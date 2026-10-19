@@ -7,6 +7,7 @@ References: digitalmodel#2298 and workspace-hub#3973.
 
 from dataclasses import dataclass
 from enum import Enum
+import math
 import re
 
 
@@ -73,11 +74,47 @@ def resume_plan(record: StopRecord, authority) -> list[str]:
     return []
 
 
+def _finite_nonnegative(value) -> bool:
+    # Zero is the counter/elapsed-time origin, not an acceptance threshold.
+    return (type(value) in (int, float) and math.isfinite(value) and value >= 0)
+
+
+def observe_progress(evidence, *, counter, now) -> dict:
+    """Return a new sample without treating polling as output advancement.
+
+    Issue 2298, contract item 2: only a strict counter increase refreshes age.
+    The first sample or a counter reset requires another observed increase.
+    Counters and timestamps must use consistent units and one clock domain.
+    """
+    for name, value in (("counter", counter), ("now", now)):
+        if not _finite_nonnegative(value):
+            raise ValueError(f"{name} must be a finite nonnegative number")
+    previous = evidence.get("progress_counter")
+    advanced_at = evidence.get("progress_counter_at")
+    if _finite_nonnegative(advanced_at) and advanced_at > now:
+        raise ValueError("Observation time precedes recorded progress time")
+    if not _finite_nonnegative(previous) or counter < previous:
+        advanced_at = None
+    elif counter > previous:
+        advanced_at = now
+    elif not _finite_nonnegative(advanced_at):
+        advanced_at = None
+    return dict(evidence, progress_counter=counter, progress_counter_at=advanced_at)
+
+
 def classify_lane(evidence, now, stall_after) -> LaneState:
+    """Classify evidence using an explicit caller-supplied output-age limit.
+
+    Issue 2298, contract item 2: age = now - last advance; age <= stall_after.
+    No engineering acceptance limit is supplied by this module.
+    """
+    for name, value in (("now", now), ("stall_after", stall_after)):
+        if not _finite_nonnegative(value):
+            raise ValueError(f"{name} must be a finite nonnegative number")
     if evidence.get("process_alive"):
         advanced_at = evidence.get("progress_counter_at")
-        if (evidence.get("progress_counter") is not None
-                and advanced_at is not None
+        if (_finite_nonnegative(evidence.get("progress_counter"))
+                and _finite_nonnegative(advanced_at)
                 and 0 <= now - advanced_at <= stall_after):
             return LaneState.SOLVING
         return LaneState.STALLED
@@ -95,6 +132,11 @@ class CriteriaVersionMismatch(ValueError):
 
 
 def check_criteria(rows, criteria_id, criteria_version) -> None:
+    """Reject unknown governing identities before comparing rows (issue 2298 §3)."""
+    for name, value in (("criteria_id", criteria_id),
+                        ("criteria_version", criteria_version)):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{name} must be a nonempty string")
     offending = [str(row["id"]) for row in rows
                  if row.get("criteria_id") != criteria_id
                  or row.get("criteria_version") != criteria_version]
@@ -121,6 +163,20 @@ def status_line(cases, report_ids) -> str:
     reported = sum(case["id"] in report_ids for case in completed)
     return (f"native {attempted}/{len(cases)} attempted, {len(completed)} completed, "
             f"{qualified} qualified; report {reported}/{len(completed)} complete")
+
+
+def campaign_status(cases, report_ids, *, criteria_id, criteria_version,
+                    next_action) -> str:
+    """Format results only after checking every row's criteria (issue 2298 §3–4).
+
+    Collectors, monitors and reports can share this opt-in boundary. Legacy
+    status_line remains available for callers without versioned result rows.
+    """
+    if not isinstance(next_action, str) or not next_action.strip():
+        raise ValueError("next_action must be a nonempty string")
+    cases = list(cases)
+    check_criteria(cases, criteria_id, criteria_version)
+    return f"{status_line(cases, report_ids)}; next: {next_action}"
 
 
 def validate_retention(manifest) -> list[str]:
