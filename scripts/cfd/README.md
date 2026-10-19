@@ -20,7 +20,8 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | `prune_case.sh` | Remove program artefacts of an assessed case (dry run by default); keeps inputs, logs, postProcessing; writes PRUNED.md. |
 | `solve_case.sh` | Detached solver launcher (file-delivered, never piped: mpirun eats stdin); arms `ittc_watch.sh` and `poller.sh`. |
 | `gate_case.sh` | Terminal waiter + two-window settling gate for a free-surface case, runs on the host reparented to PID 1. |
-| `fs_gate.sh` | Free-surface acceptance gates read from the case's own log and force history: mass drift <= 0.5 %, two 400-iteration windows < 0.2 % on viscous and pressure, 0.6 < Cf/ITTC < 1.3. |
+| `fs_gate.sh` | Free-surface acceptance gates read from the case log and force history: maximum water-content drift against a caller limit, settling and force plausibility. |
+| `domain_mass_balance.py` | Solver-free phase-fraction log assessment; text or JSON, explicit PASS / FAIL / NOT_EVALUATED. |
 | `continue_case.sh` | Continue a stopped parallel solve from its latest write (startFrom latestTime, raised endTime, detached, CONT_DONE/CONT_FAILED). The driver and solve_case.sh are fresh starts and discard processor time dirs. |
 | `lane_probe.sh` | One status row per case (iteration, s/it, pseudo-dt range raw and smoothed, Courant caps, mass drift, componentwise max U, hull forces, p_rgh residual) for a lanes table; LTS-aware. Pass `--header` for column names. |
 | `queue_after.sh` | Detached marker/ledger queue: waits for any prerequisite, waits for exact-name solver processes to clear, then launches with `QUEUE_*` status markers and a campaign ledger entry; includes `status` and PID-specific `cancel`. |
@@ -31,6 +32,28 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | `lib/cfd_chain.sh`, `lib/cfd_config.py` | Shared shell library and registry reader. |
 | `setup_*.sh`, `stage1_dtchull.sh`, `yplus_after.sh`, `auto_solve.sh`, `chain_stage45.sh`, `solve_chain.sh` | KCS/DTC verification chain (#1173). |
 | `run_sloshing_*.py`, `reduce_*.py`, `render_sloshing_viz.py`, `run_spheric_test10.py`, `run_outlet_vent_study.py`, `collect_compute_stats.py` | Sloshing and vent studies (see their headers). |
+
+The mass gate requires `DM_CFD_FIXED_DOMAIN=true` and a finite nonnegative
+`DM_CFD_MASS_DRIFT_RTOL` expressed as a fraction. The tolerance is a case-specific
+input; no universal engineering acceptance limit is supplied. Missing inputs,
+missing or malformed phase records, an unidentified water phase, fewer than two
+samples, a zero initial water content, or decreasing logged time produce
+`NOT_EVALUATED` and prevent acceptance.
+Every phase record is compared with the first, so recovery cannot hide an earlier
+excursion. The complete log is required; an extracted tail changes the baseline.
+
+The quantity is sourced from [OpenFOAM v2312 (2023), VoF/alphaEqn.H,
+lines 124–128](https://api.openfoam.com/2312/VoF_2alphaEqn_8H_source.html):
+the printed fraction is the volume-weighted mean of the water fraction. On a
+fixed-volume domain, relative water-volume drift equals relative fraction drift.
+The gate checks water-content stability; prescribed filling or drainage needs a
+flux-aware residual instead. A moving domain needs actual integrated water
+volumes. Passing this gate establishes neither interface sharpness nor boundary
+flux closure, and does not establish the other acceptance gates.
+
+Standalone use: `python3 scripts/cfd/domain_mass_balance.py log.interFoam
+--fixed-domain --max-relative-drift <case-specific-fraction> --json`.
+Only PASS returns success; FAIL and NOT_EVALUATED return a nonzero exit status.
 
 Rules the scripts encode, learned on the lanes:
 
