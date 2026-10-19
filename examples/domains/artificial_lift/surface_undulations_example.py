@@ -108,10 +108,13 @@ def main() -> None:
     print(f"Peak timing bounds: {ringing.timing_status}")
     for index, bounds in enumerate(ringing.interval_bounds, start=1):
         print(f"  Interval {index}: [{bounds.lower_s:.2f}, {bounds.upper_s:.2f}] s")
-    print(
-        "Ringing is consistent with the surface-card humps; "
-        "this does not establish pump condition."
-    )
+    if ringing.timing_status == "COMPATIBLE":
+        print(
+            "Ringing is consistent with the surface-card humps; "
+            "this does not establish pump condition."
+        )
+    else:
+        print(f"{ringing.timing_status}: check inputs and assumptions")
     print(
         "Equal time intervals crowd in position near reversal because "
         "polished-rod velocity approaches zero."

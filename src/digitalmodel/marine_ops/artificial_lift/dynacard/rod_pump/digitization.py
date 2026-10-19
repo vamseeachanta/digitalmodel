@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import math
 from dataclasses import dataclass
+from numbers import Real
 from pathlib import Path
 
 import numpy as np
@@ -27,12 +28,16 @@ class AxisCalibration:
 
     def __post_init__(self) -> None:
         if not all(
-            math.isfinite(v)
+            isinstance(v, Real) and not isinstance(v, bool) and math.isfinite(v)
             for v in (self.pixel0, self.value0, self.pixel1, self.value1)
         ):
-            raise ValueError("axis calibration must be finite")
+            raise ValueError("axis calibration must contain finite real numbers")
         if self.pixel0 == self.pixel1 or self.value0 == self.value1:
             raise ValueError("axis calibration must have nonzero pixel and value spans")
+
+        scale = (self.value1 - self.value0) / (self.pixel1 - self.pixel0)
+        if not math.isfinite(scale) or scale == 0:
+            raise ValueError("axis calibration scale must be finite and nonzero")
 
     def value(self, pixel: float) -> float:
         """Affine interpolation (or extrapolation) through the measured ticks."""
@@ -68,7 +73,11 @@ class DigitizedCard:
         )
 
     def write_csv(self, path: str | Path) -> None:
-        """Write calibrated branch samples and trace multiplicity."""
+        """Write calibrated branch samples and trace multiplicity.
+
+        Excluded pixel columns are omitted from CSV. Retain ``excluded_columns``
+        separately to distinguish extraction gaps from ordinary sample spacing.
+        """
         with Path(path).open("w", newline="", encoding="utf-8") as stream:
             writer = csv.writer(stream)
             writer.writerow(

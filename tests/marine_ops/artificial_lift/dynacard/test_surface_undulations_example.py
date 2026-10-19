@@ -27,7 +27,9 @@ def test_worked_field_example():
     hp=area/12*6.4/33000 (existing card_metrics.py unit convention).
     Arithmetic is independent of the implementation under test.
     """
-    card_csv = next((ROOT / "docs").rglob("dynacard_digitized.csv"))
+    matches = sorted((ROOT / "docs").rglob("dynacard_digitized.csv"))
+    assert len(matches) == 1, "expected exactly one digitized card CSV"
+    card_csv = matches[0]
     result = EXAMPLE.run_example(card_csv)
     ringing, card = result["ringing"], result["card"]
     assert ringing.period_s == pytest.approx(168 / 163)
@@ -63,3 +65,35 @@ def test_example_rejects_invalid_csv(tmp_path, text):
     target.write_text(text)
     with pytest.raises(ValueError):
         EXAMPLE.run_example(target)
+
+
+@pytest.mark.parametrize(
+    "overrides,status",
+    [
+        ({}, "COMPATIBLE"),
+        ({"wave_speed_ft_s": 400}, "INCOMPATIBLE"),
+        ({"peak_positions_in": ()}, "NOT_EVALUATED"),
+    ],
+)
+def test_printed_conclusion_follows_timing_criterion(
+    tmp_path, monkeypatch, capsys, overrides, status
+):
+    """A slower wave gives a period outside the selected timing bounds."""
+    card_csv = tmp_path / "card.csv"
+    card_csv.write_text(
+        "position_in,upstroke_load_lb,downstroke_load_lb\n0,2,1\n1,2,1\n"
+    )
+    analyse = EXAMPLE.analyse_undulations
+
+    def changed_inputs(**inputs):
+        return analyse(**{**inputs, **overrides})
+
+    monkeypatch.setattr(EXAMPLE, "analyse_undulations", changed_inputs)
+    monkeypatch.setattr("sys.argv", ["example", str(card_csv)])
+    EXAMPLE.main()
+    output = capsys.readouterr().out
+    assert f"Peak timing bounds: {status}" in output
+    conclusion = "Ringing is consistent with the surface-card humps"
+    assert (conclusion in output) == (status == "COMPATIBLE")
+    if status != "COMPATIBLE":
+        assert f"{status}: check inputs and assumptions" in output

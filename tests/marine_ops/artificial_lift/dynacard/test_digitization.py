@@ -90,7 +90,14 @@ def test_image_crop_uses_original_pixel_coordinates(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "values", [(0, 0, 0, 1), (0, 0, 1, 0), (0, float("nan"), 1, 1)]
+    "values",
+    [
+        (0, 0, 0, 1),
+        (0, 0, 1, 0),
+        (0, float("nan"), 1, 1),
+        (0, 0, 1e-320, 1),
+        (0, 0, 1e308, 1e-320),
+    ],
 )
 def test_invalid_calibration(values):
     """Coincident pixels, zero physical scale and nonfinite values are invalid."""
@@ -154,3 +161,12 @@ def test_invalid_image_settings(tmp_path, kwargs):
     )
     with pytest.raises(ValueError):
         digitize_image(image, *axes(), **{**settings, **kwargs})
+
+
+@pytest.mark.parametrize("field", range(4))
+@pytest.mark.parametrize("value", [True, False, "1", None, 1j])
+def test_calibration_rejects_non_real_inputs(field, value):
+    values = [0, 0, 1, 1]
+    values[field] = value
+    with pytest.raises(ValueError):
+        AxisCalibration(*values)

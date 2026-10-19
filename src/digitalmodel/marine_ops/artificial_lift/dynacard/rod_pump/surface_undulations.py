@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Sequence
 
 
@@ -49,7 +50,12 @@ class UndulationAnalysis:
 
 def _positive(**values: float) -> None:
     for name, value in values.items():
-        if not math.isfinite(value) or value <= 0:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, Real)
+            or not math.isfinite(value)
+            or value <= 0
+        ):
             raise ValueError(f"{name} must be finite and positive")
 
 
