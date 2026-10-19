@@ -1,0 +1,24 @@
+{
+  "report": "Padeye and lift point analysis",
+  "revision": 0,
+  "date": "2026-10-19",
+  "report_digest": "6459c7ea86c4364386abf603f6b70282d4376355faa17c0c098875a0751bf919",
+  "changes": [
+    {
+      "section": "basis",
+      "change": "Initial synthetic basis with supplied comparison targets and unresolved class criteria."
+    },
+    {
+      "section": "geometry",
+      "change": "Centred plate and balanced direct weld idealisation defined."
+    },
+    {
+      "section": "plate-results",
+      "change": "Nominal bearing, net tension and shear demands calculated."
+    },
+    {
+      "section": "weld-results",
+      "change": "Nominal weld comparison and effective throat requirement calculated."
+    }
+  ]
+}
