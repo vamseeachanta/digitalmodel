@@ -63,8 +63,14 @@ def annotate_rows(
     1548 (2026), Recommendation, and does not assert physical validity above it.
     Missing policy is ``NOT_EVALUATED``. Existing reliability labels and bases
     are retained, so an independent defect is never cleared by this screen.
+    In-range results appear only in the frequency screening fields; they add
+    neither a reliability label nor evidence for an earlier defect.
+    Column names containing ``hz`` or ``period`` (case-insensitive) are rejected;
+    callers must convert those values to rad/s upstream and name them accordingly.
     Amplitudes, phases, headings, ordering and row count are preserved.
     """
+    if any(unit in frequency_column.casefold() for unit in ("hz", "period")):
+        raise ValueError("frequency column must contain angular frequency in rad/s")
     result = []
     for index, row in enumerate(rows):
         if frequency_column not in row:
@@ -82,15 +88,15 @@ def annotate_rows(
         annotated = dict(row)
         # Keep independent findings and provenance rather than replacing them.
         previous = row.get("reliability", "")
-        if status == "screening_range" and previous:
-            reliability = str(previous)
-        else:
+        reliability = previous
+        reliability_basis = row.get("reliability_basis", "")
+        if status != "screening_range":
             reliability = _join_labels(previous, status)
+            if basis:
+                reliability_basis = _join_labels(reliability_basis, basis)
         annotated.update(
             reliability=reliability,
-            reliability_basis=_join_labels(row.get("reliability_basis", ""), basis)
-            if basis
-            else row.get("reliability_basis", ""),
+            reliability_basis=reliability_basis,
             frequency_screening_status=status,
             frequency_screening_basis=basis,
             minimum_screening_frequency_rad_s=cutoff,
@@ -104,7 +110,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("--frequency-column", default="frequency_rad_s")
+    parser.add_argument(
+        "--frequency-column",
+        default="frequency_rad_s",
+        help="angular-frequency column in rad/s; names containing hz or period are rejected",
+    )
     parser.add_argument("--minimum-frequency-rad-s", type=float)
     parser.add_argument("--basis")
     args = parser.parse_args(argv)

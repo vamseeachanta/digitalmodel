@@ -35,12 +35,18 @@ def test_boundary_and_all_headings_preserve_values():
     original = [row.copy() for row in rows]
     result = annotate_rows(rows, policy=ScreeningPolicy(CUTOFF, BASIS))
     assert [r["reliability"] for r in result] == (
+        ["low_freq_artifact"] * 3 + [""] * 6
+    )
+    assert [r["frequency_screening_status"] for r in result] == (
         ["low_freq_artifact"] * 3 + ["screening_range"] * 6
     )
     assert rows == original
     for source, target in zip(rows, result):
         assert all(target[key] == value for key, value in source.items())
-        assert target["reliability_basis"] == BASIS
+        assert target["reliability_basis"] == (
+            BASIS if source["frequency_rad_s"] < CUTOFF else ""
+        )
+        assert target["frequency_screening_basis"] == BASIS
 
 
 def test_missing_policy_is_not_evaluated():
@@ -63,6 +69,26 @@ def test_existing_flags_are_retained():
         "mesh_defect",
         "mesh_defect;low_freq_artifact",
     ]
+    assert [row["reliability_basis"] for row in result] == ["", BASIS]
+
+
+@pytest.mark.parametrize(
+    "frequency,flag", [(CUTOFF, "low_freq_artifact"), (0.8, "mesh_defect")]
+)
+@pytest.mark.parametrize("previous_basis", [None, "independent source"])
+def test_in_range_screen_retains_flag_provenance(frequency, flag, previous_basis):
+    """An in-range bound provides no evidence for an earlier defect label."""
+    row = {"frequency_rad_s": frequency, "reliability": flag}
+    if previous_basis is not None:
+        row["reliability_basis"] = previous_basis
+    original = row.copy()
+    result = annotate_rows([row], policy=ScreeningPolicy(CUTOFF, BASIS))[0]
+    assert result["reliability"] == flag
+    assert result["reliability_basis"] == (previous_basis or "")
+    assert result["frequency_screening_status"] == "screening_range"
+    assert result["frequency_screening_basis"] == BASIS
+    assert result["minimum_screening_frequency_rad_s"] == CUTOFF
+    assert row == original
 
 
 @pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf"), True])
@@ -86,6 +112,39 @@ def test_invalid_frequency_is_rejected(value):
 def test_missing_frequency_column_is_rejected():
     with pytest.raises(ValueError, match="frequency"):
         annotate_rows([{"period_s": "20"}])
+
+
+@pytest.mark.parametrize("column", ["frequency_hz", "frequency_HZ", "period_s", "Period"])
+def test_non_angular_frequency_column_is_rejected(column):
+    with pytest.raises(ValueError, match="rad/s"):
+        annotate_rows(
+            [{column: 0.35}],
+            policy=ScreeningPolicy(CUTOFF, BASIS),
+            frequency_column=column,
+        )
+
+
+@pytest.mark.parametrize("column", ["frequency_Hz", "wave_period_s"])
+def test_cli_rejects_non_angular_frequency_column_without_output(tmp_path, column):
+    source = tmp_path / "input.csv"
+    output = tmp_path / "annotated.csv"
+    raw = f"{column},heave\n0.35,8.0\n"
+    source.write_text(raw)
+    with pytest.raises(ValueError, match="rad/s"):
+        main(
+            [
+                str(source),
+                str(output),
+                "--frequency-column",
+                column,
+                "--minimum-frequency-rad-s",
+                str(CUTOFF),
+                "--basis",
+                BASIS,
+            ]
+        )
+    assert source.read_text() == raw
+    assert not output.exists()
 
 
 def test_cli_retains_every_row_and_source_bytes(tmp_path):
@@ -113,6 +172,11 @@ def test_cli_retains_every_row_and_source_bytes(tmp_path):
     with output.open(newline="") as stream:
         rows = list(csv.DictReader(stream))
     assert [row["reliability"] for row in rows] == [
+        "low_freq_artifact",
+        "",
+    ]
+    assert [row["reliability_basis"] for row in rows] == [BASIS, ""]
+    assert [row["frequency_screening_status"] for row in rows] == [
         "low_freq_artifact",
         "screening_range",
     ]

@@ -11,12 +11,16 @@ physical validity. Its motivating criterion is the Recommendation section of
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Document the offline frequency screen so suspect native rows remain visible with their criterion and source. |
+| 2 | 2026-10-19 | Preserve earlier defect provenance for in-range rows and reject column names indicating incompatible units. |
 
 ## Method and inputs
 
 The input CSV requires a positive finite angular-frequency column in rad/s.
 Its default name is `frequency_rad_s`; `--frequency-column` selects another name.
-Hz and period columns require an explicit conversion upstream. No implicit unit
+Names containing `hz` or `period` are rejected without regard to case. Hz and
+period columns require an explicit conversion upstream and a name reflecting
+angular frequency. Other custom names still require the caller to establish
+rad/s units. No implicit unit
 conversion, amplitude clipping or heading exception is applied.
 
 The lower bound and its source are supplied together. There is no default bound:
@@ -36,6 +40,9 @@ Every output row carries `frequency_screening_status`, `frequency_screening_basi
 and `minimum_screening_frequency_rad_s`. The `reliability` and `reliability_basis`
 columns retain earlier findings and sources; new defect labels are appended with
 semicolons without duplication. An in-range screen never clears an earlier flag.
+For in-range rows, both reliability columns remain unchanged (or empty if absent);
+the current policy basis appears only in `frequency_screening_basis`. With no
+policy, `NOT_EVALUATED` is also appended to `reliability`, without a new basis.
 The dedicated frequency columns describe the current screen even when an older
 finding remains. Consumers shall inspect the dedicated status and retained
 findings together; no row is qualified for engineering use by this screen alone.
