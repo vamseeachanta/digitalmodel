@@ -220,24 +220,23 @@ class OrcaFlexCustomAnalysis:
             print("First analysis ......")
             model.CalculateStatics()
             # #3838: a statics solve that did not reach a static state is a
-            # failed run; the bare except below turns this into the FAIL branch.
+            # failed run; the exception handler below selects the FAIL branch.
             check_statics(model, context=filename_with_ext)
             print("First analysis ... PASS")
             self.save_model_with_calculated_positions(filename_with_ext, model)
             model = self.analysis_with_calculated_positions(model)
             run_success_flag = True
-        except:
+        except Exception:
             run_success_flag = False
-            print("First static analysis for ... FAIL")
+            logging.exception("Static analysis failed for %s", filename_with_ext)
+            print("Static analysis ... FAIL")
 
         return model, run_success_flag
 
     def analysis_with_calculated_positions(self, model):
-        try:
-            model.CalculateStatics()
-            check_statics(model, context="analysis with calculated positions")
-        except:
-            print("Analysis with calculated positions ... FAIL")
+        # Issue #2548: let the caller record failure instead of returning success.
+        model.CalculateStatics()
+        check_statics(model, context="analysis with calculated positions")
 
         return model
 
