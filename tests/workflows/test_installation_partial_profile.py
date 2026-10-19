@@ -168,7 +168,7 @@ def test_profile_array_failure_is_retained(evidence, defect, reason):
     elif defect == 'wrong_shape':
         arrays['profile_001'] = np.zeros((3, 1))
     elif defect == 'logging_interval':
-        receipt = json.loads((run / 'run.json').read_text())
+        receipt = json.loads((run / 'run.json').read_text(encoding='utf-8'))
         receipt['actual_logging_interval'] = .5
         _write_json(run / 'run.json', receipt)
     _save_traces(run, metadata, arrays)
@@ -186,7 +186,7 @@ def test_legacy_request_without_profile_remains_supported(evidence):
     snapshot, matrix, run, metadata, arrays = evidence
     request = run / 'request.yml'
     request.write_text('{}')
-    receipt = json.loads((run / 'run.json').read_text())
+    receipt = json.loads((run / 'run.json').read_text(encoding='utf-8'))
     receipt['request_sha256'] = _digest(request)
     _write_json(run / 'run.json', receipt)
     for key in ('supplemental_profile', 'supplemental_profile_sha256', 'request_sha256'):
@@ -224,12 +224,49 @@ def test_report_retains_failed_case_and_excludes_its_envelopes(evidence, tmp_pat
     output = tmp_path / 'report.html'
     summary = report.generate_report(campaign, matrix_path, output, workers=workers)
     assert campaign.read_bytes() == captured
-    assert json.loads(output.with_suffix('.json').read_text()) == summary
+    assert json.loads(output.with_suffix('.json').read_text(encoding='utf-8')) == summary
     assert summary['counts'] == {'FAILED': 1}
     assert summary['envelopes'] == []
     row, = summary['cases']
     assert row['status'] == 'FAILED' and 'channel coverage' in row['reason']
     assert 'channels' not in row
-    html = output.read_text()
+    html = output.read_text(encoding='utf-8')
     assert 'title="FAILED"' in html
     assert 'Engineering acceptance: NOT EVALUATED' in html
+
+
+def test_trace_change_during_profile_check_is_rejected(evidence, monkeypatch):
+    snapshot, matrix, _, _, arrays = evidence
+    verify_arrays = report.verify_profile_arrays
+
+    def replace_traces(path, receipt, metadata):
+        arrays['profile_001'] = np.ones(3)
+        np.savez(path, **arrays)
+        verify_arrays(path, receipt, metadata)
+
+    monkeypatch.setattr(report, 'verify_profile_arrays', replace_traces)
+    row, = report.collect_cases(snapshot, matrix)
+    assert row['status'] == 'FAILED'
+    assert 'Traces changed during verification' in row['reason']
+    assert 'channels' not in row
+    assert report.component_envelopes([row]) == []
+
+
+def test_receipt_change_before_profile_check_is_rejected(evidence, monkeypatch):
+    snapshot, matrix, run, _, _ = evidence
+    collect_case = report._case
+
+    def replace_receipt(*args):
+        row = collect_case(*args)
+        path = run / 'run.json'
+        receipt = json.loads(path.read_text(encoding='utf-8'))
+        receipt['simulation_sha256'] = 'changed'
+        _write_json(path, receipt)
+        return row
+
+    monkeypatch.setattr(report, '_case', replace_receipt)
+    row, = report.collect_cases(snapshot, matrix)
+    assert row['status'] == 'FAILED'
+    assert 'Receipt changed during verification' in row['reason']
+    assert 'channels' not in row
+    assert report.component_envelopes([row]) == []

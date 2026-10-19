@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 
+from digitalmodel.infrastructure.persistence.provenance import compute_hash
 from digitalmodel.workflows.installation_seastate_report import _case, _read
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
 from digitalmodel.workflows.installation_trace_extract import verify_profile_metadata, verify_profile_arrays
@@ -52,8 +53,13 @@ def _collect_case(index, case, current, matrix):
             try:
                 run = Path(current['run_dir'])
                 receipt = _read(run / 'run.json')
+                if receipt.get('simulation_sha256') != row['simulation_sha256']:
+                    raise ValueError('Receipt changed during verification')
                 verify_profile_metadata(run, receipt, metadata)
-                verify_profile_arrays(run / 'installation_traces/traces.npz', receipt, metadata)
+                traces = run / 'installation_traces/traces.npz'
+                verify_profile_arrays(traces, receipt, metadata)
+                if compute_hash(traces) != row['trace_sha256']:
+                    raise ValueError('Traces changed during verification')
             except (OSError, ValueError, KeyError, TypeError) as error:
                 return dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')},
                             run_dir=current['run_dir'], status='FAILED',
