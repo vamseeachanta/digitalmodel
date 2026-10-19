@@ -124,7 +124,9 @@ class RAOComponent:
     unit: str                       # RAO unit (depends on DOF type)
 
     def __post_init__(self):
-        """Set appropriate units based on DOF"""
+        """Preserve declared units; infer only the legacy empty-unit default."""
+        if self.unit:
+            return
         if self.dof in [DOF.SURGE, DOF.SWAY, DOF.HEAVE]:
             self.unit = Unit.RAO_TRANSLATION.value
         else:
@@ -460,7 +462,7 @@ def _rao_component_from_dict(d: Dict) -> "RAOComponent":
         phase=np.asarray(d['phase'], dtype=float),
         frequencies=_frequency_from_dict(d['frequencies']),
         headings=_heading_from_dict(d['headings']),
-        unit=d.get('unit', ''),  # __post_init__ resets from dof
+        unit=d.get('unit', ''),  # Explicit declarations survive reconstruction.
     )
 
 
