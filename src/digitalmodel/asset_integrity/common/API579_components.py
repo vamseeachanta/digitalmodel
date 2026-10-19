@@ -257,7 +257,8 @@ class API579_components():
             LMLFileNameArray.append('LML_' + str(fileIndex) + '_')
             decimalArray = pd.Series(
                 [2, 2, 0, 0, 0, 0, 3, 3, 3, 3, 3, 1, 1, 3, 3, 3],
-                index=LMLSummaryDF.columns.values)
+                index=LMLSummaryDF.columns.drop(
+                    ["Level 2 qualification", "Level 2 limitation"]))
             LMLSummaryDF = LMLSummaryDF.round(decimalArray)
             LMLSummaryDFArray.append(LMLSummaryDF)
             if self._generate_plots():
@@ -985,6 +986,11 @@ class API579_components():
                 "MAWPr, L1": MAWPrL1,
                 "MAWPr, L2": min(MAWPrL2),
                 "RSF, L2": min(RSFL2),
+                "Level 2 qualification": "NOT_EVALUATED",
+                "Level 2 limitation": (
+                    "Spatial integration only; edition-specific API 579 "
+                    "procedure and pressure equations remain unqualified."
+                ),
                 "Mt, L2": min(MtL2),
                 "tavg": trd
             }
@@ -1047,15 +1053,51 @@ class API579_components():
         return result
 
     def LMLLevel2Evaluation(self, dfLTA, data):
+        """Return geometric mean walls and lengths for contiguous intervals.
+
+        Rows are strictly increasing longitudinal coordinates, columns are
+        independent profiles. Coordinates and walls must share a length unit.
+        Every pair of measured endpoints is included, without extrapolation or
+        sorting readings. Piecewise-linear wall is assumed between readings.
+        Ordering is column, start row, end row. ``data`` is retained for callers.
+
+        Source: NIST DLMF (2010), §3.5(i), Eq. 3.5.1,
+        https://dlmf.nist.gov/3.5.E1, applied separately to each segment:
+        A = sum((x[k+1]-x[k]) * (t[k]+t[k+1])/2), mean = A/(x[end]-x[start]).
+        This is exact for the assumed linear segments; the factor 2 is the
+        trapezoid endpoint average, not an API 579 coefficient.
+
+        Qualification remains NOT_EVALUATED: geometric regressions do not
+        qualify an edition-specific Level 2 procedure. The sole production
+        caller is LMLAcceptability via API579LML and lml; its saved RSF/MAWPr
+        outputs from the old sorted method require reassessment from raw grids.
+        No inventory or qualification of external saved results is established.
+        """
+        if len(dfLTA.index) < 2 or len(dfLTA.columns) < 1:
+            raise ValueError("Spatial profiles require two rows and one column")
+        try:
+            coordinates = np.asarray(dfLTA.index, dtype=float)
+            walls = dfLTA.to_numpy(dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Profiles require finite numeric coordinates and walls") from exc
+        if not np.isfinite(coordinates).all() or not np.isfinite(walls).all():
+            raise ValueError("Profiles require finite numeric coordinates and walls")
+        if not np.all(coordinates[1:] > coordinates[:-1]):
+            raise ValueError("Profile coordinates must be strictly increasing")
+        if np.any(walls < 0):
+            raise ValueError("Profile walls must be nonnegative")
+
         tavgi = []
         s = []
-        for i in range(0, len(dfLTA.columns)):
-            LongitudinalCTP = dfLTA.iloc[:, i].values
-            LongitudinalCTPAscending = sorted(LongitudinalCTP)
-            for j in range(1, len(LongitudinalCTPAscending)):
-                s.append((j + 1) * (dfLTA.index[1] - dfLTA.index[0]))
-                tavgi.append(
-                    sum(LongitudinalCTPAscending[0:j]) /
-                    len(LongitudinalCTPAscending[0:j]))
+        for column in range(walls.shape[1]):
+            for start in range(len(coordinates) - 1):
+                area = 0.0
+                for end in range(start + 1, len(coordinates)):
+                    pitch = coordinates[end] - coordinates[end - 1]
+                    # NIST DLMF (2010), Eq. 3.5.1: trapezoidal segment area.
+                    area += pitch * (walls[end - 1, column] + walls[end, column]) / 2
+                    length = coordinates[end] - coordinates[start]
+                    s.append(float(length))
+                    tavgi.append(float(area / length))
 
         return (tavgi, s)
