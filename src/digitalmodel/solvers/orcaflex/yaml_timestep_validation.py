@@ -129,7 +129,8 @@ def _mapping_key_issues(node):
             "tag:yaml.org,2002:str", "tag:yaml.org,2002:merge",
         }:
             issues.append(("error", "Mapping keys must be strings in the "
-                           "OrcaFlex property-name profile", "", line))
+                           f"OrcaFlex property-name profile; found tag '{key.tag}'",
+                           "", line))
             continue
         identity = (key.tag, key.value)
         if identity in first_lines:
@@ -178,20 +179,20 @@ def _document_shape_issues(root):
     return issues
 
 
-def inspect_source(raw_text, sections, invalid_properties):
-    """Return (severity, message, property, line) diagnostics and halt flag."""
+def inspect_source(raw_text, sections, invalid_properties, *, strict_profile=False):
+    """Return source diagnostics and halt flag, with optional strict preflight."""
     root = yaml.compose(raw_text, Loader=yaml.SafeLoader)
     # Large vessel tables are legitimate linear-size documents. Bound expansion
     # relative to source size, so compact alias fan-out cannot amplify work.
     mappings, counts, failure = _inventory(root, max(100000, 2 * len(raw_text)))
-    issues = _document_shape_issues(root)
+    issues = _document_shape_issues(root) if strict_profile else []
     duplicate_general = isinstance(root, MappingNode) and sum(
         _key(key) == "General" for key, _ in root.value
     ) > 1
     seen = set()
     profile_failure = bool(issues)
     for node, path in mappings:
-        key_issues = _mapping_key_issues(node)
+        key_issues = _mapping_key_issues(node) if strict_profile else []
         profile_failure = profile_failure or bool(key_issues)
         issues.extend(key_issues)
         # Preserve forbidden properties even when duplicate keys would hide them.

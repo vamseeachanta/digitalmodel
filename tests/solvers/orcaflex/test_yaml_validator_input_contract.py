@@ -14,7 +14,7 @@ from digitalmodel.solvers.orcaflex.yaml_validator import validate_orcaflex_yaml
 def validate(tmp_path, text):
     path = tmp_path / "model.yml"
     path.write_text(text, encoding="utf-8")
-    return validate_orcaflex_yaml(path)
+    return validate_orcaflex_yaml(path, strict_profile=True)
 
 
 @pytest.mark.parametrize(("text", "key", "first", "repeated"), [
@@ -63,7 +63,7 @@ def test_duplicate_in_included_file_is_rejected_by_directory_check(tmp_path):
 
     (tmp_path / "master.yml").write_text("- includefile: general.yml\n", encoding="utf-8")
     (tmp_path / "general.yml").write_text("UnitsSystem: SI\nUnitsSystem: SI\n", encoding="utf-8")
-    result = OrcaFlexYAMLValidator().validate_directory(tmp_path)
+    result = OrcaFlexYAMLValidator(strict_profile=True).validate_directory(tmp_path)
     assert not result.valid
     assert any(issue.file == "general.yml" and issue.line == 2 for issue in result.errors)
 
@@ -149,3 +149,57 @@ def test_property_default_is_not_confused_with_a_null_section(tmp_path):
     defaults from script text. This structural slice does not resolve defaults.
     """
     assert validate(tmp_path, "Environment:\n  WaterDepth: ~\n").valid
+
+
+@pytest.mark.parametrize("text", [
+    "6DBuoys:\n  1: {}\n  2: {}\n  3: {}\n",
+    "6DBuoys:\n  1.5: {}\n  2.5: {}\n",
+    "includefile: first.yml\nincludefile: second.yml\n",
+    "- includefile: first.yml\n  includefile: second.yml\n",
+    "New: first\nfirst: {}\nNew: second\nsecond: {}\n",
+])
+def test_native_patterns_remain_accepted_by_default(tmp_path, text):
+    """Numeric object names and repeated actions occur in tracked model inputs.
+
+    Synthetic names preserve those source patterns without copying model data.
+    Default acceptance does not prove that includes or actions were resolved.
+    """
+    for name in ("first.yml", "second.yml"):
+        (tmp_path / name).write_text("UnitsSystem: SI\n", encoding="utf-8")
+    path = tmp_path / "model.yml"
+    path.write_text(text, encoding="utf-8")
+    assert validate_orcaflex_yaml(path).valid
+    assert not validate_orcaflex_yaml(path, strict_profile=True).valid
+
+
+def test_strict_profile_is_explicit_for_file_and_directory(tmp_path):
+    from digitalmodel.solvers.orcaflex.yaml_validator import OrcaFlexYAMLValidator
+
+    path = tmp_path / "model.yml"
+    path.write_text("6DBuoys:\n  1: {}\n  2: {}\n", encoding="utf-8")
+    assert validate_orcaflex_yaml(path).valid
+    assert not validate_orcaflex_yaml(path, strict_profile=True).valid
+    assert not validate_orcaflex_yaml(tmp_path, strict_profile=True).valid
+    assert OrcaFlexYAMLValidator().validate_directory(tmp_path).valid
+    assert not OrcaFlexYAMLValidator(strict_profile=True).validate_file(path).valid
+
+
+def test_custom_key_tag_diagnostic_names_the_tag(tmp_path):
+    result = validate(tmp_path, "General:\n  !fixture Custom: ignored\n")
+    assert not result.valid
+    assert any(issue.line == 2 and "!fixture" in issue.message
+               and "Mapping keys must be strings" in issue.message
+               for issue in result.errors)
+
+
+def test_comment_only_template_is_outside_strict_input_scope(tmp_path):
+    """The defaults template is comments, not an automatically loaded model."""
+    path = tmp_path / "model.yml"
+    path.write_text("# General:\n#   UnitsSystem: SI\n", encoding="utf-8")
+    default = validate_orcaflex_yaml(path)
+    assert default.valid
+    assert any("null/empty" in issue.message for issue in default.warnings)
+    strict = validate_orcaflex_yaml(path, strict_profile=True)
+    assert not strict.valid
+    assert any("Document contains no model or fragment" in issue.message
+               for issue in strict.errors)
