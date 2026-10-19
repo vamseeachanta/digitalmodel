@@ -372,10 +372,32 @@ def fleet_rollup(
     its worst scan.  Per campaign horizon N the joint is FIT if life covers
     N campaigns, HIGH-FATIGUE-QUALIFIED if it covers ``high_fatigue_margin``
     times that, else REPAIR (reason: fatigue/corrosion life).
+
+    Every row of the selected component must have a nonblank joint ID and
+    finite nonnegative life; otherwise raise ``ValueError`` before grouping.
+    Numeric life strings are converted before taking the minimum. Rows of
+    other components do not contribute. The input register is not modified.
     """
-    comp = register[register["component"] == component]
+    comp = register[register["component"] == component].copy()
     if comp.empty:
         raise ValueError(f"no rows for component '{component}'.")
+    scan_life = pd.to_numeric(comp["min_life_years"], errors="coerce")
+    ids = comp["joint_id"]
+    # Issue #2334 (2026), follow-on scope: life must be finite and >= 0 for
+    # every contributing scan, including scans of the same joint. Validate
+    # before groupby can skip missing life or silently drop unidentified rows.
+    if (
+        scan_life.isna().any()
+        or not scan_life.map(math.isfinite).all()
+        or (scan_life < 0).any()
+        or ids.isna().any()
+        or ids.astype(str).str.strip().eq("").any()
+    ):
+        raise ValueError(
+            f"{component} register requires joint IDs and finite nonnegative "
+            "life for every row"
+        )
+    comp["min_life_years"] = scan_life
     life = comp.groupby("joint_id")["min_life_years"].min()
 
     campaigns = []
