@@ -250,8 +250,7 @@ def test_public_model_classifier_matches_cached_production_path():
     from digitalmodel.marine_ops.artificial_lift.dynacard import diagnostics
 
     card = load_labelled_set(document()).cards[0].card
-    model = diagnostics.PumpDiagnostics._load_model()
-    assert model is not None
+    model = json.loads(diagnostics.MODEL_PATH.read_bytes())
     expected = diagnostics.PumpDiagnostics.classify_card(card)
     assert diagnostics.classify_with_model(card, model) == expected
     stale = {**model, "scaling": {"min": [0], "max": [1]}}
