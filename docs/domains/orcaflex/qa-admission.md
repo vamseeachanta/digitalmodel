@@ -12,6 +12,7 @@ qualification. A worker's `status=ok` remains an execution result.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Define evidence admission and worker binding so incomplete or changed evidence cannot silently enter a batch. |
+| 2 | 2026-10-19 | Migrate native test callers, retain validated evidence digests, and preserve adapter failure classification and test dependency coverage. |
 
 ## Basis and scope
 
@@ -35,6 +36,17 @@ it is eligible here. Merely assigning `PASS` does not perform those checks.
 require an `AdmissionContext` for every nonempty batch. Legacy requests without
 it are refused. An empty batch has no evidence records to admit. Existing
 callers must supply the context; there is no compatibility bypass.
+`check_cases` returns `(cases, bindings)`, where bindings retain the evidence
+digests returned by validation; `run_cases` passes those identities to workers.
+
+Native test callers requiring synthetic controls are
+`tests/drilling_riser/global_model/test_parallel_runner.py`,
+`tests/drilling_riser/global_model/test_campaign.py`, and
+`tests/drilling_riser/global_model/test_w5_channels.py`.
+The campaign adapter documentation requires the same context for application
+callers. Synthetic controls test mechanics and do not qualify engineering QA.
+The domain ownership table selects both consumer shards when shared QA controls
+change.
 
 The context contains the current `criteria_revision`, a nonempty
 `required_images` role register, a `verify_signature` callable, and `requests`

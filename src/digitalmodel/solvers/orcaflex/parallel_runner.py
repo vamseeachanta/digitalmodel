@@ -44,7 +44,7 @@ from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Any, Iterable
 
-from .qa_admission import AdmissionContext, AdmissionRefused, record_payload
+from .qa_admission import AdmissionContext, AdmissionRefused
 
 DEFAULT_MAX_WORKERS = 57  # owner decision W325: 90 % of the 64 cores of the licensed host
 ANALYSES = ("statics", "dynamics")
@@ -114,11 +114,12 @@ def check_workers(n: int) -> int:
 
 
 def check_cases(cases: Iterable[dict], *, qa: AdmissionContext | None = None,
-                expected_dll: str = "11.6c") -> list[dict]:
+                expected_dll: str = "11.6c") -> tuple[list[dict], dict[str, dict[str, str]]]:
     """Check case syntax and require B1–B9 evidence before batch admission.
 
     Evidence authorities are supplied through ``qa``; submitted case fields
-    cannot declare their own approval. See qa_admission for the contract.
+    cannot declare their own approval. Return cases and their validated worker
+    bindings. See qa_admission for the contract.
     """
     cases = list(cases)
     seen = set()
@@ -134,9 +135,14 @@ def check_cases(cases: Iterable[dict], *, qa: AdmissionContext | None = None,
         json.dumps(c, allow_nan=False)  # strict JSON, hashed and sent to a worker
     if cases and not isinstance(qa, AdmissionContext):
         raise AdmissionRefused("B1", "missing QA admission context")
+    bindings = {}
     for c in cases:
-        qa.validate(c, expected_dll)
-    return cases
+        evidence_digest = qa.validate(c, expected_dll)
+        bindings[c["case_id"]] = {
+            "admitted_input_sha256": qa.requests[c["case_id"]].input_sha256,
+            "qa_evidence_sha256": evidence_digest,
+        }
+    return cases, bindings
 
 
 # --------------------------------------------------------------------------- digests
@@ -241,6 +247,7 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
     try:
         if not admitted_input_sha256 or not qa_evidence_sha256:
             raise AdmissionRefused("B1", "worker is missing parent admission identities")
+        phase = "load"
         ad = _adapter(adapter)
         if work.exists():
             shutil.rmtree(work)
@@ -425,13 +432,7 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
     A retry joins the back of the queue. If the worker pool breaks (a worker process died), its in-flight cases
     are recorded as ``infra_fault`` attempts (retried within ``max_attempts``), nothing more is submitted to it,
     and a new pool is started once they are drained; after ``MAX_POOL_RESTARTS`` restarts the batch stops."""
-    cases = check_cases(cases, qa=qa, expected_dll=expected_dll)
-    bindings = {
-        c["case_id"]: {
-            "admitted_input_sha256": qa.requests[c["case_id"]].input_sha256,
-            "qa_evidence_sha256": hashlib.sha256(record_payload(qa.requests[c["case_id"]].record)).hexdigest(),
-        } for c in cases
-    }
+    cases, bindings = check_cases(cases, qa=qa, expected_dll=expected_dll)
     workers = check_workers(min(max_workers, max(1, len(cases))))
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

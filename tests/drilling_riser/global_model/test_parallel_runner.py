@@ -332,3 +332,60 @@ def test_failed_case_leaves_no_orphan_sim_when_not_kept(monkeypatch, tmp_path):
     assert rec["status"] == "extraction_failed" and rec["sim_kept"] is None
     assert not (tmp_path / "work" / "F1" / "F1.sim").exists()
     assert not (tmp_path / "work" / "F1" / "model").exists()
+
+
+@pytest.mark.parametrize("filename", ("test_campaign.py", "test_w5_channels.py"))
+def test_native_batch_callers_supply_qa_context(filename):
+    import ast
+
+    tree = ast.parse(Path(__file__).with_name(filename).read_text())
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Attribute) and node.func.attr == "run_cases"]
+    assert calls
+    assert all(any(keyword.arg == "qa" for keyword in call.keywords) for call in calls)
+
+
+@pytest.mark.parametrize("error", (ImportError("missing adapter"), AttributeError("missing adapter")))
+def test_adapter_resolution_failure_is_a_load_failure(monkeypatch, tmp_path, error):
+    def fail(_):
+        raise error
+
+    monkeypatch.setattr(pr, "_adapter", fail)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == "load_failed"
+    assert rec["retry"] is False
+
+
+def test_worker_receives_the_validated_evidence_digest(monkeypatch, counting_pool, tmp_path):
+    from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext
+
+    cases = _cases(1)
+    qa = make_qa(cases, tmp_path / "qa", version="11.6c")
+    validate = AdmissionContext.validate
+    validated = {}
+
+    def mutate_after_validation(self, case, version):
+        digest = validate(self, case, version)
+        validated[case["case_id"]] = digest
+        self.requests[case["case_id"]].record["deviations"].append({"disposition": "changed"})
+        return digest
+
+    def worker(case, **kwargs):
+        assert kwargs["qa_evidence_sha256"] == validated[case["case_id"]]
+        return _ok(case, **kwargs)
+
+    monkeypatch.setattr(AdmissionContext, "validate", mutate_after_validation)
+    monkeypatch.setattr(pr, "run_one", worker)
+    result = pr.run_cases(cases, adapter="x:y", out_dir=tmp_path, max_workers=1, qa=qa)
+    assert result["results"][0]["status"] == "ok"
+
+
+def test_shared_qa_controls_select_both_consumer_shards():
+    import runpy
+
+    root = Path(__file__).resolve().parents[3]
+    detector = runpy.run_path(str(root / "scripts/ci/detect_touched_domains.py"))
+    domains = detector["parse_domains"](root / "tests/DOMAINS.md")
+    selected = detector["touched_domains"](["tests/solvers/orcaflex/qa_fixtures.py"], domains)
+    assert {domain.name for domain in selected} == {"orcaflex-solver", "subsea"}

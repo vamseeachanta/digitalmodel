@@ -25,7 +25,7 @@ def control(tmp_path):
 
 
 def admit(case, qa):
-    return runner.check_cases([case], qa=qa, expected_dll="test-version")
+    return runner.check_cases([case], qa=qa, expected_dll="test-version")[0]
 
 
 def test_valid_control_is_admitted_once_without_mutation(control):
@@ -195,7 +195,7 @@ def test_nonfinite_case_parameters_are_not_json_evidence(control):
 
 
 def test_empty_batch_needs_no_admission_records():
-    assert runner.check_cases([]) == []
+    assert runner.check_cases([]) == ([], {})
 
 
 def test_whole_batch_is_checked_before_any_output_or_worker(control, tmp_path, monkeypatch):
