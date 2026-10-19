@@ -1,0 +1,37 @@
+{
+  "source": {
+    "citation": "Vogel, J.V. (1968). Inflow Performance Relationships for Solution-Gas Drive Wells. JPT 20(1), 83-92. doi:10.2118/1476-PA",
+    "url": "https://blasingame.engr.tamu.edu/z_zCourse_Archive/P613_02A/Gas_IPR/00001476.pdf",
+    "sha256": "3f2ee7d96217878841083fc1b84e695d2271ce8cb0ec1a38b7badfc55ac16c89",
+    "equation_locator": "Eq. (1), printed p. 88",
+    "example_locator": "Use of Reference Curve, printed p. 89 (PDF page 7)",
+    "verified_on": "2026-10-18",
+    "verification": "Equation text and rendered example page read; numerical facts transcribed, PDF not redistributed."
+  },
+  "units": {
+    "pressure": "psi (consistent absolute datum)",
+    "rate": "BOPD (oil, not gross liquid)"
+  },
+  "published_inputs_comment": "All three inputs below are printed in the p. 89 example.",
+  "published_inputs": {
+    "reservoir_pressure_psi": 2000.0,
+    "test_pressure_psi": 1500.0,
+    "test_rate_bopd": 65.0
+  },
+  "published_outputs_comment": "p. 89 solution, not the subsequent prose's inconsistent 145 BOPD comparison. Half a displayed BOPD is the reproduction allowance, not a field-accuracy claim.",
+  "published_outputs": {
+    "qmax_bopd": 162.0,
+    "prediction_pressure_psi": 500.0,
+    "prediction_rate_bopd": 146.0,
+    "absolute_tolerance_bopd": 0.5
+  },
+  "hand_calculation_comment": "Independent substitution in Eq. (1): r=3/4 gives 1-0.15-0.45=0.4; 65/0.4=162.5. r=1/4 gives 1-0.05-0.05=0.9; 162.5*0.9=146.25. At r=0 and r=1 the factors are 1 and 0. The shut-in derivative gives PI=(0.2+2*0.8)*162.5/2000=0.14625. This PI is derived, not a published measurement, and is unused by from_test_point.",
+  "hand_calculation": {
+    "qmax_bopd": 162.5,
+    "prediction_rate_bopd": 146.25,
+    "shut_in_pi_bopd_psi": 0.14625,
+    "curve_pressure_psi": [0.0, 500.0, 1500.0, 2000.0],
+    "curve_rate_bopd": [162.5, 146.25, 65.0, 0.0]
+  },
+  "applicability": "Two-phase solution-gas drive; pr <= pb. The example does not give pb; tests set pb=pr only as a constructed saturated boundary, not as measured source data. No field-accuracy qualification."
+}

@@ -17,6 +17,10 @@ Models implemented:
 All models expose the same interface:
     flow_rate(pwf_psi)    → q (bopd)
     flowing_pressure(q)   → Pwf (psi)
+
+Vogel calibration: Vogel (1968), JPT 20(1), 83-92, doi:10.2118/1476-PA,
+Eq. (1), p. 88; stabilized-test example, p. 89. Readable source:
+https://blasingame.engr.tamu.edu/z_zCourse_Archive/P613_02A/Gas_IPR/00001476.pdf
 """
 
 from __future__ import annotations
@@ -96,6 +100,45 @@ class VogelIpr:
         Standard derivation: qmax = PI * Pr / 1.8
         """
         qmax = pi_bopd_psi * reservoir.reservoir_pressure_psi / 1.8
+        return cls(reservoir=reservoir, qmax_bopd=qmax)
+
+    @classmethod
+    def from_test_point(
+        cls,
+        reservoir: ReservoirConditions,
+        test_rate_bopd: float,
+        test_pressure_psi: float,
+    ) -> "VogelIpr":
+        """Calibrate oil qmax from a stabilized test using Vogel (1968), Eq. (1).
+
+        Rate is oil BOPD; pressures use a consistent absolute datum. The
+        two-phase solution-gas-drive assumption is supplied by the caller.
+        The reservoir must be at or below bubble point (p. 84). The PI field
+        is unused. Shut-in tests cannot identify qmax; invalid observations
+        raise ValueError rather than being clipped. This calibration does
+        not establish field prediction accuracy (paper, pp. 89-91).
+        """
+        pr = reservoir.reservoir_pressure_psi
+        pb = reservoir.bubble_point_psi
+        if not all(math.isfinite(v) for v in (pr, pb, test_rate_bopd, test_pressure_psi)):
+            raise ValueError("Reservoir pressures and test observations must be finite")
+        # Vogel (1968), Eq. (1), p. 88: pr is a positive normalizing pressure.
+        if pr <= 0.0:
+            raise ValueError("Reservoir pressure must be positive")
+        if pr > pb:
+            raise ValueError("Reservoir pressure must not exceed bubble point")
+        # Eq. (1), pp. 88-89: positive production and 0 <= pwf/pr < 1 for fitting.
+        if test_rate_bopd <= 0.0:
+            raise ValueError("Test oil rate must be positive")
+        if not 0.0 <= test_pressure_psi < pr:
+            raise ValueError("Require 0 <= test pressure < reservoir pressure")
+        ratio = test_pressure_psi / pr
+        # Vogel (1968), Eq. (1), p. 88: 1 - 0.2*r - 0.8*r**2
+        # = (1-r)*(1+0.8*r). Use (pr-pwf)/pr to avoid shut-in cancellation.
+        factor = ((pr - test_pressure_psi) / pr) * (1.0 + 0.8 * ratio)
+        qmax = test_rate_bopd / factor
+        if not math.isfinite(qmax):
+            raise ValueError("The calibrated maximum oil rate must be finite")
         return cls(reservoir=reservoir, qmax_bopd=qmax)
 
     def flow_rate(self, pwf_psi: float) -> float:
