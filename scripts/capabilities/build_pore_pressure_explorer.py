@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Build the drilling pore-pressure / mud-weight explorer.
 
-Runs the Eaton and Bowers pore-pressure predictors over a representative
-overpressured well (synthetic normal-compaction sonic log with an overpressure
-ramp), then writes a self-contained interactive HTML dashboard + raw JSON.
+Runs the Eaton pore-pressure predictor over a synthetic normal-compaction
+sonic log with an overpressure ramp, then writes an interactive HTML dashboard
+and raw JSON. Bowers is NOT_EVALUATED until a calibration is available.
 
 Outputs:
     docs/api/structural/pore-pressure-explorer.html
@@ -18,16 +18,18 @@ import json
 import warnings
 from pathlib import Path
 
-warnings.filterwarnings("ignore")
-
 from digitalmodel.well.drilling.pore_pressure import (
-    bowers_pore_pressure,
     eaton_pore_pressure,
 )
+
+warnings.filterwarnings("ignore")
 
 _REPO = Path(__file__).resolve().parents[2]
 _OUT_DIR = _REPO / "docs" / "api" / "structural"
 
+# Source for the unchanged illustrative inputs and trend coefficients below:
+# the repository's synthetic explorer fixture (pore-pressure-explorer.json).
+# All are assumed, based on previous experience; none is a calibrated field value.
 _PN = 8.6                         # normal pore-pressure gradient, ppg
 _ONSET_FT = 8000.0                # overpressure onset depth
 _DEPTH = [float(5000 + 500 * i) for i in range(0, 19)]   # 5000 .. 14000 ft
@@ -57,17 +59,25 @@ def build_study() -> dict:
     for z in _DEPTH:
         sv = _overburden(z)
         dtn, dto = _dt_normal(z), _dt_observed(z)
+        # Eaton (1975), SPE 5544: sonic equation documented in pore_pressure.py.
+        # On trend dto=dtn, hence Pp=Sv-(Sv-Pn)*1**n=Pn for any exponent.
         eaton = float(eaton_pore_pressure(overburden_emw_ppg=sv, normal_pressure_emw_ppg=_PN,
                                           observed=dto, normal=dtn, log_type="sonic"))
-        bowers = float(bowers_pore_pressure(overburden_emw_ppg=sv, tvd_ft=z, sonic_dt_us_ft=dto))
-        pp = max(eaton, bowers)          # governing pore prediction
+        # Bowers (1995), SPE 27488: Vp=V0+A*sigma_e**B needs calibrated
+        # coefficients (see pore_pressure.py, Methods). No such fit is supplied
+        # for this synthetic trend; library defaults must not govern the page.
+        pp = eaton
         pts.append({"z": int(z), "sv": round(sv, 2), "eaton": round(eaton, 2),
-                    "bowers": round(bowers, 2), "pp": round(pp, 2),
+                    "bowers": None, "pp": round(pp, 2),
                     "mw": round(pp + _KICK_MARGIN, 2)})
     return {
         "meta": {
             "pn": _PN, "onset_ft": int(_ONSET_FT), "kick_margin": _KICK_MARGIN,
-            "sv_max": 19.0, "standard": "Eaton (1975) + Bowers (1995) pore pressure",
+            "sv_max": 19.0, "standard": "Eaton (1975) pore pressure",
+            "governing_method": "eaton",
+            "bowers_status": "NOT_EVALUATED",
+            "bowers_reason": "No Bowers calibration is supplied for the synthetic trend.",
+            "data_basis": "assumed, based on previous experience",
         },
         "series": pts,
     }
@@ -112,11 +122,11 @@ _HTML = """<!DOCTYPE html>
  .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
 </style></head><body>
 <h1>Pore pressure &amp; mud weight &mdash; drilling explorer</h1>
-<p class="sub">Multi-method pore-pressure prediction down a representative overpressured well: the Eaton
-and Bowers predictors on a synthetic normal-compaction sonic log with an overpressure ramp below
-8,000&nbsp;ft. Drag the bit depth to read the governing pore gradient, the minimum safe mud weight,
-and the overburden ceiling. Every point is a live <code>eaton_pore_pressure</code> /
-<code>bowers_pore_pressure</code> evaluation.</p>
+<p class="sub">Illustrative Eaton pore-pressure prediction on a synthetic normal-compaction sonic log
+with an overpressure ramp below 8,000&nbsp;ft. Inputs and kick margin are assumed, based on previous experience.
+Drag the bit depth to read the governing pore gradient, the mud-weight indicator, and the overburden.
+Bowers is not evaluated: no calibration is supplied for this synthetic trend.
+Every evaluated point uses <code>eaton_pore_pressure</code>.</p>
 <div class="spec" id="spec"></div>
 
 <div class="panel">
@@ -158,7 +168,8 @@ function render(){
   const p = S[+slider.value];
   document.getElementById('zval').textContent = p.z.toLocaleString()+' ft';
   document.getElementById('rE').textContent = p.eaton.toFixed(2)+' ppg';
-  document.getElementById('rB').textContent = p.bowers.toFixed(2)+' ppg';
+  document.getElementById('rB').textContent = p.bowers === null ? M.bowers_status : p.bowers.toFixed(2)+' ppg';
+  document.getElementById('rB').title = M.bowers_reason;
   document.getElementById('rM').textContent = p.mw.toFixed(2)+' ppg';
   document.getElementById('rS').textContent = p.sv.toFixed(2)+' ppg';
   const win = document.getElementById('win');
