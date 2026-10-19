@@ -1,15 +1,28 @@
 name: Workflow Automation Tests
 
 on:
+  # Issue #1958: exercise dependency drift daily even without matching changes.
+  # UTC cron syntax: GitHub Actions workflow syntax, on.schedule (2026-10-19).
+  # The off-hour minute is an operational choice, not an acceptance limit.
+  schedule:
+    - cron: '43 6 * * *'
+  workflow_dispatch:
   push:
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
       - '.github/workflows/workflow-automation-tests.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'pytest.ini'
   pull_request:
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
+      - '.github/workflows/workflow-automation-tests.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'pytest.ini'
 
 jobs:
   test:
@@ -38,7 +51,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --no-sources -e ".[dev]"
+        # pytest-cov and the benchmark fixture are declared in the test extra.
+        uv pip install --no-sources -e ".[dev,test]"
 
     - name: Run workflow automation tests
       run: |
