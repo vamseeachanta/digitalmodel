@@ -16,7 +16,10 @@ from digitalmodel.cathodic_protection._edition import normalize_edition, standar
 from digitalmodel.cathodic_protection.b401_structures_phases_schema import (
     rule_citations,
 )
-from digitalmodel.cathodic_protection.b401_tables import protection_potential
+from digitalmodel.cathodic_protection.b401_tables import (
+    citation_label,
+    protection_potential,
+)
 from digitalmodel.reporting.spec import Block, TableBlock, TextBlock
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
@@ -248,24 +251,24 @@ def _difference(values: Mapping[str, float], key: str) -> str:
     difference = 100 * (supplied - demand) / demand
     return (
         f"Checked {quantity} is {supplied:.3f} {units}, a signed difference of "
-        f"{difference:.3f}% relative to the {demand:.3f} {units} demand."
+        f"{difference:.1f}% relative to the {demand:.3f} {units} demand."
     )
 
 
 def _installed_structure(results: Mapping[str, Any]) -> str:
     edition = normalize_edition(str(results.get("edition")))
-    criterion = protection_potential(edition).value
-    ver = _mapping(results.get("current_output_verification"))
-    labels = ver.get("citations") or []
-    label = next(
-        (str(item) for item in labels if "protective potential" in str(item)), ""
-    )
-    citation = f" (`{label}`)" if label else " (see Appendix A for citation evidence)"
+    # DNV-RP-B401: edition-specific protective-potential clause and value
+    # are kept together by the cited table lookup; no sizing data are needed.
+    cited = protection_potential(edition)
+    criterion = cited.value
+    citation = f" (`{citation_label(cited.citation)}`)"
     return (
         f"A structure-to-seawater potential survey is recommended against "
         f"{criterion:.3f} V versus Ag/AgCl/seawater{citation}; a measured potential "
         f"above {criterion:.3f} V should trigger investigation of protection "
-        "performance. Anode remaining mass should be measured to assess depletion. "
+        "performance. The survey should include remote or shielded members and "
+        "locations distant from anodes to assess spatial protection. "
+        "Anode remaining mass should be measured to assess depletion. "
         "See Appendix A for monitoring intervals, depletion criteria and condition data."
     )
 
@@ -277,18 +280,38 @@ def recommendation_block(results: Mapping[str, Any], key: str) -> TextBlock:
         f"**{key.replace('_', ' ')}: FAIL.**\n\n" if key != "overall_status" else ""
     )
     supported = key in _CHECKS or key == "overall_status"
-    try:
-        initial = _initial_design(results, key) if supported else "See Appendix A."
-        installed = _installed_structure(results) if supported else "See Appendix A."
-    except (KeyError, TypeError, ValueError, OverflowError):
-        initial = "See Appendix A for the missing sizing quantities."
-        installed = "See Appendix A for the applicable monitoring criterion."
+    missing_method = (
+        "NOT_EVALUATED: the applicable check method, quantities and governing "
+        "citation are required. See Appendix A."
+    )
+    initial = installed = retrofit = missing_method
+    if supported:
+        try:
+            initial = _initial_design(results, key)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            initial = (
+                "NOT_EVALUATED: complete routed sizing quantities and the "
+                "applicable edition are required. See Appendix A."
+            )
+        try:
+            installed = _installed_structure(results)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            installed = (
+                "NOT_EVALUATED: the applicable edition and its cited monitoring "
+                "criterion are required. See Appendix A."
+            )
+        retrofit = (
+            "Quantity and latest intervention year: NOT_EVALUATED. Confirmed "
+            "installed count and net mass, elapsed service, measured remaining mass, "
+            "measured potentials and historical and future current demand are "
+            "required. See Appendix A for method limitations."
+        )
     return TextBlock(
         markdown=(
             result + f"### {title}\n\n"
             f"**Initial design:** {initial}\n\n"
             f"**Installed structure:** {installed}\n\n"
-            "**Retrofit:** See Appendix A for quantity, timing and required condition data."
+            f"**Retrofit:** {retrofit}"
         )
     )
 
@@ -300,24 +323,28 @@ def conclusions_block(results: Mapping[str, Any]) -> TextBlock:
     if not keys:
         return TextBlock(markdown="\n".join([*lines, "No check fails."]))
     try:
+        normalize_edition(str(results.get("edition")))
         values = _quantities(results)
-        quantity = (
-            f"{values['additional']:.0f} additional anodes "
+        initial = (
+            f"initial design should use {values['additional']:.0f} additional anodes "
             f"({values['additional'] * values['mass']:.3f} kg additional net mass)"
         )
     except (KeyError, TypeError, ValueError, OverflowError):
-        quantity = "the sizing quantities in Appendix A"
+        initial = "initial design quantity is NOT_EVALUATED (see Appendix A)"
     for key in keys:
         title = f"Recommendation for {key.replace('_', ' ')}"
         if key not in _CHECKS and key != "overall_status":
             lines.append(
-                f"- {title}: initial design, monitoring and Retrofit: Appendix A."
+                f"- {title}: initial design, monitoring and Retrofit recommendations "
+                "are NOT_EVALUATED; the applicable method and citation are required "
+                "(Appendix A)."
             )
             continue
         lines.append(
-            f"- {title}: initial design should use {quantity}; an installed "
+            f"- {title}: {initial}; an installed "
             "structure should receive a potential survey against the criterion "
-            "and action trigger in that block. Retrofit quantity and timing: Appendix A."
+            "and action trigger in that block. Retrofit quantity and timing: "
+            "NOT_EVALUATED (Appendix A)."
         )
     return TextBlock(markdown="\n".join(lines))
 
