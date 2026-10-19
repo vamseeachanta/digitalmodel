@@ -685,6 +685,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_stability_screening
   - module: viv_screening
     entry_point: src/digitalmodel/viv_screening/
+    submodules:
+      viv_screening:
+        agent_pack: src/digitalmodel/viv_screening/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: examples/workflows/riser-viv-screening/README.md
     key_tests: [tests/workflows/test_viv_screening_workflow.py, tests/workflows/test_durable_workflows.py]
