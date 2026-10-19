@@ -50,17 +50,17 @@ def test_irregular_spacing_weights_segments_and_preserves_input():
     pd.testing.assert_frame_equal(grid, before)
 
 
-def test_columns_are_independent_and_translation_preserves_geometry():
-    """Hand: constant walls 3 and 8 retain their value for all intervals;
-    three endpoints produce 3 intervals per column, lengths 2,5,3.
+def test_critical_profile_and_translation_preserve_geometry():
+    """Hand: constant planes 3 and 8 give critical wall 3 for all intervals;
+    the minimum profile has 3 intervals, lengths 2,5,3.
     Translating every coordinate adds no segment length or area.
     """
     values = [[3, 8], [3, 8], [3, 8]]
     original = evaluate(values, [0, 2, 5])
     translated = evaluate(values, [100, 102, 105])
     assert original == translated
-    assert original[0] == pytest.approx([3, 3, 3, 8, 8, 8])
-    assert original[1] == [2, 5, 3, 2, 5, 3]
+    assert original[0] == pytest.approx([3, 3, 3])
+    assert original[1] == [2, 5, 3]
 
 
 @pytest.mark.parametrize("coordinates", [[0, 0, 1], [2, 1, 0], [0, 2, 1]])
@@ -100,7 +100,7 @@ def test_zero_wall_is_retained():
     assert evaluate([0, 4], [0, 2]) == ([2], [2])
 
 
-@pytest.mark.parametrize("entrypoint", ["API579LML", "lml"])
+@pytest.mark.parametrize("entrypoint", ["API579LML", "lml", "short_pitch"])
 def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
     """Exercise result assembly with pressure routines isolated: their dummy
     outputs are not engineering reference values. Geometry uses three measured
@@ -166,6 +166,29 @@ def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
             "RSF": 1,
         },
     )
+    if entrypoint == "short_pitch":
+        # Real pressure evaluation; only the pipe-capacity dependency is isolated.
+        monkeypatch.undo()
+        monkeypatch.setattr(component, "getMAWP", lambda *args: 1)
+        cfg.Outer_Pipe["Geometry"].update(Nominal_OD=25, Design_WT=0.5)
+        cfg.Geometry["NominalID"] = 24
+        cfg.API579Parameters.update(
+            RSFa=0.9,
+            FoliasFactor={
+                "FlawParameter": [0, 1, 20, 30],
+                "Mt": {"Cylindrical": [1, 2, 4, 6]},
+            },
+        )
+        cfg.LML["LTA"][0]["grid"] = {
+            "values": [[0.3, 0.5], [0.3, 0.5], [0.4, 0.5]],
+            "index": [0, 0.5, 1],
+        }
+        results = component.lml()["Result"]["LML"][0]
+        assert np.isfinite(results[0]["Mt, L2"])
+        assert np.isfinite(results[0]["MAWPr, L2"])
+        assert "s uses index span + 1" in results[0]["Level 2 limitation"]
+        assert "Level 2 uses endpoint distance" in results[0]["Level 2 limitation"]
+        return
     grid = pd.DataFrame([[4, 10], [4, 10], [8, 10]], index=[0, 2, 5], dtype=float)
     if entrypoint == "lml":
         results = component.lml()["Result"]["LML"][0]
@@ -173,3 +196,43 @@ def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
         results = component.API579LML(grid, cfg, 0)
     assert results[0]["Level 2 qualification"] == "NOT_EVALUATED"
     assert "edition-specific" in results[0]["Level 2 limitation"]
+
+
+def test_switching_minimum_planes_forms_one_critical_profile():
+    """Row minima [2,2,2] give mean 2 for all three intervals;
+    each original plane instead gives whole-profile mean 4 or 6.
+    """
+    assert evaluate([[2, 10], [10, 2], [2, 10]], [0, 1, 2]) == (
+        [2, 2, 2],
+        [1, 2, 1],
+    )
+
+
+@pytest.mark.parametrize("flaw_parameter", [0, 0.2, 0.354, 20, 21])
+@pytest.mark.parametrize("level", [1, 2])
+@pytest.mark.parametrize("rt", [0.1, 0.95])
+def test_folias_boundaries_use_configured_table(flaw_parameter, level, rt):
+    """Synthetic table: interpolation is 1 + lambda/10; no code values.
+    Both screening outcomes must return a defined factor and finite pressure.
+    """
+    cfg = {
+        "API579Parameters": {
+            "FoliasFactor": {
+                "FlawParameter": [0, 30], "Mt": {"Cylindrical": [1, 4]}
+            }
+        }
+    }
+    result = API579_components({}).LMLMAWPrEvaluation(
+        {
+            "LongitudinalFlawLengthParameter": flaw_parameter,
+            "Rt": rt,
+            "RSFa": 0.9,
+            "MAWP": 100,
+            "AARatio": rt,
+        },
+        cfg,
+        Level=level,
+    )
+    assert result["Mt"] == pytest.approx(1 + flaw_parameter / 10)
+    assert np.isfinite(result["MAWPr"])
+    assert np.isfinite(result["RSF"])

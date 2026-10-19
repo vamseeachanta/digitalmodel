@@ -989,7 +989,10 @@ class API579_components():
                 "Level 2 qualification": "NOT_EVALUATED",
                 "Level 2 limitation": (
                     "Spatial integration only; edition-specific API 579 "
-                    "procedure and pressure equations remain unqualified."
+                    "procedure and pressure equations remain unqualified. "
+                    "s uses index span + 1; Level 2 uses endpoint distance. "
+                    "Folias interpolation clamps outside the supplied table range; "
+                    "table coverage and source values require qualification."
                 ),
                 "Mt, L2": min(MtL2),
                 "tavg": trd
@@ -1014,17 +1017,20 @@ class API579_components():
     def LMLMAWPrEvaluation(self, data, cfg, Level):
         import numpy as np
 
+        RSFa = data['RSFa']
+        # API 579-1/ASME FFS-1, Fitness-For-Service (2016), Part 5,
+        # Table 5.2, Folias Factor: use the caller-supplied cylindrical table.
+        # Source values and edition coverage remain the caller's responsibility;
+        # this interpolation adds no standards-derived constants.
+        Mt = np.interp(
+            data['LongitudinalFlawLengthParameter'],
+            cfg['API579Parameters']['FoliasFactor']['FlawParameter'],
+            cfg['API579Parameters']['FoliasFactor']['Mt']['Cylindrical'])
         if data['LongitudinalFlawLengthParameter'] <= 0.354:
             RtFloor = 0.2
-        elif data['LongitudinalFlawLengthParameter'] < 20:
-            RSFa = data['RSFa']
-            # TODO: Bring Table into an Excel sheet format or array format
-            Mt = np.interp(
-                data['LongitudinalFlawLengthParameter'],
-                cfg['API579Parameters']['FoliasFactor']['FlawParameter'],
-                cfg['API579Parameters']['FoliasFactor']['Mt']['Cylindrical'])
+        elif data['LongitudinalFlawLengthParameter'] <= 20:
             RtFloor = (RSFa - RSFa / Mt) / (1 - RSFa / Mt)
-        elif data['LongitudinalFlawLengthParameter'] > 20:
+        else:
             RtFloor = 0.9
 
         if data['Rt'] > RtFloor:
@@ -1056,12 +1062,17 @@ class API579_components():
         """Return geometric mean walls and lengths for contiguous intervals.
 
         Rows are strictly increasing longitudinal coordinates, columns are
-        independent profiles. Coordinates and walls must share a length unit.
+        circumferential planes. The critical profile is the minimum wall at
+        each longitudinal station. Coordinates and walls share a length unit.
         Every pair of measured endpoints is included, without extrapolation or
         sorting readings. Piecewise-linear wall is assumed between readings.
-        Ordering is column, start row, end row. ``data`` is retained for callers.
+        Ordering is start row, end row. ``data`` is retained for callers.
 
-        Source: NIST DLMF (2010), §3.5(i), Eq. 3.5.1,
+        Profile basis: API 579-1/ASME FFS-1, Fitness-For-Service (2016),
+        Part 5, Required Data/Measurements for a FFS Assessment; Part 4,
+        Required Data/Measurements for a FFS Assessment (critical profiles).
+
+        Integration source: NIST DLMF (2010), §3.5(i), Eq. 3.5.1,
         https://dlmf.nist.gov/3.5.E1, applied separately to each segment:
         A = sum((x[k+1]-x[k]) * (t[k]+t[k+1])/2), mean = A/(x[end]-x[start]).
         This is exact for the assumed linear segments; the factor 2 is the
@@ -1089,15 +1100,15 @@ class API579_components():
 
         tavgi = []
         s = []
-        for column in range(walls.shape[1]):
-            for start in range(len(coordinates) - 1):
-                area = 0.0
-                for end in range(start + 1, len(coordinates)):
-                    pitch = coordinates[end] - coordinates[end - 1]
-                    # NIST DLMF (2010), Eq. 3.5.1: trapezoidal segment area.
-                    area += pitch * (walls[end - 1, column] + walls[end, column]) / 2
-                    length = coordinates[end] - coordinates[start]
-                    s.append(float(length))
-                    tavgi.append(float(area / length))
+        critical_wall = walls.min(axis=1)
+        for start in range(len(coordinates) - 1):
+            area = 0.0
+            for end in range(start + 1, len(coordinates)):
+                pitch = coordinates[end] - coordinates[end - 1]
+                # NIST DLMF (2010), Eq. 3.5.1: trapezoidal segment area.
+                area += pitch * (critical_wall[end - 1] + critical_wall[end]) / 2
+                length = coordinates[end] - coordinates[start]
+                s.append(float(length))
+                tavgi.append(float(area / length))
 
         return (tavgi, s)
