@@ -227,6 +227,10 @@ def operation_envelope(
     ``rao_set`` supplies per-DOF RAO magnitude (m/m for translations, deg/m for
     rotations). The envelope at each Tp is the worst case over ``headings``
     (default: all RAO headings) and the operation's criteria DOFs.
+
+    Numerical evaluation does not qualify the screening inputs. The citation
+    sidecar records the limits used and explicit standards evidence gaps;
+    alpha selection dependencies remain unknown (see envelope-basis.md).
     """
     op = resolve_operation(operation)
     validate_operation(op)
@@ -245,12 +249,41 @@ def operation_envelope(
               for tp in tps]
     return EnvelopeResult(
         vessel=rao_set.vessel_name, operation=op.key, alpha=op.alpha, points=points,
-        alpha_source={'status': 'unverified_screening', 'table_reference': None,
-                      'basis': op.basis, 'value': op.alpha},
-        citation_sidecar={'source_sibling': 'generic', 'limits_status': 'unverified_screening',
-                         'reference': 'docs/envelope-basis.md',
-                         'equations': ['B1', 'B2', 'B3', 'B4', 'B5'],
-                         'catalogue_table': 'B6', 'standard_clause': None},
+        alpha_source={
+            'status': 'unverified_screening', 'table_reference': None,
+            'basis': op.basis, 'value': op.alpha,
+            # Issue #2769 acceptance and audit #2747, section 12: these are
+            # alpha selection dependencies, not Tp or the spectral Hs_ref.
+            'dependencies': {
+                'planned_operation_period_h': None,
+                'design_hs_m': None,
+                'forecast_level': None,
+            },
+        },
+        citation_sidecar={
+            'source_sibling': 'generic', 'limits_status': 'unverified_screening',
+            'reference': 'docs/envelope-basis.md',
+            'equations': ['B1', 'B2', 'B3', 'B4', 'B5'],
+            'catalogue_table': 'B6' if op == OPERATIONS.get(op.key) else None,
+            'standard_clause': None,
+            'motion_limits': [
+                {'dof': limit.dof, 'max_significant': limit.max_significant,
+                 'unit': limit.unit}
+                for limit in op.limits
+            ],
+            # No designation, edition, clause or table has been verified.
+            # A caller's basis string is descriptive, not qualification evidence.
+            'qualification': {
+                'status': 'NOT_EVALUATED',
+                'reason': 'Standard evidence and alpha selection inputs are unavailable.',
+                'standard_designation': None,
+                'standard_edition': None,
+                'motion_limit_clause': None,
+                'alpha_clause': None,
+                'alpha_table': None,
+                'evidence_reference': None,
+            },
+        },
     )
 
 
