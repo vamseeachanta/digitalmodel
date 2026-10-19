@@ -5,7 +5,7 @@
 | Module | `mooring_fatigue` |
 | Repository | `digitalmodel` |
 | Package path | `src/digitalmodel/mooring_fatigue` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `29a87f1aba14aa22067794846aa5c2ec8bf407c1` |
 | Analysis family | Engineering calculations (`EC`), AQG r0 Python calculations |
 | Quality role | Engineering calculations quality manager |
@@ -23,7 +23,18 @@ The routing registry records development maturity; the engine dispatches basenam
 
 The package performs scalar fatigue screening on supplied loading; its computation route has no geometry, water-depth, heading, coordinate-origin or phase input, and material labels do not select different fatigue curves. [src/digitalmodel/mooring_fatigue/workflow.py:L23-L85] [src/digitalmodel/mooring_fatigue/workflow.py:L88-L149] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L186]
 
-UNVERIFIED: suitability of the selected detail curve for a particular chain or wire construction, and a numerical geometry or water-depth applicability envelope; issue pending (2).
+The only curve route applies a DNV-RP-C203 welded-detail class, default `D` / `seawater_cp`, to the nominal stress supplied for `CHAIN` or `STEEL-WIRE`. There is no mooring-component curve selection or minimum-breaking-strength (MBS) normalised T-N route. Material tags do not qualify this use. [src/digitalmodel/mooring_fatigue/workflow.py:L27-L28] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L186] [src/digitalmodel/fatigue/sn_curves.py:L96-L134]
+
+`area_mm2` has no defined structural basis: link-bar versus two-leg area, and nominal versus corroded or worn area, are not distinguished. Supplied area directly divides tension; it must be established together with a component-qualified fatigue curve before design use. [src/digitalmodel/mooring_fatigue/workflow.py:L101-L107] [src/digitalmodel/mooring_fatigue/workflow.py:L111-L121] [src/digitalmodel/mooring_fatigue/workflow.py:L196-L197]
+
+UNVERIFIED: construction-specific curve suitability, the area basis and a numerical geometry or water-depth applicability envelope; issue pending (2).
+
+### Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 0 | 2026-10-18 | Initial source-cited pack, regression evidence and implementation inventory. |
+| 1 | 2026-10-19 | State curve and area limitations; correct tolerances, incident exposure, history caveats and map classifications. |
 
 ## 2. Inputs and outputs
 
@@ -61,11 +72,15 @@ Scalar histories are counted without a time array, and supplied bin counts are p
 
 | Method | Implementation and basis | Provenance boundary |
 |---|---|---|
-| Tension-to-stress | Stress range in MPa = tension range in kN × 1000 / area in mm²; direct stress is used unchanged. [src/digitalmodel/mooring_fatigue/workflow.py:L99-L134] | Unit conversion, not a structural model; no mean-stress correction on the bin route. [src/digitalmodel/mooring_fatigue/workflow.py:L111-L134] |
-| History processing | `_history_bins` calls `rainflow_count`, `stress_histogram` and multiplies resulting counts by repeat count. [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] | Upstream docstring names ASTM E1049-85, *Standard Practices for Cycle Counting in Fatigue Analysis*, and pyLife rainflow documentation; no clause is supplied; clause text not checked against the licensed copy. [src/digitalmodel/fatigue/rainflow.py:L1-L10] |
-| Allowable cycles | Router selects `get_sn_curve`; that function constructs the pyLife curve from the fatigue package's data. [src/digitalmodel/mooring_fatigue/workflow.py:L27-L28] [src/digitalmodel/fatigue/sn_curves.py:L96-L134] | DNV-RP-C203, *Fatigue Design of Offshore Steel Structures*, 2021 is the code label, while the data verification label is 2011; equality across editions is explicitly not established; clause text not checked against the licensed copy. [src/digitalmodel/fatigue/sn_library.py:L34-L35] [src/digitalmodel/fatigue/c203_editions.py:L19-L37] |
+| Tension-to-stress | Stress range in MPa = tension range in kN × 1000 / area in mm²; direct stress is used unchanged. [src/digitalmodel/mooring_fatigue/workflow.py:L99-L134] | Unit conversion, not a structural model; no defined link-bar/two-leg or nominal/corroded/worn area basis, and no mean-stress correction on either the bin or history route. [src/digitalmodel/mooring_fatigue/workflow.py:L111-L134] |
+| History processing | `_history_bins` calls `rainflow_count`, `stress_histogram` and multiplies resulting counts by repeat count. [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] | The histogram discards counted mean stress and uses bin centres; ranges above a centre are understated, so damage depends on `n_bins`. [src/digitalmodel/fatigue/rainflow.py:L103-L127] Upstream docstring names ASTM E1049-85, *Standard Practices for Cycle Counting in Fatigue Analysis*, and pyLife rainflow documentation; no clause is supplied; clause text not checked against the licensed copy. [src/digitalmodel/fatigue/rainflow.py:L1-L10] |
+| Allowable cycles | Router selects `get_sn_curve`; that function constructs the pyLife curve from the fatigue package's data. [src/digitalmodel/mooring_fatigue/workflow.py:L27-L28] [src/digitalmodel/fatigue/sn_curves.py:L96-L134] | DNV-RP-C203, *Fatigue Design of Offshore Steel Structures*, 2021 is the code label, while the data verification label is 2011; equality across editions is explicitly not established; clause text not checked against the licensed copy. [src/digitalmodel/fatigue/sn_curves.py:L1-L11] [src/digitalmodel/fatigue/c203_editions.py:L19-L37] |
 | Miner accumulation | `_evaluate_line` delegates to `miner_damage`: bin damage = applied cycles / allowable cycles, total = sum of bin damage. [src/digitalmodel/mooring_fatigue/workflow.py:L69-L71] [src/digitalmodel/fatigue/damage.py:L33-L39] | Shared implementation; the parametric response uses the same curve and damage functions and is not an independent reference. [src/digitalmodel/parametric/generate.py:L28-L45] |
 | Life / margin | Life = design life / damage, required life = design life × DFF, margin = life / required life; nonpositive damage returns infinity; governing line maximises damage. [src/digitalmodel/mooring_fatigue/workflow.py:L37-L53] [src/digitalmodel/mooring_fatigue/workflow.py:L70-L83] [src/digitalmodel/mooring_fatigue/workflow.py:L230-L239] | Positive-damage bin calculations and history calculations follow the same life route. [src/digitalmodel/mooring_fatigue/workflow.py:L69-L74] |
+
+The selected DNV-RP-C203 welded-detail S-N class is the only fatigue-curve family available to this router; the default `D` / `seawater_cp` applies equally to chain and steel wire. Neither mooring-component curves nor an MBS-normalised T-N route are implemented here. Separate chain-labelled DNV-OS-E301 parameters exist in `mooring_resilience`, but this router does not use them; their existence is not component qualification of this route. [src/digitalmodel/mooring_fatigue/workflow.py:L13-L15] [src/digitalmodel/mooring_fatigue/workflow.py:L27-L28] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L197] [src/digitalmodel/fatigue/sn_curves.py:L96-L134] [src/digitalmodel/mooring_resilience/screening.py:L69-L71]
+
+With fixed counts and on a single S-N segment, damage scales as stress to the segment exponent: doubling the supplied area halves stress and reduces damage by a factor of 8.0 to 32.0 for exponents 3 to 5. This arithmetic sensitivity does not resolve which area or curve is appropriate for the component. [src/digitalmodel/mooring_fatigue/workflow.py:L111-L121] [src/digitalmodel/fatigue/damage.py:L33-L39] [src/digitalmodel/fatigue/sn_curves.py:L12-L15]
 
 The router's returned mapping contains curve/environment identifiers but no `Citation` sidecar or standard-edition field; the atlas separately stamps a standard-edition label. [src/digitalmodel/mooring_fatigue/workflow.py:L43-L57] [src/digitalmodel/parametric/refresh.py:L32-L35]
 
@@ -75,15 +90,17 @@ UNVERIFIED: equivalence of the implemented and data-verified standard editions, 
 
 Validated examples: 0; the listed regression cases compare internal identities, positivity, ordering or interpolation against the same fatigue implementation, rather than an independent physical reference. [tests/workflows/test_durable_workflows.py:L137-L168] [tests/parametric/test_atlas.py:L37-L59] [src/digitalmodel/parametric/generate.py:L28-L45]
 
-| Case / kind | Input and expected quantity | Tolerance and basis | Existing test node ID | Offline result at the code revision |
+| Case / kind | Input and expected quantity | Tolerance and basis | Existing test node ID | Historical offline result at the code revision |
 |---|---|---|---|---|
 | Metallic bins v1 / regression | `examples/workflows/mooring-fatigue/input.yml`; governing ID `wire-01`, 6 detail rows, 2 line IDs, positive stress in MPa and dimensionless damage; life = design life / damage. [tests/workflows/test_durable_workflows.py:L137-L168] | Counts/IDs exact; identity uses `pytest.approx` default relative 1e-6 and absolute 1e-12, a numerical regression tolerance. [tests/workflows/test_durable_workflows.py:L152-L159] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue0]` | PASS before and after; registry v1 is offline. [docs/registry/workflows.yaml:L84-L96] |
 | Metallic bins v2 / regression | `examples/workflows/mooring-fatigue-v2/input.yml`; same count/identity assertions with free-corrosion environment. [examples/workflows/mooring-fatigue-v2/input.yml:L9-L36] [tests/workflows/test_durable_workflows.py:L137-L168] | Same numerical tolerance as v1; no independent allowable-cycle reference. [tests/workflows/test_durable_workflows.py:L152-L159] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue1]` | PASS before and after; registry v2 is experimental and offline. [docs/registry/workflows.yaml:L120-L131] |
-| Atlas query / regression | `examples/workflows/mooring-fatigue-atlas-query/input.yml`; positive life query in years and an in-range flag, not a physical benchmark. [tests/workflows/test_durable_workflows.py:L227-L240] | Positive life in years and exact boolean checks; no published tolerance. [tests/workflows/test_durable_workflows.py:L227-L240] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue-atlas-query]` | PASS before and after; offline registry route. [docs/registry/workflows.yaml:L132-L139] |
+| Atlas query / regression | `examples/workflows/mooring-fatigue-atlas-query/input.yml`; positive life query in years and an in-range flag, not a physical benchmark. [tests/workflows/test_durable_workflows.py:L227-L240] | Positive life in years, exact boolean checks and `lo <= value <= hi` for the confidence band. The atlas registry sets dimensionless `max_rel_error` ≤ 0.10; the holdout test asserts the same threshold against the shared implementation, not a physical reference. [tests/workflows/test_durable_workflows.py:L227-L240] [docs/registry/workflows.yaml:L97-L101] [tests/parametric/test_atlas.py:L37-L40] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue-atlas-query]` | PASS before and after; offline registry route. [docs/registry/workflows.yaml:L132-L139] |
 
-Execution record: `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the three nodes above plus `tests/parametric/test_atlas.py`, `tests/parametric/test_refresh.py` and `tests/parametric/test_catalog.py` run in a temporary copy because workflow tests write their registered outputs. [tests/workflows/test_durable_workflows.py:L55-L96]
+Historical execution record (revision 0): `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the three nodes above plus `tests/parametric/test_atlas.py`, `tests/parametric/test_refresh.py` and `tests/parametric/test_catalog.py` run in a temporary copy because workflow tests write their registered outputs. [tests/workflows/test_durable_workflows.py:L55-L96]
 
-Both BASE and AFTER recorded 58 run / 58 passed / 0 failed / 0 skipped / 0 NOT_RUN at the header code revision; source bytes are unchanged. Contract and routing checks separately recorded 497 run / 497 passed / 0 failed / 0 skipped / 0 NOT_RUN before and after the registry edit. All commands ran on the uncommitted tree; no solver was started.
+The revision-0 record gives 58 run / 58 passed / 0 failed / 0 skipped / 0 NOT_RUN before and after the registry edit at the header code revision. The contract/routing set is `tests/contracts` and `tests/docs/test_digitalmodel_routing_contract.py`; its revision-0 record gives 497 passed. Those results are historical.
+
+Revision-1 execution (2026-10-19), BASE `59d58af53ea38b2bfd4d4e6e90f6c030adca51c0` and uncommitted AFTER: the explicitly named contract/routing set collected 497 tests at each state, with 494 passed / 0 failed / 3 skipped. Two skips are unavailable `assetutilities` 0.1.1 APIs (`units.quantity`, `unit_checked`); one is installed-package metadata absent from the checkout. No declared extra supplies those missing APIs. The 58-test workflow/parametric set was NOT_RUN: dependency resolution reported that `pylife>=2.2` has no usable wheel in this environment; a source build was not attempted. C01–C03, C05 and C08 diagnostics also need that dependency and were not rerun. Package source bytes remain identical to the code pin and BASE; no solver was started.
 
 ## 5. QA gates
 
@@ -91,7 +108,7 @@ Gate selection follows AQG r0, section 10, Python calculations; G5 follows secti
 
 | Gate | Applicability | Module-specific checks |
 |---|---|---|
-| G0 | Applicable: inputs, units and citations | C01, C02, C03 |
+| G0 | Applicable: inputs, units and citations | C01, C02, C03, C09 |
 | G1 | Applicable: Python import and tests; the router writes CSV, so no external-program load route is required. [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58] | C04 |
 | G2 | Applicable: independent arithmetic and same-engine regressions distinguished | C05, C06 |
 | G3 | NOT_APPLICABLE: no dynamic solver launch in the router. [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58] | None |
@@ -105,11 +122,12 @@ These are executable acceptance criteria; a failed check documents a module limi
 | C01 | G0 | For each of `_positive_float` and `_first_float`, supply NaN and positive infinity; pass = 0 nonfinite scalar values accepted (count). [src/digitalmodel/mooring_fatigue/workflow.py:L210-L227] | Scratch audit before / after: FAIL, 4 accepted; issue pending (1). |
 | C02 | G0 | `_stress_bins` with history `[0,20,0,20,0]` MPa and `n_repeats=0`, and a line containing both stress and tension bins: pass = 0 invalid repeat values / conflicting routes accepted (count); histories require integer `n_bins` ≥ 1 bin and finite repeats > 0 dimensionless. [src/digitalmodel/mooring_fatigue/workflow.py:L88-L107] [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] | Scratch audit before / after: FAIL, zero repeat and simultaneous routes accepted; issue pending (1). |
 | C03 | G0 | Call `router` on two otherwise valid unnamed lines: pass = 0 duplicate `line_id` values (count); explicitly record selected curve, material, exposure and unit aliases before evaluation. [src/digitalmodel/mooring_fatigue/workflow.py:L67-L85] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L186] | Scratch audit before / after: FAIL, 1 duplicate; issue pending (3); exposure contract issue pending (2). |
-| C04 | G1 | Import workflow via the section-4 test command; pass = 58 passed tests, 0 failed tests and 0 collection errors (counts). [tests/workflows/test_durable_workflows.py:L55-L96] [tests/parametric/test_atlas.py:L37-L59] | BASE / AFTER PASS: 58 passed each. |
+| C04 | G1 | Import workflow via the section-4 test command; pass = 58 passed tests, 0 failed tests and 0 collection errors (counts). [tests/workflows/test_durable_workflows.py:L55-L96] [tests/parametric/test_atlas.py:L37-L59] | Historical BASE / AFTER PASS: 58 passed each; revision 1 NOT_RUN, unavailable pyLife wheel (section 4). |
 | C05 | G2 | `_evaluate_line` with a test curve returning 1000 allowable cycles, tension 2.0 kN, area 100.0 mm², count 5.0, life 25.0 years, DFF 3.0: independently calculate stress 20.0 MPa, damage 5/1000, life 5000.0 years and required life 75.0 years; pass = stress error 0 MPa, damage/margin error ≤ 1e-12 dimensionless, life error ≤ 1e-9 years. [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85] [src/digitalmodel/mooring_fatigue/workflow.py:L111-L121] | Scratch arithmetic audit PASS before and after; arbitrary test curve, no standard-derived coefficients and no physical qualification. |
-| C06 | G2 | Run `tests/parametric/test_atlas.py::test_grid_point_is_exact` and `tests/parametric/test_atlas.py::test_n_cycles_is_exactly_linear`: pass = dimensionless damage relative error ≤ 1e-9 at a knot and ≤ 1e-6 for off-grid cycle counts, respectively. [tests/parametric/test_atlas.py:L43-L59] | BASE / AFTER PASS; shared damage implementation, regression evidence only. |
-| C07 | G5 | Read workflow detail/summary CSVs: pass = 6 detail rows, 2 unique line IDs, 0 nonpositive stresses (MPa) and 0 nonpositive damage values (dimensionless); life identity relative error ≤ 1e-6. [tests/workflows/test_durable_workflows.py:L137-L168] | BASE / AFTER PASS; file hashes and logs retained with the execution record. |
+| C06 | G2 | Run `tests/parametric/test_atlas.py::test_grid_point_is_exact` and `tests/parametric/test_atlas.py::test_n_cycles_is_exactly_linear`: pass = dimensionless damage relative error ≤ 1e-9 at a knot and ≤ 1e-6 for off-grid cycle counts, respectively. [tests/parametric/test_atlas.py:L43-L59] | Historical BASE / AFTER PASS; revision 1 NOT_RUN (section 4); shared damage implementation, regression evidence only. |
+| C07 | G5 | Read workflow detail/summary CSVs: pass = 6 detail rows, 2 unique line IDs, 0 nonpositive stresses (MPa) and 0 nonpositive damage values (dimensionless); life identity relative error ≤ 1e-6. [tests/workflows/test_durable_workflows.py:L137-L168] | Historical BASE / AFTER PASS; revision 1 NOT_RUN (section 4); file hashes and logs retained with the earlier execution record. |
 | C08 | G5 | Evaluate `_display_path` outside the repository and inspect router output: pass = 0 absolute metadata paths (count) and 1 revision-bound citation sidecar per calculation (count); retain input/output SHA-256 records with 0 digest mismatches (count). [src/digitalmodel/mooring_fatigue/workflow.py:L43-L57] [src/digitalmodel/mooring_fatigue/workflow.py:L281-L286] | Scratch audit before / after: FAIL, 1 absolute path and 0 citation sidecars; issue pending (2), issue pending (3). |
+| C09 | G0 | Inspect pinned `router`, `_material`, `_curve_settings` and `_line_area_mm2`, then the called `get_sn_curve`: pass = 1 component-qualified curve-family contract and 1 explicit structural area-basis contract (counts), including link-bar/two-leg and nominal/corroded/worn distinctions. [src/digitalmodel/mooring_fatigue/workflow.py:L23-L28] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L197] [src/digitalmodel/fatigue/sn_curves.py:L96-L134] | Source audit BASE / AFTER: FAIL, 0 component-qualified curve contracts and 0 structural area-basis contracts; S33/S34, issue pending (2). No calculation behaviour changed. |
 
 For reproducibility, C01–C03, C05 and C08 can be executed with the following solver-free Python recipe; put its outputs under a temporary directory.
 
@@ -151,9 +169,17 @@ with TemporaryDirectory() as tmp:
     print("C08 citation sidecars", int("citations" in result))
 ```
 
+
+C09 is a source-contract audit, separate from numerical qualification. Read the following pinned definitions and check for an explicit component-curve contract and structural area-basis contract; both are absent. The numeric defaults and positive-area conversion alone do not meet either criterion.
+
+```sh
+git show 29a87f1aba14aa22067794846aa5c2ec8bf407c1:src/digitalmodel/mooring_fatigue/workflow.py | sed -n '23,28p;175,197p'
+git show 29a87f1aba14aa22067794846aa5c2ec8bf407c1:src/digitalmodel/fatigue/sn_curves.py | sed -n '96,134p'
+```
+
 ## 6. Known failure modes and pitfalls
 
-sweep: 32 found
+sweep: 35 found
 
 The sweep covers both package Python files, including conversions and normal defaults as potential pitfalls; rows distinguish unchecked behaviour from checked or internal conversions. [src/digitalmodel/mooring_fatigue/__init__.py:L1-L1] [src/digitalmodel/mooring_fatigue/workflow.py:L1-L286]
 
@@ -164,14 +190,14 @@ rg -n 'except|continue|return None|return \[\]|return \{\}|\b0(\.0)?\b|1970|0\.0
 rg -n 'int\(|float\(|dtype=float|\.get\(|1000|MPa|mm2|kN|years|open\(|write|cache' src/digitalmodel/mooring_fatigue --glob '*.py'
 ```
 
-All rows were recorded on 2026-10-18 at the code revision in the header.
+S01–S32 were recorded on 2026-10-18; S33–S35 were added on 2026-10-19. All sites refer to the code revision in the header.
 
 | ID | Site / symptom and cause | Detection or coverage boundary | Tracking |
 |---|---|---|---|
 | S01 | Missing settings becomes an empty dictionary; required life/factor checks then raise. [src/digitalmodel/mooring_fatigue/workflow.py:L24-L26] | C01 covers scalar guard only | issue pending (1) |
 | S02 | Missing IDs fall back to the same `line` identifier, potentially hiding distinct lines. [src/digitalmodel/mooring_fatigue/workflow.py:L67-L68] | C03 | issue pending (3) |
 | S03 | Multiple loading representations silently select stress bins, tension bins, stress history, then tension history. [src/digitalmodel/mooring_fatigue/workflow.py:L88-L108] | C02 | issue pending (1) |
-| S04 | Tension-history float conversion assumes kN and mm²; locale separators raise and finite infinity has no local guard. [src/digitalmodel/mooring_fatigue/workflow.py:L101-L107] | C01 covers bin scalars only; no detection check exists for history conversion | issue pending (1) |
+| S04 | Tension-history float conversion assumes kN and mm²; locale separators raise and positive infinity has no local guard. [src/digitalmodel/mooring_fatigue/workflow.py:L101-L107] | C01 covers bin scalars only; no detection check exists for history conversion | issue pending (1) |
 | S05 | Tension-bin aliases assume kN; multiplication/division assumes area in mm² and yields MPa. [src/digitalmodel/mooring_fatigue/workflow.py:L111-L121] | C05 checks explicit units; no detection check exists for ambiguous aliases | issue pending (2) |
 | S06 | Stress aliases including bare `range` assume MPa; the first present alias wins. [src/digitalmodel/mooring_fatigue/workflow.py:L124-L132] | no detection check exists for contradictory aliases | issue pending (1) |
 | S07 | Direct stress bins write an intentional NaN tension sentinel to the detail CSV. [src/digitalmodel/mooring_fatigue/workflow.py:L130-L134] | no detection check exists for sentinel documentation | issue pending (3) |
@@ -200,10 +226,13 @@ All rows were recorded on 2026-10-18 at the code revision in the header.
 | S30 | Output writes replace files and use unspecified text encoding; empty rows raise rather than caching empty results. [src/digitalmodel/mooring_fatigue/workflow.py:L271-L278] | C07 checks normal CSV output; no detection check exists for interrupted writes/encoding | issue pending (3) |
 | S31 | The sole caught exception suppresses relative-path failure and emits an absolute metadata path. [src/digitalmodel/mooring_fatigue/workflow.py:L281-L286] | C08 | issue pending (3) |
 | S32 | Supplied counts are treated as the damage exposure for `design_life_years` without an exposure-duration input or annualisation; life is reported in years. [src/digitalmodel/mooring_fatigue/workflow.py:L69-L83] | C05 checks the implemented identity; no detection check exists for inconsistent exposure basis | issue pending (2) |
+| S33 | Tension-to-stress accepts any positive area with no link-bar/two-leg or nominal/corroded/worn basis contract; inconsistent area can change damage by stress raised to the curve exponent. [src/digitalmodel/mooring_fatigue/workflow.py:L101-L121] [src/digitalmodel/mooring_fatigue/workflow.py:L196-L197] | C09 source audit; no component-qualified numerical detection check exists | issue pending (2) |
+| S34 | `CHAIN` and `STEEL-WIRE` both use the selected DNV-RP-C203 welded-detail class (default D / seawater_cp); no component curve or MBS-normalised T-N route is selected by material. [src/digitalmodel/mooring_fatigue/workflow.py:L27-L28] [src/digitalmodel/mooring_fatigue/workflow.py:L175-L186] [src/digitalmodel/fatigue/sn_curves.py:L96-L134] | C09 source audit; no component-qualified numerical detection check exists | issue pending (2) |
+| S35 | History counting produces mean stress, but histogramming drops it and replaces each range with its bin centre. This understates the upper part of a bin and makes damage depend on `n_bins`; no mean-stress correction is applied. [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] [src/digitalmodel/fatigue/rainflow.py:L56-L70] [src/digitalmodel/fatigue/rainflow.py:L103-L127] | no detection check exists for mean-stress treatment or damage convergence with bin count | issue pending (1), issue pending (2) |
 
 No `continue`, explicit `return None`, error-path empty-list/dictionary return, epoch default or empty-result cache write occurs in the package; `_write_csv` rejects empty rows. [src/digitalmodel/mooring_fatigue/workflow.py:L1-L286]
 
-Historical incident #2165 concerns shared fatigue-curve parameters and edition traceability; `test_sn_curve_atlases_track_the_c203_sources` now checks that both curve and table sources participate in drift detection, but it is not an independent numerical benchmark of this module. [tests/parametric/test_refresh.py:L108-L116] [src/digitalmodel/fatigue/sn_curves.py:L1-L20] [src/digitalmodel/fatigue/c203_editions.py:L19-L37]
+Historical incident #2165 recorded two non-conservative defects: free-corrosion curves copied CP parameters (exposing the v2 workflow), and the CP knee used 1e7 rather than 1e6 cycles (exposing v1). Current source separates free-corrosion parameters and uses the corrected CP knee; `test_sn_curve_atlases_track_the_c203_sources` now checks that both curve and table sources participate in drift detection, but it is not an independent numerical benchmark of this module. [tests/parametric/test_refresh.py:L108-L116] [src/digitalmodel/fatigue/sn_curves.py:L1-L20] [src/digitalmodel/fatigue/c203_editions.py:L19-L37]
 
 No detection check exists here for cross-edition equivalence or construction-specific qualification; issue pending (2). [src/digitalmodel/fatigue/c203_editions.py:L19-L26] [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85]
 
@@ -239,7 +268,7 @@ Solver version constraints are not part of this package's imports or evaluation 
 
 Implementation-map source revision: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` (`origin/codex/implmap-work`); declared data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; citations to `docs/registry/implementation-map.yaml` resolve at the source revision, all other repository citations at the header code revision.
 
-The module's only map family is `sn-curves-and-miner-damage`: 4 in-package rows, ranked first; all 392 family rows, including those outside the package and under `scripts/`, are inventoried below. [docs/registry/implementation-map.yaml:L16807-L16812]
+The module's only map family is `sn-curves-and-miner-damage`: 4 in-package rows; all 392 family rows, including those outside the package and under `scripts/`, are inventoried below. [docs/registry/implementation-map.yaml:L16807-L16812] [docs/registry/implementation-map.yaml:L18397-L18441]
 
 The exact case-sensitive Python `re` search signals from this map revision are reproduced below; no signal matches the package path `mooring_fatigue` case-insensitively, so none is excluded.
 
@@ -263,6 +292,8 @@ Signal source: [docs/registry/implementation-map.yaml:L16810-L16812]
 | `_history_bins` | Listed implementation row; delegates counting | [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] |
 | `_curve_settings` | Listed settings helper | [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186] |
 | `_cycles` | Unlisted alias accessor; helper, not another implementation | [src/digitalmodel/mooring_fatigue/workflow.py:L200-L201] |
+
+Classification override: the map labels `_evaluate_line`, `_history_bins` and `_curve_settings` as `independent` (inventory rows 150–152). The table above instead classifies their role in this family as delegated damage, delegated counting and settings access, respectively, from the inspected definitions. The inventory below retains the map labels unchanged. Correct those map relations under issue pending (4); this pack does not silently replace the map's classification. [docs/registry/implementation-map.yaml:L18411-L18441] [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85] [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186]
 
 Counted-family result: 0 further in-package implementations; inventory and search meet the A8 threshold of at most 1. The module-level matches are imports and `_cycles` only delegates numeric alias selection. [src/digitalmodel/mooring_fatigue/workflow.py:L13-L15] [src/digitalmodel/mooring_fatigue/workflow.py:L200-L227]
 
@@ -681,7 +712,7 @@ External implementations are map inventory and discovery context, not package mi
 | Workflow and tests | Both metallic example inputs, atlas-query input, registry rows and metallic/query assertions; all three discovered parametric test files were read and run. [examples/workflows/mooring-fatigue/input.yml:L1-L36] [examples/workflows/mooring-fatigue-v2/input.yml:L1-L42] [docs/registry/workflows.yaml:L84-L139] [tests/workflows/test_durable_workflows.py:L137-L168] [tests/parametric/test_atlas.py:L1-L409] [tests/parametric/test_refresh.py:L1-L379] [tests/parametric/test_catalog.py:L1-L40] | Independent module-level physical reference remains absent from these cases; issue pending (2). |
 | Documentary discovery | `docs/maps/digitalmodel-operator-map.md`, `docs/registry/module-routing.yaml`, `docs/registry/workflows.yaml`, `docs/capability-map/capabilities-added.yml`, `docs/cad-inventory/ecosystem-and-automation-surface.md`, `docs/plans/2026-09-25-issue-1057-ffs-offering-program.md`, `docs/plans/parametrics-preparedness.md`, `docs/plans/parametric-refresh/adding-an-atlas.md`, `docs/plans/parametric-refresh/atlas-spec.md`, `docs/domains/asset-integrity/ffs-offering-catalog.md`, and both `docs/registry/implementation-map` documents name the module. [docs/maps/digitalmodel-operator-map.md:L91-L91] [docs/capability-map/capabilities-added.yml:L65-L65] [docs/cad-inventory/ecosystem-and-automation-surface.md:L78-L81] [docs/plans/2026-09-25-issue-1057-ffs-offering-program.md:L21-L21] [docs/plans/parametrics-preparedness.md:L52-L60] [docs/plans/parametric-refresh/adding-an-atlas.md:L112-L119] [docs/plans/parametric-refresh/atlas-spec.md:L20-L23] [docs/domains/asset-integrity/ffs-offering-catalog.md:L91-L91] [docs/registry/implementation-map.md:L24-L24] | Documentary claims about environment sweeps and out-of-plane bending are not established by this scalar package; reconcile capability wording, issue pending (4). |
 | Source and citation basis | Shared curve, damage and counting functions and edition metadata, engine dispatch and parametric wrapper were read for the paths cited in sections 1–9. [src/digitalmodel/fatigue/c203_editions.py:L19-L37] [src/digitalmodel/fatigue/damage.py:L13-L39] [src/digitalmodel/fatigue/rainflow.py:L22-L127] [src/digitalmodel/parametric/generate.py:L28-L45] | Runtime citation-sidecar and edition basis need completion; issue pending (2). |
-| Input failures | Sweep S01–S32 and C01–C03 distinguish defaults, internal conversions and unchecked external input. [src/digitalmodel/mooring_fatigue/workflow.py:L24-L286] | Nonfinite values, repeat/bin controls, aliases and exposure: issue pending (1), issue pending (2). |
+| Input failures | Sweep S01–S35 and C01–C03/C09 distinguish defaults, internal conversions and unchecked external input. [src/digitalmodel/mooring_fatigue/workflow.py:L24-L286] | Nonfinite values, repeat/bin controls, aliases and exposure: issue pending (1), issue pending (2). |
 | Output failures | Duplicate fallback IDs, replacement writes, text encoding and absolute metadata paths. [src/digitalmodel/mooring_fatigue/workflow.py:L67-L85] [src/digitalmodel/mooring_fatigue/workflow.py:L242-L286] | Portable output handling: issue pending (3). |
 | Implementation map | Complete S-N/Miner family inventory and exact in-package signal search in section 9 | Other method-family coverage: issue pending (4). |
 | Clearance | Review role assignment is in section 8 | Maintainers to obtain independent review, resolve issue-draft references and create the shared lesson entries; issue pending (4). |
