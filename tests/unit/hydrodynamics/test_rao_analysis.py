@@ -211,10 +211,11 @@ class TestWaveSpectra:
         """JONSWAP with gamma=1 total energy should be comparable to Pierson-Moskowitz."""
         ws = WaveSpectra()
         omega, S_js = ws.jonswap(hs=3.0, tp=10.0, gamma=1.0)
-        _, S_pm = ws.pierson_moskowitz(hs=3.0, tp=10.0)
+        omega_pm, S_pm = ws.pierson_moskowitz(hs=3.0, tp=10.0)
         # Both spectra should integrate to approximately Hs^2/16 m0
         # Ratio of total energy should be within 50% (same Hs used)
-        energy_ratio = np.sum(S_js) / (np.sum(S_pm) + 1e-30)
+        # Integrate each grid: Offshore Hydromechanics (2001), equation (5.115).
+        energy_ratio = ws.spectral_moment(omega, S_js) / ws.spectral_moment(omega_pm, S_pm)
         assert 0.5 < energy_ratio < 2.0
 
     def test_pierson_moskowitz_non_negative(self):

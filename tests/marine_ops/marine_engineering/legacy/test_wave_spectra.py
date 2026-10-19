@@ -209,7 +209,11 @@ class TestPiersonMoskowitzSpectrum:
     def test_pm_equals_jonswap_gamma_1(self, ws):
         """Validate P-M is JONSWAP with gamma=1.0."""
         omega_pm, S_pm = ws.pierson_moskowitz(hs=4.0, tp=10.0)
-        omega_j, S_jonswap = ws.jonswap(hs=4.0, tp=10.0, gamma=1.0)
+        # Compare densities at identical frequencies despite different defaults.
+        omega_j, S_jonswap = ws.jonswap(
+            hs=4.0, tp=10.0, gamma=1.0,
+            freq_min=omega_pm[0], freq_max=omega_pm[-1], n_points=len(omega_pm)
+        )
 
         # Should be approximately equal
         max_diff = np.max(np.abs(S_pm - S_jonswap) / (S_pm + 1e-30))
