@@ -5,13 +5,27 @@
 | Module               | `drilling_riser/global_model`                                     |
 | Repository           | `digitalmodel`                                                    |
 | Path                 | `src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md` |
-| Pack revision        | 2                                                                 |
+| Pack revision        | 3                                                                 |
 | Code revision        | `a1be651234e5541809cf1f33d57fce04d1a2ae5b`                        |
 | Analysis family      | OrcaFlex riser and mooring                                        |
 | Quality manager role | Riser and mooring quality manager                                 |
 | Status               | DRAFT                                                             |
 
 The scope of this draft is the public text-model and hand-calculation interface; gate clearance is not asserted. [src/digitalmodel/drilling_riser/global_model/spec.py:L1-L18]
+
+Current correction to the pinned inventory below (#2532): drilling-stack hand
+references now use zero separate contents density, matching the text generator.
+The specified drilling-stack mass includes its fluid inventory, even for a
+positive bore. Open-water stacks retain separate contents in a continuous bore.
+The historical positive-bore exclusions below describe the pinned code revision;
+the offline regression covers both conventions, zero bore and zero density.
+See the input conventions in `spec.py` and `tests/drilling_riser/global_model/test_stack_contents.py`.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 3 | 2026-10-19 | Record the drilling-stack contents correction and offline coverage for #2532; retain the pinned historical inventory. |
 
 ## 1. Purpose and scope
 

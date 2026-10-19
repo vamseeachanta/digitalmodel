@@ -69,9 +69,10 @@ def tension_references(spec: RiserGlobalModelSpec) -> dict:
     riser = effective_tension_chain(spec.riser, top_z_m=z0, top_tension_n=top,
                                     rho_water=rho_w, rho_contents=rho_c)
     z_lfj = riser[-1]["bottom_z_m"]
-    # The stack carries no main-bore contents in the model convention (its fluid is in the mass).
+    # Drilling convention: stack fluid is included in mass_per_m_kg; no separate
+    # contents density, even for a positive bore (build.build_generic_spec; #2532).
     stack = effective_tension_chain(spec.stack, top_z_m=z_lfj, top_tension_n=riser[-1]["te_bottom_n"],
-                                    rho_water=rho_w, rho_contents=rho_c)
+                                    rho_water=rho_w, rho_contents=0.0)
     return {
         "riser_top_n": top,
         "riser_bottom_n": riser[-1]["te_bottom_n"],
