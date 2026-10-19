@@ -430,6 +430,9 @@ modules:
       top_level:
         agent_pack: src/digitalmodel/structural/docs/agent-pack.md
         qa_family: EC
+      plate_capacity:
+        agent_pack: src/digitalmodel/structural/plate_capacity/docs/agent-pack.md
+        qa_family: EC
       pipe_capacity:
         agent_pack: src/digitalmodel/structural/pipe_capacity/docs/agent-pack.md
         qa_family: EC
