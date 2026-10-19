@@ -11,6 +11,11 @@ run systematic parameter sweeps to produce **atlases** — pre-computed grids /
 surrogates that answer common questions instantly — and to explore design space.
 Out-of-range queries report escalation under the
 [`parametric_query` contract](parametric-refresh/atlas-spec.md).
+Interpolated atlas answers are screening values; a full solver run remains the
+deliverable of record. Escalated queries will request a full run through the
+current licensed-run route, blocked until dispatch and result return are documented.
+
+Deckhand retired 2026-10-18 (deckhand issue 599).
 
 ## 2. Reuse — do NOT add a 4th parametric engine
 
@@ -39,12 +44,12 @@ usecase_registry entry  (solver, basename, operation, base template)
         ▼
    execution:
      - analytical / offline cases  → run on Linux now
-     - licensed solver cases       → Deckhand retired 2026-10-18
-                                      (deckhand issue 599)
+     - licensed solver cases       → bulk-run matrix; collect numeric bundles (#928)
+                                      blocked: no documented dispatch/result-return route
         │
         ▼
    collect  →  ATLAS (grid or surrogate, per #794/#870)
-        │           └─ out-of-range query → escalation status
+        │           └─ out-of-range query → request full licensed run (blocked)
         ▼
    post-process: Linux postproc orchestrator (#928) + envelope generator (#930)
 ```
@@ -69,16 +74,21 @@ after their template lands.)
   spec (sweep vars + grid) over a `ready` registry template; expand via the
   solver's existing case generator; run offline/dry-run. Pilots: one OrcaFlex
   (`free-span-f105`) + one diffraction (`orcawave-fpso-parametric-deck`).
-- **P1 — licensed sweeps.** Deckhand retired 2026-10-18 (deckhand issue 599).
+- **P1 — licensed sweeps.** Bulk-run the case matrix and collect numeric bundles
+  (#928 post-processing). Blocked: no licensed dispatch and result-return route
+  is documented since the bot retired.
 - **P2 — atlases + workflow queries.** Build grid/surrogate atlases (#794/#870);
-  interpolate for instant answers; out-of-range → escalation status.
+  interpolate for screening answers; out-of-range → request a full licensed run
+  through the current route (blocked until documented).
 
 ## 6. Dependencies / sequencing
 
 - Registry (`usecase_registry`, this PR) — the enumeration parametrics iterate.
 - Template gap-fill (#941/#942) — `partial`/`planned` use-cases need a `ready`
   template before they can be swept.
-- Licensed result delivery — Deckhand retired 2026-10-18 (deckhand issue 599).
+- Licensed sweeps — bulk-run the case matrix and collect numeric bundles (#928
+  post-processing). Blocked: no licensed dispatch and result-return route is
+  documented since the bot retired.
 - Atlas infra (#794/#870) — the P2 surrogate/grid store.
 
 ## 7. Non-goals

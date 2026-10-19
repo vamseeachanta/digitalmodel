@@ -72,4 +72,5 @@ horsehead→`sucker-rod-pumping-overview`); 3 were missing and were authored in
 ## Sharing the brief as a link
 
 The brief is a single static HTML file. To turn it into a link, publish `briefs/<id>.html`
-to a static host (for example GitHub Pages or an object store), then share its URL.
+to a static host (for example the website repository, GitHub Pages or an object
+store), then share its URL.

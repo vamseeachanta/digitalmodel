@@ -11,7 +11,10 @@ a parameter grid plus a per-physics surrogate, stored as a provenance-stamped ar
 The `parametric_query` workflow returns **interpolated** answers from an atlas
 (see [`docs/registry/workflows.yaml`](../../registry/workflows.yaml) for query
 examples and outputs). Out-of-range or low-confidence queries return an
-escalation status under the query contract below.
+escalation status under the query contract below. Interpolated atlas answers are
+screening values; a full solver run remains the deliverable of record. Escalated
+queries will request a full run through the current licensed-run route; execution
+will remain blocked until a dispatch and result-return route is documented.
 
 Deckhand retired 2026-10-18 (deckhand issue 599).
 

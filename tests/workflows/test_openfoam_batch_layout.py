@@ -59,7 +59,7 @@ def test_hosted_missing_root_rejects_before_side_effect(tmp_path: Path) -> None:
 
 def test_unknown_environment_context_rejects_before_side_effect(tmp_path: Path) -> None:
     before = set(tmp_path.iterdir())
-    with pytest.raises(ValueError, match="unsupported DIGITALMODEL_EXECUTION_CONTEXT"):
+    with pytest.raises(ValueError, match="unsupported DIGITALMODEL_EXECUTION_CONTEXT.*expected 'hosted' or unset"):
         resolve_batch_paths(
             {}, tmp_path, env={"DIGITALMODEL_EXECUTION_CONTEXT": "unsupported"}
         )

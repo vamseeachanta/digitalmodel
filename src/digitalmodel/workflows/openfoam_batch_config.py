@@ -14,6 +14,7 @@ from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 
 
 WORKER_CORE_FRACTION = 0.9
+# DIGITALMODEL_EXECUTION_CONTEXT accepts hosted or unset; other values fail closed.
 HOSTED_CONTEXT = "hosted"
 TRUSTED_LOCAL_CONTEXT = "trusted-local"
 DEFAULT_OUTPUT_DIR = "results"
@@ -213,7 +214,10 @@ def resolve_batch_paths(
     output_dir = _resolve(run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir)
     environment_context = environment.get("DIGITALMODEL_EXECUTION_CONTEXT")
     if environment_context not in (None, "", HOSTED_CONTEXT):
-        raise ValueError("unsupported DIGITALMODEL_EXECUTION_CONTEXT")
+        raise ValueError(
+            f"unsupported DIGITALMODEL_EXECUTION_CONTEXT {environment_context!r}; "
+            "expected 'hosted' or unset"
+        )
     hosted = environment_context == HOSTED_CONTEXT
     if hosted:
         if "work_root" in run_settings:
