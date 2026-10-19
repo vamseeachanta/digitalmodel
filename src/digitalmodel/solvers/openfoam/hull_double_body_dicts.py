@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Dict
 from .hull_case_dicts import _fmt, _vec, surfaces_provenance
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_tokens
+from .hull_layers import layer_provenance, layer_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_domain import HullDomain
@@ -44,6 +45,9 @@ def double_body_tokens(derivation: "DoubleBodyDerivation") -> Dict[str, str]:
     tokens.update(_condition_tokens(derivation))
     tokens.update(_geometry_tokens(derivation))
     tokens.update(_mesh_tokens(derivation))
+    tokens.update(layer_tokens(
+        derivation.config.absolute_layers, derivation.config.surface_regions
+    ))
     force = _force_tokens(derivation)
     tokens.update(force)
     # LAST, for the reason spelled out in ``hull_case_dicts``: the region
@@ -280,6 +284,9 @@ def _reference_provenance(
 def _mesh_provenance(derivation: "DoubleBodyDerivation") -> Dict[str, Any]:
     return {
         **derivation.budget.to_provenance(),
+        "layers": layer_provenance(
+            derivation.config.absolute_layers, derivation.config.surface_regions
+        ),
         "block_divisions": dict(derivation.divisions),
         "vertical_blocks": [
             {"z_lo": lo, "z_hi": hi, "layers": n}

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_provenance, region_tokens
+from .hull_layers import layer_provenance, layer_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_case import HullCaseConfig, HullCaseDerivation
@@ -69,6 +70,9 @@ def hull_case_tokens(derivation: "HullCaseDerivation") -> Dict[str, str]:
     tokens.update(_condition_tokens(derivation))
     tokens.update(_geometry_tokens(derivation))
     tokens.update(_mesh_tokens(derivation))
+    tokens.update(layer_tokens(
+        derivation.config.absolute_layers, derivation.config.surface_regions
+    ))
     force = _force_tokens(derivation)
     tokens.update(force)
     # LAST, and it must stay last. The region blocks are the only token values
@@ -241,6 +245,9 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
     the near-wall requirement it does NOT enforce."""
     return {
         **derivation.budget.to_provenance(),
+        "layers": layer_provenance(
+            derivation.config.absolute_layers, derivation.config.surface_regions
+        ),
         "free_surface": derivation.free_surface.to_provenance(),
         "block_divisions": dict(derivation.divisions),
         "refinement_boxes": [
@@ -259,10 +266,9 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (
-            "snappyHexMesh is scale-invariant here (relativeSizes true, hull "
-            "level (0 0), refinement from length-scaled topoSet boxes) but the "
-            "requirement it must satisfy scales with Reynolds number, not with "
-            "geometry. This height is what the near-wall mesh has to deliver "
-            "at this condition; it is recorded, not enforced."
+            "This height is the near-wall requirement at the stated Reynolds "
+            "number and y+ target; it is recorded, not enforced. Requested "
+            "layer lengths are recorded separately and do not establish the "
+            "achieved wall resolution."
         ),
     }
