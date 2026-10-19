@@ -15,6 +15,7 @@ import yaml
 
 from ..yaml_utils import _represent_none
 
+from .input_manifest import write_input_manifest
 from .schema import ProjectInputSpec
 from .builders.base import BaseBuilder
 from .builders.context import BuilderContext
@@ -115,6 +116,7 @@ class GenerationResult:
     include_files: list[Path]
     variables_resolved: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    manifest_file: Path | None = None
 
 
 class ModularModelGenerator:
@@ -249,6 +251,15 @@ class ModularModelGenerator:
 
         # Post-generation cross-builder validation
         self._run_post_validation(includes_dir, allow_validation_errors=allow_validation_errors)
+        self._write_input_manifest(output_dir, generated_files)
+
+    @staticmethod
+    def _write_input_manifest(output_dir: Path, generated_files: list[str]) -> Path:
+        """Cover every generated input, including parameters outside the include graph."""
+        return write_input_manifest(output_dir, [
+            "master.yml", "inputs/parameters.yml",
+            *(f"includes/{name}" for name in generated_files),
+        ])
 
     def _run_post_validation(
         self, includes_dir: Path, *, allow_validation_errors: bool = False,
@@ -342,6 +353,8 @@ class ModularModelGenerator:
             )
             result.master_file = output_dir / result.master_file.relative_to(staging)
             result.include_files = [output_dir / p.relative_to(staging) for p in result.include_files]
+            if result.manifest_file is not None:
+                result.manifest_file = output_dir / result.manifest_file.relative_to(staging)
         return result
 
     def _generate_with_overrides(
@@ -450,8 +463,10 @@ class ModularModelGenerator:
                 f"[{finding.level}] {finding.category}: {finding.message}"
             )
 
+        manifest_path = self._write_input_manifest(output_dir, generated_files)
         return GenerationResult(
             master_file=master_path,
+            manifest_file=manifest_path,
             include_files=include_paths,
             variables_resolved=resolved_vars,
             warnings=warnings,
