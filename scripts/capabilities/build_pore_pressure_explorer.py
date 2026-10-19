@@ -33,6 +33,20 @@ _ONSET_FT = 8000.0                # overpressure onset depth
 _DEPTH = [float(5000 + 500 * i) for i in range(0, 19)]   # 5000 .. 14000 ft
 _KICK_MARGIN = 0.3                # ppg trip/kick margin on min mud weight
 
+# Disclosure basis: Introduction to Energy Geomechanics, edition August 28,
+# 2024, section 6.5 (https://dnicolasespinoza.github.io/node48.html).
+# A mud window needs mechanical bounds; no fracture bound is evaluated here.
+_WINDOW = {
+    "status": "NOT_EVALUATED",
+    "ceiling_basis": "not supplied or calculated",
+    "not_covered": [
+        "collapse (shear failure)",
+        "weak bedding planes",
+        "natural fractures",
+        "chemical or time-dependent effects",
+    ],
+}
+
 
 def _overburden(z: float) -> float:
     # linear 16.5 ppg at 5000 ft -> 19.0 ppg at 14000 ft
@@ -68,6 +82,7 @@ def build_study() -> dict:
         "meta": {
             "pn": _PN, "onset_ft": int(_ONSET_FT), "kick_margin": _KICK_MARGIN,
             "sv_max": 19.0, "standard": "Eaton (1975) + Bowers (1995) pore pressure",
+            "drilling_window": _WINDOW,
         },
         "series": pts,
     }
@@ -101,8 +116,7 @@ _HTML = """<!DOCTYPE html>
  .read{font-size:13px;color:var(--muted)}
  .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;color:var(--navy)}
  .scale{position:relative;height:40px;margin:14px 0 4px;border-radius:9px;overflow:hidden;
-        background:linear-gradient(90deg,#e6f5ec,#e6f5ec);border:1px solid var(--line)}
- .win{position:absolute;top:0;bottom:0;background:rgba(31,157,87,.16);border-left:2px solid var(--ok);border-right:2px solid var(--bad)}
+        background:var(--soft);border:1px solid var(--line)}
  .tick{position:absolute;top:-3px;bottom:-3px;width:2px}
  .tick.pp{background:var(--bad)} .tick.mw{background:var(--mw)} .tick.sv{background:var(--navy)}
  .tick span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;white-space:nowrap}
@@ -114,9 +128,12 @@ _HTML = """<!DOCTYPE html>
 <h1>Pore pressure &amp; mud weight &mdash; drilling explorer</h1>
 <p class="sub">Multi-method pore-pressure prediction down a representative overpressured well: the Eaton
 and Bowers predictors on a synthetic normal-compaction sonic log with an overpressure ramp below
-8,000&nbsp;ft. Drag the bit depth to read the governing pore gradient, the minimum safe mud weight,
-and the overburden ceiling. Every point is a live <code>eaton_pore_pressure</code> /
+8,000&nbsp;ft. Drag the bit depth to read the governing pore gradient, pore plus an assumed margin,
+and the overburden reference. Every point is a live <code>eaton_pore_pressure</code> /
 <code>bowers_pore_pressure</code> evaluation.</p>
+<p class="sub">Illustrative inputs and model defaults are assumed, based on previous experience;
+they are not calibrated site data. The displayed pore-plus-margin value is not a mud-weight
+recommendation. The margin does not account for ECD or loss allowances.</p>
 <div class="spec" id="spec"></div>
 
 <div class="panel">
@@ -128,15 +145,25 @@ and the overburden ceiling. Every point is a live <code>eaton_pore_pressure</cod
   <div class="reads">
     <div class="read">Eaton pore<b id="rE">&mdash;</b></div>
     <div class="read">Bowers pore<b id="rB">&mdash;</b></div>
-    <div class="read">Min. mud weight<b id="rM" style="color:var(--mw)">&mdash;</b></div>
+    <div class="read">Pore + assumed margin<b id="rM" style="color:var(--mw)">&mdash;</b></div>
     <div class="read">Overburden<b id="rS">&mdash;</b></div>
   </div>
-  <div class="scale"><div class="win" id="win"></div>
+  <div class="scale">
     <div class="tick pp" id="tpp"><span style="color:var(--bad)">pore</span></div>
-    <div class="tick mw" id="tmw"><span style="color:var(--mw)">mud</span></div>
+    <div class="tick mw" id="tmw"><span style="color:var(--mw)">pore + margin</span></div>
     <div class="tick sv" id="tsv"><span style="color:var(--navy)">S_v</span></div></div>
   <div class="scalelab"><span>8 ppg</span><span>12</span><span>16</span><span>20 ppg</span></div>
-  <div class="cap">Mud-weight window at this depth: keep mud above the <i style="color:var(--bad)">pore</i> gradient (kick) and below the <i style="color:var(--navy)">overburden</i> ceiling. Shaded = the safe band above min mud weight.</div>
+  <div class="cap"><b>Drilling window: NOT_EVALUATED.</b>
+    Fracture gradient is not supplied or calculated; no window ceiling is shown.
+    Overburden is vertical stress, not a loss bound. Pore plus the assumed margin alone
+    does not establish a feasible drilling window or wellbore stability.</div>
+  <div class="cap">Not covered: collapse (shear failure), weak bedding planes,
+    natural fractures, and chemical or time-dependent effects.
+    See the <a href="../../../examples/workflows/wellbore-stability/README.md">wellbore stability screen</a>
+    for its separate inputs and limitations.</div>
+  <div class="cap">Basis: <a href="https://dnicolasespinoza.github.io/node48.html">Introduction
+    to Energy Geomechanics (2024), section 6.5, The mud window</a>:
+    mechanical stability and fracture constraints are needed to establish the bounds.</div>
 </div>
 
 <p class="foot">Built by <code>scripts/capabilities/build_pore_pressure_explorer.py</code> from
@@ -149,7 +176,8 @@ const M = DATA.meta, S = DATA.series, LO = 8.0, HI = 20.0;
 const pos = v => Math.max(0, Math.min((v-LO)/(HI-LO)*100, 100));
 const spec = document.getElementById('spec');
 spec.innerHTML = [['Methods', M.standard], ['Normal gradient', M.pn+' ppg'],
-  ['Overpressure onset', M.onset_ft.toLocaleString()+' ft']]
+  ['Overpressure onset', M.onset_ft.toLocaleString()+' ft'],
+  ['Assumed margin', M.kick_margin+' ppg']]
   .map(([k,v])=>`<span><b>${k}</b> ${v}</span>`).join('');
 const slider = document.getElementById('z');
 slider.max = S.length-1;
@@ -161,8 +189,6 @@ function render(){
   document.getElementById('rB').textContent = p.bowers.toFixed(2)+' ppg';
   document.getElementById('rM').textContent = p.mw.toFixed(2)+' ppg';
   document.getElementById('rS').textContent = p.sv.toFixed(2)+' ppg';
-  const win = document.getElementById('win');
-  win.style.left = pos(p.mw)+'%'; win.style.width = Math.max(0, pos(p.sv)-pos(p.mw))+'%';
   document.getElementById('tpp').style.left = pos(p.pp)+'%';
   document.getElementById('tmw').style.left = pos(p.mw)+'%';
   document.getElementById('tsv').style.left = pos(p.sv)+'%';

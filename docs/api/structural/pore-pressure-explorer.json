@@ -4,7 +4,17 @@
     "onset_ft": 8000,
     "kick_margin": 0.3,
     "sv_max": 19.0,
-    "standard": "Eaton (1975) + Bowers (1995) pore pressure"
+    "standard": "Eaton (1975) + Bowers (1995) pore pressure",
+    "drilling_window": {
+      "status": "NOT_EVALUATED",
+      "ceiling_basis": "not supplied or calculated",
+      "not_covered": [
+        "collapse (shear failure)",
+        "weak bedding planes",
+        "natural fractures",
+        "chemical or time-dependent effects"
+      ]
+    }
   },
   "series": [
     {
