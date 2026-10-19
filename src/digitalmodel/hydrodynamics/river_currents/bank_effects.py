@@ -8,10 +8,14 @@ References
 NASA Glenn, Conservation of Mass:
 https://www.grc.nasa.gov/www/k-12/airplane/mass.html (opened 2026-10-14).
 Constant-density continuity gives the section acceleration A/(A-A_v).
-OpenStax, University Physics volume 1, section 6.3, Centripetal Force:
+OpenStax, University Physics Volume 1 (2016), section 6.3, equation 6.3:
 https://openstax.org/books/university-physics-volume-1/pages/6-3-centripetal-force
-(opened 2026-10-14). Combining radial acceleration u**2/r with hydrostatic
-balance gives d(eta)/dr = u**2/(g*r); integration gives superelevation.
+and section 14.1, equation 14.4 (constant-density hydrostatic pressure):
+https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure
+(opened 2026-10-19). Under constant-speed radial equilibrium these imply
+rho*g*d(eta)/dr = rho*u**2/r. Integration between the banks gives
+eta_outer-eta_inner = u**2/g * ln((R+W/2)/(R-W/2)). This expression is a
+derivation under the stated assumptions, not an empirical bend correlation.
 
 The lateral quadratic and bend velocity bias are explicitly assumed shapes,
 not literature-derived calibration coefficients. The quadratic integrates to
@@ -83,13 +87,22 @@ def bend_superelevation(speed: float, width: float, radius: float,
                        gravity: float) -> float:
     """Return outer-minus-inner water level (m) for constant-speed radial balance.
 
-    The assumed rectangular bend spans radii R-width/2 to R+width/2.
-    No empirical bend coefficient is introduced. Gravity is supplied in m/s².
+    The assumed fully wetted rectangular bend spans radii R-width/2 to
+    R+width/2; R is the channel centreline radius. Speed is uniform across
+    the width, in m/s; reversing its sign preserves the water-level rise.
+    Width and radius are in metres; gravity is a required input in m/s².
+    OpenStax (2016), equations 6.3 and 14.4, give the radial/hydrostatic
+    balance derived in the module references. Secondary circulation,
+    friction and velocity redistribution are outside this screening model.
     """
     _positive(width=width, radius=radius, gravity=gravity)
     if not math.isfinite(speed) or radius <= width / 2:
         raise ValueError("speed must be finite and radius must exceed half-width")
-    return speed ** 2 / gravity * math.log((radius + width / 2) / (radius - width / 2))
+    # R-W/2 is the inner radius of the centred geometry in the cited derivation.
+    # ln(r_outer/r_inner) = ln(1+W/r_inner). Python 3 math.log1p retains
+    # precision near zero and avoids forming the possibly overflowing R+W/2:
+    # https://docs.python.org/3/library/math.html#math.log1p
+    return speed ** 2 / gravity * math.log1p(width / (radius - width / 2))
 
 
 def corrected_profile(profile: Callable[[float], float], factor: float
