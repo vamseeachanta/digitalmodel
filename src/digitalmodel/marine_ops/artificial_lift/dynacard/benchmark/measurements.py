@@ -19,7 +19,7 @@ import numpy as np
 from ..card_generators import ALL_GENERATORS, surface_card_from_pump_card
 from ..diagnostics import PumpDiagnostics
 from ..solver import DynacardWorkflow
-from .test_set_builder import LabelledCard, LabelledSet, validate_card
+from .test_set_builder import LabelledSet, validate_card
 
 MODES = tuple(ALL_GENERATORS)
 DEFAULT_MINIMUM_COUNT = 30
@@ -71,7 +71,23 @@ def score_predictions(labels, predictions, *, minimum_count=DEFAULT_MINIMUM_COUN
             item.update(status="Evaluated", accuracy=correct / total,
                         interval=list(wilson_interval(correct, total, confidence=confidence)))
         per_class[mode] = item
-    return {"status": "Evaluated" if labels else "Not Evaluated", "count": len(labels),
+    # Accuracy: scikit-learn Model evaluation guide, Accuracy score (2026),
+    # https://scikit-learn.org/stable/modules/model_evaluation.html#accuracy-score
+    # This is the confusion-matrix trace divided by the number of cards.
+    # Interval: NIST/SEMATECH e-Handbook 7.2.4.1, Wilson score (accessed 2026).
+    # Apply the caller's reporting threshold to the overall estimate as well.
+    total = len(labels)
+    correct = sum(matrix[mode][mode] for mode in MODES)
+    overall = {"count": total, "correct": correct, "wrong": total - correct}
+    if not total:
+        overall["status"] = "Not Evaluated"
+    elif total < minimum_count:
+        overall["status"] = "too thin to score"
+    else:
+        overall.update(status="Evaluated", accuracy=correct / total,
+                       interval=list(wilson_interval(correct, total, confidence=confidence)))
+    return {"status": "Evaluated" if labels else "Not Evaluated", "count": total,
+            "overall": overall,
             "minimum_count": minimum_count, "confidence": confidence,
             "interval_method": "Wilson score", "per_class": per_class,
             "confusion_matrix": matrix}
@@ -204,9 +220,17 @@ def real_accuracy(dataset: LabelledSet | None, ml_classifier, heuristic_classifi
             raise ValueError("Synthetic or plate cards cannot establish real-card accuracy")
         validate_card(card.card)
     labels = [c.label for c in dataset.cards]
-    methods = {name: score_predictions(labels, [classifier(c.card) for c in dataset.cards], **scoring)
-               for name, classifier in (("ml", ml_classifier), ("heuristic", heuristic_classifier))}
+    predictions = {name: [classifier(c.card) for c in dataset.cards]
+                   for name, classifier in (("ml", ml_classifier), ("heuristic", heuristic_classifier))}
+    methods = {name: score_predictions(labels, values, **scoring)
+               for name, values in predictions.items()}
     return {"path": path, "status": "Evaluated" if dataset.cards else "Not Evaluated",
+            "predictions": [
+                {"expected": card.label, "external_label": card.external_label,
+                 "provenance_index": index,
+                 **{name: values[index] for name, values in predictions.items()}}
+                for index, card in enumerate(dataset.cards)
+            ],
             "acquisition_counts": {
                 acquisition: sum(c.provenance.acquisition == acquisition for c in dataset.cards)
                 for acquisition in ("recorded", "digitised_graphic")
