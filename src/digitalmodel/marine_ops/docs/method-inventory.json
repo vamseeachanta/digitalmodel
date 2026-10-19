@@ -243,7 +243,7 @@
       ],
       "relation": "orchestration",
       "method": "operation batch",
-      "evidence": "Delegates to operation_envelope for each supplied operation; repeated keys overwrite.",
+      "evidence": "At code_revision, delegates to operation_envelope for each supplied operation; repeated keys overwrite. Later revisions may reject duplicate keys.",
       "map_status": "not_recorded"
     },
     {
