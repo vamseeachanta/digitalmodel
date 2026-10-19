@@ -15,6 +15,7 @@ import yaml
 
 from digitalmodel.drilling_riser.global_model.build import write_model
 from digitalmodel.drilling_riser.global_model.hand_checks import tension_references
+from digitalmodel.drilling_riser.global_model.hang_off import hang_off_spec, hung_weight_n
 from digitalmodel.drilling_riser.global_model.open_water import (
     OpenWaterRiserSpec,
     tension_references as open_water_references,
@@ -122,4 +123,40 @@ def test_stack_weight_matches_hand_balance_and_emitted_text(
     for section in model.stack:
         emitted = types[section.name]
         assert emitted["ID"] == bore
-        assert emitted["MassPerUnitLength"] * KG_PER_TONNE == section.mass_per_m_kg
+        assert emitted["MassPerUnitLength"] * KG_PER_TONNE == pytest.approx(
+            section.mass_per_m_kg, rel=ARITHMETIC_REL
+        )
+
+
+@pytest.mark.parametrize("with_lmrp", [False, True])
+@pytest.mark.parametrize("density", [0.0, 1500.0])
+def test_soft_hang_off_excludes_separate_stack_contents(spec, density, with_lmrp):
+    """Sum section mass minus wet displacement independently of the hand chain.
+
+    The synthetic stack bore is 0.4 m. Stack fluid is already in its mass;
+    riser fluid remains separate. The buoyancy and gravity sources are given
+    above; wet length is the portion below z = 0 in this vertical fixture.
+    """
+    model = _with_stack_bore(spec, 0.4, density)
+    hanging = hang_off_spec(model, "soft", with_lmrp=with_lmrp)
+    expected_mass = hanging.tension_ring.mass_kg  # fixture ring is above water
+    z = hanging.tension_ring.z_static_m
+    sections = [(section, density) for section in hanging.riser]
+    if with_lmrp:
+        sections.extend((section, 0.0) for section in hanging.stack)
+    for section, contents_density in sections:
+        wet_length = min(section.length_m, max(0.0, section.length_m - z))
+        expected_mass += (
+            section.mass_per_m_kg
+            + contents_density * math.pi * section.bore_id_m**2 / 4
+        ) * section.length_m
+        expected_mass -= (
+            hanging.environment.water_density_kg_m3
+            * section.displaced_volume_per_m_m3 * wet_length
+        )
+        z -= section.length_m
+    expected_weight = expected_mass * GRAVITY
+    assert hanging.hang_off.spring_tension_n == pytest.approx(
+        expected_weight, rel=ARITHMETIC_REL
+    )
+    assert hung_weight_n(hanging) == pytest.approx(expected_weight, rel=ARITHMETIC_REL)
