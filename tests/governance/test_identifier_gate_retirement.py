@@ -44,7 +44,7 @@ class RetirementContract(unittest.TestCase):
         hooks = {hook["id"]: hook for hook in hook_entries()}
         self.assertIn("gitleaks", hooks)
         self.assertEqual(
-            hooks["gitleaks"]["args"], ["--config", "../.gitleaks.toml"]
+            hooks["gitleaks"]["args"], ["--config", ".gitleaks.toml"]
         )
         if (ROOT / "packages" / "worldenergydata-core").exists():
             self.assertIn("detect-private-key", hooks)
