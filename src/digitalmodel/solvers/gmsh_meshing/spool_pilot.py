@@ -12,7 +12,7 @@ from pathlib import Path
 
 VOLUME_REL_TOL = 0.005
 DIMENSION_TOL_MM = 0.01
-MIN_SCALED_JACOBIAN = 0.2
+MIN_SIGNED_INVERSE_CONDITION_NUMBER = 0.2
 ELEMENT_COUNT_BAND = (1_000, 80_000)  # 3D linear tetrahedra only
 ELEMENT_SIZE_MM = 5.0
 
@@ -88,6 +88,9 @@ class SpoolParameters:
             for i in range(self.bolt_hole_count):
                 dims[f"{end}.hole_{i}.diameter"] = self.bolt_hole_diameter
                 dims[f"{end}.hole_{i}.bolt_circle"] = self.bolt_circle_diameter
+                dims[f"{end}.hole_{i}.next_hole_spacing"] = (
+                    self.bolt_circle_diameter * sin(pi / self.bolt_hole_count)
+                )
         return dims
 
 
@@ -126,10 +129,10 @@ class SolidMeasurements:
 
 @dataclass(frozen=True)
 class MeshMeasurements:
-    """One signed determinant and scaled Jacobian per 3D linear tetrahedron."""
+    """One signed determinant and signed inverse condition number per tetrahedron."""
 
     determinants: tuple[float, ...]
-    scaled_jacobians: tuple[float, ...]
+    min_sicn: tuple[float, ...]
 
     @property
     def element_count(self):
@@ -161,7 +164,10 @@ def judge_solid(p: SpoolParameters, measured: SolidMeasurements) -> Verdict:
         ("mass", cad_mass, reference.mass_kg),
     ):
         if not isfinite(actual) or abs(actual - expected) / expected > VOLUME_REL_TOL:
-            failures.append(f"{name}: {actual} vs {expected}; tolerance 0.5%")
+            basis = (
+                "derived from volume and specified density; " if name == "mass" else ""
+            )
+            failures.append(f"{name}: {basis}{actual} vs {expected}; tolerance 0.5%")
     expected_dims = p.dimensions()
     if measured.dimensions.keys() != expected_dims.keys():
         failures.append("dimensions: missing or unexpected measurements")
@@ -180,15 +186,39 @@ def judge_mesh(measured: MeshMeasurements) -> Verdict:
     n = measured.element_count
     if not ELEMENT_COUNT_BAND[0] <= n <= ELEMENT_COUNT_BAND[1]:
         failures.append(f"mesh element count: {n} outside {ELEMENT_COUNT_BAND}")
-    if len(measured.scaled_jacobians) != n or n == 0:
+    if len(measured.min_sicn) != n or n == 0:
         failures.append("mesh: require one quality value per volume element")
     if any(not isfinite(v) or v <= 0 for v in measured.determinants):
         failures.append("mesh: nonpositive or nonfinite signed Jacobian determinant")
     if any(
-        not isfinite(v) or v < MIN_SCALED_JACOBIAN for v in measured.scaled_jacobians
+        not isfinite(v) or v < MIN_SIGNED_INVERSE_CONDITION_NUMBER
+        for v in measured.min_sicn
     ):
-        failures.append("mesh: minimum scaled Jacobian below 0.2 or nonfinite")
+        failures.append(
+            "mesh: minimum signed inverse condition number below 0.2 or nonfinite"
+        )
     return Verdict(tuple(failures))
+
+
+def measure_mesh() -> MeshMeasurements:
+    """Read signed orientation and shape quality in the current gmsh context.
+
+    minSJ is curvature distortion and is always one for linear tetrahedra.
+    minSICN instead detects poor straight-sided shapes, including slivers.
+    """
+    import gmsh
+
+    types, tag_groups, _ = gmsh.model.mesh.getElements(3)
+    if list(types) != [4]:  # MSH type 4: first-order four-node tetrahedron
+        raise ValueError(f"expected only linear tetrahedra, got {list(types)}")
+    tags = tag_groups[0]
+    measured = MeshMeasurements(
+        tuple(float(v) for v in gmsh.model.mesh.getElementQualities(tags, "minDetJac")),
+        tuple(float(v) for v in gmsh.model.mesh.getElementQualities(tags, "minSICN")),
+    )
+    if measured.element_count != len(tags) or len(measured.min_sicn) != len(tags):
+        raise ValueError("gmsh did not return quality for every volume element")
+    return measured
 
 
 def mesh_step(step_path: Path) -> MeshMeasurements:
@@ -203,21 +233,9 @@ def mesh_step(step_path: Path) -> MeshMeasurements:
     try:
         generator.generate_mesh_from_step(str(step_path), element_size=ELEMENT_SIZE_MM)
         gmsh.model.mesh.optimize()
-        types, tag_groups, _ = gmsh.model.mesh.getElements(3)
-        if list(types) != [4]:  # MSH type 4: first-order four-node tetrahedron
-            raise ValueError(f"expected only linear tetrahedra, got {list(types)}")
-        tags = tag_groups[0]
-        measured = MeshMeasurements(
-            tuple(
-                float(v) for v in gmsh.model.mesh.getElementQualities(tags, "minDetJac")
-            ),
-            tuple(float(v) for v in gmsh.model.mesh.getElementQualities(tags, "minSJ")),
-        )
-        if measured.element_count != len(tags) or len(measured.scaled_jacobians) != len(
-            tags
-        ):
-            raise ValueError("gmsh did not return quality for every volume element")
-        return measured
+        # Retain the 0.2 shape threshold; improve elements instead of lowering it.
+        gmsh.model.mesh.optimize("Netgen")
+        return measure_mesh()
     finally:
         generator.finalize()
 
