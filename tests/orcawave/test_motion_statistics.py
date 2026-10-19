@@ -98,8 +98,8 @@ class TestRayleigh:
         np.testing.assert_allclose(amp_back, amplitude, rtol=1e-6)
 
     def test_quantile_zero_probability(self):
-        result = rayleigh_quantile(0.0, 1.0)
-        assert result == 0.0
+        with pytest.raises(ValueError):
+            rayleigh_quantile(0.0, 1.0)
 
 
 class TestMSI:
@@ -122,3 +122,25 @@ class TestMSI:
     def test_msi_capped_at_100(self):
         result = motion_sickness_incidence(100.0, 24.0, 0.167)
         assert result.msi_percent <= 100.0
+
+
+def test_weighted_msi_needs_no_dominant_frequency():
+    result = motion_sickness_incidence(0.5, 2.0, already_weighted=True)
+    assert result.msdv_z == pytest.approx(0.5 * np.sqrt(7200))
+    assert result.vertical_acceleration_rms == 0.5
+
+
+@pytest.mark.parametrize("frequency", [None, 0.0, -0.1, float("nan")])
+def test_unweighted_msi_requires_positive_frequency(frequency):
+    with pytest.raises(ValueError, match="frequency"):
+        motion_sickness_incidence(0.5, 2.0, frequency)
+
+
+def test_duration_per_cell_is_explicitly_deprecated():
+    scatter = [ScatterCell(hs=1, tp=10, probability=1)]
+    omega = np.array([2 * np.pi / 10, 2 * np.pi / 10 + 1])
+    args = (scatter, np.ones(2), omega, lambda *args: np.array([2.0, 0.0]))
+    expected = long_term_extreme(*args)
+    with pytest.warns(DeprecationWarning, match="duration_per_cell_s"):
+        actual = long_term_extreme(*args, duration_per_cell_s=3600)
+    assert actual.extreme_response == expected.extreme_response
