@@ -24,6 +24,13 @@ malformed YAML fail. Dependencies outside the bundle must be packaged inside it
 with updated references before manifest generation. No path is copied or rewritten
 by the collector.
 
+Other nonempty string fields whose names end in `File` or `FileName`
+(case-insensitive) are recorded as `unresolved_external_references`. Each record
+identifies the containing file, key and reference string. These references are
+not followed or hashed; their presence prevents a `PASS` result. This includes
+vessel RAO files and full-field wind files, even when their paths are inside the
+bundle.
+
 The format identifier is `orcaflex-input-manifest-v1`. `files` maps each
 relative path to the lowercase SHA-256 digest of its exact bytes. The aggregate
 `fingerprint` is defined by:
@@ -33,8 +40,10 @@ record(path) = UTF8(path + NUL + files[path] + LF)
 fingerprint = SHA256(concatenate(record(path) for path in sorted(files)))
 ```
 
-The manifest also records sorted `roots`, `opaque_dependencies`, the hash
-algorithm and revision evidence. `manifest_sha256` covers the complete manifest
+The manifest also records sorted `roots`, `opaque_dependencies`,
+`unresolved_external_references`, the hash algorithm and revision evidence.
+External reference records are sorted by containing file, key and reference.
+`manifest_sha256` covers the complete manifest
 object excluding that digest field. This object is encoded as UTF-8 JSON with
 sorted keys, compact separators, unescaped Unicode and no non-finite numbers.
 The final newline in the manifest file is outside this object digest.
@@ -72,9 +81,9 @@ The unit tests use the published `abc` SHA256 TEST1 digest in RFC 6234 section
 
 | Status | Meaning |
 | --- | --- |
-| `PASS` | The declared composition inputs match all recorded fingerprints. |
+| `PASS` | The declared composition inputs match all recorded fingerprints, with no opaque dependencies or unresolved external file references. |
 | `FAIL` | Evidence is unreadable, incomplete, invalid or inconsistent. |
-| `NOT_EVALUATED` | Opaque inputs are hashed, but their dependency graphs cannot be inspected. |
+| `NOT_EVALUATED` | Opaque dependency graphs or unresolved external file references prevent complete input coverage. |
 
 ## Known limits and later slices
 
@@ -84,9 +93,29 @@ version. Resolving and binding those revisions is a later slice; a fingerprint
 `PASS` does not satisfy G0.8/C08.
 
 Only explicit `BaseFile` and `includefile` composition references are followed.
-Other solver data-file fields and external resources require separate discovery
-before claiming complete native input coverage. Non-YAML dependencies are
+Other nonempty string fields ending in `File` or `FileName` are flagged as
+unresolved; differently named external resources still require separate
+discovery before claiming complete native input coverage. Non-YAML dependencies are
 fingerprinted as opaque bytes; their transitive dependencies are not evaluated.
+
+Both generation entry points write generated YAML with LF newlines, including
+resolved override templates, so native Windows text translation does not change
+these digests. Hashes still bind exact bytes: newline conversion during checkout
+or editing changes the evidence. Committed bundles need a `-text` attribute to
+preserve their bytes. Supplied dependencies are not newline-normalized.
+
+Filename Unicode normalization is not canonicalized. NFC and NFD spellings can
+produce different recorded names and fingerprints across filesystems.
+
+Existing manifests without `unresolved_external_references` must be regenerated
+to include this evidence, even when the list is empty.
+
+Manifest capture also runs with `allow_validation_errors=True`. This option
+bypasses post-generation validation errors for diagnostic output; it does not
+bypass manifest errors. Missing, malformed or out-of-bundle composition inputs
+still prevent diagnostic publication. In particular, override templates whose
+`BaseFile` resolves outside the staged bundle fail before publication; package
+those dependencies inside the bundle and update their references first.
 
 The manifest is unsigned. It detects stale or inconsistent evidence, and does
 not authenticate a manifest rewritten together with its digests. Existing

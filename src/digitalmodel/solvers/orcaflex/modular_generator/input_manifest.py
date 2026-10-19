@@ -57,7 +57,8 @@ def _input_path(root: Path, parent: Path, reference: str) -> Path:
         raise InputManifestError("Input reference must be a nonempty string")
     if any(char in reference for char in "\0\n\r"):
         raise InputManifestError("Input reference contains a record delimiter")
-    if Path(reference).is_absolute() or PureWindowsPath(reference).drive:
+    windows_path = PureWindowsPath(reference)
+    if reference.startswith("/") or windows_path.drive or windows_path.root:
         raise InputManifestError("Input reference must be relative to the bundle")
     # OrcaFlex files can be prepared with Windows separators on another system.
     path = (parent / reference.replace("\\", "/")).resolve()
@@ -68,13 +69,14 @@ def _input_path(root: Path, parent: Path, reference: str) -> Path:
     return path
 
 
-def _references(content: bytes, name: str) -> list[str]:
+def _references(content: bytes, name: str) -> tuple[list[str], list[dict[str, str]]]:
     """Use representation nodes so repeated include keys cannot be discarded."""
     try:
         documents = list(yaml.compose_all(content, Loader=yaml.SafeLoader))
     except (yaml.YAMLError, UnicodeError) as exc:
         raise InputManifestError(f"Cannot parse YAML input: {name}") from exc
     references = []
+    unresolved = []
     seen = set()
     pending = list(documents)
     while pending:
@@ -95,10 +97,20 @@ def _references(content: bytes, name: str) -> list[str]:
                         raise InputManifestError(f"Invalid file reference in: {name}")
                     references.append(value.value)
                 else:
+                    if (
+                        isinstance(key, ScalarNode)
+                        and key.value.lower().endswith(("file", "filename"))
+                        and isinstance(value, ScalarNode)
+                        and value.tag == "tag:yaml.org,2002:str"
+                        and value.value.strip()
+                    ):
+                        unresolved.append({
+                            "file": name, "key": key.value, "reference": value.value,
+                        })
                     pending.append(value)
         elif isinstance(node, SequenceNode):
             pending.extend(node.value)
-    return references
+    return references, unresolved
 
 
 def _capture(root: Path, inputs: Iterable[str]) -> dict:
@@ -110,6 +122,7 @@ def _capture(root: Path, inputs: Iterable[str]) -> dict:
         raise InputManifestError("At least one input is required")
     files: dict[str, str] = {}
     opaque: list[str] = []
+    unresolved: list[dict[str, str]] = []
     active: set[Path] = set()
     # Iterative DFS avoids a Python recursion limit for long dependency chains.
     pending = [(root / name, False) for name in reversed(seeds)]
@@ -133,7 +146,9 @@ def _capture(root: Path, inputs: Iterable[str]) -> dict:
             continue
         active.add(path)
         pending.append((path, True))
-        for ref in reversed(_references(content, name)):
+        references, external = _references(content, name)
+        unresolved.extend(external)
+        for ref in reversed(references):
             pending.append((_input_path(root, path.parent, ref), False))
     return {
         "schema": SCHEMA,
@@ -142,6 +157,9 @@ def _capture(root: Path, inputs: Iterable[str]) -> dict:
         "files": dict(sorted(files.items())),
         "fingerprint": _fingerprint(files),
         "opaque_dependencies": sorted(opaque),
+        "unresolved_external_references": sorted(
+            unresolved, key=lambda ref: (ref["file"], ref["key"], ref["reference"]),
+        ),
         # C08 requires all three immutable revisions to resolve (AQG r0 G0.8).
         # No revision value is inferred from a basename, version or mutable ref.
         "revisions": {
@@ -160,6 +178,8 @@ def write_input_manifest(root: Path, inputs: Iterable[str]) -> Path:
     Seeds must include every generated file, including unreferenced parameters.
     Dependencies outside the bundle are rejected; binary inputs are hashed but
     their uninspectable dependency graphs result in NOT_EVALUATED coverage.
+    Other nonempty string fields ending in File/FileName are recorded as
+    unresolved external references and also prevent a complete coverage claim.
     The manifest is an integrity record, not a signature or solver attestation.
     """
     root = Path(root).resolve()
@@ -175,8 +195,9 @@ def write_input_manifest(root: Path, inputs: Iterable[str]) -> Path:
 def verify_input_manifest(root: Path) -> FingerprintCheck:
     """Independently re-read the seed closure and recompute all file hashes.
 
-    PASS refers only to the declared YAML composition inputs (C07). Callers
-    must inspect revisions separately; C08 remains NOT_EVALUATED in this slice.
+    PASS requires matching declared YAML composition inputs and no opaque or
+    unresolved file references (C07). Callers must inspect revisions separately;
+    C08 remains NOT_EVALUATED in this slice.
     """
     root = Path(root).resolve()
     try:
@@ -210,10 +231,15 @@ def verify_input_manifest(root: Path) -> FingerprintCheck:
         if findings:
             return FingerprintCheck("FAIL", tuple(findings))
         opaque = current["opaque_dependencies"]
-        if opaque:
+        unresolved = current["unresolved_external_references"]
+        if opaque or unresolved:
             return FingerprintCheck(
                 "NOT_EVALUATED",
-                tuple(f"Opaque dependency graph: {name}" for name in opaque),
+                tuple(f"Opaque dependency graph: {name}" for name in opaque)
+                + tuple(
+                    f"Unresolved external reference: {ref['file']} ({ref['key']})"
+                    for ref in unresolved
+                ),
             )
         return FingerprintCheck("PASS")
     except (OSError, ValueError, TypeError) as exc:
