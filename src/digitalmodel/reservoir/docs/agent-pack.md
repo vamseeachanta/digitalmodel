@@ -4,7 +4,7 @@
 | --- | --- |
 | Module / repository | reservoir / digitalmodel |
 | Package | `src/digitalmodel/reservoir` |
-| Pack revision / status | 0 / DRAFT |
+| Pack revision / status | 1 / DRAFT |
 | Code pin | `f1d58a2ac0db65e68b5b690f0a609ef4746d114e` |
 | Analysis family | Engineering calculations (EC) |
 | Quality role | Engineering calculations quality manager |
@@ -22,6 +22,13 @@ The routing registry records development maturity and routes tests to `tests/res
 The volumetric model assumes uniformly saturated, fully drained area and net pay; it is a direct arithmetic calculation rather than a time-dependent reservoir simulation. [src/digitalmodel/reservoir/volumetrics.py:L18-L19] [src/digitalmodel/reservoir/volumetrics.py:L40-L64]
 
 The separately packaged `marine_ops/reservoir` implementation is outside this pack's scope; its OOIP and plotting methods are recorded as map follow-up in section 9. [src/digitalmodel/marine_ops/reservoir/properties.py:L255-L270] [src/digitalmodel/marine_ops/reservoir/legacy_migration.py:L166-L175]
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-10-18 | Initial pack records implementation evidence and open qualification gaps. |
+| 1 | 2026-10-19 | Correct plotting failure descriptions, gate classification, tolerance and map citation scope to match the pinned implementation. |
 
 ## 2. Inputs and outputs
 
@@ -48,7 +55,7 @@ Input contract (the ranges described as preconditions are caller checks; the dat
 
 UNVERIFIED: physical units for Depth/TOP/BASE, GR, RT, RHOB and PHIN are not declared by the plotting API; caller-supplied unit consistency and depth type must be documented before interpretation (issue pending (1)). [src/digitalmodel/reservoir/stratigraphic.py:L99-L105] [src/digitalmodel/reservoir/stratigraphic.py:L131-L134] [src/digitalmodel/reservoir/stratigraphic.py:L166-L175] [src/digitalmodel/reservoir/stratigraphic.py:L249-L253]
 
-No geographic coordinate, phase or horizontal-distance input is consumed by the plotter; ordering follows the requested UWI categories and it plots tracks rather than a spatially scaled section. [src/digitalmodel/reservoir/stratigraphic.py:L267-L290] [src/digitalmodel/reservoir/stratigraphic.py:L311-L319]
+No geographic coordinate, phase or horizontal-distance input is consumed by the plotter; when every requested well has log rows, ordering follows the requested UWI categories and it plots tracks rather than a spatially scaled section. [src/digitalmodel/reservoir/stratigraphic.py:L267-L290] [src/digitalmodel/reservoir/stratigraphic.py:L311-L319]
 
 ## 3. Method and governing standards
 
@@ -88,23 +95,23 @@ The applicable set is G0, G1, G2 and G5; G3 and G4 are NOT_APPLICABLE for this P
 
 | Gate | Applicability / route | Check IDs |
 | --- | --- | --- |
-| G0 | Applicable: caller input contract, units and provenance review before calculation | R-G0a, R-G0b, R-G0c |
+| G0 | Applicable: caller input contract, units and provenance review before calculation | R-G0a, R-G0b; no executable check on volumetric inputs |
 | G1 | Applicable: Python imports and offline pytest; no target-program deck is written by these APIs | R-G1a, R-G1b |
-| G2 | Applicable: arithmetic checks independent of the production function calls; external validation remains open | R-G2a, R-G2b |
+| G2 | Applicable: arithmetic checks independent of the production function calls; external validation remains open | R-G2a, R-G2b, R-G2c |
 | G3 | NOT_APPLICABLE: no dynamic time integration in the covered functions | None. [src/digitalmodel/reservoir/volumetrics.py:L40-L64] [src/digitalmodel/reservoir/stratigraphic.py:L239-L360] |
 | G4 | NOT_APPLICABLE: no diffraction body or panel calculation in the covered functions | None. [src/digitalmodel/reservoir/volumetrics.py:L40-L64] [src/digitalmodel/reservoir/stratigraphic.py:L239-L360] |
 | G5 | Applicable: retain test results, code pin, citations, input provenance and limits with any calculation report | R-G5a |
 
-Checks defined: **8** (G0: 3, G1: 2, G2: 2, G3: 0, G4: 0, G5: 1). The following are repeatable checks, with acceptance criteria prescribed here; their passing results do not resolve the section-6 defects.
+Checks defined: **8** (G0: 2, G1: 2, G2: 3, G3: 0, G4: 0, G5: 1). The following are repeatable checks, with acceptance criteria prescribed here; their passing results do not resolve the section-6 defects.
 
 | ID | Executable check | Numeric pass criterion and unit | Evidence / current result |
 | --- | --- | --- | --- |
 | R-G0a | Run `tests/reservoir/test_stratigraphic.py::TestErrorHandling::test_create_cross_section_empty_wells_list` | 1 expected ValueError, 0 unexpected exceptions (counts) | PASS / PASS. [tests/reservoir/test_stratigraphic.py:L177-L184] |
 | R-G0b | Run `tests/reservoir/test_stratigraphic.py::TestErrorHandling::test_create_cross_section_missing_columns` | 1 expected ValueError, 0 unexpected exceptions (counts) | PASS / PASS. [tests/reservoir/test_stratigraphic.py:L186-L194] |
-| R-G0c | Run `tests/reservoir/test_volumetrics.py::TestOoip::test_higher_boi_lowers_ooip` | `ooip(higher Boi) - ooip(base) < 0 STB` for the stated two inputs | PASS / PASS. [tests/reservoir/test_volumetrics.py:L30-L33] |
+| R-G2c | Run `tests/reservoir/test_volumetrics.py::TestOoip::test_higher_boi_lowers_ooip` | `ooip(higher Boi) - ooip(base) < 0 STB` for the stated two inputs | PASS / PASS. [tests/reservoir/test_volumetrics.py:L30-L33] |
 | R-G1a | Run both `tests/reservoir/test_stratigraphic.py::TestModuleImport` nodes | 2 passes, 0 failed nodes (counts); functions callable/present | PASS / PASS; mocked imports only. [tests/reservoir/test_stratigraphic.py:L93-L108] |
 | R-G1b | Run `tests/reservoir/test_stratigraphic.py::TestFunctionSignatures::test_create_cross_section_returns_figure` | 0 missing returned objects (count), 0 exceptions | PASS / PASS; mock figure smoke. [tests/reservoir/test_stratigraphic.py:L118-L136] |
-| R-G2a | Run OOIP regression; independently evaluate the displayed product/division using decimal arithmetic and the inline test inputs | Absolute difference ≤ 48.5 STB (relative assertion 1e-6), arithmetic result 48,487,500.0 STB | PASS arithmetic and test; verifies algebra only. [tests/reservoir/test_volumetrics.py:L19-L28] |
+| R-G2a | Run OOIP regression; independently evaluate the displayed product/division using decimal arithmetic and the inline test inputs | Relative tolerance `rel=1e-6`, arithmetic result 48,487,500.0 STB | PASS arithmetic and test; verifies algebra only. [tests/reservoir/test_volumetrics.py:L19-L28] |
 | R-G2b | Run both `TestRecovery` nodes; independently multiply the inline volume by 0.25 and by `(0.30 - 0.22)` | Differences ≤ 25.0 STB and ≤ 8.0 STB respectively; expected 25,000,000 and 8,000,000 STB | PASS arithmetic and tests; engineering recovery factors remain caller assumptions. [tests/reservoir/test_volumetrics.py:L36-L43] |
 | R-G5a | Resolve every pack `[path:Lstart-Lend]` reference with `git show <code-pin>:<path>`; retain counts, test-node outcomes and SHA-256 of the input source files in the evidence record | 0 unresolved citations, 0 missing outcomes for the 5 section-4 cases (counts) | Self-check evidence; does not constitute an independently signed report appendix (AQG r0, sections 9 and 11). |
 
@@ -139,9 +146,9 @@ Audit date for all rows: 2026-10-18. There are no explicit swallowing `except` b
 | S14 | OOIP accepts negative or nonfinite quantities and out-of-range fractions; zero Boi reaches division directly. [src/digitalmodel/reservoir/volumetrics.py:L29-L48] | no detection check exists; issue pending (1) |
 | S15 | Recovery functions accept unbounded factors and decreasing factors can return negative uplift. [src/digitalmodel/reservoir/volumetrics.py:L52-L64] | R-G2b covers nominal arithmetic only; no invalid-input detection check exists; issue pending (1) |
 | S16 | `figsize=(18,10)`, zero subplot spacing, color opacity 0.5/0.7 and top datum zero are display defaults; they are not confidence factors or reservoir properties. [src/digitalmodel/reservoir/stratigraphic.py:L107-L115] [src/digitalmodel/reservoir/stratigraphic.py:L190-L200] [src/digitalmodel/reservoir/stratigraphic.py:L244-L244] [src/digitalmodel/reservoir/stratigraphic.py:L280-L290] [src/digitalmodel/reservoir/stratigraphic.py:L355-L357] | R-G1b is smoke only; no appearance detection check exists; issue pending (3) |
-| S17 | Raw facies values go to `imshow` with a sorted color list and no fixed class normalization; code/color identity is not explicitly preserved across subsets. [src/digitalmodel/reservoir/stratigraphic.py:L222-L231] | no detection check exists; issue pending (3) |
+| S17 | Raw facies values go to `imshow` with a sorted color list and no fixed class normalization; colors scale to the codes present, so code/color identity can fail even within one well. With codes 0–4 and the default 0–5 palette, code 2 receives code 3's color and codes 3–4 receive the next colors. Fix direction: use a fixed `BoundaryNorm` built from the palette keys. [src/digitalmodel/reservoir/stratigraphic.py:L222-L231] | no detection check exists; issue pending (3) |
 | S18 | RT gradient normalization uses each well's own min/max, so color is not a shared resistivity scale across wells. [src/digitalmodel/reservoir/stratigraphic.py:L136-L147] | no detection check exists; issue pending (3) |
-| S19 | A requested well without any log rows has no observed group; an empty filtered dataset can return a figure with blank tracks rather than a rejected input. [src/digitalmodel/reservoir/stratigraphic.py:L70-L83] [src/digitalmodel/reservoir/stratigraphic.py:L267-L290] [src/digitalmodel/reservoir/stratigraphic.py:L299-L302] [src/digitalmodel/reservoir/stratigraphic.py:L355-L360] | no detection check exists; issue pending (3) |
+| S19 | A requested well without log rows has no observed group. Slots are assigned by enumerating observed groups rather than positions in `wells_list`: for requested wells [A, B, C] with no logs for B, C is drawn in B's slot and the last slot is blank, with no figure warning. An empty filtered dataset can return blank tracks rather than a rejected input. [src/digitalmodel/reservoir/stratigraphic.py:L70-L83] [src/digitalmodel/reservoir/stratigraphic.py:L267-L290] [src/digitalmodel/reservoir/stratigraphic.py:L299-L314] [src/digitalmodel/reservoir/stratigraphic.py:L355-L360] | no detection check exists; issue pending (3) |
 
 Additional confirmed coverage and traceability gaps:
 
@@ -151,7 +158,7 @@ Additional confirmed coverage and traceability gaps:
 | Plotter and plotting tests cite #1633, whose current issue describes a different validation problem | File references are at the pin; issue #1633 was read directly and is not evidence of a reservoir incident. [src/digitalmodel/reservoir/stratigraphic.py:L1-L4] [tests/reservoir/test_stratigraphic.py:L1-L3] | issue pending (4); no detection check exists |
 | Plotting tests replace Matplotlib with mocks | R-G1a/R-G1b cannot detect renderer errors, depth-axis inversion interactions, or sparse-well connector placement. [tests/reservoir/test_stratigraphic.py:L24-L51] [tests/reservoir/test_stratigraphic.py:L124-L136] [src/digitalmodel/reservoir/stratigraphic.py:L339-L357] | issue pending (3); no rendered-geometry detection check exists |
 
-No incident issue was specified for this package. The read issue #842 supplies a volumetrics problem lead, not an independent validation result; it is not treated as a confirmed defect. [tests/reservoir/test_volumetrics.py:L46-L74]
+No incident issue was specified for this package. Issue #842 is a separately read volumetrics problem lead; the cited test lines establish only the external problem source, not the issue association. It supplies no independent validation result; it is not treated as a confirmed defect. [tests/reservoir/test_volumetrics.py:L46-L74]
 
 ## 7. Lessons log
 
@@ -182,9 +189,9 @@ Prescribed producing role: calculation/documentation maintainer. Route method cl
 
 ### Implementation-map inventory
 
-Map audit record: ref `origin/codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, declared data revision `270c8759c374b67a7f032953e7fcdb14e0224461`. Every family implementation row was filtered on `path.startswith("src/digitalmodel/reservoir/")`; **0** families have an in-package row among **13** mapped families. The required inventory is therefore empty. Map citations in this section resolve at that map commit. [docs/registry/implementation-map.yaml:L1-L4] [docs/registry/implementation-map.yaml:L346-L26502]
+Map audit record: ref `origin/codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, declared data revision `270c8759c374b67a7f032953e7fcdb14e0224461`. Every family implementation row was filtered on `path.startswith("src/digitalmodel/reservoir/")`; **0** families have an in-package row among **13** mapped families. The required inventory is therefore empty. Map citations in this section resolve at that map commit. [docs/registry/implementation-map.yaml@3256bab9:L1-L4] [docs/registry/implementation-map.yaml@3256bab9:L346-L26502]
 
-Counted families: **0**. Ranking by in-package row count, with file-order ties, produces an empty list; the case-sensitive Python `re` grep is **NOT_APPLICABLE**, because there is no mapped family with an in-package implementation row. No path-matching signal needs exclusion, and no unlisted second implementation is counted. This is an inventory result, not a completeness claim for the map. [docs/registry/implementation-map.yaml:L346-L26502]
+Counted families: **0**. Ranking by in-package row count, with file-order ties, produces an empty list; the case-sensitive Python `re` grep is **NOT_APPLICABLE**, because there is no mapped family with an in-package implementation row. No path-matching signal needs exclusion, and no unlisted second implementation is counted. This is an inventory result, not a completeness claim for the map. [docs/registry/implementation-map.yaml@3256bab9:L346-L26502]
 
 Map follow-up: add volumetric OOIP/recovery, density porosity and stratigraphic plotting/depth-alignment families, including the covered definitions below; these are the section-3 method families missing from the map (issue pending (5)). [src/digitalmodel/reservoir/volumetrics.py:L40-L64] [src/digitalmodel/reservoir/stratigraphic.py:L156-L231] [src/digitalmodel/reservoir/stratigraphic.py:L239-L360]
 
@@ -220,7 +227,7 @@ Search hits about reservoir pressure in other engineering domains, or the separa
 | --- | --- | --- | --- |
 | C01 | UNVERIFIED plotting units/depth convention and independent constant/default provenance (both section-2/3 statements); document caller bounds and invalid-input checks, including saturation, finite values and equal densities | Calculation maintainer | issue pending (1) |
 | C02 | No independently validated worked example; qualify a public reference and test-node tolerance before describing OOIP or plotting as validated; problem #842 remains a lead | Calculation quality manager | issue pending (2); #842 |
-| C03 | Silent omissions, plot defaults, sparse-well connectors, per-well RT scale and facies color normalization; add actual rendering and referential-integrity checks | Calculation maintainer | issue pending (3) |
+| C03 | Silent omissions, plot defaults, sparse-well connectors, per-well RT scale and facies color normalization; add actual rendering and referential-integrity checks, including requested wells [A, B, C] with no logs for B: assert that C retains its requested slot and the missing B is explicitly reported; use fixed `BoundaryNorm` bins from palette keys for facies | Calculation maintainer | issue pending (3) |
 | C04 | Thirty legacy framework skips and unrelated #1633 references; choose the correct API and repair test/incident traceability | Test maintainer | issue pending (4) |
 | C05 | Add all section-3 method families to the map, including the outside-package implementations listed in section 9; no counted-family grep applies until there are in-package rows | Map maintainer | issue pending (5) |
 | C06 | UNVERIFIED deputy/shared-log assignment; neutral indexing of the two discovery files, report appendix ownership and durable evidence publication remain open; no private values or sidecar entry are needed for the synthetic cases retained here | Documentation maintainer | issue pending (6) |
