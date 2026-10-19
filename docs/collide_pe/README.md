@@ -51,8 +51,7 @@ inlining the math.
 ## Concepts connect to llm-wiki (the knowledge-base dot)
 
 Conceptual/definition problems (viscosity, corrosion, LWD, …) have no calc — but the *concept*
-is knowledge, and knowledge lives in **llm-wiki** (`wikis/<discipline>/wiki/concepts/<x>.md`),
-which is where Deckhand's `wells-subsurface` pack sources its concept pages. So each conceptual
+is knowledge, and knowledge lives in **llm-wiki** (`wikis/<discipline>/wiki/concepts/<x>.md`). Each conceptual
 problem YAML carries a `wiki_concept:` pointer to its llm-wiki page (existing or newly authored)
 — the same "connect the dot" move as `domain_function:`, but into the wiki instead of code.
 
@@ -62,18 +61,15 @@ horsehead→`sucker-rod-pumping-overview`); 3 were missing and were authored in
 `reservoir-engineering/wiki/concepts/` (`fluid-viscosity`, `reservoir-drive-mechanisms`,
 `thermal-recovery-eor`) on llm-wiki branch `feat/collide-pe-concepts`.
 
-## Two epics
+## Program and delivery
 
 - **Epic A — Solve the series.** This directory. One GitHub issue per problem,
-  ordered by hotness; we work top-of-`backlog.yml` first and append as new problems post.
-- **Epic B — Deckhand-routed solver, Telegram transport.** `solve.py:solve_problem()`
-  is the transport-free engine. Epic B wraps it as a Deckhand `solve <slug>` command on
-  the Hermes gateway: the operator sends `solve pe-2026-06-19` in Telegram, Deckhand runs
-  the solver + renderer on the host, and replies with the answer and the brief link.
-  The Claude API call stays in `solve.py` so it is testable independent of transport.
+  ordered by hotness; start at the top of `backlog.yml` and append as new problems post.
+- **Delivery.** Deckhand retired 2026-10-18 (deckhand issue 599).
+  `solve.py:solve_problem()` remains the transport-free engine. Render the brief
+  with `render_brief.py` and publish the HTML as described below.
 
 ## Sharing the brief as a link
 
 The brief is a single static HTML file. To turn it into a link, publish `briefs/<id>.html`
-to any static host (the `aceengineer-website` repo, GitHub Pages, or an object store). Epic B's
-Deckhand command automates "render → publish → reply with link".
+to a static host (for example GitHub Pages or an object store), then share its URL.

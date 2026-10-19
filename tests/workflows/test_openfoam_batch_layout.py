@@ -22,17 +22,18 @@ def test_hosted_root_is_environment_owned_and_output_remains_local(tmp_path: Pat
         {"work_root_namespace": "gpu-canary"},
         cfg_dir,
         env={
-            "DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+            "DIGITALMODEL_EXECUTION_CONTEXT": "hosted",
             "DIGITALMODEL_WORK_ROOT": str(root),
         },
     )
     assert paths.operator_root == root.resolve()
+    assert paths.execution_context == "hosted"
     assert paths.output_dir == cfg_dir / "results"
     assert paths.namespace == "gpu-canary"
     with pytest.raises(ValueError, match="operator environment"):
         resolve_batch_paths(
             {"work_root_namespace": "gpu-canary", "work_root": str(root)}, cfg_dir,
-            env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+            env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted",
                  "DIGITALMODEL_WORK_ROOT": str(root)},
         )
 
@@ -44,7 +45,7 @@ def test_namespace_rejects_nonportable_components(tmp_path: Path, namespace: str
     with pytest.raises(ValueError, match="namespace"):
         resolve_batch_paths(
             {"work_root_namespace": namespace}, tmp_path,
-            env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+            env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted",
                  "DIGITALMODEL_WORK_ROOT": str(root)},
         )
 
@@ -52,7 +53,16 @@ def test_namespace_rejects_nonportable_components(tmp_path: Path, namespace: str
 def test_hosted_missing_root_rejects_before_side_effect(tmp_path: Path) -> None:
     before = set(tmp_path.iterdir())
     with pytest.raises(ValueError, match="DIGITALMODEL_WORK_ROOT"):
-        resolve_batch_paths({}, tmp_path, env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand"})
+        resolve_batch_paths({}, tmp_path, env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted"})
+    assert set(tmp_path.iterdir()) == before
+
+
+def test_unknown_environment_context_rejects_before_side_effect(tmp_path: Path) -> None:
+    before = set(tmp_path.iterdir())
+    with pytest.raises(ValueError, match="unsupported DIGITALMODEL_EXECUTION_CONTEXT"):
+        resolve_batch_paths(
+            {}, tmp_path, env={"DIGITALMODEL_EXECUTION_CONTEXT": "unsupported"}
+        )
     assert set(tmp_path.iterdir()) == before
 
 
@@ -93,7 +103,7 @@ def test_external_output_must_remain_beneath_input_scope(tmp_path: Path) -> None
     cfg_dir, root = tmp_path / "input", tmp_path / "scratch"
     cfg_dir.mkdir()
     root.mkdir()
-    env = {"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+    env = {"DIGITALMODEL_EXECUTION_CONTEXT": "hosted",
            "DIGITALMODEL_WORK_ROOT": str(root)}
     for output in (str(tmp_path / "outside"), "../outside"):
         with pytest.raises(ValueError, match="input-local"):

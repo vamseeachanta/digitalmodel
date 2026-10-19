@@ -14,7 +14,7 @@ from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 
 
 WORKER_CORE_FRACTION = 0.9
-HOSTED_CONTEXT = "hosted-deckhand"
+HOSTED_CONTEXT = "hosted"
 TRUSTED_LOCAL_CONTEXT = "trusted-local"
 DEFAULT_OUTPUT_DIR = "results"
 DEFAULT_WORK_DIR = "batch_runs"
@@ -211,7 +211,10 @@ def resolve_batch_paths(
     environment = os.environ if env is None else env
     cfg_dir = cfg_dir.resolve()
     output_dir = _resolve(run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir)
-    hosted = environment.get("DIGITALMODEL_EXECUTION_CONTEXT") == HOSTED_CONTEXT
+    environment_context = environment.get("DIGITALMODEL_EXECUTION_CONTEXT")
+    if environment_context not in (None, "", HOSTED_CONTEXT):
+        raise ValueError("unsupported DIGITALMODEL_EXECUTION_CONTEXT")
+    hosted = environment_context == HOSTED_CONTEXT
     if hosted:
         if "work_root" in run_settings:
             raise ValueError("hosted run_batch.work_root is forbidden; operator environment owns the root")
