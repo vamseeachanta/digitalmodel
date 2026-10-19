@@ -26464,6 +26464,49 @@ families:
     unresolved_definitions: 56
   coverage: partial
   coverage_reason: Unresolved name matches are recorded individually in rejected_candidates; classification requires inspection.
+- id: reel-lay-residual-curvature
+  title: Reel-lay strain and residual-curvature screening
+  source_revision: 272a424107ab9b2a3084bb61dada36dd66d601e8
+  classification_scope: reel_workflow_only
+  qualification: classification_only
+  numerical_qualification: NOT_EVALUATED
+  native_solver_qualification: NOT_EVALUATED
+  search_signals:
+  - search: algorithm
+    pattern: \b(?:run_reel_lay|_reel_result)\b
+  implementations:
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: run_reel_lay
+    line: 90
+    kind: function
+    what: Validates reel-lay settings and delegates strain and residual-curvature calculation to _reel_result; optionally adds operability output.
+    signals:
+    - reel_core_radius_m
+    - residual_curvature_1_per_m
+    relation: caller
+    module: pipelay/workflow.py
+    file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
+    body_sha256: 7972cdab275e067c76cb828fdbe2a70f25743cc41a1b5db1f7b7510c9b500aa7
+    delegates_to:
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: _reel_result
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: _reel_result
+    line: 110
+    kind: function
+    what: Evaluates the assumed straightener removal fraction, residual curvature, bending strain and small-slope out-of-straightness screening quantities.
+    signals:
+    - reel_core_radius_m
+    - residual_curvature_1_per_m
+    relation: independent
+    module: pipelay/workflow.py
+    file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
+    body_sha256: 35f473bd5b3d8f906bbec8d12a311abbfe5eb19aac831e272b55a4e35414f9d2
+  identical_groups: []
+  first_module: pipelay/workflow.py
+  coverage: partial
+  coverage_reason: Scoped source inspection covers only the reel-lay wrapper and calculation; operability, stinger and J-lay classification remain for later slices. No repository-wide search was regenerated.
+  notes: Source classification only. The numerical assumptions are documented in src/digitalmodel/pipelay/docs/screening-basis.md, E5-E6; this inventory does not qualify those assumptions or any acceptance limit.
 byte_identical_groups:
 - id: file-001
   sha256: 62095d6e678265a526f70da009a8909b60d9e8fed8d790d3e091f7b5f32656f3
