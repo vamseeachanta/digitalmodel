@@ -5,7 +5,7 @@ This package provides:
 - **rao_processing**: RAO data I/O, interpolation, format conversion, comparison
 - **hydro_coefficients**: Added mass, damping, excitation force storage & conversion
 - **panel_mesh**: WAMIT GDF panel mesh I/O, quality metrics, volume/area calculation
-- **wave_spectrum**: JONSWAP, PM, Bretschneider, ISSC, Ochi-Hubble, Torsethaugen spectra
+- **wave_spectrum**: JONSWAP, PM, Bretschneider, ISSC, Ochi-Hubble, synthetic two-peak spectra
 - **motion_statistics**: Short/long-term response statistics, MSI
 - **drift_forces**: Mean/slowly-varying drift forces, Newman approximation, wind/current
 - **vessel_database**: Common vessel parameters and representative RAO data
@@ -29,6 +29,9 @@ from digitalmodel.orcawave.hydro_coefficients import (
     HydroCoefficients,
     interpolate_matrix_at_frequency,
     interpolate_excitation_at_frequency,
+    to_native_added_mass,
+    to_native_damping,
+    from_native_added_mass,
     to_wamit_added_mass,
     to_wamit_damping,
     from_wamit_added_mass,
@@ -55,6 +58,7 @@ from digitalmodel.orcawave.wave_spectrum import (
     bretschneider,
     issc_spectrum,
     ochi_hubble,
+    heuristic_two_peak,
     torsethaugen,
     generate_spectrum,
     compute_spectral_moments,
@@ -112,6 +116,9 @@ __all__ = [
     "HydroCoefficients",
     "interpolate_matrix_at_frequency",
     "interpolate_excitation_at_frequency",
+    "to_native_added_mass",
+    "to_native_damping",
+    "from_native_added_mass",
     "to_wamit_added_mass",
     "to_wamit_damping",
     "from_wamit_added_mass",
@@ -136,6 +143,7 @@ __all__ = [
     "bretschneider",
     "issc_spectrum",
     "ochi_hubble",
+    "heuristic_two_peak",
     "torsethaugen",
     "generate_spectrum",
     "compute_spectral_moments",
