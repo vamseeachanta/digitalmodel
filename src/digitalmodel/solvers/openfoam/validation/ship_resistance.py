@@ -45,6 +45,7 @@ whose condition tuple is incomplete.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from dataclasses import dataclass
@@ -727,6 +728,11 @@ def build_ship_resistance_case(
     # tutorial does.
     (case / "0").mkdir(exist_ok=True)
     (case / "constant" / "triSurface").mkdir(parents=True, exist_ok=True)
+    from ..near_wall_acceptance import pending_near_wall
+
+    (case / "near_wall_acceptance.json").write_text(
+        json.dumps(pending_near_wall(), indent=2) + "\n", encoding="utf-8"
+    )
     return case
 
 
@@ -962,6 +968,8 @@ def evaluate_ship_resistance_run(
     companion_config: ShipResistanceConfig | None = None,
     mesh_cells: Optional[int] = None,
     companion_mesh_cells: Optional[int] = None,
+    near_wall_measurements=None,
+    near_wall_criteria=None,
 ) -> Dict[str, Any]:
     """Score a solved run against V1, V2a, V2b and (if given a pair) V3.
 
@@ -1094,6 +1102,13 @@ def evaluate_ship_resistance_run(
             "iterative_scatter_ct": companion_coeffs["scatter"],
         }
 
+    from ..near_wall_acceptance import assess_near_wall
+
+    supplied = near_wall_measurements or {}
+    expected = ["primary", "companion"] if companion_force_dat is not None else ["primary"]
+    manifest["criteria"]["near_wall"] = assess_near_wall(
+        {name: supplied.get(name) for name in expected}, near_wall_criteria
+    )
     manifest["summary"] = {
         name: bool(verdict["passed"])
         for name, verdict in manifest["criteria"].items()

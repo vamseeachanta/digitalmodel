@@ -338,7 +338,9 @@ def test_a_settled_force_is_stable_and_a_drifting_one_is_not(tmp_path) -> None:
         _force_file(tmp_path, 1.25, name="settled.dat"), _config()
     )
     assert settled["force_convergence"]["verdict"] == "stable"
-    assert settled["admissibility"]["admissible"] is True
+    # A stable force alone no longer qualifies the wall treatment.
+    assert settled["near_wall"]["status"] == "NOT_EVALUATED"
+    assert settled["admissibility"]["admissible"] is False
 
     drifting = evaluate_double_body_run(
         _force_file(tmp_path, 1.25, drift=0.05, name="drifting.dat"), _config()

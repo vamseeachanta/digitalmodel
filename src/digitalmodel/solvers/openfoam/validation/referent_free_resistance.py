@@ -769,6 +769,8 @@ def evaluate_referent_free_run(
     *,
     companions: Sequence[Tuple[Path | str, int]] = (),
     mesh_cells: Optional[int] = None,
+    near_wall_measurements=None,
+    near_wall_criteria=None,
 ) -> Dict[str, Any]:
     """Score a solved run for a hull with no published coefficient.
 
@@ -858,6 +860,13 @@ def evaluate_referent_free_run(
             f"{grid['classification']!r}); a coefficient without a numerical "
             "band is a single number with unknown error."
         )
+    from ..near_wall_acceptance import assess_near_wall
+
+    supplied = near_wall_measurements or {}
+    expected = ["primary"] + [f"companion_{index}" for index in range(len(companions))]
+    wall = assess_near_wall({name: supplied.get(name) for name in expected}, near_wall_criteria)
+    if not wall["passed"]:
+        reasons.append(f"near-wall qualification is {wall['status']}")
     admissible = not reasons
 
     ct = production["ct"]
@@ -880,6 +889,7 @@ def evaluate_referent_free_run(
         )
 
     return {
+        "near_wall": wall,
         "mode": "referent_free_prediction",
         "issue": "#2023",
         "validation": {
