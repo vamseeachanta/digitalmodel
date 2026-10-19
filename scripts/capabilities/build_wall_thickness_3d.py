@@ -33,6 +33,9 @@ from digitalmodel.structural.analysis.wall_thickness import (
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
 
+# Case inputs: build_wall_thickness_explorer.py, reference case (repository).
+# No public design case is supplied: assumed, based on previous experience.
+# These are illustrative inputs, not prescribed material or design limits.
 _OD_M = 0.3239
 _GRADE = "X65"
 _SMYS_PA = 448.0e6
@@ -42,6 +45,9 @@ _EXTERNAL_PRESSURE_PA = 10.0e6
 _SAFETY_CLASS = SafetyClass.MEDIUM
 _FABRICATION_TOLERANCE = 0.125
 
+# Area is the exact annular area; capacities follow ApiStd2rdStrategy
+# compute_plastic_tension / compute_yield_moment (API STD 2RD, 2013).
+# The moment expression is the inherited thin-wall approximation.
 _REFERENCE_WALL_M = 0.018
 _REFERENCE_AREA_M2 = math.pi / 4 * (
     _OD_M**2 - (_OD_M - 2 * _REFERENCE_WALL_M) ** 2
@@ -54,6 +60,8 @@ _YIELD_MOMENT_NM = (
     * (_OD_M - _REFERENCE_WALL_M) ** 2
     * _REFERENCE_WALL_M
 )
+# The 60% endpoint is a visualization sampling choice from this reference
+# study, not a standards-derived factor or an acceptance criterion.
 _TENSION_MAX_N = round(0.6 * _YIELD_TENSION_N)
 _MOMENT_MAX_NM = round(0.6 * _YIELD_MOMENT_NM)
 
@@ -76,6 +84,32 @@ _CHECK_NAMES = tuple(
 )
 
 
+def _validate_axes(walls, tensions, moments, codes) -> None:
+    for name, values in (
+        ("wall_thickness_mm", walls),
+        ("effective_tension_n", tensions),
+        ("bending_moment_nm", moments),
+    ):
+        if not values or any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+            for value in values
+        ):
+            raise ValueError(f"{name} must contain finite nonnegative numbers")
+        if any(a >= b for a, b in zip(values, values[1:])):
+            raise ValueError(f"{name} must be strictly increasing")
+    if walls[0] <= 0 or walls[-1] >= _OD_M * 1000 / 2:
+        raise ValueError("wall_thickness_mm must lie between zero and OD/2")
+    if (
+        not codes
+        or any(not isinstance(code, DesignCode) for code in codes)
+        or len(codes) != len(set(codes))
+    ):
+        raise ValueError("codes must contain unique DesignCode members")
+
+
 def _axis_metadata(values: Sequence[float], unit: str) -> dict:
     if not values:
         raise ValueError(f"{unit} grid axis must not be empty")
@@ -95,6 +129,7 @@ def build_metadata(
     codes: Sequence[DesignCode] = _DESIGN_CODES,
 ) -> dict:
     """Describe the reference case, capacity basis, units, and emitted grid."""
+    _validate_axes(wall_thickness_mm, effective_tension_n, bending_moment_nm, codes)
     grid = {
         "wall_thickness_mm": _axis_metadata(wall_thickness_mm, "mm"),
         "effective_tension_n": _axis_metadata(effective_tension_n, "N"),
@@ -116,6 +151,29 @@ def build_metadata(
     ]
     return {
         "schema_version": 1,
+        "qualification": {
+            "status": "NOT_EVALUATED",
+            "inputs": "assumed, based on previous experience",
+            "intended_use": "illustrative load-interaction screening only",
+            "limits": (
+                "No independent standards compliance qualification; fatigue, "
+                "installation history, defects and compression are not evaluated. "
+                "A governing code check is not a complete design assessment."
+            ),
+        },
+        "sources": {
+            "inputs": "scripts/capabilities/build_wall_thickness_explorer.py",
+            "interaction": {
+                "document": "API STD 2RD, Method 1 (inherited implementation)",
+                "edition": "2013",
+                "implementation": (
+                    "src/digitalmodel/structural/analysis/"
+                    "wall_thickness_codes/api_std_2rd.py"
+                ),
+                "qualification": "standard text not independently verified",
+            },
+            "area": "exact annular integration: A = pi*t*(D-t)",
+        },
         "geometry": {
             "outer_diameter_m": _OD_M,
             "corrosion_allowance_m": 0.0,
@@ -135,6 +193,9 @@ def build_metadata(
         },
         "safety_class": _SAFETY_CLASS.value,
         "load_range_basis": {
+            "qualification": (
+                "capacity-scaled sampling choice, not an allowable-load envelope"
+            ),
             "reference_wall_thickness_mm": _REFERENCE_WALL_M * 1000.0,
             "reference_area_m2": _REFERENCE_AREA_M2,
             "tension": {
@@ -208,6 +269,8 @@ def _analyze_point(
         "utilisation": round(float(result.max_utilisation), 6),
         "governing_check": result.governing_check,
         "is_safe": bool(result.is_safe),
+        "qualification": "NOT_EVALUATED",
+        "code_reference": result.code_reference,
     }
     row.update({f"{name}_utilisation": None for name in _CHECK_NAMES})
     row.update(
@@ -226,6 +289,9 @@ def build_study(
     codes: Sequence[DesignCode] = _DESIGN_CODES,
 ) -> dict:
     """Run the requested grid and return metadata plus tidy result rows."""
+    meta = build_metadata(
+        wall_thickness_mm, effective_tension_n, bending_moment_nm, codes
+    )
     rows = [
         _analyze_point(code, wall_mm, tension_n, moment_nm)
         for code in codes
@@ -234,27 +300,29 @@ def build_study(
         for moment_nm in bending_moment_nm
     ]
     return {
-        "meta": build_metadata(
-            wall_thickness_mm,
-            effective_tension_n,
-            bending_moment_nm,
-            codes,
-        ),
+        "meta": meta,
         "rows": rows,
     }
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    import argparse
     import json
     from pathlib import Path
 
     repo = Path(__file__).resolve().parents[2]
-    out = repo / "docs" / "api" / "structural" / "wall-thickness-3d.json"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output", type=Path,
+        default=repo / "docs/api/structural/wall-thickness-3d.json",
+        help="full study destination; large generated studies need not enter Git",
+    )
+    out = parser.parse_args(argv or []).output
     study = build_study()
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(study, indent=1) + "\n", encoding="utf-8")
     meta = study["meta"]
-    print(f"wrote {out} ({out.stat().st_size / 1048576:.1f} MB)")
+    print(f"wrote {out.name} ({out.stat().st_size / 1048576:.1f} MB)")
     print(
         f"  rows: {meta['grid']['row_count']:,} "
         f"over {meta['grid']['code_count']} codes"
@@ -262,4 +330,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main(sys.argv[1:])

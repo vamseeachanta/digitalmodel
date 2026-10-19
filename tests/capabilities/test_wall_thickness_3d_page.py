@@ -3,6 +3,8 @@
 
 import importlib.util
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -141,7 +143,7 @@ def test_page_has_accessible_controls_and_an_automatic_2d_fallback():
     assert "plotly-3.6.0.min.js" in page
     assert "plotly-latest" not in page
     assert "overflow-x:hidden" in page
-    assert 'href="wall-thickness-3d.json"' in page
+    assert 'href="../../examples/wall-thickness-load-example.html"' in page
 
 
 def test_default_view_marks_the_dnv_acceptance_boundary():
@@ -192,4 +194,114 @@ def test_main_reads_the_full_study_path_and_writes_the_explorer(
     renderer.main()
 
     assert output.read_text(encoding="utf-8").startswith("<!DOCTYPE html>")
-    assert "embedded JSON bytes" in capsys.readouterr().out
+    assert "sidecar JSON bytes" in capsys.readouterr().out
+
+
+def test_main_writes_a_fetched_bounded_sidecar(tmp_path, capsys):
+    renderer = _load_module()
+    renderer._REPO = tmp_path
+    renderer._SOURCE = tmp_path / "full.json"
+    renderer._OUTPUT = tmp_path / "explorer.html"
+    renderer._SOURCE.write_text(json.dumps(_study()), encoding="utf-8")
+    renderer.main()
+    page = renderer._OUTPUT.read_text(encoding="utf-8")
+    sidecar = renderer._OUTPUT.with_suffix(".json")
+    raw = sidecar.read_bytes()
+    data = json.loads(raw)
+    assert 'fetch("explorer.json"' in page
+    assert '<script id="study-data"' not in page
+    assert data["m"]["z"] == len(raw) < 400_000
+    assert data["m"]["p"] == 72
+    assert data["m"]["qualification"]["status"] == "NOT_EVALUATED"
+    assert "embedded JSON bytes" not in capsys.readouterr().out
+    assert "400 kB" in page
+    assert "Data could not be loaded" in page
+
+
+@pytest.mark.parametrize("data_url", ["https://example.invalid/a.json", "../a.json", "a</script>.json"])
+def test_external_contract_rejects_nonlocal_urls(data_url):
+    with pytest.raises(ValueError, match="sidecar"):
+        _load_module().build_page(_study(), data_url=data_url)
+
+
+def test_snapshot_has_an_explicit_row_cap(monkeypatch):
+    renderer = _load_module()
+    monkeypatch.setattr(renderer, "_MAX_DISPLAY_POINTS", 1)
+    def unexpected_packing(*args):
+        pytest.fail("point cap must be checked before allocation")
+    monkeypatch.setattr(renderer, "_pack_rows", unexpected_packing)
+    with pytest.raises(ValueError, match="point cap"):
+        renderer.build_page(_study())
+
+
+@pytest.mark.parametrize("webgl", [False, True])
+@pytest.mark.parametrize("external", [False, True])
+def test_viewer_executes_at_mobile_width_without_plotly(tmp_path, webgl, external):
+    """Run shipped JavaScript with a 375 px canvas and no external library.
+
+    The viewport is the issue's mobile acceptance width. Canvas calls are
+    recorded rather than rendered; finite coordinates and working wall/code
+    controls are checked without starting a browser or requiring WebGL.
+    """
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node is unavailable")
+    page = _load_module().build_page(_study())
+    raw, _payload = _embedded_payload(page)
+    if external:
+        page = _load_module().build_page(_study(), data_url="data.json")
+    script = page.rsplit("<script>", 1)[1].split("</script>", 1)[0]
+    harness = r"""
+const assert = require('node:assert/strict');
+const calls = [];
+const context = new Proxy({}, {get:(_target, name)=>(...args)=>{
+  args.filter(x=>typeof x==='number').forEach(x=>assert(Number.isFinite(x)));
+  calls.push(name);
+}, set:()=>true});
+const elements = new Map();
+function element(id){if(!elements.has(id))elements.set(id, {
+ value:'0',style:{},textContent:'',innerHTML:'',max:0,
+ parentElement:{getBoundingClientRect:()=>({width:375,height:390})},
+ setAttribute(){},addEventListener(event,fn){this.oninput=fn;},add(option){this.value=option.value;},
+ getContext:()=>context
+});return elements.get(id);}
+global.document={getElementById:element,documentElement:{},createElement:()=>({getContext:()=>WEBGL})};
+global.window={WebGLRenderingContext:WEBGL,addEventListener(){}};
+global.devicePixelRatio=1;
+global.getComputedStyle=()=>({getPropertyValue:()=> '#222'});
+global.Option=function(text,value){this.text=text;this.value=value;};
+element('study-data').textContent=RAW;
+global.fetch=()=>Promise.resolve({ok:true,json:()=>Promise.resolve(JSON.parse(element('study-data').textContent))});
+""".replace("WEBGL", "true" if webgl else "false").replace("RAW", json.dumps(raw))
+    trailer = r"""
+setImmediate(()=>{
+assert(calls.includes('fillRect'));
+assert.match(element('wall-value').textContent, /mm/);
+assert.match(element('summary').innerHTML, /Range/);
+assert.match(element('mode').textContent, /2D/);
+assert(element('fallback').width<=375);
+element('wall').value='0';element('wall').oninput();
+assert.equal(element('wall-value').textContent,'8.0 mm');
+element('code').value='API-RP-1111';element('code').oninput();
+assert.match(element('summary').innerHTML,/Range/);
+});
+"""
+    target = tmp_path / "viewer.cjs"
+    target.write_text(harness + script + trailer, encoding="utf-8")
+    result = subprocess.run([node, str(target)], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
+
+
+def test_capability_card_links_to_the_delivered_load_explorer():
+    cards = json.loads((REPO_ROOT / "docs/capability-map/capability-cards.json").read_text())
+    card = next(card for card in cards if card["id"] == "wall-thickness-explorer")
+    assert card["link"] == "docs/api/structural/wall-thickness-3d-explorer.html"
+    assert "tension" in card["summary"].lower()
+    assert "assumed" in card["summary"].lower()
+
+
+def test_worked_example_records_inputs_method_answer_and_limits():
+    example = REPO_ROOT / "docs/examples/wall-thickness-load-example.html"
+    text = example.read_text(encoding="utf-8")
+    for phrase in ("Revision history", "Inputs", "Method", "Answer", "NOT_EVALUATED", "assumed, based on previous experience"):
+        assert phrase in text
