@@ -1,103 +1,25 @@
-"""
-Comprehensive test suite for digitalmodel.engine module.
+"""Test engine configuration, routing, and error handling.
 
-This test file provides extensive coverage for the engine.py module including:
-- Unit tests for all public functions
-- Parametrized tests for different input scenarios
-- Mock all external dependencies (file I/O, API calls, etc.)
-- Edge case tests (empty inputs, invalid data, exceptions)
-- Integration tests for the main engine() function workflow
-- Property-based tests using Hypothesis where applicable
-
-Tests are designed to achieve maximum coverage of the 144 lines in engine.py.
+Dependency doubles are scoped to each test. The real engine source is executed
+without changing the import state retained by domain tests.
 """
 
 import os
 import sys
-import tempfile
-import shutil
 from pathlib import Path
-from unittest.mock import patch, MagicMock, Mock, mock_open
-from typing import Dict, Any, Optional, List
+from unittest.mock import patch, MagicMock
 import pytest
 import yaml
-import json
-import hypothesis
-from hypothesis import given, strategies as st, settings, assume, example
+from hypothesis import given, strategies as st, settings, assume
 from hypothesis.stateful import RuleBasedStateMachine, invariant, rule, Bundle
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+from tests.engine_test_support import AttributeDict
+from tests.engine_test_support import engine_test_doubles as engine_test_doubles
 
-# Mock problematic imports before importing engine
-def mock_imports():
-    """Mock imports that commonly cause test failures."""
-    problematic_modules = [
-        'scipy',
-        'scipy.interpolate',
-        'scipy.interpolate._interpolate',
-        'orcfxapi',
-        'ansys.mapdl',
-        'ansys.dpf',
-        'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_circular',
-        'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular',
-        'digitalmodel.signal_processing.signal_analysis.fatigue',
-        'digitalmodel.infrastructure.common.ship_design',
-        # New canonical paths (Phase 2D)
-        'digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection',
-        'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular',
-        'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular',
-        'digitalmodel.infrastructure.base_solvers.marine.ship.ship_design',
-        'digitalmodel.infrastructure.base_solvers.structural.plate_buckling',
-        'digitalmodel.infrastructure.base_solvers.marine.pipe_properties',
-        'digitalmodel.modules.mooring.mooring',
-        'digitalmodel.solvers.orcaflex.orcaflex',
-        'digitalmodel.solvers.orcaflex.orcaflex_file_management',
-        'digitalmodel.solvers.orcaflex.orcaflex_installation',
-        'digitalmodel.solvers.orcaflex.orcaflex_modal_analysis',
-        'digitalmodel.solvers.orcaflex.umbilical_analysis_components',
-        'digitalmodel.structural.pipe_capacity.pipe_capacity',
-        'digitalmodel.subsea.pipeline.pipeline',
-        'digitalmodel.hydrodynamics.rao_analysis.rao_analysis',
-        'digitalmodel.signal_processing.time_series.time_series_analysis',
-        'digitalmodel.infrastructure.transformation.transformation',
-        'digitalmodel.subsea.vertical_riser.vertical_riser',
-        'digitalmodel.subsea.viv_analysis.viv_analysis',
-        'digitalmodel.infrastructure.common.plate_buckling',
-        'digitalmodel.aqwa',
-        'digitalmodel.infrastructure.common.cathodic_protection',
-        'assetutilities.common.ApplicationManager',
-        'assetutilities.common.data',
-        'assetutilities.common.file_management',
-        'assetutilities.common.update_deep',
-        'assetutilities.common.yml_utilities'
-    ]
+# Bound by engine_test_doubles during each test, never during collection.
+engine = None
 
-    for module_name in problematic_modules:
-        if module_name not in sys.modules:
-            sys.modules[module_name] = MagicMock()
-
-# Apply mocks before importing
-mock_imports()
-
-try:
-    from digitalmodel.engine import engine
-except ImportError:
-    # If import still fails, create a mock engine function
-    def engine(*args, **kwargs):
-        return {'basename': 'mock', 'result': 'mocked'}
-
-try:
-    from assetutilities.common.update_deep import AttributeDict
-except ImportError:
-    # Create a simple AttributeDict mock
-    class AttributeDict(dict):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.__dict__ = self
-
-# Test markers
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.usefixtures("engine_test_doubles")]
 
 
 class TestEngineConfiguration:
@@ -204,10 +126,6 @@ class TestEngineConfiguration:
 
         # Test quiet mode
         with patch('digitalmodel.engine.get_output_level_from_argv') as mock_output:
-            # Use engine's own OutputController binding: sibling test modules
-            # replace sys.modules['...output_control'] with fresh mocks at
-            # collection time, so re-importing here yields a different object
-            # than the one engine compares against.
             from digitalmodel.engine import OutputController
             mock_output.return_value = OutputController.QUIET
 
@@ -259,18 +177,12 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_catenary.assert_called_once()
                     mock_instance.router.assert_called_once_with(cfg)
 
-    @pytest.mark.skip(reason="vertical_riser import is commented out in engine.py - feature disabled")
     def test_vertical_riser_routing(self):
-        """Test routing to vertical riser module.
-
-        Note: This test is skipped because the vertical_riser import is
-        commented out in engine.py (line 33). The routing code exists but
-        would fail at runtime.
-        """
+        """The vertical riser function receives the configuration directly."""
         cfg = {"basename": "vertical_riser"}
 
         with patch('digitalmodel.engine.vertical_riser') as mock_vertical_riser:
@@ -280,7 +192,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_vertical_riser.assert_called_once_with(cfg)
 
     def test_orcaflex_routing(self):
@@ -299,7 +211,7 @@ class TestModuleRouting:
                     mock_app_manager.save_cfg = MagicMock()
 
                     with patch('digitalmodel.engine.logger'):
-                        result = engine(cfg=cfg, config_flag=False)
+                        engine(cfg=cfg, config_flag=False)
                         mock_orcaflex.assert_called_once()
                         mock_instance.router.assert_called_once_with(cfg)
 
@@ -316,7 +228,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_aqwa.assert_called_once()
                     mock_instance.router.assert_called_once_with(cfg)
 
@@ -333,7 +245,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_modal.assert_called_once()
                     mock_instance.run_modal_analysis.assert_called_once_with(cfg)
 
@@ -350,7 +262,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_umbilical.assert_called_once()
                     mock_instance.perform_analysis.assert_called_once_with(cfg)
 
@@ -367,7 +279,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_fatigue.assert_called_once()
                     mock_instance.router.assert_called_once_with(cfg)
 
@@ -384,7 +296,7 @@ class TestModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_pipeline.assert_called_once()
                     mock_instance.router.assert_called_once_with(cfg)
 
@@ -419,7 +331,7 @@ class TestComplexModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_dnv.assert_called_once()
                     mock_instance.get_orcaflex_6dbuoy.assert_called_once_with(cfg)
 
@@ -439,7 +351,7 @@ class TestComplexModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_dnv.assert_called_once()
                     mock_instance.get_orcaflex_6dbuoy.assert_called_once_with(cfg)
 
@@ -459,7 +371,7 @@ class TestComplexModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_install.assert_called_once()
                     mock_instance.create_model_for_water_depth.assert_called_once_with(cfg)
 
@@ -478,7 +390,7 @@ class TestComplexModuleRouting:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_install.assert_called_once()
                     # Should not call create_model_for_water_depth when flag is False
                     mock_instance.create_model_for_water_depth.assert_not_called()
@@ -499,7 +411,7 @@ class TestComplexModuleRouting:
                     mock_app_manager.save_cfg = MagicMock()
 
                     with patch('digitalmodel.engine.logger'):
-                        result = engine(cfg=cfg, config_flag=False)
+                        engine(cfg=cfg, config_flag=False)
                         mock_ofm.assert_called_once()
                         mock_instance.file_management.assert_called_once_with(cfg)
 
@@ -509,17 +421,7 @@ class TestDynamicImports:
 
     def test_rigging_dynamic_import(self):
         """Test rigging module with dynamic import."""
-        import sys
         cfg = {"basename": "rigging"}
-
-        # Mock the missing rigging_components module before importing rigging
-        mock_slings = MagicMock()
-        mock_shackles = MagicMock()
-        mock_components = MagicMock()
-        mock_components.Slings = mock_slings
-        mock_components.Shackles = mock_shackles
-        sys.modules['digitalmodel.custom'] = MagicMock()
-        sys.modules['digitalmodel.custom.rigging_components'] = mock_components
 
         # Now we can safely patch the rigging module path
         with patch('digitalmodel.specialized.rigging.rigging.Rigging') as mock_rigging:
@@ -531,7 +433,7 @@ class TestDynamicImports:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_rigging.assert_called_once()
                     mock_instance.get_rigging_groups.assert_called_once_with(cfg)
 
@@ -549,7 +451,7 @@ class TestDynamicImports:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_catenary.assert_called_once()
                     mock_instance.router.assert_called_once_with(cfg)
 
@@ -612,7 +514,7 @@ class TestAllModuleBasenames:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
                     mock_module.assert_called_once()
 
 
@@ -714,7 +616,7 @@ class TestErrorHandling:
                     mock_mooring.return_value = mock_mooring_instance
 
                     with patch('digitalmodel.engine.logger'):
-                        result = engine(cfg=cfg, config_flag=True)
+                        engine(cfg=cfg, config_flag=True)
 
                         mock_app_manager.configure.assert_called_once()
                         mock_app_manager.configure_result_folder.assert_called_once()
@@ -751,7 +653,7 @@ class TestConfigurationManagement:
                         mock_fm.return_value = mock_fm_instance
 
                         with patch('digitalmodel.engine.logger'):
-                            result = engine(inputfile=temp_config_file, config_flag=True)
+                            engine(inputfile=temp_config_file, config_flag=True)
 
                             # Verify config paths are tracked through the processing
                             mock_app_manager.configure.assert_called_once()
@@ -780,7 +682,7 @@ class TestConfigurationManagement:
                     mock_fm.return_value = mock_fm_instance
 
                     with patch('digitalmodel.engine.logger'):
-                        result = engine(cfg=cfg, config_flag=True)
+                        engine(cfg=cfg, config_flag=True)
 
                         # Verify correct parameters passed to configure
                         call_args = mock_app_manager.configure.call_args[0]
@@ -811,22 +713,13 @@ def sample_config():
 
 
 @pytest.fixture
-def temp_config_file():
-    """Create a temporary config file for testing."""
-    config_data = {
-        "basename": "test_module",
-        "inputs": {"test": "value"}
-    }
-
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
-        yaml.dump(config_data, f)
-        temp_file = f.name
-
-    yield temp_file
-
-    # Cleanup
-    if os.path.exists(temp_file):
-        os.unlink(temp_file)
+def temp_config_file(tmp_path):
+    """Create a configuration in pytest's temporary directory."""
+    path = tmp_path / "config.yml"
+    path.write_text(yaml.safe_dump({
+        "basename": "test_module", "inputs": {"test": "value"}
+    }))
+    return str(path)
 
 
 class TestEnginePropertyBased:
@@ -1068,7 +961,7 @@ class TestEngineEdgeCases:
                 mock_app_manager.save_cfg = MagicMock()
 
                 with patch('digitalmodel.engine.logger'):
-                    result = engine(cfg=cfg, config_flag=False)
+                    engine(cfg=cfg, config_flag=False)
 
                     # Should not call create_model_for_water_depth when flag is False
                     mock_install_instance.create_model_for_water_depth.assert_not_called()
