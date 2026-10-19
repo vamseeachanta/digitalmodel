@@ -17,7 +17,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark import (
 def worked_example() -> dict:
     """Score four invented labels and predictions against hand arithmetic.
 
-    NIST/SEMATECH e-Handbook 7.2.4.1, Wilson score formula (accessed 2026):
+    NIST/SEMATECH e-Handbook 7.2.4.1, Wilson score formula (accessed 2026-10-19):
     choose z=2 as an example input, n=4 and p=2/4. The denominator is 2,
     centre is 1/2 and radius is sqrt(1/8); accuracy is 50.0%, bounds are
     14.6% and 85.4%. Neither z nor the four-card threshold is a recommendation.

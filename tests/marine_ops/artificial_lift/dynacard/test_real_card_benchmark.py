@@ -49,7 +49,7 @@ def document():
 def test_overall_score_matches_independent_hand_calculation():
     """Accuracy = (1 normal + 1 gas correct) / 4 = 1/2.
 
-    NIST/SEMATECH e-Handbook 7.2.4.1 (Wilson score formula, accessed 2026):
+    NIST/SEMATECH e-Handbook 7.2.4.1 (Wilson score formula, accessed 2026-10-19):
     with confidence = Phi(2)-Phi(-2), z = 2, p = 1/2 and n = 4,
     denominator = 2, centre = 1/2, radius = sqrt(1/8).
     Thus the bounds are (1-sqrt(1/2))/2 and (1+sqrt(1/2))/2.
@@ -117,7 +117,7 @@ def test_cli_empty_corpus_has_no_field_estimate_or_model_claim(tmp_path):
 
 
 def test_cli_scores_with_shipped_model_and_retains_artifact_digest(tmp_path):
-    """A fixture can verify plumbing but cannot establish field performance."""
+    """Plumbing test only: counts and digests do not establish field performance."""
     cli = importlib.import_module(PACKAGE + ".__main__")
     path = tmp_path / "fixture.json"
     path.write_text(json.dumps(document()))
@@ -170,7 +170,7 @@ def test_cli_model_scores_against_hand_constructed_tree_logits(tmp_path, monkeyp
     }
     model_path = tmp_path / "model.json"
     model_path.write_text(json.dumps(model))
-    monkeypatch.setattr(cli, "_MODEL_PATH", model_path)
+    monkeypatch.setattr(cli, "MODEL_PATH", model_path)
     path = tmp_path / "cards.json"
     path.write_text(json.dumps(document()))
     result = cli.benchmark_document(path, minimum_count=4, confidence=0.95)
@@ -216,3 +216,44 @@ def test_worked_example_is_explicitly_arithmetic_only():
     assert result["score"]["overall"]["correct"] == 2
     assert result["score"]["overall"]["accuracy"] == 0.5
     assert result["field_status"] == "Not Evaluated"
+
+
+@pytest.mark.parametrize("prediction", ["ABSTAIN", "OUTSIDE_TAXONOMY"])
+def test_overall_counts_unrecognised_predictions_as_wrong(prediction):
+    score = score_predictions(
+        ["NORMAL", "GAS_LOCK"], ["NORMAL", prediction], minimum_count=2,
+    )
+    assert score["overall"]["count"] == 2
+    assert score["overall"]["correct"] == 1
+    assert score["overall"]["wrong"] == 1
+    assert score["overall"]["accuracy"] == 0.5
+    assert score["confusion_matrix"]["GAS_LOCK"][prediction] == 1
+
+
+def test_unmapped_labels_are_retained_but_excluded_from_scoring():
+    data = document()
+    data["cards"].append({**data["cards"][0], "label": "unmapped"})
+    result = BenchmarkRunner(
+        real_set=load_labelled_set(data), minimum_count=4,
+        ml_classifier=lambda card: "NORMAL", heuristic_classifier=lambda card: "GAS_LOCK",
+    ).run().to_dict()["sections"]["real_card_accuracy"]
+    assert result["unmapped_labels"] == {"unmapped": 1}
+    assert len(result["predictions"]) == 4
+    for method in ("ml", "heuristic"):
+        overall = result["methods"][method]["overall"]
+        assert overall["count"] == 4
+        assert overall["correct"] == overall["wrong"] == 2
+        assert overall["accuracy"] == 0.5
+
+
+def test_public_model_classifier_matches_cached_production_path():
+    from digitalmodel.marine_ops.artificial_lift.dynacard import diagnostics
+
+    card = load_labelled_set(document()).cards[0].card
+    model = diagnostics.PumpDiagnostics._load_model()
+    assert model is not None
+    expected = diagnostics.PumpDiagnostics.classify_card(card)
+    assert diagnostics.classify_with_model(card, model) == expected
+    stale = {**model, "scaling": {"min": [0], "max": [1]}}
+    with pytest.raises(ValueError, match="expects 1 features"):
+        diagnostics.classify_with_model(card, stale)

@@ -71,10 +71,10 @@ def score_predictions(labels, predictions, *, minimum_count=DEFAULT_MINIMUM_COUN
             item.update(status="Evaluated", accuracy=correct / total,
                         interval=list(wilson_interval(correct, total, confidence=confidence)))
         per_class[mode] = item
-    # Accuracy: scikit-learn Model evaluation guide, Accuracy score (2026),
+    # Accuracy: scikit-learn Model evaluation guide, Accuracy score (accessed 2026-10-19),
     # https://scikit-learn.org/stable/modules/model_evaluation.html#accuracy-score
     # This is the confusion-matrix trace divided by the number of cards.
-    # Interval: NIST/SEMATECH e-Handbook 7.2.4.1, Wilson score (accessed 2026).
+    # Interval: NIST/SEMATECH e-Handbook 7.2.4.1, Wilson score (accessed 2026-10-19).
     # Apply the caller's reporting threshold to the overall estimate as well.
     total = len(labels)
     correct = sum(matrix[mode][mode] for mode in MODES)

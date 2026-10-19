@@ -10,8 +10,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from ..diagnostics import _MODEL_PATH, _check_feature_count, _predict_from_trees
-from ..feature_extraction import FeatureExtractor
+from ..diagnostics import MODEL_PATH, classify_with_model
 from ..models import CardData
 from .runner import BenchmarkRunner
 from .test_set_builder import load_labelled_set
@@ -37,16 +36,13 @@ def benchmark_document(
     if dataset is not None and dataset.cards:
         # The training domain is documented in training.py, not inferred from
         # the exported CV number. Never present synthetic CV as a field score.
-        model_bytes = _MODEL_PATH.read_bytes()
+        model_bytes = MODEL_PATH.read_bytes()
         model = json.loads(model_bytes)
 
         def predict_card(card: CardData) -> str:
             # Reuse production inference against the exact bytes identified
             # below, independently of any process-level classifier cache.
-            vector = FeatureExtractor.extract_classifier_vector(card)
-            _check_feature_count(vector, model)
-            normalised = FeatureExtractor.normalize(vector, model["scaling"])
-            return _predict_from_trees(normalised, model)[0]
+            return classify_with_model(card, model)
 
         classifier = predict_card
         artifact.update(
