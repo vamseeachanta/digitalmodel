@@ -5,7 +5,7 @@
 | Module / repository | `marine_ops` / `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/` |
 | Scope | Direct Python files; sub-packages retain separate qualification |
-| Pack revision / status | 2 / DRAFT — unverified screening inputs |
+| Pack revision / status | 4 / DRAFT — unverified screening inputs |
 | Current code reference | Functions in the same Git revision as this pack |
 | Prior discovery code pin | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Prior implementation-map pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
@@ -21,6 +21,13 @@ and heading. `envelope_for_operations()` applies that calculation to each key.
 The catalogue is unverified screening input, not a standards-derived design
 allowable. The [calculation basis](envelope-basis.md) defines equations B1–B5 and
 table B6. Audit disposition: [2747](https://github.com/vamseeachanta/digitalmodel/issues/2747).
+
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 4 | 2026-10-19 | Bound inventory fingerprints, search matches and definition ranges to the recorded Git revision so later source edits and checkout line endings do not invalidate historical evidence; live symbol completeness remains checked. |
+| 3 | 2026-10-18 | Supplemented historical discovery with the current direct-function inventory and checked repository locators because numerical helpers moved into a separate file. |
 
 ## 2. Inputs and outputs
 
@@ -175,6 +182,51 @@ Required reviewer: engineering calculations family quality manager, on a provide
 UNVERIFIED: U4 — a deputy quality manager assignment and shared-log entry are not established in this repository; nomination and registration remain required, [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771).
 
 ## 9. Dependencies and other implementations
+
+### Revision-pinned direct-package inventory
+
+[method-inventory.json](method-inventory.json) supplements the historical map
+below. Its code reference is `272a424107ab9b2a3084bb61dada36dd66d601e8`;
+source fingerprints and definition ranges bind the observations to that revision.
+Tests read Git blobs at that pin for digests, definition ranges and search
+matches, including the shared map and upstream definitions. Checkout line
+endings and later source edits do not change this historical evidence. The pin
+must be available in local Git history; unavailable blobs fail explicitly.
+Live completeness checks still compare the direct-file and symbol sets with
+the inventory. They do not require current line ranges or whole-file digests
+to match an earlier revision. Behavioural evidence, including duplicate-key
+handling, describes the recorded revision and does not qualify later behaviour.
+It enumerates all 22 explicit function definitions in the three direct Python
+files, including private helpers, class methods and properties. Imported and
+generated dataclass methods and sub-package definitions are excluded.
+The counts are discovery observations from those definitions, not acceptance
+limits or numerical qualification.
+
+Each row gives a method description, relation, inspection evidence and map
+status. The map's two `independent` labels for `operation_envelope` and
+`_significant_response` are retained as historical `recorded_independent`
+statuses. Inspection at the code pin identifies orchestration and delegation,
+respectively; these are distinct from an independent numerical implementation.
+Other definitions are explicitly `not_recorded` in that mapped family, rather
+than silently classified as qualified implementations. The central registry
+remains unchanged.
+
+The exact three `wave-spectra` search patterns and embedded map data revision
+are retained. Case-sensitive `re.search` runs on every source line in all three
+direct files, including docstrings and imports, with empty match lists retained.
+This extends the historical two-file search without rewriting its evidence.
+The upstream definition locators identify `WaveSpectra.jonswap` and the three
+seakeeping functions; delegation does not establish numerical equivalence.
+
+Published documentation locators in this supplement are repository-relative:
+this pack's dependency section and [the calculation basis](envelope-basis.md).
+Tests check their files and exact headings, plus upstream symbol ranges and
+fingerprints, without importing or executing discovered implementations.
+No external documentation locator is newly asserted. The previously withheld
+locator, wider helper-family reconciliation and numerical qualification remain
+`NOT_EVALUATED` under issue 2770; no restricted locator is reproduced or inferred.
+The earlier completeness and miss-count statements below apply only to their
+original discovery pins.
 
 ### Direct dependencies and scope boundary
 

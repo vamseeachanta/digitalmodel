@@ -1,0 +1,419 @@
+{
+  "schema": "marine-ops-method-inventory-v1",
+  "code_revision": "272a424107ab9b2a3084bb61dada36dd66d601e8",
+  "qualification": "NOT_EVALUATED",
+  "historical_inventory": {
+    "code_revision": "7aad603be1c6136106dbb2381ce5096b050654f8",
+    "map_revision": "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4",
+    "map_data_revision": "270c8759c374b67a7f032953e7fcdb14e0224461"
+  },
+  "map": {
+    "path": "docs/registry/implementation-map.yaml",
+    "observed_at_revision": "272a424107ab9b2a3084bb61dada36dd66d601e8",
+    "data_revision": "270c8759c374b67a7f032953e7fcdb14e0224461",
+    "sha256": "3bb10aa9cfc37dc4f09a6fcb699e31be53649b7b32a18a7f127bbab6db844695",
+    "family": "wave-spectra"
+  },
+  "scope": "All AST function definitions directly in package Python files, including private helpers, methods and properties; excludes imports, generated methods and sub-packages.",
+  "files": [
+    {
+      "path": "src/digitalmodel/marine_ops/__init__.py",
+      "sha256": "7b0e589fb1fb37237e5cb7e31320987f743633ce92537b4c9c71dcd7cc0872ca"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "sha256": "d3a7c90f7a0f4e791099309b766c0182eb80b547eab837ebafa1f46ebfcef44d"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "sha256": "51587aa025a00b6ff309f58eab769890bc55a2335b315c2a80b1d0123b979130"
+    }
+  ],
+  "functions": [
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "positive",
+      "lines": [
+        8,
+        10
+      ],
+      "relation": "validation",
+      "method": "positive scalar input",
+      "evidence": "Rejects non-scalar, non-finite and non-positive values.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "finite_grid",
+      "lines": [
+        13,
+        19
+      ],
+      "relation": "validation",
+      "method": "finite input grid",
+      "evidence": "Rejects invalid dimension, empty grids and non-finite values.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "validate_operation",
+      "lines": [
+        22,
+        33
+      ],
+      "relation": "validation",
+      "method": "operation criteria contract",
+      "evidence": "Checks alpha, criterion DOFs, units and positive limits; delegates to positive.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "validate_component",
+      "lines": [
+        36,
+        55
+      ],
+      "relation": "validation",
+      "method": "RAO array contract",
+      "evidence": "Checks declared units, distinct axes, shape and finite non-negative magnitudes.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "integrate",
+      "lines": [
+        58,
+        60
+      ],
+      "relation": "delegation",
+      "method": "trapezoidal quadrature",
+      "evidence": "Delegates to NumPy trapezoid, with trapz compatibility fallback.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "spectrum",
+      "lines": [
+        63,
+        82
+      ],
+      "relation": "numerical_helper",
+      "method": "wave-spectra",
+      "evidence": "Delegates density to WaveSpectra.jonswap; independently estimates retained variance and checks it.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "extrapolated_fraction",
+      "lines": [
+        85,
+        113
+      ],
+      "relation": "numerical_helper",
+      "method": "response coverage",
+      "evidence": "Integrates held-edge response tails through integrate; no unseen resonance qualification.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/envelope_numerics.py",
+      "symbol": "heading_column",
+      "lines": [
+        116,
+        126
+      ],
+      "relation": "numerical_helper",
+      "method": "circular heading selection",
+      "evidence": "Selects a nearest circular heading and rejects unsupported mismatch; no inferred symmetry.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "available_operations",
+      "lines": [
+        119,
+        120
+      ],
+      "relation": "lookup",
+      "method": "catalogue keys",
+      "evidence": "Returns stored operation keys.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "resolve_operation",
+      "lines": [
+        123,
+        131
+      ],
+      "relation": "lookup",
+      "method": "catalogue resolution",
+      "evidence": "Returns an explicit Operation or resolves a catalogue key; unknown keys raise.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "EnvelopePoint.hs_forecast_limit_m",
+      "lines": [
+        146,
+        148
+      ],
+      "relation": "alias",
+      "method": "forecast criterion naming",
+      "evidence": "Returns the stored hs_limit_m without recomputation.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "EnvelopeResult.require_valid_points",
+      "lines": [
+        161,
+        175
+      ],
+      "relation": "validation",
+      "method": "result status contract",
+      "evidence": "Accepts explicit coverage gaps and checks evaluated point status and limits.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "EnvelopeResult.require_evaluated",
+      "lines": [
+        177,
+        180
+      ],
+      "relation": "validation",
+      "method": "result completeness",
+      "evidence": "Delegates validity checks and rejects coverage gaps.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "EnvelopeResult.hs_limit_at",
+      "lines": [
+        182,
+        187
+      ],
+      "relation": "lookup",
+      "method": "period lookup",
+      "evidence": "Validates result states and returns a stored matching limit or None.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "EnvelopeResult.to_dict",
+      "lines": [
+        189,
+        212
+      ],
+      "relation": "serialization",
+      "method": "result mapping",
+      "evidence": "Validates result states and serializes fields; no numerical recomputation.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "operation_envelope",
+      "lines": [
+        215,
+        254
+      ],
+      "relation": "orchestration",
+      "method": "wave-spectra",
+      "evidence": "Validates inputs, delegates period calculations to _evaluate_point and attaches screening provenance.",
+      "map_status": "recorded_independent"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "_evaluate_point",
+      "lines": [
+        257,
+        276
+      ],
+      "relation": "numerical_helper",
+      "method": "criterion aggregation",
+      "evidence": "Combines local spectrum, response and coverage helpers; chooses a forecast limit or a coverage gap.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "envelope_for_operations",
+      "lines": [
+        279,
+        290
+      ],
+      "relation": "orchestration",
+      "method": "operation batch",
+      "evidence": "At code_revision, delegates to operation_envelope for each supplied operation; repeated keys overwrite. Later revisions may reject duplicate keys.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "plot_envelopes",
+      "lines": [
+        293,
+        323
+      ],
+      "relation": "presentation",
+      "method": "envelope plotting",
+      "evidence": "Validates results and plots stored limits, leaving explicit coverage gaps; no independent solver.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "_component_for",
+      "lines": [
+        326,
+        327
+      ],
+      "relation": "lookup",
+      "method": "RAO component access",
+      "evidence": "Returns a named component using getattr with a None fallback.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "_rao_by_heading",
+      "lines": [
+        330,
+        341
+      ],
+      "relation": "numerical_helper",
+      "method": "RAO interpolation",
+      "evidence": "Delegates circular selection to heading_column and uses NumPy interpolation with held edges.",
+      "map_status": "not_recorded"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/operation_envelope.py",
+      "symbol": "_significant_response",
+      "lines": [
+        344,
+        351
+      ],
+      "relation": "delegation",
+      "method": "wave-spectra",
+      "evidence": "Delegates response spectrum, moment and amplitude to seakeeping functions; checks moment validity.",
+      "map_status": "recorded_independent"
+    }
+  ],
+  "search_mode": "case-sensitive re.search per source line",
+  "search_signals": [
+    {
+      "search": "algorithm",
+      "pattern": "jonswap|pierson.moskowitz|bretschneider|ochi.hubble|torsethaugen|gaussian.swell|\\bISSC\\b|spectral_moment|normalize_to_significant|spectral_density|gamma\\s*\\*\\*|S_PM|S_pm|np\\.exp|math\\.exp|spectral_density|spectrum\\s*\\*|sigma\\s*=",
+      "matching_lines": {
+        "src/digitalmodel/marine_ops/__init__.py": [],
+        "src/digitalmodel/marine_ops/envelope_numerics.py": [
+          66,
+          74,
+          75,
+          78
+        ],
+        "src/digitalmodel/marine_ops/operation_envelope.py": [
+          38,
+          346
+        ]
+      }
+    },
+    {
+      "search": "vocabulary",
+      "pattern": "spectrum|spectral.density|wave.spectra|JONSWAP",
+      "matching_lines": {
+        "src/digitalmodel/marine_ops/__init__.py": [],
+        "src/digitalmodel/marine_ops/envelope_numerics.py": [
+          63,
+          64,
+          71,
+          78,
+          81
+        ],
+        "src/digitalmodel/marine_ops/operation_envelope.py": [
+          13,
+          36,
+          40,
+          42,
+          258,
+          345
+        ]
+      }
+    },
+    {
+      "search": "constants_or_keys",
+      "pattern": "0\\.07|0\\.09|0\\.287|peak_enhancement",
+      "matching_lines": {
+        "src/digitalmodel/marine_ops/__init__.py": [],
+        "src/digitalmodel/marine_ops/envelope_numerics.py": [],
+        "src/digitalmodel/marine_ops/operation_envelope.py": []
+      }
+    }
+  ],
+  "upstream": [
+    {
+      "path": "src/digitalmodel/hydrodynamics/wave_spectra.py",
+      "symbol": "WaveSpectra.jonswap",
+      "lines": [
+        46,
+        96
+      ],
+      "sha256": "9b314e7095d6ca497966dba5d366bb700715aa3ff1444822414fa22faa2c5dc9",
+      "relation": "delegated_implementation",
+      "qualification": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/seakeeping.py",
+      "symbol": "compute_response_spectrum",
+      "lines": [
+        30,
+        53
+      ],
+      "sha256": "bbb3cee4dc4ebf4167c0afdf67aff442aae75dedb6c6f8c9e87bf7bbf135e4d9",
+      "relation": "delegated_implementation",
+      "qualification": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/seakeeping.py",
+      "symbol": "spectral_moments",
+      "lines": [
+        56,
+        82
+      ],
+      "sha256": "bbb3cee4dc4ebf4167c0afdf67aff442aae75dedb6c6f8c9e87bf7bbf135e4d9",
+      "relation": "delegated_implementation",
+      "qualification": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/seakeeping.py",
+      "symbol": "significant_amplitude",
+      "lines": [
+        85,
+        104
+      ],
+      "sha256": "bbb3cee4dc4ebf4167c0afdf67aff442aae75dedb6c6f8c9e87bf7bbf135e4d9",
+      "relation": "delegated_implementation",
+      "qualification": "NOT_EVALUATED"
+    }
+  ],
+  "documentation": [
+    {
+      "path": "src/digitalmodel/marine_ops/docs/agent-pack.md",
+      "heading": "## 9. Dependencies and other implementations"
+    },
+    {
+      "path": "src/digitalmodel/marine_ops/docs/envelope-basis.md",
+      "heading": "## Governing equations"
+    }
+  ],
+  "remaining_gaps": [
+    {
+      "topic": "Reconcile helper families and adjacent implementations in the central method map.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "topic": "Resolve the previously withheld documentation locator after publication review; no restricted locator is reproduced.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "topic": "Qualify numerical equivalence and standards provenance independently of discovery.",
+      "status": "NOT_EVALUATED"
+    }
+  ]
+}
