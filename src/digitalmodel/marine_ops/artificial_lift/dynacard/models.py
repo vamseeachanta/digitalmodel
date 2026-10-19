@@ -14,7 +14,6 @@ from .constants import (
     DEFAULT_FLUID_DENSITY_LB_PER_FT3,
     DEFAULT_MINIMUM_TENSILE_STRENGTH_PSI,
     GRAVITATIONAL_ACCELERATION_SI,
-    GRAVITATIONAL_ACCELERATION_FT_PER_S2,
     DENSITY_OF_WATER_SI_KG_PER_M3,
     DENSITY_OF_STEEL_SI_KG_PER_M3,
     DEFAULT_PRIME_MOVER_EFFICIENCY,
@@ -256,12 +255,12 @@ class GearBoxLoadingAnalysis(BaseModel):
 
 
 class PowerConsumptionAnalysis(BaseModel):
-    """Results from power consumption analysis."""
-    card_area: float = 0.0  # ft-lbs (work per stroke)
-    polished_rod_horsepower: float = 0.0  # HP
-    prime_mover_horsepower: float = 0.0  # HP
-    power_consumption_kw: float = 0.0  # kW
-    daily_energy_consumption: float = 0.0  # kWh
+    """Power results; None means no calculation completed, not zero power."""
+    card_area: Optional[float] = None  # ft-lbs (work per stroke)
+    polished_rod_horsepower: Optional[float] = None  # HP
+    prime_mover_horsepower: Optional[float] = None  # HP
+    power_consumption_kw: Optional[float] = None  # kW
+    daily_energy_consumption: Optional[float] = None  # kWh
     motor_design: str = "Others"  # "Mark II" or "Others" (pumping unit class)
     # Prime mover provenance. "electric" | "gas_engine" | "unspecified" | ...
     prime_mover_type: str = "unspecified"
@@ -301,16 +300,21 @@ class LoadRatioAnalysis(BaseModel):
 class CardGeometryAnalysis(BaseModel):
     """Results from card geometry analysis."""
     area: float = 0.0  # in-lbs (position*load units)
-    # DEPRECATED: mixes inches and pounds under one sqrt, so it is not a
+    # Null compatibility field: mixing inches and pounds cannot define a
     # physical length and must not be interpreted as one. Use
     # position_path_length / load_path_length (dimensionally meaningful) or
     # normalized_perimeter (dimensionless shape complexity) instead.
-    perimeter: float = Field(
-        default=0.0,
+    perimeter: None = Field(
+        default=None,
         deprecated=(
             "perimeter mixes inches and pounds and is not a physical length; "
             "use position_path_length, load_path_length or normalized_perimeter"
         ),
+    )
+    # Frozen arbitrary feature for the existing classifier; never a length.
+    # Excluded from serialized engineering results. See issue #1864.
+    legacy_perimeter_feature: Optional[float] = Field(
+        default=None, exclude=True, repr=False
     )
     # Dimensionally meaningful replacements for `perimeter`
     position_path_length: float = 0.0  # inches - total polished-rod travel per cycle
@@ -410,7 +414,11 @@ class IdealCardAnalysis(BaseModel):
     # Deviation from measured card (surface domain). None = not computable.
     load_deviation_rms: Optional[float] = None  # lbs (branch-wise RMS difference)
     stroke_length_difference: Optional[float] = None  # inches (|measured - ideal| stroke)
-    shape_similarity: Optional[float] = None  # (0, 1] (1 = identical shape)
+    shape_similarity: Optional[float] = None  # [-1, 1], signed centered cosine
+    # Frozen distance score for the existing classifier, excluded from reports.
+    legacy_shape_feature: Optional[float] = Field(
+        default=None, exclude=True, repr=False
+    )
     # Simulation parameters
     fillage_assumed: float = 1.0  # 0-1 (pump fillage)
     num_time_points: int = 0  # number of simulation points

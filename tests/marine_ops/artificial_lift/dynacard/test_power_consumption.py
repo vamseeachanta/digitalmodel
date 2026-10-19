@@ -1,7 +1,6 @@
 # ABOUTME: Unit tests for power consumption analysis module.
 # ABOUTME: Validates card area calculation, motor design detection, and energy estimates.
 
-import math
 import pytest
 import numpy as np
 from pathlib import Path
@@ -448,11 +447,11 @@ class TestPowerConsumptionAnalysisModel:
     def test_analysis_defaults(self):
         """Test PowerConsumptionAnalysis default values."""
         analysis = PowerConsumptionAnalysis()
-        assert analysis.card_area == 0.0
-        assert analysis.polished_rod_horsepower == 0.0
-        assert analysis.prime_mover_horsepower == 0.0
-        assert analysis.power_consumption_kw == 0.0
-        assert analysis.daily_energy_consumption == 0.0
+        assert analysis.card_area is None
+        assert analysis.polished_rod_horsepower is None
+        assert analysis.prime_mover_horsepower is None
+        assert analysis.power_consumption_kw is None
+        assert analysis.daily_energy_consumption is None
         assert analysis.motor_design == "Others"
         # Updated: the old defaults ("NEMA B", 0.0) read as determined values
         # on a result that has determined nothing. F_CL is never legitimately
