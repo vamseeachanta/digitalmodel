@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -506,3 +507,104 @@ def test_example_pack_end_to_end(tmp_path):
         assert "PDF not rendered" in status
     else:
         assert (out / "input_report.pdf").stat().st_size > 0
+
+
+def test_every_standard_table_has_its_own_scroll_container(tmp_path):
+    """Issue 1625: each table needs a local scroll owner, including metadata.
+
+    Expected topology is hand-enumerated from the standard report structure:
+    document, sign-off, revisions, results, references, sources and input echo.
+    No cell value is calculated or changed by this layout requirement.
+    """
+    from bs4 import BeautifulSoup
+
+    router(_cfg(tmp_path, _base_settings(tmp_path)))
+    html = (tmp_path / "results" / "case_report.html").read_text(encoding="utf-8")
+    tables = BeautifulSoup(html, "html.parser").find_all("table")
+    assert tables
+    for table in tables:
+        assert "tbl-wrap" in table.parent.get("class", []), str(table)[:80]
+
+
+@pytest.fixture(scope="module")
+def layout_browser():
+    """Use an installed browser; absence is reported as a skipped layout check."""
+    playwright = pytest.importorskip("playwright.sync_api")
+    executable = next(
+        (path for name in ("chromium", "chromium-browser", "google-chrome", "msedge")
+         if (path := shutil.which(name))),
+        None,
+    )
+    with playwright.sync_playwright() as runtime:
+        if executable is None and not Path(runtime.chromium.executable_path).is_file():
+            pytest.skip("Install Chromium or Chrome to run report layout checks")
+        browser = runtime.chromium.launch(executable_path=executable, headless=True)
+        yield browser
+        browser.close()
+
+
+# Viewports and wide-table size reproduce the scenarios in issue 1625;
+# two columns and one unbroken cell are synthetic boundary cases, not design data.
+@pytest.mark.parametrize("viewport", [(1440, 1000), (390, 844)])
+@pytest.mark.parametrize("media", ["screen", "print"])
+@pytest.mark.parametrize("shape", ["wide", "narrow", "unbroken"])
+def test_pack_tables_scroll_locally(tmp_path, layout_browser, viewport, media, shape):
+    """Hand-derived criterion: page overflow = scrollWidth - clientWidth = 0.
+
+    Issue 1625 supplies the viewport sizes and zero page-overflow criterion.
+    W3C CSS Overflow Level 3 (2025-10-07), section 3.1, defines overflow:auto:
+    an oversized table has positive local overflow and a reachable final cell.
+    Result and appendix cells must exactly equal the synthetic CSV input;
+    narrow tables must fit at desktop width. Print emulation checks layout,
+    not whether all off-screen columns paginate in a PDF.
+    """
+    from digitalmodel.reporting import Section
+
+    settings = _base_settings(tmp_path)
+    # Keep this table-layout regression independent of the masthead's
+    # standard-chip layout; no external standard governs synthetic strings.
+    settings["citations"] = []
+    columns = [f"result_{i}" for i in range(30 if shape == "wide" else 2)]
+    row = ["value" for _ in columns]
+    if shape == "unbroken":
+        row[-1] = "unbroken" * 100  # Synthetic stress string, no physical meaning.
+    (tmp_path / "data" / "results.csv").write_text(
+        ",".join(columns) + "\n" + ",".join(row) + "\n", encoding="utf-8"
+    )
+    spec = build_report_spec(load_pack(_cfg(tmp_path, settings)))
+    table = spec.sections[2].blocks[-1]
+    spec.appendices.append(
+        Section(key="appendix-layout", title="Table records", blocks=[table])
+    )
+    page = layout_browser.new_page(
+        viewport={"width": viewport[0], "height": viewport[1]}
+    )
+    try:
+        page.emulate_media(media=media)
+        page.set_content(render_html(spec))
+        # A page-level clip must not disguise missing table containment.
+        page.add_style_tag(content=".doc { overflow-x: visible; }")
+        assert page.evaluate(
+            "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+        ) == 0
+        for selector in ("#section-3 .tbl-wrap", "#appendix-layout .tbl-wrap"):
+            wrapper = page.locator(selector)
+            assert wrapper.locator("th").all_text_contents() == columns
+            assert wrapper.locator("td").all_text_contents() == row
+            assert wrapper.evaluate("e => getComputedStyle(e).overflowX") == "auto"
+            assert wrapper.evaluate("e => getComputedStyle(e).maxWidth") == "100%"
+            overflow = wrapper.evaluate("e => e.scrollWidth - e.clientWidth")
+            if shape != "narrow" or viewport[0] == 390:
+                assert overflow > 0
+                # Scrolling to the end must expose the final cell, not clip it.
+                assert wrapper.evaluate(
+                    "e => { e.scrollLeft = e.scrollWidth; return e.scrollLeft; }"
+                ) == overflow
+                assert wrapper.evaluate(
+                    """e => e.querySelector('tbody tr:last-child td:last-child')
+                        .getBoundingClientRect().right <= e.getBoundingClientRect().right"""
+                )
+            else:
+                assert overflow == 0
+    finally:
+        page.close()
