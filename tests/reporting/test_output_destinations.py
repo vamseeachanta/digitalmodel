@@ -6,6 +6,7 @@ must resolve to the intended artifact and the retained input hashes must be
 unchanged on rejection. No engineering coefficients or limits are introduced.
 """
 
+import errno
 from hashlib import sha256
 import json
 
@@ -51,7 +52,9 @@ def test_colliding_bundle_outputs_preserve_all_files(tmp_path, monkeypatch, pair
         else:
             try:
                 destination.symlink_to(retained.name)
-            except OSError:
+            except OSError as exc:
+                if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                    raise
                 pytest.skip("Symlink creation is unavailable")
 
     with pytest.raises(ValueError, match="distinct"):
@@ -69,7 +72,9 @@ def test_colliding_bundle_outputs_preserve_all_files(tmp_path, monkeypatch, pair
 def test_disabled_pdf_is_not_a_destination(tmp_path):
     try:
         (tmp_path / "analysis.pdf").symlink_to("analysis.html")
-    except OSError:
+    except OSError as exc:
+        if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+            raise
         pytest.skip("Symlink creation is unavailable")
     artifacts = write_report(_spec(), tmp_path, "analysis", pdf="off")
     assert artifacts.html_path.is_file()
@@ -84,11 +89,15 @@ def test_cross_directory_artifacts_keep_resolvable_manifest_links(tmp_path):
     details.mkdir()
     try:
         (summary / "analysis.html").symlink_to(details / "report.html")
-    except OSError:
+    except OSError as exc:
+        if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+            raise
         pytest.skip("Symlink creation is unavailable")
     try:
         (summary / "analysis_citations.json").symlink_to(details / "citations.json")
-    except OSError:
+    except OSError as exc:
+        if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+            raise
         pytest.skip("Symlink creation is unavailable")
 
     artifacts = write_report(_spec(), summary, "analysis", pdf="off")

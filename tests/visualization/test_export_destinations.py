@@ -6,6 +6,7 @@ must fail before the third destination is created. SHA-256 compares retained
 fixture bytes, without deriving expectations from any exporter.
 """
 
+import errno
 from hashlib import sha256
 
 import pytest
@@ -30,7 +31,9 @@ def test_all_destinations_validated_before_first_export(tmp_path, pair):
     for suffix in pair:
         try:
             (tmp_path / f"analysis.{suffix}").symlink_to(retained.name)
-        except OSError:
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                raise
             pytest.skip("Symlink creation is unavailable")
 
     with pytest.raises(ValueError, match="distinct"):
@@ -48,7 +51,9 @@ def test_all_destinations_validated_before_first_export(tmp_path, pair):
 def test_unselected_formats_do_not_create_false_collisions(tmp_path):
     try:
         (tmp_path / "analysis.json").symlink_to("analysis.html")
-    except OSError:
+    except OSError as exc:
+        if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+            raise
         pytest.skip("Symlink creation is unavailable")
     files = export_all_formats(_report(), tmp_path / "analysis", formats=["html"])
     assert files == {"html": tmp_path / "analysis.html"}

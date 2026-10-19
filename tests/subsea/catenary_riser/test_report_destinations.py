@@ -6,6 +6,7 @@ the final suffix maps ``analysis`` to ``analysis.md`` and ``analysis.html`` to
 calculation or acceptance criterion is exercised here.
 """
 
+import errno
 from hashlib import sha256
 
 import pytest
@@ -49,7 +50,9 @@ def test_aliased_destinations_preserve_existing_bytes(tmp_path, alias):
     else:
         try:
             twin.symlink_to(output.name)
-        except OSError:
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                raise
             pytest.skip("Symlink creation is unavailable")
     before = sha256(output.read_bytes()).digest() if output.exists() else None
 
