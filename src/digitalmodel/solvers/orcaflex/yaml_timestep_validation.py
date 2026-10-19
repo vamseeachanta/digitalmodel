@@ -112,18 +112,88 @@ def _mapping_issues(node, placement, ambiguous):
     return issues
 
 
+def _mapping_key_issues(node):
+    """Enforce the property-name profile before construction loses information.
+
+    Source: YAML 1.2.2 (2021), sections 3.2.1.1 Nodes and 3.2.1.3 Node
+    Comparison, https://yaml.org/spec/1.2.2/#3213-node-comparison.
+    String equality uses decoded content, so quoting cannot hide a duplicate.
+    The application profile requires string property names; general YAML allows
+    arbitrary keys. Retain SafeLoader's existing merge directive separately.
+    """
+    first_lines = {}
+    issues = []
+    for key, _ in node.value:
+        line = key.start_mark.line + 1
+        if not isinstance(key, ScalarNode) or key.tag not in {
+            "tag:yaml.org,2002:str", "tag:yaml.org,2002:merge",
+        }:
+            issues.append(("error", "Mapping keys must be strings in the "
+                           "OrcaFlex property-name profile", "", line))
+            continue
+        identity = (key.tag, key.value)
+        if identity in first_lines:
+            issues.append((
+                "error", f"Duplicate mapping key '{key.value}'; "
+                f"first declared on line {first_lines[identity]}", key.value, line,
+            ))
+        else:
+            first_lines[identity] = line
+    return issues
+
+
+def _document_shape_issues(root):
+    """Require content and recognizable property-section containers.
+
+    Source: Orcina, OrcaFlex help, Text data files, Indentation (online,
+    retrieved 2026-10-19; no edition stated):
+    https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+    Include lists follow the repository's CRITICAL_YAML_FORMAT_FINDINGS.md,
+    Correct OrcaFlex YAML Formats, Format 2 (2025-11-15).
+    This profile does not resolve property defaults or require absent sections.
+    """
+    if root is None or (isinstance(root, ScalarNode)
+                        and root.tag == "tag:yaml.org,2002:null"):
+        return [("error", "Document contains no model or fragment", "",
+                 root.start_mark.line + 1 if root is not None else None)]
+    if not isinstance(root, MappingNode):
+        return []
+    issues = []
+    for key, value in root.value:
+        name = _key(key)
+        if name not in {"General", "Environment"}:
+            continue
+        if isinstance(value, MappingNode):
+            continue
+        if isinstance(value, SequenceNode) and value.value and all(
+            isinstance(item, MappingNode) and any(
+                _key(k) == "includefile" and isinstance(v, ScalarNode)
+                and v.tag == "tag:yaml.org,2002:str" and v.value.strip()
+                for k, v in item.value
+            ) for item in value.value
+        ):
+            continue
+        issues.append(("error", f"{name} must be a mapping or a nonempty include list",
+                       name, key.start_mark.line + 1))
+    return issues
+
+
 def inspect_source(raw_text, sections, invalid_properties):
     """Return (severity, message, property, line) diagnostics and halt flag."""
     root = yaml.compose(raw_text, Loader=yaml.SafeLoader)
     # Large vessel tables are legitimate linear-size documents. Bound expansion
     # relative to source size, so compact alias fan-out cannot amplify work.
     mappings, counts, failure = _inventory(root, max(100000, 2 * len(raw_text)))
-    issues = []
+    issues = _document_shape_issues(root)
     duplicate_general = isinstance(root, MappingNode) and sum(
         _key(key) == "General" for key, _ in root.value
     ) > 1
     seen = set()
+    profile_failure = bool(issues)
     for node, path in mappings:
+        key_issues = _mapping_key_issues(node)
+        profile_failure = profile_failure or bool(key_issues)
+        issues.extend(key_issues)
         # Preserve forbidden properties even when duplicate keys would hide them.
         for key, _ in node.value:
             name = _key(key)
@@ -138,4 +208,4 @@ def inspect_source(raw_text, sections, invalid_properties):
         issues.extend(_mapping_issues(node, placement, ambiguous))
     if failure:
         issues.append(("error", failure, "", None))
-    return issues, failure is not None
+    return issues, failure is not None or profile_failure

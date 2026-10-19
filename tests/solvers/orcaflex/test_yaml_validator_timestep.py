@@ -170,14 +170,20 @@ def test_intervening_include_invalidates_known_prefix(tmp_path):
     [f"{METHOD}: Explicit time domain", f"{MODE}: true",
      f"{MAXIMUM}: 0.125", f"{METHOD}: Implicit time domain"],
 ])
-def test_duplicate_relevant_keys_warn_before_dictionary_collapse(tmp_path, rows):
-    assert_unresolved(check(tmp_path, general(*rows)))
+def test_duplicate_relevant_keys_error_before_dictionary_collapse(tmp_path, rows):
+    result = check(tmp_path, general(*rows))
+    assert not result.valid
+    assert any("Duplicate mapping key" in issue.message for issue in result.errors)
+    assert result.warnings  # Assignment-time context diagnostics are retained.
 
 
-def test_duplicate_general_mappings_warn(tmp_path):
+def test_duplicate_general_mappings_error(tmp_path):
     content = general(f"{MODE}: false") + general(
         f"{METHOD}: Implicit time domain", f"{MODE}: true", f"{MAXIMUM}: 0.125")
-    assert_unresolved(check(tmp_path, content))
+    result = check(tmp_path, content)
+    assert not result.valid
+    assert any(issue.property == "General" for issue in result.errors)
+    assert result.warnings
 
 
 def test_merge_alias_cannot_silently_supply_context(tmp_path):
