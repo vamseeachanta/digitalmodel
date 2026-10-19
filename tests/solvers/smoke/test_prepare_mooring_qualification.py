@@ -1,5 +1,6 @@
 """Offline qualification packaging preserves inputs and reports reference differences."""
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -95,17 +96,27 @@ def test_existing_file_is_rejected(packaging, tmp_path):
     assert output.read_text() == "preserve"
 
 
-def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkeypatch):
-    def fail(*args):
-        raise ValueError("injected generation failure")
+def test_failed_generation_retains_inputs_and_partial_output(packaging, tmp_path, monkeypatch):
+    """Expected bytes are supplied by the fixture; no native construction occurs."""
+    original = ValueError("injected generation failure")
+
+    def fail(self, bundle):
+        bundle.mkdir()
+        (bundle / "partial.yml").write_bytes(b"partial: evidence\n")
+        raise original
 
     monkeypatch.setattr(packaging.ModularModelGenerator, "generate", fail)
     neighbor = tmp_path / "neighbor"
     neighbor.write_text("preserve")
     output = tmp_path / "output"
-    with pytest.raises(ValueError, match="injected"):
+    with pytest.raises(ValueError, match="injected") as caught:
         packaging.prepare_bundle(output)
-    assert not output.exists()
+    assert caught.value is original
+    assert (output / "source/spec.yml").read_bytes() == packaging.SOURCE.read_bytes()
+    assert (output / "bundle/partial.yml").read_bytes() == b"partial: evidence\n"
+    failure = json.loads((output / "failure.json").read_bytes())
+    assert failure == {"status": "failed", "phase": "generation",
+                       "source_sha256": hashlib.sha256(packaging.SOURCE.read_bytes()).hexdigest()}
     assert neighbor.read_text() == "preserve"
 
 
@@ -248,3 +259,63 @@ def test_generated_sections_refuse_ambiguous_includes(packaging, tmp_path, maste
     bundle = _bundle(tmp_path, master, includes)
     with pytest.raises(ValueError):
         packaging._generated_sections(bundle)
+
+
+@pytest.mark.parametrize("symbol,phase", [
+    ("verify_manifest", "manifest_verification"),
+    ("_reference_report", "reference_comparison"),
+])
+def test_failed_post_generation_retains_manifest_and_original_error(
+        packaging, tmp_path, monkeypatch, symbol, phase):
+    """Successful offline generation is retained when a later evidence step fails."""
+    original = RuntimeError("injected evidence failure")
+
+    def fail(*args):
+        raise original
+
+    monkeypatch.setattr(packaging, symbol, fail)
+    output = tmp_path / "output"
+    with pytest.raises(RuntimeError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert (output / "manifest.json").is_file()
+    assert (output / "bundle/master.yml").is_file()
+    record = json.loads((output / "failure.json").read_bytes())
+    assert record["status"] == "failed"
+    assert record["phase"] == phase
+    assert record["source_sha256"] == hashlib.sha256(
+        (output / "source/spec.yml").read_bytes()).hexdigest()
+
+
+def test_failed_metadata_creation_preserves_existing_evidence(packaging, tmp_path, monkeypatch):
+    """A pre-existing failure record is retained byte for byte on name collision."""
+    original = RuntimeError("injected generation failure")
+
+    def fail(self, bundle):
+        (bundle.parent / "failure.json").write_bytes(b"existing evidence")
+        raise original
+
+    monkeypatch.setattr(packaging.ModularModelGenerator, "generate", fail)
+    output = tmp_path / "output"
+    with pytest.raises(RuntimeError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert (output / "failure.json").read_bytes() == b"existing evidence"
+    assert any("metadata" in note for note in original.__notes__)
+
+
+def test_source_copy_failure_records_unknown_digest(packaging, tmp_path, monkeypatch):
+    """Failed copy cannot establish a digest; JSON null records that absence."""
+    original = OSError("injected copy failure")
+
+    def fail(*args):
+        raise original
+
+    monkeypatch.setattr(packaging.shutil, "copyfile", fail)
+    output = tmp_path / "output"
+    with pytest.raises(OSError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert json.loads((output / "failure.json").read_bytes()) == {
+        "status": "failed", "phase": "source_copy", "source_sha256": None,
+    }

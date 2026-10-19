@@ -153,12 +153,16 @@ def prepare_bundle(output_root: Path) -> Path:
         raise ValueError("Python hash seed 0 required at process startup")
     root = Path(output_root).resolve()
     root.mkdir(parents=True, exist_ok=False)
+    phase, source_sha256 = "source_copy", None
     try:
         source = root / "source/spec.yml"
         source.parent.mkdir()
         shutil.copyfile(SOURCE, source)
+        source_sha256 = digest(source)
+        phase = "generation"
         with contextlib.redirect_stdout(sys.stderr):
             ModularModelGenerator(source).generate(root / "bundle")
+        phase = "manifest"
         contract = load_contract()
         files = [{"path": p.relative_to(root).as_posix(), "sha256": digest(p)}
                  for p in sorted(root.rglob("*")) if p.is_file()]
@@ -169,12 +173,20 @@ def prepare_bundle(output_root: Path) -> Path:
                     "python_hash_seed": "0", "outputs": dict(OUTPUTS)}
         path = root / "manifest.json"
         path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        phase = "manifest_verification"
         verify_manifest(path)
+        phase = "reference_comparison"
         _reference_report(root, manifest)
         return path
-    except Exception:
-        # Only this call's fresh, resolved output root is owned by this cleanup.
-        shutil.rmtree(root)
+    except BaseException as exc:
+        # Failed preparation is diagnostic evidence, not disposable cleanup.
+        exc.add_note(f"Preparation evidence retained at {root}")
+        try:
+            with (root / "failure.json").open("x", encoding="utf-8") as stream:
+                json.dump({"status": "failed", "phase": phase,
+                           "source_sha256": source_sha256}, stream, sort_keys=True)
+        except Exception as error:
+            exc.add_note(f"Failure metadata could not be recorded ({type(error).__name__})")
         raise
 
 
