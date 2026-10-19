@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Durable workflow for synthetic mooring-rope service-life screening."""
 
 from __future__ import annotations
@@ -152,7 +155,7 @@ def _line_inputs(
     )
     temperature = line.get("temperature_C")
     if temperature is not None:
-        temperature = float(temperature)
+        temperature = _finite_float(line, "temperature_C", f"{line_id} temperature_C")
     return line_id, material, mbl, mean_tension / mbl, min_tension_kn, temperature
 
 
@@ -187,8 +190,8 @@ def _fatigue_rows(
             }
         )
 
-    if total_damage <= 0.0:
-        raise ValueError(f"{line_id} total_damage must be positive")
+    if not math.isfinite(total_damage) or total_damage <= 0.0:
+        raise ValueError(f"{line_id} total_damage must be finite and positive")
     return rows, total_damage
 
 
@@ -339,21 +342,35 @@ def _min_tension(source: dict[str, Any]) -> dict[str, float]:
     }
 
 
-def _positive_float(source: dict[str, Any], name: str, label: str) -> float:
+def _finite_float(source: dict[str, Any], name: str, label: str) -> float:
+    """Convert a scalar while preserving field context for invalid inputs."""
     value = source.get(name)
     if value is None:
         raise ValueError(f"synthetic_rope_mooring_fatigue {label} is required")
-    value = float(value)
+    error = f"synthetic_rope_mooring_fatigue {label} must be a finite number"
+    # Booleans represent flags, even though float() accepts them as magnitudes.
+    if isinstance(value, bool):
+        raise ValueError(error)
+    try:
+        value = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(error) from exc
+    # Python 3.11 Library Reference (2022), math.isfinite: excludes NaN and
+    # both infinities. https://docs.python.org/3.11/library/math.html#math.isfinite
+    if not math.isfinite(value):
+        raise ValueError(error)
+    return value
+
+
+def _positive_float(source: dict[str, Any], name: str, label: str) -> float:
+    value = _finite_float(source, name, label)
     if value <= 0.0:
         raise ValueError(f"synthetic_rope_mooring_fatigue {label} must be positive")
     return value
 
 
 def _nonnegative_float(source: dict[str, Any], name: str, label: str) -> float:
-    value = source.get(name)
-    if value is None:
-        raise ValueError(f"synthetic_rope_mooring_fatigue {label} is required")
-    value = float(value)
+    value = _finite_float(source, name, label)
     if value < 0.0:
         raise ValueError(
             f"synthetic_rope_mooring_fatigue {label} must be non-negative"
