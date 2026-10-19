@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser model-data appendix interface</title>
+<style>
+body { max-width: 70em; margin: 2em auto; padding: 1em; color: #172c40;
+       font: 1em/1.6 system-ui, sans-serif; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #b8c6d0; padding: .5em; text-align: left; }
+code, pre { background: #eef3f7; padding: .2em; }
+caption { caption-side: bottom; text-align: left; padding: .5em; }
+</style>
+<h1>Riser model-data appendix interface</h1>
+<h2>Summary</h2>
+<p>The appendix builder converts explicit SI property snapshots into native
+C.1–C.3 tables suitable for JSON and report builders. Each table caption carries
+the SHA-256 of the supplied model bytes. A matching snapshot digest establishes
+binding to those bytes; extraction from a solved model is not established.
+The output therefore retains <code>model_extraction_status=NOT_EVALUATED</code>.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>Initial</td><td>2026-10-19</td><td>Snapshot tables and explicit screens
+provide the first solver-free portion of the model-data appendix.</td></tr>
+<caption>Revision history of this interface document.</caption>
+</table>
+<h2>Plan-lite</h2>
+<p>Slice 1 will introduce <code>ComponentSnapshot</code> and
+<code>build_appendix</code> in
+<code>src/digitalmodel/drilling_riser/model_data_appendix.py</code>.
+It will retain supplied C.1 properties, field sources and missing-value status,
+sort the line by elevation, and bind snapshots to supplied model bytes.</p>
+<p>Slice 2 will add C.2 directed ratios and symmetric step screens; slice 3 will
+add normal-direction circular-line C.3 factors. Hand-worked synthetic cases in
+<code>tests/drilling_riser/test_model_data_appendix.py</code> will check
+arithmetic, ordering, source metadata, missing values, zero coefficients,
+screen boundaries, digest mismatch, invalid values and finite JSON output.</p>
+<p>Later work will implement the solved-model adapter, shared reconciliation
+with the stack-up drawing, lumped bodies, special components, node-level
+discretisation and the elevation step-profile figure. No licensed solver will
+be imported or queried by the snapshot builder.</p>
+<h2>Inputs and output</h2>
+<p>Import <code>ComponentSnapshot</code> and <code>build_appendix</code> from
+<code>digitalmodel.drilling_riser.model_data_appendix</code>. A snapshot contains
+a generic component identifier, top and bottom elevations, the model digest,
+an elevation source, a property mapping and a source mapping. Each supplied
+property requires a non-empty source reference. Omitted or null properties
+remain null and <code>NOT_EVALUATED</code>; a true zero is retained.</p>
+<p>The builder requires model bytes, snapshots, water density and its source.
+It accepts optional screening limits keyed by the transition metric names.
+The returned dictionary contains <code>tables</code>, units, field status,
+sources, screening limits, limitations and the digest. Serialize it with
+<code>json.dumps(result, allow_nan=False)</code>. Input mappings are copied;
+the builder performs no file writes.</p>
+<p>The component list represents one continuous line. Elevations increase
+upward; top elevation exceeds bottom elevation. Exact adjoining elevations are
+required; no unreported closure tolerance is applied. Component length and
+target segment length remain explicit inputs: neither is inferred from the
+elevation difference, which can differ from arc length.</p>
+<h2>Equations and source basis</h2>
+<table>
+<tr><th>Quantity</th><th>Equation</th><th>Source and interpretation</th></tr>
+<tr><td>Normal added mass per length (kg/m)</td>
+<td>m<sub>a</sub> = C<sub>a</sub> ρ π D<sub>a</sub>² / 4</td>
+<td>Morison et al. (1950), as reproduced by Orcina; C<sub>a</sub> times
+displaced-fluid mass, using the elementary circular-area identity.</td></tr>
+<tr><td>Total inertial mass per length (kg/m)</td>
+<td>m<sub>dry</sub> + m<sub>contents</sub> + m<sub>a</sub></td>
+<td>Orcina accelerating-body equation, (m + C<sub>a</sub>Δ)a.
+Contents are separate from the supplied structural dry mass.</td></tr>
+<tr><td>Normal drag factor (kg/m²)</td>
+<td>ρ C<sub>d</sub> D<sub>drag</sub> / 2</td>
+<td>Orcina extended Morison equation, drag coefficient multiplying
+|v<sub>relative</sub>|v<sub>relative</sub> per unit length.</td></tr>
+<tr><td>Transition ratio and step factor (dimensionless)</td>
+<td>r = lower / upper; s = max(r, 1/r)</td>
+<td>Adjacent-component ratio requirement in issue 2153 (2026).
+The symmetric screen is an explicit interface convention, not a code criterion.</td></tr>
+<caption>Equations for circular, submerged normal-direction snapshot factors.</caption>
+</table>
+<p>Source: <a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Morison%27sequation.htm">Orcina,
+Morison’s equation</a>, online help retrieved 2026-10-19, HTTP 200.
+The help page has no stated edition. It identifies Morison et al. (1950);
+the original paper was not independently retrieved.</p>
+<p>No environmental density, hydrodynamic coefficient or engineering screening
+limit is supplied by the implementation. The added-mass diameter is independent
+of hydrodynamic drag diameter and is never inferred from it. The normal Ca and
+its reference diameter must describe the same displaced-area convention.</p>
+<h2>Screening and limitations</h2>
+<p>A screen flags only strict exceedance of the supplied limit; equality does
+not flag. Both adjacent values must be positive to form a ratio. A zero or
+missing comparator leaves the ratio and screen <code>NOT_EVALUATED</code>.
+A valid ratio without a limit remains calculated, but the screening verdict
+remains <code>NOT_EVALUATED</code>. Screening is not an acceptance criterion.</p>
+<p>The transition metrics are stress OD, stress ID, supplied section modulus,
+EI, EA, hydrodynamic diameter, dry mass per length, added mass per length and
+Ca·D<sub>a</sub>². No equivalent tube section or stiffness is reconstructed.</p>
+<p>Wet mass is buoyancy-adjusted mass per length and may be negative; it is
+retained in C.1 and never substituted for inertial mass. Marine growth,
+buoyancy modules, auxiliary lines and trapped water are not automatically
+added. The supplied mass, diameters and coefficients must already represent
+their intended inclusion. A field source is recorded, not independently
+qualified by this builder.</p>
+<p>Axial, non-circular, partially submerged and lumped-body loading,
+flex-joint curves, tensioners, stroke limits, composite sections, VIV
+suppression, node positions, design-basis reconciliation and graphical
+profiles are not evaluated. These remain later parts of
+<a href="../../issues/2153">issue 2153</a>. The existing stack-up reconciler
+checks drawing-to-spec agreement; it is not used as a model-to-basis check.</p>
+</html>
