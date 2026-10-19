@@ -144,7 +144,7 @@ acceptance limits.
   regime thresholds and turbulent correlation. Their full coefficient provenance
   and applicability have not been established here. The independent worked
   example uses zero elevation and laminar flow. Shared transition behavior
-  must not be described as a verified conservative bound.
+  has no verified pressure-drop bound in this slice.
 - **Foundation, header and load qualification:** the existing elementary screens
   use supplied capacities; they do not provide verified API wall sizing,
   collapse, settlement, installation, trawl or impact acceptance criteria.
