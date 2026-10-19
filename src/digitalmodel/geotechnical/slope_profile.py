@@ -128,6 +128,8 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     Coordinates are metres, weights kN/m³, strengths kPa, angles degrees,
     conductivity m/s and the pseudo-static horizontal coefficient dimensionless.
     Each layer starts at its top boundary; the first starts at ground level.
+    Positive strength gradients require a datum at or above the minimum
+    elevation of the layer lower boundary.
     """
     data = deepcopy(profile)
     allowed = {"units", "ground_surface_m", "bottom_elevation_m", "layers",
@@ -157,6 +159,23 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         layer["top_boundary_m"] = top
         previous = top
     _boundary(previous, [[ground[0][0], bottom], [ground[-1][0], bottom]])
+    for index, layer in enumerate(layers):
+        lower_minimum = (
+            min(y for _, y in layers[index + 1]["top_boundary_m"])
+            if index + 1 < len(layers) else bottom
+        )
+        # xslope 1.0.3 slice.py cp rule, documented in the slope screening
+        # guide and XSLOPE Tutorial 7 (accessed 2026), undrained strength section:
+        # Su(y) = Su_ref + g * max(0, R-y). If R < min(lower), R-y < 0
+        # throughout the layer, so a positive gradient has no effect.
+        # Linear boundary segments attain their minima at vertices.
+        if (layer.get("su_gradient_kpa_per_m", 0) > 0
+                and layer["reference_elevation_m"] < lower_minimum):
+            raise ValueError(
+                f"layers[{index}].reference_elevation_m is below the layer lower "
+                f"boundary minimum ({lower_minimum} m); positive strength gradient "
+                "has no effect throughout the layer"
+            )
     if "water_table_m" in data:
         water = _line(data["water_table_m"], "water_table_m")
         if [water[0][0], water[-1][0]] != [ground[0][0], ground[-1][0]]:
