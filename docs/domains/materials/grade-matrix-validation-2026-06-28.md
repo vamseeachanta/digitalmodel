@@ -5,6 +5,13 @@ The matrix is the single source of truth that the line-pipe (#1087), casing
 (#1090), rod (#1091) and structural modules consume, replacing 8+ scattered
 strength dicts that disagreed on values and units.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 1 | 2026-10-18 | Added the #2726 supersession note to distinguish historical conversions from the current product-level basis. |
+| 2 | 2026-10-18 | Reworded the grade designation sentence to pass the engineering register check. |
+
 ## Scope
 
 | Standard | Grades | Count |
@@ -17,13 +24,20 @@ Stored in **MPa** (SI); psi properties and back-compat adapters provided.
 
 ## Reconciliation of the prior disagreement
 
+**Superseded by #2726:** the reconciliation and golden-value table below
+record the historical interpretation. Converted legacy tensile strengths are
+not the current API 5L 46th-edition SI minima. Current PSL1 entries use
+9.3.1 Table 6; X80 has no PSL1 entry. A25 and A have no PSL2 entry under
+9.3.2 Table 7. Consult `materials.grades` for supported product levels;
+licensed-text verification by the maintainer remains required before #2726 closes.
+
 The scattered tables disagreed on X52 in two distinct ways, both now resolved
 and documented per record:
 
 1. **SMYS 358 / 359 / 360 MPa** — 358–359 are the US-customary `52 ksi`
    conversion (52,000 psi = 358.5 MPa); 360 MPa is the ISO 3183 metric grade
    `L360`. The matrix stores the ISO metric value (`smys_mpa`) and preserves the
-   US designation via `grade_ksi` for psi back-compat.
+   ksi grade designation via `grade_ksi` for psi back-compat.
 2. **SMTS 455 vs 460 MPa** — this is the **PSL1 vs PSL2** split, *not* an error.
    PSL1 X52 minimum tensile = 455 MPa; PSL2 = 460 MPa. The matrix stores PSL2 in
    `smts_mpa` and PSL1 in `smts_psl1_mpa`; `smts_mpa(name, psl=...)` selects.
