@@ -74,9 +74,37 @@ def _environment(manifest, base):
         raise ValueError('Pinned solver_library_sha256 required')
     if not runtime.get('cpu_affinity') or any(type(x) is not int or x < 0 for x in runtime['cpu_affinity']):
         raise ValueError('Explicit processor affinity required')
-    for entry in runtime.get('external_files', []):
-        external = (base / entry['path']).resolve()
-        if not external.is_file() or sha256(external.read_bytes()).hexdigest() != entry['sha256']:
+    _validate_external_files(runtime, base)
+
+
+def _validate_external_files(runtime, base, *, verify=True):
+    """Require declared runtime evidence, including an explicit empty inventory.
+
+    Contract: issue 2141, explicit external-file declaration audit case.
+    Disabling environment verification still validates the declaration schema.
+    """
+    if not isinstance(runtime, dict):
+        raise ValueError('runtime mapping with explicit external_files required')
+    entries = runtime.get('external_files')
+    if not isinstance(entries, list):
+        raise ValueError('runtime.external_files must be an explicit list')
+    seen = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {'path', 'sha256'}:
+            raise ValueError('external_files entries require exactly path and sha256')
+        name, digest = entry['path'], entry['sha256']
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError('external_files path must be nonempty text')
+        # Match the hexadecimal width of the existing hashlib SHA-256 contract.
+        if (not isinstance(digest, str) or len(digest) != len(sha256().hexdigest())
+                or any(char not in '0123456789abcdef' for char in digest)):
+            raise ValueError('external_files sha256 must be a lowercase SHA-256 digest')
+        external = (base / name).resolve()
+        identity = os.path.normcase(str(external))
+        if identity in seen:
+            raise ValueError('external_files contains duplicate resolved paths')
+        seen.add(identity)
+        if verify and (not external.is_file() or sha256(external.read_bytes()).hexdigest() != digest):
             raise ValueError('External runtime file digest mismatch')
 
 
@@ -97,6 +125,7 @@ def validate_manifest(path, output, *, check_environment=True):
             raise ValueError(f'Missing or changed input: {name}')
         inputs[name] = source
     _tolerances(manifest['comparison'])
+    _validate_external_files(manifest.get('runtime'), path.parent, verify=check_environment)
     _validate_execution(manifest)
     _validate_selection(manifest, inputs)
     if check_environment:
