@@ -74,7 +74,7 @@ The inventory labels below enumerate calculating definitions, including definiti
 | Mesh geometry | `_triangle_area_and_normal`: cross-product area; `compute_panel_quality`: two-triangle area/normal, edge ratio, diagonal skewness; `compute_mesh_summary`: waterplane selection, volume estimate, symmetry and suggestions; `compute_waterplane_area` and `compute_displaced_volume` delegate to summary. Do not use its volume as an independent hydrostatic reference; section 6 records the defect. [src/digitalmodel/orcawave/panel_mesh.py:L160-L350] |
 | Spectral moments / periods | `compute_spectral_moments`: trapezoidal moments; `spectral_periods`: derived periods and bandwidth with denominator floors. [src/digitalmodel/orcawave/wave_spectrum.py:L68-L102] |
 | Single-mode spectra | `pierson_moskowitz`, `jonswap`, `issc_spectrum`: implemented spectral expressions; JONSWAP renormalises to requested variance; `bretschneider` delegates to Pierson-Moskowitz. These are code descriptions, not standards-qualified formulae. [src/digitalmodel/orcawave/wave_spectrum.py:L109-L230] |
-| Two-mode spectra | `ochi_hubble` and nested `_component`: gamma-function components summed; `torsethaugen`: simplified sea/swell partition with renormalisation. [src/digitalmodel/orcawave/wave_spectrum.py:L233-L328] |
+| Two-mode spectra | `ochi_hubble` and nested `_component`: gamma-function components summed; `heuristic_two_peak`: explicitly synthetic sea/swell partition; former named-model API raises. [src/digitalmodel/orcawave/wave_spectrum.py:L233-L328] |
 | Spectrum generation | `generate_spectrum`: normalised type selection, synthetic second-mode fallbacks, computed Hs and peak period. [src/digitalmodel/orcawave/wave_spectrum.py:L335-L390] |
 | Response / short-term | `compute_response_spectrum`: squared RAO times wave spectrum and moments; `short_term_statistics`: RMS, significant response, zero crossing and duration-dependent maxima. [src/digitalmodel/orcawave/motion_statistics.py:L97-L174] |
 | Exceedance / long-term | `rayleigh_exceedance`, `rayleigh_quantile`: exponential exceedance and inverse; `long_term_extreme`: probability-weighted mixture solved by fixed-iteration bisection. [src/digitalmodel/orcawave/motion_statistics.py:L181-L283] |
@@ -122,40 +122,62 @@ Native solver cases: NOT_RUN, because native loading and hydrostatics require a 
 
 ## 5. QA gates
 
-AQG r0, sections 3, 8–11, supplies the gate criteria. The checks below are pack requirements; a defined check is not a claimed PASS. Named native routes are deferred procedures, not executed commands.
+This section supersedes the baseline gate table. The other source inventories and
+line references in this pack describe the historical audit snapshot; consult
+[engineering-citations.md](engineering-citations.md) for the corrected APIs,
+equations, assumptions and migration limits.
 
-| Gate | Applicability / program route | Module-specific evidence and criterion | Present evidence |
+G0 uses the C0 nodes below. G1 uses explicit native NOT_RUN records. G2/G3 are
+NOT_APPLICABLE to this frequency-domain pack. G4 uses the C4 nodes. G5 asserts
+the `qa_gates.build_trace` output for supplied offline quantities. None of these
+synthetic inputs establishes native loading, solver convergence, native CoB/GM
+agreement, irregular-frequency freedom or a qualified engineering report.
+Native consumers call `require_native_gate`, which raises without solver access.
+
+Every row has one collected pytest node in
+`tests/orcawave/test_pack_gates.py`, named `test_` plus the check identifier with
+hyphens replaced by underscores. Native nodes assert deferred status and loud
+failure; they do not claim that the native criterion passed. C4-VOLUME is a
+passing numerical regression after the volume fix; no known offline defect is
+hidden behind a non-strict xfail. The narrower C0-MAP scope is the direct-file
+package producer map; wider historical discovery is retained as snapshot data.
+
+| Check | Producing package function / output | Executable assertion | Qualification |
 | --- | --- | --- | --- |
-| G0 | Applicable: RAO CSV, GDF and coefficient arrays | C0-CSV, C0-GDF, C0-COEFF, C0-MAP below; require 0 unexplained missing records, unit declarations and input digests | Nominal synthetic tests; malformed-input and frame gaps remain in section 6. [src/digitalmodel/orcawave/rao_processing.py:L95-L150] [src/digitalmodel/orcawave/panel_mesh.py:L77-L153] |
-| G1 | OrcaWave: import the `write_gdf` mesh with explicitly declared units/symmetry into the intended program version; load the downstream model and run its native validation | C1-OW: 0 validation errors and 0 unexplained warnings, panel count equal to emitted header, units count (dimensionless) | NOT_RUN: licensed program/interface excluded; CSV helpers do not generate a complete native model. [src/digitalmodel/orcawave/panel_mesh.py:L133-L153] [src/digitalmodel/orcawave/rao_processing.py:L318-L343] |
-| G1 | AQWA: no native deck writer exists in this direct-file API; where GDF/coefficient output is converted downstream, record converter revision and run the resulting AQWA deck through hydrostatics in the target licensed version | C1-AQWA: 0 import/deck/hydrostatics errors and 0 unexplained warnings, count (dimensionless); no direct GDF-load compatibility is asserted | NOT_RUN for downstream native qualification; native-deck generation is NOT_APPLICABLE to the direct-file API. The AQWA mention is a descriptive format-helper claim only. [src/digitalmodel/orcawave/hydro_coefficients.py:L1-L4] [src/digitalmodel/orcawave/__init__.py:L14-L102] |
-| G2 | NOT_APPLICABLE: the OrcaWave/AQWA family rows have no mooring statics gate | No statics criterion is assigned here | AQG r0, section 10, OrcaWave and AQWA rows. |
-| G3 | NOT_APPLICABLE: the OrcaWave/AQWA family rows have no short dynamics gate | No time-domain production simulation criterion is assigned here | AQG r0, section 10, OrcaWave and AQWA rows. |
-| G4 | Applicable to all mesh and hydro data consumers | C4-AREA, C4-ASPECT, C4-SKEW, C4-VOLUME, C4-BALANCE, C4-FRAME, C4-MESH, C4-WATERLINE, C4-NORMALS, C4-IRREGULAR, C4-HYDRO, C4-WIND, C4-HULL below | Offline geometry/arithmetic evidence only; native/full-body qualification remains open. [src/digitalmodel/orcawave/panel_mesh.py:L174-L350] |
-| G5 | Applicable to reports consuming these outputs; report builder is outside this pack | C5-TRACE: 0 missing fingerprint/gate/disposition/signature fields, count (dimensionless), and 100.0 % of reported quantities traced | NOT_RUN: no engineering report or evidence appendix is generated here; report construction is a separate subpackage. [src/digitalmodel/orcawave/__init__.py:L1-L11] |
+| C0-CSV | rao_processing.read_rao_csv | 2 periods, 2 headings; encoded amplitudes within 1e-6 | offline |
+| C0-GDF | panel_mesh.read_gdf / write_gdf | 6 panels, ULEN=1, signed volume=8 m3 | offline |
+| C0-COEFF | hydro_coefficients.from_native_added_mass | one SI record, omega=2pi/10, A33=8200000 kg; no WAMIT claim | offline |
+| C0-MAP | qa_gates.implementation_map | direct-file AST function map contains all ten named core producers | offline |
+| C1-OW | qa_gates.native_gate_record / require_native_gate | status NOT_RUN; consumer request raises | native NOT_RUN |
+| C1-AQWA | qa_gates.native_gate_record / require_native_gate | status NOT_RUN; consumer request raises | native NOT_RUN |
+| C4-AREA | panel_mesh.compute_panel_quality | box bottom area=4 m2 within .01 | offline |
+| C4-ASPECT | panel_mesh.compute_panel_quality | square aspect=1 within .01 | offline |
+| C4-SKEW | panel_mesh.compute_panel_quality | square skew=0 within .01 | offline |
+| C4-VOLUME | panel_mesh.compute_displaced_volume | outward box=8 m3 within .5%; regression now passes | offline |
+| C4-BALANCE | qa_gates.check_balance | rho*V=8200 kg; reject >1% mass error | offline |
+| C4-FRAME | qa_gates.compute_buoyancy_centroid / hydro_coefficients.create_hydrostatic_restoring | declared body frame, box CoB=[0,1,-1] m, translated CoB=[3,-1,-1] m; GM=2,100 m recovered from restoring | offline; native CoB/GM comparison NOT_RUN |
+| C4-MESH | qa_gates.check_mesh_resolution | max edge=2 m, aspect<=3, edge<=lambda/6, 6 panels<=declared limit; reject excess | offline |
+| C4-WATERLINE | qa_gates.check_waterline | closed lidless boundary and 4 m2 area, draft=2 m; reject missing edge or >.01 m draft error | offline |
+| C4-NORMALS | qa_gates.check_normals | positive 8 m3 volume, nonzero area, opposite shared edges; reject reversed or inconsistent orientation | offline; full closed mesh only |
+| C4-IRREGULAR | qa_gates.native_gate_record / require_native_gate | status NOT_RUN; require_native_gate raises for missing native lid/pressure/spike evidence | native NOT_RUN |
+| C4-HYDRO | qa_gates.check_hydrodynamics | added-mass and radiation-damping reciprocity<=2% using diagonal/coupling normalization, nonnegative damping, longest supplied-period heave=1±2% across all headings; reject excessive asymmetry/negative damping/bad heave | offline |
+| C4-WIND | drift_forces.compute_wind_current_drift | beam wind588 kN, current922.5 kN, yaw37762.5 kN m within rel1e-9 | offline |
+| C4-HULL | vessel_database.generate_parametric_hull | rectangular midsection half breadth=15 m within1% | offline |
+| C5-TRACE | qa_gates.build_trace | SHA256, quantity producer/value/unit, gate/disposition/maintainer signature present; required-quantity coverage=100%; incomplete coverage or missing gate rejected | offline; native/report qualification NOT_RUN |
 
-| Check | Executable check and numeric pass criterion | Unit / evidence / status |
-| --- | --- | --- |
-| C0-CSV | Run `tests/orcawave/test_rao_processing.py::TestReadWriteCSV::test_read_csv`; require 2 periods, 2 headings and amplitudes within 1e-6 of encoded cells | count (dimensionless), m/m; nominal CSV test; PASS at BASE and AFTER. [tests/orcawave/test_rao_processing.py:L64-L75] |
-| C0-GDF | Run `tests/orcawave/test_panel_mesh.py::TestGDFReadWrite::test_write_then_read`; require 6 panels and preserved unit-length field | panels, characteristic-length units; PASS at BASE and AFTER. [tests/orcawave/test_panel_mesh.py:L90-L97] |
-| C0-COEFF | Run R1; require 5 frequency records and first diagonal relative error <= 1e-4 | count (dimensionless), relative matrix unit; PASS at BASE and AFTER; does not qualify WAMIT format. [tests/orcawave/test_hydro_coefficients.py:L27-L38] [tests/orcawave/test_hydro_coefficients.py:L106-L114] |
-| C0-MAP | Replay section-9 inventory and exact Python regex/definition classification at the two pins; require 0 omitted map rows and <= 1 further unlisted own implementation over counted families | count (dimensionless); A8 record in section 9. |
-| C1-OW | Native route above: compare `write_gdf` emitted panel count with imported count; require absolute difference 0 and native errors 0 | panels, errors (count); NOT_RUN. [src/digitalmodel/orcawave/panel_mesh.py:L142-L153] |
-| C1-AQWA | Downstream route above: compare converted panel count and source count; require difference 0, hydrostatics-stage errors 0 | panels, errors (count); NOT_RUN; external conversion unqualified. [src/digitalmodel/orcawave/hydro_coefficients.py:L1-L4] |
-| C4-AREA | Run V1; square area absolute error <= 0.01 | m²; PASS at BASE and AFTER. [tests/orcawave/test_panel_mesh.py:L60-L63] |
-| C4-ASPECT | Run `tests/orcawave/test_panel_mesh.py::TestPanelQuality::test_unit_square_aspect_ratio`; unit-square aspect error <= 0.01 | dimensionless; PASS at BASE and AFTER. [tests/orcawave/test_panel_mesh.py:L65-L68] |
-| C4-SKEW | Run `tests/orcawave/test_panel_mesh.py::TestPanelQuality::test_unit_square_skewness`; absolute skewness <= 0.01 | dimensionless; PASS at BASE and AFTER. [tests/orcawave/test_panel_mesh.py:L70-L73] |
-| C4-VOLUME | Independent box check: use the six panels in `_make_box_mesh`, with symmetry off; compare `compute_displaced_volume` against length × breadth × depth = 8 m³; error <= 0.5 % | m³, relative %; FAIL at BASE-equivalent source: 2.7 m³, error 66.7 % against 8 m³ (computed unrounded, displayed to one decimal place); positivity test cannot detect this defect. [tests/orcawave/test_panel_mesh.py:L30-L52] [tests/orcawave/test_panel_mesh.py:L131-L135] [src/digitalmodel/orcawave/panel_mesh.py:L266-L284] |
-| C4-BALANCE | For a free body using `HydroCoefficients.mass_kg` and independently integrated mesh volume, compare rho × volume with mass; relative error <= 1.0 %; declared preload required otherwise | kg, relative %; NOT_RUN: no qualified body input; do not use defective summary volume. [src/digitalmodel/orcawave/hydro_coefficients.py:L42-L51] [src/digitalmodel/orcawave/panel_mesh.py:L266-L284] |
-| C4-FRAME | Compare independently computed CoB to native value, horizontal error <= 0.5 % of waterline length, vertical <= 1.0 % of draft; GM > 0 and relative difference <= 2.0 % | m, relative %; NOT_RUN: summary carries no CoB/GM. [src/digitalmodel/orcawave/panel_mesh.py:L47-L59] |
-| C4-MESH | Recompute `compute_panel_quality` for every panel: maximum aspect <= 3; maximum edge <= shortest analysed wavelength/6; installed-version panel-limit excess = 0 | dimensionless, m, panels; NOT_RUN: no analysis mesh/version/wavelength. Suggestions alone are insufficient. [src/digitalmodel/orcawave/panel_mesh.py:L194-L209] [src/digitalmodel/orcawave/panel_mesh.py:L288-L311] |
-| C4-WATERLINE | Reconstruct waterline from GDF vertices: closure gaps <= 0.001 m, top-coordinate error <= 0.001 m, design-draft error <= 0.01 m | m; NOT_RUN: production mesh absent; summary's near-waterplane area is not a closure test. [src/digitalmodel/orcawave/panel_mesh.py:L259-L264] |
-| C4-NORMALS | Independent oriented-surface check: signed volume > 0, zero-area panels = 0 and inward normals = 0; symmetry declarations duplicated = 0 | m³, m², count; NOT_RUN for complete body; local heuristic cannot establish this. [src/digitalmodel/orcawave/panel_mesh.py:L211-L217] [src/digitalmodel/orcawave/panel_mesh.py:L266-L284] |
-| C4-IRREGULAR | For a qualified rectangular body, compare analysis range with 0.9 × estimated irregular frequency per AQG r0 section 8; require 0 missing interior-lid records when triggered, 3 mesh views and 0 spikes inside the specified 5.0 % band | rad/s, relative %, records; NOT_RUN: geometry/solver record absent; no lid field in GDF model. [src/digitalmodel/orcawave/panel_mesh.py:L62-L70] |
-| C4-HYDRO | Check imported `HydroCoefficients`: added-mass asymmetry <= 2.0 %, negative damping diagonals = 0; longest-period heave RAO within 2.0 % of 1 m/m | relative %, matrix units, m/m; NOT_RUN: no qualified coefficients; current symmetry test starts with a symmetric identity. [tests/orcawave/test_hydro_coefficients.py:L54-L59] [src/digitalmodel/orcawave/hydro_coefficients.py:L42-L71] |
-| C4-WIND | Run `tests/orcawave/test_drift_forces.py::TestWindCurrentDrift::test_zero_wind_zero_force`; zero-speed total surge/sway = 0 within NumPy assertion defaults | kN; PASS at BASE and AFTER, arithmetic regression only. [tests/orcawave/test_drift_forces.py:L128-L136] |
-| C4-HULL | Run `tests/orcawave/test_vessel_database.py::TestParametricHull::test_barge_hull`; generated midsection half-breadth within 1.0 % of 15 m | m; PASS at BASE and AFTER, shape regression only. [tests/orcawave/test_vessel_database.py:L88-L95] |
-| C5-TRACE | For a report consuming `RAOTable`, `HydroCoefficients` and `MeshSummary`, inspect generated appendix against AQG r0 section 9; missing required fields = 0, result coverage = 100.0 % | count, relative %; NOT_RUN: no report issued by this work. [src/digitalmodel/orcawave/rao_processing.py:L29-L43] [src/digitalmodel/orcawave/hydro_coefficients.py:L42-L71] [src/digitalmodel/orcawave/panel_mesh.py:L47-L59] |
+The canonical offline pack-report required set is `offline_pack_report_v1`:
+`displaced_volume_m3`, `waterplane_area_m2`, `centre_of_buoyancy_m`, `gm_t_m`,
+`gm_l_m`, `longest_period_heave_m_per_m`, `wind_force_sway_kn`,
+`current_force_sway_kn`, and `total_yaw_knm`. Pass this entire set as
+`required_quantities` to `build_trace` for a pack report; extra traced quantities
+cannot replace any required quantity. The smaller C5-TRACE volume fixture tests
+one producer and is not a complete pack report. Native/report qualification
+remains NOT_RUN.
+
+C4-HYDRO uses `abs(Mij-Mji) / max(sqrt(abs(Mii*Mjj)), abs(Mij), abs(Mji))`
+for both matrix families, with a 2% limit. A zero denominator denotes a zero
+pair with zero error. This scale admits small opposite-sign numerical noise
+beside large diagonals while retaining the 1% pass and 3% rejection cases.
 
 ## 6. Known failure modes and pitfalls
 
