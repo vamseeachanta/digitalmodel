@@ -36,6 +36,8 @@ def test_end_a_contact_uses_support_nearest_measured_position(end_x, forces, acc
     """Moving End A shall use the new support; zero resultant means no contact."""
     reaction = slay_probe.end_a_support_reaction(end_x, [-31.1, -36.1, -41.1], forces)
     result = slay_probe.evaluate_static_acceptance(
+        diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+        radius=TABLE["basis"]["equipment"]["stinger"]["radius"],
         wire_length=10, end_a_reaction=reaction, last_support_force=0,
         grounded_tension=[0, 1], overbend_strain=0.00267,
         lift_off_arc=55, departure_angle=21,
@@ -47,6 +49,8 @@ def test_end_a_contact_uses_support_nearest_measured_position(end_x, forces, acc
 def test_zero_end_a_resultant_cannot_pass_acceptance():
     with pytest.raises(ValueError, match="End A.*contact"):
         slay_probe.assert_static_acceptance(
+            diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+            radius=TABLE["basis"]["equipment"]["stinger"]["radius"],
             wire_length=10, end_a_reaction=0, last_support_force=0,
             grounded_tension=[0], overbend_strain=0.00267,
             lift_off_arc=55, departure_angle=21,
@@ -77,13 +81,15 @@ def test_depth_consumers_reject_unknown_and_accept_equivalent_depth(tmp_path, co
     case = table["cases"][3]
     case["depth_m"] = depth
     if consumer == "prepare":
-        invoke = lambda: preparation_driver().case_spec(table["basis"], case)
+        def invoke():
+            return preparation_driver().case_spec(table["basis"], case)
     else:
         (tmp_path / "case-table.yml").write_text(yaml.safe_dump(table))
         # Reuse only the retained model inputs; the screen shall not regenerate them.
         import shutil
         shutil.copytree(CAMPAIGN / "models" / case["id"], tmp_path / "models" / case["id"])
-        invoke = lambda: slay_probe.screen_case(tmp_path, case["id"])
+        def invoke():
+            return slay_probe.screen_case(tmp_path, case["id"])
     if depth == 60:
         with pytest.raises(ValueError, match="stinger.*depth|depth.*stinger"):
             invoke()
