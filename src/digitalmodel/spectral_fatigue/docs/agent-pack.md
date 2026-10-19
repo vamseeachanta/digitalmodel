@@ -5,7 +5,7 @@
 | Module | `spectral_fatigue` |
 | Repository | `digitalmodel` |
 | Package | `src/digitalmodel/spectral_fatigue` |
-| Pack revision | 0, 2026-10-18 |
+| Pack revision | 1, 2026-10-19 |
 | Code revision | `29a87f1aba14aa22067794846aa5c2ec8bf407c1` |
 | Analysis family | Engineering calculations (`EC`); AQG r0, Python calculations |
 | Quality role | Engineering calculations quality manager |
@@ -44,7 +44,7 @@ The dependency documents a one-sided PSD in Hz and MPa²/Hz; no spatial coordina
 
 | Output | Unit / format | Meaning and bounds | Source |
 | --- | --- | --- | --- |
-| `<stem>_spectral_fatigue.csv` | CSV | One row per sea state: location, zero-based state index, occurrence, method, RMS MPa, bandwidth, peak rate Hz, full and weighted annual damage (year⁻¹) | [src/digitalmodel/spectral_fatigue/workflow.py:L99-L110] [src/digitalmodel/spectral_fatigue/workflow.py:L193-L194] |
+| `<stem>_spectral_fatigue.csv` | CSV | One row per sea state: location, zero-based state index, occurrence, method, RMS MPa, bandwidth, `peak_rate_Hz` (affected by the extra 1/(2π) factor in #2583), full and weighted annual damage (year⁻¹) | [src/digitalmodel/spectral_fatigue/workflow.py:L99-L110] [src/digitalmodel/spectral_fatigue/workflow.py:L193-L194] |
 | `<stem>_spectral_fatigue_summary.csv` | CSV | One row per location: annual damage year⁻¹, life and required life in years, margin dimensionless, Boolean pass | [src/digitalmodel/spectral_fatigue/workflow.py:L113-L127] [src/digitalmodel/spectral_fatigue/workflow.py:L197-L198] |
 | Replaced `cfg["spectral_fatigue"]` | mapping | Design inputs, method, curve, governing location/margin/life, locations and displayed CSV paths | [src/digitalmodel/spectral_fatigue/workflow.py:L60-L74] |
 | `cfg["screening_status"]` | `pass` / `fail` | Pass only if every location passes; location passes when margin ≥ 1.0 | [src/digitalmodel/spectral_fatigue/workflow.py:L68-L75] [src/digitalmodel/spectral_fatigue/workflow.py:L118-L126] |
@@ -59,7 +59,7 @@ CSV columns follow first-row dictionary order; existing files are opened for rep
 | `compute_spectral_moments` | Trapezoidal integration of PSD times frequency powers; RMS and bandwidth are dependency properties. [src/digitalmodel/fatigue/spectral_fatigue.py:L59-L82] [src/digitalmodel/fatigue/spectral_fatigue.py:L133-L143] |
 | `narrow_band_damage` | Library docstring attributes the Rayleigh-range closed form to Bendat (1964); that attribution is recorded here as code provenance, without independent source verification. [src/digitalmodel/fatigue/spectral_fatigue.py:L150-L162] |
 | `wirsching_light_damage` | Library docstring names DNV-RP-C203, 2021, Frequency domain fatigue analysis, and a subsection locator; empirical coefficients are not reproduced here. [src/digitalmodel/fatigue/spectral_fatigue.py:L207-L221] |
-| `dirlik_damage` | Library attributes its exponential/Rayleigh mixture to Dirlik (1985), and clamps mixture parameters and denominators. [src/digitalmodel/fatigue/spectral_fatigue.py:L261-L271] [src/digitalmodel/fatigue/spectral_fatigue.py:L291-L327] |
+| `dirlik_damage` | Library attributes its exponential/Rayleigh mixture to Dirlik (1985), but substitutes bandwidth ε = √(1−α2²) for irregularity γ = α2 in D1/R/Q, then clamps parameters and denominators. This default-estimator formula defect is tracked in #2746, item 2; C10 exposes it in the narrow-band limit. [src/digitalmodel/fatigue/spectral_fatigue.py:L261-L271] [src/digitalmodel/fatigue/spectral_fatigue.py:L291-L327] |
 | `benasciutti_tovo_damage` | Library attributes the interpolation to Benasciutti and Tovo (2005); its wide-band factor and final maximum remain a qualification defect (#2775). [src/digitalmodel/fatigue/spectral_fatigue.py:L339-L348] [src/digitalmodel/fatigue/spectral_fatigue.py:L364-L390] |
 | `_evaluate_location` | `annual_damage = sum(full_annual_damage * occurrence_fraction)`; life = reciprocal annual damage; required life = design life × DFF; margin = life / required life; reject nonpositive accumulated damage. [src/digitalmodel/spectral_fatigue/workflow.py:L91-L98] [src/digitalmodel/spectral_fatigue/workflow.py:L113-L125] |
 | `router` | Governing location minimizes margin; writes both CSVs and collapses all location pass flags to the overall verdict. [src/digitalmodel/spectral_fatigue/workflow.py:L54-L75] |
@@ -76,7 +76,7 @@ Validated workflow examples: **0**; the shipped example supplies a PSD and curve
 
 | Regression case | Source / input | Expected output and tolerance | Existing test node ID | Last offline result |
 | --- | --- | --- | --- | --- |
-| R01 durable example | Repository example at the code revision; `examples/workflows/spectral-fatigue/input.yml` | Dirlik, overall `fail`, 2 locations, 3 sea-state rows; reciprocal life and weighted damage agree at pytest default tolerance; these are consistency checks, not an independent fatigue benchmark. [tests/workflows/test_durable_workflows.py:L364-L401] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]` | PASS at BASE and AFTER; temporary copy, outputs retained outside the source tree |
+| R01 durable example | Repository example at the code revision; `examples/workflows/spectral-fatigue/input.yml` | Dirlik; matching overall/configuration verdicts of `fail`; governing location is the splash zone and governing margin is the minimum; the summary contains splash-zone and keel-joint IDs, with pass flags false and true respectively; exactly 2 splash-zone detail rows, all full damage positive; reciprocal life and weighted damage agree at pytest default tolerance. Output files must exist. These are consistency checks, not an independent fatigue benchmark; total row counts are C09. [tests/workflows/test_durable_workflows.py:L364-L401] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]` | PASS at BASE and AFTER; temporary copy, outputs retained outside the source tree |
 | R02 narrow-band wiring | Synthetic PSD written by the test; expected annual damage and reciprocal life from the imported library | Relative error ≤ 1e-9, dimensionless, in damage (year⁻¹) and life (year); shared-library regression, affected by #2583. [tests/workflows/test_durable_workflows.py:L1893-L1950] | `tests/workflows/test_durable_workflows.py::test_spectral_fatigue_workflow_matches_narrow_band_closed_form` | PASS at BASE and AFTER; temporary copy |
 
 Offline execution record: code revision `29a87f1aba14aa22067794846aa5c2ec8bf407c1`; the two nodes above plus `tests/fatigue/test_spectral_fatigue.py`, `tests/test_spectral_fatigue.py` and `tests/test_spectral_fatigue_validation.py`; command form `PYTHONPATH=src uv run --no-sources --with 'pytest>=7.4.3,<9.0.0' python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`. The tests and source are copied without edits before running; the workflow outputs remain in the temporary copy. Observed results are recorded in section 10; no licensed runtime is needed for these cases. [tests/workflows/test_durable_workflows.py:L56-L59] [docs/registry/workflows.yaml:L169-L178]
@@ -89,7 +89,7 @@ Gate applicability follows AQG r0, Python calculations: G0 inputs/units/citation
 | --- | --- | --- |
 | G0 | Applicable: supplied PSD and scalar-curve preflight; standard provenance remains open | C01–C03 |
 | G1 | Applicable: Python import and offline pytest route, no model-load route because the router writes CSV rather than a solver deck. [src/digitalmodel/spectral_fatigue/workflow.py:L54-L58] [src/digitalmodel/spectral_fatigue/workflow.py:L222-L229] | C04–C05 |
-| G2 | Applicable: check weighted accumulation independently, then qualify crossing rates and spectral estimators separately | C06–C08 |
+| G2 | Applicable: check weighted accumulation independently, then qualify crossing rates and spectral estimators separately | C06–C08, C10 |
 | G3 | NOT_APPLICABLE: no time integration is performed by the supplied-PSD router. [src/digitalmodel/spectral_fatigue/workflow.py:L92-L98] | None |
 | G4 | NOT_APPLICABLE: no diffraction mesh or hydrostatics is read or written by this route. [src/digitalmodel/spectral_fatigue/workflow.py:L160-L171] [src/digitalmodel/spectral_fatigue/workflow.py:L222-L229] | None |
 | G5 | Applicable: retain input/output fingerprints, test outcomes and unresolved dispositions; a signed report appendix is not generated by the router. [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] | C09 |
@@ -102,11 +102,12 @@ Gate applicability follows AQG r0, Python calculations: G0 inputs/units/citation
 | C04 | G1 | Execute R01 and R02 by their exact section-4 nodes; require 2 pass, 0 fail, 0 skip, count | PASS, BASE and AFTER. [tests/workflows/test_durable_workflows.py:L364-L401] [tests/workflows/test_durable_workflows.py:L1893-L1950] |
 | C05 | G1 | Run all tests in the three dependency/comparison files named in section 4; require 63 pass, 0 fail, 0 skip, count | PASS, BASE and AFTER; these include sibling implementations rather than direct router tests. [tests/fatigue/test_spectral_fatigue.py:L7-L14] [tests/test_spectral_fatigue.py:L6-L14] [tests/test_spectral_fatigue_validation.py:L24-L42] |
 | C06 | G2 | Read detail CSV, independently sum full damage × occurrence by location and compare `annual_damage`; check life × damage = 1 and margin × required life / life = 1; maximum relative error ≤ 1e-9 dimensionless | PASS on shipped example; checks only accumulation and reporting algebra, not the spectral-damage reference. [src/digitalmodel/spectral_fatigue/workflow.py:L97-L125] [tests/workflows/test_durable_workflows.py:L385-L401] |
-| C07 | G2 | Integrate the rectangular PSD in the recipe below and compare `moments.nu_0` with a separate trapezoidal Hz-moment calculation; relative discrepancy ≤ 1e-9 dimensionless; report both in Hz | Known dependency defect #2583: observed 0.2 Hz versus 1.0 Hz, ratio 6.3 (rounded); fails qualification. [src/digitalmodel/fatigue/spectral_fatigue.py:L64-L71] [src/digitalmodel/fatigue/spectral_fatigue.py:L133-L143] |
+| C07 | G2 | Integrate the rectangular PSD in the recipe below and compare `moments.nu_0` with a separate trapezoidal Hz-moment calculation; relative discrepancy ≤ 1e-9 dimensionless; report both in Hz | Known dependency defect #2583: observed 0.159 Hz versus 1.000 Hz, ratio 6.3 (rounded); fails qualification. [src/digitalmodel/fatigue/spectral_fatigue.py:L64-L71] [src/digitalmodel/fatigue/spectral_fatigue.py:L133-L143] |
 | C08 | G2 | Compute BT / narrow-band annual damage for the synthetic moments in the recipe; require the claimed wide-band interpolation to remain finite and between 0 and 1, dimensionless, pending independent qualification of that bound | Known dependency defect #2775: ratio 2.8, above 1; positivity tests alone do not detect this. [src/digitalmodel/fatigue/spectral_fatigue.py:L345-L348] [src/digitalmodel/fatigue/spectral_fatigue.py:L364-L390] [tests/fatigue/test_spectral_fatigue.py:L122-L140] |
 | C09 | G5 | For R01, require detail rows = 3, summary rows = 2, verdict mismatches = 0, count; retain SHA-256 for 1 input and 2 CSV outputs with check results; require 0 missing evidence files | PASS for local evidence capture; signed appendix and provenance remain open, issue pending (2). [tests/workflows/test_durable_workflows.py:L364-L401] [src/digitalmodel/spectral_fatigue/workflow.py:L54-L76] |
+| C10 | G2 | For the C07 rectangular PSD, compare Dirlik / narrow-band annual damage at S-N slope 3 and log intercept 12; require finite damage ratio with absolute departure from 1 ≤ 0.02 (2%), dimensionless | Known dependency defect #2746, item 2: ratio 49.8, outside tolerance despite α2 approaching 1; R01 does not expose the substitution because its bandwidth and irregularity are similar. [src/digitalmodel/fatigue/spectral_fatigue.py:L74-L82] [src/digitalmodel/fatigue/spectral_fatigue.py:L291-L327] |
 
-Executable preflight and dependency checks (run against the pinned source; the two final assertions deliberately expose the unchanged defects):
+Executable preflight and dependency checks (run against the pinned source; C07, C08 and C10 deliberately expose unchanged defects and must run separately):
 
 ```python
 import math
@@ -115,7 +116,7 @@ from digitalmodel.spectral_fatigue.workflow import (
 )
 from digitalmodel.fatigue.spectral_fatigue import (
     compute_spectral_moments, SpectralMoments,
-    benasciutti_tovo_damage, narrow_band_damage,
+    benasciutti_tovo_damage, narrow_band_damage, dirlik_damage,
 )
 
 # C01
@@ -163,6 +164,12 @@ m = SpectralMoments(m0=100, m1=500, m2=5000, m4=2000000)
 ratio = (benasciutti_tovo_damage(m, 3, 12).damage_per_year /
          narrow_band_damage(m, 3, 12).damage_per_year)
 assert math.isfinite(ratio) and 0 <= ratio <= 1  # Known failure, #2775.
+
+# C10, execute separately; narrow-band limit cancels the shared rate defect.
+m = compute_spectral_moments([0.99, 1.0, 1.01], [1.0, 1.0, 1.0])
+ratio = (dirlik_damage(m, 3, 12).damage_per_year /
+         narrow_band_damage(m, 3, 12).damage_per_year)
+assert math.isfinite(ratio) and abs(ratio - 1) <= 0.02  # Known failure, #2746.
 ```
 
 ## 6. Known failure modes and pitfalls
@@ -201,7 +208,7 @@ rg -n 'float\(|int\(|get\(|or \{\}|Hz|MPa|year|cache|open\(' src/digitalmodel/sp
 | --- | --- |
 | Hz moments are paired with angular-rate conversion, propagating an understated damage rate through all methods. [src/digitalmodel/fatigue/spectral_fatigue.py:L64-L71] [src/digitalmodel/fatigue/spectral_fatigue.py:L138-L141] | C07; #2583 |
 | BT factor exceeds the narrow-band bound for the supplied wide-band moments, despite the interpolation description. [src/digitalmodel/fatigue/spectral_fatigue.py:L345-L348] [src/digitalmodel/fatigue/spectral_fatigue.py:L364-L390] | C08; #2775 |
-| Default Dirlik clamps parameters; existing dependency tests check positivity, a broad bound and annualization rather than a published benchmark. [src/digitalmodel/fatigue/spectral_fatigue.py:L294-L305] [tests/fatigue/test_spectral_fatigue.py:L99-L119] | no independent detection check exists; issue pending (2) |
+| Default Dirlik uses bandwidth ε instead of irregularity γ = α2 in D1/R/Q and clamps the resulting mixture; existing tests check positivity, a broad bound and annualization rather than this narrow-band limit. [src/digitalmodel/fatigue/spectral_fatigue.py:L294-L305] [tests/fatigue/test_spectral_fatigue.py:L99-L119] | C10; #2746, item 2; known failure |
 | Standard edition and machine-readable citation evidence are absent from the router output; same-library equality is insufficient validation. [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] [tests/workflows/test_durable_workflows.py:L1941-L1950] | C03; issue pending (2) |
 
 The complete source contains no record-skipping `continue`, `return None`, empty-result error return, epoch fallback, percentage fallback or cache write; its sole caught exception is S15. [src/digitalmodel/spectral_fatigue/workflow.py:L37-L237]
@@ -226,7 +233,7 @@ The durable registry separately declares a parametric atlas using fixed stress-g
 
 ### Implementation-map inventory
 
-Map evidence in this section is pinned to `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `origin/codex/implmap-work`; its recorded data revision is `270c8759c374b67a7f032953e7fcdb14e0224461`. All other source evidence uses the header's code pin. Row relations below are the map's labels, not independent endorsements of those classifications. [docs/registry/implementation-map.yaml:L1-L3]
+Map evidence in this section is pinned to `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `origin/codex/implmap-work`; its recorded data revision is `270c8759c374b67a7f032953e7fcdb14e0224461`. This map pin is on a side branch and is not an ancestor of main at `6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c`; the map blob there differs. The 534 map citations resolve only at the separate map pin, not the header code pin, and depend on retaining that commit if the side branch is deleted. All other source evidence uses the header's code pin. Row relations below are the map's labels, not independent endorsements of those classifications. [docs/registry/implementation-map.yaml:L1-L3]
 
 Counted families, ranked by in-package rows: `sn-curves-and-miner-damage` (2), then `wave-spectra` (1); both count because fewer than three families have rows in the package. The inventory below retains every row in both families, including scripts, tests and implementations outside the package. [src/digitalmodel/spectral_fatigue/workflow.py:L37-L49] [src/digitalmodel/spectral_fatigue/workflow.py:L93-L98] [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143]
 
@@ -822,7 +829,7 @@ sn-curves-and-miner-damage
 
 The counted result is **0 further second implementations**, meeting the maximum of 1 for the package boundary; the inventory contains all 533 map rows (141 wave-spectra, 392 S-N/Miner), with no path absent at the code pin. The map's independent classification of `_sn_curve` and wave-spectrum classification of `_evaluate_location` overstate what those definitions compute; revise those relations and the unrelated #2543 affected-status tag in issue pending (3). [src/digitalmodel/spectral_fatigue/workflow.py:L93-L98] [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143]
 
-A repository-wide tracked-Python search, including `scripts/`, used the same expressions (wave-spectra: 496 files, 1262 enclosing definitions, including 60 script files; S-N/Miner: 321 files, 1494 enclosing definitions, including 30 script files); external hits are map follow-up findings, not counted package misses. Shared spectral estimators also exist in `structural/fatigue/frequency_domain.py` and `structural/spectral_fatigue.py`; their independent correctness is outside this package review. [src/digitalmodel/structural/fatigue/frequency_domain.py:L101-L177] [src/digitalmodel/structural/spectral_fatigue.py:L1-L14]
+A repository-wide search at code revision `29a87f1aba14aa22067794846aa5c2ec8bf407c1` used the file set from `git ls-tree -r --name-only 29a87f1aba14aa22067794846aa5c2ec8bf407c1`, retaining only paths ending in `.py`, and read each blob with `git show <revision>:<path>`. Applying the same case-sensitive Python `re` expressions to those blobs, including `scripts/`, gives wave-spectra: 496 files, including 60 script files; S-N/Miner: 321 files, including 30 script files. These are file counts at the stated revision, not a recount of a later tree; external hits are map follow-up findings, not counted package misses. Shared spectral estimators also exist in `structural/fatigue/frequency_domain.py` and `structural/spectral_fatigue.py`; their independent correctness is outside this package review. [src/digitalmodel/structural/fatigue/frequency_domain.py:L101-L177] [src/digitalmodel/structural/spectral_fatigue.py:L1-L14]
 
 Families covered in section 3 but lacking dedicated in-package map rows include Dirlik mixture estimation, narrow-band range estimation, Wirsching-Light correction and Benasciutti-Tovo correction: they are imported here, so they are map follow-up rather than additional counted families. External-hit classification and dedicated estimator families remain issue pending (3). [src/digitalmodel/spectral_fatigue/workflow.py:L16-L34] [src/digitalmodel/spectral_fatigue/workflow.py:L93-L98]
 
@@ -831,10 +838,11 @@ Families covered in section 3 but lacking dedicated in-package map rows include 
 | Item | Coverage or unresolved work | Tracking / responsible role |
 | --- | --- | --- |
 | O1 | Complete negative-case coverage and enforce finite numbers, PSD shape/sign/order, occurrence totals, unique location IDs and output identity; section-6 S01–S18 retains guarded defaults as well as gaps. [src/digitalmodel/spectral_fatigue/workflow.py:L88-L127] [src/digitalmodel/spectral_fatigue/workflow.py:L130-L237] | issue pending (1); maintainers |
-| O2 | Reconcile the UNVERIFIED standard designation/edition in section 3; provide an independent router-level benchmark, default Dirlik qualification, resolved citations, signed gate evidence and a shared-log entry. [examples/workflows/spectral-fatigue/input.yml:L6-L9] [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] [tests/workflows/test_durable_workflows.py:L1941-L1950] | issue pending (2); maintainers |
+| O2 | Correct the default Dirlik bandwidth/irregularity substitution and qualify the narrow-band limit with C10 before relying on that estimator. [src/digitalmodel/fatigue/spectral_fatigue.py:L291-L327] | #2746, item 2; maintainers |
 | O3 | Repair dependency frequency convention before relying on damage or life. [src/digitalmodel/fatigue/spectral_fatigue.py:L64-L71] [src/digitalmodel/fatigue/spectral_fatigue.py:L133-L143] | #2583; maintainers |
 | O4 | Qualify BT correction and its broad-band range independently. [src/digitalmodel/fatigue/spectral_fatigue.py:L364-L390] | #2775; maintainers |
 | O5 | Reconcile map classifications, dedicated estimator-family coverage, external search findings and documentation that groups supplied PSD and generated-grid workflows. [docs/domains/fatigue/fatg-legacy-spectral-fatigue.md:L54-L63] [src/digitalmodel/spectral_fatigue/workflow.py:L160-L171] | issue pending (3); maintainers |
+| O6 | Reconcile the UNVERIFIED standard designation/edition in section 3; provide an independent router-level benchmark, resolved citations, signed gate evidence and a shared-log entry. [examples/workflows/spectral-fatigue/input.yml:L6-L9] [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] [tests/workflows/test_durable_workflows.py:L1941-L1950] | issue pending (2); maintainers |
 
 ### File coverage
 
@@ -857,13 +865,22 @@ Documentation discovery used `rg -n 'spectral_fatigue|spectral-fatigue' docs src
 
 Supporting code/tests read: the fatigue library, engine dispatch, the three spectral test files and the two relevant durable-workflow definitions; sibling spectral implementations were compared for dependency and map context. [src/digitalmodel/fatigue/spectral_fatigue.py:L1-L395] [src/digitalmodel/engine.py:L340-L345] [tests/fatigue/test_spectral_fatigue.py:L1-L140] [tests/test_spectral_fatigue.py:L1-L14] [tests/test_spectral_fatigue_validation.py:L24-L42] [tests/workflows/test_durable_workflows.py:L364-L401] [tests/workflows/test_durable_workflows.py:L1893-L1950]
 
-The calculation-citation contract was readable; its sidecar expectation is recorded as O2, rather than retrofitted into module code. The pack includes no private derived values and requires no private sidecar entry for its examples. [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] [examples/workflows/spectral-fatigue/input.yml:L1-L26]
+The calculation-citation contract was readable; its sidecar expectation is recorded as O6, rather than retrofitted into module code. The pack includes no private derived values and requires no private sidecar entry for its examples. [src/digitalmodel/spectral_fatigue/workflow.py:L60-L76] [examples/workflows/spectral-fatigue/input.yml:L1-L26]
 
 ### Offline results
 
 | Run / test scope | BASE: passed / failed / skipped / NOT_RUN | AFTER: passed / failed / skipped / NOT_RUN |
 | --- | --- | --- |
 | Two router cases plus 63 dependency/comparison tests | 65 / 0 / 0 / 0 | 65 / 0 / 0 / 0 |
-| Complete tests-contracts domain, with required pytest plugins | 1064 / 0 / 61 / 0 | 1064 / 0 / 61 / 0 |
+| Complete `tests-contracts` gate in `.claude/quality-gates.yaml`, with required pytest plugins | 1064 / 0 / 61 / 0 | 1064 / 0 / 61 / 0 |
 
-The initial mixed-root invocation failed before collection with duplicate `tests.conftest` registration; the corrected invocation uses one temporary tree. The first contracts invocation had 1062 pass, 1 failure and 61 skips because the declared timeout plugin was missing; the missing plugin was supplied before repeating the domain. No test or marker was changed. The standard pytest addopts remained enabled. [tests/docs/test_agent_pack_node_ids.py:L33-L41] [tests/solvers/orcaflex/test_yaml_validator_timestep.py:L125-L125] [pyproject.toml:L177-L183] [pytest.ini:L68-L71]
+The initial mixed-root invocation failed before collection with duplicate `tests.conftest` registration; the corrected invocation uses one temporary tree. The first contracts invocation had 1062 pass, 1 failure and 61 skips because the declared timeout plugin was missing; the missing plugin was supplied before repeating the domain. No test or marker was changed. The standard pytest addopts remained enabled. [tests/docs/test_agent_pack_node_ids.py:L33-L41] [tests/solvers/orcaflex/test_yaml_validator_timestep.py:L125-L125] [pyproject.toml:L177-L183] [pytest.ini:L48-L52] [.claude/quality-gates.yaml:L91-L111]
+
+Documentation revision 1 rerun, 2026-10-19, before and after edits from `89c63f94550e49000274394679686c51e0677053`: the same focused nodes ran from an unmodified temporary source copy, with generated CSVs outside the checkout. The contracts gate ran against the checkout. Both used `uv run --no-project --with pytest python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the standard addopts enabled and dependencies installed in scratch.
+
+| Revision 1 scope | Before: passed / failed / skipped | After: passed / failed / skipped |
+| --- | --- | --- |
+| Two router cases plus 63 dependency/comparison tests | 65 / 0 / 0 | 65 / 0 / 0 |
+| Complete `tests-contracts` gate | 1063 / 0 / 62 | 1064 / 0 / 61 |
+
+The additional before-run skip was the installed-metadata check; installing the package from the temporary source copy and running that node gave 1 pass. The other 61 skips concern existing missing or removed module layouts, not optional dependency packages. C01 rejects 8/8 invalid inputs; C02 occurrence sums are 1.0 for both locations; C06 has zero relative accumulation error; C09 captures 3 detail and 2 summary rows with no verdict mismatch and all three fingerprints. C07, C08 and C10 reproduce the documented qualification failures, independently of the passing regression counts. The repeated package sweep retains 18 documented behaviors and finds no additional unlisted failure path; both counted map families retain 0 further second implementations.
