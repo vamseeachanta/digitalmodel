@@ -376,7 +376,7 @@ class TestEdgeCases:
         path = tmp_yaml("foo: [unclosed bracket")
         result = validator.validate_file(path)
         assert not result.valid
-        assert any("parse error" in i.message.lower() for i in result.errors)
+        assert any("composition error" in i.message.lower() for i in result.errors)
 
     def test_basefile_key_accepted(self, validator, tmp_yaml):
         path = tmp_yaml("""\
