@@ -534,6 +534,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
   - module: alt_fuel_ship_sizing
     entry_point: src/digitalmodel/alt_fuel_ship_sizing/
+    submodules:
+      alt_fuel_ship_sizing:
+        agent_pack: src/digitalmodel/alt_fuel_ship_sizing/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/ship-design/alt-fuel-lh2-sizing.md
     key_tests: [tests/naval_architecture/test_alt_fuel_ship_sizing.py, tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py]
