@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 
+from digitalmodel.workflows.installation_report_paths import display_cases
 from digitalmodel.workflows.installation_seastate_report import _case, _read
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
 
@@ -213,7 +214,8 @@ th{background:#eef3f7}small{display:block;color:#64788c;font-size:11px;white-spa
 .caption{font-size:12px;color:#61758a}footer{font-size:12px;color:#61758a}@media print{body{background:white}section{break-inside:avoid}main{padding:0}}'''
 
 
-def render_html(summary, links, base=Path('.')):
+def render_html(summary, links, base=Path('.'), *, config=None):
+    """Render retained evidence; config may supply dataset_root and case_run_dirs."""
     counts, cases = summary['counts'], summary['cases']
     issue = ('Complete run-demand snapshot; engineering acceptance pending'
              if cases and all(case['status'] == 'VERIFIED' for case in cases) else 'Partial issue')
@@ -254,7 +256,7 @@ Forecast performance is not calculated by this report; linked results remain spe
 <p>Operating-window qualification will require applicable capacity and DNV criteria, resolution of the pipe strength discrepancy,
 RAO coverage assessment, slack/snap and interference checks, and duration, time-step, seed and heading sensitivities.</p></section>
 {marketing_section()}
-<section id="appendix-a"><h2>Appendix A · Detailed results by case</h2>{_case_details(cases, base)}
+<section id="appendix-a"><h2>Appendix A · Detailed results by case</h2>{_case_details(display_cases(summary, config or {}, base), base)}
 <h3>A.1 Pending detailed results</h3><p>Detailed records for queued, running, failed or incomplete cases will populate here
 after successful evidence verification. Their current states remain visible in Section 5.1.</p></section>
 <section><h2>Appendix B · Provenance, references and limitations</h2><p>All status counts refer to the captured campaign manifest; later progress is
