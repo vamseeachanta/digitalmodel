@@ -26,6 +26,7 @@ from typing import Any, Iterator, Mapping
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
+from digitalmodel._output_paths import validate_output_paths
 from digitalmodel.reporting.calc_report import _DEFAULT_TEMPLATE, _template_parts
 from digitalmodel.reporting.figures import inline_plotlyjs, plotly_div
 from digitalmodel.reporting.pdf import PdfMode, PdfStatus, render_pdf
@@ -256,13 +257,20 @@ def write_report(
     The manifest lists artifact names (pack-relative, portable), the
     standards, the citation count and the PDF status; keys are sorted and no
     timestamp is generated.
+
+    Aliased output destinations raise ``ValueError`` before rendering or writing.
+    A disabled PDF is excluded from destination validation.
     """
     out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
     html_path = out_dir / f"{stem}.html"
     pdf_path = out_dir / f"{stem}.pdf"
     citations_path = out_dir / f"{stem}_citations.json"
     manifest_path = out_dir / f"{stem}_manifest.json"
+    destinations = [html_path, citations_path, manifest_path]
+    if pdf != "off":
+        destinations.append(pdf_path)
+    validate_output_paths(*destinations)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     html_path.write_text(render_html(spec), encoding="utf-8", newline="\n")
     status = render_pdf(html_path, pdf_path, pdf)
