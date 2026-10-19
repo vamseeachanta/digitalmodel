@@ -1,5 +1,6 @@
 """Execution assignments must cover declared roots and every pytest file."""
 
+import glob
 import os
 import re
 import shlex
@@ -18,7 +19,7 @@ SHARDS = {name: gate for name, gate in GATES.items() if gate.get("domain")}
 
 
 @lru_cache(maxsize=None)
-def pytest_paths(command):
+def pytest_paths(command, root=ROOT):
     """Read positional paths, keeping --ignore arguments out of the roots."""
     args = shlex.split(command)
     args = args[args.index("pytest") + 1 :]
@@ -30,7 +31,8 @@ def pytest_paths(command):
         elif arg.startswith("--ignore="):
             ignored.append(Path(arg.split("=", 1)[1]))
         elif arg.startswith("tests/") and "::" not in arg:
-            roots.append(Path(arg))
+            paths = glob.glob(arg, root_dir=root) if glob.has_magic(arg) else [arg]
+            roots.extend(Path(path) for path in paths)
     return roots, ignored
 
 
@@ -48,9 +50,9 @@ def test_declared_test_roots_are_executed():
         cells = line.split("|")
         if len(cells) < 4 or (name := "tests-" + cells[1].strip()) not in SHARDS:
             continue
-        argv = shlex.split(SHARDS[name]["command"])
+        roots, _ = pytest_paths(SHARDS[name]["command"])
         for root in re.findall(r"`(tests/[^`]+)`", cells[2]):
-            if (ROOT / root).exists() and root.endswith(("/", ".py")) and root not in argv:
+            if (ROOT / root).exists() and root.endswith(("/", ".py")) and Path(root) not in roots:
                 missing.append(f"{name}: {root}")
     assert not missing, f"{len(missing)} missing root assignments:\n" + "\n".join(missing)
 
@@ -92,3 +94,12 @@ def test_every_test_file_has_an_execution_assignment():
 )
 def test_execution_path_matching(path, arguments, expected):
     assert covers(Path(path), f"python -m pytest {arguments} -q") is expected
+
+
+def test_pytest_paths_expands_shell_globs(tmp_path):
+    directory = tmp_path / "tests" / "module"
+    directory.mkdir(parents=True)
+    (directory / "test_one.py").write_text("")
+    (directory / "helper.py").write_text("")
+    roots, _ = pytest_paths("python -m pytest tests/module/test_*.py", root=tmp_path)
+    assert roots == [Path("tests/module/test_one.py")]

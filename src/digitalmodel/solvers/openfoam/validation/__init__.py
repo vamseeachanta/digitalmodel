@@ -43,6 +43,7 @@ from .cylinder import (
 )
 from .dam_break import (
     DAM_BREAK_FRONT_TOLERANCE,
+    DAM_BREAK_INTERFACE_TOLERANCE_CELLS,
     DAM_BREAK_MASS_TOLERANCE,
     DAM_BREAK_RAW_FRONT_TOLERANCE,
     DAM_BREAK_SOLVE_TOLERANCE,
@@ -53,7 +54,9 @@ from .dam_break import (
     build_dam_break_case,
     dimensionless_front,
     dimensionless_time,
+    extract_interface_width,
     front_deviation,
+    interface_band_width,
     martin_moyce_front,
 )
 from .flat_plate import (
@@ -490,6 +493,7 @@ __all__ = [
     "strouhal_number",
     # Dam break (#1165)
     "DAM_BREAK_FRONT_TOLERANCE",
+    "DAM_BREAK_INTERFACE_TOLERANCE_CELLS",
     "DAM_BREAK_MASS_TOLERANCE",
     "DAM_BREAK_RAW_FRONT_TOLERANCE",
     "DAM_BREAK_SOLVE_TOLERANCE",
@@ -500,7 +504,9 @@ __all__ = [
     "build_dam_break_case",
     "dimensionless_front",
     "dimensionless_time",
+    "extract_interface_width",
     "front_deviation",
+    "interface_band_width",
     "martin_moyce_front",
     # Wave tank (#1170)
     "DISPERSION_TOLERANCE",
