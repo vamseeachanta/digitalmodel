@@ -1,8 +1,13 @@
 """Check that an OrcaFlex .sim is a completed simulation with a Line exposing strength result variables.
 
 Usage:  uv run python scripts/validate_orcaflex_sim.py <path-to-.sim>
-Prints VALIDATE: PASS or VALIDATE: FAIL with reasons. Read-only on the .sim.
+Prints VALIDATE: PASS, FAIL or NOT_EVALUATED with reasons. Read-only on the .sim.
 Requires a licensed OrcFxAPI install.
+
+Exit status: 0 = pass, 1 = fail, 2 = usage error, 3 = not evaluated.
+Whole-simulation frequency-domain strength extrema are not evaluated; their
+range graphs do not expose time-domain Min/Max fields. An unavailable dynamics
+domain also leaves this check not evaluated. Neither outcome is a pass.
 
 Only ``SimulationStopped`` with ``simulationComplete`` explicitly true counts
 as a completed simulation; a model that does not expose the completion flag
@@ -11,8 +16,9 @@ statics-only, and still-running states are rejected with a non-zero exit:
 they can expose partial range-graph data that must not be post-processed as a
 finished run. Mirrors ``digitalmodel.solvers.orcaflex.run_state``.
 
-Every Line is sampled and reported; the run passes only when every Line
-exposes all strength variables, and any failing Line fails the run.
+For time-domain dynamics every Line is sampled and reported; the run passes
+only when every Line exposes all strength variables, and any failing Line
+fails the run. Completion and presence of a Line are required in either domain.
 """
 from __future__ import annotations
 
@@ -32,6 +38,10 @@ REJECT_REASONS = {
 }
 
 STRENGTH_VARS = ("Effective Tension", "Wall Tension", "Bend Moment", "Curvature", "Bend Radius")
+
+# Application-defined status for the deferral permitted by issue #2325;
+# distinct from the existing pass, failure and usage statuses (see module docstring).
+NOT_EVALUATED = 3
 
 
 def state_name(state) -> str:
@@ -102,6 +112,23 @@ def main(argv: list[str]) -> int:
     if not lines:
         print("VALIDATE: FAIL  (no Line object present)")
         return 1
+
+    # Orcina public Python reference (online edition, accessed 2026-10-19):
+    # Model.isFrequencyDomainDynamics is a boolean domain indicator.
+    # https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,Model.htm
+    frequency_domain = getattr(model, "isFrequencyDomainDynamics", None)
+    if frequency_domain is not False:
+        # OrcaFlexLineObject.RangeGraph, whole-simulation frequency-domain case:
+        # X, StaticValue, StdDev, Upper, Lower are available, not Min/Max.
+        # No conversion of statistical results into time-domain extrema is assumed.
+        # https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,OrcaFlexLineObject.htm
+        reason = (
+            "frequency domain"
+            if frequency_domain is True
+            else "dynamics domain unavailable; isFrequencyDomainDynamics must be boolean"
+        )
+        print(f"VALIDATE: NOT_EVALUATED  (strength variables not evaluated ({reason}))")
+        return NOT_EVALUATED
 
     # Sample and report every Line; any Line missing a strength variable fails the run.
     failing = []
