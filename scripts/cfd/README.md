@@ -90,3 +90,7 @@ executable and point `settings.json` at the combined command:
 The renderer emits one `lane:case it/end s/it w<write> m<drift%>` segment per
 lane, separated by ` │ `, then cache age. It marks unreachable lanes and stale
 caches without blocking the prompt. Use `--width COLUMNS` to bound the segment.
+
+For read-only discovery of shell scripts whose process name is not `bash`, see
+[Finding a running shell script on Linux](../../docs/runbooks/script-process-discovery.md).
+The lookup validates the expected working directory and lists candidates only.
