@@ -47,8 +47,12 @@ def domain(manifest: HullManifest):
 
 def test_extents_are_multiples_of_lpp_not_of_a_ported_box(manifest, domain) -> None:
     lpp = manifest.lpp_m
-    assert domain.x_inlet == pytest.approx(UPSTREAM_LPP * lpp)
-    assert domain.x_outlet == pytest.approx(-DOWNSTREAM_LPP * lpp)
+    assert domain.x_inlet - manifest.bbox_max_m[0] == pytest.approx(
+        UPSTREAM_LPP * lpp
+    )
+    assert manifest.bbox_min_m[0] - domain.x_outlet == pytest.approx(
+        DOWNSTREAM_LPP * lpp
+    )
     assert domain.y_side == pytest.approx(-LATERAL_LPP * lpp)
     assert domain.z_levels[0] == pytest.approx(-DEPTH_LPP * lpp)
     assert domain.z_levels[-1] == pytest.approx(FREEBOARD_LPP * lpp)
@@ -89,8 +93,12 @@ def test_x_is_mirrored_so_the_inlet_faces_the_bow(manifest, domain) -> None:
     stern-first: it solves, it converges, and it answers a different question.
     """
     assert domain.x_inlet > 0 > domain.x_outlet
-    assert domain.x_inlet == pytest.approx(-domain.config.min_coords[0])
-    assert domain.x_outlet == pytest.approx(-domain.config.max_coords[0])
+    assert domain.x_inlet - manifest.bbox_max_m[0] == pytest.approx(
+        -domain.config.min_coords[0]
+    )
+    assert domain.x_outlet - manifest.bbox_min_m[0] == pytest.approx(
+        -domain.config.max_coords[0]
+    )
     assert domain.flow_direction == (-1.0, 0.0, 0.0)
 
 

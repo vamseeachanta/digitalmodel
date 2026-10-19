@@ -4,12 +4,11 @@ ladder for this lane was sized at one speed and then run at four, and the
 in-plane criterion it has to satisfy moves with the SQUARE of the speed while
 the mesh does not move at all.
 
-WHAT THESE TESTS PIN, MEASURED. On the full-scale hull below, at the coarse
-level (background cell Lpp/6.3 = 25.11 m, six topoSet/refineMesh stages that
-halve x and y only, so 0.392 m in the free-surface plane) the achieved
-resolution is 85 cells per linear deep-water wavelength at 14 kn -- and 73, 62
-and 52 at 13, 12 and 11 kn. The project's acceptance criterion is 80. A coarse
-sweep therefore fails the criterion at EVERY solve below 14 kn.
+WHAT THESE TESTS PIN, DERIVED. The synthetic full-scale hull below uses the
+background target in ``hull_domain.py``. Hull-relative domain placement and
+integer block counts determine the actual in-plane cell. Hand calculations
+below pin that cell after the refinement stages and confirm that the coarse
+sweep fails the selected resolution criterion below its highest speed.
 
 Nothing in the solve reports that. An under-resolved wave train is damped by
 numerical diffusion, the residuals converge, and the wave-making component of
@@ -141,7 +140,11 @@ def test_the_in_plane_cell_is_the_background_cell_halved_once_per_stage(
     res = free_surface_resolution(domain, div, SPEEDS_M_S[14])
     coarsest = max(domain.length / div["nx"], domain.width / div["ny"])
     assert res.cell_size == pytest.approx(coarsest / 2**REFINEMENT_STAGES)
-    assert res.cell_size == pytest.approx(0.392, abs=5e-4)
+    # Hand calculation from FULL_SCALE and the tutorial factors in
+    # hull_domain.py: length = 160.2 - (-1.0) + (2.0 + 4.5) * 158.2
+    # = 1189.5 m; nx = round(1189.5 / (158.2 / 6.3)) = 47.
+    # dx > dy = 474.6 / 19, so the six-stage cell is (1189.5 / 47) / 64.
+    assert res.cell_size == pytest.approx(1189.5 / 47 / 64)
 
 
 def test_the_fourteen_knot_ladder_fails_the_criterion_below_fourteen_knots(
@@ -300,7 +303,10 @@ def test_a_stated_background_cell_that_cannot_meet_the_criterion_fails_the_BUILD
             tmp_path / "aborted",
         )
     message = str(excinfo.value)
-    assert "73" in message, "the achieved cells/wavelength is not named"
+    # Independent hand calculation with the synthetic speed and the existing
+    # gravity input: (2*pi*6.6878**2/9.81) / (1189.5/47/64) = 72.47,
+    # rounded to the diagnostic's four significant figures.
+    assert "72.47" in message, "the achieved cells/wavelength is not named"
     assert "80" in message, "the required cells/wavelength is not named"
     assert "base_cell_size" in message, "the knob to turn is not named"
 

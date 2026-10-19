@@ -58,17 +58,18 @@ class HullDomainError(ValueError):
     """A domain that would emit an invalid or inverted blockMeshDict."""
 
 
-# --- Extents, in multiples of Lpp measured from MIDSHIP --------------------- #
+# --- Extents, in multiples of Lpp ------------------------------------------ #
 #
 #  DEFAULTS: every one is also a ``HullCaseConfig`` field, so a case can trim
 #  its own far field. These reproduce the DTC tutorial's own proportions (whose
 #  domain the KCS validation case uses) to within rounding.
 #
-#  MEASURED FROM THE ORIGIN OF THE CASE FRAME = the hull's AFT PERPENDICULAR,
-#  not midship and not the hull's ends. This claimed the ITTC 7.5-03-02-03
-#  minimums measured from the ends, which assumed a translation the builder
-#  does not perform: true forward clearance is ``upstream_lpp - LOA/Lpp``.
-#  Far-field sizing, deliberately left alone by #2033, which fixed resolution.
+#  Longitudinal clearances are measured from the hull bounding-box ends in
+#  case coordinates. ITTC 7.5-03-02-03, Practical Guidelines for Ship CFD
+#  Applications (2024), revision 02, section 2.2, pages 4-5, discusses boundary
+#  distances from the body: https://www.ittc.info/media/11958/75-03-02-03.pdf
+#  This datum correction does not change or qualify the tutorial defaults.
+#  Lateral, depth and freeboard extents retain their case-origin datum.
 
 UPSTREAM_LPP = 2.0
 DOWNSTREAM_LPP = 4.5
@@ -124,8 +125,10 @@ class HullDomain:
     """The computational domain, in the emitted case's own coordinates.
 
     ``config`` is exactly what ``DomainBuilder.from_hull_dims`` returned, kept
-    so a reader can see the delegation. ``x_inlet``/``x_outlet`` are that box
-    mirrored into the template's flow direction.
+    so a reader can see the delegation: its coordinates are unplaced, in the
+    builder's +x flow convention. ``x_inlet``/``x_outlet`` mirror its x offsets
+    into the template's -x flow convention and add the hull's bow/stern
+    coordinates. Only these placed extents are used to emit the hull case.
     """
 
     config: DomainConfig
@@ -196,9 +199,12 @@ def build_hull_domain(
         base_cell_size=base_cell_size,
     )
 
-    # Mirror x: DomainBuilder's upstream (-x) is the template's inlet (+x).
-    x_inlet = -config.min_coords[0]
-    x_outlet = -config.max_coords[0]
+    # Mirror the delegated offsets, then measure from the hull ends (#2033).
+    # Distance identity: inlet - bow = upstream_lpp * Lpp, and
+    # stern - outlet = downstream_lpp * Lpp (ITTC section 2.2 cited above).
+    # The hull surfaces remain in their original case coordinates.
+    x_inlet = manifest.bbox_max_m[0] - config.min_coords[0]
+    x_outlet = manifest.bbox_min_m[0] - config.max_coords[0]
     z_levels = _z_levels(config, lpp, draft, keel_clearance_drafts)
 
     return HullDomain(

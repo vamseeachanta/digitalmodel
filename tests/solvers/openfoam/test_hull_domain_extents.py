@@ -23,11 +23,16 @@ rather than route around it.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Dict
 
 import pytest
 
-from digitalmodel.solvers.openfoam.hull_case import HullCaseConfig, derive_hull_case
+from digitalmodel.solvers.openfoam.hull_case import (
+    HullCaseConfig,
+    build_hull_case,
+    derive_hull_case,
+)
 from digitalmodel.solvers.openfoam.hull_case_physics import derive_cell_budget
 from digitalmodel.solvers.openfoam.hull_domain import (
     DEPTH_LPP,
@@ -93,10 +98,10 @@ def _config(manifest: HullManifest, stl, **kw) -> HullCaseConfig:
 #  The five multiples reach the domain
 # --------------------------------------------------------------------------- #
 
-def test_the_defaults_are_todays_values_so_existing_callers_do_not_move(
+def test_the_case_defaults_match_the_domain_builder_defaults(
     full_scale, stl_file
 ) -> None:
-    """Additive: a caller that states nothing gets exactly what it got before."""
+    """A caller that states no factors gets the domain builder's defaults."""
     config = _config(full_scale, stl_file)
     assert config.upstream_lpp == UPSTREAM_LPP
     assert config.downstream_lpp == DOWNSTREAM_LPP
@@ -116,8 +121,12 @@ def test_the_defaults_are_todays_values_so_existing_callers_do_not_move(
 def test_each_multiple_reaches_the_emitted_box(full_scale, stl_file) -> None:
     lpp = full_scale.lpp_m
     domain = derive_hull_case(_config(full_scale, stl_file, **TRIMMED)).domain
-    assert domain.x_inlet == pytest.approx(TRIMMED["upstream_lpp"] * lpp)
-    assert domain.x_outlet == pytest.approx(-TRIMMED["downstream_lpp"] * lpp)
+    assert domain.x_inlet - full_scale.bbox_max_m[0] == pytest.approx(
+        TRIMMED["upstream_lpp"] * lpp
+    )
+    assert full_scale.bbox_min_m[0] - domain.x_outlet == pytest.approx(
+        TRIMMED["downstream_lpp"] * lpp
+    )
     assert domain.y_side == pytest.approx(-TRIMMED["lateral_lpp"] * lpp)
     assert domain.z_levels[0] == pytest.approx(-TRIMMED["depth_lpp"] * lpp)
     assert domain.z_levels[-1] == pytest.approx(TRIMMED["freeboard_lpp"] * lpp)
@@ -250,3 +259,109 @@ def test_the_floor_moves_with_the_draft_to_lpp_ratio() -> None:
     build_hull_domain(deep_manifest, freeboard_lpp=_freeboard_floor(deep_manifest) + 0.02)
     with pytest.raises(HullDomainError, match="FS_OUTER_LPP"):
         build_hull_domain(deep_manifest, freeboard_lpp=0.30)
+
+
+# Hull-end datum: ITTC 7.5-03-02-03 (2024), revision 02, section 2.2,
+# pages 4-5 measures boundary distances from the body, not the case origin.
+# The following values are synthetic arithmetic inputs, not ITTC limits.
+@pytest.mark.parametrize(
+    ("downstream_lpp", "expected_outlet", "expected_length"),
+    [(4.5, -712.9, 1189.5), (3.5, -554.7, 1031.3)],
+)
+def test_longitudinal_clearances_are_measured_from_the_hull_ends(
+    full_scale, downstream_lpp, expected_outlet, expected_length
+) -> None:
+    """Independent hand calculation using FULL_SCALE's synthetic dimensions.
+
+    Lpp = 158.2 m, hull x = [-1.0, 160.2] m, upstream multiple = 2.0.
+    Inlet = 160.2 + 2.0 * 158.2 = 476.6 m.
+    Default outlet = -1.0 - 4.5 * 158.2 = -712.9 m; length = 1189.5 m.
+    Trimmed outlet = -1.0 - 3.5 * 158.2 = -554.7 m; length = 1031.3 m.
+    The historical origin-based default length was 6.5 * 158.2 = 1028.3 m.
+    The added length is the hull extent: 160.2 - (-1.0) = 161.2 m.
+    """
+    domain = build_hull_domain(
+        full_scale, upstream_lpp=2.0, downstream_lpp=downstream_lpp
+    )
+    assert domain.x_inlet == pytest.approx(476.6)
+    assert domain.x_outlet == pytest.approx(expected_outlet)
+    assert domain.length == pytest.approx(expected_length)
+
+
+@pytest.mark.parametrize("shift", [-500.0, 0.0, 50.0])
+def test_translation_preserves_clearances_and_moves_the_keep_point(shift) -> None:
+    """Hand calculation: translate the synthetic interval by any shift s.
+
+    Inlet = 476.6 + s; outlet = -712.9 + s; length = 1189.5 m.
+    Keep point x = ((-1.0 + s) + (-712.9 + s)) / 2 = -356.95 + s.
+    The chosen perturbations put the hull wholly aft of, across and forward
+    of the case origin; they are test inputs, not engineering coefficients.
+    """
+    data = json.loads(json.dumps(FULL_SCALE))
+    for key in ("bbox_min_m", "bbox_max_m"):
+        data[key][0] += shift
+    moved = HullManifest.from_dict(data)
+    domain = build_hull_domain(moved)
+
+    assert domain.x_inlet == pytest.approx(476.6 + shift)
+    assert domain.x_outlet == pytest.approx(-712.9 + shift)
+    assert domain.length == pytest.approx(1189.5)
+    x, y, z = domain.location_in_mesh
+    assert x == pytest.approx(-356.95 + shift)
+    assert domain.x_outlet < x < moved.bbox_min_m[0]
+    assert domain.y_side < y < domain.y_centreplane
+    assert domain.z_levels[0] < z < domain.waterline
+    for lo, hi in refinement_boxes(moved, domain):
+        assert domain.x_outlet <= lo[0] <= moved.bbox_min_m[0]
+        assert moved.bbox_max_m[0] <= hi[0] <= domain.x_inlet
+
+
+def test_emitted_vertices_and_provenance_use_the_hull_end_datum(
+    full_scale, stl_file, tmp_path
+) -> None:
+    """The independent hand calculation above also governs emitted files.
+
+    Inlet = 160.2 + 316.4 = 476.6 m; outlet = -1.0 - 711.9 = -712.9 m.
+    Keep point x = (-1.0 - 712.9) / 2 = -356.95 m.
+    """
+    case = build_hull_case(_config(full_scale, stl_file), tmp_path / "case")
+    text = (case / "system/blockMeshDict").read_text()
+    vertices = text.split("vertices", 1)[1].split(";", 1)[0]
+    xs = {
+        float(match[0])
+        for match in re.findall(r"\(\s*([-\d.eE+]+)\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s*\)", vertices)
+    }
+    assert sorted(xs) == pytest.approx([-712.9, 476.6])
+    snappy = (case / "system/snappyHexMeshDict").read_text()
+    point = re.search(r"^\s*locationInMesh\s+\(([^)]+)\)", snappy, re.M)
+    assert point is not None
+    assert float(point[1].split()[0]) == pytest.approx(-356.95)
+    provenance = json.loads((case / "case_provenance.json").read_text())
+    assert provenance["domain"]["x_inlet"] == pytest.approx(476.6)
+    assert provenance["domain"]["x_outlet"] == pytest.approx(-712.9)
+
+
+def test_hull_length_is_included_in_the_background_cell_count(full_scale) -> None:
+    """Independent hand calculation from the synthetic FULL_SCALE fixture.
+
+    Using hull_domain.py's existing tutorial factors, h = 158.2 / 6.3 m.
+    Before: nx = round(1028.3 / h) = 41. After: round(1189.5 / h) = 47.
+    ny = round(474.6 / h) = 19. The vertical ladder is unchanged:
+    band = 0.009 * 158.2 = 1.4238 m; nzb = ceil(band / (h*0.0148)) = 4;
+    dz = band/4 = 0.35595 m; nza = ceil(50.4971 / (dz*1.6)) = 89;
+    nzc = ceil(32.7474 / (dz*2.2)) = 42;
+    nzd = ceil(58.2588 / (dz*8.1)) = 21.
+    Layers = 2*89 + 2*4 + 42 + 21 = 249.
+    Background = nx*ny*layers (hull_case_physics._background_cells):
+    before = 41*19*249 = 193971; after = 47*19*249 = 222357 cells.
+    These are background counts, not a prediction of solver cost.
+    """
+    domain = build_hull_domain(full_scale)
+    divisions = block_divisions(domain)
+    assert divisions == {
+        "nx": 47, "ny": 19, "nza": 89, "nzb": 4, "nzc": 42, "nzd": 21
+    }
+    budget = derive_cell_budget(
+        domain, refinement_boxes(full_scale, domain), divisions, ranks=8
+    )
+    assert budget.background_cells == 222357
