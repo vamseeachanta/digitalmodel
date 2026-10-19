@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+from collections import Counter
+from decimal import Decimal
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -24,6 +27,111 @@ SOURCE = ROOT / "docs/domains/orcaflex/library/templates/mooring_buoy/spec.yml"
 REFERENCE = ROOT / "docs/domains/orcaflex/examples/yml/C07/C07 Metocean buoy in deep water.yml"
 # Preimage of the digest recorded for a member that is absent (not present-and-null).
 ABSENT_VALUE_BYTES = b"\x00digitalmodel.absent.v1"
+
+
+def _difference_category(reference, candidate, path, kind):
+    """Diagnostic candidates only; no installed-product equivalence is inferred."""
+    if kind != "value_or_type":
+        # Candidate inventory: issue #2104, Decomposition. These names alone do
+        # not establish display-only semantics. In particular the wind variation
+        # factor is not included: no format evidence supports that disposition.
+        parts = path.split("/")
+        if kind == "missing_key" and (
+            path in {"/General/DefaultViewAzimuth", "/General/DefaultViewCentre",
+                     "/General/DefaultViewElevation", "/General/DefaultViewMode",
+                     "/General/DefaultViewSize"}
+            or (len(parts) == 4 and parts[1] == "Lines" and parts[2].isascii()
+                and parts[2].isdecimal() and parts[3] in {
+                    "ContactPen", "DrawNodesAsDiscs", "DrawShadedNodesAsSpheres"})
+        ):
+            return "presentation_key_candidate"
+        return "missing_data"
+    # YAML 1.1 type definitions (2005-01-18), int.html and float.html at
+    # https://yaml.org/type/ distinguish integer and approximate real tags.
+    # Python 3.11 Decimal constructor: string conversion is exact and unaffected
+    # by context precision (https://docs.python.org/3.11/library/decimal.html).
+    # Compare decoded decimal spellings exactly, without a guessed tolerance or
+    # converting an integer to binary float. Original YAML lexemes are not kept.
+    if (type(reference) in (int, float) and type(candidate) in (int, float)
+            and type(reference) is not type(candidate)
+            and all(type(value) is int or math.isfinite(value)
+                    for value in (reference, candidate))
+            and Decimal(str(reference)) == Decimal(str(candidate))):
+        return "equal_decimal_numeric"
+    # YAML 1.1 bool (2005-01-18), https://yaml.org/type/bool.html, lists Yes/No
+    # spellings. A decoded string remains a different type; only matching
+    # spellings are candidates, and field-specific OrcaFlex semantics are pending.
+    for boolean, spelling in ((reference, candidate), (candidate, reference)):
+        if (type(boolean) is bool and type(spelling) is str
+                and spelling == ("Yes" if boolean else "No")):
+            return "boolean_spelling"
+    # YAML 1.1 null (2005-01-18), https://yaml.org/type/null.html, Definition:
+    # null differs from both an empty string and an absent key. Never waive it.
+    if ((reference is None and type(candidate) is str and candidate == "")
+            or (candidate is None and type(reference) is str and reference == "")):
+        return "null_empty_string"
+    return "value_or_type"
+
+
+def _category_decisions():
+    """Record the evidence gaps explicitly, rather than treating tags as waivers."""
+    format_source = "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm"
+    decisions = {
+        "equal_decimal_numeric": (
+            "YAML 1.1 int/float definitions (2005-01-18): https://yaml.org/type/int.html; "
+            "https://yaml.org/type/float.html. Python 3.11 Decimal constructor: "
+            "https://docs.python.org/3.11/library/decimal.html. Exact equality of decoded "
+            "decimal spellings is diagnostic only; YAML tags remain distinct.",
+            "Field-specific OrcaFlex documentation or reviewed version-bound readback "
+            "establishing whether integer and float input tags have identical effects.",
+        ),
+        "boolean_spelling": (
+            "YAML 1.1 bool definition (2005-01-18): https://yaml.org/type/bool.html. "
+            "Matching Yes/No strings are candidates, not proof of field acceptance.",
+            "Field-specific evidence that the installed product accepts both the "
+            "boolean and quoted string with identical effects.",
+        ),
+        "null_empty_string": (
+            "YAML 1.1 null Definition (2005-01-18): https://yaml.org/type/null.html. "
+            "Null, empty string and absence are distinct.",
+            "Field-specific disposition of null versus empty script or data value; "
+            "no general substitution is supported.",
+        ),
+        "presentation_key_candidate": (
+            "Issue #2104 Decomposition supplies candidate names only. "
+            + format_source + " (YAML file format) does not establish these keys "
+            "as safe omissions. Wind variation is excluded from this candidate list.",
+            "Vendor field definitions and reviewed evidence that omitting each key "
+            "has no analysis effect before any non-blocking policy is introduced.",
+        ),
+        "missing_data": (
+            "YAML 1.1 null Definition (2005-01-18): https://yaml.org/type/null.html. "
+            "Presence is significant; " + format_source + " describes defaults "
+            "for unspecified data without establishing equivalence for these fields.",
+            "Individual disposition of each missing field or list member.",
+        ),
+        "value_or_type": (
+            format_source + " describes ordered assignments, not a general "
+            "cross-type normalization or numerical acceptance tolerance.",
+            "Individual disposition of each changed value or unclassified type pair.",
+        ),
+    }
+    return {name: {"semantic_status": "NOT_EVALUATED", "blocking": True,
+                   "basis": basis, "required_evidence": evidence}
+            for name, (basis, evidence) in decisions.items()}
+
+
+def _difference_record(reference, candidate, path, kind, *,
+                       reference_present=True, candidate_present=True):
+    record = {
+        "path": path, "kind": kind,
+        "category": _difference_category(reference, candidate, path, kind),
+        "reference_value_sha256": _value_hash(reference, present=reference_present),
+        "candidate_value_sha256": _value_hash(candidate, present=candidate_present),
+    }
+    if kind != "value_or_type":
+        record.update(reference_present=reference_present, candidate_present=candidate_present)
+    return record
 
 
 def _merge(target, incoming):
@@ -97,13 +205,9 @@ def _differences(reference, candidate, path=""):
                 if isinstance(present, dict) and present:
                     yield from _differences(reference.get(key, {}), candidate.get(key, {}), child)
                     continue
-                yield {"path": child, "kind": "missing_key",
-                       "reference_present": reference_present,
-                       "candidate_present": candidate_present,
-                       "reference_value_sha256": _value_hash(
-                           reference.get(key), present=reference_present),
-                       "candidate_value_sha256": _value_hash(
-                           candidate.get(key), present=candidate_present)}
+                yield _difference_record(
+                    reference.get(key), candidate.get(key), child, "missing_key",
+                    reference_present=reference_present, candidate_present=candidate_present)
             else:
                 yield from _differences(reference[key], candidate[key], child)
     elif isinstance(reference, list) and isinstance(candidate, list):
@@ -111,39 +215,40 @@ def _differences(reference, candidate, path=""):
             if index >= min(len(reference), len(candidate)):
                 reference_present = index < len(reference)
                 candidate_present = index < len(candidate)
-                yield {"path": f"{path}/{index}", "kind": "missing_item",
-                       "reference_present": reference_present,
-                       "candidate_present": candidate_present,
-                       "reference_value_sha256": _value_hash(
-                           reference[index] if reference_present else None,
-                           present=reference_present),
-                       "candidate_value_sha256": _value_hash(
-                           candidate[index] if candidate_present else None,
-                           present=candidate_present)}
+                yield _difference_record(
+                    reference[index] if reference_present else None,
+                    candidate[index] if candidate_present else None,
+                    f"{path}/{index}", "missing_item", reference_present=reference_present,
+                    candidate_present=candidate_present)
             else:
                 yield from _differences(reference[index], candidate[index], f"{path}/{index}")
     elif type(reference) is not type(candidate) or reference != candidate:
-        yield {"path": path, "kind": "value_or_type",
-               "reference_value_sha256": _value_hash(reference),
-               "candidate_value_sha256": _value_hash(candidate)}
+        yield _difference_record(reference, candidate, path, "value_or_type")
 
 
 def _reference_report(root, manifest):
     reference = read_yaml(REFERENCE)
     generated = _generated_sections(root / "bundle")
     differences = list(_differences(reference, generated))
-    report = {"schema_version": 2,
+    report = {"schema_version": 3,
               "missing_member_hash_rule": _missing_member_hash_rule(),
               "reference_sha256": digest(REFERENCE), "source_sha256": manifest["source"]["sha256"],
               "input_files": manifest["files"], "reference_compatible": not differences,
               "difference_count": len(differences), "differences": differences,
+              "blocking_difference_count": len(differences),
+              "category_counts": dict(sorted(Counter(
+                  item["category"] for item in differences).items())),
+              "category_decisions": _category_decisions(),
               "comparison": "Strict YAML (duplicate keys and aliases refused) with presence-aware "
                             "missing-member hashes; under a mapping-key parent, a missing non-empty "
                             "mapping recurses to descendant rows without a container row, so an absent "
                             "container and a present empty mapping can yield identical rows; a missing "
                             "list member hashes the whole member in one missing_item row; recursive "
                             "mapping merge in generated include order; lists compared in order; no "
-                            "metadata exclusions.",
+                            "metadata exclusions. Categories describe decoded representation "
+                            "candidates only; no numeric tolerance or semantic waiver is applied. "
+                            "All strict differences remain blocking and each category's "
+                            "OrcaFlex semantics is NOT_EVALUATED.",
               "native_verified": False, "engineering_parity": False}
     (root / "reference-differences.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 
