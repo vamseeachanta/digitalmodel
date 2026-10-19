@@ -22,6 +22,7 @@ import re
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
+from numbers import Integral
 from typing import Any, Optional
 
 import json
@@ -123,6 +124,11 @@ class ComparisonRow:
 
 # PRNSOL output: NODE    SX    SY    SZ    SXY   SYZ   SXZ
 _PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+[A-Z]", re.IGNORECASE)
+_PRNSOL_PAGE_RE = re.compile(
+    r"^\s*(?:\*+\s+POST1\s+NODAL\s+STRESS\s+LISTING\s+\*+\s*|"
+    r"(?:LOAD\s+STEP|TIME)\s*=.*)$",
+    re.IGNORECASE,
+)
 # Intel Fortran Developer Guide, 2023.0, "E and D Editing": explicit E/D
 # exponents and overflow asterisks. Exponent-letter omission is deliberately
 # rejected here: without a verified field format its interpretation is ambiguous.
@@ -188,8 +194,9 @@ def _check_prnsol_coverage(seen: set[int], expected_node_ids: Iterable[int]) -> 
     """Compare against independently supplied nodes, never listing-derived IDs."""
     expected: set[int] = set()
     for node_id in expected_node_ids:
-        if type(node_id) is not int or node_id <= 0:
+        if isinstance(node_id, bool) or not isinstance(node_id, Integral) or node_id <= 0:
             raise ValueError("PRNSOL expected node IDs must be positive integers")
+        node_id = int(node_id)
         if node_id in expected:
             raise ValueError(f"PRNSOL duplicate expected node {node_id}")
         expected.add(node_id)
@@ -266,6 +273,11 @@ class ResultsExtractor:
         system, load-step or shell-surface identity. Repeated node IDs are
         rejected because this scalar interface cannot distinguish surfaces.
         Unsupported page annotations and malformed rows raise ValueError.
+        Recognized page banners require a fresh NODE header before more rows.
+
+        Unlike the earlier last-column fallback, the requested component must
+        appear in the header. The default SEQV therefore raises ValueError for
+        PRNSOL,S,COMP listings without SEQV; pass an explicit component such as SX.
 
         Parameters
         ----------
@@ -288,6 +300,7 @@ class ResultsExtractor:
         labels: list[str] = []
         component = component.upper()
         in_data = False
+        awaiting_header = False
 
         for line in text_block.splitlines():
             if not line.strip():
@@ -299,7 +312,14 @@ class ResultsExtractor:
                 if component not in labels[1:]:
                     raise ValueError(f"PRNSOL component {component!r} is absent")
                 in_data = True
+                awaiting_header = False
                 continue
+            if _PRNSOL_PAGE_RE.fullmatch(line):
+                in_data = False
+                awaiting_header = True
+                continue
+            if awaiting_header:
+                raise ValueError("PRNSOL page requires a fresh NODE header")
             if in_data:
                 if line.strip().upper().startswith(("MINIMUM", "MAXIMUM")):
                     in_data = False

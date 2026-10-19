@@ -6,6 +6,7 @@ https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRNS
 All numbers below are synthetic inputs; no engineering acceptance limit is used.
 """
 
+import numpy as np
 import pytest
 
 from digitalmodel.ansys.results_extractor import ResultsExtractor
@@ -59,6 +60,60 @@ def test_repeated_headers_and_blank_lines_preserve_rows():
     assert result.to_dict("records") == [
         {"node_id": 1, "value": 5}, {"node_id": 2, "value": 9},
     ]
+
+
+@pytest.mark.parametrize("banner", [
+    "***** POST1 NODAL STRESS LISTING *****",
+    "LOAD STEP= 1 SUBSTEP= 1",
+    "TIME= 1.0000",
+])
+def test_page_banner_requires_a_fresh_node_header(banner):
+    text = f"NODE SEQV\n1 5\n\n{banner}\n2 9\n"
+    with pytest.raises(ValueError, match="NODE header"):
+        ResultsExtractor().parse_prnsol_block(text)
+
+
+def test_two_pages_with_banners_preserve_column_identity():
+    text = """***** POST1 NODAL STRESS LISTING *****
+LOAD STEP= 1 SUBSTEP= 1
+TIME= 1.0000
+NODE SEQV SX
+1 5 2
+
+***** POST1 NODAL STRESS LISTING *****
+LOAD STEP= 1 SUBSTEP= 1
+TIME= 1.0000
+NODE SX SEQV
+2 3 9
+"""
+    result = ResultsExtractor().parse_prnsol_block(text, expected_node_ids=[1, 2])
+    assert result.to_dict("records") == [
+        {"node_id": 1, "value": 5}, {"node_id": 2, "value": 9},
+    ]
+
+
+def test_unknown_text_after_page_banner_is_rejected():
+    text = "NODE SEQV\n1 5\nTIME= 1.0000\nunknown annotation\nNODE SEQV\n2 9"
+    with pytest.raises(ValueError, match="NODE header"):
+        ResultsExtractor().parse_prnsol_block(text)
+
+
+@pytest.mark.parametrize("dtype", [np.int32, np.int64, np.uint64])
+def test_numpy_integral_node_manifest_is_accepted(dtype):
+    result = ResultsExtractor().parse_prnsol_block(
+        "NODE SEQV\n1 5\n2 9", expected_node_ids=np.array([1, 2], dtype=dtype),
+    )
+    assert result["node_id"].tolist() == [1, 2]
+
+
+@pytest.mark.parametrize("expected, reason", [
+    ([np.bool_(True)], "expected node IDs"),
+    ([np.int64(-1)], "expected node IDs"),
+    ([1, np.int64(1)], "duplicate expected"),
+])
+def test_numpy_node_manifest_rejects_invalid_or_duplicate_ids(expected, reason):
+    with pytest.raises(ValueError, match=reason):
+        ResultsExtractor().parse_prnsol_block("NODE SEQV\n1 5", expected_node_ids=expected)
 
 
 def test_extrema_footer_is_not_a_result_row():
