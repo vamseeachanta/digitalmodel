@@ -182,6 +182,9 @@ modules:
       aqwa:
         agent_pack: src/digitalmodel/hydrodynamics/aqwa/docs/agent-pack.md
         qa_family: DF
+      planing_hull:
+        agent_pack: src/digitalmodel/hydrodynamics/planing_hull/docs/agent-pack.md
+        qa_family: EC
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
