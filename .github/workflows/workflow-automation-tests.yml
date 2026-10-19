@@ -11,6 +11,10 @@ on:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -38,7 +42,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --no-sources -e ".[dev]"
+        uv pip install --no-sources -e ".[dev]" "pytest-cov>=4.1.0,<5.0.0"
 
     - name: Run workflow automation tests
       run: |
