@@ -5,8 +5,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from ruamel.yaml import YAML
-from ruamel.yaml.constructor import DuplicateKeyError
+import yaml
+from yaml.constructor import ConstructorError
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,11 +15,29 @@ OPERATOR_MAP = ROOT / "docs" / "maps" / "digitalmodel-operator-map.md"
 REGISTRY = ROOT / "docs" / "registry" / "module-routing.yaml"
 
 
+class UniqueKeySafeLoader(yaml.SafeLoader):
+    """Reject repeated keys while retaining safe YAML construction."""
+
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        mapping = super().construct_mapping(node, deep=deep)
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    f"found duplicate key {key!r}",
+                    key_node.start_mark,
+                )
+            seen.add(key)
+        return mapping
+
+
 def load_registry(text: str) -> dict:
     """Parse the routing registry without silently shadowing mapping entries."""
-    loader = YAML(typ="safe")
-    loader.allow_duplicate_keys = False
-    return loader.load(text)
+    return yaml.load(text, Loader=UniqueKeySafeLoader)
 
 
 def package_domains() -> set[str]:
@@ -192,7 +210,7 @@ def test_registry_rejects_duplicate_mapping_keys(text: str) -> None:
     The solver case reproduces the shadowing structure reported in issue #2772.
     Source: https://yaml.org/spec/1.2.2/#3211-nodes
     """
-    with pytest.raises(DuplicateKeyError):
+    with pytest.raises(ConstructorError):
         load_registry(text)
 
 
@@ -203,6 +221,7 @@ def test_registry_preserves_solver_submodule_routes() -> None:
     seven orcaflex child packages, orcawave and top_level make fourteen routes.
     Paths and QA families are transcribed from docs/registry/module-routing.yaml
     at that revision; these are routing metadata, not engineering limits.
+    For intentional changes, re-enumerate routes by hand from the registry, not loader output.
     """
     expected_families = {
         "calculix": "FE",
