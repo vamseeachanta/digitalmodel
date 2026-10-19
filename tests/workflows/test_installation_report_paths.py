@@ -80,6 +80,34 @@ def test_relocated_links_preserve_pinned_evidence(tmp_path, kind, retained):
 
 
 @pytest.mark.parametrize("kind", ["partial", "capability", "full"])
+def test_links_through_symlinked_dataset_remain_portable(tmp_path, kind):
+    """A linked dataset and its copied tree share the same relative report link."""
+    dataset = tmp_path / "physical"
+    target = dataset / "runs/case/extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("retained extraction", encoding="utf-8")
+    (dataset / "reports").mkdir()
+    linked = tmp_path / "linked"
+    try:
+        linked.symlink_to(dataset, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"Directory symlink unavailable: {error}")
+    data = summary("retained")
+    frozen = deepcopy(data)
+    config = {"dataset_root": "..", "case_run_dirs": {"0": "runs/case"}}
+    document = render(kind, data, config, linked / "reports")
+    links = Links()
+    links.feed(document)
+    expected = "../runs/case/extracted/report.html"
+    assert expected in links.targets
+    assert str(dataset) not in document
+    relocated = tmp_path / "relocated"
+    shutil.copytree(linked, relocated)
+    assert (relocated / "reports" / unquote(expected)).read_text() == "retained extraction"
+    assert data == frozen
+
+
+@pytest.mark.parametrize("kind", ["partial", "capability", "full"])
 @pytest.mark.parametrize("config", [
     {"dataset_root": "..", "case_run_dirs": {}},
     {"dataset_root": "..", "case_run_dirs": {"1": "runs/case"}},

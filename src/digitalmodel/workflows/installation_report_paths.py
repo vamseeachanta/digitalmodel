@@ -5,6 +5,7 @@ all stringified case indices to POSIX paths beneath that dataset root. Source
 rows remain unchanged. Without a mapping, existing link behavior is retained.
 This resolves locators only; it does not verify the linked evidence contents.
 """
+import os
 from pathlib import Path, PurePosixPath
 
 
@@ -29,7 +30,6 @@ def display_cases(summary, config, base):
         resolved = (root / entry).resolve()
         if not resolved.is_relative_to(root):
             raise ValueError('Case mapping resolves outside dataset root')
-        rows.append(dict(row, run_dir=str(resolved)))
+        run_dir = os.path.normpath(os.path.join(base, locator, entry))
+        rows.append(dict(row, run_dir=run_dir))
     return rows
-
-
