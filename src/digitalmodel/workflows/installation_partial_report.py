@@ -13,6 +13,7 @@ from pathlib import Path
 
 from digitalmodel.workflows.installation_seastate_report import _case, _read
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
+from digitalmodel.workflows.installation_trace_extract import verify_profile_metadata, verify_profile_arrays
 
 
 def collect_cases(snapshot, matrix, *, workers=1):
@@ -48,6 +49,15 @@ def _collect_case(index, case, current, matrix):
             metadata = json.loads(raw)
             if metadata['trace_sha256'] != row['trace_sha256']:
                 raise ValueError('Metadata changed during verification')
+            try:
+                run = Path(current['run_dir'])
+                receipt = _read(run / 'run.json')
+                verify_profile_metadata(run, receipt, metadata)
+                verify_profile_arrays(run / 'installation_traces/traces.npz', receipt, metadata)
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                return dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')},
+                            run_dir=current['run_dir'], status='FAILED',
+                            reason=f'Profile evidence verification failed: {error}')
             row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
                        metadata_sha256=sha256(raw).hexdigest(),
                        limitations=metadata.get('limitations', []))
@@ -171,7 +181,7 @@ def _scatter(cases):
                    for row, value in points)
     ticks = ''.join(f'<text x="{55 + p * 29}" y="268">{p}</text>' for p in range(4, 17, 2))
     yticks = ''.join(f'<text x="5" y="{249 - y * .34}">{y}</text>' for y in (0, 200, 400, 600))
-    return (f'<svg viewBox="0 0 600 300" role="img" aria-label="Sling 5 End B low-tension duration by Tp">'
+    return ('<svg viewBox="0 0 600 300" role="img" aria-label="Sling 5 End B low-tension duration by Tp">'
             '<path d="M55 30V245H545" fill="none" stroke="#637383"/>' + dots + ticks + yticks +
             '<text x="245" y="293">Peak period Tp (s)</text>'
             '<text x="60" y="20">Total tension ≤0 duration (s), per 600 s record</text></svg>')
