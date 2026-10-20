@@ -10,11 +10,98 @@ import argparse
 import hashlib
 from html import escape
 import json
+import math
 from pathlib import Path
 
 LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Acceptance criteria come from a workbook whose applicability is '
             'unresolved; alert levels are provisional.')
+NUMERICAL_BASIS: dict = {
+    'revision': 1,
+    'status': 'assumed, based on previous experience',
+    'kN_per_Te': 9.81,
+    'load_limits_Te': {'Master-link load-path proxy: TopRigging End B': 17.7,
+                       'Sling2 End B tension': 10.89},
+    'alert_probability': 0.2,
+    'load_limit_rule': 'limit_kN = assumed_limit_Te * kN_per_Te',
+    'probability_rule': 'p = count(max(forecast + error_trajectory) > limit) / window_count',
+    'alert_rule': 'alert = (p >= alert_probability)',
+    'implementation_references': [
+        'src/digitalmodel/workflows/installation_monitoring_demo.py:resolve_channels',
+        'src/digitalmodel/workflows/installation_forecast.py:exceedance_forecast',
+    ],
+    'limitations': [
+        'These assumptions expose the existing demonstration inputs; their original derivation is not established.',
+        'The conversion is a demonstration convention, not a certified component capacity or a standards criterion.',
+        'The alert cutoff is illustrative; no offshore risk tolerance or operational calibration is established.',
+        'Calibration error trajectories are not published; individual recorded probabilities cannot be independently recomputed.',
+        'The worked example is hypothetical arithmetic, not the calibration data for any published frame.',
+    ],
+    'worked_example': {
+        'forecast_kN': [100, 110],
+        'limit_kN': 110,
+        'error_trajectories_kN': [[-1, 0], [10, 0], [0, 1], [11, 0], [12, 0]],
+        'window_probability': 0.6,
+        'alert': True,
+    },
+}
+
+
+def validate_numerical_basis(scenario: dict, config: dict) -> None:
+    """Reject inputs that contradict the published demonstration assumptions."""
+    basis = NUMERICAL_BASIS
+    if config['exceedance']['alert_probability'] != basis['alert_probability']:
+        raise ValueError('Alert cutoff differs from the numerical basis')
+    for frame in scenario['frames']:
+        for channel in frame['channels']:
+            limit = channel['assumed_limit']
+            if limit is None:
+                continue
+            assumed = basis['load_limits_Te'].get(channel['label'])
+            if (assumed is None or channel['units'] != 'kN'
+                    or not math.isclose(limit, assumed * basis['kN_per_Te'], rel_tol=0, abs_tol=1e-9)):
+                raise ValueError('Load limit differs from the numerical basis')
+            alert = channel['exceedance']
+            if (alert['alert_probability'] != basis['alert_probability']
+                    or alert['alert'] is not (alert['window_probability'] >= basis['alert_probability'])):
+                raise ValueError('Alert result differs from the numerical basis')
+
+
+def numerical_basis_html() -> str:
+    """Expose the assumptions and a hand-worked example independently of the series."""
+    basis, rows = NUMERICAL_BASIS, []
+    for label, limit in basis['load_limits_Te'].items():
+        rows.append(f'<tr><td>{escape(label)}</td><td>{limit:.3f}</td>'
+                    f'<td>{limit * basis["kN_per_Te"]:.3f}</td></tr>')
+    example = basis['worked_example']
+    example_rows = ''.join(
+        f'<tr><td>{errors[0]:g}, {errors[1]:g}</td>'
+        f'<td>{max(f + e for f, e in zip(example["forecast_kN"], errors)):g}</td></tr>'
+        for errors in example['error_trajectories_kN'])
+    limitations = ''.join(f'<li>{escape(item)}</li>' for item in basis['limitations'])
+    references = ''.join(f'<li><code>{escape(item)}</code></li>' for item in basis['implementation_references'])
+    return f'''<section><h2>Numerical basis and assumptions</h2>
+<p>Load limits and the alert cutoff are {basis['status']}. They are provisional demonstration
+settings; no component capacity, workbook applicability or operational acceptance is established.</p>
+<p>Load conversion: limit (kN) = assumed limit (Te) × {basis['kN_per_Te']:.3f} kN/Te.
+Te denotes the tonne-force equivalent used by this demonstration.</p>
+<table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th></tr></thead>
+<tbody>{''.join(rows)}</tbody></table><p>Table 2. Assumed loads and their conversion.</p>
+<p>The alert cutoff is {basis['alert_probability']:.1%}, also written as {basis['alert_probability']:.3f}.
+For each complete calibration window, its joint error trajectory is added to the current forecast.
+The window exceeds the load limit only if its maximum is strictly greater than the limit.
+The empirical probability is the number of exceeding windows divided by the window count;
+an alert occurs when that probability is greater than or equal to the cutoff.</p>
+<h3>Independently worked arithmetic example</h3>
+<p>A hypothetical two-sample forecast is 100 and 110 kN, with a 110 kN load limit.
+Adding the following five error trajectories gives the maxima shown.</p>
+<table><thead><tr><th>Error trajectory (kN)</th><th>Resulting maximum (kN)</th></tr></thead>
+<tbody>{example_rows}</tbody></table><p>Table 3. Hypothetical trajectory arithmetic.</p>
+<p>Two maxima equal the limit and do not exceed it. Three maxima exceed it:
+3 / 5 = 60.0 % exceeds the 20.0 % cutoff, so the example alert is true.
+Exactly 1 / 5 = 20.0 % would also trigger an alert under the inclusive cutoff rule.</p>
+<ul>{limitations}</ul><p>Implementation references establish the arithmetic rules,
+not the engineering suitability of the assumptions:</p><ul>{references}</ul></section>'''
 
 
 def digest(raw: bytes) -> str:
@@ -67,6 +154,7 @@ def render(payload: dict, config: dict) -> str:
     selected = max(config['scenarios'], key=lambda row: row['hs_m'])
     scenario, = [s for s in payload['demo']['scenarios']
                  if all(s[k] == selected[k] for k in ('hs_m', 'tp_s'))]
+    validate_numerical_basis(scenario, config)
     frames, sections = [], []
     for frame in scenario['frames']:
         channels, figures = [], []
@@ -111,7 +199,12 @@ arrangement remains unresolved. Load-path proxies and hardware mapping are uncon
 Crane, geometric slack, re-tension, interference and whole-line criteria remain unresolved.</p>
 <p>Forecast sampling can miss short peaks between samples. No offshore forecast skill
 or operational risk calibration is established by this demonstration.</p>
-</header>{''.join(sections)}
+</header><section><h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
+</tbody></table><p>Table 1. Page revisions.</p></section>
+{numerical_basis_html()}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
 wave-preview forecast, withheld truth or full envelope dataset is published.</footer>
 <script type="application/json" id="forecast-data">{encoded}</script></main></body></html>
@@ -131,6 +224,7 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
     encoded = html.encode('utf-8')
     manifest = {'sha256': digest(encoded), 'size_bytes': len(encoded),
                 'source_sha256': {'reviewed_payload': digest(raw), 'reviewed_config': digest(config_raw)},
+                'numerical_basis': NUMERICAL_BASIS,
                 'sanitization': {'findings': 0, 'terms_checked': len(terms),
                                  'substring_fingerprints': [
                                      {'length': len(term.casefold()),

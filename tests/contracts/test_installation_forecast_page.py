@@ -7,6 +7,8 @@ import json
 import os
 import re
 import subprocess
+from copy import deepcopy
+from decimal import Decimal
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -45,6 +47,98 @@ def test_manifest_integrity():
     assert manifest['size_bytes'] == PAGE.stat().st_size
     assert manifest['sanitization']['findings'] == 0
     assert manifest['sanitization']['terms_checked'] > 0
+    assert manifest['numerical_basis'] == builder.NUMERICAL_BASIS
+
+
+def test_numerical_basis_explains_published_limits_and_alerts():
+    text = PAGE.read_text(encoding='utf-8')
+    basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
+    assert basis['status'] == 'assumed, based on previous experience'
+    conversion = Decimal(str(basis['kN_per_Te']))
+    assert conversion == Decimal('9.81')
+    loads = basis['load_limits_Te']
+    expected = {'Master-link load-path proxy: TopRigging End B': Decimal('173.637'),
+                'Sling2 End B tension': Decimal('106.8309')}
+    assert set(loads) == set(expected)
+    assert {label: Decimal(str(value)) * conversion for label, value in loads.items()} == expected
+    cutoff = Decimal(str(basis['alert_probability']))
+    assert cutoff == Decimal(1) / 5
+    for frame in embedded_scenario(text)['frames']:
+        for channel in frame['channels']:
+            if channel['assumed_limit'] is None:
+                continue
+            assert channel['assumed_limit'] == pytest.approx(float(expected[channel['label']]))
+            alert = channel['exceedance']
+            assert Decimal(str(alert['alert_probability'])) == cutoff
+            assert alert['alert'] is (Decimal(str(alert['window_probability'])) >= cutoff)
+    assert 'assumed, based on previous experience' in text
+    assert 'Calibration error trajectories are not published' in text
+    assert 'Revision history' in text
+
+
+def test_independent_worked_probability_example():
+    basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
+    example = basis['worked_example']
+    assert example['forecast_kN'] == [100, 110]
+    # Hand-worked maxima: two equal the limit, three exceed it.
+    maxima = [max(f + e for f, e in zip(example['forecast_kN'], errors, strict=True))
+              for errors in example['error_trajectories_kN']]
+    assert maxima == [110, 110, 111, 111, 112]
+    assert example['limit_kN'] == 110
+    assert sum(value > example['limit_kN'] for value in maxima) == 3
+    assert example['window_probability'] == 3 / 5
+    assert example['alert'] is True
+    text = PAGE.read_text(encoding='utf-8')
+    assert '3 / 5 = 60.0 %' in text
+    assert '20.0 %' in text
+
+
+@pytest.mark.parametrize('channel_index', [1, 2])
+def test_render_rejects_load_limit_inconsistent_with_basis(channel_index):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    scenario['frames'][0]['channels'][channel_index]['assumed_limit'] += 1
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='numerical basis'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_render_rejects_alert_cutoff_inconsistent_with_basis():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    for frame in scenario['frames']:
+        for channel in frame['channels']:
+            if 'exceedance' in channel:
+                channel['exceedance']['alert_probability'] = 0.5
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.5}}
+    with pytest.raises(ValueError, match='numerical basis'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+@pytest.mark.parametrize(('limit', 'probability', 'alert'), [(100, 0.0, False), (99, 1.0, True)])
+def test_constant_history_has_hand_worked_exceedance(limit, probability, alert):
+    from digitalmodel.workflows.installation_forecast import exceedance_forecast
+
+    # All forecasts and all back-test errors are exactly 100 and 0 respectively.
+    result = exceedance_forecast(list(range(15)), [100] * 15, 14, limit,
+                                 horizon_s=2, order=1, stride=1, alert_probability=0.2)
+    assert result['calibration_windows'] == 11
+    assert result['window_probability'] == probability
+    assert result['alert'] is alert
+
+
+def test_builder_publishes_numerical_basis(tmp_path):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    config_raw = json.dumps(config).encode('utf-8')
+    payload = {'demo': {'scenarios': [deepcopy(scenario)]},
+               'provenance': {'demo_config': {'sha256': hashlib.sha256(config_raw).hexdigest()}}}
+    for name, raw in (('payload', json.dumps(payload).encode('utf-8')), ('config', config_raw),
+                      ('terms', b'["reserved-example-term"]')):
+        (tmp_path / name).write_bytes(raw)
+    output = tmp_path / 'forecast.html'
+    builder.build(tmp_path / 'payload', tmp_path / 'config', output, tmp_path / 'terms')
+    manifest = json.loads(output.with_suffix('.manifest.json').read_text())
+    assert manifest['numerical_basis'] == builder.NUMERICAL_BASIS
+    assert manifest['sha256'] == hashlib.sha256(output.read_bytes()).hexdigest()
 
 
 def test_navigation_is_registered():

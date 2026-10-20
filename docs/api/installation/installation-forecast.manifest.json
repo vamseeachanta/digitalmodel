@@ -1,6 +1,6 @@
 {
-  "sha256": "a2679cd5cfdc1cf57c76beeb4f405210582704088e8d150aae8cd729deb50202",
-  "size_bytes": 315916,
+  "sha256": "144d12e76c81cc6dadb74d1f228d39d8e800939488cca17aa1b4f36c9feb441b",
+  "size_bytes": 319237,
   "source_sha256": {
     "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
     "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
@@ -39,5 +39,60 @@
       }
     ]
   },
-  "reduction": "Selected history-only scenario; chart arrays and alert values only."
+  "reduction": "Selected history-only scenario; chart arrays and alert values only.",
+  "numerical_basis": {
+    "revision": 1,
+    "status": "assumed, based on previous experience",
+    "kN_per_Te": 9.81,
+    "load_limits_Te": {
+      "Master-link load-path proxy: TopRigging End B": 17.7,
+      "Sling2 End B tension": 10.89
+    },
+    "alert_probability": 0.2,
+    "load_limit_rule": "limit_kN = assumed_limit_Te * kN_per_Te",
+    "probability_rule": "p = count(max(forecast + error_trajectory) > limit) / window_count",
+    "alert_rule": "alert = (p >= alert_probability)",
+    "implementation_references": [
+      "src/digitalmodel/workflows/installation_monitoring_demo.py:resolve_channels",
+      "src/digitalmodel/workflows/installation_forecast.py:exceedance_forecast"
+    ],
+    "limitations": [
+      "These assumptions expose the existing demonstration inputs; their original derivation is not established.",
+      "The conversion is a demonstration convention, not a certified component capacity or a standards criterion.",
+      "The alert cutoff is illustrative; no offshore risk tolerance or operational calibration is established.",
+      "Calibration error trajectories are not published; individual recorded probabilities cannot be independently recomputed.",
+      "The worked example is hypothetical arithmetic, not the calibration data for any published frame."
+    ],
+    "worked_example": {
+      "forecast_kN": [
+        100,
+        110
+      ],
+      "limit_kN": 110,
+      "error_trajectories_kN": [
+        [
+          -1,
+          0
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "window_probability": 0.6,
+      "alert": true
+    }
+  }
 }
