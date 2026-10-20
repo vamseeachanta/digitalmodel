@@ -274,14 +274,6 @@ class WatchCircleConstraint(BaseModel):
                 _CITATION_EMITTED_CACHE["standalone"] = True
             return []
 
-        page = resolve_wiki_path(_DNV_RP_0360_WIKI_PATH, override=wiki_base)
-        if not page.is_file():
-            raise CitationResolutionError(
-                code_id="DNV-RP-0360",
-                wiki_path=_DNV_RP_0360_WIKI_PATH,
-                reason="page_missing",
-            )
-
         citation = Citation(
             code_id="DNV-RP-0360",
             publisher="DNV",
@@ -292,10 +284,17 @@ class WatchCircleConstraint(BaseModel):
             note="MBR limit is a cable-specific design input supplied by caller",
         )
         try:
+            page = resolve_wiki_path(citation.wiki_path, override=wiki_base)
+            if not page.is_file():
+                raise CitationResolutionError(
+                    code_id=citation.code_id,
+                    wiki_path=citation.wiki_path,
+                    reason="page_missing",
+                )
             validate_citation(citation, repo_root=wiki_base)
         except (OSError, UnicodeError) as error:
             # Calculation Output Citation Contract, section 4.1: resolution
-            # failures identify the citation at calc time, including read errors.
+            # failures identify the citation, including lookup and read errors.
             # Do not expose file contents or local paths from the original error.
             raise CitationResolutionError(
                 code_id=citation.code_id,
