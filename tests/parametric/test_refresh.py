@@ -27,7 +27,9 @@ def test_parametric_workflow_ids_discovered():
 
 
 def test_committed_atlases_are_current():
-    for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation"):
+    for wid in (
+        "mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation", "spectral-fatigue",
+    ):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
 
