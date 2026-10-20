@@ -26505,7 +26505,8 @@ families:
   identical_groups: []
   first_module: pipelay/workflow.py
   coverage: partial
-  coverage_reason: Scoped source inspection covers only the reel-lay wrapper and calculation; operability, stinger and J-lay classification remain for later slices. No repository-wide search was regenerated.
+  coverage_reason: No repository-wide search was regenerated for this scoped family.
+  classification_limits: Scoped source inspection covers only the reel-lay wrapper and calculation; operability, stinger and J-lay classification remain for later slices.
   notes: Source classification only. The numerical assumptions are documented in src/digitalmodel/pipelay/docs/screening-basis.md, E5-E6; this inventory does not qualify those assumptions or any acceptance limit.
 byte_identical_groups:
 - id: file-001

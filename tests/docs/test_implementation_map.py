@@ -404,5 +404,38 @@ def test_reel_lay_inventory_does_not_claim_qualification(reel_lay_family):
     assert reel_lay_family["numerical_qualification"] == "NOT_EVALUATED"
     assert reel_lay_family["native_solver_qualification"] == "NOT_EVALUATED"
     assert reel_lay_family["source_revision"]
-    assert "operability" in reel_lay_family["coverage_reason"]
-    assert "stinger" in reel_lay_family["coverage_reason"]
+    for deferred in ("operability", "stinger", "J-lay"):
+        assert deferred in reel_lay_family["classification_limits"]
+
+
+def test_reel_lay_limits_survive_regeneration(reel_lay_family):
+    """Name reconciliation must retain the inspected classification boundary."""
+    path = "src/digitalmodel/pipelay/workflow.py"
+    doc = {"families": [reel_lay_family], "rejected_candidates": [],
+           "seed_verification": [], "searched": {}}
+    before = copy.deepcopy(doc)
+    result = generator().regenerate(doc, ROOT, tracked_paths=[path], revision="b" * 40)
+    family = result["families"][0]
+    assert family["reconciliation"] == {
+        "matched_definitions": 2, "unresolved_definitions": 0,
+    }
+    assert family["coverage"] == "reconciled_names"
+    assert family["coverage_reason"] != reel_lay_family["coverage_reason"]
+    assert family["classification_limits"] == reel_lay_family["classification_limits"]
+    for key in ("classification_scope", "qualification", "numerical_qualification",
+                "native_solver_qualification", "source_revision", "notes"):
+        assert family[key] == reel_lay_family[key]
+    rendered = generator().render_map(yaml.safe_dump(before), result)
+    assert yaml.safe_load(rendered) == result
+    assert doc == before
+
+
+@pytest.mark.parametrize("empty", [False, True], ids=["missing", "empty"])
+def test_reel_lay_family_is_required(sample, empty):
+    """Reference validation must reject a dropped or emptied reel family."""
+    doc, root = sample
+    family_id = "reel-lay-residual-curvature"
+    doc["families"] = [f for f in doc["families"] if f["id"] != family_id]
+    if empty:
+        doc["families"].append({"id": family_id, "implementations": []})
+    assert f"missing or empty family: {family_id}" in check_map(doc, root)

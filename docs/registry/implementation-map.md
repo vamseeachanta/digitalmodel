@@ -10,6 +10,7 @@ The map lists implementations of method families for module knowledge packs. Its
 | 2 | 2026-10-16 | Regeneration and drift diagnostics were added; missing methods, caller relationships and fixture status were corrected. |
 | 3 | 2026-10-16 | Source coordinates and counts were refreshed after source updates; the removed lid fallback, contradictory rejections and visible drift diagnostics were corrected. |
 | 4 | 2026-10-19 | Reel-lay screening was classified separately with a source revision and a direct delegation reference; the historical search snapshot was retained. |
+| 5 | 2026-10-20 | Curated reel-lay scope limits were separated from generated name coverage so regeneration retains them; reference validation now requires the family, and the family counts were clarified. |
 
 Revision 4 is a scoped addition for issue #2766. The new `reel-lay-residual-curvature` family records `run_reel_lay` as a caller of `_reel_result`, which implements the residual-curvature screen. Its `source_revision` identifies the inspected code; the top-level YAML revision and `searched` statistics still describe the last repository-wide regeneration. Existing family rows and historical pack inventories retain their original provenance. No repository-wide search or numerical qualification is claimed by this addition.
 
@@ -58,7 +59,7 @@ Every searched non-test Python definition whose name matches a recorded pattern 
 
 The CI harness runs the reference test and prints the generator’s staleness diagnostics independently of the domain selected by the change. Coordinate or digest drift remains a warning; missing paths, missing qualified symbols, missing required families and missing known defects and mapped/rejected overlaps within a family remain failures. No source history is required for that check. Defect entries marked `not_checked` require further inspection.
 
-The retained repository-wide name reconciliation records 2469 unresolved family matches involving 2270 distinct definitions; all 13 original families are marked partial. The scoped reel-lay family is also partial and has no regenerated search counts. Regeneration does not revalidate curated engineering classifications or defect assessments and issue states when their source changes; those judgments require inspection.
+The 14 families comprise 13 with retained repository-wide name reconciliation and one scoped reel-lay addition. The retained reconciliation records 2469 unresolved family matches involving 2270 distinct definitions; those 13 families are marked partial. The scoped reel-lay family is also partial and has no regenerated search counts. Its curated `classification_limits` survive regeneration independently of the generated `coverage` and `coverage_reason` name-search results. Regeneration does not revalidate curated engineering classifications or defect assessments and issue states when their source changes; those judgments require inspection.
 
 AST reconciliation excludes 8 searched Python files that cannot be parsed with Python 3.11. Definition coverage for those files remains unestablished.
 
