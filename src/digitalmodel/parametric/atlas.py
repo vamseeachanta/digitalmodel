@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass, field
+from numbers import Real
 from pathlib import Path
 from typing import Any
 
@@ -122,8 +123,25 @@ class Atlas:
         return cats[0] if cats else None
 
     @property
+    def validation_available(self) -> bool:
+        """Whether a finite measured error is supplied (including measured zero).
+
+        Source: atlas-spec.md Decisions 2 and 4, confidence from holdout error;
+        issue 2118 distinguishes absent evidence from an exact measured fit.
+        """
+        error = self.validation.get("max_rel_error")
+        return (
+            self.validation.get("status") != "unavailable"
+            and isinstance(error, Real)
+            and not isinstance(error, (bool, np.bool_))
+            and math.isfinite(error)
+            and error >= 0  # Relative error is a nonnegative magnitude by definition.
+        )
+
+    @property
     def max_rel_error(self) -> float:
-        return float(self.validation.get("max_rel_error", 0.0))
+        """Measured relative error, or NaN when validation is unavailable."""
+        return float(self.validation["max_rel_error"]) if self.validation_available else math.nan
 
     # -- transforms ------------------------------------------------------
     def _axis_coords(self, axis: Axis) -> np.ndarray:
@@ -204,6 +222,8 @@ class Atlas:
         Tighter than the global max_rel_error in smooth regions, wider near a
         feature. Falls back to the global error if no local map is present (an
         older atlas) or on any miss — so it is always at least as honest."""
+        if not self.validation_available:
+            return math.nan
         slice_map = (self.validation.get("local_error_map") or {})
         if not slice_map:
             return self.max_rel_error
@@ -256,7 +276,8 @@ class Atlas:
             "axes": [ax.to_dict() for ax in self.axes],
             "validation": {
                 "metric": self.validation.get("metric"),
-                "max_rel_error": self.max_rel_error,
+                "max_rel_error": self.max_rel_error if self.validation_available else None,
+                **({} if self.validation_available else {"status": "unavailable"}),
                 "threshold": self.validation.get("threshold"),
                 "passes": self.validation.get("passes"),
             },

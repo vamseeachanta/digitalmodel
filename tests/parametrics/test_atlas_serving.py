@@ -53,17 +53,18 @@ def _query(atlas_root: Path, point: dict, out_dir: Path) -> dict:
     return parametric_query(cfg)["parametric_query"]["result"]
 
 
-def test_in_range_query_serves_utilisation(tmp_path: Path):
+def test_in_range_query_without_holdout_escalates(tmp_path: Path):
     _save_fowt_atlas(tmp_path / "atlases")
     result = _query(
         tmp_path / "atlases",
         {"watch_circle_radius": 20.0, "mbr_limit_m": 4.5},  # interpolated interior
         tmp_path / "out",
     )
-    assert result["in_range"] is True
-    assert result["response"] == "utilisation"
-    assert result["screening_status"] == "pass"  # UC ~0.03 << 1.0
-    assert result["value"] > 0.0
+    assert result["in_range"] is False
+    assert result["action"] == "escalate"
+    assert result["reason"] == "validation unavailable"
+    assert result["value"] is None
+    assert "confidence" not in result
 
 
 def test_out_of_range_query_escalates(tmp_path: Path):
@@ -74,4 +75,4 @@ def test_out_of_range_query_escalates(tmp_path: Path):
         tmp_path / "out",
     )
     assert result["in_range"] is False
-    assert "watch_circle_radius" in str(result.get("reason", ""))
+    assert result["reason"] == "validation unavailable"

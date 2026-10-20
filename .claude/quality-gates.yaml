@@ -434,6 +434,8 @@ gates:
     test_roots:
       [
         "tests/workflows/",
+        "tests/parametric/test_validation_availability.py",
+        "tests/parametrics/test_atlas_grid_validation.py",
         "tests/test_automation/",
         "tests/domains/",
         "tests/specs/",
@@ -444,7 +446,7 @@ gates:
         "tests/test_workflow_executor.py",
         "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/parametric/test_validation_availability.py tests/parametrics/test_atlas_grid_validation.py tests/workflows/ tests/test_automation/ tests/domains/ tests/specs/ tests/scripts/ tests/test_agent_dashboard.py tests/test_workflow_checkpoints.py tests/test_workflow_executor.py tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
