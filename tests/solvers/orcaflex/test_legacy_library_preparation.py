@@ -47,7 +47,8 @@ def test_validator_records_invalid_models_without_emitting_source_content(tmp_pa
     results = module.validate_models(inventory, tmp_path)
     assert results["validator_sources_sha256"] == {
         name: sha256((ROOT / "src/digitalmodel/solvers/orcaflex" / name).read_bytes()).hexdigest()
-        for name in ("yaml_validator.py", "yaml_timestep_validation.py")
+        for name in ("yaml_validator.py", "yaml_timestep_validation.py",
+                     "starting_shape_validation.py")
     }
     assert len(results["models"]) == 2
     by_name = {Path(item["path"]).name: item for item in results["models"]}
@@ -143,6 +144,27 @@ def test_resume_cache_is_bound_to_input_bytes(tmp_path):
     assert len(list(cache.iterdir())) == 2
 
 
+def test_resume_cache_is_invalidated_when_starting_shape_validator_changes(tmp_path, monkeypatch):
+    module = implementation()
+    root = tmp_path / "source"
+    source = root / "src/digitalmodel/solvers/orcaflex"
+    source.mkdir(parents=True)
+    for name in ("yaml_validator.py", "yaml_timestep_validation.py",
+                 "starting_shape_validation.py"):
+        (source / name).write_bytes((ROOT / "src/digitalmodel/solvers/orcaflex" / name).read_bytes())
+    monkeypatch.setattr(module, "ROOT", root)
+    item = {"path": "model.yml", "sha256": "a" * 64}
+    cache = tmp_path / "cache"
+    module.cache_validation(cache, item, {"status": "pass"})
+    original = module.validation_cache_path(cache, item)
+    assert original.is_file()
+    shape_source = source / "starting_shape_validation.py"
+    shape_source.write_bytes(shape_source.read_bytes() + b"\n")
+    changed = module.validation_cache_path(cache, item)
+    assert changed != original
+    assert not changed.exists()
+
+
 def test_committed_records_cover_models_and_match_manifest_digests():
     module = implementation()
     output = ROOT / "docs/domains/orcaflex/library/legacy-round-trip"
@@ -161,7 +183,8 @@ def test_committed_records_cover_models_and_match_manifest_digests():
     message = "regenerate legacy-round-trip records"
     assert validators["validator_sources_sha256"] == {
         name: sha256((ROOT / "src/digitalmodel/solvers/orcaflex" / name).read_bytes()).hexdigest()
-        for name in ("yaml_validator.py", "yaml_timestep_validation.py")
+        for name in ("yaml_validator.py", "yaml_timestep_validation.py",
+                     "starting_shape_validation.py")
     }, message
     library_input_count = len(module.inspection.inventory(ROOT))
     assert library_input_count == inventory["counts"]["library_inputs"], message

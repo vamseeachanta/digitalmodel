@@ -80,9 +80,14 @@ def _table(mapping: dict, required: tuple[str, ...]) -> list[dict] | None:
         if len({len(array) for array in arrays}) != 1:
             raise ValueError("Parallel table columns have different row counts")
         parsed = [dict(zip(required, values)) for values in zip(*arrays)]
-        # Preserve optional segmentation columns for section checks.
-        for column in ("NumberOfSegments", "TargetSegmentLength"):
-            if required == ("LineType", "Length") and column in mapping:
+        # Preserve optional segmentation and coordinate-frame columns.
+        optional = {
+            ("LineType", "Length"): ("NumberOfSegments", "TargetSegmentLength"),
+            ("Connection", "ConnectionX", "ConnectionY", "ConnectionZ"):
+                ("ConnectionzRelativeTo",),
+        }.get(required, ())
+        for column in optional:
+            if column in mapping:
                 values = mapping[column]
                 if not isinstance(values, list) or len(values) != len(parsed):
                     raise ValueError("Optional column has a different row count")
@@ -177,6 +182,10 @@ def _validate_line(line, si, add):
 
 
 def _validate_lengths(line, chords, shape_length, add):
+    if line.get("LengthAndEndOrientations", "Explicit") != "Explicit":
+        for check in ("arc_length", "sections"):
+            add(check, "NOT_EVALUATED", "Calculated section lengths are not resolved")
+        return
     try:
         sections = _table(line, ("LineType", "Length"))
         if sections is None:
@@ -193,10 +202,6 @@ def _validate_lengths(line, chords, shape_length, add):
     except (ValueError, OverflowError) as exc:
         add("sections", "FAIL", f"Malformed section table: {exc}")
         add("arc_length", "NOT_EVALUATED", "Valid section lengths are required")
-        return
-    if line.get("LengthAndEndOrientations", "Explicit") != "Explicit":
-        for check in ("arc_length", "sections"):
-            add(check, "NOT_EVALUATED", "Calculated section lengths are not resolved")
         return
     # AQG r0 G0.6 relative mismatch = abs(Lshape - Lline) / Lline.
     error = abs(shape_length - total) / total
@@ -247,6 +252,9 @@ def _validate_endpoints(line, points, add):
             # Orcina Object connections: anchored z is seabed-relative; child
             # coordinates are parent-relative. Free ends impose no restraint.
             add(check, "NOT_EVALUATED", "An explicit Fixed global connection is required")
+            continue
+        if connections[index].get("ConnectionzRelativeTo") not in (None, "~"):
+            add(check, "NOT_EVALUATED", "Connection vertical reference is not resolved")
             continue
         target = tuple(connections[index][c] for c in columns[1:])
         if not all(_finite(v) for v in target):

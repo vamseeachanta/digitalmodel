@@ -86,11 +86,12 @@ def validator_source_digests() -> dict[str, str]:
     """Identify the validator implementation used for records and cache keys."""
     source = ROOT / "src/digitalmodel/solvers/orcaflex"
     return {name: sha256((source / name).read_bytes()).hexdigest()
-            for name in ("yaml_validator.py", "yaml_timestep_validation.py")}
+            for name in ("yaml_validator.py", "yaml_timestep_validation.py",
+                         "starting_shape_validation.py")}
 
 
 def validation_cache_path(cache_dir: Path, item: dict) -> Path:
-    """Bind resumable checks to input bytes and both validator source modules."""
+    """Bind resumable checks to input bytes and all validator source modules."""
     import yaml
 
     key = {"path": item["path"], "sha256": item["sha256"], "yaml_version": yaml.__version__,

@@ -96,6 +96,7 @@ docs/domains/orcaflex/training/** -text
 # Keep hash-bound implementation sources and generated records in LF form.
 src/digitalmodel/solvers/orcaflex/yaml_validator.py text eol=lf
 src/digitalmodel/solvers/orcaflex/yaml_timestep_validation.py text eol=lf
+src/digitalmodel/solvers/orcaflex/starting_shape_validation.py text eol=lf
 scripts/orcaflex/check_legacy_library_sanitisation.py text eol=lf
 scripts/legal/check_identifiers.py text eol=lf
 .legal-deny-list.yaml text eol=lf

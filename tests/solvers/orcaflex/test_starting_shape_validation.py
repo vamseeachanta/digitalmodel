@@ -109,8 +109,10 @@ def test_wrong_line_table_cannot_hide_behind_other_line_geometry(model):
     model["Lines"].append(other)
     model["Lines"][0][SHAPE] = deepcopy(other[SHAPE])
     results = validate_starting_shapes(model)
-    assert next(f for f in results if f.line == "test line"
-                and f.check == "arc_length").actual == pytest.approx(1)
+    wrong_line = next(f for f in results if f.line == "test line"
+                      and f.check == "arc_length")
+    assert wrong_line.actual == pytest.approx(1)
+    assert wrong_line.status == "FAIL"
     assert next(f for f in results if f.line == "other line"
                 and f.check == "arc_length").status == "PASS"
 
@@ -137,6 +139,37 @@ def test_unresolved_endpoint_frame(model, connection):
     model["Lines"][0][CONNECTIONS][0][0] = connection
     assert findings(model)["end_a"].status == "NOT_EVALUATED"
     assert findings(model)["end_b"].status == "PASS"
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+@pytest.mark.parametrize("end,index", [("end_a", 0), ("end_b", -1)])
+@pytest.mark.parametrize("relative_to", [None, "~", "Seabed", 0])
+def test_fixed_endpoint_requires_global_vertical_reference(model, parallel, end, index, relative_to):
+    line = model["Lines"][0]
+    rows = [row + [None] for row in line.pop(CONNECTIONS)]
+    rows[index][-1] = relative_to
+    header = CONNECTIONS + ", ConnectionzRelativeTo"
+    if parallel:
+        for i, column in enumerate(header.split(", ")):
+            line[column] = [row[i] for row in rows]
+    else:
+        line[header] = rows
+    result = findings(model)
+    expected = "PASS" if relative_to in (None, "~") else "NOT_EVALUATED"
+    assert result[end].status == expected
+    other = "end_b" if end == "end_a" else "end_a"
+    assert result[other].status == "PASS"
+
+
+def test_parallel_vertical_references_must_match_connection_row_count(model):
+    line = model["Lines"][0]
+    rows = line.pop(CONNECTIONS)
+    for i, column in enumerate(CONNECTIONS.split(", ")):
+        line[column] = [row[i] for row in rows]
+    line["ConnectionzRelativeTo"] = [None]
+    result = findings(model)
+    assert result["end_a"].status == "FAIL"
+    assert result["end_b"].status == "FAIL"
 
 
 @pytest.mark.parametrize("units", [None, "US", "User"])
@@ -220,6 +253,18 @@ def test_invalid_explicit_segment_counts_cannot_pass(model, count):
 def test_missing_section_lengths_are_unevaluated(model):
     del model["Lines"][0][SECTIONS]
     assert findings(model)["arc_length"].status == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("length", [None, "~", 0, "calculated"])
+def test_calculated_section_lengths_ignore_inactive_placeholders(model, length):
+    line = model["Lines"][0]
+    line["LengthAndEndOrientations"] = "Calculated from end positions"
+    line[SECTIONS][0][1] = length
+    result = findings(model)
+    assert result["arc_length"].status == "NOT_EVALUATED"
+    assert result["sections"].status == "NOT_EVALUATED"
+    assert result["end_a"].status == "PASS"
+    assert result["end_b"].status == "PASS"
 
 
 def test_equal_geometry_cannot_certify_diameter_provenance(model):
