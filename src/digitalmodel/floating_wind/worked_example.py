@@ -7,12 +7,15 @@ is performed. Exit success means documentation consistency, never run readiness.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import json
 import os
+import posixpath
 from pathlib import Path, PureWindowsPath
 import re
-from html import unescape
+from html.parser import HTMLParser
+from urllib.parse import unquote
 
 DOMAIN = Path("docs/domains/orcaflex")
 DOCUMENTS = DOMAIN / "wind/fowt-worked-example"
@@ -113,25 +116,83 @@ def cited_value(lines: list[str], line: int) -> str:
     return value.strip()
 
 
+class _InputRows(HTMLParser):
+    """Retain table-cell text, including inline markup, and section membership."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.sections = []
+        self.has_basis = False
+        self.rows = []
+        self.row = None
+        self.cell = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "section":
+            section = dict(attrs).get("id")
+            self.sections.append(section)
+            self.has_basis |= section == "as-held"
+        elif tag == "tr":
+            self.row = []
+        elif tag in {"td", "th"} and self.row is not None:
+            self.cell = (tag, [])
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell[1].append(data)
+
+    def handle_endtag(self, tag):
+        if tag in {"td", "th"} and self.cell is not None:
+            kind, text = self.cell
+            self.row.append((kind, " ".join("".join(text).split())))
+            self.cell = None
+        elif tag == "tr" and self.row is not None:
+            self.rows.append(("as-held" in self.sections, self.row))
+            self.row = None
+        elif tag == "section" and self.sections:
+            self.sections.pop()
+
+
 def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
-    """Compare every source-cited report cell to the actual key and value."""
-    errors = []
-    pattern = r"<td>([^<]+) \((L02|K03) lines? (\d+)(?:-\d+)?: (\w+)\)</td>"
-    matches = list(re.finditer(pattern, html))
-    if not matches:
-        return ["input echo has no source-cited cells"]
-    for match in matches:
-        value, model, number, key = match.groups()
-        line = int(number)
-        try:
-            actual = cited_value(sources[model], line)
-            actual_key = sources[model][line - 1].strip().partition(":")[0]
-            if actual_key != key:
-                errors.append(f"{model} line {line}: source key differs from {key}")
-            if actual != unescape(value):
-                errors.append(f"{model} line {line}: transcribed value differs")
-        except (KeyError, ValueError) as error:
-            errors.append(str(error))
+    """Require and validate a source citation in every model-value cell."""
+    parser = _InputRows()
+    parser.feed(html)
+    parser.close()
+    errors, checked = [], 0
+    pattern = r"(.+?) \((L02|K03) lines? (\d+)(?:-\d+)?: (\w+)\)"
+    for in_basis, row in parser.rows:
+        if parser.has_basis and not in_basis:
+            continue
+        if not row:
+            continue
+        if all(kind == "th" for kind, _ in row) and [text for _, text in row[1:]] == [
+            "L02 as held",
+            "K03 as held",
+        ]:
+            continue
+        if len(row) < 2 or (parser.has_basis and len(row) != 3):
+            errors.append("input echo row requires every model-value cell")
+        for column, (kind, text) in enumerate(row[1:], 1):
+            checked += 1
+            match = re.fullmatch(pattern, text)
+            if kind != "td" or not match:
+                errors.append("input echo model-value cell requires a source citation")
+                continue
+            value, model, number, key = match.groups()
+            if parser.has_basis and model != {1: "L02", 2: "K03"}.get(column):
+                errors.append("input echo citation differs from model column")
+            line = int(number)
+            try:
+                actual = cited_value(sources[model], line)
+                actual_key = sources[model][line - 1].strip().partition(":")[0]
+                if actual_key != key:
+                    errors.append(f"{model} line {line}: source key differs from {key}")
+                if actual != value:
+                    errors.append(f"{model} line {line}: transcribed value differs")
+            except (KeyError, ValueError) as error:
+                errors.append(str(error))
+    if not checked:
+        errors.append("input echo has no source-cited cells")
     return errors
 
 
@@ -154,31 +215,43 @@ def audit_result_rows(html: str) -> list[str]:
 
 
 def audit_inventory(inventory: str, model: str, references: list[dict]) -> list[str]:
-    """Check dependency rows, occurrence locators and stated holding status."""
-    errors = []
+    """Reconcile dependencies, raw occurrences and holdings in both directions."""
+    errors, rows, expected = [], {}, {}
     for reference in references:
-        rows = [
-            line
-            for line in inventory.splitlines()
-            if line.startswith(f"| {model} | `{reference['file']}` |")
-        ]
-        if len(rows) != 1:
-            errors.append(f"{model}: dependency requires one inventory row")
+        expected.setdefault(reference["file"], []).append(reference)
+    for line in inventory.splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if cells[0] != model:
             continue
-        row = rows[0]
-        cells = [cell.strip() for cell in row.strip("|").split("|")]
-        locator = f"{model} L{reference['line']}"
-        if not re.search(re.escape(locator) + r"(?!\d)", cells[2]):
-            errors.append(f"{model}: inventory omits occurrence {locator}")
+        if len(cells) != 6 or not re.fullmatch(r"`[^`]+`", cells[1]):
+            errors.append(f"{model}: malformed dependency inventory row")
+            continue
+        filename = cells[1].strip("`")
+        if filename in rows:
+            errors.append(f"{model}: dependency requires one inventory row")
+        rows[filename] = cells
+    if rows.keys() != expected.keys():
+        errors.append(f"{model}: inventory dependencies differ from raw model")
+    for filename in rows.keys() & expected.keys():
+        cells, uses = rows[filename], expected[filename]
+        locators = re.findall(rf"\b{re.escape(model)} L(\d+)\b", cells[2])
+        if Counter(map(int, locators)) != Counter(use["line"] for use in uses):
+            errors.append(
+                f"{model}: inventory occurrence locators differ for {filename}"
+            )
         status = cells[4].casefold()
-        if reference["status"] == "MISSING":
+        if uses[0]["status"] == "MISSING":
             if "not held" not in status:
                 errors.append(f"{model}: inventory falsely claims dependency held")
         elif "held" not in status or "not held" in status:
             errors.append(f"{model}: inventory omits dependency holding")
-        for path in reference["held_paths"]:
-            if path not in row:
-                errors.append(f"{model}: inventory omits holding {path}")
+        stated_paths = {
+            posixpath.normpath(posixpath.join(DOCUMENTS.as_posix(), unquote(target)))
+            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", cells[4])
+        }
+        held_paths = {path for use in uses for path in use["held_paths"]}
+        if stated_paths != held_paths:
+            errors.append(f"{model}: inventory holding paths differ for {filename}")
     return errors
 
 

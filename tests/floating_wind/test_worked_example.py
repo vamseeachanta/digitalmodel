@@ -140,3 +140,130 @@ def test_inventory_rejects_false_held_claim_and_missing_occurrence():
     good = false.replace("| held |", "| not held (GAP) |")
     assert subject.audit_inventory(good, "K03", references) == []
     assert subject.audit_inventory(good.replace("K03 L4", "K03 L5"), "K03", references)
+
+
+@pytest.mark.parametrize(
+    "cell",
+    [
+        "<td><strong>9</strong> (L02 line 1: WaveHs)</td>",
+        '<td class="value">9 (L02 line 1: WaveHs)</td>',
+        "<td>7</td>",
+        "<th>9 (L02 line 1: WaveHs)</th>",
+    ],
+)
+def test_input_audit_validates_every_model_cell(cell):
+    html = (
+        '<section id="as-held"><table><tr><th>Input</th>'
+        "<th>L02 as held</th><th>K03 as held</th></tr>"
+        "<tr><td>Wave height</td>"
+        + cell
+        + "<td>4 (K03 line 1: WaveHs)</td></tr></table></section>"
+    )
+    assert subject.audit_input_echo(html, {"L02": ["WaveHs: 7"], "K03": ["WaveHs: 4"]})
+
+
+def test_input_audit_accepts_inline_markup_and_attributes():
+    html = (
+        '<tr><td>Wave height</td><td class="value"><strong>7</strong> '
+        "(<span>L02 line 1: WaveHs</span>)</td></tr>"
+    )
+    assert subject.audit_input_echo(html, {"L02": ["WaveHs: 7"]}) == []
+
+
+def test_input_audit_requires_each_model_column():
+    html = (
+        '<section id="as-held"><table><tr><td>Wave height</td>'
+        "<td>7 (L02 line 1: WaveHs)</td></tr></table></section>"
+    )
+    assert subject.audit_input_echo(html, {"L02": ["WaveHs: 7"]})
+
+
+def test_input_audit_does_not_skip_value_rows_marked_as_headers():
+    html = (
+        '<section id="as-held"><table>'
+        "<tr><th>Wave height</th><th>9 (L02 line 1: WaveHs)</th>"
+        "<th>4 (K03 line 1: WaveHs)</th></tr>"
+        "<tr><td>Wave height</td><td>7 (L02 line 1: WaveHs)</td>"
+        "<td>4 (K03 line 1: WaveHs)</td></tr></table></section>"
+    )
+    assert subject.audit_input_echo(html, {"L02": ["WaveHs: 7"], "K03": ["WaveHs: 4"]})
+
+
+@pytest.mark.parametrize("retained", [True, False])
+def test_inventory_rejects_removed_occurrence_and_dependency(retained):
+    inventory = "| L02 | `control.py` | L02 L2; L02 L3 | function | not held | source |"
+    references = [
+        {"file": "control.py", "line": 3, "held_paths": [], "status": "MISSING"}
+    ]
+    assert subject.audit_inventory(inventory, "L02", references if retained else [])
+
+
+def test_inventory_reconciles_holding_paths_in_both_directions():
+    inventory = (
+        "| L02 | `control.py` | L02 L2 | function | held elsewhere: "
+        "[docs/control.py](../../../../control.py); compatibility unverified | source |"
+    )
+    references = [
+        {
+            "file": "control.py",
+            "line": 2,
+            "held_paths": ["docs/control.py"],
+            "status": "HELD_ELSEWHERE_COMPATIBILITY_UNVERIFIED",
+        }
+    ]
+    assert subject.audit_inventory(inventory, "L02", references) == []
+    stale = inventory.replace(
+        "; compatibility", "; [stale](../../../../stale.py); compatibility"
+    )
+    assert subject.audit_inventory(stale, "L02", references)
+    references[0]["held_paths"] = []
+    references[0]["status"] = "MISSING"
+    stale = inventory.replace("held elsewhere:", "not held (GAP):")
+    assert subject.audit_inventory(stale, "L02", references)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["markup", "attribute", "citation", "occurrence", "dependency", "holding"],
+)
+def test_complete_audit_rejects_stale_evidence(monkeypatch, mutation):
+    read_text, read_bytes = Path.read_text, Path.read_bytes
+
+    def changed_text(path, *args, **kwargs):
+        if path == ROOT / subject.MODELS["L02"]:
+            return changed_bytes(path).decode("utf-8-sig")
+        text = read_text(path, *args, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            old = "<td>7 (L02 line 104: WaveHs)</td>"
+            replacements = {
+                "markup": "<td><strong>9</strong> (L02 line 104: WaveHs)</td>",
+                "attribute": '<td class="value">9 (L02 line 104: WaveHs)</td>',
+                "citation": "<td>7</td>",
+            }
+            text = text.replace(old, replacements.get(mutation, old))
+        if (
+            mutation == "holding"
+            and path == ROOT / subject.DOCUMENTS / "external-files-inventory.md"
+        ):
+            text = text.replace(
+                "; compatibility unverified |",
+                "; [stale](stale.py); compatibility unverified |",
+            )
+        return text
+
+    def changed_bytes(path):
+        payload = read_bytes(path)
+        if path == ROOT / subject.MODELS["L02"] and mutation in {
+            "occurrence",
+            "dependency",
+        }:
+            lines = payload.splitlines(keepends=True)
+            # Raw L02 controller declarations: lines 53 and 59. Keep all locators fixed.
+            for number in [53] if mutation == "occurrence" else [53, 59]:
+                lines[number - 1] = b"# declaration removed\n"
+            payload = b"".join(lines)
+        return payload
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    monkeypatch.setattr(Path, "read_bytes", changed_bytes)
+    assert subject.audit_phase_a(ROOT)["errors"]
