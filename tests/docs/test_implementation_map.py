@@ -404,5 +404,31 @@ def test_reel_lay_inventory_does_not_claim_qualification(reel_lay_family):
     assert reel_lay_family["numerical_qualification"] == "NOT_EVALUATED"
     assert reel_lay_family["native_solver_qualification"] == "NOT_EVALUATED"
     assert reel_lay_family["source_revision"]
-    assert "operability" in reel_lay_family["coverage_reason"]
-    assert "stinger" in reel_lay_family["coverage_reason"]
+    for deferred in ("operability", "stinger", "J-lay"):
+        assert deferred in reel_lay_family["classification_limits"]
+
+
+@pytest.mark.parametrize("disposition", ["missing", "empty"])
+def test_missing_or_empty_reel_lay_family_is_reported(sample, disposition):
+    doc, root = sample
+    family_id = "reel-lay-residual-curvature"
+    doc["families"] = [f for f in doc["families"] if f["id"] != family_id]
+    if disposition == "empty":
+        doc["families"].append({"id": family_id, "implementations": []})
+    assert any(family_id in problem for problem in check_map(doc, root))
+
+
+def test_reel_lay_classification_limits_survive_regeneration(sample, reel_lay_family):
+    """Name reconciliation shall retain the inspected classification boundary."""
+    doc, _ = sample
+    doc["families"] = [copy.deepcopy(reel_lay_family)]
+    path = "src/digitalmodel/pipelay/workflow.py"
+    result = generator().regenerate(doc, ROOT, tracked_paths=[path], revision="b" * 40)
+    family = result["families"][0]
+    assert family["coverage"] == "reconciled_names"
+    assert family["reconciliation"] == {
+        "matched_definitions": 2, "unresolved_definitions": 0,
+    }
+    assert family["classification_limits"] == reel_lay_family["classification_limits"]
+    assert family["source_revision"] == reel_lay_family["source_revision"]
+    test_reel_lay_inventory_does_not_claim_qualification(family)
