@@ -59,45 +59,28 @@ class GeometryValidator:
             "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
 
-        logger.info(f"Validating {len(geometry_files)} geometry files...")
-        logger.info(f"Geometry path: {self.geometry_path}")
+        # G0-GEOMETRY: issue 2738 requires explicit rejection of omissions.
+        # Publish one complete result set; a failed retry must not reuse old data.
+        self.results = {}
+        missing = [name for name in geometry_files
+                   if not (self.geometry_path / name).is_file()]
+        if missing:
+            raise FileNotFoundError("Missing requested geometry: " + ", ".join(missing))
 
+        results = {}
         if parallel:
-            try:
-                with ProcessPoolExecutor(max_workers=3) as executor:
-                    futures = {}
-                    for filename, format_type in geometry_files.items():
-                        filepath = self.geometry_path / filename
-                        if filepath.exists():
-                            future = executor.submit(self.validate_file, filepath, format_type)
-                            futures[future] = filename
-                        else:
-                            logger.warning(f"File not found: {filepath}")
-
-                    for future in as_completed(futures):
-                        filename = futures[future]
-                        try:
-                            stats = future.result()
-                            self.results[filename] = stats
-                            logger.info(f"Validated: {filename}")
-                        except Exception as e:
-                            logger.error(f"Failed to validate {filename}: {e}")
-            except (OSError, PermissionError) as e:
-                logger.warning(f"Parallel validation failed: {e}. Retrying sequentially.")
-                return self.validate_all(parallel=False)
+            # Preserve the existing worker bound; propagate pool and parse errors.
+            with ProcessPoolExecutor(max_workers=3) as executor:
+                futures = {
+                    executor.submit(self.validate_file, self.geometry_path / name, kind): name
+                    for name, kind in geometry_files.items()
+                }
+                for future in as_completed(futures):
+                    results[futures[future]] = future.result()
         else:
-            for filename, format_type in geometry_files.items():
-                filepath = self.geometry_path / filename
-                if filepath.exists():
-                    try:
-                        stats = self.validate_file(filepath, format_type)
-                        self.results[filename] = stats
-                        logger.info(f"Validated: {filename}")
-                    except Exception as e:
-                        logger.error(f"Failed to validate {filename}: {e}")
-                else:
-                    logger.warning(f"File not found: {filepath}")
-
+            for name, kind in geometry_files.items():
+                results[name] = self.validate_file(self.geometry_path / name, kind)
+        self.results = results
         return self.results
 
     def validate_file(self, filepath: Path, format_type: str) -> MeshStatistics:
@@ -141,7 +124,8 @@ class GeometryValidator:
                 vertices.extend(triangle_vertices)
                 
                 # Read attribute byte count (2 bytes)
-                f.read(2)
+                if len(f.read(2)) != 2:  # Existing STL attribute-byte contract.
+                    raise ValueError("Truncated STL attribute bytes")
                 
                 # Create face (indices)
                 base_idx = i * 3
@@ -175,6 +159,9 @@ class GeometryValidator:
                         faces.append([base_idx, base_idx + 1, base_idx + 2])
                         current_triangle = []
         
+        if current_triangle:
+            raise ValueError("Incomplete ASCII STL triangle")
+
         vertices = np.array(vertices)
         faces = np.array(faces, dtype=object)
         
@@ -217,10 +204,40 @@ class GeometryValidator:
     ) -> MeshStatistics:
         """Compute comprehensive mesh statistics"""
         
+        # Triangle contract: existing STL readers and G4-CLOSURE fixture.
+        vertices = np.asarray(vertices, dtype=float)
+        if (vertices.ndim != 2 or vertices.shape[1] != 3 or not len(vertices)
+                or not np.isfinite(vertices).all()):
+            raise ValueError("Expected nonempty finite three-coordinate vertices")
+        if not len(faces):
+            raise ValueError("Expected nonempty triangular faces")
+        for face in faces:
+            if len(face) != 3 or any(
+                not isinstance(index, (int, np.integer))
+                or index < 0 or index >= len(vertices) for index in face
+            ):
+                raise ValueError("Expected triangular faces with valid integer indices")
+        faces = np.asarray(faces, dtype=int)
+
         # Basic counts
         num_vertices = len(vertices)
         num_faces = len(faces)
-        num_edges = num_faces * 3  # Approximate for triangular mesh
+        # Exact coordinate welding supports STL's repeated vertex records.
+        # Source: hydrodynamics/diffraction/geometry_quality.py,
+        # GeometryQualityChecker.check_watertightness: two panels per edge.
+        # No positional tolerance or physical acceptance limit is inferred.
+        _, vertex_ids = np.unique(vertices, axis=0, return_inverse=True)
+        edge_counts = {}
+        unique_faces = set()
+        duplicate_faces = False
+        for face in vertex_ids[faces]:
+            key = tuple(sorted(face))
+            duplicate_faces |= key in unique_faces
+            unique_faces.add(key)
+            for a, b in zip(face, np.roll(face, -1)):
+                edge = tuple(sorted((a, b)))
+                edge_counts[edge] = edge_counts.get(edge, 0) + 1
+        num_edges = len(edge_counts)
         
         # Bounding box
         bbox_min = vertices.min(axis=0)
@@ -272,9 +289,12 @@ class GeometryValidator:
         # Check for degenerate faces (zero area)
         has_degenerate = min_area < 1e-10
         
-        # Estimate if watertight (closed surface)
-        # Simple check: volume should be non-zero for closed mesh
-        is_watertight = volume > 1e-6
+        # G4-CLOSURE: edge closure is independent of signed-volume magnitude.
+        # Edge incidence criterion is cited above; this is not solver qualification.
+        is_watertight = bool(
+            edge_counts and not duplicate_faces and min_area > 0
+            and all(a != b and count == 2 for (a, b), count in edge_counts.items())
+        )
         
         # Waterline area (assuming z=0 is waterline)
         waterline_vertices = vertices[np.abs(vertices[:, 2]) < 0.1]

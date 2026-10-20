@@ -275,11 +275,13 @@ class OrcaWaveOrchestrator:
         logger.info("PHASE 4: Quality Assurance")
         logger.info("=" * 60)
         
-        # Run quality checks
+        # G5-STATE (issue 2738): failed checks and exceptions clear stale success.
+        self.workflow_state['quality_checked'] = False
         checks_passed = self._run_quality_checks()
         
         if not checks_passed:
-            logger.warning("Some quality checks failed - review results")
+            logger.warning("Quality checks failed or NOT_EVALUATED")
+            return False
         
         self.workflow_state['quality_checked'] = True
         logger.info("âœ“ Phase 4 completed")
@@ -469,18 +471,9 @@ class OrcaWaveOrchestrator:
             return False
     
     def _generate_visualizations(self) -> bool:
-        """Generate plots and visualizations"""
-        
-        logger.info("Generating visualizations...")
-        
-        # This would typically generate plots of:
-        # - Added mass vs frequency
-        # - Damping vs frequency
-        # - Wave excitation forces
-        # - RAOs if available
-        
-        logger.info("âœ“ Visualization generation completed")
-        return True
+        """Report the unimplemented visualization stage without claiming output."""
+        logger.warning("NOT_EVALUATED: visualization generation is not implemented")
+        return False
 
     def _find_repo_root(self) -> Path:
         """Find repository root by locating pyproject.toml or .git."""
@@ -512,18 +505,18 @@ class OrcaWaveOrchestrator:
     
     def _check_reciprocity(self) -> bool:
         """Check radiation-diffraction reciprocity relations"""
-        # Simplified check - would implement actual reciprocity validation
-        return True
+        logger.warning("NOT_EVALUATED: reciprocity validation is not implemented")
+        return False
     
     def _check_energy_conservation(self) -> bool:
         """Check energy conservation in results"""
-        # Simplified check - would implement actual energy validation
-        return True
+        logger.warning("NOT_EVALUATED: energy validation is not implemented")
+        return False
     
     def _check_asymptotes(self) -> bool:
         """Check high/low frequency asymptotic behavior"""
-        # Simplified check - would implement actual asymptote validation
-        return True
+        logger.warning("NOT_EVALUATED: asymptote validation is not implemented")
+        return False
     
     def _check_data_completeness(self) -> bool:
         """Check if all expected data is present"""
