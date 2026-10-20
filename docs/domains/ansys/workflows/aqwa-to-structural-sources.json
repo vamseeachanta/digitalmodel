@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "catalog_identity_status": "Unavailable: shared catalogs absent at the referenced location; reference keys below are document-local labels only",
+  "readiness": "NOT_EVALUATED",
+  "sources": [
+    {
+      "reference": "ansys-setup",
+      "title": "Ansys Aqwa User's Manual",
+      "version": "2024 R2",
+      "sections": [
+        "8.1.3"
+      ],
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_workflow.html",
+      "retrieved_at": "2026-10-20T11:22:42Z",
+      "http_status": 200,
+      "response_sha256": "526e6595afb0c3aff0462e1d14c72c90e3d906d6b2ff41ecd4e5c27637617112",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "ansys-pressure",
+      "title": "Ansys Aqwa User's Manual",
+      "version": "2024 R2",
+      "sections": [
+        "8.1.4",
+        "8.1.4.1.3",
+        "8.1.4.1.4",
+        "8.1.4.1.7",
+        "8.1.4.2"
+      ],
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_import.html",
+      "retrieved_at": "2026-10-20T11:16:35Z",
+      "http_status": 200,
+      "response_sha256": "33a219ac20aa723c7b2fb7419f54e8c104004c03221b4ee5b3f8df7b03a7ad20",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "ansys-time",
+      "title": "Ansys Aqwa User's Manual",
+      "version": "2024 R2",
+      "sections": [
+        "8.1.5",
+        "8.1.5.1.4"
+      ],
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_td_pressure_import.html",
+      "retrieved_at": "2026-10-20T11:21:53Z",
+      "http_status": 200,
+      "response_sha256": "1ee155dbd27a6582651fe07f1143d7ab4a01cb96bef69c76e2fd17afe9df1e28",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "ansys-submodel",
+      "title": "Ansys Advanced Analysis Guide",
+      "version": "2024 R2",
+      "sections": [
+        "7.2.1",
+        "7.2.3",
+        "7.2.4",
+        "7.2.5"
+      ],
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_2.html",
+      "retrieved_at": "2026-10-20T11:19:19Z",
+      "http_status": 200,
+      "response_sha256": "0598f4454994dba53b4aa058b74da2046c52bd1f1d2692ee50c264732d5257d6",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "ansys-shell",
+      "title": "Ansys Advanced Analysis Guide",
+      "version": "2024 R2",
+      "sections": [
+        "7.4"
+      ],
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_4.html",
+      "retrieved_at": "2026-10-20T11:21:53Z",
+      "http_status": 200,
+      "response_sha256": "79b11155f997036af5e34f070328c1f2f78b66b969cd2ce0958735ca43913122",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "nasa-forces",
+      "title": "NASA Aerodynamic Forces",
+      "version": "Updated 2025-09-03",
+      "sections": [
+        "Variation in Pressure"
+      ],
+      "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/",
+      "retrieved_at": "2026-10-20T11:16:58Z",
+      "http_status": 200,
+      "response_sha256": "2b23a84af2f01b5642b3e519ff87926d27d28ce1f773a749a138e7888a6b0d2b",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    },
+    {
+      "reference": "openstax-torque",
+      "title": "OpenStax University Physics Volume 1",
+      "version": "2016",
+      "sections": [
+        "10.6, equations 10.22 and 10.24"
+      ],
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/10-6-torque",
+      "retrieved_at": "2026-10-20T11:16:36Z",
+      "http_status": 200,
+      "response_sha256": "0b41ee8c5c654f60ab45ed7ea3f0364a705c0706e7a45eaf6a7c906d9f1d789f",
+      "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
+      "raw_copy_committed": false
+    }
+  ]
+}

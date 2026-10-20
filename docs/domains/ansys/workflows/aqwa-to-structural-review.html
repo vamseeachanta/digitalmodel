@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AQWA pressure-transfer and submodel workflow review</title>
+  <style>
+    body { font: 1rem/1.6 system-ui, sans-serif; max-width: 76rem; margin: 2rem auto; padding: 0 1rem; color: #172636; }
+    h1, h2 { line-height: 1.25; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #b4c1cf; padding: .65rem; text-align: left; vertical-align: top; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    pre { overflow: auto; padding: 1rem; background: #eef3f8; }
+    .status { border-left: .3rem solid #996000; padding: 1rem; background: #fff5de; }
+    a { color: #145a8a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>AQWA pressure-transfer and submodel workflow review</h1>
+  <h2>Summary</h2>
+  <p class="status">Engineering readiness is <strong>NOT_EVALUATED</strong>.
+    The preserved definition contains unsupported limits and contradictory capability
+    claims. This review corrects those claims and supplies an offline conservation
+    check. No hydrodynamic, structural or submodel solver result is qualified.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+    <tr><td>Initial review</td><td>2026-10-20</td><td>The inherited definition is reviewed against public release documentation; unsupported numerical rules are withdrawn and a synthetic transfer check is added.</td></tr>
+    <caption>Table 1. Review revision record.</caption>
+  </table>
+
+  <h2>Scope and preservation</h2>
+  <p>The original document remains in commit
+    <code>93cf3c927e08504db80fa23e9f1cbc08a6d6d3eb</code>, Git blob
+    <code>e2c72b3c7bd419fe56bcef78a6959b494ef0ba96</code>.
+    The <a href="aqwa-to-structural-submodel.md">current workflow definition</a>
+    is a reviewed revision. Preservation establishes traceability, not correctness.
+    This review covers assertions, source support, automation boundaries and evidence
+    required before use. It does not implement an AQWA-to-Mechanical interface.</p>
+
+  <h2>Existing capabilities and responsibility</h2>
+  <table>
+    <tr><th>Surface</th><th>Inspected capability</th><th>Responsibility and gap</th></tr>
+    <tr><td><code>src/digitalmodel/hydrodynamics/aqwa/</code> and <code>hydrodynamics/diffraction/</code></td><td>AQWA input, output parsing and diffraction preparation.</td><td>Hydrodynamics maintains source geometry, units, components, RAOs and case provenance; these interfaces do not demonstrate pressure transfer to Mechanical.</td></tr>
+    <tr><td><code>src/digitalmodel/ansys/</code></td><td>APDL generation, journal reading, native execution evidence and direct-load examples.</td><td>Structural automation maintains model and result provenance; a direct-load result is not evidence of hydrodynamic pressure mapping.</td></tr>
+    <tr><td><code>docs/registry/workflows.yaml</code></td><td>Workflow discovery and readiness declarations.</td><td>No entry is activated by this review; engineering readiness needs native comparators and governing criteria.</td></tr>
+    <tr><td><code>src/digitalmodel/structural/pressure_transfer.py</code></td><td>New offline pressure integration and six-component comparison.</td><td>Checks supplied loads only; input authenticity, mapping distribution, mass reconciliation and structural response remain external responsibilities.</td></tr>
+    <caption>Table 2. Interface inventory and responsibility boundaries; these are functional responsibilities, not verified individual assignments.</caption>
+  </table>
+
+  <h2>Engineering findings and dispositions</h2>
+  <table>
+    <tr><th>Assertion or check</th><th>Evidence and disposition</th><th>Required next evidence</th></tr>
+    <tr><td>One pressure object implies one system per wave.</td><td><strong>CORRECTED.</strong> The <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_import.html">2024 R2 pressure-import documentation</a>, section 8.1.4.1.3, supports multiple wave cases and phase steps within one system.</td><td>Retain a step-to-case record and read back the mapped load for each selected instant.</td></tr>
+    <tr><td>Generating the load automatically adds corrective point masses.</td><td><strong>CORRECTED.</strong> Sections 8.1.4.1.7 and 8.1.4.2 describe mass-property comparison and generated accelerations; they do not establish the claimed automatic mass addition.</td><td>Declare the added-mass distribution, acceleration settings and gravity basis; check signed force and moment equilibrium.</td></tr>
+    <tr><td>One vertical resultant establishes transfer quality.</td><td><strong>CORRECTED.</strong> A moved force can preserve vertical force while changing moment; a pure couple can have zero total force.</td><td>Compare all force and moment components about a common origin, then compare spatial pressures using a declared sampling and error criterion.</td></tr>
+    <tr><td>Universal residual, mesh, sampling and boundary-distance limits.</td><td><strong>NOT_EVALUATED.</strong> Traceable governing clauses are absent. The unsupported numerical rules are withdrawn.</td><td>Supply the governing title, edition, clause, units, normalization denominator and intended-use criterion. An equation source is not an acceptance-limit source.</td></tr>
+    <tr><td>Imposed displacement agreement validates the cut boundary.</td><td><strong>CORRECTED.</strong> It checks constraint application. <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_2.html">Using Submodeling</a>, section 7.2.5, supports comparison of recovered results along corresponding boundaries.</td><td>Compare recovered stress; relocate the cut and compare the governing local response against a declared criterion and a separate fine-model comparator.</td></tr>
+    <tr><td>Cut interpolation also transfers all interior loads.</td><td><strong>SOURCE_CHECKED restriction.</strong> Section 7.2.4 requires the other loads to be applied to the submodel.</td><td>Reconcile pressure, inertia, thermal loads, preload and other applicable interior loads with the global load record.</td></tr>
+    <tr><td>Only the coarse result file is needed for MAPDL interpolation.</td><td><strong>CORRECTED.</strong> Section 7.2.1 also requires the coarse-model database.</td><td>Retain the database and matching result set, model revision and load-case identity.</td></tr>
+    <tr><td>All hydrodynamic structures use floating-body restraints.</td><td><strong>CORRECTED.</strong> Section 8.1.4.1.3 distinguishes fixed and free structures.</td><td>Match hydrodynamic fixity and distinguish intended support reactions from imbalance.</td></tr>
+    <tr><td>Direct and Interpolated mapping are interchangeable.</td><td><strong>SOURCE_CHECKED restriction.</strong> Section 8.1.4.1.4 distinguishes line-body, solid-surface and multiple-structure support.</td><td>Freeze the geometry selection and method. Match hydrostatic and wave components before any resultant comparison.</td></tr>
+    <tr><td>Updating the hydrodynamic editor establishes downstream transfer.</td><td><strong>CORRECTED.</strong> <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_workflow.html">Workflow setup</a>, section 8.1.3, requires the schematic update and subsequent refresh when source data changes.</td><td>Retain input/output digests and pressure readback. A mandatory closed-editor condition is not established by the opened source.</td></tr>
+    <tr><td>Moonpool/time-domain and shell-to-solid restrictions.</td><td><strong>SOURCE_CHECKED restrictions.</strong> <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_td_pressure_import.html">Time-domain import</a> excludes moonpool mapping; <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_4.html">shell-to-solid guidance</a> documents projection, section-offset limitations and the two-block file read.</td><td>Qualify the selected release and command route; no native execution is demonstrated here.</td></tr>
+    <tr><td>Headless route and repeated wave-case updates are established.</td><td><strong>NOT_EVALUATED.</strong> Workbench schematic control, Mechanical object control and a neutral-file interface are different boundaries. An interface proposal is not execution evidence.</td><td>Supply supported API/configuration details, invocation, exit semantics, retained output and a repeated-case changed-load comparator.</td></tr>
+    <tr><td>EDW, dispersion and allowable values are qualified by the definition.</td><td><strong>NOT_EVALUATED.</strong> Governing method and criterion sources are absent; illustrative allowable values are removed.</td><td>Identify signed extremes, RAO conventions, phase origin, physical wave limits and applicable structural clauses before solving.</td></tr>
+    <caption>Table 3. Independent claim review. SOURCE_CHECKED denotes documentary support for the cited release; it is not a native-run verdict.</caption>
+  </table>
+
+  <h2>Worked example: constant pressure on planar patches</h2>
+  <p>All following values are synthetic inputs or independent hand calculations.
+    They are not measured data, design allowables or source values from a standard.
+    The input is <a href="../../../../examples/ansys/pressure-transfer/input.json">input.json</a>;
+    the executable is <a href="../../../../examples/ansys/pressure-transfer/run_example.py">run_example.py</a>.</p>
+  <p><a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/">NASA, Aerodynamic Forces (updated 2025)</a>,
+    Variation in Pressure, supports pressure-area summation. With an outward
+    area vector S and positive compressive pressure p, the patch force is
+    F = −pS. <a href="https://openstax.org/books/university-physics-volume-1/pages/10-6-torque">OpenStax, University Physics Volume 1 (2016)</a>,
+    section 10.6, equations 10.22 and 10.24, gives M = Σ((r − O) × F).</p>
+  <pre>Input: p = 2.0 Pa; S = (0.0, 0.0, 3.0) m²
+       r = (4.0, 5.0, 0.0) m; O = (0.0, 0.0, 0.0) m
+Hand calculation:
+       Fz = −2.0 × 3.0 = −6.0 N
+       Mx = 5.0 × (−6.0) = −30.0 N·m
+       My = −4.0 × (−6.0) = 24.0 N·m
+       Fx = Fy = Mz = 0.0
+Split mapping: two 1.5 m² patches at x = 3.0 m and 5.0 m, both y = 5.0 m
+       Fz = −3.0 − 3.0 = −6.0 N
+       My = 3.0 × 3.0 + 5.0 × 3.0 = 24.0 N·m
+Shifted mapping: original patch moved to x = 5.0 m
+       Fz = −6.0 N; My = 30.0 N·m; difference My = +6.0 N·m</pre>
+  <table>
+    <tr><th>Comparison</th><th>Force difference (N)</th><th>Moment difference (N·m)</th><th>Result and criterion</th></tr>
+    <tr><td>Split mapping</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 0.0, 0.0)</td><td>PASS against synthetic exact zero component limits.</td></tr>
+    <tr><td>Shifted mapping</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 6.0, 0.0)</td><td>FAIL: moment difference exceeds the synthetic zero limit.</td></tr>
+    <tr><td>No supplied criteria</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 0.0, 0.0)</td><td>NOT_EVALUATED even when the loads match.</td></tr>
+    <caption>Table 4. Synthetic arithmetic dispositions; exact zero is a test criterion, not an engineering tolerance.</caption>
+  </table>
+  <pre>PYTHONPATH=src python examples/ansys/pressure-transfer/run_example.py</pre>
+  <p>The API accepts uniform pressure on planar patches using signed pressure,
+    outward oriented area vectors, centroids and an explicit moment origin.
+    Comparisons require the same frame and instantaneous-case identifier.
+    Absolute component limits avoid division by a zero reference. Numeric limits
+    and their criterion source are required inputs. Missing loads or criteria
+    produce NOT_EVALUATED; nonfinite numbers and incompatible metadata are rejected.</p>
+
+  <h2>Verification and limitations</h2>
+  <p><code>tests/structural/test_pressure_transfer.py</code> provides independent
+    hand calculations for signed pressure, all force and moment components, a pure
+    couple, an origin shift, subdivision, wrong lever arms and threshold boundaries.
+    Negative tests cover missing criteria/evidence and invalid input. The example's
+    output is checked against those hand calculations.</p>
+  <p>The comparison can detect a changed resultant and still miss a changed local
+    distribution with the same resultant. Centroid quadrature is exact here only
+    for constant pressure on a planar patch. Curved faces, nonuniform pressure,
+    unit conversion, coordinate rotation, harmonic reconstruction and phase-offset
+    calculation are not implemented. The caller's metadata does not authenticate
+    a load case. No native solver, stress, mesh-convergence or physical comparator
+    is exercised; this is not a full-chain validation.</p>
+
+  <h2>Qualification sequence for later work</h2>
+  <ol>
+    <li>The hydrodynamic basis will specify source geometry, mass, gravity, units,
+      governing wave theory, EDW method, phase convention, components and signed extremes.</li>
+    <li>The transfer case will define applicable release, supported mapping interface,
+      transforms, reference origin, sampling plan and sourced force/moment criteria.</li>
+    <li>A native comparator will retain source and mapped pressure readback, all
+      resultants, mass/inertia settings and the signed structural equilibrium balance.</li>
+    <li>A global-to-local comparator will reapply interior loads and compare recovered
+      stresses, moved boundaries and an independently solved fine model.</li>
+    <li>Engineering review will bind acceptance to the governing case and criteria;
+      passing the offline arithmetic will not substitute for those comparators.</li>
+  </ol>
+
+  <h2>Reusable review checks</h2>
+  <p>Cardinality restrictions do not establish load-case restrictions. Agreement of
+    imposed values does not independently validate the boundary that imposes them.
+    Force conservation alone does not establish moment conservation. Missing limits
+    shall remain visible as NOT_EVALUATED. These checks apply to future transfer
+    interfaces as well as this definition.</p>
+
+  <h2>Source coverage</h2>
+  <p>The <a href="aqwa-to-structural-sources.json">source manifest</a> identifies
+    the seven public pages used, release/version, UTC retrieval, HTTP status and
+    SHA-256 of the received response. Original vendor pages are not copied into
+    the repository. Response digests identify the observed bytes; web content may
+    change. The shared source catalogs were not present at the referenced location,
+    so catalog identities and wider source coverage are not established. No new
+    dataset allocation or solver-result store is created.</p>
+</main>
+</body>
+</html>
