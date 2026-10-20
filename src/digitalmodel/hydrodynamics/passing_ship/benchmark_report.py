@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Generate self-contained HTML benchmark report for passing ship Wang (1975) calculator."""
 
 import json
@@ -228,6 +231,13 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 
     Returns:
         HTML string of the report.
+
+    Regeneration notes:
+        The generation timestamp and Git revision identify each build. Embedded
+        plot arrays retain solver precision, so floating-point differences
+        between platforms can also change the serialized HTML bytes. These
+        metadata and serialization differences are expected; regenerated arrays
+        require numerical comparison before a change is treated as cosmetic.
     """
     calc = _build_calculator()
     xn, surge, sway, yaw = _run_sweep(calc)
