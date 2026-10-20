@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Synthetic format tests; no restricted export rows are redistributed.
 
@@ -83,6 +83,10 @@ def test_acquisition_type_is_preserved_without_diagnosis(kind):
         ("0,1,0", "1,nan,1", "INVALID"),
         ("bad", "bad", "INVALID"),
         ("0,1,0", "10,20,10", "UNVERIFIED"),
+        ("0,2,4,2,0", "10,30,30,10,10", "SURFACE_COPY"),
+        ("0.0,2.0,4.0,2.0,0.0", "10.0,30.0,30.0,10.0,10.0", "SURFACE_COPY"),
+        ("0,2,4,2,0", "1,2,3,2,1", "UNVERIFIED"),
+        ("0,1,2,1,0", "10,30,30,10,10", "UNVERIFIED"),
     ],
 )
 def test_downhole_headers_never_establish_validation(position, load, status):
@@ -117,6 +121,34 @@ def test_downhole_headers_never_establish_validation(position, load, status):
 def test_invalid_surface_or_metadata_fails_with_row_context(changes):
     with pytest.raises(ValueError, match="row 2"):
         read_one(**changes)
+
+
+@pytest.mark.parametrize("line_ending", ["\r\n", "\r\r\n"])
+@pytest.mark.parametrize("record_index", [2, 3])
+def test_row_context_counts_records_with_multiline_cells(
+    tmp_path, line_ending, record_index,
+):
+    valid = export_text(**{"Well Name": "SYNTHETIC\nCONTINUED"})
+    invalid = export_text(**{
+        "Well Name": "SYNTHETIC\nCONTINUED", "Surface Loads": "invalid",
+    })
+    text = invalid if record_index == 2 else valid + invalid.split("\r\n", 1)[1]
+    path = tmp_path / "multiline.csv"
+    path.write_text(text.replace("\r\n", line_ending), newline="")
+    with pytest.raises(ValueError, match=rf"^row {record_index}: loads:"):
+        load_scada_export(path)
+
+
+@pytest.mark.parametrize("preceding_record", [False, True])
+def test_quoting_error_context_counts_records(preceding_record):
+    valid = export_text(**{"Well Name": "SYNTHETIC\nCONTINUED"})
+    text = valid if preceding_record else valid.split("\r\n", 1)[0] + "\r\n"
+    text += '\"unfinished\n'
+    record_index = 3 if preceding_record else 2
+    with pytest.raises(
+        ValueError, match=rf"^row {record_index}: malformed delimited text$",
+    ):
+        read_scada_export(io.StringIO(text, newline=""))
 
 
 def test_no_header_or_missing_or_duplicate_columns():
@@ -181,7 +213,7 @@ def test_batch_preserves_distribution_and_per_card_values():
 
 def test_load_utf8_bom_and_cli(tmp_path, capsys):
     path = tmp_path / "synthetic.csv"
-    path.write_text(export_text(), encoding="utf-8-sig")
+    path.write_text(export_text(), encoding="utf-8-sig", newline="")
     assert len(load_scada_export(path)) == 1
     assert main([str(path)]) == 0
     report = json.loads(capsys.readouterr().out)
@@ -193,7 +225,7 @@ def test_load_utf8_bom_and_cli(tmp_path, capsys):
 
 def test_cli_failure_does_not_print_input_values(tmp_path, capsys):
     path = tmp_path / "bad.csv"
-    path.write_text(export_text(**{"Surface Loads": "invalid"}))
+    path.write_text(export_text(**{"Surface Loads": "invalid"}), newline="")
     assert main([str(path)]) == 2
     captured = capsys.readouterr()
     assert not captured.out

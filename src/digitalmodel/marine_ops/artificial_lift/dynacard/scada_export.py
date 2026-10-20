@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Read pipe-delimited controller surface-card exports without inferring units.
 
@@ -105,7 +105,10 @@ def _pair(position: str, load: str) -> tuple[tuple[float, ...], tuple[float, ...
     return x, y
 
 
-def _downhole_status(position: str, load: str) -> str:
+def _downhole_status(
+    position: str, load: str,
+    surface_position: tuple[float, ...], surface_load: tuple[float, ...],
+) -> str:
     if not position.strip() and not load.strip():
         return "MISSING"
     try:
@@ -113,7 +116,11 @@ def _downhole_status(position: str, load: str) -> str:
     except ValueError:
         return "INVALID"
     # Exact numeric equality also catches copies with different text formatting.
-    return "COPIED" if x == y else "UNVERIFIED"
+    if x == y:
+        return "COPIED"
+    if x == surface_position and y == surface_load:
+        return "SURFACE_COPY"
+    return "UNVERIFIED"
 
 
 def _positive_optional(row: dict[str, str], field: str) -> float | None:
@@ -150,6 +157,7 @@ def _read_row(row: dict[str, str]) -> ScadaSurfaceCard:
         stroke_length=_positive_optional(row, "Stroke Length"),
         downhole_status=_downhole_status(
             row.get("Downhole Positions", ""), row.get("Downhole Loads", ""),
+            x, y,
         ),
     )
     metrics = (card.surface_stroke, card.load_range, card.stroke_ratio)
@@ -163,26 +171,29 @@ def read_scada_export(stream: TextIO) -> list[ScadaSurfaceCard]:
 
     Unknown columns are ignored. Sample order, repeated points and acquisition
     order are preserved; there is no closure, sorting, deduplication, smoothing
-    or resampling. Error messages contain row context but no source values.
+    or resampling. Error messages count records (header = 1), including quoted
+    multiline cells, and contain no source values.
     """
     reader = csv.DictReader(stream, delimiter="|", strict=True)
+    index = 0
     try:
         fields = reader.fieldnames
         if (not fields or len(set(fields)) != len(fields)
                 or not _REQUIRED.issubset(fields)):
             raise ValueError("export header: missing or duplicate required columns")
         cards = []
-        for row in reader:
+        index = 1
+        for index, row in enumerate(reader, start=2):
             try:
                 if None in row or any(value is None for value in row.values()):
                     raise ValueError("column count differs from header")
                 cards.append(_read_row(row))
             except ValueError as error:
-                raise ValueError(f"row {reader.line_num}: {error}") from None
+                raise ValueError(f"row {index}: {error}") from None
         return cards
     except csv.Error:
         raise ValueError(
-            f"row {reader.reader.line_num}: malformed delimited text"
+            f"row {index + 1}: malformed delimited text"
         ) from None
 
 
