@@ -129,7 +129,8 @@ def _mapping_key_issues(node):
             "tag:yaml.org,2002:str", "tag:yaml.org,2002:merge",
         }:
             issues.append(("error", "Mapping keys must be strings in the "
-                           "OrcaFlex property-name profile", "", line))
+                           f"OrcaFlex property-name profile; found tag '{key.tag}'",
+                           "", line))
             continue
         identity = (key.tag, key.value)
         if identity in first_lines:
@@ -140,6 +141,26 @@ def _mapping_key_issues(node):
         else:
             first_lines[identity] = line
     return issues
+
+
+def _effective_section_items(node, cache):
+    """Resolve section keys on an acyclic merge graph without mutating nodes."""
+    if id(node) in cache:
+        return cache[id(node)]
+    sections = {}
+    for key, value in node.value:
+        if key.tag == "tag:yaml.org,2002:merge":
+            sources = value.value if isinstance(value, SequenceNode) else [value]
+            # SafeLoader gives earlier merge-list entries precedence.
+            for source in reversed(sources):
+                if isinstance(source, MappingNode):
+                    sections.update(_effective_section_items(source, cache))
+    # Local assignments override all merges, regardless of source order.
+    for key, value in node.value:
+        if key.tag == "tag:yaml.org,2002:str" and _key(key) in {"General", "Environment"}:
+            sections[key.value] = (key, value)
+    cache[id(node)] = sections
+    return sections
 
 
 def _document_shape_issues(root):
@@ -159,10 +180,8 @@ def _document_shape_issues(root):
     if not isinstance(root, MappingNode):
         return []
     issues = []
-    for key, value in root.value:
+    for key, value in _effective_section_items(root, {}).values():
         name = _key(key)
-        if name not in {"General", "Environment"}:
-            continue
         if isinstance(value, MappingNode):
             continue
         if isinstance(value, SequenceNode) and value.value and all(
@@ -178,20 +197,20 @@ def _document_shape_issues(root):
     return issues
 
 
-def inspect_source(raw_text, sections, invalid_properties):
-    """Return (severity, message, property, line) diagnostics and halt flag."""
+def inspect_source(raw_text, sections, invalid_properties, *, strict_profile=False):
+    """Return source diagnostics and halt flag, with optional strict preflight."""
     root = yaml.compose(raw_text, Loader=yaml.SafeLoader)
     # Large vessel tables are legitimate linear-size documents. Bound expansion
     # relative to source size, so compact alias fan-out cannot amplify work.
     mappings, counts, failure = _inventory(root, max(100000, 2 * len(raw_text)))
-    issues = _document_shape_issues(root)
+    issues = _document_shape_issues(root) if strict_profile and failure is None else []
     duplicate_general = isinstance(root, MappingNode) and sum(
         _key(key) == "General" for key, _ in root.value
     ) > 1
     seen = set()
     profile_failure = bool(issues)
     for node, path in mappings:
-        key_issues = _mapping_key_issues(node)
+        key_issues = _mapping_key_issues(node) if strict_profile else []
         profile_failure = profile_failure or bool(key_issues)
         issues.extend(key_issues)
         # Preserve forbidden properties even when duplicate keys would hide them.

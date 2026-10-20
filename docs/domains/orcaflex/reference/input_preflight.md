@@ -1,19 +1,27 @@
 # OrcaFlex YAML input preflight
 
-The offline validator rejects source structures that lose assignments during
-dictionary construction. A valid result covers the implemented structural
-checks; it does not establish native loading, units or physical qualification.
+The offline validator offers an opt-in strict input profile that rejects source
+structures that lose assignments during dictionary construction. Existing
+callers retain the default compatibility checks. A valid result covers only the
+enabled checks; it does not establish native loading, units or physical
+qualification.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Document source controls and their limits so structural results are not treated as complete input qualification. |
+| 1 | 2026-10-19 | Make the strict profile opt-in so existing callers retain support for native numeric names and repeated directives; state the profile's exclusions. |
+| 2 | 2026-10-20 | Check effective property-section containers inherited through root merges so malformed sections cannot bypass the strict profile. |
 
 ## Source controls
 
 `OrcaFlexYAMLValidator.validate_file` inspects the composed YAML graph before
-constructing Python dictionaries. The source inspection rejects:
+constructing Python dictionaries. Enable the strict preflight profile with
+`OrcaFlexYAMLValidator(strict_profile=True)` or
+`validate_orcaflex_yaml(path, strict_profile=True)`. The option also applies to
+every file checked by `validate_directory` or the directory convenience call.
+With this option the source inspection rejects:
 
 - Repeated keys in any mapping, including nested objects, fragments and include
   entries. Diagnostics identify the repeated key's source line and the first
@@ -25,15 +33,24 @@ constructing Python dictionaries. The source inspection rejects:
 - Present `General` and `Environment` sections that contain neither a mapping
   nor a nonempty sequence of include mappings with string file references.
 
-Invalid source controls halt construction. Existing assignment-time timestep
-diagnostics are retained. Shared aliases do not repeat the same source finding.
+Invalid strict source controls halt construction. Existing assignment-time
+timestep diagnostics and graph traversal limits apply in both modes. Shared
+aliases do not repeat the same source finding.
 Keys in distinct mappings are independent. Empty section mappings, missing
 sections and the existing include-list convention remain supported.
 
 The existing SafeLoader scalar resolution and merge behavior remain in use.
+The strict profile checks effective `General` and `Environment` containers
+inherited through root merges, including nested merges and merge sequences.
+Local section assignments override inherited ones regardless of source order;
+earlier mappings in a merge sequence take precedence over later ones. Container
+diagnostics identify the original section key's source line. Graph traversal
+limits are checked before merge resolution.
+
 A merge directive and a local override are distinct source keys; two merge
-directives in one mapping are rejected. Merge expansion does not establish
-resolved assignment context or native compatibility.
+directives in one mapping are rejected by the strict profile. This container
+check does not resolve assignment-time timestep context or establish native
+compatibility.
 
 ## Interpretation and limits
 
@@ -50,6 +67,22 @@ variation file. Such files are intentionally rejected by this preflight profile
 because dictionary construction would discard their sequence. Rejection is not
 a claim that the native loader rejects every such file.
 
+The strict profile also rejects native numeric object names such as `1:` and
+`2.5:`, repeated `includefile:` entries in one mapping, and repeated `New:`
+actions. These constructs occur in tracked model inputs. They remain accepted
+by the default compatibility checks, which use SafeLoader's final dictionary
+and do not interpret directive order or prove transitive include closure.
+Default acceptance therefore does not establish that every assignment was
+retained. The strict profile is intended for preflight inputs whose authors
+require unique string keys, rather than as a native model acceptance test.
+
+The comment-only `modular_generator/templates/defaults.yml` is an inactive
+placeholder, outside the model and fragment input scope. The generator uses
+registered builders or explicitly selected section templates; it does not
+automatically load that placeholder. If explicitly submitted as an input, a
+comment-only document is rejected by the strict profile. The default validator
+retains its null-document warning.
+
 The include-list convention is documented in the repository's
 [format findings](../CRITICAL_YAML_FORMAT_FINDINGS.md), Correct OrcaFlex YAML
 Formats, Format 2, dated 2025-11-15. It is retained as an existing structural
@@ -65,9 +98,17 @@ loading and physical qualification remain unverified.
 ## Test evidence
 
 `tests/solvers/orcaflex/test_yaml_validator_input_contract.py` uses synthetic
-source controls. Expected duplicate locations are independently counted from
-the literals in the tests, with the uniqueness source cited in the module
-docstring. Negative controls cover repeated keys, typed keys, null documents
-and malformed sections. Positive controls cover separate object mappings,
+source controls with strict preflight enabled. Expected duplicate locations are
+independently counted from the literals in the tests, with the uniqueness source
+cited in the module docstring. Negative controls cover repeated keys, typed
+keys, null documents and malformed sections. Positive controls cover separate object mappings,
 quoted text keys, aliases, local merge overrides, section include lists and
 property defaults. These fixtures contain no engineering measurements.
+Default compatibility controls separately cover numeric object names, repeated
+include directives and repeated creation actions. File and directory controls
+check that the strict profile must be explicitly requested. Custom-tagged keys
+identify the unsupported tag in the strict diagnostic.
+Merge controls check inherited malformed sections, valid mapping and include-list
+containers, local overrides, merge-sequence precedence and original source lines.
+Quoted merge-like keys remain ordinary strings; cyclic and deep merge graphs
+remain rejected by the traversal guards.

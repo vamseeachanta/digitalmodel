@@ -14,7 +14,7 @@ from digitalmodel.solvers.orcaflex.yaml_validator import validate_orcaflex_yaml
 def validate(tmp_path, text):
     path = tmp_path / "model.yml"
     path.write_text(text, encoding="utf-8")
-    return validate_orcaflex_yaml(path)
+    return validate_orcaflex_yaml(path, strict_profile=True)
 
 
 @pytest.mark.parametrize(("text", "key", "first", "repeated"), [
@@ -63,7 +63,7 @@ def test_duplicate_in_included_file_is_rejected_by_directory_check(tmp_path):
 
     (tmp_path / "master.yml").write_text("- includefile: general.yml\n", encoding="utf-8")
     (tmp_path / "general.yml").write_text("UnitsSystem: SI\nUnitsSystem: SI\n", encoding="utf-8")
-    result = OrcaFlexYAMLValidator().validate_directory(tmp_path)
+    result = OrcaFlexYAMLValidator(strict_profile=True).validate_directory(tmp_path)
     assert not result.valid
     assert any(issue.file == "general.yml" and issue.line == 2 for issue in result.errors)
 
@@ -149,3 +149,147 @@ def test_property_default_is_not_confused_with_a_null_section(tmp_path):
     defaults from script text. This structural slice does not resolve defaults.
     """
     assert validate(tmp_path, "Environment:\n  WaterDepth: ~\n").valid
+
+
+@pytest.mark.parametrize("text", [
+    "6DBuoys:\n  1: {}\n  2: {}\n  3: {}\n",
+    "6DBuoys:\n  1.5: {}\n  2.5: {}\n",
+    "includefile: first.yml\nincludefile: second.yml\n",
+    "- includefile: first.yml\n  includefile: second.yml\n",
+    "New: first\nfirst: {}\nNew: second\nsecond: {}\n",
+])
+def test_native_patterns_remain_accepted_by_default(tmp_path, text):
+    """Numeric object names and repeated actions occur in tracked model inputs.
+
+    Synthetic names preserve those source patterns without copying model data.
+    Default acceptance does not prove that includes or actions were resolved.
+    """
+    for name in ("first.yml", "second.yml"):
+        (tmp_path / name).write_text("UnitsSystem: SI\n", encoding="utf-8")
+    path = tmp_path / "model.yml"
+    path.write_text(text, encoding="utf-8")
+    assert validate_orcaflex_yaml(path).valid
+    assert not validate_orcaflex_yaml(path, strict_profile=True).valid
+
+
+def test_strict_profile_is_explicit_for_file_and_directory(tmp_path):
+    from digitalmodel.solvers.orcaflex.yaml_validator import OrcaFlexYAMLValidator
+
+    path = tmp_path / "model.yml"
+    path.write_text("6DBuoys:\n  1: {}\n  2: {}\n", encoding="utf-8")
+    assert validate_orcaflex_yaml(path).valid
+    assert not validate_orcaflex_yaml(path, strict_profile=True).valid
+    assert not validate_orcaflex_yaml(tmp_path, strict_profile=True).valid
+    assert OrcaFlexYAMLValidator().validate_directory(tmp_path).valid
+    assert not OrcaFlexYAMLValidator(strict_profile=True).validate_file(path).valid
+
+
+def test_custom_key_tag_diagnostic_names_the_tag(tmp_path):
+    result = validate(tmp_path, "General:\n  !fixture Custom: ignored\n")
+    assert not result.valid
+    assert any(issue.line == 2 and "!fixture" in issue.message
+               and "Mapping keys must be strings" in issue.message
+               for issue in result.errors)
+
+
+def test_comment_only_template_is_outside_strict_input_scope(tmp_path):
+    """The defaults template is comments, not an automatically loaded model."""
+    path = tmp_path / "model.yml"
+    path.write_text("# General:\n#   UnitsSystem: SI\n", encoding="utf-8")
+    default = validate_orcaflex_yaml(path)
+    assert default.valid
+    assert any("null/empty" in issue.message for issue in default.warnings)
+    strict = validate_orcaflex_yaml(path, strict_profile=True)
+    assert not strict.valid
+    assert any("Document contains no model or fragment" in issue.message
+               for issue in strict.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("value", ["", "null", "~", "true", "1", "wrong", "[]", "[null]", "[{Custom: wrong}]"])
+@pytest.mark.parametrize(("template", "line"), [
+    ("<<:\n  {section}: {value}\n", 2),
+    ("<<:\n- {section}: {value}\n", 2),
+    ("<<:\n  <<:\n    {section}: {value}\n", 3),
+])
+def test_merged_malformed_property_sections_are_rejected(tmp_path, section, value, template, line):
+    """Inherited containers have the same shape requirements as direct ones."""
+    result = validate(tmp_path, template.format(section=section, value=value))
+    assert not result.valid
+    matches = [issue for issue in result.errors if issue.property == section]
+    assert len(matches) == 1
+    assert matches[0].line == line
+    assert matches[0].file == "model.yml"
+    assert "mapping or a nonempty include list" in matches[0].message
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize(("inherited", "local", "valid"), [
+    ("null", "{}", True),
+    ("{}", "wrong", False),
+])
+@pytest.mark.parametrize("local_first", [True, False])
+def test_local_section_overrides_merge_regardless_of_order(tmp_path, section, inherited, local, valid, local_first):
+    """Local keys win even when they precede the merge directive in source."""
+    merge_text = f"<<:\n  {section}: {inherited}\n"
+    local_text = f"{section}: {local}\n"
+    text = local_text + merge_text if local_first else merge_text + local_text
+    result = validate(tmp_path, text)
+    assert result.valid is valid
+    if not valid:
+        matches = [issue for issue in result.errors if issue.property == section]
+        assert len(matches) == 1
+        assert matches[0].line == (1 if local_first else 3)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("invalid_first", [True, False])
+def test_first_mapping_in_merge_sequence_has_precedence(tmp_path, section, invalid_first):
+    """SafeLoader gives earlier merge-list entries priority over later ones."""
+    first, second = ("null", "{}") if invalid_first else ("{}", "null")
+    result = validate(tmp_path, f"<<:\n- {section}: {first}\n- {section}: {second}\n")
+    assert result.valid is not invalid_first
+    if invalid_first:
+        assert any(issue.property == section and issue.line == 2
+                   for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("value", ["{}", "[{includefile: fragment.yml}]"])
+@pytest.mark.parametrize("template", [
+    "<<:\n  {section}: {value}\n",
+    "<<:\n- {section}: {value}\n",
+    "<<:\n  <<:\n    {section}: {value}\n",
+])
+def test_valid_merged_section_containers_remain_supported(tmp_path, section, value, template):
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    assert validate(tmp_path, template.format(section=section, value=value)).valid
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+def test_merged_section_alias_reports_original_key_location_once(tmp_path, section):
+    result = validate(tmp_path, f"Defaults: &d\n  {section}: null\n<<: [*d, *d]\n")
+    assert not result.valid
+    matches = [issue for issue in result.errors if issue.property == section]
+    assert len(matches) == 1
+    assert matches[0].line == 2
+
+
+def test_quoted_merge_key_does_not_inherit_sections(tmp_path):
+    assert validate(tmp_path, '"<<": {General: null, Environment: wrong}\n').valid
+
+
+@pytest.mark.parametrize("text", ["&d\n<<: *d\n", "&d\n<<: [*d]\n"])
+def test_strict_merge_resolution_retains_cycle_guard(tmp_path, text):
+    result = validate(tmp_path, text)
+    assert not result.valid
+    assert any("Unsupported cyclic YAML alias graph" in issue.message
+               for issue in result.errors)
+
+
+def test_strict_merge_resolution_retains_depth_guard(tmp_path):
+    text = "".join("  " * depth + "<<:\n" for depth in range(105))
+    result = validate(tmp_path, text + "  " * 105 + "General: {}\n")
+    assert not result.valid
+    assert any("Unsupported YAML graph traversal limit" in issue.message
+               for issue in result.errors)

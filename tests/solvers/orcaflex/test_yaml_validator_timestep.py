@@ -17,10 +17,10 @@ SECTIONS = [
 ]
 
 
-def check(tmp_path, content):
+def check(tmp_path, content, *, strict_profile=False):
     path = tmp_path / "model.yml"
     path.write_text(textwrap.dedent(content), encoding="utf-8")
-    return validate_orcaflex_yaml(path)
+    return validate_orcaflex_yaml(path, strict_profile=strict_profile)
 
 
 def general(*rows):
@@ -171,7 +171,7 @@ def test_intervening_include_invalidates_known_prefix(tmp_path):
      f"{MAXIMUM}: 0.125", f"{METHOD}: Implicit time domain"],
 ])
 def test_duplicate_relevant_keys_error_before_dictionary_collapse(tmp_path, rows):
-    result = check(tmp_path, general(*rows))
+    result = check(tmp_path, general(*rows), strict_profile=True)
     assert not result.valid
     assert any("Duplicate mapping key" in issue.message for issue in result.errors)
     assert result.warnings  # Assignment-time context diagnostics are retained.
@@ -180,7 +180,7 @@ def test_duplicate_relevant_keys_error_before_dictionary_collapse(tmp_path, rows
 def test_duplicate_general_mappings_error(tmp_path):
     content = general(f"{MODE}: false") + general(
         f"{METHOD}: Implicit time domain", f"{MODE}: true", f"{MAXIMUM}: 0.125")
-    result = check(tmp_path, content)
+    result = check(tmp_path, content, strict_profile=True)
     assert not result.valid
     assert any(issue.property == "General" for issue in result.errors)
     assert result.warnings
