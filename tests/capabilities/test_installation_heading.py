@@ -40,9 +40,12 @@ def test_data_covers_every_stage_size_heading(builder, data):
     assert data["illustrative"] is True
     assert "invented" in data["source"].lower()
     assert all(len(stage["limits_m"]) == 3 for stage in data["stages"])
+    for stage in data["stages"]:
+        for values in stage["limits_m"].values():
+            assert values[0] == values[-1]
 
 
-@pytest.mark.parametrize("fault", ["heading", "band", "missing-size", "short", "negative", "boolean", "integer", "precision", "duplicate", "source", "condition", "real", "no-samples"])
+@pytest.mark.parametrize("fault", ["heading", "band", "missing-size", "short", "negative", "boolean", "integer", "precision", "duplicate", "source", "condition", "real", "no-samples", "endpoint-mismatch"])
 def test_invalid_data_rejected(builder, data, fault):
     bad = copy.deepcopy(data)
     series = bad["stages"][0]["limits_m"]["small"]
@@ -56,6 +59,8 @@ def test_invalid_data_rejected(builder, data, fault):
         series.pop()
     elif fault in ("negative", "boolean", "integer", "precision"):
         series[0] = {"negative": -1.0, "boolean": True, "integer": 1, "precision": 1.23}[fault]
+    elif fault == "endpoint-mismatch":
+        series[0] = round(series[-1] + 0.1, 1)
     elif fault == "duplicate":
         bad["stages"].append(bad["stages"][0])
     elif fault == "condition":
@@ -86,15 +91,31 @@ class Resources(HTMLParser):
         self.addresses.extend(value for key, value in attrs if key in ("src", "href"))
 
 
-def test_two_builds_manifest_revision_and_self_containment(builder, tmp_path):
+@pytest.mark.parametrize("checkout_crlf", [False, True])
+def test_two_builds_manifest_revision_and_self_containment(builder, tmp_path, monkeypatch, checkout_crlf):
+    read_text, read_bytes = Path.read_text, Path.read_bytes
+
+    def legacy_read_text(path, *args, **kwargs):
+        kwargs.setdefault("encoding", "cp1252")
+        return read_text(path, *args, **kwargs)
+
+    def checkout_bytes(path):
+        raw = read_bytes(path)
+        if checkout_crlf and path == ROOT / builder.PAGE_REL:
+            return raw.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        return raw
+
+    monkeypatch.setattr(Path, "read_text", legacy_read_text)
+    monkeypatch.setattr(Path, "read_bytes", checkout_bytes)
     first, second = tmp_path / "first", tmp_path / "second"
     builder.build(output_dir=first)
     builder.build(output_dir=second)
     for path in first.iterdir():
         assert path.read_bytes() == (second / path.name).read_bytes()
     page = first / builder.PAGE_NAME
-    text = page.read_text()
-    assert page.read_bytes() == (ROOT / builder.PAGE_REL).read_bytes()
+    text = page.read_text(encoding="utf-8")
+    # Checkout newline conversion must not invalidate generated content equality.
+    assert page.read_bytes() == (ROOT / builder.PAGE_REL).read_bytes().replace(b"\r\n", b"\n")
     parser = Resources()
     parser.feed(text)
     assert parser.addresses == []
@@ -103,13 +124,13 @@ def test_two_builds_manifest_revision_and_self_containment(builder, tmp_path):
     assert embedded == builder.load_data(builder.DATA)
     assert embedded["condition_basis"] in text
     assert "fetch(" not in text and "XMLHttpRequest" not in text
-    revisions = json.loads(builder.REVISIONS.read_text())
+    revisions = json.loads(builder.REVISIONS.read_text(encoding="utf-8"))
     assert revisions[-1]["revision"] == embedded["revision"]
     assert text.index('</header>') < text.index('id="revision-history"') < text.index('id="controls"')
     assert f'<td>{embedded["revision"]}</td>' in text
-    manifest = json.loads((first / builder.MANIFEST_NAME).read_text())
-    # Revision-2 synthetic fixture: 4 stages × 3 sizes × 13 supplied headings.
-    assert manifest["records"] == 156
+    manifest = json.loads((first / builder.MANIFEST_NAME).read_text(encoding="utf-8"))
+    # Revision-2 synthetic fixture: 4 stages × 3 sizes × 14 supplied headings, including both endpoint labels.
+    assert manifest["records"] == 168
     for relative, digest in manifest["sha256"].items():
         target = page if relative == builder.PAGE_REL else ROOT / relative
         assert hashlib.sha256(target.read_bytes()).hexdigest() == digest
@@ -118,6 +139,7 @@ def test_two_builds_manifest_revision_and_self_containment(builder, tmp_path):
     assert 'id="theme"' in text
     assert 'station-keeping tolerance ±15°' in text
     assert 'illustrative until heading-resolved results land' in text
+    assert 'Status: <strong>illustrative until heading-resolved results land</strong>.' in text
     assert 'Negative headings: port' in text
     assert 'The left half mirrors' not in text
     assert 'ILLUSTRATIVE' in text and 'invented' in text
@@ -147,7 +169,7 @@ def test_script_pure_functions(builder, tmp_path):
     engineering acceptance limit. Issue #2696 (2026) supplies the band angles.
     """
     builder.build(output_dir=tmp_path)
-    text = (tmp_path / builder.PAGE_NAME).read_text()
+    text = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
     script = re.search(r'<script id="chart-script">(.*?)</script>', text, re.S)[1]
     pure = script.split('// DOM wiring')[0]
     checks = r'''
@@ -184,7 +206,7 @@ for (const baseline of [null, 0]) {
 
 
 @pytest.mark.parametrize("heading, hs, status", [
-    (-180, None, "Outside"), (-30, 1.8, "Outside"), (-15, 1.8, "Within"), (0, 3.6, "Within"),
+    (-180, 3.2, "Outside"), (-45, None, "Outside"), (-30, 1.8, "Outside"), (-15, 1.8, "Within"), (0, 3.6, "Within"),
     (15, 3.6, "Within"), (30, 3.4, "Outside"), (180, 3.2, "Outside"),
 ])
 def test_signed_selection_and_missing_data(builder, data, tmp_path, heading, hs, status):
@@ -201,7 +223,7 @@ def test_signed_selection_and_missing_data(builder, data, tmp_path, heading, hs,
     path = tmp_path / "limits.json"
     path.write_text(json.dumps(data))
     builder.build(data_path=path, output_dir=tmp_path)
-    text = (tmp_path / builder.PAGE_NAME).read_text()
+    text = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
     script = re.search(r'<script id="chart-script">(.*?)</script>', text, re.S)[1]
     # Only the DOM surface used by the shipped script; no browser is started.
     setup = r'''
@@ -250,6 +272,18 @@ assert.ok(endpoints);
 assert.equal(Number(endpoints[1]), -Number(endpoints[3]));
 assert.equal(Number(endpoints[2]), Number(endpoints[4]));
 assert.ok(getNode('samples').children.some(row => row.children.some(cell => cell.textContent === 'no data')));
+// Render each unavailable baseline with a supplied off-bow limit.
+getNode('heading').value = '30';
+const baselineIndex = DATA.headings_deg.indexOf(0);
+const selectedValues = data.stages[Number(getNode('stage').value)].limits_m.small;
+const originalBaseline = selectedValues[baselineIndex];
+for (const baseline of [null, 0]) {{
+  selectedValues[baselineIndex] = baseline;
+  render();
+  assert.equal(getNode('readout').textContent,
+    'allowable Hs 3.4 m, head-seas percentage unavailable.');
+}}
+selectedValues[baselineIndex] = originalBaseline;
 // A different stage must drive the readout, not just its label.
 getNode('stage').value = String(DATA.stages.findIndex(stage => stage.name === 'Splash zone'));
 getNode('heading').value = '0'; render();
@@ -268,6 +302,7 @@ def test_missing_and_zero_baselines_and_partial_coverage(builder, data):
     for baseline in (None, 0.0):
         values = data["stages"][0]["limits_m"]["small"]
         values[data["headings_deg"].index(0)] = baseline
+        values[0] = values[-1] = None
         builder.validate_data(data)
         assert values[data["headings_deg"].index(-30)] is None
 

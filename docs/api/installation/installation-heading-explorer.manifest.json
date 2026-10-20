@@ -1,12 +1,12 @@
 {
   "illustrative": true,
-  "records": 156,
-  "revision": "3",
+  "records": 168,
+  "revision": "4",
   "sha256": {
-    "docs/api/installation/installation-heading-explorer.html": "fb4bc98a3c5182fbb3eefff553bc617547b00eaf4523408d27213b64ffca3f88",
-    "scripts/capabilities/build_installation_heading_explorer.py": "dcd50d363fa347e7b24b17c8f0a8d4dab88ef26b6f9771843433a559bdfd5cd3",
-    "scripts/capabilities/installation_heading/limits.json": "2cad37c3e982c66fb6999464d4cb74178b1f73db7a22b9921bed0f33c7a66848",
-    "scripts/capabilities/installation_heading/page.html.template": "45d39227e45a94af2d97d867501de44183743125fded98dbaa2589a4227bd3ed",
-    "scripts/capabilities/installation_heading/revisions.json": "45b6bbfce7a6f38628e9ecdfd14323977df39d39a06ae26c32ca0f9a1cd09e72"
+    "docs/api/installation/installation-heading-explorer.html": "b645b5e619849448d36a2a384715c32401d353c52c892c645df9063c2c9b2fa4",
+    "scripts/capabilities/build_installation_heading_explorer.py": "1109f3002caf8d80e2fff057160e9895c89cc9c36bec46e243af0231968c2b1b",
+    "scripts/capabilities/installation_heading/limits.json": "3b0c03c40d063decbf98107973dac47d6b6a6ec97329e04e57760b36fa3ff186",
+    "scripts/capabilities/installation_heading/page.html.template": "eba9b20f3e3cf9d13c45683eb6f3960a5813f6ef9970081866da06c00df0da66",
+    "scripts/capabilities/installation_heading/revisions.json": "aee45d13bd8bc8171835af19b494c641d6f45fb87f41ae33d5cc4910c874d87b"
   }
 }

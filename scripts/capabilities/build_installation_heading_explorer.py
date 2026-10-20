@@ -83,6 +83,7 @@ def validate_data(data: dict) -> None:
                 type(value) is float and math.isfinite(value) and value >= 0
                 and value == round(value, 1)) for value in values),
                 "Expected nonnegative Hs numbers with one decimal or null")
+            require(values[0] == values[-1], "Endpoint mismatch at minus/plus 180 degrees")
     require(len(set(names)) == len(names), "Duplicate stages")
 
 
@@ -108,12 +109,11 @@ def build(data_path: Path = DATA, output_dir: Path | None = None,
         "@@DATA@@": embedded,
         "@@REVISION_ROWS@@": "\n".join(rows),
         "@@REVISION@@": escape(data["revision"]),
-        "@@STATUS@@": "illustrative" if data["illustrative"] else "results",
-        "@@BADGE@@": "ILLUSTRATIVE" if data["illustrative"] else "SUPPLIED RESULTS",
+        "@@STATUS@@": "illustrative",
+        "@@BADGE@@": "ILLUSTRATIVE",
         "@@SOURCE@@": escape(data["source"]),
         "@@CONDITION_BASIS@@": escape(data["condition_basis"]),
-        "@@NOTICE@@": ("Invented numbers for interaction demonstration; no operational limit is established."
-                       if data["illustrative"] else "Supplied discrete results; confirm applicability before use."),
+        "@@NOTICE@@": "Invented numbers for interaction demonstration; no operational limit is established.",
     }
     text = TEMPLATE.read_text(encoding="utf-8")
     # A single substitution pass prevents data text from being treated as a placeholder.

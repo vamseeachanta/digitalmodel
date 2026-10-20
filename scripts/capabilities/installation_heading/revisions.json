@@ -13,5 +13,10 @@
     "revision": "3",
     "date": "2026-10-19",
     "change": "Uses signed headings and explicit missing samples to remove assumed symmetry; labels the station-keeping premise and retains the illustrative caveat."
+  },
+  {
+    "revision": "4",
+    "date": "2026-10-20",
+    "change": "Makes both following-seas endpoint labels share one sample and rejects contradictory limits; corrects the illustrative status sentence."
   }
 ]

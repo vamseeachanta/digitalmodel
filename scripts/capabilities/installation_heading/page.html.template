@@ -17,7 +17,7 @@
 <div class="top"><div><div class="eyebrow">INSTALLATION · DISCRETE LIMITS</div><h1>Heading and allowable wave height</h1></div><button id="theme" type="button" aria-pressed="false">Dark theme</button></div>
 <p>Explore the allowable significant wave height (Hs) against heading relative to the waves, for each installation stage and structure size.</p>
 <p><span class="badge">@@BADGE@@</span> Revision @@REVISION@@</p>
-<p>@@NOTICE@@ <strong>illustrative until heading-resolved results land</strong>.</p>
+<p>@@NOTICE@@ Status: <strong>illustrative until heading-resolved results land</strong>.</p>
 </header>
 <section class="card" id="revision-history" aria-labelledby="revision-title">
 <h2 id="revision-title">Revision history</h2>
