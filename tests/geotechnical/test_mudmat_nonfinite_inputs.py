@@ -1,6 +1,16 @@
-"""Non-finite input rejection and optional-input regression pins."""
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+"""Non-finite input rejection and optional-input regression pins.
+
+NaN and both infinities are non-finite by Python 3.11 Library Reference,
+math.isfinite: https://docs.python.org/3.11/library/math.html#math.isfinite.
+Fixture dimensions and loads use the synthetic reproduction in issue #2105;
+soil inputs use issue #2330 and the existing optional-input regression pins.
+These are test inputs, not calibrated engineering coefficients or limits.
+"""
 
 import math
+from copy import deepcopy
 
 import pytest
 
@@ -18,11 +28,6 @@ NUMERIC_ARGUMENTS = (
     "vertical_load_kn",
     "moment_knm",
     "undrained_shear_strength_kpa",
-    "friction_angle_deg",
-    "effective_cohesion_kpa",
-    "interface_friction_angle_deg",
-)
-DRAINED_ARGUMENTS = (
     "friction_angle_deg",
     "effective_cohesion_kpa",
     "interface_friction_angle_deg",
@@ -66,10 +71,14 @@ def test_nan_moment_reproduction_is_rejected():
         for label in ("nan", "inf", "-inf")
     ],
 )
-def test_nonfinite_numeric_argument_names_offender(argument, value):
-    overrides = {argument: value}
-    if argument in DRAINED_ARGUMENTS:
-        overrides = dict(condition="drained", friction_angle_deg=30.0) | overrides
+@pytest.mark.parametrize("condition", ["undrained", "drained"])
+@pytest.mark.parametrize("axis", ["B", "L"])
+def test_nonfinite_numeric_argument_names_offender(argument, value, condition, axis):
+    # Include unused soil fields: finiteness is independent of the chosen branch.
+    overrides = dict(
+        condition=condition, eccentricity_axis=axis, friction_angle_deg=30.0
+    )
+    overrides[argument] = value
     with pytest.raises(ValueError, match=argument):
         calculate(**overrides)
 
@@ -81,10 +90,11 @@ def test_nonfinite_capacity_factor_angle_names_offender(label):
 
 
 @pytest.mark.parametrize("argument", NUMERIC_ARGUMENTS)
-def test_boolean_numeric_argument_is_rejected(argument):
-    overrides = {argument: True}
-    if argument in DRAINED_ARGUMENTS:
-        overrides = dict(condition="drained", friction_angle_deg=30.0) | overrides
+@pytest.mark.parametrize("value", [False, True])
+@pytest.mark.parametrize("condition", ["undrained", "drained"])
+def test_boolean_numeric_argument_is_rejected(argument, value, condition):
+    overrides = dict(condition=condition, friction_angle_deg=30.0)
+    overrides[argument] = value
     with pytest.raises(ValueError, match=argument):
         calculate(**overrides)
 
@@ -95,25 +105,13 @@ def test_boolean_capacity_factor_angle_is_rejected(value):
         bearing_capacity_factors(value)
 
 
-@pytest.mark.parametrize(
-    "condition,argument",
-    [
-        ("drained", "undrained_shear_strength_kpa"),
-        ("undrained", "friction_angle_deg"),
-        ("undrained", "effective_cohesion_kpa"),
-        ("undrained", "interface_friction_angle_deg"),
-    ],
-)
-def test_unused_nonfinite_soil_argument_is_rejected(condition, argument):
-    overrides = dict(condition=condition, friction_angle_deg=30.0)
-    overrides[argument] = float("nan")
-    with pytest.raises(ValueError, match=argument):
-        calculate(**overrides)
-
-
 @pytest.mark.parametrize("condition", ["undrained", "drained"])
 def test_optional_none_arguments_regression_pin(condition):
-    """Regression pin: unused soil inputs and default interface angle accept None."""
+    """No moment: hand-calculated area is B*L = 3*4 = 12 square metres.
+
+    Area: FHWA NHI-06-089 (2006), Section 8.4.3.1, Equation 8-9.
+    Unused optional soil inputs and the default interface angle accept None.
+    """
     result = calculate(
         condition=condition,
         undrained_shear_strength_kpa=25.0 if condition == "undrained" else None,
@@ -123,3 +121,49 @@ def test_optional_none_arguments_regression_pin(condition):
     assert result.effective_area_m2 == 12.0
     assert math.isfinite(result.vertical_capacity_kn)
     assert math.isfinite(result.sliding_capacity_kn)
+
+
+CONFIG_ARGUMENTS = (
+    ("foundation", "width_B_m", "width_b_m"),
+    ("foundation", "length_L_m", "length_l_m"),
+    ("foundation", "embedment_depth_m", "embedment_depth_m"),
+    ("soil", "submerged_unit_weight_kN_m3", "submerged_unit_weight_kn_m3"),
+    ("loads", "vertical_kN", "vertical_load_kn"),
+    ("loads", "moment_kNm", "moment_knm"),
+    ("soil", "undrained_shear_strength_kpa", "undrained_shear_strength_kpa"),
+    ("soil", "friction_angle_deg", "friction_angle_deg"),
+    ("soil", "effective_cohesion_kpa", "effective_cohesion_kpa"),
+    ("soil", "interface_friction_angle_deg", "interface_friction_angle_deg"),
+)
+
+
+@pytest.mark.parametrize("section,key,argument", CONFIG_ARGUMENTS)
+@pytest.mark.parametrize("label", ["nan", "inf", "-inf"])
+@pytest.mark.parametrize("condition", ["undrained", "drained"])
+def test_config_nonfinite_strings_rejected_before_output(
+    tmp_path, section, key, argument, label, condition
+):
+    """Text numeric inputs must fail before a summary or a result is published."""
+    from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
+
+    cfg = {
+        "_config_dir_path": str(tmp_path),
+        "mudmat_bearing_capacity": {
+            "foundation": {"width_B_m": 3.0, "length_L_m": 4.0},
+            "soil": {
+                "condition": condition,
+                "submerged_unit_weight_kN_m3": 8.0,
+                "undrained_shear_strength_kpa": 25.0,
+                "friction_angle_deg": 30.0,
+            },
+            "loads": {"vertical_kN": 800.0, "moment_kNm": 400.0},
+        },
+    }
+    cfg["mudmat_bearing_capacity"][section][key] = label
+    original = deepcopy(cfg)
+
+    with pytest.raises(ValueError, match=argument):
+        MudmatBearingCapacityWorkflow().router(cfg)
+
+    assert cfg == original
+    assert list(tmp_path.iterdir()) == []
