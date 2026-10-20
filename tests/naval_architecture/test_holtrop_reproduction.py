@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Diagnostic reproduction preserves operating-point and oracle distinctions."""
 
 import importlib.util
@@ -6,7 +8,10 @@ from pathlib import Path
 import pytest
 
 
-SCRIPT = Path(__file__).resolve().parents[2] / "scripts/validation/reproduce_holtrop_discrepancy.py"
+SCRIPT = (
+    Path(__file__).resolve().parents[2]
+    / "scripts/validation/reproduce_holtrop_discrepancy.py"
+)
 
 
 def load_script():
@@ -22,7 +27,9 @@ def test_fixed_speed_diagnostics_preserve_reference_status_and_components():
     assert len(report["fixed_speed"]) == 2
     for row in report["fixed_speed"]:
         assert row["speed_ms"] == 7.72
-        assert row["ct"] == pytest.approx(row["viscous_ct"] + row["wave_ct"] + row["ca"])
+        assert row["ct"] == pytest.approx(
+            row["viscous_ct"] + row["wave_ct"] + row["ca"]
+        )
         expected_error = 100 * (row["ct"] / row["ct_approx"] - 1)
         assert row["error_pct"] == pytest.approx(expected_error)
         assert row["floor_ct"] <= row["ct"]
@@ -39,6 +46,7 @@ def test_common_froude_comparison_uses_length_specific_speed():
 
 def test_reordered_fixture_preserves_named_separation(monkeypatch):
     import yaml
+
     module = load_script()
     original = module.build_report()
     fixture = yaml.safe_load(module.FIXTURE.read_text())
@@ -46,5 +54,24 @@ def test_reordered_fixture_preserves_named_separation(monkeypatch):
     monkeypatch.setattr(module.yaml, "safe_load", lambda _: fixture)
     report = module.build_report()
     for left, right in zip(original["common_froude"], report["common_froude"]):
-        assert right["tanker_relative_to_series60_pct"] == pytest.approx(left["tanker_relative_to_series60_pct"])
+        assert right["tanker_relative_to_series60_pct"] == pytest.approx(
+            left["tanker_relative_to_series60_pct"]
+        )
     assert "Holtrop-regression" in report["ct_normalization"]
+
+
+def test_report_accounts_for_each_enabled_reference():
+    report = load_script().build_report()
+    assert report["qualification_status"] == "NOT_EVALUATED"
+    assert {row["id"] for row in report["reference_checks"]} == {
+        "series60_cb060",
+        "tanker_cb080",
+        "form_factor_validation",
+    }
+    for row in report["reference_checks"]:
+        assert all(
+            check["status"] == "NOT_EVALUATED" for check in row["checks"].values()
+        )
+    assert any(
+        path.endswith("holtrop_diagnostics.py") for path in report["source_sha256"]
+    )
