@@ -399,3 +399,17 @@ def test_cli_does_not_reissue_unverified_native_outcomes(stored, domain, tmp_pat
         json.loads(destination.read_text())["cases"][0]["load"]["status"]
         == "NOT_EVALUATED"
     )
+
+
+@pytest.mark.parametrize("object_name,reason", [(42, None), (None, 42), (" ", None)])
+def test_failure_object_disposition_requires_text(stored, object_name, reason):
+    manifest, record, native = stored
+    record["load"].update(
+        status="FAIL",
+        error="Synthetic error",
+        failing_object=object_name,
+        object_unavailable_reason=reason,
+    )
+    record["statics"].update(status="NOT_ATTEMPTED", converged=None)
+    with pytest.raises(ValueError, match="object"):
+        am.reconcile_results(manifest, [record], native)

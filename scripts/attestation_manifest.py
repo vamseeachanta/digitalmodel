@@ -238,9 +238,13 @@ def _stage(stage: dict) -> None:
     if stage["status"] == "FAIL":
         if not isinstance(stage.get("error"), str) or not stage["error"].strip():
             raise ValueError("failure requires the exact error")
-        if not stage.get("failing_object") and not stage.get(
-            "object_unavailable_reason"
-        ):
+        object_name = stage.get("failing_object")
+        reason = stage.get("object_unavailable_reason")
+        named = isinstance(object_name, str) and bool(object_name.strip())
+        unavailable = (
+            object_name is None and isinstance(reason, str) and bool(reason.strip())
+        )
+        if not (named or unavailable):
             raise ValueError("failure requires object or explicit unavailable reason")
     elif stage.get("error") is not None:
         raise ValueError("non-failure cannot carry an error")
