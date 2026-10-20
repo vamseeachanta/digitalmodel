@@ -284,10 +284,18 @@ def assess(manifest_path, csv_path):
     manifest = verify_manifest(manifest_path)
     rows = read_rows(csv_path, manifest)
     criteria = manifest["criteria"]
+    limits = {
+        key: cited(criteria[key])
+        for key in (
+            "mesh_absolute_m_per_m",
+            "solver_absolute_m_per_m",
+            "asymptotic_max_rad_s",
+        )
+    }
     checks = []
     for key, amplitude in rows.items():
         run_id, frequency, heading, dof = key
-        if dof == "heave" and frequency <= cited(criteria["asymptotic_max_rad_s"]):
+        if dof == "heave" and frequency <= limits["asymptotic_max_rad_s"]:
             checks.append(
                 dict(
                     kind="heave_asymptote",
@@ -343,7 +351,7 @@ def assess(manifest_path, csv_path):
                 rows[left, frequency, heading, dof]
                 - rows[right, frequency, heading, dof]
             )
-            limit = cited(criteria[criterion]) if criterion else None
+            limit = limits[criterion] if criterion else None
             checks.append(
                 dict(
                     kind=kind,

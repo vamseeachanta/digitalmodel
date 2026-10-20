@@ -4,6 +4,7 @@ import copy
 import csv
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -206,8 +207,19 @@ def test_large_artifact_is_retained_and_fails(inputs):
     path = export(inputs, manifest, lambda rows: rows[0].update(amplitude=9))
     report = campaign.assess(inputs[2] / "manifest.json", path)
     assert report["numerical_screen"] == "FAIL"
-    assert any(check["difference"] == 9 for check in report["checks"])
-    assert "9" in path.read_text(encoding="utf-8")
+    assert any(check.get("difference") == 9 for check in report["checks"])
+    with path.open(encoding="utf-8", newline="") as stream:
+        retained = list(csv.DictReader(stream))
+    mutated = [
+        row
+        for row in retained
+        if row["run_id"] == manifest["cases"][0]["run_id"]
+        and row["frequency_rad_s"] == "0.1"
+        and row["heading_deg"] == "0.0"
+        and row["dof"] == "sway"
+    ]
+    assert len(mutated) == 1
+    assert campaign.number(mutated[0]["amplitude"]) == 9
 
 
 def test_heave_band_boundary_is_inclusive(inputs):
@@ -222,3 +234,42 @@ def test_heave_band_boundary_is_inclusive(inputs):
         inputs[2] / "manifest.json", export(inputs, manifest, boundary)
     )
     assert report["numerical_screen"] == "PASS"
+
+
+def test_campaign_is_collected_by_diffraction_ci_domain():
+    detector_path = SCRIPT.parents[1] / "ci/detect_touched_domains.py"
+    spec = importlib.util.spec_from_file_location(
+        "campaign_domain_detector", detector_path
+    )
+    detector = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = detector
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    test_path = "tests/hydrodynamics/test_low_frequency_campaign.py"
+    diffraction = next(d for d in domains if d.name == "hydrodynamics-diffraction")
+    assert test_path in diffraction.roots
+    assert "hydrodynamics-diffraction" in {
+        d.name for d in detector.touched_domains([test_path], domains)
+    }
+
+
+def test_assessment_validates_each_criterion_once(inputs, monkeypatch):
+    manifest = prepare(inputs)
+    path = export(inputs, manifest)
+    # Preparation already validates source-bound criteria; isolate assessment.
+    monkeypatch.setattr(campaign, "verify_manifest", lambda _: manifest)
+    validated = []
+    original = campaign.cited
+
+    def track(record):
+        validated.append(record)
+        return original(record)
+
+    monkeypatch.setattr(campaign, "cited", track)
+    report = campaign.assess(inputs[2] / "manifest.json", path)
+    assert report["numerical_screen"] == "PASS"
+    assert len(validated) == len(manifest["criteria"])
+    assert all(
+        sum(item is record for item in validated) == 1
+        for record in manifest["criteria"].values()
+    )
