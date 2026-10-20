@@ -290,11 +290,10 @@ def test_expected_node_manifest_requires_exact_coverage(text, expected, reason):
 
 @pytest.mark.parametrize("pages", [2, 9])
 def test_complete_native_page_header_preserves_rows(pages):
-    """Repeat the retained element-listing page preamble with scalar rows."""
+    """Repeat the retained scalar page preamble with hand-valued rows."""
     fixtures = Path(__file__).parent / "fixtures/n4_recovery"
-    native = (fixtures / "presol.txt").read_text()
-    page = native[native.index(" *** MAPDL"):]
-    preamble = page[:page.index("  ELEMENT=")]
+    lines = (fixtures / "stress.txt").read_text().splitlines()
+    preamble = "\n".join(lines[3:17]) + "\n"
     text = "".join(
         f"{preamble}NODE SX SY SZ SXY SYZ SXZ\n{node} -12 3 4 5 6 7\n"
         for node in range(1, pages + 1)
@@ -320,3 +319,38 @@ def test_native_stress_rows_survive_a_complete_page_break():
 def test_absent_page_identity_is_exposed_as_empty_metadata():
     result = ResultsExtractor().parse_prnsol_block("NODE SEQV\n1 5\n")
     assert result.attrs["result_identity"] == {}
+
+
+@pytest.mark.parametrize("indicator", ["both", "banner", "element"])
+def test_single_element_listing_is_rejected(indicator):
+    """The retained first element block is never a scalar nodal result."""
+    native = (Path(__file__).parent / "fixtures/n4_recovery/presol.txt").read_text()
+    first = native.index("  ELEMENT=")
+    text = native[:native.index("  ELEMENT=", first + 1)]
+    if indicator == "banner":
+        text = "\n".join(line for line in text.splitlines() if "ELEMENT=" not in line)
+    elif indicator == "element":
+        text = "\n".join(
+            line for line in text.splitlines() if "ELEMENT NODAL" not in line
+        )
+    with pytest.raises(ValueError, match="element listing"):
+        ResultsExtractor().parse_prnsol_block(text, "SX")
+
+
+@pytest.mark.parametrize("prefix", [
+    "", "TIME= 1\n", "NODE SX\n1 5\n", "NODE SX\n1 5\nMINIMUM VALUES\n",
+])
+def test_element_marker_is_rejected_in_every_parser_state(prefix):
+    with pytest.raises(ValueError, match="element listing"):
+        ResultsExtractor().parse_prnsol_block(prefix + " element = 1\n", "SX")
+
+
+def test_older_ansys_page_banner_preserves_rows():
+    """Synthetic older banner spelling with hand lookup: node 2 has SX=-12."""
+    text = (
+        "NODE SX\n1 5\n"
+        " *** ANSYS - ENGINEERING ANALYSIS SYSTEM ***\n"
+        "NODE SX\n2 -12\n"
+    )
+    result = ResultsExtractor().parse_prnsol_block(text, "SX", expected_node_ids=[1, 2])
+    assert result["value"].tolist() == [5, -12]

@@ -127,10 +127,13 @@ class ComparisonRow:
 _PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+[A-Z]", re.IGNORECASE)
 _PRNSOL_PAGE_RE = re.compile(
     r"^\s*(?:\*+\s+POST1\s+NODAL\s+STRESS\s+LISTING\s+\*+\s*|"
-    r"\*+\s+MAPDL\s+-\s+ENGINEERING\s+ANALYSIS\s+SYSTEM\b.*|"
+    r"\*+\s+(?:MAPDL|ANSYS)\s+-\s+ENGINEERING\s+ANALYSIS\s+SYSTEM\b.*|"
     r"[0-9]+\s+VERSION=.*|"
     r"(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=.*)$",
     re.IGNORECASE,
+)
+_PRNSOL_ELEMENT_RE = re.compile(
+    r"\bELEMENT\s+NODAL\b.*\bLISTING\b|^\s*ELEMENT\s*=", re.IGNORECASE,
 )
 _PRNSOL_IDENTITY_RE = re.compile(
     r"\b(LOAD\s+STEP|SUBSTEP|TIME)\s*=\s*(\S+)", re.IGNORECASE,
@@ -327,6 +330,8 @@ class ResultsExtractor:
         for line in text_block.splitlines():
             if not line.strip():
                 continue
+            if _PRNSOL_ELEMENT_RE.search(line):
+                raise ValueError("PRNSOL cannot parse an element listing")
             if _PRNSOL_HEADER_RE.match(line):
                 labels = line.upper().split()
                 if len(set(labels)) != len(labels):
