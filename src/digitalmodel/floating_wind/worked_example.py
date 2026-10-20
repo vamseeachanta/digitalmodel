@@ -116,14 +116,16 @@ def cited_value(lines: list[str], line: int) -> str:
     return value.strip()
 
 
-class _InputRows(HTMLParser):
-    """Retain table-cell text, including inline markup, and section membership."""
+class _TableRows(HTMLParser):
+    """Retain cell text, section membership and result-class rows structurally."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.sections = []
         self.has_basis = False
         self.rows = []
+        self.result_rows = []
+        self.is_result = False
         self.row = None
         self.cell = None
 
@@ -134,6 +136,7 @@ class _InputRows(HTMLParser):
             self.has_basis |= section == "as-held"
         elif tag == "tr":
             self.row = []
+            self.is_result = "result" in (dict(attrs).get("class") or "").split()
         elif tag in {"td", "th"} and self.row is not None:
             self.cell = (tag, [])
 
@@ -148,6 +151,8 @@ class _InputRows(HTMLParser):
             self.cell = None
         elif tag == "tr" and self.row is not None:
             self.rows.append(("as-held" in self.sections, self.row))
+            if self.is_result:
+                self.result_rows.append(self.row)
             self.row = None
         elif tag == "section" and self.sections:
             self.sections.pop()
@@ -155,7 +160,7 @@ class _InputRows(HTMLParser):
 
 def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
     """Require and validate a source citation in every model-value cell."""
-    parser = _InputRows()
+    parser = _TableRows()
     parser.feed(html)
     parser.close()
     errors, checked = [], 0
@@ -198,17 +203,19 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
 
 def audit_result_rows(html: str) -> list[str]:
     """Require all result cells to remain explicit nonnumeric placeholders."""
-    rows = re.findall(r'<tr class="result">(.*?)</tr>', html, re.DOTALL)
-    if not rows:
+    parser = _TableRows()
+    parser.feed(html)
+    parser.close()
+    if not parser.result_rows:
         return ["report has no marked result rows"]
     errors = []
-    for row in rows:
-        cells = re.findall(r"<td>(.*?)</td>", row, re.DOTALL)
-        if len(cells) < 2 or any(
-            not cell.startswith("[RESULT:")
+    for row in parser.result_rows:
+        if len(row) < 2 or any(
+            kind != "td"
+            or not cell.startswith("[RESULT:")
             or not cell.endswith("]")
             or re.search(r"\d", cell)
-            for cell in cells[1:]
+            for kind, cell in row[1:]
         ):
             errors.append("report result row contains an unmarked or numeric result")
     return errors

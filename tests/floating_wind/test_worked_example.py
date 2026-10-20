@@ -77,6 +77,76 @@ def test_result_audit_rejects_numeric_or_unmarked_results():
     assert subject.audit_result_rows("<p>No results table</p>")
 
 
+@pytest.mark.parametrize(
+    "row_tag",
+    [
+        '<tr class="result" id="surge">',
+        '<tr class="result highlighted">',
+        "<tr id='surge' class='highlighted result'>",
+    ],
+)
+def test_result_audit_accepts_placeholder_rows_with_attributes(row_tag):
+    html = (
+        row_tag + '<td scope="row">Surge natural period</td>'
+        '<td class="value"><strong>[RESULT: not calculated]</strong></td></tr>'
+    )
+    assert subject.audit_result_rows(html) == []
+
+
+@pytest.mark.parametrize(
+    "cell",
+    [
+        '<td class="value">12 s</td>',
+        "<td><strong>12</strong> s</td>",
+        '<td class="value">[RESULT: &#49;2 s]</td>',
+        '<th scope="row">12 s</th>',
+    ],
+)
+def test_result_audit_checks_every_value_cell(cell):
+    html = (
+        '<tr class="result"><td>Surge natural period</td>'
+        + cell
+        + "<td>[RESULT: comparator unselected]</td>"
+        "<td>[RESULT: evidence absent]</td></tr>"
+    )
+    assert subject.audit_result_rows(html)
+
+
+@pytest.mark.parametrize(
+    "row_tag, value_cell",
+    [
+        ('<tr class="result">', '<td class="value">12 s</td>'),
+        ('<tr class="result" id="surge">', "<td>12 s</td>"),
+        ('<tr class="result highlighted">', "<td>12 s</td>"),
+    ],
+)
+def test_complete_audit_rejects_numeric_result_markup(
+    monkeypatch, capsys, row_tag, value_cell
+):
+    read_text = Path.read_text
+
+    def changed_text(path, *args, **kwargs):
+        text = read_text(path, *args, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            old = (
+                '<tr class="result"><td>Surge natural period</td>'
+                "<td>[RESULT: not calculated; case unselected]</td>"
+            )
+            assert text.count(old) == 1
+            text = text.replace(
+                old, row_tag + "<td>Surge natural period</td>" + value_cell
+            )
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    assert subject.main(["--root", str(ROOT)]) == 1
+    import json
+
+    evidence = json.loads(capsys.readouterr().out)
+    assert any("numeric result" in error for error in evidence["errors"])
+    assert evidence["execution_ready"] is False
+
+
 def test_repository_phase_a_evidence():
     evidence = subject.audit_phase_a(ROOT)
     assert evidence["errors"] == []
