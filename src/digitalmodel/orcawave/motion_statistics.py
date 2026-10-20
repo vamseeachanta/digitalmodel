@@ -11,6 +11,8 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 import warnings
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -148,9 +150,9 @@ def compute_response_spectrum(
         raise ValueError("RAO must have one finite amplitude per frequency")
     s_r = np.abs(rao_amplitude) ** 2 * wave_spectrum
 
-    m0 = float(np.trapz(s_r, omega))
-    m2 = float(np.trapz(omega**2 * s_r, omega))
-    m4 = float(np.trapz(omega**4 * s_r, omega))
+    m0 = float(_trapezoid(s_r, omega))
+    m2 = float(_trapezoid(omega**2 * s_r, omega))
+    m4 = float(_trapezoid(omega**4 * s_r, omega))
 
     return ResponseSpectrum(
         frequencies=omega.tolist(),

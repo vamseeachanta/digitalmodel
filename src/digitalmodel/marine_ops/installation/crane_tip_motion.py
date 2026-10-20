@@ -24,6 +24,8 @@ from __future__ import annotations
 import numpy as np
 from .models import Vessel, CraneTipConfig
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def _complex_rao(amplitude: np.ndarray, phase_deg: np.ndarray) -> np.ndarray:
     """Convert amplitude + phase (deg) to complex RAO."""
@@ -146,7 +148,7 @@ def crane_tip_significant_motion(
     S = _jonswap_spectrum(frequencies, hs_m, wp, gamma if spectrum_type == "jonswap" else 1.0)
 
     # Response spectrum
-    m0 = np.trapz(tip_rao_amplitude**2 * S, frequencies)
+    m0 = _trapezoid(tip_rao_amplitude**2 * S, frequencies)
     return 2.0 * np.sqrt(m0)
 
 
@@ -164,7 +166,7 @@ def crane_tip_significant_velocity(
     """
     wp = 2 * np.pi / tp_s
     S = _jonswap_spectrum(frequencies, hs_m, wp, gamma if spectrum_type == "jonswap" else 1.0)
-    m2 = np.trapz(frequencies**2 * tip_rao_amplitude**2 * S, frequencies)
+    m2 = _trapezoid(frequencies**2 * tip_rao_amplitude**2 * S, frequencies)
     return 2.0 * np.sqrt(m2)
 
 
