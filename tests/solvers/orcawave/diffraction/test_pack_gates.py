@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Solver-free diagnostics specified by agent-pack section 5 (G0/G4/G5)."""
 
 import ast
@@ -402,3 +405,93 @@ def test_collinear_face_rejects_closed_connectivity(tmp_path, tetrahedron):
     )
     assert stats.min_panel_area == 0
     assert not stats.is_watertight
+
+
+@pytest.mark.parametrize("separate_vertices", [False, True])
+def test_column_inverse_indices_preserve_topology(
+    tmp_path, tetrahedron, monkeypatch, separate_vertices
+):
+    vertices, faces = tetrahedron
+    if separate_vertices:
+        vertices = vertices[faces].reshape(-1, 3)
+        faces = np.arange(len(vertices)).reshape(-1, 3)
+    original_unique = np.unique
+
+    def column_inverse(*args, **kwargs):
+        result = original_unique(*args, **kwargs)
+        if kwargs.get("return_inverse"):
+            coordinates, inverse = result
+            return coordinates, inverse.reshape(-1, 1)
+        return result
+
+    # Reproduce the inverse-index shape returned by NumPy 2.0.0.
+    monkeypatch.setattr(np, "unique", column_inverse)
+    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+        "synthetic", "obj", vertices, faces
+    )
+    assert stats.is_watertight
+    assert stats.num_edges == 6
+
+
+@pytest.mark.parametrize("parse_failure", [False, True])
+def test_pool_construction_failure_retries_sequentially(
+    tmp_path, monkeypatch, parse_failure
+):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+
+    def unavailable_pool(**kwargs):
+        raise OSError("synthetic pool construction failure")
+
+    def parse(path, kind):
+        if parse_failure and kind == "obj":
+            raise OSError("synthetic parser failure")
+        return kind
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", unavailable_pool)
+    monkeypatch.setattr(validator, "validate_file", parse)
+    if parse_failure:
+        with pytest.raises(OSError, match="synthetic parser failure"):
+            validator.validate_all()
+        assert validator.results == {}
+    else:
+        results = validator.validate_all()
+        assert set(results.values()) == {"stl_ascii", "stl_binary", "obj"}
+        assert "stale" not in results
+
+
+@pytest.mark.parametrize("phase", ["submit", "result"])
+def test_started_pool_errors_remain_fatal(tmp_path, monkeypatch, phase):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+    monkeypatch.setattr(validator, "validate_file",
+                        lambda *args: pytest.fail("unexpected sequential retry"))
+
+    class Future:
+        def result(self):
+            raise OSError("synthetic worker failure")
+
+    class Pool:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def submit(self, *args):
+            if phase == "submit":
+                raise OSError("synthetic submission failure")
+            return Future()
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
+    monkeypatch.setattr(module, "as_completed", lambda futures: iter(futures))
+    with pytest.raises(OSError, match="synthetic .* failure"):
+        validator.validate_all()
+    assert validator.results == {}

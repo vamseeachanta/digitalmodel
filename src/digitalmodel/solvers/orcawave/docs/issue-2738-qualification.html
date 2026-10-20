@@ -9,11 +9,12 @@ workflow. Native runs attempted: none. Qualified engineering results: none.</p>
 <table><thead><tr><th>Gate</th><th>Contract</th><th>Regression evidence</th></tr></thead><tbody>
 <tr><td>G0-GEOMETRY</td><td><code>GeometryValidator.validate_all</code> clears stale results,
 requires every legacy requested file, and publishes results only after all parsers succeed.
-Missing files raise FileNotFoundError; parser and pool failures propagate.</td>
+Missing files raise FileNotFoundError; pool-construction OSError retries sequentially.
+Parser, submission and worker failures propagate.</td>
 <td>Empty and partial discovery, stale result, sequential and simulated parallel failure cases.</td></tr>
 <tr><td>G4-CLOSURE</td><td><code>_compute_mesh_statistics</code> rejects empty, nonfinite or
 unsupported connectivity. Exact coincident coordinates are welded for edge counting.
-Every edge must belong to exactly two triangles; duplicate and degenerate faces fail closure.
+Every edge must belong to exactly two triangles; duplicate and zero-area faces fail closure.
 Volume remains a separate statistic.</td><td>Independent open-triangle boundary count,
 closed tetrahedron, duplicated STL-style vertices, hole, duplicate-face and nonmanifold cases.</td></tr>
 <tr><td>G5-STATE</td><td><code>_phase4_quality_assurance</code> clears its success flag before
@@ -41,14 +42,11 @@ partial CSV/Excel channels, units/conventions, geometry-validation bypasses in t
 output packaging and provenance are still software follow-up work. A licensed run cannot
 repair those defects. The issue must remain open.</p>
 <h2>Validation status</h2>
-<p>Before implementation, the module suite collected 46 tests. Its temporary-directory access
-failed with PermissionError on the Windows workstation and session teardown prevented a
-normal summary. The test step was stopped without changing paths or permissions. No passing
-runtime claim is made for the repairs. The three existing strict expected-failure marks were
-removed; the assertions remain. New regressions require execution in a permitted environment.</p>
-<p>Scoped Ruff reports eight pre-existing findings, reproduced before edits and verified in
-the base branch. No new Ruff finding was introduced. Static parsing, whitespace checks and
-runner review evidence are recorded in the draft pull-request handoff.</p>
+<p>The solver-free diffraction suite passed 79 tests at revision <code>a4e01b69</code>
+with Python 3.12 and NumPy 1.26.4 in the second-provider review. The repair regressions
+exercise column-shaped inverse indices, sequential fallback after pool-construction
+failure, and fatal parser, submission and worker errors. Licensed solver execution
+and engineering qualification remain unverified.</p>
 <h2>Solver-manager request</h2>
 <p>The <a href="issue-2738-run-request.json">run request</a> distinguishes the solver-free
 regression gate from later licensed qualification. Existing generic example inputs are reused;

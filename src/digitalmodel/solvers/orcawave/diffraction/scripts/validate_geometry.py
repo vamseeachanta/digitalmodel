@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Geometry Validation Script for tug_30m_1 Vessel
 Validates STL and OBJ mesh files for OrcaWave analysis
@@ -69,8 +72,14 @@ class GeometryValidator:
 
         results = {}
         if parallel:
-            # Preserve the existing worker bound; propagate pool and parse errors.
-            with ProcessPoolExecutor(max_workers=3) as executor:
+            # Retry only construction failures; submission and parser errors are fatal.
+            try:
+                executor = ProcessPoolExecutor(max_workers=3)
+            except OSError:
+                logger.warning("Process pool unavailable; validating sequentially")
+                parallel = False
+        if parallel:
+            with executor:
                 futures = {
                     executor.submit(self.validate_file, self.geometry_path / name, kind): name
                     for name, kind in geometry_files.items()
@@ -227,6 +236,7 @@ class GeometryValidator:
         # GeometryQualityChecker.check_watertightness: two panels per edge.
         # No positional tolerance or physical acceptance limit is inferred.
         _, vertex_ids = np.unique(vertices, axis=0, return_inverse=True)
+        vertex_ids = vertex_ids.reshape(-1)
         edge_counts = {}
         unique_faces = set()
         duplicate_faces = False
