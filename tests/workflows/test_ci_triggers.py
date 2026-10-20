@@ -4,7 +4,11 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import json
+import os
 import re
+import subprocess
+import sys
 from typing import Any
 
 import pytest
@@ -18,6 +22,10 @@ GATES = (
     "parametric-atlas-drift.yml",
     "gmsh-meshing-tests.yml",
 )
+WORKFLOW_EVENTS = {
+    path.name: yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)["on"]
+    for path in sorted((*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")))
+}
 
 
 def load_workflow(filename: str) -> dict:
@@ -59,7 +67,7 @@ def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
 
 
 def concurrency_result(
-    filename: str, event: str, run_id: int, number: int = 1
+    filename: str, event: str, run_id: int, number: int = 1, ref: str | None = None,
 ) -> tuple[str, bool]:
     """Render the actual workflow group and cancellation expression."""
     workflow = load_workflow(filename)
@@ -68,7 +76,9 @@ def concurrency_result(
         "github.workflow": workflow["name"],
         "github.event_name": event,
         "github.event.pull_request.number": number,
-        "github.ref": "refs/heads/main",
+        "github.ref": ref or (
+            f"refs/pull/{number}/merge" if event == "pull_request" else "refs/heads/main"
+        ),
         "github.run_id": run_id,
     }
     group = re.sub(
@@ -84,7 +94,9 @@ def concurrency_result(
     return group, result
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", [
+    filename for filename, events in WORKFLOW_EVENTS.items() if "pull_request" in events
+])
 def test_pull_request_concurrency(filename: str) -> None:
     """Only updates of the same pull request supersede earlier runs."""
     first = concurrency_result(filename, "pull_request", 101, number=1)
@@ -92,18 +104,40 @@ def test_pull_request_concurrency(filename: str) -> None:
     other = concurrency_result(filename, "pull_request", 103, number=2)
     assert first == update
     assert first[0] != other[0]
+    assert first[0] == f"{load_workflow(filename)['name']}-refs/pull/1/merge"
     assert first[1] is True
     assert other[1] is True
 
 
-@pytest.mark.parametrize("filename", GATES)
-@pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
-def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
-    """Push and manual runs keep separate groups identified by run ID."""
+@pytest.mark.parametrize("filename", [
+    filename for filename, events in WORKFLOW_EVENTS.items() if "push" in events
+])
+def test_push_updates_cancel_only_the_same_ref(filename: str) -> None:
+    """A newer main push supersedes the old run without cancelling another ref."""
+    first = concurrency_result(filename, "push", 101)
+    update = concurrency_result(filename, "push", 102)
+    other = concurrency_result(filename, "push", 103, ref="refs/heads/develop")
+    assert first == update == (f"{load_workflow(filename)['name']}-refs/heads/main", True)
+    assert other == (f"{load_workflow(filename)['name']}-refs/heads/develop", True)
+
+
+@pytest.mark.parametrize("filename,event", [
+    (filename, event)
+    for filename, events in WORKFLOW_EVENTS.items()
+    if filename != "full-matrix-sweep.yml"
+    for event in ("schedule", "workflow_dispatch") if event in events
+])
+def test_scheduled_and_manual_runs_are_never_cancelled(filename: str, event: str) -> None:
+    """Independent groups protect manual and scheduled runs from push updates."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
-    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
+    assert first == (f"{load_workflow(filename)['name']}-refs/heads/main-101", False)
+    assert second == (f"{load_workflow(filename)['name']}-refs/heads/main-102", False)
+    events = WORKFLOW_EVENTS[filename]
+    if "push" in events:
+        assert first[0] != concurrency_result(filename, "push", 103)[0]
+    if "pull_request" in events:
+        assert first[0] != concurrency_result(filename, "pull_request", 104)[0]
 
 
 @pytest.mark.parametrize(
@@ -141,9 +175,7 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
-    assert "pull_request" not in triggers
-    assert "workflow_dispatch" in triggers
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
 
 
 @pytest.mark.parametrize("filename,job_id", (
@@ -161,9 +193,9 @@ def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id:
     assert int(depth) == 0, "Subsea must fetch history to verify the pinned manifest commit"
 
 
-@pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
-def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
-    """Every sweep keeps its own group and cannot cancel another sweep."""
+@pytest.mark.parametrize("event", ("schedule", "workflow_dispatch"))
+def test_full_sweep_replaces_older_sweep_on_same_ref(event: str) -> None:
+    """The diagnostic sweep has an explicit per-ref cancellation policy."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
     groups = []
     for run_id in (101, 102):
@@ -179,11 +211,88 @@ def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
                 concurrency["group"],
             )
         )
-    assert groups == [
-        "full-matrix-sweep-refs/heads/main-101",
-        "full-matrix-sweep-refs/heads/main-102",
+    assert "github.run_id" not in concurrency["group"]
+    assert groups == ["full-matrix-sweep-refs/heads/main"] * 2
+    assert concurrency["cancel-in-progress"] is True
+
+
+def test_full_sweep_still_builds_every_shard() -> None:
+    """Nightly and manual sweeps keep the full detector and failure aggregate."""
+    jobs = load_workflow("full-matrix-sweep.yml")["jobs"]
+    builder = next(step for step in jobs["full-matrix"]["steps"] if step.get("id") == "matrix")
+    assert "scripts/ci/detect_touched_domains.py" in builder["run"]
+    assert "--mode full" in builder["run"]
+    assert "--mode touched" not in builder["run"]
+    assert "if" not in jobs["full-matrix"]
+    assert "if" not in jobs["sweep-tests"]
+    assert jobs["sweep-result"]["if"] == "always()"
+    assert jobs["sweep-result"]["needs"] == ["full-matrix", "sweep-tests"]
+    enforce = jobs["sweep-result"]["steps"][-1]
+    assert '"$MATRIX_RESULT" != "success"' in enforce["run"]
+    assert '"$SWEEP_RESULT" != "success"' in enforce["run"]
+    assert enforce["run"].count("exit 1") == 2
+
+
+@pytest.mark.parametrize("event", ("pull_request", "push", "workflow_dispatch"))
+@pytest.mark.parametrize("domains", ([], [{"domain": "subsea", "runner": "ubuntu-latest"}]))
+def test_domain_detection_routes_events(event: str, domains: list, tmp_path: Path) -> None:
+    """Execute the shipped routing shell with a recording detector substitute."""
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    assert workflow["on"]["push"]["branches"] == ["main", "develop"]
+    detect = next(
+        step for step in workflow["jobs"]["detect-domains"]["steps"]
+        if step.get("id") == "detect"
+    )
+    assert detect["env"] == {
+        "EVENT_NAME": "${{ github.event_name }}",
+        "PR_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+        "PR_HEAD_SHA": "${{ github.event.pull_request.head.sha }}",
+        "PUSH_BEFORE_SHA": "${{ github.event.before }}",
+        "PUSH_AFTER_SHA": "${{ github.event.after }}",
+    }
+    # Only replace the uv command boundary; execute the actual branch logic.
+    uv = tmp_path / "uv"
+    uv.write_text(f"#!{sys.executable}\n" + '''
+import json
+import os
+from pathlib import Path
+import sys
+
+args = sys.argv[1:]
+assert args[:3] == ["run", "--no-sources", "python"]
+if args[3] == "scripts/ci/detect_touched_domains.py":
+    Path(os.environ["DETECTOR_ARGS"]).write_text(json.dumps(args[4:]))
+    print(os.environ["DETECTOR_MATRIX"])
+else:
+    assert args[3] == "-c"
+    os.execv(sys.executable, [sys.executable, *args[3:]])
+''', encoding="utf-8")
+    uv.chmod(0o755)
+    matrix = json.dumps({"include": domains}, separators=(",", ":"))
+    arguments = tmp_path / "arguments.json"
+    output = tmp_path / "output"
+    environment = {
+        **os.environ,
+        "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
+        "EVENT_NAME": event,
+        "PR_BASE_SHA": "pr-base", "PR_HEAD_SHA": "pr-head",
+        "PUSH_BEFORE_SHA": "push-before", "PUSH_AFTER_SHA": "push-after",
+        "DETECTOR_ARGS": str(arguments), "DETECTOR_MATRIX": matrix,
+        "GITHUB_OUTPUT": str(output),
+    }
+    subprocess.run(["bash", "-e", "-o", "pipefail", "-c", detect["run"]],
+                   env=environment, check=True, capture_output=True, text=True)
+    expected = ["--mode", "full"]
+    if event == "pull_request":
+        expected = ["--mode", "touched", "--base", "pr-base", "--head", "pr-head"]
+    elif event == "push":
+        expected = ["--mode", "touched", "--base", "push-before", "--head", "push-after",
+                    "--on-missing-base", "full"]
+    expected += ["--domains-file", "tests/DOMAINS.md", "--output-format", "json-matrix"]
+    assert json.loads(arguments.read_text()) == expected
+    assert output.read_text().splitlines() == [
+        f"matrix={matrix}", f"has_domains={str(bool(domains)).lower()}",
     ]
-    assert concurrency["cancel-in-progress"] is False
 
 
 def test_full_sweep_bounds_each_shard() -> None:

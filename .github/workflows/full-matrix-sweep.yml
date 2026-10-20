@@ -5,9 +5,10 @@
 # green indefinitely. This workflow is the counterweight: it runs EVERY domain
 # shard, ignoring touched-domain detection entirely, on
 #
-#   * every push to `main`  -> main's green is earned, not assumed
 #   * a nightly cron        -> drift is caught within a day even without merges
 #   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+#
+# Main pushes retain touched-domain checks in `Quality Gates by Domain`.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
@@ -16,8 +17,6 @@
 name: Full Matrix Sweep
 
 "on":
-  push:
-    branches: [main]
   schedule:
     - cron: "17 7 * * *"
   workflow_dispatch:
@@ -27,14 +26,14 @@ permissions:
   actions: read
 
 concurrency:
-  # Each sweep keeps a separate group because cancelled runs publish no baseline.
-  group: full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}
-  cancel-in-progress: false
+  group: full-matrix-sweep-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   full-matrix:
     name: Build full shard matrix
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       total: ${{ steps.matrix.outputs.total }}
@@ -186,6 +185,7 @@ jobs:
       issues: write
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Summarize shard results
         continue-on-error: true
