@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Render only reviewed forecast series; no solver imports or recomputation.
 
 The SVG scaling follows installation_envelope_dashboard.drawChart. Input paths
@@ -14,11 +17,13 @@ CRITERIA = ('Acceptance criteria come from a workbook whose applicability is '
             'unresolved; alert levels are provisional.')
 
 
-def digest(raw):
+def digest(raw: bytes) -> str:
+    """Return the raw-byte SHA-256 digest."""
     return hashlib.sha256(raw).hexdigest()
 
 
-def chart(channel, now):
+def chart(channel: dict, now: float) -> str:
+    """Render the reviewed history and forecast with shared axis scaling."""
     history, forecast = channel['history'], channel['forecast']
     assert history['times'][-1] == now
     assert forecast['times'][0] > now
@@ -30,8 +35,13 @@ def chart(channel, now):
     pad = max((high - low) * .12, .01)
     low, high = low - pad, high + pad
     start, end = history['times'][0], forecast['times'][-1]
-    x = lambda t: 65 + (t - start) / (end - start) * 915
-    y = lambda v: 245 - (v - low) / (high - low) * 215
+
+    def x(t: float) -> float:
+        return float(65 + (t - start) / (end - start) * 915)
+
+    def y(v: float) -> float:
+        return float(245 - (v - low) / (high - low) * 215)
+
     elements = []
     for series, color in ((history, '#173e56'), (forecast, '#147fac')):
         assert len(series['times']) == len(series['values'])
@@ -51,7 +61,8 @@ def chart(channel, now):
             + ''.join(elements) + '</svg>')
 
 
-def render(payload, config):
+def render(payload: dict, config: dict) -> str:
+    """Render the selected scenario without recomputing its forecast values."""
     # The reviewed alert demonstration is the scenario with the largest Hs.
     selected = max(config['scenarios'], key=lambda row: row['hs_m'])
     scenario, = [s for s in payload['demo']['scenarios']
@@ -64,7 +75,7 @@ def render(payload, config):
                        ('label', 'units', 'history', 'forecast', 'assumed_limit')}
             figures.append(chart(channel, frame['now_s']))
             if channel['assumed_limit'] is not None:
-                figures.append(f'<p>Provisional load limit: {channel["assumed_limit"]} '
+                figures.append(f'<p>Provisional load limit: {channel["assumed_limit"]:.3f} '
                                f'{escape(channel["units"])}.</p>')
             if 'exceedance' in source:
                 e = source['exceedance']
@@ -73,7 +84,7 @@ def render(payload, config):
                 assert e['alert_probability'] == config['exceedance']['alert_probability']
                 assert e['horizon_s'] == channel['forecast']['times'][-1] - frame['now_s']
                 figures.append('<p>Provisional exceedance probability: '
-                               f'{e["window_probability"]}; alert threshold: {e["alert_probability"]}; '
+                               f'{e["window_probability"]:.3f}; alert threshold: {e["alert_probability"]:.3f}; '
                                f'alert: {str(e["alert"]).lower()}. Calibration windows: {e["calibration_windows"]}.</p>')
             channels.append(channel)
         frames.append({'now_s': frame['now_s'], 'channels': channels})
@@ -107,7 +118,8 @@ wave-preview forecast, withheld truth or full envelope dataset is published.</fo
 '''
 
 
-def build(payload_path, config_path, output, scan_path):
+def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) -> None:
+    """Validate reviewed inputs and write the scanned page with its manifest."""
     raw, config_raw = payload_path.read_bytes(), config_path.read_bytes()
     payload, config = json.loads(raw), json.loads(config_raw)
     if digest(config_raw) != payload['provenance']['demo_config']['sha256']:
