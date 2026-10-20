@@ -703,6 +703,10 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_seakeeping
   - module: vessel_stability_screening
+    submodules:
+      vessel_stability_screening:
+        agent_pack: src/digitalmodel/vessel_stability_screening/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/vessel_stability_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/vessel-stability-screening.md
