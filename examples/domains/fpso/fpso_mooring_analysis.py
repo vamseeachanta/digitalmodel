@@ -75,6 +75,8 @@ from digitalmodel.marine_ops.marine_engineering.hydrodynamic_coefficients import
     load_sample_coefficients,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def setup_environment():
     """Set up output directory and plotting style."""
@@ -176,9 +178,9 @@ def define_environmental_conditions():
     print(f"  Heading:            {current_heading:.0f}°")
 
     # Calculate wave spectrum statistics
-    m0 = np.trapz(spectrum, frequencies)
-    m1 = np.trapz(frequencies * spectrum, frequencies)
-    m2 = np.trapz(frequencies**2 * spectrum, frequencies)
+    m0 = _trapezoid(spectrum, frequencies)
+    m1 = _trapezoid(frequencies * spectrum, frequencies)
+    m2 = _trapezoid(frequencies**2 * spectrum, frequencies)
     Hs_calc = 4 * np.sqrt(m0)
     Tz_calc = 2 * np.pi * np.sqrt(m0 / m2)
 

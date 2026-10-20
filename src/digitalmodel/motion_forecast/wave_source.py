@@ -17,6 +17,8 @@ import numpy as np
 
 from .models import WaveComponent, WaveForecast
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def jonswap_spectrum(
     omega: np.ndarray, hs: float, tp: float, gamma: float = 3.3
@@ -39,8 +41,7 @@ def jonswap_spectrum(
         s = pm * gamma**r
     s = np.where(np.isfinite(s) & (omega > 0), s, 0.0)
     # renormalise to the requested Hs
-    _trapz = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
-    m0 = float(_trapz(s, omega))
+    m0 = float(_trapezoid(s, omega))
     if m0 > 0:
         s = s * (hs / (4.0 * np.sqrt(m0))) ** 2
     return s

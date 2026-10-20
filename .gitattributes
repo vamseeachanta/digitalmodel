@@ -111,3 +111,6 @@ docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
 # Preserve the hash-bound forecast page and its LF manifest on every checkout.
 docs/api/installation/installation-forecast.html -text
 docs/api/installation/installation-forecast.manifest.json text eol=lf
+
+# Preserve manifest-bound riser database fingerprints across checkout settings.
+data/riser_database/** text eol=lf
