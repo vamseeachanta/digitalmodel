@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CI test registration</title>
+    <style>
+      body { font: 1rem/1.6 system-ui, sans-serif; max-width: 60rem; margin: 3rem auto; padding: 0 1rem; color: #192b38; }
+      pre { padding: 1rem; background: #eef3f6; overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { text-align: left; border-bottom: 1px solid #c8d4dd; padding: .5rem; }
+      caption { caption-side: bottom; text-align: left; }
+    </style>
+  </head>
+  <body>
+    <h1>CI test registration</h1>
+    <p>
+      The registration audit detects test files that lack documented ownership,
+      gate metadata, configured pytest arguments or touched-domain selection.
+      Existing defects and collection exclusions remain visible as exact ledger
+      entries. Passing the audit establishes enrollment consistency against that
+      ledger; it does not establish that the tests passed or were collected.
+    </p>
+    <h2>Revision history</h2>
+    <table>
+      <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+      <tbody><tr><td>Initial</td><td>2026-10-20</td><td>Document the registration invariant and a worked omission example to prevent new paths from escaping explicit commands.</td></tr></tbody>
+      <caption>Table 1. Guide revision history.</caption>
+    </table>
+    <h2>Run the audit</h2>
+    <pre>uv run --no-project --with pyyaml==6.0.2 python scripts/ci/check_test_registration.py</pre>
+    <p>
+      The required <code>ci-harness-tests</code> job runs this command independently
+      of the domain matrix, followed by the regression tests. No test module or
+      conftest is imported by the audit. Configuration is read from the same
+      <code>.claude/quality-gates.yaml</code> commands consumed by the domain workflow.
+    </p>
+    <h2>Method and sources</h2>
+    <ol>
+      <li>Discover Python files beneath <code>tests/</code> using the filename patterns in <code>pytest.ini</code>, including files suppressed by collection policy.</li>
+      <li>Resolve the most specific matching ownership root from <code>tests/DOMAINS.md</code>, respecting the explicit overrides in <code>scripts/ci/detect_touched_domains.py</code>.</li>
+      <li>Require an enabled, blocking gate whose metadata and positional pytest roots cover the file. Parse ignores separately from positional arguments; a path appearing as an ignore value is not an execution root.</li>
+      <li>Account for <code>norecursedirs</code>, supported <code>addopts</code>, declarative <code>collect_ignore</code> and <code>collect_ignore_glob</code>. Read conftests with AST rather than executing them.</li>
+      <li>Check that touched-domain selection includes the collecting domain. A detector exemption requires an explicit, unconditional invocation in the independent harness.</li>
+      <li>Subtract only exact findings in <code>config/ci/test-registration-exceptions.json</code>. Reject new findings, empty reasons and stale entries.</li>
+    </ol>
+    <p>
+      The executable sources are <code>scripts/ci/check_test_registration.py</code>
+      and <code>scripts/ci/detect_touched_domains.py</code>. Command consumption and
+      independent execution are defined in
+      <code>.github/workflows/quality-gates-by-domain.yml</code>. Expected regression
+      results are derived from explicit fixture membership in
+      <code>tests/scripts/test_test_registration.py</code>; no engineering equations
+      or standards-derived constants are used.
+    </p>
+    <h2>Worked example: a new sibling is omitted</h2>
+    <p>The input initially contains this registration:</p>
+    <pre>Discovered file: tests/example/test_example.py
+Documented domain root: example → tests/example/
+Gate test_roots: [tests/example/]
+Gate command: python -m pytest tests/example/test_example.py</pre>
+    <p>
+      A new file <code>tests/example/test_sibling.py</code> is added. Both files
+      match the documented and metadata directory root. The literal command
+      names only the original file. The independent set calculation is:
+    </p>
+    <pre>Discovered = {test_example.py, test_sibling.py}
+Commanded = {test_example.py}
+Discovered minus Commanded = {test_sibling.py}</pre>
+    <p>The answer is a failing audit with this finding:</p>
+    <pre>missing-command|example|tests/example/test_sibling.py</pre>
+    <p>
+      Changing the command to <code>python -m pytest tests/example/</code> covers
+      both files. An existing exception for the original file cannot acknowledge
+      the new sibling. The regression
+      <code>test_existing_directory_cannot_hide_new_undispatched_file</code>
+      implements this example without importing either fixture file.
+    </p>
+    <h2>Existing debt and intentional exclusions</h2>
+    <p>
+      Each ledger key has the form <code>kind|domain|repository-relative-path</code>.
+      Its nonempty reason states the source of the existing boundary or gap and
+      the unresolved work. Entries acknowledge defects; they do not suppress test
+      execution, repair commands or establish test readiness. New files in an
+      excluded directory require their own reviewed disposition. Removing a gap
+      also requires removing the corresponding stale ledger entry.
+    </p>
+    <p>
+      Existing command and metadata omissions remain tracked under issue 2083.
+      Existing collection-policy debt remains associated with issue 1923. The
+      prior solver-smoke registration case from issue 2082 remains covered by
+      its focused regression. The existing gate configuration and collection
+      exclusions are preserved by this change.
+    </p>
+    <h2>Limits</h2>
+    <p>
+      The scope is file enrollment beneath <code>tests/</code>, not repository-wide
+      test coverage. Test functions, markers, runtime skips, plugin behavior and
+      tests outside that tree are not qualified. Static analysis supports the
+      repository's literal Python or uv pytest commands and declarative
+      exclusions; unsupported shell composition, selection expressions and
+      dynamic collection policy fail the audit. Command ignores are treated
+      conservatively as exclusions even where an explicit pytest argument could
+      override them. Independent review and hosted execution remain separate
+      acceptance steps.
+    </p>
+  </body>
+</html>
