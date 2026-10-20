@@ -129,6 +129,14 @@ reports `RESOLVED_DRAWS_ONLY` if any draws are unresolved, otherwise
 `ALL_DRAWS_RESOLVED`. `quantile_basis` explicitly labels the conditional
 population. These percentiles do not estimate unconditional collapse quantiles;
 resolution can depend on the input realization and bias the retained subset.
+The collapse band's `bias_direction` is `unknown (unresolved draws)` when any
+draw is unresolved. Numerical misses can omit a sub-fracture collapse root
+below the retained draws and raise the resolved-only percentiles. Downward
+bias toward a lower mud-weight floor is a conditional risk if the omitted
+draws have higher collapse pressures, including pressures above their own
+fracture-initiation ceiling. A supplied fraction limit does not correct
+selection bias. When every draw resolves, `bias_direction` is
+`none (all draws resolved)`; this describes resolution selection only.
 
 Above the supplied limit, or with no resolved draws, the band is
 `INDETERMINATE` with null percentiles and an explicit `indeterminate_reason`.
@@ -137,6 +145,9 @@ If unresolved draws exist but the limit is omitted or null, the band is also
 All-resolved ensembles retain their percentiles without a supplied limit.
 Counts, fraction and the supplied limit remain visible for indeterminate bands.
 Other curves and the ceiling retain the requirement that every draw resolve.
+Their `unresolved_fraction_check` is `ALL_DRAWS_REQUIRED`, and any unresolved
+draw gives `indeterminate_reason: ALL_DRAWS_REQUIRED`; the collapse fraction
+limit does not apply to them.
 
 Interpolation follows *Sample Quantiles in Statistical Packages* (1996),
 equation (1) and Definition 7, pages 361 and 363,

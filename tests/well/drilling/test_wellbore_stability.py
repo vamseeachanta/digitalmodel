@@ -263,6 +263,9 @@ def test_workflow_four_curves_bands_polar_and_validation_labels(tmp_path):
                 assert band["p50_emw_ppg"] == pytest.approx(
                     band["p50_psi"] / (0.052 * row["tvd_ft"])
                 )
+        assert (
+            row["curves"]["collapse"]["bias_direction"] == "none (all draws resolved)"
+        )
         floor = max(
             row["curves"]["pore"]["p90_psi"], row["curves"]["collapse"]["p90_psi"]
         )
@@ -283,6 +286,7 @@ def test_uncertainty_does_not_discard_failed_draws(tmp_path):
     out = run_workflow(cfg, tmp_path)
     row = out["window"][0]
     assert row["curves"]["collapse"]["p50_psi"] is None
+    assert row["curves"]["collapse"]["bias_direction"] == "unknown (unresolved draws)"
     assert row["failed_draws"] == 8
     assert row["conservative_window"]["feasible"] is False
 
@@ -297,6 +301,7 @@ def test_partially_unresolved_ensemble_without_limit_is_indeterminate(tmp_path):
     assert row["curves"]["collapse"]["p50_psi"] is None
     assert row["curves"]["collapse"]["numerical_status"] == "INDETERMINATE"
     assert row["curves"]["collapse"]["unresolved_fraction_check"] == "NOT_EVALUATED"
+    assert row["curves"]["collapse"]["bias_direction"] == "unknown (unresolved draws)"
     assert row["curves"]["fracture_initiation"]["p50_psi"] == pytest.approx(4320)
     assert row["conservative_window"]["feasible"] is False
 
@@ -356,8 +361,11 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     cfg["ensemble"] = {"samples": 4, "sigma": {}, "max_unresolved_fraction": 0.25}
     cfg["polar"] = {"inclinations_deg": []}
     pressures = iter([100, None, 150, 200, 150])
+    calls = []
 
     def scripted_bounds(*args, **kwargs):
+        calls.append(args[0])
+        assert len(calls) <= 5, "expected four draws followed by one nominal call"
         pressure = next(pressures)
         return {
             "collapse": {"pressure_psi": pressure},
@@ -370,14 +378,24 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
         "digitalmodel.well.drilling.wellbore_stability.pressure_bounds", scripted_bounds
     )
     result = run_workflow(cfg, tmp_path)
+    assert len(calls) == 5, "expected four draws followed by one nominal call"
     row = result["window"][0]
     band = row["curves"]["collapse"]
+    assert band["bias_direction"] == "unknown (unresolved draws)"
+    policy = result["uncertainty"]["failed_draw_policy"]
+    assert "bias direction is unknown" in policy
+    assert (
+        "downward bias is a risk if omitted draws have higher collapse pressures"
+        in policy
+    )
     assert [band[name + "_psi"] for name in ("p10", "p50", "p90")] == pytest.approx(
         [110, 150, 190]
     )
     assert band["numerical_status"] == "RESOLVED_DRAWS_ONLY"
     assert band["unresolved_draws"] == row["failed_draws"] == 1
     assert band["unresolved_fraction"] == 0.25
+    for name in ("pore", "fracture_initiation", "minimum_horizontal_stress"):
+        assert row["curves"][name]["unresolved_fraction_check"] == "ALL_DRAWS_REQUIRED"
     assert row["conservative_window"]["low_psi"] is None
     assert row["conservative_window"]["high_psi"] is None
     assert row["conservative_window"]["feasible"] is False
@@ -386,6 +404,84 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     assert result["uncertainty"]["max_unresolved_fraction"] == 0.25
     assert json.loads((tmp_path / "summary.json").read_text()) == result
     assert json.loads((tmp_path / "window.json").read_text()) == result["window"]
+
+
+def test_numerical_miss_can_raise_resolved_only_collapse_median(tmp_path, monkeypatch):
+    """Synthetic hand oracle: a missed sub-fracture root can raise the median.
+
+    For the narrow case, at theta=90 degrees and dP=1013 psi, the axial,
+    hoop and radial stresses are 1005, 2030-1013=1017 and 1013 psi.
+    With zero friction, max-min=12=UCS; collapse is 1000+1013=2013 psi.
+    The minimum hoop term gives fracture at 1000+1990=2990 psi.
+    For the isotropic case q=3 and hoop=8000-dP, so collapse satisfies
+    8000-dP=1000+3*dP, giving Pmud=1000+1750=2750 psi.
+    The full two-draw median is (2013+2750)/2=2381.5 psi; excluding the
+    lower, numerically missed root raises it to 2750 psi. The fraction
+    limit 0.5 is an arithmetic fixture, not an engineering acceptance value.
+    """
+    narrow = reference(
+        sv_psi=2005,
+        shmax_psi=2010,
+        shmin_psi=2000,
+        pore_pressure_psi=1000,
+        ucs_psi=12,
+        friction_angle_deg=0,
+        poisson_ratio=0,
+        tensile_strength_psi=0,
+    )
+    isotropic = replace(
+        narrow,
+        sv_psi=5000,
+        shmax_psi=5000,
+        shmin_psi=5000,
+        ucs_psi=1000,
+        friction_angle_deg=30,
+    )
+    cfg = yaml.safe_load(INPUT.read_text())
+    cfg["profile"] = [cfg["profile"][0]]
+    cfg["ensemble"] = {"samples": 2, "sigma": {}, "max_unresolved_fraction": 0.5}
+    cfg["polar"] = {"inclinations_deg": []}
+    cfg["screening"] = {}
+    cases = iter([narrow, isotropic, isotropic])
+    sampled = []
+
+    def sampled_bounds(*args, **kwargs):
+        result = pressure_bounds(next(cases), **kwargs)
+        sampled.append(result)
+        return result
+
+    monkeypatch.setattr(
+        "digitalmodel.well.drilling.wellbore_stability.pressure_bounds", sampled_bounds
+    )
+    coarse = run_workflow(cfg, tmp_path / "coarse")
+    assert len(sampled) == 3
+    assert sampled[0]["collapse"]["pressure_psi"] is None
+    assert sampled[0]["collapse"]["numerical_status"] == "NO_FEASIBLE_SAMPLED_PRESSURE"
+    cases = iter([narrow, isotropic, isotropic])
+    sampled = []
+    cfg["screening"]["pressure_samples"] = 2049
+    refined = run_workflow(cfg, tmp_path / "refined")
+    assert len(sampled) == 3
+    recovered = sampled[0]
+    assert recovered["collapse"]["pressure_psi"] == pytest.approx(2013, abs=1e-6)
+    assert recovered["fracture_initiation"]["pressure_psi"] == pytest.approx(2990)
+    coarse_row = coarse["window"][0]
+    refined_row = refined["window"][0]
+    coarse_band = coarse_row["curves"]["collapse"]
+    refined_band = refined_row["curves"]["collapse"]
+    assert coarse_band["unresolved_draws"] == 1
+    assert coarse_band["numerical_status"] == "RESOLVED_DRAWS_ONLY"
+    assert coarse_band["p50_psi"] == pytest.approx(2750, abs=1e-6)
+    assert refined_band["unresolved_draws"] == 0
+    assert refined_band["p50_psi"] == pytest.approx(2381.5, abs=1e-6)
+    assert coarse_band["p50_psi"] > refined_band["p50_psi"]
+    assert coarse_band["bias_direction"] == "unknown (unresolved draws)"
+    assert refined_band["bias_direction"] == "none (all draws resolved)"
+    assert coarse_row["conservative_window"]["low_psi"] is None
+    assert coarse_row["conservative_window"]["feasible"] is False
+    assert coarse["screening_only"] is True
+    assert coarse["validation_status"] == "NOT_VALIDATED"
+    assert json.loads((tmp_path / "coarse" / "summary.json").read_text()) == coarse
 
 
 @pytest.mark.parametrize("limit", [-0.1, 1.1, math.nan, math.inf, "0.25", True])
@@ -464,3 +560,13 @@ def test_cli_runs_without_engine_or_licensed_solver(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert (tmp_path / "summary.json").is_file()
+
+
+@pytest.mark.parametrize("values", [[100, 150], [100, None], [None, None]])
+def test_all_draws_required_band_reports_its_policy(values):
+    band = _band(values, 1000, require_all_draws=True)
+    assert band["unresolved_fraction_check"] == "ALL_DRAWS_REQUIRED"
+    assert band["indeterminate_reason"] == (
+        "ALL_DRAWS_REQUIRED" if None in values else None
+    )
+    assert band["p50_psi"] == (None if None in values else 125)

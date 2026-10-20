@@ -346,7 +346,7 @@ def pressure_bounds(
     }
 
 
-def _validate_unresolved_fraction_limit(limit):
+def _validate_unresolved_fraction_limit(limit: float | None) -> None:
     # A fraction is bounded by zero and one by definition. No engineering
     # acceptance limit is supplied here: it must come from the caller.
     if limit is not None and (
@@ -358,7 +358,13 @@ def _validate_unresolved_fraction_limit(limit):
         raise ValueError("max_unresolved_fraction must be finite and in [0, 1]")
 
 
-def _band(values, tvd, *, max_unresolved_fraction=None):
+def _band(
+    values: list[float | None],
+    tvd: float,
+    *,
+    max_unresolved_fraction: float | None = None,
+    require_all_draws: bool = False,
+) -> dict:
     """Conditional empirical band; unresolved-draw policy is an explicit input."""
     _validate_unresolved_fraction_limit(max_unresolved_fraction)
     if not values:
@@ -367,7 +373,9 @@ def _band(values, tvd, *, max_unresolved_fraction=None):
     unresolved = len(values) - len(resolved)
     fraction = unresolved / len(values)
     reason = None
-    if not resolved:
+    if require_all_draws and unresolved:
+        reason = "ALL_DRAWS_REQUIRED"
+    elif not resolved:
         reason = "NO_RESOLVED_DRAWS"
     elif unresolved:
         if max_unresolved_fraction is None:
@@ -396,7 +404,9 @@ def _band(values, tvd, *, max_unresolved_fraction=None):
         "unresolved_fraction": fraction,
         "max_unresolved_fraction": max_unresolved_fraction,
         "unresolved_fraction_check": (
-            "NOT_EVALUATED" if max_unresolved_fraction is None else "EVALUATED"
+            "ALL_DRAWS_REQUIRED"
+            if require_all_draws
+            else ("NOT_EVALUATED" if max_unresolved_fraction is None else "EVALUATED")
         ),
     }
     for name, value in zip(("p10", "p50", "p90"), quantiles):
@@ -459,17 +469,28 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             draws.append(draw)
             bounds.append(pressure_bounds(draw, **controls))
         curves = {
-            "pore": _band([c.pore_pressure_psi for c in draws], tvd),
+            "pore": _band(
+                [c.pore_pressure_psi for c in draws], tvd, require_all_draws=True
+            ),
             "collapse": _band(
                 [b["collapse"]["pressure_psi"] for b in bounds],
                 tvd,
                 max_unresolved_fraction=unresolved_limit,
             ),
             "fracture_initiation": _band(
-                [b["fracture_initiation"]["pressure_psi"] for b in bounds], tvd
+                [b["fracture_initiation"]["pressure_psi"] for b in bounds],
+                tvd,
+                require_all_draws=True,
             ),
-            "minimum_horizontal_stress": _band([c.shmin_psi for c in draws], tvd),
+            "minimum_horizontal_stress": _band(
+                [c.shmin_psi for c in draws], tvd, require_all_draws=True
+            ),
         }
+        curves["collapse"]["bias_direction"] = (
+            "unknown (unresolved draws)"
+            if curves["collapse"]["unresolved_draws"]
+            else "none (all draws resolved)"
+        )
         failed = sum(b["collapse"]["pressure_psi"] is None for b in bounds)
         # Conditional collapse quantiles do not establish a joint window.
         low = (
@@ -479,7 +500,11 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
         )
         # Include the first shear interval's upper bound as well as the four
         # requested curves. Joint draw ceilings preserve competing upper limits.
-        upper = _band([b["conservative_ceiling_psi"] for b in bounds], tvd)
+        upper = _band(
+            [b["conservative_ceiling_psi"] for b in bounds],
+            tvd,
+            require_all_draws=True,
+        )
         high = upper["p10_psi"]
         window.append(
             {
@@ -552,6 +577,9 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             "max_unresolved_fraction": unresolved_limit,
             "failed_draw_policy": (
                 "collapse bands use resolved draws only within the supplied unresolved-fraction limit; "
+                "bias direction is unknown for unresolved draws; numerical misses can omit lower collapse pressures; "
+                "downward bias is a risk if omitted draws have higher collapse pressures; "
+                "a supplied fraction limit does not correct selection bias; "
                 "unresolved draws without a supplied limit, or no resolved draws, give an indeterminate band; "
                 "windows remain unavailable if any collapse or ceiling draw is unresolved; "
                 "invalid physical draws raise"
