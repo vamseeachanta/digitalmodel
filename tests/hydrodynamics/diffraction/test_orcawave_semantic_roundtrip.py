@@ -180,7 +180,8 @@ class TestOrcaWaveL03ShipBenchmarkRoundTrip:
             assert parsed.vessel.inertia.inertia_tensor[key] == pytest.approx(
                 expected, rel=1e-9
             )
-        assert parsed.vessel.external_damping[3][3] == pytest.approx(36010.0)
+        # Native example uses kN; canonical SI uses N (Data: Model / Units).
+        assert parsed.vessel.external_damping[3][3] == pytest.approx(36010000.0)
 
     def test_l03_generated_native_yaml_preserves_qtf_solve_intent(self, tmp_path: Path) -> None:
         """QTF min/max are native backend settings, not currently reverse-parsed.
