@@ -4,6 +4,7 @@ All fixture numbers are synthetic test inputs, not recommended design values.
 Expected values are derived below, independently of the implementation.
 """
 
+import csv
 from pathlib import Path
 
 import pytest
@@ -198,3 +199,28 @@ def test_actual_passing_symmetry_and_scaling(spec):
             assert y[key] == pytest.approx(4 * x[key], abs=1e-7)
     assert a[-1]["surge_n"] == pytest.approx(0, abs=1e-7)
     assert a[-1]["yaw_nm"] == pytest.approx(0, abs=1e-7)
+
+
+@pytest.mark.parametrize("times_s", [[0, 100, 200], [0, 100, 400]])
+def test_native_interval_covers_force_history(spec, tmp_path, times_s):
+    """Native start plus stage durations must cover every CSV sample.
+
+    Orcina General data: Analysis defines the default start as minus the first
+    stage duration. A custom ramp already built up before the start preserves
+    the prepared load magnitudes throughout the sampled interval.
+    """
+    from digitalmodel.hydrodynamics.berth_mooring import write_campaign
+
+    spec["sampling"]["times_s"] = times_s
+    manifest = write_campaign(spec, tmp_path)
+    for case in manifest["cases"]:
+        general = yaml.safe_load((tmp_path / case["model"]).read_text())["General"]
+        with (tmp_path / case["history"]).open(newline="") as stream:
+            times = [float(row["time_s"]) for row in csv.DictReader(stream)]
+        # Resolve the documented native default so the old model fails on its
+        # actual interval, rather than merely on the absence of a YAML key.
+        start = general.get("StartTime", -general["StageDuration"][0])
+        finish = start + sum(general["StageDuration"])
+        assert (start, finish) == (times[0], times[-1])
+        assert general["FirstStage"] == 1
+        assert general["RampStartTime"] < general["RampFinishTime"] < start

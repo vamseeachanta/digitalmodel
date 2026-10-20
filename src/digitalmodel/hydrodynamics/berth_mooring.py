@@ -309,12 +309,20 @@ def native_model(spec: dict) -> dict:
             link["SpringLength, SpringTension"] = item["length_force_kn"]
         links.append(link)
     hull = spec["moored"]
+    times = spec["sampling"]["times_s"]
+    time_step = spec["sampling"]["time_step_s"]
     return {
         "General": {
             "UnitsSystem": "SI",
             "DynamicsSolutionMethod": "Implicit time domain",
-            "ImplicitConstantTimeStep": spec["sampling"]["time_step_s"],
-            "StageDuration": [spec["sampling"]["times_s"][-1]],
+            "ImplicitConstantTimeStep": time_step,
+            "StartTime": times[0],
+            "FirstStage": 1,
+            "StageDuration": [times[-1] - times[0]],
+            # Orcina General data: Analysis: an already completed custom ramp
+            # preserves the CSV loads; no build-up is simulated in this model.
+            "RampStartTime": times[0] - 2 * time_step,
+            "RampFinishTime": times[0] - time_step,
         },
         # BIPM SI Brochure, 9th ed. (2019), SI prefixes: kilo=10^3.
         # OrcaFlex SI density is tonnes/m³, unlike the force calculation in kg/m³.
