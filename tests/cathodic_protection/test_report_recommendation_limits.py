@@ -1,13 +1,18 @@
 """FAIL advice distinguishes sizing evidence from monitoring evidence."""
 
 from copy import deepcopy
+import json
+from pathlib import Path
 
 import pytest
 
+from digitalmodel.cathodic_protection.report_adapters import anode_design_report
 from digitalmodel.cathodic_protection.report_recommendations import (
     conclusions_block,
     recommendation_block,
+    recommendation_caveats,
 )
+from digitalmodel.reporting import render_html
 
 
 def sizing_result():
@@ -145,3 +150,59 @@ def test_spatial_failure_conclusion_retains_cited_monitoring():
     assert "potential survey" in text
     assert "initial design quantity is NOT_EVALUATED" in text
     assert "Retrofit quantity and timing: NOT_EVALUATED" in text
+
+
+@pytest.mark.parametrize("missing_sizing", [False, True])
+@pytest.mark.parametrize("missing_routed_citations", [False, True])
+def test_rendered_monitoring_caveats_agree_with_available_criterion(
+    missing_sizing, missing_routed_citations
+):
+    fixture = (
+        Path(__file__).resolve().parents[1]
+        / "fixtures/reporting/cp_anode_design_result.json"
+    )
+    cfg = json.loads(fixture.read_text(encoding="utf-8"))
+    results = cfg["results"]
+    if missing_sizing:
+        del results["anode_requirements"]["total_mass_kg"]
+    if missing_routed_citations:
+        results["current_output_verification"].pop("citations", None)
+    before = deepcopy(cfg)
+
+    html = render_html(anode_design_report(cfg))
+
+    assert "potential survey" in html
+    assert "monitoring applicability are not evaluated" not in html
+    assert "Monitoring citation not held" not in html
+    assert "Monitoring interval and depletion action trigger are not evaluated" in html
+    if missing_sizing:
+        assert "Initial-design quantities are not evaluated" in html
+        assert "additional count:" not in html
+    assert cfg == before
+
+
+@pytest.mark.parametrize("edition", [None, "unsupported"])
+def test_monitoring_caveats_require_a_resolvable_edition_even_with_routed_citation(
+    edition,
+):
+    results = sizing_result()
+    results["edition"] = edition
+    results["status"] = {"result": "FAIL", "checks": {"mass": False}}
+    results["current_output_verification"]["citations"] = ["protective potential"]
+
+    caveats = " ".join(recommendation_caveats(results))
+
+    assert "Installed-structure monitoring is not evaluated" in caveats
+    assert "edition" in caveats
+    assert "Initial-design quantities are not evaluated" in caveats
+
+
+def test_unsupported_check_caveat_limits_only_initial_design_and_retrofit():
+    results = sizing_result()
+    results["status"] = {"result": "FAIL", "checks": {"spatial_protection": False}}
+
+    caveats = " ".join(recommendation_caveats(results))
+
+    assert "Initial-design and retrofit recommendations for additional check types" in caveats
+    assert "Recommendations for additional check types are not evaluated" not in caveats
+    assert "Installed-structure monitoring is not evaluated" not in caveats

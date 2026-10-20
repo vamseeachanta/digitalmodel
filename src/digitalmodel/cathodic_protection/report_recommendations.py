@@ -383,25 +383,26 @@ def recommendation_caveats(results: Mapping[str, Any]) -> list[str]:
         "the repository for these items in the selected route and edition.",
     ]
     try:
+        normalize_edition(str(results.get("edition")))
         _quantities(results)
     except (KeyError, TypeError, ValueError, OverflowError):
         caveats.append(
-            "Initial-design quantities and monitoring applicability are not evaluated: "
+            "Initial-design quantities are not evaluated: "
             "complete routed demands, capacities, checked and recommended counts, "
-            "and the applicable protection criterion are required."
+            "and the applicable edition are required."
         )
     unsupported = set(failed_keys(results)) - _CHECKS - {"overall_status"}
     if unsupported:
         caveats.append(
-            "Recommendations for additional check types are not evaluated: "
+            "Initial-design and retrofit recommendations for additional check types "
+            "are not evaluated: "
             "the applicable check method, quantities and governing citation are required."
         )
-    ver = _mapping(results.get("current_output_verification"))
-    if not any(
-        "protective potential" in str(item) for item in ver.get("citations") or []
-    ):
+    try:
+        protection_potential(normalize_edition(str(results.get("edition"))))
+    except (KeyError, TypeError, ValueError, OverflowError):
         caveats.append(
-            "Monitoring citation not held in the repository's routed citation list: "
-            "the selected edition's protection-potential citation is required."
+            "Installed-structure monitoring is not evaluated: the applicable edition "
+            "and its cited protection-potential criterion are required."
         )
     return caveats
