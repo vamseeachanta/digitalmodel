@@ -1394,3 +1394,31 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+def test_parametric_regressions_owned_and_executed_by_solver_smoke():
+    """The atlas evidence regressions must run in their assigned CI shard."""
+    root = SCRIPT.parents[2]
+    detector = load_detector_module()
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains(
+        ["tests/parametric/test_audit_fingerprint.py"], domains,
+    )
+    assert "solver-smoke" in {domain.name for domain in selected}
+    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    gate = gates["tests-solver-smoke"]
+    assert "tests/parametric/" in gate["test_roots"]
+    assert "tests/parametric/" in shlex.split(gate["command"])
+
+
+@pytest.mark.parametrize("workflow,job", [
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+])
+def test_atlas_history_is_available_in_domain_test_jobs(workflow, job):
+    """Both execution lanes must retain the recorded atlas source revisions."""
+    root = SCRIPT.parents[2]
+    config = yaml.safe_load((root / ".github/workflows" / workflow).read_text())
+    checkout = next(step for step in config["jobs"][job]["steps"]
+                    if step.get("uses", "").startswith("actions/checkout@"))
+    assert checkout.get("with", {}).get("fetch-depth") == 0
