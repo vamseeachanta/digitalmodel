@@ -60,6 +60,28 @@ def _nonnegative(**values: float) -> None:
             raise ValueError(f"{name} must be finite and nonnegative")
 
 
+def _liquid_choked_pressure_drop(
+    *, p_upstream: float, p_downstream: float, specific_gravity: float,
+    unit_constant: float, piping_factor: float, recovery_factor: float,
+    critical_pressure_ratio: float, vapor_pressure: float,
+) -> float:
+    """Validate liquid inputs and return the positive choking pressure drop."""
+    _positive(p_upstream=p_upstream, specific_gravity=specific_gravity,
+              unit_constant=unit_constant, piping_factor=piping_factor,
+              recovery_factor=recovery_factor,
+              critical_pressure_ratio=critical_pressure_ratio)
+    _nonnegative(p_downstream=p_downstream, vapor_pressure=vapor_pressure)
+    if p_downstream > p_upstream or vapor_pressure >= p_upstream:
+        raise ValueError("forward flow and a liquid inlet are required")
+    # Squared FLP/Fp: Handbook, 6th ed. (2023), §5.8.2, p. 113.
+    recovery_ratio = recovery_factor / piping_factor
+    limit = recovery_ratio * recovery_ratio * (
+        p_upstream - critical_pressure_ratio * vapor_pressure
+    )
+    _positive(choked_pressure_drop=limit)
+    return limit
+
+
 def liquid_capacity(
     *, coefficient: float, p_upstream: float, p_downstream: float,
     specific_gravity: float, unit_constant: float, piping_factor: float,
@@ -85,20 +107,13 @@ def liquid_capacity(
         ValueError: For invalid, reverse-flow or flashing-inlet inputs, or
             liquid arithmetic outside floating-point range.
     """
-    _positive(p_upstream=p_upstream, specific_gravity=specific_gravity,
-              unit_constant=unit_constant, piping_factor=piping_factor,
-              recovery_factor=recovery_factor,
-              critical_pressure_ratio=critical_pressure_ratio)
-    _nonnegative(coefficient=coefficient, p_downstream=p_downstream,
-                 vapor_pressure=vapor_pressure)
-    if p_downstream > p_upstream or vapor_pressure >= p_upstream:
-        raise ValueError("forward flow and a liquid inlet are required")
-    # Squared FLP/Fp: Handbook, 6th ed. (2023), §5.8.2, p. 113.
-    recovery_ratio = recovery_factor / piping_factor
-    limit = recovery_ratio * recovery_ratio * (
-        p_upstream - critical_pressure_ratio * vapor_pressure
+    _nonnegative(coefficient=coefficient)
+    limit = _liquid_choked_pressure_drop(
+        p_upstream=p_upstream, p_downstream=p_downstream,
+        specific_gravity=specific_gravity, unit_constant=unit_constant,
+        piping_factor=piping_factor, recovery_factor=recovery_factor,
+        critical_pressure_ratio=critical_pressure_ratio, vapor_pressure=vapor_pressure,
     )
-    _positive(choked_pressure_drop=limit)
     drop = p_upstream - p_downstream
     effective = min(drop, limit)
     rate = unit_constant * piping_factor * coefficient * math.sqrt(
@@ -126,11 +141,12 @@ def required_liquid_coefficient(*, rate: float, **inputs: float) -> float:
             capacity/coefficient arithmetic outside floating-point range.
     """
     _nonnegative(rate=rate)
-    # Unit C for linear inversion: Handbook, 6th ed. (2023), §5.8.3.
-    unit = liquid_capacity(coefficient=1.0, **inputs).rate
     # True zero demand implies zero C (same relation); not an acceptance limit.
     if rate == 0:
+        _liquid_choked_pressure_drop(**inputs)
         return 0.0
+    # Unit C for linear inversion: Handbook, 6th ed. (2023), §5.8.3.
+    unit = liquid_capacity(coefficient=1.0, **inputs).rate
     if unit == 0:
         raise ValueError("positive flow requires positive pressure drop")
     coefficient = rate / unit

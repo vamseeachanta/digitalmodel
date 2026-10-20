@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Liquid sizing qualification against published and independent arithmetic.
 
 Source: Emerson/Fisher, Control Valve Handbook, sixth edition (August 2023),
@@ -127,6 +130,59 @@ def test_true_zero_capacity_and_demand():
     assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
     with pytest.raises(ValueError, match="positive pressure drop"):
         required_liquid_coefficient(rate=1.0, **inputs)
+
+
+@pytest.mark.parametrize("downstream", [0.0, 100.0])
+@pytest.mark.parametrize(
+    "changes",
+    [dict(unit_constant=1e308),
+     dict(unit_constant=1e-200, specific_gravity=1e300)],
+    ids=["unit-capacity-overflow", "unit-capacity-underflow"],
+)
+def test_zero_demand_does_not_require_representable_unit_capacity(changes, downstream):
+    """Zero demand requires C=0, even when unit capacity is out of range.
+
+    At positive drop the constructed cases have unit capacities 5e308 and
+    5e-350; at zero drop both are exactly zero. None changes zero demand.
+    """
+    inputs = liquid_inputs(p_downstream=downstream, **changes)
+    assert liquid_capacity(coefficient=0.0, **inputs).rate == 0.0
+    assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
+
+
+@pytest.mark.parametrize(
+    "changes, error",
+    [(dict(unit_constant=1e308), "capacity_rate"),
+     (dict(unit_constant=1e-200, specific_gravity=1e300), "underflow")],
+)
+def test_positive_demand_still_rejects_unrepresentable_unit_capacity(changes, error):
+    """Positive demand still needs a finite, positive unit capacity."""
+    with pytest.raises(ValueError, match=error):
+        required_liquid_coefficient(rate=1.0, **liquid_inputs(**changes))
+
+
+@pytest.mark.parametrize("value", [-1.0, float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("field", list(liquid_inputs()))
+def test_zero_demand_rejects_invalid_liquid_inputs(field, value):
+    """Zero demand does not accept negative or non-finite physical inputs."""
+    with pytest.raises(ValueError):
+        required_liquid_coefficient(rate=0.0, **liquid_inputs(**{field: value}))
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [dict(p_upstream=0.0), dict(specific_gravity=0.0),
+     dict(unit_constant=0.0), dict(piping_factor=0.0),
+     dict(recovery_factor=0.0), dict(critical_pressure_ratio=0.0),
+     dict(p_downstream=101.0), dict(vapor_pressure=100.0),
+     dict(vapor_pressure=50.0, critical_pressure_ratio=2.0),
+     dict(vapor_pressure=50.0, critical_pressure_ratio=3.0),
+     dict(recovery_factor=1e200), dict(recovery_factor=1e-200)],
+)
+def test_zero_demand_preserves_liquid_domain_and_choking_validation(changes):
+    """Retain factor, forward-flow, inlet and choking-range rejection."""
+    with pytest.raises(ValueError):
+        required_liquid_coefficient(rate=0.0, **liquid_inputs(**changes))
 
 
 @pytest.mark.parametrize("value", [-1.0, float("nan"), float("inf"), -float("inf")])
