@@ -15,6 +15,9 @@ The roots are those named in the issue: `library/model_library`,
 `docs/domains/orcaflex`. Enumeration is sorted and deduplicated by relative path.
 Campaign specifications elsewhere are outside this inventory. Counts are
 calculated from the current checkout, rather than copied from a historical audit.
+Every named root must exist as a directory; a missing root stops inventory.
+The manifest's `root_counts` records the specification count for every root,
+including zero for an existing empty directory.
 
 Supply a target solver version selected for the later native batch. This is a
 requested version, not a claim that the version is installed or has been used.
@@ -46,7 +49,8 @@ Readback compares bundle digests before parsing generated YAML, and recursive
 YAML aliases are traversed once per container.
 
 The existing `ModularModelGenerator.generate` method is used without diagnostic
-validation overrides. Per-case schema, validation and file errors are retained
+validation overrides. Per-case generator errors, including collection collisions,
+and schema, validation and file errors are retained
 as `FAIL`, with the exception type and message (root locations are replaced with
 role markers). Remaining independent cases continue. Alternate schemas detected
 by the discriminators in `scripts/audit_all_specs.py::_is_different_schema` are
@@ -67,7 +71,7 @@ records with these fields:
 | `case_id` | Exact inventory identity; unknown and duplicate cases are rejected. |
 | `source_sha256`, `files` | Exact copies of the manifest source digest and full generated-file digest map. |
 | `solver_version` | Exact requested manifest version; mixed versions are rejected. |
-| `api_version` | Nonempty version actually recorded by the native runner. |
+| `api_version` | Nonempty string containing the version actually recorded by the native runner. |
 | `started_at`, `finished_at` | Timezone-aware ISO timestamps, ordered by time. |
 | `load`, `statics` | Objects described below; these remain separate outcomes. |
 | `evidence` | Nonempty map from relative native evidence paths to SHA-256 values, checked against retained files. |
@@ -83,6 +87,8 @@ require `error: null`. Statics cannot be attempted unless load passed: after a
 load failure, statics remains `NOT_ATTEMPTED`. Missing case records stay
 `NOT_EVALUATED`; they never become passes. Evidence hashes bind supplied bytes,
 not authenticity, convergence interpretation or scientific correctness.
+Non-string API versions and non-object stages are rejected with a controlled
+CLI error before any reconciled manifest is written.
 
 After the original generated bundle and native evidence have been retained,
 reconcile without regenerating inputs:
@@ -105,12 +111,15 @@ back after saving. Reports escape supplied text, distinguish recorded outcomes
 from claims and place revision history directly after the summary. Each report
 is an initial snapshot; an issued revision must preserve its previous revision
 history under the document issuance workflow.
+The summary labels the requested solver version and reports every status count
+for generation, load and statics, including zero counts.
 
 ## Worked example: identity and digest calculation
 
 Inputs: two explicitly synthetic files, `library/templates/a/spec.yml` and
 `library/model_library/b/spec.yml`, each containing exactly the three UTF-8 bytes
 `abc`, without a newline. These are inventory fixtures, not valid model inputs.
+All named root directories exist; the remaining roots contain no specifications.
 
 Method: sort the relative paths and compute SHA-256 over the raw bytes. The
 independent reference is the NIST **Secure Hash Algorithm, Message Digest Length

@@ -26,6 +26,8 @@ import attestation_manifest as am
 @pytest.fixture
 def domain(tmp_path):
     root = tmp_path / "domain"
+    for folder in am.SPEC_ROOTS:
+        (root / folder).mkdir(parents=True, exist_ok=True)
     for name in ("library/templates/a", "library/model_library/b"):
         p = root / name / "spec.yml"
         p.parent.mkdir(parents=True)
@@ -39,16 +41,57 @@ def test_inventory_identity_digest_and_planned_output(domain):
         "library/model_library/b/spec.yml",
         "library/templates/a/spec.yml",
     ]
+    assert [c["master"] for c in manifest["cases"]] == [
+        "library/model_library/b/master.yml",
+        "library/templates/a/master.yml",
+    ]
     for case in manifest["cases"]:
         assert case["source_sha256"] == (
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         )
-        assert case["master"] == str(Path(case["case_id"]).with_name("master.yml"))
         assert case["generation"]["status"] == "NOT_ATTEMPTED"
         assert case["load"]["status"] == case["statics"]["status"] == "NOT_EVALUATED"
     assert am.dumps(manifest) == am.dumps(am.build_manifest(domain, "test-version"))
     (domain / "library/templates/a/spec.yml").write_text("abcd")
     assert am.build_manifest(domain, "test-version") != manifest
+
+
+@pytest.mark.parametrize("replacement", ["missing", "file"])
+def test_inventory_rejects_missing_or_non_directory_root(domain, replacement):
+    named_root = domain / "training"
+    named_root.rename(domain / "archived_training")
+    if replacement == "file":
+        named_root.write_text("not a directory")
+    with pytest.raises(ValueError, match="missing specification root: training"):
+        am.build_manifest(domain, "test-version")
+
+
+def test_inventory_records_every_named_root_count(domain):
+    manifest = am.build_manifest(domain, "test-version")
+    assert manifest["root_counts"] == {
+        "library/model_library": 1,
+        "library/templates": 1,
+        "library/tier2_fast": 0,
+        "installation": 0,
+        "jumper": 0,
+        "subsea/jumper/installation": 0,
+        "pipeline/installation": 0,
+        "reference": 0,
+        "regional": 0,
+        "mooring/reference": 0,
+        "passing_ship": 0,
+        "training": 0,
+    }
+    assert sum(manifest["root_counts"].values()) == len(manifest["cases"])
+
+
+def test_explicit_inventory_counts_only_selected_paths(domain):
+    manifest = am.build_manifest(
+        domain, "test-version", paths=["library/templates/a/spec.yml"]
+    )
+    assert manifest["root_counts"]["library/templates"] == 1
+    assert manifest["root_counts"]["library/model_library"] == 0
+    assert sum(manifest["root_counts"].values()) == 1
 
 
 @pytest.mark.parametrize("name", ["/absolute/spec.yml", "../spec.yml"])
@@ -99,6 +142,61 @@ def test_generation_hashes_files_and_retains_independent_failures(domain, tmp_pa
     assert len(second["files"]) == 2  # master + one include, by fixture construction
     assert second["load"]["status"] == "NOT_EVALUATED"
     assert manifest["cases"][0]["generation"]["status"] == "NOT_ATTEMPTED"
+
+
+@pytest.mark.parametrize("failure", ["collision", "runtime"])
+def test_generator_exceptions_are_retained_per_case(domain, tmp_path, failure):
+    from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
+        CollectionCollisionError,
+    )
+
+    error = (
+        CollectionCollisionError("synthetic generator failure", [])
+        if failure == "collision"
+        else RuntimeError("synthetic generator failure")
+    )
+
+    def generate(spec, output):
+        if "model_library" in spec.parts:
+            raise error
+        fake_generate(spec, output)
+
+    result = am.generate_cases(
+        am.build_manifest(domain, "test-version"),
+        domain,
+        tmp_path / "outputs",
+        generate,
+    )
+    first, second = result["cases"]
+    assert first["generation"] == {
+        "status": "FAIL",
+        "error": f"{type(error).__name__}: synthetic generator failure",
+    }
+    assert first["files"] == {}
+    assert second["generation"]["status"] == "PASS"
+    assert len(second["files"]) == 2
+
+
+@pytest.mark.parametrize(
+    "error_type", [ImportError, ModuleNotFoundError, KeyboardInterrupt, SystemExit]
+)
+def test_dependency_failures_and_interrupts_stop_generation(
+    domain, tmp_path, error_type
+):
+    attempted = []
+
+    def generate(spec, output):
+        attempted.append(spec)
+        raise error_type("synthetic dependency failure or interrupt")
+
+    with pytest.raises(error_type):
+        am.generate_cases(
+            am.build_manifest(domain, "test-version"),
+            domain,
+            tmp_path / "outputs",
+            generate,
+        )
+    assert len(attempted) == 1
 
 
 def test_generation_refuses_stale_output_and_input_digest_drift(domain, tmp_path):
@@ -202,6 +300,60 @@ def test_reject_unbound_evidence(stored, field, value):
         am.reconcile_results(manifest, [record], native)
 
 
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("api_version", None),
+        ("api_version", 42),
+        ("api_version", []),
+        ("api_version", {}),
+        ("load", None),
+        ("load", []),
+        ("load", "PASS"),
+        ("load", 42),
+        ("statics", None),
+        ("statics", []),
+        ("statics", "PASS"),
+        ("statics", 42),
+    ],
+)
+def test_malformed_record_types_are_rejected_by_cli(
+    stored, domain, tmp_path, capsys, field, value
+):
+    manifest, record, native = stored
+    record[field] = value
+    with pytest.raises(ValueError):
+        am.reconcile_results(manifest, [record], native)
+    saved = tmp_path / "generated.json"
+    saved.write_text(am.dumps(manifest))
+    records = tmp_path / "results.json"
+    records.write_text(json.dumps([record]))
+    destination = tmp_path / "joined.json"
+    with pytest.raises(SystemExit) as failure:
+        am.main(
+            [
+                "--root",
+                str(domain),
+                "--solver-version",
+                "test-version",
+                "--input-manifest",
+                str(saved),
+                "--generated-root",
+                str(tmp_path / "out"),
+                "--results",
+                str(records),
+                "--evidence-root",
+                str(native),
+                "--manifest",
+                str(destination),
+            ]
+        )
+    assert failure.value.code == 1
+    assert capsys.readouterr().err == "Attestation failed: ValueError\n"
+    assert not destination.exists()
+    assert json.loads(saved.read_text()) == manifest
+
+
 def test_duplicate_and_tampered_evidence_rejected(stored):
     manifest, record, native = stored
     with pytest.raises(ValueError):
@@ -239,6 +391,31 @@ def test_summary_escapes_text_and_separates_recorded_from_claims(stored):
         < summary.index("Results")
     )
     assert "NOT_EVALUATED" in summary
+
+
+def test_summary_shows_requested_version_and_counts_for_every_status(stored):
+    manifest, record, native = stored
+    manifest = am.reconcile_results(manifest, [record], native)
+    remaining = manifest["cases"][1]
+    remaining["generation"] = {"status": "FAIL", "error": "synthetic failure"}
+    remaining["load"] = {"status": "NOT_ATTEMPTED"}
+    summary = am.render_summary(manifest, "2026-10-20")
+    assert "Requested solver version: test-version" in summary
+    assert "Pinned solver version" not in summary
+    assert (
+        "<th>Stage</th><th>PASS</th><th>FAIL</th>"
+        "<th>NOT_ATTEMPTED</th><th>NOT_EVALUATED</th>"
+    ) in summary
+    for stage, counts in (
+        ("Generation", (1, 1, 0, 0)),
+        ("Load", (1, 0, 1, 0)),
+        ("Statics", (1, 0, 0, 1)),
+    ):
+        assert (
+            f"<tr><th>{stage}</th>"
+            + "".join(f"<td>{count}</td>" for count in counts)
+            + "</tr>"
+        ) in summary
 
 
 def test_real_generator_never_imports_solver(tmp_path):
@@ -445,9 +622,10 @@ def test_recursive_yaml_alias_traversal_terminates(tmp_path):
             "sys.path.insert(0, sys.argv[1]); "
             "import attestation_manifest as am; "
             "assert am._generated_files(Path(sys.argv[2]), 'master.yml') "
-            "== {'master.yml': am.digest(Path(sys.argv[2]) / 'master.yml')}",
+            "== {'master.yml': sys.argv[3]}",
             str(Path(am.__file__).parent),
             str(tmp_path),
+            hashlib.sha256(b"cycle: &cycle [*cycle]\n").hexdigest(),
         ],
         capture_output=True,
         text=True,
@@ -459,6 +637,8 @@ def test_recursive_yaml_alias_traversal_terminates(tmp_path):
 @pytest.mark.parametrize("child_name", ["a", "z"])
 def test_nested_cases_read_back_in_both_generation_orders(tmp_path, child_name):
     root = tmp_path / "domain"
+    for folder in am.SPEC_ROOTS:
+        (root / folder).mkdir(parents=True, exist_ok=True)
     names = [
         "library/templates/example/spec.yml",
         f"library/templates/example/{child_name}/spec.yml",

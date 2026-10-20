@@ -82,11 +82,14 @@ def build_manifest(
     if not solver_version.strip():
         raise ValueError("a pinned solver version is required")
     if paths is None:
-        paths = [
-            p.relative_to(root).as_posix()
-            for folder in SPEC_ROOTS
-            for p in (root / folder).rglob("spec.yml")
-        ]
+        paths = []
+        for folder in SPEC_ROOTS:
+            directory = contained(root, folder)
+            if not directory.is_dir():
+                raise ValueError(f"missing specification root: {folder}")
+            paths.extend(
+                p.relative_to(root).as_posix() for p in directory.rglob("spec.yml")
+            )
     paths = sorted(set(paths))
     if not paths:
         raise ValueError("empty specification inventory")
@@ -110,6 +113,10 @@ def build_manifest(
         "schema_version": "1",
         "solver_version": solver_version,
         "claim_update": "NOT_EVALUATED",
+        "root_counts": {
+            folder: sum(name.startswith(f"{folder}/") for name in paths)
+            for folder in SPEC_ROOTS
+        },
         "cases": cases,
     }
 
@@ -235,7 +242,9 @@ def generate_cases(
                 source, output / relative_path(case["master"]).parent
             )
             case["generation"] = {"status": "PASS"}
-        except (ValueError, TypeError, KeyError, OSError, yaml.YAMLError) as exc:
+        except ImportError:
+            raise
+        except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
             error = error.replace(str(root), "<spec-root>").replace(
                 str(output), "<output-root>"
@@ -264,7 +273,11 @@ def generate_cases(
 
 
 def _stage(stage: dict) -> None:
-    if stage.get("status") not in STATES or not isinstance(stage.get("warnings"), list):
+    if (
+        not isinstance(stage, dict)
+        or stage.get("status") not in STATES
+        or not isinstance(stage.get("warnings"), list)
+    ):
         raise ValueError("invalid stage status or warnings")
     if not all(isinstance(w, str) for w in stage["warnings"]):
         raise ValueError("warnings must contain text")
@@ -329,7 +342,11 @@ def _validate_record(case: dict, record: dict, version: str) -> None:
         or not case["files"]
     ):
         raise ValueError("input digest mismatch")
-    if record["solver_version"] != version or not record["api_version"].strip():
+    if (
+        record["solver_version"] != version
+        or not isinstance(record["api_version"], str)
+        or not record["api_version"].strip()
+    ):
         raise ValueError("solver/API version mismatch or missing version")
     _timestamps(record)
     for stage in ("load", "statics"):
@@ -404,10 +421,18 @@ def render_summary(manifest: dict, report_date: str) -> str:
         return html.escape(str(value))
 
     rows = []
-    counts = {
-        stage: sum(c[stage]["status"] == "PASS" for c in manifest["cases"])
-        for stage in ("generation", "load", "statics")
-    }
+    statuses = ("PASS", "FAIL", "NOT_ATTEMPTED", "NOT_EVALUATED")
+    count_rows = []
+    for stage in ("generation", "load", "statics"):
+        counts = [
+            sum(c[stage]["status"] == status for c in manifest["cases"])
+            for status in statuses
+        ]
+        count_rows.append(
+            f"<tr><th>{stage.title()}</th>"
+            + "".join(f"<td>{count}</td>" for count in counts)
+            + "</tr>"
+        )
     for case in manifest["cases"]:
         cells = [case["case_id"]]
         for stage in ("generation", "load", "statics"):
@@ -417,12 +442,16 @@ def render_summary(manifest: dict, report_date: str) -> str:
         '<!doctype html><html lang="en"><meta charset="utf-8">'
         "<title>Specification library attestation analysis</title><body>"
         "<h1>Specification library attestation analysis</h1><h2>Summary</h2>"
-        f"<p>{len(rows)} cases; recorded PASS counts: {esc(counts)}. "
-        f"Pinned solver version: {esc(manifest['solver_version'])}.</p>"
+        f"<p>{len(rows)} cases. "
+        f"Requested solver version: {esc(manifest['solver_version'])}.</p>"
         "<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>"
         f"<tr><td>Initial</td><td>{esc(report_date)}</td><td>Recorded outcomes to expose missing evidence.</td></tr></table>"
         "<h2>Results</h2><table><tr><th>Specification</th><th>Generation</th><th>Load</th><th>Statics</th></tr>"
         + "".join(rows)
+        + "</table><h2>Recorded status counts</h2><table><tr><th>Stage</th>"
+        + "".join(f"<th>{status}</th>" for status in statuses)
+        + "</tr>"
+        + "".join(count_rows)
         + "</table><h2>Limitations and way forward</h2>"
         "<p>Claim update: NOT_EVALUATED. No native solver is run by this workflow. "
         "Stored records and digest checks do not establish native authenticity. "
