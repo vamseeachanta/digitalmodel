@@ -202,3 +202,49 @@ def test_manifest_history_requirement_matches_domain_mapping() -> None:
         if "`tests/drilling_riser/`" in row
     ]
     assert owners == ["subsea"]
+
+
+@pytest.mark.parametrize("run_id", ("101", "102"))
+@pytest.mark.parametrize("event,ref,number,expected", (
+    ("pull_request", "refs/pull/1/merge", "1", "Repository Structure-1"),
+    ("pull_request", "refs/pull/2/merge", "2", "Repository Structure-2"),
+    ("push", "refs/heads/main", None, "Repository Structure-refs/heads/main"),
+    ("push", "refs/heads/topic", None, "Repository Structure-refs/heads/topic"),
+    ("push", "refs/heads/1", None, "Repository Structure-refs/heads/1"),
+    ("workflow_dispatch", "refs/heads/main", None,
+     "Repository Structure-refs/heads/main"),
+))
+def test_repo_structure_cancels_superseded_runs(
+    event: str, ref: str, number: str | None, expected: str, run_id: str,
+) -> None:
+    """Derive groups by hand from synthetic context values, not the evaluator.
+
+    Basis: GitHub Actions workflow syntax, concurrency (unversioned), and
+    evaluate-expressions-in-workflows-and-actions, Operators (unversioned):
+    https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+    https://docs.github.com/en/actions/reference/evaluate-expressions-in-workflows-and-actions#operators
+
+    Hand substitution: prefix the workflow name and a hyphen to the PR number
+    when present, otherwise to the full ref. Thus PRs 1 and 2 give suffixes
+    '1' and '2'; pushes give 'refs/heads/main', 'refs/heads/topic' and
+    'refs/heads/1'. A manual main run shares the main push group. Synthetic
+    run IDs 101 and 102 never enter the result, so updates supersede work
+    only in the same workflow/ref group. The branch named '1' remains distinct
+    from PR 1. This read-only check allows cancellation for every trigger.
+    """
+    workflow = load_workflow("repo-structure.yml")
+    concurrency = workflow["concurrency"]
+    context = {
+        "github.workflow": workflow["name"],
+        "github.event_name": event,
+        "github.ref": ref,
+        "github.event.pull_request.number": number,
+        "github.run_id": run_id,
+    }
+    group = re.sub(
+        r"\$\{\{(.*?)\}\}",
+        lambda match: str(evaluate_expression(match[1], context)),
+        concurrency["group"],
+    )
+    assert group == expected
+    assert concurrency["cancel-in-progress"] is True
