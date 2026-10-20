@@ -4,6 +4,7 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+from copy import deepcopy
 import json
 import os
 import re
@@ -28,9 +29,29 @@ WORKFLOW_EVENTS = {
 }
 
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Reject duplicate workflow keys instead of silently keeping the last."""
+
+
+def unique_mapping(loader, node, deep=False):
+    """Check root and nested mapping entries before constructing a dictionary."""
+    result = {}
+    for key, value in loader.construct_pairs(node, deep=deep):
+        if key in result:
+            raise yaml.constructor.ConstructorError(
+                "while constructing a mapping", node.start_mark,
+                f"duplicate key: {key}", node.start_mark,
+            )
+        result[key] = value
+    return result
+
+
+UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
+
+
 def load_workflow(filename: str) -> dict:
     """Read a workflow without changing YAML 1.1 boolean-key handling."""
-    return yaml.safe_load((WORKFLOWS / filename).read_text(encoding="utf-8"))
+    return yaml.load((WORKFLOWS / filename).read_text(encoding="utf-8"), Loader=UniqueKeyLoader)
 
 
 @pytest.mark.parametrize("filename", GATES)
@@ -75,7 +96,7 @@ def concurrency_result(
     context = {
         "github.workflow": workflow["name"],
         "github.event_name": event,
-        "github.event.pull_request.number": number,
+        "github.event.pull_request.number": number if event == "pull_request" else None,
         "github.ref": ref or (
             f"refs/pull/{number}/merge" if event == "pull_request" else "refs/heads/main"
         ),
@@ -87,6 +108,8 @@ def concurrency_result(
         concurrency["group"],
     )
     cancel = concurrency["cancel-in-progress"]
+    if isinstance(cancel, bool):
+        return group, cancel
     assert isinstance(cancel, str)
     assert cancel.startswith("${{") and cancel.endswith("}}")
     result = evaluate_expression(cancel[3:-2], context)
@@ -104,7 +127,8 @@ def test_pull_request_concurrency(filename: str) -> None:
     other = concurrency_result(filename, "pull_request", 103, number=2)
     assert first == update
     assert first[0] != other[0]
-    assert first[0] == f"{load_workflow(filename)['name']}-refs/pull/1/merge"
+    suffix = "1" if filename == "repo-structure.yml" else "refs/pull/1/merge"
+    assert first[0] == f"{load_workflow(filename)['name']}-{suffix}"
     assert first[1] is True
     assert other[1] is True
 
@@ -113,18 +137,26 @@ def test_pull_request_concurrency(filename: str) -> None:
     filename for filename, events in WORKFLOW_EVENTS.items() if "push" in events
 ])
 def test_push_updates_cancel_only_the_same_ref(filename: str) -> None:
-    """A newer main push supersedes the old run without cancelling another ref."""
+    """Incremental gates retain every push; read-only checks may supersede runs."""
     first = concurrency_result(filename, "push", 101)
     update = concurrency_result(filename, "push", 102)
     other = concurrency_result(filename, "push", 103, ref="refs/heads/develop")
-    assert first == update == (f"{load_workflow(filename)['name']}-refs/heads/main", True)
-    assert other == (f"{load_workflow(filename)['name']}-refs/heads/develop", True)
+    name = load_workflow(filename)["name"]
+    if filename in {"quality-gates-by-domain.yml", "quality-gates.yml"}:
+        assert first == (f"{name}-refs/heads/main-101", False)
+        assert update == (f"{name}-refs/heads/main-102", False)
+        assert other == (f"{name}-refs/heads/develop-103", False)
+    elif filename == "pages.yml":
+        assert first == update == other == ("pages", False)
+    else:
+        assert first == update == (f"{name}-refs/heads/main", True)
+        assert other == (f"{name}-refs/heads/develop", True)
 
 
 @pytest.mark.parametrize("filename,event", [
     (filename, event)
     for filename, events in WORKFLOW_EVENTS.items()
-    if filename != "full-matrix-sweep.yml"
+    if filename not in {"full-matrix-sweep.yml", "pages.yml", "publish.yml", "repo-structure.yml"}
     for event in ("schedule", "workflow_dispatch") if event in events
 ])
 def test_scheduled_and_manual_runs_are_never_cancelled(filename: str, event: str) -> None:
@@ -138,6 +170,61 @@ def test_scheduled_and_manual_runs_are_never_cancelled(filename: str, event: str
         assert first[0] != concurrency_result(filename, "push", 103)[0]
     if "pull_request" in events:
         assert first[0] != concurrency_result(filename, "pull_request", 104)[0]
+
+
+@pytest.mark.parametrize("filename,group", [("pages.yml", "pages"), ("publish.yml", "publish")])
+def test_deployments_are_serialized(filename: str, group: str) -> None:
+    """Manual and push deployments share one uncancelled group across refs."""
+    for event in WORKFLOW_EVENTS[filename]:
+        for run_id, ref in [(101, "refs/heads/main"), (102, "refs/heads/other")]:
+            assert concurrency_result(filename, event, run_id, ref=ref) == (group, False)
+
+
+@pytest.mark.parametrize("event", ["push", "pull_request", "workflow_dispatch"])
+def test_repository_structure_keeps_existing_group(event: str) -> None:
+    """The read-only structure contract retains its shared ref or PR group."""
+    suffix = "1" if event == "pull_request" else "refs/heads/main"
+    expected = (f"Repository Structure-{suffix}", True)
+    assert concurrency_result("repo-structure.yml", event, 101) == expected
+    assert concurrency_result("repo-structure.yml", event, 102) == expected
+
+
+@pytest.mark.parametrize("filename,job_id,step_name", [
+    ("quality-gates-by-domain.yml", "domain-tests-required", "Enforce required domain result"),
+    ("quality-gates.yml", "quality-gates-aggregate", "Verify matrix result"),
+])
+def test_required_aggregate_fails_on_draft_skips(
+    filename: str, job_id: str, step_name: str, tmp_path: Path,
+) -> None:
+    """A draft's skipped workers must yield a failing named required check."""
+    job = load_workflow(filename)["jobs"][job_id]
+    assert job["if"] == "always()"
+    step = next(step for step in job["steps"] if step["name"] == step_name)
+    environment = dict(os.environ, GITHUB_EVENT_NAME="pull_request",
+                       DETECT_RESULT="skipped", HARNESS_RESULT="skipped",
+                       DOMAIN_RESULT="skipped", QUALITY_GATES_RESULT="skipped",
+                       HAS_DOMAINS="", GITHUB_STEP_SUMMARY=str(tmp_path / "summary"))
+    result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", step["run"]],
+                            cwd=tmp_path, env=environment, capture_output=True, text=True)
+    assert result.returncode == 1, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("document", [
+    "concurrency: {group: first}\nconcurrency: {group: second}\n",
+    "jobs:\n  detect:\n    env:\n      BASE: first\n      BASE: second\n",
+])
+def test_workflow_loader_rejects_duplicate_keys(document: str, tmp_path: Path, monkeypatch) -> None:
+    """Raw duplicate-key controls must fail before a mapping can discard evidence."""
+    (tmp_path / "duplicate.yml").write_text(document, encoding="utf-8")
+    monkeypatch.setattr(sys.modules[__name__], "WORKFLOWS", tmp_path)
+    with pytest.raises(yaml.constructor.ConstructorError, match="duplicate"):
+        load_workflow("duplicate.yml")
+
+
+@pytest.mark.parametrize("path", sorted(WORKFLOWS.glob("*.yml")), ids=lambda path: path.name)
+def test_workflows_have_unique_mapping_keys(path: Path) -> None:
+    """Every workflow is parsed with duplicate-key rejection enabled."""
+    load_workflow(path.name)
 
 
 @pytest.mark.parametrize(
@@ -311,3 +398,58 @@ def test_manifest_history_requirement_matches_domain_mapping() -> None:
         if "`tests/drilling_riser/`" in row
     ]
     assert owners == ["subsea"]
+
+
+@pytest.mark.parametrize("filename,policy,args", [
+    ("quality-gates-by-domain.yml", test_push_updates_cancel_only_the_same_ref, ("quality-gates-by-domain.yml",)),
+    ("quality-gates.yml", test_push_updates_cancel_only_the_same_ref, ("quality-gates.yml",)),
+    ("pages.yml", test_deployments_are_serialized, ("pages.yml", "pages")),
+    ("publish.yml", test_deployments_are_serialized, ("publish.yml", "publish")),
+    ("repo-structure.yml", test_repository_structure_keeps_existing_group, ("workflow_dispatch",)),
+    ("docs.yml", test_pull_request_concurrency, ("docs.yml",)),
+    ("docs.yml", test_scheduled_and_manual_runs_are_never_cancelled, ("docs.yml", "workflow_dispatch")),
+])
+@pytest.mark.parametrize("field", ["group", "cancel-in-progress"])
+def test_concurrency_mutations_are_rejected(filename, policy, args, field, monkeypatch) -> None:
+    """Negative controls exercise the same concurrency assertions used in CI."""
+    workflow = deepcopy(load_workflow(filename))
+    concurrency = workflow["concurrency"]
+    concurrency[field] = "shared" if field == "group" else (
+        False if filename in {"repo-structure.yml", "docs.yml"} and len(args) == 1 else True
+    )
+    monkeypatch.setattr(sys.modules[__name__], "load_workflow", lambda name: workflow)
+    with pytest.raises(AssertionError):
+        policy(*args)
+
+
+@pytest.mark.parametrize("filename,job_id,step_name", [
+    ("quality-gates-by-domain.yml", "domain-tests-required", "Enforce required domain result"),
+    ("quality-gates.yml", "quality-gates-aggregate", "Verify matrix result"),
+])
+def test_guarded_aggregate_mutations_are_rejected(filename, job_id, step_name, tmp_path, monkeypatch) -> None:
+    """Restoring a draft guard must be detected before skipped checks can pass."""
+    workflow = deepcopy(load_workflow(filename))
+    workflow["jobs"][job_id]["if"] = "github.event.pull_request.draft == false && always()"
+    monkeypatch.setattr(sys.modules[__name__], "load_workflow", lambda name: workflow)
+    with pytest.raises(AssertionError):
+        test_required_aggregate_fails_on_draft_skips(filename, job_id, step_name, tmp_path)
+
+
+def test_full_sweep_trigger_mutation_is_rejected(monkeypatch) -> None:
+    """A restored push trigger must not duplicate incremental domain checks."""
+    workflow = deepcopy(load_workflow("full-matrix-sweep.yml"))
+    triggers = workflow.get("on", workflow.get(True))
+    triggers["push"] = {"branches": ["main"]}
+    monkeypatch.setattr(sys.modules[__name__], "load_workflow", lambda name: workflow)
+    with pytest.raises(AssertionError):
+        test_full_sweep_keeps_nightly_schedule()
+
+
+def test_full_sweep_mode_mutation_is_rejected(monkeypatch) -> None:
+    """A partial nightly matrix must fail the full-sweep policy."""
+    workflow = deepcopy(load_workflow("full-matrix-sweep.yml"))
+    step = next(step for step in workflow["jobs"]["full-matrix"]["steps"] if step.get("id") == "matrix")
+    step["run"] = step["run"].replace("--mode full", "--mode touched")
+    monkeypatch.setattr(sys.modules[__name__], "load_workflow", lambda name: workflow)
+    with pytest.raises(AssertionError):
+        test_full_sweep_still_builds_every_shard()

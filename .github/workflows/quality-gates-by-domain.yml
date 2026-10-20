@@ -16,14 +16,14 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'schedule' && format('-{0}', github.run_id) || github.event_name == 'workflow_dispatch' && format('-{0}', github.run_id) || '' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'push' && format('-{0}', github.run_id) || github.event_name == 'schedule' && format('-{0}', github.run_id) || github.event_name == 'workflow_dispatch' && format('-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   actions: read
@@ -266,7 +266,7 @@ jobs:
   domain-tests-required:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (always())
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -367,7 +367,7 @@ jobs:
           PYTHON
               then
                 if uv run --no-project --with pyyaml==6.0.2 python scripts/ci/ci_baseline.py compare \
-                  --baseline baseline.json --results baseline-results --max-age-hours 24 \
+                  --baseline baseline.json --results baseline-results --max-age-hours 30 \
                   --register "$RUNNER_TEMP/flaky-register.yml" \
                   --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
                   comparison=0

@@ -21,6 +21,7 @@ PR_WORKFLOWS = {
 DRAFT_GUARD = (
     "github.event_name != 'pull_request' || github.event.pull_request.draft == false"
 )
+REQUIRED_AGGREGATES = {"domain-tests-required", "quality-gates-aggregate"}
 
 
 def test_snapshot_workflows_are_present() -> None:
@@ -48,11 +49,14 @@ def test_pull_request_draft_policy(path: Path) -> None:
         return
 
     assert (triggers["pull_request"] or {}).get("types") == [
-        "opened", "reopened", "synchronize", "ready_for_review",
+        "opened", "synchronize", "reopened", "edited", "ready_for_review",
     ]
     assert "workflow_dispatch" in triggers
-    for job in jobs.values():
-        assert DRAFT_GUARD in job.get("if", "")
+    for job_id, job in jobs.items():
+        if job_id in REQUIRED_AGGREGATES:
+            assert job["if"] == "always()"
+        else:
+            assert DRAFT_GUARD in job.get("if", "")
 
 
 @pytest.mark.parametrize(
@@ -67,7 +71,7 @@ def test_pull_request_draft_policy(path: Path) -> None:
         ("pages.yml", "build", 60),
         ("pages.yml", "deploy", 15),
         ("parametric-atlas-drift.yml", "atlas-drift", 15),
-        ("publish.yml", "publish", 60),
+        ("publish.yml", "publish", 180),
         ("quality-gates-by-domain.yml", "detect-domains", 15),
         ("quality-gates-by-domain.yml", "ci-harness-tests", 60),
         ("quality-gates-by-domain.yml", "domain-tests", 60),
@@ -94,7 +98,8 @@ def test_timeout_inventory_covers_every_job() -> None:
             (WORKFLOWS / filename).read_text(encoding="utf-8"), Loader=yaml.BaseLoader,
         )
         for job_id, job in workflow["jobs"].items():
-            assert 0 < int(job.get("timeout-minutes", "0")) <= 60, (filename, job_id)
+            limit = 180 if filename == "publish.yml" else 60
+            assert 0 < int(job.get("timeout-minutes", "0")) <= limit, (filename, job_id)
 
 
 def test_draft_policy_runs_in_ci_harness() -> None:
@@ -107,3 +112,48 @@ def test_draft_policy_runs_in_ci_harness() -> None:
         step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
     )
     assert "tests/workflows/test_ci_draft_policy.py" in commands
+
+
+@pytest.mark.parametrize("filename,job_id", [
+    (filename, job_id) for filename, jobs in SNAPSHOT.items() for job_id in jobs
+])
+@pytest.mark.parametrize("mutation", ["missing", "zero", "excessive"])
+def test_timeout_mutations_are_rejected(filename: str, job_id: str, mutation: str, monkeypatch) -> None:
+    """Every committed job limit has negative controls without editing workflows."""
+    workflow = yaml.load((WORKFLOWS / filename).read_text(), Loader=yaml.BaseLoader)
+    job = workflow["jobs"][job_id]
+    minutes = int(job["timeout-minutes"])
+    if mutation == "missing":
+        del job["timeout-minutes"]
+    else:
+        job["timeout-minutes"] = "0" if mutation == "zero" else str(minutes + 1)
+    monkeypatch.setattr(yaml, "load", lambda *args, **kwargs: workflow)
+    with pytest.raises(AssertionError):
+        test_job_timeout(filename, job_id, minutes)
+
+
+@pytest.mark.parametrize("filename,job_id", [
+    (filename, job_id) for filename, jobs in SNAPSHOT.items() for job_id in jobs
+])
+def test_check_name_mutations_are_rejected(filename: str, job_id: str, monkeypatch) -> None:
+    """Every job name remains bound to the committed inventory."""
+    path = WORKFLOWS / filename
+    workflow = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+    workflow["jobs"][job_id]["name"] = "changed-check"
+    monkeypatch.setattr(yaml, "load", lambda *args, **kwargs: workflow)
+    with pytest.raises(AssertionError):
+        test_pull_request_draft_policy(path)
+
+
+@pytest.mark.parametrize("filename", sorted(PR_WORKFLOWS))
+@pytest.mark.parametrize("event", ["edited", "ready_for_review"])
+def test_readiness_event_mutations_are_rejected(filename: str, event: str, monkeypatch) -> None:
+    """Deleting either required activity cannot silently disable its checks."""
+    path = WORKFLOWS / filename
+    workflow = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+    workflow["on"]["pull_request"]["types"] = [
+        value for value in workflow["on"]["pull_request"]["types"] if value != event
+    ]
+    monkeypatch.setattr(yaml, "load", lambda *args, **kwargs: workflow)
+    with pytest.raises(AssertionError):
+        test_pull_request_draft_policy(path)

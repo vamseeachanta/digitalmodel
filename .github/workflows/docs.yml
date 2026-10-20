@@ -20,7 +20,7 @@ on:
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
     paths:
       - 'src/**'
       - 'scripts/**'

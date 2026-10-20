@@ -35,7 +35,7 @@ def test_structure_workflow_runs_for_ready_pull_requests():
     config = workflow("repo-structure.yml")
     assert set(config["on"]) == {"pull_request", "push", "workflow_dispatch"}
     assert config["on"]["pull_request"] == {
-        "types": ["opened", "reopened", "synchronize", "ready_for_review"],
+        "types": ["opened", "synchronize", "reopened", "edited", "ready_for_review"],
     }
     assert config["on"]["push"]["branches"] == ["main"]
     job = config["jobs"]["repo-structure"]

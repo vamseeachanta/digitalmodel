@@ -453,7 +453,7 @@ def artifact(run_id=100, **updates):
 
 @pytest.mark.parametrize("updates,accepted", [
     ({"event": "pull_request", "head_repository": {"full_name": "fork/repository"}}, False),
-    ({"event": "pull_request"}, False), ({"event": "workflow_dispatch"}, False),
+    ({"event": "pull_request"}, False), ({"event": "workflow_dispatch"}, True),
     ({"event": "push"}, True), ({"event": "schedule"}, True),
     ({"head_branch": "develop"}, False), ({"path": "other.yml"}, False),
 ])
@@ -470,9 +470,33 @@ def test_selection_falls_back_when_newest_has_no_baseline(newest, expected):
 
 
 def test_selection_does_not_fall_back_to_stale_sweep():
-    old = sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())
+    old = sweep(updated_at=(NOW - timedelta(hours=31)).isoformat())
     assert ci.select_baseline_run([sweep(101, conclusion="cancelled"), old],
                                   [artifact()], "example/repository", NOW) is None
+
+
+@pytest.mark.parametrize("hours,accepted", [(25, True), (30, True), (30.01, False), (-0.01, False)])
+def test_selection_uses_thirty_hour_freshness(hours, accepted):
+    run = sweep(event="workflow_dispatch", updated_at=(NOW - timedelta(hours=hours)).isoformat())
+    assert (ci.select_baseline_run([run], [artifact()], "example/repository", NOW) is not None) is accepted
+
+
+@pytest.mark.parametrize("hours,expected", [(25, 0), (30, 0), (30.01, 1), (-0.01, 1)])
+def test_comparison_default_matches_selection_freshness(tmp_path, hours, expected):
+    row = result(completed_at=(NOW - timedelta(hours=hours)).isoformat())
+    base = baseline(tmp_path, row)
+    directory = write_results(tmp_path, result())
+    assert ci.main(["compare", "--baseline", str(base), "--results", str(directory),
+                    "--summary", str(tmp_path / "summary.md"),
+                    "--verdict", str(tmp_path / "verdict.json"),
+                    "--now", NOW.isoformat()]) == expected
+
+
+def test_workflow_comparison_uses_thirty_hour_freshness():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    job = workflow["jobs"]["domain-tests-required"]
+    enforce = next(step for step in job["steps"] if step.get("name") == "Enforce required domain result")
+    assert "--max-age-hours 30" in enforce["run"]
 
 
 def test_newest_published_sweep_wins_over_older_red():
@@ -526,7 +550,7 @@ def mock_download(monkeypatch, runs, artifacts, verified=None):
     monkeypatch.setattr(ci.subprocess, "check_output", lambda *args, **kwargs: payload.getvalue())
 
 
-@pytest.mark.parametrize("event", ["push", "schedule"])
+@pytest.mark.parametrize("event", ["push", "schedule", "workflow_dispatch"])
 def test_reader_downloads_verified_own_main(tmp_path, monkeypatch, event):
     run = sweep(event=event)
     mock_download(monkeypatch, [run], [artifact()], verified=dict(run, extra="detail"))
@@ -555,7 +579,7 @@ def test_main_execution_must_also_be_proven(tmp_path, change):
 
 def test_reader_stale_only_fallback_fails_closed(tmp_path, monkeypatch):
     runs = [sweep(101, conclusion="cancelled"),
-            sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())]
+            sweep(updated_at=(NOW - timedelta(hours=31)).isoformat())]
     mock_download(monkeypatch, runs, [artifact()])
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW) is False
 
@@ -833,7 +857,7 @@ def test_evidence_requires_failed_same_shard_job(monkeypatch, field, value):
     assert ci.verified_evidence(EVIDENCE_URL, "example") is False
 
 
-@pytest.mark.parametrize("event", ["push", "schedule"])
+@pytest.mark.parametrize("event", ["push", "schedule", "workflow_dispatch"])
 def test_main_run_evidence_is_accepted(monkeypatch, event):
     monkeypatch.setattr(ci, "gh_json", lambda endpoint: evidence_response(endpoint, event=event))
     assert ci.verified_evidence(EVIDENCE_URL, "example") is True

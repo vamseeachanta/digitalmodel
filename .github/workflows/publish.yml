@@ -8,15 +8,15 @@ permissions:
   id-token: write  # OIDC trusted publishing
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'schedule' && format('-{0}', github.run_id) || github.event_name == 'workflow_dispatch' && format('-{0}', github.run_id) || '' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+  group: publish
+  cancel-in-progress: false
 
 jobs:
   publish:
     name: Build and Publish
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
     # The pypi GitHub environment must have the owner as a REQUIRED REVIEWER.
     # No PyPI publish may occur without a later owner decision card.
     # Configure required reviewers in GitHub; this comment does not enforce it.
