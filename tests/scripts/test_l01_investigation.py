@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Synthetic fixtures test contracts, not solver physics or acceptance limits."""
 import copy
 import importlib.util
@@ -71,15 +74,20 @@ def test_stages_are_exact_source_subsets_and_full_comparison_is_distinct(mod):
     assert request["native_inputs"] == "NOT_EVALUATED"
 
 
-@pytest.mark.parametrize("field,value", [
-    ("threads", [True]), ("budget_minutes", float("nan")),
-    ("resource_citation", ""), ("max_relative_gap", 0),
-    ("frequencies_rad_s", [1, 1]), ("headings_deg", [0, 360]),
+@pytest.mark.parametrize("field,value,message", [
+    ("threads", [True], "unique positive integer thread counts"),
+    ("budget_minutes", float("nan"), "finite numeric value"),
+    ("resource_citation", "", "nonempty citation or declaration"),
+    ("max_relative_gap", 0, "positive value"),
+    ("frequencies_rad_s", [1 + i / 100 for i in range(19)] + [1.18],
+     "frequencies must be strictly increasing"),
+    ("headings_deg", list(range(8)) + [360], "headings must be unique canonical degrees"),
+    ("headings_deg", list(range(8)) + [7], "headings must be unique canonical degrees"),
 ])
-def test_invalid_requests_refused(mod, field, value):
+def test_invalid_requests_refused(mod, field, value, message):
     c = config()
     c[field] = value
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         mod.build_request(c)
 
 

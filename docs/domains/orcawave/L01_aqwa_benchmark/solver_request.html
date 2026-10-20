@@ -5,7 +5,7 @@
 <h1>L01 offline investigation and solver request</h1>
 <p>Status: NOT_EVALUATED. No native solve or native readback accompanies this
 request. The timeout cause, physical model equivalence, and correlation remain
-unestablished. This document requests reviewed execution by the solver manager;
+unestablished. This document requests reviewed execution by the maintainers;
 it is not execution authorization or a qualified benchmark.</p>
 
 <h2>Evidence and scope</h2>
@@ -13,8 +13,8 @@ it is not execution authorization or a qualified benchmark.</p>
 investigation. The historical comparison used different physical models,
 intersected sparse frequency grids, and placeholder matrices. A corrected
 comparison cannot qualify those historical outputs. Source: repository issue
-<a href="https://github.com/vamseeachanta/digitalmodel/issues/714">714</a>,
-owner comments on input mismatch, sampling and native-output conventions.</p>
+#714,
+maintainer comments on input mismatch, sampling and native-output conventions.</p>
 <p>The existing <code>orcawave_001_ship_raos_rev2_matched.yml</code> is an
 investigation candidate, not proof of matching. Its centre of gravity still
 requires reconciliation with AQWA. It also requests a full QTF calculation;
@@ -50,7 +50,7 @@ before inspecting the results. No universal acceptance band is asserted.</li>
 
 <h2>Offline request generator</h2>
 <pre>python scripts/benchmark/l01_investigation.py prepare config.json request.json</pre>
-<p>Input and output arguments refer to manager-controlled working files; the
+<p>Input and output arguments refer to authorized working files; the
 output must not already exist. The generator emits a reviewable JSON request,
 not solver-native input. No command starts a solver.</p>
 <table border="1">
@@ -87,7 +87,7 @@ scientific comparison grids. Source: issue 714 diagnostic scope and
 <a href="../examples/L01_default_vessel/API_EXECUTION_SUMMARY.md">API execution summary</a>.
 The complete supplied grid is separately retained for both solvers.</p>
 
-<h2>Solver manager run request</h2>
+<h2>Solver run request</h2>
 <ol>
 <li>Review the physical basis and source rights. Use the existing matched YAML
 and AQWA source model only after reconciliation. Prepare native inputs for the
@@ -102,7 +102,7 @@ Resolve fatal AQWA mesh diagnostics before scheduling. Record any topology
 change produced by panel division. Keep mesh, physics and solve type fixed
 across the case-count ladder; investigate QTF complexity as a separately
 labelled sensitivity if required.</li>
-<li>On the licensed OrcaWave workstation, execute the ordered ladder serially
+<li>Using a licensed OrcaWave installation, execute the ordered ladder serially
 with explicitly pinned threads and reviewed time/resource budgets. Record
 solver/API versions, input digests, stage identity, actual native frequencies
 and headings, panel counts, time spent loading/calculating/saving, memory,
@@ -111,7 +111,7 @@ silent interval a solver hang without progress/resource evidence. Do not infer
 a threshold between untested case counts; add bracketed stages if needed.</li>
 <li>Run AQWA and OrcaWave on the full common resolved grid using the reconciled
 basis. Retain native inputs, logs, native outputs and extraction scripts with
-digests in their authorized result owner. AQWA needs complete native coefficient
+digests in an authorized result store. AQWA needs complete native coefficient
 output, including AH1 where applicable; LIS alone does not provide every
 matrix term, excitation or hydrostatics. Verify native completion independently
 of process exit status. A fatal log or failed validator prevents completion.</li>
@@ -128,7 +128,7 @@ the timeout investigation and full-grid matched comparison are evidenced.</li>
 <p>Licensed-minute estimate: NOT_EVALUATED. The historical summary records a
 small-model run in 4.26 seconds and larger-case timeouts; these do not support
 extrapolating a matched-model duration. The matched runner's historical estimate
-of 30–60 minutes is unverified. The solver manager shall supply an allocation
+of 30–60 minutes is unverified. The maintainers shall supply an allocation
 for the ladder and full-grid runs before launch. The supplied budget is an
 allocation, not a measured duration or an automatic process-termination rule.</p>
 
@@ -146,6 +146,13 @@ couplings. Source for dimensions: API execution summary, Hydrodynamic Data.
 Duplicate keys, incomplete grids, nonfinite values, placeholder provenance,
 incompatible declarations and malformed dimensions are refused. Reordered
 complete arrays are paired by frequency and heading value.</p>
+<p>Exports must carry the request grid's exact <code>frequency_rad_s</code> and
+<code>heading_deg</code> values. Coverage uses exact numeric keys; converting a
+native period back to angular frequency may differ in the last bit and will
+be refused. The normalizer must record the native-to-request mapping, including
+native values, units, conversion and the corresponding exact request values,
+with evidence that each native sample represents its requested grid point.
+Do not independently round or infer missing grid points.</p>
 <p>The requested AQG-style band is a caller-specified pointwise envelope:
 for each response or coefficient, the absolute difference divided by its
 predeclared positive engineering scale must not exceed
@@ -168,7 +175,7 @@ does not establish native readiness, solver completion or engineering acceptance
 
 <h2>Sources and outstanding evidence</h2>
 <ul>
-<li>Issue 714 and its owner comments: corrected mismatch diagnosis, sparse-grid
+<li>Issue 714 and its maintainer comments: corrected mismatch diagnosis, sparse-grid
 limitation, phase/reference-point concerns and native-log failure handling.</li>
 <li>API_EXECUTION_SUMMARY.md: observed resource/time history and warnings.
 Its statement that low memory rules out resource problems is not adopted as
