@@ -23,16 +23,20 @@ No dataset is uploaded and no explorer is switched to an unverified remote endpo
 <h2>Revision history</h2>
 <table>
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-  <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr></tbody>
+  <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr>
+  <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr></tbody>
 </table>
 <p class="caption">Table 1. Revision record.</p>
 
 <h2>Method and source basis</h2>
 <p><code>scripts/hf/build_capability_datasets.py</code> renames leaf fields and retains
 every facet as a column. Values are copied without recalculation or additional rounding.
-The bundle command reads each source once: the retained JSON, recorded source digest,
-and projected rows share that snapshot. Generator and projection digests identify the
-method; SHA-256 digests identify the exact source and output bytes.</p>
+The bundle command reads each source once and normalizes CRLF line endings to LF:
+the retained JSON, recorded source digest, and projected rows share that snapshot.
+Generator, projection, and packager digests also use LF-normalized text, so text
+checkout conversion does not change their identities. SHA-256 digests identify the
+retained source and output bytes. The manifest records the build system and architecture;
+full byte verification includes that platform metadata.</p>
 <p>The bundle contains a dataset card, <code>manifest.json</code>,
 <code>&lt;config&gt;/train.jsonl</code>, and <code>sources/&lt;config&gt;.json</code>.
 Config names and column names form the website registry contract. Source metadata is
@@ -74,13 +78,14 @@ sidecars; they do not establish independent engineering qualification.</p>
 <tbody>
 <tr><td>ipr</td><td>reservoir_pressure_psi, productivity_index_bopd_psi, flowing_pressure_psi, flow_rate_bopd, qmax_bopd</td></tr>
 <tr><td>anchor_holding</td><td>soil, anchor, weight_kn, holding_capacity_kn</td></tr>
-<tr><td>ship_resistance</td><td>hull, speed_kn, resistance_kn, effective_power_kw, froude_number</td></tr>
+<tr><td>ship_resistance</td><td>hull, speed_knots, resistance_kn, effective_power_kw, froude_number</td></tr>
 <tr><td>viv</td><td>member, current_speed_m_s, reduced_velocity, status, safety_factor</td></tr>
 <tr><td>pore_pressure</td><td>depth_ft, overburden_ppg, eaton_ppg, bowers_ppg, pore_pressure_ppg, mud_weight_ppg</td></tr>
 <tr><td>field_economics</td><td>capex_musd, oil_price_usd_bbl, npv_musd, payback_years</td></tr>
 </tbody>
 </table>
 <p class="caption">Table 3. Units follow the generators' input DTOs and output fields.
+The suffix <code>knots</code> denotes speed in knots; <code>kn</code> denotes force in kN.
 MUSD denotes millions of USD; bopd denotes oil barrels per day; ppg denotes pounds
 per gallon (US). Froude number, reduced velocity, and safety factor are dimensionless.</p>
 

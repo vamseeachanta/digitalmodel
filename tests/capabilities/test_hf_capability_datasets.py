@@ -78,7 +78,7 @@ def test_ipr_keeps_both_facets_and_every_curve_point(monkeypatch):
             [
                 {
                     "hull": "generic",
-                    "speed_kn": 3,
+                    "speed_knots": 3,
                     "resistance_kn": 7,
                     "effective_power_kw": 9,
                     "froude_number": 2,

@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import math
+import platform
 import re
 from pathlib import Path
 
@@ -85,6 +86,11 @@ def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _text_bytes(path: Path) -> bytes:
+    """Undo CRLF checkout conversion for text provenance and retained sources."""
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
 def _check_locators(value: object) -> None:
     """Fail before staging; scientific values and retained sources are not edited."""
     if isinstance(value, dict):
@@ -97,7 +103,7 @@ def _check_locators(value: object) -> None:
     elif isinstance(value, str):
         patterns = (
             r"/(?:home|mnt)/",
-            r"(?i)[a-z]:[\\/]+Users[\\/]",
+            r"(?i)[a-z]:[\\/]*Users[\\/]",
             r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}",
         )
         if any(re.search(pattern, value) for pattern in patterns):
@@ -120,7 +126,7 @@ def _rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
 def _table_files(name, project):
     source, generator, limits = SOURCES[name]
     source_path = REPO / "docs/api" / source
-    source_bytes = source_path.read_bytes()
+    source_bytes = _text_bytes(source_path)
     document = json.loads(source_bytes)
     _check_locators(document)
     rows, columns = _rows(project(document))
@@ -131,7 +137,7 @@ def _table_files(name, project):
         "source": source_path.relative_to(REPO).as_posix(),
         "source_sha256": _sha(source_bytes),
         "generator": generator,
-        "generator_sha256": _sha((REPO / generator).read_bytes()),
+        "generator_sha256": _sha(_text_bytes(REPO / generator)),
         "row_count": len(rows),
         "columns": columns,
         "data_sha256": _sha(data),
@@ -167,8 +173,10 @@ def bundle_files(dataset: str, *, license_id: str) -> dict[str, bytes]:
         "schema_version": 1,
         "dataset": dataset,
         "license": license_id,
-        "projection_sha256": _sha(Path(builder.__file__).read_bytes()),
-        "packager_sha256": _sha(Path(__file__).read_bytes()),
+        "build_platform": {"system": platform.system(), "machine": platform.machine()},
+        "text_newlines": "LF",
+        "projection_sha256": _sha(_text_bytes(Path(builder.__file__))),
+        "packager_sha256": _sha(_text_bytes(Path(__file__))),
         "tables": tables,
     }
     files["manifest.json"] = _json_bytes(manifest)
@@ -184,7 +192,9 @@ def _card(dataset, tables, configs, license_id):
         "## Provenance and limits\n",
         "Engineering readiness: NOT_EVALUATED. Dataset export does not establish "
         "engineering qualification. Source and output digests are in manifest.json; "
-        "source sidecars are retained under sources/.\n",
+        "source sidecars are retained under sources/. Text hashes and retained sources "
+        "use LF newlines. The manifest records the build system and architecture; "
+        "byte verification also compares this platform metadata.\n",
     ]
     for name, table in tables.items():
         sections.append(

@@ -172,7 +172,7 @@ def anchor_holding_rows(doc: dict | None = None) -> list[dict]:
 
 def ship_resistance_rows(doc: dict | None = None) -> list[dict]:
     return _project_series("ship-resistance", {
-        "v": "speed_kn", "r": "resistance_kn", "p": "effective_power_kw",
+        "v": "speed_knots", "r": "resistance_kn", "p": "effective_power_kw",
         "fn": "froude_number",
     }, "hull", doc)
 

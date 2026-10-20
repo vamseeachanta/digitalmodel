@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import platform
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ def test_bundle_carries_every_ipr_point_and_source_digest(tmp_path):
     """Independent count from build_ipr_explorer.py: 3 pressures * 10 PI * 11 points.
 
     The digest is calculated directly over the source bytes, independently of the
-    exporter. No model output is used as its own engineering reference answer.
+    exporter, using LF newlines. No model output is its own reference answer.
     """
     destination = tmp_path / "bundle"
     bundles.write_bundle("digitalmodel-artificial-lift", destination, license_id="mit")
@@ -22,7 +23,9 @@ def test_bundle_carries_every_ipr_point_and_source_digest(tmp_path):
     assert table["row_count"] == 3 * 10 * 11
     assert (
         table["source_sha256"]
-        == hashlib.sha256((bundles.REPO / table["source"]).read_bytes()).hexdigest()
+        == hashlib.sha256(
+            (bundles.REPO / table["source"]).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest()
     )
     rows = [
         json.loads(line)
@@ -116,14 +119,16 @@ def test_existing_destination_is_preserved(tmp_path):
     assert sentinel.read_text() == "existing data"
 
 
-@pytest.mark.parametrize("kind", ["home", "mnt", "windows", "contact"])
+@pytest.mark.parametrize(
+    "kind", ["home", "mnt", "windows", "windows-drive-relative", "contact"]
+)
 def test_source_locator_is_rejected_before_any_output(tmp_path, monkeypatch, kind):
     """A retained source sidecar must not leak a private locator in its metadata."""
     repo = tmp_path / "repo"
-    if kind == "windows":
-        restricted = str(Path("C:") / "Users" / tmp_path.name / "data").replace(
-            "/", "\\"
-        )
+    if kind in {"windows", "windows-drive-relative"}:
+        separator = "\\"
+        drive = "C:" + (separator if kind == "windows" else "")
+        restricted = drive + "Users" + separator + tmp_path.name + separator + "data"
     elif kind == "contact":
         restricted = "example" + chr(64) + "example.org"
     else:
@@ -211,3 +216,59 @@ def test_command_line_build_and_readonly_verify(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", [*args, "--verify"])
     bundles.main()
     assert "verified (not published)" in capsys.readouterr().out
+
+
+def test_crlf_checkout_preserves_digests_and_retained_source_bytes(monkeypatch):
+    """Simulate Git's text checkout conversion for every source and script read.
+
+    No scientific value changes: only actual line endings are expanded. JSON
+    escape sequences inside values remain untouched.
+    """
+    expected = bundles.bundle_files("digitalmodel-hydro", license_id="mit")
+    read_bytes = Path.read_bytes
+    converted = set()
+
+    def crlf_bytes(path):
+        data = read_bytes(path)
+        if path.suffix in {".json", ".py"}:
+            converted.add(path)
+            return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", crlf_bytes)
+    actual = bundles.bundle_files("digitalmodel-hydro", license_id="mit")
+    assert Path(bundles.__file__) in converted
+    assert Path(bundles.builder.__file__) in converted
+    for name in ("ship_resistance", "viv"):
+        source, generator, _ = bundles.SOURCES[name]
+        assert bundles.REPO / "docs/api" / source in converted
+        assert bundles.REPO / generator in converted
+        assert actual[f"sources/{name}.json"] == expected[f"sources/{name}.json"]
+    # Includes source, generator, projection, packager and data digests.
+    assert actual == expected
+
+
+def test_manifest_records_build_platform():
+    files = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
+    manifest = json.loads(files["manifest.json"])
+    assert manifest["build_platform"] == {
+        "system": platform.system(),
+        "machine": platform.machine(),
+    }
+    assert manifest["text_newlines"] == "LF"
+
+
+def test_hydro_contract_distinguishes_knots_from_kilonewtons():
+    files = bundles.bundle_files("digitalmodel-hydro", license_id="mit")
+    manifest = json.loads(files["manifest.json"])
+    columns = manifest["tables"]["ship_resistance"]["columns"]
+    assert "speed_knots" in columns
+    assert "speed_kn" not in columns
+    assert "resistance_kn" in columns
+    row = json.loads(files["ship_resistance/train.jsonl"].splitlines()[0])
+    source = json.loads(files["sources/ship_resistance.json"])
+    point = source["series"][row["hull"]][0]
+    assert row["speed_knots"] == point["v"]
+    assert row["resistance_kn"] == point["r"]
+    card = files["README.md"].decode()
+    assert "speed_knots" in card
