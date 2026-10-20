@@ -5,7 +5,7 @@
 | Module | solvers/orcawave |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/solvers/orcawave` |
-| Pack revision | 4; 2026-10-20 |
+| Pack revision | 5; 2026-10-20 |
 | Code revision | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Analysis family | Diffraction; registry code DF |
 | Quality role | Diffraction quality manager; deputy: diffraction quality manager on another provider |
@@ -25,6 +25,7 @@ regressions use synthetic inputs only and establish no solver qualification.
 | 2 | 2026-10-18 | Required CSV grids and a supported coefficient file; tightened evidence checks and retained unresolved limitations. |
 | 3 | 2026-10-19 | Rejected absent requested regular geometry files before worker creation; retained partial-input, parser and topology limitations. |
 | 4 | 2026-10-20 | Recorded complete requested-input refusal, atomic parser results, edge-closure and QA-state repairs; retained the historical audit pin and unresolved engineering qualifications. |
+| 5 | 2026-10-20 | Bound the 100-test result to revision 64f5380d, which includes the submission-failure regressions. |
 
 ## 1. Purpose and scope
 
@@ -159,7 +160,7 @@ The two geometry-discovery log messages are retained for diagnostics.
 The historical diagnostics and section-6 catalogue remain bound to the code pin
 above; their repaired contracts are identified in
 [the issue-2738 qualification note](issue-2738-qualification.html). The suite
-passed 95 tests at `f9296195` in the second-provider review (Python 3.12,
+passed 100 tests at `64f5380d` in the second-provider review (Python 3.12.3,
 NumPy 1.26.4). Closure is an edge-incidence criterion, not hydrostatic or native
 solver qualification. The small-area heuristic, numerical physics, units,
 caller bypasses, partial CSV/Excel channels, packaging and provenance remain open.
