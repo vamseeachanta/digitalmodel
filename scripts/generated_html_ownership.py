@@ -241,6 +241,10 @@ MANUAL_PAGES = {
     "docs/api/hydro/short-horizon-motion-forecast.html": (
         "hand-maintained explorer; no scripts producer found"
     ),
+    "docs/api/installation/coverage-status-claims.html": (
+        "hand-maintained coverage-claim grammar and executable example; "
+        "validated by tests/workflows/test_coverage_status_claims.py"
+    ),
     "docs/api/subsea/offshore-cross-section-report.html": (
         "hand-maintained report; no scripts producer found"
     ),
