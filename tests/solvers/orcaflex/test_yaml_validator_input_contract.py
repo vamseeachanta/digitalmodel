@@ -203,3 +203,61 @@ def test_comment_only_template_is_outside_strict_input_scope(tmp_path):
     assert not strict.valid
     assert any("Document contains no model or fragment" in issue.message
                for issue in strict.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("value", ["null", "wrong", "[]", "[null]"])
+def test_malformed_merged_sections_retain_source_locations(tmp_path, section, value):
+    """Inherited containers require the same shape as literal root sections."""
+    result = validate(tmp_path, f"<<:\n  {section}: {value}\n")
+    assert not result.valid
+    assert any(issue.property == section and issue.line == 2
+               and "mapping or a nonempty include list" in issue.message
+               for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+def test_nested_root_merges_validate_the_effective_section(tmp_path, section):
+    result = validate(tmp_path, f"Defaults: &d\n  {section}: null\n<<:\n  <<: *d\n")
+    assert not result.valid
+    assert any(issue.property == section and issue.line == 2
+               and "mapping or a nonempty include list" in issue.message
+               for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+def test_first_merge_source_takes_precedence_for_section_shape(tmp_path, section):
+    result = validate(tmp_path, f"<<:\n- {section}: wrong\n- {section}: {{}}\n")
+    assert not result.valid
+    assert any(issue.property == section and issue.line == 2
+               and "mapping or a nonempty include list" in issue.message
+               for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("text", [
+    "<<: {{{section}: {{}}}}\n",
+    "Defaults: &d {{{section}: {{}}}}\n<<:\n  <<: *d\n",
+    "<<: {{{section}: null}}\n{section}: {{}}\n",
+    "{section}: {{}}\n<<: {{{section}: wrong}}\n",
+    "<<: [{{{section}: {{}}}}, {{{section}: null}}]\n",
+])
+def test_valid_merged_sections_and_local_overrides_remain_supported(tmp_path, section, text):
+    """Local sections override merges regardless of their source order."""
+    assert validate(tmp_path, text.format(section=section)).valid
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+def test_merged_section_include_lists_remain_supported(tmp_path, section):
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    text = f"<<:\n  {section}:\n  - includefile: fragment.yml\n"
+    assert validate(tmp_path, text).valid
+
+
+@pytest.mark.parametrize("strict_profile", [False, True])
+def test_root_merge_graph_limits_remain_enforced(tmp_path, strict_profile):
+    path = tmp_path / "model.yml"
+    path.write_text("&root {<<: *root}\n", encoding="utf-8")
+    result = validate_orcaflex_yaml(path, strict_profile=strict_profile)
+    assert not result.valid
+    assert any("cyclic YAML alias graph" in issue.message for issue in result.errors)

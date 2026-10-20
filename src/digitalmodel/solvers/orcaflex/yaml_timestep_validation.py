@@ -4,6 +4,7 @@ This is not an include interpreter or a native OrcaFlex acceptance check.
 """
 
 from collections import Counter
+from copy import deepcopy
 from math import isfinite
 
 import yaml
@@ -159,9 +160,18 @@ def _document_shape_issues(root):
                  root.start_mark.line + 1 if root is not None else None)]
     if not isinstance(root, MappingNode):
         return []
+    # Flatten a copy: the original nodes still carry assignment-order evidence.
+    effective_root = deepcopy(root)
+    loader = yaml.SafeLoader("")
+    try:
+        loader.flatten_mapping(effective_root)
+    finally:
+        loader.dispose()
+    # SafeLoader places inherited pairs first and local overrides last; the
+    # last value for each name is the section that construction will expose.
+    effective = {_key(key): (key, value) for key, value in effective_root.value}
     issues = []
-    for key, value in root.value:
-        name = _key(key)
+    for name, (key, value) in effective.items():
         if name not in {"General", "Environment"}:
             continue
         if isinstance(value, MappingNode):
@@ -185,7 +195,7 @@ def inspect_source(raw_text, sections, invalid_properties, *, strict_profile=Fal
     # Large vessel tables are legitimate linear-size documents. Bound expansion
     # relative to source size, so compact alias fan-out cannot amplify work.
     mappings, counts, failure = _inventory(root, max(100000, 2 * len(raw_text)))
-    issues = _document_shape_issues(root) if strict_profile else []
+    issues = _document_shape_issues(root) if strict_profile and not failure else []
     duplicate_general = isinstance(root, MappingNode) and sum(
         _key(key) == "General" for key, _ in root.value
     ) > 1
