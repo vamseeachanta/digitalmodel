@@ -39,11 +39,11 @@ def _text(value):
     return value
 
 
-def _quantity(item, unit, *, positive=False):
+def _quantity(item, unit, *, positive=False, signed=False):
     if item["unit"] != unit:
         raise ValueError(f"Expected unit {unit}")
     _text(item["source"])
-    return _number(item["value"], positive=positive)
+    return _number(item["value"], positive=positive, signed=signed)
 
 
 def build_cases(basis):
@@ -92,12 +92,12 @@ def _criteria(basis):
         keys.add(key)
         if criterion["bound"] not in ("maximum", "minimum"):
             raise ValueError("A maximum or minimum bound is required")
-        _quantity(criterion["limit"], _text(criterion["limit"]["unit"]))
+        _quantity(criterion["limit"], _text(criterion["limit"]["unit"]), signed=True)
     return criteria
 
 
 def prepare_models(basis, source, output):
-    """Overlay sea states on a complete, digest-pinned single-JONSWAP model.
+    """Overlay sea states on a complete, digest-pinned SI single-JONSWAP model.
 
     The caller supplies the entire physical model and its source ledger. No
     template coefficients, rigging or solver settings are invented here.
@@ -133,6 +133,8 @@ def prepare_models(basis, source, output):
         model = yaml.load(raw.decode("utf-8-sig"), Loader=OrcaFlexLoader)
         if not isinstance(model, dict):
             raise ValueError("A complete model mapping is required")
+        if model.get("General", {}).get("UnitsSystem") != "SI":
+            raise ValueError("Source model requires explicit SI units")
         _dependencies(model)
         waves = model.get("Environment", {}).get("WaveTrains", [])
         if len(waves) != 1 or waves[0].get("WaveType") != "JONSWAP":

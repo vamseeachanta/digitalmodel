@@ -204,6 +204,42 @@ def test_signed_clearance_failure(basis):
     assert assess_sweep(basis, data)["screening_status"] == "FAIL"
 
 
+@pytest.mark.parametrize(
+    "bound,value,status",
+    [
+        ("minimum", 0.0, "PASS"),
+        ("minimum", -0.1, "PASS"),
+        ("minimum", -0.2, "FAIL"),
+        ("maximum", -0.2, "PASS"),
+        ("maximum", -0.1, "PASS"),
+        ("maximum", 0.0, "FAIL"),
+    ],
+)
+def test_negative_criterion_bounds(basis, bound, value, status):
+    """Compare signed metre values directly against an illustrative -0.1 m bound."""
+    data = records(basis)
+    for criterion in basis["criteria"]:
+        criterion.update(name="clearance", bound=bound)
+        criterion["limit"].update(value=-0.1, unit="m")
+    for record in data:
+        for metric in record["metrics"]:
+            metric.update(name="clearance", value=value, unit="m")
+    result = assess_sweep(basis, data)
+    assert result["screening_status"] == status
+    assert all(
+        check["status"] == status and check["limit"] == -0.1
+        for case in result["cases"]
+        for check in case["checks"]
+    )
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -float("inf"), True, "-0.1"])
+def test_criterion_bounds_require_finite_numbers(basis, bad):
+    basis["criteria"][0]["limit"]["value"] = bad
+    with pytest.raises(ValueError):
+        assess_sweep(basis, records(basis))
+
+
 def test_result_sea_state_must_match_case(basis):
     data = records(basis)
     for record, case in zip(data, build_cases(basis)):
@@ -313,6 +349,42 @@ def test_prepare_case_models_and_preserve_input(basis, tmp_path):
         prepare_models(basis, source, output)
 
 
+@pytest.mark.parametrize("units", ["US", "User", "si", None, "missing"])
+def test_prepare_requires_explicit_si_units(basis, tmp_path, units):
+    """Metre-valued Hs must not be written into a different native unit system."""
+    import yaml
+    from digitalmodel.workflows.subsea_lowering import prepare_models
+
+    model = {
+        "General": {"UnitsSystem": units},
+        "Environment": {
+            "WaterDepth": 50,
+            "WaveTrains": [
+                {
+                    "WaveType": "JONSWAP",
+                    "WaveJONSWAPParameters": "Partially specified",
+                    "WaveGamma": 1,
+                    "WaveHs": 9,
+                    "WaveTp": 9,
+                }
+            ],
+        },
+    }
+    if units is None:
+        model["General"] = {}
+    elif units == "missing":
+        del model["General"]
+    source = tmp_path / "source.yml"
+    source.write_text(yaml.safe_dump(model))
+    original = source.read_bytes()
+    basis["model_sha256"] = hashlib.sha256(original).hexdigest()
+    output = tmp_path / "models"
+    with pytest.raises(ValueError, match="explicit SI units"):
+        prepare_models(basis, source, output)
+    assert not output.exists()
+    assert source.read_bytes() == original
+
+
 @pytest.mark.parametrize(
     "mutation", ["digest", "dependency", "waves", "spectrum", "invalid"]
 )
@@ -320,7 +392,10 @@ def test_prepare_refuses_ambiguous_models(basis, tmp_path, mutation):
     import yaml
     from digitalmodel.workflows.subsea_lowering import prepare_models
 
-    model = {"Environment": {"WaveTrains": [{"WaveType": "JONSWAP"}]}}
+    model = {
+        "General": {"UnitsSystem": "SI"},
+        "Environment": {"WaveTrains": [{"WaveType": "JONSWAP"}]},
+    }
     if mutation == "dependency":
         model["BaseFile"] = "absent.yml"
     if mutation == "waves":
@@ -350,7 +425,14 @@ def test_jonswap_requires_hs_and_tp_to_be_independent_inputs(basis, tmp_path, mo
     if mode is not None:
         wave["WaveJONSWAPParameters"] = mode
     source = tmp_path / "source.yml"
-    source.write_text(yaml.safe_dump({"Environment": {"WaveTrains": [wave]}}))
+    source.write_text(
+        yaml.safe_dump(
+            {
+                "General": {"UnitsSystem": "SI"},
+                "Environment": {"WaveTrains": [wave]},
+            }
+        )
+    )
     basis["model_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
     with pytest.raises(ValueError, match="Partially specified"):
         prepare_models(basis, source, tmp_path / "models")
@@ -381,7 +463,14 @@ def test_linked_period_input_cannot_override_peak_period(basis, tmp_path, linked
         linked: 1,
     }  # Invented structural exercise values.
     source = tmp_path / "source.yml"
-    source.write_text(yaml.safe_dump({"Environment": {"WaveTrains": [wave]}}))
+    source.write_text(
+        yaml.safe_dump(
+            {
+                "General": {"UnitsSystem": "SI"},
+                "Environment": {"WaveTrains": [wave]},
+            }
+        )
+    )
     basis["model_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
     with pytest.raises(ValueError, match="linked"):
         prepare_models(basis, source, tmp_path / "models")
