@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Generate self-contained HTML benchmark report for passing ship Wang (1975) calculator."""
 
 import json
@@ -9,6 +12,8 @@ from typing import Optional
 
 from assetutilities.units import TrackedQuantity
 
+from .analysis import AnalysisResult
+from .response_report import response_sections
 from .calculator import PassingShipCalculator
 from .configuration import VesselConfig, EnvironmentalConfig, CalculationConfig
 
@@ -220,11 +225,15 @@ def _dof_block(name, pid, badge_color, badge_text, badge_desc, stats, obs, data_
         f'<div>{_plot_div(pid, data_j, layout_j)}</div></div></div>')
 
 
-def generate_benchmark_report(output_path: Optional[str] = None) -> str:
+def generate_benchmark_report(
+    output_path: Optional[str] = None,
+    *, response_results: Optional[list[AnalysisResult]] = None,
+) -> str:
     """Generate the passing ship benchmark HTML report.
 
     Args:
         output_path: Path to write HTML file. If None, returns HTML string only.
+        response_results: Computed analysis cases for tension and motion sections.
 
     Returns:
         HTML string of the report.
@@ -362,6 +371,7 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <tr><td>ft &rarr; m</td><td>{ft_to_m}</td></tr><tr><td>lbf &rarr; N</td><td>{lbf_to_n}</td></tr>
 <tr><td>ft&middot;lbf &rarr; N&middot;m</td><td>{ft_lbf_to_nm}</td></tr>
 <tr><td>slug/ft&sup3; &rarr; kg/m&sup3;</td><td>{slug_ft3_to_kg_m3}</td></tr></tbody></table></div>
+{response_sections(response_results or [])}
 </div></body></html>"""
 
     if output_path:

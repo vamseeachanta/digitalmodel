@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Canonical input schema for passing ship analysis (WRK-131 Phase 2).
 
 Solver-agnostic specification that fully defines a passing ship analysis:
@@ -71,6 +74,10 @@ class MooringLineSpec(BaseModel):
     )
     length: float = Field(..., gt=0, description="Unstretched line length (m)")
     pretension: float = Field(..., ge=0, description="Pretension (kN)")
+    horizontal_stiffness_n_m: Optional[float] = Field(
+        None, gt=0,
+        description="Effective horizontal tangent stiffness (N/m); required for response",
+    )
     fairlead_x: float = Field(
         ...,
         description="Fairlead x-position from vessel midship (m)",
@@ -100,6 +107,50 @@ class MooringLineSpec(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class FenderSpec(BaseModel):
+    """Unloaded linear compression spring; normal points toward compression."""
+
+    fender_id: str
+    x: float = Field(..., description="Contact x from midship (m)")
+    y: float = Field(..., description="Contact y from centreline (m)")
+    normal_x: float
+    normal_y: float
+    gap_m: float = Field(..., ge=0, description="Initial clearance (m)")
+    stiffness_n_m: float = Field(..., gt=0)
+
+
+class ResponseSettings(BaseModel):
+    """User-supplied model validity bounds and numerical balance tolerances.
+
+    No design acceptance criteria are inferred. Translation is the horizontal
+    displacement norm; yaw is in radians. Bounds must suit the supplied
+    tangent stiffness and the small-displacement assumption.
+    """
+
+    max_translation_m: float = Field(..., gt=0)
+    max_yaw_rad: float = Field(..., gt=0)
+    force_tolerance_n: float = Field(..., gt=0)
+    moment_tolerance_nm: float = Field(..., gt=0)
+
+
+class WindLoadSpec(BaseModel):
+    """User-supplied directional drag model, with no inferred coefficients.
+
+    Reference areas are frontal and lateral. The simplified model projects
+    the wind velocity onto body axes and applies componentwise quadratic
+    drag. Coefficients must be qualified for that convention. Centre of
+    pressure coordinates supply the yaw moment arm.
+    """
+
+    air_density_kg_m3: float = Field(..., gt=0)
+    frontal_area_m2: float = Field(..., gt=0)
+    lateral_area_m2: float = Field(..., gt=0)
+    surge_coefficient: float = Field(..., ge=0)
+    sway_coefficient: float = Field(..., ge=0)
+    centre_of_pressure_x_m: float
+    centre_of_pressure_y_m: float
+
+
 class MooredVesselSpec(BaseModel):
     """Complete specification of the moored vessel."""
 
@@ -119,6 +170,8 @@ class MooredVesselSpec(BaseModel):
         default_factory=list,
         description="Mooring line definitions",
     )
+    fenders: List[FenderSpec] = Field(default_factory=list)
+    wind_load: Optional[WindLoadSpec] = None
     rao_source: Optional[str] = Field(
         None,
         description="Path to RAO file (relative to spec.yml)",
@@ -409,6 +462,7 @@ class PassingShipSpec(BaseModel):
         default_factory=OutputSpec,
         description="Output request specification",
     )
+    response_settings: Optional[ResponseSettings] = None
 
     @classmethod
     def from_yaml(cls, path: Union[str, Path]) -> PassingShipSpec:
@@ -472,6 +526,9 @@ class PassingShipSpec(BaseModel):
 __all__ = [
     "HullSpec",
     "MooringLineSpec",
+    "FenderSpec",
+    "ResponseSettings",
+    "WindLoadSpec",
     "MooredVesselSpec",
     "PassingShipDimensions",
     "PassingTrack",
