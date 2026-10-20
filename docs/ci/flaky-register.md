@@ -6,7 +6,10 @@ not part of this change. Entries close with the merged fix recorded in `fix_issu
 
 The register never deselects or skips a test. In enforce mode, a retry-recovered
 test ID can clear only when its register entry has `status: open` and a nonempty
-`evidence` list. Missing, fixed, empty or unreadable entries keep the shard red.
+`evidence` list. Every URL must resolve to a completed failing job for the same
+shard in this repository, from a main push or scheduled run. PR evidence, other
+shards and unverifiable metadata cannot authorize a recovery. Missing, fixed,
+empty or unreadable entries keep the shard red.
 Each entry records a unique ID, kind, first and last observation dates, run
 evidence, cause (including uncertainty), fix reference or `pending`, and status.
 
@@ -35,17 +38,22 @@ classifying each as pre-existing on fresh main evidence for the same shard and
 ID, registered with evidence after recovery, or NEW. The committed baseline mode
 remains `report`. Recovered IDs are excluded from open main-baseline failures.
 
-Atlas runs its direct command and is outside the retry pilot. Signal exits
-propagate without retry in both modes. `--decide-only --from-log LOG` inspects
-cached hosted logs without executing their content. An isolated pass does not
-establish a failure's cause; shared state and leftover files can produce a retry
-pass. Failures whose test IDs cannot be established retain their raw classname
-and name in the retry record and job summary.
+The Atlas drift gate runs its direct command. The diagnostic `--signal-retry`
+option retries the whole command once after a signal exit (128 or above),
+excluding timeout and termination
+codes. Ordinary exits 1 to 127 propagate without retry. Both modes return the
+first signal exit, and the record and summary retain both attempt exits.
+`--decide-only --from-log LOG` inspects cached hosted
+logs without executing their content. Neither an isolated pass nor a signal
+retry establishes a failure's cause; shared state and leftover files can also
+produce a retry pass. Failures whose test IDs cannot be established retain their
+raw classname and name in the retry record and job summary.
 Register evidence remains a human decision.
 
 On pull requests, register selection fetches the base branch tip at run time
 and reads its register with `git show` into a temporary file. The wrapper and
-comparator receive that file through `--register`. An absent base register
+comparator receive that file through `--register` and independently reselect
+the base register on PRs before approving any entry. An absent base register
 means no registered IDs; fetch or object-read errors fail closed. Other events
 use the checked-out register. A pull request cannot certify its own failures
 by adding entries to its checkout.

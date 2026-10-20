@@ -20,7 +20,21 @@ derives it (canonical-derived). Where it diverges, the view returns a
 **legacy-preserved** snapshot stored in `grades.py`. This table is the artifact
 to sign off **before** any value is converged.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 1 | 2026-10-18 | Added the #2726 supersession note so historical conversion values are not treated as current product-level minima. |
+
 ## Canonical reference (`materials.grades`, MPa)
+
+**Superseded by #2726:** this table records the historical reference used
+for the migration. Its converted legacy PSL1 values are not the current
+API 5L 46th-edition SI minima. Current PSL1 entries use 9.3.1 Table 6;
+X80 has no PSL1 entry. A25 and A have no PSL2 entry under 9.3.2 Table 7.
+Legacy-preserved snapshots remain historical data. Consult `materials.grades`
+for supported product levels; licensed-text verification by the maintainer
+remains required before #2726 closes.
 
 API 5L / ISO 3183. `smys_mpa` = ISO L-grade; `smts_mpa` = PSL2 min;
 `smts_psl1_mpa` = PSL1 min (US-customary) where it differs.

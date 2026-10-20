@@ -7,6 +7,10 @@ Implements:
 - monopile_scour_depth: equilibrium scour for monopiles (Breusers/Sumer)
 - rock_armour_thickness: minimum rock armour protection layer
 - riprap_residual_scour_depth: guarded steady-current fit (Yang et al., 2026)
+- critical_sediment_motion: Shields stress and bed shear velocity thresholds
+
+The sediment-motion helper uses the USACE reference cited in its docstring;
+it does not qualify the legacy scour curves or their DNV attribution above.
 
 References:
     DNV-RP-F107 "Risk Assessment of Pipeline Protection" (2019)
@@ -52,6 +56,83 @@ class RockArmourResult:
     thickness_m: float
     stability_number: float
     standard: str = STANDARD
+
+
+@dataclass(frozen=True)
+class CriticalSedimentMotionResult:
+    """Noncohesive incipient-motion thresholds, not a scour-depth assessment.
+
+    Shear stress is in Pa; shear (friction) velocity is in m/s and must not
+    be substituted for a depth-averaged or near-bed current velocity.
+    """
+
+    critical_shear_stress_pa: float
+    critical_shear_velocity_ms: float
+
+
+def critical_sediment_motion(
+    *,
+    sediment_d50_m: float,
+    sediment_density_kg_m3: float,
+    water_density_kg_m3: float,
+    critical_shields_parameter: float,
+    gravity_ms2: float,
+) -> CriticalSedimentMotionResult:
+    """Convert a supplied critical Shields parameter to motion thresholds.
+
+    Source: USACE, HEC-RAS 2D Sediment Technical Reference Manual, v6.4.1
+    (2023), section 2.14.1, equation 132; section 2.13.1, bed shear velocity
+    definition following equation 111 (pages 77 and 69, respectively):
+    https://www.hec.usace.army.mil/software/hec-ras/documentation/HEC-RAS%202D%20Sediment%20Technical%20Reference%20Manual-v6.4.1.pdf
+
+    tau_cr = theta_cr * (rho_s - rho_w) * g * d50
+    u_star_cr = sqrt(tau_cr / rho_w)
+
+    All inputs are required: median grain diameter in m, grain and water
+    densities in kg/m^3, dimensionless critical Shields parameter, and
+    gravity in m/s^2. The caller must select and qualify the critical Shields
+    parameter for the noncohesive sediment and transport criterion; no
+    universal critical parameter or environmental properties are assumed.
+
+    This is a threshold conversion, not a scour predictor. Cohesive erosion,
+    depth-averaged critical current velocity, local flow amplification and
+    scour depth are not evaluated. In particular, the returned friction
+    velocity is not a replacement for the legacy monopile current threshold.
+
+    Raises:
+        ValueError: Inputs violate the positive submerged-weight domain or
+            the thresholds cannot be represented as positive finite floats.
+    """
+    for name, value in (
+        ("sediment_d50_m", sediment_d50_m),
+        ("sediment_density_kg_m3", sediment_density_kg_m3),
+        ("water_density_kg_m3", water_density_kg_m3),
+        ("critical_shields_parameter", critical_shields_parameter),
+        ("gravity_ms2", gravity_ms2),
+    ):
+        # Positive finite quantities are the domain of the cited equations,
+        # not an empirical sediment-size range or an acceptance limit.
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be positive and finite")
+    if sediment_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("sediment_density_kg_m3 must exceed water_density_kg_m3")
+
+    # USACE v6.4.1 (2023), section 2.14.1, equation 132, rearranged.
+    stress = (
+        critical_shields_parameter
+        * (sediment_density_kg_m3 - water_density_kg_m3)
+        * gravity_ms2
+        * sediment_d50_m
+    )
+    # USACE v6.4.1 (2023), section 2.13.1, definition after equation 111.
+    velocity = math.sqrt(stress / water_density_kg_m3)
+    if not all(math.isfinite(value) and value > 0.0 for value in (stress, velocity)):
+        raise ValueError("thresholds must be representable as positive finite floats")
+
+    return CriticalSedimentMotionResult(
+        critical_shear_stress_pa=stress,
+        critical_shear_velocity_ms=velocity,
+    )
 
 
 def pipeline_scour_depth(

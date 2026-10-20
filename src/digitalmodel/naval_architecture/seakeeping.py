@@ -152,10 +152,23 @@ def simple_heave_rao(
 
     H(omega) = 1 / sqrt((1 - r²)² + (2*zeta*r)²)
     where r = omega / omega_n
+
+    Raises:
+        ValueError: The response is unbounded at undamped resonance.
+
+    The default damping ratio is a legacy assumption, not a qualified hull
+    property. Supply the damping ratio for the system being evaluated.
     """
     r = wave_freq_rad / natural_freq_rad
-    denom = math.sqrt((1 - r**2) ** 2 + (2 * damping_ratio * r) ** 2)
-    return 1.0 / denom if denom > 1e-10 else 100.0
+    # Mechanics Map, 2021 online edition, section 15.5, magnification-factor
+    # equation and Figure 2 (Viscous Damped Harmonic Forced Vibrations):
+    # https://eng.libretexts.org/Bookshelves/Mechanical_Engineering/Mechanics_Map_(Moore_et_al.)/15:_Vibrations_with_One_Degree_of_Freedom/15.5:_Viscous_Damped_Harmonic_Forced_Vibrations
+    # The coefficients below follow that equation. hypot avoids underflow
+    # when squaring a small, nonzero damping term at resonance.
+    denom = math.hypot(1 - r**2, 2 * damping_ratio * r)
+    if denom == 0.0:
+        raise ValueError("Heave RAO is unbounded at undamped resonance")
+    return 1.0 / denom
 
 
 def motion_sickness_incidence(

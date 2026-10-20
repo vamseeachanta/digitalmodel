@@ -5,18 +5,22 @@ short-term Rayleigh distribution, long-term scatter diagram integration,
 and Motion Sickness Incidence (MSI) per ISO 2631-1.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+import warnings
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class ResponseSpectrum(BaseModel):
     """Response spectrum S_r(omega) = |RAO(omega)|^2 * S_wave(omega)."""
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     frequencies: List[float] = Field(..., description="Frequency vector (rad/s)")
     spectral_density: List[float] = Field(
@@ -31,7 +35,21 @@ class ResponseSpectrum(BaseModel):
 class ShortTermStatistics(BaseModel):
     """Short-term response statistics assuming narrow-band Rayleigh."""
 
-    significant: float = Field(..., description="Significant response (double amplitude)")
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    significant_single_amplitude: float
+    significant_double_amplitude: float
+
+    @property
+    def significant(self) -> float:
+        """Deprecated compatibility alias for the significant single amplitude."""
+        warnings.warn(
+            "Use significant_single_amplitude or significant_double_amplitude",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.significant_single_amplitude
+
     rms: float = Field(..., description="RMS response")
     mean_zero_crossing_period: float = Field(..., description="Tz in seconds")
     most_probable_maximum_3hr: float = Field(
@@ -51,6 +69,8 @@ class ShortTermStatistics(BaseModel):
 class ScatterCell(BaseModel):
     """One cell from a wave scatter diagram."""
 
+    model_config = ConfigDict(allow_inf_nan=False)
+
     hs: float = Field(..., description="Significant wave height (m)", gt=0)
     tp: float = Field(..., description="Peak period (s)", gt=0)
     probability: float = Field(
@@ -63,6 +83,8 @@ class ScatterCell(BaseModel):
 
 class LongTermResult(BaseModel):
     """Long-term extreme response from scatter diagram integration."""
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     return_period_years: float
     extreme_response: float = Field(
@@ -78,6 +100,8 @@ class LongTermResult(BaseModel):
 class MSIResult(BaseModel):
     """Motion Sickness Incidence result per ISO 2631-1."""
 
+    model_config = ConfigDict(allow_inf_nan=False)
+
     msi_percent: float = Field(
         ...,
         description="Percentage of occupants expected to be sick",
@@ -87,12 +111,18 @@ class MSIResult(BaseModel):
         description="Vertical RMS acceleration (m/s^2)",
     )
     exposure_hours: float
+    msdv_z: float
+    qualification: str = (
+        "computational_reference_only; licensed edition verification pending"
+    )
+    citations: List[str]
     frequency_weighted: bool = Field(default=True)
 
 
 # ---------------------------------------------------------------------------
 # Response spectrum
 # ---------------------------------------------------------------------------
+
 
 def compute_response_spectrum(
     omega: np.ndarray,
@@ -109,7 +139,14 @@ def compute_response_spectrum(
     Returns:
         ResponseSpectrum with moments.
     """
-    s_r = rao_amplitude**2 * wave_spectrum
+    from .wave_spectrum import validate_spectral_grid
+
+    validate_spectral_grid(omega, wave_spectrum)
+    if np.shape(rao_amplitude) != np.shape(omega) or not np.all(
+        np.isfinite(rao_amplitude)
+    ):
+        raise ValueError("RAO must have one finite amplitude per frequency")
+    s_r = np.abs(rao_amplitude) ** 2 * wave_spectrum
 
     m0 = float(np.trapz(s_r, omega))
     m2 = float(np.trapz(omega**2 * s_r, omega))
@@ -128,6 +165,7 @@ def compute_response_spectrum(
 # Short-term statistics
 # ---------------------------------------------------------------------------
 
+
 def short_term_statistics(
     response: ResponseSpectrum,
     duration_s: float = 10800.0,
@@ -143,29 +181,32 @@ def short_term_statistics(
     Returns:
         ShortTermStatistics.
     """
-    m0 = max(response.m0, 1e-30)
-    m2 = max(response.m2, 1e-30)
-    m4 = max(response.m4, 1e-30)
+    m0, m2, m4 = response.m0, response.m2, response.m4
+    if min(m0, m2, m4) <= 0 or not np.isfinite(duration_s) or duration_s <= 0:
+        raise ValueError("Positive moments and duration are required")
+    if m2**2 > m0 * m4 * (1 + 1e-12):
+        raise ValueError("Spectral moments violate m2**2 <= m0*m4")
 
     sigma = np.sqrt(m0)
     tz = 2.0 * np.pi * np.sqrt(m0 / m2)
-    epsilon = np.sqrt(1.0 - m2**2 / (m0 * m4))
+    epsilon = np.sqrt(max(0.0, 1.0 - m2**2 / (m0 * m4)))
 
     # Number of zero-crossings in duration
     n_cycles = duration_s / tz if tz > 0 else 1.0
 
-    # Significant response (average of highest 1/3 peaks)
-    significant = 2.0 * sigma  # = 4 * sqrt(m0) / 2 for double amplitude
+    if n_cycles <= 1:
+        raise ValueError("Rayleigh maximum asymptote requires more than one cycle")
 
     # Most probable maximum (Rayleigh)
     mp_max = sigma * np.sqrt(2.0 * np.log(max(n_cycles, 1.0)))
 
-    # Expected maximum (Cartwright & Longuet-Higgins)
-    euler_gamma = 0.5772
-    e_max = mp_max + euler_gamma / (2.0 * mp_max / sigma**2) if mp_max > 0 else sigma
+    # Narrow-band Rayleigh/Gumbel asymptote; see engineering-citations.md, R1.
+    euler_gamma = 0.5772156649015329  # Euler-Mascheroni constant
+    e_max = mp_max + euler_gamma * sigma**2 / mp_max
 
     return ShortTermStatistics(
-        significant=float(significant),
+        significant_single_amplitude=float(2 * sigma),
+        significant_double_amplitude=float(4 * sigma),
         rms=float(sigma),
         mean_zero_crossing_period=float(tz),
         most_probable_maximum_3hr=float(mp_max),
@@ -178,21 +219,36 @@ def short_term_statistics(
 # Rayleigh distribution helpers
 # ---------------------------------------------------------------------------
 
+
 def rayleigh_exceedance(amplitude: float, sigma: float) -> float:
     """Probability of exceeding a given amplitude (Rayleigh distribution).
 
-    P(X > x) = exp(-x^2 / (2 * sigma^2))
+    P(X > x) = exp(-(x / sigma)^2 / 2).
+    Source: SciPy 1.14.1 reference (2024), scipy.stats.rayleigh, Notes;
+    integrate the standardized density u*exp(-u^2/2) over [x/sigma, infinity).
+    https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.stats.rayleigh.html
 
     Args:
-        amplitude: Response amplitude threshold.
-        sigma: RMS response (sqrt(m0)).
+        amplitude: Finite, nonnegative response amplitude threshold.
+        sigma: Finite, positive RMS response (sqrt(m0)).
 
     Returns:
         Exceedance probability.
+
+    Raises:
+        ValueError: Threshold or scale is outside the declared domain.
     """
-    if sigma <= 0:
-        return 0.0
-    return float(np.exp(-amplitude**2 / (2.0 * sigma**2)))
+    if not np.isfinite(amplitude) or amplitude < 0:
+        raise ValueError("Require finite amplitude >= 0")
+    if not np.isfinite(sigma) or sigma <= 0:
+        raise ValueError("Require finite sigma > 0")
+    # Form the dimensionless ratio before squaring to avoid losing a valid
+    # probability when dimensional inputs are individually very large or small.
+    # For extreme ratios, overflow/underflow gives the valid limiting values
+    # exp(-infinity)=0 and exp(0)=1; invalid operations remain errors.
+    with np.errstate(over="ignore", under="ignore"):
+        ratio = np.float64(amplitude) / sigma
+        return float(np.exp(-0.5 * ratio**2))
 
 
 def rayleigh_quantile(probability: float, sigma: float) -> float:
@@ -205,8 +261,14 @@ def rayleigh_quantile(probability: float, sigma: float) -> float:
     Returns:
         Response amplitude.
     """
-    if probability <= 0 or probability > 1 or sigma <= 0:
-        return 0.0
+    if (
+        not np.isfinite(probability)
+        or not np.isfinite(sigma)
+        or probability <= 0
+        or probability > 1
+        or sigma <= 0
+    ):
+        raise ValueError("Require 0 < probability <= 1 and finite sigma > 0")
     return float(sigma * np.sqrt(-2.0 * np.log(probability)))
 
 
@@ -214,13 +276,14 @@ def rayleigh_quantile(probability: float, sigma: float) -> float:
 # Long-term distribution
 # ---------------------------------------------------------------------------
 
+
 def long_term_extreme(
     scatter: List[ScatterCell],
     rao_amplitude: np.ndarray,
     omega: np.ndarray,
     spectrum_func,
     return_period_years: float = 100.0,
-    duration_per_cell_s: float = 10800.0,
+    duration_per_cell_s: Optional[float] = None,
 ) -> LongTermResult:
     """Compute long-term extreme response by integrating over a scatter diagram.
 
@@ -233,12 +296,30 @@ def long_term_extreme(
         omega: Frequency vector (rad/s).
         spectrum_func: Callable(omega, hs, tp) -> S(omega).
         return_period_years: Target return period.
-        duration_per_cell_s: Duration per sea state (s).
+        duration_per_cell_s: Deprecated, ignored duration per sea state (s).
+            Cycle rates are derived from each response zero-crossing period.
 
     Returns:
         LongTermResult with extreme response and per-cell contributions.
     """
-    target_prob = 1.0 / (return_period_years * 365.25 * 24 * 3600 / duration_per_cell_s)
+    if not scatter or not np.isclose(
+        sum(c.probability for c in scatter), 1.0, atol=1e-6, rtol=0
+    ):
+        raise ValueError(
+            "Scatter probabilities must sum to 1 within absolute tolerance 1e-6"
+        )
+    if duration_per_cell_s is not None:
+        if not np.isfinite(duration_per_cell_s) or duration_per_cell_s <= 0:
+            raise ValueError("Sea-state duration must be positive and finite")
+        warnings.warn(
+            "duration_per_cell_s is deprecated and ignored; response cycle rates are used",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    if not np.isfinite(return_period_years) or return_period_years <= 0:
+        raise ValueError("Return period must be positive and finite")
+    # Expected exceedance count = years_in_seconds * sum(p_i/Tz_i * q_i).
+    target_prob = 1.0 / (return_period_years * 365.25 * 24 * 3600)
 
     contributions = []
     sigmas = []
@@ -247,18 +328,24 @@ def long_term_extreme(
     for cell in scatter:
         s_wave = spectrum_func(omega, cell.hs, cell.tp)
         resp = compute_response_spectrum(omega, rao_amplitude, s_wave)
-        sigma = np.sqrt(max(resp.m0, 0.0))
+        if resp.m0 <= 0 or resp.m2 <= 0:
+            raise ValueError("Long-term extremes require positive response moments")
+        sigma = np.sqrt(resp.m0)
+        tz = 2 * np.pi * np.sqrt(resp.m0 / resp.m2)
         sigmas.append(sigma)
-        probs.append(cell.probability)
-        contributions.append({
-            "hs": cell.hs,
-            "tp": cell.tp,
-            "probability": cell.probability,
-            "sigma": float(sigma),
-        })
+        probs.append(cell.probability / tz)
+        contributions.append(
+            {
+                "hs": cell.hs,
+                "tp": cell.tp,
+                "probability": cell.probability,
+                "sigma": float(sigma),
+                "zero_crossing_period_s": float(tz),
+            }
+        )
 
     # Weighted long-term exceedance: find x such that
-    # sum_i [ p_i * exp(-x^2/(2*sigma_i^2)) ] = target_prob
+    # sum_i [ p_i/Tz_i * exp(-x^2/(2*sigma_i^2)) ] = 1/return_seconds
     sigmas_arr = np.array(sigmas)
     probs_arr = np.array(probs)
 
@@ -267,7 +354,7 @@ def long_term_extreme(
     for _ in range(100):
         x_mid = 0.5 * (x_lo + x_hi)
         q = np.sum(
-            probs_arr * np.exp(-x_mid**2 / (2.0 * np.maximum(sigmas_arr, 1e-30) ** 2))
+            probs_arr * np.exp(-(x_mid**2) / (2.0 * np.maximum(sigmas_arr, 1e-30) ** 2))
         )
         if q > target_prob:
             x_lo = x_mid
@@ -287,53 +374,69 @@ def long_term_extreme(
 # Motion Sickness Incidence
 # ---------------------------------------------------------------------------
 
+
+def wf_weighting(frequency_hz: float) -> float:
+    """Wf modulus, ISO 8041:2005 5.6, equations (8)-(12), Table 3.
+
+    Applies to a single sinusoidal component. Broadband RMS must be weighted
+    component by component before combining, never at a dominant frequency.
+    """
+    if not np.isfinite(frequency_hz) or frequency_hz <= 0:
+        raise ValueError("Frequency must be positive and finite")
+    s = 2j * np.pi * frequency_hz
+    w1, w2, w4, w5, w6 = 2 * np.pi * np.array([0.08, 0.63, 0.25, 0.0625, 0.1])
+    q = 1 / np.sqrt(2)
+    high = 1 / (1 + w1 / (q * s) + (w1 / s) ** 2)
+    low = 1 / (1 + s / (q * w2) + (s / w2) ** 2)
+    transition = 1 / (1 + s / (0.86 * w4) + (s / w4) ** 2)
+    step = (
+        (1 + s / (0.8 * w5) + (s / w5) ** 2)
+        / (1 + s / (0.8 * w6) + (s / w6) ** 2)
+        * (w5 / w6) ** 2
+    )
+    return float(abs(high * low * transition * step))
+
+
 def motion_sickness_incidence(
     vertical_acc_rms: float,
-    exposure_hours: float = 2.0,
-    dominant_frequency_hz: float = 0.15,
+    exposure_hours: float,
+    dominant_frequency_hz: Optional[float] = None,
+    *,
+    already_weighted: bool = False,
 ) -> MSIResult:
-    """Compute Motion Sickness Incidence per ISO 2631-1.
+    """Constant-exposure MSDV estimate, ISO 2631-1:1997 Annex D.
 
-    MSI (%) = K_m * a_w * sqrt(t)
-
-    where K_m is the frequency-dependent sickness constant and
-    a_w is the frequency-weighted vertical acceleration RMS.
-
-    The ISO frequency weighting peaks at ~0.167 Hz (6s period).
-
-    Args:
-        vertical_acc_rms: RMS vertical acceleration (m/s^2).
-        exposure_hours: Exposure duration (hours).
-        dominant_frequency_hz: Dominant frequency of vertical motion (Hz).
-
-    Returns:
-        MSIResult.
+    D.1(b), equation (D.2): MSDVz = aw * sqrt(T), with T in seconds.
+    D.2: MSI percent = Km * MSDVz, Km=1/3 for the reference population.
+    Input is either a single-frequency RMS or an explicitly Wf-weighted RMS.
+    A dominant frequency alone cannot qualify a broadband acceleration.
+    A dominant frequency is required only for unweighted sinusoidal input.
+    See docs/engineering-citations.md for applicability and source sidecar.
     """
-    # ISO 2631-1 frequency weighting Wf for motion sickness
-    # Peaks at ~0.167 Hz; simplified transfer function
-    f = dominant_frequency_hz
-    if f < 0.1:
-        w_factor = f / 0.1
-    elif f <= 0.315:
-        w_factor = 1.0
-    elif f <= 0.63:
-        w_factor = 0.315 / f
-    else:
-        w_factor = (0.315 / f) ** 2
-
-    a_w = vertical_acc_rms * w_factor
-
-    # MSI formula: McCauley et al. (1976) / ISO 2631-1 Annex D
-    # MSI% = 1/3 * (a_w)^1.4 * (t_minutes)^0.5  (simplified)
-    t_minutes = exposure_hours * 60.0
-    km = 1.0 / 3.0
-
-    msi = km * (a_w**1.4) * np.sqrt(t_minutes)
-    msi = min(msi, 100.0)  # cap at 100%
-
+    if not np.all(np.isfinite([vertical_acc_rms, exposure_hours])):
+        raise ValueError("MSI inputs must be finite")
+    if vertical_acc_rms < 0 or exposure_hours <= 0:
+        raise ValueError("Require nonnegative acceleration and positive exposure")
+    if not already_weighted and (
+        dominant_frequency_hz is None
+        or not np.isfinite(dominant_frequency_hz)
+        or dominant_frequency_hz <= 0
+    ):
+        raise ValueError("Unweighted input requires a positive finite frequency")
+    a_w = (
+        vertical_acc_rms
+        if already_weighted
+        else vertical_acc_rms * wf_weighting(dominant_frequency_hz)
+    )
+    dose = a_w * np.sqrt(exposure_hours * 3600)
     return MSIResult(
-        msi_percent=float(msi),
+        msi_percent=float(min(dose / 3, 100)),
         vertical_acceleration_rms=float(a_w),
         exposure_hours=exposure_hours,
         frequency_weighted=True,
+        msdv_z=float(dose),
+        citations=[
+            "ISO 2631-1:1997 D.1(b), Eq. (D.2), D.2",
+            "ISO 8041:2005 5.6, Eqs. (8)-(12), Table 3 Wf",
+        ],
     )

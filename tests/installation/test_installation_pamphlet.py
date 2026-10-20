@@ -1,8 +1,10 @@
 """Tests for the deterministic, config-driven installation-pamphlet workflow.
 
-Golden numbers are taken from the validated upstream prototype (compute_pamphlet):
-  * rao_basis="barge"     -> transit Hs limit at Tp=6 s ~= 0.52 m
-  * rao_basis="drillship" -> transit Hs limit at Tp=6 s ~= 1.84 m
+Transit goldens combine the synthetic R4 response documented in
+src/digitalmodel/orcawave/docs/engineering-citations.md (R4-P) with the
+full-spectrum integration in envelope-basis.md B3 / audit §5:
+  * rao_basis="barge"     -> transit Hs limit at Tp=6 s ~= 0.31 m
+  * rao_basis="drillship" -> transit Hs limit at Tp=6 s ~= 2.23 m
   * small 50 te mudmat is defensible with crane utilisation < 5 %
 """
 
@@ -261,7 +263,8 @@ def test_splashzone_absent_when_no_catalog_records(vessel_info, lifts):
 def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "barge")
     hs6 = res["envelopes"]["transit"]["hs_by_tp"]["6.0"]
-    assert hs6 == pytest.approx(0.52, abs=0.02)
+    # R4-P: pitch m0=14.227770329103 at Hs=1; 0.9*2.5/(2*sqrt(m0)).
+    assert hs6 == pytest.approx(0.30, abs=0.02)
     small = res["lifts"][0]
     assert small["item"] == "Mudmat (small)"
     assert small["mass_air_te"] == pytest.approx(50.0)
@@ -272,7 +275,10 @@ def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
 def test_golden_drillship_transit_hs(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
     hs6 = res["envelopes"]["transit"]["hs_by_tp"]["6.0"]
-    assert hs6 == pytest.approx(1.84, abs=0.05)
+    # R4-P supplies the corrected synthetic response; envelope-basis.md B3
+    # integrates the full spectrum instead of the old 200-point grid.
+    # Together these give 2.23 m; retain the same absolute tolerance.
+    assert hs6 == pytest.approx(2.23, abs=0.05)
     assert res["rao_provenance"] == "ship_proxy"
     assert res["provenance"]["basis_run_id"] == "lr_acma_8de9c018adbd"
 
@@ -534,8 +540,13 @@ def _envelopes_from_rao(rao_set):
         env = operation_envelope(rao_set, op, tp_range_s=calc.DEFAULT_TP_GRID_S)
         out[op] = {
             "alpha": env.alpha,
-            "hs_by_tp": {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) for p in env.points},
+            "criterion_type": env.criterion_type,
+            "alpha_source": env.alpha_source,
+            "citation_sidecar": env.citation_sidecar,
+            "hs_by_tp": {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) if p.evaluated else None
+                         for p in env.points},
             "gov_by_tp": {f"{round(p.tp_s, 1):.1f}": p.governing_dof for p in env.points},
+            "status_by_tp": {f"{round(p.tp_s, 1):.1f}": p.status for p in env.points},
         }
     return out
 
@@ -724,6 +735,35 @@ def _write_two_case_artifacts(tmp_path):
     return low_path, high_path
 
 
+def _assert_band_contract(band, low_env, high_env):
+    """Check every period, including explicit gaps in both damping inputs."""
+    for op in calc.DEFAULT_OPERATIONS:
+        b = band[op]
+        keys = set(low_env[op]["hs_by_tp"])
+        assert set(high_env[op]["hs_by_tp"]) == keys
+        for field in ("hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high"):
+            assert set(b[field]) == keys
+        missing_by_case = []
+        for env in (low_env[op], high_env[op]):
+            missing = {k for k in keys if env["hs_by_tp"][k] is None}
+            assert missing == {k for k in keys if env["status_by_tp"][k] == "insufficient_coverage"}
+            missing_by_case.append(missing)
+        # These paired fixtures share their frequency band and gap locations.
+        missing = missing_by_case[0]
+        assert missing == missing_by_case[1]
+        assert missing and keys - missing  # exercise unavailable AND numeric bounds
+        assert {k for k in keys if b["hs_by_tp_low"][k] is None} == missing
+        assert {k for k in keys if b["hs_by_tp_high"][k] is None} == missing
+        for k in keys:
+            if k in missing:
+                assert b["gov_by_tp_low"][k] == b["gov_by_tp_high"][k] == "coverage"
+            else:
+                lo, hi = low_env[op]["hs_by_tp"][k], high_env[op]["hs_by_tp"][k]
+                assert b["hs_by_tp_low"][k] <= b["hs_by_tp_high"][k]
+                assert b["hs_by_tp_low"][k] == pytest.approx(min(lo, hi))
+                assert b["hs_by_tp_high"][k] == pytest.approx(max(lo, hi))
+
+
 def test_compute_envelope_band_is_ordered_and_roll_damping_controlled(tmp_path):
     low_path, high_path = _write_two_case_artifacts(tmp_path)
     band = calc.compute_envelope_band(
@@ -736,8 +776,6 @@ def test_compute_envelope_band_is_ordered_and_roll_damping_controlled(tmp_path):
         assert set(b) == {
             "alpha", "hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high",
         }
-        for k in b["hs_by_tp_low"]:
-            assert b["hs_by_tp_low"][k] <= b["hs_by_tp_high"][k]  # band ordered
 
     # physical direction: high-damping (smaller roll) tolerates >= Hs, and the roll
     # damping ACTUALLY moved the heavy-lift envelope (non-zero band width)
@@ -747,27 +785,36 @@ def test_compute_envelope_band_is_ordered_and_roll_damping_controlled(tmp_path):
     high_env = calc.compute_envelopes(
         "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, rao_artifact=high_path
     )
+    _assert_band_contract(band, low_env, high_env)
     hl_lo = low_env["heavy_lift"]["hs_by_tp"]
     hl_hi = high_env["heavy_lift"]["hs_by_tp"]
-    assert all(hl_hi[k] >= hl_lo[k] for k in hl_lo)
-    assert any(hl_hi[k] > hl_lo[k] for k in hl_lo)  # roll damping is the lever
+    evaluated = {k for k in hl_lo if hl_lo[k] is not None and hl_hi[k] is not None}
+    assert evaluated
+    assert all(hl_hi[k] >= hl_lo[k] for k in evaluated)
+    assert any(hl_hi[k] > hl_lo[k] for k in evaluated)  # roll damping is the lever
     # roll governs both heavy-lift bounds (the damping-controlled DOF)
-    assert set(band["heavy_lift"]["gov_by_tp_low"].values()) == {"roll"}
-    assert set(band["heavy_lift"]["gov_by_tp_high"].values()) == {"roll"}
+    assert {band["heavy_lift"]["gov_by_tp_low"][k] for k in evaluated} == {"roll"}
+    assert {band["heavy_lift"]["gov_by_tp_high"][k] for k in evaluated} == {"roll"}
     # the band bounds are exactly min/max of the two single-damping envelopes
-    for k in hl_lo:
+    for k in evaluated:
         assert band["heavy_lift"]["hs_by_tp_low"][k] == pytest.approx(min(hl_lo[k], hl_hi[k]))
         assert band["heavy_lift"]["hs_by_tp_high"][k] == pytest.approx(max(hl_lo[k], hl_hi[k]))
 
 
 def test_compute_envelopes_signature_unchanged_by_band(tmp_path):
-    """Backward-compat: compute_envelopes still returns the single-value shape."""
+    """Single-value outputs retain the complete forecast audit contract."""
     low_path, _ = _write_two_case_artifacts(tmp_path)
     env = calc.compute_envelopes(
         "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, rao_artifact=low_path
     )
     for op in calc.DEFAULT_OPERATIONS:
-        assert set(env[op]) == {"alpha", "hs_by_tp", "gov_by_tp"}
+        assert set(env[op]) == {
+            "alpha", "hs_by_tp", "gov_by_tp", "status_by_tp",
+            "alpha_source", "criterion_type", "citation_sidecar",
+        }
+        assert env[op]["criterion_type"] == "forecast_limit"
+        assert env[op]["alpha_source"]["status"] == "unverified_screening"
+        assert env[op]["citation_sidecar"]
 
 
 def test_build_provenance_records_damping_band():
@@ -813,7 +860,7 @@ def test_assemble_result_wires_envelope_band(vessel_info, lifts, tmp_path):
         rao_artifact_low=str(low_path), rao_artifact_high=str(high_path),
     )
 
-    # the band is present, well-shaped and ORDERED (low <= high) at every Tp
+    # Numeric bounds are ordered; unavailable bounds retain explicit gaps.
     band = res["envelope_band"]
     assert set(band) == set(calc.DEFAULT_OPERATIONS)
     for op in calc.DEFAULT_OPERATIONS:
@@ -821,8 +868,9 @@ def test_assemble_result_wires_envelope_band(vessel_info, lifts, tmp_path):
         assert set(b) == {
             "alpha", "hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high",
         }
-        for k in b["hs_by_tp_low"]:
-            assert b["hs_by_tp_low"][k] <= b["hs_by_tp_high"][k]
+    low_env = _envelopes_from_rao(_rao_set_roll(LOW_DAMPING_ROLL))
+    high_env = _envelopes_from_rao(_rao_set_roll(HIGH_DAMPING_ROLL))
+    _assert_band_contract(band, low_env, high_env)
     # it equals the standalone band builder (assemble_result just wires it)
     assert band == calc.compute_envelope_band(
         "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, str(low_path), str(high_path)

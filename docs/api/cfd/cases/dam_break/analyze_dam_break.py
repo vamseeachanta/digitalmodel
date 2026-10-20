@@ -2,8 +2,9 @@
 """Post-process the dam-break case and compare to Martin & Moyce (1952).
 
 Computes the dimensionless surge-front history Z(T) and residual column
-height, checks mass conservation from the waterVolume functionObject, and
-writes results.json + verification PNGs.
+height, checks mass conservation from the waterVolume functionObject, records
+weighted interface mixing width from written fields, and writes results.json
+and verification PNGs. The width is diagnostic, with no calibrated solve cutoff.
 
 Usage: uv run python analyze_dam_break.py <case_dir> [<out_dir>]
 
@@ -22,6 +23,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pyvista as pv
+
+from digitalmodel.solvers.openfoam.validation.dam_break import (
+    DamBreakConfig,
+    extract_interface_width,
+)
 
 CASE = Path(sys.argv[1])
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else CASE
@@ -77,12 +83,19 @@ mass = np.loadtxt(CASE / "postProcessing/waterVolume/0/volFieldValue.dat",
 v0 = mass[0, 1]
 drift = float(np.max(np.abs(mass[:, 1] - v0)) / v0)
 
+# Match the saved uniform mesh rather than assuming the default resolution.
+interface_width_cells = extract_interface_width(
+    CASE, DamBreakConfig(column_width=A, cells_per_width=nx // 8)
+)
+
 results = {
     "column_width_m": A, "mesh_cells": int(n_cells),
     "front_dev_mean_gate_corrected": mean_cor,
     "front_dev_max_gate_corrected": max_cor,
     "front_dev_mean_raw": mean_raw, "front_dev_max_raw": max_raw,
     "mass_drift_rel": drift, "water_volume_m3": float(v0),
+    "interface_band_width_cells": interface_width_cells,
+    "interface_width_status": "diagnostic only; solved-field cutoff not calibrated",
     "gate_release_shift": GATE_SHIFT,
     "gates": {"front_mean_corrected<=0.06": mean_cor <= 0.06,
               "front_max_corrected<=0.10": max_cor <= 0.10,

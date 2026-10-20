@@ -10,6 +10,12 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | --- | --- | --- |
 | 0 | 2026-10-14 | Add the SI profile interface and public benchmark reproductions for slope screening. |
 | 1 | 2026-10-15 | Add the Bishop search benchmark, seepage handoff and example tests, and hosted solver execution; clarify validation limits. |
+| 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
+| 3 | 2026-10-18 | Isolate seed refinements to prevent cache sharing; preserve thin user-circle mechanisms; disclose group minima, the coarse filter and per-search unsolved counts; require explicit search mode in result records. |
+| 4 | 2026-10-18 | Distinguish isolated search metadata; run preflight before the sweep to preserve input diagnostics; clarify thin grid-seeded mechanisms and search cost. |
+| 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
+| 6 | 2026-10-18 | Track the datum-below-layer diagnostic separately in #2785 so the remaining warning has a dedicated acceptance criterion. |
+| 7 | 2026-10-19 | Reject positive-gradient datums below the entire layer to diagnose an inactive strength gradient. |
 
 ## Basis and boundaries
 
@@ -42,8 +48,9 @@ pip install "xslope==1.0.3" "gmsh>=4.15" "numpy>=1.24.0,<2.0.0"
 ~~~
 
 Install and import were exercised on Linux x86-64 with Python 3.11 and 3.12.
-Windows x64 and Linux Arm are not tested; the adoption issue records no gmsh
-Linux aarch64 wheel. Python 3.13 is not established by this work. Linux gmsh
+Stability execution is also exercised on Linux Arm with Python 3.11; Gmsh
+installation there is unavailable because no compatible wheel exists.
+Windows x64 is not tested. Python 3.13 is not established by this work. Linux gmsh
 requires the system OpenGL libraries noted in the
 [xslope README](https://github.com/njones61/xslope/blob/main/README.md).
 
@@ -67,7 +74,7 @@ angles degrees, conductivity m/s and seismic coefficient dimensionless.
 | c_kpa, phi_deg | Drained effective cohesion and friction angle |
 | su_kpa | Alternative undrained strength; existing Su_kpa spelling accepted |
 | su_gradient_kpa_per_m | Non-negative strength gradient; default zero |
-| reference_elevation_m | Strength datum; default zero |
+| reference_elevation_m | Required explicit strength datum when the gradient is positive; immaterial at zero gradient |
 | permeability_m_s | Optional positive isotropic conductivity |
 | top_boundary_m | Lower layers only: full-width increasing-x polyline |
 | water_table_m | Optional full-width piezometric line |
@@ -78,7 +85,27 @@ angles degrees, conductivity m/s and seismic coefficient dimensionless.
 
 Undrained strength maps to upstream cp behavior:
 Su(y) = su_kpa + su_gradient_kpa_per_m × max(0, reference_elevation_m − y).
-Select the reference elevation explicitly for a meaningful gradient.
+This is the governing cp equation in xslope 1.0.3, `xslope/slice.py`
+(strength at the slice base). A positive gradient without an explicit
+reference_elevation_m is rejected before importing the solver. Constant strength
+(gradient zero) may omit the datum because the equation is independent of it.
+An explicit datum strictly below the minimum elevation of the layer's lower
+boundary is rejected with a ValueError naming the layer index and
+reference_elevation_m. Such a datum makes the positive gradient inactive
+throughout the layer. The lower boundary is the next layer's top polyline, or
+bottom_elevation_m for the lowest layer. Every polyline vertex is considered,
+including interior low points. This diagnostic implements the rejection option
+in #2785, supplementing the missing-datum check in #2704.
+
+Equality with the minimum lower-boundary elevation remains accepted, as does a
+datum that activates the gradient in only part of the layer. These are input
+diagnostics rather than an assessment of the intended strength distribution;
+check the datum against the full layer geometry. Zero-gradient profiles remain
+independent of the datum. Validation precedes optional solver imports and does
+not modify the supplied profile. The cp material model is also described in the
+upstream [input-template material properties](https://xslope.org/en/latest/usage/input_template/).
+For example, su_kpa=5, gradient=1.5 and reference=-100 m give Su=20 kPa at
+z=-110 m; the same relative geometry at a +100 m datum gives the same strength.
 Undrained layers use total stress; drained layers use the piezometric line when
 supplied. Seepage supplies its nodal pore pressures to drained layers on the
 same model before stability runs. Every seepage layer requires conductivity.
@@ -104,17 +131,66 @@ result = engine("examples/workflows/slope-stability/input.yml")
 Set slope_stability.outputs.directory to the output directory. Temporary workbooks
 are populated from the installed upstream template there and removed after
 loading; source workbooks are untouched. The JSON summary records xslope_version,
-units, requested slices, each method's FS, critical circle and search convergence.
+units, requested slices, each method's FS, critical circle, search_mode and search convergence.
 Seepage adds discharge per unit out-of-plane width, length/time units,
 convergence and relative mass-balance error. No design report is generated.
 A failed seepage convergence stops calculation. A non-converged search is
 labelled not_converged; a converged search is screening_only. Geometry bounds
 and soil properties require engineering review. Each method searches independently.
+The adapter records search_mode="grid_seeds_isolated" for its combined search and
+"fixed_circle" for a direct evaluation. This distinguishes the adapter from
+upstream `circular_search(seed="grid")`, which shares a refinement cache and
+applies its thin-surface filter during refinement. Preflight checks the model
+and method before the adapter starts its coarse sweep, so missing inputs retain
+their diagnostic instead of appearing as an empty search. The search uses xslope 1.0.3
+`_grid_seed_circles` to retain coarse tangent families, then calls
+`circular_search(seed="circles")` separately for every retained seed and every
+user circle. Each refinement has its own cache, including when two seeds share a
+centre but have different depths. The lowest solved FS is reported. The upstream
+coarse sweep retains at most four families within 25% of its coarse minimum;
+it can discard a family whose refined minimum would govern.
+
+The coarse sweep excludes surfaces thinner than 5% of the slope height
+(maximum minus minimum ground elevation in `_grid_seed_circles`). Refinement applies no thin-surface filter, preserving thin mechanisms
+from user circles. Grid-seed refinements can also converge to a surficial sliver
+on a cohesionless face after the coarse seed passes the filter. Such a surface
+is retained and can govern, unlike upstream grid mode. Assess whether that
+mechanism belongs in the calculation and check sensitivity to the search bounds
+and slice count. JSON records `grid_thin_surface_filter="coarse_only_5_percent"`
+and `search_factors_of_safety` with separate `grid` and `user_circles` minima;
+a null minimum means that group produced no solved surface. Unsolved counts
+include the sweep and all refinements, with their individual records retained.
+Convergence describes the selected refinement and does not certify a global
+minimum. Geometry bounds, coarse family retention and unsolved trials can omit
+mechanisms. Screening requires sensitivity checks and engineering review.
+The governing upstream implementation is `xslope/search.py` in version 1.0.3;
+its seed helper defaults to `keep=4`. Profile construction and searches of
+workbook-loaded models reject other xslope versions. Direct workbook
+fixed-circle evaluation records the installed version without this guard.
+A rejected solver result in a nonempty seed cache stops the method rather than
+reporting another seed as if that rejection had not occurred.
+
+## Search cost
+
+A single paired timing of the README workbook's 40-slice Bishop search with one
+user circle took 6.3 s for the adapter (three grid seeds plus one user-circle
+refinement) and 5.9 s for one upstream `circular_search(seed="grid")` call:
+1.1 times the upstream duration (7.6 % longer). Both reached the pinned README
+minimum. Timing excludes workbook loading and uses xslope 1.0.3, Python 3.11,
+NumPy 1.26.4 and Linux Arm with one process and one numerical thread. This is
+one observation, without repeated samples or an uncertainty estimate.
+
+The adapter performs one sweep and up to four grid-seed refinements plus one
+refinement per user circle, for each requested method. A ten-circle profile can
+therefore launch up to fourteen independent refinements per method. Geometry,
+method, trial failures and convergence affect cost; the measured ratio for one
+circle does not predict the ten-circle case or Spencer duration.
 
 ## Benchmarks and limits
 
-Tests quote README Bishop FS = 1.279 at 20 slices, its circular-search minimum
-FS = 1.215 at the upstream default of 40 slices, and
+Tests reproduce README Bishop FS = 1.279 at 20 slices and pin the adapter search
+re-baseline FS = 1.214733 at 40 slices to 0.01% relative tolerance (still rounding
+to the published 1.215). Tests also reproduce
 [SEEP-1](https://xslope.org/en/latest/tutorials/seep01_sheetpile/) discharge
 40.111 m³/yr per m on a 0.5 m linear-triangle mesh. A 1% relative tolerance
 allows mesh/platform variation and printed-value rounding. The equivalent SI
@@ -123,6 +199,15 @@ result is also compared directly with the README workbook at 1e-8 relative
 tolerance. Spencer searches are exercised for convergence and serialization;
 no published Spencer benchmark is established here. Fixture provenance,
 digests and upstream licence notices accompany the workbooks.
+
+The synthetic two-family regression uses a shallow fill above a stiff crust
+and a weak undrained foundation. The search is bounded above by a directly
+re-evaluated deep circle (FS=0.689, with 1% search tolerance) obtained from an
+earlier xslope 1.0.3 grid search. This is a repeatability check, not an
+independent minimum: the circle is tangent to the model floor
+and exits near the domain edge. Domain expansion remains necessary to assess
+boundary sensitivity. These synthetic values are test bounds only.
+Stability tests run without Gmsh; only seepage solves skip when it is absent.
 
 The SI profile-driven seepage test checks metre/second units and the drained
 material pore-pressure handoff before both stability searches solve. Failed

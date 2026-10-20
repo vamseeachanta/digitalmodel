@@ -37,23 +37,18 @@ class CatenaryCalculator:
         weight = data["w"]
         distance = data["d"]
 
-        length = distance * (2 * force / weight - distance)
-        horiz_dist = ((force / weight) - distance) * math.log(
-            (length + (force / weight)) / ((force / weight) - distance)
-        )
-        t_horiz = force * horiz_dist / math.sqrt(length**2 + horiz_dist**2)
-        t_horizontal = force * horiz_dist / math.sqrt(length**2 + horiz_dist**2)
-        shape_param = weight * 9.81 / t_horizontal
-
-        data.update(
-            {
-                "S": length,
-                "X": horiz_dist,
-                "THorizontal": t_horiz,
-                "THorizontal": t_horizontal,
-                "b": shape_param,
-            }
-        )
+        # Governing vertex-catenary equations: engineering-basis.md E1-E2.
+        # F is total top tension (N); w is effective weight (N/m).
+        if not all(math.isfinite(v) and v > 0 for v in (force, weight, distance)):
+            raise ValueError("F, w and d must be finite and positive")
+        t_horizontal = force - weight * distance
+        if t_horizontal <= 0:
+            raise ValueError("F must exceed w*d for a suspended catenary")
+        length = math.sqrt(distance * (2 * force / weight - distance))
+        a = t_horizontal / weight
+        horiz_dist = a * math.acosh(1 + distance / a)
+        data.update({"S": length, "X": horiz_dist,
+                     "THorizontal": t_horizontal, "b": weight / t_horizontal})
         return data
 
     def _calculate_from_x(self, data):

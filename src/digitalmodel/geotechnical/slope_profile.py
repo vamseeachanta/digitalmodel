@@ -65,6 +65,11 @@ def _strength(layer: dict[str, Any]) -> None:
         layer["su_gradient_kpa_per_m"] = _number(
             layer.get("su_gradient_kpa_per_m", 0), "su_gradient_kpa_per_m", 0
         )
+        # xslope 1.0.3 slice.py, cp rule:
+        # Su(y) = Su_ref + gradient * max(0, reference_elevation - y).
+        # A positive gradient therefore requires an explicit elevation datum.
+        if layer["su_gradient_kpa_per_m"] > 0 and "reference_elevation_m" not in layer:
+            raise ValueError("positive strength gradient requires reference_elevation_m")
         layer["reference_elevation_m"] = _number(
             layer.get("reference_elevation_m", 0), "reference_elevation_m"
         )
@@ -95,6 +100,25 @@ def _layer(layer: dict[str, Any]) -> None:
         if _number(layer["permeability_m_s"], "permeability_m_s", 0) == 0:
             raise ValueError("permeability_m_s must be positive")
     _strength(layer)
+
+
+def _strength_datums(layers: list[dict[str, Any]], bottom: float) -> None:
+    for index, layer in enumerate(layers):
+        if layer.get("su_gradient_kpa_per_m", 0) <= 0:
+            continue
+        lower_min = bottom
+        if index + 1 < len(layers):
+            lower_min = min(point[1] for point in layers[index + 1]["top_boundary_m"])
+        # xslope 1.0.3 slice.py, cp rule (see the slope screening guide):
+        # Su(y) = Su_ref + gradient * max(0, reference_elevation - y).
+        # Below the entire layer the datum makes the gradient term zero.
+        # Linear boundary segments attain their minima at vertices, including
+        # interior vertices; the next layer top is this layer's lower boundary.
+        if layer["reference_elevation_m"] < lower_min:
+            raise ValueError(
+                f"layers[{index}].reference_elevation_m is below the entire "
+                "layer lower boundary; positive strength gradient is inactive"
+            )
 
 
 def _seepage(profile: dict[str, Any]) -> None:
@@ -152,6 +176,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         layer["top_boundary_m"] = top
         previous = top
     _boundary(previous, [[ground[0][0], bottom], [ground[-1][0], bottom]])
+    _strength_datums(layers, bottom)
     if "water_table_m" in data:
         water = _line(data["water_table_m"], "water_table_m")
         if [water[0][0], water[-1][0]] != [ground[0][0], ground[-1][0]]:
