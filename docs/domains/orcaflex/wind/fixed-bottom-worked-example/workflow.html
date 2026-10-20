@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixed-bottom wind turbine analysis workflow</title>
+<style>
+body { font: 1rem system-ui, sans-serif; max-width: 75rem; margin: auto; padding: 2rem; color: #183347; }
+p, li { line-height: 1.6; } table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #bdcbd4; padding: .6rem; text-align: left; vertical-align: top; }
+th { background: #eaf1f5; } pre { overflow: auto; padding: 1rem; background: #f1f5f7; }
+code { overflow-wrap: anywhere; } .status { padding: 1rem; background: #fff0d5; }
+</style>
+</head>
+<body>
+<h1>Fixed-bottom wind turbine analysis workflow</h1>
+<h2>Summary</h2>
+<p class="status">Offline preparation and stored-export processing are implemented. Native turbine results and engineering acceptance remain NOT_EVALUATED.</p>
+<p>Start with the <a href="report.html">unissued analysis report</a>. The
+<a href="synthetic-example.html">synthetic worked example</a> demonstrates inputs, method and answers;
+it is an arithmetic example and contains no predicted turbine response.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Initial</td><td>2026-10-20</td><td>Added sourced preparation, an export contract and synthetic processing to make missing native evidence explicit.</td></tr></table>
+<h2>Scope and sources</h2>
+<p>The <a href="../../examples/raw/K02/K02%2010MW%20fixed-bottom%20OWT.yml">raw model</a>,
+<a href="../../library/model_library/k02_10mw_fixed_bottom_owt/spec.yml">library specification</a> and
+<a href="../../library/templates/wind_turbine_fixed/spec.yml">steady template</a> are distinct representations.
+The inventory records their exact-byte digests rather than asserting equivalence.</p>
+<table>
+<tr><th>Input</th><th>As-held value and locator</th><th>Use</th></tr>
+<tr><td>Water depth</td><td>30.0 m; raw model L120, SeabedOriginDepth</td><td>Design-basis echo</td></tr>
+<tr><td>Irregular waves</td><td>JONSWAP; raw model L133–140, WaveHs and WaveTz</td><td>Both wind routes retain this condition; full precision stays in the source</td></tr>
+<tr><td>Steady speed</td><td>11.4 m/s; template L64, environment.wind.speed</td><td>Initial route, with specified torque in place of the external controller</td></tr>
+<tr><td>Turbulent speed</td><td>12.0 m/s; held generator input L40, URef</td><td>Unreconciled alternative, not a matched-speed comparison</td></tr>
+<tr><td>Distributed soil support</td><td>Raw model L13052–13071, connections; L13097–14147, constraints</td><td>Scale selected translational and rotational stiffness coefficients by a required input factor; preserve DOFs, damping and zero stiffnesses</td></tr>
+<tr><td>Controller dependencies</td><td>Raw model L14371–14372; controller input L91</td><td>DLL, wrapper, controller input and rotor-performance table held; read or hash only</td></tr>
+<tr><td>Turbulent wind</td><td>Raw model L174, wind.bts: not held</td><td>Regeneration NOT_EVALUATED; reconcile grid, height, duration and controller first</td></tr>
+</table>
+<p>The generator input L2 describes a smaller reference turbine; L23–26 set usable time, hub height and grid dimensions.
+It is not a proven recipe for this rotor. The template and turbulent route also change the speed and controller arrangement.
+Their differences cannot be attributed to turbulence alone.</p>
+<p>The public turbine definition is <a href="https://www.nlr.gov/docs/fy19osti/73492.pdf">IEA Wind Task 37,
+Systems Engineering in Wind Energy — WP2.1 Reference Wind Turbines (May 2019), section 5, Offshore Wind Turbine</a>.
+The public model repository links its OrcaFlex implementation to the vendor examples portal.
+Equivalence of the held model to the report remains to be established. No coefficients or acceptance limits are transcribed from that publication.</p>
+<h2>Method and case matrix</h2>
+<p>Prepare baseline, softened and stiffened soil for each of steady and turbulent wind: six dynamic case slots.
+Baseline factor one is the identity K_case = K_held. Soft/stiff multipliers have no defaults:
+0 &lt; softened &lt; 1 &lt; stiffened is only the definition of the comparison labels, not a soil acceptance range.
+A cited engineering basis is required before selecting levels. The synthetic fixture uses arbitrary arithmetic levels only.</p>
+<p>The issue's approximate analysis count is a planning estimate. Reusing statics/modal results between
+wind/control arrangements requires native readback proving compatible equilibrium and preload;
+this workflow does not assert that those operations can be shared.</p>
+<ol>
+<li>Freeze the representation, source digests, defining reference, environmental settings, wave seeds,
+soil-level basis, controller and wind route. Confirm mesh, sample interval and production-window adequacy.</li>
+<li>Prepare model changes separately. The workflow writes reports only. Review all distributed stiffness changes,
+including rotational coefficients; retain constraint connections, DOFs and damping.</li>
+<li>After separately authorised native execution, retain solver version, static convergence evidence,
+modal shapes, input/controller/wind digests and native time histories. No solver is started by this workflow.</li>
+<li>Export global force and moment components at the mudline section using one recorded sign convention.
+Convert to kN and kN.m before export. Do not substitute tower-base loads, and do not translate loads without accounting for the moment arm.</li>
+<li>Assign stable mode_key labels from reviewed shapes and record shape_evidence for every mode.
+Provide tower and monopile labels as supported by the native shapes. Mixed modes may have descriptive labels;
+this workflow does not infer localization from frequency order.</li>
+<li>Reduce samples in the inclusive window. Sample mean = sum(x)/N, from
+<a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm">NIST/SEMATECH e-Handbook,
+online edition read 2026-10-20, section 1.3.5.1, Measures of Location</a>.
+Minimum, maximum and absolute peak are sample order statistics, not long-term extremes.
+A sample mean is not a time-weighted mean for irregular sample intervals.</li>
+<li>Compare within a wind/control arrangement by reviewed modal label. The relative-change definition is
+(variant − baseline)/baseline; report percentages to one decimal place. Zero baseline loads give NOT_EVALUATED,
+not zero change. Matching windows, signs, non-soil basis fingerprints and mode-label sets are mandatory.</li>
+</ol>
+<h2>Stored-export contract</h2>
+<p>JSON is a list of case records. The
+<a href="../../../../../tests/solvers/orcaflex/fixtures/fixed_bottom/synthetic_exports.json">synthetic input</a>
+is executable documentation of the schema. Required fields:</p>
+<table>
+<tr><th>Field</th><th>Contract</th></tr>
+<tr><td>case_id, representation, soil_factor</td><td>Match the prepared case. For example steady_baseline uses template and identity soil factor.</td></tr>
+<tr><td>synthetic, solver_version</td><td>Explicit boolean and nonempty version. Every record in one report has the same synthetic status and solver version.</td></tr>
+<tr><td>input_sha256</td><td>Lower-case SHA-256 of the actual solved input bytes, including soil changes. Synthetic records use an explicit dummy digest.</td></tr>
+<tr><td>comparison_basis_sha256</td><td>Fingerprint of the complete unchanged comparison basis: non-soil model settings, wind and controller files, wave/current definition and seeds, equilibrium/preload treatment, numerical settings and exporter version. Canonicalize a sorted-key JSON manifest and hash its UTF-8 bytes; only the declared soil multiplier and resulting soil coefficients are excluded. Retain that manifest with native evidence. Different fingerprints prevent sensitivity calculation.</td></tr>
+<tr><td>soil_factor_source</td><td>Nonempty source and locator for the selected soil level; synthetic inputs identify their arbitrary arithmetic basis.</td></tr>
+<tr><td>frame, origin, force_unit, moment_unit, load_convention</td><td>global, mudline, kN, kN.m, and a nonempty sign/action description. Axes are the model's global axes; no hidden transformation is performed.</td></tr>
+<tr><td>window_s, samples</td><td>Inclusive start/end with positive duration. Samples cover the whole window, have strictly increasing time_s and finite fx, fy, fz, mx, my, mz. At least two selected points are required to describe a history; this is not an adequacy limit.</td></tr>
+<tr><td>modes</td><td>Unique nonempty mode_key, finite positive frequency_hz, nonempty shape_evidence. Frequencies are exported directly; no estimated foundation eigenvalue is computed.</td></tr>
+</table>
+<p>Digests and evidence fields are exporter declarations. Syntax and comparison consistency are checked;
+these checks do not prove native completion, convergence, authenticity or correct mode pairing.
+Review the retained evidence independently. Extra mode labels are preserved; incompatible sets are not compared.</p>
+<h2>Worked example and reproduction</h2>
+<p>Run from the repository root. Replace &lt;scratch&gt; with a writable output directory outside the repository.
+Each output must be new; existing outputs are never overwritten.</p>
+<pre>python src/digitalmodel/solvers/orcaflex/fixed_bottom_workflow.py \
+  --output &lt;scratch&gt;/report.html
+
+python src/digitalmodel/solvers/orcaflex/fixed_bottom_workflow.py \
+  --exports tests/solvers/orcaflex/fixtures/fixed_bottom/synthetic_exports.json \
+  --soft-factor 0.5 --stiff-factor 2 \
+  --output &lt;scratch&gt;/synthetic-example.html</pre>
+<p>The second command's factors are arbitrary synthetic test inputs, not recommendations.
+For Fx = −3.0, 0.0, 6.0 kN, the answer is sample mean 1.0 kN and absolute peak 6.0 kN.
+For Mx = −12.0, 0.0, 24.0 kN.m, sample mean is 4.0 kN.m and absolute peak is 24.0 kN.m.
+Tower-labelled modal inputs 1.0, 2.0, 3.0 Hz give −50.0% and +50.0% changes.
+The independent hand calculation is written out in the test docstring. Unprovided turbulent results stay NOT_EVALUATED.</p>
+<h2>Checks and limits</h2>
+<p>Run the new test module with pytest and lint both Python files with ruff. Tests cover inventory,
+source locators, factor selection, missing data, export validation, arithmetic, provenance mismatches,
+HTML escaping, report generation, exclusive output creation and fresh-process solver isolation.
+The orcaflex-solver test domain already includes this test directory; no CI selection change is needed.</p>
+<p>Missing native runs, defining-reference reconciliation, controller/wind reconciliation, seed policy,
+mesh/time-step convergence, frequency-separation criteria, soil adequacy, fatigue and structural capacity
+remain later work. The report follows the repository standard report sections but is a standalone static
+HTML artifact, not an engine-validated report pack. Share results and method only until vendor
+redistribution terms have been checked.</p>
+</body>
+</html>
