@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -225,6 +226,30 @@ def test_report_standard_form_and_revision(prepared):
     assert "<script src=" not in rendered
 
 
+@pytest.mark.parametrize(
+    "curvature, displayed", [(0.04, "0.04"), (0.00004, "4e-05"), (0, "0")]
+)
+def test_report_preserves_quantity_precision(prepared, curvature, displayed):
+    """96/100 and 104/100 straddle unity; nonzero curvature stays visible."""
+    from digitalmodel.reporting import render_html
+
+    row = response(prepared, kind="solver_export")
+    row["extrema"]["Mooring_1"]["max"] = 96
+    row["extrema"]["Hawser"]["max"] = 104
+    row["extrema"]["TransferHose"]["max"] = curvature
+    report = build_report(prepared, assess_results(prepared, [row], limits(prepared)))
+    results = next(s for s in report.sections if s.key == "results").blocks[0]
+    checks = {r[1]: r for r in results.rows[:8]}
+    assert checks["Mooring_1"][3:5] == ["96.0", "100.0"]
+    assert checks["Mooring_1"][7:9] == ["0.960", "PASS"]
+    assert checks["Hawser"][7:9] == ["1.040", "FAIL"]
+    assert checks["TransferHose"][3] == displayed
+    rendered = render_html(report)
+    assert f"<td>{displayed}</td>" in rendered
+    assert "<td>0.960</td>" in rendered
+    assert "<td>1.040</td>" in rendered
+
+
 def test_full_solver_export_matrix_scalar_comparison(prepared):
     """All 24 complete arithmetic rows meet 100 kN and 4 m scalar limits."""
     rows = []
@@ -238,14 +263,25 @@ def test_full_solver_export_matrix_scalar_comparison(prepared):
     assert len(result["checks"]) == 192  # 24 cases times eight components.
 
 
-def test_cli_builds_report_and_manifest(cfg, prepared, tmp_path):
+def test_cli_builds_report_and_manifest(cfg, prepared, tmp_path, monkeypatch):
     from digitalmodel.solvers.orcaflex.calm_workflow import main
 
     config = tmp_path / "input.yml"
     cfg["criteria"] = limits(prepared)
     config.write_text(yaml.safe_dump(cfg, sort_keys=False))
     rows = tmp_path / "responses.json"
-    rows.write_text(json.dumps([response(prepared)]))
+    record = response(prepared)
+    record["source"] = "Constructed arithmetic — illustrative"
+    rows.write_text(json.dumps([record], ensure_ascii=False), encoding="utf-8")
+    original_read_text = Path.read_text
+
+    def read_text(path, *args, **kwargs):
+        # Emulate a non-UTF-8 platform default for response files only.
+        if path == rows and "encoding" not in kwargs:
+            kwargs["encoding"] = "ascii"
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
     out = tmp_path / "cli"
     assert (
         main(
@@ -276,7 +312,6 @@ def test_resuming_changed_model_is_refused(cfg, prepared, tmp_path):
 
 def test_committed_example_reproduces_report_and_manifest(cfg, prepared, tmp_path):
     """Read constructed fixture values; expected ratios remain independent arithmetic."""
-    from digitalmodel.reporting import render_html
     from digitalmodel.solvers.orcaflex.calm_workflow import main
 
     example = EXAMPLE.parent
@@ -302,11 +337,18 @@ def test_committed_example_reproduces_report_and_manifest(cfg, prepared, tmp_pat
     assert current == committed
     assert current["assessment"]["checks"][0]["utilisation"] == pytest.approx(0.6)
     assert current["assessment"]["checks"][7]["utilisation"] == pytest.approx(0.8)
+
     # Tool version metadata can differ for an installed package versus a source tree.
-    report = build_report(current["preparation"], current["assessment"])
-    report.tool_version = "test"
-    assert "ILLUSTRATIVE" in render_html(report)
-    assert "NOT_EVALUATED" in (example / "report.html").read_text()
+    def normalise_tool_version(html):
+        return re.sub(
+            r'(<span class="k">Tool version</span> )[^<]*(</li>)',
+            r"\g<1>test\2",
+            html,
+        )
+
+    assert normalise_tool_version(
+        (output / "report.html").read_text(encoding="utf-8")
+    ) == normalise_tool_version((example / "report.html").read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize(

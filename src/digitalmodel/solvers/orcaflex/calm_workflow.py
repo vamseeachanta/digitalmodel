@@ -396,8 +396,8 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
     def section(key: str, title: str, *blocks: Any) -> Section:
         return Section(key=key, title=title, blocks=list(blocks))
 
-    def display(value: float | None) -> str:
-        return "NOT_EVALUATED" if value is None else f"{value:.1f}"
+    def display(value: float | None, precision: str = ".1f") -> str:
+        return "NOT_EVALUATED" if value is None else format(value, precision)
 
     cfg = prepared["input"]
     return ReportSpec(
@@ -545,13 +545,16 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
                             c["case_id"],
                             c["object"],
                             c["quantity"],
-                            display(c["maximum"]),
+                            display(
+                                c["maximum"],
+                                ".3g" if c["quantity"] == "curvature" else ".1f",
+                            ),
                             display(c["criterion"]["value"])
                             if c["criterion"]
                             else "NOT_EVALUATED",
                             c["criterion"]["unit"] if c["criterion"] else "missing",
                             c["criterion"]["source"] if c["criterion"] else "missing",
-                            display(c["utilisation"]),
+                            display(c["utilisation"], ".3f"),
                             c["status"],
                             c["evidence_kind"] or "missing",
                         ]
@@ -623,7 +626,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.criteria:
         config["criteria"] = yaml.safe_load(args.criteria.read_text(encoding="utf-8"))
     prepared = prepare_campaign(config, args.repo_root, args.output / "models")
-    responses = json.loads(args.responses.read_text()) if args.responses else []
+    responses = (
+        json.loads(args.responses.read_text(encoding="utf-8")) if args.responses else []
+    )
     assessment = assess_results(prepared, responses, config.get("criteria", {}))
     from digitalmodel.reporting import render_html
 
