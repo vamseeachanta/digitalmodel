@@ -78,8 +78,9 @@ class TestJonswapExtended:
         """JONSWAP with gamma=1 should produce energy similar to PM (same Hs)."""
         ws = _ws()
         omega, S_js1 = ws.jonswap(hs=3.0, tp=10.0, gamma=1.0, n_points=200)
-        _, S_pm = ws.pierson_moskowitz(hs=3.0, tp=10.0, n_points=200)
-        ratio = np.sum(S_js1) / (np.sum(S_pm) + 1e-30)
+        omega_pm, S_pm = ws.pierson_moskowitz(hs=3.0, tp=10.0, n_points=200)
+        # Integrate each grid: Offshore Hydromechanics (2001), equation (5.115).
+        ratio = ws.spectral_moment(omega, S_js1) / ws.spectral_moment(omega_pm, S_pm)
         assert 0.5 < ratio < 2.0
 
     def test_gamma_effect_higher_peak(self):

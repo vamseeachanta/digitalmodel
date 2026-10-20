@@ -100,7 +100,7 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
+        freq_max: Optional[float] = None,
         n_points: int = 100
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -112,7 +112,8 @@ class WaveSpectra:
             hs: Significant wave height (m)
             tp: Peak period (s)
             freq_min: Minimum frequency (rad/s)
-            freq_max: Maximum frequency (rad/s)
+            freq_max: Maximum frequency (rad/s). If omitted, use ten times
+                the peak frequency; see pm-default-grid.md for the tail bound.
             n_points: Number of frequency points
 
         Returns:
@@ -120,7 +121,19 @@ class WaveSpectra:
 
         Reference:
             DNV-RP-C205 Section 3.5.1
+            Offshore Hydromechanics, first edition (2001), equations
+            (5.115)-(5.118), (5.123)-(5.124). The automatic cutoff is a
+            numerical policy derived in docs/domains/hydrodynamics/pm-default-grid.md,
+            not a standard-prescribed limit. Explicit bounds retain their grid.
         """
+        if freq_max is None:
+            if not np.isfinite(tp) or tp <= 0:
+                raise ValueError("tp must be finite and positive for an automatic grid")
+            # R=10: derived moment-tail bound, pm-default-grid.md, "Cutoff".
+            freq_max = 10.0 * (2 * np.pi / tp)
+            if not np.isfinite(freq_min) or not 0 < freq_min < freq_max:
+                raise ValueError("freq_min must be finite, positive and below freq_max")
+
         # Frequency array
         omega = np.linspace(freq_min, freq_max, n_points)
 
