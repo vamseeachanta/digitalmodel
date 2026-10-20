@@ -35,6 +35,8 @@ import numpy as np
 from scipy import special
 from pydantic import BaseModel, Field
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -135,10 +137,10 @@ def compute_spectral_moments(
     if len(f) != len(S):
         raise ValueError("frequency and psd must have equal length")
 
-    m0 = float(np.trapz(S, f))
-    m1 = float(np.trapz(S * f, f))
-    m2 = float(np.trapz(S * f ** 2, f))
-    m4 = float(np.trapz(S * f ** 4, f))
+    m0 = float(_trapezoid(S, f))
+    m1 = float(_trapezoid(S * f, f))
+    m2 = float(_trapezoid(S * f ** 2, f))
+    m4 = float(_trapezoid(S * f ** 4, f))
 
     return SpectralMoments(m0=m0, m1=m1, m2=m2, m4=m4)
 

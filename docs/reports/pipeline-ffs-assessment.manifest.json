@@ -763,7 +763,7 @@
     "src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py": "875626eb053a5333f082ee5c83486a048dee77dcc102e6bdbeed4e5e86aa7f1c",
     "src/digitalmodel/asset_integrity/rstreng_2d.py": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
-    "src/digitalmodel/materials/grades.py": "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab",
+    "src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90",
     "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
     "src/digitalmodel/reporting/engine.py": "c2166904cb93dedf00e8f80955eabc23c187fa8b778f70176db93cb1409531de",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
