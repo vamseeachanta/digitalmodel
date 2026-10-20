@@ -19,11 +19,7 @@ Unit convention:
 See CONVENTIONS.md for sign convention and coordinate system documentation.
 """
 
-import hashlib
 import math
-import os
-import re
-import subprocess
 from pathlib import Path
 import numpy as np
 import pytest
@@ -622,45 +618,6 @@ class TestVBACrossValidation:
         if expected_yaw_ft_lbf is not None:
             yaw_ft_lbf = _tq(result["yaw"], 'N * m').to('ft * lbf').magnitude
             assert abs(yaw_ft_lbf - expected_yaw_ft_lbf) / max(abs(expected_yaw_ft_lbf), 1.0) < 0.05
-
-
-def _tracked_text_paths():
-    """Select tracked public text, excluding large files and model data."""
-    root = Path(__file__).resolve().parents[3]
-    env = os.environ.copy()
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
-        env.pop(key, None)
-    paths = subprocess.check_output(
-        ["git", "ls-files", "-z"], cwd=root, env=env,
-    ).decode("utf-8").split("\0")
-    suffixes = {
-        ".py", ".md", ".html", ".htm", ".yaml", ".yml", ".json", ".csv",
-        ".txt", ".toml", ".rst", ".xml", ".js", ".css", ".sh", ".ini", ".cfg",
-    }
-    return [
-        path for path in paths
-        if Path(path).suffix.lower() in suffixes
-        and not (root / path).is_symlink()
-        and (root / path).is_file()
-        and (root / path).stat().st_size <= 1024 * 1024
-    ]
-
-
-@pytest.mark.parametrize("relative_path", _tracked_text_paths())
-def test_vba_credit_without_personal_name_in_tracked_text(relative_path):
-    """Prevent copies of the retired credit throughout tracked public text."""
-    root = Path(__file__).resolve().parents[3]
-    text = (root / relative_path).read_text(encoding="utf-8", errors="replace").casefold()
-    # Pin the retired ASCII surname by digest without republishing it.
-    retired_digest = "8bd08eb81fab474e28e164e23a554bfabacc98c4ccbc98d2651a1d73278e02cb"
-    # Numeric plot arrays need no hashing; deduplicate repeated words per file.
-    words = set(re.findall(r"[a-z]{7,}", text))
-    assert not any(
-        hashlib.sha256(word[index:index + 7].encode()).hexdigest()
-        == retired_digest
-        for word in words
-        for index in range(len(word) - 7 + 1)
-    ), f"Personal VBA credit returned in {relative_path}"
 
 
 @pytest.mark.parametrize("relative_path", [
