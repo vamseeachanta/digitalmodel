@@ -310,6 +310,7 @@ def critical_flaw_depth_mm(
     k_mat: Optional[float] = None,
     cvn_joules: Optional[float] = None,
     e_mpa: float = 207_000.0,
+    width_mm: float = 1.0e6,
     max_depth_fraction: float = 0.85,
     tol_mm: float = 0.01,
 ) -> float:
@@ -319,13 +320,15 @@ def critical_flaw_depth_mm(
     metal-loss acceptance envelope (feeds the weld region of the riser-joint
     Level-1 chart).  Returns 0.0 when even a vanishing depth is unacceptable.
     Depth is additionally capped so a/c stays within Newman-Raju validity.
+    ``width_mm`` is the plate half-width, as in the point assessment; it
+    enters every trial depth's finite-width correction.
     """
     c_mm = length_mm / 2.0
     hi_cap = min(max_depth_fraction * t_mm, c_mm)  # a <= c validity
     kwargs = dict(c_mm=c_mm, t_mm=t_mm, sigma_m_mpa=sigma_m_mpa,
                   sigma_b_mpa=sigma_b_mpa, sigma_y_mpa=sigma_y_mpa,
                   sigma_u_mpa=sigma_u_mpa, k_mat=k_mat,
-                  cvn_joules=cvn_joules, e_mpa=e_mpa)
+                  cvn_joules=cvn_joules, e_mpa=e_mpa, width_mm=width_mm)
 
     def ok(a: float) -> bool:
         return assess_crack_like_flaw(a_mm=a, **kwargs).acceptable

@@ -91,9 +91,9 @@ engines:
   circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181, note: "pipeline-corroded-defect-screen exercises axial membrane only; combined-loading and edition-matched Part 5 qualification remain outside scope"}
   pitting: {module: asset_integrity.assessment.pitting, status: workflow, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
   dents: {module: asset_integrity.dent_assessment, status: workflow, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182, caveat: "manual geometry; formula anchors only, published-case validation not established"}
-  crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
+  crack-fad: {module: asset_integrity.assessment.crack_fad_workflow, status: workflow, workflow: crack-fad-level2-handoff, validation: docs/domains/asset-integrity/crack-fad-handoff-validation.html, issue: 2184, caveat: "BS 7910:2013 Option 1 plate screen and specialist handoff; arithmetic checks only, published-case qualification not established; API 579 Part 9 remains separate"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
-  level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
+  level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: workflow, workflow: crack-fad-level2-handoff, issue: 2184, caveat: "specialist data contract only; no advanced analysis is performed"}
   measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}
   rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
   composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}

@@ -9,6 +9,15 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: crack-fad-level2-handoff
+    basename: crack_fad_level2_handoff
+    title: BS 7910:2013 Option 1 plate crack assessment and specialist handoff
+    input: examples/workflows/crack-fad-level2-handoff/input.yml
+    outputs:
+      - examples/workflows/crack-fad-level2-handoff/results/crack-fad-report.html
+      - examples/workflows/crack-fad-level2-handoff/results/level3-handoff.json
+    test: tests/asset_integrity/test_crack_fad_workflow.py::test_registered_example_runs_through_engine
+    runtime: offline
   - id: four-point-skew
     basename: four_point_skew
     title: Four-point single-hook axial-spring skew screening

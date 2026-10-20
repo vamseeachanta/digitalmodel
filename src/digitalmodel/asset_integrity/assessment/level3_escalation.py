@@ -89,7 +89,7 @@ def should_escalate_to_level3(
 
     Escalation is triggered when **any** of the following hold:
 
-    * **Severe metal loss** — the remaining-strength factor is below the
+    * **Severe metal loss** — a supplied remaining-strength factor is below the
       Level-2 applicability / re-rating floor (``rsf < rsf_floor``); the
       closed-form re-rating no longer applies.
     * **Crack-like (planar) flaw** — outside the metal-loss L1/L2 scope; this is
@@ -105,7 +105,8 @@ def should_escalate_to_level3(
         level1_result: dict from the Level 1 screener (uses ``verdict`` if
             present, informational only here).
         level2_result: dict from the Level 2 engine; needs ``rsf`` and
-            ``rsf_a``.
+            ``rsf_a`` for metal loss. Crack-only results may omit both;
+            absence is not interpreted as measured zero strength.
         has_crack_like_flaw: Flaw is crack-like / planar rather than volumetric
             metal loss.
         interacting_defects: Multiple flaws interact (a colony).
@@ -122,7 +123,7 @@ def should_escalate_to_level3(
 
     reasons: list = []
 
-    if rsf < float(rsf_floor):
+    if "rsf" in level2_result and rsf < float(rsf_floor):
         reasons.append(
             f"RSF={rsf:.3f} is below the Level-2 re-rating floor of "
             f"{float(rsf_floor):.2f} — the closed-form re-rating no longer "
@@ -154,7 +155,7 @@ def should_escalate_to_level3(
     # Level 2 itself fails with no viable re-rate. Only meaningful when an RSFa
     # is supplied (rsf_a > 0); guard against a still-passing case that already
     # tripped the floor above.
-    if rsf_a > 0.0 and rsf < rsf_a:
+    if "rsf" in level2_result and rsf_a > 0.0 and rsf < rsf_a:
         reasons.append(
             f"Level 2 fails: RSF={rsf:.3f} is below RSFa={rsf_a:.2f} with no "
             "viable re-rate — a Level 3 assessment is required to qualify "
@@ -212,7 +213,9 @@ def escalate_to_level3(
         rsf_floor=rsf_floor,
     )
 
-    severe_metal_loss = (rsf < float(rsf_floor)) or (rsf_a > 0.0 and rsf < rsf_a)
+    severe_metal_loss = "rsf" in level2_result and (
+        (rsf < float(rsf_floor)) or (rsf_a > 0.0 and rsf < rsf_a)
+    )
 
     # --- Recommended analyses, selected from the active triggers -------------
     recommended_analysis: list = []
