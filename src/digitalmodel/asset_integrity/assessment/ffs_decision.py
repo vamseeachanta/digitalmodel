@@ -424,7 +424,7 @@ def decide(
     def _make(verdict: Verdict, criterion: str) -> Decision:
         action = policy.actions[verdict]
         if verdict is Verdict.DERATE:
-            if margin_label is not None:
+            if margin_label is not None and action == "RE_RATE":
                 action = "REDUCE LIMIT"
             if derating is not None:
                 if derating.quantity != "mawp" and action == "RE_RATE":

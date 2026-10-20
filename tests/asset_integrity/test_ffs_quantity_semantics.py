@@ -104,6 +104,34 @@ def test_non_rsf_policy_does_not_emit_rsf_aliases():
     assert "rsf" not in result and "rsf_a" not in result
 
 
+@pytest.mark.parametrize(
+    "asset_class, margin_label, expected_action",
+    [
+        ("mooring_chain", "RF", "REDUCE TENSION LIMIT"),
+        ("hull_plating", "t_ratio", "RESTRICT LOADING"),
+    ],
+)
+@pytest.mark.parametrize("with_derater", [False, True])
+@pytest.mark.parametrize("action_override", [None, "REDUCE APPLIED FORCE"])
+def test_explicit_margin_label_preserves_class_action(
+    asset_class, margin_label, expected_action, with_derater, action_override
+):
+    """Synthetic force limits retain class actions unless explicitly overridden."""
+    derater = (
+        scaled_limit(Q_(80, "kN"), "[force]", action=action_override)
+        if with_derater else None
+    )
+    result = decide(
+        0.75, 1, 5, asset_class, bands=BANDS,
+        margin_label=margin_label, derate=derater,
+    )
+    assert result.verdict is Verdict.DERATE
+    assert result.action == (
+        action_override if with_derater and action_override else expected_action
+    )
+    assert result.to_dict()["action"] == result.action
+
+
 def test_legacy_pressure_payload_retains_rsf_and_mawp():
     """Hand calculation: 1000 * 0.72 / 0.9 = 800 psi (synthetic inputs)."""
     result = decide(
