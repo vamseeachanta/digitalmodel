@@ -379,6 +379,8 @@ def decide(
         remaining_life_yr: Years (float) or a pint time quantity. None or NaN
             means not evaluated; it cannot trigger a short-life repair. Positive
             infinity is reserved for an explicit zero-degradation projection.
+            Negative values, including negative infinity, raise ValueError;
+            zero remains an exhausted-life projection.
         asset_class: One of :data:`ASSET_CLASSES`.
         derate: Injected de-rating callable ``(margin, allowable) -> Derating``
             built with :func:`reduced_mawp` / :func:`scaled_limit`. Evaluated
@@ -399,7 +401,9 @@ def decide(
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
     life = _years(remaining_life_yr) if remaining_life_yr is not None else None
-    if life is not None and (math.isnan(life) or life < 0):
+    if life is not None and life < 0:
+        raise ValueError("remaining_life_yr must be non-negative")
+    if life is not None and math.isnan(life):
         life = None
     lbl = policy.margin_label
 

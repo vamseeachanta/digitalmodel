@@ -69,7 +69,29 @@ def test_single_row_explicit_pitch_and_equivalent_extent():
     assert l2["equivalent_lta"]["source_axial_rows"] == 1
 
 
-@pytest.mark.parametrize("index", [[0], ["row"], [0, 0], [0, 1, 3]])
+def test_uniform_decimal_index_preserves_pitch_and_equivalent_extent():
+    """Four cell-centred rows * 0.1 in pitch = 0.4 in axial extent.
+
+    Decimal subtraction has binary roundoff; no spacing variation is intended.
+    """
+    char = characterize_pit_field(
+        pd.DataFrame([[0.3, 0.5]] * 4, index=[0.0, 0.1, 0.2, 0.3]), 0.5)
+    assert char.row_spacing_in == pytest.approx(0.1)
+    assert char.spacing_basis == "uniform numeric index"
+    assert char.pitted_region_length_in == pytest.approx(0.4)
+    l2 = assess_pitting_level2_equivalent_lta(
+        char, nominal_od_in=16, nominal_wt_in=0.5, t_min_in=0.35)
+    assert l2["verdict"] != "NOT_EVALUATED"
+    assert math.isfinite(l2["rsf"])
+    assert l2["flaw_length_in"] == pytest.approx(0.4)
+    assert l2["equivalent_lta"]["axial_extent_in"] == pytest.approx(0.4)
+
+
+@pytest.mark.parametrize("index", [
+    [0], ["row"], [0, 0], [0, 1, 3],
+    [0.0, 0.1, 0.2, 0.30000000001],
+    [0.0, 0.1, 0.0, 0.1], [0.3, 0.2, 0.1, 0.0],
+])
 def test_unknown_or_nonuniform_pitch_is_not_one_inch(index):
     """Neither one coordinate nor unequal gaps establish a uniform cell pitch."""
     char = characterize_pit_field(pd.DataFrame([[0.3]] * len(index), index=index), 0.5)
@@ -105,6 +127,22 @@ def test_current_screen_can_pass_without_a_life_projection():
     assert result["verdict"] == "ACCEPT"
     assert result["remaining_life_yr"] is None
     assert "not evaluated" in result["governing_criterion"].lower()
+
+
+@pytest.mark.parametrize("life", [-1.0, float("-inf"), Q_(-1, "yr"), Q_(float("-inf"), "yr")])
+@pytest.mark.parametrize("screening_pass", [None, True, False])
+def test_negative_life_is_rejected_before_screening(life, screening_pass):
+    """An expired or invalid projection cannot become absent passing evidence."""
+    with pytest.raises(ValueError, match="remaining_life_yr.*non-negative"):
+        decide(1.0, 0.9, life, "pipeline", screening_pass=screening_pass)
+
+
+@pytest.mark.parametrize("life, verdict", [(0.0, "REPAIR"), (float("inf"), "ACCEPT")])
+def test_zero_and_explicit_unlimited_life_keep_their_meaning(life, verdict):
+    """Zero life is exhausted; positive infinity is explicit zero degradation."""
+    result = decide(1.0, 0.9, life, "pipeline").to_dict()
+    assert result["verdict"] == verdict
+    assert result["remaining_life_yr"] == life
 
 
 def test_missing_rating_does_not_claim_rerating():
