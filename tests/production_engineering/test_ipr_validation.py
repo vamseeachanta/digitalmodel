@@ -31,35 +31,37 @@ ARITHMETIC_ABS_TOL = 1e-10
 
 
 @pytest.fixture
-def benchmark():
+def vogel_example():
     """Load the source-traceable numerical facts and independent arithmetic."""
     path = Path(__file__).parent / "fixtures" / "vogel_1968.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 @pytest.fixture
-def reservoir(benchmark):
+def reservoir(vogel_example):
     """Construct the saturated boundary; pb is not reported by the paper."""
-    pr = benchmark["published_inputs"]["reservoir_pressure_psi"]
+    pr = vogel_example["published_inputs"]["reservoir_pressure_psi"]
     return ReservoirConditions(
         reservoir_pressure_psi=pr,
         bubble_point_psi=pr,  # Vogel (1968), p. 84: below-bubble-point scope.
-        productivity_index_bopd_psi=benchmark["hand_calculation"]["shut_in_pi_bopd_psi"],
+        productivity_index_bopd_psi=vogel_example["hand_calculation"][
+            "shut_in_pi_bopd_psi"
+        ],
     )
 
 
 @pytest.fixture
-def calibrated(reservoir, benchmark):
+def calibrated(reservoir, vogel_example):
     """Calibrate with only the p. 89 rate/pressure test, not its answer."""
-    data = benchmark["published_inputs"]
+    data = vogel_example["published_inputs"]
     return VogelIpr.from_test_point(
         reservoir, data["test_rate_bopd"], data["test_pressure_psi"]
     )
 
 
-def test_published_example(calibrated, benchmark):
+def test_published_example(calibrated, vogel_example):
     """Reproduce the two integer outputs of Vogel (1968), p. 89 solution."""
-    expected = benchmark["published_outputs"]
+    expected = vogel_example["published_outputs"]
     tolerance = expected["absolute_tolerance_bopd"]
     assert calibrated.qmax_bopd == pytest.approx(
         expected["qmax_bopd"], abs=tolerance, rel=0
@@ -69,16 +71,16 @@ def test_published_example(calibrated, benchmark):
     )
 
 
-def test_calibrated_aof_hand_calculation(calibrated, benchmark):
+def test_calibrated_aof_hand_calculation(calibrated, vogel_example):
     """Eq. (1): 65/(1-0.15-0.45)=162.5 BOPD, independent calculation above."""
     assert calibrated.qmax_bopd == pytest.approx(
-        benchmark["hand_calculation"]["qmax_bopd"], abs=ARITHMETIC_ABS_TOL, rel=0
+        vogel_example["hand_calculation"]["qmax_bopd"], abs=ARITHMETIC_ABS_TOL, rel=0
     )
 
 
-def test_existing_forward_curve_hand_calculation(reservoir, benchmark):
+def test_existing_forward_curve_hand_calculation(reservoir, vogel_example):
     """Test the existing constructor independently of the new calibration path."""
-    hand = benchmark["hand_calculation"]
+    hand = vogel_example["hand_calculation"]
     model = VogelIpr(reservoir, hand["qmax_bopd"])
     for pressure, expected in zip(
         hand["curve_pressure_psi"], hand["curve_rate_bopd"], strict=True
@@ -88,12 +90,12 @@ def test_existing_forward_curve_hand_calculation(reservoir, benchmark):
         )
 
 
-def test_existing_inverse_hand_calculation(reservoir, benchmark):
+def test_existing_inverse_hand_calculation(reservoir, vogel_example):
     """Eq. (1)'s independent positive root r=1/4 gives pwf=500 psi."""
-    hand = benchmark["hand_calculation"]
+    hand = vogel_example["hand_calculation"]
     model = VogelIpr(reservoir, hand["qmax_bopd"])
     assert model.flowing_pressure(hand["prediction_rate_bopd"]) == pytest.approx(
-        benchmark["published_outputs"]["prediction_pressure_psi"],
+        vogel_example["published_outputs"]["prediction_pressure_psi"],
         abs=ARITHMETIC_ABS_TOL,
         rel=0,
     )
@@ -102,9 +104,9 @@ def test_existing_inverse_hand_calculation(reservoir, benchmark):
 # Nonfinite sentinels are invalid input probes, not engineering data.
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
 @pytest.mark.parametrize("field", ["pr", "pb", "rate", "pwf"])
-def test_calibration_rejects_nonfinite(reservoir, benchmark, field, invalid):
+def test_calibration_rejects_nonfinite(reservoir, vogel_example, field, invalid):
     """Calibration has no finite physical interpretation with these sentinels."""
-    data = benchmark["published_inputs"]
+    data = vogel_example["published_inputs"]
     rate, pwf = data["test_rate_bopd"], data["test_pressure_psi"]
     if field == "pr":
         reservoir = replace(reservoir, reservoir_pressure_psi=invalid)
@@ -124,9 +126,9 @@ def test_calibration_rejects_nonfinite(reservoir, benchmark, field, invalid):
     ("field", "invalid"),
     [("pr", 0.0), ("pr", -1.0), ("rate", 0.0), ("rate", -1.0), ("pwf", -1.0)],
 )
-def test_calibration_rejects_outside_domain(reservoir, benchmark, field, invalid):
+def test_calibration_rejects_outside_domain(reservoir, vogel_example, field, invalid):
     """Reject invalid observations rather than clipping a calibration test."""
-    data = benchmark["published_inputs"]
+    data = vogel_example["published_inputs"]
     rate, pwf = data["test_rate_bopd"], data["test_pressure_psi"]
     if field == "pr":
         reservoir = replace(reservoir, reservoir_pressure_psi=invalid)
@@ -138,51 +140,52 @@ def test_calibration_rejects_outside_domain(reservoir, benchmark, field, invalid
         VogelIpr.from_test_point(reservoir, rate, pwf)
 
 
-def test_calibration_rejects_shut_in(reservoir, benchmark):
+def test_calibration_rejects_shut_in(reservoir, vogel_example):
     """At r=1, Eq. (1) vanishes: a positive test rate cannot identify qmax."""
     with pytest.raises(ValueError, match="test pressure"):
         VogelIpr.from_test_point(
             reservoir,
-            benchmark["published_inputs"]["test_rate_bopd"],
+            vogel_example["published_inputs"]["test_rate_bopd"],
             reservoir.reservoir_pressure_psi,
         )
 
 
-def test_calibration_rejects_above_reservoir_pressure(reservoir, benchmark):
+def test_calibration_rejects_above_reservoir_pressure(reservoir, vogel_example):
     """A doubled reservoir pressure is a constructed out-of-domain probe."""
     with pytest.raises(ValueError, match="test pressure"):
         VogelIpr.from_test_point(
             reservoir,
-            benchmark["published_inputs"]["test_rate_bopd"],
+            vogel_example["published_inputs"]["test_rate_bopd"],
             reservoir.reservoir_pressure_psi + reservoir.reservoir_pressure_psi,
         )
 
 
-def test_calibration_rejects_undersaturated_reservoir(reservoir, benchmark):
+def test_calibration_rejects_undersaturated_reservoir(reservoir, vogel_example):
     """Vogel (1968), p. 84: pr>pb requires a different inflow treatment."""
     reservoir = replace(
-        reservoir, bubble_point_psi=benchmark["published_inputs"]["test_pressure_psi"]
+        reservoir,
+        bubble_point_psi=vogel_example["published_inputs"]["test_pressure_psi"],
     )
     with pytest.raises(ValueError, match="bubble point"):
         VogelIpr.from_test_point(
             reservoir,
-            benchmark["published_inputs"]["test_rate_bopd"],
-            benchmark["published_inputs"]["test_pressure_psi"],
+            vogel_example["published_inputs"]["test_rate_bopd"],
+            vogel_example["published_inputs"]["test_pressure_psi"],
         )
 
 
-def test_calibration_at_zero_pressure(reservoir, benchmark):
+def test_calibration_at_zero_pressure(reservoir, vogel_example):
     """At r=0, Eq. (1) is unity, so qmax equals the observed oil rate."""
-    rate = benchmark["published_inputs"]["test_rate_bopd"]
+    rate = vogel_example["published_inputs"]["test_rate_bopd"]
     model = VogelIpr.from_test_point(reservoir, rate, 0.0)  # Eq. (1), r=0.
     assert model.qmax_bopd == rate
 
 
-def test_calibration_rejects_overflow(reservoir, benchmark):
+def test_calibration_rejects_overflow(reservoir, vogel_example):
     """A finite stress input overflows on division by 0.4; no physical claim."""
     with pytest.raises(ValueError, match="calibrated"):
         VogelIpr.from_test_point(
             reservoir,
             sys.float_info.max,  # Runtime floating-point bound, not physical data.
-            benchmark["published_inputs"]["test_pressure_psi"],
+            vogel_example["published_inputs"]["test_pressure_psi"],
         )
