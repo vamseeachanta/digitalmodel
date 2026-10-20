@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>ANSYS response acceptance criteria</title>
+<style>body{max-width:1000px;margin:32px auto;padding:0 20px;font:17px/1.5 sans-serif;color:#25333c}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aaa;padding:8px;text-align:left}caption{caption-side:bottom;text-align:left}pre{overflow:auto;background:#f3f5f5;padding:16px}</style></head>
+<body>
+<h1>ANSYS response acceptance criteria</h1>
+<p>The offline evidence adapter evaluates equilibrium, convergence and strength separately from native execution and independent reference agreement. Engineering lookup requires explicit intended-use requirements in the digest-bound verification register. Existing diagnostic packages remain diagnostic; import alone establishes no engineering qualification.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Separate sourced acceptance checks are added to prevent execution success or numerical agreement from implying strength acceptance.</td></tr>
+<caption>Table 1. Document revisions.</caption></table>
+<h2>Method and evidence contract</h2>
+<p>Source: <a href="../../standards/analysis-parametric-lookup-criteria.html">ENG-ANALYSIS-CRITERIA, Revision 1 (2026)</a>, AC-01, AC-07 and AC-08; <a href="analysis-workflow.html">ANSYS analysis workflow</a>, Revision 1 (2026), Extract and verify. No engineering constants or default acceptance limits are supplied. The only numerical operations are exact decimal ordering: observed &le; limit (<code>le</code>) or observed &ge; limit (<code>ge</code>), with equality passing. Values and limits share the declared unit; no conversion or interpolation is performed.</p>
+<p>Each verification entry adds <code>acceptance_criteria</code>, a mapping with optional <code>equilibrium</code>, <code>convergence</code> and <code>strength</code> records. Each supplied record requires <code>criterion_id</code>, <code>quantity</code>, <code>unit</code>, <code>observed</code>, <code>limit</code>, <code>comparator</code>, <code>source</code> and nonempty <code>evidence</code>. Source text identifies the document, edition and clause/table or independently recorded derivation; evidence references use the existing logical ID and SHA-256 resolver protocol. Their bytes are checked on every evaluation. The independent checker remains responsible for applicability and derivation of the observed quantity, limit and units; a digest is not evidence of competence or authority.</p>
+<p><code>acceptance_requirements</code> maps each permitted intended use to a nonempty list of required criteria. Equilibrium and convergence are always required. A strength decision additionally lists <code>strength</code>. A demand-only use may omit strength explicitly, retaining <code>NOT_EVALUATED</code> for capacity readiness. This policy is frozen with the verification register; an ordinary query cannot supply or override it. Strength observations, when supplied, must equal the queried response value, definition and unit. A strength criterion shall therefore use the same quantity as that response, rather than an unrelated utilization.</p>
+<p>A missing record, observed value or limit yields <code>NOT_EVALUATED</code>; a valid comparison yields <code>PASS</code> or <code>FAIL</code>. Malformed records, unknown criterion names, nonfinite values, unsupported comparators and unavailable or changed evidence raise <code>ValueError</code>. Any required check other than PASS blocks engineering lookup. Independent comparison, rights, retained-native evidence, current publication authority, review findings and withdrawal checks remain required.</p>
+<h2>Response-family acceptance matrix</h2>
+<table><tr><th>Family</th><th>Required basis and response interpretation</th><th>Unestablished evidence</th></tr>
+<tr><td>Pressure vessel</td><td>Pressure/thermal load basis, stress definition and location, equilibrium and mesh assessment, applicable strength criterion.</td><td>Applicable capacity and numerical limits require sourced inputs; no family default is provided.</td></tr>
+<tr><td>Padeye</td><td>Load/connection basis, section versus local response definition, equilibrium, mesh assessment and applicable capacity.</td><td>Historical benchmark reproduction alone establishes no modern design acceptance.</td></tr>
+<tr><td>Mudmat</td><td>Soil/contact basis, restraint definition, equilibrium, numerical assessment and applicable response limit.</td><td>Execution completion alone establishes neither foundation convergence nor capacity.</td></tr>
+<caption>Table 2. Evidence requirements are response-specific; no family inherits another family's qualification.</caption></table>
+<h2>Worked offline example: comparison protocol</h2>
+<p>Inputs below are invented software-test values, not engineering data or design limits. Independent hand calculation: 12.5 is less than 13, so the supplied strength comparison passes; 12.5 exceeds 12, so changing the limit to 12 fails. Equilibrium and convergence are absent and remain NOT_EVALUATED. The result does not qualify any case. The source file is created only in a temporary directory configured through the launch environment.</p>
+<pre><code>from pathlib import Path
+from tempfile import TemporaryDirectory
+from digitalmodel.ansys.analysis_criteria import evaluate_criteria
+from digitalmodel.ansys.analysis_records import digest_bytes
+
+with TemporaryDirectory() as directory:
+    basis = Path(directory) / "basis.txt"
+    basis.write_text("Synthetic comparison example, revision 1: 12.5 &lt; 13; 12.5 &gt; 12.")
+    strength = {
+        "criterion_id": "synthetic-comparison", "quantity": "test scalar",
+        "unit": "MPa", "observed": "12.5", "limit": "13", "comparator": "le",
+        "source": "Synthetic comparison example, revision 1, independent ordering",
+        "evidence": [{"id": "basis", "sha256": digest_bytes(basis.read_bytes())}],
+    }
+    result = evaluate_criteria({"strength": strength}, {"basis": basis})
+    assert result == {"equilibrium": "NOT_EVALUATED",
+                      "convergence": "NOT_EVALUATED", "strength": "PASS"}
+    strength["limit"] = "12"
+    assert evaluate_criteria({"strength": strength}, {"basis": basis})["strength"] == "FAIL"
+    print(result)
+</code></pre>
+<h2>Lookup and migration</h2>
+<p><code>lookup(...)</code> returns <code>acceptance_results</code> only after the existing qualification gates and the required checks pass. This key preserves all three statuses, including unresolved capacity for a demand-only use. Diagnostic retrieval continues to return unqualified responses without requiring a register. Historical registers lacking the new requirements cannot qualify an engineering response; a new register digest and package revision bound to current authority are required. Merely adding passing labels is insufficient.</p>
+<p>Tests cover exact boundaries, high-precision ordering, null versus zero, missing requirements, malformed sources, changed evidence, response binding and diagnostic preservation. Existing retained results are neither rewritten nor newly qualified. Native execution, new campaigns, physical validation, source authentication and automated determination of criterion applicability are outside this offline implementation.</p>
+</body></html>

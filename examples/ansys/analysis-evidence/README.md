@@ -253,3 +253,11 @@ owners; licensed-standard originals remain at licensed locations. Generalization
 requires recorded transformations, restricted provenance and physical-meaning
 validation under the charter. This scope amendment adds no client-derived dataset
 or qualified result.
+
+## Separate acceptance criteria
+
+The [response acceptance guide](../../../docs/domains/ansys/acceptance-criteria.html)
+defines sourced equilibrium, convergence and strength checks, intended-use
+requirements and a worked offline comparison. Existing retained packages remain
+diagnostic. Engineering lookup requires a new digest-bound verification register
+with explicit requirements; execution success alone cannot supply them.

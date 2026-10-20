@@ -40,6 +40,15 @@ def protocol(intake, tmp_path):
         "required_roles": [], "allowed_limitations": [],
         "checks": {k: "passed" for k in ("source_rights", "equilibrium",
                                         "numerical_quality", "independent_method")}}
+    # Synthetic protocol inputs only: 12.5 <= 13 by independent ordering.
+    # No capacity or convergence threshold from an engineering standard is used.
+    entry["acceptance_requirements"] = {"screening": ["equilibrium", "convergence", "strength"]}
+    entry["acceptance_criteria"] = {
+        name: {"criterion_id": "synthetic-" + name, "quantity": "test scalar",
+               "unit": "MPa", "observed": "12.5", "limit": "13", "comparator": "le",
+               "source": "Synthetic protocol basis, revision 1, comparison example",
+               "evidence": [review]}
+        for name in ("equilibrium", "convergence", "strength")}
     register = tmp_path / "register.json"
     register.write_text(json.dumps({"entries": {"case-1:stress": entry}}))
     ref = {"id": "register", "sha256": digest_bytes(register.read_bytes())}
