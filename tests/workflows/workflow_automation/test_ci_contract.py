@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Regression contracts for the workflow automation CI job (issue #1958).
@@ -8,6 +11,7 @@ environment. The daily heartbeat and dependency-file triggers implement #1958.
 No engineering equations or empirical acceptance limits are used here.
 """
 
+import configparser
 import re
 import shlex
 import tomllib
@@ -86,6 +90,7 @@ def test_dependency_and_workflow_changes_trigger_ci(workflow, event):
         "tests/workflows/workflow_automation/**",
         WORKFLOW_PATH,
         "pyproject.toml",
+        ".coveragerc",
         "uv.lock",
         "pytest.ini",
     }.issubset(paths)
@@ -108,3 +113,36 @@ def test_coverage_collection_and_upload_remain_enabled(workflow):
     upload = next(step for step in steps if step.get("name") == "Upload coverage")
     assert upload["uses"].startswith("codecov/codecov-action@")
     assert upload["with"]["file"] == "./coverage.xml"
+
+
+def test_workflow_selects_repository_coverage_gate(workflow):
+    """A green heartbeat must satisfy the declared repository threshold."""
+    steps = workflow["jobs"]["test"]["steps"]
+    command = next(
+        step["run"]
+        for step in steps
+        if step.get("name") == "Run workflow automation tests"
+    )
+    assert "--cov-config=pyproject.toml" in shlex.split(command)
+    coverage = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
+    assert coverage["report"]["fail_under"] == 80.0
+
+
+@pytest.mark.parametrize("section", ["run", "report", "html", "xml", "json"])
+def test_coverage_configurations_agree(section):
+    """Default discovery and explicit TOML selection must share settings."""
+    coverage = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(REPO / ".coveragerc")
+    for option, expected in coverage[section].items():
+        assert config.has_option(section, option), f"{section}.{option} is missing"
+        if isinstance(expected, bool):
+            actual = config.getboolean(section, option)
+        elif isinstance(expected, (int, float)):
+            actual = config.getfloat(section, option)
+        elif isinstance(expected, list):
+            actual = config.get(section, option).splitlines()
+            actual = [line.strip() for line in actual if line.strip()]
+        else:
+            actual = config.get(section, option)
+        assert actual == expected, f"{section}.{option} differs between configurations"
