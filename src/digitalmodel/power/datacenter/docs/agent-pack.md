@@ -5,11 +5,22 @@
 | Module | power/datacenter |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/power/datacenter |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
 | Analysis family | Engineering calculations (EC); AQG r0, section 10, Python calculations |
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT |
+
+Revision 0 code citations and offline results refer to the recorded code revision above.
+Revision 1 updates the finite-input contract using symbol references; it does not
+requalify the historical calculation examples.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 0 | 2026-10-17 | Initial source-pinned knowledge pack and regression inventory. |
+| 1 | 2026-10-19 | Reject nonfinite UPS/STS ratings and STS transfer times to prevent invalid capacities and timings; issue [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 2. |
 
 ## 1. Purpose and scope
 
@@ -24,9 +35,9 @@ UNVERIFIED: certification equivalence, design-load sufficiency and applicability
 | --- | --- | --- | --- | --- |
 | Generic rated_kva, efficiency | kVA, dimensionless | No runtime range check | 0.0, 1.0 | [src/digitalmodel/power/datacenter/models.py:L19-L41] |
 | component_type, name | text | No enumerated restriction; empty name generated | Empty strings | [src/digitalmodel/power/datacenter/models.py:L24-L41] |
-| UPS rated_kva, efficiency | kVA, dimensionless | rated_kva > 0; 0 < efficiency <= 1 | Capacity inherited; efficiency 0.95 | [src/digitalmodel/power/datacenter/models.py:L56-L75] |
+| UPS rated_kva, efficiency | kVA, dimensionless | Finite rated_kva > 0; 0 < efficiency <= 1 | Capacity inherited; efficiency 0.95 | `UPSModule.__post_init__` in `models.py` |
 | battery_runtime_min, bypass_enabled | min, boolean | No runtime validation | 10.0, True | [src/digitalmodel/power/datacenter/models.py:L50-L75] |
-| STS rated_kva, transfer_time_ms | kVA, ms | rated_kva > 0; transfer time >= 0 | Capacity inherited; transfer time 4.0 | [src/digitalmodel/power/datacenter/models.py:L94-L109] |
+| STS rated_kva, transfer_time_ms | kVA, ms | Finite rated_kva > 0; finite transfer time >= 0 | Capacity inherited; transfer time 4.0 | `STSModule.__post_init__` in `models.py` |
 | preferred_source, alternate_source, retransfer_enabled | text, text, boolean | No runtime validation | A, B, True | [src/digitalmodel/power/datacenter/models.py:L94-L109] |
 | path name, components | text, ordered objects | No topology constraints enforced | Required name; empty component list | [src/digitalmodel/power/datacenter/topology.py:L30-L35] |
 | paths, redundancy_scheme | object list, enum | No minimum path count | Required paths; scheme None | [src/digitalmodel/power/datacenter/validator.py:L29-L35] |
@@ -96,6 +107,7 @@ The sweep entries below distinguish normal defaults from missing rejection check
 
 | ID | Symptom or assumption | Detection check | Tracking and pinned location |
 | --- | --- | --- | --- |
+| F01 | NaN or infinity in UPS/STS ratings or STS transfer time can evade range-only comparisons. | `tests/power/datacenter/test_finite_inputs.py`: rejection and retained-boundary cases | [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 2; finite checks precede range checks in both constructors. |
 | S01 | Generic rating defaults to 0.0 kVA with no rejection. | no detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L34-L41] |
 | S02 | Generic efficiency defaults to lossless 1.0 and has no bounds check. | no detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L34-L41] |
 | S03 | Empty generic type is accepted. | no detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L34-L41] |
@@ -104,7 +116,7 @@ The sweep entries below distinguish normal defaults from missing rejection check
 | S06 | UPS autonomy defaults to 10.0 min without range validation. | C0b records the default; no rejection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L56-L65] |
 | S07 | UPS bypass defaults to True and does not enter the tier rules. | C0b records default; no functional detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L56-L58] [src/digitalmodel/power/datacenter/validator.py:L84-L107] |
 | S08 | UPS substitutes type and generated name when empty. | no detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L67-L70] |
-| S09 | STS transfer defaults to 4.0 ms; only negative times are rejected. | C0b records default; no adequacy check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L94-L105] |
+| S09 | STS transfer defaults to 4.0 ms; negative and nonfinite times are rejected. | `test_reject_invalid_transfer_time`; default adequacy remains unverified | [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 2; `STSModule.__post_init__` in `models.py` |
 | S10 | STS preferred/alternate labels default to A/B with no connectivity check. | C0b records labels; no connectivity detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L94-L109] |
 | S11 | STS retransfer defaults to True; tier classification does not inspect it. | C0b records default; no functional detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L97-L109] [src/digitalmodel/power/datacenter/validator.py:L84-L107] |
 | S12 | STS substitutes type and generated name when empty. | no detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L106-L109] |
@@ -121,6 +133,19 @@ The sweep entries below distinguish normal defaults from missing rejection check
 
 The multiplication accumulator 1.0 and empty Counter/dict initializers are normal algorithm identities, not error-result caching; no swallowed exception, skipped record, external numeric conversion, return None error path, 1970 fallback or cache write is present in the complete package bodies. [src/digitalmodel/power/datacenter/models.py:L1-L109] [src/digitalmodel/power/datacenter/topology.py:L1-L67] [src/digitalmodel/power/datacenter/validator.py:L1-L107] [src/digitalmodel/power/datacenter/__init__.py:L1-L31]
 No incident issue is named in the scope; read-only issue searches for datacenter and SPOF returned no matching issue, so the confirmed limitations are tracked in the numbered drafts above.
+
+Finite-input basis (revision 1): the [Python 3.11 Library Reference,
+`math.isfinite`](https://docs.python.org/3.11/library/math.html#math.isfinite)
+excludes NaN and both infinities while considering zero finite. Positive rating
+and nonnegative transfer time remain local input-domain requirements from
+[2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 2, rather
+than standards-derived equipment limits. The boundary tests derive expected
+acceptance by hand in their docstrings. Generic component validation, mutable
+post-construction attributes, tier definitions, STS efficiency and rating/power-factor
+conventions remain outside this slice; no engineering qualification is established.
+
+Revision 1 checks: all 57 datacenter test nodes passed, including 23 finite-input
+cases. The historical 34-node results and inventory remain scoped to revision 0.
 
 ## 7. Lessons log
 
