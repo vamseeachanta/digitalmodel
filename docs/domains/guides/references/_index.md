@@ -25,6 +25,6 @@ When adding new content:
 
 ## External tools
 
-Open repositories we study for ideas and cross-checks. Each page records the licence; a repository without a licence is reference only (no code copied).
+Open repositories studied for ideas and cross-checks. Each page records the licence; a repository without a licence is reference only (no code copied).
 
 - [PointCloud Studio](external-tools/pointcloud-studio.md): survey point clouds for subsea cables, pipelines and foundations (free spans, scour, depth of burial, rock berms, sand waves); no licence stated.
