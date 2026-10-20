@@ -463,7 +463,14 @@ Independent provider clearance and issue creation from the numbered drafts remai
 `riprap_residual_scour_depth` adds a two-stage steady-current calculation:
 first estimate local armour shear from approach shear, then calculate residual
 scour using excess shear and dimensionless grain sizes. Inputs use SI units;
-water density, both grain densities and viscosity are explicit. The optional
+water density, both grain densities and viscosity are explicit. The sediment
+`sediment_d90_m` roughness input is mandatory in both the physical calculation
+and `approach_bed_shear_stress`; no default d90/d50 ratio is sourced. Results
+record the supplied d90 and its source. The critical Shields parameter
+theta_c = 0.045 is an unverified screening assumption, recorded as
+`critical_shields` alongside `critical_shear_pa`; it is not qualified for design
+use. The threshold conversion uses `critical_sediment_motion` with explicit
+theta_c and gravity, retaining the screening gravity of 9.81 m/s². The optional
 `scour.riprap` workflow block writes the intermediate values to the summary.
 `riprap_scour_from_dimensionless` exposes the second stage separately for checking
 printed dimensionless tables.

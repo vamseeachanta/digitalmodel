@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Scour depth screening for pipelines, monopiles and riprap.
 # ABOUTME: Includes the Yang et al. (2026) residual-scour screening method.
 """Scour depth screening.
@@ -376,7 +379,7 @@ def approach_bed_shear_stress(
     sediment_d50_m: float,
     water_density_kg_m3: float,
     *,
-    sediment_d90_m: float | None = None,
+    sediment_d90_m: float,
 ) -> float:
     """Return approach-bed shear in Pa, rho*g*(V/C)**2.
 
@@ -400,24 +403,28 @@ def critical_shear_stress(
     particle_density_kg_m3: float,
     water_density_kg_m3: float,
     critical_shields: float = 0.045,
+    *,
+    gravity_ms2: float = GRAVITY,
 ) -> float:
     """Return theta_c*(rho_p-rho_w)*g*d in Pa.
 
     The default theta_c = 0.045 is an unverified screening assumption;
     its source equation remains to be checked before design use.
+    The threshold conversion delegates to critical_sediment_motion and its
+    cited USACE relation; that reference does not qualify the default theta_c.
     """
     _riprap_number("grain_diameter_m", grain_diameter_m)
     _riprap_number("particle_density_kg_m3", particle_density_kg_m3)
     _riprap_number("water_density_kg_m3", water_density_kg_m3)
     _riprap_number("critical_shields", critical_shields)
-    if particle_density_kg_m3 <= water_density_kg_m3:
-        raise ValueError("particle_density_kg_m3 must exceed water_density_kg_m3")
-    return (
-        critical_shields
-        * (particle_density_kg_m3 - water_density_kg_m3)
-        * GRAVITY
-        * grain_diameter_m
-    )
+    _riprap_number("gravity_ms2", gravity_ms2)
+    return critical_sediment_motion(
+        sediment_d50_m=grain_diameter_m,
+        sediment_density_kg_m3=particle_density_kg_m3,
+        water_density_kg_m3=water_density_kg_m3,
+        critical_shields_parameter=critical_shields,
+        gravity_ms2=gravity_ms2,
+    ).critical_shear_stress_pa
 
 
 def dimensionless_grain_size(
@@ -454,6 +461,8 @@ def riprap_scour_from_dimensionless(
     This entry point permits checking the printed dimensionless tables separately
     from inconsistent physical-density statements in the source. It does not
     extrapolate outside the published calibration envelope.
+    Equation/table identifiers, coefficients and bounds remain unverified
+    against the source tables; current equation checks are synthetic.
     """
     _riprap_number("excess_shear", excess_shear, positive=False)
     bounds = (
@@ -495,7 +504,7 @@ def riprap_residual_scour_depth(
     water_density_kg_m3: float,
     kinematic_viscosity_m2_s: float,
     *,
-    sediment_d90_m: float | None = None,
+    sediment_d90_m: float,
 ) -> RiprapResidualScourResult:
     """Estimate residual scour inside riprap using Yang et al. (2026).
 
@@ -504,7 +513,11 @@ def riprap_residual_scour_depth(
     SI inputs; d90 is required explicitly because no d90/d50 ratio is sourced.
     Densities and viscosity must be supplied for the actual fluid and
     grains. K = 1 + 3.17*(dr/d50)**0.35*(D/h)**(-0.02), tau_max = K*tau_a,
-    tau' = (tau_max-tau_c)/tau_c, with riprap theta_c = 0.045.
+    tau' = (tau_max-tau_c)/tau_c. The theta_c = 0.045 value is an unverified
+    screening assumption, recorded as critical_shields in the result; its
+    source equation remains unchecked and it is not qualified for design use.
+    The amplification coefficients and their equation/table identifiers remain
+    unverified against the source; current equation checks are synthetic.
 
     Scope: steady current, an intact 10*dr layer extending over diameter 5*D,
     lab-scale 24-hour tests (equilibrium not established). A screening and
@@ -544,8 +557,13 @@ def riprap_residual_scour_depth(
         1 + 3.17 * (rock_d50_m / sediment_d50_m) ** 0.35 * diameter_depth**-0.02
     )
     peak = amplification * approach
+    critical_shields = 0.045  # Unverified screening assumption, not a design value.
     critical = critical_shear_stress(
-        rock_d50_m, rock_density_kg_m3, water_density_kg_m3
+        rock_d50_m,
+        rock_density_kg_m3,
+        water_density_kg_m3,
+        critical_shields=critical_shields,
+        gravity_ms2=GRAVITY,
     )
     excess = (peak - critical) / critical
     sand_star = dimensionless_grain_size(
@@ -570,7 +588,7 @@ def riprap_residual_scour_depth(
         pile_diameter_m=pile_diameter_m,
         sediment_d90_m=d90,
         d90_source="supplied",
-        critical_shields=0.045,
+        critical_shields=critical_shields,
         chezy_coefficient_m_half_s=chezy,
         approach_shear_pa=approach,
         shear_amplification=amplification,

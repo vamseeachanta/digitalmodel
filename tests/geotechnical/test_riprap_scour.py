@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Synthetic checks for the Yang et al. (2026) steady-current equations."""
 
 import math
@@ -221,10 +224,35 @@ def test_checked_in_example(tmp_path):
 def test_explicit_roughness_is_required():
     physical = inputs()
     physical.pop("sediment_d90_m")
-    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+    with pytest.raises(TypeError, match="sediment_d90_m"):
         riprap_residual_scour_depth(**physical)
-    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+    with pytest.raises(TypeError, match="sediment_d90_m"):
         approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000)
+
+
+def test_explicit_none_roughness_is_rejected():
+    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+        riprap_residual_scour_depth(**(inputs() | {"sediment_d90_m": None}))
+    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+        approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000, sediment_d90_m=None)
+
+
+def test_critical_shear_uses_explicit_shields_and_gravity():
+    # 0.05 * (2250 - 1000) * 10 * 0.005 = 3.125 Pa.
+    assert critical_shear_stress(
+        0.005, 2250, 1000, critical_shields=0.05, gravity_ms2=10.0
+    ) == pytest.approx(3.125)
+
+
+@pytest.mark.parametrize("gravity", [0, -1, math.nan, math.inf, True, "10"])
+def test_critical_shear_rejects_invalid_gravity(gravity):
+    with pytest.raises(ValueError, match="gravity_ms2"):
+        critical_shear_stress(0.005, 2250, 1000, gravity_ms2=gravity)
+
+
+def test_critical_shear_rejects_unrepresentable_threshold():
+    with pytest.raises(ValueError, match="representable"):
+        critical_shear_stress(1e200, 1e200, 1000)
 
 
 @pytest.mark.parametrize("d90", [0.0006, 0.0012])
