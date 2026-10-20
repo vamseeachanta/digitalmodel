@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solver proof completeness audit</title>
+<style>
+body { font: 16px/1.6 system-ui, sans-serif; max-width: 1100px; margin: auto; padding: 24px; color: #183044; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid #bbc9d3; padding: 10px; text-align: left; vertical-align: top; }
+code, pre { background: #f3f6f8; overflow-wrap: anywhere; white-space: pre-wrap; }
+.limit { border-left: 4px solid #a96400; padding-left: 16px; }
+</style>
+</head>
+<body>
+<h1>Solver proof completeness audit</h1>
+<h2>Summary</h2>
+<p>The audit separates mandatory input coverage, retained artifact bytes, observed cleanup and claimed numerical proof.
+At revision <code>e92a4e7ad2a7766f7c040ce4795b431d9da608fa</code>, the declared search found 36 candidate paths;
+five explicit callers were added, giving 41 inventoried paths. Selected functions in 22 files were inspected;
+the other 19 paths remain <code>NOT_EVALUATED</code>. Two bounded observations are reproduced with source-only doubles below.
+The reusable offline contract rejects incomplete manifests and unconfirmed cleanup. Existing adapters are unchanged.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-20</td><td>Issue 2085: record selected proof owners and provide an offline contract for missing inputs and unconfirmed cleanup.</td></tr></tbody></table>
+<p>Table 1. Initial issue revision.</p>
+
+<h2>Scope and proposed adoption plan</h2>
+<p>Slice 1 will inventory existing writers and consumers, retain source digests and separate selected functions from unevaluated candidates.
+Slice 2 will introduce mandatory input declarations, pinned digests, exact parent/child manifest comparison and independent output hashing.
+Slice 3 will distinguish observed whole-tree cleanup from requests, retain failure reasons and provide a synthetic worked example.
+Future adoption will review each adapter's dependency closure and observer interface before changing that adapter.</p>
+<p>The machine-readable <a href="solver-proof-inventory.json">inventory</a> records the exact search roots, pattern,
+supplemental paths, revision, source-byte SHA-256 values and inspection disposition.
+The search is lexical and bounded; it does not establish coverage of every solver, external adapter or runtime.</p>
+
+<h2>Selected owners and consumers</h2>
+<table>
+<thead><tr><th>Owner / consumer</th><th>Required inputs and optional outputs</th><th>Cleanup and proof disposition</th></tr></thead>
+<tbody>
+<tr><td><a href="../plans/evidence/issue-2082-native.ps1">Native smoke harness</a>: <code>run_smoke</code>, <code>run_owned</code>, <code>drain_owned</code></td>
+<td>The fixed source list is checked before launch and rehashed afterward. Discovered scratch files are optional diagnostic outputs, not the mandatory input declaration.</td>
+<td>The owned job is queried and the root is waited for; failed final observation raises. Existing targeted repair is present. Native behavior is NOT_EVALUATED here.</td></tr>
+<tr><td>Same harness: <code>model_sources</code>, <code>model_phase</code>, <code>run_model</code>; <a href="../../src/digitalmodel/solvers/smoke/model_probe.py">model probe</a></td>
+<td>Sources, manifest, simulation and loaded native export are bound. <code>model_results.py</code> is conditionally listed although the child imports it unconditionally. Observation A applies.</td>
+<td>Independent phases and whole-job cleanup are required; <a href="../../src/digitalmodel/solvers/smoke/model_proof.py">validate_report</a> also checks completion, settings flags, result arrays and readback. No missing-module success is claimed.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/smoke/model_manifest.py">Mooring manifest verifier</a>: <code>_file_manifest</code>, <code>_closure</code>, <code>verify_manifest</code></td>
+<td>Listed files are hashed; reachable includes must be listed. Case-specific contract and source binding are checked. Its include closure remains the domain owner.</td>
+<td>Input-byte preservation is distinct from native physical-setting readback. This verifier does not observe processes.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/smoke/workflow.py">Smoke workflow</a> and <a href="../../src/digitalmodel/solvers/smoke/probes.py">probes</a></td>
+<td>In-process probe results feed a JSON report. Scratch retention is optional; filesystem removal uses <code>ignore_errors=True</code>.</td>
+<td>Dropping API references and requesting scratch removal do not establish observed process-tree or filesystem absence. Those criteria are NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/ghs/contracts.py">GHS contracts</a>, <a href="../../src/digitalmodel/solvers/ghs/runner.py">synthetic runner</a>, <a href="../../src/digitalmodel/solvers/ghs/_owned_process.py">owned-process helper</a></td>
+<td>Packet geometry, runfile, runtime and policy identities are explicit. Synthetic staging is rechecked. Sentinel and interpreter hashes use explicit reads.</td>
+<td>The live capture entry raises unavailable; synthetic capture remains unqualified. The process helper checks final root wait and closes handles. Solver cleanup qualification is NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/openfoam/smoke_evidence.py">OpenFOAM evidence</a>: <code>capture_pre_run_artifacts</code>, <code>validate_evidence</code>, <code>cross_check_bridge_manifest</code></td>
+<td>Named pre-run files are read directly; field/dictionary/mesh trees are hashed. Durable bundle and separate bridge manifest are compared. Schema validation alone does not read current artifact bytes.</td>
+<td>The payload limits its engineering claim. These functions do not observe process-tree cleanup; that criterion is NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/openfoam/gmsh_bridge.py">Mesh bridge</a> and <a href="../../src/digitalmodel/solvers/openfoam/prebuilt_mesh.py">prebuilt execution</a></td>
+<td>Source-copy identity, pre/post bytes, protected case inputs and mesh trees are checked. Optional input metadata is distinguished from required mesh/control inputs.</td>
+<td>Snapshot/lock release is filesystem cleanup, not solver process termination. Existing helpers are retained as domain-specific owners.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/openfoam/runner.py">Detached OpenFOAM runner</a>: <code>poll_detached_run</code>, <code>_terminate_group</code></td>
+<td>The detached-run record supplies the elapsed-time budget; it is not a complete mandatory input manifest.</td>
+<td>On injected signalling denial, the caller reports terminated while the fake observer still reports a live root. Observation B applies; no operating-system termination is performed.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/orcaflex/parallel_runner.py">Parallel runner</a>: <code>input_digest</code>, <code>reextract</code>; <a href="../../src/digitalmodel/solvers/orcaflex/sim_retention.py">retention helper</a>: <code>_reason</code></td>
+<td>The input digest discovers existing regular files under the master directory. Re-extraction and retention check result/simulation digests. A separately declared dependency set is not established by directory discovery.</td>
+<td>Missing expected dependencies and observed process cleanup are NOT_EVALUATED. No false-success reproduction is claimed for this adapter.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/orcaflex/modular_generator/slay_execution.py">S-lay preparation</a>: <code>read_contract</code></td>
+<td>Fixed preparation documents are read before parsing and hashed from those bytes. Missing reads propagate; preparation metadata is not a native result.</td>
+<td>This selected function does not launch a child. Native result/readback and cleanup are NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../scripts/artificial_lift/build_solver_guard_evidence.py">Artificial-lift evidence</a>: <code>main</code></td>
+<td>Explicit source paths are hashed without an existence filter. Results can be written before later source reads; a partial file is not evidence of successful completion.</td>
+<td>No process observer is supplied by this writer. Numerical validation remains its domain owner's responsibility.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/benchmark/runner.py">Benchmark receipt</a>: <code>_clean</code>; <a href="../../src/digitalmodel/solvers/benchmark/cases.py">case definitions</a></td>
+<td>Receipts retain selected hashes, finite fingerprints, timing and observed threads. They are not exact mandatory-file manifests.</td>
+<td>Receipt completeness is not whole-process cleanup evidence. Per-case cleanup is NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../src/digitalmodel/hydrodynamics/diffraction/aqwa_runner.py">AQWA runner</a>: <code>_invoke_solver</code></td>
+<td>A deck is passed to a bounded subprocess; diagnostics and return code are returned. This seam does not declare/hash all dependencies.</td>
+<td>Subprocess return/timeout does not itself attest descendant absence. No native or timeout run is performed.</td></tr>
+<tr><td><a href="../../scripts/verify_solver_evidence.py">Stored-payload verifier</a>: <code>verify</code>; <a href="../../scripts/screen_solver_evidence.py">text screener</a></td>
+<td>The verifier checks exact payload membership, sizes and digests in disk or pinned bare-Git mode. The screener detects text-extractable credential patterns only.</td>
+<td>Neither establishes native settings, numerical adequacy or process cleanup. They remain distinct controls.</td></tr>
+</tbody></table>
+<p>Table 2. Selected source observations at the audited revision; an unevaluated criterion is not a failed native run.</p>
+
+<h2>Bounded observations and way forward</h2>
+<p><strong>A — declaration gap.</strong> The source-only fixture removes no real data and executes only <code>model_sources</code>
+against a temporary tree. The missing <code>model_results.py</code> is omitted, while AST inspection establishes its unconditional import.
+This proves a mismatch between the declared source inventory and the import dependency. It does not prove a successful child with the module missing.
+Adapter adoption will explicitly declare this dependency and test refusal before child launch.</p>
+<p><strong>B — cleanup claim gap.</strong> A source-only operating-system double raises <code>PermissionError</code> during signalling.
+The final caller result is <code>terminated=true, running=false</code>, although the injected liveness observer remains true.
+The reusable contract rejects the equivalent unconfirmed observation. A separate adapter repair will preserve diagnostic failure and require a final observation;
+it will also distinguish root-process absence from owned-tree absence.</p>
+<p>The observation tests read frozen Git bytes so later adapter repairs will not be required to preserve the audited defects.</p>
+
+<h2>Reusable contract and method</h2>
+<p><a href="../../src/digitalmodel/infrastructure/solver_proof.py">solver_proof.py</a> is independent of optional solver APIs.
+The caller supplies a trusted mapping of required input names to pinned digests, explicit required output names, untrusted child evidence,
+and a separate parent-owned cleanup observation. <code>capture_inputs</code> will be called before launch;
+<code>audit_proof</code> will be called after observed cleanup. Optional diagnostics are retained outside the mandatory manifests.</p>
+<pre>names(observed inputs) = names(declared inputs) = names(child input manifest)
+SHA256(current input bytes) = pinned input digest = child input digest
+names(observed outputs) = names(required outputs) = names(child output manifest)
+SHA256(current output bytes) = child output digest
+cleanup confirmed = successful owned-tree observation AND exited root AND zero active processes
+complete = every required comparison passes AND child reports success AND cleanup confirmed</pre>
+<p>The set comparisons and cleanup predicate implement the acceptance proposed in issue 2085.
+The digest method is illustrated by the public <a href="https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA256.pdf">NIST SHA-256 worked example</a>,
+One Block Message Sample, PDF modified 2012, opened successfully on 2026-10-20.
+No physical equation, coefficient, engineering tolerance or licensed-publication value is introduced.</p>
+
+<h2>Worked example: inputs, method and answer</h2>
+<p>The <a href="../../examples/solver_proof_completeness.py">runnable example</a> writes separate input and fake-result files containing the three ASCII bytes <code>abc</code>.
+The independently published digest is <code>ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad</code>.
+Each required manifest contains exactly its one declared filename; no optional diagnostic is counted.</p>
+<pre>PYTHONPATH=src uv run --no-project python examples/solver_proof_completeness.py &lt;new-scratch-directory&gt;
+observed:       complete=true,  failures=[]
+requested_only: complete=false, failures=["cleanup_unconfirmed"]</pre>
+<p>The positive observation is a synthetic fixture with an exited root and zero active processes.
+The second fixture contains only a termination request. Both audit answers and original fixture bytes are retained and read back;
+no existing directory is overwritten, no solver is imported, and no process is terminated by the example.</p>
+
+<h2>Checks and limitations</h2>
+<p>The focused tests cover missing/unreadable/substituted inputs, changed bytes during hashing, path redirection,
+exact manifests, retained output bytes, fake-child flags, unconfirmed cleanup, independent expected digests and example readback.
+A fresh interpreter rejects optional solver imports while importing the helper. Inventory digests are independently recomputed from frozen Git bytes.</p>
+<p class="limit">Completeness is not engineering acceptance. Native settings, units, result arrays, simulation completion and readback remain adapter-specific checks.
+The helper cannot authenticate a caller-supplied observation or discover undeclared dependencies. A caller-controlled declaration is not approval evidence.
+Symlink/reparse checks and metadata comparisons are observational; hostile concurrent directory replacement, Windows containment and full process-tree observation are not qualified here.
+No existing solver writer is migrated. No licensed solver is started, imported or queried. Second-provider review remains pending.</p>
+</body>
+</html>

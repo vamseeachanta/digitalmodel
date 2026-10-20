@@ -1,0 +1,229 @@
+{
+  "audited_revision": "e92a4e7ad2a7766f7c040ce4795b431d9da608fa",
+  "observed_date": "2026-10-20",
+  "basis": "Issue 2085; selected owner functions only, not complete adapter qualification",
+  "discovery_roots": [
+    "src/digitalmodel/solvers",
+    "scripts/solver_smoke_test.py",
+    "scripts/orcaflex_native_model_probe.py",
+    "scripts/verify_solver_evidence.py",
+    "scripts/screen_solver_evidence.py",
+    "scripts/artificial_lift/build_solver_guard_evidence.py",
+    "docs/plans/evidence/issue-2082-native.ps1"
+  ],
+  "discovery_pattern": "sha256|input_hashes|proof.json|WaitForSingleObject",
+  "supplemental_paths": [
+    "scripts/screen_solver_evidence.py",
+    "src/digitalmodel/hydrodynamics/diffraction/aqwa_runner.py",
+    "src/digitalmodel/solvers/openfoam/runner.py",
+    "src/digitalmodel/solvers/smoke/probes.py",
+    "src/digitalmodel/solvers/smoke/workflow.py"
+  ],
+  "files": [
+    {
+      "path": "docs/plans/evidence/issue-2082-native.ps1",
+      "sha256": "98a1bb2ee2ec2106d27b1fae52af1987ac908ae556f9444a0fcbeeed999d33dc",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "scripts/artificial_lift/build_solver_guard_evidence.py",
+      "sha256": "a2f622b34753aad96527e4a60528fce05c9453deba692952f676c02d2b3b402c",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "scripts/screen_solver_evidence.py",
+      "sha256": "1a3ff990f8b3fe6cf1e7442fc1fd096515b2d78b8135ba06e22bb897b3360288",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "scripts/verify_solver_evidence.py",
+      "sha256": "b756f313a751b6283adbda016b2c85fb8e8c6d80dfe8bd2e6c943e0077fb2e08",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/diffraction/aqwa_runner.py",
+      "sha256": "b3ba56adfa777fd9fc673f8127db38cdb12bc0e5dda562123825e26c7d3d6913",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/benchmark/cases.py",
+      "sha256": "38b3fd76a0c26279b17356d3c50de2d4563a35c45259df39a5a243dabeb7651e",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/benchmark/compare.py",
+      "sha256": "a4562b88b51599f6c8bcbf8aae626fd6e7ec291f97d901cdfb6795b6337909eb",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/benchmark/runner.py",
+      "sha256": "b156b86f7bb2fd5be6e139a410c881c724360dcb29beffa2072ca7d39101221a",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/benchmark/solvers.py",
+      "sha256": "7a8d178102a5a511a74478ec8825a7e34500fdf2a413e8eb28c9d119d3901151",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/_canonical.py",
+      "sha256": "4ca7a266bdede03d6c47b8ee1079bfb2421e0cce281db9291fe267b8b98456f1",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+      "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/_windows_job.py",
+      "sha256": "03351f97a44d81e78afa051e58d7ec00954e05a3683afb53420f94fcd0ef9f1c",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/comparison.py",
+      "sha256": "b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/contracts.py",
+      "sha256": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/qualification.py",
+      "sha256": "92ae10f65beedc314416523ad7be7a514d5d38316725c8b88dce08eb51db894b",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/runner.py",
+      "sha256": "364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/artifact_index.py",
+      "sha256": "b1adc10511524db598ba4f0386135ec0248e5e909bf5df8297d20a6330fa9902",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/case_coupling.py",
+      "sha256": "d09638e5ad7812476a973240b47b1db0d4c43ccf6f4ef50d9034febb2e50490b",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/docs/agent-pack.md",
+      "sha256": "486e5e9ea721620bbc30effcf2e8627e5115ac9317c01d3f99ba6d78ca5f6178",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/gmsh_bridge.py",
+      "sha256": "4087ae0f69eec9aa51c0d0da757f702b788bd24879791db339c605089f90e057",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/hull_manifest.py",
+      "sha256": "353fda50198506769cdd46823c573e61f9130f1d6242ed86649722819c5b70ff",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/mesh_store.py",
+      "sha256": "e7c7b3d52226ee42c9796873ef5422adb1e00fdd47cf1523877977ba0ff31be2",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/prebuilt_mesh.py",
+      "sha256": "fab94838931b3cbd718111007964db8a24b5b37586108c7acff109b88b6c2dd3",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/runner.py",
+      "sha256": "e9762f9609f2bafca3ed5f117e5f0b4e4deb2248cbd0b84ae82b0caea3467cb5",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/sloshing_sweep.py",
+      "sha256": "709d94a41337a0e70e8171c960222ae16a035135a8cbcf087cbb955e31b7e498",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/smoke.py",
+      "sha256": "981e5d8df91f20bf1f10ebcc27b03c9b87799c3daa74340af5c311279e645854",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/smoke_evidence.py",
+      "sha256": "13fc2828a1280862ac1629c44c1872bc86cb20c59b12ccebb0429dce25ec523a",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/warm_start/admissibility.py",
+      "sha256": "14f47a48c1ca384ee68a01ff0b4668d76c70a93c271d69b837ef15fce8d23ab4",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/warm_start/cli.py",
+      "sha256": "72c3eef1279f09ada791c2f92d333c9118d56d95ef9bb4df7a516473c788efd8",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/openfoam/warm_start/fields.py",
+      "sha256": "bc00a6cd1f1d5a77d63060f1d6280b8ce951981ebac3cd91a51553c4f221bc58",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
+      "sha256": "44af1f44886db223da2bd738c2446ec77f4c6afa6251296adba10e5975b4f939",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md",
+      "sha256": "738a423717942ef5fc06eb109a3805b7287f6922457b96f12573bc5f2976b36d",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/slay_execution.py",
+      "sha256": "6f98dac55e92340f3b676e147ca52eeff72f01be090f41aed2322efdeb2688e8",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/parallel_runner.py",
+      "sha256": "d3ded9564b753fdaec7a974df462652d3cba4ed5d82dde0a2ca2e4e69d7b0fc6",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/sim_retention.py",
+      "sha256": "e051729325ab0921eebbc3edc4f684f32fd979783020ee32d9e54e4a129425e2",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_data_readback.py",
+      "sha256": "de0e0a6ced2b0f40567056621784c5839389c0b42c900c80003b11900008a49a",
+      "disposition": "NOT_EVALUATED"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_manifest.py",
+      "sha256": "6c321f6f00ff56f0b436bcdfaf3a55739c28586b0f9a1b17bcec037cfdb16b28",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_probe.py",
+      "sha256": "106c5e8d24b33b2455447bc9ee1bc6b909f0064cf55b94b33fef29ab315d2793",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_proof.py",
+      "sha256": "73163369aca115a6d640ba4327fa08c39472be374bc7c2dedb40ef2acbe73856",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/probes.py",
+      "sha256": "074c57c7608db8162536a5dadb519c3cf9faf3308e25121474b78623006a0856",
+      "disposition": "selected_owner"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/workflow.py",
+      "sha256": "c4dc244b8fe32bcdb6a64494d781a77a53fbd039cdf14e062aae3f9662ce21fa",
+      "disposition": "selected_owner"
+    }
+  ]
+}

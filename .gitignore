@@ -267,6 +267,8 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/solver-proof-completeness.html
+!docs/reports/solver-proof-inventory.json
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
