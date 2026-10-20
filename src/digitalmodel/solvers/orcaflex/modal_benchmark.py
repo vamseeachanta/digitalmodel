@@ -11,6 +11,11 @@ CSV goes to stdout, or to a new file with ``--output comparison.csv``.
 For Python callers, load this file with importlib.util.spec_from_file_location.
 The parent package is not part of this standalone interface.
 
+For an unfiltered stored ``_modes_summary.csv`` add ``--summary-csv --model mj01
+--period-unit s --synthetic false``. Confirm extraction started at the first mode.
+The CSV adapter leaves directions unknown; annotated JSON is required to compare
+classified targets. No solver is imported or executed by either input route.
+
 Result JSON: model (target-table key), synthetic (boolean), modes (list of
 mode, frequency_hz, optional direction). Frequencies are finite and positive;
 mode identifiers are positive integers. Directions are in-plane/out-of-plane.
@@ -34,6 +39,7 @@ PAIRING_RULE = (
     "Ascending frequency within the same direction class where recorded; "
     "reserve classified targets first, then pair remaining slots by ascending "
     "frequency. Missing published slots consume ranks; no direction is guessed. "
+    "Unclassified pairing is withheld if any classified target lacks a match. "
     "Equal computed frequencies use mode number as tie-break. No pass/fail limit."
 )
 MISSING = "not held in the repository"
@@ -76,9 +82,9 @@ def _validate_modes(rows: Any, *, published: bool) -> list[dict[str, Any]]:
                 raise ValueError("frequency_hz must be positive")
         if row.get("direction") not in DIRECTIONS:
             raise ValueError("direction must be in-plane, out-of-plane, or null")
+    if seen != set(range(1, len(rows) + 1)):
+        raise ValueError("modes must include every rank slot from one")
     if published:
-        if seen != set(range(1, len(rows) + 1)):
-            raise ValueError("published modes must include every rank slot")
         known = [
             r["frequency_hz"]
             for r in sorted(rows, key=lambda r: r["mode"])
@@ -127,6 +133,51 @@ def load_result(path: str | Path) -> dict[str, Any]:
     return dict(data)
 
 
+def read_summary_csv(
+    stream: TextIO, *, model: str, synthetic: bool, period_unit: str
+) -> dict[str, Any]:
+    """Convert stored, unfiltered modal summary rows into the JSON interface.
+
+    Column basis: OrcModalAnalysis.modes_summary_df_columns and save_summary_files
+    in orcaflex_modal_analysis.py. Repeated object rows share a global mode index.
+    Period basis: Orcina Python reference, Modes.modeDetails (accessed 2026-10-20):
+    https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,Modes.htm
+    f = 1 / T by definition of period; callers must confirm T is in seconds.
+    DOF labels cannot establish the jumper plane; directions remain unknown.
+    """
+    if period_unit != "s" or type(synthetic) is not bool:
+        raise ValueError("confirm period_unit='s' and a boolean synthetic origin")
+    if not isinstance(model, str) or not model:
+        raise ValueError("model must be a nonempty target-table key")
+    reader = csv.DictReader(stream)
+    if not {"modeIndex", "period"}.issubset(reader.fieldnames or []):
+        raise ValueError("summary CSV needs modeIndex and period columns")
+    periods = {}
+    for row in reader:
+        index_text = row.get("modeIndex", "")
+        if not isinstance(index_text, str) or not index_text.isdecimal():
+            raise ValueError("modeIndex must be a zero-based integer")
+        index = int(index_text)
+        try:
+            period = float(row["period"])
+        except (ValueError, TypeError) as error:
+            raise ValueError("period must be finite and positive") from error
+        if not math.isfinite(period) or period <= 0:
+            raise ValueError("period must be finite and positive")
+        if index in periods and periods[index] != period:
+            raise ValueError("conflicting periods for one global modeIndex")
+        periods[index] = period
+    if not periods:
+        raise ValueError("summary CSV must contain modes")
+    # +1 converts the producer's zero-based index to the benchmark's rank slots.
+    modes = [
+        {"mode": index + 1, "frequency_hz": 1 / period, "direction": None}
+        for index, period in sorted(periods.items())
+    ]
+    _validate_modes(modes, published=False)
+    return {"model": model, "synthetic": synthetic, "modes": modes}
+
+
 def _pair_modes(
     targets: list[dict[str, Any]],
     modes: list[dict[str, Any]],
@@ -144,6 +195,11 @@ def _pair_modes(
         if match is not None:
             paired[published["mode"]] = match
             remaining.remove(match)
+    if any(
+        row.get("direction") is not None and row["mode"] not in paired
+        for row in targets
+    ):
+        return paired
     unclassified = [row for row in targets if row.get("direction") is None]
     for published, computed in zip(unclassified, remaining):
         paired[published["mode"]] = computed
@@ -204,7 +260,12 @@ def write_comparison(
     """Write UTF-8-compatible CSV rows, including the rule and data origin."""
     writer = csv.DictWriter(stream, fieldnames=FIELDS, lineterminator="\n")
     writer.writeheader()
-    writer.writerows(dict(row, model=model, synthetic=synthetic) for row in rows)
+    for row in rows:
+        output = dict(row, model=model, synthetic=synthetic)
+        difference = output["difference_percent"]
+        if difference is not None:
+            output["difference_percent"] = f"{difference:.1f}"
+        writer.writerow(output)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -213,8 +274,26 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("targets", type=Path)
     parser.add_argument("result", type=Path)
     parser.add_argument("--output", type=Path, help="New CSV file; defaults to stdout")
+    parser.add_argument("--summary-csv", action="store_true")
+    parser.add_argument("--model", help="Required target-table key for summary CSV")
+    parser.add_argument("--period-unit", choices=["s"])
+    parser.add_argument("--synthetic", choices=["true", "false"])
     args = parser.parse_args(argv)
-    table, result = load_targets(args.targets), load_result(args.result)
+    table = load_targets(args.targets)
+    if args.summary_csv:
+        if not args.model or not args.period_unit or args.synthetic is None:
+            parser.error("summary CSV requires --model, --period-unit and --synthetic")
+        with args.result.open(encoding="utf-8-sig", newline="") as stream:
+            result = read_summary_csv(
+                stream,
+                model=args.model,
+                synthetic=args.synthetic == "true",
+                period_unit=args.period_unit,
+            )
+    else:
+        if args.model or args.period_unit or args.synthetic is not None:
+            parser.error("CSV metadata options require --summary-csv")
+        result = load_result(args.result)
     if result["model"] not in table["models"]:
         raise ValueError("result model is absent from target table")
     rows = compare_modes(table["models"][result["model"]]["modes"], result["modes"])

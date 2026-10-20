@@ -46,12 +46,20 @@ Numerical mode-shape arrays are not held in the inspected sources. Recorded dire
 <p>Phase B will require converged statics, a recorded solver version, modal readback, and documented modelling assumptions.
 No acceptance threshold is defined and no qualification or claim-registry change is established here.</p>
 </section>
+<section aria-labelledby="revision-history">
+<h2 id="revision-history">Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-20</td><td>Stored summary CSV conversion, complete-rank validation,
+comparison precision and a synthetic worked example are documented so the offline comparison can be reproduced.</td></tr></tbody>
+<caption>Revision history begins with this issue; prior skeleton releases did not carry a revision table.</caption></table>
+</section>
 <section aria-labelledby="method">
 <h2 id="method">Method and comparison basis</h2>
 <p>Difference (%) = (computed frequency − published frequency) / published frequency × 100.</p>
 <p>Pairing is by ascending frequency within the same direction class where recorded. Classified targets reserve matching
 modes first; remaining slots pair with remaining computed modes in ascending frequency. Missing published slots consume
 ranks. Equal computed frequencies use mode number as tie-break. Missing direction is not guessed.
+Unclassified pairing is withheld if any classified target has no direction match, because the remaining ranks are ambiguous.
 This rank-based convention is not mode-shape correlation or proof of modal identity.</p>
 <p>A missing computed match is labelled “not computed”. A missing reference remains “not held in the repository”,
 with no percentage calculated. The full spectrum from mode 1 is required; gaps in the exported computed spectrum can
@@ -89,6 +97,23 @@ Source digests use UTF-8 text with LF newlines, so checkout newline conversion d
 </table></div>
 <p>Comparison CSV: <mark class="placeholder">[PLACEHOLDER: relative path to verified harness output]</mark>.
 Phase B will import the CSV using a path relative to this report and retain its provenance and synthetic flag.</p>
+</section>
+<section aria-labelledby="worked-example">
+<h2 id="worked-example">Offline worked example: synthetic arithmetic only</h2>
+<p>The existing tiny stored fixture is explicitly synthetic. Its two input frequencies are 0.900 Hz and 2.000 Hz,
+listed out of order. The first model's published targets are held in
+<a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">specification header, lines 15–16</a>.
+No input in this example is a native solver result.</p>
+<pre>python src/digitalmodel/solvers/orcaflex/modal_benchmark.py   docs/domains/orcaflex/subsea/jumper/m_shaped/modal_benchmark_targets.yaml   tests/solvers/orcaflex/fixtures/modal_benchmark/tiny_modal_result.json</pre>
+<p>Method: sort by frequency, then calculate the signed difference against the published frequency.
+Independent arithmetic gives (900 − 863) / 863 × 100 = 3700 / 863 %, displayed as 4.3 %;
+(2000 − 2149) / 2149 × 100 = −14900 / 2149 %, displayed as −6.9 %.
+The common conversion from hertz to millihertz cancels in each ratio. The remaining target modes are marked
+“not computed”. Differences are printed to one decimal; calculations retain unrounded values.
+No pass/fail criterion or benchmark qualification is established by this example.</p>
+<p>For stored summary CSV, the independent reciprocal-period check uses synthetic periods 2 s and 0.5 s:
+frequency = 1 / period gives 0.5 Hz and 2 Hz respectively. Repeated object rows for one mode yield one frequency.
+The regression test docstring records this hand calculation. No empirical coefficient is applied.</p>
 </section>
 <section aria-labelledby="plots">
 <h2 id="plots">Interactive visualizations reserved for phase B</h2>
@@ -142,11 +167,20 @@ including those without published frequencies. The issue estimates about 6 solve
 <p>The stored JSON interface is one object with <code>model</code> (mj01/mj02/mj03), <code>synthetic</code> (boolean),
 and <code>modes</code> (list of <code>mode</code>, <code>frequency_hz</code>, optional <code>direction</code>).
 The existing modal module records zero-based <code>modeIndex</code> and <code>period</code>.
-An exporter will provide positive mode identifiers and frequency in hertz from reciprocal period in seconds;
+The standalone comparison script now accepts the unfiltered <code>_modes_summary.csv</code> using
+<code>--summary-csv --model mj01 --period-unit s --synthetic false</code>.
+The adapter consolidates repeated object rows by global index, rejects conflicting periods and missing rank slots,
+and provides positive mode identifiers and frequency in hertz from reciprocal period in seconds.
+The period unit is confirmed explicitly; directions remain unknown and direction-specific targets require an annotated JSON export.
+The producer indexes the extracted spectrum rather than recording native mode numbers, so phase B must record that
+extraction started at the first mode and retain the complete, unfiltered summary. Contiguous indices alone cannot prove this.
+Source: <a href="https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,Modes.htm">Orcina Python reference, Modes, modeDetails</a>
+(accessed 2026-10-20), and repository <code>orcaflex_modal_analysis.py</code>,
+<code>modes_summary_df_columns</code> and <code>save_summary_files</code>;
 raw DOF labels do not establish in-plane/out-of-plane direction without the model coordinate basis.</p>
 <h3>Rank-pairing caveat</h3>
 <p>Pairing is by ascending frequency within a direction class; a swapped pair of close modes is not detected.
-The closest target pair is mj01 modes 2 and 3, with relative spacing 2.094%
+The closest target pair is mj01 modes 2 and 3, with relative spacing 2.1%
 ((2.194 - 2.149) / 2.149 * 100). Phase B therefore confirms each pairing from the mode shape and direction
 before a difference is read.</p>
 <ul>

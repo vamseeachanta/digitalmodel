@@ -17,6 +17,7 @@ import types
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -61,18 +62,116 @@ class TestModalBenchmark(unittest.TestCase):
                     self.assertLessEqual(source["line_end"], len(lines))
                     self.assertGreaterEqual(source["line_start"], 1)
 
+    def test_computed_rank_gaps_rejected(self):
+        """Ranks 1 and 3 cannot establish the second frequency in a spectrum."""
+        with self.assertRaisesRegex(ValueError, "every rank"):
+            self.harness.compare_modes(
+                [target(1, 2), target(2, 4)], [target(1, 2), target(3, 6)]
+            )
+
+    def test_summary_csv_reciprocal_period_and_duplicate_objects(self):
+        """Hand calculation: T=2 s gives 1/2 Hz; T=0.5 s gives 2 Hz.
+
+        Two objects sharing one global mode must yield one frequency, not two.
+        These are synthetic inputs, not published or native results.
+        """
+        stream = io.StringIO(
+            "modeIndex,period,name,abs_max_dof\n1,0.5,pipe,x\n0,2,pipe,z\n0,2,hub,z\n"
+        )
+        result = self.harness.read_summary_csv(
+            stream, model="mj01", synthetic=True, period_unit="s"
+        )
+        self.assertEqual(result["model"], "mj01")
+        self.assertTrue(result["synthetic"])
+        self.assertEqual(result["modes"], [target(1, 0.5), target(2, 2.0)])
+
+    def test_summary_csv_invalid_data_rejected(self):
+        for body in (
+            "modeIndex,period\n0,0\n",
+            "modeIndex,period\n0,nan\n",
+            "modeIndex,period\n0,-2\n",
+            "modeIndex,period\n-1,2\n",
+            "modeIndex,period\n0,2\n0,3\n",
+            "modeIndex,period\n1,2\n",
+            "modeIndex,period\n0,2\n2,1\n",
+            "modeIndex,period\n0.0,2\n",
+            "modeIndex,period\n",
+            "modeIndex,frequency\n0,2\n",
+        ):
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                self.harness.read_summary_csv(
+                    io.StringIO(body), model="mj01", synthetic=True, period_unit="s"
+                )
+
+    def test_summary_csv_requires_seconds_and_origin(self):
+        for unit, origin in (("ms", True), ("s", "false")):
+            with self.subTest(unit=unit), self.assertRaises(ValueError):
+                self.harness.read_summary_csv(
+                    io.StringIO("modeIndex,period\n0,2\n"),
+                    model="mj01",
+                    synthetic=origin,
+                    period_unit=unit,
+                )
+
+    def test_summary_csv_cli(self):
+        """Synthetic T=2 s -> 0.5 Hz; against 2 Hz gives -75.0 percent."""
+        table = {"models": {"synthetic": {"modes": [target(1, 2)]}}}
+        output = io.StringIO()
+        with (
+            patch.object(self.harness, "load_targets", return_value=table),
+            patch.object(
+                Path, "open", return_value=io.StringIO("modeIndex,period\n0,2\n")
+            ),
+            redirect_stdout(output),
+        ):
+            self.harness.main(
+                [
+                    "targets.yaml",
+                    "summary.csv",
+                    "--summary-csv",
+                    "--model",
+                    "synthetic",
+                    "--period-unit",
+                    "s",
+                    "--synthetic",
+                    "true",
+                ]
+            )
+        row = next(csv.DictReader(io.StringIO(output.getvalue())))
+        self.assertEqual(row["difference_percent"], "-75.0")
+        self.assertEqual(row["synthetic"], "True")
+
+    def test_summary_csv_cli_requires_metadata(self):
+        with (
+            patch.object(self.harness, "load_targets", return_value={"models": {}}),
+            patch("sys.stderr", new_callable=io.StringIO),
+            self.assertRaises(SystemExit) as error,
+        ):
+            self.harness.main(["targets.yaml", "summary.csv", "--summary-csv"])
+        self.assertEqual(error.exception.code, 2)
+
+    def test_csv_difference_uses_one_decimal(self):
+        """Synthetic 3 versus 7 Hz: 100*(3-7)/7 = -400/7 -> -57.1%."""
+        rows = self.harness.compare_modes([target(1, 7)], [target(1, 3)])
+        stream = io.StringIO()
+        self.harness.write_comparison(rows, stream, model="synthetic", synthetic=True)
+        parsed = next(csv.DictReader(io.StringIO(stream.getvalue())))
+        self.assertEqual(parsed["difference_percent"], "-57.1")
+        self.assertAlmostEqual(rows[0]["difference_percent"], -400 / 7)
+
     def test_fixture_arithmetic(self):
+        """Hand calculation in millihertz: (900-863)*100/863 = 3700/863 %.
+
+        The source frequency is in the mj01 specification header, lines 15-16;
+        900 millihertz is the explicitly synthetic stored fixture input.
+        """
         table = self.harness.load_targets(TARGETS)
         result = self.harness.load_result(FIXTURE)
         self.assertTrue(result["synthetic"])
         rows = self.harness.compare_modes(
             table["models"]["mj01"]["modes"], result["modes"]
         )
-        published = table["models"]["mj01"]["modes"][0]["frequency_hz"]
-        computed = min(row["frequency_hz"] for row in result["modes"])
-        self.assertAlmostEqual(
-            rows[0]["difference_percent"], (computed - published) / published * 100
-        )
+        self.assertAlmostEqual(rows[0]["difference_percent"], 3700 / 863)
         self.assertLess(rows[1]["difference_percent"], 0)
 
     def test_unordered_modes_pair_by_frequency_not_number(self):
@@ -99,6 +198,14 @@ class TestModalBenchmark(unittest.TestCase):
         rows = self.harness.compare_modes(targets, modes)
         self.assertEqual([r["computed_mode"] for r in rows], [2, 1, 3])
         self.assertEqual(len({r["computed_mode"] for r in rows}), 3)
+
+    def test_missing_class_does_not_shift_unclassified_ranks(self):
+        """An unclassified first mode cannot silently become published mode two."""
+        rows = self.harness.compare_modes(
+            [target(1, 2, "out-of-plane"), target(2, 4)],
+            [target(1, 2), target(2, 4)],
+        )
+        self.assertTrue(all(row["status"] == "not computed" for row in rows))
 
     def test_missing_direction_is_not_guessed(self):
         rows = self.harness.compare_modes(
@@ -189,12 +296,12 @@ class TestModalBenchmark(unittest.TestCase):
                 )
                 pairs.append((spacing, model, lower["mode"], upper["mode"]))
         spacing, model, lower, upper = min(pairs)
-        skeleton = TARGETS.with_name(
-            "modal-benchmark-report-skeleton.html"
-        ).read_text(encoding="utf-8")
+        skeleton = TARGETS.with_name("modal-benchmark-report-skeleton.html").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Rank-pairing caveat", skeleton)
         self.assertIn(f"{model} modes {lower} and {upper}", skeleton)
-        self.assertIn(f"{spacing:.3f}%", skeleton)
+        self.assertIn(f"{spacing:.1f}%", skeleton)
 
     def test_import_does_not_load_solver_interface(self):
         code = """
