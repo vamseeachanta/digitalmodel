@@ -150,14 +150,31 @@ class TestModalBenchmark(unittest.TestCase):
             self.harness.main(["targets.yaml", "summary.csv", "--summary-csv"])
         self.assertEqual(error.exception.code, 2)
 
-    def test_csv_difference_uses_one_decimal(self):
-        """Synthetic 3 versus 7 Hz: 100*(3-7)/7 = -400/7 -> -57.1%."""
+    def test_csv_difference_retains_full_precision(self):
+        """Synthetic 3 versus 7 Hz: persist -400/7 %, before display rounding."""
         rows = self.harness.compare_modes([target(1, 7)], [target(1, 3)])
         stream = io.StringIO()
         self.harness.write_comparison(rows, stream, model="synthetic", synthetic=True)
         parsed = next(csv.DictReader(io.StringIO(stream.getvalue())))
-        self.assertEqual(parsed["difference_percent"], "-57.1")
+        self.assertEqual(
+            float(parsed["difference_percent"]), rows[0]["difference_percent"]
+        )
+        self.assertAlmostEqual(float(parsed["difference_percent"]), -400 / 7)
         self.assertAlmostEqual(rows[0]["difference_percent"], -400 / 7)
+
+    def test_csv_small_differences_retain_sign_and_magnitude(self):
+        """A synthetic change of one in 2500 Hz is positive or negative 0.04 %."""
+        for actual, expected in ((2499, -0.04), (2501, 0.04)):
+            with self.subTest(actual=actual):
+                rows = self.harness.compare_modes(
+                    [target(1, 2500)], [target(1, actual)]
+                )
+                stream = io.StringIO()
+                self.harness.write_comparison(
+                    rows, stream, model="synthetic", synthetic=True
+                )
+                parsed = next(csv.DictReader(io.StringIO(stream.getvalue())))
+                self.assertEqual(float(parsed["difference_percent"]), expected)
 
     def test_fixture_arithmetic(self):
         """Hand calculation in millihertz: (900-863)*100/863 = 3700/863 %.

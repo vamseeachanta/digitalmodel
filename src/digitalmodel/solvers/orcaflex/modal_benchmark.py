@@ -257,14 +257,11 @@ def write_comparison(
     model: str,
     synthetic: bool,
 ) -> None:
-    """Write UTF-8-compatible CSV rows, including the rule and data origin."""
+    """Write CSV with unrounded differences, the pairing rule and data origin."""
     writer = csv.DictWriter(stream, fieldnames=FIELDS, lineterminator="\n")
     writer.writeheader()
     for row in rows:
         output = dict(row, model=model, synthetic=synthetic)
-        difference = output["difference_percent"]
-        if difference is not None:
-            output["difference_percent"] = f"{difference:.1f}"
         writer.writerow(output)
 
 
