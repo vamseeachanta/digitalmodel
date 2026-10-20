@@ -9,6 +9,19 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: api653-tank-settlement-screen
+    basename: tank_settlement_screen
+    title: Tank settlement diagnostic analysis with unresolved Annex B criteria
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/api653-tank-settlement-screen/input.yml
+    invocation: "uv run python -m digitalmodel.asset_integrity.tank_settlement_workflow {input}"
+    outputs:
+      - examples/workflows/api653-tank-settlement-screen/results/settlement-summary.json
+      - examples/workflows/api653-tank-settlement-screen/results/settlement-report.html
+    test: tests/asset_integrity/test_tank_settlement.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: four-point-skew
     basename: four_point_skew
     title: Four-point single-hook axial-spring skew screening
