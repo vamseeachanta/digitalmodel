@@ -1,0 +1,38 @@
+# Illustrative inputs only; no measured vessel or RAO data are supplied.
+# Source: the hand calculation in test_jumper_vessel_conversion.py and README.md.
+installation:
+  stage: suspended
+  vessel_types:
+    - name: support_type
+      length: 100.0  # Declared example input (m), not a design recommendation.
+      properties:
+        RAOResponseUnits: degrees
+        RAOWaveUnit: amplitude
+  vessels:
+    - name: support
+      vessel_type: support_type
+      connection: Free
+      initial_position: [100.0, 200.0, 0.0]  # Declared global origin (m).
+      properties:
+        Orientation: [0.0, 0.0, 0.0]  # Declared zero rotation (degrees).
+        IncludedInStatics: "None"
+        PrimaryMotion: "None"
+        SuperimposedMotion: "None"  # Motion is not evaluated by this example.
+  end_a:
+    connection: support
+    position: [-10.0, 0.0, -20.0]  # Declared attachment in vessel axes (m).
+    azimuth: 0.0
+    declination: 0.0
+    gamma: 0.0
+  end_b:
+    connection: support
+    position: [10.0, 0.0, -20.0]
+    azimuth: 0.0
+    declination: 180.0
+    gamma: 0.0
+  # Declared global spline (m); origin + local attachment gives each endpoint.
+  spline_control_points:
+    - [90.0, 200.0, -20.0]
+    - [90.0, 200.0, -10.0]
+    - [110.0, 200.0, -10.0]
+    - [110.0, 200.0, -20.0]

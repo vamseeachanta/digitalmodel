@@ -84,8 +84,16 @@ def test_build_modular_spec_is_generator_ready(name):
 
 
 @pytest.mark.parametrize("name", GOM_TIEBACK)
-def test_generation_writes_master_and_includes(name, tmp_path):
-    data = build_modular_spec(str(_spec_path(name)))
+@pytest.mark.parametrize("with_vessel", [False, True], ids=["in_place", "suspended"])
+def test_generation_writes_master_and_includes(name, with_vessel, tmp_path):
+    domain_path = _spec_path(name)
+    if with_vessel:
+        domain = yaml.safe_load(domain_path.read_text())
+        overlay = REPO_ROOT / "examples/workflows/jumper-vessel/installation.yml"
+        domain.update(yaml.safe_load(overlay.read_text()))
+        domain_path = tmp_path / "domain.yml"
+        domain_path.write_text(yaml.safe_dump(domain, sort_keys=False))
+    data = build_modular_spec(str(domain_path))
     spec_file = tmp_path / "spec.yml"
     spec_file.write_text(yaml.safe_dump(data, sort_keys=False))
 
@@ -111,6 +119,17 @@ def test_generation_writes_master_and_includes(name, tmp_path):
     objects = yaml.safe_load(
         (out_dir / "includes/20_generic_objects.yml").read_text()
     )
+    if with_vessel:
+        # Values are declared illustrative inputs in installation.yml.
+        assert objects["VesselTypes"][0]["Name"] == "support_type"
+        assert objects["Vessels"][0]["VesselType"] == "support_type"
+        assert objects["Vessels"][0]["Name"] == "support"
+        connections = next(
+            value for key, value in objects["Lines"][0].items()
+            if key.startswith("Connection,")
+        )
+        assert [row[0] for row in connections] == ["support", "support"]
+
     line = objects["Lines"][0]
     key = next(k for k in line if k.startswith("LineType,"))
     assert len(line[key]) == EXPECTED_SECTIONS

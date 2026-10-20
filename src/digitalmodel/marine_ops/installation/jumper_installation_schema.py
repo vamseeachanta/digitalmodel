@@ -28,9 +28,16 @@ Example usage::
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    field_validator,
+    model_validator,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +213,135 @@ class CraneSpec(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Vessel attachments for modular YAML conversion
+# ---------------------------------------------------------------------------
+
+
+class JumperVesselTypeSpec(BaseModel):
+    """Domain-supplied GenericVesselType fields; RAOs pass through unchanged."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1)
+    length: FiniteFloat = Field(gt=0, description="Type length (m)")
+    properties: Dict[str, Any] = Field(default_factory=dict)
+
+
+class JumperVesselSpec(BaseModel):
+    """Explicit generic vessel definition; no vessel data are inferred."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1)
+    vessel_type: str = Field(min_length=1)
+    connection: Literal["Free", "Fixed"]
+    initial_position: List[FiniteFloat] = Field(min_length=3, max_length=3)
+    length: Optional[FiniteFloat] = Field(None, gt=0, description="Vessel length (m)")
+    properties: Dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_explicit_motion(self) -> JumperVesselSpec:
+        """Require explicit vessel orientation and motion selections."""
+        # Orcina online help (2026), Vessel data: Initial position and
+        # orientation; calculation settings must be supplied, not inferred.
+        for key in ("Orientation", "PrimaryMotion", "SuperimposedMotion"):
+            if key not in self.properties:
+                raise ValueError(f"vessel properties require {key}")
+        return self
+
+
+class JumperEndConnectionSpec(BaseModel):
+    """End coordinates and angles in connection axes (m, degrees).
+
+    Source: Orcina, OrcaFlex online help (2026), Line data: End connections,
+    Position and Orientation. Fixed coordinates are global; vessel attachments
+    use vessel axes. All orientations are explicit inputs.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    connection: str = Field(min_length=1)
+    position: List[FiniteFloat] = Field(min_length=3, max_length=3)
+    azimuth: FiniteFloat
+    declination: FiniteFloat
+    gamma: FiniteFloat
+
+    def to_connection_row(self) -> List[Any]:
+        """Emit the native table row; no release or line-relative coordinate."""
+        return [
+            self.connection, *self.position,
+            self.azimuth, self.declination, self.gamma, None, None,
+        ]
+
+
+class JumperInstallationStageSpec(BaseModel):
+    """Optional vessel definitions and explicit suspended-stage geometry.
+
+    The legacy conversion remains in place when this block is absent.
+    Suspended stages require a global starting spline supplied independently
+    of the vessel-relative end coordinates; no rigid-body transform or rigging
+    geometry is guessed. See Orcina online help (2026), Line data: Statics.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    stage: Literal["in_place", "suspended"]
+    vessel_types: List[JumperVesselTypeSpec]
+    vessels: List[JumperVesselSpec]
+    end_a: Optional[JumperEndConnectionSpec] = None
+    end_b: Optional[JumperEndConnectionSpec] = None
+    # Cubic starting spline uses at least four supplied control points.
+    # Source: existing converter's SplineOrder=3; this is an input-shape rule.
+    spline_control_points: Optional[List[List[FiniteFloat]]] = Field(
+        None, min_length=4
+    )
+
+    @field_validator("spline_control_points")
+    @classmethod
+    def validate_spline_points(
+        cls, points: Optional[List[List[float]]]
+    ) -> Optional[List[List[float]]]:
+        """Require three coordinates for each global spline point."""
+        if points is not None and any(len(point) != 3 for point in points):
+            raise ValueError("spline_control_points must contain XYZ triples")
+        return points
+
+    @model_validator(mode="after")
+    def validate_references_and_stage(self) -> JumperInstallationStageSpec:
+        """Check references and require complete suspended-stage inputs."""
+        for field in ("vessels", "vessel_types"):
+            names = [obj.name for obj in getattr(self, field)]
+            if len(names) != len(set(names)):
+                raise ValueError(f"duplicate names in {field}")
+        type_names = {obj.name for obj in self.vessel_types}
+        vessel_names = {obj.name for obj in self.vessels}
+        if vessel_names & {"Fixed", "Free", "Anchored"}:
+            raise ValueError("vessel names must not use reserved connection names")
+        for vessel in self.vessels:
+            if vessel.vessel_type not in type_names:
+                raise ValueError("vessel_type must reference a supplied vessel type")
+        ends = (self.end_a, self.end_b)
+        if self.stage == "in_place":
+            if (
+                any(end is not None for end in ends)
+                or self.spline_control_points is not None
+            ):
+                raise ValueError("in_place stage cannot specify suspended geometry")
+            return self
+        if not self.vessels or not self.vessel_types:
+            raise ValueError("suspended stage requires vessels and vessel_types")
+        for field in ("end_a", "end_b", "spline_control_points"):
+            if getattr(self, field) is None:
+                raise ValueError(f"suspended stage requires {field}")
+        for end in ends:
+            if end.connection != "Fixed" and end.connection not in vessel_names:
+                raise ValueError("end connection must reference Fixed or a supplied vessel")
+        if all(end.connection == "Fixed" for end in ends):
+            raise ValueError("suspended stage requires at least one vessel attachment")
+        return self
+
+
+# ---------------------------------------------------------------------------
 # Top-level spec
 # ---------------------------------------------------------------------------
 
@@ -232,6 +368,7 @@ class JumperInstallationSpec(BaseModel):
     environment: JumperEnvironmentSpec
     pipe: PipeSpec
     jumper: JumperGeometrySpec
+    installation: Optional[JumperInstallationStageSpec] = None
     crane_configuration: Dict[str, CraneSpec] = Field(
         default_factory=dict,
         description="Crane configurations keyed by crane id (SZ, DZ, ...)",
@@ -306,5 +443,9 @@ __all__ = [
     "PipeSpec",
     "JumperGeometrySpec",
     "CraneSpec",
+    "JumperVesselTypeSpec",
+    "JumperVesselSpec",
+    "JumperEndConnectionSpec",
+    "JumperInstallationStageSpec",
     "JumperInstallationSpec",
 ]
