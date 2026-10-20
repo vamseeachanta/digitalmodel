@@ -122,8 +122,8 @@
     <div class="brand">
       <a class="brandmark kicker" href="../capabilities/" title="All capabilities" aria-label="Back to capabilities index"><span class="dot"></span><span class="lbl">Marine operations &middot; decision support</span></a>
       <h1>Short-Horizon Motion Forecast</h1>
-      <div class="tag">Know the next few <em>motions</em>, not just the next few waves. Anchored to live <strong>vessel &amp; structure</strong> motions from an <strong>MMS / motion-measurement system</strong>, a phase-resolved wave forecast transferred through the asset RAO predicts what is coming &mdash; a rolling go / no-go with lead time.</div>
-      <div style="margin-top:12px"><span class="pill">Live MMS / MRU feed &middot; phase-resolved forecast &middot; vessel &amp; structure motions &middot; on AQWA / OrcaFlex RAOs</span></div>
+      <div class="tag">Know the next few <em>motions</em>, not just the next few waves. Illustrative: a <strong>synthetic sea and simplified analytic RAOs</strong> demonstrate <strong>vessel &amp; structure</strong> motions &mdash; a rolling go / no-go with lead time. MMS / MRU integration is planned.</div>
+      <div style="margin-top:12px"><span class="pill">Synthetic sea &middot; simplified analytic RAOs &middot; phase-resolved forecast &middot; vessel &amp; structure motions</span></div>
     </div>
     <button class="theme-btn" id="themeBtn" aria-label="Toggle colour theme"><span id="themeIcon">&#x25D0;</span><span id="themeTxt">Theme</span></button>
   </header>
@@ -229,7 +229,7 @@
   <footer>
     <p style="margin:.2em 0 1em"><span class="pill">Illustrative tracer</span> &nbsp; Synthetic JONSWAP sea &middot; simplified analytic RAOs &middot; deterministic phases. Numbers demonstrate the workflow, not a certified vessel model.</p>
     <p style="margin:.2em 0"><b>Honest horizon.</b> The forecast is bounded by the <b>predictable zone</b> &mdash; a group-velocity wedge set by spectral bandwidth. Realistic short-crested seas give tens of seconds to ~1&ndash;2 min, not the 4&ndash;5 min sometimes marketed.</p>
-    <p style="margin:.2em 0"><b>Two data modes.</b> <b>Measured</b> &mdash; live vessel &amp; structure motions from an onboard MMS / MRU (motion-reference unit) give the "now" ground truth. <b>Predicted</b> &mdash; a phase-resolved wave forecast transferred through the asset RAO extends it across the predictable zone. Both feed the same rolling go / no-go.</p>
+    <p style="margin:.2em 0"><b>Two data modes.</b> <b>Measured</b> &mdash; the Python module supports a synthetic measured-motion stub or an offline CSV reader; MMS / MRU (motion-reference unit) integration and hardware time synchronisation are planned. <b>Predicted</b> &mdash; this demo transfers a synthetic phase-resolved wave forecast through simplified analytic RAOs across the predictable zone. Both modes support the same rolling go / no-go workflow.</p>
     <p style="margin:.2em 0"><b>Where the value is.</b> The wave-sensing and motion-sensing front-end (X-band radar / lidar / up-wave buoy &rarr; phase-resolved surface; MMS / MRU for measured motion) is partner/licensed. This layer is the asset-motion transfer, the operability decision, and the learning loop (measured MMS vs forecast) &mdash; on AQWA / OrcaFlex RAOs.</p>
     <p style="margin:.6em 0 .3em"><b>Criteria referenced.</b></p>
     <div class="chips">
