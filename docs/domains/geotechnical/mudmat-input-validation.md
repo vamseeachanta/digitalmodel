@@ -11,6 +11,7 @@ arguments even when the selected drainage condition does not use them.
 | --- | --- | --- |
 | 1 | 2026-10-20 | Document the existing finite-input contract and add an executable geometry example to explain rejection before calculation. |
 | 2 | 2026-10-20 | Validate horizontal load and safety factor before summary output, collect the examples in normal tests, and identify the example values as synthetic. |
+| 3 | 2026-10-20 | Fail sliding screening when positive load has no positive resistance, check hand-derived capacities, and explain configuration coercion limits. |
 
 ## Input contract
 
@@ -95,6 +96,31 @@ summary. Omitted values retain the defaults of zero horizontal load and a safety
 factor of 2.0. Invalid values must be corrected from an input source; they are
 not replaced with zero or interpreted as missing values.
 
+The calculator's Boolean rejection applies to direct calls. The configuration
+workflow converts numeric fields with `float()` first, so YAML `true` and `false`
+become 1.0 and 0.0 and then undergo numeric range checks. For example, `true` is
+accepted as a horizontal load or safety factor; `false` is rejected as a safety
+factor because zero is not positive. Use numeric values rather than Booleans
+in configuration files. Explicit YAML `null` for `horizontal_kN`,
+`factor_of_safety`, or `effective_cohesion_kpa` raises a `TypeError` without a
+field name. Omit these keys to obtain their defaults instead. The three optional
+soil fields named above retain their existing `None` handling.
+
+The positive safety-factor check accepts values below 1.0; it is an input
+constraint, not a design recommendation. The representative screening test
+uses a factor of 2.0, a vertical load of 100.0 kN, no moment, and a horizontal
+load of 10.0 kN. The hand-derived area is 12.0 m2; undrained sliding resistance
+is `25*12 = 300.0 kN`, and drained resistance is `100*tan(30 degrees)`, or
+57.7 kN. The corresponding utilizations are `1/15` and `sqrt(3)/5`. A separate
+regression retains acceptance of a factor of 0.5 without endorsing its use.
+
+For a positive horizontal load, zero or negative sliding resistance now gives
+infinite sliding utilization and a `fail` screening status. Zero horizontal
+load gives zero sliding utilization, including when resistance is nonpositive;
+bearing screening still applies. This prevents a missing sliding resistance
+from being reported as a sliding pass. It does not validate the physical basis
+of a negative interface angle or effective cohesion.
+
 ## Scope and remaining audit
 
 The runtime guard and its original tests are already present from #2404.
@@ -102,7 +128,9 @@ The expanded tests cover every numeric argument under both drainage conditions
 and eccentricity axes, both Boolean values, optional `None` defaults, and
 configuration strings, including horizontal load and safety factor. Normal
 pytest collection runs this document through `doctest.testfile`. The finite
-eccentricity regressions are retained.
+eccentricity regressions are retained. The workflow adds horizontal-load and
+safety-factor validation and corrects screening for nonpositive sliding
+resistance; the calculator's finite-input guard remains unchanged.
 
 Other geotechnical calculators require a separate audit. Reading the current
 source gives the following inventory; it does not establish exhaustive input

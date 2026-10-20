@@ -262,7 +262,9 @@ class MudmatBearingCapacityWorkflow:
         allowable_h = result.sliding_capacity_kn / fos
         bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
         sliding_util = (
-            (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+            applied_h / allowable_h
+            if allowable_h > 0
+            else (float("inf") if applied_h > 0 else 0.0)
         )
         governing = "bearing" if bearing_util >= sliding_util else "sliding"
         passes = bearing_util <= 1.0 and sliding_util <= 1.0

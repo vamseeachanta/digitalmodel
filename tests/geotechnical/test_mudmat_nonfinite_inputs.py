@@ -209,11 +209,19 @@ def test_config_invalid_screening_ranges_rejected_before_output(
 
 @pytest.mark.parametrize("condition", ["undrained", "drained"])
 @pytest.mark.parametrize(
-    "horizontal,factor", [(None, None), (0.0, 2.0), ("0", "2"), (100.0, 0.5)]
+    "horizontal,factor,undrained_util,drained_util",
+    [
+        (None, None, 0.0, 0.0),
+        (0.0, 2.0, 0.0, 0.0),
+        ("0", "2", 0.0, 0.0),
+        (10.0, 2.0, 1 / 15, math.sqrt(3) / 5),
+        (100.0, 0.5, 1 / 6, math.sqrt(3) / 2),
+    ],
 )
 def test_config_valid_screening_inputs_preserve_summary(
-    tmp_path, condition, horizontal, factor
+    tmp_path, condition, horizontal, factor, undrained_util, drained_util
 ):
+    """Hand basis: A=3*4=12; sliding is 25*12 or 100*tan(30 degrees)."""
     from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
 
     cfg = configuration(tmp_path, condition)
@@ -228,12 +236,42 @@ def test_config_valid_screening_inputs_preserve_summary(
     summary = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
     design = summary["design"]
     fos = 2.0 if factor is None else float(factor)
-    load = 0.0 if horizontal is None else float(horizontal)
-    expected_utilization = load / (summary["result"]["sliding_capacity_kn"] / fos)
+    expected_capacity = 300.0 if condition == "undrained" else 100 / math.sqrt(3)
+    expected_utilization = undrained_util if condition == "undrained" else drained_util
+    assert summary["result"]["effective_area_m2"] == 12.0
+    assert summary["result"]["sliding_capacity_kn"] == pytest.approx(expected_capacity)
     assert design == result["design"]
     assert design["factor_of_safety"] == fos
     assert design["sliding_utilization"] == pytest.approx(expected_utilization)
     assert design["screening_status"] == "pass"
+
+
+@pytest.mark.parametrize("horizontal", [0.0, 100.0])
+@pytest.mark.parametrize("angle,cohesion", [(0.0, 0.0), (-10.0, 0.0), (0.0, -1.0)])
+def test_config_nonpositive_sliding_capacity_screening(
+    tmp_path, horizontal, angle, cohesion
+):
+    from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
+
+    cfg = configuration(tmp_path, "drained")
+    workflow = cfg["mudmat_bearing_capacity"]
+    workflow["soil"].update(
+        interface_friction_angle_deg=angle, effective_cohesion_kpa=cohesion
+    )
+    workflow["loads"].update(
+        vertical_kN=100.0, moment_kNm=0.0, horizontal_kN=horizontal
+    )
+
+    result = MudmatBearingCapacityWorkflow().router(cfg)["mudmat_bearing_capacity"]
+    summary = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
+    design = result["design"]
+    assert summary["design"] == design
+    assert result["result"]["sliding_capacity_kn"] <= 0.0
+    assert design["sliding_utilization"] == (float("inf") if horizontal > 0 else 0.0)
+    assert design["screening_status"] == ("fail" if horizontal > 0 else "pass")
+    assert cfg["screening_status"] == design["screening_status"]
+    if horizontal > 0:
+        assert design["governing_check"] == "sliding"
 
 
 def test_documented_mudmat_examples():
