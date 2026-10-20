@@ -22,6 +22,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tbody>
 <tr><td>0</td><td>2026-10-15</td><td>Prepared the matched mesh/removal campaign and export checks to investigate reported low-frequency motion.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
+<tr><td>2</td><td>2026-10-20</td><td>Added transverse buoyancy and mesh-digest checks, restricted symmetry and ULEN, and derived the sampling ceiling from geometry and loading to prevent invalid preparations.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -48,7 +49,8 @@ Generated meshes remain in the controlled run package; the repository retains th
 Copy the manifest beside the request and retain the meshes under the base-spec directory. The geometry-only
 DF2 check integrates the supplied panels without applying symmetry reflection. It returns volume, waterplane
 area, centre of buoyancy and |rho × V − M|/M; gravity cancels from this force ratio. All three full-body levels
-pass the 1.0 % criterion. The half-body negative control has volume 58,074.6 m3, half the waterplane,
+pass the 1.0 % mass criterion and |y_B| no greater than 0.1 % of the mesh beam. An equal-volume asymmetric
+surface fails the transverse criterion. The half-body negative control has volume 58,074.6 m3, half the waterplane,
 an off-centre buoyancy location and 50.0 % mass residual, and returns FAIL. Missing, nonfinite, open,
 duplicated or reversed surfaces return NOT_EVALUATED. This does not qualify all hydrostatic or mesh gates.</p>
 
@@ -60,12 +62,14 @@ The maintainer must supply a reviewed single-body base spec, heading convention,
 corrected heave natural frequency and heading-specific asymptotic justification. Approval references must be
 recorded as <code>APPROVED: reference</code>, and each comparison criterion must be marked approved.
 These strings record evidence; they do not authenticate an approval.</p>
-<p>Before writing any specification the campaign checks header symmetry against the spec and requires DF2 PASS
-at every mesh level. ISX maps to the yz plane and ISY to the xz plane. A nonzero flag with symmetry none,
-a zero flag with declared symmetry, or a different plane is refused. This is a campaign-specific consistency
-contract. It does not change backend symmetry optimization semantics.</p>
+<p>Before writing any specification the campaign requires DF2 PASS at every mesh level,
+specification symmetry <code>none</code> and GDF flags ISX = ISY = 0. Symmetry declarations in the unified schema
+describe full-body optimization, not half-mesh input. This campaign does not support those optimizations.
+ULEN must equal 1.0; GDF vertices are dimensional and are never scaled by ULEN.</p>
 <p>The new coarse level replaces the original half mesh. The base mesh is retained only as bound provenance;
 it is never forced into the ladder. Mesh paths are portable relative paths inside the base-spec directory.
+The required <code>mesh_manifest</code> resolves inside the base-spec directory; every level must match its
+recorded SHA-256 before any case is written. The manifest is retained as digest-bound preparation input.
 Source and output digests are verified before assessment; changed inputs or prepared specs are rejected.
 Existing mass, inertia, reference point, damping and environment are preserved. Free-floating inferred mass,
 nonzero mesh waterline and non-metre declared units are unsupported. Auxiliary meshes are refused.</p>
@@ -89,7 +93,9 @@ Apply to coarse/medium and medium/fine, for both translations, holding program a
 These are supplied investigation candidates, not approved limits or demonstrated convergence.</td></tr>
 <tr><td>Solver pairs</td><td>Absolute amplitude difference no greater than 0.05 m/m, holding mesh and treatment fixed.
 Convention and physical-model agreement require native evidence. Numerical agreement alone does not establish correctness.</td></tr>
-<tr><td>Asymptotic upper frequency</td><td>At most 0.236 rad/s, proposed only. A1 DF5.1 checks the longer of the
+<tr><td>Asymptotic upper frequency</td><td>The preparation ceiling is the smallest sqrt(rho × g × A_wp / M) / 4
+across the DF2 waterplane areas, using the base mass, density and gravity. For the current geometry the
+proposed 0.236 rad/s lies below this dry-heave ceiling. A1 DF5.1 checks the longer of the
 longest period and four times the corrected heave natural period. The corrected natural frequency is MISSING;
 the final bound may need to be lower. Justify it for every heading, well below the anomaly frequencies.
 Finite-frequency beam-sea heave above unity can be physical and is not rejected by applying this band there.</td></tr>

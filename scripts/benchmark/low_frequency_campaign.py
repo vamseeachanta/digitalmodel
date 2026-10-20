@@ -187,8 +187,6 @@ def build(base_path, request_path, output):
             "asymptotic_max_rad_s",
         )
     }
-    if limits["asymptotic_max_rad_s"] > Decimal("0.236"):
-        raise ValueError("asymptotic limit must not exceed 0.236 rad/s")
     frequencies = grid(request["frequencies_rad_s"])
     headings = grid(request["headings_deg"], headings=True)
     old_frequency = base["frequencies"]
@@ -230,10 +228,44 @@ def build(base_path, request_path, output):
         )
         if df2[level]["decision"] != "PASS":
             raise ValueError(f"DF2 {level}: {df2[level]['decision']}; no case issued")
+    gravity = float(number(base["environment"].get("gravity", mesh_geometry.GRAVITY)))
+    if gravity <= 0:
+        raise ValueError("positive finite environment gravity required")
+    # Dry heave estimate only: omega_n = sqrt(rho*g*A_wp/M). The corrected
+    # natural period and heading-specific applicability still require review.
+    ceiling = min(
+        math.sqrt(
+            base["environment"].get("water_density", 1025)
+            * gravity
+            * report["waterplane_area_m2"]
+            / inertia["mass"]
+        )
+        / 4
+        for report in df2.values()
+    )
+    if not math.isfinite(ceiling) or limits["asymptotic_max_rad_s"] > number(ceiling):
+        raise ValueError("asymptotic limit exceeds the DF2-derived dry-heave ceiling")
+    mesh_manifest_path = local_mesh(root, request.get("mesh_manifest"))
+    mesh_manifest = json.loads(mesh_manifest_path.read_bytes())
+    records = mesh_manifest.get("meshes") if isinstance(mesh_manifest, dict) else None
+    if not isinstance(records, dict) or set(records) != set(LEVELS):
+        raise ValueError("mesh manifest requires coarse, medium and fine records")
+    for level, mesh in meshes.items():
+        record = records[level]
+        sha = record.get("sha256") if isinstance(record, dict) else None
+        if (
+            not isinstance(sha, str)
+            or len(sha) != 64
+            or any(c not in "0123456789abcdef" for c in sha)
+        ):
+            raise ValueError("mesh manifest requires a SHA-256 for every level")
+        if digest(mesh.read_bytes()) != sha:
+            raise ValueError(f"mesh digest mismatch for {level}")
     paths = {
         "base": base_path,
         "request": request_path,
         "original_mesh": original_mesh,
+        "mesh_manifest": mesh_manifest_path,
         **meshes,
     }
     inputs = {
@@ -282,6 +314,7 @@ def build(base_path, request_path, output):
         headings_deg=request["headings_deg"],
         native_execution="NOT_EVALUATED",
         df2=df2,
+        asymptotic_ceiling_rad_s=ceiling,
         approvals=approvals,
     )
     return manifest, contents

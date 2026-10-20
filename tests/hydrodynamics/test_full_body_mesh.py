@@ -109,7 +109,7 @@ def test_invalid_df2_parameters(tmp_path, mass, rho, tolerance):
     )
 
 
-def test_analytic_box_and_scaled_units(tmp_path):
+def test_analytic_box(tmp_path):
     # Outward wet faces of a 2 x 2 x 1 box; independent of the hull generator.
     panels = np.array(
         [
@@ -122,11 +122,61 @@ def test_analytic_box_and_scaled_units(tmp_path):
         dtype=float,
     )
     path = tmp_path / "box.gdf"
-    data = mesh.encode_gdf(panels / 2).decode().splitlines()
-    data[1] = "2.0 9.80665"
-    path.write_text("\n".join(data) + "\n")
+    path.write_bytes(mesh.encode_gdf(panels))
     report = mesh.check_df2_buoyancy(path, 4100)
     assert report["decision"] == "PASS"
     assert report["volume_m3"] == pytest.approx(4)
     assert report["waterplane_area_m2"] == pytest.approx(4)
     assert report["centre_of_buoyancy_m"] == pytest.approx([1, 0, -0.5])
+
+
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_asymmetric_equal_volume_mesh_fails_df2(tmp_path, sign):
+    panels = mesh.panels_for_level("coarse")
+    # A transverse shear preserves volume and area but shifts buoyancy off centre.
+    panels[:, :, 1] += sign * 0.004 * mesh.BEAM * panels[:, :, 0] / mesh.LENGTH
+    path = tmp_path / "asymmetric.gdf"
+    path.write_bytes(mesh.encode_gdf(panels))
+    report = mesh.check_df2_buoyancy(path, mesh.MASS)
+    assert report["volume_m3"] == pytest.approx(mesh.VOLUME)
+    assert report["relative_error"] < 1e-8
+    assert report["centre_of_buoyancy_m"][1] == pytest.approx(sign * 0.098)
+    assert report["decision"] == "FAIL"
+
+
+@pytest.mark.parametrize("fraction,decision", [(0.0009, "PASS"), (0.0011, "FAIL")])
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_df2_transverse_centre_tolerance(tmp_path, fraction, decision, sign):
+    panels = mesh.panels_for_level("coarse")
+    panels[:, :, 1] += sign * fraction * mesh.BEAM
+    path = tmp_path / "offset.gdf"
+    path.write_bytes(mesh.encode_gdf(panels))
+    report = mesh.check_df2_buoyancy(path, mesh.MASS)
+    assert report["relative_error"] < 1e-8
+    assert report["decision"] == decision
+
+
+@pytest.mark.parametrize("ulen", [0.5, 2.0])
+def test_nonunit_ulen_cannot_be_interpreted_as_coordinate_scale(tmp_path, ulen):
+    path = tmp_path / "nonunit.gdf"
+    lines = mesh.gdf_bytes("coarse").decode().splitlines()
+    lines[1] = f"{ulen} 9.80665"
+    path.write_text("\n".join(lines) + "\n")
+    with pytest.raises(ValueError, match="ULEN.*1.0"):
+        mesh.read_gdf(path)
+    report = mesh.check_df2_buoyancy(path, mesh.MASS)
+    assert report["decision"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("flags", [(0, 0), (1, 0), (0, 1), (1, 1)])
+@pytest.mark.parametrize("declared", ["none", "xz", "yz", "xz+yz", "unknown"])
+def test_campaign_symmetry_requires_full_body_without_optimization(
+    tmp_path, flags, declared
+):
+    path = tmp_path / "symmetry.gdf"
+    path.write_bytes(mesh.encode_gdf(mesh.panels_for_level("coarse"), flags))
+    if flags == (0, 0) and declared == "none":
+        assert mesh.check_symmetry(path, declared) == (0, 0)
+    else:
+        with pytest.raises(ValueError, match="full-body.*symmetry.*none"):
+            mesh.check_symmetry(path, declared)

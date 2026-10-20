@@ -6,6 +6,7 @@ import copy
 import csv
 import importlib.util
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -45,12 +46,18 @@ def inputs(tmp_path):
     base_path.write_text(yaml.safe_dump(base), encoding="utf-8")
     for level in campaign.LEVELS:
         (tmp_path / f"{level}.gdf").write_bytes(campaign.mesh_geometry.gdf_bytes(level))
+    (tmp_path / "full-body-meshes.json").write_bytes(
+        (
+            SCRIPT.parents[2] / "examples/hydrodynamics/full-body-meshes.json"
+        ).read_bytes()
+    )
     request = {
         "source": "synthetic test specification, not engineering input",
         "approvals": {
             key: "APPROVED: synthetic reference" for key in campaign.APPROVALS
         },
         "meshes": {level: f"{level}.gdf" for level in campaign.LEVELS},
+        "mesh_manifest": "full-body-meshes.json",
         "frequencies_rad_s": [0.1, 0.2, 0.35, 0.5],
         "headings_deg": [0.0, 90.0, 180.0],
         "criteria": {
@@ -174,6 +181,49 @@ def test_changed_mesh_detected(inputs):
     prepare(inputs)
     (inputs[0].parent / "fine.gdf").write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="digest"):
+        campaign.verify_manifest(inputs[2] / "manifest.json")
+
+
+@pytest.mark.parametrize("level", campaign.LEVELS)
+def test_mesh_digest_required_before_any_case_is_written(inputs, level):
+    path = inputs[0].parent / f"{level}.gdf"
+    # A title change leaves geometry and DF2 intact, isolating the digest guard.
+    path.write_bytes(path.read_bytes().replace(b"Reconstructed", b"Altered", 1))
+    with pytest.raises(ValueError, match="mesh digest mismatch"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "fault", ["missing", "outside", "invalid_json", "missing_level", "bad_digest"]
+)
+def test_mesh_manifest_required_before_any_case_is_written(inputs, fault):
+    path = inputs[0].parent / "full-body-meshes.json"
+    if fault == "missing":
+        inputs[4].pop("mesh_manifest")
+    elif fault == "outside":
+        inputs[4]["mesh_manifest"] = "../full-body-meshes.json"
+    elif fault == "invalid_json":
+        path.write_text("not JSON")
+    else:
+        manifest = json.loads(path.read_text())
+        if fault == "missing_level":
+            manifest["meshes"].pop("fine")
+        else:
+            manifest["meshes"]["fine"]["sha256"] = "invalid"
+        path.write_text(json.dumps(manifest))
+    inputs[1].write_text(json.dumps(inputs[4]))
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_mesh_manifest_is_bound_to_preparation(inputs):
+    manifest = prepare(inputs)
+    assert "mesh_manifest" in manifest["inputs"]
+    path = inputs[0].parent / "full-body-meshes.json"
+    path.write_bytes(path.read_bytes() + b"\n")
+    with pytest.raises(ValueError, match="input digest mismatch"):
         campaign.verify_manifest(inputs[2] / "manifest.json")
 
 
@@ -350,6 +400,16 @@ def test_mass_mismatch_blocks_all_cases(inputs):
     assert not inputs[2].exists()
 
 
+def test_equal_volume_asymmetry_blocks_all_cases(inputs):
+    geometry = campaign.mesh_geometry
+    panels = geometry.panels_for_level("fine")
+    panels[:, :, 1] += 0.004 * geometry.BEAM * panels[:, :, 0] / geometry.LENGTH
+    (inputs[0].parent / "fine.gdf").write_bytes(geometry.encode_gdf(panels))
+    with pytest.raises(ValueError, match="DF2 fine: FAIL"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
 def test_coarse_replaces_original_half_mesh(inputs):
     # The old base mesh is retained as provenance, never forced into the ladder.
     inputs[3]["vessel"]["geometry"]["mesh_file"] = "old.gdf"
@@ -392,6 +452,58 @@ def test_asymptotic_limit_above_candidate_bound_rejected(inputs):
     inputs[1].write_text(json.dumps(inputs[4]))
     with pytest.raises(ValueError, match="asymptotic limit"):
         prepare(inputs)
+
+
+@pytest.mark.parametrize(
+    "draft_scale,area_scale,density_scale,gravity,limit,allowed",
+    [
+        (4, 1, 1, 9.80665, 0.15, False),
+        (0.25, 1, 1, 9.80665, 0.35, True),
+        (1, 1, 0.5, 9.80665, 0.23, True),
+        (1, 1, 2, 9.80665, 0.24, False),
+        (1, 1, 1, 4, 0.2, False),
+        (1, 1, 1, 20, 0.3, True),
+        (1, 0.5, 1, 9.80665, 0.23, True),
+        (1, 2, 1, 9.80665, 0.23, True),
+    ],
+)
+def test_asymptotic_ceiling_uses_df2_loading_and_environment(
+    inputs, draft_scale, area_scale, density_scale, gravity, limit, allowed
+):
+    geometry = campaign.mesh_geometry
+    manifest_path = inputs[0].parent / "full-body-meshes.json"
+    mesh_manifest = json.loads(manifest_path.read_text())
+    for level in campaign.LEVELS:
+        panels = geometry.panels_for_level(level)
+        panels[:, :, 0] *= area_scale
+        panels[:, :, 2] *= draft_scale
+        data = geometry.encode_gdf(panels)
+        (inputs[0].parent / f"{level}.gdf").write_bytes(data)
+        mesh_manifest["meshes"][level]["sha256"] = campaign.digest(data)
+    manifest_path.write_text(json.dumps(mesh_manifest))
+    inputs[3]["vessel"]["inertia"]["mass"] *= draft_scale * area_scale * density_scale
+    inputs[3]["environment"].update(water_density=1025 * density_scale, gravity=gravity)
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = limit
+    inputs[1].write_text(json.dumps(inputs[4]))
+    expected_ceiling = math.sqrt(gravity / (geometry.DRAFT * draft_scale)) / 4
+    assert (limit < expected_ceiling) == allowed
+    if allowed:
+        manifest = prepare(inputs)
+        assert manifest["asymptotic_ceiling_rad_s"] == pytest.approx(expected_ceiling)
+    else:
+        with pytest.raises(ValueError, match="asymptotic limit"):
+            prepare(inputs)
+        assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("gravity", [None, -1, 0, True, float("nan"), float("inf")])
+def test_invalid_gravity_blocks_derived_ceiling_before_output(inputs, gravity):
+    inputs[3]["environment"]["gravity"] = gravity
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
 
 
 def test_mesh_generator_is_collected_by_diffraction_ci_domain():
