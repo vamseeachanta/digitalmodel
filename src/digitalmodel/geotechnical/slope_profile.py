@@ -102,6 +102,25 @@ def _layer(layer: dict[str, Any]) -> None:
     _strength(layer)
 
 
+def _strength_datums(layers: list[dict[str, Any]], bottom: float) -> None:
+    for index, layer in enumerate(layers):
+        if layer.get("su_gradient_kpa_per_m", 0) <= 0:
+            continue
+        lower_min = bottom
+        if index + 1 < len(layers):
+            lower_min = min(point[1] for point in layers[index + 1]["top_boundary_m"])
+        # xslope 1.0.3 slice.py, cp rule (see the slope screening guide):
+        # Su(y) = Su_ref + gradient * max(0, reference_elevation - y).
+        # Below the entire layer the datum makes the gradient term zero.
+        # Linear boundary segments attain their minima at vertices, including
+        # interior vertices; the next layer top is this layer's lower boundary.
+        if layer["reference_elevation_m"] < lower_min:
+            raise ValueError(
+                f"layers[{index}].reference_elevation_m is below the entire "
+                "layer lower boundary; positive strength gradient is inactive"
+            )
+
+
 def _seepage(profile: dict[str, Any]) -> None:
     seep = profile.get("seepage")
     if seep is None:
@@ -157,6 +176,7 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
         layer["top_boundary_m"] = top
         previous = top
     _boundary(previous, [[ground[0][0], bottom], [ground[-1][0], bottom]])
+    _strength_datums(layers, bottom)
     if "water_table_m" in data:
         water = _line(data["water_table_m"], "water_table_m")
         if [water[0][0], water[-1][0]] != [ground[0][0], ground[-1][0]]:
