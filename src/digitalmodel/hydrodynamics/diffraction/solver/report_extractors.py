@@ -45,18 +45,6 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-# OrcFxAPI is only needed by ``extract_report_data_from_owr`` (which calls
-# ``OrcFxAPI.Diffraction()``). The module's other public function,
-# ``build_report_data_from_solver_results``, has a minimal path that does
-# not touch OrcFxAPI at all (used by BenchmarkRunner on Linux CI).
-# Make the import lazy so the module is importable without the DLL; we
-# raise a clear error at call time below if extract_report_data_from_owr
-# is invoked without OrcFxAPI. See workspace-hub #2614 (Cat A).
-try:  # pragma: no cover - exercised only when OrcFxAPI is installed
-    import OrcFxAPI  # type: ignore[import-not-found]
-except ImportError:
-    OrcFxAPI = None  # type: ignore[assignment]
-
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     complex_phase_degrees,
     hz_to_rad_per_s,
@@ -81,6 +69,11 @@ from digitalmodel.hydrodynamics.diffraction.report_computations import (
 )
 
 
+# Injection point retained for existing converter tests. A real interface is
+# loaded only inside extract_report_data_from_owr, never during collection.
+OrcFxAPI = None
+
+
 def _round_2d(arr: np.ndarray, decimals: int = 6) -> List[List[float]]:
     """Round 2D array to nested list."""
     return [[round(float(v), decimals) for v in row] for row in arr]
@@ -101,15 +94,17 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
             ``OrcFxAPI.Diffraction()``); see workspace-hub #2614 for why
             we defer the failure to call time instead of import time.
     """
-    if OrcFxAPI is None:
-        raise ModuleNotFoundError(
-            "extract_report_data_from_owr requires OrcFxAPI, but it is not "
-            "installed on this host. Install OrcaFlex/OrcaWave and the "
-            "OrcFxAPI Python bindings, or call the OrcFxAPI-free helpers "
-            "in this module instead (e.g. build_report_data_from_solver_results "
-            "without an owr_path argument)."
-        )
-    d = OrcFxAPI.Diffraction()
+    api = OrcFxAPI
+    if api is None:
+        try:
+            import OrcFxAPI as api
+        except ImportError as exc:
+            raise ModuleNotFoundError(
+                "extract_report_data_from_owr requires OrcFxAPI; use "
+                "build_report_data_from_solver_results without an owr_path "
+                "for offline reports."
+            ) from exc
+    d = api.Diffraction()
     d.LoadResults(str(Path(owr_path).resolve()))
 
     # --- Frequency/heading grids ---
