@@ -22,7 +22,6 @@ from digitalmodel.asset_integrity.dnv_rp_f101 import dnv_f101_single_defect
 from digitalmodel.asset_integrity.circumferential_defect import (
     api579_part5_circumferential_netsection,
 )
-from digitalmodel.asset_integrity.assessment.ffs_decision import DecisionBands, decide
 from digitalmodel.asset_integrity.assessment.ffs_report import FFSReport
 
 VALIDATION_RECORDS = (
@@ -127,19 +126,17 @@ def _circumferential_row(inputs, depth, length):
 
 def _decision(rows, applicability):
     governing = min(rows, key=lambda row: row["margin"])
-    # This screen uses capacity/demand, not API 579 RSF severity bands:
-    # ratio >= 1 -> ACCEPT, 0 <= ratio < 1 -> DERATE, any flag -> ESCALATE.
-    decision = decide(
-        governing["margin"],
-        1.0,
-        float("inf"),
-        "pipeline",
-        bands=DecisionBands(monitor_band=0, derate_floor=0, repair_life_yr=0),
-        applicability=applicability,
-    ).to_dict()
-    decision.pop("rsf")
-    decision.pop("rsf_a")
-    decision["remaining_life_yr"] = None
+    # Unity is the definition of allowable/demand, not an RSF policy band.
+    # Each physical demand limit was calculated in _methods; life is absent.
+    verdict = ("ESCALATE" if not applicability.ok else
+               "ACCEPT" if governing["margin"] >= 1 else "DERATE")
+    decision = {
+        "verdict": verdict, "action": "RE_RATE" if verdict == "DERATE" else verdict,
+        "asset_class": "pipeline", "margin": governing["margin"],
+        "margin_allowable": 1.0, "remaining_life_yr": None,
+        "rerated_mawp_psi": None, "derated": None, "derated_units": None,
+        "applicability": applicability.to_dict(),
+    }
     if not applicability.ok:
         decision["demand_limits_psi"] = None
         decision["governing_criterion"] = (

@@ -45,6 +45,7 @@ class FFSWorkflow:
             grid,
             input_units=ffs_cfg.get("input_units", "in"),
             force_type=ffs_cfg.get("force_type"),
+            row_spacing_in=ffs_cfg.get("row_spacing_in"),
             repair_context=ffs_cfg.get("repair_context"),
         )
 

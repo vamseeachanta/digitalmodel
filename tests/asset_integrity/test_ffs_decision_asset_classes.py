@@ -39,8 +39,8 @@ CASES = [
     (0.9501, 10.0, Verdict.ACCEPT),         # just above the band edge
     (0.9499, 10.0, Verdict.MONITOR),        # just inside band
     (0.90, 10.0, Verdict.MONITOR),          # exactly at allowable
-    (0.8999, 10.0, Verdict.DERATE),         # just below allowable
-    (0.50, 10.0, Verdict.DERATE),           # exactly at floor -> still de-rate
+    (0.8999, 10.0, Verdict.ESCALATE),       # rating evidence absent
+    (0.50, 10.0, Verdict.ESCALATE),         # rating evidence absent
     (0.4999, 10.0, Verdict.REPLACE),        # below floor
     (0.95, 0.0, Verdict.REPAIR),            # screening fails (life exhausted), margin OK
     (float("nan"), 10.0, Verdict.ESCALATE), # margin not evaluable
@@ -147,7 +147,8 @@ def test_derate_capped_at_limit_and_none_without_callable():
     assert d.derated.to("psi").magnitude == pytest.approx(1000.0)
     d0 = decide(0.72, RSFA, 5.0, "pressure")
     assert d0.derated is None
-    assert "Reduce MAWP or operating pressure" in d0.governing_criterion
+    assert "not calculated" in d0.governing_criterion
+    assert d0.verdict is Verdict.ESCALATE
 
 
 def test_mooring_derate_is_tension_limit():

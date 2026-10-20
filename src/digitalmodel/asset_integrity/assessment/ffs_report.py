@@ -347,20 +347,16 @@ class FFSReport:
         verdict: str,
         verdict_color: str,
         criterion: str,
-        remaining_life: float,
+        remaining_life: Optional[float],
         design_code: str,
-        rsf: float,
+        rsf: Optional[float],
         rsf_a: float,
         rerated_mawp_psi: float | None = None,
         verdict_label: str | None = None,
     ) -> str:
         label = verdict_label or verdict
-        rl_str = (
-            f"{remaining_life:.1f} yr"
-            if math.isfinite(remaining_life)
-            else "&#x221e; (no corrosion)"
-        )
-        rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
+        rl_str = FFSReport._life_text(remaining_life, "yr")
+        rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
         return (
             "<div class='section'>\n"
             "<h2>1. Executive Summary</h2>\n"
@@ -444,16 +440,17 @@ class FFSReport:
 
     @staticmethod
     def _section_level2(
-        rsf: float,
+        rsf: Optional[float],
         rsf_a: float,
         t_am: float,
         t_mm: float,
         decision: dict,
     ) -> str:
-        rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
-        verdict = "ACCEPT" if rsf >= rsf_a else "FAIL"
+        rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
+        comparable = rsf is not None and math.isfinite(rsf)
+        verdict = ("ACCEPT" if rsf >= rsf_a else "FAIL") if comparable else "NOT_EVALUATED"
         color = _VERDICT_COLORS.get(
-            "ACCEPT" if rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
+            "ACCEPT" if comparable and rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
         )
         folias = decision.get("folias_factor", 1.0)
         l2_verdict = decision.get("verdict", "")
@@ -477,17 +474,22 @@ class FFSReport:
         )
 
     @staticmethod
+    def _life_text(value, units):
+        """Distinguish an explicit zero-rate projection from missing evidence."""
+        if value is None or math.isnan(value) or value < 0:
+            return "Not evaluated"
+        if value == math.inf:
+            return "Unlimited (no further corrosion assumed)"
+        return f"{value:.1f} {units}"
+
+    @staticmethod
     def _section_remaining_life(
         t_mm: float,
         t_min: float,
-        remaining_life: float,
+        remaining_life: Optional[float],
         corr_rate: Optional[float],
     ) -> str:
-        rl_str = (
-            f"{remaining_life:.2f} years"
-            if math.isfinite(remaining_life)
-            else "Unlimited (no further corrosion assumed)"
-        )
+        rl_str = FFSReport._life_text(remaining_life, "years")
         rate_str = f"{corr_rate:.4f} in/yr" if corr_rate is not None else "Not provided"
         return (
             "<div class='section'>\n"

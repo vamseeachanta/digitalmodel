@@ -1,7 +1,7 @@
 """Manual dent geometry adapter, preserving all existing screening criteria."""
 from dataclasses import asdict
 
-from digitalmodel.asset_integrity.assessment.ffs_decision import decide
+from digitalmodel.asset_integrity.assessment.ffs_decision import from_screening
 from digitalmodel.asset_integrity.assessment.ffs_report import FFSReport
 from digitalmodel.asset_integrity.assessment.screening_report import finite_number, store_report
 from .dent_assessment import (
@@ -29,20 +29,17 @@ def _geometry(block):
 
 
 def _decision(assessment, geometry):
-    """Map engine dispositions through shared tree; tokens are not physical margins."""
+    """Translate dispositions directly, retaining the actual dent comparator."""
     status = assessment.verdict
     if status not in {"ACCEPT", "MONITOR", "REJECT", "NEEDS_ASSESSMENT"}:
         raise ValueError(f"Unknown dent engine verdict {status}")
     unreliable = any(geometry["dent_depth_in"] / geometry[key] > 0.5
                      for key in ("dent_length_axial_in", "dent_length_circ_in"))
-    if status == "REJECT":
-        decision = decide(1.0, 1.0, 0.0, "pipeline", screening_pass=False)
-    elif status == "NEEDS_ASSESSMENT" or unreliable:
-        decision = decide(float("nan"), 1.0, 0.0, "pipeline")
-    else:
-        token = 1.0 if status == "MONITOR" else 2.0
-        decision = decide(token, 1.0, float("inf"), "pipeline", screening_pass=True)
-    result = decision.to_dict()
+    mapped = {"REJECT": "REPAIR", "NEEDS_ASSESSMENT": "ESCALATE",
+              "ACCEPT": "ACCEPT", "MONITOR": "MONITOR"}[status]
+    if unreliable and status != "REJECT":
+        mapped = "ESCALATE"
+    result = from_screening(mapped, "pipeline", assessment.governing_criterion).to_dict()
     for key in ("rsf", "rsf_a", "margin", "margin_allowable", "remaining_life_yr",
                 "rerated_mawp_psi", "derated", "derated_units"):
         result.pop(key)

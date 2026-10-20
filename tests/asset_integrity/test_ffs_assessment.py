@@ -678,7 +678,7 @@ class TestFFSDecision:
             t_min_in=0.300,
             corrosion_rate_in_per_yr=0.010,
         )
-        assert result["verdict"] in ("REPAIR", "REPLACE", "RE_RATE", "MONITOR")
+        assert result["verdict"] == "ESCALATE"  # no rating evidence
 
     def test_accept_result_has_remaining_life(self):
         from digitalmodel.asset_integrity.assessment.ffs_decision import FFSDecision

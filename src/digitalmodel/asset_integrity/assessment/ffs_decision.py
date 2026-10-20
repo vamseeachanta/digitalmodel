@@ -299,9 +299,9 @@ class Decision:
     verdict: Verdict
     action: str
     asset_class: str
-    margin: float
-    margin_allowable: float
-    remaining_life_yr: float
+    margin: Optional[float]
+    margin_allowable: Optional[float]
+    remaining_life_yr: Optional[float]
     governing_criterion: str
     derated: Optional["ureg.Quantity"] = None
     applicability: Applicability = field(default_factory=Applicability)
@@ -325,10 +325,10 @@ class Decision:
             "asset_class": self.asset_class,
             "remaining_life_yr": self.remaining_life_yr,
             "governing_criterion": self.governing_criterion,
-            "margin": self.margin,
-            "margin_allowable": self.margin_allowable,
-            "rsf": self.margin,
-            "rsf_a": self.margin_allowable,
+            "margin": _finite_or_none(self.margin),
+            "margin_allowable": _finite_or_none(self.margin_allowable),
+            "rsf": _finite_or_none(self.margin),
+            "rsf_a": _finite_or_none(self.margin_allowable),
             "rerated_mawp_psi": rerated_psi,
             "derated": derated_mag,
             "derated_units": derated_units,
@@ -336,10 +336,32 @@ class Decision:
         }
 
 
+def _finite_or_none(value):
+    return value if value is not None and math.isfinite(value) else None
+
+
+def from_screening(verdict: Union[Verdict, str], asset_class: Union[str, AssetClass],
+                   governing_criterion: str) -> Decision:
+    """Map an existing disposition without inventing strength, life or rating.
+
+    This is vocabulary translation only. A mechanism adapter must supply its
+    actual comparator in governing_criterion. Rating changes require decide()
+    with physical margin and an evaluated derating callable.
+    """
+    policy = _policy(asset_class)
+    verdict = Verdict(verdict)
+    if verdict not in {Verdict.ACCEPT, Verdict.MONITOR, Verdict.REPAIR, Verdict.ESCALATE}:
+        raise ValueError("Screening translation cannot establish a rating or replacement")
+    if not governing_criterion.strip():
+        raise ValueError("The governing screening comparator is required")
+    return Decision(verdict, policy.actions[verdict], policy.name,
+                    None, None, None, governing_criterion)
+
+
 def decide(
     margin: QuantityLike,
     margin_allowable: QuantityLike,
-    remaining_life_yr: QuantityLike,
+    remaining_life_yr: Optional[QuantityLike],
     asset_class: Union[str, AssetClass],
     *,
     derate: Optional[DerateFn] = None,
@@ -354,14 +376,17 @@ def decide(
             ratio, RSR ...).  Larger is safer; ``margin >= margin_allowable``
             passes.  Non-finite -> ESCALATE.
         margin_allowable: Allowable margin (e.g. RSFa = 0.90).
-        remaining_life_yr: Years (float) or a pint time quantity.
+        remaining_life_yr: Years (float) or a pint time quantity. None or NaN
+            means not evaluated; it cannot trigger a short-life repair. Positive
+            infinity is reserved for an explicit zero-degradation projection.
         asset_class: One of :data:`ASSET_CLASSES`.
         derate: Injected de-rating callable ``(margin, allowable) -> Derating``
-            built with :func:`reduced_mawp` / :func:`scaled_limit`.  Evaluated
-            on every verdict (reported alongside), quoted on DERATE.
+            built with :func:`reduced_mawp` / :func:`scaled_limit`. Evaluated
+            only for applicable, finite margin/allowable inputs. A missing or
+            invalid reduced rating cannot establish a DERATE verdict.
         bands: Override the class's :class:`DecisionBands`.
         screening_pass: Whether the primary screening passed.  ``None``
-            derives it as ``margin >= allowable and remaining_life > 0``; the
+            derives it from margin and, when known, positive life; the
             legacy wrapper passes the Level 1/Level 2 outcome explicitly.
         applicability: Validity record from the strength method(s) (#1094).
             When any flag is raised the verdict is ESCALATE and the numeric
@@ -373,11 +398,18 @@ def decide(
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
-    life = _years(remaining_life_yr)
+    life = _years(remaining_life_yr) if remaining_life_yr is not None else None
+    if life is not None and (math.isnan(life) or life < 0):
+        life = None
     lbl = policy.margin_label
 
-    derating = derate(m, m_a) if derate is not None else None
-    note = derating.note if derating is not None else policy.no_derate_note
+    derating = None
+    if derate is not None and app.ok and math.isfinite(m) and math.isfinite(m_a) and m_a > 0:
+        derating = derate(m, m_a)
+        if derating is not None and (not math.isfinite(derating.value.magnitude)
+                                     or derating.value.magnitude <= 0):
+            derating = None
+    note = derating.note if derating is not None else "Reduced rating not calculated."
 
     def _make(verdict: Verdict, criterion: str) -> Decision:
         return Decision(
@@ -387,7 +419,7 @@ def decide(
             margin=m,
             margin_allowable=m_a,
             remaining_life_yr=life,
-            governing_criterion=criterion,
+            governing_criterion=criterion + (" Remaining life not evaluated." if life is None else ""),
             derated=derating.value if derating is not None else None,
             applicability=app,
         )
@@ -403,6 +435,9 @@ def decide(
             "engineering review is required before a fitness verdict.",
         )
 
+    if not math.isfinite(m_a) or m_a <= 0:
+        return _make(Verdict.ESCALATE, "Allowable margin is absent or invalid.")
+
     if not math.isfinite(m):
         return _make(
             Verdict.ESCALATE,
@@ -411,7 +446,7 @@ def decide(
         )
 
     if screening_pass is None:
-        screening_pass = m >= m_a and life > 0.0
+        screening_pass = m >= m_a and (life is None or life > 0.0)
 
     if screening_pass:
         if m < m_a + b.monitor_band:
@@ -432,6 +467,10 @@ def decide(
             f"{lbl}_floor={b.derate_floor:.2f}.  Component must be replaced.",
         )
     if m < m_a:
+        if derating is None:
+            return _make(Verdict.ESCALATE,
+                         f"{lbl}={m:.3f} < {lbl}a={m_a:.2f}; reduced rating not calculated. "
+                         "Engineering review is required.")
         return _make(
             Verdict.DERATE,
             f"Screening FAIL; {lbl}={m:.3f} in de-rating band "
@@ -439,12 +478,19 @@ def decide(
         )
     # Margin acceptable but screening failed (e.g. thickness already below
     # t_min): repair if remaining life is short, otherwise operate de-rated.
+    if life is None:
+        return _make(Verdict.ESCALATE,
+                     f"Screening FAIL despite {lbl} >= {lbl}a; remaining life is absent. "
+                     "The failed screening comparator requires engineering review.")
     if life < b.repair_life_yr:
         return _make(
             Verdict.REPAIR,
             f"Screening FAIL; {lbl} acceptable but remaining life {life:.1f} yr "
             "is short.  Repair recommended.",
         )
+    if derating is None:
+        return _make(Verdict.ESCALATE,
+                     f"Screening FAIL despite {lbl} >= {lbl}a; reduced rating not calculated.")
     return _make(Verdict.DERATE, f"Screening FAIL; {lbl} acceptable.  {note}")
 
 
@@ -483,7 +529,7 @@ class FFSDecision:
         rsf_a: float,
         t_mm_in: float,
         t_min_in: float,
-        corrosion_rate_in_per_yr: float,
+        corrosion_rate_in_per_yr: Optional[float],
         design_pressure_psi: float | None = None,
         applicability: Optional[Applicability] = None,
     ) -> dict:
@@ -502,7 +548,7 @@ class FFSDecision:
             t_mm_in: Minimum measured wall thickness (inches).
             t_min_in: Code-required minimum wall thickness (inches).
             corrosion_rate_in_per_yr: Future corrosion rate (inches/year).
-                Use 0.0 for no further degradation.
+                None means unknown; use 0.0 only for explicit no further degradation.
             design_pressure_psi: Design pressure / MAWP.  When supplied, the
                 RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
                 (API 579-1 §2.4.2.2) is computed and reported on every
@@ -518,7 +564,7 @@ class FFSDecision:
                     REPLACE, ESCALATE (pressure wording).
                 action (str): Same as ``verdict`` for the pressure class.
                 asset_class (str): ``"pressure"``.
-                remaining_life_yr (float): Estimated remaining service life.
+                remaining_life_yr (float | None): Estimated life; None if rate is absent.
                     ``float('inf')`` when corrosion_rate_in_per_yr == 0.
                 governing_criterion (str): Human-readable description of the
                     governing assessment criterion.
@@ -532,7 +578,7 @@ class FFSDecision:
         life = remaining_life(
             Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
             Q_(corrosion_rate_in_per_yr, "inch/year"),
-        )
+        ) if corrosion_rate_in_per_yr is not None else None
         derate = (
             reduced_mawp(Q_(design_pressure_psi, "psi"))
             if design_pressure_psi is not None else None
@@ -544,6 +590,14 @@ class FFSDecision:
         )
         out = d.to_dict()
         out["verdict"] = d.action
+        rsf_text = f"{rsf:.3f}" if math.isfinite(rsf) else "not evaluated"
+        wall_comparison = ">=" if t_mm_in >= t_min_in else "<"
+        out["governing_criterion"] = (
+            f"Level 1: measured minimum={t_mm_in:.3f} in vs required={t_min_in:.3f} in; "
+            f"wall comparator {wall_comparison}; disposition={level1_verdict}. "
+            f"Level 2: RSF={rsf_text} vs RSFa={rsf_a:.3f} "
+            f"({level2_verdict}). " + out["governing_criterion"]
+        )
         return out
 
     # ------------------------------------------------------------------
