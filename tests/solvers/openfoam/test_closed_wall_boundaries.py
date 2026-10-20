@@ -124,14 +124,28 @@ def test_default_open_outlets_retain_free_patch_conditions(tmp_path, case_type):
     assert _patch((root / "0/nut").read_text(), "outlet")["type"] == "calculated"
 
 
+@pytest.mark.parametrize("case_type", list(CaseType))
 @pytest.mark.parametrize("patch", ["inlet", "outlet", "top", "sides"])
-def test_no_slip_overrides_drive_mesh_and_turbulence_together(tmp_path, patch):
+def test_no_slip_overrides_drive_mesh_and_turbulence_together(
+    tmp_path, patch, case_type
+):
     """No-slip on any generated face must satisfy the same wall contract."""
-    case = OpenFOAMCase.for_case_type(CaseType.SLOSHING, name="closed_face")
+    case = OpenFOAMCase.for_case_type(case_type, name="closed_face")
     case.boundary_conditions = [BoundaryCondition(patch, BoundaryType.NO_SLIP, "U")]
     root = OpenFOAMCaseBuilder(case).build(tmp_path)
     assert _patch((root / "system/blockMeshDict").read_text(), patch)["type"] == "wall"
     assert _patch((root / "0/omega").read_text(), patch)["type"] == "omegaWallFunction"
+    for field_path in (root / "0").iterdir():
+        field_type = _patch(field_path.read_text(), patch)["type"]
+        assert field_type not in {"symmetry", "empty"}, field_path.name
+    pressure = "p_rgh" if case.solver_config.is_multiphase else "p"
+    expected = "fixedFluxPressure" if case.solver_config.is_multiphase else "zeroGradient"
+    assert _patch((root / "0" / pressure).read_text(), patch)["type"] == expected
+    if case.solver_config.is_multiphase:
+        assert (
+            _patch((root / "0/alpha.water").read_text(), patch)["type"]
+            == "zeroGradient"
+        )
 
 
 def test_last_velocity_override_controls_topology(tmp_path):

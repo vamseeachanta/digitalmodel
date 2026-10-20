@@ -136,13 +136,14 @@ def write_pressure_field(
         "top": {"type": "totalPressure", "p0": "uniform 0"},
         "sides": {"type": "symmetry"},
     }
-    if is_multiphase:
+    for patch, kind in boundary_patch_types(boundary_conditions).items():
         # OpenFOAM v2312 (2023), fixedFluxPressure, Description: match the
         # prescribed velocity flux and compensate body forces (gravity).
         # https://doc.openfoam.com/2312/tools/processing/boundary-conditions/rtm/derived/inlet/fixedFluxPressure/
-        for patch, kind in boundary_patch_types(boundary_conditions).items():
-            if kind == "wall":
-                defaults[patch] = {"type": "fixedFluxPressure"}
+        if kind == "wall":
+            defaults[patch] = {
+                "type": "fixedFluxPressure" if is_multiphase else "zeroGradient"
+            }
     content = _foam_header("volScalarField", field_name)
     content += f"\ndimensions  {dims};\n\ninternalField   uniform 0;\n\n"
     content += _boundary_field(field_name, defaults, boundary_conditions)
@@ -191,7 +192,11 @@ def write_alpha_water(zero_dir: Path, boundary_conditions=None) -> None:
     """
     content = _foam_header("volScalarField", "alpha.water")
     content += "\ndimensions  [0 0 0 0 0 0 0];\n\ninternalField   uniform 0;\n\n"
-    content += _boundary_field("alpha.water", _ALPHA_DEFAULTS, boundary_conditions)
+    defaults = {patch: dict(entries) for patch, entries in _ALPHA_DEFAULTS.items()}
+    for patch, kind in boundary_patch_types(boundary_conditions).items():
+        if kind == "wall":
+            defaults[patch] = {"type": "zeroGradient"}
+    content += _boundary_field("alpha.water", defaults, boundary_conditions)
     content += "\n" + _FOOTER
     (zero_dir / "alpha.water").write_text(content)
 
