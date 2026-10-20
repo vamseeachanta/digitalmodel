@@ -21,9 +21,13 @@ API 653 (tank inspection) — remaining-life and inspection-interval rules.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from digitalmodel.fatigue.threshold_growth import GrowthResult
 
 
 @dataclass
@@ -37,6 +41,66 @@ class InspectionPlan:
     next_inspection_interval_years: float
     screening_status: str
     notes: list[str]
+
+
+@dataclass
+class CrackInspectionPlan:
+    """Same year/half-life/cap semantics as InspectionPlan, without corrosion."""
+
+    remaining_life_cycles: float | None
+    remaining_life_years: float | None
+    half_life_interval_years: float | None
+    code_max_interval_years: float
+    next_inspection_interval_years: float
+    screening_status: str
+    growth_status: str
+    policy_basis: str
+    notes: list[str]
+
+
+def plan_crack_inspection(
+    growth: GrowthResult,
+    *,
+    cycles_per_year: float,
+    code_max_interval_years: float,
+    life_divisor: float,
+    policy_basis: str,
+) -> CrackInspectionPlan:
+    """Convert growth cycles to years and cap the inspection interval.
+
+    The half-life semantics follow ``plan_inspection`` in this module.
+    A caller supplies the applicable policy basis, maximum interval and
+    divisor (at least the existing planner's half-life divisor). These are
+    not asserted to be API 579 crack-specific acceptance requirements.
+    Arrest means unbounded life only for the specified constant-amplitude
+    model and threshold; changes in loading/environment require reassessment.
+    """
+    values = (cycles_per_year, code_max_interval_years, life_divisor)
+    if not all(math.isfinite(v) and v > 0 for v in values):
+        raise ValueError("cycle rate, interval cap and divisor must be finite positive")
+    # Repository policy: plan_inspection uses remaining_life / 2, above.
+    if life_divisor < 2 or not policy_basis.strip():
+        raise ValueError("life_divisor must be >= 2 and policy_basis is required")
+    life = growth.life_cycles
+    if growth.status not in {"ARRESTED", "LIMIT_REACHED"}:
+        raise ValueError("unsupported growth status")
+    if (growth.status == "ARRESTED") != (life is None):
+        raise ValueError("growth status and remaining life disagree")
+    if life is not None and (not math.isfinite(life) or life < 0):
+        raise ValueError("remaining cycles must be finite non-negative")
+    years = None if life is None else life / cycles_per_year
+    if years is not None and not math.isfinite(years):
+        raise ValueError("remaining years exceed finite range")
+    half = None if years is None else years / 2
+    interval = (code_max_interval_years if years is None else
+                min(years / life_divisor, code_max_interval_years))
+    return CrackInspectionPlan(
+        life, years, half, code_max_interval_years, interval,
+        "fail" if life == 0 else "pass", growth.status, policy_basis,
+        ["Model-based screening; material calibration and inspection policy require qualification.",
+         "Arrest applies only to the supplied loading and service threshold." if life is None
+         else "Interval is limited by remaining life and the supplied policy cap."],
+    )
 
 
 def corrosion_rate_mm_yr(
@@ -138,6 +202,10 @@ def plan_inspection(
 
 def router(cfg: dict) -> dict:
     settings = cfg.get("inspection_planning") or {}
+    if "crack_growth" in settings:
+        if "thickness" in settings:
+            raise ValueError("supply crack_growth or thickness, not both")
+        return _route_crack_growth(cfg, settings)
     thickness = settings["thickness"]
     corrosion = settings.get("corrosion", {})
     design = settings.get("design", {})
@@ -173,6 +241,37 @@ def router(cfg: dict) -> dict:
     payload["summary_json"] = str(
         _write_summary(cfg, settings.get("outputs", {}), payload)
     )
+    cfg["inspection_planning"] = payload
+    cfg["screening_status"] = plan.screening_status
+    return cfg
+
+
+def _route_crack_growth(cfg: dict, settings: dict) -> dict:
+    """Route explicit crack inputs while preserving the thickness workflow."""
+    from digitalmodel.fatigue.crack_growth import stress_intensity_factor
+    from digitalmodel.fatigue.threshold_growth import GrowthLaw
+
+    from .crack_life import assess_crack_life, plan_crack_from_fad
+
+    inputs = dict(settings["crack_growth"])
+    law = GrowthLaw(**inputs.pop("law"))
+    stress = inputs.pop("stress_range_mpa")
+    factor = inputs.pop("geometry_factor")
+    if not math.isfinite(stress) or stress < 0:
+        raise ValueError("stress_range_mpa must be finite non-negative")
+    if not math.isfinite(factor) or factor <= 0:
+        raise ValueError("geometry_factor must be finite positive")
+
+    def delta_k(a):
+        return stress_intensity_factor(stress, a, Y=factor)
+
+    assess = plan_crack_from_fad if "fad_inputs" in inputs else assess_crack_life
+    assessment = assess(law=law, delta_k=delta_k, **inputs)
+    plan = assessment.inspection
+    payload = {**settings, "result": asdict(plan),
+               "crack_assessment": asdict(assessment),
+               "screening_status": plan.screening_status}
+    payload["summary_json"] = str(_write_summary(cfg, settings.get("outputs", {}), payload))
     cfg["inspection_planning"] = payload
     cfg["screening_status"] = plan.screening_status
     return cfg

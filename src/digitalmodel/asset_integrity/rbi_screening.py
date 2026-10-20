@@ -59,7 +59,7 @@ from typing import Any, Mapping, Optional, Sequence
 
 import pandas as pd
 
-from .inspection_planning import InspectionPlan, plan_inspection
+from .inspection_planning import CrackInspectionPlan, InspectionPlan, plan_inspection
 
 # 7-phase RBI programme cycle (workflow framing; see module docstring).
 RBI_PHASES: tuple[str, ...] = (
@@ -179,7 +179,7 @@ class RBIScreeningResult:
     governing: str  # which limit set the interval
     pof_subscores: dict[str, Optional[int]]
     inputs: dict[str, Any]  # every input echoed
-    inspection_plan: Optional[InspectionPlan]
+    inspection_plan: Optional[InspectionPlan | CrackInspectionPlan]
     basis: list[str]
     phases: tuple[str, ...] = RBI_PHASES
 
@@ -279,7 +279,7 @@ def risk_band(
 
 def recommend_interval(
     band: str,
-    inspection_plan: InspectionPlan,
+    inspection_plan: InspectionPlan | CrackInspectionPlan,
     params: RBIParameters = RBIParameters(),
 ) -> tuple[float, str]:
     """Risk-scaled interval = min(half-life-rule interval, band cap).
@@ -298,7 +298,43 @@ def recommend_interval(
         return 0.0, "FFS/half-life screening failed — inspect/repair now"
     if cap < base:
         return interval, f"risk-band cap governs ({band}: {cap:g} yr)"
+    if isinstance(inspection_plan, CrackInspectionPlan):
+        return interval, "crack-growth life / policy-cap interval governs"
     return interval, "API 510/570/653 half-life / code-max interval governs"
+
+
+def screen_crack_plan(
+    plan: CrackInspectionPlan,
+    consequence_class: str | int,
+    *,
+    component_id: str,
+    params: RBIParameters,
+) -> RBIScreeningResult:
+    """Apply the existing qualitative RBI policy to a crack-growth plan.
+
+    No corrosion rate or remaining-strength factor is invented for cracks.
+    ``params`` is required: existing practice bands need independent policy
+    qualification. Arrest is unbounded only under the supplied growth model.
+    """
+    life = plan.remaining_life_years
+    pof, subscores = pof_category(
+        remaining_life_yr=float("inf") if life is None else life, params=params,
+    )
+    cof, cls = cof_category(consequence_class)
+    score, band = risk_band(pof, cof, params)
+    interval, governing = recommend_interval(band, plan, params)
+    return RBIScreeningResult(
+        component_id=component_id, pof_category=pof, cof_category=cof,
+        cof_class=cls, risk_score=score, risk_band=band,
+        recommended_interval_yr=interval,
+        half_life_interval_yr=plan.half_life_interval_years,
+        code_max_interval_yr=plan.code_max_interval_years, governing=governing,
+        pof_subscores=subscores,
+        inputs={"consequence_class": consequence_class,
+                "remaining_life_yr": life, "growth_status": plan.growth_status},
+        inspection_plan=plan,
+        basis=params.basis_notes() + [plan.policy_basis] + plan.notes,
+    )
 
 
 def screen_component(
