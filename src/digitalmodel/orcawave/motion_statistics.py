@@ -5,7 +5,7 @@ short-term Rayleigh distribution, long-term scatter diagram integration,
 and Motion Sickness Incidence (MSI) per ISO 2631-1.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
@@ -223,18 +223,32 @@ def short_term_statistics(
 def rayleigh_exceedance(amplitude: float, sigma: float) -> float:
     """Probability of exceeding a given amplitude (Rayleigh distribution).
 
-    P(X > x) = exp(-x^2 / (2 * sigma^2))
+    P(X > x) = exp(-(x / sigma)^2 / 2).
+    Source: SciPy 1.14.1 reference (2024), scipy.stats.rayleigh, Notes;
+    integrate the standardized density u*exp(-u^2/2) over [x/sigma, infinity).
+    https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.stats.rayleigh.html
 
     Args:
-        amplitude: Response amplitude threshold.
-        sigma: RMS response (sqrt(m0)).
+        amplitude: Finite, nonnegative response amplitude threshold.
+        sigma: Finite, positive RMS response (sqrt(m0)).
 
     Returns:
         Exceedance probability.
+
+    Raises:
+        ValueError: Threshold or scale is outside the declared domain.
     """
-    if sigma <= 0:
-        return 0.0
-    return float(np.exp(-(amplitude**2) / (2.0 * sigma**2)))
+    if not np.isfinite(amplitude) or amplitude < 0:
+        raise ValueError("Require finite amplitude >= 0")
+    if not np.isfinite(sigma) or sigma <= 0:
+        raise ValueError("Require finite sigma > 0")
+    # Form the dimensionless ratio before squaring to avoid losing a valid
+    # probability when dimensional inputs are individually very large or small.
+    # For extreme ratios, overflow/underflow gives the valid limiting values
+    # exp(-infinity)=0 and exp(0)=1; invalid operations remain errors.
+    with np.errstate(over="ignore", under="ignore"):
+        ratio = np.float64(amplitude) / sigma
+        return float(np.exp(-0.5 * ratio**2))
 
 
 def rayleigh_quantile(probability: float, sigma: float) -> float:

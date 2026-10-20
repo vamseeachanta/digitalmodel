@@ -81,7 +81,10 @@ def test_credit_guard_runs_in_pr_harness():
     )
     triggers = workflow.get("on", workflow.get(True))
     assert "pull_request" in triggers
-    assert not triggers["pull_request"]
+    # Event types may be explicit; path and branch filters could bypass the scan.
+    assert not {"paths", "paths-ignore", "branches", "branches-ignore"} & set(
+        triggers["pull_request"] or {}
+    )
     job = workflow["jobs"]["ci-harness-tests"]
     assert "if" not in job
     commands = "\n".join(step.get("run", "") for step in job["steps"])

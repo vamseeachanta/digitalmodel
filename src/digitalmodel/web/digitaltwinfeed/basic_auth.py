@@ -35,6 +35,24 @@ def basic_auth_password_for(username):
     return value if matches else None
 
 
+def basic_auth_verify_password(username, password):
+    """Verify both credentials against the live, nonblank environment values."""
+    configured = basic_auth_user()
+    value = basic_auth_password()
+    if configured is None or value is None or not username or not password:
+        return False
+    # Python 3.11 Library Reference, hmac.compare_digest: non-ASCII text must
+    # be encoded as bytes. Compare both fields before combining the results.
+    # https://docs.python.org/3.11/library/hmac.html#hmac.compare_digest
+    user_matches = hmac.compare_digest(
+        username.encode('utf-8'), configured.encode('utf-8')
+    )
+    value_matches = hmac.compare_digest(
+        password.encode('utf-8'), value.encode('utf-8')
+    )
+    return user_matches and value_matches
+
+
 def warn_if_basic_auth_closed():
     """Warn once at start-up, naming missing variables without their values."""
     global _startup_checked
