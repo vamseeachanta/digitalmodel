@@ -151,6 +151,9 @@ def source_groups(domain: Path) -> list[tuple[Path, list[Path]]]:
     groups: dict[Path, list[Path]] = {}
     for folder in ROOTS:
         root = domain / folder
+        if not root.is_dir():
+            groups[root] = []
+            continue
         for path in sorted(root.rglob("*")):
             if path.is_file() and path.suffix.lower() in (".yml", ".yaml"):
                 relative = path.relative_to(root)
@@ -159,7 +162,16 @@ def source_groups(domain: Path) -> list[tuple[Path, list[Path]]]:
                 if deep and relative.parts[0] != "include_structure":
                     group /= relative.parts[1]
                 groups.setdefault(group, []).append(path)
-        for child in sorted(root.iterdir()):
+        children = [child for child in root.iterdir() if child.is_dir()]
+        if folder == "templates":
+            children += [
+                child
+                for category in list(children)
+                if category.name != "include_structure"
+                for child in category.iterdir()
+                if child.is_dir() and child.name not in STRUCTURAL_FOLDERS
+            ]
+        for child in sorted(children, reverse=True):
             populated = any(child == g or child in g.parents for g in groups)
             if child.is_dir() and not populated:
                 groups.setdefault(child, [])
@@ -169,6 +181,11 @@ def source_groups(domain: Path) -> list[tuple[Path, list[Path]]]:
 def catalogue_entries(root: Path, groups: list, omissions: list) -> Iterable:
     """Check group provenance before emitting any member's metadata."""
     for group, paths in groups:
+        if not group.is_dir():
+            omissions.append(
+                group.relative_to(root).as_posix() + ": catalogue root not present"
+            )
+            continue
         readmes = [group / "README.md", group.parent / "README.md"]
         readme = "\n".join(read_text(p) for p in readmes if p.is_file())
         headers = [header(p) for p in paths]
@@ -195,13 +212,10 @@ def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
             for p in paths
         }
     )
+    needles = {owner: "/".join(owner.split("/")[-2:]) for owner in owners}
     patterns = {
-        owner: re.compile(
-            r"(?<![\w.-])"
-            + re.escape("/".join(owner.split("/")[-2:]))
-            + r"(?![\w.-])"
-        )
-        for owner in owners
+        owner: re.compile(r"(?<![\w.-])" + re.escape(needle) + r"(?![\w.-])")
+        for owner, needle in needles.items()
     }
     usage: dict[str, list[str]] = {owner: [] for owner in owners}
     candidates = [root / "docs/registry/workflows.yaml"]
@@ -209,9 +223,9 @@ def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
         candidates += sorted((root / folder).rglob("*"))
     for path in candidates:
         if path.is_file() and path.suffix in (".py", ".yaml", ".yml", ".md", ".json"):
-            text = read_text(path).replace("\\", "/")
+            text = re.sub(r"\\+", "/", read_text(path))
             for owner, pattern in patterns.items():
-                if pattern.search(text):
+                if needles[owner] in text and pattern.search(text):
                     usage[owner].append(path.relative_to(root).as_posix())
     return usage
 
