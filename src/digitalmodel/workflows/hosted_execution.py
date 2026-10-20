@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass, field
+import errno
 import hashlib
 import math
 import os
@@ -17,18 +18,19 @@ import shutil
 import stat
 import subprocess
 import sys
-from typing import Callable, Iterator, Mapping, Sequence, TypeVar
+from typing import Callable, Iterable, Iterator, Mapping, Sequence, TypeVar
 
 T = TypeVar("T")
 _COMPONENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*", re.ASCII)
 
 
-def resource_count(value: object, *, name: str, ceilings: Sequence[int] = ()) -> int:
+def resource_count(value: object, *, name: str, ceilings: Iterable[int] = ()) -> int:
     """Require positive built-in integers at every resource boundary.
 
     Policy: issue 1596 (2026), strict scalar validation; no coercion, including
     bool (a Python int subclass). Ceilings are supplied capabilities, not defaults.
     """
+    ceilings = tuple(ceilings)
     if type(value) is not int:
         raise TypeError(f"{name} requires integer counts")
     for item in (value, *ceilings):
@@ -105,7 +107,7 @@ def validated_request(
     root: Path,
     locator: str,
     ranks: object,
-    ceilings: Sequence[int],
+    ceilings: Iterable[int],
     mutate: Callable[[int, int, str], T],
 ) -> T:
     """Finish every shared request check before invoking a layout/launch callback.
@@ -113,6 +115,9 @@ def validated_request(
     Workflow-specific pure validators must run before this function; the callback
     must use descriptor-relative operations and return relative result locators.
     """
+    ceilings = tuple(ceilings)
+    if not ceilings:
+        raise ValueError("request requires at least one ceiling")
     count = resource_count(ranks, name="ranks", ceilings=ceilings)
     relative = result_locator(locator)
     with destination_fd(root, relative) as fd:
@@ -137,7 +142,8 @@ def _snapshot(path: str, expected: str) -> int:
         if not stat.S_ISREG(metadata.st_mode) or not metadata.st_mode & 0o111:
             # Linux man-pages 6.19 inode(7), file mode: user/group/other execute bits.
             raise ValueError("selected executable must be a regular executable file")
-        fd = os.memfd_create("hosted-executable", os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+        flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | getattr(os, "MFD_EXEC", 0)
+        fd = os.memfd_create("hosted-executable", flags)
         try:
             with os.fdopen(os.dup(fd), "wb") as snapshot:
                 shutil.copyfileobj(stream, snapshot)
@@ -226,24 +232,31 @@ def run_witnessed(
     if not plan.fds or plan.argv[0] not in {f"/proc/self/fd/{fd}" for fd in plan.fds}:
         raise ValueError("launcher must use a witnessed descriptor")
     inherited = plan.fds + (() if cwd_fd is None else (cwd_fd,))
-    return subprocess.run(
-        plan.argv,
-        executable=plan.argv[0],
-        pass_fds=inherited,
-        cwd=None if cwd_fd is None else f"/proc/self/fd/{cwd_fd}",
-        env={},
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        timeout=timeout,
-        check=False,
-    )
+    try:
+        return subprocess.run(
+            plan.argv,
+            executable=plan.argv[0],
+            pass_fds=inherited,
+            cwd=None if cwd_fd is None else f"/proc/self/fd/{cwd_fd}",
+            env={},
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except OSError as error:
+        if error.errno == errno.EACCES:
+            raise NotImplementedError(
+                "executable memfd launch is denied by the runtime or kernel policy"
+            ) from error
+        raise
 
 
 def validated_launch(
     root: Path,
     locator: str,
     ranks: object,
-    ceilings: Sequence[int],
+    ceilings: Iterable[int],
     argv: Sequence[str],
     executable_digests: Mapping[int, str],
     mutate: Callable[[int, int, str, WitnessedArgv], T],

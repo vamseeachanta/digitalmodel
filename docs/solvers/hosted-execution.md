@@ -10,6 +10,7 @@ solution or licensed solver result is produced by these infrastructure checks.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add reusable execution contracts to address pathname replacement, scalar coercion and nested checkout boundaries. |
+| 1 | 2026-10-19 | Enforce iterator ceilings and bounded requests, clarify executable memory-file failures, and skip incompatible utility aliases in tests. |
 
 ## Inputs, method and guarantees
 
@@ -39,11 +40,15 @@ solution or licensed solver result is produced by these infrastructure checks.
   executable digests before invoking the mutation callback. Its callback receives
   `(destination_fd, count, relative_locator, witnessed_plan)`. `validated_request`
   provides the corresponding count/destination contract without launching tools.
+  Both require at least one ceiling, including when ceilings are supplied as an
+  iterator; an empty iterable is rejected before destination access or mutation.
 - `run_witnessed(plan, timeout=..., cwd_fd=...)` executes only while the witness
   context remains open, with an empty environment, captured output and optional
   descriptor-bound working directory. The required positive finite timeout
   bounds the direct child only. A nonzero exit is returned, not converted into
-  success. The caller owns process-tree containment and bounded log retention.
+  success. The caller is responsible for process-tree containment and bounded log
+  retention. Execution permission denial raises `NotImplementedError` with a
+  runtime or kernel policy diagnostic.
 
 ## Worked example: resource request
 
@@ -90,6 +95,8 @@ are required. Unsupported platforms or runtimes fail closed; no weaker pathname
 fallback is provided. Only ELF executables are accepted; scripts would add an
 unwitnessed interpreter. Copying must match the approved digest, even if the
 source is modified during the copy.
+When the runtime defines `MFD_EXEC`, snapshots request it explicitly. Otherwise,
+execution remains subject to the kernel's default memory-file execution policy.
 
 The caller must identify **every** nested executable position and use a local
 launcher that preserves these inherited descriptors. Remote MPI, launchers that

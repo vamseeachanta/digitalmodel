@@ -5,6 +5,7 @@ requested 4 > min(4, 3). These are synthetic inputs, not engineering limits.
 Locators follow literal POSIX component concatenation, not code-derived output.
 """
 
+import errno
 import hashlib
 import os
 from pathlib import Path
@@ -53,6 +54,34 @@ def test_resource_ceiling_is_strict_for_every_operand():
     for bad in (True, "4", 4.0, 0):
         with pytest.raises((TypeError, ValueError)):
             guards.resource_count(2, name="ranks", ceilings=(bad,))
+
+
+@pytest.mark.parametrize("boundary", ["count", "request", "launch"])
+def test_generator_ceiling_cannot_be_consumed_before_comparison(tmp_path, boundary):
+    ceilings = (ceiling for ceiling in (3,))
+    with pytest.raises(ValueError, match="ceiling"):
+        if boundary == "count":
+            guards.resource_count(4, name="ranks", ceilings=ceilings)
+        elif boundary == "request":
+            guards.validated_request(tmp_path, "missing", 4, ceilings, pytest.fail)
+        else:
+            guards.validated_launch(
+                tmp_path, "missing", 4, ceilings, [], {}, pytest.fail
+            )
+
+
+@pytest.mark.parametrize("boundary", ["request", "launch"])
+@pytest.mark.parametrize("as_iterator", [False, True])
+def test_request_boundaries_require_a_ceiling(tmp_path, boundary, as_iterator):
+    ceilings = iter(()) if as_iterator else ()
+    with pytest.raises(ValueError, match="at least one ceiling"):
+        if boundary == "request":
+            guards.validated_request(tmp_path, "missing", 2, ceilings, pytest.fail)
+        else:
+            guards.validated_launch(
+                tmp_path, "missing", 2, ceilings, [], {}, pytest.fail
+            )
+    assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.parametrize(
@@ -161,10 +190,66 @@ def test_valid_request_mutates_through_destination_descriptor(tmp_path):
 def harmless_tool(tmp_path):
     # Public coreutils true/echo are test tools, never a licensed solver.
     source = Path(shutil.which("true")).resolve()
+    if source.name != "true":
+        pytest.skip("sealed launch fixture requires a standalone true binary")
     path = tmp_path / "tool"
     shutil.copyfile(source, path)
     path.chmod(source.stat().st_mode)
     return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@requires_sealed_launch
+def test_snapshot_requests_executable_memfd_when_defined(monkeypatch, harmless_tool):
+    path, digest = harmless_tool
+    create = os.memfd_create
+    flags_seen = []
+    monkeypatch.setattr(os, "MFD_EXEC", 0x10, raising=False)
+
+    def require_exec(name, flags):
+        flags_seen.append(flags)
+        if not flags & os.MFD_EXEC:
+            raise PermissionError(errno.EACCES, "executable flag required")
+        # Exercise a newer runtime's flag without requiring a newer test kernel.
+        return create(name, flags & ~os.MFD_EXEC)
+
+    monkeypatch.setattr(os, "memfd_create", require_exec)
+    with guards.witnessed_argv([str(path)], {0: digest}) as plan:
+        assert os.pread(plan.fds[0], 4, 0) == b"\x7fELF"
+    assert flags_seen == [os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | os.MFD_EXEC]
+
+
+@requires_sealed_launch
+def test_exec_permission_denial_explains_missing_support(monkeypatch, harmless_tool):
+    path, digest = harmless_tool
+
+    def deny_exec(*args, **kwargs):
+        raise PermissionError(errno.EACCES, "execution denied")
+
+    with guards.witnessed_argv([str(path)], {0: digest}) as plan:
+        monkeypatch.setattr(guards.subprocess, "run", deny_exec)
+        with pytest.raises(NotImplementedError, match="executable memfd") as caught:
+            guards.run_witnessed(plan, timeout=2)
+        assert caught.value.__cause__.errno == errno.EACCES
+
+
+@requires_sealed_launch
+@pytest.mark.parametrize("utility", ["true", "env"])
+def test_multicall_alias_is_skipped_before_launch(
+    tmp_path, monkeypatch, request, utility
+):
+    tool = request.getfixturevalue("harmless_tool")
+    path, _ = tool
+    multicall = tmp_path / "multicall"
+    shutil.copyfile(path, multicall)
+    multicall.chmod(path.stat().st_mode)
+    alias = tmp_path / utility
+    alias.symlink_to(multicall)
+    monkeypatch.setattr(shutil, "which", lambda name: str(alias))
+    with pytest.raises(pytest.skip.Exception, match="standalone"):
+        if utility == "true":
+            harmless_tool.__wrapped__(tmp_path)
+        else:
+            test_nested_executable_is_bound_and_inherited(tool)
 
 
 @requires_sealed_launch
@@ -186,6 +271,8 @@ def test_launch_binds_bytes_despite_path_replacement_and_inplace_write(
 def test_nested_executable_is_bound_and_inherited(harmless_tool):
     path, digest = harmless_tool
     echo = Path(shutil.which("env")).resolve()
+    if echo.name != "env":
+        pytest.skip("sealed launch fixture requires a standalone env binary")
     echo_digest = hashlib.sha256(echo.read_bytes()).hexdigest()
     with guards.witnessed_argv(
         [str(echo), str(path)], {0: echo_digest, 1: digest}
