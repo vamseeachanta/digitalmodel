@@ -9,8 +9,11 @@ soil inputs use issue #2330 and the existing optional-input regression pins.
 These are test inputs, not calibrated engineering coefficients or limits.
 """
 
+import doctest
+import json
 import math
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -134,7 +137,26 @@ CONFIG_ARGUMENTS = (
     ("soil", "friction_angle_deg", "friction_angle_deg"),
     ("soil", "effective_cohesion_kpa", "effective_cohesion_kpa"),
     ("soil", "interface_friction_angle_deg", "interface_friction_angle_deg"),
+    ("loads", "horizontal_kN", "horizontal_kN"),
+    ("design", "factor_of_safety", "factor_of_safety"),
 )
+
+
+def configuration(tmp_path, condition):
+    return {
+        "_config_dir_path": str(tmp_path),
+        "mudmat_bearing_capacity": {
+            "foundation": {"width_B_m": 3.0, "length_L_m": 4.0},
+            "soil": {
+                "condition": condition,
+                "submerged_unit_weight_kN_m3": 8.0,
+                "undrained_shear_strength_kpa": 25.0,
+                "friction_angle_deg": 30.0,
+            },
+            "loads": {"vertical_kN": 800.0, "moment_kNm": 400.0},
+            "design": {},
+        },
+    }
 
 
 @pytest.mark.parametrize("section,key,argument", CONFIG_ARGUMENTS)
@@ -146,19 +168,7 @@ def test_config_nonfinite_strings_rejected_before_output(
     """Text numeric inputs must fail before a summary or a result is published."""
     from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
 
-    cfg = {
-        "_config_dir_path": str(tmp_path),
-        "mudmat_bearing_capacity": {
-            "foundation": {"width_B_m": 3.0, "length_L_m": 4.0},
-            "soil": {
-                "condition": condition,
-                "submerged_unit_weight_kN_m3": 8.0,
-                "undrained_shear_strength_kpa": 25.0,
-                "friction_angle_deg": 30.0,
-            },
-            "loads": {"vertical_kN": 800.0, "moment_kNm": 400.0},
-        },
-    }
+    cfg = configuration(tmp_path, condition)
     cfg["mudmat_bearing_capacity"][section][key] = label
     original = deepcopy(cfg)
 
@@ -167,3 +177,70 @@ def test_config_nonfinite_strings_rejected_before_output(
 
     assert cfg == original
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("condition", ["undrained", "drained"])
+@pytest.mark.parametrize(
+    "section,key,value",
+    [
+        ("loads", "horizontal_kN", -1.0),
+        ("loads", "horizontal_kN", "-1"),
+        ("design", "factor_of_safety", -1.0),
+        ("design", "factor_of_safety", "-1"),
+        ("design", "factor_of_safety", 0.0),
+        ("design", "factor_of_safety", "0"),
+    ],
+)
+def test_config_invalid_screening_ranges_rejected_before_output(
+    tmp_path, condition, section, key, value
+):
+    from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
+
+    cfg = configuration(tmp_path, condition)
+    cfg["mudmat_bearing_capacity"][section][key] = value
+    original = deepcopy(cfg)
+
+    with pytest.raises(ValueError, match=key):
+        MudmatBearingCapacityWorkflow().router(cfg)
+
+    assert cfg == original
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("condition", ["undrained", "drained"])
+@pytest.mark.parametrize(
+    "horizontal,factor", [(None, None), (0.0, 2.0), ("0", "2"), (100.0, 0.5)]
+)
+def test_config_valid_screening_inputs_preserve_summary(
+    tmp_path, condition, horizontal, factor
+):
+    from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
+
+    cfg = configuration(tmp_path, condition)
+    workflow = cfg["mudmat_bearing_capacity"]
+    workflow["loads"].update(vertical_kN=100.0, moment_kNm=0.0)
+    if horizontal is not None:
+        workflow["loads"]["horizontal_kN"] = horizontal
+    if factor is not None:
+        workflow["design"]["factor_of_safety"] = factor
+
+    result = MudmatBearingCapacityWorkflow().router(cfg)["mudmat_bearing_capacity"]
+    summary = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
+    design = summary["design"]
+    fos = 2.0 if factor is None else float(factor)
+    load = 0.0 if horizontal is None else float(horizontal)
+    expected_utilization = load / (summary["result"]["sliding_capacity_kn"] / fos)
+    assert design == result["design"]
+    assert design["factor_of_safety"] == fos
+    assert design["sliding_utilization"] == pytest.approx(expected_utilization)
+    assert design["screening_status"] == "pass"
+
+
+def test_documented_mudmat_examples():
+    document = (
+        Path(__file__).resolve().parents[2]
+        / "docs/domains/geotechnical/mudmat-input-validation.md"
+    )
+    result = doctest.testfile(str(document), module_relative=False, encoding="utf-8")
+    assert result.attempted > 0
+    assert result.failed == 0

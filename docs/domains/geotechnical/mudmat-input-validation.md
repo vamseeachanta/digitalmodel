@@ -10,6 +10,7 @@ arguments even when the selected drainage condition does not use them.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-20 | Document the existing finite-input contract and add an executable geometry example to explain rejection before calculation. |
+| 2 | 2026-10-20 | Validate horizontal load and safety factor before summary output, collect the examples in normal tests, and identify the example values as synthetic. |
 
 ## Input contract
 
@@ -37,8 +38,8 @@ limit, or unit-weight sign limit is introduced.
 ## Worked example
 
 The synthetic inputs below reproduce the geometry in issue #2105 and the soil
-inputs in issue #2330. They are assumed, based on previous experience, and are
-not site data. The method is the existing effective-area construction in
+inputs in issue #2330. These are synthetic values for this example; not site data
+or calibrated parameters. The method is the existing effective-area construction in
 `src/digitalmodel/geotechnical/mudmat.py`: equilibrium gives eccentricity
 `e = abs(M)/V`; removing two eccentricity strips from the selected dimension
 gives `B_eff = B - 2e` or `L_eff = L - 2e`. These dimension reductions and the
@@ -84,17 +85,24 @@ ValueError: moment_knm must be a finite number
 ```
 
 Configuration-based calls through `MudmatBearingCapacityWorkflow` also reject
-numeric strings representing NaN or infinities before writing a summary. Their
-error names use the calculator's argument names listed above. Invalid values
-must be corrected from an input source; they are not replaced with zero or
-interpreted as missing values.
+numeric strings representing NaN or infinities for the calculator arguments
+listed above before writing a summary. Their error names use the calculator's
+argument names. The workflow additionally requires a finite, nonnegative
+`loads.horizontal_kN` and a finite, positive `design.factor_of_safety`, including
+when supplied as numeric strings. Errors name `horizontal_kN` or
+`factor_of_safety` and leave the configuration unchanged without writing a
+summary. Omitted values retain the defaults of zero horizontal load and a safety
+factor of 2.0. Invalid values must be corrected from an input source; they are
+not replaced with zero or interpreted as missing values.
 
 ## Scope and remaining audit
 
 The runtime guard and its original tests are already present from #2404.
 The expanded tests cover every numeric argument under both drainage conditions
 and eccentricity axes, both Boolean values, optional `None` defaults, and
-configuration strings. The finite eccentricity regressions are retained.
+configuration strings, including horizontal load and safety factor. Normal
+pytest collection runs this document through `doctest.testfile`. The finite
+eccentricity regressions are retained.
 
 Other geotechnical calculators require a separate audit. Reading the current
 source gives the following inventory; it does not establish exhaustive input
@@ -109,6 +117,6 @@ validation or change any of these modules.
 | `liquefaction.py` | Acceleration, magnitude, stress and required safety factor include positivity comparisons. | Audit scalar and layer inputs. |
 
 Finite input alone does not guarantee finite output: extreme finite values may
-overflow. Wider physical validity limits, overflow handling, configuration-only
-design fields, and validation in other calculators remain outside this change.
+overflow. Wider physical validity limits, overflow handling, and validation in
+other calculators remain outside this change.
 Atlas data and calculator source bytes are retained.
