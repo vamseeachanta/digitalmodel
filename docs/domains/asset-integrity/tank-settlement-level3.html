@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Tank settlement Level 3 preparation</title>
+<style>body{font-family:system-ui,sans-serif;max-width:60rem;margin:2rem auto;padding:1rem;line-height:1.5}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}
+code{overflow-wrap:anywhere}.warning{border-left:4px solid #a40;padding:1rem;background:#fff4e5}</style></head>
+<body>
+<h1>Tank settlement Level 3 preparation</h1>
+<p class="warning">The result is a preparation handoff with an ESCALATE verdict.
+No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acceptance is established.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Initial geometry/load preparation and explicit missing evidence;
+unavailable code factors and solver results are kept out of acceptance decisions.</td></tr></table>
+<p>Table 1. Document revisions.</p>
+<h2>Scope and executable plan</h2>
+<p>Scope is tracked by issue 2174.
+The implementation will prepare a validated component inventory, evaluate referenced load expressions,
+and render all four unevaluated failure checks through the existing FFS report and decision interfaces.
+Tests will precede the implementation and compare against independently derived answers.
+The registry will expose a standalone command; no external routing configuration will be modified.</p>
+<p>The first slice will validate courses, bottom, annular ring, top angle, girders and an optional flat roof.
+The second slice will synthesize supplied settlement harmonics and prepare hydrostatic and self-weight loads.
+The third slice will retain missing criteria, render the report and write the durable JSON handoff.
+Later work will generate a connected mesh, run a qualified nonlinear solver and reproduce a published FEA case.</p>
+<h2>Input contract and method</h2>
+<p>Inputs use metres, kilograms, seconds, pascals and newtons. Angles are degrees measured
+counterclockwise from a caller-selected common reference. Radius is the shell mid-surface radius;
+z = 0 is the bottom; displacement is positive upward. Material references identify required evidence;
+they do not supply constitutive properties or qualification. All steel components use the explicitly supplied density.</p>
+<p>Each course supplies height, thickness and material reference. The bottom is an inner disk of radius R − w;
+the annular ring occupies radii R − w to R, so plate weight is counted once.
+No overhang, stepped plate elevation, sloped roof, overlapping plates, foundation contact or weld topology is modelled.
+The top angle and wind girders supply section area for weight inventory only; their stiffness is not calculated.
+A flat roof is optional. Mesh target and junction sizes describe intent, not generated elements.</p>
+<p>Full bottom-edge displacement is u<sub>z</sub>(θ) = m + Σ[a<sub>n</sub>cos(nθ) + b<sub>n</sub>sin(nθ)].
+This is finite Fourier synthesis from
+<a href="https://dlmf.nist.gov/1.8#E1">NIST DLMF (2010), equation 1.8.1</a>,
+with m = a<sub>0</sub>/2. Mean movement and the first harmonic are retained.
+Survey fitting and API 653 Annex B survey reduction are not performed; supplied coefficients require an upstream source reference.
+The angle list gives inspection samples, not a mesh or a convergence criterion; the complete coefficients remain in the handoff.</p>
+<p>For a vented tank with constant product density, gauge pressure is
+p(z) = ρg max(h − z, 0), following
+<a href="https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure">OpenStax University Physics Volume 1 (2016), section 14.1, equation 14.4</a>.
+Gravity, density and fill height are required inputs, with no default gravity or product properties.
+Pressure is reported at course ends and on the bottom; a solver must apply the continuous distribution.</p>
+<p>Self-weight is W = ρ<sub>s</sub>gV. Geometric volume is the sum of 2πRtH for each course,
+π(R − w)²t for the inner disk, π[R² − (R − w)²]t for the annulus,
+2πRA for each circumferential section and πR²t for a flat roof.
+These expressions are direct mid-surface area-times-thickness derivations, not code acceptance equations.
+Wind pressure and its reference, when supplied, are retained as unevaluated intent; no circumferential wind law is invented.</p>
+<h2>Worked synthetic example</h2>
+<p>The committed <a href="../../../examples/workflows/api579-tank-settlement-level3/input.json">input</a>
+is synthetic and does not represent an operating tank. All numerical geometry, loads, mesh sizes and coefficients
+are selected for arithmetic demonstration. They are not standard limits or measured data.</p>
+<pre><code>python -m digitalmodel.asset_integrity.tank_settlement_level3 \
+  examples/workflows/api579-tank-settlement-level3/input.json \
+  --output-dir results</code></pre>
+<p>The explicit output directory should be a retained calculation location outside the source checkout.
+The command writes <code>handoff.json</code> and <code>report.html</code>.
+Exit zero means the handoff was written; the engineering result remains ESCALATE.
+The workflow registry identifier is <code>api579-tank-settlement-level3</code>.
+This standalone invocation does not use the engine or the in-process workflow API.</p>
+<table><tr><th>Quantity</th><th>Independent calculation</th><th>Answer</th></tr>
+<tr><td>Shell volume (m³)</td><td>2π × 10 × (5 × 0.010 + 5 × 0.008)</td><td>1.800π</td></tr>
+<tr><td>Inner bottom volume (m³)</td><td>π × 9² × 0.006</td><td>0.486π</td></tr>
+<tr><td>Annular volume (m³)</td><td>π × (10² − 9²) × 0.010</td><td>0.190π</td></tr>
+<tr><td>Top angle volume (m³)</td><td>2π × 10 × 0.001</td><td>0.020π</td></tr>
+<tr><td>Weight (N)</td><td>2.496π × 7800 × 10</td><td>611630.4</td></tr>
+<tr><td>Bottom pressure (Pa)</td><td>800 × 10 × 8</td><td>64000.0</td></tr>
+<tr><td>Pressure at z = 5 m (Pa)</td><td>800 × 10 × (8 − 5)</td><td>24000.0</td></tr>
+<tr><td>Displacement at θ = 0° (m)</td><td>−0.010 + 0.002</td><td>−0.008</td></tr>
+<tr><td>Displacement at θ = 45° (m)</td><td>−0.010 + 0.002/√2 + 0.003</td><td>approximately −0.005586</td></tr>
+</table><p>Table 2. Independent arithmetic for the synthetic example; unrounded expressions govern the tests.</p>
+<p>A separate published test anchor uses OpenStax section 14.1, Example 14.1:
+1000 kg/m³ × 9.80 m/s² × 40 m = 392000 Pa. This qualifies hydrostatic arithmetic only.
+It does not qualify tank deformation, material response or settlement FEA.</p>
+<h2>Failure checks and evidence gaps</h2>
+<table><tr><th>Check</th><th>2007 requirement pointer</th><th>Status and missing basis</th></tr>
+<tr><td>Strain limit</td><td>B1.3</td><td>NOT_EVALUATED: local plastic strain and triaxiality histories,
+qualified material strain limit and applicable acceptance rule.</td></tr>
+<tr><td>Buckling</td><td>B1.4.1</td><td>NOT_EVALUATED: Type 1/2 eigen results with capacity reduction factors,
+or Type 3 collapse with explicit imperfections, plus convergence and acceptance basis.</td></tr>
+<tr><td>Plastic collapse</td><td>B1.2.4 and Table B1.4</td><td>NOT_EVALUATED: converged load path and sourced factors.
+Secondary for displacement-controlled settlement; passing collapse cannot replace the primary checks.</td></tr>
+<tr><td>Shell-to-bottom weld strain</td><td>B1.2.4.3 b</td><td>NOT_EVALUATED: weld geometry,
+strain extraction, mesh convergence and service criterion.</td></tr></table>
+<p>Table 3. API 579-1/ASME FFS-1 (2007) pointers supplied by the issue requirements.</p>
+<p>For the 2016/2021 editions, Annex 2D is the program's stated counterpart to Annex B1.
+Exact current subclauses are <strong>not verified</strong>; no guessed crosswalk or licensed numerical factor is supplied.
+Licensed clause text was not accessed. No acceptance constants are emitted, so no standards-derived numeric sidecar is implied.
+The public sources above were opened successfully on 2026-10-20. They support only the stated arithmetic.</p>
+<h2>Verification and review limits</h2>
+<p>The tests exercise independent harmonic, pressure and weight anchors; invalid scalars and structures;
+optional roof, girder and wind intent; JSON serialization; missing-check escalation;
+and CLI output readback plus registry linkage. The input digest binds the handoff to its supplied configuration,
+not to source authenticity, material qualification or solver results.</p>
+<p>Local adversarial inspection identifies three required boundaries: sampled harmonics cannot be described as a solved mesh;
+reported collapse cannot govern acceptance for displacement-controlled settlement; and missing code evidence cannot be filled from memory.
+All three boundaries are retained in the handoff and tests. Separate-provider review remains required before merge.</p>
+<h2>Later slices and way forward</h2>
+<p>Connect the material-library dependency and nonlinear-shell extension after their interfaces are qualified.
+Generate and inspect the Gmsh shell/bottom junction; establish supports, contact and load sequence;
+run strain, buckling, collapse and weld checks against sourced current criteria;
+then reproduce an accessible published tank-settlement case within a declared tolerance.
+No FEA case has been reproduced by this change. External assistant routing is outside this repository change.</p>
+</body></html>
