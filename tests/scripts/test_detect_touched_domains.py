@@ -48,6 +48,29 @@ def load_detector_module():
     return module
 
 
+def test_unmatched_test_path_still_runs_assignment_guard() -> None:
+    """An empty domain matrix must retain the execution-assignment guard."""
+    root = SCRIPT.parents[2]
+    detector = load_detector_module()
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains(["tests/unassigned/test_new.py"], domains)
+    assert detector.matrix_for(selected) == {"include": []}
+
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text()
+    )
+    harness = workflow["jobs"]["ci-harness-tests"]
+    assert harness["needs"] == "detect-domains"
+    assert "if" not in harness
+    assert not harness.get("continue-on-error", False)
+    step = next(step for step in harness["steps"] if step.get("name") == "Run harness tests")
+    assert "if" not in step
+    assert not step.get("continue-on-error", False)
+    args = shlex.split(step["run"].replace("\\\n", ""))
+    pytest_args = args[args.index("pytest") + 1 :]
+    assert "tests/scripts/test_gate_root_coverage.py" in pytest_args
+
+
 @pytest.mark.parametrize(("path", "expected"), [
     ("src/digitalmodel/orcaflex/installation_analysis.py",
      {"orcaflex", "marine-ops-other", "workflows"}),
