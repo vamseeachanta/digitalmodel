@@ -12,6 +12,7 @@ See OpenStax University Physics vol. 1 (2016), §9.6 (mass first moment),
 """
 
 import copy
+import hashlib
 import json
 import subprocess
 import sys
@@ -343,3 +344,74 @@ def test_nonzero_floater_datum_rejected(inputs, tmp_path):
     inputs["template"]["generic"]["vessels"][0]["initial_position"] = [0, 0, -1]
     with pytest.raises(ValueError, match="datum"):
         prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+
+
+@pytest.mark.parametrize("units_system", ["User", "US"])
+def test_non_si_template_rejected_before_writing(inputs, tmp_path, units_system):
+    inputs["template"]["generic"]["general_properties"] = {
+        "UnitsSystem": units_system,
+        "MassUnits": "kg",
+        "LengthUnits": "ft",
+    }
+    with pytest.raises(ValueError, match="SI units"):
+        prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("wave_type", ["jonswap", "pierson_moskowitz"])
+@pytest.mark.parametrize("raw_periods", [{}, {"WaveTz": 5}, {"WaveTp": 6, "WaveTz": 5}])
+def test_spectral_peak_period_survives_generation(
+    inputs, tmp_path, wave_type, raw_periods
+):
+    env = inputs["template"]["environment"]
+    env["waves"]["type"] = wave_type
+    env["raw_properties"] = {"WaveTrains": [raw_periods]}
+    inputs["load_cases"].append(dict(name="parked", hs_m=3, tp_s=9, steady_load_kN=0))
+    prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    for case in inputs["load_cases"]:
+        output = tmp_path / case["name"] / "includes" / "03_environment.yml"
+        train = yaml.safe_load(output.read_text())["Environment"]["WaveTrains"][0]
+        assert train["WaveTp"] == case["tp_s"]
+        assert train["WaveHs"] == case["hs_m"]
+        assert "WaveTz" not in train
+        assert "WavePeriod" not in train
+
+
+@pytest.mark.parametrize("wave_type", ["user_defined", "Torsethaugen", "unknown"])
+def test_unsupported_wave_period_convention_rejected(inputs, tmp_path, wave_type):
+    inputs["template"]["environment"]["waves"]["type"] = wave_type
+    with pytest.raises(ValueError, match="wave type"):
+        prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("name", ["diffraction", "Diffraction", "DIFFRACTION"])
+def test_reserved_case_name_rejected_before_writing(inputs, tmp_path, name):
+    inputs["load_cases"][0]["name"] = name
+    with pytest.raises(ValueError, match="reserved"):
+        prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+def test_written_specifications_match_bundle_and_manifest(inputs, tmp_path):
+    bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert (
+        yaml.safe_load((tmp_path / "diffraction.yml").read_text()) == bundle.diffraction
+    )
+    for name, spec in bundle.coupled_specs.items():
+        assert yaml.safe_load((tmp_path / f"{name}.yml").read_text()) == spec
+    for name, digest in bundle.manifest["files"].items():
+        assert hashlib.sha256((tmp_path / name).read_bytes()).hexdigest() == digest
+
+
+@pytest.mark.parametrize(
+    "key,value", [("MassUnits", "kg"), ("LengthUnits", "ft"), ("ForceUnits", "lbf")]
+)
+def test_si_template_with_unit_override_rejected(inputs, tmp_path, key, value):
+    inputs["template"]["generic"]["general_properties"] = {
+        "UnitsSystem": "SI",
+        key: value,
+    }
+    with pytest.raises(ValueError, match="SI units"):
+        prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert not list(tmp_path.iterdir())

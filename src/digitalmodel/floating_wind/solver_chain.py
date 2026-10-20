@@ -140,6 +140,8 @@ class ChainInput(BaseModel):
             not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]*", n) for n in names
         ):
             raise ValueError("load-case names must be unique portable identifiers")
+        if any(n.casefold() == "diffraction" for n in names):
+            raise ValueError("load-case name is reserved for workflow output")
         # Nested legacy models permit non-finite floats; reject them here too.
         _finite_tree(self.model_dump(mode="python"))
         if self.criteria.mooring_stiffness_kN_per_m is not None:
@@ -221,6 +223,14 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
     if template.generic is None:
         raise ValueError("a generic coupled template is required")
     generic = template.generic
+    unit_properties = generic.general_properties
+    if unit_properties.get("UnitsSystem", "SI") != "SI" or any(
+        key in unit_properties
+        for key in ("LengthUnits", "MassUnits", "ForceUnits", "g")
+    ):
+        raise ValueError(
+            "coupled template must use SI units (m, t, kN) without unit overrides"
+        )
     vessels = [v for v in generic.vessels if v.name == inputs.floater_name]
     turbines = [t for t in generic.turbines if t.name == inputs.turbine_name]
     if len(vessels) != 1 or len(turbines) != 1:
@@ -301,8 +311,43 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
             raise ValueError(
                 "single wave train required for a shared screening sea state"
             )
-        spec.environment.waves.trains[0].height = lc.hs_m
-        spec.environment.waves.trains[0].period = lc.tp_s
+        train = spec.environment.waves.trains[0]
+        spectral = train.type in {
+            "jonswap",
+            "JONSWAP",
+            "pierson_moskowitz",
+            "Pierson-Moskowitz",
+        }
+        if not spectral and train.type not in {
+            "airy",
+            "Airy",
+            "dean_stream",
+            "Dean stream",
+            "stokes_5th",
+            "Stokes' 5th",
+            "cnoidal",
+            "Cnoidal",
+        }:
+            raise ValueError("unsupported wave type for shared peak-period mapping")
+        train.height = lc.hs_m
+        train.period = lc.tp_s
+        # The repository builder selects Tp only from a Tp-only raw train.
+        # Remove inherited period keys so the shared sea state is authoritative.
+        raw = spec.environment.raw_properties
+        raw_trains = raw.get("WaveTrains", [])
+        raw_train = (
+            dict(raw_trains[0])
+            if isinstance(raw_trains, list)
+            and raw_trains
+            and isinstance(raw_trains[0], dict)
+            else {}
+        )
+        for key in ("WaveTp", "WaveTz", "WavePeriod"):
+            raw_train.pop(key, None)
+        if spectral:
+            raw_train["WaveTp"] = lc.tp_s
+        if spectral or raw_trains:
+            raw["WaveTrains"] = [raw_train]
         coupled[lc.name] = spec.model_dump(mode="json", exclude_none=True)
 
     out.mkdir(parents=True, exist_ok=True)
