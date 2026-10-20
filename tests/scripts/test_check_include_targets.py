@@ -280,3 +280,47 @@ def test_baseline_can_only_shrink():
     entries = load_checker().read_baseline(BASELINE)
     # This ceiling may be lowered, never raised without a visible test edit.
     assert len(entries) <= 198
+
+
+@pytest.mark.parametrize("key", ["includefile", "BaseFile"])
+def test_tracked_target_missing_from_worktree_fails(repo, key):
+    """A tracked name alone cannot supply the bytes needed by an include chain.
+
+    Independent fixture: the index contains models/case.dat, but its working
+    file is renamed away. Thus run.yml has one unresolved target, case.dat.
+    Git ls-files documents that cached paths remain listed after local removal:
+    https://git-scm.com/docs/git-ls-files (cached and deleted options).
+    """
+    write(repo, "models/run.yml", f"{key}: case.dat\n")
+    target = write(repo, "models/case.dat", "General: {}\n")
+    git(repo, "add", "models/run.yml", "models/case.dat")
+    target.rename(repo / "retained-case.dat")
+    result = run_check(repo)
+    assert result.returncode == 1
+    assert "models/run.yml" in result.stdout
+    assert "case.dat" in result.stdout
+    assert "missing from working tree" in result.stdout
+
+
+def test_missing_tracked_target_can_be_baselined_and_repaired(repo):
+    """One missing target is baselined; restoring its bytes makes that row stale.
+
+    Expected sets are calculated directly: {('models/run.yml', 'case.dat')}
+    before restoration, and the empty set after restoration. The baseline
+    must equal the broken-reference set, rather than hide a repaired defect.
+    """
+    write(repo, "models/run.yml", "BaseFile: case.dat\n")
+    target = write(repo, "models/case.dat", "General: {}\n")
+    git(repo, "add", "models/run.yml", "models/case.dat")
+    retained = repo / "retained-case.dat"
+    target.rename(retained)
+    baseline = repo / "baseline.txt"
+    generated = run_check(repo, baseline, "--write-baseline")
+    assert generated.returncode == 0, generated.stdout + generated.stderr
+    assert load_checker().read_baseline(baseline) == {("models/run.yml", "case.dat")}
+    assert run_check(repo, baseline).returncode == 0
+    retained.rename(target)
+    git(repo, "add", "models/case.dat")
+    result = run_check(repo, baseline)
+    assert result.returncode == 1
+    assert "stale baseline entry" in result.stdout
