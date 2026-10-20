@@ -56,10 +56,13 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Mapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Union
 
 from digitalmodel.asset_integrity.applicability import Applicability
 from digitalmodel.units import Q_, ureg
+
+if TYPE_CHECKING:
+    from .part9_level1 import Part9Level1Result
 
 Number = Union[int, float]
 QuantityLike = Union[Number, "ureg.Quantity"]
@@ -334,6 +337,29 @@ class Decision:
             "derated_units": derated_units,
             "applicability": self.applicability.to_dict(),
         }
+
+
+def decide_part9_level1(result: Part9Level1Result) -> dict:
+    """Escalate an unevaluated crack screen without a metal-loss rating.
+
+    API 579-1/ASME FFS-1 (2021), 9.4.2 and 9.4.3 identify the assessment
+    levels. This adapter enforces a software evidence gate; no engineering
+    acceptance criterion is available in the current readiness-only screen.
+    """
+    payload = result.to_dict()
+    return {
+        "verdict": Verdict.ESCALATE.value,
+        "assessment_status": payload["status"],
+        "governing_criterion": (
+            "Part 9 Level 1 NOT_EVALUATED: qualified reference-flaw curves "
+            "and their applicability and validation evidence are unavailable. "
+            "No Level 1 acceptance or reduced rating is established; complete "
+            "the missing data and obtain a qualified Part 9 Level 2 assessment."
+        ),
+        "missing_inputs": payload["missing_inputs"],
+        "missing_evidence": payload["missing_evidence"],
+        "next_step": "PART9_LEVEL2",
+    }
 
 
 def decide(

@@ -38,7 +38,12 @@ from localised loss patterns.  Engineers may override via ``force_type``
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pandas as pd
+
+if TYPE_CHECKING:
+    from .part9_level1 import Part9Level1Case
 
 # Fraction of nominal WT below which a cell is considered "degraded"
 _DEGRADED_FRACTION_OF_NOMINAL = 0.10  # >10 % loss counts as degraded cell
@@ -57,6 +62,25 @@ _VALID_FORCE_TYPES = {"GML", "LML", "PITTING"}
 
 class FFSRouter:
     """Classify a wall-thickness grid as GML, LML or PITTING per API 579."""
+
+    @staticmethod
+    def route_crack_like_flaw(case: Part9Level1Case) -> dict:
+        """Route an explicitly identified crack to Part 9 Level 1 readiness.
+
+        A thickness grid cannot establish the absence of a crack. The caller
+        supplies a crack case explicitly, separate from morphology inference.
+        See API 579-1/ASME FFS-1 (2021), 9.3 and 9.4.2 (section locators).
+        """
+        from .ffs_decision import decide_part9_level1
+        from .part9_level1 import screen_part9_level1
+
+        result = screen_part9_level1(case)
+        return {
+            "assessment_type": "CRACK_LIKE",
+            "level_reached": 1,
+            "level1": result.to_dict(),
+            "decision": decide_part9_level1(result),
+        }
 
     @staticmethod
     def classify(
