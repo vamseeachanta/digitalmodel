@@ -1349,3 +1349,15 @@ workflows:
     result:
       kind: in_memory
       key: on_bottom_stability_e305_result
+
+  - id: ffs-campaign-demo
+    basename: ffs_campaign
+    title: FFS campaign sufficiency, qualitative risk, repair and interval screening
+    input: examples/workflows/ffs-campaign-demo/input.yml
+    outputs:
+      - examples/workflows/ffs-campaign-demo/results/input.yml
+    test: tests/asset_integrity/test_ffs_campaign.py::test_registered_workflow_offline
+    runtime: offline
+    result:
+      kind: in_memory
+      key: ffs_campaign_result
