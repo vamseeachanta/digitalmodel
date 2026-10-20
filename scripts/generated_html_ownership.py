@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/benchmark/l01_investigation.py": (
+        "writes JSON requests/comparisons, no HTML"
+    ),
     "scripts/capabilities/build_onepagers.py": (
         "writes JSON capability cards, not docs/api HTML"
     ),

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<title>L01 offline investigation and solver request</title>
+<body>
+<h1>L01 offline investigation and solver request</h1>
+<p>Status: NOT_EVALUATED. No native solve or native readback accompanies this
+request. The timeout cause, physical model equivalence, and correlation remain
+unestablished. This document requests reviewed execution by the solver manager;
+it is not execution authorization or a qualified benchmark.</p>
+
+<h2>Revision history</h2>
+<table border="1">
+<tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Internal-use rights, cited physical reconciliation,
+conditional native preparation and a capped timing ladder are recorded so that
+unresolved inputs cannot be issued.</td></tr>
+</table>
+<p>Table: Revision history.</p>
+
+<h2>Evidence and scope</h2>
+<p>The issue's original matrices-agree hypothesis is superseded by its input
+investigation. The historical comparison used different physical models,
+intersected sparse frequency grids, and placeholder matrices. A corrected
+comparison cannot qualify those historical outputs. Source: repository issue
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/714">#714</a>,
+maintainer comments on input mismatch, sampling and native-output conventions.</p>
+<p>The existing <code>orcawave_001_ship_raos_rev2_matched.yml</code> is an
+investigation candidate, not proof of matching. Its centre of gravity still
+requires reconciliation with AQWA. It also requests a full QTF calculation;
+frequency times heading count does not describe the entire workload.
+Native mapping and readback remain separate checks. No native input is issued
+with this page; the conditional offline command below refuses the current basis.</p>
+<p>The matched API runner now refuses calculation failure before saving.
+Successful calculation and saving still require separate native completion,
+completeness, model-equivalence and engineering checks. The fallback that
+assumed automatic calculation after missing methods is removed.</p>
+
+<h2>Required inputs before scheduling</h2>
+<ul>
+<li>Reconcile geometry, wetted mesh, symmetry, mass, full inertia, centre of
+gravity, response and coefficient reference point, depth, density, gravity,
+restraints and requested solve type. Retain source citations, units, revisions
+and SHA-256 digests. The internal-use rights record below governs this request.
+A matching declaration is not evidence of physical equivalence.</li>
+<li>Pin axes, DOF order, translational and rotational units, wave amplitude
+normalization, heading origin/direction, phase/time convention and response
+reference point. Normalize by documented transforms before export; do not use
+empirical sign changes to improve agreement. Pair headings by value.</li>
+<li>Choose a shared ascending angular-frequency grid from the expected natural
+periods and damping. Supply a cited maximum relative frequency gap appropriate
+to the least-damped target mode. The existing coarse grids are not a resolved
+resonance comparison. The script applies the supplied gap criterion across the
+whole grid, without interpolation or extrapolation.</li>
+<li>Supply the reviewed thread counts within the shared stage-1 allocation.
+Do not select all available cores implicitly. Supply a separately justified
+AQG-style band label, positive reference scales and positive numerical limit
+before inspecting the results. No universal acceptance band is asserted.</li>
+</ul>
+
+<h2>Offline request generator</h2>
+<pre>python scripts/benchmark/l01_investigation.py prepare config.json request.json</pre>
+<p>Input and output arguments refer to authorized working files; the
+output must not already exist. The generator emits a reviewable JSON request,
+not solver-native input. No command starts a solver.</p>
+<table border="1">
+<tr><th>Configuration field</th><th>Required meaning</th></tr>
+<tr><td>frequencies_rad_s</td><td>Strictly increasing positive finite common grid</td></tr>
+<tr><td>headings_deg</td><td>Unique canonical headings in [0, 360), in the pinned convention</td></tr>
+<tr><td>threads; budget_minutes; resource_citation</td><td>Unique positive integer counts, positive shared stage-1 cap no greater than 60 licensed minutes, allocation evidence</td></tr>
+<tr><td>max_relative_gap; sampling_citation</td><td>Positive gap criterion and physical derivation including resonance coverage</td></tr>
+<tr><td>basis</td><td>Nonempty cited declarations for every field below, including units and native mapping evidence</td></tr>
+<tr><td>criteria</td><td>Predeclared band, limits, scales and phase eligibility described below</td></tr>
+</table>
+<p>Table: Required request configuration; no engineering defaults are supplied.</p>
+<pre>basis keys:
+geometry, mesh, mass, inertia, centre_of_gravity, reference_point,
+water_depth, density, gravity, units, axes, heading_convention,
+phase_convention, normalization, dof_order, solve_type, source_rights, restraints
+
+criteria keys:
+citation, aqg_band, max_normalized_error,
+rao_scales, phase_amplitude_floors, added_mass_scales, damping_scales</pre>
+<p>The basis fields are exact strings containing declarations and evidence
+references. They are deliberately not interpreted as native model fields.
+RAO scales and phase floors contain one positive value per DOF; matrix scales
+contain one positive value for every matrix cell. The scale units must match
+the corresponding normalized export, including mixed rotational/translational
+matrix units. The criteria citation must justify each scale and limit. A
+nonempty citation passes syntax checking only; its validity needs review.</p>
+<p>The ladder uses 4 frequencies by 4 headings, 10 by 9, and 20 by 9, giving
+16, 90 and 180 cases, for each supplied thread count and each
+<code>DivideNonPlanarPanels</code> state. Subsets select deterministic indices
+including the endpoints from the supplied common grid; values are not invented.
+Subsets are not necessarily nested. These are workload diagnostics, never
+scientific comparison grids. Source: issue 714 diagnostic scope and
+<a href="../examples/L01_default_vessel/API_EXECUTION_SUMMARY.md">API execution summary</a>.
+The complete supplied grid is separately retained for both solvers.</p>
+
+<h2>Source rights</h2>
+<p>Source rights: internal use only. The L01 source model files are held in the project repositories; runs use the project licences; results are kept in the private data store; nothing derived from the source model is published in a public repository or page until its provenance is recorded.</p>
+<p>The same record is retained in <a href="native_request.json">native_request.json</a>.
+That file pins both source decks by SHA-256. Issued decks and solver outputs
+belong in the private data store; they are not public deliverables.</p>
+
+<h2>Physical basis reconciliation</h2>
+<p>Only the checked-in matched YAML and AQWA deck are used below. The AQWA
+deck is also the mesh selected by the matched YAML. Values are retained as read;
+no unrecorded coordinate transform, tolerance or restraint default is applied.</p>
+<table border="1">
+<tr><th>Quantity</th><th>Value with unit</th><th>File and line</th><th>Agrees across the OrcaWave and AQWA inputs (yes/no)</th><th>Note</th></tr>
+<tr><td>Geometry</td><td>OrcaWave mesh translation [0, 0, 0.5] m;
+AQWA node 10 z = 0 m and waterline z = 0 m</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:82,85-90;
+aqwa_001_ship_raos_rev2.dat:30,6143</td><td>no — NOT_EVALUATED</td>
+<td>The mesh file is shared, but a common geometry/frame transform is not established.
+The translation and native mesh coordinates are not interchangeable.</td></tr>
+<tr><td>Mass</td><td>OrcaWave 44082.20 t; AQWA 45184268 kg</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:11,108;
+aqwa_001_ship_raos_rev2.dat:13,12138</td><td>no — DISAGREES</td>
+<td>The AQWA mass card governs this record, rather than the displacement quoted
+in a YAML comment. Unit conversion does not reconcile the values.</td></tr>
+<tr><td>Centre of gravity</td><td>OrcaWave [108.88, 0.002, 8.0] m;
+AQWA [108.882, 0.0016289, 8.5] m</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:106;
+aqwa_001_ship_raos_rev2.dat:6134</td><td>no — DISAGREES</td>
+<td>These are the input coordinates. A common-frame transformation is not evidenced.</td></tr>
+<tr><td>Reference point</td><td>NOT_EVALUATED (m): OrcaWave free-surface/body-origin declarations;
+AQWA response/coefficient reference point not specified</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:92,124,132;
+aqwa_001_ship_raos_rev2.dat:12191-12193</td><td>no — NOT_EVALUATED</td>
+<td>The empty AQWA DRC1 block does not establish a common response/coefficient origin.</td></tr>
+<tr><td>Water depth</td><td>OrcaWave 500 m; AQWA 500 m</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:36;
+aqwa_001_ship_raos_rev2.dat:12150</td><td>yes — AGREES</td>
+<td>Both explicit depth fields agree.</td></tr>
+<tr><td>Restraints</td><td>NOT_EVALUATED (dimensionless): OrcaWave free connection,
+multibody constraints disabled and all fixed DOFs disabled; AQWA not established</td>
+<td>orcawave_001_ship_raos_rev2_matched.yml:78,133,135-140;
+aqwa_001_ship_raos_rev2.dat:12191-12193</td><td>no — NOT_EVALUATED</td>
+<td>Absence of an AQWA restraint card is not evidence of equivalent restraints.
+External damping and inertia also require reconciliation for a scientific comparison.</td></tr>
+</table>
+<p>Table: Reconciliation against the explicit source inputs. DISAGREES and
+NOT_EVALUATED both prevent native issuance. Corrected, cited inputs are required;
+the source decks are not changed by this request.</p>
+
+<h2>Conditional offline native preparation</h2>
+<pre>python scripts/benchmark/l01_investigation.py issue docs/domains/orcawave/L01_aqwa_benchmark/native_request.json "$PRIVATE_RUN_DIR/stage1" --source-root .</pre>
+<p>The command checks the complete rights record, the positive licensed-minute
+cap no greater than 60, all reconciliation rows, source digests and file:line
+citations before creating any output directory. DISAGREES, NOT_EVALUATED,
+missing evidence or unequal normalized values refuse issuance. With all rows
+AGREES and the other controls satisfied, it writes stage1.yml, stage1.dat and a
+read-back manifest exclusively to the supplied private working directory.
+Existing output directories are preserved. No solver library is imported or queried.</p>
+<p>The current record is refused. A changed status alone cannot reconcile unequal
+values. The reconciliation values and citations are supplied evidence, rather
+than independently authenticated physical equivalence. The solver manager shall
+review them against the pinned decks. Native preparation selects the declared
+periods/headings, converts period to AQWA HRTZ and updates the mesh reference.
+Other model fields are preserved. AQWA card precision is retained in the issued
+deck; the manifest records the native-to-request mapping. Native import/readback,
+mesh QA and the complete scientific basis remain required before execution.</p>
+
+<h2>Licensed-minute ladder</h2>
+<table border="1">
+<tr><th>Stage</th><th>Cases</th><th>Allocation and stop rule</th></tr>
+<tr><td>1</td><td>16 paired grid points, each in AQWA and OrcaWave</td>
+<td>60 licensed minutes total across both solvers, all thread/panel variants,
+loading, calculation, saving and failed attempts. Stop at 60 minutes;
+the solver manager stops both solvers when cumulative licensed time reaches the cap.</td></tr>
+<tr><td>2</td><td>90</td><td>allocation = measured stage-1 minutes per case x 90 x 1.25, set by the solver manager from the measured time</td></tr>
+<tr><td>3</td><td>180</td><td>allocation = measured stage-1 minutes per case x 180 x 1.25, set by the solver manager from the measured time</td></tr>
+</table>
+<p>Table: Timing allocation. The later stages are not allocated or issued until
+stage 1 is measured. Minutes per case are measured separately for each solver
+and fixed configuration; later allocations are summed across requested solvers
+and variants. An incomplete or capped stage does not establish a full-stage
+duration. The offline command records the stop rule; execution supervision shall
+enforce it. There is no running solver or automatic termination claim here.</p>
+<p>Stage-1 identifiers below describe the same sampling points in each solver.
+The period and heading values come from
+<code>orcawave_001_ship_raos_rev2_matched.yml</code>, at the cited lines. Each
+AQWA case expects <code>stage1.LIS</code> and <code>stage1.AH1</code>; each OrcaWave
+case expects <code>stage1.owr</code>. These are shared native files containing all
+stage-1 samples, not separate fabricated files per sample. Both solvers also
+retain execution logs, input digests and native readback in the private data store.</p>
+<table border="1">
+<tr><th>Case ID</th><th>Solver</th><th>Period (s), file:line</th><th>Heading (deg), file:line</th><th>Expected outputs</th></tr>
+<tr><td>L01-S1-F01-H01</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F01-H02</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F01-H03</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F01-H04</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F02-H01</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F02-H02</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F02-H03</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F02-H04</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F03-H01</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F03-H02</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F03-H03</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F03-H04</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F04-H01</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F04-H02</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F04-H03</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+<tr><td>L01-S1-F04-H04</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
+</table>
+<p>Table: Stage-1 case IDs, solvers and expected native outputs. The shared
+60-minute stop rule applies to every listed case.</p>
+
+<h2>Solver run request</h2>
+<ol>
+<li>Review the physical basis and source rights. Use the existing matched YAML
+and AQWA source model only after reconciliation. Prepare native inputs for the
+request's exact grids and panel-division variants. Convert angular frequencies
+to the native frequency/period convention explicitly; the historical YAML uses
+periods. Verify generated values by native readback. Do not directly apply
+request JSON fields as native API options.</li>
+<li>Run the repository GeometryQualityChecker with retained mesh reports.
+Inspect non-planar panels, winding, mesh dimensions, panel aspect ratios,
+waterline/interior surfaces and the shortest-wave criterion in both solvers.
+Resolve fatal AQWA mesh diagnostics before scheduling. Record any topology
+change produced by panel division. Keep mesh, physics and solve type fixed
+across the case-count ladder; investigate QTF complexity as a separately
+labelled sensitivity if required.</li>
+<li>Using a licensed OrcaWave installation, execute the ordered ladder serially
+with explicitly pinned threads and reviewed time/resource budgets. Record
+solver/API versions, input digests, stage identity, actual native frequencies
+and headings, panel counts, time spent loading/calculating/saving, memory,
+native progress, warnings, exceptions and termination reason. Do not call a
+silent interval a solver hang without progress/resource evidence. Do not infer
+a threshold between untested case counts; add bracketed stages if needed.</li>
+<li>Run AQWA and OrcaWave on the full common resolved grid using the reconciled
+basis. Retain native inputs, logs, native outputs and extraction scripts with
+digests in an authorized result store. AQWA needs complete native coefficient
+output, including AH1 where applicable; LIS alone does not provide every
+matrix term, excitation or hydrostatics. Verify native completion independently
+of process exit status. A fatal log or failed validator prevents completion.</li>
+<li>Export displacement RAOs as complex values at every frequency and heading;
+export real full added-mass and damping matrices at every frequency. Retain
+excitation, hydrostatics and native model readback for independent checking.
+Use the common response/coefficient reference point and explicit units.
+Classify unavailable terms as unavailable, never identity or zero placeholders.</li>
+<li>Run the offline comparison below. Independently check governing samples
+against the native outputs and the engineering criteria. Report attempted,
+native-complete and qualified runs separately. Complete this issue only after
+the timeout investigation and full-grid matched comparison are evidenced.</li>
+</ol>
+<p>Measured licensed minutes: NOT_EVALUATED. Stage 1 has the shared hard cap
+specified above. The solver manager will set the later allocations from measured
+stage-1 time; historical small-model timings are not a matched-model estimate.</p>
+
+<h2>Normalized export and QA</h2>
+<pre>python scripts/benchmark/l01_investigation.py compare config.json comparison.json --aqwa aqwa.json --orcawave orcawave.json</pre>
+<p>Each JSON export requires <code>solver</code> exactly AQWA or OrcaWave,
+<code>source</code> exactly solver, a native artifact's <code>native_sha256</code>,
+<code>native_readback: true</code>, the exact declared <code>basis</code>, and
+the following complete arrays. Readback and provenance declarations are supplied
+attestations, not authenticated by the offline script.</p>
+<pre>raos: [{frequency_rad_s, heading_deg, values: [[real, imaginary], ...]}]
+matrices: [{frequency_rad_s, added_mass: [[...], ...], damping: [[...], ...]}]</pre>
+<p>RAO rows contain six complex pairs. Each matrix is six by six, including
+couplings. Source for dimensions: API execution summary, Hydrodynamic Data.
+Duplicate keys, incomplete grids, nonfinite values, placeholder provenance,
+incompatible declarations and malformed dimensions are refused. Reordered
+complete arrays are paired by frequency and heading value.</p>
+<p>Exports must carry the request grid's exact <code>frequency_rad_s</code> and
+<code>heading_deg</code> values. Coverage uses exact numeric keys; converting a
+native period back to angular frequency may differ in the last bit and will
+be refused. The normalizer must record the native-to-request mapping, including
+native values, units, conversion and the corresponding exact request values,
+with evidence that each native sample represents its requested grid point.
+Do not independently round or infer missing grid points.</p>
+<p>The requested AQG-style band is a caller-specified pointwise envelope:
+for each response or coefficient, the absolute difference divided by its
+predeclared positive engineering scale must not exceed
+<code>max_normalized_error</code>. The scale and limit together define the
+allowable absolute difference in that component's units. This is an explicit
+request-specific acceptance definition, not a published AQG classification or
+the repository comparator's RMS policy. Every failing cell is reported; an
+average cannot hide a governing failure. Complex RAO differences include phase.</p>
+<p>Phase difference is circular and diagnostic-only, consistent with
+<code>src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py</code>
+phase statistics and ComparisonPolicy. Samples at or below either declared
+amplitude floor are counted as NOT_EVALUATED for phase. The numerical band check
+can say WITHIN_BAND or OUTSIDE_BAND, but engineering qualification always remains
+NOT_EVALUATED until independent evidence review. Identical or fabricated data
+cannot be authenticated by agreement alone. The output records canonical JSON
+digests of the configuration and exports, not raw-file byte digests.</p>
+<p>Exit status is nonzero for refused inputs or an OUTSIDE_BAND comparison.
+Existing output files are preserved. A successful prepare or compare exit
+does not establish native readiness, solver completion or engineering acceptance.</p>
+
+<h2>Sources and outstanding evidence</h2>
+<ul>
+<li>Issue 714 and its maintainer comments: corrected mismatch diagnosis, sparse-grid
+limitation, phase/reference-point concerns and native-log failure handling.</li>
+<li>API_EXECUTION_SUMMARY.md: observed resource/time history and warnings.
+Its statement that low memory rules out resource problems is not adopted as
+a new conclusion.</li>
+<li>orcawave_001_ship_raos_rev2_matched.yml: existing calculation options and
+candidate physical basis; no claim of verified equivalence.</li>
+<li>src/digitalmodel/hydrodynamics/diffraction/benchmark_abscissa.py:
+relative-gap sampling contract; a new roll-specific bound requires evidence.</li>
+<li>docs/plans/issue-714-aqwa-offline-scope-addendum.html: source-rights,
+native-mapping and retention boundaries.</li>
+</ul>
+<p>Outstanding: physical reconciliation, native input issuance,
+reviewed mesh quality, installed native mappings, measured later-stage allocations,
+engineer-approved scales and band, native runs, complete exports, hand-checked
+results and cross-provider review before publication. No supplied synthetic
+test fixture is an engineering input or a benchmark result.</p>
+</body></html>
