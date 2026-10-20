@@ -7,7 +7,13 @@
 <h1>Unit-box orientation: solver run request</h1>
 <p>Status: native execution NOT_EVALUATED in this change. The existing repaired
 mesh is preserved. This request will be executed only by the solver manager after
-review. It does not authorize a run from the development lane.</p>
+review. It does not authorize a run from a development environment.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-19</td><td>Initial request for native hydrostatic readback of the repaired box.</td></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Defined time budgets, evidence reuse conditions and fixed-spec screening to prevent unlike-input acceptance.</td></tr>
+</table>
 <h2>Purpose and retained inputs</h2>
 <p>The run will check positive heave restoring stiffness, displaced volume,
 waterplane area and vertical centre of buoyancy for the repaired five-panel box.
@@ -34,24 +40,32 @@ diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.ym
 diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -o output/aqwa/</pre>
 <p>Command source: repository
 <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/cli.py">cli.py,
-run_orcawave and run_aqwa_cmd</a>, and the adjacent <a href="README.md">README</a>.
-These commands have not been executed in this lane: the diffraction package
+run_orcawave_cmd and run_aqwa_cmd</a>, and the adjacent <a href="README.md">README</a>.
+These commands have not been executed for this change: the diffraction package
 initialization attempts a licensed API import.</p>
 <p>Expected retained outputs are the OrcaWave native results and hydrodynamic data
 export described in the README, and the AQWA native listing plus generated deck.
 The manager will preserve native hydrostatic terms and their units, and extract
 heave added mass and damping on the spec frequency grid for comparison context.
 Successful process exit alone will not establish acceptance.</p>
-<p>Licensed duration estimate: NOT_EVALUATED. The README describes the tiny
-OrcaWave case as completing in seconds, but no measured AQWA duration is available
-in this change. The manager will supply a licensed-minute budget for each program
-before launch; this request does not invent a resource estimate.</p>
+<p>Licensed duration estimates include native readback: OrcaWave 1 minute with a
+3-minute cap; AQWA 2 minutes with a 5-minute cap. These are assumed, based on
+previous experience; the README supplies a seconds-scale OrcaWave solve basis,
+but no measured AQWA timing is available. At the cap the manager will stop the
+run, retain diagnostics and request a revised budget before retrying.</p>
+<p>The linked issue records an OrcaWave 11.6c solve with positive heave stiffness.
+Retention of the native output is not established by the inspected issue record;
+no archive manifest or input/output digest binding is supplied there. If the
+manager locates retained native evidence matching the repaired mesh, spec and
+solver settings, the OrcaWave allocation will cover readback only and AQWA alone
+will be solved. Otherwise both bounded runs will be required.</p>
 <h2>Criteria and sources</h2>
 <p>The exact geometry is a unit cube wetted below z = 0: volume 1 m³,
 waterplane area 1 m² and centre of buoyancy z = -0.5 m, derived from the linked
 GDF coordinates. All panels will point outward under the right-hand cross-product
 convention. The spec supplies density 1025 kg/m³ and gravity 9.80665 m/s²,
-giving K33 = density × gravity × waterplane area = 10051.81625 N/m.
+giving K33 = density × gravity × waterplane area = 10051.8 N/m (display rounded;
+screening will use the unrounded product).
 The GDF header carries a different gravity; the manager will confirm that each
 program uses the spec gravity, and will record the actual setting rather than
 silently compare unlike inputs. Sources: spec environment, GDF coordinates, and
@@ -73,12 +87,16 @@ full response qualification and convergence studies are outside this orientation
 request; the five-panel mesh cannot establish them.</p>
 <h2>Offline native-result screen</h2>
 <p>For each program, the manager will create a JSON object with these required
-fields: <code>mesh_sha256</code> (from the standalone QA output),
+fields: <code>mesh_sha256</code> (SHA-256 of the mesh bytes after CRLF-to-LF
+normalization, from the standalone QA output),
 <code>density_kg_m3</code>, <code>gravity_m_s2</code>, <code>k33_n_per_m</code>,
 <code>volume_m3</code>, <code>waterplane_area_m2</code>, and <code>cob_z_m</code>.
 Every value will be extracted from retained native evidence, converted explicitly
 to the indicated SI units and checked against the spec. A digest in this manually
 prepared object binds the mesh only; it does not authenticate the native results.</p>
+<p>The screen will require density and gravity to equal the spec values and will
+fail any mismatch. Observed settings will not redefine the K33 reference.
+Archive manifests will separately retain SHA-256 digests of the original bytes.</p>
 <pre>python scripts/validation/check_unit_box_orientation.py examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf --observations output/observations.json</pre>
 <p>The command emits relative residuals and a conditional screening disposition.
 Missing, non-finite, malformed or digest-mismatched observations fail closed.

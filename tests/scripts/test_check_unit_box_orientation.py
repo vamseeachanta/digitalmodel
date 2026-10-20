@@ -1,8 +1,13 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline regression for the repaired fixtures in issue 898."""
 
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -19,22 +24,27 @@ def checker():
     return module
 
 
-# Inventory from the issue 898 repair; the hull-library mesh is a different box.
-FIXTURES = [
-    "examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf",
-    "tests/hydrodynamics/diffraction/fixtures/acceptance_610/unit_box.gdf",
-    "tests/hydrodynamics/bemrosetta/fixtures/sample_box.gdf",
-    *[f"examples/workflows/{workflow}/{name}.gdf" for workflow, name in [
-        ("orcawave-control-surface", "unit_box"),
-        ("orcawave-diffraction-solve", "unit_box"),
-        ("orcawave-field-points", "unit_box"),
-        ("orcawave-mean-drift", "unit_box"),
-        ("orcawave-input-prep", "sample_box"),
-        ("aqwa-diffraction-deck-prep", "sample_box"),
-    ]],
-    *[f"docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/{solver}/"
-      "unit_box_clean.gdf" for solver in ("aqwa", "orcawave")],
-]
+def five_panel_fixtures():
+    """Census tracked GDF headers, independent of names and mesh validity."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")}
+    tracked = subprocess.check_output(
+        ["git", "ls-files", "-z", "--", "*.gdf"], cwd=ROOT, env=env,
+    ).decode().split("\0")
+    five_panel = []
+    for path in filter(None, tracked):
+        lines = (ROOT / path).read_text(encoding="utf-8").splitlines()
+        if len(lines) >= 4 and lines[3].split()[:1] == ["5"]:
+            five_panel.append(path)
+    return five_panel
+
+
+FIXTURES = five_panel_fixtures()
+
+
+def test_fixture_inventory_covers_tracked_five_panel_meshes():
+    assert "examples/workflows/orcawave-control-surface/control_surface.gdf" in FIXTURES
+    assert len(FIXTURES) >= 12
 
 
 @pytest.mark.parametrize("path", FIXTURES)
@@ -103,3 +113,58 @@ def test_digest_mismatch_rejected(checker):
 def test_cli_no_native_data(checker, capsys):
     assert checker.main([str(CANONICAL)]) == 0
     assert json.loads(capsys.readouterr().out)["native_hydrostatics"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("key,value", [("density_kg_m3", 1000),
+                                       ("gravity_m_s2", 9.81)])
+def test_native_settings_must_match_spec(checker, key, value):
+    result = checker.check_mesh(CANONICAL)
+    observed = native_record(result)
+    observed[key] = value
+    observed["k33_n_per_m"] = observed["density_kg_m3"] * observed["gravity_m_s2"]
+    screen = checker.compare_native(result, observed)
+    assert screen["status"] == "FAIL"
+    assert screen["expected"]["k33_n_per_m"] == 1025 * 9.80665
+
+
+def test_native_reference_matches_canonical_spec(checker):
+    import yaml
+
+    environment = yaml.safe_load(CANONICAL.with_name("spec.yml").read_text())["environment"]
+    result = checker.check_mesh(CANONICAL)
+    expected = checker.compare_native(result, native_record(result))["expected"]
+    assert expected["k33_n_per_m"] == environment["water_density"] * environment["gravity"]
+
+
+@pytest.mark.parametrize("fault,reason", [("crossed", "crosses"),
+                                         ("lid", "lid"),
+                                         ("line_count", "five")])
+def test_malformed_faces_rejected(checker, tmp_path, fault, reason):
+    lines = CANONICAL.read_text(encoding="utf-8").splitlines()
+    if fault == "crossed":
+        lines[5], lines[6] = lines[6], lines[5]
+    elif fault == "lid":
+        lines[4:8] = [line.rsplit(maxsplit=1)[0] + " 0" for line in lines[4:8]]
+    else:
+        lines.pop()
+    path = tmp_path / "fault.gdf"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match=reason):
+        checker.check_mesh(path)
+
+
+def test_cli_native_failure_exits_one(checker, tmp_path, capsys):
+    observed = native_record(checker.check_mesh(CANONICAL))
+    observed["k33_n_per_m"] *= -1
+    path = tmp_path / "observations.json"
+    path.write_text(json.dumps(observed), encoding="utf-8")
+    assert checker.main([str(CANONICAL), "--observations", str(path)]) == 1
+    assert json.loads(capsys.readouterr().out)["native_hydrostatics"]["status"] == "FAIL"
+
+
+def test_mesh_digest_ignores_checkout_line_endings(checker, tmp_path):
+    raw = CANONICAL.read_bytes().replace(b"\r\n", b"\n")
+    lf, crlf = tmp_path / "lf.gdf", tmp_path / "crlf.gdf"
+    lf.write_bytes(raw)
+    crlf.write_bytes(raw.replace(b"\n", b"\r\n"))
+    assert checker.check_mesh(lf)["mesh_sha256"] == checker.check_mesh(crlf)["mesh_sha256"]

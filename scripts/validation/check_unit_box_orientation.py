@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Exact fixture QA and native hydrostatic screening; no solver imports.
 
 Geometry contract: examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf.
@@ -7,22 +10,25 @@ It does not replace that module's general-purpose topology checks.
 """
 
 import argparse
+from collections.abc import Sequence
 from fractions import Fraction
 import hashlib
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 
-def cross(a, b):
+def cross(a: Sequence[Fraction], b: Sequence[Fraction]) -> tuple[Fraction, Fraction, Fraction]:
     """Right-hand vector area, as in mesh_orientation.panel_vector_areas."""
     return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
             a[0] * b[1] - a[1] * b[0])
 
 
-def check_mesh(path):
+def check_mesh(path: str | Path) -> dict[str, Any]:
     """Reject malformed, crossed, duplicate, missing or inward box faces."""
-    raw = Path(path).read_bytes()
+    # Stable across LF/CRLF checkouts; all other input bytes remain significant.
+    raw = Path(path).read_bytes().replace(b"\r\n", b"\n")
     lines = raw.decode("utf-8").splitlines()
     # Header layout, unit scale, no symmetry and panel count: canonical GDF.
     if len(lines) != 24 or int(lines[3].split()[0]) != 5:
@@ -51,8 +57,8 @@ def check_mesh(path):
         # Polygon vector area = half the sum of edge cross products;
         # equivalent to the triangle integration in mesh_orientation.py.
         edges = [cross(quad[i], quad[(i + 1) % 4]) for i in range(4)]
-        area = [sum(e[k] for e in edges) / 2 for k in range(3)]
-        center = [sum(v[k] for v in quad) / 4 for k in range(3)]
+        area = [sum((e[k] for e in edges), Fraction(0)) / 2 for k in range(3)]
+        center = [sum((v[k] for v in quad), Fraction(0)) / 4 for k in range(3)]
         if sum(area[k] * (center[k] - interior[k]) for k in range(3)) <= 0:
             raise ValueError("panel is not outward or its vertex order crosses")
         for k in range(3):
@@ -65,7 +71,7 @@ def check_mesh(path):
             "native_hydrostatics": "NOT_EVALUATED"}
 
 
-def compare_native(mesh, observed):
+def compare_native(mesh: dict[str, Any], observed: dict[str, Any]) -> dict[str, Any]:
     """Screen manually extracted SI data, without claiming native provenance.
 
     The digest binds the mesh only. A manager must verify the native result,
@@ -83,10 +89,13 @@ def compare_native(mesh, observed):
             raise ValueError(f"{key} must be a finite number")
     if observed["density_kg_m3"] <= 0 or observed["gravity_m_s2"] <= 0:
         raise ValueError("density and gravity must be positive")
-    # rho*g*Awp: issue 898 and test_mesh_orientation.py hydrostatics assertion.
+    # Fixed environment: examples/hydrodynamics/diffraction/unit_box_rao/spec.yml.
+    # Observations must not redefine the analytical comparison reference.
+    density, gravity = 1025, 9.80665
+    settings_match = (observed["density_kg_m3"] == density
+                      and observed["gravity_m_s2"] == gravity)
     expected = {key: mesh[key] for key in ("volume_m3", "waterplane_area_m2", "cob_z_m")}
-    expected["k33_n_per_m"] = (observed["density_kg_m3"] * observed["gravity_m_s2"]
-                              * mesh["waterplane_area_m2"])
+    expected["k33_n_per_m"] = density * gravity * mesh["waterplane_area_m2"]
     if not math.isfinite(expected["k33_n_per_m"]):
         raise ValueError("stiffness reference overflows")
     residuals = {key: abs(observed[key] - ref) / abs(ref)
@@ -94,13 +103,16 @@ def compare_native(mesh, observed):
     # Repository AQG-style hydrostatics tier, not an independently verified
     # standard: cross_solver_acceptance.py DEFAULT_CRITERIA[HYDROSTATICS].
     limit = 0.005
-    return {"status": "PASS_CONDITIONAL" if all(v <= limit for v in residuals.values())
+    return {"status": "PASS_CONDITIONAL" if settings_match
+            and all(v <= limit for v in residuals.values())
             else "FAIL", "relative_limit": limit, "relative_errors": residuals,
+            "settings_match_spec": settings_match,
             "expected": expected, "native_provenance": "NOT_EVALUATED",
             "convergence": "NOT_EVALUATED"}
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
+    """Print the offline screening record and return a failing exit status on rejection."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mesh", type=Path)
     parser.add_argument("--observations", type=Path,
