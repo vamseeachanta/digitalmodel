@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Build the drilling pore-pressure / mud-weight explorer.
+"""Build the drilling pore-pressure explorer.
 
 Runs the Eaton and Bowers pore-pressure predictors over a representative
 overpressured well (synthetic normal-compaction sonic log with an overpressure
@@ -31,7 +31,7 @@ _OUT_DIR = _REPO / "docs" / "api" / "structural"
 _PN = 8.6                         # normal pore-pressure gradient, ppg
 _ONSET_FT = 8000.0                # overpressure onset depth
 _DEPTH = [float(5000 + 500 * i) for i in range(0, 19)]   # 5000 .. 14000 ft
-_KICK_MARGIN = 0.3                # ppg trip/kick margin on min mud weight
+_KICK_MARGIN = 0.3                # ppg illustrative margin; assumed, not sourced
 
 # Disclosure basis: Introduction to Energy Geomechanics, edition August 28,
 # 2024, section 6.5 (https://dnicolasespinoza.github.io/node48.html).
@@ -81,6 +81,7 @@ def build_study() -> dict:
     return {
         "meta": {
             "pn": _PN, "onset_ft": int(_ONSET_FT), "kick_margin": _KICK_MARGIN,
+            "kick_margin_basis": "assumed, not sourced",
             "sv_max": 19.0, "standard": "Eaton (1975) + Bowers (1995) pore pressure",
             "drilling_window": _WINDOW,
         },
@@ -93,7 +94,7 @@ def build_study() -> dict:
 _HTML = """<!DOCTYPE html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pore-pressure / mud-weight explorer — digitalmodel</title>
+<title>Pore-pressure explorer — digitalmodel</title>
 <link rel="stylesheet" href="../_assets/brand.css">
 <style>
  :root{--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--mw:#7c3aed}
@@ -125,7 +126,7 @@ _HTML = """<!DOCTYPE html>
  .cap i{font-style:normal;font-weight:700}
  .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
 </style></head><body>
-<h1>Pore pressure &amp; mud weight &mdash; drilling explorer</h1>
+<h1>Pore pressure explorer</h1>
 <p class="sub">Multi-method pore-pressure prediction down a representative overpressured well: the Eaton
 and Bowers predictors on a synthetic normal-compaction sonic log with an overpressure ramp below
 8,000&nbsp;ft. Drag the bit depth to read the governing pore gradient, pore plus an assumed margin,
@@ -159,7 +160,7 @@ recommendation. The margin does not account for ECD or loss allowances.</p>
     does not establish a feasible drilling window or wellbore stability.</div>
   <div class="cap">Not covered: collapse (shear failure), weak bedding planes,
     natural fractures, and chemical or time-dependent effects.
-    See the <a href="../../../examples/workflows/wellbore-stability/README.md">wellbore stability screen</a>
+    See the <a href="wellbore-stability/">wellbore stability screen</a>
     for its separate inputs and limitations.</div>
   <div class="cap">Basis: <a href="https://dnicolasespinoza.github.io/node48.html">Introduction
     to Energy Geomechanics (2024), section 6.5, The mud window</a>:

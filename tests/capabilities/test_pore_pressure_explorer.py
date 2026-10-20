@@ -10,6 +10,7 @@ import json
 import re
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urljoin, urlsplit
 
 import pytest
 
@@ -20,11 +21,14 @@ class PageText(HTMLParser):
     def __init__(self):
         super().__init__()
         self.parts = []
+        self.links = []
         self.hidden = False
 
     def handle_starttag(self, tag, attrs):
         if tag in {"script", "style"}:
             self.hidden = True
+        if tag == "a":
+            self.links.append(dict(attrs).get("href", ""))
 
     def handle_endtag(self, tag):
         if tag in {"script", "style"}:
@@ -87,11 +91,41 @@ def test_exclusions_are_visible_and_machine_readable(generated, exclusion):
     assert exclusion in data["meta"]["drilling_window"]["not_covered"]
 
 
-def test_assumptions_source_and_stability_link_are_visible(generated):
+def test_assumptions_and_source_are_visible(generated):
     html, _ = generated
     assert "assumed, based on previous experience" in html
     assert 'href="https://dnicolasespinoza.github.io/node48.html"' in html
-    assert 'href="../../../examples/workflows/wellbore-stability/README.md"' in html
+
+
+def test_stability_link_resolves_to_published_workflow(generated):
+    html, _ = generated
+    page = PageText()
+    page.feed(html)
+    href = next(link for link in page.links if "wellbore-stability" in link)
+    # Mirror the MkDocs page route under a site prefix, without network access.
+    published = urljoin(
+        "https://docs.example.org/reference/structural/pore-pressure-explorer.html",
+        href,
+    )
+    assert urlsplit(published).path == "/reference/structural/wellbore-stability/"
+    repo = Path(__file__).resolve().parents[2]
+    published_source = repo / "docs/api/structural/wellbore-stability.md"
+    workflow_source = repo / "examples/workflows/wellbore-stability/README.md"
+    assert published_source.read_bytes() == workflow_source.read_bytes()
+
+
+def test_margin_basis_is_machine_readable(generated):
+    _, data = generated
+    assert data["meta"]["kick_margin_basis"] == "assumed, not sourced"
+
+
+@pytest.mark.parametrize("heading", [
+    "<title>Pore-pressure explorer — digitalmodel</title>",
+    "<h1>Pore pressure explorer</h1>",
+])
+def test_headings_describe_pore_pressure_only(generated, heading):
+    html, _ = generated
+    assert heading in html
 
 
 def test_embedded_data_equals_json_and_committed_page(generated):

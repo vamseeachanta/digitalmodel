@@ -3,6 +3,7 @@
     "pn": 8.6,
     "onset_ft": 8000,
     "kick_margin": 0.3,
+    "kick_margin_basis": "assumed, not sourced",
     "sv_max": 19.0,
     "standard": "Eaton (1975) + Bowers (1995) pore pressure",
     "drilling_window": {
