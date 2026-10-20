@@ -109,7 +109,10 @@ def _stress_psd_from_rao(
         gamma = float(wave_spectrum.get("gamma", 3.3))
         omega, s_omega = spectra.jonswap(hs=hs, tp=tp, gamma=gamma)
     elif kind == "pierson_moskowitz":
-        omega, s_omega = spectra.pierson_moskowitz(hs=hs, tp=tp)
+        # Preserve the fatigue grid: m4 and clamped RAOs depend on its cutoff.
+        omega, s_omega = spectra.pierson_moskowitz(
+            hs=hs, tp=tp, freq_min=0.02, freq_max=2.0, n_points=100
+        )
     else:
         omega, s_omega = spectra.bretschneider(hs=hs, tp=tp)
 
