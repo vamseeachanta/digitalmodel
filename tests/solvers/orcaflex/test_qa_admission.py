@@ -5,7 +5,8 @@ unchanged signed control is admitted once. These are logical contract tests,
 not calculated engineering values or claims of native qualification.
 """
 
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
+import hashlib
 import json
 from pathlib import Path
 from unittest.mock import Mock
@@ -31,6 +32,45 @@ def admit(case, qa):
 def test_valid_control_is_admitted_once_without_mutation(control):
     case, qa, _ = control
     assert admit(case, qa) == [case]
+
+
+def test_validation_returns_immutable_input_and_evidence_binding(control):
+    case, qa, record = control
+    payload = json.dumps(
+        {key: value for key, value in record.items() if key != "signature"},
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode()
+    binding = qa.validate(case, "test-version")
+    assert binding.admitted_input_sha256 == qa.requests[case["case_id"]].input_sha256
+    assert binding.qa_evidence_sha256 == hashlib.sha256(payload).hexdigest()
+    with pytest.raises(FrozenInstanceError):
+        binding.admitted_input_sha256 = "changed"
+    with pytest.raises(FrozenInstanceError):
+        binding.qa_evidence_sha256 = "changed"
+
+
+def test_record_refresh_cannot_mix_signed_and_bound_input_identities(control, tmp_path, monkeypatch):
+    case, qa, record = control
+    replacement_digest = hashlib.sha256(b"replacement input").hexdigest()
+    replacement = make_qa([case], tmp_path / "replacement", {case["case_id"]: replacement_digest})
+    read_bytes = Path.read_bytes
+    verify = qa.verify_signature
+    signed_inputs = []
+
+    def refresh_during_image_read(path):
+        data = read_bytes(path)
+        if path == qa.requests[case["case_id"]].images["static"]:
+            record.update(replacement.requests[case["case_id"]].record)
+        return data
+
+    def verify_either_approved_record(payload, signature):
+        signed_inputs.append(json.loads(payload)["input_sha256"])
+        return verify(payload, signature) or replacement.verify_signature(payload, signature)
+
+    monkeypatch.setattr(Path, "read_bytes", refresh_during_image_read)
+    qa = replace(qa, verify_signature=verify_either_approved_record)
+    binding = qa.validate(case, "test-version")
+    assert signed_inputs == [binding.admitted_input_sha256]
 
 
 @pytest.mark.parametrize("refusal", ("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9"))
@@ -227,7 +267,7 @@ def test_worker_refuses_changed_fingerprint_before_solver_access(control, tmp_pa
     record = runner.run_one(
         case, adapter="unused:adapter", out_dir=str(tmp_path / "worker"),
         admitted_input_sha256=qa.requests[case["case_id"]].input_sha256,
-        qa_evidence_sha256=qa.validate(case, "test-version"),
+        qa_evidence_sha256=qa.validate(case, "test-version").qa_evidence_sha256,
     )
     assert record["status"] == "admission_failed"
     assert record["phase"] == "admission"
@@ -284,7 +324,7 @@ def test_worker_matches_admission_before_reopen_and_keeps_evidence_identity(cont
     master = Adapter().build(case, tmp_path / "independent")
     fingerprint = control_fingerprint(master, case)
     qa = make_qa([case], tmp_path / "qa", {case["case_id"]: fingerprint})
-    evidence_digest = qa.validate(case, "test-version")
+    evidence_digest = qa.validate(case, "test-version").qa_evidence_sha256
     api = SimpleNamespace(Model=Model, ModelState=SimpleNamespace(InStaticState="static"))
     monkeypatch.setattr(runner, "_api", lambda *_: (api, "test-version"))
     monkeypatch.setattr(runner, "_adapter", lambda _: Adapter())

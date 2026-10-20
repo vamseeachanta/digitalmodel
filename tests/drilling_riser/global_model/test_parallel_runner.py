@@ -7,6 +7,7 @@ import threading
 import time as _time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,6 +15,7 @@ import pytest
 
 from digitalmodel.solvers.orcaflex import orcaflex_api
 from digitalmodel.solvers.orcaflex import parallel_runner as pr
+from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext, AdmissionRefused
 from tests.solvers.orcaflex.qa_fixtures import control_fingerprint, make_qa
 
 # --------------------------------------------------------------------------- fault classes (W306)
@@ -357,19 +359,151 @@ def test_adapter_resolution_failure_is_a_load_failure(monkeypatch, tmp_path, err
     assert rec["retry"] is False
 
 
-def test_worker_receives_the_validated_evidence_digest(monkeypatch, counting_pool, tmp_path):
-    from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext
+@pytest.mark.parametrize("refresh_at", ("signature", "validation-return"))
+def test_replaced_request_cannot_admit_replacement_inputs(monkeypatch, tmp_path, refresh_at):
+    case = _cases(1)[0]
+    original = tmp_path / "original" / "master.yml"
+    original.parent.mkdir()
+    original.write_text("synthetic: original\n", encoding="utf-8")
+    replacement = tmp_path / "replacement" / "master.yml"
+    replacement.parent.mkdir()
+    replacement.write_text("synthetic: replacement\n", encoding="utf-8")
+    original_digest = control_fingerprint(original, case)
+    replacement_digest = control_fingerprint(replacement, case)
+    qa = make_qa([case], tmp_path / "qa", {case["case_id"]: original_digest}, version="11.6c")
+    replacement_request = replace(qa.requests[case["case_id"]], input_sha256=replacement_digest)
+    verifying, refreshed = threading.Event(), threading.Event()
+    verify = qa.verify_signature
+    validate = AdmissionContext.validate
 
+    def refresh():
+        assert verifying.wait(timeout=5)
+        qa.requests[case["case_id"]] = replacement_request
+        refreshed.set()
+
+    def verify_while_refreshing(payload, signature):
+        verifying.set()
+        assert refreshed.wait(timeout=5)
+        return verify(payload, signature)
+
+    def refresh_after_validation(self, candidate, version):
+        binding = validate(self, candidate, version)
+        verifying.set()
+        assert refreshed.wait(timeout=5)
+        return binding
+
+    if refresh_at == "signature":
+        qa = replace(qa, verify_signature=verify_while_refreshing)
+    else:
+        monkeypatch.setattr(AdmissionContext, "validate", refresh_after_validation)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        refresh_future = pool.submit(refresh)
+        _, bindings = pr.check_cases([case], qa=qa)
+        refresh_future.result(timeout=5)
+
+    def build(candidate, directory):
+        directory.mkdir(parents=True)
+        master = directory / "master.yml"
+        master.write_bytes(replacement.read_bytes())
+        return master
+
+    def native_access(*_):
+        pytest.fail("replacement inputs reached native access")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    monkeypatch.setattr(pr, "_api", native_access)
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path / "worker"),
+                     **bindings[case["case_id"]])
+    assert rec["status"] == "admission_failed"
+    assert rec["retry"] is False
+    assert "B2" in rec["message"]
+    assert bindings[case["case_id"]]["admitted_input_sha256"] == original_digest
+
+
+@pytest.mark.parametrize("operation", ("build", "hash"))
+@pytest.mark.parametrize("error, status, retry", (
+    (OSError("transient file failure"), "infra_fault", True),
+    (FileNotFoundError("model file unavailable"), "infra_fault", True),
+    (PermissionError("model file temporarily inaccessible"), "infra_fault", True),
+    (ValueError("invalid model"), "build_failed", False),
+    (AdmissionRefused("B2", "unapproved inputs"), "build_failed", False),
+))
+def test_pre_native_file_errors_keep_retry_policy(monkeypatch, tmp_path, operation, error, status, retry):
+    def fail(*_):
+        raise error
+
+    def native_access(*_):
+        pytest.fail("a failed build or hash reached native access")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(
+        build=fail if operation == "build" else lambda *args: tmp_path / "master.yml"))
+    if operation == "hash":
+        monkeypatch.setattr(pr, "input_digest", fail)
+    monkeypatch.setattr(pr, "_api", native_access)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == status
+    assert rec["retry"] is retry
+    assert str(error) in rec["message"]
+
+
+@pytest.mark.parametrize("status, expected, retry", (
+    (17, "infra_fault", True), (18, "infra_fault", True), (19, "load_failed", False),
+))
+def test_native_file_status_keeps_retry_policy(monkeypatch, tmp_path, status, expected, retry):
+    class FileFailure(Exception):
+        pass
+
+    def load(_):
+        error = FileFailure("native file unavailable")
+        error.status = status
+        raise error
+
+    def build(case, directory):
+        directory.mkdir(parents=True)
+        master = directory / "master.yml"
+        master.write_text("synthetic: model\n", encoding="utf-8")
+        return master
+
+    case = _cases(1)[0]
+    fingerprint = control_fingerprint(build(case, tmp_path / "prepared"), case)
+    api = SimpleNamespace(Model=load, stFileReadError=17, stFileWriteError=18)
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    monkeypatch.setattr(pr, "_api", lambda *_: (api, "11.6c"))
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path / "worker"),
+                     admitted_input_sha256=fingerprint, qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == expected
+    assert rec["retry"] is retry
+    assert rec["phase"] == "load"
+
+
+def test_pre_native_io_retries_stop_at_attempt_limit(monkeypatch, counting_pool, tmp_path):
+    def build(*_):
+        raise OSError("transient file failure")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    cases = _cases(1)
+    result = pr.run_cases(cases, adapter="x:y", out_dir=tmp_path / "worker", max_workers=1,
+                          max_attempts=3, qa=make_qa(cases, tmp_path / "qa", version="11.6c"))
+    record = result["results"][0]
+    assert record["status"] == "infra_fault"
+    assert record["attempt"] == 3
+    ledger = [json.loads(line) for line in
+              (tmp_path / "worker" / "ledger.jsonl").read_text().splitlines()]
+    assert [item["attempt"] for item in ledger] == [1, 2, 3]
+
+
+def test_worker_receives_the_validated_evidence_digest(monkeypatch, counting_pool, tmp_path):
     cases = _cases(1)
     qa = make_qa(cases, tmp_path / "qa", version="11.6c")
     validate = AdmissionContext.validate
     validated = {}
 
     def mutate_after_validation(self, case, version):
-        digest = validate(self, case, version)
-        validated[case["case_id"]] = digest
+        binding = validate(self, case, version)
+        validated[case["case_id"]] = binding.qa_evidence_sha256
         self.requests[case["case_id"]].record["deviations"].append({"disposition": "changed"})
-        return digest
+        return binding
 
     def worker(case, **kwargs):
         assert kwargs["qa_evidence_sha256"] == validated[case["case_id"]]

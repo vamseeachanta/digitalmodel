@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 from collections.abc import Callable, Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -50,6 +51,14 @@ class AdmissionRequest:
 
 
 @dataclass(frozen=True)
+class AdmissionBinding:
+    """Immutable worker identities captured from one validated request."""
+
+    admitted_input_sha256: str
+    qa_evidence_sha256: str
+
+
+@dataclass(frozen=True)
 class AdmissionContext:
     """Trusted admission policy, supplied independently of candidate records.
 
@@ -66,16 +75,19 @@ class AdmissionContext:
     verify_signature: Callable[[bytes, Mapping[str, Any]], bool]
     requests: Mapping[str, AdmissionRequest]
 
-    def validate(self, case: dict, expected_version: str) -> str:
-        """Refuse incomplete evidence, or return its canonical record digest."""
+    def validate(self, case: dict, expected_version: str) -> AdmissionBinding:
+        """Refuse incomplete evidence, or bind its input and canonical record digests."""
         request = self.requests.get(case["case_id"])
         if not isinstance(request, AdmissionRequest):
             raise AdmissionRefused("B1", "missing model evidence record")
-        record = request.record
+        # Keep structural checks, signature bytes and returned identities on one
+        # snapshot even when the caller refreshes the original evidence in place.
+        record = deepcopy(request.record)
         if not isinstance(record, Mapping) or record.get("case_id") != case["case_id"]:
             raise AdmissionRefused("B1", "missing or mismatched model evidence record")
 
-        if not _digest(request.input_sha256) or record.get("input_sha256") != request.input_sha256:
+        input_sha256 = request.input_sha256
+        if not _digest(input_sha256) or record.get("input_sha256") != input_sha256:
             raise AdmissionRefused("B2", "input fingerprint differs at admission")
 
         gates = record.get("gates")
@@ -151,7 +163,7 @@ class AdmissionContext:
             approved = False
         if not approved:
             raise AdmissionRefused("B6", "exact evidence content has no approved signature")
-        return hashlib.sha256(payload).hexdigest()
+        return AdmissionBinding(input_sha256, hashlib.sha256(payload).hexdigest())
 
 
 def record_payload(record: Mapping[str, Any]) -> bytes:

@@ -137,10 +137,10 @@ def check_cases(cases: Iterable[dict], *, qa: AdmissionContext | None = None,
         raise AdmissionRefused("B1", "missing QA admission context")
     bindings = {}
     for c in cases:
-        evidence_digest = qa.validate(c, expected_dll)
+        binding = qa.validate(c, expected_dll)
         bindings[c["case_id"]] = {
-            "admitted_input_sha256": qa.requests[c["case_id"]].input_sha256,
-            "qa_evidence_sha256": evidence_digest,
+            "admitted_input_sha256": binding.admitted_input_sha256,
+            "qa_evidence_sha256": binding.qa_evidence_sha256,
         }
     return cases, bindings
 
@@ -329,7 +329,7 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
             status, retry = exc.status, False
         else:
             lic = ofx is not None and _is_licensing(ofx, exc)
-            io = ofx is not None and _is_io(ofx, exc)
+            io = _is_io(ofx, exc)
             status, retry = fault_class(phase, licensing=lic, io_error=io)
         rec.update(status=status, retry=retry, phase=phase, message=f"{type(exc).__name__}: {exc}"[:2000])
     finally:
