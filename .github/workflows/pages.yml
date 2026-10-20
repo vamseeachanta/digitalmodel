@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -46,6 +47,7 @@ jobs:
           path: site
 
   deploy:
+    timeout-minutes: 15
     needs: build
     runs-on: ubuntu-latest
     environment:

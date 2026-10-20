@@ -47,7 +47,7 @@ def test_pull_request_activity_types(filename: str) -> None:
     workflow = load_workflow(filename)
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["pull_request"]["types"] == [
-        "opened", "synchronize", "reopened", "edited"
+        "opened", "synchronize", "reopened", "edited", "ready_for_review"
     ]
     expected_keys = {"types", "paths"} if filename == "gmsh-meshing-tests.yml" else {"types"}
     assert set(triggers["pull_request"]) == expected_keys
@@ -391,7 +391,10 @@ def test_base_consumers_use_local_tip() -> None:
     quality = load_workflow("quality-gates.yml")
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-    assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
+    assert register["env"]["REGISTER_BASE"] == (
+        "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || "
+        "github.event_name == 'workflow_dispatch' && 'origin/main' || github.event.before }}"
+    )
 
 
 def test_trigger_tests_run_in_harness() -> None:
@@ -408,9 +411,7 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
-    assert "pull_request" not in triggers
-    assert "workflow_dispatch" in triggers
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
 
 
 @pytest.mark.parametrize("filename,job_id", (
@@ -428,13 +429,14 @@ def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id:
     assert int(depth) == 0, "Subsea must fetch history to verify the pinned manifest commit"
 
 
-@pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
-def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
-    """Every sweep keeps its own group and cannot cancel another sweep."""
+@pytest.mark.parametrize("event", ("schedule", "workflow_dispatch"))
+def test_full_sweep_replaces_older_sweep_on_same_ref(event: str) -> None:
+    """Scheduled and manual sweeps replace older work for the same workflow/ref."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
     groups = []
     for run_id in (101, 102):
         context = {
+            "github.workflow": load_workflow("full-matrix-sweep.yml")["name"],
             "github.ref": "refs/heads/main",
             "github.event_name": event,
             "github.run_id": run_id,
@@ -446,11 +448,8 @@ def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
                 concurrency["group"],
             )
         )
-    assert groups == [
-        "full-matrix-sweep-refs/heads/main-101",
-        "full-matrix-sweep-refs/heads/main-102",
-    ]
-    assert concurrency["cancel-in-progress"] is False
+    assert groups == ["Full Matrix Sweep-refs/heads/main"] * 2
+    assert concurrency["cancel-in-progress"] is True
 
 
 def test_full_sweep_bounds_each_shard() -> None:

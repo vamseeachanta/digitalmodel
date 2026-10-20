@@ -1,18 +1,26 @@
 name: Workflow Automation Tests
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
       - '.github/workflows/workflow-automation-tests.yml'
   pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 60
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

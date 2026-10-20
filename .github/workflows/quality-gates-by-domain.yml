@@ -8,8 +8,8 @@
 #   1. Every run reports its own scope -- how many shards ran, how many did not,
 #      and which -- in the "Detect touched test domains" and "Domain test
 #      aggregate" job summaries.
-#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard on every push
-#      to `main` and nightly, under its own distinct check names. The nightly
+#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard nightly and
+#      on manual dispatch, under its own distinct check names. The nightly
 #      cron formerly lived here; it moved there so that a full-sweep failure is
 #      never posted under the same check names as the gated pull-request lane.
 name: Quality Gates by Domain
@@ -17,7 +17,7 @@ name: Quality Gates by Domain
 "on":
   pull_request:
     # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -32,6 +32,8 @@ permissions:
 
 jobs:
   detect-domains:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 15
     name: Detect touched test domains
     runs-on: ubuntu-latest
     outputs:
@@ -188,6 +190,8 @@ jobs:
           uv run --no-sources python scripts/ci/report_shard_scope.py
 
   ci-harness-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 60
     name: CI harness and compliance tests
     needs: detect-domains
     runs-on: ubuntu-latest
@@ -289,15 +293,17 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/workflows/test_ci_draft_policy.py \
             -q --tb=line
 
       - name: Report implementation map staleness
         run: uv run --no-sources python scripts/generate_implementation_map.py
 
   domain-tests:
+    timeout-minutes: 60
     name: tests-${{ matrix.domain }}
     needs: detect-domains
-    if: needs.detect-domains.outputs.has-domains == 'true'
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.detect-domains.outputs.has-domains == 'true')
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -471,6 +477,7 @@ jobs:
           retention-days: 30
 
   domain-tests-required:
+    timeout-minutes: 15
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
     if: always()
@@ -501,7 +508,7 @@ jobs:
             {
               echo "A pass here means **${SELECTED_COUNT:-?} of ${TOTAL_COUNT:-?} shards**"
               echo "passed. The other ${SKIPPED_COUNT:-?} were not executed by this run;"
-              echo "they run in full on every push to \`main\` and nightly via the"
+              echo "they run in full nightly and on manual dispatch via the"
               echo "\`Full Matrix Sweep\` workflow."
               echo
               echo "Not run: \`${SKIPPED_DOMAINS}\`"
@@ -643,7 +650,7 @@ jobs:
           PYTHON
               then
                 if uv run --no-project --with pyyaml==6.0.2 python scripts/ci/ci_baseline.py compare \
-                  --baseline baseline.json --results baseline-results --max-age-hours 24 \
+                  --baseline baseline.json --results baseline-results --max-age-hours 30 \
                   --register "$RUNNER_TEMP/flaky-register.yml" \
                   --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
                   comparison=0
