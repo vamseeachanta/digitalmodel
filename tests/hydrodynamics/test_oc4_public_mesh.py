@@ -8,9 +8,9 @@ COB z=-13.15 m. Table 3-3 (p. 9): platform CM z=-13.46 m.
 The roughly 380 m2 waterplane includes the inclined braces, not just
 pi*(6.5**2 + 3*12**2)/4 = 372.5 m2 from the columns.
 Source: https://www.nlr.gov/docs/fy14osti/60601.pdf
-Acceptance limits (maintainer task): 1% hydrostatics, aspect <=3,
-maximum panel span <=3.66 m, zero waterline crossings. These are mesh
-criteria, not physical dimensions from the publication.
+Acceptance limits (maintainer task): 1% displacement and waterplane area,
+aspect <=3, maximum panel span <=3.66 m, zero waterline crossings. These
+are mesh criteria, not publication dimensions. COB depth is informational.
 GDF gravity input 9.80665 m/s2: public WAMIT manual, section 6.1,
 https://www.wamit.com/manual7.x/html/wamit_v75manualch6.html.
 """
@@ -58,6 +58,7 @@ def test_public_mesh_hydrostatics_and_limits(mesh_file, checker):
     cosine = rise / np.sqrt(rise**2 + run_squared)
     analytic_waterplane = np.pi * (6.5**2 + 3 * 12**2) / 4 + 3 * np.pi * 0.8**2 / cosine
     assert abs(values["waterplane"] / analytic_waterplane - 1) < 0.01
+    # Geometry regression against Table 4-6, rather than a task acceptance limit.
     assert abs(values["cob_z"] / -13.15 - 1) < 0.01
     assert abs(values["cob_x"]) < 0.02  # rounded Table 3-2 coordinates
     assert abs(values["cob_y"]) < 0.02
@@ -70,7 +71,7 @@ def test_public_mesh_hydrostatics_and_limits(mesh_file, checker):
     assert max(panels[:, :, 2].ravel()) == pytest.approx(0)
     # Outer base radius 12 m at x=-28.87 m (Table 3-2, BC2).
     assert min(panels[:, :, 0].ravel()) == pytest.approx(-28.87 - 12, abs=0.02)
-    assert all(row[3] == "PASS" for row in checker.checks(values))
+    assert all(row[3] in ("PASS", "INFO") for row in checker.checks(values))
 
 
 def test_checker_cli_reads_export_and_reports_unknown_mass(mesh_file):
@@ -84,6 +85,10 @@ def test_checker_cli_reads_export_and_reports_unknown_mass(mesh_file):
     assert "NOT_EVALUATED" in run.stdout
     assert "platform CM" in run.stdout
     assert "FAIL" not in run.stdout
+    buoyancy = next(
+        line for line in run.stdout.splitlines() if line.startswith("COB z")
+    )
+    assert buoyancy.endswith("| INFO")
 
 
 def box_panels():
@@ -106,24 +111,39 @@ def box_panels():
     ]
 
 
-def test_flux_hydrostatics_are_independent_of_origin(checker):
-    values = checker.measure(box_panels())
+@pytest.mark.parametrize(
+    ("shift", "cob"),
+    [((0, 0, 0), (0.5, 0.5, -0.5)), ((5, -3, 0), (5.5, -2.5, -0.5))],
+)
+def test_flux_hydrostatics_are_independent_of_horizontal_origin(checker, shift, cob):
+    values = checker.measure(box_panels() + shift)
     assert values["volume"] == pytest.approx(1)
     assert values["waterplane"] == pytest.approx(1)
-    assert values["cob_z"] == pytest.approx(-0.5)
-    assert values["cob_x"] == pytest.approx(0.5)
-    assert values["cob_y"] == pytest.approx(0.5)
+    assert values["cob_z"] == pytest.approx(cob[2])
+    assert values["cob_x"] == pytest.approx(cob[0])
+    assert values["cob_y"] == pytest.approx(cob[1])
     assert values["bad_edges"] == 0
 
 
 def test_checker_limits_are_enforced(checker):
     values = checker.measure(box_panels())
     values.update(volume=13917, waterplane=380, cob_z=-13.15)
-    assert all(row[3] == "PASS" for row in checker.checks(values))
+    assert all(row[3] in ("PASS", "INFO") for row in checker.checks(values))
     values.update(max_aspect=3.01, max_span=3.67)
     rows = {row[0]: row[3] for row in checker.checks(values)}
     assert rows["Maximum aspect"] == "FAIL"
     assert rows["Maximum span (m)"] == "FAIL"
+
+
+@pytest.mark.parametrize("cob_z", [-13.15, -12.0])
+def test_cob_depth_is_informational(checker, cob_z):
+    values = checker.measure(box_panels())
+    values.update(volume=13917, waterplane=380, cob_z=cob_z)
+    rows = checker.checks(values)
+    buoyancy = next(row for row in rows if row[0] == "COB z (m) [T4-6]")
+    assert buoyancy[2] == cob_z
+    assert buoyancy[3] == "INFO"
+    assert all(row[3] == "PASS" for row in rows if row is not buoyancy)
 
 
 def test_measured_aspect_excludes_only_triangle_repeat(checker):

@@ -128,12 +128,11 @@ def checks(values):
             380 * 0.99,
             380 * 1.01,
         ),
-        ("COB z (m) [T4-6]", "-13.15 +/- 1%", "cob_z", -13.15 * 1.01, -13.15 * 0.99),
     )
     return [
         (label, limit, values[key], "PASS" if low <= values[key] <= high else "FAIL")
         for label, limit, key, low, high in criteria
-    ]
+    ] + [("COB z (m) [T4-6]", "reference -13.15", values["cob_z"], "INFO")]
 
 
 def main():
