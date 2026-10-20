@@ -8,6 +8,10 @@
 
 These use only the spec data, never the OrcaFlex solver, so they can serve as the
 reference side of a model-versus-hand comparison. SI units throughout.
+
+Method identities and unverified standards context are exposed separately by
+``provenance.hand_check_provenance``; see ``docs/hand-check-provenance.html``.
+These hand references do not establish standards compliance or solver qualification.
 """
 
 from __future__ import annotations
