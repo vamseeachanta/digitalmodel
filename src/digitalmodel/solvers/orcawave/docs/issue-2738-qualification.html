@@ -5,12 +5,19 @@
 The changes repair the reproduced discovery, closure and QA-state defects and remove
 uncomputed physics and visualization success. They do not qualify the complete legacy
 workflow. Native runs attempted: none. Qualified engineering results: none.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-20</td><td>Recorded the repaired discovery, closure
+and QA-state contracts and the initial 79-test result.</td></tr>
+<tr><td>2</td><td>2026-10-20</td><td>Updated the reviewed result to 95 tests at
+f9296195 and documented fallback for lazy process-pool startup failures.</td></tr></tbody></table>
+<p>Table: qualification-note revision history.</p>
 <h2>Method contracts and evidence</h2>
 <table><thead><tr><th>Gate</th><th>Contract</th><th>Regression evidence</th></tr></thead><tbody>
 <tr><td>G0-GEOMETRY</td><td><code>GeometryValidator.validate_all</code> clears stale results,
 requires every legacy requested file, and publishes results only after all parsers succeed.
-Missing files raise FileNotFoundError; pool-construction OSError retries sequentially.
-Parser, submission and worker failures propagate.</td>
+Missing files raise FileNotFoundError; pool-construction or submission OSError retries
+sequentially after pool shutdown. Parser and worker failures propagate.</td>
 <td>Empty and partial discovery, stale result, sequential and simulated parallel failure cases.</td></tr>
 <tr><td>G4-CLOSURE</td><td><code>_compute_mesh_statistics</code> rejects empty, nonfinite or
 unsupported connectivity. Exact coincident coordinates are welded for edge counting.
@@ -32,8 +39,9 @@ vertex-manifold topology, hydrostatic correctness, mesh units or solver suitabil
 The existing small-area heuristic remains unqualified. Polygon faces are refused rather
 than partially integrated. ASCII STL trailing vertex groups and truncated binary attribute
 bytes are explicitly refused; full licensed-format grammar validation is not established.</p>
-<p>The historical <a href="agent-pack.md">knowledge pack</a> and
-<a href="gate-dispositions.json">disposition catalogue</a> describe their pinned source,
+<p>The <a href="agent-pack.md">knowledge pack</a> revision 4 records the current software
+contracts while preserving its historical audit pin. The historical
+<a href="gate-dispositions.json">disposition catalogue</a> describes its pinned source,
 not this revision. This note is the current contract overlay: S009, S017-S020, S073-S076
 and the volume-based closure part of S085 are addressed. S078 and S077 receive bounded
 truncation checks. S080 receives exact edge counting, but its centroid limitation remains.
@@ -42,10 +50,10 @@ partial CSV/Excel channels, units/conventions, geometry-validation bypasses in t
 output packaging and provenance are still software follow-up work. A licensed run cannot
 repair those defects. The issue must remain open.</p>
 <h2>Validation status</h2>
-<p>The solver-free diffraction suite passed 79 tests at revision <code>a4e01b69</code>
+<p>The solver-free diffraction suite passed 95 tests at revision <code>f9296195</code>
 with Python 3.12 and NumPy 1.26.4 in the second-provider review. The repair regressions
 exercise column-shaped inverse indices, sequential fallback after pool-construction
-failure, and fatal parser, submission and worker errors. Licensed solver execution
+or submission failure, and fatal parser and worker errors. Licensed solver execution
 and engineering qualification remain unverified.</p>
 <h2>Solver-manager request</h2>
 <p>The <a href="issue-2738-run-request.json">run request</a> distinguishes the solver-free

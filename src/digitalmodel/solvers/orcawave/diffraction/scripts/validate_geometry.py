@@ -66,7 +66,7 @@ class GeometryValidator:
             "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
 
-        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 2, 2026).
+        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 4, 2026).
         # Clear stale results and reject omissions before parsing or pool creation.
         self.results = {}
         missing = [name for name in geometry_files
@@ -81,7 +81,7 @@ class GeometryValidator:
 
         results = {}
         if parallel:
-            # Retry only construction failures; submission and parser errors are fatal.
+            # Worker startup may fail during construction or lazy submission.
             try:
                 executor = ProcessPoolExecutor(max_workers=3)
             except OSError:
@@ -89,13 +89,19 @@ class GeometryValidator:
                 parallel = False
         if parallel:
             with executor:
-                futures = {
-                    executor.submit(self.validate_file, self.geometry_path / name, kind): name
-                    for name, kind in geometry_files.items()
-                }
-                for future in as_completed(futures):
-                    results[futures[future]] = future.result()
-        else:
+                try:
+                    futures = {
+                        executor.submit(self.validate_file, self.geometry_path / name, kind): name
+                        for name, kind in geometry_files.items()
+                    }
+                except OSError:
+                    logger.warning("Process pool submission failed; validating sequentially")
+                    parallel = False
+                else:
+                    # Keep worker/parser errors outside the startup fallback.
+                    for future in as_completed(futures):
+                        results[futures[future]] = future.result()
+        if not parallel:
             for name, kind in geometry_files.items():
                 results[name] = self.validate_file(self.geometry_path / name, kind)
         self.results = results

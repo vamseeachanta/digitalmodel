@@ -548,8 +548,53 @@ def test_pool_construction_failure_retries_sequentially(
         assert "stale" not in results
 
 
-@pytest.mark.parametrize("phase", ["submit", "result"])
-def test_started_pool_errors_remain_fatal(tmp_path, monkeypatch, phase):
+@pytest.mark.parametrize("failed_submission", [1, 2, 3])
+@pytest.mark.parametrize("parse_failure", [False, True])
+def test_pool_submission_failure_retries_sequentially(
+    tmp_path, monkeypatch, failed_submission, parse_failure
+):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+    parsed = []
+
+    def parse(path, kind):
+        parsed.append(kind)
+        if parse_failure and kind == "obj":
+            raise OSError("synthetic parser failure")
+        return kind
+
+    class Pool:
+        def __init__(self, **kwargs):
+            self.submissions = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def submit(self, *args):
+            self.submissions += 1
+            if self.submissions == failed_submission:
+                raise OSError("synthetic pool startup failure")
+            return object()
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
+    monkeypatch.setattr(validator, "validate_file", parse)
+    if parse_failure:
+        with pytest.raises(OSError, match="synthetic parser failure"):
+            validator.validate_all()
+        assert validator.results == {}
+    else:
+        results = validator.validate_all()
+        assert set(results.values()) == {"stl_ascii", "stl_binary", "obj"}
+        assert "stale" not in results
+    assert parsed == ["stl_ascii", "stl_binary", "obj"]
+
+
+def test_started_pool_worker_errors_remain_fatal(tmp_path, monkeypatch):
     module = sys.modules[GeometryValidator.__module__]
     validator = GeometryValidator(str(tmp_path))
     validator.results["stale"] = object()
@@ -572,8 +617,6 @@ def test_started_pool_errors_remain_fatal(tmp_path, monkeypatch, phase):
             return False
 
         def submit(self, *args):
-            if phase == "submit":
-                raise OSError("synthetic submission failure")
             return Future()
 
     monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
