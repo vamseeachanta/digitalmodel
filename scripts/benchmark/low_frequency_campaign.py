@@ -159,6 +159,26 @@ def mesh_keys(value, trail=()):
             yield from mesh_keys(child, trail)
 
 
+def load_mesh_manifest(root: Path, value: str | None) -> tuple[Path, dict[str, str]]:
+    """Require a reference SHA-256 for each campaign mesh level."""
+    path = local_mesh(root, value)
+    manifest = json.loads(path.read_bytes())
+    records = manifest.get("meshes") if isinstance(manifest, dict) else None
+    if not isinstance(records, dict) or set(records) != set(LEVELS):
+        raise ValueError("mesh manifest requires all three levels")
+    digests = {}
+    for level, record in records.items():
+        sha = record.get("sha256") if isinstance(record, dict) else None
+        if (
+            not isinstance(sha, str)
+            or len(sha) != 64
+            or any(char not in "0123456789abcdef" for char in sha)
+        ):
+            raise ValueError("mesh manifest requires SHA-256 digests")
+        digests[level] = sha
+    return path, digests
+
+
 def build(base_path, request_path, output):
     """Build a deterministic preparation packet in memory before any writes."""
     base_path, request_path, output = map(Path, (base_path, request_path, output))
@@ -187,8 +207,6 @@ def build(base_path, request_path, output):
             "asymptotic_max_rad_s",
         )
     }
-    if limits["asymptotic_max_rad_s"] > Decimal("0.236"):
-        raise ValueError("asymptotic limit must not exceed 0.236 rad/s")
     frequencies = grid(request["frequencies_rad_s"])
     headings = grid(request["headings_deg"], headings=True)
     old_frequency = base["frequencies"]
@@ -207,6 +225,9 @@ def build(base_path, request_path, output):
     if set(request["meshes"]) != set(LEVELS):
         raise ValueError("ordered coarse, medium and fine meshes required")
     meshes = {level: local_mesh(root, request["meshes"][level]) for level in LEVELS}
+    mesh_manifest, expected_digests = load_mesh_manifest(
+        root, request.get("mesh_manifest")
+    )
     original_mesh = local_mesh(root, base["vessel"]["geometry"]["mesh_file"])
     if any(
         path.suffix.lower() != original_mesh.suffix.lower() for path in meshes.values()
@@ -222,17 +243,33 @@ def build(base_path, request_path, output):
     inertia = base["vessel"]["inertia"]
     if inertia.get("mode", "explicit") != "explicit":
         raise ValueError("DF2 requires explicit mass")
+    environment = base["environment"]
+    # Use the EnvironmentSpec default when gravity is omitted.
+    gravity = number(environment.get("gravity", 9.80665))
+    if gravity <= 0:
+        raise ValueError("positive gravity required")
+    rho = environment.get("water_density", 1025)
     df2 = {}
     for level, mesh in meshes.items():
         mesh_geometry.check_symmetry(mesh, geometry.get("symmetry", "none"))
-        df2[level] = check_df2_buoyancy(
-            mesh, inertia["mass"], base["environment"].get("water_density", 1025)
-        )
+        df2[level] = check_df2_buoyancy(mesh, inertia["mass"], rho)
         if df2[level]["decision"] != "PASS":
             raise ValueError(f"DF2 {level}: {df2[level]['decision']}; no case issued")
+        if digest(mesh.read_bytes()) != expected_digests[level]:
+            raise ValueError(f"mesh digest mismatch for {level}; no case issued")
+        # Quarter of the dry-heave natural angular frequency, using DF2 area.
+        ceiling = (
+            number(rho)
+            * gravity
+            * number(df2[level]["waterplane_area_m2"])
+            / number(inertia["mass"])
+        ).sqrt() / 4
+        if limits["asymptotic_max_rad_s"] > ceiling:
+            raise ValueError(f"asymptotic limit exceeds dry-heave ceiling for {level}")
     paths = {
         "base": base_path,
         "request": request_path,
+        "mesh_manifest": mesh_manifest,
         "original_mesh": original_mesh,
         **meshes,
     }

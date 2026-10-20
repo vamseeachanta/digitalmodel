@@ -111,7 +111,7 @@ def gdf_bytes(level):
 
 
 def read_gdf(path):
-    """Read finite WAMIT quads, scaling coordinates by ULEN without reflection."""
+    """Read dimensional metre vertices with ULEN 1.0 and no reflection."""
     lines = Path(path).read_text(encoding="ascii").splitlines()
     if len(lines) < 4:
         raise ValueError("incomplete GDF header")
@@ -122,25 +122,22 @@ def read_gdf(path):
         raise ValueError("invalid GDF count or symmetry flags")
     if not np.isfinite([ulen, gravity]).all() or min(ulen, gravity) <= 0:
         raise ValueError("invalid GDF units or gravity")
+    if ulen != 1.0:
+        raise ValueError("GDF ULEN must be 1.0; vertices are dimensional metres")
     tokens = " ".join(lines[4:]).replace("D", "E").replace("d", "e").split()
     if len(tokens) != count * 12:
         raise ValueError("GDF panel count differs from coordinate count")
-    panels = np.array(list(map(float, tokens))).reshape(count, 4, 3) * ulen
+    panels = np.array(list(map(float, tokens))).reshape(count, 4, 3)
     if not np.isfinite(panels).all():
         raise ValueError("nonfinite GDF coordinates")
     return dict(panels=panels, symmetry=symmetry, ulen=ulen, gravity=gravity)
 
 
 def check_symmetry(mesh, declared):
-    """Require header planes to match the campaign declaration in both directions.
-
-    GDF ISX reflects x=0 (yz); ISY reflects y=0 (xz). This campaign contract
-    is deliberately stricter than backend full-mesh symmetry optimizations.
-    """
+    """Require an explicit full body without backend symmetry optimizations."""
     flags = read_gdf(mesh)["symmetry"]
-    expected = {"none": (0, 0), "xz": (0, 1), "yz": (1, 0), "xz+yz": (1, 1)}
-    if declared not in expected or flags != expected[declared]:
-        raise ValueError("mesh header symmetry disagrees with specification symmetry")
+    if declared != "none" or flags != (0, 0):
+        raise ValueError("campaign requires symmetry 'none' and GDF ISX=ISY=0")
     return flags
 
 
@@ -198,7 +195,7 @@ def _integrate(parsed):
 
 
 def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
-    """Return PASS/FAIL/NOT_EVALUATED for |rho*V-M|/M, using raw geometry only.
+    """Check mass balance and transverse buoyancy within 0.001 of mesh beam.
 
     Gravity cancels in the force ratio. Symmetry flags allow planar closure
     for integration but never multiply volume. No weight report is inferred.
@@ -221,10 +218,16 @@ def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
             raise ValueError(
                 "positive finite mass, density and tolerance below one required"
             )
-        volume, area, centre = _integrate(read_gdf(mesh))
+        parsed = read_gdf(mesh)
+        volume, area, centre = _integrate(parsed)
+        beam = float(np.ptp(parsed["panels"][:, :, 1]))
         error = abs(rho * volume - mass_kg) / mass_kg
         result.update(
-            decision="PASS" if error <= tolerance else "FAIL",
+            decision=(
+                "PASS"
+                if error <= tolerance and abs(centre[1]) <= 0.001 * beam
+                else "FAIL"
+            ),
             volume_m3=volume,
             waterplane_area_m2=area,
             centre_of_buoyancy_m=centre,

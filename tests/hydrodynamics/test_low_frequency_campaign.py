@@ -4,6 +4,7 @@
 
 import copy
 import csv
+import hashlib
 import importlib.util
 import json
 import sys
@@ -45,12 +46,15 @@ def inputs(tmp_path):
     base_path.write_text(yaml.safe_dump(base), encoding="utf-8")
     for level in campaign.LEVELS:
         (tmp_path / f"{level}.gdf").write_bytes(campaign.mesh_geometry.gdf_bytes(level))
+    reference = SCRIPT.parents[2] / "examples/hydrodynamics/full-body-meshes.json"
+    (tmp_path / "full-body-meshes.json").write_bytes(reference.read_bytes())
     request = {
         "source": "synthetic test specification, not engineering input",
         "approvals": {
             key: "APPROVED: synthetic reference" for key in campaign.APPROVALS
         },
         "meshes": {level: f"{level}.gdf" for level in campaign.LEVELS},
+        "mesh_manifest": "full-body-meshes.json",
         "frequencies_rad_s": [0.1, 0.2, 0.35, 0.5],
         "headings_deg": [0.0, 90.0, 180.0],
         "criteria": {
@@ -74,6 +78,18 @@ def inputs(tmp_path):
 
 def prepare(inputs):
     return campaign.prepare(*inputs[:3])
+
+
+def refresh_mesh_reference(inputs):
+    """Bind synthetic geometry variants to their own reference bytes."""
+    root = inputs[0].parent
+    path = root / "full-body-meshes.json"
+    reference = json.loads(path.read_text())
+    for level in campaign.LEVELS:
+        reference["meshes"][level]["sha256"] = hashlib.sha256(
+            (root / f"{level}.gdf").read_bytes()
+        ).hexdigest()
+    path.write_text(json.dumps(reference))
 
 
 def export(inputs, manifest, mutate=None):
@@ -174,6 +190,47 @@ def test_changed_mesh_detected(inputs):
     prepare(inputs)
     (inputs[0].parent / "fine.gdf").write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="digest"):
+        campaign.verify_manifest(inputs[2] / "manifest.json")
+
+
+@pytest.mark.parametrize("level", ["coarse", "medium", "fine"])
+def test_mesh_digest_must_match_reference_before_preparation(inputs, level):
+    path = inputs[0].parent / f"{level}.gdf"
+    _, coordinates = path.read_bytes().split(b"\n", 1)
+    path.write_bytes(b"Changed title, identical geometry\n" + coordinates)
+    with pytest.raises(ValueError, match="mesh digest"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("fault", ["missing_path", "missing_file", "levels", "digest"])
+def test_mesh_manifest_must_supply_all_level_digests(inputs, fault):
+    path = inputs[0].parent / "full-body-meshes.json"
+    reference = json.loads(path.read_text())
+    if fault == "missing_path":
+        inputs[4].pop("mesh_manifest")
+        inputs[1].write_text(json.dumps(inputs[4]))
+    elif fault == "missing_file":
+        inputs[4]["mesh_manifest"] = "absent.json"
+        inputs[1].write_text(json.dumps(inputs[4]))
+    elif fault == "levels":
+        reference["meshes"].pop("fine")
+    else:
+        reference["meshes"]["fine"]["sha256"] = "invalid"
+    path.write_text(json.dumps(reference))
+    with pytest.raises(ValueError, match="mesh|manifest"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_mesh_manifest_remains_bound_during_assessment(inputs):
+    manifest = prepare(inputs)
+    assert "mesh_manifest" in manifest["inputs"]
+    path = inputs[0].parent / "full-body-meshes.json"
+    reference = json.loads(path.read_text())
+    reference["basis"] = "changed reference"
+    path.write_text(json.dumps(reference))
+    with pytest.raises(ValueError, match="input digest mismatch"):
         campaign.verify_manifest(inputs[2] / "manifest.json")
 
 
@@ -392,6 +449,75 @@ def test_asymptotic_limit_above_candidate_bound_rejected(inputs):
     inputs[1].write_text(json.dumps(inputs[4]))
     with pytest.raises(ValueError, match="asymptotic limit"):
         prepare(inputs)
+
+
+@pytest.mark.parametrize(
+    "draft_scale,limit,allowed", [(4, 0.15, False), (0.25, 0.35, True)]
+)
+def test_asymptotic_ceiling_follows_integrated_waterplane(
+    inputs, draft_scale, limit, allowed
+):
+    for level in campaign.LEVELS:
+        panels = campaign.mesh_geometry.panels_for_level(level)
+        # Preserve displacement and mass while changing waterplane and draft.
+        panels[:, :, 0] /= draft_scale
+        panels[:, :, 2] *= draft_scale
+        (inputs[0].parent / f"{level}.gdf").write_bytes(
+            campaign.mesh_geometry.encode_gdf(panels)
+        )
+    refresh_mesh_reference(inputs)
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = limit
+    inputs[1].write_text(json.dumps(inputs[4]))
+    if allowed:
+        manifest = prepare(inputs)
+        assert len(manifest["cases"]) == 12
+        assert manifest["df2"]["fine"]["waterplane_area_m2"] == pytest.approx(
+            42236.07272727273
+        )
+    else:
+        with pytest.raises(ValueError, match="asymptotic limit"):
+            prepare(inputs)
+        assert not inputs[2].exists()
+
+
+def test_asymptotic_ceiling_checks_every_mesh_level(inputs):
+    panels = campaign.mesh_geometry.panels_for_level("fine")
+    panels[:, :, 0] /= 4
+    panels[:, :, 2] *= 4
+    (inputs[0].parent / "fine.gdf").write_bytes(
+        campaign.mesh_geometry.encode_gdf(panels)
+    )
+    refresh_mesh_reference(inputs)
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = 0.15
+    inputs[1].write_text(json.dumps(inputs[4]))
+    with pytest.raises(ValueError, match="asymptotic limit.*fine"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "gravity,limit,allowed", [(39.2266, 0.35, True), (0.612915625, 0.1, False)]
+)
+def test_asymptotic_ceiling_uses_specification_gravity(inputs, gravity, limit, allowed):
+    inputs[3]["environment"]["gravity"] = gravity
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = limit
+    inputs[1].write_text(json.dumps(inputs[4]))
+    if allowed:
+        assert len(prepare(inputs)["cases"]) == 12
+    else:
+        with pytest.raises(ValueError, match="asymptotic limit"):
+            prepare(inputs)
+        assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("gravity", [0, -1, True, float("inf")])
+def test_invalid_gravity_cannot_issue(inputs, gravity):
+    inputs[3]["environment"]["gravity"] = gravity
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
 
 
 def test_mesh_generator_is_collected_by_diffraction_ci_domain():

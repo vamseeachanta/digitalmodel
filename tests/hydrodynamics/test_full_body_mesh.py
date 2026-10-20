@@ -69,6 +69,33 @@ def test_half_mesh_fails_without_implicit_reflection(tmp_path):
 
 
 @pytest.mark.parametrize(
+    "beam_scale,offset,decision",
+    [(1, 0.1, "FAIL"), (1, -0.1, "FAIL"), (1, 0.01, "PASS"), (0.1, 0.01, "FAIL")],
+)
+def test_equal_volume_buoyancy_requires_transverse_centring(
+    tmp_path, beam_scale, offset, decision
+):
+    panels = mesh.panels_for_level("coarse")
+    panels[:, :, 1] = panels[:, :, 1] * beam_scale + offset
+    path = tmp_path / "offset.gdf"
+    path.write_bytes(mesh.encode_gdf(panels))
+    report = mesh.check_df2_buoyancy(path, 119052930 * beam_scale)
+    assert report["relative_error"] < 1e-8
+    assert report["centre_of_buoyancy_m"][1] == pytest.approx(offset, abs=1e-8)
+    assert report["decision"] == decision
+
+
+@pytest.mark.parametrize(
+    "declared,flags", [("xz", (0, 1)), ("yz", (1, 0)), ("xz+yz", (1, 1))]
+)
+def test_campaign_symmetry_requires_explicit_full_body(tmp_path, declared, flags):
+    path = tmp_path / "declared.gdf"
+    path.write_bytes(mesh.encode_gdf(mesh.panels_for_level("coarse"), flags))
+    with pytest.raises(ValueError, match="requires symmetry 'none'.*ISX=ISY=0"):
+        mesh.check_symmetry(path, declared)
+
+
+@pytest.mark.parametrize(
     "fault", ["missing", "reversed", "one_reversed", "duplicate", "nan", "bad_header"]
 )
 def test_unusable_mesh_is_not_evaluated(tmp_path, fault):
@@ -109,7 +136,18 @@ def test_invalid_df2_parameters(tmp_path, mass, rho, tolerance):
     )
 
 
-def test_analytic_box_and_scaled_units(tmp_path):
+@pytest.mark.parametrize("ulen", [0.5, 2.0])
+def test_nonunit_ulen_is_rejected_without_scaling_vertices(tmp_path, ulen):
+    path = tmp_path / "nonunit.gdf"
+    lines = mesh.gdf_bytes("coarse").decode().splitlines()
+    lines[1] = f"{ulen} 9.80665"
+    path.write_text("\n".join(lines) + "\n")
+    with pytest.raises(ValueError, match="ULEN.*1.0"):
+        mesh.read_gdf(path)
+    assert mesh.check_df2_buoyancy(path, 119052930)["decision"] == "NOT_EVALUATED"
+
+
+def test_analytic_box_uses_dimensional_vertices(tmp_path):
     # Outward wet faces of a 2 x 2 x 1 box; independent of the hull generator.
     panels = np.array(
         [
@@ -122,9 +160,7 @@ def test_analytic_box_and_scaled_units(tmp_path):
         dtype=float,
     )
     path = tmp_path / "box.gdf"
-    data = mesh.encode_gdf(panels / 2).decode().splitlines()
-    data[1] = "2.0 9.80665"
-    path.write_text("\n".join(data) + "\n")
+    path.write_bytes(mesh.encode_gdf(panels))
     report = mesh.check_df2_buoyancy(path, 4100)
     assert report["decision"] == "PASS"
     assert report["volume_m3"] == pytest.approx(4)
