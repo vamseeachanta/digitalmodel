@@ -350,7 +350,7 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <h3>A. Wang (1975) Reference</h3><ul>
 <li><strong>Paper:</strong> Wang, S. (1975). "Dynamic effects of ship passage on moored vessels." <em>J. Waterways, Harbors &amp; Coastal Engineering</em>, ASCE.</li>
 <li><strong>MathCAD:</strong> "Calculation of forces and moments from Wang.pdf"</li>
-<li><strong>VBA:</strong> modPassingShip.bas (Nick Barczak, July 2016)</li></ul>
+<li><strong>VBA:</strong> modPassingShip.bas (the original spreadsheet author, July 2016)</li></ul>
 <h3>B. Formulation Summary</h3>
 <table><thead><tr><th>Function</th><th>Expression</th></tr></thead><tbody>
 <tr><td>Sectional area</td><td>S(x) = A<sub>max</sub> &middot; (1 &minus; 4x&sup2;/L&sup2;)</td></tr>
