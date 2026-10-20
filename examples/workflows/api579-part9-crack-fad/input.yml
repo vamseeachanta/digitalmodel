@@ -1,0 +1,54 @@
+# Synthetic inspection only: these values are not standard limits or field data.
+basename: api579_part9_crack_fad
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+part9_inspection:
+  component_id: synthetic-component
+  standard_edition: '2016'
+  units: mm-MPa-C
+  inspection:
+    date: '2026-10-20'
+    method: synthetic UT
+    sizing_basis: Synthetic demonstration only
+  geometry:
+    shape: cylinder
+    thickness_mm: 20
+    inside_radius_mm: 500
+    location: base_metal
+  flaw:
+    depth_mm: 5
+    length_mm: 30
+    orientation: longitudinal
+    position: external_surface
+    sizing_uncertainty_mm: 1
+  loads:
+    pressure_mpa: 2
+    temperature_c: -10
+    cyclic: false
+    membrane_mpa: 50
+    bending_mpa: -5
+    secondary_mpa: 0
+    stress_basis: Synthetic specified stresses; no pressure conversion
+    governing_case: synthetic steady state
+  material:
+    yield_mpa: 250
+    ultimate_mpa: 400
+    toughness_mpa_sqrt_m: 60
+    toughness_temperature_c: -10
+    toughness_zone: base_metal
+    toughness_basis: Synthetic input; no material qualification
+  fabrication:
+    pwht: false
+    pressure_test_after_weld: false
+  environment:
+    hydrogen_service: false
+  growth:
+    mechanism: none
+    basis: Synthetic non-growing case; no growth qualification
+    assessment_period_years: 1
+part9_report:
+  issue_date: '2026-10-20'
+  output_dir: results

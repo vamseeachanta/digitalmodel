@@ -815,6 +815,10 @@ def engine(
         from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
 
         cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "api579_part9_crack_fad":
+        from digitalmodel.asset_integrity.part9_workflow import router
+
+        cfg_base = router(cfg_base)
     elif basename == "api579_pitting_screen":
         from digitalmodel.asset_integrity.assessment.pitting import router
 

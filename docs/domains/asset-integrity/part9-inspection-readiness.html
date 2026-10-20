@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part 9 inspection readiness</title>
+  <style>
+    body { font-family: sans-serif; max-width: 70rem; margin: 2rem auto; padding: 1rem; line-height: 1.5; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #aaa; padding: .5rem; text-align: left; vertical-align: top; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    code, pre { background: #f1f4f6; overflow-wrap: anywhere; }
+    pre { padding: 1rem; overflow-x: auto; }
+  </style>
+</head>
+<body>
+<h1>Part 9 inspection readiness</h1>
+<p>The <code>api579-part9-crack-fad</code> workflow checks declared inspection
+fields and reports outstanding method qualification. The worked example has
+complete intake fields and returns <strong>NOT_EVALUATED</strong> for fitness
+for service: no stress-intensity factor, reference stress, FAD point, remaining
+life or operating limit is calculated. Intake completeness is not engineering
+sufficiency or acceptance under API 579-1/ASME FFS-1.</p>
+
+<h2>Revision history</h2>
+<table>
+  <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+  <tr><td>1</td><td>2026-10-20</td><td>Inspection readiness is added so missing
+  measurements and unqualified methods cannot imply service acceptance.</td></tr>
+  <caption>Table 1. Document issue history.</caption>
+</table>
+
+<h2>Workflow and result contract</h2>
+<p>The engine basename is <code>api579_part9_crack_fad</code>. The registry
+entry is callable through <code>digitalmodel.workflow_api.run_workflow</code>,
+the same entry point used by Deckhand consumers. No separate Deckhand service
+is changed or deployed. Direct Python callers may use
+<code>digitalmodel.asset_integrity.part9_inspection.assess_inspection</code>
+without report dependencies.</p>
+<pre>from digitalmodel.workflow_api import run_workflow
+
+envelope = run_workflow("api579-part9-crack-fad")
+result = envelope.result["value"]
+# result["measurement_sufficiency"]["status"] == "COMPLETE_FOR_REVIEW"
+# result["verdict"] == "NOT_EVALUATED"
+# result["acceptable"], result["kr"], result["lr"] are None</pre>
+<p>The workflow API envelope can have <code>status="ok"</code> when the
+workflow executed and the engineering result is <code>NOT_EVALUATED</code>.
+Consumers shall inspect the engineering result. <code>acceptable=None</code>
+means no acceptance decision was established; it is not a failed FAD check.
+No unresolved standard reference is emitted as a qualified citation sidecar.</p>
+<p>With the example input, the optional <code>part9_report.output_dir</code>
+requests <code>part9-report.html</code> through the existing
+<code>FFSReport.generate_screening_html</code> renderer. The engine resolves
+relative output directories beneath its configuration root. The supplied
+<code>part9_report.issue_date</code> records the report revision date. Written
+paths are kept in configuration metadata, outside the in-memory engineering
+result. The shared report header uses the date of report generation.</p>
+
+<h2>Input schema</h2>
+<p><code>FIELD_SPECS</code> in <code>part9_inspection.py</code> is the
+declarative schema. The root <code>part9_inspection</code> block shall be a
+mapping. Missing or invalid fields produce an ordered list of
+<code>{field, kind, reason}</code> issues. Booleans and numeric strings do not
+count as measured numbers; nonfinite values are invalid. No absent boolean is
+interpreted as false. All input values in the example are synthetic.</p>
+<table>
+  <tr><th>Block</th><th>Required fields and representation</th></tr>
+  <tr><td>Root</td><td><code>component_id</code>, <code>standard_edition</code>
+  as text; <code>units: mm-MPa-C</code>. Requested editions other than 2016
+  raise a crosswalk flag; no edition is numerically qualified.</td></tr>
+  <tr><td>inspection</td><td><code>date</code> as a quoted ISO date,
+  <code>method</code>, <code>sizing_basis</code> as nonempty text.</td></tr>
+  <tr><td>geometry</td><td><code>shape</code>: cylinder, sphere, plate or other;
+  positive <code>thickness_mm</code>; <code>location</code>: base_metal, weld,
+  haz or nozzle. Cylinders and spheres also require positive
+  <code>inside_radius_mm</code>.</td></tr>
+  <tr><td>flaw</td><td>Positive <code>depth_mm</code> and total
+  <code>length_mm</code>; <code>orientation</code>: longitudinal,
+  circumferential or other; <code>position</code>: internal_surface,
+  external_surface, embedded or through_wall; nonnegative
+  <code>sizing_uncertainty_mm</code>. Embedded flaws also require positive
+  <code>ligament_mm</code>. Depth records the measured through-thickness extent;
+  no conversion to an Annex C embedded-crack half-depth is made.</td></tr>
+  <tr><td>loads</td><td>Nonnegative <code>pressure_mpa</code>; finite signed
+  <code>temperature_c</code>, <code>membrane_mpa</code>,
+  <code>bending_mpa</code> and <code>secondary_mpa</code>; boolean
+  <code>cyclic</code>; nonempty <code>stress_basis</code> and
+  <code>governing_case</code>. These describe one governing load case.
+  Pressure is never silently converted to crack-driving stress.</td></tr>
+  <tr><td>material</td><td>Positive <code>yield_mpa</code>,
+  <code>ultimate_mpa</code>, <code>toughness_mpa_sqrt_m</code>;
+  finite <code>toughness_temperature_c</code>;
+  <code>toughness_zone</code>: base_metal, weld or haz;
+  nonempty <code>toughness_basis</code>. A temperature mismatch requires a
+  separate material assessment. No Charpy correlation is assumed.</td></tr>
+  <tr><td>fabrication</td><td>Boolean <code>pwht</code> and
+  <code>pressure_test_after_weld</code>. Weld, HAZ and nozzle locations also
+  require <code>weld_type</code> text and nonnegative
+  <code>distance_to_weld_mm</code>; their presence does not qualify a profile.</td></tr>
+  <tr><td>environment</td><td>Boolean <code>hydrogen_service</code>; true also
+  requires nonempty <code>hydrogen_basis</code>. Hydrogen effects remain a
+  specialist review flag.</td></tr>
+  <tr><td>growth</td><td><code>mechanism</code>: none, fatigue,
+  environmental, combined or unknown; nonempty <code>basis</code>; positive
+  <code>assessment_period_years</code>. Cyclic loading or a mechanism other
+  than none also requires <code>parameters</code> containing nonempty
+  <code>model</code>, <code>basis</code>, <code>units</code> and a nonempty
+  <code>values</code> mapping of named finite numbers. These fields record a
+  proposed basis; they do not validate the growth law.</td></tr>
+  <caption>Table 2. Inspection intake fields and conditional requirements.</caption>
+</table>
+
+<h2>Method and worked answer</h2>
+<p>The committed input is
+<code>examples/workflows/api579-part9-crack-fad/input.yml</code>.
+The invented cylinder has a 20 mm wall and a surface indication 5 mm deep and
+30 mm long, with 1 mm depth-sizing uncertainty. The supplied stresses and
+toughness are synthetic demonstration inputs, not measurements or a material
+specification. They shall not be used as engineering data.</p>
+<ol>
+  <li>The required fields and their types are checked.</li>
+  <li>Geometric consistency is checked: depth plus its stated uncertainty is
+  less than wall thickness. For the example, 5 + 1 = 6 mm, below 20 mm.
+  This is a geometric identity, not an API acceptance limit.</li>
+  <li>Strength ordering, flaw-zone toughness, temperature basis and conditional
+  weld, hydrogen and growth fields are checked.</li>
+  <li>Each unavailable numerical method is returned as a named blocker.</li>
+</ol>
+<p><strong>Answer:</strong> the example has zero intake issues and seven
+<code>NOT_EVALUATED</code> method checks. Its intake status is
+<code>COMPLETE_FOR_REVIEW</code>; its engineering verdict is
+<code>NOT_EVALUATED</code>; acceptance, Kr and Lr are null. The way forward is
+to qualify the source data, geometry-specific solutions and an independent
+published example before an engineering disposition is issued.</p>
+
+<h2>Calculation boundaries and later slices</h2>
+<table>
+  <tr><th>Check</th><th>Required evidence before calculation</th></tr>
+  <tr><td>FAD and cutoff</td><td>Edition and applicability qualification for
+  the existing shared <code>assessment.crack_fad.fad_curve_api579_level2</code>.
+  The BS 7910 Option 1 plate assessment is not substituted.</td></tr>
+  <tr><td>Partial safety factors</td><td>A verified category-keyed table,
+  category selection and application rules; no unity default.</td></tr>
+  <tr><td>Annex C K</td><td>Verified cylinder longitudinal/circumferential and
+  sphere influence coefficients, crack-front locations, interpolation,
+  applicability ranges and edition mapping. No plate approximation.</td></tr>
+  <tr><td>Annex D reference stress</td><td>A matching cracked-geometry
+  reference-stress solution. An uncracked pressure stress cannot supply Lr.</td></tr>
+  <tr><td>Annex E residual stress</td><td>Weld/PWHT/pressure-test dependent
+  distributions, secondary-stress treatment and a qualified plasticity-interaction
+  rule. Residual stress is never defaulted to zero.</td></tr>
+  <tr><td>Growth and published cases</td><td>A qualified growth and environment
+  basis, assessment period and independent published-case benchmarks.
+  Remaining life and leak-before-break remain unevaluated.</td></tr>
+  <caption>Table 3. Outstanding numerical qualification under API 579-1/ASME
+  FFS-1 (2016), Part 9 and Annexes C/D/E; clause titles are references only.</caption>
+</table>
+<p>Slice 1 supplies inspection intake. Slice 2 supplies explicit calculation
+readiness and applicability flags, while numerical methods remain deferred.
+Slice 3 supplies engine/registry/API routing, report output and the worked
+example. The complete numerical objective and published-example acceptance
+remain open under issue 2175. The source catalog and extracted tables were
+unavailable in the inspected checkout; their absence does not establish that
+they are absent elsewhere. No standard-derived values are reproduced here.</p>
+
+<h2>Sources and test basis</h2>
+<p><a href="https://www.inspection-for-industry.com/api-579-part-9-crack-like-flaws-assessment.html">API
+579 Part 9 Crack Like Flaws Assessment</a>, Inspection for Industry, undated,
+accessed 2026-10-20 (HTTP 200), supplies the practitioner intake checklist.
+It supplies no numerical qualification used by this workflow. API 579-1/ASME
+FFS-1 (2016), Part 9 and Annexes C/D/E are required method references; no
+licensed source tables or worked examples have been qualified for this route.</p>
+<p><code>test_part9_inspection.py</code> checks each required field and
+uses explicit hand geometry in its test docstrings. Expected results are
+declared missing-data lists and geometric identities, not values generated by
+the implementation. <code>test_part9_workflow.py</code> checks report readback,
+HTML escaping, missing data, registry resolution, engine output isolation and
+repeated workflow API results. These tests establish software behavior only;
+they do not establish agreement with a published Part 9 example.</p>
+</body>
+</html>

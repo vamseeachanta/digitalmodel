@@ -1284,6 +1284,17 @@ workflows:
       kind: in_memory
       key: mooring_mbl
 
+  - id: api579-part9-crack-fad
+    basename: api579_part9_crack_fad
+    title: Part 9 inspection readiness with explicit calculation blockers
+    input: examples/workflows/api579-part9-crack-fad/input.yml
+    outputs: []
+    test: tests/asset_integrity/test_part9_workflow.py::test_registry_row_and_engine_route
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_part9_crack_fad
+
   - id: api579-pitting-screen
     basename: api579_pitting_screen
     title: Offline api579-pitting-screen geometric screening and FFS report
