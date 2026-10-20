@@ -1,0 +1,45 @@
+{
+  "cycle": [
+    [
+      "measure",
+      "model"
+    ],
+    [
+      "model",
+      "quantify"
+    ],
+    [
+      "quantify",
+      "decide"
+    ],
+    [
+      "decide",
+      "reinspect"
+    ],
+    [
+      "reinspect",
+      "measure"
+    ]
+  ],
+  "decision_status": "NOT_EVALUATED",
+  "feedback": {
+    "source": "process-change",
+    "target": "model"
+  },
+  "method": "Qualitative directed cycle; no numerical model or plotted numerical arrays",
+  "provenance": {
+    "ai_use": "AI-assisted chart implementation. This page illustrates an evidence workflow; it performs no AI prediction, agentic monitoring or automated engineering decision.",
+    "basis": "Issue #2695 (2026), Purpose and deliverable 1: uncertainty loop and process-change feedback.",
+    "equations": "None. No numerical engineering constant, coefficient, acceptance limit or forecasting equation is used. Engineering criteria are required inputs.",
+    "rights": "Original schematic and synthetic context are supplied under the repository MIT licence; no third-party data or chart design is reproduced.",
+    "source": "Original synthetic workflow context. No measured readings, private case data or external dataset is included."
+  },
+  "revision": "B",
+  "sha256": {
+    "docs/domains/asset-integrity/uncertainty-loop.html": "615ffc5de5ab864c3322fe2650fe5ac77e234c79dc6a153e938c9f519867da75",
+    "scripts/capabilities/build_uncertainty_loop.py": "c7330700436714fd61d90ce1edb7b6ee5c85fc6745083df180dea38a415517c4",
+    "scripts/capabilities/uncertainty_loop/page.html.template": "a3006756e4c09c912478905db9a802e44597fe291046cc1f260f0edb49a991f8",
+    "scripts/capabilities/uncertainty_loop/workflow.json": "44ae6698e7bb2a70af5e0972b9b64bec7ad5bcab0b2ff5bd515a32ff24e96377"
+  },
+  "status": "synthetic"
+}
