@@ -137,11 +137,50 @@ def linear_offset(force_xy_kn, stiffness_kn_m) -> tuple[float, float]:
     return ((d * fx - b * fy) / det, (a * fy - c * fx) / det)
 
 
+def _validated_screen(screen, active_lines):
+    """Snapshot a sourced single-line comparison and its physical input basis."""
+    if not isinstance(screen, dict):
+        raise ValueError("screen must be a record")
+    line_id = screen.get("line_id")
+    if not isinstance(line_id, str) or line_id not in active_lines:
+        raise ValueError("comparison requires an active screened line")
+    basis = {"line_id": line_id}
+    for key in ("offset_m", "top_tension_kn"):
+        value = _finite(screen.get(key), f"screen {key}")
+        if value < 0:
+            raise ValueError("screen values cannot be negative")
+        basis[key] = value
+    source = screen.get("source")
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError("screen source is required")
+    basis["source"] = source
+    if "inputs" not in screen and "input_manifest" not in screen:
+        raise ValueError(
+            "screen requires physical inputs or an input manifest reference"
+        )
+    if "inputs" in screen:
+        inputs = screen["inputs"]
+        if not isinstance(inputs, dict) or not inputs:
+            raise ValueError("screen inputs must be a nonempty physical input record")
+        try:
+            basis["inputs"] = json.loads(json.dumps(inputs, allow_nan=False))
+        except (TypeError, ValueError) as error:
+            raise ValueError("screen inputs must be finite JSON data") from error
+    if "input_manifest" in screen:
+        reference = screen["input_manifest"]
+        if not isinstance(reference, str) or not reference.strip():
+            raise ValueError("screen input manifest reference must be nonempty")
+        basis["input_manifest"] = reference
+    return basis
+
+
 def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=None):
     """Review supplied peak metrics; PASS refers only to the supplied ratio limit.
 
     Capacities are line-specific required inputs. Limit schema: ratio, source.
     No standard default, dynamic amplification or damaged multiplier is assumed.
+    A screen requires line_id, offset_m, top_tension_kn, source, and physical
+    inputs or an input_manifest reference. Its tension is matched to line_id.
     Supplied extracted metrics do not establish native-output qualification.
     """
     out = {
@@ -156,6 +195,8 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
         "reason": "stored results absent",
         "criterion": limit,
     }
+    if screen is not None:
+        out["screen"] = _validated_screen(screen, case["active_lines"])
     if result is None:
         return out
     if result["basis_sha256"] != case["basis_sha256"]:
@@ -207,16 +248,12 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
             reason="supplied peak/MBL ratio compared with supplied limit",
         )
     if screen is not None:
+        basis = out["screen"]
         # Percent difference definition: 100*(stored-screen)/screen.
-        for key, actual in (
-            ("offset", out["offset_m"]),
-            ("tension", out["max_tension_kn"]),
+        for key, actual, expected in (
+            ("offset", out["offset_m"], basis["offset_m"]),
+            ("tension", tensions[basis["line_id"]], basis["top_tension_kn"]),
         ):
-            expected = _finite(
-                screen["offset_m" if key == "offset" else "top_tension_kn"], "screen"
-            )
-            if expected < 0:
-                raise ValueError("screen values cannot be negative")
             out[f"{key}_difference_pct"] = (
                 100 * (actual - expected) / expected if expected else None
             )
@@ -298,6 +335,16 @@ def render_report(cases, assessments, *, revision, date) -> str:
                 item["source"],
                 description="Supplied metrics; native readback not established",
             )
+        if "screen" in item:
+            screen = item["screen"]
+            provenance.add(
+                "analytical screen",
+                screen["source"],
+                description=(
+                    f"Analytical screen for {case['case_id']}, line {screen['line_id']}; "
+                    "physical input basis retained in the input echo"
+                ),
+            )
     supplied = sum("solver_version" in item for item in assessments.values())
     spec = ReportSpec(
         document=DocumentMeta(
@@ -375,7 +422,9 @@ def render_report(cases, assessments, *, revision, date) -> str:
                             "a matched benchmark. Catenary screening assumes uniform submerged weight, "
                             "inextensible line and frictionless horizontal touchdown. Linear Kq=F offsets "
                             "exclude yaw and nonlinear redistribution. Percent differences use the screen "
-                            "as denominator; a zero screen leaves the difference not established.\n\n"
+                            "as denominator; tension comparisons use the identified active line. "
+                            "The screen source and physical inputs or manifest reference are retained "
+                            "in the input echo. A zero screen leaves the difference not established.\n\n"
                             + CATENARY_SOURCE
                             + "\n\n"
                             + LINEAR_SOURCE

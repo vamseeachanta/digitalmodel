@@ -4,6 +4,8 @@ All numbers below are invented mathematical test inputs, not design data.
 """
 
 import copy
+import html
+import re
 from pathlib import Path
 
 import pytest
@@ -102,6 +104,28 @@ def metric(case):
     }
 
 
+def screen_record(line_id="Mooring_L2", *, offset_m=4, top_tension_kn=64):
+    """Invented analytical basis: H+w*h=64 kN and identity K gives 4 m."""
+    return {
+        "line_id": line_id,
+        "offset_m": offset_m,
+        "top_tension_kn": top_tension_kn,
+        "source": "synthetic analytical basis & equations",
+        "inputs": {
+            "catenary": {
+                "horizontal_kn": 40,
+                "weight_kn_m": 1,
+                "height_m": 24,
+                "length_m": 100,
+            },
+            "linear_offset": {
+                "force_xy_kn": [offset_m, 0],
+                "stiffness_kn_m": [[1, 0], [0, 1]],
+            },
+        },
+    }
+
+
 def test_stored_metrics_and_comparison():
     """Hand check: max(40/100,80/200)=0.4; limit=0.5 -> utilisation=0.8.
 
@@ -118,7 +142,7 @@ def test_stored_metrics_and_comparison():
             for name in case["active_lines"]
         },
         limit={"ratio": 0.5, "source": "test-only criterion"},
-        screen={"offset_m": 4, "top_tension_kn": 64},
+        screen=screen_record(),
     )
     assert out["status"] == "PASS"
     assert out["utilisation"] == pytest.approx(0.8)
@@ -141,7 +165,7 @@ def test_failure_boundary_and_zero_screen():
         metric(case),
         capacities_kn={name: 100 for name in case["active_lines"]},
         limit={"ratio": 0.5, "source": "test-only"},
-        screen={"offset_m": 0, "top_tension_kn": 0},
+        screen=screen_record(offset_m=0, top_tension_kn=0),
     )
     assert out["status"] == "FAIL"
     assert out["offset_difference_pct"] is None
@@ -247,7 +271,7 @@ def test_report_rounds_comparison_including_echo():
     """Independent (5-3)/3*100=200/3 %, presented to one decimal as 66.7 %."""
     cases = build_case_table(ROOT)
     case = cases[0]
-    out = assess_case(case, metric(case), screen={"offset_m": 3, "top_tension_kn": 64})
+    out = assess_case(case, metric(case), screen=screen_record(offset_m=3))
     report = render_report(
         cases, {case["case_id"]: out}, revision="00", date="2026-10-20"
     )
@@ -277,3 +301,133 @@ def test_unspecified_damage_cannot_pass_supplied_criterion():
     )
     assert out["status"] == "NOT_EVALUATED"
     assert out["reason"] == "damaged line unspecified"
+
+
+def test_comparison_matches_screened_line_when_another_line_governs():
+    """Matched difference: 100*(40-64)/64=-37.5%, despite an 80 kN peak."""
+    case = build_case_table(ROOT)[0]
+    out = assess_case(
+        case,
+        metric(case),
+        screen=screen_record("Mooring_L1"),
+    )
+    assert out["max_tension_kn"] == 80
+    assert out["tension_difference_pct"] == -37.5
+
+
+@pytest.mark.parametrize("line_id", [None, "", "absent", "Mooring_L1", []])
+def test_comparison_requires_an_active_screened_line(line_id):
+    case = next(
+        c
+        for c in build_case_table(ROOT, {"spread": "Mooring_L1"})
+        if c["condition"] == "damaged"
+    )
+    screen = screen_record()
+    del screen["line_id"]
+    if line_id is not None:
+        screen["line_id"] = line_id
+    with pytest.raises(ValueError, match="active screened line"):
+        assess_case(case, metric(case), screen=screen)
+
+
+@pytest.mark.parametrize("basis_kind", ["inputs", "input_manifest"])
+def test_screen_basis_is_retained_in_assessment_and_report(basis_kind):
+    cases = build_case_table(ROOT)
+    case = cases[0]
+    screen = screen_record("Mooring_L1")
+    if basis_kind == "input_manifest":
+        del screen["inputs"]
+        screen["input_manifest"] = "analytical-inputs.json#spread-intact-000"
+    out = assess_case(case, metric(case), screen=screen)
+    assert out["screen"] == screen
+    report = render_report(
+        cases, {case["case_id"]: out}, revision="01", date="2026-10-20"
+    )
+    echo = re.search(r'<section id="input-echo">(.*?)</section>', report, re.DOTALL)
+    assert echo is not None
+    echoed = dict(
+        re.findall(
+            r"<tr><td>(.*?)</td><td>(.*?)</td></tr>",
+            html.unescape(echo.group(1)),
+            re.DOTALL,
+        )
+    )
+    prefix = f"assessments.{case['case_id']}.screen."
+    assert echoed[prefix + "line_id"] == "Mooring_L1"
+    assert echoed[prefix + "offset_m"] == "4"
+    assert echoed[prefix + "top_tension_kn"] == "64"
+    assert echoed[prefix + "source"] == screen["source"]
+    if basis_kind == "inputs":
+        assert echoed[prefix + "inputs.catenary.horizontal_kn"] == "40"
+        assert echoed[prefix + "inputs.catenary.height_m"] == "24"
+        assert echoed[prefix + "inputs.linear_offset.force_xy_kn"] == "[4, 0]"
+        assert (
+            echoed[prefix + "inputs.linear_offset.stiffness_kn_m"] == "[[1, 0], [0, 1]]"
+        )
+    else:
+        assert echoed[prefix + "input_manifest"] == screen["input_manifest"]
+    assert "Analytical screen for spread-intact-000, line Mooring_L1" in report
+    assert "synthetic analytical basis &amp; equations" in report
+    assert out["offset_difference_pct"] == 25
+    assert out["tension_difference_pct"] == -37.5
+
+
+@pytest.mark.parametrize("pending", ["missing_results", "unspecified_damage"])
+def test_screen_basis_is_retained_without_an_evaluated_case(pending):
+    cases = build_case_table(ROOT)
+    case = cases[0] if pending == "missing_results" else cases[8]
+    screen = screen_record()
+    out = assess_case(
+        case, None if pending == "missing_results" else metric(case), screen=screen
+    )
+    assert out["status"] == "NOT_EVALUATED"
+    assert out["screen"] == screen
+
+
+def test_retained_screen_basis_does_not_alias_caller_inputs():
+    case = build_case_table(ROOT)[0]
+    screen = screen_record()
+    expected = copy.deepcopy(screen)
+    out = assess_case(case, metric(case), screen=screen)
+    screen["inputs"]["linear_offset"]["force_xy_kn"][0] = 999
+    screen["source"] = "changed source"
+    assert out["screen"] == expected
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source", None),
+        ("source", ""),
+        ("source", "  "),
+        ("source", 1),
+        ("inputs", None),
+        ("inputs", {}),
+        ("inputs", []),
+        ("inputs", {"force_kn": float("nan")}),
+        ("inputs", {"force_kn": float("inf")}),
+        ("inputs", {"force_kn": object()}),
+        ("input_manifest", ""),
+        ("input_manifest", "  "),
+        ("input_manifest", 1),
+        ("offset_m", -1),
+        ("offset_m", True),
+        ("offset_m", float("nan")),
+        ("offset_m", float("inf")),
+        ("top_tension_kn", -1),
+        ("top_tension_kn", False),
+        ("top_tension_kn", float("nan")),
+        ("top_tension_kn", float("inf")),
+    ],
+)
+def test_invalid_screen_basis_is_rejected(field, value):
+    case = build_case_table(ROOT)[0]
+    screen = screen_record()
+    if field == "input_manifest":
+        del screen["inputs"]
+    if value is None:
+        del screen[field]
+    else:
+        screen[field] = value
+    with pytest.raises(ValueError, match="screen"):
+        assess_case(case, metric(case), screen=screen)
