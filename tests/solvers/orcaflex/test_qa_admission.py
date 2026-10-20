@@ -5,7 +5,8 @@ unchanged signed control is admitted once. These are logical contract tests,
 not calculated engineering values or claims of native qualification.
 """
 
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
+import hashlib
 import json
 from pathlib import Path
 from unittest.mock import Mock
@@ -25,12 +26,26 @@ def control(tmp_path):
 
 
 def admit(case, qa):
-    return runner.check_cases([case], qa=qa, expected_dll="test-version")
+    return runner.check_cases([case], qa=qa, expected_dll="test-version")[0]
 
 
 def test_valid_control_is_admitted_once_without_mutation(control):
     case, qa, _ = control
     assert admit(case, qa) == [case]
+
+
+def test_validated_binding_contains_both_immutable_identities(control):
+    case, qa, record = control
+    payload = json.dumps(
+        {key: value for key, value in record.items() if key != "signature"},
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode()
+    binding = qa.validate(case, "test-version")
+    assert binding.input_sha256 == record["input_sha256"]
+    assert binding.evidence_sha256 == hashlib.sha256(payload).hexdigest()
+    for field in ("input_sha256", "evidence_sha256"):
+        with pytest.raises(FrozenInstanceError):
+            setattr(binding, field, "changed")
 
 
 @pytest.mark.parametrize("refusal", ("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9"))
@@ -195,7 +210,7 @@ def test_nonfinite_case_parameters_are_not_json_evidence(control):
 
 
 def test_empty_batch_needs_no_admission_records():
-    assert runner.check_cases([]) == []
+    assert runner.check_cases([]) == ([], {})
 
 
 def test_whole_batch_is_checked_before_any_output_or_worker(control, tmp_path, monkeypatch):
@@ -227,7 +242,7 @@ def test_worker_refuses_changed_fingerprint_before_solver_access(control, tmp_pa
     record = runner.run_one(
         case, adapter="unused:adapter", out_dir=str(tmp_path / "worker"),
         admitted_input_sha256=qa.requests[case["case_id"]].input_sha256,
-        qa_evidence_sha256=qa.validate(case, "test-version"),
+        qa_evidence_sha256=qa.validate(case, "test-version").evidence_sha256,
     )
     assert record["status"] == "admission_failed"
     assert record["phase"] == "admission"
@@ -284,7 +299,7 @@ def test_worker_matches_admission_before_reopen_and_keeps_evidence_identity(cont
     master = Adapter().build(case, tmp_path / "independent")
     fingerprint = control_fingerprint(master, case)
     qa = make_qa([case], tmp_path / "qa", {case["case_id"]: fingerprint})
-    evidence_digest = qa.validate(case, "test-version")
+    evidence_digest = qa.validate(case, "test-version").evidence_sha256
     api = SimpleNamespace(Model=Model, ModelState=SimpleNamespace(InStaticState="static"))
     monkeypatch.setattr(runner, "_api", lambda *_: (api, "test-version"))
     monkeypatch.setattr(runner, "_adapter", lambda _: Adapter())

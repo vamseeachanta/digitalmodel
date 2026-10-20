@@ -50,6 +50,14 @@ class AdmissionRequest:
 
 
 @dataclass(frozen=True)
+class AdmissionBinding:
+    """Immutable input and approved evidence identities from one validation."""
+
+    input_sha256: str
+    evidence_sha256: str
+
+
+@dataclass(frozen=True)
 class AdmissionContext:
     """Trusted admission policy, supplied independently of candidate records.
 
@@ -66,8 +74,8 @@ class AdmissionContext:
     verify_signature: Callable[[bytes, Mapping[str, Any]], bool]
     requests: Mapping[str, AdmissionRequest]
 
-    def validate(self, case: dict, expected_version: str) -> str:
-        """Refuse incomplete evidence, or return its canonical record digest."""
+    def validate(self, case: dict, expected_version: str) -> AdmissionBinding:
+        """Refuse incomplete evidence, or bind both identities from this request."""
         request = self.requests.get(case["case_id"])
         if not isinstance(request, AdmissionRequest):
             raise AdmissionRefused("B1", "missing model evidence record")
@@ -151,7 +159,10 @@ class AdmissionContext:
             approved = False
         if not approved:
             raise AdmissionRefused("B6", "exact evidence content has no approved signature")
-        return hashlib.sha256(payload).hexdigest()
+        return AdmissionBinding(
+            input_sha256=request.input_sha256,
+            evidence_sha256=hashlib.sha256(payload).hexdigest(),
+        )
 
 
 def record_payload(record: Mapping[str, Any]) -> bytes:

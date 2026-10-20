@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 import time as _time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -332,3 +335,178 @@ def test_failed_case_leaves_no_orphan_sim_when_not_kept(monkeypatch, tmp_path):
     assert rec["status"] == "extraction_failed" and rec["sim_kept"] is None
     assert not (tmp_path / "work" / "F1" / "F1.sim").exists()
     assert not (tmp_path / "work" / "F1" / "model").exists()
+
+
+@pytest.mark.parametrize("filename", ("test_campaign.py", "test_w5_channels.py"))
+def test_native_batch_callers_supply_qa_context(filename):
+    import ast
+
+    tree = ast.parse(Path(__file__).with_name(filename).read_text())
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Attribute) and node.func.attr == "run_cases"]
+    assert calls
+    assert all(any(keyword.arg == "qa" for keyword in call.keywords) for call in calls)
+
+
+@pytest.mark.parametrize("error", (ImportError("missing adapter"), AttributeError("missing adapter")))
+def test_adapter_resolution_failure_is_a_load_failure(monkeypatch, tmp_path, error):
+    def fail(_):
+        raise error
+
+    monkeypatch.setattr(pr, "_adapter", fail)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == "load_failed"
+    assert rec["retry"] is False
+
+
+def test_worker_receives_the_validated_evidence_digest(monkeypatch, counting_pool, tmp_path):
+    from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext
+
+    cases = _cases(1)
+    qa = make_qa(cases, tmp_path / "qa", version="11.6c")
+    validate = AdmissionContext.validate
+    validated = {}
+
+    def mutate_after_validation(self, case, version):
+        binding = validate(self, case, version)
+        validated[case["case_id"]] = binding.evidence_sha256
+        self.requests[case["case_id"]].record["deviations"].append({"disposition": "changed"})
+        return binding
+
+    def worker(case, **kwargs):
+        assert kwargs["qa_evidence_sha256"] == validated[case["case_id"]]
+        return _ok(case, **kwargs)
+
+    monkeypatch.setattr(AdmissionContext, "validate", mutate_after_validation)
+    monkeypatch.setattr(pr, "run_one", worker)
+    result = pr.run_cases(cases, adapter="x:y", out_dir=tmp_path, max_workers=1, qa=qa)
+    assert result["results"][0]["status"] == "ok"
+
+
+def test_shared_qa_controls_select_both_consumer_shards():
+    import runpy
+
+    root = Path(__file__).resolve().parents[3]
+    detector = runpy.run_path(str(root / "scripts/ci/detect_touched_domains.py"))
+    domains = detector["parse_domains"](root / "tests/DOMAINS.md")
+    selected = detector["touched_domains"](["tests/solvers/orcaflex/qa_fixtures.py"], domains)
+    assert {domain.name for domain in selected} == {"orcaflex-solver", "subsea"}
+
+
+@pytest.mark.parametrize("worker_content", ("approved", "replacement"))
+def test_concurrent_request_refresh_keeps_validated_input_and_evidence_together(
+    monkeypatch, counting_pool, tmp_path, worker_content,
+):
+    """A refresh during signature verification cannot approve replacement bytes."""
+    case = _cases(1)[0]
+
+    class Adapter:
+        def build(self, case, directory, content=worker_content):
+            directory.mkdir(parents=True)
+            master = directory / "master.yml"
+            master.write_text(f"synthetic: {content}\n", encoding="utf-8")
+            return master
+
+    ad = Adapter()
+    approved = control_fingerprint(ad.build(case, tmp_path / "approved", "approved"), case)
+    replacement = control_fingerprint(ad.build(case, tmp_path / "replacement", "replacement"), case)
+    assert approved != replacement
+    qa = make_qa([case], tmp_path / "qa", {case["case_id"]: approved}, version="11.6c")
+    original = qa.requests[case["case_id"]]
+    payload = json.dumps(
+        {key: value for key, value in original.record.items() if key != "signature"},
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode()
+    evidence = hashlib.sha256(payload).hexdigest()
+    verifying, refreshed = threading.Event(), threading.Event()
+    verify_signature = qa.verify_signature
+
+    def verify(payload, signature):
+        verifying.set()
+        assert refreshed.wait(5), "request refresh did not finish"
+        return verify_signature(payload, signature)
+
+    def refresh():
+        assert verifying.wait(5), "signature verification did not start"
+        qa.requests[case["case_id"]] = replace(original, input_sha256=replacement)
+        refreshed.set()
+
+    qa = replace(qa, verify_signature=verify)
+    api = Mock(side_effect=RuntimeError("synthetic native boundary"))
+    monkeypatch.setattr(pr, "_api", api)
+    monkeypatch.setattr(pr, "_adapter", lambda _: ad)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending = pool.submit(refresh)
+        result = pr.run_cases([case], adapter="x:y", out_dir=tmp_path / "batch",
+                              max_workers=1, qa=qa)
+        pending.result(timeout=5)
+    assert qa.requests[case["case_id"]].input_sha256 == replacement
+    (rec,) = result["results"]
+    assert rec["qa_evidence_sha256"] == evidence
+    assert rec["retry"] is False
+    if worker_content == "replacement":
+        assert rec["input_sha256"] == replacement
+        assert rec["status"] == "admission_failed"
+        assert "B2" in rec["message"]
+        api.assert_not_called()
+    else:
+        assert rec["input_sha256"] == approved
+        assert rec["status"] == "load_failed"
+        api.assert_called_once()
+
+
+@pytest.mark.parametrize("stage", ("build", "hash"))
+@pytest.mark.parametrize("error", (
+    OSError("transient file failure"), PermissionError("file unavailable"),
+    FileNotFoundError("file unavailable"), ValueError("invalid model"),
+))
+def test_preflight_file_errors_retry_without_native_access(monkeypatch, tmp_path, stage, error):
+    class Adapter:
+        def build(self, case, directory):
+            if stage == "build":
+                raise error
+            directory.mkdir(parents=True)
+            master = directory / "master.yml"
+            master.write_text("synthetic: input\n", encoding="utf-8")
+            return master
+
+    def fail_hash(_):
+        raise error
+
+    api = Mock(side_effect=AssertionError("native access is forbidden"))
+    monkeypatch.setattr(pr, "_api", api)
+    monkeypatch.setattr(pr, "_adapter", lambda _: Adapter())
+    if stage == "hash":
+        monkeypatch.setattr(pr, "sha256_file", fail_hash)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    retry = isinstance(error, OSError)
+    assert rec["status"] == ("infra_fault" if retry else "build_failed")
+    assert rec["retry"] is retry
+    assert rec["phase"] == "build"
+    api.assert_not_called()
+
+
+@pytest.mark.parametrize("status", ("stFileReadError", "stFileWriteError"))
+def test_native_file_error_status_still_retries(monkeypatch, tmp_path, status):
+    class Adapter:
+        def build(self, case, directory):
+            directory.mkdir(parents=True)
+            master = directory / "master.yml"
+            master.write_text("synthetic: input\n", encoding="utf-8")
+            return master
+
+    case = _cases(1)[0]
+    ad = Adapter()
+    fingerprint = control_fingerprint(ad.build(case, tmp_path / "control"), case)
+    error = RuntimeError("synthetic binding file error")
+    error.status = 7
+    api = SimpleNamespace(Model=Mock(side_effect=error), **{status: error.status})
+    monkeypatch.setattr(pr, "_api", lambda *_: (api, "11.6c"))
+    monkeypatch.setattr(pr, "_adapter", lambda _: ad)
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path / "worker"),
+                     admitted_input_sha256=fingerprint, qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == "infra_fault"
+    assert rec["retry"] is True
+    assert rec["phase"] == "load"
