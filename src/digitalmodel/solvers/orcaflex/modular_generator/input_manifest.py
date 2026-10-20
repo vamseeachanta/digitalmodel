@@ -61,7 +61,10 @@ def _input_path(root: Path, parent: Path, reference: str) -> Path:
     if reference.startswith("/") or windows_path.drive or windows_path.root:
         raise InputManifestError("Input reference must be relative to the bundle")
     # OrcaFlex files can be prepared with Windows separators on another system.
-    path = (parent / reference.replace("\\", "/")).resolve()
+    try:
+        path = (parent / reference.replace("\\", "/")).resolve()
+    except (OSError, RuntimeError) as exc:
+        raise InputManifestError("Cannot resolve input reference") from exc
     if not path.is_relative_to(root):
         raise InputManifestError("Input dependency is outside the bundle")
     if not path.is_file():
@@ -115,9 +118,12 @@ def _references(content: bytes, name: str) -> tuple[list[str], list[dict[str, st
 
 def _capture(root: Path, inputs: Iterable[str]) -> dict:
     root = root.resolve()
-    seeds = sorted(
-        {_input_path(root, root, name).relative_to(root).as_posix() for name in inputs}
-    )
+    seed_paths: dict[str, Path] = {}
+    for name in inputs:
+        path = _input_path(root, root, name)
+        # Retain entry-point names so verification revalidates their links.
+        seed_paths[Path(name.replace("\\", "/")).as_posix()] = path
+    seeds = sorted(seed_paths)
     if not seeds:
         raise InputManifestError("At least one input is required")
     files: dict[str, str] = {}
@@ -125,7 +131,7 @@ def _capture(root: Path, inputs: Iterable[str]) -> dict:
     unresolved: list[dict[str, str]] = []
     active: set[Path] = set()
     # Iterative DFS avoids a Python recursion limit for long dependency chains.
-    pending = [(root / name, False) for name in reversed(seeds)]
+    pending = [(seed_paths[name], False) for name in reversed(seeds)]
     while pending:
         path, leaving = pending.pop()
         if leaving:

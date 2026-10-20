@@ -223,6 +223,52 @@ def test_invalid_yaml_and_symlink_escape_fail(tmp_path):
         write_input_manifest(root, ["master.yml"])
 
 
+@pytest.mark.parametrize("reference", ["master.yml", r"sub\master.yml"])
+def test_seed_symlink_retains_requested_name(tmp_path, reference):
+    """The seed name is retained while dependencies use the resolved parent."""
+    target = put(tmp_path, "a.yml", "BaseFile: leaf.yml\n")
+    put(tmp_path, "leaf.yml", "{}\n")
+    link = tmp_path / reference.replace("\\", "/")
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link_target = Path("..") / target.name if link.parent != tmp_path else target.name
+    try:
+        link.symlink_to(link_target)
+    except OSError:
+        pytest.skip("Symlink creation is unavailable on this platform")
+    manifest = load(write_input_manifest(tmp_path, [reference]))
+    assert manifest["roots"] == [reference.replace("\\", "/")]
+    assert set(manifest["files"]) == {"a.yml", "leaf.yml"}
+    assert verify_input_manifest(tmp_path).status == "PASS"
+
+
+@pytest.mark.parametrize("mutation", ["remove", "redirect", "escape", "loop"])
+def test_seed_symlink_change_fails_verification(tmp_path, mutation):
+    """A missing or redirected entry point invalidates unchanged evidence."""
+    root = tmp_path / "bundle"
+    target = put(root, "a.yml", "{}\n")
+    replacement = put(root, "b.yml", "changed\n")
+    external = put(tmp_path, "external.yml", "{}\n")
+    link = root / "master.yml"
+    try:
+        link.symlink_to(target.name)
+    except OSError:
+        pytest.skip("Symlink creation is unavailable on this platform")
+    manifest_path = write_input_manifest(root, ["master.yml"])
+    manifest_bytes = manifest_path.read_bytes()
+    target_bytes = target.read_bytes()
+    assert verify_input_manifest(root).status == "PASS"
+    link.rename(root / "retained-link.yml")
+    if mutation == "redirect":
+        link.symlink_to(replacement.name)
+    elif mutation == "escape":
+        link.symlink_to(Path("..") / external.name)
+    elif mutation == "loop":
+        link.symlink_to(link.name)
+    assert verify_input_manifest(root).status == "FAIL"
+    assert manifest_path.read_bytes() == manifest_bytes
+    assert target.read_bytes() == target_bytes
+
+
 def test_missing_or_invalid_manifest_fails(tmp_path):
     """Absent and malformed evidence never passes."""
     assert verify_input_manifest(tmp_path).status == "FAIL"

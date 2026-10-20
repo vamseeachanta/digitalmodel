@@ -24,6 +24,11 @@ malformed YAML fail. Dependencies outside the bundle must be packaged inside it
 with updated references before manifest generation. No path is copied or rewritten
 by the collector.
 
+Recorded roots retain the requested seed names, including symlink entry points.
+Each check resolves those names again and enforces bundle containment. Removing
+or redirecting a seed link fails verification when its recorded input graph
+changes; dependency paths remain relative to the resolved containing file.
+
 Other nonempty string fields whose names end in `File` or `FileName`
 (case-insensitive) are recorded as `unresolved_external_references`. Each record
 identifies the containing file, key and reference string. These references are
@@ -109,6 +114,8 @@ produce different recorded names and fingerprints across filesystems.
 
 Existing manifests without `unresolved_external_references` must be regenerated
 to include this evidence, even when the list is empty.
+Older manifests that recorded resolved targets instead of symlink seed names must
+also be regenerated to bind the requested entry points.
 
 Manifest capture also runs with `allow_validation_errors=True`. This option
 bypasses post-generation validation errors for diagnostic output; it does not
