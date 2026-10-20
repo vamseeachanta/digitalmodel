@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline attestation tests; fixtures are synthetic, never native solver evidence.
 
 Expected counts are enumerated fixture sets. Digests use the independently
@@ -10,6 +13,7 @@ coefficients or acceptance limits are introduced.
 import hashlib
 import importlib.abc
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -412,4 +416,74 @@ def test_failure_object_disposition_requires_text(stored, object_name, reason):
     )
     record["statics"].update(status="NOT_ATTEMPTED", converged=None)
     with pytest.raises(ValueError, match="object"):
+        am.reconcile_results(manifest, [record], native)
+
+
+def test_tampered_cyclic_bundle_is_rejected_before_yaml_parsing(
+    stored, domain, tmp_path, monkeypatch
+):
+    manifest, _, _ = stored
+    master = tmp_path / "out" / manifest["cases"][0]["master"]
+    master.write_text("cycle: &cycle [*cycle]\n")
+
+    def unexpected_parse(*args, **kwargs):
+        pytest.fail("tampered YAML was parsed before its digest was checked")
+
+    monkeypatch.setattr(am.yaml, "safe_load", unexpected_parse)
+    with pytest.raises(ValueError, match="digest"):
+        am.verify_generated(manifest, domain, tmp_path / "out")
+
+
+def test_recursive_yaml_alias_traversal_terminates(tmp_path):
+    master = tmp_path / "master.yml"
+    master.write_text("cycle: &cycle [*cycle]\n")
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; from pathlib import Path; "
+            "sys.path.insert(0, sys.argv[1]); "
+            "import attestation_manifest as am; "
+            "assert am._generated_files(Path(sys.argv[2]), 'master.yml') "
+            "== {'master.yml': am.digest(Path(sys.argv[2]) / 'master.yml')}",
+            str(Path(am.__file__).parent),
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    assert probe.returncode == 0, probe.stderr
+
+
+@pytest.mark.parametrize("child_name", ["a", "z"])
+def test_nested_cases_read_back_in_both_generation_orders(tmp_path, child_name):
+    root = tmp_path / "domain"
+    names = [
+        "library/templates/example/spec.yml",
+        f"library/templates/example/{child_name}/spec.yml",
+    ]
+    for name in names:
+        source = root / name
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text("abc")
+
+    def generate(spec, output):
+        output.mkdir(parents=True, exist_ok=True)
+        (output / "master.yml").write_text("General: {}\n")
+
+    manifest = am.generate_cases(
+        am.build_manifest(root, "v"), root, tmp_path / "out", generate
+    )
+    assert all(case["generation"]["status"] == "PASS" for case in manifest["cases"])
+    am.verify_generated(manifest, root, tmp_path / "out")
+
+
+def test_failed_load_requires_statics_not_attempted(stored):
+    manifest, record, native = stored
+    record["load"].update(
+        status="FAIL", error="Synthetic error", failing_object="LineA"
+    )
+    record["statics"].update(status="NOT_EVALUATED", converged=None)
+    with pytest.raises(ValueError, match="NOT_ATTEMPTED"):
         am.reconcile_results(manifest, [record], native)

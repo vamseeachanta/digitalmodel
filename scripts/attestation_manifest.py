@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline specification attestation; never executes or imports a native solver.
 
 Scope: issue 2428 named roots. Claim policy: SEMANTIC_EQUIVALENCE_CLAIM_BOUNDARY
@@ -7,6 +10,7 @@ sections 1.1 and 4; recorded load/statics evidence alone cannot promote L2/L3.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable, Sequence
 import copy
 from datetime import datetime
 import hashlib
@@ -51,6 +55,7 @@ def relative_path(value: str) -> Path:
 
 
 def contained(root: Path, value: str) -> Path:
+    """Resolve an unlinked path within the supplied evidence root."""
     path = root / relative_path(value)
     if not path.resolve().is_relative_to(root.resolve()):
         raise ValueError("path escapes root")
@@ -60,14 +65,18 @@ def contained(root: Path, value: str) -> Path:
 
 
 def digest(path: Path) -> str:
+    """Return the SHA-256 digest of the supplied file bytes."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def dumps(value: dict) -> str:
+    """Serialize a manifest deterministically with a final newline."""
     return json.dumps(value, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
 
 
-def build_manifest(root: Path, solver_version: str, *, paths=None) -> dict:
+def build_manifest(
+    root: Path, solver_version: str, *, paths: Sequence[str] | None = None
+) -> dict:
     """Inventory source bytes and intended outputs, with no execution claims."""
     root = Path(root).resolve(strict=True)
     if not solver_version.strip():
@@ -125,6 +134,17 @@ def _alternate_schema(source: Path) -> bool:
     )
 
 
+def _bundle_digests(output: Path, master: str) -> dict:
+    directory = contained(output, master).parent
+    files = {}
+    for path in sorted(directory.rglob("*")):
+        relative = path.relative_to(output).as_posix()
+        contained(output, relative)
+        if path.is_file():
+            files[relative] = digest(path)
+    return files
+
+
 def _generated_files(output: Path, master: str) -> dict:
     """Hash the full generated bundle and check recursive YAML include closure."""
     master_path = contained(output, master)
@@ -135,9 +155,13 @@ def _generated_files(output: Path, master: str) -> dict:
             continue
         visited.add(current)
         data = yaml.safe_load(current.read_text(encoding="utf-8"))
-        nodes = [data]
+        nodes, containers = [data], set()
         while nodes:
             node = nodes.pop()
+            if isinstance(node, (list, dict)):
+                if id(node) in containers:
+                    continue
+                containers.add(id(node))
             if isinstance(node, list):
                 nodes.extend(node)
             elif isinstance(node, dict):
@@ -148,14 +172,7 @@ def _generated_files(output: Path, master: str) -> dict:
                         pending.append(
                             contained(output, target.relative_to(output).as_posix())
                         )
-    directory = master_path.parent
-    files = {}
-    for path in sorted(directory.rglob("*")):
-        relative = path.relative_to(output).as_posix()
-        contained(output, relative)
-        if path.is_file():
-            files[relative] = digest(path)
-    return files
+    return _bundle_digests(output, master)
 
 
 def _validate_manifest(manifest: dict) -> None:
@@ -181,7 +198,12 @@ def _validate_manifest(manifest: dict) -> None:
         raise ValueError("empty specification inventory")
 
 
-def generate_cases(manifest: dict, root: Path, output: Path, generator=None) -> dict:
+def generate_cases(
+    manifest: dict,
+    root: Path,
+    output: Path,
+    generator: Callable[[Path, Path], None] | None = None,
+) -> dict:
     """Generate independent cases; refuse stale outputs and changed source bytes."""
     _validate_manifest(manifest)
     root, output = Path(root).resolve(), Path(output).absolute()
@@ -212,12 +234,6 @@ def generate_cases(manifest: dict, root: Path, output: Path, generator=None) -> 
             (generator or generate_one)(
                 source, output / relative_path(case["master"]).parent
             )
-            case_dir = output / relative_path(case["master"]).parent
-            files = _generated_files(case_dir, "master.yml")
-            case["files"] = {
-                (case_dir / path).relative_to(output).as_posix(): sha
-                for path, sha in files.items()
-            }
             case["generation"] = {"status": "PASS"}
         except (ValueError, TypeError, KeyError, OSError, yaml.YAMLError) as exc:
             error = f"{type(exc).__name__}: {exc}"
@@ -227,6 +243,23 @@ def generate_cases(manifest: dict, root: Path, output: Path, generator=None) -> 
             case["generation"] = {"status": "FAIL", "error": error}
         if digest(source) != case["source_sha256"]:
             raise ValueError("source digest changed during generation")
+    # Nested cases share directories. Freeze every map against the final tree.
+    for case in result["cases"]:
+        if case["generation"]["status"] != "PASS":
+            continue
+        try:
+            case_dir = contained(output, case["master"]).parent
+            files = _generated_files(case_dir, "master.yml")
+            case["files"] = {
+                (case_dir / path).relative_to(output).as_posix(): sha
+                for path, sha in files.items()
+            }
+        except (ValueError, TypeError, KeyError, OSError, yaml.YAMLError) as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            error = error.replace(str(root), "<spec-root>").replace(
+                str(output), "<output-root>"
+            )
+            case["generation"] = {"status": "FAIL", "error": error}
     return result
 
 
@@ -262,6 +295,12 @@ def verify_generated(manifest: dict, root: Path, output: Path) -> None:
         if case["generation"]["status"] != "PASS":
             continue
         directory = contained(Path(output).resolve(), case["master"]).parent
+        expected = {
+            (directory / p).relative_to(Path(output).resolve()).as_posix(): sha
+            for p, sha in _bundle_digests(directory, "master.yml").items()
+        }
+        if expected != case["files"]:
+            raise ValueError("generated bundle digest mismatch")
         files = _generated_files(directory, "master.yml")
         actual = {
             (directory / p).relative_to(Path(output).resolve()).as_posix(): sha
@@ -295,6 +334,11 @@ def _validate_record(case: dict, record: dict, version: str) -> None:
     _timestamps(record)
     for stage in ("load", "statics"):
         _stage(record[stage])
+    if (
+        record["load"]["status"] == "FAIL"
+        and record["statics"]["status"] != "NOT_ATTEMPTED"
+    ):
+        raise ValueError("load FAIL requires statics NOT_ATTEMPTED")
     if (
         record["statics"]["status"] == "PASS"
         and record["statics"].get("converged") is not True
@@ -356,7 +400,7 @@ def reconcile_results(manifest: dict, records: list, evidence_root: Path) -> dic
 def render_summary(manifest: dict, report_date: str) -> str:
     """Render only recorded outcomes; HTML-escape all supplied text."""
 
-    def esc(value):
+    def esc(value: object) -> str:
         return html.escape(str(value))
 
     rows = []
@@ -408,7 +452,8 @@ def _argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    """Inventory, generate or reconcile evidence from command-line arguments."""
     parser = _argument_parser()
     args = parser.parse_args(argv)
     if args.generate and args.input_manifest:

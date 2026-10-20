@@ -40,6 +40,10 @@ remains separate cases. All files in a successful generated case are hashed,
 including parameter files; nested YAML `includefile` and `BaseFile` references
 must resolve inside that case's directory. Absolute paths, parent traversal and
 linked files are rejected.
+Nested cases share output trees; bundle maps are finalized after all cases have
+generated so readback uses the complete tree regardless of generation order.
+Readback compares bundle digests before parsing generated YAML, and recursive
+YAML aliases are traversed once per container.
 
 The existing `ModularModelGenerator.generate` method is used without diagnostic
 validation overrides. Per-case schema, validation and file errors are retained
