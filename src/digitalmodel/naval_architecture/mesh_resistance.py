@@ -2,9 +2,11 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Mesh-derived calm-water friction records, with missing components explicit.
 
-Sources: ITTC 7.5-03-02-04 (2024, revision 02), sections 2.7 and 4;
-ITTC 7.5-02-03-01.4 (2021, revision 05), section 2.4.1. Neither
-source makes a friction-only estimate a total hull-resistance prediction.
+Sources: ITTC 7.5-03-02-04 (2024, revision 02), section 2.1 for Re/Fn
+and the unnumbered tutorial, printed page 8, for the friction correlation;
+ITTC 7.5-02-03-01.4 (2021, revision 05), section 2.4.1 for resistance
+coefficients and the form-factor decomposition. Neither source makes a
+friction-only estimate a total hull-resistance prediction.
 """
 
 from __future__ import annotations
@@ -175,8 +177,9 @@ def mesh_friction(
         "method_class": "empirical_correlation",
         "method": "ITTC-1957 friction with optional declared form factor",
         "equation_sources": [
-            "ITTC 7.5-03-02-04 (2024 rev 02), section 4: ITTC-1957 correlation line",
-            "ITTC 7.5-02-03-01.4 (2021 rev 05), section 2.4.1: resistance coefficients",
+            "ITTC 7.5-03-02-04 (2024 rev 02), section 2.1: Reynolds and Froude numbers",
+            "ITTC 7.5-03-02-04 (2024 rev 02), unnumbered tutorial, printed page 8: ITTC-1957 correlation line",
+            "ITTC 7.5-02-03-01.4 (2021 rev 05), section 2.4.1: resistance coefficients and form-factor decomposition",
         ],
         "citations": [asdict(c) for c in cf_record["citations"]],
         "citation_status": "RESOLVED" if cf_record["citations"] else "UNRESOLVED",

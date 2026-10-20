@@ -1,8 +1,8 @@
-# Mesh-derived resistance and analytical research
+# Mesh-derived calm-water friction records
 
 The implementation connects existing mesh hydrostatics and SI friction to a
-traceable result, condition-matched comparisons and a reusable analytical
-evidence gate. It provides a friction estimate and arithmetic verification.
+traceable result. It provides a friction estimate and an independent synthetic
+arithmetic check.
 Physical hull-resistance accuracy, wave resistance and total effective power
 remain **NOT_EVALUATED**. Refs #2239.
 
@@ -11,31 +11,26 @@ remain **NOT_EVALUATED**. Refs #2239.
 | Revision | Date | What changed and why |
 |---|---|---|
 | 1 | 2026-10-20 | Added friction records, benchmark gates and analytical evidence checks to extend the existing geometry and friction kernels. |
+| 2 | 2026-10-20 | Retained mesh friction only, deferred the benchmark and analytical gates and transfer inventory, and corrected the equation source locators. |
 
-## Implemented slices and ownership
+## Implementation and ownership
 
-1. `src/digitalmodel/naval_architecture/mesh_resistance.py` consumes
-   `mesh_hydrostatics.compute_hydrostatics` without changing its output schema.
-   Geometry/input hashes, SI conditions, source revision, package version,
-   mathematical class, component forces, citations and omissions accompany the
-   result. `friction_scaling.py` remains the source of SI dimensionless kernels.
-2. `src/digitalmodel/naval_architecture/resistance_validation.py` requires
-   observable, units, normalization, geometry and complete conditions to match.
-   A separate split check groups whole families, geometry hashes and normalized
-   source hashes across train/calibration/validation/test roles. Public export
-   requires an explicit redistribution declaration and its basis.
-3. `src/digitalmodel/naval_architecture/analytical_verification.py` records
-   dimensional, governing-equation, continuity, boundary/initial-condition,
-   force and limiting-case evidence. Missing evidence stays NOT_EVALUATED;
-   failed criteria and extrapolation produce REJECTED records. Finite checks
-   never establish a formal proof or promote a surrogate to an exact solution.
+`src/digitalmodel/naval_architecture/mesh_resistance.py` consumes
+`mesh_hydrostatics.compute_hydrostatics` without changing its output schema.
+Geometry/input hashes, SI conditions, source revision, package version,
+mathematical class, component forces, citations and omissions accompany the
+result. `friction_scaling.py` remains the source of SI dimensionless kernels.
+
+Benchmark comparisons, analytical evidence gates and the cross-domain inventory
+are deferred to separately authorized changes under #2239. They are not
+dependencies of the friction record or worked example.
 
 These are algorithms and ephemeral result records, not a new data catalog.
 Reusable retained results remain with the existing authoritative data repository. Original
 synthetic examples are covered by the repository license; external source
-documents and numerical datasets are not redistributed here. Rights fields
-are declarations, not an automatic license review. Hashes supplied by a caller
-must be checked against retained bytes by the consuming workflow.
+documents and numerical datasets are not redistributed here. The consuming
+workflow must check source rights and hashes against retained bytes before
+using external data.
 
 ## Geometry and operating contract
 
@@ -70,9 +65,9 @@ its trapezoidal integration is not used as an independent mesh oracle.
 
 | Quantity | Equation | Open source inspected |
 |---|---|---|
-| Reynolds number | Re = UL/nu | ITTC CFD guideline, 2024 revision 02, sections 2.1 and 4 |
-| Froude number | Fn = U/sqrt(gL) | Same source, sections 2.1 and 4 |
-| Friction coefficient | CF = 0.075/(log10(Re) - 2)^2 | Same source, section 4, printed page 8 |
+| Reynolds number | Re = UL/nu | ITTC CFD guideline, 2024 revision 02, section 2.1 |
+| Froude number | Fn = U/sqrt(gL) | Same source, section 2.1 |
+| Friction coefficient | CF = 0.075/(log10(Re) - 2)^2 | Same source, unnumbered tutorial, printed page 8 |
 | Friction force | RF = rho U^2 S CF/2 | ITTC performance prediction procedure, 2021 revision 05, section 2.4.1 |
 | Declared form term | Rform = k RF | Same procedure, section 2.4.1, form-factor decomposition |
 | Component power | PF = RF U | Mechanical work definition; CFD guideline section 1 distinguishes effective power |
@@ -87,14 +82,10 @@ Sources opened on 2026-10-20:
 
 - [ITTC Practical Guidelines for Ship Resistance CFD, 2024 revision 02](https://ittc.info/media/11960/75-03-02-04.pdf), HTTP 200.
 - [1978 ITTC Performance Prediction Method, 2021 revision 05](https://ittc.info/media/11796/75-02-03-014.pdf), HTTP 200.
-- [AI Feynman, arXiv:1905.11481, 2019](https://arxiv.org/abs/1905.11481), HTTP 200; candidate symbolic expressions are not proofs of arbitrary boundary-value problems.
-- [Official existence and smoothness problem context](https://www.claymath.org/millennium/navier-stokes-equation/), HTTP 200; this is distinct from a prescribed hull boundary-value solver.
-- [Thin-ship paper identifier](https://doi.org/10.1080/14786449808621111), publisher HTTP 403; no equations, coefficients or accuracy limits from that paper were used.
 
-Source responses, UTC retrieval times and statuses are retained as working
-evidence outside the repository. Availability establishes no redistribution
-right. The announcement mentioned in the issue is not used as an executable
-engineering method or as authority for a numerical value.
+The cited source locations were checked on 2026-10-20. Availability establishes
+no redistribution right. The announcement mentioned in the issue is not used
+as an executable engineering method or as authority for a numerical value.
 
 The friction wrapper reuses the existing `Citation` sidecar contract.
 Configured missing/stale references still fail closed. Explicit `cite=False`
@@ -123,10 +114,10 @@ The independent hand calculation is:
 Displayed results are rounded; calculations and test expectations retain the
 unrounded arithmetic values.
 
-The example compares RF to the independent hand calculation with an absolute
-arithmetic roundoff budget of 1e-10 N. That budget verifies arithmetic only;
-it is not a towing-tank accuracy criterion. The analytical gate returns
-NOT_EVALUATED because no governing-equation or boundary evidence was supplied.
+The example exposes the independent hand-calculated force and an
+`arithmetic_matches` boolean with an absolute roundoff budget of 1e-10 N and
+zero relative tolerance. That budget checks arithmetic only; it is not a
+towing-tank accuracy criterion. No benchmark or analytical evidence gate is run.
 
 ## Method selection and later slices
 
@@ -138,8 +129,6 @@ NOT_EVALUATED because no governing-equation or boundary evidence was supplied.
 | Thin-ship method | Linear-theory integral evaluated numerically | Converged sections, slender-hull assumptions | NOT_EVALUATED pending readable source and independent linear-theory benchmark; no full-bodied use or closed-form label |
 | Potential-flow panels | Numerical integral-equation method | Surface panels and boundary conditions | Follow-up; excludes turbulent separation and needs its own mesh convergence evidence |
 | RANS resistance | Numerical PDE solution | Volume/domain mesh and full conditions | Owned by #1173/#2023; no solver is invoked here and existing accuracy evidence is not promoted |
-| Analytical candidate | Claimed exact or asymptotic under explicit assumptions | Tractable reduced domain with stated boundary conditions | Evidence gate only; proof/residual evaluation must be independent; no candidate discovery run |
-| Learned symbolic expression | Surrogate | Rights-cleared data and declared training domain | Evidence and leakage gates only; no training or generalization claim |
 
 A public analytic box is the current pilot; it checks geometry and arithmetic,
 not realistic bow/stern flow. Independently generated analytic parabolic hull
@@ -149,38 +138,10 @@ definitions, fluid and scale, experimental uncertainty, and predeclared
 criteria before any physical-validation status is assigned. No external hull
 dataset is copied into this change.
 
-The comparison gate requires exact input-condition equality, deliberately
-refusing unrecorded tolerances. It does not perform scale transfer. A separately
-reviewed transfer must precede a scale comparison. A normalization label alone
-does not convert forces, areas or units. Learned applications must call the
-split gate before fitting preprocessing or calibration parameters and use a
-held-out family only once for a released model revision; persistent enforcement
-of a locked test set belongs to the consuming workflow.
-
-An analytical study will predeclare the reduced equations, assumptions,
-dimensioned domain, runtime budget and independent oracle. It will stop when
-that budget expires and retain a negative or incomplete record. The gate
-does not execute expressions, differentiate fields, authenticate attestations,
-prove identities or enforce runtime. No hidden residual tolerance is provided.
-
-## Ranked transfer opportunities
-
-Only this repository was inspected; no other repository inventory is claimed.
-These are follow-ups for separate scopes, with no new domain kernels here.
-
-| Rank | Existing code | Candidate use of the evidence gate |
-|---|---|---|
-| 1 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | Existing analytic equilibrium as a limiting-case and force-balance anchor before extending loading assumptions |
-| 2 | `src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py` | Manufactured displacement and force cases against the existing finite-element kernel |
-| 3 | `src/digitalmodel/infrastructure/calculations/plate_buckling.py` and `src/digitalmodel/subsea/pipeline/thermal_buckling.py` | Assumption/domain rejection and comparison of existing reduced models before proposing new expressions |
-| 4 | `src/digitalmodel/ansys/pressure_vessel.py` and `src/digitalmodel/ansys/thermal_analysis.py` | Separate sourced analytical pressure/thermal anchors from solver results; no licensed solver use in this change |
-| 5 | `src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py` | Check existing vibration estimates with independently derived limiting cases and declared boundary conditions before proposing corrections |
-| 6 | `src/digitalmodel/naval_architecture/resistance.py` and `src/digitalmodel/naval_architecture/friction_scaling.py` | Reuse dimensionless flow and scale-transfer kernels with explicit unit and similarity checks |
-
-The thermal module generates solver commands; it does not establish a standalone
-analytical heat-transfer solution. A later inventory must inspect governing
-equations and source rights before selecting an analytical extension. The
-vibration inventory identifies existing code without qualifying its constants.
+Future benchmark work must refuse circular comparisons that share a source
+digest, even when read-only access is permitted. Future analytical evidence
+must distinguish an explicitly justified NOT_APPLICABLE check from a zero
+residual or missing evidence. Neither deferred gate is implemented here.
 
 ## Verification and known limits
 

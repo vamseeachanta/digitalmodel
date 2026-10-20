@@ -5,8 +5,10 @@
 Synthetic inputs: L=10, B=2, depth=2, draft=1 m; U=1 m/s,
 rho=1000 kg/m^3, nu=1e-5 m^2/s, g=10 m/s^2 (declared test values).
 S=LB+2LT+2BT=44 m^2, V=LBT=20 m^3. Re=UL/nu=1e6.
-ITTC 7.5-03-02-04 (2024 rev 02), section 4: CF=.075/(6-2)^2
+ITTC 7.5-03-02-04 (2024 rev 02), section 2.1 defines Re and Fn;
+the unnumbered tutorial, printed page 8, gives CF=.075/(6-2)^2
 =.0046875. RF=CF*rho*U^2*S/2=103.125 N; PF=RF*U=103.125 W.
+RF and k*RF follow ITTC 7.5-02-03-01.4 (2021 rev 05), section 2.4.1.
 With declared k=.2, k*RF=20.625 N. Numerical comparison tolerance
 1e-12 is a synthetic arithmetic criterion, not a physical acceptance limit.
 """
@@ -95,6 +97,14 @@ def test_units_and_deterministic_identity(conditions):
     assert changed["components"]["viscous_form"]["force_N"] is None
 
 
+def test_equation_sources_identify_the_actual_locators(conditions):
+    assert run(conditions)["equation_sources"] == [
+        "ITTC 7.5-03-02-04 (2024 rev 02), section 2.1: Reynolds and Froude numbers",
+        "ITTC 7.5-03-02-04 (2024 rev 02), unnumbered tutorial, printed page 8: ITTC-1957 correlation line",
+        "ITTC 7.5-02-03-01.4 (2021 rev 05), section 2.4.1: resistance coefficients and form-factor decomposition",
+    ]
+
+
 @pytest.mark.parametrize(
     "field,value",
     [
@@ -181,9 +191,14 @@ def test_example_complete_flow():
         / "examples/naval_architecture/mesh_resistance_example.py"
     )
     result = runpy.run_path(str(example))["worked_example"]()
-    assert result["arithmetic_comparison"]["status"] == "PASS"
+    assert set(result) == {
+        "resistance",
+        "arithmetic_reference_N",
+        "arithmetic_matches",
+    }
+    assert result["arithmetic_matches"] is True
+    assert result["arithmetic_reference_N"] == pytest.approx(103.125)
     assert result["resistance"]["friction_power_W"] == pytest.approx(103.125)
-    assert result["analytical_evidence"]["status"] == "NOT_EVALUATED"
 
 
 def test_overflowing_form_force_refused(conditions):
