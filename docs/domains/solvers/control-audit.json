@@ -1,0 +1,342 @@
+[
+  {
+    "id": "ghs-staged-binding",
+    "family": "ghs",
+    "control": "staged_input_binding",
+    "status": "STATIC_ONLY",
+    "observation": "Packet reconstruction and synthetic stage read-back bind supplied geometry, runfile and profile bytes. This is a synthetic seam, not live execution approval.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/contracts.py",
+        "symbol": "validate_packet",
+        "sha256": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/runner.py",
+        "symbol": "run_synthetic_capture",
+        "sha256": "364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b"
+      },
+      {
+        "path": "tests/solvers/ghs/test_boundaries.py",
+        "symbol": "test_swapped_packet_never_calls_backend",
+        "sha256": "d2aebea5bff3ba61b37941608f535968299b0554479324b2b6d6c173d82789fe"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-runtime-image",
+    "family": "ghs",
+    "control": "runtime_image_and_argv",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel helper hashes its actual interpreter image and script; packet preparation separately records argv identity. These are distinct contexts and do not establish a licensed capture chain.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "source_identity",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "native_image",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/contracts.py",
+        "symbol": "build_argv",
+        "sha256": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-windows-aliases",
+    "family": "ghs",
+    "control": "windows_path_aliases",
+    "status": "STATIC_ONLY",
+    "observation": "Runtime validation rejects dot segments and trailing dot or space components, then compares normalized case and path. Other adapters have not been evaluated for Windows aliases.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/contracts.py",
+        "symbol": "path_text",
+        "sha256": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/contracts.py",
+        "symbol": "runtime_record",
+        "sha256": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e"
+      },
+      {
+        "path": "tests/solvers/ghs/test_contracts.py",
+        "symbol": "test_runtime_directory_alias_rejected",
+        "sha256": "95c43038133b176225c9219ca41e7f92ae32a2561ae57af4ce9f65867627e84f"
+      }
+    ],
+    "follow_up": "#2096"
+  },
+  {
+    "id": "ghs-atomic-assignment",
+    "family": "ghs",
+    "control": "atomic_process_assignment",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel launch supplies a Job Object attribute during suspended process creation and verifies membership before resume. Static inspection does not qualify native crash containment.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "launch",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_windows_job.py",
+        "symbol": "Attributes.__enter__",
+        "sha256": "03351f97a44d81e78afa051e58d7ec00954e05a3683afb53420f94fcd0ef9f1c"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-handle-inheritance",
+    "family": "ghs",
+    "control": "noninheritable_job_handles",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel creates an unnamed job with null security attributes and passes false for process handle inheritance. Native noninheritance observation remains separate.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_windows_job.py",
+        "symbol": "new_job",
+        "sha256": "03351f97a44d81e78afa051e58d7ec00954e05a3683afb53420f94fcd0ef9f1c"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "launch",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-timeout-trigger",
+    "family": "ghs",
+    "control": "owned_timeout",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel has an explicit timeout observation and retained process handles. No licensed solver timeout containment is established.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "observe_timeout",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "Owned.cleanup",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "openfoam-timeout-modes",
+    "family": "openfoam",
+    "control": "owned_timeout",
+    "status": "STATIC_ONLY",
+    "observation": "Attached invocation supplies a subprocess timeout. Detached budget enforcement requires polling, as the source explicitly documents. Descendant completeness and controller-crash containment are not established by this inspection.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/openfoam/runner.py",
+        "symbol": "OpenFOAMRunner._run_stage",
+        "sha256": "e9762f9609f2bafca3ed5f117e5f0b4e4deb2248cbd0b84ae82b0caea3467cb5"
+      },
+      {
+        "path": "src/digitalmodel/solvers/openfoam/runner.py",
+        "symbol": "poll_detached_run",
+        "sha256": "e9762f9609f2bafca3ed5f117e5f0b4e4deb2248cbd0b84ae82b0caea3467cb5"
+      }
+    ],
+    "follow_up": "#2096"
+  },
+  {
+    "id": "orcawave-batch-timeout",
+    "family": "orcawave",
+    "control": "owned_timeout",
+    "status": "GAP",
+    "observation": "The direct batch subprocess.run call in the named method supplies no timeout keyword or keyword unpacking. This is a confirmed absence of an explicit bound at that call, not a reproduced solver failure or a claim about all OrcaWave entrypoints.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/orcawave/diffraction/orchestrator.py",
+        "symbol": "OrcaWaveOrchestrator._phase2_orcawave_execution",
+        "sha256": "62b46c533f6541861f370a166521f659c9f112e719ea17af873bd895e46cfbee"
+      },
+      {
+        "path": "tests/scripts/test_audit_solver_controls.py",
+        "symbol": "test_real_batch_invocation_has_no_explicit_timeout",
+        "sha256": "b5980f76b4c16b361be00d25d1dbd230699e9fff55b1b2ceb3b85aeaf50fee73"
+      }
+    ],
+    "follow_up": "#2096"
+  },
+  {
+    "id": "ghs-independent-cleanup",
+    "family": "ghs",
+    "control": "independent_cleanup",
+    "status": "STATIC_ONLY",
+    "observation": "Cleanup accumulates independent resource failures while continuing other attempts. Native completion still requires retained-handle and census observations.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+        "symbol": "cleanup_failed_launch",
+        "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "Resources.close_all",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-historical-census",
+    "family": "ghs",
+    "control": "historical_process_census",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel compares observed parent and child identities to job membership and persists creation stages. Current process absence alone cannot reconstruct a missing historical census.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "parent_members",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_state.py",
+        "symbol": "Attempt.stage",
+        "sha256": "b43340534980e5df464584d7e2620be7ec77784da533fd119c4d1732859a60dc"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-recovery-publication",
+    "family": "ghs",
+    "control": "recovery_state_consistency",
+    "status": "STATIC_ONLY",
+    "observation": "Successful public summary publication follows interlock finalization; unresolved attempts cannot finalize. The cited regression checks failed finalization without native execution.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/qualification.py",
+        "symbol": "qualify",
+        "sha256": "92ae10f65beedc314416523ad7be7a514d5d38316725c8b88dce08eb51db894b"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_state.py",
+        "symbol": "Attempt.finish",
+        "sha256": "b43340534980e5df464584d7e2620be7ec77784da533fd119c4d1732859a60dc"
+      },
+      {
+        "path": "tests/solvers/ghs/test_qualification_finalization.py",
+        "symbol": "test_failed_marker_finalization_never_publishes_success",
+        "sha256": "d20563478a89505fb162801445c4ad7ad7192aebeb4fd7ee8df2307dbac836c8"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-positive-evidence",
+    "family": "ghs",
+    "control": "positive_trigger_evidence",
+    "status": "STATIC_ONLY",
+    "observation": "The sentinel checks child identity, pre-trigger liveness, census and timing around the final-handle trigger. Software inspection is not a new native qualification result.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "ordinary",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "check_timing",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+        "symbol": "second_handle",
+        "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "ghs-license-recovery",
+    "family": "ghs",
+    "control": "license_recovery",
+    "status": "NOT_EVALUATED",
+    "observation": "The live entrypoint refuses execution. Sentinel recovery is not evidence of license release, safe retry or vendor-lock recovery. Those checks remain unevaluated.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/runner.py",
+        "symbol": "run_approved_capture",
+        "sha256": "364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "orcaflex-license-boundary",
+    "family": "orcaflex",
+    "control": "license_recovery",
+    "status": "NOT_EVALUATED",
+    "observation": "The single-model runner distinguishes explicit mock mode and checks statics before saving. No license-recovery or historical process-census guarantee is inferred for the API route.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/orcaflex/run_to_sim.py",
+        "symbol": "OrcaFlexModelRunner.__init__",
+        "sha256": "6f9a80743d74183cb5816ce25e4494cf857299fdaa3dc117e957a7e3918cace1"
+      },
+      {
+        "path": "src/digitalmodel/solvers/orcaflex/run_to_sim.py",
+        "symbol": "OrcaFlexModelRunner.run_single_model",
+        "sha256": "6f9a80743d74183cb5816ce25e4494cf857299fdaa3dc117e957a7e3918cace1"
+      }
+    ],
+    "follow_up": "#2096"
+  },
+  {
+    "id": "ghs-native-format-boundary",
+    "family": "ghs",
+    "control": "observed_native_format",
+    "status": "NOT_EVALUATED",
+    "observation": "The comparison accepts normalized synthetic assertions and labels limitations. It is not an observed native-report parser; native-format qualification remains unevaluated.",
+    "evidence": [
+      {
+        "path": "src/digitalmodel/solvers/ghs/comparison.py",
+        "symbol": "evidence_record",
+        "sha256": "b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676"
+      },
+      {
+        "path": "src/digitalmodel/solvers/ghs/comparison.py",
+        "symbol": "compare_normalized",
+        "sha256": "b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676"
+      }
+    ],
+    "follow_up": "#2089"
+  },
+  {
+    "id": "shared-fixture-clearance",
+    "family": "shared-fixtures",
+    "control": "public_fixture_clearance",
+    "status": "NOT_EVALUATED",
+    "observation": "The shared scanner checks text-extractable credential patterns and caller-supplied deny rules. The verifier checks membership and byte identity. Neither grants publication permission, reviews native header identities or qualifies binary semantics.",
+    "evidence": [
+      {
+        "path": "scripts/screen_solver_evidence.py",
+        "symbol": "screen_bytes",
+        "sha256": "1a3ff990f8b3fe6cf1e7442fc1fd096515b2d78b8135ba06e22bb897b3360288"
+      },
+      {
+        "path": "scripts/verify_solver_evidence.py",
+        "symbol": "verify",
+        "sha256": "b756f313a751b6283adbda016b2c85fb8e8c6d80dfe8bd2e6c943e0077fb2e08"
+      }
+    ],
+    "follow_up": "#2096"
+  }
+]
