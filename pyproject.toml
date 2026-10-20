@@ -36,6 +36,8 @@ dependencies = [
     "deepdiff>=6.7.0,<8.0.0",
     "fastmcp>=2.12.4,<3.0.0",
     "flask>=3.0.0,<4.0.0",
+    "flask-httpauth==4.8.1",
+    "flask-restful==0.3.10",
     "geopandas>=1.1.3,<2.0.0",
     "h5py==3.10.0",
     "imageio>=2.25.0,<3.0.0",
@@ -101,6 +103,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+metocean = [
+    # API tested against the published metocean-stats 1.2.0 distribution.
+    "metocean-stats==1.2.0",
+]
 fowt = [
     "capytaine==3.0.0",
     "moorpy==1.3.0",
@@ -164,6 +170,8 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Exercise the optional adapter against the same published backend release.
+    "metocean-stats==1.2.0",
     "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",
@@ -280,6 +288,7 @@ digitalmodel = [
     "py.typed",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
+    "hydrodynamics/aqwa/docs/damping-basis.md",
     "data_systems/data/*.yml",
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",

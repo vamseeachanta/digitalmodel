@@ -17,6 +17,24 @@ AppBlueprint = Blueprint(AppName, __name__, template_folder="templates")
 api = Api(AppBlueprint)
 
 
+def _basic_auth_password_for(username):
+    """Use TEMPLATE_CODE_BASIC_AUTH_USER and TEMPLATE_CODE_BASIC_AUTH_PASSWORD.
+
+    Missing or blank variables refuse every authentication request.
+    """
+    # Keep this import local so tests can compile the function on its own.
+    import hmac
+    import os
+
+    configured = os.environ.get('TEMPLATE_CODE_BASIC_AUTH_USER')
+    value = os.environ.get('TEMPLATE_CODE_BASIC_AUTH_PASSWORD')
+    if (configured is None or value is None or not configured.strip()
+            or not value.strip() or not username):
+        return None
+    matches = hmac.compare_digest(username.encode('utf-8'), configured.encode('utf-8'))
+    return value if matches else None
+
+
 @auth.get_password
 def get_password(username):
     """Retrieve the password for HTTP basic authentication.
@@ -27,9 +45,7 @@ def get_password(username):
     Returns:
         The password string if username is valid, None otherwise.
     """
-    if username == "dtf_beta":
-        return "dtf_gamma"
-    return None
+    return _basic_auth_password_for(username)
 
 
 @auth.error_handler

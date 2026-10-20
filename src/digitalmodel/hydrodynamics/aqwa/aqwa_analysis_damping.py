@@ -6,6 +6,9 @@ from typing import Dict, Iterable, Optional, Sequence
 # Third party imports
 from assetutilities.common.update_deep import AttributeDict
 import numpy as np
+from .damping_physics import (
+    citation_sidecar, critical_dof, frequency_grid, motion_amplitudes, positive,
+)
 
 # Reader imports
 try:  # pragma: no cover - compatibility shim for environments without custom package
@@ -69,54 +72,28 @@ class AqwaDamping:
         return np.sqrt(np.nanmean(np.square(values), axis=axis))
 
     def derive_viscous_damping_statistical(
-        self,
-        frequencies: Sequence[float],
-        raos: Dict[str, np.ndarray],
-        drag_properties: Dict[str, Iterable[Dict[str, float]]],
-        fluid_density: float = 1025.0,
-    ) -> Dict[str, np.ndarray]:
-        """Derive equivalent viscous damping using statistical linearization."""
+        self, frequencies, raos, drag_properties, fluid_density=1025.0,
+        *, wave_amplitude=None,
+    ):
+        """Harmonic energy-equivalent damping (legacy method name), E1-E3.
 
-        omega = np.asarray(frequencies, dtype=float)
-        viscous: Dict[str, np.ndarray] = {
-            "B33": np.zeros_like(omega, dtype=float),
-            "B44": np.zeros_like(omega, dtype=float),
-            "B55": np.zeros_like(omega, dtype=float),
-        }
-
-        heave_rms = self.compute_heading_rms(self._resolve_rao_amplitudes(raos.get("heave"), len(omega)))
-        roll_rms = self.compute_heading_rms(self._resolve_rao_amplitudes(raos.get("roll"), len(omega)))
-        pitch_rms = self.compute_heading_rms(self._resolve_rao_amplitudes(raos.get("pitch"), len(omega)))
-
-        constant = (8.0 / (3.0 * math.pi)) * fluid_density
-
-        viscous["B33"] = self._aggregate_viscous_force(
-            omega,
-            heave_rms,
-            drag_properties.get("heave", []),
-            constant,
-            moment_axis=None,
-        )
-
-        roll_components = self._aggregate_viscous_force(
-            omega,
-            roll_rms,
-            drag_properties.get("roll", []),
-            constant,
-            moment_axis="x",
-        )
-        viscous["B44"] = roll_components
-
-        pitch_components = self._aggregate_viscous_force(
-            omega,
-            pitch_rms,
-            drag_properties.get("pitch", []),
-            constant,
-            moment_axis="y",
-        )
-        viscous["B55"] = pitch_components
-
+        Wave amplitude is {"value": positive peak amplitude, "unit": "m"}.
+        RAOs carry amplitude arrays and explicit m/m, rad/m or deg/m units.
+        """
+        omega = frequency_grid(frequencies)
+        if not isinstance(wave_amplitude, dict) or wave_amplitude.get("unit") != "m":
+            raise ValueError("wave_amplitude must declare value and unit 'm'")
+        amplitude = positive(wave_amplitude.get("value", 0), "wave amplitude")
+        constant = (4.0 / (3.0 * math.pi)) * positive(fluid_density, "fluid density")
+        viscous = {}
+        for dof, key, axis in (("heave", "B33", None), ("roll", "B44", "x"), ("pitch", "B55", "y")):
+            members = list(drag_properties.get(dof, []))
+            motion = motion_amplitudes(raos, dof, len(omega), amplitude, bool(members))
+            viscous[key] = self._aggregate_viscous_force(omega, motion, members, constant, axis)
         viscous["frequencies"] = omega
+        viscous["linearisation"] = {"method": "harmonic", "wave_amplitude": dict(wave_amplitude),
+                                    "heading_reduction": "quadratic mean of harmonic amplitudes"}
+        viscous["citation_sidecar"] = citation_sidecar()
         return viscous
 
     def _resolve_rao_amplitudes(self, entry: Optional[np.ndarray], length: int) -> np.ndarray:
@@ -146,9 +123,11 @@ class AqwaDamping:
             area = float(member.get("area", 0.0))
             lever = float(member.get("lever_arm", 0.0))
 
+            if not all(math.isfinite(v) for v in (cd, area, lever)) or cd < 0 or area < 0:
+                raise ValueError("Drag coefficient/area must be finite and nonnegative; arm finite")
             force = constant * cd * area * omega * rao_rms
             if moment_axis:
-                total += force * lever
+                total += force * abs(lever) ** 3  # damping-basis.md E3
             else:
                 total += force
 
@@ -211,50 +190,16 @@ class AqwaDamping:
     ) -> Dict[str, Dict[str, np.ndarray]]:
         """Compute critical damping ratios using provided mass and stiffness data."""
 
-        omega = np.asarray(frequencies, dtype=float)
-        results: Dict[str, Dict[str, np.ndarray]] = {}
-
-        dof_map = {
-            "heave": ("B33", "I33", "C33", "A33"),
-            "roll": ("B44", "I44", "C44", "A44"),
-            "pitch": ("B55", "I55", "C55", "A55"),
-        }
-
-        for dof, (b_key, inertia_key, restoring_key, added_mass_key) in dof_map.items():
-            damping_values = np.asarray(total_damping.get(b_key, np.zeros_like(omega)))
-            inertia_value = float(inertia.get(inertia_key, 0.0))
-            restoring_value = float(restoring.get(restoring_key, 0.0))
-
-            if use_frequency_dependent:
-                added_mass_series = np.asarray(
-                    (added_mass_frequency or {}).get(added_mass_key, np.zeros_like(omega))
-                )
-                denominator = inertia_value + added_mass_series
-            else:
-                added_mass_scalar = float((added_mass_infinite or {}).get(added_mass_key, 0.0))
-                denominator = inertia_value + added_mass_scalar
-
-            with np.errstate(divide="ignore", invalid="ignore"):
-                natural_frequency = np.sqrt(
-                    np.where(denominator > 0, restoring_value / denominator, 0.0)
-                )
-                critical_ratio = np.where(
-                    denominator * natural_frequency * 2.0 > 0,
-                    damping_values / (2.0 * denominator * natural_frequency),
-                    0.0,
-                )
-                natural_period = np.where(
-                    natural_frequency > 0,
-                    (2.0 * math.pi) / natural_frequency,
-                    math.inf,
-                )
-
-            results[dof] = {
-                "critical_damping_ratio": critical_ratio,
-                "natural_frequency_rad_s": natural_frequency,
-                "natural_period_s": natural_period,
-                "damping": damping_values,
-                "denominator": denominator,
-            }
-
+        omega = frequency_grid(frequencies)
+        results = {}
+        for dof, suffix in (("heave", "33"), ("roll", "44"), ("pitch", "55")):
+            mass_source = added_mass_frequency if use_frequency_dependent else added_mass_infinite
+            required = ((inertia, "I"), (restoring, "C"), (total_damping, "B"), (mass_source or {}, "A"))
+            for source, prefix in required:
+                if prefix + suffix not in source:
+                    raise ValueError(f"{dof}: missing required coefficient {prefix + suffix}")
+            results[dof] = critical_dof(
+                omega, total_damping["B" + suffix], inertia["I" + suffix],
+                restoring["C" + suffix], mass_source["A" + suffix], dof,
+            )
         return results

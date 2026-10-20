@@ -6,17 +6,19 @@ and LNGC vessel types.  Includes parametric hull generation for
 quick feasibility checks.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class VesselParameters(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
     """Physical parameters for a vessel."""
 
     name: str = Field(..., description="Vessel identifier")
@@ -43,10 +45,25 @@ class VesselParameters(BaseModel):
         description="Natural periods {heave_s, roll_s, pitch_s}",
     )
 
+    @model_validator(mode="after")
+    def displacement_consistency(self):
+        # Definition Cb=V/(LBT), Archimedes mass=rho*V; 1% input band.
+        expected = (
+            1.025 * self.length_m * self.beam_m * self.draft_m * self.block_coefficient
+        )
+        if abs(self.displacement_te / expected - 1) > 0.01:
+            raise ValueError(
+                "Displacement must agree with 1.025*L*B*T*Cb within 1 percent"
+            )
+        return self
+
 
 class VesselRAOSet(BaseModel):
     """Representative RAO data for a vessel type."""
 
+    synthetic: bool = Field(
+        default=True, description="Analytic screening data, not solver output"
+    )
     vessel_type: str
     periods: List[float] = Field(..., description="Wave periods (s)")
     headings_deg: List[float] = Field(
@@ -99,7 +116,7 @@ _VESSEL_DB: Dict[str, VesselParameters] = {
         beam_m=46.0,
         draft_m=16.0,
         depth_m=28.0,
-        displacement_te=180000.0,
+        displacement_te=160310.0,
         gm_t_m=5.0,
         gm_l_m=300.0,
         waterplane_area_m2=9200.0,
@@ -113,7 +130,7 @@ _VESSEL_DB: Dict[str, VesselParameters] = {
         beam_m=80.0,
         draft_m=22.0,
         depth_m=45.0,
-        displacement_te=52000.0,
+        displacement_te=79376.0,
         gm_t_m=3.5,
         gm_l_m=3.5,
         waterplane_area_m2=2400.0,
@@ -127,7 +144,7 @@ _VESSEL_DB: Dict[str, VesselParameters] = {
         beam_m=42.0,
         draft_m=12.0,
         depth_m=21.0,
-        displacement_te=70000.0,
+        displacement_te=92678.04,
         gm_t_m=4.0,
         gm_l_m=250.0,
         waterplane_area_m2=7700.0,
@@ -141,7 +158,7 @@ _VESSEL_DB: Dict[str, VesselParameters] = {
         beam_m=30.0,
         draft_m=5.0,
         depth_m=7.0,
-        displacement_te=14000.0,
+        displacement_te=13837.5,
         gm_t_m=8.0,
         gm_l_m=150.0,
         waterplane_area_m2=2800.0,
@@ -155,7 +172,7 @@ _VESSEL_DB: Dict[str, VesselParameters] = {
         beam_m=46.0,
         draft_m=11.5,
         depth_m=26.0,
-        displacement_te=100000.0,
+        displacement_te=115385.48,
         gm_t_m=4.5,
         gm_l_m=350.0,
         waterplane_area_m2=10500.0,
@@ -208,6 +225,7 @@ def get_vessels_by_type(vessel_type: str) -> List[VesselParameters]:
 # Representative RAO generation
 # ---------------------------------------------------------------------------
 
+
 def _generate_ship_rao(
     periods: np.ndarray,
     natural_period: float,
@@ -239,7 +257,7 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
     """Generate representative RAO data for a vessel type.
 
     RAOs are generated using simplified single-DOF transfer functions
-    with realistic natural periods and damping.  These are suitable
+    with assumed natural periods and damping. Synthetic outputs are suitable
     for preliminary screening only.
 
     Args:
@@ -290,11 +308,24 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
         h_rao *= heading_scale_heave[hi]
         heave_raos.append(h_rao.tolist())
 
-        r_rao = _generate_ship_rao(periods, t_roll, 5.0, damping["roll"])
+        # Deep-water slope excites a damped rotational oscillator; see sidecar R4.
+        # The gain tends to one for T >> Tn and retains resonant amplification.
+        # Below Tn, hold excitation at the Tn slope so rotations decay as T^2
+        # instead of approaching a constant as T -> 0 (synthetic envelope).
+        slope = (2 * np.pi / periods) ** 2 / 9.81 * 180 / np.pi
+        roll_ratio = t_roll / periods
+        r_rao = slope / np.hypot(
+            1 - roll_ratio**2, 2 * damping["roll"] * roll_ratio
+        )
+        r_rao *= np.minimum(1.0, (periods / t_roll) ** 2)
         r_rao *= heading_scale_roll[hi]
         roll_raos.append(r_rao.tolist())
 
-        p_rao = _generate_ship_rao(periods, t_pitch, 3.0, damping["pitch"])
+        pitch_ratio = t_pitch / periods
+        p_rao = slope / np.hypot(
+            1 - pitch_ratio**2, 2 * damping["pitch"] * pitch_ratio
+        )
+        p_rao *= np.minimum(1.0, (periods / t_pitch) ** 2)
         p_rao *= heading_scale_pitch[hi]
         pitch_raos.append(p_rao.tolist())
 
@@ -316,6 +347,7 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
 # ---------------------------------------------------------------------------
 # Parametric hull generation
 # ---------------------------------------------------------------------------
+
 
 def generate_parametric_hull(
     vessel_type: str,
@@ -356,7 +388,9 @@ def generate_parametric_hull(
         y[stern_mask] = half_beam * (fwd_frac[stern_mask] / stern_end) ** 0.5
         # Bow taper
         bow_mask = fwd_frac > bow_start
-        y[bow_mask] = half_beam * ((1.0 - fwd_frac[bow_mask]) / (1.0 - bow_start)) ** 0.7
+        y[bow_mask] = (
+            half_beam * ((1.0 - fwd_frac[bow_mask]) / (1.0 - bow_start)) ** 0.7
+        )
         bow_shape = "pointed"
     elif vessel_type == "Barge":
         # Rectangular waterline with small corner radii
@@ -366,7 +400,9 @@ def generate_parametric_hull(
         stern_mask = x < length_m * end_frac
         y[stern_mask] = half_beam * (x[stern_mask] / (length_m * end_frac)) ** 0.3
         bow_mask = x > length_m * (1 - end_frac)
-        y[bow_mask] = half_beam * ((length_m - x[bow_mask]) / (length_m * end_frac)) ** 0.3
+        y[bow_mask] = (
+            half_beam * ((length_m - x[bow_mask]) / (length_m * end_frac)) ** 0.3
+        )
         bow_shape = "blunt"
     elif vessel_type == "SemiSubmersible":
         # Twin pontoons: each pontoon width ~ beam/4

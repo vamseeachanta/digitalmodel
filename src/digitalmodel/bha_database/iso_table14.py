@@ -37,6 +37,14 @@ def validate_quantity(field, quantity):
     require(quantity['source_key'] == (WEIGHT_KEY if weight else SOURCE_KEY),
             f'{field} source_key')
     require(quantity['basis'] == ('computed' if weight else 'published'), f'{field} basis')
+    if 'verification' in quantity:
+        status = quantity['verification']
+        require(status in ('verified', 'pending'), f'{field} verification')
+        context = ('verification_reason', 'verification_issue') if status == 'pending' else (
+            'verification_locator',)
+        for key in context:
+            require(isinstance(quantity.get(key), str) and quantity[key].strip(),
+                    f'{field} {key}')
     for key in ('as_published', 'as_published_on'):
         require(isinstance(quantity[key], str) and quantity[key].strip(), f'{field} {key}')
     if weight:
@@ -96,10 +104,26 @@ def load_table14(path: Path | str = DEFAULT_PATH):
     Six table fields retain supplied units and as_published metadata. Stored
     lbf/ft weight uses an assumed coefficient; it is not a standard rating.
     Defaults to source-checkout data; installed consumers pass a YAML path.
+
+    Optional cell verification accepts only pending or verified. Pending cells
+    require verification_reason and verification_issue; verified cells require
+    verification_locator recording the comparison's printed page. These labels
+    do not authenticate a source comparison. An absent status remains unspecified,
+    not implicitly verified. The returned pending_cells list identifies each
+    pending component_id, field, source_key, reason and issue. It is recomputed
+    from cell metadata on every load, including when reading a saved result.
     """
     try:
         _, data = read_yaml(Path(path))
         validate_document(data)
+        data['pending_cells'] = [
+            {'component_id': row['component_id'], 'field': field,
+             'source_key': row[field]['source_key'],
+             'reason': row[field]['verification_reason'],
+             'issue': row[field]['verification_issue']}
+            for row in data['components'] for field in UNITS
+            if row[field].get('verification') == 'pending'
+        ]
         return data
     except BhaDatabaseError:
         raise

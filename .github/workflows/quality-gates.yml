@@ -3,6 +3,7 @@ name: Quality Gates
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
 
@@ -40,7 +41,77 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0  # need history so the abs-path guard can diff vs base
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -61,7 +132,7 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && 'origin/main' || github.event.before }}
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
         run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
       - name: Create reports directory

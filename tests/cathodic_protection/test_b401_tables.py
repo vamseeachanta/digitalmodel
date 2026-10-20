@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the cited DNV-RP-B401 table lookups (issues #2207, #2208).
 
 Every table value is asserted against the fixture CSVs under
@@ -12,6 +15,7 @@ against the live wiki when the resolver can find it.
 from __future__ import annotations
 
 import csv
+from dataclasses import replace
 from functools import lru_cache
 from pathlib import Path
 import warnings
@@ -29,8 +33,17 @@ from digitalmodel.cathodic_protection.b401_tables import (
     DesignPhase,
     PaintCategory,
 )
-from digitalmodel.citations import CitationResolutionError, validate_citation
+from digitalmodel.citations import (
+    Citation,
+    CitedValue,
+    CitationResolutionError,
+    validate_citation,
+)
 from digitalmodel.citations.resolver import resolve_wiki_path
+from digitalmodel.citations.table_verification import (
+    TableVerificationError,
+    verify_table_value,
+)
 
 DATASETS = (
     Path(__file__).resolve().parents[1]
@@ -523,13 +536,59 @@ def test_aluminium_seawater_spot_values():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("edition", EDITIONS)
-@pytest.mark.parametrize("shape", list(AnodeShape))
-def test_utilisation_factor_matches_table_8(edition, shape):
-    result = tbl.utilisation_factor(shape, edition=edition)
+def _check_utilisation_factor(result, edition, shape):
+    if edition in ("2017", "2021"):
+        # Independent CSV oracle: DNVGL-RP-B401 June 2017, Table A-8, and
+        # DNV-RP-B401 May 2021, Table 8-8, "Recommended anode utilisation
+        # factors". Existing dataset PROVENANCE.md records the transcription.
+        # Metadata below is pinned independently of the production source map.
+        revision, filename, standard = {
+            "2017": ("2017-06", "dnv-rp-b401-2017.md", "DNVGL-RP-B401 (June 2017)"),
+            "2021": ("2021-05", "dnv-rp-b401-2021.md", "DNV-RP-B401 (May 2021)"),
+        }[edition]
+        expected = CitedValue(
+            value=table_8(edition)[shape],
+            units="dimensionless",
+            citation=Citation(
+                code_id="dnv-rp-b401",
+                publisher="DNV",
+                revision=revision,
+                section={"2017": "Table A-8", "2021": "Table 8-8"}[edition],
+                wiki_path="wikis/engineering-standards/wiki/standards/" + filename,
+                note=(
+                    f"anode utilisation factor, {shape.value}; "
+                    f"edition={edition} ({standard}); "
+                    f"provenance=verified-{edition}-tables"
+                ),
+            ),
+        )
+        verify_table_value(result, expected, repo_root=CITATION_FIXTURES)
     assert result.value == table_8(edition)[shape]
     assert result.units == "dimensionless"
     assert result.citation.section == EDITION_FIXTURES[edition][3] + "8"
+
+
+@pytest.mark.parametrize("edition", EDITIONS)
+@pytest.mark.parametrize("shape", list(AnodeShape))
+def test_utilisation_factor_matches_table_8(edition, shape):
+    _check_utilisation_factor(tbl.utilisation_factor(shape, edition=edition), edition, shape)
+
+
+@pytest.mark.parametrize("edition", ["2017", "2021"])
+@pytest.mark.parametrize("mutation", ["units", "revision", "wiki_path", "note"])
+def test_utilisation_checker_rejects_unchanged_value_with_mutated_metadata(
+    edition, mutation
+):
+    """Existing cited CSV values stay fixed; only quantity metadata changes."""
+    shape = AnodeShape.LONG_SLENDER_STANDOFF
+    actual = tbl.utilisation_factor(shape, edition=edition)
+    if mutation == "units":
+        actual = replace(actual, units="m")
+    else:
+        replacement = "wikis/unrelated.md" if mutation == "wiki_path" else "unrelated"
+        actual = replace(actual, citation=replace(actual.citation, **{mutation: replacement}))
+    with pytest.raises(TableVerificationError, match=mutation):
+        _check_utilisation_factor(actual, edition, shape)
 
 
 # ---------------------------------------------------------------------------

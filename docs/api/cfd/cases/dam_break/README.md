@@ -24,6 +24,17 @@ A 144×72 mesh (the in-repo test builder default, `DamBreakConfig(cells_per_widt
 reproduces the same deviations (mean 2.9%, max 8.1%) — the comparison is mesh-independent
 at these resolutions.
 
+The weighted interface diagnostic added to `analyze_dam_break.py` has not been
+executed against solved fields. The figures above are earlier front-position
+and mass-conservation results, not qualification of this diagnostic. It now
+measures `4 * integral(alpha * (1 - alpha)) / integral(abs(grad(alpha)))`,
+divided by cell size to report cells. This replaces the threshold-counted
+0.05–0.95 band; its values cannot be compared directly with that former width.
+Rotated synthetic tanh profiles agree with their continuous mixing width
+within 2.0%; three-cell linear ramps have sampling errors up to 12.0%.
+No three-cell cutoff is enforced on solved fields until it is calibrated;
+the solve test records the maximum width over all written times.
+
 ## Geometry / conditions
 
 Column base `a = 0.1461 m`, height `2a` (the tutorial-scale n²=2 configuration); plain tank

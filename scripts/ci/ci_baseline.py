@@ -11,6 +11,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -216,6 +217,72 @@ def classify(row: dict[str, Any], baseline: dict[str, Any], max_age: float, now:
     return True, "all failing ids are pre-existing on main"
 
 
+def verified_evidence(url: str, shard: str) -> bool:
+    """Require a completed failing same-shard job from this repository's main."""
+    repository = os.environ.get("GITHUB_REPOSITORY", "")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        return False
+    escaped = re.escape(repository)
+    match = re.fullmatch(
+        rf"https://(?:github\.com/{escaped}|api\.github\.com/(?:repos/{escaped}|repositories/[0-9]+))"
+        r"/actions/(runs|jobs)/([0-9]+)", url)
+    if not match:
+        return False
+    kind, number = match.groups()
+    prefix = f"repos/{repository}/actions"
+    try:
+        job = gh_json(f"{prefix}/jobs/{number}") if kind == "jobs" else None
+        run_id = job["run_id"] if job is not None else int(number)
+        run = gh_json(f"{prefix}/runs/{run_id}")
+        if (str(run.get("id")) != str(run_id) or run.get("head_branch") != "main"
+                or run.get("event") not in {"push", "schedule"} or run.get("status") != "completed"
+                or not isinstance(run.get("head_repository"), dict)
+                or run["head_repository"].get("full_name") != repository):
+            return False
+        jobs = [job] if job is not None else gh_json(f"{prefix}/runs/{run_id}/jobs?per_page=100")["jobs"]
+        return any(isinstance(item, dict)
+                   and item.get("name") in {f"tests-{shard}", f"sweep-tests-{shard}"}
+                   and item.get("status") == "completed" and item.get("conclusion") == "failure"
+                   and str(item.get("run_id")) == str(run_id)
+                   and item.get("head_sha") == run.get("head_sha") for item in jobs)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError):
+        return False
+
+
+def register_decisions(path: Path, ids: list[str], shard: str) -> dict[str, str]:
+    """Read trusted entries and verify every evidence URL before clearing an ID."""
+    try:
+        import yaml
+        with tempfile.TemporaryDirectory(prefix="ci-register-") as scratch:
+            if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+                path = Path(scratch) / "register.yml"
+                select_register(path)
+            rows = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+            raise ValueError("Invalid register")
+        entries = {row["id"]: row for row in rows}
+        if len(entries) != len(rows):
+            raise ValueError("Duplicate register IDs")
+    except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.CalledProcessError):
+        return {node: "register unreadable" for node in ids}
+    except yaml.YAMLError:
+        return {node: "register unreadable" for node in ids}
+    decisions = {}
+    checked: dict[str, bool] = {}
+    for node in ids:
+        row = entries.get(node, {})
+        evidence = row.get("evidence")
+        approved = (row.get("status") == "open" and isinstance(evidence, list) and bool(evidence)
+                    and all(isinstance(item, str) and item.strip() for item in evidence))
+        if approved:
+            for url in evidence:
+                if url not in checked:
+                    checked[url] = verified_evidence(url, shard)
+            approved = all(checked[url] for url in evidence)
+        decisions[node] = "registered with evidence" if approved else "missing open entry with evidence"
+    return decisions
+
+
 def compare_results(baseline_path: Path, results: Path, max_age: float, summary: Path,
                     verdict: Path, now: datetime | None = None,
                     register: Path = Path(".github/ci/flaky-register.yml")) -> int:
@@ -235,23 +302,15 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
         if not rows:
             raise ValueError("No shard results")
         outcomes = []
-        try:
-            import yaml
-            entries = yaml.safe_load(register.read_text(encoding="utf-8"))
-            if not isinstance(entries, list) or not all(isinstance(item, dict) for item in entries):
-                raise ValueError("Invalid register")
-            by_id = {item["id"]: item for item in entries}
-            if len(by_id) != len(entries):
-                raise ValueError("Duplicate register ids")
-        except (OSError, ValueError, KeyError, TypeError, ImportError):
-            by_id = {}
-        except yaml.YAMLError:
-            by_id = {}
         for row in rows:
             first = row.get("first_attempt_failed", {})
             ids = sorted(set(row["failed"] + row["errored"]) | set(first))
             if row["conclusion"] == "success" and not ids:
+                outcomes.append(row["parsed"] is True and row.get("exit_code") == 0
+                                and row.get("collected", 0) > 0
+                                and row.get("first_attempt_exit_code", 0) == 0)
                 continue
+            choices = register_decisions(register, ids, row["shard"])
             classifications = {}
             reasons = []
             main = baseline["shards"].get(row["shard"], {})
@@ -263,15 +322,11 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
                         and node in row.get("recovered", []) and row.get("exit_code") == 0):
                     observation["conclusion"] = "failure"
                 ok, reason = classify(observation, baseline, max_age, now)
-                entry = by_id.get(node, {})
-                evidence = entry.get("evidence")
                 registered = (node in row.get("recovered", []) and node in first
                               and observation["conclusion"] == "failure"
                               and observation.get("exit_code") == 1 and row.get("exit_code") in {0, 1}
                               and row["parsed"] is True and row.get("collected", 0) > 0
-                              and "::" in node and entry.get("status") == "open"
-                              and isinstance(evidence, list) and bool(evidence)
-                              and all(isinstance(item, str) and item.strip() for item in evidence))
+                              and "::" in node and choices[node] == "registered with evidence")
                 classifications[node] = "PRE-EXISTING" if ok else "FLAKY" if registered else "NEW"
                 if ok:
                     report["pre_existing"].append(node)
@@ -288,7 +343,7 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
             reason = "; ".join(dict.fromkeys(reasons))
             report["shards"].append(dict(shard=row["shard"], pre_existing=bool(ids) and all(
                 value == "PRE-EXISTING" for value in classifications.values()), reason=reason, ids=classifications))
-        report["passed"] = bool(outcomes) and all(outcomes)
+        report["passed"] = all(outcomes)
     except (OSError, ValueError, KeyError, TypeError) as error:
         lines.append(f"\nComparison fails closed: {type(error).__name__}.")
     summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
