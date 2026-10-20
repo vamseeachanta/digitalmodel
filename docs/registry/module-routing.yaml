@@ -167,6 +167,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      bemrosetta:
+        agent_pack: src/digitalmodel/hydrodynamics/bemrosetta/docs/agent-pack.md
+        qa_family: DF
       hydrodynamics:
         agent_pack: src/digitalmodel/hydrodynamics/docs/agent-pack.md
         qa_family: EC
