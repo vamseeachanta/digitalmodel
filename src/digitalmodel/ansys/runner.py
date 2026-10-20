@@ -18,6 +18,7 @@ Invocation is subprocess-based (no PyANSYS hard dependency).
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import platform
 import shutil
@@ -27,6 +28,11 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+
+from digitalmodel.ansys.runner_process import (
+    ProcessCleanupError,
+    run_process as _run_solver_process,
+)
 
 # APDL solver error markers (MAPDL may return rc=0 yet write errors to the log).
 _ERROR_MARKERS = ("*** ERROR ***", "SOLUTION NOT CONVERGED", "*** FATAL ***")
@@ -49,6 +55,17 @@ class ANSYSRunConfig:
     timeout_seconds: int = 7200
     dry_run: bool = False
     extra_args: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.timeout_seconds, bool)
+            or not isinstance(self.timeout_seconds, (int, float))
+            or not math.isfinite(self.timeout_seconds)
+            or self.timeout_seconds <= 0
+        ):
+            raise ValueError("timeout_seconds must be finite and positive")
+        if "-smp" in self.extra_args and "-dis" in self.extra_args:
+            raise ValueError("choose either -smp or -dis")
 
 
 @dataclass
@@ -159,23 +176,30 @@ class ANSYSRunner:
         out_file = self._result.output_dir / f"{self._result.input_file.stem}.out"
         previous_files = self._snapshot_result_files(self._result.output_dir)
         self._result.status = ANSYSRunStatus.RUNNING
+        # Issue 2196: single-node runs use SMP; -dis explicitly opts into MPI.
+        explicit_mode = any(arg in ("-smp", "-dis") for arg in self._config.extra_args)
+        mode = [] if explicit_mode else ["-smp"]
         argv = [str(exe), "-b", "-i", str(self._result.input_file),
-                "-o", str(out_file), *self._config.extra_args]
+                "-o", str(out_file), *mode, *self._config.extra_args]
         try:
-            proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
-                argv, cwd=str(self._result.output_dir), capture_output=True,
-                text=True, timeout=self._config.timeout_seconds, check=False,
+            proc = _run_solver_process(
+                argv, cwd=str(self._result.output_dir), timeout=self._config.timeout_seconds,
             )
         except subprocess.TimeoutExpired as exc:
             self._record_timeout(exc, previous_files, out_file)
+            return
+        except ProcessCleanupError as exc:
+            self._record_timeout(
+                exc, previous_files, out_file, error_message=str(exc),
+            )
             return
         self._result.return_code = proc.returncode
         self._result.stdout = proc.stdout or ""
         self._result.stderr = proc.stderr or ""
         self._collect_evidence(previous_files, out_file, proc.returncode)
 
-    def _record_timeout(self, exc, previous_files, out_file) -> None:
-        """Retain partial evidence while timeout remains an unconditional failure."""
+    def _record_timeout(self, exc, previous_files, out_file, error_message=None) -> None:
+        """Retain partial evidence while invocation failure stays unconditional."""
         assert self._result is not None
         for field_name in ("stdout", "stderr"):
             value = getattr(exc, field_name) or ""
@@ -188,7 +212,8 @@ class ANSYSRunner:
         except OSError as error:
             evidence_error = f"; partial evidence unavailable: {error}"
         self._result.status = ANSYSRunStatus.FAILED
-        self._result.error_message = f"MAPDL timeout after {exc.timeout} seconds{evidence_error}"
+        message = error_message or f"MAPDL timeout after {exc.timeout} seconds"
+        self._result.error_message = message + evidence_error
 
     def _collect_evidence(self, previous_files, out_file, return_code) -> None:
         """Attribute fresh outputs and publish only a readable solver log."""

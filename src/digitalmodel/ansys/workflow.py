@@ -51,6 +51,7 @@ class AnsysWorkflow:
             dry_run=requested_dry_run,
             timeout_seconds=int(settings.get("timeout_seconds", 7200)),
             executable_path=settings.get("executable_path"),
+            extra_args=settings.get("extra_args"),
         )
 
         status = str(getattr(result.status, "value", result.status)).lower()
