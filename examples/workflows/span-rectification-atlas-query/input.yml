@@ -12,7 +12,6 @@ parametric_query:
     current_velocity_ms: 0.7
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

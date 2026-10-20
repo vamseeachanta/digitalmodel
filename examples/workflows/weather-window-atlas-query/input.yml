@@ -14,7 +14,6 @@ parametric_query:
     required_window_hours: 30.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

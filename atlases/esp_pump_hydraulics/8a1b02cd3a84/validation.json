@@ -1,0 +1,177 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.003649635036496272,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 40,
+  "worst_samples": [
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1200.0,
+        "flow_rate_m3_per_day": 850.0
+      },
+      "predicted": 0.6875,
+      "actual": 0.685,
+      "rel_error": 0.003649635036496272,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1642.3309878105028,
+        "flow_rate_m3_per_day": 1450.0
+      },
+      "predicted": 1.0155545782543762,
+      "actual": 1.0125,
+      "rel_error": 0.0030168674117296516,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1280.5081437384208,
+        "flow_rate_m3_per_day": 1150.0
+      },
+      "predicted": 0.7847950598910087,
+      "actual": 0.7825,
+      "rel_error": 0.0029329838862731696,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1800.0,
+        "flow_rate_m3_per_day": 850.0
+      },
+      "predicted": 0.9375,
+      "actual": 0.935,
+      "rel_error": 0.0026737967914437933,
+      "in_range": true
+    },
+    {
+      "point": {
+        "flow_rate_m3_per_day": 792.4318261986612,
+        "dynamic_fluid_level_m": 1350.0
+      },
+      "predicted": 0.7394458348030879,
+      "actual": 0.7375,
+      "rel_error": 0.00263842007198353,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1676.8682651860015,
+        "flow_rate_m3_per_day": 1750.0
+      },
+      "predicted": 1.1249451104941675,
+      "actual": 1.1225,
+      "rel_error": 0.002178272155160269,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 2400.0,
+        "flow_rate_m3_per_day": 850.0
+      },
+      "predicted": 1.1875,
+      "actual": 1.185,
+      "rel_error": 0.0021097046413501657,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1212.5291449872132,
+        "flow_rate_m3_per_day": 1450.0
+      },
+      "predicted": 0.8364704770780056,
+      "actual": 0.835,
+      "rel_error": 0.0017610503928211108,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1200.0,
+        "flow_rate_m3_per_day": 1150.0
+      },
+      "predicted": 0.75125,
+      "actual": 0.75,
+      "rel_error": 0.0016666666666666312,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1200.0,
+        "flow_rate_m3_per_day": 1450.0
+      },
+      "predicted": 0.83125,
+      "actual": 0.83,
+      "rel_error": 0.001506024096385644,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1200.0,
+        "flow_rate_m3_per_day": 1750.0
+      },
+      "predicted": 0.92625,
+      "actual": 0.925,
+      "rel_error": 0.0013513513513513226,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1800.0,
+        "flow_rate_m3_per_day": 1150.0
+      },
+      "predicted": 1.00125,
+      "actual": 1.0,
+      "rel_error": 0.0012499999999999734,
+      "in_range": true
+    },
+    {
+      "point": {
+        "flow_rate_m3_per_day": 1780.4831069284267,
+        "dynamic_fluid_level_m": 2250.0
+      },
+      "predicted": 1.374165061533879,
+      "actual": 1.3725,
+      "rel_error": 0.0012131595875256166,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1800.0,
+        "flow_rate_m3_per_day": 1450.0
+      },
+      "predicted": 1.08125,
+      "actual": 1.08,
+      "rel_error": 0.0011574074074073826,
+      "in_range": true
+    },
+    {
+      "point": {
+        "dynamic_fluid_level_m": 1800.0,
+        "flow_rate_m3_per_day": 1750.0
+      },
+      "predicted": 1.17625,
+      "actual": 1.175,
+      "rel_error": 0.0010638297872340198,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "flow_rate_m3_per_day": [
+        0.003649635036496272,
+        0.0029329838862731696,
+        0.0030168674117296516,
+        0.002178272155160269
+      ],
+      "dynamic_fluid_level_m": [
+        0.003649635036496272,
+        0.0030168674117296516,
+        0.0026737967914437933,
+        0.0021097046413501657
+      ]
+    }
+  },
+  "densification_log": []
+}

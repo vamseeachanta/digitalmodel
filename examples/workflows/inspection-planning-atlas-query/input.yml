@@ -11,7 +11,6 @@ parametric_query:
     current_wall_thickness_mm: 11.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

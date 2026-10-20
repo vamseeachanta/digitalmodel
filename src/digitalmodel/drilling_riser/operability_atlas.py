@@ -211,27 +211,8 @@ def build_atlas(cfg_path: Path = CONFIG_PATH, repo_root: Path = REPO_ROOT) -> At
         },
     )
 
-    # held-out interior validation + per-interval local-error map (mirrors
-    # generate_atlas so the query path's local_error/straddle rail works).
-    worst = 0.0
-    samples: list[dict[str, Any]] = []
-    local_error_map: dict[str, dict[str, list[float]]] = {}
-    for entry in _holdout_points(axes):
-        point = entry["point"]
-        predicted = atlas.predict(point)
-        actual = governing_utilisation(point, cfg=cfg)
-        rel = abs(predicted.value - actual) / actual if actual else 0.0
-        worst = max(worst, rel)
-        samples.append({"point": point, "predicted": predicted.value, "actual": actual,
-                        "rel_error": rel, "in_range": predicted.in_range})
-        local_error_map.setdefault(entry["cat_key"], {}).setdefault(entry["axis"], []).append(rel)
-    atlas.validation = {
-        "metric": "max_rel_error",
-        "max_rel_error": worst,
-        "threshold": TOLERANCE,
-        "passes": worst <= TOLERANCE,
-        "n_holdout": len(samples),
-        "worst_samples": sorted(samples, key=lambda s: -s["rel_error"])[:15],
-        "local_error_map": local_error_map,
-    }
+    # Share interval aggregation and fail-closed residual checks with the atlas engine.
+    from digitalmodel.parametric.validation import validate_atlas
+
+    validate_atlas(atlas, lambda point: governing_utilisation(point, cfg=cfg), TOLERANCE)
     return atlas

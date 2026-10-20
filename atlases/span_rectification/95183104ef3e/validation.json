@@ -1,0 +1,177 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.026252535081307544,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 40,
+  "worst_samples": [
+    {
+      "point": {
+        "current_velocity_ms": 0.5051003951180438,
+        "actual_span_length_m": 9.25
+      },
+      "predicted": 0.6325497297550312,
+      "actual": 0.6163684942370601,
+      "rel_error": 0.026252535081307544,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 8.770265218322177,
+        "current_velocity_ms": 0.5
+      },
+      "predicted": 0.5989991342829031,
+      "actual": 0.584401639640746,
+      "rel_error": 0.024978531290792975,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 18.0,
+        "current_velocity_ms": 0.5
+      },
+      "predicted": 1.2293795168893351,
+      "actual": 1.1994197725694142,
+      "rel_error": 0.02497853129079295,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 13.0,
+        "current_velocity_ms": 0.5
+      },
+      "predicted": 0.8878852066422975,
+      "actual": 0.8662476135223547,
+      "rel_error": 0.024978531290792937,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 8.0,
+        "current_velocity_ms": 0.5
+      },
+      "predicted": 0.54639089639526,
+      "actual": 0.5330754544752951,
+      "rel_error": 0.02497853129079291,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 17.10006953953,
+        "current_velocity_ms": 0.5
+      },
+      "predicted": 1.1679152905156347,
+      "actual": 1.1394534176680133,
+      "rel_error": 0.02497853129079288,
+      "in_range": true
+    },
+    {
+      "point": {
+        "current_velocity_ms": 0.45367209582561396,
+        "actual_span_length_m": 11.75
+      },
+      "predicted": 0.7934512552325808,
+      "actual": 0.7829545737605897,
+      "rel_error": 0.013406501250225359,
+      "in_range": true
+    },
+    {
+      "point": {
+        "current_velocity_ms": 0.6948873252070019,
+        "actual_span_length_m": 14.25
+      },
+      "predicted": 1.0701506354656631,
+      "actual": 1.072918348155197,
+      "rel_error": 0.002579611667833505,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 13.580279108281461,
+        "current_velocity_ms": 0.7
+      },
+      "predicted": 1.0236131545699916,
+      "actual": 1.0262480117441704,
+      "rel_error": 0.0025674662888756044,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 8.80929291231918,
+        "current_velocity_ms": 0.7
+      },
+      "predicted": 0.6640002046799769,
+      "actual": 0.6657093910998135,
+      "rel_error": 0.002567466288875548,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 13.0,
+        "current_velocity_ms": 0.7
+      },
+      "predicted": 0.9798746331579516,
+      "actual": 0.9823969040915023,
+      "rel_error": 0.0025674662888755294,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 18.0,
+        "current_velocity_ms": 0.7
+      },
+      "predicted": 1.3567494920648562,
+      "actual": 1.3602418672036185,
+      "rel_error": 0.002567466288875479,
+      "in_range": true
+    },
+    {
+      "point": {
+        "actual_span_length_m": 8.0,
+        "current_velocity_ms": 0.7
+      },
+      "predicted": 0.6029997742510472,
+      "actual": 0.604551940979386,
+      "rel_error": 0.0025674662888754587,
+      "in_range": true
+    },
+    {
+      "point": {
+        "current_velocity_ms": 0.7179121767906678,
+        "actual_span_length_m": 16.75
+      },
+      "predicted": 1.2787673831037487,
+      "actual": 1.2818732477244215,
+      "rel_error": 0.002422910865942692,
+      "in_range": true
+    },
+    {
+      "point": {
+        "current_velocity_ms": 0.4083527633248088,
+        "actual_span_length_m": 14.25
+      },
+      "predicted": 0.9515217726249302,
+      "actual": 0.9495406532841195,
+      "rel_error": 0.00208639760073327,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "actual_span_length_m": [
+        0.026252535081307544,
+        0.013406501250225359,
+        0.024978531290792937,
+        0.02497853129079295
+      ],
+      "current_velocity_ms": [
+        0.026252535081307544,
+        0.002579611667833505,
+        0.0015492025142385625,
+        0.0010357375101103599
+      ]
+    }
+  },
+  "densification_log": []
+}

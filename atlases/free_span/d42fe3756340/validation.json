@@ -1,0 +1,220 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.0874718989022036,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 493,
+  "worst_samples": [
+    {
+      "point": {
+        "span_length_m": 70.0,
+        "od_m": 0.6,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.8672832913783108,
+      "actual": 1.7170864766835099,
+      "rel_error": 0.0874718989022036,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 10.0,
+        "od_m": 0.6,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 0.26675475591118725,
+      "actual": 0.24529806809764426,
+      "rel_error": 0.08747189890220357,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.6,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.067019023644749,
+      "actual": 0.981192272390577,
+      "rel_error": 0.08747189890220357,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 70.0,
+        "od_m": 0.6,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.9382120109281225,
+      "actual": 1.80185965002248,
+      "rel_error": 0.0756731307590696,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 10.0,
+        "od_m": 0.6,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 0.2768874301325889,
+      "actual": 0.25740852143178283,
+      "rel_error": 0.07567313075906948,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.6,
+        "wt_m": 0.024,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.1075497205303555,
+      "actual": 1.0296340857271313,
+      "rel_error": 0.07567313075906948,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 21.679917937803452,
+        "od_m": 0.2442410007824798,
+        "wt_m": 0.028340091472987237,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.4842757982708403,
+      "actual": 1.3937206628227137,
+      "rel_error": 0.06497366212876876,
+      "in_range": true
+    },
+    {
+      "point": {
+        "od_m": 0.2370958054228679,
+        "wt_m": 0.012087019236840598,
+        "current_velocity_ms": 0.6600199854692452,
+        "span_length_m": 55.0
+      },
+      "predicted": 4.879345722695209,
+      "actual": 4.598623443827683,
+      "rel_error": 0.06104485011581335,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 10.0,
+        "od_m": 0.4,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 0.39532533084856136,
+      "actual": 0.3750254070404067,
+      "rel_error": 0.05412946276988497,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "od_m": 0.4,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 1.5813013233942455,
+      "actual": 1.5001016281616268,
+      "rel_error": 0.05412946276988497,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 70.0,
+        "od_m": 0.4,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.35
+      },
+      "predicted": 2.7672773159399293,
+      "actual": 2.625177849282847,
+      "rel_error": 0.05412946276988486,
+      "in_range": true
+    },
+    {
+      "point": {
+        "od_m": 0.5640027815812001,
+        "wt_m": 0.02204450239490663,
+        "current_velocity_ms": 0.29711514947830153,
+        "span_length_m": 25.0
+      },
+      "predicted": 0.7358576314642506,
+      "actual": 0.6988105957371596,
+      "rel_error": 0.05301441614234672,
+      "in_range": true
+    },
+    {
+      "point": {
+        "od_m": 0.5018738003475169,
+        "wt_m": 0.017713371310897147,
+        "current_velocity_ms": 0.43886472207140315,
+        "span_length_m": 65.0
+      },
+      "predicted": 2.307366913140935,
+      "actual": 2.1955236445162534,
+      "rel_error": 0.050941500404257455,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 10.0,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.2,
+        "od_m": 0.25
+      },
+      "predicted": 0.6520207157175402,
+      "actual": 0.6210635224604755,
+      "rel_error": 0.04984545402766722,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_m": 40.0,
+        "wt_m": 0.03,
+        "current_velocity_ms": 0.2,
+        "od_m": 0.25
+      },
+      "predicted": 2.6080828628701607,
+      "actual": 2.484254089841902,
+      "rel_error": 0.04984545402766722,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "span_length_m": [
+        0.08747189890220357,
+        0.06497366212876876,
+        0.04255834678123894,
+        0.08747189890220357,
+        0.06104485011581335,
+        0.0874718989022036
+      ],
+      "od_m": [
+        0.06497366212876876,
+        0.04265207280340182,
+        0.05412946276988497,
+        0.0874718989022036
+      ],
+      "wt_m": [
+        0.06104485011581335,
+        0.05301441614234672,
+        0.0874718989022036
+      ],
+      "current_velocity_ms": [
+        0.0874718989022036,
+        0.06104485011581335,
+        0.042473836049073094,
+        0.04255834678123894
+      ]
+    }
+  },
+  "densification_log": []
+}

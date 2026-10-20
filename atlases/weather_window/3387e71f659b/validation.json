@@ -1,0 +1,177 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.09212107938615736,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 40,
+  "worst_samples": [
+    {
+      "point": {
+        "required_window_hours": 72.0,
+        "hs_limit_m": 2.75
+      },
+      "predicted": 13.605640404173725,
+      "actual": 12.457996334821203,
+      "rel_error": 0.09212107938615736,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.161858582463836,
+        "required_window_hours": 30.0
+      },
+      "predicted": 14.622340921377262,
+      "actual": 13.508117959909487,
+      "rel_error": 0.0824854331872625,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 72.0,
+        "hs_limit_m": 2.25
+      },
+      "predicted": 4.870608128238775,
+      "actual": 4.507989204189418,
+      "rel_error": 0.08043917312675995,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.0,
+        "required_window_hours": 60.0
+      },
+      "predicted": 4.9147965783729815,
+      "actual": 4.605064730630104,
+      "rel_error": 0.06725895635792675,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 40.61136423019511,
+        "hs_limit_m": 2.25
+      },
+      "predicted": 12.005053768011486,
+      "actual": 11.256793102401621,
+      "rel_error": 0.0664719213370124,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.154053043664435,
+        "required_window_hours": 18.0
+      },
+      "predicted": 20.509529826431056,
+      "actual": 19.485925662802128,
+      "rel_error": 0.05253043562528561,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 19.882529633853288,
+        "hs_limit_m": 2.25
+      },
+      "predicted": 21.622208370080568,
+      "actual": 20.600410006008527,
+      "rel_error": 0.04960087511724341,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.8008051782140444,
+        "required_window_hours": 60.0
+      },
+      "predicted": 56.912992139577646,
+      "actual": 59.84309536647786,
+      "rel_error": 0.048963096059057847,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 36.0,
+        "hs_limit_m": 2.25
+      },
+      "predicted": 13.5010795585088,
+      "actual": 12.876627979665056,
+      "rel_error": 0.048494961555920334,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 72.0,
+        "hs_limit_m": 3.75
+      },
+      "predicted": 50.20203943589258,
+      "actual": 52.49999733473861,
+      "rel_error": 0.04377062886678469,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 44.62695919642759,
+        "hs_limit_m": 2.75
+      },
+      "predicted": 23.096586803864675,
+      "actual": 22.140899960064186,
+      "rel_error": 0.04316386621701346,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 72.0,
+        "hs_limit_m": 3.25
+      },
+      "predicted": 30.944034849197344,
+      "actual": 29.720567548278915,
+      "rel_error": 0.04116567757096142,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.0404995770076217,
+        "required_window_hours": 42.0
+      },
+      "predicted": 8.652462522384829,
+      "actual": 8.342547127618545,
+      "rel_error": 0.03714877363296981,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.8843034481380223,
+        "required_window_hours": 42.0
+      },
+      "predicted": 29.34666623005713,
+      "actual": 28.305036213720275,
+      "rel_error": 0.03680016547132868,
+      "in_range": true
+    },
+    {
+      "point": {
+        "required_window_hours": 53.37893056375448,
+        "hs_limit_m": 3.75
+      },
+      "predicted": 57.872613343356065,
+      "actual": 59.8785202000349,
+      "rel_error": 0.03349960636932482,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "hs_limit_m": [
+        0.0824854331872625,
+        0.09212107938615736,
+        0.04116567757096142,
+        0.048963096059057847
+      ],
+      "required_window_hours": [
+        0.05253043562528561,
+        0.0824854331872625,
+        0.0664719213370124,
+        0.09212107938615736
+      ]
+    }
+  },
+  "densification_log": []
+}

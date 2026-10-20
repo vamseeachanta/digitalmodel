@@ -63,12 +63,14 @@ class SpectralMoments(BaseModel):
     @property
     def nu_p(self) -> float:
         """Expected number of peaks per second (peak rate)."""
-        return math.sqrt(self.m4 / self.m2) / (2.0 * math.pi)
+        # Cyclic-frequency moments: estimate_fatigue_psd.pdf (2014), Eq. (3).
+        return math.sqrt(self.m4 / self.m2)
 
     @property
     def nu_0(self) -> float:
         """Expected zero-upcrossing rate per second."""
-        return math.sqrt(self.m2 / self.m0) / (2.0 * math.pi)
+        # Same reference, Eq. (2); moments are integrated over Hz, not rad/s.
+        return math.sqrt(self.m2 / self.m0)
 
     @property
     def bandwidth_parameter(self) -> float:
@@ -258,6 +260,36 @@ def wirsching_light_damage(
 # Dirlik method
 # ---------------------------------------------------------------------------
 
+def dirlik_coefficients(moments: SpectralMoments) -> tuple[float, ...]:
+    """Mixture coefficients, DOI 10.3390/met11091333, Eq. (8).
+
+    The exact narrow-band limit is the unit Rayleigh distribution, Eq. (5).
+    Invalid mixtures are rejected; clipping destroys PDF normalization.
+    """
+    gamma = moments.irregularity_factor
+    xm = moments.m1 / moments.m0 * math.sqrt(moments.m2 / moments.m4)
+    if math.isclose(gamma, 1.0, abs_tol=1e-12, rel_tol=0) and math.isclose(
+        xm, 1.0, abs_tol=1e-12, rel_tol=0
+    ):
+        return 0.0, 0.0, 1.0, 1.0, 1.0
+    d1 = 2.0 * (xm - gamma ** 2) / (1.0 + gamma ** 2)
+    denominator = 1.0 - gamma - d1 + d1 ** 2
+    if denominator == 0 or d1 == 0:
+        raise ValueError("Dirlik coefficients are singular")
+    r = (gamma - xm - d1 ** 2) / denominator
+    if r == 1:
+        raise ValueError("Dirlik coefficients are singular")
+    d2 = denominator / (1.0 - r)
+    d3 = 1.0 - d1 - d2
+    q = 1.25 * (gamma - d3 - d2 * r) / d1
+    weights = (d1, d2, d3)
+    if (not all(math.isfinite(v) for v in (*weights, q, r))
+            or min(weights) < 0 or q <= 0
+            or abs(sum(weights) - 1.0) > 1e-12):
+        raise ValueError("Dirlik mixture must have nonnegative normalized weights and positive Q")
+    return d1, d2, d3, q, r
+
+
 def dirlik_damage(
     moments: SpectralMoments,
     sn_slope: float,
@@ -288,22 +320,8 @@ def dirlik_damage(
     m_sn = sn_slope
     A = 10.0 ** sn_intercept
 
-    xm = m1 / m0 * math.sqrt(m2 / m4)
     eps = moments.bandwidth_parameter
-
-    # Dirlik parameters
-    D1 = 2.0 * (xm - eps ** 2) / (1.0 + eps ** 2)
-    R = (eps - xm - D1 ** 2) / max(1.0 - eps - D1 + D1 ** 2, 1e-12)
-    D2 = (1.0 - eps - D1 + D1 ** 2) / max(1.0 - R, 1e-12)
-    D3 = 1.0 - D1 - D2
-    Q = 1.25 * (eps - D3 - D2 * R) / max(D1, 1e-12)
-
-    # Ensure physical parameters
-    D1 = max(D1, 0.0)
-    D2 = max(D2, 0.0)
-    D3 = max(D3, 0.0)
-    Q = max(Q, 1e-12)
-    R = max(R, 1e-12)
+    D1, D2, D3, Q, R = dirlik_coefficients(moments)
 
     sqrt_m0 = math.sqrt(m0)
 

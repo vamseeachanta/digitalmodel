@@ -279,16 +279,14 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["in_range"] is True
         assert result["response"] == "heave_rao_m_per_m"
         assert result["value"] > 0.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
+        assert result["confidence"] == {"band": None, "basis": "not established"}
     elif workflow["id"] == "orcaflex-library-query":
         result = cfg["parametric_query"]["result"]
         # licensed-solver sparse library: covered load case interpolates heading
         assert result["in_range"] is True
         assert result["response"] == "max_effective_tension_N"
         assert result["value"] > 0.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
+        assert result["confidence"] == {"band": None, "basis": "not established"}
     elif workflow["id"] == "drilling-riser-envelope-library-query":
         result = cfg["parametric_query"]["result"]
         # licensed-solver sparse library: covered operating mode interpolates
@@ -296,21 +294,21 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["in_range"] is True
         assert result["response"] == "von_mises_daf"
         assert result["value"] >= 1.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
+        assert result["confidence"] == {"band": None, "basis": "not established"}
         # the STUB must self-identify at the query surface (#1346 governance fix)
         assert result["provenance"]["solver"]["licensed"] is False
         assert result["provenance"]["solver"]["version"] == "STUB"
     elif workflow["id"] == "drilling-riser-operability-query":
         result = cfg["parametric_query"]["result"]
-        # exact operability node-cache (#1283): governing utilisation thresholded at
-        # 1.0; the example point is operable (a clean pass, not a boundary escalation).
-        assert result["in_range"] is True
-        assert result["response"] == "utilisation"
-        assert result["value"] > 0.0
-        assert result["screening_status"] in {"pass", "fail"}
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
+        # The dedicated cache has no generic workflow fingerprint. The generic
+        # router must expose the missing evidence and withhold a verdict/value.
+        assert result["in_range"] is False
+        assert result["value"] is None
+        assert result["action"] == "escalate"
+        assert result["stale"] is True
+        assert result["reason"] == (
+            "atlas staleness unverified: missing workflow_id or content_fingerprint")
+        assert "screening_status" not in result
         assert result["provenance"]["atlas_id"]
     elif workflow["id"] == "free-span-atlas-query":
         result = cfg["parametric_query"]["result"]
@@ -382,7 +380,16 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         }
         by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
         assert bool(by_loc["riser-splash-zone"]["passes"]) is False
-        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is False
+        # Independent trapezoid-Hz-moment + Dirlik evaluation of input.yml.
+        # Both locations fail the unchanged 25 yr x DFF 3 = 75 yr requirement.
+        for location, damage, life in (
+            ("riser-keel-joint", 0.014225, 70.30),
+            ("riser-splash-zone", 0.24691, 4.05),
+        ):
+            assert by_loc[location]["annual_damage"] == pytest.approx(damage, rel=5e-4)
+            assert by_loc[location]["fatigue_life_years"] == pytest.approx(life, abs=0.01)
+            assert by_loc[location]["fatigue_life_years"] < 25.0 * 3.0
         # life = 1 / accumulated annual damage; governing = smallest margin
         for _, row in location_summary.iterrows():
             assert row["fatigue_life_years"] == pytest.approx(
@@ -1602,11 +1609,14 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         )
     elif workflow["id"] == "fowt-mooring-atlas-query":
         result = cfg["parametric_query"]["result"]
-        # in-range point -> served interpolated utilisation, no escalation
-        assert result["in_range"] is True
-        assert result["response"] == "utilisation"
-        assert result["screening_status"] == "pass"
-        assert 0.0 < result["value"] < 1.0
+        # The new response-wrapper basis invalidates the historical atlas.
+        # Without a qualified citation-backed rebuild it must withhold a value.
+        assert result["in_range"] is False
+        assert result["stale"] is True
+        assert result["action"] == "escalate"
+        assert result["value"] is None
+        assert "basis" in result["reason"] and "refresh required" in result["reason"]
+        assert "screening_status" not in result
     elif workflow["id"] == "lifting-lug-atlas-query":
         result = cfg["parametric_query"]["result"]
         # in-range light-load / thick-plate point -> served utilisation, passes

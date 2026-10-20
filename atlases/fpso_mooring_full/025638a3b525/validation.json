@@ -1,0 +1,193 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.027658542445422846,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 77,
+  "worst_samples": [
+    {
+      "point": {
+        "Hs": 5.0,
+        "Tp": 9.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7767613.439843173,
+      "actual": 7558554.830244792,
+      "rel_error": 0.027658542445422846,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 5.0,
+        "Tp": 11.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7767613.439843173,
+      "actual": 7558554.830244792,
+      "rel_error": 0.027658542445422846,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 5.0,
+        "Tp": 13.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7767613.439843173,
+      "actual": 7558554.830244792,
+      "rel_error": 0.027658542445422846,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 9.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7686081.577730846,
+      "actual": 7483142.772458617,
+      "rel_error": 0.027119461894958962,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 11.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7686081.577730846,
+      "actual": 7483142.772458617,
+      "rel_error": 0.027119461894958962,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.0,
+        "Tp": 13.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7686081.577730846,
+      "actual": 7483142.772458617,
+      "rel_error": 0.027119461894958962,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 3.150049963673113,
+        "Tp": 9.804738060266317,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7632506.350346568,
+      "actual": 7432724.972025478,
+      "rel_error": 0.02687861841693407,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 2.278218540671509,
+        "Tp": 9.019337608186799,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7590749.970816454,
+      "actual": 7393789.166198566,
+      "rel_error": 0.026638682844557428,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 2.0,
+        "Tp": 9.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7578300.268471865,
+      "actual": 7384045.056451455,
+      "rel_error": 0.026307425067875104,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 2.0,
+        "Tp": 11.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7578300.268471865,
+      "actual": 7384045.056451455,
+      "rel_error": 0.026307425067875104,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 2.0,
+        "Tp": 13.0,
+        "water_depth_m": 1250.0
+      },
+      "predicted": 7578300.268471865,
+      "actual": 7384045.056451455,
+      "rel_error": 0.026307425067875104,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Tp": 10.58956088395334,
+        "water_depth_m": 1189.6488427292413,
+        "Hs": 3.5
+      },
+      "predicted": 7412179.193433745,
+      "actual": 7234747.441196049,
+      "rel_error": 0.024524940736336633,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 4.754378412190027,
+        "water_depth_m": 1400.4025891070223,
+        "Tp": 10.0
+      },
+      "predicted": 8365641.534275891,
+      "actual": 8200502.092549747,
+      "rel_error": 0.02013772325918623,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Tp": 9.30810608732887,
+        "water_depth_m": 1410.006953953,
+        "Hs": 4.5
+      },
+      "predicted": 8381080.498214103,
+      "actual": 8226288.047503783,
+      "rel_error": 0.018816804106110863,
+      "in_range": true
+    },
+    {
+      "point": {
+        "Hs": 5.0,
+        "Tp": 9.0,
+        "water_depth_m": 750.0
+      },
+      "predicted": 6136701.201049171,
+      "actual": 6089514.417099417,
+      "rel_error": 0.007748858236915121,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "Hs": [
+        0.026638682844557428,
+        0.02687861841693407,
+        0.027658542445422846
+      ],
+      "Tp": [
+        0.027658542445422846,
+        0.027658542445422846
+      ],
+      "water_depth_m": [
+        0.007748858236915121,
+        0.027658542445422846
+      ]
+    }
+  },
+  "densification_log": []
+}

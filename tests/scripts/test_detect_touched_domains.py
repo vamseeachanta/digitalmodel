@@ -1394,3 +1394,75 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+@pytest.mark.parametrize("test_root,test_file", [
+    ("tests/parametric/", "test_audit_fingerprint.py"),
+    ("tests/parametrics/", "test_atlas_serving.py"),
+])
+def test_parametric_regressions_owned_and_executed_by_solver_smoke(test_root, test_file):
+    """The atlas evidence regressions must run in their assigned CI shard."""
+    root = SCRIPT.parents[2]
+    assert (root / test_root / test_file).is_file()
+    detector = load_detector_module()
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains(
+        [test_root + test_file], domains,
+    )
+    assert {domain.name for domain in selected} == {"solver-smoke"}
+    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    gate = gates["tests-solver-smoke"]
+    assert test_root in gate["test_roots"]
+    assert test_root in shlex.split(gate["command"])
+
+
+@pytest.mark.parametrize("workflow,job", [
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+    ("quality-gates.yml", "quality-gates"),
+])
+def test_atlas_history_is_available_in_domain_test_jobs(workflow, job):
+    """All execution lanes must retain the recorded atlas source revisions."""
+    root = SCRIPT.parents[2]
+    config = yaml.safe_load((root / ".github/workflows" / workflow).read_text())
+    checkout = next(step for step in config["jobs"][job]["steps"]
+                    if step.get("uses", "").startswith("actions/checkout@"))
+    assert checkout.get("with", {}).get("fetch-depth") == 0
+
+
+@pytest.mark.parametrize("left,right,expected", [
+    ("enabled: true\ncommand: run\n", "command: run\nenabled: true\n", 0),
+    ("enabled: true", "enabled: false", 1),
+    ("enabled: true", "enabled: 1", 1),
+    ("command: run", "command: [\n", 2),
+    ("date: 2026-01-01", "date: 2026-01-01", 0),
+    ("date: 2026-01-01", 'date: "2026-01-01"', 1),
+    ("1: value", '"1": value', 1),
+])
+def test_yaml_equivalence_checker(tmp_path, left, right, expected):
+    """Formatting may reorder keys; changed values and invalid YAML fail."""
+    left_path = tmp_path / "before.yml"
+    right_path = tmp_path / "after.yml"
+    left_path.write_text(left)
+    right_path.write_text(right)
+    checker = SCRIPT.parents[2] / "scripts/ci/check_yaml_equivalence.py"
+    result = subprocess.run(
+        [sys.executable, str(checker), str(left_path), str(right_path)],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == expected, result.stderr
+    if expected == 2:
+        assert "Invalid YAML" in result.stderr
+
+
+def test_yaml_checker_is_covered_by_unconditional_ci_harness():
+    """Checker edits remain tested when no domain shard is selected."""
+    root = SCRIPT.parents[2]
+    config = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text(),
+    )
+    job = config["jobs"]["ci-harness-tests"]
+    assert "if" not in job
+    step = next(step for step in job["steps"]
+                if "tests/scripts/test_detect_touched_domains.py" in step.get("run", ""))
+    assert "if" not in step

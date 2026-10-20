@@ -8,7 +8,6 @@ parametric_query:
     heading_deg: 30.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

@@ -186,13 +186,16 @@ def _sha_files(paths: list[str], repo_root: Path) -> str:
     h = hashlib.sha256()
     for rel in paths:
         h.update(rel.encode())
-        h.update((repo_root / rel).read_bytes())
+        # Git may materialize text with CRLF; the engineering basis is unchanged.
+        h.update((repo_root / rel).read_bytes().replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 
 def content_fingerprint(workflow_id: str, repo_root: Path = REPO_ROOT) -> str:
     """Hash of everything an atlas's correctness depends on. Stable across
     unrelated commits; changes iff spec / template / source / standard move."""
+    from digitalmodel.parametric.fingerprint import response_source
+
     row = _row(workflow_id)
     block = row["parametric"]
     basename = row["basename"]
@@ -205,9 +208,10 @@ def content_fingerprint(workflow_id: str, repo_root: Path = REPO_ROOT) -> str:
         "response_kwargs": block.get("response_kwargs", {}),
         "standards": STANDARDS.get(basename, []),
         "input_sha256": hashlib.sha256(
-            (repo_root / row["input"]).read_bytes()
+            (repo_root / row["input"]).read_bytes().replace(b"\r\n", b"\n")
         ).hexdigest(),
         "source_sha256": _sha_files(SOURCE_FILES.get(basename, []), repo_root),
+        "response_source": response_source(basename, repo_root),
     }
     return hashlib.sha256(json.dumps(basis, sort_keys=True).encode()).hexdigest()
 
@@ -313,6 +317,7 @@ def _swap_atlas(staged: Path, destination: Path, temporary: Path) -> None:
 def _rebuild_atlas(workflow_id: str) -> bool:
     """Keep the live atlas untouched until a temporary build passes validation."""
     from digitalmodel.parametric.build import build_atlas_from_registry
+    from digitalmodel.parametric.validation import validation_passes
 
     DEFAULT_ATLAS_ROOT.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-") as name:
@@ -323,7 +328,7 @@ def _rebuild_atlas(workflow_id: str) -> bool:
             print(f"  WARNING: {workflow_id} {result.as_posix()} "
                   "missing key 'passes'; failed validation gate")
             return False
-        if not atlas.validation["passes"]:
+        if not validation_passes(atlas):
             print(f"  WARNING: {workflow_id} regenerated but failed validation gate")
             return False
         _swap_atlas(temporary / "build" / atlas.basename,

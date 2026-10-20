@@ -1,0 +1,198 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 1.4631170695050877e-14,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 132,
+  "worst_samples": [
+    {
+      "point": {
+        "tension_range_kN": 564.7868358909502,
+        "MBL_kN": 7946.109022849525,
+        "n_cycles": 316227.7660168379
+      },
+      "predicted": 4.27549750653116e-10,
+      "actual": 4.275497506531223e-10,
+      "rel_error": 1.4631170695050877e-14,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 264.66630419572414,
+        "n_cycles": 117767.1062392756,
+        "MBL_kN": 14142.13562373095
+      },
+      "predicted": 2.5195108747876776e-18,
+      "actual": 2.5195108747877123e-18,
+      "rel_error": 1.3759313105521395e-14,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 398.101095558891,
+        "MBL_kN": 11701.144897207438,
+        "n_cycles": 3162277.6601683795
+      },
+      "predicted": 2.109877999352597e-13,
+      "actual": 2.109877999352572e-13,
+      "rel_error": 1.1844814479827895e-14,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 688.5944926891443,
+        "MBL_kN": 43043.82309636507,
+        "n_cycles": 31622.776601683792
+      },
+      "predicted": 8.189354541663257e-20,
+      "actual": 8.189354541663344e-20,
+      "rel_error": 1.0729850962688959e-14,
+      "in_range": true
+    },
+    {
+      "point": {
+        "tension_range_kN": 257.0988457816579,
+        "MBL_kN": 5055.9690456236785,
+        "n_cycles": 316227.7660168379
+      },
+      "predicted": 4.714554216992693e-12,
+      "actual": 4.714554216992735e-12,
+      "rel_error": 8.909700376296079e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 472154.0643448766,
+        "MBL_kN": 6024.1988043989095,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 1.793655548256597e-05,
+      "actual": 1.793655548256581e-05,
+      "rel_error": 8.878081091912581e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000.0,
+        "MBL_kN": 5000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 4.666202400428762e-06,
+      "actual": 4.666202400428721e-06,
+      "rel_error": 8.713205724739005e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 1000000.0,
+        "MBL_kN": 5000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 0.00046662024004287615,
+      "actual": 0.0004666202400428721,
+      "rel_error": 8.713205724739005e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000000.0,
+        "MBL_kN": 20000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 3.674820153537401e-11,
+      "actual": 3.67482015353737e-11,
+      "rel_error": 8.441031581063765e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000.0,
+        "MBL_kN": 20000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 3.674820153537401e-14,
+      "actual": 3.67482015353737e-14,
+      "rel_error": 8.414928130536388e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 1000000.0,
+        "MBL_kN": 20000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 3.6748201535374015e-12,
+      "actual": 3.674820153537371e-12,
+      "rel_error": 8.353104168761017e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000.0,
+        "MBL_kN": 5000.0,
+        "tension_range_kN": 1549.1933384829667
+      },
+      "predicted": 0.005462426851321824,
+      "actual": 0.005462426851321782,
+      "rel_error": 7.621770424874256e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000000.0,
+        "MBL_kN": 5000.0,
+        "tension_range_kN": 916.515138991168
+      },
+      "predicted": 0.0046662024004287565,
+      "actual": 0.004666202400428721,
+      "rel_error": 7.621150607238382e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 10000.0,
+        "MBL_kN": 50000.0,
+        "tension_range_kN": 1549.1933384829667
+      },
+      "predicted": 1.894024682254665e-16,
+      "actual": 1.8940246822546507e-16,
+      "rel_error": 7.549058912004435e-15,
+      "in_range": true
+    },
+    {
+      "point": {
+        "n_cycles": 1000000.0,
+        "MBL_kN": 50000.0,
+        "tension_range_kN": 1549.1933384829667
+      },
+      "predicted": 1.894024682254665e-14,
+      "actual": 1.8940246822546508e-14,
+      "rel_error": 7.496996436749231e-15,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "tension_range_kN": [
+        1.3759313105521395e-14,
+        1.4631170695050877e-14,
+        8.878081091912581e-15,
+        7.621770424874256e-15,
+        6.760364557482448e-15
+      ],
+      "n_cycles": [
+        1.0729850962688959e-14,
+        1.4631170695050877e-14,
+        1.1844814479827895e-14
+      ],
+      "MBL_kN": [
+        1.4631170695050877e-14,
+        1.3759313105521395e-14,
+        8.441031581063765e-15,
+        1.0729850962688959e-14
+      ]
+    }
+  },
+  "densification_log": []
+}

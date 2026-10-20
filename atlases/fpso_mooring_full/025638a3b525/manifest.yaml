@@ -1,0 +1,39 @@
+atlas_id: 025638a3b525
+basename: fpso_mooring_full
+physics: linear
+response: max_line_tension_N
+axes:
+- name: Hs
+  scale: linear
+  grid:
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+- name: Tp
+  scale: linear
+  grid:
+  - 9.0
+  - 11.0
+  - 13.0
+- name: water_depth_m
+  scale: linear
+  grid:
+  - 500.0
+  - 1000.0
+  - 1500.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.027658542445422846
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: fpso_mooring_full
+  code_version: 50ff7030
+  standards:
+  - id: DNV-OS-E301
+    edition: 2018-07
+  response_kwargs: {}
+  workflow_id: fpso-mooring-full
+  content_fingerprint: 025638a3b5258d21ecb2b4c2f7050cf7349c43a22a79ff6c1d7388ed6d55aaa8
+  input_template_sha256: 7b50476a25ebd7921108f6176192ce14a3425bf0367adab68c668a2d39b3d635

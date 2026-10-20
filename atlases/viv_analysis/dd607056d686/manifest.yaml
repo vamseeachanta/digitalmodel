@@ -1,0 +1,36 @@
+atlas_id: dd607056d686
+basename: viv_analysis
+physics: log_log
+response: safety_factor_inline
+axes:
+- name: span_length_ft
+  scale: log
+  grid:
+  - 40.0
+  - 60.0
+  - 80.0
+  - 100.0
+  - 120.0
+- name: current_speed_in_s
+  scale: log
+  grid:
+  - 12.0
+  - 24.0
+  - 36.0
+  - 48.0
+  - 72.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 1.2943231231289076e-15
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: viv_analysis
+  code_version: 50ff7030
+  standards:
+  - id: DNV-RP-F105
+    edition: 2017-06
+  response_kwargs: {}
+  workflow_id: viv-analysis
+  content_fingerprint: dd607056d686b522703764c8fc46fd56324ba3e9c7098c8f94a175d16ff85364
+  input_template_sha256: 8cf936bc09a6a35f76e4d8c7d9925a6626b246f276af34a0567e73bdfa036455

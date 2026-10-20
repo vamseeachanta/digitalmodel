@@ -1,0 +1,329 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.06044955926775002,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 1914,
+  "worst_samples": [
+    {
+      "point": {
+        "wall_thickness": 0.018761990401146428,
+        "effective_tension_kN": 58.25971794619345,
+        "bending_moment_kNm": 30.923835802013812,
+        "smys": 448000000.0,
+        "outer_diameter": 0.26
+      },
+      "predicted": 0.10095479804228981,
+      "actual": 0.0952,
+      "rel_error": 0.06044955926775002,
+      "in_range": true
+    },
+    {
+      "point": {
+        "wall_thickness": 0.017627509877951093,
+        "effective_tension_kN": 953.7121410065037,
+        "bending_moment_kNm": 217.51306130951727,
+        "smys": 359000000.0,
+        "outer_diameter": 0.22
+      },
+      "predicted": 1.3625963477763365,
+      "actual": 1.2986,
+      "rel_error": 0.0492810317082524,
+      "in_range": true
+    },
+    {
+      "point": {
+        "wall_thickness": 0.018348651619037266,
+        "effective_tension_kN": 1075.0872325865562,
+        "bending_moment_kNm": 391.61240576369835,
+        "smys": 552000000.0,
+        "outer_diameter": 0.22
+      },
+      "predicted": 1.5030961011381871,
+      "actual": 1.4372,
+      "rel_error": 0.04585033477469184,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.21483832216914717,
+        "effective_tension_kN": 9.668804093399874,
+        "bending_moment_kNm": 153.33999515641509,
+        "smys": 359000000.0,
+        "wall_thickness": 0.0175
+      },
+      "predicted": 0.9753338189334687,
+      "actual": 0.933,
+      "rel_error": 0.04537386809589352,
+      "in_range": true
+    },
+    {
+      "point": {
+        "wall_thickness": 0.01758823584755733,
+        "effective_tension_kN": 625.3082137595651,
+        "bending_moment_kNm": 77.84255490272018,
+        "smys": 552000000.0,
+        "outer_diameter": 0.33999999999999997
+      },
+      "predicted": 0.15556103911831665,
+      "actual": 0.1491,
+      "rel_error": 0.04333359569628863,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.22856424518126173,
+        "wall_thickness": 0.0167884445198224,
+        "bending_moment_kNm": 184.95167589961991,
+        "smys": 448000000.0,
+        "effective_tension_kN": 1800.0
+      },
+      "predicted": 1.0193384853723368,
+      "actual": 0.9773,
+      "rel_error": 0.04301492415055449,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.2105691624760302,
+        "wall_thickness": 0.017033178192409962,
+        "effective_tension_kN": 826.5005391647273,
+        "smys": 552000000.0,
+        "bending_moment_kNm": 30.0
+      },
+      "predicted": 0.26090829802419296,
+      "actual": 0.2503,
+      "rel_error": 0.04238233329681558,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.21927030386632507,
+        "wall_thickness": 0.027836930512976636,
+        "effective_tension_kN": 1320.945794924606,
+        "smys": 552000000.0,
+        "bending_moment_kNm": 60.0
+      },
+      "predicted": 0.2765577143001306,
+      "actual": 0.2654,
+      "rel_error": 0.042041123964320165,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.23218952241065263,
+        "effective_tension_kN": 508.40166489036733,
+        "bending_moment_kNm": 147.70334119357514,
+        "smys": 359000000.0,
+        "wall_thickness": 0.0175
+      },
+      "predicted": 0.8130245037519954,
+      "actual": 0.7804,
+      "rel_error": 0.041804848477697894,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.2193404554630696,
+        "wall_thickness": 0.028081445823756473,
+        "effective_tension_kN": 998.2007308685801,
+        "smys": 552000000.0,
+        "bending_moment_kNm": 200.0
+      },
+      "predicted": 0.5688279268298758,
+      "actual": 0.5466,
+      "rel_error": 0.04066580100599313,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.21019621418079681,
+        "wall_thickness": 0.021343878966253022,
+        "effective_tension_kN": 1127.996285976796,
+        "smys": 552000000.0,
+        "bending_moment_kNm": 120.0
+      },
+      "predicted": 0.5078176703640108,
+      "actual": 0.488,
+      "rel_error": 0.040609980254120555,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.22520050745437611,
+        "wall_thickness": 0.022565906734125864,
+        "effective_tension_kN": 1210.5832222974113,
+        "smys": 552000000.0,
+        "bending_moment_kNm": 360.0
+      },
+      "predicted": 1.113077153634641,
+      "actual": 1.0707,
+      "rel_error": 0.03957892372713283,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.34522922231326164,
+        "wall_thickness": 0.032832270400164495,
+        "bending_moment_kNm": 50.62525788177883,
+        "smys": 552000000.0,
+        "effective_tension_kN": 600.0
+      },
+      "predicted": 0.06849254382779303,
+      "actual": 0.0659,
+      "rel_error": 0.03934057401810366,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.23114644783414257,
+        "wall_thickness": 0.01721205003912399,
+        "bending_moment_kNm": 363.11314384416085,
+        "smys": 359000000.0,
+        "effective_tension_kN": 1800.0
+      },
+      "predicted": 2.097925565770465,
+      "actual": 2.0187,
+      "rel_error": 0.03924583433420778,
+      "in_range": true
+    },
+    {
+      "point": {
+        "outer_diameter": 0.22705687660750978,
+        "effective_tension_kN": 304.0389151462517,
+        "bending_moment_kNm": 394.7582124127843,
+        "smys": 552000000.0,
+        "wall_thickness": 0.0225
+      },
+      "predicted": 1.1739395844007365,
+      "actual": 1.1306,
+      "rel_error": 0.038333260570260465,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "359000000.0": {
+      "outer_diameter": [
+        0.0492810317082524,
+        0.03689797130209913,
+        0.03484581459074689,
+        0.024052316198128004
+      ],
+      "wall_thickness": [
+        0.0492810317082524,
+        0.03689797130209913,
+        0.038163890438312,
+        0.037322903945101585
+      ],
+      "effective_tension_kN": [
+        0.04537386809589352,
+        0.02591756862345972,
+        0.041804848477697894,
+        0.0492810317082524,
+        0.03183947747943983,
+        0.03924583433420778
+      ],
+      "bending_moment_kNm": [
+        0.031171398848423192,
+        0.014950715107980116,
+        0.03414682168421031,
+        0.037322903945101585,
+        0.04537386809589352,
+        0.0492810317082524,
+        0.038163890438312,
+        0.03924583433420778
+      ]
+    },
+    "448000000.0": {
+      "outer_diameter": [
+        0.04301492415055449,
+        0.06044955926775002,
+        0.034863742392454565,
+        0.03480848908025399
+      ],
+      "wall_thickness": [
+        0.06044955926775002,
+        0.03173279459424819,
+        0.0366467435870359,
+        0.03478854024556612
+      ],
+      "effective_tension_kN": [
+        0.06044955926775002,
+        0.024888870252328624,
+        0.031728965652335565,
+        0.034863742392454565,
+        0.025205312207716032,
+        0.04301492415055449
+      ],
+      "bending_moment_kNm": [
+        0.03480848908025399,
+        0.031728965652335565,
+        0.06044955926775002,
+        0.023284305219798254,
+        0.0366467435870359,
+        0.04301492415055449,
+        0.0277419213500501,
+        0.03474622521375297
+      ]
+    },
+    "552000000.0": {
+      "outer_diameter": [
+        0.04585033477469184,
+        0.036510371308062436,
+        0.03505718719877617,
+        0.04333359569628863
+      ],
+      "wall_thickness": [
+        0.04585033477469184,
+        0.040609980254120555,
+        0.042041123964320165,
+        0.03934057401810366
+      ],
+      "effective_tension_kN": [
+        0.03503363228699555,
+        0.038333260570260465,
+        0.04333359569628863,
+        0.04585033477469184,
+        0.042041123964320165,
+        0.03505718719877617
+      ],
+      "bending_moment_kNm": [
+        0.020017406440382912,
+        0.018571758902871355,
+        0.04238233329681558,
+        0.04333359569628863,
+        0.040609980254120555,
+        0.04066580100599313,
+        0.03710051510069956,
+        0.04585033477469184
+      ]
+    }
+  },
+  "densification_log": [
+    {
+      "round": 1,
+      "axis": "bending_moment_kNm",
+      "added_knot": 40.0,
+      "max_rel_error_before": 0.270015484109935
+    },
+    {
+      "round": 2,
+      "axis": "bending_moment_kNm",
+      "added_knot": 20.0,
+      "max_rel_error_before": 0.21498063973070974
+    },
+    {
+      "round": 3,
+      "axis": "effective_tension_kN",
+      "added_knot": 200.0,
+      "max_rel_error_before": 0.2617391973615445
+    },
+    {
+      "round": 4,
+      "axis": "bending_moment_kNm",
+      "added_knot": 10.0,
+      "max_rel_error_before": 0.2804328634885679
+    }
+  ]
+}

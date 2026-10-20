@@ -498,7 +498,9 @@ def _mudmat_bearing_utilisation(point: dict[str, Any]) -> float:
     allowable_v = result.vertical_capacity_kn / fos
     allowable_h = result.sliding_capacity_kn / fos
     bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
-    sliding_util = (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+    # Utilisation = demand / allowable capacity (issue 2746, section 12).
+    # Positive demand with zero/nonpositive resistance cannot pass.
+    sliding_util = (applied_h / allowable_h if allowable_h > 0 else math.inf) if applied_h > 0 else 0.0
     return float(max(bearing_util, sliding_util))
 
 
@@ -587,22 +589,40 @@ def _grid_points(axes: list[Axis]) -> list[dict[str, Any]]:
 
 def _holdout_points(axes: list[Axis]) -> list[dict[str, Any]]:
     """Interior test entries: each is a midpoint between adjacent knots on one
-    continuous axis (others at their median), tagged with the slice / axis /
+    continuous axis, with other axes at corners, medians and seeded interiors,
+    tagged with the slice / axis /
     interval it measures so generation can build a per-interval error map.
     Catches grid-too-coarse error the publish gate enforces against."""
     cont = [ax for ax in axes if not ax.is_categorical]
     cats = [ax for ax in axes if ax.is_categorical]
-    base = {ax.name: ax.grid[len(ax.grid) // 2] for ax in cont}
+    import random
+
+    rng = random.Random(2746)
     entries: list[dict[str, Any]] = []
     cat_combos = list(itertools.product(*[ax.values for ax in cats])) or [()]
     for cat_combo in cat_combos:
         cat_part = {ax.name: v for ax, v in zip(cats, cat_combo)}
         cat_key = "|".join(str(v) for v in cat_combo)  # "" when no categorical axis
         for ax in cont:
+            others = [other for other in cont if other is not ax]
+            lines = [dict(zip([other.name for other in others], values))
+                     for values in itertools.product(*[
+                         sorted(set([other.grid[0], other.grid[len(other.grid) // 2], other.grid[-1]]))
+                         for other in others])]
             for i, (a, b) in enumerate(zip(ax.grid, ax.grid[1:])):
                 mid = (a * b) ** 0.5 if ax.scale == "log" else (a + b) / 2.0
-                entries.append({"point": {**base, **cat_part, ax.name: mid},
-                                "cat_key": cat_key, "axis": ax.name, "interval": i})
+                interiors = []
+                for _ in range(2):
+                    sample = {}
+                    for other in others:
+                        lo, hi = other.grid[0], other.grid[-1]
+                        u = rng.random()
+                        sample[other.name] = (lo * (hi / lo)**u if other.scale == "log"
+                                              else lo + (hi - lo) * u)
+                    interiors.append(sample)
+                for base in [*lines, *interiors]:
+                    entries.append({"point": {**base, **cat_part, ax.name: mid},
+                                    "cat_key": cat_key, "axis": ax.name, "interval": i})
     return entries
 
 
@@ -673,35 +693,20 @@ def generate_atlas(
         grid=grid,
         provenance=provenance,
     )
+    invalid_grid = [row for row in rows if not math.isfinite(row[response])
+                    or (physics == "log_log" and row[response] <= 0)]
+    if invalid_grid:
+        atlas.validation = {
+            "metric": "max_rel_error", "max_rel_error": None,
+            "threshold": tolerance, "passes": False, "n_holdout": 0,
+            "failures": ["grid response must be finite (and positive for log_log)"],
+            "worst_samples": [], "local_error_map": {},
+        }
+        return atlas
 
-    # held-out validation -------------------------------------------------
-    worst = 0.0
-    samples = []
-    # local_error_map[cat_key][axis] = [rel_error per interval] (#828)
-    local_error_map: dict[str, dict[str, list[float]]] = {}
-    for entry in _holdout_points(axes):
-        point = entry["point"]
-        predicted = atlas.predict(point)
-        actual = fn(point, **response_kwargs)
-        rel = abs(predicted.value - actual) / actual if actual else 0.0
-        worst = max(worst, rel)
-        samples.append(
-            {"point": point, "predicted": predicted.value, "actual": actual,
-             "rel_error": rel, "in_range": predicted.in_range}
-        )
-        per_axis = local_error_map.setdefault(entry["cat_key"], {}).setdefault(
-            entry["axis"], [])
-        per_axis.append(rel)  # intervals arrive in ascending order
-    worst_samples = sorted(samples, key=lambda s: -s["rel_error"])[:15]
-    atlas.validation = {
-        "metric": "max_rel_error",
-        "max_rel_error": worst,
-        "threshold": tolerance,
-        "passes": worst <= tolerance,
-        "n_holdout": len(samples),
-        "worst_samples": worst_samples,
-        "local_error_map": local_error_map,
-    }
+    from digitalmodel.parametric.validation import validate_atlas
+
+    validate_atlas(atlas, lambda point: fn(point, **response_kwargs), tolerance)
     return atlas
 
 
@@ -741,8 +746,14 @@ def generate_atlas_adaptive(
     log: list[dict[str, Any]] = []
     atlas = generate_atlas(basename, physics, response, axes, **kwargs)
     rounds = 0
-    while not atlas.validation["passes"] and rounds < max_rounds:
-        name, knot, axes = _refine_axis(axes, atlas.validation["worst_samples"][0]["point"])
+    while (not atlas.validation["passes"] and not atlas.validation.get("failures")
+           and rounds < max_rounds):
+        from digitalmodel.parametric.refinement import refinement_point
+
+        point = refinement_point(
+            atlas, atlas.validation["worst_samples"][0]["point"],
+            lambda p: RESPONSE_FUNCS[basename](p, **kwargs.get("response_kwargs", {})))
+        name, knot, axes = _refine_axis(axes, point)
         if name is None:
             break  # nothing left to refine (e.g. categorical-only error)
         log.append({

@@ -1,0 +1,36 @@
+atlas_id: c223190a77d6
+basename: lifting_lug
+physics: utilization_threshold
+response: governing_utilisation
+axes:
+- name: static_load_kN
+  scale: linear
+  grid:
+  - 200.0
+  - 300.0
+  - 400.0
+  - 500.0
+  - 600.0
+- name: plate_thickness_mm
+  scale: linear
+  grid:
+  - 30.0
+  - 40.0
+  - 50.0
+  - 60.0
+  - 70.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.020833333333333447
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: lifting_lug
+  code_version: 50ff7030
+  standards:
+  - id: AISC-360-ASD
+    edition: '2016'
+  response_kwargs: {}
+  workflow_id: lifting-lug-design
+  content_fingerprint: c223190a77d6572a3695c7eee41722d624a6d8fc79f3cdf846ed824e80cdda2b
+  input_template_sha256: 199b419866a7373c16142407a4690711dd9817686e03e7cbfb1c47dc62a81f54

@@ -9,7 +9,6 @@ parametric_query:
     dff: 3.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:
