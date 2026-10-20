@@ -21,7 +21,8 @@ code { overflow-wrap: anywhere; } .status { padding: 1rem; background: #fff0d5; 
 it is an arithmetic example and contains no predicted turbine response.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
-<tr><td>Initial</td><td>2026-10-20</td><td>Added sourced preparation, an export contract and synthetic processing to make missing native evidence explicit.</td></tr></table>
+<tr><td>Initial</td><td>2026-10-20</td><td>Added sourced preparation, an export contract and synthetic processing to make missing native evidence explicit.</td></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Preserved frequency and soil-factor precision, added full-precision JSON output and clarified validation and file availability.</td></tr></table>
 <h2>Scope and sources</h2>
 <p>The <a href="../../examples/raw/K02/K02%2010MW%20fixed-bottom%20OWT.yml">raw model</a>,
 <a href="../../library/model_library/k02_10mw_fixed_bottom_owt/spec.yml">library specification</a> and
@@ -55,7 +56,7 @@ this workflow does not assert that those operations can be shared.</p>
 <ol>
 <li>Freeze the representation, source digests, defining reference, environmental settings, wave seeds,
 soil-level basis, controller and wind route. Confirm mesh, sample interval and production-window adequacy.</li>
-<li>Prepare model changes separately. The workflow writes reports only. Review all distributed stiffness changes,
+<li>Prepare model changes separately. The workflow writes reports and analysis JSON only. Review all distributed stiffness changes,
 including rotational coefficients; retain constraint connections, DOFs and damping.</li>
 <li>After separately authorised native execution, retain solver version, static convergence evidence,
 modal shapes, input/controller/wind digests and native time histories. No solver is started by this workflow.</li>
@@ -93,7 +94,11 @@ these checks do not prove native completion, convergence, authenticity or correc
 Review the retained evidence independently. Extra mode labels are preserved; incompatible sets are not compared.</p>
 <h2>Worked example and reproduction</h2>
 <p>Run from the repository root. Replace &lt;scratch&gt; with a writable output directory outside the repository.
-Each output must be new; existing outputs are never overwritten.</p>
+Each command creates the HTML report and the full-precision <code>analyse()</code> result beside it,
+using the same stem with the suffix <code>.json</code>. Both output paths must be new;
+existing outputs are never overwritten. The report path must differ from the JSON path.
+Report frequencies use four significant figures, soil factors retain their supplied values,
+and loads and relative changes use one decimal place.</p>
 <pre>python src/digitalmodel/solvers/orcaflex/fixed_bottom_workflow.py \
   --output &lt;scratch&gt;/report.html
 

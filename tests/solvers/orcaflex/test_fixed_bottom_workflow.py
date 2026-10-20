@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -41,7 +44,7 @@ def workflow():
 
 @pytest.fixture
 def exports():
-    return json.loads(EXAMPLE.read_text())
+    return json.loads(EXAMPLE.read_text(encoding="utf-8"))
 
 
 def test_inventory_and_basis(workflow):
@@ -173,7 +176,8 @@ def test_empty_report_and_html_escaping(workflow):
     assert "&lt;script&gt;" in html
     assert "Revision history" in html
     assert "NOT_EVALUATED" in html
-    assert "Synthetic" not in html or "synthetic" in html.lower()
+    assert "SYNTHETIC ARITHMETIC EXAMPLE" not in html
+    assert "UNISSUED — NATIVE RESULTS NOT ESTABLISHED" in html
 
 
 def test_fresh_process_never_loads_solver():
@@ -207,10 +211,15 @@ def test_cli_end_to_end_and_no_overwrite(tmp_path):
     ]
     result = subprocess.run(args, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
-    assert "SYNTHETIC" in output.read_text()
+    assert "SYNTHETIC" in output.read_text(encoding="utf-8")
+    analysis_file = output.with_suffix(".json")
+    analysis = json.loads(analysis_file.read_text(encoding="utf-8"))
+    assert analysis["results"]["steady_baseline"]["loads"]["fx"]["sample_mean"] == 1
     before = output.read_bytes()
+    analysis_before = analysis_file.read_bytes()
     assert subprocess.run(args, capture_output=True).returncode != 0
     assert output.read_bytes() == before
+    assert analysis_file.read_bytes() == analysis_before
 
 
 def test_missing_inventory_never_hashes_absent_inputs(workflow, tmp_path):
@@ -282,7 +291,7 @@ def test_committed_report_is_reproducible(workflow, exports, filename, synthetic
         ROOT, 0.5 if synthetic else None, 2 if synthetic else None
     )
     data = workflow.analyse(cases, exports if synthetic else [])
-    assert (folder / filename).read_text() == workflow.render_report(
+    assert (folder / filename).read_text(encoding="utf-8") == workflow.render_report(
         workflow.inventory(ROOT), workflow.read_basis(ROOT), cases, data
     )
 
@@ -303,7 +312,154 @@ def test_document_links_resolve():
     folder = ROOT / "docs/domains/orcaflex/wind/fixed-bottom-worked-example"
     for path in folder.glob("*.html"):
         parser = Links()
-        parser.feed(path.read_text())
+        parser.feed(path.read_text(encoding="utf-8"))
         for target in parser.targets:
             if not urlparse(target).scheme and not target.startswith("#"):
                 assert (path.parent / unquote(target)).is_file(), target
+
+
+@pytest.mark.parametrize("field", ["input_sha256", "comparison_basis_sha256"])
+def test_digest_requires_text(workflow, exports, field):
+    exports[0][field] = int("1" * 64)
+    with pytest.raises(ValueError, match=field):
+        workflow.analyse(workflow.prepare_cases(ROOT, 0.5, 2), exports)
+
+
+@pytest.mark.parametrize("mode", [None, [], "invalid", 1])
+def test_modes_require_objects(workflow, exports, mode):
+    exports[0]["modes"] = [mode]
+    with pytest.raises(ValueError, match="mode"):
+        workflow.analyse(workflow.prepare_cases(ROOT, 0.5, 2), exports)
+
+
+def test_missing_dependency_not_reported_as_held(workflow):
+    files = workflow.inventory(ROOT)
+    binary = next(row for row in files if row["path"].endswith("libdiscon.dll"))
+    binary.update(held=False, sha256=None)
+    cases = workflow.prepare_cases(ROOT)
+    html = workflow.render_report(
+        files, workflow.read_basis(ROOT), cases, workflow.analyse(cases, [])
+    )
+    assert (
+        "The wrapper, binary, controller input and rotor-performance table are held"
+        not in html
+    )
+    assert "Availability and digests are recorded per file in the inventory" in html
+
+
+@pytest.fixture
+def sub_hertz_exports(exports):
+    # Independent inputs: (0.243 - 0.251) / 0.251 = -3.187...%, displayed -3.2%.
+    # Soil factor 0.75 must remain 0.75; loads still use one decimal place.
+    for result, frequency in zip(exports, [0.251, 0.243, 0.258]):
+        result["modes"][0]["frequency_hz"] = frequency
+    exports[1]["soil_factor"] = 0.75
+    return exports
+
+
+def test_report_preserves_sub_hertz_frequencies_and_factors(
+    workflow, sub_hertz_exports
+):
+    cases = workflow.prepare_cases(ROOT, 0.75, 2)
+    data = workflow.analyse(cases, sub_hertz_exports)
+    html = workflow.render_report(
+        workflow.inventory(ROOT), workflow.read_basis(ROOT), cases, data
+    )
+    for value in ("0.2430", "0.2510", "0.2580", "0.75", "-3.2%"):
+        assert f"<td>{value}</td>" in html
+    assert "<td>fx</td><td>kN</td><td>1.0</td>" in html
+
+
+def test_cli_writes_full_precision_analysis(workflow, sub_hertz_exports, tmp_path):
+    source = tmp_path / "exports.json"
+    source.write_text(json.dumps(sub_hertz_exports), encoding="utf-8")
+    output = tmp_path / "report.html"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--root",
+            str(ROOT),
+            "--exports",
+            str(source),
+            "--soft-factor",
+            "0.75",
+            "--stiff-factor",
+            "2",
+            "--output",
+            str(output),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    actual = json.loads(output.with_suffix(".json").read_text(encoding="utf-8"))
+    expected = workflow.analyse(
+        workflow.prepare_cases(ROOT, 0.75, 2), sub_hertz_exports
+    )
+    assert actual == expected
+    assert actual["results"]["steady_softened"]["frequencies_hz"]["tower_fa"] == 0.243
+    assert actual["sensitivity"]["steady_softened"]["frequency_relative_change"][
+        "tower_fa"
+    ] == pytest.approx((0.243 - 0.251) / 0.251)
+
+
+@pytest.mark.parametrize("occupied", ["report.html", "report.json"])
+def test_cli_preserves_existing_outputs(tmp_path, occupied):
+    existing = tmp_path / occupied
+    existing.write_text("Existing output", encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--root",
+            str(ROOT),
+            "--output",
+            str(tmp_path / "report.html"),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert existing.read_text(encoding="utf-8") == "Existing output"
+    assert {p.name for p in tmp_path.iterdir()} == {occupied}
+
+
+def test_cli_rejects_json_report_path(tmp_path):
+    output = tmp_path / "report.json"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(ROOT), "--output", str(output)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert not output.exists()
+
+
+def test_cli_rejects_null_mode_without_traceback(exports, tmp_path):
+    exports[0]["modes"] = [None]
+    source = tmp_path / "exports.json"
+    source.write_text(json.dumps(exports), encoding="utf-8")
+    output = tmp_path / "report.html"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--root",
+            str(ROOT),
+            "--exports",
+            str(source),
+            "--soft-factor",
+            "0.5",
+            "--stiff-factor",
+            "2",
+            "--output",
+            str(output),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "Cannot build report:" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert not output.exists()

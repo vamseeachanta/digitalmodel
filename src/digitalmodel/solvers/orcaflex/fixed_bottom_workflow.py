@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -18,7 +21,7 @@ import json
 import math
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 DOMAIN = Path("docs/domains/orcaflex")
 RAW = DOMAIN / "examples/raw/K02"
@@ -37,7 +40,7 @@ def number(value: Any, name: str, *, positive: bool = False) -> float:
         raise ValueError(f"{name}: finite number required")
     if not math.isfinite(value) or (positive and value <= 0):
         raise ValueError(f"{name}: invalid numeric value")
-    return value
+    return cast(float, value)
 
 
 def text(value: Any, name: str) -> str:
@@ -166,7 +169,8 @@ def validate_export(case: dict[str, Any], result: dict[str, Any]) -> dict[str, A
     for field in ("solver_version", "load_convention", "soil_factor_source"):
         text(result.get(field), field)
     for field in ("input_sha256", "comparison_basis_sha256"):
-        if not re.fullmatch(r"[0-9a-f]{64}", str(result.get(field, ""))):
+        digest = result.get(field)
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError(f"{field}: SHA-256 required")
     for field, expected in (
         ("representation", case["representation"]),
@@ -210,6 +214,8 @@ def validate_export(case: dict[str, Any], result: dict[str, Any]) -> dict[str, A
     frequencies = {}
     shapes = {}
     for mode in modes:
+        if not isinstance(mode, dict):
+            raise ValueError("mode: object required")
         key = text(mode.get("mode_key"), "mode_key")
         text(mode.get("shape_evidence"), "shape_evidence")
         if key in frequencies:
@@ -257,7 +263,9 @@ def analyse(
     or tower/monopile classification is inferred here.
     """
     case_map = {c["case_id"]: c for c in cases}
-    results = {key: {"status": NOT_EVALUATED} for key in case_map}
+    results: dict[str, dict[str, Any]] = {
+        key: {"status": NOT_EVALUATED} for key in case_map
+    }
     seen = set()
     synthetic_flags = set()
     versions = set()
@@ -269,7 +277,7 @@ def analyse(
         reduced = validate_export(case_map[key], result)
         synthetic_flags.add(reduced["synthetic"])
         versions.add(reduced["solver_version"])
-        results[key] = reduced
+        results[cast(str, key)] = reduced
     if len(synthetic_flags) > 1 or len(versions) > 1:
         raise ValueError(
             "one synthetic status and one solver version required per report"
@@ -323,14 +331,14 @@ def analyse(
     }
 
 
-def display(value: Any) -> str:
-    """Format report numbers to one decimal place; retain machine inputs separately."""
+def display(value: Any, format_spec: str = ".1f") -> str:
+    """Format numbers for their quantity; escape text for report cells."""
     if value is None:
         return NOT_EVALUATED
     if isinstance(value, bool):
         return "held" if value else "not held"
     if isinstance(value, (int, float)):
-        return f"{value:.1f}"
+        return format(value, format_spec)
     return html.escape(str(value))
 
 
@@ -383,7 +391,13 @@ def render_report(
                     "Initial",
                     "2026-10-20",
                     "Offline method and input gaps recorded to prepare reproducible analysis.",
-                ]
+                ],
+                [
+                    "1",
+                    "2026-10-20",
+                    "Preserved frequency and soil-factor precision, added JSON analysis output "
+                    "and corrected validation and inventory wording after review.",
+                ],
             ],
         ),
         "<h2>Document control</h2><p>Unissued analysis. Prepared, checked and approved: pending. ",
@@ -411,7 +425,9 @@ def render_report(
         )
     )
     parts += [
-        "<p>Display rounding is one decimal place; the source inputs retain full precision. ",
+        "<p>Frequencies use four significant figures; soil factors retain their supplied values. ",
+        "Loads and relative changes use one decimal place. The companion JSON retains full ",
+        "analysis precision; source inputs retain full precision. ",
         "Raw model: JONSWAP (L133–140); soil connections (L13052–13071); constraint coefficients ",
         "(L13097–14147). The template and library copy are distinct representations. ",
         "The template substitutes steady wind and specified torque for the external controller. ",
@@ -429,8 +445,8 @@ def render_report(
         )
     )
     parts += [
-        "<p>The wrapper, binary, controller input and rotor-performance table are held. ",
-        "The binary was hashed only. No wrapper, controller or solver was imported or loaded. ",
+        "<p>Availability and digests are recorded per file in the inventory. ",
+        "Held files are read or hashed only. No wrapper, controller or solver was imported or loaded. ",
         "The initial route is the steady template; wind.bts regeneration remains unevaluated.</p>",
         "<h2>Methodology and assumptions</h2><p>For each approved soil factor a, ",
         "K_case = a K_held for all selected translational and rotational soil coefficients; ",
@@ -454,7 +470,7 @@ def render_report(
                 [
                     display(c["case_id"]),
                     display(c["representation"]),
-                    display(c["soil_factor"]),
+                    display(c["soil_factor"], ""),
                     display(c["wind_speed_m_s"]["value"]),
                     display("; ".join(c["blockers"])),
                 ]
@@ -488,7 +504,11 @@ def render_report(
             table(
                 ["Shape-reviewed label", "Frequency (Hz)", "Shape evidence"],
                 [
-                    [display(k), display(v), display(result["shape_evidence"][k])]
+                    [
+                        display(k),
+                        display(v, "#.4g"),
+                        display(result["shape_evidence"][k]),
+                    ]
                     for k, v in result["frequencies_hz"].items()
                 ],
             )
@@ -539,15 +559,38 @@ def render_report(
         f"<p>{display(analysis['note'])}</p>",
         "<h2>Appendix A — Reproduction and qualifications</h2><p>Run the standalone script ",
         "with --output pointing to a new report file. Add --exports only for validated JSON ",
-        "and --soft-factor/--stiff-factor only with a recorded input basis. Output files are ",
+        "and --soft-factor/--stiff-factor only with a recorded input basis. The analyse() result ",
+        "is also written beside the report with the suffix .json, preserving numeric precision. ",
+        "The report path must differ from the JSON path. Both output files are ",
         "created exclusively. Missing solver results prevent engineering qualification.</p>",
         "</main></html>\n",
     ]
     return "\n".join(part.rstrip() for part in parts) + "\n"
 
 
+def write_outputs(output: Path, report: str, analysis: dict[str, Any]) -> None:
+    """Create the report and JSON exclusively; roll back only this call's new files."""
+    json_output = output.with_suffix(".json")
+    if output == json_output:
+        raise ValueError("report and analysis JSON paths must differ")
+    payloads = (
+        (output, report),
+        (json_output, json.dumps(analysis, indent=2, allow_nan=False) + "\n"),
+    )
+    created = []
+    try:
+        for path, content in payloads:
+            with path.open("x", encoding="utf-8") as stream:
+                created.append(path)
+                stream.write(content)
+    except (OSError, ValueError):
+        for path in created:
+            path.unlink()
+        raise
+
+
 def main() -> None:
-    """Create a new report; never overwrite an existing report or solver input."""
+    """Create a report and JSON; never overwrite existing outputs or solver inputs."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--exports", type=Path)
@@ -562,11 +605,11 @@ def main() -> None:
         if not isinstance(exports, list):
             raise ValueError("exports must be a list of case records")
         cases = prepare_cases(args.root, args.soft_factor, args.stiff_factor)
+        analysis = analyse(cases, exports)
         report = render_report(
-            inventory(args.root), read_basis(args.root), cases, analyse(cases, exports)
+            inventory(args.root), read_basis(args.root), cases, analysis
         )
-        with args.output.open("x", encoding="utf-8") as stream:
-            stream.write(report)
+        write_outputs(args.output, report, analysis)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         parser.exit(2, f"Cannot build report: {exc}\n")
 
