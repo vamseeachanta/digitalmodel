@@ -13,6 +13,7 @@ supplied allowables. Coupled responses are `NOT_EVALUATED` in the example.
 | Revision | Date | What changed and why |
 |---|---|---|
 | 00 | 2026-10-20 | Initial solver-free preparation and worked example to expose the method and pending response. |
+| 01 | 2026-10-20 | Refined passing histories and corrected response summaries, model metadata and report presentation to answer review findings. |
 
 ## Inputs and method
 
@@ -30,7 +31,12 @@ without contributing numerical parameters.
   relation. Area, coefficient, density and application point are required inputs.
   A single coefficient applies to the resultant; this is an isotropic screen.
 - Passage kinematics: `stagger = initial_stagger + speed * time`, with explicit
-  sampling times and speed through still water. The force calculation reuses
+  requested times and speed through still water. Each requested interval is
+  subdivided to at most `time_step_s`; faster passages are refined to the
+  nominal stagger increment of the slowest declared passage. For the example,
+  that increment is 0.1 m, giving 4001 samples at 1.0 m/s and 8001 at 2.0 m/s.
+  Irregular requested times can require smaller increments. These sampled
+  peaks remain unconverged. The force calculation reuses
   `src/digitalmodel/hydrodynamics/wang_passing_ship.py`, whose equations and
   finite-depth image method are documented in
   [the 1975-method note](../../../../docs/domains/hydrodynamics/wang-passing-ship-forces.md).
@@ -54,6 +60,13 @@ Axes are x along the berth, +y toward the passing track and z upward. Positive
 yaw is right handed. The quay and all link endpoints are at y <= 0. Wind/current
 velocities point **toward** their force direction, rather than meteorological
 “from” directions. Loads are superposed in the initial fixed body frame.
+
+The asymmetric-stagger test independently integrates distributed loads obtained
+by integration by parts of the documented area kernels. Signed surge is the
+integral of the longitudinal load; right-handed yaw is the integral of `x*qy`.
+At +50 m stagger, the example's surge and yaw are positive, and the latter adds
+to positive wind yaw. This tests the mapping without relying on symmetry or a
+sign copied from the passing-force implementation.
 
 ## Worked answer and use
 
@@ -83,6 +96,12 @@ uses kilo = 10³ (BIPM SI Brochure, ninth edition, 2019, SI prefixes).
 
 Public source retrieval records are in [sources.json](sources.json).
 Artifact paths in the manifest are relative to the reproducible build output.
+The `numerical_runtime` mapping records observed Python, NumPy, SciPy and output
+library versions. Byte reproduction requires matching these versions and
+compatible numerical-library behaviour; unpinned installation can change CSV
+roundoff and therefore artifact digests. The repeat-build test establishes byte
+identity within one runtime, not across runtimes. Each rebuilt manifest must be
+checked against its own generated files; its hashes are not numerical tolerances.
 
 The committed [worked report](report.html) records
 the sampled applied-load peaks. Rebuilding creates the full review model set;
@@ -109,6 +128,10 @@ static equilibrium and licensed load attestation before response analysis.
 Zero damping and waves are explicit exclusions; inactive unit wave period and
 coordinate zeros are model setup, not design values. The initial line extensions
 are illustrative and do not imply a balanced initial berth equilibrium.
+Each native file identifies its case and companion force history in comments.
+Roll and pitch inertia are `NOT_EVALUATED`, represented by null diagonal entries;
+the supplied yaw inertia is retained only for yaw. These placeholders require
+sourced roll/pitch values before native solver loading or response analysis.
 
 Passing forces assume parabolic hull sections and a straight parallel track.
 Bank/channel effects, relative current effects on passage, hull-motion feedback,

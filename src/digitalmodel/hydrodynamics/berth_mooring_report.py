@@ -26,6 +26,31 @@ from digitalmodel.reporting import (
 )
 
 
+def _response_summary(
+    records: list[dict], expected: set[tuple[str, str]]
+) -> tuple[str, str]:
+    failures = [row for row in records if row["status"] == "FAIL"]
+    if failures:
+        governing = max(failures, key=lambda row: row["utilisation"])
+        return "FAIL", (
+            f" Governing case {governing['case']}, object {governing['object']}, "
+            f"utilisation **{governing['utilisation']:.2f}**."
+        )
+    if len(records) != len(expected) or {
+        (row["case"], row["object"]) for row in records
+    } != expected:
+        return "NOT_EVALUATED", ""
+    if not records or any(
+        row["status"] != "PASS"
+        or row["peak_kn"] is None
+        or row["allowable_kn"] is None
+        or not row["criterion_source"]
+        for row in records
+    ):
+        return "NOT_EVALUATED", ""
+    return "PASS", ""
+
+
 def build_report(spec: dict, manifest: dict) -> ReportSpec:
     """Build a standard report with a revision table directly after summary.
 
@@ -37,7 +62,13 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
 
     # BIPM SI Brochure, 9th ed. (2019), SI prefixes: kilo=10^3.
     def kn(value):
-        return f"{value / 1000:.1f}"
+        scaled = value / 1000
+        if scaled == 0:
+            return "0.00"
+        exponent = math.floor(math.log10(abs(scaled)))
+        if exponent < -2 or exponent >= 3:
+            return f"{scaled:.2e}"
+        return f"{scaled:.{2 - exponent}f}"
 
     def section(key, title, *blocks):
         return Section(key=key, title=title, blocks=list(blocks))
@@ -64,18 +95,29 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
             r["object"],
             "—" if r["peak_kn"] is None else f"{r['peak_kn']:.1f}",
             "—" if r["allowable_kn"] is None else f"{r['allowable_kn']:.1f}",
-            "—" if r["utilisation"] is None else f"{r['utilisation']:.1f}",
+            "—" if r["utilisation"] is None else f"{r['utilisation']:.2f}",
             r["status"],
             r["criterion_source"] or "not supplied",
         ]
         for r in manifest["response"]
     ]
     version = manifest["solver_version"] or "not supplied"
-    response_status = (
-        "NOT_EVALUATED"
-        if manifest["solver_version"] is None
-        else "exported samples evaluated against supplied criteria"
-    )
+    expected = {
+        (case["name"], item["name"])
+        for case in manifest["cases"]
+        for item in spec["lines"] + spec["fenders"]
+    }
+    response_status, governing_response = _response_summary(manifest["response"], expected)
+    revision_rows = [
+        [
+            "00", "2026-10-20",
+            "Initial generic preparation to expose inputs, methods and pending response.",
+        ],
+        [
+            "01", "2026-10-20",
+            "Refined passage sampling, corrected response summary and clarified pending qualification.",
+        ],
+    ]
     calculations = []
     for key, load in (("wind", wind), ("current", current)):
         data = spec[key]
@@ -89,12 +131,16 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
         )
     return ReportSpec(
         document=DocumentMeta(
-            number="B0000-RPT-013-00",
-            revision="00",
+            number="B0000-RPT-013-01",
+            revision="01",
             title="Generic berth mooring analysis",
             project="Generic example",
             client="Not applicable",
             date="2026-10-20",
+            revision_history=[
+                {"rev": rev, "date": date, "description": description}
+                for rev, date, description in revision_rows
+            ],
         ),
         provenance=Provenance().add(
             "calculation",
@@ -111,7 +157,7 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                     markdown=(
                         f"{len(manifest['cases'])} generic berth cases are prepared. Steady combined sway is **{kn(total[1])} kN** "
                         f"and yaw moment **{kn(total[2])} kN m**. These are applied loads. "
-                        f"Line/fender response: **{response_status}**. Equilibrium and applied-load wiring "
+                        f"Line/fender response: **{response_status}**.{governing_response} Equilibrium and applied-load wiring "
                         "are **NOT_EVALUATED**. Preparation alone does not establish design acceptance."
                     )
                 ),
@@ -120,15 +166,9 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                 "revision",
                 "Revision history",
                 TableBlock(
-                    title="",
+                    title="Document revision history",
                     columns=["Revision", "Date", "What changed and why"],
-                    rows=[
-                        [
-                            "00",
-                            "2026-10-20",
-                            "Initial generic preparation to expose inputs, methods and pending response.",
-                        ]
-                    ],
+                    rows=revision_rows,
                 ),
             ),
             section(
@@ -146,7 +186,8 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                 "inputs",
                 "Design data and assumptions",
                 TableBlock(
-                    title="", columns=["Input group", "Basis"], rows=assumptions
+                    title="Input assumptions and sources",
+                    columns=["Input group", "Basis"], rows=assumptions
                 ),
                 TextBlock(
                     markdown=(
@@ -173,6 +214,10 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                         "are explicit inputs. The passing track is +y and the quay is -y; yaw is right handed. "
                         "Forces are summed in a fixed initial body frame. Bank/channel effects, "
                         "current-passage interaction and moving-hull feedback are excluded.\n\n"
+                        "**Passage sampling:** requested times are retained and time_step_s is an upper bound. "
+                        "Faster cases are refined to the same target stagger increment as the slowest passage; "
+                        "interval subdivision may produce smaller increments for irregular requested times. "
+                        "This finer spatial sampling does not establish peak convergence.\n\n"
                         "**Mooring links:** T = EA (length - unstretched_length) / unstretched_length "
                         "in tension, otherwise zero. **Fenders:** linear interpolation of supplied "
                         "length/tension points, with negative tension indicating compression. Orcina Links: Data, "
@@ -187,7 +232,7 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                 "answer",
                 "Worked answer",
                 TableBlock(
-                    title="",
+                    title="Steady applied-load contributions",
                     columns=["Steady contribution", "Surge kN", "Sway kN", "Yaw kN m"],
                     rows=[
                         [name, *[kn(x) for x in load]]
@@ -200,7 +245,7 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                 ),
                 TextBlock(
                     markdown=(
-                        "Hand calculation from the supplied inputs (display rounded to one decimal): "
+                        "Hand calculation from the supplied inputs (applied loads shown to three significant figures): "
                         + " ".join(calculations)
                         + f" Combined sway = {kn(total[1])} kN and yaw = {kn(total[2])} kN m. "
                         "All numbers are example inputs, not recommended coefficients. "
@@ -213,7 +258,7 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                 "cases",
                 "Case table and sampled applied loads",
                 TableBlock(
-                    title="",
+                    title="Sampled applied-load peaks: unconverged sampling and image sum",
                     columns=[
                         "Case",
                         "Speed m/s",
@@ -270,12 +315,17 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
                     markdown=(
                         "Supply sourced allowable line tensions, fender reactions and any displacement or "
                         "compression limits. Qualify hydrodynamic inertia/damping and initial equilibrium. "
+                        "Roll/pitch inertia is NOT_EVALUATED; the null placeholders must be replaced with "
+                        "qualified values before solver loading. "
                         "Wire the CSV loads to vessel applied loads, converting N to kN and N m to kN m, "
                         "and retain the fixed global axes during rotations. Load and solve the twelve cases "
                         "only under separate authorisation on a recorded solver version. Export nonnegative "
                         "line tensile/fender compression magnitudes in kN for every case and object; the "
-                        "stored-result evaluator checks completeness and supplied limits. Record sampling, "
-                        "time-step and image-sum convergence before treating sampled peaks as governing."
+                        "stored-result evaluator checks completeness and supplied limits. Refine the target "
+                        "stagger increment below the slowest passage's speed times time_step_s, keeping "
+                        "time_step_s as an upper bound and refining faster cases to the same target increment. "
+                        "Record peak convergence with finer spatial sampling and image sums before treating "
+                        "sampled peaks as governing."
                     )
                 ),
             ),

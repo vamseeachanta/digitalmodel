@@ -40,6 +40,7 @@ passages:
   - {speed_m_s: 2, separation_m: 150}
 sampling:
   initial_stagger_m: -200
+  # Requested knots; histories are refined using the analysis time step.
   times_s: [0, 50, 100, 150, 200, 250, 300, 350, 400]
   time_step_s: 0.1
 numerics: {quadrature_nodes: 96, image_pairs: 10}

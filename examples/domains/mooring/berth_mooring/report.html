@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>B0000-RPT-013-00 Rev 00 - Generic berth mooring analysis</title>
-<meta name="description" content="Generic berth mooring analysis (B0000-RPT-013-00 Rev 00) - Generic example / Not applicable">
+<title>B0000-RPT-013-01 Rev 01 - Generic berth mooring analysis</title>
+<meta name="description" content="Generic berth mooring analysis (B0000-RPT-013-01 Rev 01) - Generic example / Not applicable">
 <style>
   /* ============================ TOKENS ============================ */
   :root{
@@ -410,7 +410,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <header class="masthead" id="report-header">
   <div class="wrap">
     <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>B0000-RPT-013-00</b> &middot; Rev 00</span>
+    <span class="docno num"><b>B0000-RPT-013-01</b> &middot; Rev 01</span>
     <div class="mh-legend chips" id="header-standards">
     </div>
   </div>
@@ -424,8 +424,8 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="kv">
         <div class="cap">Document</div>
         <table>
-          <tr><td>Document number</td><td>B0000-RPT-013-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
+          <tr><td>Document number</td><td>B0000-RPT-013-01</td></tr>
+          <tr><td>Revision</td><td>01</td></tr>
           <tr><td>Project</td><td>Generic example</td></tr>
           <tr><td>Client</td><td>Not applicable</td></tr>
           <tr><td>Date</td><td>2026-10-20</td></tr>
@@ -446,7 +446,8 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <table>
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
-          <tr><td>00</td><td>2026-10-20</td><td>Issued</td><td></td><td></td><td></td></tr>
+          <tr><td>00</td><td>2026-10-20</td><td>Initial generic preparation to expose inputs, methods and pending response.</td><td></td><td></td><td></td></tr>
+          <tr><td>01</td><td>2026-10-20</td><td>Refined passage sampling, corrected response summary and clarified pending qualification.</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
     </div>
@@ -478,14 +479,14 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Summary</h2></div>
 
     <div class="prose">
-<p>12 generic berth cases are prepared. Steady combined sway is <strong>160.0 kN</strong> and yaw moment <strong>1600.0 kN m</strong>. These are applied loads. Line/fender response: <strong>NOT_EVALUATED</strong>. Equilibrium and applied-load wiring are <strong>NOT_EVALUATED</strong>. Preparation alone does not establish design acceptance.</p>
+<p>12 generic berth cases are prepared. Steady combined sway is <strong>160 kN</strong> and yaw moment <strong>1.60e+03 kN m</strong>. These are applied loads. Line/fender response: <strong>NOT_EVALUATED</strong>. Equilibrium and applied-load wiring are <strong>NOT_EVALUATED</strong>. Preparation alone does not establish design acceptance.</p>
     </div>
     </section>
     <section id="revision">
       <div class="l1head"><span class="secnum"></span><h2>Revision history</h2></div>
 
     <div class="tbl" id="table-1">
-      <div class="cap">Table 1. </div>
+      <div class="cap">Table 1. Document revision history</div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -493,6 +494,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </thead>
           <tbody>
             <tr><td>00</td><td>2026-10-20</td><td>Initial generic preparation to expose inputs, methods and pending response.</td></tr>
+            <tr><td>01</td><td>2026-10-20</td><td>Refined passage sampling, corrected response summary and clarified pending qualification.</td></tr>
           </tbody>
         </table>
       </div>
@@ -509,7 +511,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Design data and assumptions</h2></div>
 
     <div class="tbl" id="table-2">
-      <div class="cap">Table 2. </div>
+      <div class="cap">Table 2. Input assumptions and sources</div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -541,6 +543,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <div class="prose">
 <p><strong>Steady load:</strong> F = rho Cd A |v| v / 2; Mz = x Fy - y Fx. NASA Drag Equation, public web edition retrieved 2026-10-20. The single supplied area and coefficient form an isotropic screen; directional wind/current coefficients are not inferred. Velocity points toward the force.</p>
 <p><strong>Passage:</strong> stagger(t) = initial_stagger + speed t. The existing closed-form passing-force implementation uses parabolic sectional areas and the finite-depth image sum documented in the repository&#x27;s 1975-method note. Its numerical settings are explicit inputs. The passing track is +y and the quay is -y; yaw is right handed. Forces are summed in a fixed initial body frame. Bank/channel effects, current-passage interaction and moving-hull feedback are excluded.</p>
+<p><strong>Passage sampling:</strong> requested times are retained and time_step_s is an upper bound. Faster cases are refined to the same target stagger increment as the slowest passage; interval subdivision may produce smaller increments for irregular requested times. This finer spatial sampling does not establish peak convergence.</p>
 <p><strong>Mooring links:</strong> T = EA (length - unstretched_length) / unstretched_length in tension, otherwise zero. <strong>Fenders:</strong> linear interpolation of supplied length/tension points, with negative tension indicating compression. Orcina Links: Data, public web edition retrieved 2026-10-20. Zero damping is an explicit exclusion.</p>
 <p><strong>Acceptance:</strong> sampled maximum tensile/compressive magnitude divided by a supplied allowable is utilisation. PASS requires peak &lt;= allowable. Every allowable needs a source. Missing allowable or response is NOT_EVALUATED. No licensed-standard limit is inferred.</p>
     </div>
@@ -549,47 +552,47 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Worked answer</h2></div>
 
     <div class="tbl" id="table-3">
-      <div class="cap">Table 3. </div>
+      <div class="cap">Table 3. Steady applied-load contributions</div>
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr><th>Steady contribution</th><th>Surge kN</th><th>Sway kN</th><th>Yaw kN m</th></tr>
           </thead>
           <tbody>
-            <tr><td>Wind</td><td>0.0</td><td>60.0</td><td>600.0</td></tr>
-            <tr><td>Current</td><td>0.0</td><td>100.0</td><td>1000.0</td></tr>
-            <tr><td>Combined</td><td>0.0</td><td>160.0</td><td>1600.0</td></tr>
+            <tr><td>Wind</td><td>0.00</td><td>60.0</td><td>600</td></tr>
+            <tr><td>Current</td><td>0.00</td><td>100</td><td>1.00e+03</td></tr>
+            <tr><td>Combined</td><td>0.00</td><td>160</td><td>1.60e+03</td></tr>
           </tbody>
         </table>
       </div>
     </div>
     <div class="prose">
-<p>Hand calculation from the supplied inputs (display rounded to one decimal): wind: |F| = 0.5 x 1.2 x 1000.0 x 1.0 x 10.0 squared = 60.0 kN; Mz = 10.0 x 60.0 - 0.0 x 0.0 = 600.0 kN m. current: |F| = 0.5 x 1000.0 x 200.0 x 1.0 x 1.0 squared = 100.0 kN; Mz = 10.0 x 100.0 - 0.0 x 0.0 = 1000.0 kN m. Combined sway = 160.0 kN and yaw = 1600.0 kN m. All numbers are example inputs, not recommended coefficients. The table below adds computed passing loads at the specified samples. Each component peak may occur at a different time.</p>
+<p>Hand calculation from the supplied inputs (applied loads shown to three significant figures): wind: |F| = 0.5 x 1.2 x 1000.0 x 1.0 x 10.0 squared = 60.0 kN; Mz = 10.0 x 60.0 - 0.0 x 0.00 = 600 kN m. current: |F| = 0.5 x 1000.0 x 200.0 x 1.0 x 1.0 squared = 100 kN; Mz = 10.0 x 100 - 0.0 x 0.00 = 1.00e+03 kN m. Combined sway = 160 kN and yaw = 1.60e+03 kN m. All numbers are example inputs, not recommended coefficients. The table below adds computed passing loads at the specified samples. Each component peak may occur at a different time.</p>
     </div>
     </section>
     <section id="cases">
       <div class="l1head"><span class="secnum"></span><h2>Case table and sampled applied loads</h2></div>
 
     <div class="tbl" id="table-4">
-      <div class="cap">Table 4. </div>
+      <div class="cap">Table 4. Sampled applied-load peaks: unconverged sampling and image sum</div>
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr><th>Case</th><th>Speed m/s</th><th>Separation m</th><th>Wind</th><th>Current</th><th>Peak surge kN</th><th>Peak sway kN</th><th>Peak yaw kN m</th><th>Coupled response</th></tr>
           </thead>
           <tbody>
-            <tr><td>case_1_w0_c0</td><td>1.0</td><td>100.0</td><td>False</td><td>False</td><td>0.1</td><td>0.4</td><td>3.8</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_1_w0_c1</td><td>1.0</td><td>100.0</td><td>False</td><td>True</td><td>0.1</td><td>100.4</td><td>1003.8</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_1_w1_c0</td><td>1.0</td><td>100.0</td><td>True</td><td>False</td><td>0.1</td><td>60.4</td><td>603.8</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_1_w1_c1</td><td>1.0</td><td>100.0</td><td>True</td><td>True</td><td>0.1</td><td>160.4</td><td>1603.8</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_2_w0_c0</td><td>2.0</td><td>100.0</td><td>False</td><td>False</td><td>0.4</td><td>1.5</td><td>3.4</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_2_w0_c1</td><td>2.0</td><td>100.0</td><td>False</td><td>True</td><td>0.4</td><td>101.5</td><td>1003.4</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_2_w1_c0</td><td>2.0</td><td>100.0</td><td>True</td><td>False</td><td>0.4</td><td>61.5</td><td>603.4</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_2_w1_c1</td><td>2.0</td><td>100.0</td><td>True</td><td>True</td><td>0.4</td><td>161.5</td><td>1603.4</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_3_w0_c0</td><td>2.0</td><td>150.0</td><td>False</td><td>False</td><td>0.2</td><td>0.6</td><td>2.6</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_3_w0_c1</td><td>2.0</td><td>150.0</td><td>False</td><td>True</td><td>0.2</td><td>100.6</td><td>1002.6</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_3_w1_c0</td><td>2.0</td><td>150.0</td><td>True</td><td>False</td><td>0.2</td><td>60.6</td><td>602.6</td><td>NOT_EVALUATED</td></tr>
-            <tr><td>case_3_w1_c1</td><td>2.0</td><td>150.0</td><td>True</td><td>True</td><td>0.2</td><td>160.6</td><td>1602.6</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_1_w0_c0</td><td>1.0</td><td>100.0</td><td>False</td><td>False</td><td>0.146</td><td>0.381</td><td>3.84</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_1_w0_c1</td><td>1.0</td><td>100.0</td><td>False</td><td>True</td><td>0.146</td><td>100</td><td>1.00e+03</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_1_w1_c0</td><td>1.0</td><td>100.0</td><td>True</td><td>False</td><td>0.146</td><td>60.4</td><td>604</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_1_w1_c1</td><td>1.0</td><td>100.0</td><td>True</td><td>True</td><td>0.146</td><td>160</td><td>1.60e+03</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_2_w0_c0</td><td>2.0</td><td>100.0</td><td>False</td><td>False</td><td>0.584</td><td>1.52</td><td>15.4</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_2_w0_c1</td><td>2.0</td><td>100.0</td><td>False</td><td>True</td><td>0.584</td><td>102</td><td>1.02e+03</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_2_w1_c0</td><td>2.0</td><td>100.0</td><td>True</td><td>False</td><td>0.584</td><td>61.5</td><td>615</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_2_w1_c1</td><td>2.0</td><td>100.0</td><td>True</td><td>True</td><td>0.584</td><td>162</td><td>1.62e+03</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_3_w0_c0</td><td>2.0</td><td>150.0</td><td>False</td><td>False</td><td>0.212</td><td>0.566</td><td>4.10</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_3_w0_c1</td><td>2.0</td><td>150.0</td><td>False</td><td>True</td><td>0.212</td><td>101</td><td>1.00e+03</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_3_w1_c0</td><td>2.0</td><td>150.0</td><td>True</td><td>False</td><td>0.212</td><td>60.6</td><td>604</td><td>NOT_EVALUATED</td></tr>
+            <tr><td>case_3_w1_c1</td><td>2.0</td><td>150.0</td><td>True</td><td>True</td><td>0.212</td><td>161</td><td>1.60e+03</td><td>NOT_EVALUATED</td></tr>
           </tbody>
         </table>
       </div>
@@ -673,7 +676,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Way forward</h2></div>
 
     <div class="prose">
-<p>Supply sourced allowable line tensions, fender reactions and any displacement or compression limits. Qualify hydrodynamic inertia/damping and initial equilibrium. Wire the CSV loads to vessel applied loads, converting N to kN and N m to kN m, and retain the fixed global axes during rotations. Load and solve the twelve cases only under separate authorisation on a recorded solver version. Export nonnegative line tensile/fender compression magnitudes in kN for every case and object; the stored-result evaluator checks completeness and supplied limits. Record sampling, time-step and image-sum convergence before treating sampled peaks as governing.</p>
+<p>Supply sourced allowable line tensions, fender reactions and any displacement or compression limits. Qualify hydrodynamic inertia/damping and initial equilibrium. Roll/pitch inertia is NOT_EVALUATED; the null placeholders must be replaced with qualified values before solver loading. Wire the CSV loads to vessel applied loads, converting N to kN and N m to kN m, and retain the fixed global axes during rotations. Load and solve the twelve cases only under separate authorisation on a recorded solver version. Export nonnegative line tensile/fender compression magnitudes in kN for every case and object; the stored-result evaluator checks completeness and supplied limits. Refine the target stagger increment below the slowest passage&#x27;s speed times time_step_s, keeping time_step_s as an upper bound and refining faster cases to the same target increment. Record peak convergence with finer spatial sampling and image sums before treating sampled peaks as governing.</p>
     </div>
     </section>
     <section id="refs">
@@ -765,7 +768,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div>
         <h3>Document</h3>
         <ul>
-          <li><span class="k">Number</span> B0000-RPT-013-00 &middot; Rev 00</li>
+          <li><span class="k">Number</span> B0000-RPT-013-01 &middot; Rev 01</li>
           <li><span class="k">Project</span> Generic example</li>
           <li><span class="k">Client</span> Not applicable</li>
         </ul>
@@ -787,7 +790,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       </div>
     </div>
     <div class="foot-bar">
-      <span>B0000-RPT-013-00 Rev 00 &middot; Generic berth mooring analysis</span>
+      <span>B0000-RPT-013-01 Rev 01 &middot; Generic berth mooring analysis</span>
       <span class="pdf" id="pdf-status">PDF: derivative of this HTML; render status in the manifest</span>
     </div>
   </div>

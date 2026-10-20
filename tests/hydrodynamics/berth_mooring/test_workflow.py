@@ -5,9 +5,14 @@ Expected values are derived below, independently of the implementation.
 """
 
 import csv
+from importlib.metadata import version
+import math
 from pathlib import Path
+import platform
 
+import numpy as np
 import pytest
+from scipy.integrate import simpson
 import yaml
 
 from digitalmodel.hydrodynamics.berth_mooring import (
@@ -69,9 +74,22 @@ def test_time_mapping_and_superposition(spec):
         return [[x, 2 * speed, 3 * separation] for x in staggers]
 
     rows = prepare_history(spec, case, force_function=forces)
-    assert [r["stagger_m"] for r in rows] == [-200, 0, 200]
-    assert [r["sway_n"] for r in rows] == pytest.approx([160004] * 3)
-    assert [r["yaw_nm"] for r in rows] == pytest.approx([1600300] * 3)
+    requested = {r["time_s"]: r for r in rows}
+    assert [requested[t]["stagger_m"] for t in (0, 100, 200)] == [-200, 0, 200]
+    assert all(r["sway_n"] == pytest.approx(160004) for r in rows)
+    assert all(r["yaw_nm"] == pytest.approx(1600300) for r in rows)
+
+
+def test_history_resolves_requested_intervals(spec):
+    """Every requested time is retained; no interval exceeds the analysis step."""
+    spec["sampling"]["times_s"] = [0, 0.15, 0.31]
+    case = build_campaign(spec)[4]
+    rows = prepare_history(
+        spec, case, force_function=lambda xs, *_: [[0, 0, 0] for _ in xs]
+    )
+    times = [r["time_s"] for r in rows]
+    assert set(spec["sampling"]["times_s"]) <= set(times)
+    assert all(0 < b - a <= 0.1 + 1e-12 for a, b in zip(times, times[1:]))
 
 
 @pytest.mark.parametrize(
@@ -173,11 +191,56 @@ def test_native_yaml_and_campaign(spec, tmp_path):
         result = OrcaFlexYAMLValidator().validate_file(path)
         assert result.valid, result.errors
         model = yaml.safe_load(path.read_text())
+        assert f"# Case: {case['name']}" in path.read_text()
+        assert f"# Force history: {case['history']}" in path.read_text()
+        assert "Roll/pitch inertia: NOT_EVALUATED" in path.read_text()
         assert len(model["Links"]) == len(spec["lines"]) + len(spec["fenders"])
         assert model["Links"][0]["Stiffness"] == spec["lines"][0]["ea_kn"]
         assert model["Vessels"][0]["IncludeWindLoad"] == "No"
         assert case["coupled_response"] == "NOT_EVALUATED"
         assert (tmp_path / case["history"]).exists()
+
+
+def test_unknown_roll_pitch_inertia_is_not_copied_from_yaw(spec):
+    """An unprovided inertia is missing data, never the supplied yaw inertia."""
+    from digitalmodel.hydrodynamics.berth_mooring import native_model
+
+    draught = native_model(spec)["VesselTypes"][0]["Draughts"][0]
+    tensor = draught[
+        "MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ"
+    ]
+    assert tensor == [
+        [None, 0, 0], [0, None, 0], [0, 0, spec["moored"]["yaw_inertia_t_m2"]]
+    ]
+
+
+def test_campaign_speed_squared_peaks(spec, tmp_path):
+    """Unmodified campaign sampling must preserve the physical U squared scale.
+
+    The first two passages differ only in speed; each passing-only component
+    must have a fourfold sampled peak without manually aligning input times.
+    """
+    from digitalmodel.hydrodynamics.berth_mooring import write_campaign
+
+    cases = write_campaign(spec, tmp_path)["cases"]
+    slow, fast = cases[0], cases[4]
+    for component in ("surge_n", "sway_n"):
+        assert fast["peak_force_n"][component] == pytest.approx(
+            4 * slow["peak_force_n"][component], rel=1e-10
+        )
+    assert fast["peak_yaw_nm"] == pytest.approx(4 * slow["peak_yaw_nm"], rel=1e-10)
+    assert len({c["model"] for c in cases}) == 12
+
+
+def test_manifest_records_observed_runtime(spec, tmp_path):
+    """Byte reproduction is bounded by the observed numerical/output runtime."""
+    from digitalmodel.hydrodynamics.berth_mooring import write_campaign
+
+    spec["sampling"]["times_s"] = [0, 0.1]
+    runtime = write_campaign(spec, tmp_path)["numerical_runtime"]
+    assert runtime["python"] == platform.python_version()
+    for package in ("numpy", "scipy", "pyyaml", "pydantic", "pandas", "plotly", "jinja2"):
+        assert runtime[package] == version(package)
 
 
 def test_actual_passing_symmetry_and_scaling(spec):
@@ -199,6 +262,46 @@ def test_actual_passing_symmetry_and_scaling(spec):
             assert y[key] == pytest.approx(4 * x[key], abs=1e-7)
     assert a[-1]["surge_n"] == pytest.approx(0, abs=1e-7)
     assert a[-1]["yaw_nm"] == pytest.approx(0, abs=1e-7)
+
+
+def test_asymmetric_stagger_matches_distributed_load_moment(spec):
+    """Establish signed surge and right-handed yaw independently of primitives.
+
+    Integrating the repository's area kernels by parts gives distributed loads
+    qx=-rho U² S1 F'/(2 pi), qy=-rho U² eta S1 G'/pi. Direct numerical inner
+    integrals use F'=integral S2' (2R²-eta_n²)/(eta_n²+R²)^(5/2),
+    G'=integral 3 S2' R/(eta_n²+R²)^(5/2), R=x2-x1+stagger.
+    Since x cross y = z, the yaw moment is integral x1*qy, with no sign flip.
+    At +50 m stagger these independent signed surge and yaw integrals are positive.
+    """
+    spec["sampling"].update(times_s=[0, 250], time_step_s=250)
+    moored, passing = spec["moored"], spec["passing"]
+    x1 = np.linspace(-moored["length_m"] / 2, moored["length_m"] / 2, 401)
+    x2 = np.linspace(-passing["length_m"] / 2, passing["length_m"] / 2, 401)
+    area = moored["midship_area_m2"] * (1 - 4 * x1**2 / moored["length_m"]**2)
+    slope = -8 * passing["midship_area_m2"] * x2 / passing["length_m"]**2
+    r = x2[None, :] - x1[:, None] + 50
+    qx, qy = np.zeros_like(x1), np.zeros_like(x1)
+    scale = spec["water_density_kg_m3"] / math.pi  # U = 1 m/s.
+    for image in range(-spec["numerics"]["image_pairs"], spec["numerics"]["image_pairs"] + 1):
+        eta_squared = 100**2 + 4 * image**2 * spec["depth_m"]**2
+        denominator = (eta_squared + r**2)**2.5
+        fp = simpson(slope * (2 * r**2 - eta_squared) / denominator, x=x2, axis=1)
+        gp = simpson(3 * slope * r / denominator, x=x2, axis=1)
+        qx -= scale * area * fp / 2
+        qy -= scale * 100 * area * gp
+    expected = [simpson(qx, x=x1), simpson(qy, x=x1), simpson(x1 * qy, x=x1)]
+    assert expected[0] > 0 and expected[2] > 0
+    case = dict(speed_m_s=1, separation_m=100, wind=False, current=False)
+    row = prepare_history(spec, case)[-1]
+    assert [row[k] for k in ("surge_n", "sway_n", "yaw_nm")] == pytest.approx(
+        expected, rel=1e-6
+    )
+    # A +y drag load at +x has the same positive yaw convention.
+    case["wind"] = True
+    assert prepare_history(spec, case)[-1]["yaw_nm"] == pytest.approx(
+        expected[2] + 600000, rel=1e-6
+    )
 
 
 @pytest.mark.parametrize("times_s", [[0, 100, 200], [0, 100, 400]])

@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import csv
 import hashlib
+from importlib.metadata import version
 from itertools import product
 import json
 import math
 from pathlib import Path
+import platform
 import re
 from typing import Callable
 
@@ -228,7 +230,18 @@ def prepare_history(
     separation = _number(case["separation_m"], positive=True)
     if separation <= (spec["moored"]["beam_m"] + spec["passing"]["beam_m"]) / 2:
         raise ValueError("parallel hull footprints overlap")
-    times = spec["sampling"]["times_s"]
+    # Preserve requested endpoints while bounding the interval by time_step_s.
+    # Faster passages use the same nominal stagger increment as the slowest
+    # declared passage; aligned endpoints then preserve sampled U squared peaks.
+    step = spec["sampling"]["time_step_s"] * min(
+        p["speed_m_s"] for p in spec["passages"]
+    ) / speed
+    requested = spec["sampling"]["times_s"]
+    times = [requested[0]]
+    for start, finish in zip(requested, requested[1:]):
+        count = math.ceil((finish - start) / min(step, spec["sampling"]["time_step_s"]))
+        times.extend(start + (finish - start) * i / count for i in range(1, count))
+        times.append(finish)
     staggers = [spec["sampling"]["initial_stagger_m"] + speed * t for t in times]
     if force_function is None:
         vessels = [
@@ -349,8 +362,8 @@ def native_model(spec: dict) -> dict:
                         "Name": "generic_draft",
                         "Mass": hull["mass_t"],
                         "MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ": [
-                            [hull["yaw_inertia_t_m2"], 0, 0],
-                            [0, hull["yaw_inertia_t_m2"], 0],
+                            [None, 0, 0],
+                            [0, None, 0],
                             [0, 0, hull["yaw_inertia_t_m2"]],
                         ],
                     }
@@ -472,6 +485,9 @@ def write_campaign(
             "# Not solve-ready: applied load wiring and equilibrium NOT_EVALUATED.\n"
             "# Zero damping/waves are exclusions; unit wave period is inactive.\n"
             "# Force laws: Orcina Links: Data, public web edition, 2026-10-20.\n"
+            f"# Case: {case['name']}\n"
+            f"# Force history: {history_name}\n"
+            "# Roll/pitch inertia: NOT_EVALUATED; null entries require supplied data before use.\n"
         )
         (destination / model_name).write_text(
             model_text + yaml.safe_dump(model, sort_keys=False)
@@ -502,6 +518,15 @@ def write_campaign(
         cases=records,
         sources=SOURCE_URLS,
         basis=spec["basis"],
+        numerical_runtime={
+            "python": platform.python_version(),
+            **{
+                package: version(package)
+                for package in (
+                    "numpy", "scipy", "pyyaml", "pydantic", "pandas", "plotly", "jinja2"
+                )
+            },
+        },
         input_sha256=input_digest(spec),
         artifacts={
             name: hashlib.sha256((destination / name).read_bytes()).hexdigest()
