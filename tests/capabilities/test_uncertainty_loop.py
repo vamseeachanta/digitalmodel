@@ -15,6 +15,7 @@ import importlib
 import json
 from pathlib import Path
 import re
+from xml.etree import ElementTree
 
 import pytest
 
@@ -109,7 +110,7 @@ def test_saved_page_and_manifest_are_reproducible(builder, tmp_path, data):
         text, re.S,
     )[1]
     assert json.loads(embedded) == data
-    manifest = json.loads((first / builder.MANIFEST_NAME).read_text())
+    manifest = json.loads((first / builder.MANIFEST_NAME).read_text(encoding="utf-8"))
     assert manifest["cycle"] == [
         ["measure", "model"], ["model", "quantify"], ["quantify", "decide"],
         ["decide", "reinspect"], ["reinspect", "measure"],
@@ -134,7 +135,8 @@ def test_offline_native_disclosures_and_visible_limitations(builder, tmp_path, d
                for tag, attrs in tags if tag == "script")
     assert not any(key in attrs for _, attrs in tags for key in ("src", "href"))
     assert not any(tag in {"iframe", "object", "embed"} for tag, _ in tags)
-    assert "@import" not in text and "url(" not in text
+    assert "@import" not in text
+    assert all(target == "#loop-arrow" for target in re.findall(r"url\((.*?)\)", text))
     assert "fetch(" not in text
     assert 'name="viewport"' in text
     assert "prefers-color-scheme: dark" in text
@@ -167,3 +169,58 @@ def test_custom_text_is_escaped_once(builder, data, tmp_path):
         text, re.S,
     )[1]
     assert json.loads(embedded) == data
+
+
+def test_svg_draws_cycle_and_process_change_feedback(builder, tmp_path):
+    """A prose list cannot substitute for the requested directed diagram."""
+    builder.build(output_dir=tmp_path)
+    text = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
+    match = re.search(r"<svg\b.*?</svg>", text, re.S)
+    assert match, "The workflow needs a drawn SVG cycle"
+    svg = ElementTree.fromstring(match[0])
+    ns = {"s": "http://www.w3.org/2000/svg"}
+    assert svg.attrib["role"] == "img"
+    for reference in svg.attrib["aria-labelledby"].split():
+        alternative = svg.find(f".//*[@id='{reference}']", ns)
+        assert alternative is not None and "".join(alternative.itertext()).strip()
+    nodes = svg.findall("s:g[@data-node]", ns)
+    assert [node.attrib["data-node"] for node in nodes] == [
+        "measure", "model", "quantify", "decide", "reinspect"
+    ]
+    assert ["".join(node.itertext()).strip() for node in nodes] == [
+        "Measure", "Model", "Quantify uncertainty", "Decide", "Reinspect"
+    ]
+    edges = svg.findall(".//s:path[@data-source]", ns)
+    assert [(edge.attrib["data-source"], edge.attrib["data-target"]) for edge in edges] == [
+        ("measure", "model"), ("model", "quantify"), ("quantify", "decide"),
+        ("decide", "reinspect"), ("reinspect", "measure"), ("process-change", "model"),
+    ]
+    assert all(edge.attrib["d"] and edge.attrib["marker-end"] == "url(#loop-arrow)"
+               for edge in edges)
+    assert edges[-1].attrib["stroke-dasharray"] == "8 6"
+    assert svg.find(".//s:marker[@id='loop-arrow']", ns) is not None
+
+
+def test_freshness_gate_rebuilds_both_uncertainty_outputs(builder, tmp_path, monkeypatch):
+    """The repository gate must own the page and digest manifest together."""
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/capabilities/build_uncertainty_loop.py"]
+    assert len(entries) == 1, "The uncertainty builder needs freshness registration"
+    entry = entries[0]
+    assert entry.outputs == (
+        "docs/domains/asset-integrity/uncertainty-loop.html",
+        "docs/domains/asset-integrity/uncertainty-loop.manifest.json",
+    )
+    assert entry.inputs == (
+        "scripts/capabilities/uncertainty_loop/workflow.json",
+        "scripts/capabilities/uncertainty_loop/page.html.template",
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    checker.prepare_shadow(builder.ROOT, tmp_path)
+    assert checker.regenerate(tmp_path) == []
+    assert checker.compare_outputs(builder.ROOT, tmp_path) == []
+    (tmp_path / entry.outputs[0]).write_text("stale", encoding="utf-8")
+    (tmp_path / entry.outputs[1]).write_text("{}", encoding="utf-8")
+    assert {path for path, _ in checker.compare_outputs(builder.ROOT, tmp_path)} == set(entry.outputs)

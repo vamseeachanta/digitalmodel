@@ -1,7 +1,7 @@
 {
-  "revision": "A",
+  "revision": "B",
   "date": "2026-10-19",
-  "change": "Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.",
+  "change": "Add a drawn cycle and process-change arrow so the workflow paths are visible; register reproducible outputs for freshness checks.",
   "status": "synthetic",
   "decision_status": "NOT_EVALUATED",
   "provenance": {

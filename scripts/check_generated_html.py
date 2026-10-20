@@ -80,6 +80,15 @@ GENERATORS = (
         ),
     ),
     Generator(
+        "scripts/capabilities/build_uncertainty_loop.py",
+        ("docs/domains/asset-integrity/uncertainty-loop.html",
+         "docs/domains/asset-integrity/uncertainty-loop.manifest.json"),
+        inputs=(
+            "scripts/capabilities/uncertainty_loop/workflow.json",
+            "scripts/capabilities/uncertainty_loop/page.html.template",
+        ),
+    ),
+    Generator(
         "scripts/reporting/build_riser_pipe_comparison.py",
         ("docs/reports/2026-10-09-compute-program/riser-pipe-comparison/riser-pipe-comparison.html",),
         inputs=("scripts/reporting/riser_pipe_comparison.yml",
@@ -206,7 +215,8 @@ def discover_candidate_generators(repo: Path) -> set[str]:
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
             # Avoid write API names: producers use helpers and exporters too.
-            if all(marker in text for marker in ("docs", "api", "html")):
+            if (all(marker in text for marker in ("docs", "html"))
+                    and ("api" in text or "docs/domains/asset-integrity" in text)):
                 found.add(path.relative_to(repo).as_posix())
     return found
 
