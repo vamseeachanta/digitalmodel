@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalculiX shell analysis interfaces</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#172b3a}
+h1,h2{color:#123e58} table{border-collapse:collapse;width:100%}
+th,td{padding:.6rem;text-align:left;border-bottom:1px solid #cad5dc;vertical-align:top}
+pre{padding:1rem;background:#edf3f6;overflow:auto} code{font-size:.9em}
+caption{caption-side:bottom;text-align:left;padding:.6rem 0;color:#425766}
+.limit{border-left:4px solid #a96400;padding-left:1rem}
+</style>
+<main>
+<h1>CalculiX shell analysis interfaces</h1>
+<h2>Summary</h2>
+<p>The writer, result parser and FEM chain provide shell input and output contracts
+for the shell extension tracked in issue 2173.
+Native tests compare an elastic shell patch with its hand calculation, read a
+nonlinear plastic patch through its final converged increment, and compare a
+beam buckling factor with both an analytical reference and the in-repository
+beam solver. These comparisons do not establish shell collapse capacity.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-20</td><td>Input/output contracts and a worked patch are added to support shell analysis development while retaining explicit acceptance gaps.</td></tr>
+<caption>Table 1. Document revisions.</caption>
+</table>
+<h2>Inputs and method</h2>
+<p>Coordinates, section thickness, stress, modulus, pressure, density and gravity
+use one caller-selected consistent unit system. The writer performs no unit
+conversion. Connectivity and sets use dense zero-based indices; exported deck
+identifiers start at one. External geometry providers shall map their original
+node tags before calling <code>FEMChain.set_mesh</code>. Element IDs follow the
+insertion order of element families and connectivity rows.</p>
+<table>
+<tr><th>Interface</th><th>Behaviour</th><th>Basis</th></tr>
+<tr><td><code>add_shell_section</code></td><td>Positive homogeneous thickness for disjoint shell-only sets; quadrilateral families map to S4 and S8R. Solid and shell section assignments are separated.</td><td>Manual sections 6.2 and 7.117.</td></tr>
+<tr><td><code>add_plasticity</code></td><td>True stress versus equivalent plastic strain, with zero initial plastic strain, increasing strain and nondecreasing positive stress.</td><td>Manual section 7.105.</td></tr>
+<tr><td><code>add_step</code></td><td>Static or buckling; NLGEOM and optional increment count are written on STEP. Four static timing controls or an explicit positive mode count can be supplied.</td><td>Manual sections 7.5, 7.122 and 7.124.</td></tr>
+<tr><td><code>add_pressure</code></td><td>DLOAD with shell P or solid face P1 through P6; sign and normal follow the element convention.</td><td>Manual section 7.43.</td></tr>
+<tr><td><code>add_hydrostatic_pressure</code></td><td>Centroid-wise constant pressure, zero above the free surface. Density, gravity and free-surface elevation are required inputs.</td><td>Fluid-column force balance and DLOAD representation, manual section 7.43.</td></tr>
+<caption>Table 2. Supported input contracts and their source sections.</caption>
+</table>
+<p>Hydrostatic equilibrium is derived from the vertical force balance on a fluid
+column: <code>dp/dz = -rho*g</code>. With zero gauge pressure at the surface,
+<code>p = rho*g*max(z_surface-z_centroid, 0)</code>. For synthetic inputs
+<code>rho=2, g=5, z_surface=3, z_centroid=1</code>, pressure is 20 consistent
+pressure units. A dry centroid at elevation 4 has zero pressure. No gravity
+constant is built into the interface. This discretization requires refinement
+at the free surface and is not an exact linearly varying face load.</p>
+<p>BCs and loads added after a step belong to that step's deck block. Calls before
+the first step are transferred into it. CalculiX retains loads and constraints
+between static steps according to its own replacement rules; an empty later
+step does not unload the structure. A buckling perturbation flag is explicit.
+The load multiplier applies to the buckling step load, with any preload treated
+according to manual section 7.5.</p>
+<h2>Worked example: membrane patch</h2>
+<p>The executable example is <code>examples/calculix/shell_patch.py</code>.
+The default input is a unit-square shell, thickness 0.100 mm, synthetic modulus
+1000 MPa and zero Poisson ratio. Its left edge is fixed in x; its right edge is
+displaced 0.01 mm. Out-of-plane motion is restrained. No material grade or
+design allowable is represented by these inputs.</p>
+<pre>PYTHONPATH=src python examples/calculix/shell_patch.py ../analysis-output
+cd ../analysis-output
+ccx -i patch</pre>
+<p>The method is a small-strain uniaxial membrane patch. With zero transverse
+coupling, <code>epsilon_x=delta/L</code> and <code>sigma_x=E*epsilon_x</code>
+(linear elasticity, manual section 6.8.1). The independent answer is axial
+stress 10.0 MPa and axial strain 1.0 %. The native S4 result is 10.0 MPa at the
+display precision; the full-precision stress differs by less than the test's
+relative tolerance of <code>1e-4</code>. That tolerance is a numerical test criterion.</p>
+<p>A second native case sets displacement to 0.02 mm, enables NLGEOM, and uses
+synthetic plastic rows (10 MPa, zero strain) and (20 MPa, 0.1 strain). Its
+kinematic reference is the Green-Lagrange axial component
+<code>E_xx = ((1+delta/L)^2-1)/2</code>, obtained from
+<code>E=(F^T F-identity)/2</code>. The result is 2.0 % at the display precision; the
+test evaluates the unrounded expression. Plastic strain is positive and the final
+converged step time is 1.0. This verifies field and increment readback; it is
+not a constitutive-model or strain-limit qualification.</p>
+<p>The existing FFS library supplies the plastic table without another material
+model: <code>writer.add_plasticity("MAT", curve.plastic_table())</code>, where
+<code>curve</code> is a <code>TrueStressStrainCurve</code>. Its modulus is in MPa;
+the analysis shall use MPa or convert the stresses before passing the table.
+Library applicability and source qualification remain the caller's responsibility.</p>
+<h2>Buckling overlap</h2>
+<p>The pinned-column test uses synthetic modulus 1000, square side 1, length 100
+and compressive reference force 0.01 in a consistent unit system. Integration
+over the square gives <code>I=b*h^3/12=1/12</code>. Substitution of
+<code>w=sin(pi*x/L)</code> into <code>EI*w''''+P*w''=0</code> gives
+<code>P_cr=pi^2*EI/L^2</code>. Dividing by the reference force gives the expected
+factor <code>5*pi^2/6</code>. This is also the reference used by
+<code>structural/fe/elastic_buckling_workflow.py</code>.</p>
+<p>The native 20-element B31 factor and the reference both round to 8.2. The
+unrounded comparison is within 1.0 %, the explicit numerical test criterion.
+The same deck is compared with the repository's beam eigen-solver within
+1.0 %. This is a beam overlap check; no cylinder or ring shell buckling result
+is inferred from it.</p>
+<h2>Result meaning and limits</h2>
+<ul>
+<li>FRD fields include displacement, stress, TOSTRAIN and PE/PEEQ. Principal
+strains are eigenvalues of the symmetric tensor, sorted greatest first; shear
+components are tensor components. For incremental plasticity TOSTRAIN is total
+Lagrangian strain, not logarithmic strain or equivalent plastic strain.</li>
+<li>FRD output is nodal extrapolated output. Each returned field is its latest
+complete block; fields are not asserted to share a time or increment. Truncated
+supported blocks raise an error. Expanded shell node IDs are retained and shall
+not be interpreted as indices into the original midsurface mesh.</li>
+<li>DAT parsing preserves signed mode factors and excludes frequency eigenvalue
+tables. Multiple buckling tables are flattened in file order; no step association
+is supplied. Reaction data remain available.</li>
+<li>STA parsing identifies unsuccessful attempts and the last converged increment.
+An empty history returns no converged increment. Its collapse status remains
+NOT_EVALUATED; neither convergence nor failure establishes physical collapse.</li>
+</ul>
+<p class="limit">Riks/arc-length requests raise an explicit unsupported-feature
+error: no such procedure is documented in the cited manual. API 579 strain
+limits, collapse factors, imperfection sensitivity and acceptance are
+NOT_EVALUATED. No licensed-standard numerical values are introduced. Cylinder
+axial buckling, ring external-pressure benchmarks and native S8R qualification
+remain later slices. The two-solver crack comparison in
+the crack spike (issue 2178)
+and the alternative-solver evaluation (issue 253)
+remain open; this work makes no solver-selection verdict.</p>
+<h2>Sources and verification</h2>
+<p>The keyword and output basis is the
+<a href="https://www.dhondt.de/ccx_2.22.pdf">CalculiX CrunchiX User's Manual,
+version 2.22, August 2024</a>, sections 6.8.1, 7.5, 7.43, 7.51, 7.105, 7.117,
+7.122 and 7.124. The public manual was retrieved on 2026-10-20 with HTTP 200;
+its text was inspected rather than numerical allowables copied. Native tests
+were run with open-source CalculiX 2.21. Keyword support in other versions is
+not established by these tests.</p>
+<p>Reproduction: run <code>python -m pytest tests/solvers/calculix -q</code>
+with the package importable. Native tests skip explicitly when ccx is absent.
+The separate plate-with-hole tests require gmsh. No solver is started by the
+worked-example generator itself.</p>
+</main>
+</html>

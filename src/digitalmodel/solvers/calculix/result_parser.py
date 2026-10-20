@@ -8,6 +8,16 @@ import math
 import re
 from pathlib import Path
 
+import numpy as np
+
+
+def _number(value: str) -> float:
+    """Read solver reals, including Fortran double-precision exponents."""
+    result = float(value.replace("D", "E").replace("d", "e"))
+    if not math.isfinite(result):
+        raise ValueError("Non-finite solver result")
+    return result
+
 
 class CalculiXResultParser:
     """
@@ -21,6 +31,8 @@ class CalculiXResultParser:
         self.work_dir = Path(work_dir)
         self._displacements: dict[int, dict] = {}
         self._stresses: dict[int, dict] = {}
+        self._strains: dict[int, dict] = {}
+        self._plastic_strain: dict[int, float] = {}
         self._parsed = False
 
     # ------------------------------------------------------------------
@@ -33,6 +45,9 @@ class CalculiXResultParser:
         if not frd_path.exists():
             raise FileNotFoundError(f"FRD file not found: {frd_path}")
 
+        self._parsed = False
+        self._displacements, self._stresses = {}, {}
+        self._strains, self._plastic_strain = {}, {}
         lines = frd_path.read_text().splitlines()
         self._parse_frd_blocks(lines)
         self._parsed = True
@@ -40,6 +55,8 @@ class CalculiXResultParser:
         return {
             "displacements": dict(self._displacements),
             "stresses": dict(self._stresses),
+            "strains": dict(self._strains),
+            "equivalent_plastic_strain": dict(self._plastic_strain),
         }
 
     def parse_dat_file(self) -> dict:
@@ -50,7 +67,36 @@ class CalculiXResultParser:
 
         content = dat_path.read_text()
         reactions = self._extract_reactions(content)
-        return {"reactions": reactions}
+        return {"reactions": reactions,
+                "buckling_factors": self._extract_buckling_factors(content)}
+
+    def parse_sta_file(self) -> dict:
+        """Read converged increments, never equate solver failure to collapse.
+
+        CalculiX 2.22 manual (2024), section 5 troubleshooting: .sta records
+        increment convergence. U marks an unsuccessful attempt; this is solver
+        evidence, not a strain-limit or physical-collapse acceptance criterion.
+        """
+        path = self.work_dir / f"{self.job_name}.sta"
+        increments, unsuccessful = [], False
+        for line in path.read_text().splitlines():
+            fields = line.split()
+            if not fields or not fields[0].isdigit():
+                continue
+            if len(fields) != 7:
+                raise ValueError("Incomplete STA increment record")
+            step, increment, attempt, iterations, total, time, size = fields
+            if "U" in attempt.upper():
+                unsuccessful = True
+                continue
+            increments.append({"step": int(step), "increment": int(increment),
+                               "attempt": int(attempt), "iterations": int(iterations),
+                               "total_time": _number(total), "step_time": _number(time),
+                               "increment_time": _number(size)})
+        return {"increments": increments,
+                "last_converged": increments[-1] if increments else None,
+                "has_unconverged_attempts": unsuccessful,
+                "collapse_status": "NOT_EVALUATED"}
 
     def get_max_von_mises(self) -> float:
         """Return maximum von Mises stress across all nodes."""
@@ -95,84 +141,84 @@ class CalculiXResultParser:
     # ------------------------------------------------------------------
 
     def _parse_frd_blocks(self, lines: list[str]):
-        """Walk through FRD lines and dispatch to block parsers."""
+        """Keep the latest complete block of each field (not a synchronized frame).
+
+        Labels follow CalculiX 2.22 (2024), section 7.51. TOSTRAIN is total
+        Lagrangian strain for incremental plasticity; it is not plastic strain.
+        """
         i = 0
         while i < len(lines):
             line = lines[i]
-            if line.startswith(" -4") and "DISP" in line:
-                i = self._parse_disp_block(lines, i)
-            elif line.startswith(" -4") and "STRESS" in line:
-                i = self._parse_stress_block(lines, i)
-            else:
+            if not line.startswith(" -4"):
                 i += 1
+                continue
+            label = line.split()[1]
+            specs = {"DISP": (3, self._displacements),
+                     "STRESS": (6, self._stresses), "TOSTRAIN": (6, self._strains),
+                     "PE": (1, self._plastic_strain), "PEEQ": (1, self._plastic_strain)}
+            if label not in specs:
+                i += 1
+                continue
+            count, target = specs[label]
+            rows, i = self._read_field(lines, i, count)
+            target.clear()
+            for node, values in rows.items():
+                if label == "DISP":
+                    target[node] = dict(zip(("dx", "dy", "dz"), values))
+                    target[node]["magnitude"] = math.sqrt(sum(v*v for v in values))
+                elif label in {"PE", "PEEQ"}:
+                    target[node] = values[0]
+                else:
+                    prefix = "e" if label == "TOSTRAIN" else "s"
+                    target[node] = dict(zip((prefix + c for c in ("xx", "yy", "zz", "xy", "yz", "zx")), values))
+                    if label == "TOSTRAIN":
+                        xx, yy, zz, xy, yz, zx = values
+                        tensor = [[xx, xy, zx], [xy, yy, yz], [zx, yz, zz]]
+                        target[node]["principal"] = np.linalg.eigvalsh(tensor)[::-1].tolist()
 
-    def _parse_disp_block(self, lines: list[str], start: int) -> int:
-        """Parse a DISP block starting after the -4 header."""
-        i = start + 1
-        # Skip all -5 component-name header lines
-        while i < len(lines) and lines[i].strip().startswith("-5"):
-            i += 1
+    @staticmethod
+    def _read_field(lines, start, count):
+        rows, i = {}, start + 1
         while i < len(lines):
             line = lines[i]
-            if line.strip().startswith("-3"):
-                return i + 1
-            if line.strip().startswith("-1"):
-                self._parse_disp_line(line)
+            flag = line[:3].strip()
+            if flag == "-3":
+                return rows, i + 1
+            if flag == "-1":
+                if len(line) < 13 + 12*count:
+                    raise ValueError("Truncated FRD field record")
+                node = int(line[3:13])
+                if node in rows:
+                    raise ValueError("Duplicate node in FRD field")
+                rows[node] = [_number(line[13 + 12*j:25 + 12*j]) for j in range(count)]
+            elif flag != "-5":
+                raise ValueError("Unsupported or incomplete ASCII FRD field")
             i += 1
-        return i
-
-    def _parse_stress_block(self, lines: list[str], start: int) -> int:
-        """Parse a STRESS block starting after the -4 header."""
-        i = start + 1
-        while i < len(lines) and lines[i].strip().startswith("-5"):
-            i += 1
-        while i < len(lines):
-            line = lines[i]
-            if line.strip().startswith("-3"):
-                return i + 1
-            if line.strip().startswith("-1"):
-                self._parse_stress_line(line)
-            i += 1
-        return i
-
-    def _parse_disp_line(self, line: str):
-        """Parse fixed-width FRD displacement line.
-
-        Format: -1  node_id(10)  dx(12)  dy(12)  dz(12)
-        """
-        if len(line) < 37:
-            return
-        node_id = int(line[3:13])
-        dx = float(line[13:25])
-        dy = float(line[25:37])
-        dz = float(line[37:49]) if len(line) >= 49 else 0.0
-        dmag = math.sqrt(dx * dx + dy * dy + dz * dz)
-        self._displacements[node_id] = {
-            "dx": dx, "dy": dy, "dz": dz, "magnitude": dmag,
-        }
-
-    def _parse_stress_line(self, line: str):
-        """Parse fixed-width FRD stress line.
-
-        Format: -1  node_id(10)  sxx(12)  syy(12)  szz(12)  sxy(12)  syz(12)  szx(12)
-        """
-        if len(line) < 85:
-            return
-        node_id = int(line[3:13])
-        sxx = float(line[13:25])
-        syy = float(line[25:37])
-        szz = float(line[37:49])
-        sxy = float(line[49:61])
-        syz = float(line[61:73])
-        szx = float(line[73:85])
-        self._stresses[node_id] = {
-            "sxx": sxx, "syy": syy, "szz": szz,
-            "sxy": sxy, "syz": syz, "szx": szx,
-        }
+        raise ValueError("Unterminated FRD field")
 
     # ------------------------------------------------------------------
     # DAT parsing
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_buckling_factors(content):
+        """Read buckling tables only; section 7.5 defines load-factor meaning."""
+        factors, active, started = [], False, False
+        for line in content.splitlines():
+            compact = "".join(line.upper().split())
+            if "BUCKLINGFACTOR" in compact:
+                active, started = True, False
+                continue
+            if not active:
+                continue
+            fields = line.split()
+            if len(fields) == 2 and fields[0].isdigit():
+                factors.append({"mode": int(fields[0]), "factor": _number(fields[1])})
+                started = True
+            elif started or (compact and "OUTPUT" in compact):
+                active = False
+        return factors
+
 
     def _extract_reactions(self, content: str) -> list[dict]:
         """Extract reaction force summaries from .dat content."""
