@@ -136,6 +136,20 @@ RDB-08 defines a public package-output check rather than accepting a suite total
 
 ## 6. Known failure modes and pitfalls
 
+Checkout hazard (#2677; update after the code pin): `core.autocrlf=true`
+can convert LF CSV bytes to CRLF and trigger a fingerprint mismatch before
+lookup. The `.gitattributes` rule `data/riser_database/** text eol=lf`
+keeps the tables and manifest in LF form across checkout settings, as defined
+by the [Git attributes manual, text and eol sections](https://git-scm.com/docs/gitattributes#_eol).
+The regression `tests/riser_database/test_checkout_eol.py` applies Git's
+checkout filters with `core.autocrlf=true`, `false` and `input`, compares the
+resulting table hashes with the manifest, and loads the converted database.
+Existing CRLF working copies need a fresh checkout of the database files;
+adding the rule does not rewrite files already on disk. Preserve the manifest
+digests when refreshing a checkout; do not regenerate them to accept conversion
+drift. This addresses checkout conversion without relaxing the loader's
+raw-byte integrity check.
+
 sweep: 37 found
 
 The sweep counts distinct source sites and individual unit-schema assumptions, including documented defaults; a hit is not automatically a defect. The complete package was inspected with these exact commands:
