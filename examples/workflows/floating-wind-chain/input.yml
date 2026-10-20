@@ -1,0 +1,73 @@
+# Synthetic arithmetic example; not a turbine design or a solver-ready model.
+# All geometry, masses, inertia radii, sea states and screening coefficients
+# below are assumed, based on previous experience, solely to exercise mapping.
+# Independent arithmetic: tests/floating_wind/test_solver_chain.py docstring.
+case_id: generic-barge
+basis: "assumed, based on previous experience; synthetic mapping example"
+archetype: barge
+params:
+  length: 20.0
+  beam: 10.0
+  draft: 2.0
+  block_coeff: 1.0
+  waterplane_coeff: 1.0
+  steel_mass_t: 100.0
+  steel_vcg_frac: 0.5
+  ca_heave: 0.0
+  ca_pitch: 0.0
+topside:
+  rna_mass_t: 10.0
+  tower_mass_t: 20.0
+  hub_height_m: 10.0
+  tower_base_above_swl_m: 2.0
+criteria:
+  gm_min_m: 0.0
+  daf_limit: 2.0
+  damping_ratio: 0.05
+  modal_band_s: [5.0, 16.0]
+  mooring_stiffness_kN_per_m: null
+  max_offset_m: null
+load_cases:
+  - name: operating
+    hs_m: 1.0
+    tp_s: 8.0
+    steady_load_kN: 0.0
+water_depth_m: 50.0
+frequencies_rad_s: [0.4, 0.8]
+headings_deg: [0.0, 90.0]
+hull_radii_m: [3.0, 5.0, 5.0]
+mesh_file: hull.gdf
+floater_name: Floater
+turbine_name: Rotor
+# Only the connection is illustrated. Blade, controller, tower, mooring and
+# radiation/diffraction data require the reviewed arrangement from #2423.
+# Schema/reference validation does not establish native solver loadability.
+template:
+  metadata:
+    name: generic-coupling
+    description: Synthetic coupled-input mapping
+    structure: floating wind
+    operation: in-place
+  environment:
+    water: {depth: 50.0, density: 1.025}
+    seabed:
+      stiffness: {normal: 0.0, shear: 0.0}
+    waves:
+      type: airy
+      height: 1.0
+      period: 8.0
+  generic:
+    vessel_types:
+      - name: SizedHull
+        properties: {}
+    vessels:
+      - name: Floater
+        vessel_type: SizedHull
+        connection: Free
+        initial_position: [0.0, 0.0, 0.0]
+    turbines:
+      - name: Rotor
+        properties:
+          Connection: Floater
+          GeneratorMode: Specified rotation
+          PitchController: (none)
