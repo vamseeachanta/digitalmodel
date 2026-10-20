@@ -15,6 +15,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 4 | 2026-10-18 | Distinguish isolated search metadata; run preflight before the sweep to preserve input diagnostics; clarify thin grid-seeded mechanisms and search cost. |
 | 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
 | 6 | 2026-10-18 | Track the datum-below-layer diagnostic separately in #2785 so the remaining warning has a dedicated acceptance criterion. |
+| 7 | 2026-10-19 | Reject positive-gradient datums below the entire layer to diagnose an inactive strength gradient. |
 
 ## Basis and boundaries
 
@@ -88,11 +89,21 @@ This is the governing cp equation in xslope 1.0.3, `xslope/slice.py`
 (strength at the slice base). A positive gradient without an explicit
 reference_elevation_m is rejected before importing the solver. Constant strength
 (gradient zero) may omit the datum because the equation is independent of it.
-An explicit datum below the layer bottom leaves a positive gradient inert
-throughout that layer and currently produces no warning. Check the datum against
-the layer elevations before relying on the gradient. The datum-below-layer
-warning is tracked separately in #2785; rejecting an omitted datum in #2704
-does not resolve that behaviour.
+An explicit datum strictly below the minimum elevation of the layer's lower
+boundary is rejected with a ValueError naming the layer index and
+reference_elevation_m. Such a datum makes the positive gradient inactive
+throughout the layer. The lower boundary is the next layer's top polyline, or
+bottom_elevation_m for the lowest layer. Every polyline vertex is considered,
+including interior low points. This diagnostic implements the rejection option
+in #2785, supplementing the missing-datum check in #2704.
+
+Equality with the minimum lower-boundary elevation remains accepted, as does a
+datum that activates the gradient in only part of the layer. These are input
+diagnostics rather than an assessment of the intended strength distribution;
+check the datum against the full layer geometry. Zero-gradient profiles remain
+independent of the datum. Validation precedes optional solver imports and does
+not modify the supplied profile. The cp material model is also described in the
+upstream [input-template material properties](https://xslope.org/en/latest/usage/input_template/).
 For example, su_kpa=5, gradient=1.5 and reference=-100 m give Su=20 kPa at
 z=-110 m; the same relative geometry at a +100 m datum gives the same strength.
 Undrained layers use total stress; drained layers use the piezometric line when

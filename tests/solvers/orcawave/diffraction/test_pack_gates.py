@@ -30,9 +30,10 @@ orchestrator = load_helper("pack_orchestrator", "diffraction/orchestrator.py")
 OrcaFlexConverter = load_helper(
     "pack_converter", "diffraction/scripts/convert_to_orcaflex.py"
 ).OrcaFlexConverter
-GeometryValidator = load_helper(
+geometry = load_helper(
     "pack_geometry", "diffraction/scripts/validate_geometry.py"
-).GeometryValidator
+)
+GeometryValidator = geometry.GeometryValidator
 
 
 @pytest.fixture
@@ -55,8 +56,93 @@ def test_g0_syntax():
 
 
 def test_g0_geometry_rejects_empty_directory(tmp_path):
+    """Pack section 5, G0-GEOMETRY (revision 2, 2026): absence must raise."""
     with pytest.raises((FileNotFoundError, ValueError)):
         GeometryValidator(str(tmp_path)).validate_all(parallel=False)
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+@pytest.mark.parametrize("contents", ["empty", "missing", "unrelated"])
+def test_g0_geometry_absence_refused_before_work(tmp_path, monkeypatch, parallel, contents):
+    """G0-GEOMETRY, pack section 5 (revision 2, 2026), not a mesh threshold.
+
+    Independently constructed input sets contain no requested regular files;
+    therefore validation must raise without parsing or starting a worker pool.
+    A prior result cannot turn missing current input into a successful return.
+    """
+    geometry_path = tmp_path / "missing" if contents == "missing" else tmp_path
+    if contents == "unrelated":
+        (tmp_path / "unrequested.obj").touch()
+    validator = GeometryValidator(str(geometry_path))
+    validator.results["previous.obj"] = object()
+
+    def unexpected_work(*args, **kwargs):
+        pytest.fail("missing geometry reached validation or worker creation")
+
+    monkeypatch.setattr(validator, "validate_file", unexpected_work)
+    monkeypatch.setattr(geometry, "ProcessPoolExecutor", unexpected_work)
+    with pytest.raises(FileNotFoundError, match="No requested geometry files"):
+        validator.validate_all(parallel=parallel)
+
+
+@pytest.fixture
+def requested_geometry():
+    """Read the legacy filename registry without duplicating dataset identifiers."""
+    tree = ast.parse(Path(geometry.__file__).read_text(encoding="utf-8"))
+    method = next(node for node in ast.walk(tree)
+                  if isinstance(node, ast.FunctionDef) and node.name == "validate_all")
+    registry = next(node.value for node in ast.walk(method)
+                    if isinstance(node, ast.Assign)
+                    and any(isinstance(target, ast.Name) and target.id == "geometry_files"
+                            for target in node.targets))
+    return ast.literal_eval(registry)
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+def test_g0_geometry_directories_are_not_input_files(
+    tmp_path, requested_geometry, parallel, monkeypatch
+):
+    """G0-GEOMETRY requires files; matching directory names contain no mesh."""
+    for name in requested_geometry:
+        (tmp_path / name).mkdir()
+
+    def unexpected_pool(*args, **kwargs):
+        pytest.fail("directories reached worker creation")
+
+    monkeypatch.setattr(geometry, "ProcessPoolExecutor", unexpected_pool)
+    with pytest.raises(FileNotFoundError, match="No requested geometry files"):
+        GeometryValidator(str(tmp_path)).validate_all(parallel=parallel)
+
+
+@pytest.mark.parametrize("fallback", [False, True])
+def test_g0_geometry_present_input_keeps_dispatch_contract(
+    tmp_path, requested_geometry, monkeypatch, fallback
+):
+    """Dispatch identity is checked by a sentinel, without qualifying mesh parsing.
+
+    Every requested regular file is present. A failed process-pool start must
+    still retry sequentially without changing dispatch order or format.
+    """
+    for filename in requested_geometry:
+        (tmp_path / filename).touch()
+    expected = object()
+    calls = []
+    validator = GeometryValidator(str(tmp_path))
+
+    def validate(path, kind):
+        calls.append((path, kind))
+        return expected
+
+    def unavailable_pool(*args, **kwargs):
+        raise PermissionError("synthetic process-pool restriction")
+
+    monkeypatch.setattr(validator, "validate_file", validate)
+    monkeypatch.setattr(geometry, "ProcessPoolExecutor", unavailable_pool)
+    assert validator.validate_all(parallel=fallback) == {
+        name: expected for name in requested_geometry
+    }
+    assert calls == [(tmp_path / name, kind)
+                     for name, kind in requested_geometry.items()]
 
 
 @pytest.mark.parametrize("excel_present", [False, True])

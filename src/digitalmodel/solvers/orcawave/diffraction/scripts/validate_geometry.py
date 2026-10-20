@@ -54,7 +54,11 @@ class GeometryValidator:
         self.results = {}
         
     def validate_all(self, parallel: bool = True) -> Dict[str, MeshStatistics]:
-        """Validate all geometry files in parallel"""
+        """Validate every requested file, optionally in parallel.
+
+        Reject missing inputs before work and publish results only after all
+        files parse successfully. Presence alone does not qualify mesh validity.
+        """
 
         geometry_files = {
             "tug_30m_1_0.25 Mesh_Ascii.stl": "stl_ascii",
@@ -62,13 +66,18 @@ class GeometryValidator:
             "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
 
-        # G0-GEOMETRY: issue 2738 requires explicit rejection of omissions.
-        # Publish one complete result set; a failed retry must not reuse old data.
+        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 2, 2026).
+        # Clear stale results and reject omissions before parsing or pool creation.
         self.results = {}
         missing = [name for name in geometry_files
                    if not (self.geometry_path / name).is_file()]
+        if len(missing) == len(geometry_files):
+            raise FileNotFoundError("No requested geometry files found")
         if missing:
             raise FileNotFoundError("Missing requested geometry: " + ", ".join(missing))
+
+        logger.info(f"Validating {len(geometry_files)} geometry files...")
+        logger.info(f"Geometry path: {self.geometry_path}")
 
         results = {}
         if parallel:

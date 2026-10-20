@@ -15,6 +15,7 @@ _SPCF_HEADER = "S P C   F O R C E S"
 _STRESS_HEADER = "E L E M E N T   S T R E S S E S"
 _ETYPE_RE = re.compile(r"F O R\s+E L E M E N T\s+T Y P E\s+(.+)$")
 _EPSILON_RE = re.compile(r"EPSILON ERROR ESTIMATE\s*=\s*([-+0-9.Ee]+)")
+_SUBCASE_RE = re.compile(r"\bSUBCASE\s+\d+\b")
 _VEC_KEYS = ("t1", "t2", "t3", "r1", "r2", "r3")
 
 
@@ -75,10 +76,9 @@ class MystranResultParser:
         self._epsilon = None
 
         lines = text.splitlines()
-        i = 0
-        n = len(lines)
-        while i < n:
-            line = lines[i]
+        # Diagnostics span the whole file, including unsupported/empty blocks.
+        # Keep this scan independent of the result parsers' cursor advances.
+        for line in lines:
             if "*ERROR" in line or "*FATAL" in line.upper():
                 self._errors.append(line.strip())
             m = _EPSILON_RE.search(line)
@@ -87,6 +87,10 @@ class MystranResultParser:
                     self._epsilon = float(m.group(1))
                 except ValueError:
                     pass
+        i = 0
+        n = len(lines)
+        while i < n:
+            line = lines[i]
             if _DISP_HEADER in line:
                 i = self._parse_vector_block(lines, i + 1, self._displacements)
                 continue
@@ -194,6 +198,8 @@ class MystranResultParser:
         n = len(lines)
         started = False
         while i < n:
+            if _is_block_boundary(lines[i]):
+                return i
             tok = lines[i].split()
             is_row = len(tok) == 8 and tok[0].isdigit() and tok[1].isdigit()
             vals: list[float] = []
@@ -219,6 +225,8 @@ class MystranResultParser:
         etype = None
         headers: list[str] = []
         while i < n and etype is None:
+            if _is_block_boundary(lines[i]):
+                return i
             m = _ETYPE_RE.search(lines[i])
             if m:
                 etype = m.group(1).replace(" ", "").strip()
@@ -226,14 +234,14 @@ class MystranResultParser:
         if etype is None:
             return i
         while i < n:
+            if _is_block_boundary(lines[i]):
+                return i  # different layout (e.g. BAR) — not parsed
             if "Location" in lines[i]:
                 hdr = lines[i].replace("von Mises", "von_Mises")
                 tok = hdr.split()
                 headers = [_norm(h) for h in tok[tok.index("Location") + 1:]]
                 i += 1
                 break
-            if _DISP_HEADER in lines[i] or _STRESS_HEADER in lines[i]:
-                return i  # different layout (e.g. BAR) — not parsed
             i += 1
         if not headers:
             return i
@@ -241,6 +249,8 @@ class MystranResultParser:
         current_eid: Optional[int] = None
         while i < n:
             line = lines[i]
+            if _is_block_boundary(line):
+                return i
             tok = line.split()
             if "-----" in line or "MAX*" in line:
                 return i + 1
@@ -257,10 +267,16 @@ class MystranResultParser:
             ):
                 vals = _floats(tok[2:])
                 block[current_eid]["grid"][int(tok[1])] = dict(zip(headers, vals))
-            elif _STRESS_HEADER in line or _DISP_HEADER in line:
-                return i
             i += 1
         return i
+
+
+def _is_block_boundary(line: str) -> bool:
+    """Leave recognized headers/subcases for the outer result dispatcher."""
+    return (
+        any(header in line for header in (_DISP_HEADER, _SPCF_HEADER, _STRESS_HEADER))
+        or _SUBCASE_RE.search(line) is not None
+    )
 
 
 def _norm(h: str) -> str:
