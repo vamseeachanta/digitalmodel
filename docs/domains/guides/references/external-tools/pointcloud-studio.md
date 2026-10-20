@@ -3,14 +3,14 @@ title: PointCloud Studio (external reference)
 type: external-reference
 url: https://github.com/skyflying/pointcloud-studio
 recorded: 2026-10-20
-recorded_by: intake desk, at the owner's request
+recorded_by: maintainers
 licence: none stated (no LICENSE file on 2026-10-20)
 ---
 
 # PointCloud Studio (external reference)
 
 **Repository:** https://github.com/skyflying/pointcloud-studio
-**Owner:** skyflying (GitHub)
+**Author:** skyflying (GitHub)
 
 **What it is:** a Python desktop application for viewing, cleaning and analysing point clouds and surfaces from hydrographic (MBES) and land (LiDAR, survey) sources. Version 0.1.23, last updated 2026-10-19. Its GitHub topics are offshore wind, cable, RPL, bathymetry, dredge, DTM, lidar and geophysics.
 
