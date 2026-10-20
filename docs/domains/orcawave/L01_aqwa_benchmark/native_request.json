@@ -1,0 +1,446 @@
+{
+  "source_rights": "Source rights: internal use only. The L01 source model files are held in the project repositories; runs use the project licences; results are kept in the private data store; nothing derived from the source model is published in a public repository or page until its provenance is recorded.",
+  "sources": {
+    "OrcaWave": {
+      "file": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml",
+      "sha256": "6f8ea4c3203330a29b8f4d4f33d39590a84d7fd901e621d4f131aac66841916a"
+    },
+    "AQWA": {
+      "file": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat",
+      "sha256": "90c36097327bc48a041323b2c3cd0233c2420540e82bc8258efefd8d4b608f54"
+    }
+  },
+  "reconciliation": [
+    {
+      "quantity": "geometry",
+      "status": "NOT_EVALUATED",
+      "unit": "m",
+      "OrcaWave": {
+        "value": [
+          0,
+          0,
+          0.5
+        ],
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:82"
+      },
+      "AQWA": {
+        "value": null,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:30"
+      },
+      "note": "OrcaWave imports the AQWA deck as its mesh (matched YAML:85-90) and applies a mesh translation. AQWA node 10 has z = 0 m (AQWA deck:30), and ZLWL is 0 m (:6143). No common geometry/frame transform is established; a shared mesh filename does not establish equivalence."
+    },
+    {
+      "quantity": "mass",
+      "status": "DISAGREES",
+      "unit": "kg",
+      "OrcaWave": {
+        "value": 44082200,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:108"
+      },
+      "AQWA": {
+        "value": 45184268,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:12138"
+      },
+      "note": "OrcaWave specifies 44082.20 t in SI units (matched YAML:11,108); AQWA specifies 45184268 kg (AQWA deck:13,12138). The AQWA mass card differs from the displacement quoted in the YAML comment; the card governs this record."
+    },
+    {
+      "quantity": "centre_of_gravity",
+      "status": "DISAGREES",
+      "unit": "m",
+      "OrcaWave": {
+        "value": [
+          108.88,
+          0.002,
+          8.0
+        ],
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:106"
+      },
+      "AQWA": {
+        "value": [
+          108.882,
+          0.0016289,
+          8.5
+        ],
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:6134"
+      },
+      "note": "Coordinates are retained exactly as specified. No evidenced common-frame transformation reconciles them."
+    },
+    {
+      "quantity": "reference_point",
+      "status": "NOT_EVALUATED",
+      "unit": "m",
+      "OrcaWave": {
+        "value": null,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:92"
+      },
+      "AQWA": {
+        "value": null,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:12191"
+      },
+      "note": "OrcaWave declares a free-surface body origin and body-origin external matrices (matched YAML:92,124,132). The AQWA DRC1 block contains no data (:12191-12193). A common response/coefficient reference point is not explicitly established."
+    },
+    {
+      "quantity": "water_depth",
+      "status": "AGREES",
+      "unit": "m",
+      "OrcaWave": {
+        "value": 500,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:36"
+      },
+      "AQWA": {
+        "value": 500,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:12150"
+      },
+      "note": "Both input depth fields specify the same finite water depth."
+    },
+    {
+      "quantity": "restraints",
+      "status": "NOT_EVALUATED",
+      "unit": "dimensionless",
+      "OrcaWave": {
+        "value": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:135"
+      },
+      "AQWA": {
+        "value": null,
+        "file_line": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat:12192"
+      },
+      "note": "OrcaWave declares a free connection, no multibody constraints and all fixed DOFs disabled (matched YAML:78,133,135-140). The AQWA DRC1 block contains no data (:12191-12193). Absence of a restraint card is not proof of equivalent restraints. External damping and inertia also require reconciliation before a scientific comparison."
+    }
+  ],
+  "stage1": {
+    "cap_licensed_minutes": 60,
+    "periods_s": [
+      2,
+      7.5,
+      11,
+      22
+    ],
+    "headings_deg": [
+      0,
+      45,
+      112.5,
+      180
+    ],
+    "grid_evidence": [
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:41",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:47",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:53",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:60",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:62",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:64",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:67",
+      "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:70"
+    ],
+    "stop_rule": "stop at 60 minutes of cumulative licensed time across both solvers, all variants and failed attempts",
+    "cases": [
+      {
+        "id": "L01-S1-F01-H01",
+        "period_s": 2,
+        "heading_deg": 0,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F01-H02",
+        "period_s": 2,
+        "heading_deg": 45,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F01-H03",
+        "period_s": 2,
+        "heading_deg": 112.5,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F01-H04",
+        "period_s": 2,
+        "heading_deg": 180,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F02-H01",
+        "period_s": 7.5,
+        "heading_deg": 0,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F02-H02",
+        "period_s": 7.5,
+        "heading_deg": 45,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F02-H03",
+        "period_s": 7.5,
+        "heading_deg": 112.5,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F02-H04",
+        "period_s": 7.5,
+        "heading_deg": 180,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F03-H01",
+        "period_s": 11,
+        "heading_deg": 0,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F03-H02",
+        "period_s": 11,
+        "heading_deg": 45,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F03-H03",
+        "period_s": 11,
+        "heading_deg": 112.5,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F03-H04",
+        "period_s": 11,
+        "heading_deg": 180,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F04-H01",
+        "period_s": 22,
+        "heading_deg": 0,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F04-H02",
+        "period_s": 22,
+        "heading_deg": 45,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F04-H03",
+        "period_s": 22,
+        "heading_deg": 112.5,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      },
+      {
+        "id": "L01-S1-F04-H04",
+        "period_s": 22,
+        "heading_deg": 180,
+        "solvers": [
+          "AQWA",
+          "OrcaWave"
+        ],
+        "expected_outputs": {
+          "AQWA": [
+            "stage1.LIS",
+            "stage1.AH1"
+          ],
+          "OrcaWave": [
+            "stage1.owr"
+          ]
+        }
+      }
+    ]
+  },
+  "later_stages": [
+    {
+      "cases": 90,
+      "allocation": "allocation = measured stage-1 minutes per case x 90 x 1.25, set by the solver manager from the measured time"
+    },
+    {
+      "cases": 180,
+      "allocation": "allocation = measured stage-1 minutes per case x 180 x 1.25, set by the solver manager from the measured time"
+    }
+  ],
+  "native_inputs": "WITHHELD",
+  "limitations": "This record does not assert physical equivalence, native readback, completion or engineering qualification. Native inputs remain withheld while any reconciliation row is DISAGREES or NOT_EVALUATED. No source deck is modified by this record."
+}

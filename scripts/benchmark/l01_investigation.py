@@ -1,6 +1,6 @@
-"""Offline L01 request generation and conditional comparison of normalized exports.
+"""Offline L01 request generation, gated native preparation and export comparison.
 
-No solver imports, native deck issuance, subprocesses, or licence operations.
+No solver imports, subprocesses, or licence operations.
 See docs/domains/orcawave/L01_aqwa_benchmark/solver_request.html for the contract.
 """
 import argparse
@@ -15,6 +15,16 @@ import re
 STAGES = ((4, 4), (10, 9), (20, 9))
 # API_EXECUTION_SUMMARY.md, Hydrodynamic Data: six motion DOFs and 6 x 6 matrices.
 DOFS = 6
+SOURCE_RIGHTS = (
+    "Source rights: internal use only. The L01 source model files are held in "
+    "the project repositories; runs use the project licences; results are kept "
+    "in the private data store; nothing derived from the source model is "
+    "published in a public repository or page until its provenance is recorded."
+)
+RECONCILIATION_FIELDS = {
+    "geometry", "mass", "centre_of_gravity", "reference_point", "water_depth",
+    "restraints",
+}
 BASIS_FIELDS = {
     "geometry", "mesh", "mass", "inertia", "centre_of_gravity", "reference_point",
     "water_depth", "density", "gravity", "units", "axes", "heading_convention",
@@ -73,6 +83,8 @@ def validate_config(config):
             or len(set(threads)) != len(threads)):
         raise ValueError("unique positive integer thread counts required")
     number(config["budget_minutes"], positive=True)
+    if config["budget_minutes"] > 60:
+        raise ValueError("stage-1 licensed-minute cap cannot exceed 60")
     text(config["resource_citation"])
     basis = config["basis"]
     if not isinstance(basis, dict) or set(basis) != BASIS_FIELDS:
@@ -94,6 +106,11 @@ def subset(values, count):
     return [values[i * (len(values) - 1) // (count - 1)] for i in range(count)]
 
 
+def later_allocation(cases):
+    return (f"allocation = measured stage-1 minutes per case x {cases} x 1.25, "
+            "set by the solver manager from the measured time")
+
+
 def build_request(config):
     validate_config(config)
     runs = []
@@ -106,7 +123,9 @@ def build_request(config):
                     "divide_non_planar_panels": divide,
                     "frequencies_rad_s": subset(config["frequencies_rad_s"], nf),
                     "headings_deg": subset(config["headings_deg"], nh),
-                    "budget_minutes": config["budget_minutes"],
+                    **({"budget_minutes": config["budget_minutes"],
+                        "budget_scope": "shared_stage1_all_solvers_and_variants"}
+                       if nf * nh == 16 else {"allocation": later_allocation(nf * nh)}),
                     "scientific_comparison": False,
                 })
     return {
@@ -120,6 +139,164 @@ def build_request(config):
         "estimated_licensed_minutes": "NOT_EVALUATED",
         "native_inputs": "NOT_EVALUATED", "engineering_qualification": "NOT_EVALUATED",
     }
+
+
+def validate_reconciliation(request):
+    """Check supplied reconciliations; declarations are not native readback."""
+    rows = request.get("reconciliation", [])
+    if (len(rows) != len(RECONCILIATION_FIELDS)
+            or {row.get("quantity") for row in rows} != RECONCILIATION_FIELDS):
+        raise ValueError("complete unique physical reconciliation required")
+    for row in rows:
+        if row.get("status") != "AGREES":
+            raise ValueError(f"reconciliation: {row.get('quantity')} {row.get('status')}")
+        if not isinstance(row.get("unit"), str) or not row["unit"].strip():
+            raise ValueError("reconciliation units required")
+        a, b = (row.get(solver, {}).get("value") for solver in ("AQWA", "OrcaWave"))
+        if a is None or b is None or a != b:
+            raise ValueError("reconciliation values disagree or are not evaluated")
+        pending = [a, b]
+        while pending:
+            value = pending.pop()
+            if isinstance(value, list) and value:
+                pending.extend(value)
+            elif type(value) not in (int, float, bool):
+                raise ValueError("reconciliation requires evaluated numeric values")
+            elif type(value) is bool and row["quantity"] != "restraints":
+                raise ValueError("reconciliation booleans describe restraints only")
+        # Reject NaN, including nested normalized vectors, before equality is used.
+        json.dumps([a, b], allow_nan=False)
+
+
+def native_sources(request, root):
+    """Pin both deck bytes and resolve every citation inside the supplied root."""
+    root = Path(root).resolve(strict=True)
+    sources = request.get("sources", {})
+    if set(sources) != {"AQWA", "OrcaWave"}:
+        raise ValueError("both native sources required")
+    contents = {}
+    for solver, source in sources.items():
+        path = root / source["file"]
+        if Path(source["file"]).is_absolute() or not path.resolve().is_relative_to(root):
+            raise ValueError("native source must be relative to the evidence root")
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != source["sha256"]:
+            raise ValueError("native source digest mismatch")
+        contents[solver] = raw.decode("utf-8-sig").replace("\r\n", "\n")
+    for row in request["reconciliation"]:
+        for solver in sources:
+            path, line = row[solver]["file_line"].rsplit(":", 1)
+            if (path != sources[solver]["file"] or not line.isdigit()
+                    or not 1 <= int(line) <= len(contents[solver].splitlines())):
+                raise ValueError("reconciliation file:line citation required")
+    return contents
+
+
+def native_stage1(request, contents):
+    """Select the declared four-by-four grid without loading a solver library."""
+    stage = request["stage1"]
+    periods = vector(stage["periods_s"], 4, positive=True)
+    headings = vector(stage["headings_deg"], 4)
+    if (len(set(periods)) != 4 or len(set(headings)) != 4
+            or any(not 0 <= h < 360 for h in headings)):
+        raise ValueError("unique stage-1 periods and canonical headings required")
+    ow = contents["OrcaWave"]
+    if (not re.search(r"(?m)^WavesReferredToBy: period \(s\)$", ow)
+            or not re.search(r"(?m)^\s*BodyMeshFormat: Aqwa dat$", ow)):
+        raise ValueError("explicit period convention and AQWA mesh format required")
+    mesh = re.findall(r"(?m)^\s*BodyMeshFileName: ([^\n]+)$", ow)
+    if mesh != [Path(request["sources"]["AQWA"]["file"]).name]:
+        raise ValueError("OrcaWave must reference the pinned AQWA mesh source")
+    # These anchors describe the checked-in L01 YAML and AQWA FDR1 deck only.
+    period_pattern = r"(?m)^PeriodOrFrequency:\n((?:[ \t]+- [^\n]+\n)+)"
+    heading_pattern = r"(?m)^WaveHeading:\n((?:[ \t]+- [^\n]+\n)+)"
+    for pattern, values in ((period_pattern, periods), (heading_pattern, headings)):
+        match = re.search(pattern, ow)
+        if match is None or not set(values) <= {
+                float(line.strip()[2:]) for line in match[1].splitlines()}:
+            raise ValueError("stage-1 grid must be read from the OrcaWave candidate")
+        field = match[0].splitlines()[0]
+        ow, count = re.subn(pattern, field + "\n" + "".join(
+            f"  - {value}\n" for value in values), ow)
+        if count != 1:
+            raise ValueError("ambiguous native grid block")
+    ow, count = re.subn(r"(?m)^(\s*BodyMeshFileName:) [^\n]+$",
+                        r"\1 stage1.dat", ow)
+    if count != 1:
+        raise ValueError("one AQWA mesh reference required")
+    # AQWA cards retain the source's fixed columns and ascending frequency order.
+    cards = "".join(f"     1HRTZ {i:4d} {i:4d}{1 / p:10.7g}\n"
+                    for i, p in enumerate(sorted(periods, reverse=True), 1))
+    cards += "".join(f"     1DIRN {i:4d} {i:4d}{h:10.7g}\n"
+                     for i, h in enumerate(headings, 1))
+    aqwa, count = re.subn(r"(?m)^(          FDR1\n)(?:(?! END\n)[^\n]*\n)*",
+                          lambda m: m[1] + cards, contents["AQWA"])
+    if count != 1:
+        raise ValueError("one AQWA frequency and direction deck required")
+    return {"stage1.yml": ow.encode("utf-8"), "stage1.dat": aqwa.encode("utf-8")}
+
+
+def stage1_manifest(stage):
+    cases = []
+    for i, period in enumerate(stage["periods_s"], 1):
+        for j, heading in enumerate(stage["headings_deg"], 1):
+            cases.append({"id": f"L01-S1-F{i:02d}-H{j:02d}",
+                          "period_s": period, "heading_deg": heading,
+                          "solvers": ["AQWA", "OrcaWave"],
+                          "expected_outputs": {"AQWA": ["stage1.LIS", "stage1.AH1"],
+                                               "OrcaWave": ["stage1.owr"]}})
+    if "cases" in stage and stage["cases"] != cases:
+        raise ValueError("declared stage-1 cases differ from the native grid")
+    return {"cap_licensed_minutes": stage["cap_licensed_minutes"], "cases": cases,
+            "budget_scope": "shared_stage1_all_solvers_and_variants",
+            "stop_rule": (f"stop at {stage['cap_licensed_minutes']:g} minutes; "
+                          "the solver manager stops both solvers when cumulative "
+                          "licensed time reaches the cap, including failed attempts")}
+
+
+def issue_native_inputs(request, root, output):
+    """Issue candidate decks offline only after all release controls hold."""
+    if request.get("source_rights") != SOURCE_RIGHTS:
+        raise ValueError("complete internal-use source rights record required")
+    cap = request.get("stage1", {}).get("cap_licensed_minutes")
+    if type(cap) not in (int, float) or not math.isfinite(cap) or not 0 < cap <= 60:
+        raise ValueError("stage-1 licensed-minute cap must be present and at most 60")
+    validate_reconciliation(request)
+    contents = native_sources(request, root)
+    payloads = native_stage1(request, contents)
+    manifest = {
+        "native_inputs": "ISSUED", "source_rights": request["source_rights"],
+        "request_sha256": digest(request), "sources": request["sources"],
+        "reconciliation": request["reconciliation"],
+        "stage1": stage1_manifest(request["stage1"]),
+        "later_stages": [{"cases": n, "allocation": later_allocation(n)}
+                         for n in (90, 180)],
+        "files": [{"file": path, "sha256": hashlib.sha256(raw).hexdigest()}
+                  for path, raw in payloads.items()],
+        "engineering_qualification": "NOT_EVALUATED",
+        "native_readback": "NOT_EVALUATED",
+        "native_to_request": [
+            {"OrcaWave_period_s": p, "AQWA_frequency_hz": float(f"{1 / p:.7g}"),
+             "requested_frequency_rad_s": math.tau / p}
+            for p in request["stage1"]["periods_s"]],
+        "native_heading_to_request": [
+            {"OrcaWave_heading_deg": h, "AQWA_heading_deg": float(f"{h:.7g}"),
+             "requested_heading_deg": h} for h in request["stage1"]["headings_deg"]],
+    }
+    serialized = json.dumps(manifest, indent=2, allow_nan=False) + "\n"
+    output = Path(output)
+    output.mkdir()  # Exclusive; never overwrite a previous issuance.
+    for name, raw in payloads.items():
+        with (output / name).open("xb") as stream:
+            stream.write(raw)
+    with (output / "manifest.json").open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(serialized)
+    for item in manifest["files"]:
+        if hashlib.sha256((output / item["file"]).read_bytes()).hexdigest() != item["sha256"]:
+            raise ValueError("issued native input readback digest mismatch")
+    if read_json(output / "manifest.json") != manifest:
+        raise ValueError("issued manifest readback mismatch")
+    return manifest
 
 
 def digest(value):
@@ -222,14 +399,20 @@ def read_json(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("prepare", "compare"))
+    parser.add_argument("mode", choices=("prepare", "compare", "issue"))
     parser.add_argument("config", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--aqwa", type=Path)
     parser.add_argument("--orcawave", type=Path)
+    parser.add_argument("--source-root", type=Path)
     args = parser.parse_args(argv)
     try:
         config = read_json(args.config)
+        if args.mode == "issue":
+            if args.source_root is None:
+                raise ValueError("explicit source root required for native issuance")
+            issue_native_inputs(config, args.source_root, args.output)
+            return 0
         if args.mode == "prepare":
             result = build_request(config)
         else:

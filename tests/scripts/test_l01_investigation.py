@@ -200,3 +200,24 @@ def test_extreme_finite_phase_does_not_overflow(mod):
     b["raos"][0]["values"] = [[1e308, 1e308]] * 6
     result = mod.compare(c, a, b)
     assert result["max_phase_difference_deg"] == 0
+
+
+def test_later_stage_budgets_depend_on_measured_stage1_time(mod):
+    request = mod.build_request(config())
+    for run in request["scaling_runs"]:
+        if run["cases"] == 16:
+            assert run["budget_minutes"] == 60
+            assert run["budget_scope"] == "shared_stage1_all_solvers_and_variants"
+        else:
+            assert "budget_minutes" not in run
+            assert run["allocation"] == (
+                f"allocation = measured stage-1 minutes per case x {run['cases']} x 1.25, "
+                "set by the solver manager from the measured time"
+            )
+
+
+def test_prepare_refuses_stage1_allocation_above_sixty_minutes(mod):
+    c = config()
+    c["budget_minutes"] = 61
+    with pytest.raises(ValueError, match="cap"):
+        mod.build_request(c)
