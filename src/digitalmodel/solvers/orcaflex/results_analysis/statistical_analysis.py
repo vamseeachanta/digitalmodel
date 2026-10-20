@@ -174,7 +174,10 @@ class StatisticalAnalysisService:
             # Calculate statistics
             n = len(x_clean)
             residuals = y_clean - y_pred
-            mse = np.mean(residuals ** 2)
+            # NIST/SEMATECH e-Handbook (2012), section 4.4.3.1:
+            # residual variance = SSE/(n-p), p=2 (slope and intercept).
+            # https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd431.htm
+            mse = np.sum(residuals ** 2) / (n - 2)
             std_error = np.sqrt(mse)
             
             # Calculate t-statistic and p-value
