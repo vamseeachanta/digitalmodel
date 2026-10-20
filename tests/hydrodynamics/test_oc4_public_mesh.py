@@ -131,6 +131,22 @@ def test_measured_aspect_excludes_only_triangle_repeat(checker):
     assert checker.measure(panels)["max_aspect"] == pytest.approx(np.sqrt(101))
 
 
+@pytest.mark.parametrize("rotation", range(4))
+def test_triangle_repeat_position_preserves_cube_measurements(checker, rotation):
+    quads = box_panels()
+    triangles = np.concatenate([quads[:, [0, 1, 2, 2]], quads[:, [0, 2, 3, 3]]])
+    values = checker.measure(np.roll(triangles, rotation, axis=1))
+    assert values["volume"] == pytest.approx(1)
+    assert values["waterplane"] == pytest.approx(1)
+    assert values["cob_x"] == pytest.approx(0.5)
+    assert values["cob_y"] == pytest.approx(0.5)
+    assert values["cob_z"] == pytest.approx(-0.5)
+    assert values["degenerate"] == 0
+    assert values["bad_edges"] == 0
+    assert values["max_aspect"] == pytest.approx(np.sqrt(2))
+    assert values["max_span"] == pytest.approx(np.sqrt(2))
+
+
 @pytest.mark.parametrize("damage", ["reverse", "hole", "duplicate", "crossing", "zero"])
 def test_checker_rejects_damaged_mesh(checker, damage):
     panels = box_panels()

@@ -45,9 +45,13 @@ def measure(panels):
     crossings = degenerate = 0
     for panel in panels:
         vertices = [tuple(p) for p in np.round(panel, 8)]
-        # Low-order GDF triangles repeat their final vertex.
-        if vertices[2] == vertices[3]:
-            vertices.pop()
+        # Low-order GDF permits any adjacent pair to coincide, including 4/1.
+        for index in range(4):
+            repeated = (index + 1) % 4
+            if vertices[index] == vertices[repeated]:
+                vertices.pop(repeated)
+                panel = np.delete(panel, repeated, axis=0)
+                break
         unique = len(set(vertices)) == len(vertices)
         lengths = [
             np.linalg.norm(np.subtract(b, a))

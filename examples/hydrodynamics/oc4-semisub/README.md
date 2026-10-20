@@ -11,6 +11,7 @@ published platform centre of mass is a distinct quantity.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | A | 2026-10-20 | Public column and member geometry, independent mesh checks and dimension-based tests are added to provide a reproducible diffraction input. |
+| B | 2026-10-20 | Hosted test coverage is added, the dependency pin and reference platform are clarified, and every adjacent triangle repeat is supported. |
 
 ## Public basis
 
@@ -89,17 +90,21 @@ specified by the public file-format manual [F, section 6.1]; it remains a requir
 generator argument rather than an inferred physical input.
 
 ```bash
-uv run --no-project --with numpy --with gmsh==4.15.2 python \
+uv run --no-project --with 'numpy<2' --with gmsh==4.15.1 python \
   examples/hydrodynamics/oc4-semisub/generate_mesh.py \
   "$TMPDIR/oc4-public.gdf" --gravity 9.80665
-uv run --no-project --with numpy python \
+uv run --no-project --with 'numpy<2' python \
   examples/hydrodynamics/oc4-semisub/check_mesh.py "$TMPDIR/oc4-public.gdf"
 ```
 
 The default target edge size is 1.25 m, with curvature refinement at 16 elements
 per full circle [G, `Mesh.MeshSizeFromCurvature`]. These are numerical choices,
-not publication dimensions. The reference output below uses Gmsh 4.15.2 and
-contains 35,928 triangular panels. Triangles repeat the last vertex, normals
+not publication dimensions. The reference output below was generated on Linux
+x86-64 with Python 3.11.14, NumPy 1.26.4 and Gmsh 4.15.1, matching the repository's
+`cfd` extra. It contains 35,928 triangular panels. Panel counts and rounded
+hydrostatics can vary across platforms and Gmsh releases; acceptance depends on
+the numerical criteria, rather than exact reproduction of these counts or values.
+The generator repeats the last vertex of each triangle, normals
 point into the fluid and symmetry flags are disabled for full-body export
 [F, section 6.1]. No lid or irregular-frequency treatment is included.
 
@@ -109,7 +114,8 @@ hydrostatics. It calculates waterplane area from the oriented open boundary.
 Every non-SWL edge must have exactly one occurrence in each direction. A hole,
 duplicate face or reversed winding therefore cannot silently pass the topology
 check. Aspect ratio means longest boundary edge divided by shortest boundary
-edge, excluding the repeated triangle vertex; span means the maximum distance
+edge, excluding any adjacent repeated triangle vertex, including the closing
+fourth/first pair permitted by [F, section 6.1]; span means the maximum distance
 between any panel vertices. Verdicts use unrounded values. Coordinates use
 numerical tolerances stated in the code; the criteria in [M] are unchanged.
 
@@ -129,7 +135,7 @@ Published platform CM z (m) [T3-3] | metadata | -13.46 | INFO
 Requested system CM z | required public source | NOT_EVALUATED | NOT_EVALUATED
 ```
 
-Table C. Checker output from the default discretization. Values are computed;
+Table C. Illustrative checker output from the reference platform and default discretization. Values are computed;
 reference quantities cite [P] and numerical acceptance limits cite [M].
 The volume and waterplane discrepancies from [M] are 0.3% and 0.8%, respectively.
 
@@ -141,7 +147,7 @@ resolved and solver-specific input compatibility and convergence assessed.
 ## Tests
 
 ```bash
-uv run --no-project --with numpy --with gmsh==4.15.2 --with 'pytest<9' python -m pytest \
+uv run --no-project --with 'numpy<2' --with gmsh==4.15.1 --with 'pytest<9' python -m pytest \
   tests/hydrodynamics/test_oc4_public_mesh.py \
   --basetemp="$TMPDIR/oc4-pytest" -p no:cacheprovider
 uv run --no-project --with ruff ruff check \
@@ -153,3 +159,9 @@ checks hydrostatics, the dimension-derived waterplane, draft and base extent,
 mesh limits, CLI readback, malformed files and damaged topology. A synthetic unit
 cube independently checks volume and buoyancy integration. All generated files
 are temporary test outputs; none is a stored solver result.
+
+Hosted execution belongs to `.github/workflows/gmsh-meshing-tests.yml`, which
+installs the Gmsh runtime library and the locked `cfd` and `test` extras. Its push
+and pull-request filters include this example and its tests. Registration
+regressions check those filters and the executable pytest arguments, so metadata
+alone cannot substitute for running the tests.
