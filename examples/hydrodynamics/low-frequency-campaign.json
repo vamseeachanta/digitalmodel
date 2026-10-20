@@ -1,0 +1,72 @@
+{
+  "source": "base spec of the codenamed vessel; reconstructed full-body geometry and proposed sampling",
+  "base_spec": "MISSING",
+  "meshes": {
+    "coarse": "meshes/coarse.gdf",
+    "medium": "meshes/medium.gdf",
+    "fine": "meshes/fine.gdf"
+  },
+  "mesh_manifest": "full-body-meshes.json",
+  "base_values": {
+    "basis": "base spec of the codenamed vessel",
+    "mass_kg": 119052930,
+    "centre_of_gravity_m": [115.5, 0, -5.5],
+    "centre_of_gravity_basis": "estimate",
+    "radii_of_gyration_m": [17.15, 57.75, 60.06],
+    "radii_of_gyration_basis": "estimate",
+    "B44": 6000000,
+    "water_depth_m": 1000,
+    "water_density_kg_m3": 1025,
+    "gravity_m_s2": 9.80665
+  },
+  "headings_deg": [0, 45, 90, 135, 180],
+  "heading_convention": "MISSING",
+  "weight_report": "MISSING",
+  "final_frequency_list": "MISSING",
+  "frequencies_rad_s": [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.5, 0.575, 0.65, 0.7, 0.75, 0.8, 0.9, 1.0],
+  "approvals": {
+    "criteria": "PROPOSED: needs DF QM approval",
+    "geometry": "PROPOSED: needs DF QM approval",
+    "heading_convention": "MISSING",
+    "weight_report": "MISSING",
+    "frequency_list": "PROPOSED: needs DF QM approval"
+  },
+  "criteria": {
+    "mesh_absolute_m_per_m": {
+      "value": 0.05,
+      "strict_alternative": 0.0125,
+      "source": "proposed comparison limits supplied for this investigation; neither alternative is approved",
+      "status": "proposed",
+      "approval": "PROPOSED: needs DF QM approval"
+    },
+    "solver_absolute_m_per_m": {
+      "value": 0.05,
+      "source": "proposed cross-solver comparison limit supplied for this investigation",
+      "status": "proposed",
+      "approval": "PROPOSED: needs DF QM approval"
+    },
+    "asymptotic_max_rad_s": {
+      "value": 0.236,
+      "source": "A1 DF5.1: longer of longest period and four times corrected heave natural period; proposed upper bound only",
+      "status": "proposed",
+      "approval": "PROPOSED: needs DF QM approval",
+      "heave_natural_frequency_rad_s": "MISSING",
+      "heading_justification": "MISSING",
+      "dispersion": "omega squared = g k tanh(k h), h = 1000 m; deep-water approximation is not assumed"
+    }
+  },
+  "heave_long_period_band_m_per_m": [0.98, 1.02],
+  "heave_band_source": "qa_gates.py AQ-10; AQG r1 DF5; Marine Hydrodynamics (1977), chapter 6; approval and applicability remain open",
+  "pilot_order": [
+    "DF2 buoyancy check for every mesh before any case",
+    "one fine-mesh frequency per solver inside the 30-minute QA cap",
+    "six-case ladder per solver: three meshes times removal off/on"
+  ],
+  "licensed_minutes_estimate": {
+    "basis": "assumed, based on previous experience; estimate only, not measured timing",
+    "orcawave": [57, 95],
+    "aqwa": [49, 81],
+    "uncertainty_factor": 3,
+    "qa_cap_minutes": 30
+  }
+}
