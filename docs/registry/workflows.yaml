@@ -9,6 +9,16 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: casing-wear-remaining-capacity
+    basename: digitalmodel.well.tubulars.casing_wear_report
+    title: Worn-casing inspection and remaining-capacity evidence gaps
+    version: 1
+    status: experimental
+    latest: false
+    invocation: "python -m digitalmodel.well.tubulars.casing_wear_report {input} --output-directory {output}"
+    outputs: []
+    test: tests/well/tubulars/test_casing_wear.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: four-point-skew
     basename: four_point_skew
     title: Four-point single-hook axial-spring skew screening
