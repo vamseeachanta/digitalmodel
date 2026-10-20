@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Low-frequency diffraction: offline preparation and solver request</title>
+<style>
+body { max-width: 72rem; margin: auto; padding: 2rem; font: 1rem/1.6 system-ui; color: #172a39; }
+table { border-collapse: collapse; width: 100%; } td, th { border: 1px solid #b9c8cf; padding: .6rem; text-align: left; }
+pre { overflow: auto; padding: 1rem; background: #edf2f4; } .status { border-left: .3rem solid #b06000; padding: 1rem; }
+caption { caption-side: bottom; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Low-frequency diffraction: solver run request</h1>
+<p class="status">Native runs: NOT_EVALUATED. Numerical repair, root cause and physical qualification are not established.
+This package prepares a diagnostic campaign and screens exported amplitudes. It does not alter native RAOs or remove flags.</p>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1548">issue 1548</a>.
+The separate <a href="https://github.com/vamseeachanta/digitalmodel/pull/3053">frequency-screening draft</a>
+retains and annotates native rows. This follow-up supplies the mesh/removal investigation and run request;
+it does not depend on that draft or duplicate its annotation code.</p>
+
+<h2>Plan and review basis</h2>
+<ol>
+<li>The operator will provide a reviewed single-body unified specification, the original coarse mesh,
+and medium/fine refinements of the same geometry and wetted surface.</li>
+<li>The preparation will retain loading and environment fields, retain all original frequency and heading samples,
+and add samples inside the original lowest-frequency interval.</li>
+<li>Each solver will receive each mesh with removal disabled and interior-panel removal enabled.
+The manager will convert, inspect and execute the specifications using the existing native-deck workflow.</li>
+<li>The checker will compare complete exact sample grids and retain per-sample failures.
+Native completion and engineering qualification will remain separate manual evidence gates.</li>
+</ol>
+<p>The plan review identified treatment mapping, input binding, incomplete grids and false convergence claims
+as material risks. The resulting design uses explicit solver/treatment pairs, input and generated-specification digests,
+complete grids, and numerical difference labels rather than a convergence or qualification verdict.</p>
+
+<h2>Required inputs and preparation</h2>
+<p>Copy <code>examples/hydrodynamics/low-frequency-campaign.json</code> into the controlled run package and replace
+every null with reviewed inputs. The template is deliberately non-runnable. No mesh, mass, inertia, damping,
+water depth, grid, runtime or comparison tolerance is invented here. The source strings will cite the specific
+approval or engineering basis; a nonempty string is a traceability field, not authenticated approval.</p>
+<p>The base specification will use explicit angular frequencies in rad/s and explicit headings in degrees.
+The mesh paths in the request will be relative to the base specification directory, remain inside it,
+and have the same file format. Coarse will reference the original base mesh. The generator rejects identical mesh contents,
+but distinct hashes do not establish actual refinement. The mesh inspection will establish panel counts,
+geometry equivalence, waterline, normals and refinement quality. A class-quality replacement of a different geometry
+will require its own matched campaign; it cannot serve as a convergence level for the original hull.</p>
+<p>The generator supports a single vessel and no auxiliary mesh references. Existing mass, inertia, reference point,
+depth, damping and other options are preserved. It does not validate the full engineering schema or generate native decks.
+The manager will validate generated specifications with the existing <code>SpecConverter</code> workflow before execution.
+Generated paths refer back to the supplied meshes: retain the entire input/preparation directory layout.</p>
+<pre>python scripts/benchmark/low_frequency_campaign.py prepare base.yml request.json prepared
+python scripts/benchmark/low_frequency_campaign.py assess prepared/manifest.json results.csv screen.json</pre>
+<p>The first command creates a new output directory exclusively, records source and generated-specification SHA-256 digests,
+and verifies readback. The second command rebuilds and checks those bindings before reading results.
+No subprocess, solver API, licensed import or network operation is used. Existing outputs are never overwritten.</p>
+<p>If a write or readback fails, the partial preparation is retained for diagnosis and is not runnable evidence.
+After resolving the cause, use a fresh destination; do not overwrite or treat a partial manifest as a completed preparation.</p>
+
+<h2>Solver request</h2>
+<table>
+<thead><tr><th>Item</th><th>Requested work and retained evidence</th></tr></thead>
+<tbody>
+<tr><td>Programs</td><td>OrcaWave and AQWA, on the authorized solver workstation after review.
+Retain program versions, native-deck conversion version, solver settings, warnings and completion evidence.</td></tr>
+<tr><td>Inputs</td><td>Each generated case specification and its bound source mesh; common loading,
+water depth, reference frame, wave amplitude normalization, heading convention and damping treatment.
+The manager will reconcile any backend convention differences before pairing results.</td></tr>
+<tr><td>Matrix</td><td>Coarse, medium and fine meshes; removal off and interior panels; both programs.
+The resulting twelve cases are the Cartesian product of these declared diagnostic dimensions, not a numerical standard.</td></tr>
+<tr><td>OrcaWave mapping</td><td><code>irregular_frequency_method: none</code> or <code>interior_panels</code>;
+<code>orcawave_backend.py::_build_body_dict</code> maps the latter to interior-surface triangulation.
+Retain the actual emitted native settings and successful native readback.</td></tr>
+<tr><td>AQWA mapping</td><td>The same unified treatments resolve through the legacy boolean in
+<code>input_schemas.py::SolverOptions</code>; <code>aqwa_backend.py</code> conditionally emits <code>ILID AUTO</code>.
+This requests analogous removal mechanisms, not identical panels or equivalent numerical algorithms.
+Retain deck and lid inspection evidence. Unsupported native mappings will be NOT_EVALUATED.</td></tr>
+<tr><td>Frequency/heading study</td><td>Retain the original sample set, refine its lowest interval,
+and include the affected non-beam headings plus the beam comparison from the issue.
+The manager will justify additional low-frequency samples, depth effects and resonance separation.
+The case-specific screening boundary in the issue is not proof that any finite sample is asymptotic.</td></tr>
+<tr><td>Native outputs</td><td>Native results, complete solver logs and warnings, hydrostatics, radiation damping,
+added mass, excitation, all motion RAO magnitudes and phases, and input/mesh/native-output digests.
+Retain every row, including outliers. The compact screening export below contains heave and sway only.</td></tr>
+<tr><td>Export provenance</td><td>For each manifest run ID, record actual input/spec/mesh digests,
+native result digest, extraction tool/version and convention transformations. Bind the export digest to that record.
+The checker binds bytes but cannot establish that a native result was produced from those inputs.</td></tr>
+<tr><td>Licensed minutes</td><td>NOT_EVALUATED: no qualified mesh panel counts or timing evidence is available.
+Before batch dispatch, the solver manager will supply a per-solver pilot estimate and budget from the reviewed mesh sizes.
+No licensed run is authorized or started by this package.</td></tr>
+</tbody>
+<caption>Requested native campaign and retained evidence.</caption>
+</table>
+
+<h2>Export contract and numerical checks</h2>
+<pre>run_id,frequency_rad_s,heading_deg,dof,amplitude,unit</pre>
+<p>Each run will contain every requested frequency/heading pair for <code>sway</code> and <code>heave</code>,
+with nonnegative magnitude and unit <code>m/m</code>. The manifest supplies run IDs.
+Headings use the canonical half-open revolution [0, 360) degrees; periodic duplicates are rejected, not normalized.
+Sample matching uses exact decimal numeric identity, without interpolation or nearest-neighbor tolerances.
+Exports will preserve the manifest sampling values when native serialization rounds labels; that mapping requires
+reviewed extraction evidence. Missing, additional, duplicate, malformed and non-finite samples are errors.
+Values that overflow or underflow the report's floating-point representation are also rejected.</p>
+<table>
+<thead><tr><th>Check</th><th>Criterion and limitation</th></tr></thead>
+<tbody>
+<tr><td>Long-period heave</td><td>For frequencies at or below the supplied cited asymptotic upper frequency,
+heave magnitude will fall within [0.98, 1.02] m/m, inclusive. Source: repository
+<code>src/digitalmodel/hydrodynamics/aqwa/qa_gates.py</code>, AQG-r0 AQ-10,
+<code>long_period_heave_within_2_percent</code>. The band is unity plus/minus that repository screening criterion,
+not a claim of independently verified standards compliance. It does not apply to sway.</td></tr>
+<tr><td>Mesh pairs</td><td>Absolute amplitude difference will be no greater than the required cited
+<code>mesh_absolute_m_per_m</code>, at every requested sample, for both coarse/medium and medium/fine pairs,
+holding solver and treatment fixed. This reports pairwise agreement, not asymptotic convergence order.</td></tr>
+<tr><td>Solver pairs</td><td>Absolute amplitude difference will be no greater than the required cited
+<code>solver_absolute_m_per_m</code>, at every requested sample, holding mesh and treatment fixed.
+The manager will establish matching physical models and conventions; agreement alone does not establish correctness.</td></tr>
+<tr><td>Removal sensitivity</td><td>Off/on differences are retained for each solver and mesh.
+No acceptance tolerance is assigned: this is a diagnostic comparison, marked NOT_EVALUATED.</td></tr>
+</tbody>
+<caption>AQG-style band and caller-supplied comparison criteria; no implicit mesh or solver limits.</caption>
+</table>
+<p><code>numerical_screen</code> reports PASS only when all applicable numerical checks pass, including diagnostic
+removal-off cases. A failed diagnostic case may coexist with a satisfactory corrected candidate; the per-sample report
+is the evidence for that distinction. Exit status is nonzero for a failed numerical screen or invalid input.
+An exit status of zero is never engineering acceptance. <code>qualification</code> and <code>native_execution</code>
+remain NOT_EVALUATED even for numerically passing or synthetic exports.</p>
+
+<h2>Acceptance and remaining work</h2>
+<p>Closure will require the manager to identify the governing corrected candidate, reproduce the original anomaly,
+and demonstrate the applicable heave band, mesh agreement and independent solver comparison with native evidence.
+Hydrostatic equilibrium, mass/inertia consistency, geometry equivalence, normals, waterline, irregular-frequency treatment,
+nonnegative radiation damping and added-mass checks will also require review under the repository AQG gates.
+The observed finite-frequency peak may have a physical, loading or numerical cause; this preparation does not diagnose it.
+Additional frequency refinement and phase/excitation review may be needed to distinguish those causes.</p>
+<p>The original raw results and low-frequency flags will remain retained until qualification.
+Dataset republication and downstream flag propagation are separate follow-ups; this tool neither publishes data
+nor automatically promotes flagged rows. Public commits will contain only generic code and instructions.
+Native geometry, run logs and results will remain in their authorized owning storage with a retained manifest and replica.</p>
+<h2>Sources</h2>
+<ul>
+<li>Repository issue 1548, Finding and Recommendation: reported anomaly and proposed mesh/grid investigation.</li>
+<li>Repository <code>input_schemas.py</code>: VesselGeometry, FrequencySpec, WaveHeadingSpec, SolverOptions.</li>
+<li>Repository <code>orcawave_backend.py::_build_body_dict</code> and <code>aqwa_backend.py</code>: treatment mappings.</li>
+<li>Repository <code>spec_converter.py::SpecConverter</code>: native conversion and mesh packaging workflow.</li>
+<li>Repository <code>qa_gates.py::EXTERNAL_CHECKS</code>: AQG-r0 manual and native evidence gates.</li>
+</ul>
+</body>
+</html>
