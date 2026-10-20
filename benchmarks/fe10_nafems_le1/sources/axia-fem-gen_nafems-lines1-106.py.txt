@@ -1,0 +1,106 @@
+# Excerpt, lines 1-106 with bibliographic attribution shortened, of the MIT-licensed axia-fem solver/scripts/gen_nafems.py, commit 884ec6fe7b74f0a1a9b9ae55e57ccfba625a93c1, blob fcb641ab9a4e0f7c6afec0a722d50ec672791821. Numerical definitions unchanged.
+#!/usr/bin/env python3
+"""Generate NAFEMS benchmark decks (LE1, LE10, T4) as CalculiX INP.
+
+Lengths for LE1/LE10 are millimetres, stresses come out in MPa.
+T4 is SI (metres, °C, W/m·K).
+
+Targets (NAFEMS TNSB rev. 3 / published reference):
+  LE1  σyy at D (inner, +x)           =  92.7 MPa
+  LE10 σyy at D (inner, +x, top)      =  -5.38 MPa
+  T4   T at (0.6 m, 0.2 m)            =  18.3 °C
+"""
+from __future__ import annotations
+
+import math
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "examples" / "nafems"
+
+
+def ellipse(s: float, th: float, ai, bi, ao, bo):
+    a = ai + s * (ao - ai)
+    b = bi + s * (bo - bi)
+    return a * math.cos(th), b * math.sin(th)
+
+
+def write_nodes(fh, ids, coords):
+    fh.write("*NODE\n")
+    for i in ids:
+        x, y, z = coords[i]
+        fh.write(f"{i}, {x:.8g}, {y:.8g}, {z:.8g}\n")
+
+
+def write_set(fh, kind, name, members, per=12):
+    fh.write(f"*{kind}, {kind}={name}\n")
+    line = []
+    for i, m in enumerate(members):
+        line.append(str(m))
+        if len(line) == per or i == len(members) - 1:
+            fh.write(", ".join(line) + "\n")
+            line = []
+
+
+def gen_le1(nr=8, nt=24):
+    """Quarter elliptic membrane, CPS8. Outward pressure 10 MPa on the outer edge."""
+    ai, bi, ao, bo = 2000.0, 1000.0, 3250.0, 2750.0
+    ni, nj = 2 * nr, 2 * nt
+    coords = {}
+    nid = {}
+    n = 0
+    for i in range(ni + 1):
+        for j in range(nj + 1):
+            if (i % 2) and (j % 2):
+                continue  # face centre, not a serendipity node
+            n += 1
+            s = i / ni
+            th = (j / nj) * math.pi / 2.0
+            x, y = ellipse(s, th, ai, bi, ao, bo)
+            nid[(i, j)] = n
+            coords[n] = (x, y, 0.0)
+    elems = []
+    outer = []
+    eid = 0
+    for ie in range(nr):
+        for je in range(nt):
+            i0, j0 = 2 * ie, 2 * je
+            conn = [
+                nid[(i0, j0)],
+                nid[(i0 + 2, j0)],
+                nid[(i0 + 2, j0 + 2)],
+                nid[(i0, j0 + 2)],
+                nid[(i0 + 1, j0)],
+                nid[(i0 + 2, j0 + 1)],
+                nid[(i0 + 1, j0 + 2)],
+                nid[(i0, j0 + 1)],
+            ]
+            eid += 1
+            elems.append((eid, conn))
+            if ie == nr - 1:
+                outer.append(eid)
+    d = nid[(0, 0)]
+    path = OUT / "le1_cps8.inp"
+    with path.open("w") as fh:
+        fh.write("*HEADING\n")
+        fh.write("NAFEMS LE1 elliptic membrane (plane stress, quarter)\n")
+        fh.write("Target: syy(D) = 92.7 MPa at the inner point on +x\n")
+        fh.write(f"** mesh CPS8 {nr} radial x {nt} hoop, node D = {d}\n")
+        write_nodes(fh, range(1, n + 1), coords)
+        fh.write("*ELEMENT, TYPE=CPS8, ELSET=MEM\n")
+        for eid, c in elems:
+            fh.write(str(eid) + ", " + ", ".join(map(str, c)) + "\n")
+        write_set(fh, "ELSET", "OUTER", outer)
+        write_set(fh, "NSET", "D", [d])
+        ysym = [nid[(i, 0)] for i in range(ni + 1) if (i, 0) in nid]
+        xsym = [nid[(i, nj)] for i in range(ni + 1) if (i, nj) in nid]
+        write_set(fh, "NSET", "YS", ysym)
+        write_set(fh, "NSET", "XS", xsym)
+        fh.write("*MATERIAL, NAME=STEEL\n*ELASTIC\n210000, 0.3\n")
+        fh.write("*SOLID SECTION, ELSET=MEM, MATERIAL=STEEL\n100\n")
+        fh.write("*BOUNDARY\nYS, 2, 2\nXS, 1, 1\n")
+        fh.write("*STEP\n*STATIC\n")
+        # Positive P on a CCW edge is inward. Outward pressure → negative.
+        fh.write("*DLOAD\nOUTER, P2, -10\n")
+        fh.write("*NODE FILE\nU\n*EL FILE\nS\n*END STEP\n")
+    return path, d, n, eid
