@@ -1,0 +1,43 @@
+{
+  "sha256": "493e6f6a75a74010b66e0d4de3bac75d10862c0f41b26d938b865214f334132b",
+  "size_bytes": 315978,
+  "source_sha256": {
+    "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
+    "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
+  },
+  "sanitization": {
+    "findings": 0,
+    "terms_checked": 7,
+    "substring_fingerprints": [
+      {
+        "length": 15,
+        "sha256": "76ef98453de6cc365db9be912c034141139bdb3f4be41afcb7d114b732f98350"
+      },
+      {
+        "length": 52,
+        "sha256": "259077f5535ce2d0596fbb684d5915aa1e1cf612f5e3ed6350c3fc361a9ed7c6"
+      },
+      {
+        "length": 15,
+        "sha256": "4d9e47e347e542e92d45bdb886f4a2c933a11d64f8be7d8fd1d967dc818cff5c"
+      },
+      {
+        "length": 95,
+        "sha256": "df96db28f2b34c1a62280be7951dc81b07652b9ec0f3de6a1844872d9e9a8bf4"
+      },
+      {
+        "length": 22,
+        "sha256": "4f7d5f773c6ed1b5cad84c6cf00effcef1d4d32c6ead054c39c7014be5ed337f"
+      },
+      {
+        "length": 14,
+        "sha256": "a8d4f0b596db29c85a7c57efd635a85ac07796c6d3a2cae5a7e7fb36c7fe04fb"
+      },
+      {
+        "length": 12,
+        "sha256": "48317e165ae592706816e08c9a924071bffe25c58749922287828a2c80874559"
+      }
+    ]
+  },
+  "reduction": "Selected history-only scenario; chart arrays and alert values only."
+}
