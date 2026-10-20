@@ -84,10 +84,13 @@ class FeatureExtractor:
         ``extract_bezerra_projections`` normalises position *and* load to
         [0, 1], which is what makes it robust to units and to well-to-well
         amplitude differences -- and also what makes it blind to any mode
-        defined by absolute size. ``NORMAL`` (80-120 in), ``TUBING_MOVEMENT``
-        (130-180 in) and ``PLUNGER_UNDERTRAVEL`` (30-55 in) differ *only* in
-        stroke length, so under projections alone they are not merely hard to
-        tell apart, they are the same vector (dm#1884).
+        defined by absolute size. Historically, ``NORMAL`` (80-120 in),
+        ``TUBING_MOVEMENT`` (130-180 in) and ``PLUNGER_UNDERTRAVEL`` (30-55 in)
+        differed only in stroke length and gave the same projection vector
+        (dm#1884). These disjoint ranges are historical: current defaults share
+        a stroke draw, and undertravel defaults also duplicate NORMAL's noise.
+        Synthetic labelled datasets exclude undertravel until a distinguishing
+        matched-travel basis exists.
 
         Returns (3,): stroke length, load range, and enclosed card area, all
         in the card's own units. Trees split on raw magnitudes happily, and

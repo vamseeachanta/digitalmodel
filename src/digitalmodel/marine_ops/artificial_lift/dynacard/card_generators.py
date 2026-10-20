@@ -850,6 +850,15 @@ ALL_GENERATORS: dict[str, Callable] = {
     "EXCESSIVE_VIBRATION": generate_excessive_vibration_card,
 }
 
+# Direct generation and physical-label validation retain the full registry.
+# Seed-only labelled datasets cannot distinguish this default from NORMAL.
+SYNTHETIC_LABEL_EXCLUSIONS: dict[str, str] = {
+    "PLUNGER_UNDERTRAVEL": (
+        "Default cards duplicate NORMAL; a distinguishing matched-travel "
+        "basis is required before synthetic training or benchmark scoring."
+    ),
+}
+
 
 # Retired mode names, and what they now resolve to. The classifier has been
 # retrained on the 20-mode set and no longer emits ``PUMP_TAGGING``, but
@@ -1096,7 +1105,10 @@ def surface_card_from_pump_card(
 def generate_training_dataset(
     samples_per_mode: int = 200,
 ) -> tuple[list[CardData], list[str]]:
-    """Generate a full training dataset with all 20 failure modes.
+    """Generate training cards for the 19 eligible synthetic labels.
+
+    PLUNGER_UNDERTRAVEL is excluded because its defaults duplicate NORMAL;
+    see SYNTHETIC_LABEL_EXCLUSIONS for the condition for restoring the label.
 
     Args:
         samples_per_mode: Number of synthetic cards per failure mode.
@@ -1108,6 +1120,8 @@ def generate_training_dataset(
     labels: List[str] = []
 
     for mode_name, gen_func in ALL_GENERATORS.items():
+        if mode_name in SYNTHETIC_LABEL_EXCLUSIONS:
+            continue
         for i in range(samples_per_mode):
             card = gen_func(seed=i)
             cards.append(card)

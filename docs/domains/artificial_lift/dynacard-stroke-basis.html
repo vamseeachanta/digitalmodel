@@ -23,9 +23,10 @@ reduced-travel comparison without inventing tubing compliance. Field diagnosis
 and the dimensioned operating envelope remain <strong>NOT_EVALUATED</strong>.</p>
 <h2>Revision history</h2>
 <table>
+  <caption>Table 1. Revision history of the synthetic stroke basis.</caption>
   <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
   <tr><td>1</td><td>2026-10-19</td><td>Shared synthetic travel and explicit lost motion remove disjoint-range label cues.</td></tr>
-  <caption>Table 1. Initial issue of the synthetic stroke basis.</caption>
+  <tr><td>2</td><td>2026-10-20</td><td>Indistinguishable undertravel defaults are excluded from labelled synthetic sets; regression criteria permit reduced separation, and table captions use valid element order.</td></tr>
 </table>
 <h2>Method and source</h2>
 <p>The public SWPSC paper
@@ -40,12 +41,12 @@ coupled rod and tubing dynamics. It establishes the loss direction for matched
 inputs, not an ordering of absolute travel across different installations.</p>
 <h2>Worked example</h2>
 <table>
+  <caption>Table 2. Published example values; these are not operating limits.</caption>
   <tr><th>Input</th><th>Travel (in)</th><th>Basis</th></tr>
   <tr><td>Surface travel</td><td>45.4</td><td>SWPSC (2017), Figure 1 discussion</td></tr>
   <tr><td>Rod stretch</td><td>30.7</td><td>Same source</td></tr>
   <tr><td>Dynamic overtravel</td><td>12.2</td><td>Same source</td></tr>
   <tr><td>Tubing stretch</td><td>8.3</td><td>Same source</td></tr>
-  <caption>Table 2. Published example values; these are not operating limits.</caption>
 </table>
 <p>The otherwise matched anchored travel is reconstructed as
 45.4 − 30.7 + 12.2 = 26.9 in. The generator applies the specified loss:
@@ -67,6 +68,9 @@ at matched seeds, equal default noise for normal and undertravel, reduced travel
 for a positive specified loss, rejection of incomplete or invalid loss inputs,
 and complete registry coverage. Independent rectangles check the audit: widths
 3.0 and 4.0 in with a 200.0 lbf height have areas 600.0 and 800.0 in·lbf.</p>
+<p>At 32 seeds per mode, the regression baseline contains 19 stroke, 53 load-range
+and 56 area pairs with disjoint sampled envelopes. Each current pair set shall
+be a subset of its baseline: removing separation passes; adding a pair fails.</p>
 <h2>Known limits and way forward</h2>
 <ul>
   <li>The retained common default travel bounds are assumed, based on previous
@@ -76,6 +80,10 @@ and complete registry coverage. Independent rectangles check the audit: widths
   <li>Default calls specify no physical loss. Loss magnitude is NOT_EVALUATED;
   default normal and undertravel cards are intentionally identical. Explicit
   loss requires a supplied anchored travel and cannot be inferred from the label.</li>
+  <li>Synthetic training and hold-out builders exclude PLUNGER_UNDERTRAVEL until
+  a distinguishing matched-travel basis exists. They cover 19 labels. Direct
+  generation and the 20-mode audit remain available; identical defaults shall
+  not be trained or scored as separate labels.</li>
   <li>Other generators retain their existing assumptions. Disjoint load, stroke
   or area envelopes reported elsewhere remain review findings.</li>
   <li>The shipped classifier, stored examples and previously published

@@ -63,6 +63,34 @@ def test_training_features_preserve_indistinguishable_defaults():
     assert returned_labels.tolist() == labels
 
 
+@pytest.mark.parametrize("builder", ["training", "hold_out"])
+def test_labelled_synthetic_sets_exclude_indistinguishable_undertravel(builder):
+    """Seed-matched duplicate defaults cannot carry contradictory labels."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
+        ALL_GENERATORS,
+        generate_training_dataset,
+    )
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.test_set_builder import (
+        build_hold_out_test_set,
+    )
+
+    if builder == "training":
+        cards, labels = generate_training_dataset(samples_per_mode=1)
+    else:
+        records = build_hold_out_test_set(samples_per_mode=1)
+        cards = [record.card for record in records]
+        labels = [record.label for record in records]
+
+    for (left, left_label), (right, right_label) in itertools.combinations(
+        zip(cards, labels), 2
+    ):
+        assert left.position != right.position or left.load != right.load, (
+            f"Identical synthetic cards have labels {left_label} and {right_label}"
+        )
+    assert set(labels) == set(ALL_GENERATORS) - {"PLUNGER_UNDERTRAVEL"}
+    assert len(cards) == 19
+
+
 @pytest.mark.parametrize("generator", LOSS_GENERATORS)
 def test_published_lost_motion_example(generator):
     """SWPSC (2017), Definition of Over Travel and Under Travel, Fig. 1.
@@ -164,6 +192,145 @@ def test_scale_audit_boundary_contact_is_overlap():
     assert all(not pairs for pairs in report["disjoint_pairs"].values())
 
 
+# Observed at 32 seeds before the regression guard; reductions remain allowed.
+BASELINE_DISJOINT_PAIRS = {
+    "stroke_length": {
+        ("BENT_BARREL", "STUCK_PUMP"),
+        ("DELAYED_TV_CLOSURE", "STUCK_PUMP"),
+        ("EXCESSIVE_FRICTION", "STUCK_PUMP"),
+        ("EXCESSIVE_VIBRATION", "STUCK_PUMP"),
+        ("FLUID_POUND", "STUCK_PUMP"),
+        ("GAS_INTERFERENCE", "STUCK_PUMP"),
+        ("GAS_LOCK", "STUCK_PUMP"),
+        ("NORMAL", "STUCK_PUMP"),
+        ("PARAFFIN_RESTRICTION", "STUCK_PUMP"),
+        ("PLUNGER_OUT_OF_BARREL", "STUCK_PUMP"),
+        ("PLUNGER_UNDERTRAVEL", "STUCK_PUMP"),
+        ("PUMP_TAGGING_DOWN", "STUCK_PUMP"),
+        ("PUMP_TAGGING_UP", "STUCK_PUMP"),
+        ("ROD_PARTING", "STUCK_PUMP"),
+        ("SAND_ABRASION", "STUCK_PUMP"),
+        ("STUCK_PUMP", "TUBING_MOVEMENT"),
+        ("STUCK_PUMP", "VALVE_LEAK_SV"),
+        ("STUCK_PUMP", "VALVE_LEAK_TV"),
+        ("STUCK_PUMP", "WORN_BARREL"),
+    },
+    "load_range": {
+        ("BENT_BARREL", "GAS_LOCK"),
+        ("BENT_BARREL", "ROD_PARTING"),
+        ("BENT_BARREL", "STUCK_PUMP"),
+        ("DELAYED_TV_CLOSURE", "GAS_LOCK"),
+        ("DELAYED_TV_CLOSURE", "ROD_PARTING"),
+        ("DELAYED_TV_CLOSURE", "STUCK_PUMP"),
+        ("EXCESSIVE_FRICTION", "GAS_LOCK"),
+        ("EXCESSIVE_FRICTION", "ROD_PARTING"),
+        ("EXCESSIVE_FRICTION", "STUCK_PUMP"),
+        ("EXCESSIVE_VIBRATION", "GAS_LOCK"),
+        ("EXCESSIVE_VIBRATION", "ROD_PARTING"),
+        ("EXCESSIVE_VIBRATION", "STUCK_PUMP"),
+        ("FLUID_POUND", "GAS_LOCK"),
+        ("FLUID_POUND", "ROD_PARTING"),
+        ("FLUID_POUND", "STUCK_PUMP"),
+        ("GAS_INTERFERENCE", "GAS_LOCK"),
+        ("GAS_INTERFERENCE", "ROD_PARTING"),
+        ("GAS_INTERFERENCE", "STUCK_PUMP"),
+        ("GAS_LOCK", "NORMAL"),
+        ("GAS_LOCK", "PARAFFIN_RESTRICTION"),
+        ("GAS_LOCK", "PLUNGER_OUT_OF_BARREL"),
+        ("GAS_LOCK", "PLUNGER_UNDERTRAVEL"),
+        ("GAS_LOCK", "PUMP_TAGGING_DOWN"),
+        ("GAS_LOCK", "PUMP_TAGGING_UP"),
+        ("GAS_LOCK", "ROD_PARTING"),
+        ("GAS_LOCK", "SAND_ABRASION"),
+        ("GAS_LOCK", "TUBING_MOVEMENT"),
+        ("GAS_LOCK", "VALVE_LEAK_SV"),
+        ("GAS_LOCK", "VALVE_LEAK_TV"),
+        ("GAS_LOCK", "WORN_BARREL"),
+        ("NORMAL", "ROD_PARTING"),
+        ("NORMAL", "STUCK_PUMP"),
+        ("PARAFFIN_RESTRICTION", "ROD_PARTING"),
+        ("PARAFFIN_RESTRICTION", "STUCK_PUMP"),
+        ("PLUNGER_OUT_OF_BARREL", "ROD_PARTING"),
+        ("PLUNGER_OUT_OF_BARREL", "STUCK_PUMP"),
+        ("PLUNGER_UNDERTRAVEL", "ROD_PARTING"),
+        ("PLUNGER_UNDERTRAVEL", "STUCK_PUMP"),
+        ("PUMP_TAGGING_DOWN", "ROD_PARTING"),
+        ("PUMP_TAGGING_DOWN", "STUCK_PUMP"),
+        ("PUMP_TAGGING_UP", "ROD_PARTING"),
+        ("PUMP_TAGGING_UP", "STUCK_PUMP"),
+        ("ROD_PARTING", "SAND_ABRASION"),
+        ("ROD_PARTING", "STUCK_PUMP"),
+        ("ROD_PARTING", "TUBING_MOVEMENT"),
+        ("ROD_PARTING", "VALVE_LEAK_SV"),
+        ("ROD_PARTING", "VALVE_LEAK_TV"),
+        ("ROD_PARTING", "WORN_BARREL"),
+        ("SAND_ABRASION", "STUCK_PUMP"),
+        ("STUCK_PUMP", "TUBING_MOVEMENT"),
+        ("STUCK_PUMP", "VALVE_LEAK_SV"),
+        ("STUCK_PUMP", "VALVE_LEAK_TV"),
+        ("STUCK_PUMP", "WORN_BARREL"),
+    },
+    "card_area": {
+        ("BENT_BARREL", "GAS_LOCK"),
+        ("BENT_BARREL", "ROD_PARTING"),
+        ("BENT_BARREL", "STUCK_PUMP"),
+        ("DELAYED_TV_CLOSURE", "GAS_LOCK"),
+        ("DELAYED_TV_CLOSURE", "ROD_PARTING"),
+        ("DELAYED_TV_CLOSURE", "STUCK_PUMP"),
+        ("EXCESSIVE_FRICTION", "FLUID_POUND"),
+        ("EXCESSIVE_FRICTION", "GAS_LOCK"),
+        ("EXCESSIVE_FRICTION", "PLUNGER_OUT_OF_BARREL"),
+        ("EXCESSIVE_FRICTION", "ROD_PARTING"),
+        ("EXCESSIVE_FRICTION", "STUCK_PUMP"),
+        ("EXCESSIVE_VIBRATION", "GAS_LOCK"),
+        ("EXCESSIVE_VIBRATION", "ROD_PARTING"),
+        ("EXCESSIVE_VIBRATION", "STUCK_PUMP"),
+        ("FLUID_POUND", "GAS_LOCK"),
+        ("FLUID_POUND", "PUMP_TAGGING_DOWN"),
+        ("FLUID_POUND", "PUMP_TAGGING_UP"),
+        ("FLUID_POUND", "ROD_PARTING"),
+        ("FLUID_POUND", "STUCK_PUMP"),
+        ("GAS_INTERFERENCE", "GAS_LOCK"),
+        ("GAS_INTERFERENCE", "ROD_PARTING"),
+        ("GAS_INTERFERENCE", "STUCK_PUMP"),
+        ("GAS_LOCK", "NORMAL"),
+        ("GAS_LOCK", "PARAFFIN_RESTRICTION"),
+        ("GAS_LOCK", "PLUNGER_OUT_OF_BARREL"),
+        ("GAS_LOCK", "PLUNGER_UNDERTRAVEL"),
+        ("GAS_LOCK", "PUMP_TAGGING_DOWN"),
+        ("GAS_LOCK", "PUMP_TAGGING_UP"),
+        ("GAS_LOCK", "SAND_ABRASION"),
+        ("GAS_LOCK", "STUCK_PUMP"),
+        ("GAS_LOCK", "TUBING_MOVEMENT"),
+        ("GAS_LOCK", "VALVE_LEAK_SV"),
+        ("GAS_LOCK", "VALVE_LEAK_TV"),
+        ("GAS_LOCK", "WORN_BARREL"),
+        ("NORMAL", "ROD_PARTING"),
+        ("NORMAL", "STUCK_PUMP"),
+        ("PARAFFIN_RESTRICTION", "ROD_PARTING"),
+        ("PARAFFIN_RESTRICTION", "STUCK_PUMP"),
+        ("PLUNGER_OUT_OF_BARREL", "ROD_PARTING"),
+        ("PLUNGER_OUT_OF_BARREL", "STUCK_PUMP"),
+        ("PLUNGER_UNDERTRAVEL", "ROD_PARTING"),
+        ("PLUNGER_UNDERTRAVEL", "STUCK_PUMP"),
+        ("PUMP_TAGGING_DOWN", "ROD_PARTING"),
+        ("PUMP_TAGGING_DOWN", "STUCK_PUMP"),
+        ("PUMP_TAGGING_UP", "ROD_PARTING"),
+        ("PUMP_TAGGING_UP", "STUCK_PUMP"),
+        ("ROD_PARTING", "SAND_ABRASION"),
+        ("ROD_PARTING", "TUBING_MOVEMENT"),
+        ("ROD_PARTING", "VALVE_LEAK_SV"),
+        ("ROD_PARTING", "VALVE_LEAK_TV"),
+        ("ROD_PARTING", "WORN_BARREL"),
+        ("SAND_ABRASION", "STUCK_PUMP"),
+        ("STUCK_PUMP", "TUBING_MOVEMENT"),
+        ("STUCK_PUMP", "VALVE_LEAK_SV"),
+        ("STUCK_PUMP", "VALVE_LEAK_TV"),
+        ("STUCK_PUMP", "WORN_BARREL"),
+    },
+}
+
+
 def test_all_modes_audited_and_target_stroke_pairs_overlap():
     from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
         ALL_GENERATORS,
@@ -177,8 +344,12 @@ def test_all_modes_audited_and_target_stroke_pairs_overlap():
     targets = ("NORMAL", "TUBING_MOVEMENT", "PLUNGER_UNDERTRAVEL")
     for pair in itertools.combinations(targets, 2):
         assert sorted(pair) not in report["disjoint_pairs"]["stroke_length"]
-    # The guard reports residual synthetic separation; it does not hide it.
-    assert report["disjoint_pairs"]["stroke_length"]
+    # A removed pair is an improvement; every newly separated pair is a regression.
+    for metric, pairs in report["disjoint_pairs"].items():
+        current = {tuple(pair) for pair in pairs}
+        assert current <= BASELINE_DISJOINT_PAIRS[metric], (
+            metric, current - BASELINE_DISJOINT_PAIRS[metric]
+        )
 
 
 @pytest.mark.parametrize("count", [0, -1, True, 1.5])
