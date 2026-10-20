@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANSYS supported-load digest assessment</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; max-width: 68rem; margin: auto; padding: 2rem; color: #172938; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #9baab4; padding: .5rem; text-align: left; }
+pre { white-space: pre-wrap; background: #edf2f5; padding: 1rem; }
+code { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<h1>ANSYS supported-load digest assessment</h1>
+<h2>Summary</h2>
+<p>The production digest reader rejects incomplete, repeated and nonfinite evidence.
+An offline supported-load assessment compares stress, utilization and signed in-plane
+forces with explicit independent inputs. The synthetic worked case passes these
+content checks: utilization is 0.6 and the force residual is 0.0 N against a 1.0 N
+input criterion. Native qualification remains <code>NOT_EVALUATED</code>.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-20</td><td>Added strict parsing and an explicit supported-load hand case to expose malformed or inconsistent digest evidence.</td></tr></tbody>
+</table>
+<p>Table 1. Document revisions.</p>
+
+<h2>Scope and method</h2>
+<p><a href="../../../../../issues/2094">Issue 2094</a>
+records that matching a deck to its generator establishes reproducibility without
+establishing physical correctness. The existing base already removes the pressure-vessel
+radial restraint, replaces the inert mudmat foundation construction, captures CSV files
+and retains historical goldens. This change addresses the remaining permissive production
+reader and provides a callable assessment for the supported in-plane digest convention.</p>
+<p>The API is <code>assess_supported_digest(csv_text, criteria)</code> in
+<a href="../../../src/digitalmodel/ansys/screening_validation.py">screening_validation.py</a>.
+Every allowable, yield strength, applied force, tolerance and source is required.
+No standard-derived allowable or acceptance tolerance is supplied by the API.
+The source string declares the input basis; it does not authenticate that basis.</p>
+<p>Field labels are normalized to lowercase. Each row contains complete
+<code>label,value</code> pairs. Blank fields, duplicate labels ignoring case, empty
+digests, invalid labels, nonnumeric values and nonfinite values raise
+<code>ValueError</code>. Unknown well-formed fields remain available to callers.
+Missing assessment quantities produce <code>NOT_EVALUATED</code> for the affected
+checks. A known failure takes precedence over missing evidence.</p>
+
+<h2>Inputs for the worked case</h2>
+<p>All values in this example are synthetic demonstration inputs. They do not
+describe a physical material or component and are not engineering design inputs.</p>
+<table>
+<thead><tr><th>Quantity</th><th>Value</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td>Peak equivalent stress (MPa)</td><td>60.0</td><td>Synthetic digest input</td></tr>
+<tr><td>Allowable stress (MPa)</td><td>100.0</td><td>Independent synthetic criterion, also recorded in the digest</td></tr>
+<tr><td>Yield strength (MPa)</td><td>200.0</td><td>Independent synthetic criterion</td></tr>
+<tr><td>Applied force, X / Y (N)</td><td>300.0 / 400.0</td><td>Independent synthetic case, also recorded in the digest</td></tr>
+<tr><td>Support reaction, X / Y (N)</td><td>-300.0 / -400.0</td><td>Synthetic digest input</td></tr>
+<tr><td>Absolute force tolerance (N)</td><td>1.0</td><td>Demonstration criterion; no general acceptance claim</td></tr>
+<tr><td>Absolute stress tolerance (MPa)</td><td>0.0</td><td>Exact synthetic allowable match</td></tr>
+<tr><td>Absolute utilization tolerance</td><td>0.0</td><td>Exact synthetic ratio match</td></tr>
+</tbody>
+</table>
+<p>Table 2. Explicit synthetic case inputs and their intended use.</p>
+
+<h2>Independent calculation and answer</h2>
+<p>Utilization is defined by the screening deck as peak stress divided by
+allowable stress. The sub-yield and below-unity criteria follow the example
+requirements in issue 2094, recorded in 2026. The independent
+allowable is used in the calculation, so a changed digest allowable cannot
+silently redefine its own acceptance.</p>
+<pre>UC = 60.0 / 100.0 = 0.6
+60.0 MPa &lt; 100.0 MPa allowable and &lt; 200.0 MPa yield
+Applied-vector error = norm((300.0, 400.0) - (300.0, 400.0)) = 0.0 N
+Force residual = sqrt((300.0 - 300.0)^2 + (400.0 - 400.0)^2) = 0.0 N
+0.0 N &lt;= 1.0 N criterion
+Recorded residual = 0.0 N; difference from calculated residual = 0.0 N</pre>
+<p>Signed force equilibrium follows <cite>Engineering Statics: Open and Interactive</cite>,
+online edition consulted in 2026,
+<a href="https://engineeringstatics.org/Chapter_05-equations-of-equilibrium.html">section 5.3,
+equation 5.3.1</a>: the vector sum of external forces is zero. The assessment
+uses the Euclidean norm of the two signed residual components. Recorded applied
+forces are checked separately against the independent case, so a wrong load
+balanced by a wrong reaction still fails. The recorded residual is checked
+against the independently calculated norm.</p>
+<p>The executable example is
+<a href="../../../examples/ansys/digest-assessment/build.py">build.py</a>:</p>
+<pre>PYTHONPATH=src python examples/ansys/digest-assessment/build.py</pre>
+<p>The output contains five <code>PASS</code> content dispositions and
+<code>native_qualification: NOT_EVALUATED</code>. The example writes no files
+and does not start a solver.</p>
+
+<h2>Verification and known limits</h2>
+<p>The regression tests include independent hand answers for equilibrium,
+utilization and tolerance boundaries. Negative cases include a reversed reaction,
+a 3.0 N / 4.0 N component imbalance giving a 5.0 N residual, balanced wrong loads,
+changed allowables, duplicate labels, missing fields and nonfinite evidence.
+Golden readers share the production parser, while their independent physical
+comparators remain separate.</p>
+<p>This assessment checks content only. It does not bind a digest to an executed
+deck, authenticate provenance, establish solver completion, prove mesh convergence,
+check moments or out-of-plane forces, or qualify padeye contact stresses. The
+pressure-vessel and mudmat self-balanced conventions are outside this API and
+continue to use their existing golden checks. No committed deck, retained native
+evidence, golden value or registry readiness is changed. Current native
+qualification and the outstanding physical comparators remain open under
+<a href="../../../../../issues/2094">issue 2094</a>.</p>
+</body>
+</html>

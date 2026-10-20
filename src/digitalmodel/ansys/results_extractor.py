@@ -18,8 +18,9 @@ Returns results as dataclasses and pandas DataFrames.
 
 from __future__ import annotations
 
+import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 import json
@@ -152,6 +153,11 @@ _PRETAB_DATA_RE = re.compile(r"^\s*(\d+)\s+([-\d.E+]+(?:\s+[-\d.E+]+)*)\s*$")
 # Reaction force: TOTAL VALUES
 _REACTION_TOTAL_RE = re.compile(
     r"TOTAL\s+VALUES?\s*[:=]?\s*([-\d.E+]+)", re.IGNORECASE
+)
+
+# Numeric syntax of the screening decks' *VWRITE F/E edit descriptors.
+_DIGEST_NUMBER_RE = re.compile(
+    r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?"
 )
 
 
@@ -446,25 +452,29 @@ class ResultsExtractor:
         Raises
         ------
         ValueError
-            If the token count is odd, or a value is not numeric. A malformed
-            digest must fail loudly: it is the artifact a golden comparison
-            reads, so a silent partial parse would compare against nothing.
+            If a row is incomplete, a label is invalid or repeated (ignoring
+            case), or a value is nonnumeric or nonfinite. Labels are returned
+            in lowercase. Empty fields are errors, rather than discarded data.
         """
-        tokens = [t.strip() for t in csv_text.strip().replace("\n", ",").split(",")]
-        tokens = [t for t in tokens if t]
-        if len(tokens) % 2 != 0:
-            raise ValueError(
-                f"digest has an odd token count ({len(tokens)}); "
-                "expected flat label,value pairs"
-            )
+        if not csv_text.strip():
+            raise ValueError("digest is empty")
         out: dict[str, float] = {}
-        for label, value in zip(tokens[0::2], tokens[1::2]):
-            try:
-                out[label] = float(value)
-            except ValueError as exc:
-                raise ValueError(
-                    f"digest field {label!r} has non-numeric value {value!r}"
-                ) from exc
+        for row in csv_text.strip().splitlines():
+            tokens = [token.strip() for token in row.split(",")]
+            if len(tokens) % 2 or any(not token for token in tokens):
+                raise ValueError("digest row requires complete label,value pairs")
+            for label, raw in zip(tokens[::2], tokens[1::2]):
+                if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", label):
+                    raise ValueError("digest field label is invalid")
+                label = label.lower()
+                if label in out:
+                    raise ValueError(f"duplicate digest field {label!r}")
+                if not _DIGEST_NUMBER_RE.fullmatch(raw):
+                    raise ValueError(f"digest field {label!r} is non-numeric")
+                value = float(raw)
+                if not math.isfinite(value):
+                    raise ValueError(f"digest field {label!r} is nonfinite")
+                out[label] = value
         return out
 
     def export_results(
