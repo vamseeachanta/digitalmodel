@@ -1349,3 +1349,15 @@ workflows:
     result:
       kind: in_memory
       key: on_bottom_stability_e305_result
+  - id: flexible-pipe-integrity-screen
+    basename: flexible_pipe_integrity_screen
+    title: Unbonded flexible pipe evidence screen; capacity and fatigue life not evaluated
+    input: src/digitalmodel/base_configs/modules/flexible_pipe_integrity_screen/flexible_pipe_integrity_screen.yml
+    outputs: []
+    test: tests/asset_integrity/test_flexible_pipe.py::test_registered_workflow_runs_with_licensed_imports_blocked
+    runtime: offline
+    status: experimental
+    version: 1
+    result:
+      kind: in_memory
+      key: flexible_pipe_integrity_screen
