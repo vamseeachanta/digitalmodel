@@ -231,6 +231,8 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         raise ValueError(
             "coupled template must use SI units (m, t, kN) without unit overrides"
         )
+    if template.environment.raw_properties.get("WaterSurfaceZ", 0) != 0:
+        raise ValueError("water surface must use the zero SWL datum")
     vessels = [v for v in generic.vessels if v.name == inputs.floater_name]
     turbines = [t for t in generic.turbines if t.name == inputs.turbine_name]
     if len(vessels) != 1 or len(turbines) != 1:
@@ -342,6 +344,7 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
             and isinstance(raw_trains[0], dict)
             else {}
         )
+        raw_train.setdefault("Name", train.name)
         for key in ("WaveTp", "WaveTz", "WavePeriod"):
             raw_train.pop(key, None)
         if spectral:

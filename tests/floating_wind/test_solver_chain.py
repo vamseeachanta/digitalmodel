@@ -415,3 +415,54 @@ def test_si_template_with_unit_override_rejected(inputs, tmp_path, key, value):
     with pytest.raises(ValueError, match="SI units"):
         prepare_chain(ChainInput.model_validate(inputs), tmp_path)
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("water_surface_z", [5.0, -5.0])
+def test_nonzero_water_datum_rejected_before_writing(inputs, tmp_path, water_surface_z):
+    inputs["template"]["environment"]["raw_properties"] = {
+        "WaterSurfaceZ": water_surface_z
+    }
+    with pytest.raises(ValueError, match="datum"):
+        prepare_chain(ChainInput.model_validate(inputs), tmp_path / "output")
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("raw_properties", [{}, {"WaterSurfaceZ": 0.0}])
+def test_generated_water_and_hull_share_zero_datum(inputs, tmp_path, raw_properties):
+    inputs["template"]["environment"]["raw_properties"] = raw_properties
+    bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    includes = tmp_path / "operating" / "includes"
+    environment = yaml.safe_load((includes / "03_environment.yml").read_text())[
+        "Environment"
+    ]
+    objects = yaml.safe_load((includes / "20_generic_objects.yml").read_text())
+    assert environment["WaterSurfaceZ"] == 0
+    assert objects["Vessels"][0]["InitialPosition"] == [0, 0, 0]
+    draught = objects["VesselTypes"][0]["Draughts"][0]
+    assert draught["CentreOfMass"][2] == pytest.approx(128 / 380 - 2)
+    assert (
+        draught["CentreOfMass"]
+        == bundle.diffraction["vessel"]["inertia"]["centre_of_gravity"]
+    )
+
+
+@pytest.mark.parametrize("wave_type", ["airy", "jonswap", "pierson_moskowitz"])
+@pytest.mark.parametrize(
+    "raw_train,expected_name",
+    [(None, "CustomWave"), ({}, "CustomWave"), ({"Name": "RawWave"}, "RawWave")],
+)
+def test_wave_name_survives_generation(
+    inputs, tmp_path, wave_type, raw_train, expected_name
+):
+    env = inputs["template"]["environment"]
+    env["waves"].update(type=wave_type, name="CustomWave")
+    if raw_train is not None:
+        env["raw_properties"] = {"WaveTrains": [raw_train]}
+    bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    output = tmp_path / "operating" / "includes" / "03_environment.yml"
+    train = yaml.safe_load(output.read_text())["Environment"]["WaveTrains"][0]
+    assert train["Name"] == expected_name
+    assert (
+        bundle.coupled_specs["operating"]["environment"]["waves"]["trains"][0]["name"]
+        == "CustomWave"
+    )
