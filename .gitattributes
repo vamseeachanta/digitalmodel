@@ -107,3 +107,10 @@ data/bha_database/*.yaml -text
 
 # B3 benchmark inputs are bound by raw-byte MANIFEST digests.
 docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
+
+# Preserve uncertainty chart input hashes and byte-identical regeneration.
+scripts/capabilities/build_uncertainty_loop.py text eol=lf
+scripts/capabilities/uncertainty_loop/workflow.json text eol=lf
+scripts/capabilities/uncertainty_loop/page.html.template text eol=lf
+docs/domains/asset-integrity/uncertainty-loop.html text eol=lf
+docs/domains/asset-integrity/uncertainty-loop.manifest.json text eol=lf

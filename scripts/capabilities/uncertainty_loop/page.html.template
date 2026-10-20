@@ -7,10 +7,10 @@
 <title>Uncertainty loop — evidence before inspection decisions</title>
 <style>
 :root { color-scheme: light dark; --bg: #f5f7fa; --panel: #fff; --ink: #172b40;
-  --muted: #46576b; --line: #516d80; --accent: #005c57; --tint: #e2f2ed; }
+  --muted: #46576b; --line: #516d80; --loop-accent: var(--accent, #005c57); --tint: #e2f2ed; }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #111b26; --panel: #1a2a39; --ink: #edf2f6; --muted: #c1cfdb;
-    --line: #a4bfce; --accent: #8fe3cd; --tint: #173e3c; }
+    --line: #a4bfce; --loop-accent: var(--accent, #8fe3cd); --tint: #173e3c; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink);
@@ -18,7 +18,7 @@ body { margin: 0; background: var(--bg); color: var(--ink);
 main { max-width: 74rem; margin: auto; padding: 2rem; }
 h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); line-height: 1.2; }
 h2 { line-height: 1.3; }
-.eyebrow, .badge { font-weight: bold; color: var(--accent); }
+.eyebrow, .badge { font-weight: bold; color: var(--loop-accent); }
 .badge { display: inline-block; border: 2px solid currentColor; padding: .2rem .6rem; }
 .muted, .unit, caption { color: var(--muted); }
 section { margin-block: 2rem; }
@@ -28,20 +28,27 @@ th, td { border: 1px solid var(--line); padding: .7rem; text-align: left;
   vertical-align: top; overflow-wrap: anywhere; }
 th { background: var(--tint); }
 .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2rem; }
+.diagram { margin: 0; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 36rem; height: auto; }
+.diagram rect { fill: var(--panel); stroke: var(--loop-accent); stroke-width: 2; }
+.diagram text { fill: var(--ink); font: 16px system-ui, sans-serif; text-anchor: middle; }
+.diagram .edges { fill: none; stroke: var(--loop-accent); stroke-width: 3; }
+.diagram marker path { fill: var(--loop-accent); }
+figcaption { color: var(--muted); margin-block: .6rem; }
 .loop { list-style: none; margin: 0; padding: 0 0 0 1.2rem;
-  border-left: .3rem solid var(--accent); }
+  border-left: .3rem solid var(--loop-accent); }
 details { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; }
 summary { cursor: pointer; padding: .9rem; font-weight: bold; }
-summary:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+summary:focus-visible { outline: .2rem solid var(--loop-accent); outline-offset: .2rem; }
 details[open] summary { border-bottom: 1px solid var(--line); }
 dl { padding: 0 1rem; }
-dt { font-weight: bold; color: var(--accent); }
+dt { font-weight: bold; color: var(--loop-accent); }
 dd { margin: 0 0 .8rem; overflow-wrap: anywhere; }
 .flow { margin: .4rem 0; color: var(--muted); }
-.return { color: var(--accent); font-weight: bold; }
-.feedback { border: 2px dashed var(--accent); }
+.return { color: var(--loop-accent); font-weight: bold; }
+.feedback { border: 2px dashed var(--loop-accent); }
 .feedback p { padding: 0 1rem; }
-.notice { background: var(--tint); border-left: .3rem solid var(--accent); padding: 1rem; }
+.notice { background: var(--tint); border-left: .3rem solid var(--loop-accent); padding: 1rem; }
 footer { border-top: 1px solid var(--line); padding-block: 1rem; }
 @media (max-width: 44rem) {
   main { padding: 1rem; }
@@ -69,7 +76,9 @@ This chart exposes what is required before that decision can be evaluated.</p>
 <h2 id="revision-title">Revision history</h2>
 <table>
 <thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead>
-<tbody><tr><td>@@REVISION@@</td><td>@@DATE@@</td><td>@@CHANGE@@</td></tr></tbody>
+<tbody><tr><td>A</td><td>2026-10-19</td><td>Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.</td></tr>
+<tr><td>B</td><td>2026-10-19</td><td>Add a drawn cycle and process-change arrow so the workflow paths are visible; register reproducible outputs for freshness checks.</td></tr>
+<tr><td>@@REVISION@@</td><td>@@DATE@@</td><td>@@CHANGE@@</td></tr></tbody>
 </table>
 </section>
 <section id="evidence" aria-labelledby="evidence-title">
@@ -83,6 +92,24 @@ This chart exposes what is required before that decision can be evaluated.</p>
 </tbody>
 </table>
 </section>
+<figure class="diagram">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 550" role="img" aria-labelledby="cycle-title cycle-description">
+<title id="cycle-title">Uncertainty workflow cycle</title>
+<desc id="cycle-description">Measure to Model to Quantify uncertainty to Decide to Reinspect and back to Measure. A dashed process-change arrow returns to Model for historical-trend reassessment. The expandable steps below give the equivalent workflow and evidence requirements.</desc>
+<defs><marker id="loop-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
+<g class="edges">
+<path data-source="measure" data-target="model" d="M270 72 H550" marker-end="url(#loop-arrow)"/>
+<path data-source="model" data-target="quantify" d="M640 104 V310" marker-end="url(#loop-arrow)"/>
+<path data-source="quantify" data-target="decide" d="M640 374 V482 H500" marker-end="url(#loop-arrow)"/>
+<path data-source="decide" data-target="reinspect" d="M320 482 H180 V374" marker-end="url(#loop-arrow)"/>
+<path data-source="reinspect" data-target="measure" d="M180 310 V104" marker-end="url(#loop-arrow)"/>
+<path data-source="process-change" data-target="model" d="M410 200 H490 V90 H550" stroke-dasharray="8 6" marker-end="url(#loop-arrow)"/>
+</g>
+@@SVG_NODES@@
+<text x="365" y="190">Process change</text>
+</svg>
+<figcaption>Directed cycle with dashed process-change feedback into Model. Expandable steps below retain the text equivalent.</figcaption>
+</figure>
 <div class="workspace">
 <section aria-labelledby="loop-title">
 <h2 id="loop-title">Uncertainty loop</h2>

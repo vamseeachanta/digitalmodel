@@ -74,7 +74,7 @@ def build(data_path: Path = DATA, output_dir: Path | None = None) -> None:
             f'<br><span class="unit">{escape(row["unit"])}</span></td>'
             f'<td role="cell" data-label="Required input">{escape(row["required"])}</td>'
             f'<td role="cell" data-label="Status / missing evidence">'
-            f'<strong>{row["status"]}</strong><br>{escape(row["missing"])}</td></tr>'
+            f'<strong>{escape(row["status"])}</strong><br>{escape(row["missing"])}</td></tr>'
         )
     steps = data["steps"]
     cycle = list(zip(STEP_IDS, (*STEP_IDS[1:], STEP_IDS[0])))
@@ -89,11 +89,20 @@ def build(data_path: Path = DATA, output_dir: Path | None = None) -> None:
             f'<dl>{fields}</dl></details><p class="flow">'
             f'<span aria-hidden="true">↓ </span>Next: {escape(next_label)}</p></li>'
         )
+    positions = ((90, 40), (550, 40), (550, 310), (320, 450), (90, 310))
+    svg_nodes = []
+    for step, (x, y) in zip(steps, positions):
+        svg_nodes.append(
+            f'<g data-node="{step["id"]}" transform="translate({x} {y})">'
+            '<rect width="180" height="64" rx="12"/>'
+            f'<text x="90" y="38">{escape(step["label"])}</text></g>'
+        )
     embedded = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False)
     embedded = embedded.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
     replacements = {
         "@@DATA@@": embedded,
         "@@EVIDENCE_ROWS@@": "\n".join(evidence_rows),
+        "@@SVG_NODES@@": "\n".join(svg_nodes),
         "@@STEPS@@": "\n".join(cards),
         "@@REVISION@@": escape(data["revision"]),
         "@@DATE@@": escape(data["date"]),

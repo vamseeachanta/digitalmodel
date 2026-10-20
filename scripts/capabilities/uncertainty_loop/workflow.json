@@ -1,7 +1,7 @@
 {
-  "revision": "A",
-  "date": "2026-10-19",
-  "change": "Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.",
+  "revision": "C",
+  "date": "2026-10-20",
+  "change": "Preserve the shared brand accent and reproducible output across text checkout settings.",
   "status": "synthetic",
   "decision_status": "NOT_EVALUATED",
   "provenance": {

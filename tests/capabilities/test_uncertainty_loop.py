@@ -15,6 +15,9 @@ import importlib
 import json
 from pathlib import Path
 import re
+import subprocess
+import sys
+from xml.etree import ElementTree
 
 import pytest
 
@@ -109,7 +112,7 @@ def test_saved_page_and_manifest_are_reproducible(builder, tmp_path, data):
         text, re.S,
     )[1]
     assert json.loads(embedded) == data
-    manifest = json.loads((first / builder.MANIFEST_NAME).read_text())
+    manifest = json.loads((first / builder.MANIFEST_NAME).read_text(encoding="utf-8"))
     assert manifest["cycle"] == [
         ["measure", "model"], ["model", "quantify"], ["quantify", "decide"],
         ["decide", "reinspect"], ["reinspect", "measure"],
@@ -134,7 +137,8 @@ def test_offline_native_disclosures_and_visible_limitations(builder, tmp_path, d
                for tag, attrs in tags if tag == "script")
     assert not any(key in attrs for _, attrs in tags for key in ("src", "href"))
     assert not any(tag in {"iframe", "object", "embed"} for tag, _ in tags)
-    assert "@import" not in text and "url(" not in text
+    assert "@import" not in text
+    assert all(target == "#loop-arrow" for target in re.findall(r"url\((.*?)\)", text))
     assert "fetch(" not in text
     assert 'name="viewport"' in text
     assert "prefers-color-scheme: dark" in text
@@ -167,3 +171,113 @@ def test_custom_text_is_escaped_once(builder, data, tmp_path):
         text, re.S,
     )[1]
     assert json.loads(embedded) == data
+
+
+def test_svg_draws_cycle_and_process_change_feedback(builder, tmp_path):
+    """A prose list cannot substitute for the requested directed diagram."""
+    builder.build(output_dir=tmp_path)
+    text = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
+    match = re.search(r"<svg\b.*?</svg>", text, re.S)
+    assert match, "The workflow needs a drawn SVG cycle"
+    svg = ElementTree.fromstring(match[0])
+    ns = {"s": "http://www.w3.org/2000/svg"}
+    assert svg.attrib["role"] == "img"
+    for reference in svg.attrib["aria-labelledby"].split():
+        alternative = svg.find(f".//*[@id='{reference}']", ns)
+        assert alternative is not None and "".join(alternative.itertext()).strip()
+    nodes = svg.findall("s:g[@data-node]", ns)
+    assert [node.attrib["data-node"] for node in nodes] == [
+        "measure", "model", "quantify", "decide", "reinspect"
+    ]
+    assert ["".join(node.itertext()).strip() for node in nodes] == [
+        "Measure", "Model", "Quantify uncertainty", "Decide", "Reinspect"
+    ]
+    edges = svg.findall(".//s:path[@data-source]", ns)
+    assert [(edge.attrib["data-source"], edge.attrib["data-target"]) for edge in edges] == [
+        ("measure", "model"), ("model", "quantify"), ("quantify", "decide"),
+        ("decide", "reinspect"), ("reinspect", "measure"), ("process-change", "model"),
+    ]
+    assert all(edge.attrib["d"] and edge.attrib["marker-end"] == "url(#loop-arrow)"
+               for edge in edges)
+    assert edges[-1].attrib["stroke-dasharray"] == "8 6"
+    assert svg.find(".//s:marker[@id='loop-arrow']", ns) is not None
+
+
+def test_freshness_gate_rebuilds_both_uncertainty_outputs(builder, tmp_path, monkeypatch):
+    """The repository gate must own the page and digest manifest together."""
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/capabilities/build_uncertainty_loop.py"]
+    assert len(entries) == 1, "The uncertainty builder needs freshness registration"
+    entry = entries[0]
+    assert entry.outputs == (
+        "docs/domains/asset-integrity/uncertainty-loop.html",
+        "docs/domains/asset-integrity/uncertainty-loop.manifest.json",
+    )
+    assert entry.inputs == (
+        "scripts/capabilities/uncertainty_loop/workflow.json",
+        "scripts/capabilities/uncertainty_loop/page.html.template",
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    checker.prepare_shadow(builder.ROOT, tmp_path)
+    assert checker.regenerate(tmp_path) == []
+    assert checker.compare_outputs(builder.ROOT, tmp_path) == []
+    (tmp_path / entry.outputs[0]).write_text("stale", encoding="utf-8")
+    (tmp_path / entry.outputs[1]).write_text("{}", encoding="utf-8")
+    assert {path for path, _ in checker.compare_outputs(builder.ROOT, tmp_path)} == set(entry.outputs)
+
+
+def test_page_inherits_brand_accent_without_overriding_core_tokens(builder, tmp_path):
+    """The offline palette must leave canonical brand properties inherited."""
+    from scripts import brand_guard
+
+    builder.build(output_dir=tmp_path)
+    page = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
+    assert brand_guard.CORE_RE.search(page) is None
+    assert "--loop-accent: var(--accent, #005c57)" in page
+    assert "--loop-accent: var(--accent, #8fe3cd)" in page
+    assert "var(--loop-accent)" in page
+
+
+def test_crlf_checkout_preserves_inputs_outputs_and_raw_hashes(builder, tmp_path):
+    """Exercise Git's conversion filters with CRLF checkout defaults enabled."""
+    paths = (
+        "scripts/capabilities/build_uncertainty_loop.py",
+        "scripts/capabilities/uncertainty_loop/workflow.json",
+        "scripts/capabilities/uncertainty_loop/page.html.template",
+        "docs/domains/asset-integrity/uncertainty-loop.html",
+        "docs/domains/asset-integrity/uncertainty-loop.manifest.json",
+    )
+
+    def checkout_bytes(relative, source):
+        return subprocess.check_output(
+            ["git", "-c", "core.autocrlf=true", "-c", "core.eol=crlf",
+             "cat-file", "--filters", f"--path={relative}", f"HEAD:{source}"],
+            cwd=builder.ROOT,
+        )
+
+    # An unpinned text path is converted, so the test cannot pass vacuously.
+    assert b"\r\n" in checkout_bytes("unconfigured-checkout.txt", paths[0])
+    for relative in paths:
+        original = subprocess.check_output(
+            ["git", "show", f"HEAD:{relative}"], cwd=builder.ROOT,
+        )
+        converted = checkout_bytes(relative, relative)
+        assert converted == original.replace(b"\r\n", b"\n"), relative
+        assert b"\r" not in converted, relative
+        # The active attributes preserve LF; apply that verified policy to the
+        # current source, including edits that are not committed yet.
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        current = (builder.ROOT / relative).read_bytes()
+        assert b"\r" not in current, relative
+        target.write_bytes(current)
+
+    subprocess.run([sys.executable, str(tmp_path / paths[0])],
+                   cwd=tmp_path, check=True, capture_output=True)
+    for relative in paths[3:]:
+        assert (tmp_path / relative).read_bytes() == (builder.ROOT / relative).read_bytes()
+    manifest = json.loads((tmp_path / paths[4]).read_text(encoding="utf-8"))
+    for relative, digest in manifest["sha256"].items():
+        assert hashlib.sha256((tmp_path / relative).read_bytes()).hexdigest() == digest

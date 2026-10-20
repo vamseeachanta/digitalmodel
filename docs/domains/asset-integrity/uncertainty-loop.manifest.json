@@ -34,12 +34,12 @@
     "rights": "Original schematic and synthetic context are supplied under the repository MIT licence; no third-party data or chart design is reproduced.",
     "source": "Original synthetic workflow context. No measured readings, private case data or external dataset is included."
   },
-  "revision": "A",
+  "revision": "C",
   "sha256": {
-    "docs/domains/asset-integrity/uncertainty-loop.html": "53e30e0cd215a0be9f3ae0bf3ba420d028fff5b776e1ef3585ce1f64a85bc4e1",
-    "scripts/capabilities/build_uncertainty_loop.py": "4c1c53a0e65c92dd2320a2b356d4110b77411d82881443194e8b2eee6a1bf4b9",
-    "scripts/capabilities/uncertainty_loop/page.html.template": "3540bf0f8e30627517c12558d647431a84aa25fa5fa39b0ddca8a5a89be26a0a",
-    "scripts/capabilities/uncertainty_loop/workflow.json": "117acc9d3718b144e20979afec658e95e47aae400547fa37c1631e5a01efadac"
+    "docs/domains/asset-integrity/uncertainty-loop.html": "b9d33fe535b0ca161a04c0596095a3ca55bd78c5fbd1583aed20d7f609884f2a",
+    "scripts/capabilities/build_uncertainty_loop.py": "c7330700436714fd61d90ce1edb7b6ee5c85fc6745083df180dea38a415517c4",
+    "scripts/capabilities/uncertainty_loop/page.html.template": "aa5e8be6d4b2de0dea5b0abb40cf8ed30acf89660fce7d09251e6328c73f13d9",
+    "scripts/capabilities/uncertainty_loop/workflow.json": "3fe8c929270fb9a3be7ac89b9125567e3c1d5847965b1645d246f5ffb8076501"
   },
   "status": "synthetic"
 }
