@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Generic mooring analysis workflow</title>
+<style>body{max-width:70rem;margin:3rem auto;padding:0 1.5rem;font:17px/1.6 system-ui;color:#183044}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border:1px solid #bdcbd5;text-align:left}pre{overflow:auto;background:#eff4f7;padding:1rem}code{font-size:.9em}.gap{border-left:4px solid #b57918;padding:1rem;background:#fff5df}caption{caption-side:bottom;text-align:left}</style></head>
+<body>
+<h1>Generic mooring analysis workflow</h1>
+<h2>Summary</h2>
+<p>The offline workflow enumerates spread and turret arrangements, intact and one-line-damaged conditions, and eight proposed environmental headings: 32 cases. It calculates analytical screens and checks supplied extracted metrics against explicit line capacities and a sourced, condition-specific peak/MBL limit. Missing results or criteria produce <code>NOT_EVALUATED</code>. No licensed integration is imported or executed.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>00</td><td>2026-10-20</td><td>Offline workflow and hand calculations introduced to prepare an auditable generic mooring analysis.</td></tr></tbody><caption>Table 1. Document issue record.</caption></table>
+<h2>Coverage and evidence boundary</h2>
+<table><thead><tr><th>Slice</th><th>Delivered capability</th><th>Unestablished evidence</th></tr></thead><tbody>
+<tr><td>1</td><td>Template-derived 32-case inventory; environmental source locators, SI unit convention and case-basis SHA-256.</td><td>Headings are an issue enumeration, not standard-required coverage. A damaged line must be selected explicitly.</td></tr>
+<tr><td>2</td><td>Grounded catenary and coupled horizontal linear offset screens with required force, weight, geometry and stiffness inputs.</td><td>Hydrodynamic response, yaw equilibrium, nonlinear damage redistribution and dynamic peaks.</td></tr>
+<tr><td>3</td><td>Stored-metric validation, line-specific utilisation, screen differences and the standard HTML report with every case retained.</td><td>Native readback, benchmark explanation, allowable offset and engineering acceptance.</td></tr>
+</tbody><caption>Table 2. Offline capabilities and limitations.</caption></table>
+<p class="gap">Model generation is deferred. The platform include/component gaps identified by the linked library work and the vessel motion settings require resolution and physical readiness review. The supplied spread and turret environments differ, so their results cannot establish an arrangement benchmark. No generated model is represented as validated.</p>
+<h2>Inputs and provenance</h2>
+<p>The entry point is <code>digitalmodel.mooring_analysis_workflow</code>. <code>build_case_table(repo_root, damaged_lines)</code> reads the spread and turret base templates under <code>docs/domains/orcaflex/templates/mooring_systems/</code>. Each environmental mapping retains its repository-relative source locator. Proposed headings rotate wave/current together in the template global convention; no template is edited. The source values are generic template assumptions, not sourced site metocean observations.</p>
+<p>The case digest covers the exact base-template bytes plus system, condition, heading and selected damaged line. It is a planning-basis digest, not a hash of generated native input. External included component bytes are not covered. Native execution requires a separate complete input manifest. A change to that planning basis invalidates a supplied metric record.</p>
+<p>A result record requires <code>basis_sha256</code>, <code>solver_version</code>, <code>source</code>, <code>offset_xy_m</code> and <code>tensions_kn</code>. Every active line must appear exactly once; a removed line must be absent. Offsets are horizontal components relative to the agreed undisplaced vessel reference, in metres; tensions are peak effective line tensions in kN. The caller must establish compatible extraction location, duration and input basis before comparison. A report requires one solver version. Report comparisons are presented to one decimal place; the input echo is a rounded display, while calculations retain full precision. Extracted records are not a substitute for retained native output and are never marked qualified by this module.</p>
+<p>Capacities in kN are required for every active line. The criterion is <code>{"ratio": ..., "source": ...}</code>; its source must identify the governing method, edition, clause and condition. No API RP 2SK or DNV-OS-E301 numerical limit is assumed. The caller is responsible for the line-capacity source and applicability of the criterion. If either is absent, the check remains <code>NOT_EVALUATED</code>.</p>
+<h2>Method and independent worked answer</h2>
+<p>All following input numbers are deliberately invented mathematical examples. They are not component properties, metocean data or engineering criteria.</p>
+<p>For a uniform submerged line of weight <em>w</em>, horizontal tension <em>H</em>, fairlead height <em>h</em> above a horizontal touchdown and total length <em>L</em>, the frictionless inextensible equations are:</p>
+<pre>a = H / w
+s² = h² + 2 a h
+x = a acosh(1 + h/a)
+T = H + w h
+R = x + (L - s)</pre>
+<p>These follow from <a href="https://github.com/NREL/MoorPy/blob/main/moorpy/Catenary.py">MoorPy, Catenary.py, ProfileType 2</a>, in the inextensible, zero-friction limit (source header records the 2020 solver update). The existing repository counterpart is <code>src/digitalmodel/orcaflex/mooring_design.py:solve_catenary</code>. The new screen accepts submerged force per length directly and returns unrounded values. It does not use default gravity or material-library coefficients. No external implementation is executed.</p>
+<p>With <em>H</em> = 100 kN, <em>w</em> = 1 kN/m, <em>h</em> = 25 m and <em>L</em> = 100 m: <em>a</em> = 100 m; <em>s</em>² = 625 + 5,000 = 5,625 m²; <em>s</em> = 75 m; vertical tension is 75 kN; <em>T</em> = 125 kN. Since acosh(1.25) = ln(2), <em>x</em> = 100 ln(2) m and <em>R</em> = 94.3 m. The screen rejects <em>s &gt; L</em>, which requires a fully suspended geometry solution.</p>
+<p>The linear offset screen solves <em>Kq = F</em>. Its basis is the static linear restoring-force relation in <a href="https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion">OpenStax, University Physics Volume 1 (2016), section 15.1</a>, extended to two coupled horizontal degrees of freedom. A finite symmetric positive-definite matrix is required. Each damaged system needs its own independently established matrix; removing a line is not represented by a default multiplier.</p>
+<p>For <em>K</em> = [[4, 1], [1, 3]] kN/m and <em>F</em> = [9, 8] kN, equilibrium gives 4x + y = 9 and x + 3y = 8. Therefore x = 19/11 m and y = 23/11 m, or 1.7 m and 2.1 m for presentation. This is a linear screen, not a nonlinear mooring solution.</p>
+<p>For invented line peaks of 40 kN and 80 kN, capacities of 100 kN and 200 kN and a test-only ratio limit of 0.5, the maximum peak/MBL is 0.4 and utilisation is 0.8: PASS against that supplied criterion. An offset [3, 4] m has magnitude 5 m. Relative to a 4 m screen, its signed difference is 100(5 − 4)/4 = 25.0 %. A zero screen leaves the percentage unestablished. A screen tension of 64 kN compared with an 80 kN stored peak likewise gives 25.0 %. The numbers show the arithmetic; they establish no design acceptance.</p>
+<h2>Runnable worked example</h2>
+<p>Run from the repository root with its Python dependencies installed. Set <code>MOORING_REPORT_DIR</code> to an existing approved scratch directory. The example creates only derived files there and refuses to overwrite existing files. The generated report shows zero supplied results and all 32 cases pending; the printed analytical answers are independent of licensed software.</p>
+<pre><code>PYTHONPATH=src python3 - &lt;&lt;'PY'
+import json
+import os
+from pathlib import Path
+from digitalmodel.mooring_analysis_workflow import (
+    build_case_table, catenary_screen, linear_offset, render_report,
+)
+cases = build_case_table(Path.cwd(), {
+    "spread": "Mooring_L1", "turret": "Mooring_L1",
+})
+print("Top tension [kN]:", catenary_screen(100, 1, 25, 100)["top_tension_kn"])
+print("Linear offset [m]:", tuple(round(v, 1) for v in
+    linear_offset((9, 8), ((4, 1), (1, 3)))))
+output = Path(os.environ["MOORING_REPORT_DIR"])
+artifacts = {
+    "mooring-cases.json": json.dumps(cases, indent=2),
+    "mooring-analysis.html": render_report(cases, {}, revision="00", date="2026-10-20"),
+}
+for name, content in artifacts.items():
+    target = output / name
+    with target.open("x", encoding="utf-8") as stream:
+        stream.write(content)
+    assert target.read_text(encoding="utf-8") == content
+PY</code></pre>
+<h2>Checks and way forward</h2>
+<p>Run <code>PYTHONPATH=src python3 -m pytest tests/subsea/test_generic_mooring_workflow.py</code>. Expected arithmetic is written in the test docstrings and comes from the calculations above, never from the implementation under test. Coverage includes full case enumeration, removed-line identity, damaged line exclusion, source retention, invalid stiffness/geometry, missing limits, digest mismatch, mixed versions and report completeness.</p>
+<p>Later work will establish a common environmental basis, response inputs, component readiness, native-model generation and YAML validation, and a public benchmark. A separately authorized licensed campaign will provide statics and dynamics, one recorded version and retained native output. Native readback and matched screen comparisons will then establish which results meet the governing sourced criteria. The complete issue acceptance is not established by these offline slices.</p>
+<p>Traceability: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2426">mooring workflow issue</a>; <a href="https://github.com/vamseeachanta/digitalmodel/issues/2425">template readiness</a>; <a href="https://github.com/vamseeachanta/digitalmodel/issues/1788">semantic proof</a>; <a href="https://github.com/vamseeachanta/digitalmodel/issues/1702">standard load-case generator</a>; <a href="https://github.com/vamseeachanta/digitalmodel/issues/1805">standards inventory</a>.</p>
+</body></html>
