@@ -69,3 +69,6 @@ class MeasuredMotion:
             dof={d: self.dof[d][mask] for d in DOF_NAMES},
             metadata=dict(self.metadata),
         )
+
+    # Offline transformation of supplied measurements.
+    window.LIVE_INPUT = False  # type: ignore[attr-defined]

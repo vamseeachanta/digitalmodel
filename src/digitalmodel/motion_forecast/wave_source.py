@@ -101,3 +101,7 @@ def synthesize_forecast(
         phase_reference_location=phase_reference_location,
         water_depth=water_depth,
     )
+
+
+# Offline synthesis from supplied parameters.
+synthesize_forecast.LIVE_INPUT = False  # type: ignore[attr-defined]

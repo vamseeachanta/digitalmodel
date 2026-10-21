@@ -199,3 +199,7 @@ class SyntheticWaveField:
 
     def read(self) -> WaveForecast:
         return synthesize_directional_forecast(self._hs, self._tp, **self._kw)
+
+
+# Offline synthesis from supplied parameters.
+synthesize_directional_forecast.LIVE_INPUT = False  # type: ignore[attr-defined]
