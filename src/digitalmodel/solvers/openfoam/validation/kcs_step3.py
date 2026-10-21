@@ -19,7 +19,7 @@ UNITS = {key: '1' for key in ('time_over_Te', *SIGNALS, 'wave_over_lpp')}
 QUANTITIES = {f'{q}_{kind}{n}': ('rad' if kind == 'phase' else '1')
               for q in SIGNALS for kind, ns in [('a', range(5)), ('phase', range(1, 5))] for n in ns}
 QUANTITIES['wave_over_lpp_a1'] = '1'
-POLICY_SHA256 = '670417ea4566dff60c453365f9f7c0c778fe15f78c5c9964a4cc6d86c9fb22f9'
+POLICY_SHA256 = '073746650da7780ca3b559ebc8726ffdde724317a30c1015c0be2b1e54144d25'
 
 CONDITION_SHA256 = {'C0': 'cc535717fe99826d5865adaffa2b6b8dd7735775ff0e44c194514df0a81bdd79', 'C1': 'b78de3330990056c4fc22ee44e30020f61169df15c37d2093d8f49325f8ad58d', 'C2': '225b8f6fa082a1037e681ca224afa133f65d6ab5b68251a80bef2f955aee69a6', 'C3': 'fddc7fd84a8ad860ad16af77c684bf83672a9f5507f63a7a2af405282ad8a937', 'C4': '3593a8090424128d694321c9e5640f0a388ebaff41246bd5e681687cfcdaa65c', 'C5': '170d3fd903ef6d58549b71d36be23c9c717c5d53f3a00ec5ed1ec1f5a9eb46ce'}
 
