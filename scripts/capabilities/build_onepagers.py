@@ -420,6 +420,17 @@ SPECS: list[dict] = [
          bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
                   "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
+    dict(id="wall-thickness-3d-explorer", kind="work",
+         title="Wall-thickness tension and bending explorer",
+         std="DNV-ST-F101 · API RP 1111 · ASME B31.4/8 · PD 8010-2 · ISO 13623",
+         path="structural/wall-thickness-3d-explorer.html",
+         blurb="Wall thickness, effective tension and bending moment swept across nine design "
+               "codes. A fetched, bounded snapshot shows utilisation and governing check as a "
+               "3D surface with a 2D fallback. Inputs are assumed, based on previous experience; "
+               "design qualification is not evaluated.",
+         figures=[("9", "design codes")],
+         bullets=["Utilisation and governing check across wall thickness, tension and bending",
+                  "Bounded snapshot with a 3D surface and 2D fallback"]),
     dict(id="sloshing-explorer", kind="work", title="Tank sloshing natural-period & resonance explorer",
          std="Faltinsen linear potential theory · McIver · API 650 Annex E",
          path="structural/sloshing-explorer.html",
