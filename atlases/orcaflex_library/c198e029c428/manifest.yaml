@@ -30,7 +30,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder max line tension \u2014 replace with a licensed OrcaFlex\
-      \ run per case (operator, dev-secondary)."
+      \ run per case (operator, 32-core workstation)."
   coverage:
     key_axis: case
     covered_cases:

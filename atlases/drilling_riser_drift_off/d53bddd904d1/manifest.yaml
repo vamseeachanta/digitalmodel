@@ -37,7 +37,8 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder drift-off dynamic amplification \u2014 replace with\
-      \ a licensed OrcaFlex time-domain run per operating mode (operator step, dev-secondary)."
+      \ a licensed OrcaFlex time-domain run per operating mode (operator step, 32-core\
+      \ workstation)."
   coverage:
     key_axis: mode
     covered_cases:

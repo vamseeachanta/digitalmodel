@@ -41,7 +41,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder heave RAO \u2014 replace with a licensed diffraction\
-      \ run per case (operator, dev-secondary)."
+      \ run per case (operator, 32-core workstation)."
   coverage:
     key_axis: case
     covered_cases:

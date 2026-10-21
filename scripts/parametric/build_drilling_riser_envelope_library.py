@@ -93,7 +93,7 @@ def main() -> None:
             "run_date": "STUB",
             "note": "synthetic placeholder von-Mises dynamic amplification — "
                     "replace with a licensed OrcaFlex time-domain run per "
-                    "operating mode (operator step, dev-secondary).",
+                    "operating mode (operator step, 32-core workstation).",
         },
         coverage_note=(
             "STUB drilling-riser von-Mises dynamic-amplification library, 3 "
