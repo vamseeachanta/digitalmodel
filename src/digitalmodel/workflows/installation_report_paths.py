@@ -20,16 +20,16 @@ def display_cases(summary, config, base):
     locator = config.get('dataset_root')
     if not isinstance(locator, str) or not locator or locator.startswith('/') or '\\' in locator or ':' in locator:
         raise ValueError('dataset_root must be an explicit relative locator')
-    root = (Path(base) / locator).resolve()
+    root = Path(os.path.normpath(os.path.join(base, locator))).resolve()
     rows = []
     for row in summary['cases']:
         entry = mapping[str(row['index'])]
         if (not isinstance(entry, str) or not entry or '\\' in entry or ':' in entry
                 or entry.startswith('/') or '..' in PurePosixPath(entry).parts):
             raise ValueError('Case mapping entries must be relative without traversal')
-        resolved = (root / entry).resolve()
+        run_dir = os.path.normpath(os.path.join(base, locator, entry))
+        resolved = Path(run_dir).resolve()
         if not resolved.is_relative_to(root):
             raise ValueError('Case mapping resolves outside dataset root')
-        run_dir = os.path.normpath(os.path.join(base, locator, entry))
         rows.append(dict(row, run_dir=run_dir))
     return rows
