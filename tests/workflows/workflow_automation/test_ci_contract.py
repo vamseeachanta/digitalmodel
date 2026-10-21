@@ -1,8 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Regression contracts for the workflow automation CI job (issue #1958).
 
 Expected dependencies come from the workflow's coverage and benchmark consumers
@@ -130,7 +128,9 @@ def test_workflow_selects_repository_coverage_gate(workflow):
 
 @pytest.mark.parametrize("section", ["run", "report", "html", "xml", "json"])
 def test_coverage_configurations_agree(section):
-    """Default discovery and explicit TOML selection must share settings."""
+    """Every TOML setting in these sections must match default discovery.
+
+    INI-only options and sections are intentionally outside this contract."""
     coverage = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
     config = configparser.ConfigParser(interpolation=None)
     config.read(REPO / ".coveragerc")
@@ -146,3 +146,38 @@ def test_coverage_configurations_agree(section):
         else:
             actual = config.get(section, option)
         assert actual == expected, f"{section}.{option} differs between configurations"
+
+
+def test_matrix_collects_evidence_after_other_leg_failure(workflow):
+    """A coverage shortfall on one interpreter must not cancel another."""
+    assert workflow["jobs"]["test"]["strategy"]["fail-fast"] == "false"
+
+
+@pytest.mark.parametrize("name", ["Test CLI commands", "Verify package installation"])
+def test_smoke_checks_run_after_failure_unless_cancelled(workflow, name):
+    """Test, upload and coverage failures must not hide smoke-check evidence."""
+    steps = workflow["jobs"]["test"]["steps"]
+    step = next(step for step in steps if step.get("name") == name)
+    assert step["if"] == "${{ !cancelled() }}"
+
+
+def test_coverage_threshold_is_a_separate_final_step(workflow):
+    """Keep pytest's outcome independent and enforce the inherited gate last."""
+    steps = workflow["jobs"]["test"]["steps"]
+    tests = next(s for s in steps if s.get("name") == "Run workflow automation tests")
+    assert "--cov-fail-under=0" in shlex.split(tests["run"])
+    assert "continue-on-error" not in tests
+    gate = steps[-1]
+    assert gate["name"] == "Enforce coverage threshold"
+    assert gate["if"] == "${{ !cancelled() }}"
+    assert shlex.split(gate["run"]) == [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-m",
+        "coverage",
+        "report",
+        "--rcfile=pyproject.toml",
+    ]
+    assert "continue-on-error" not in gate

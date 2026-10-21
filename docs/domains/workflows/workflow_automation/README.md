@@ -16,6 +16,7 @@ This repairs the dependency mismatch reported in issue #1958.
 | --- | --- | --- |
 | A | 2026-10-19 | Document the corrected test installation and heartbeat so an old passing run is not treated as current evidence. |
 | B | 2026-10-19 | Select the coverage threshold explicitly, align shared coverage settings and explain test-extra side effects so a passing heartbeat has a defined meaning. |
+| C | 2026-10-21 | Separate test and coverage outcomes and retain smoke checks and both matrix legs after failures. |
 
 ## Execution and coverage
 
@@ -24,12 +25,27 @@ coverage collection/upload. Push and pull-request path filters include the
 module, its tests, the workflow, `pyproject.toml`, `.coveragerc`, `uv.lock` and `pytest.ini`.
 Dependency and collection changes therefore request fresh execution.
 
-The test command explicitly selects `--cov-config=pyproject.toml`, including the
-repository's 80.0% coverage threshold. Overlapping settings in `.coveragerc`
-are aligned with that configuration and protected by regression contracts.
-Previously, automatic discovery selected `.coveragerc`, which had no threshold;
-a passing run therefore did not establish 80.0% coverage. With explicit selection,
-the job fails while measured coverage remains below the threshold.
+The test command selects `--cov-config=pyproject.toml` and overrides the
+threshold only during collection with `--cov-fail-under=0`. Its conclusion
+therefore reports test failures independently of the coverage shortfall. A final
+**Enforce coverage threshold** step runs `python -m coverage report
+--rcfile=pyproject.toml`, enforcing the repository's existing 80.0% threshold.
+The job is expected to remain red until coverage meets that criterion; inspect
+individual step conclusions to distinguish coverage, test, install and smoke
+check failures. At the reviewed revision, hosted Python 3.11 passed 131 tests
+with 50.57% coverage; Python 3.12 was cancelled. Those results precede this fix.
+
+Matrix `fail-fast: false` preserves evidence from both Python versions. CLI and
+import checks, and the final coverage check, run after earlier failures unless
+the workflow is cancelled. Coverage upload precedes the threshold check; a
+coverage shortfall alone therefore no longer suppresses upload or smoke checks.
+An earlier test failure can still suppress upload under its default condition.
+
+TOML settings in the run, report, HTML, XML and JSON sections are also checked
+against `.coveragerc`. INI-only settings (`context`, `sort`, `ignore_errors`,
+`[lcov]` and `[paths]`) are outside that one-way contract. `.coveragerc` also
+sets 80.0%, so ad hoc `pytest --cov` commands using default discovery enforce
+that threshold unless explicitly overridden. Previously it had no threshold.
 
 The daily schedule is `43 6 * * *` in UTC, independently of those path filters.
 The time is an operational choice. `workflow_dispatch` permits an immediate
@@ -67,13 +83,14 @@ From the repository root, reproduce the hosted job in an isolated environment:
 uv venv --python 3.11
 uv pip install --no-sources -e ".[dev,test]"
 uv run --no-sync pytest tests/workflows/workflow_automation/ -v \
-  --cov=digitalmodel.workflows.workflow_automation --cov-config=pyproject.toml \
+  --cov=digitalmodel.workflows.workflow_automation --cov-config=pyproject.toml --cov-fail-under=0 \
   --cov-report=xml --cov-report=term
 uv run --no-sync workflow-automation list
+uv run --no-sync python -m coverage report --rcfile=pyproject.toml
 ```
 
 The outputs are a pytest summary, coverage XML and terminal table, and a CLI
-listing. A successful test command also requires meeting the repository's
+listing. The final coverage command requires meeting the repository's
 coverage gate, even if every test passes. This example checks dependency
 installation and workflow behavior; it does not execute engineering solvers.
 The regression contracts in `test_ci_contract.py`
