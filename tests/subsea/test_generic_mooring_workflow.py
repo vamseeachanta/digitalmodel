@@ -5,6 +5,8 @@ All numbers below are invented mathematical test inputs, not design data.
 
 import copy
 import html
+import importlib.util
+import json
 import re
 from pathlib import Path
 
@@ -43,7 +45,7 @@ def test_inventory_rejects_unknown_removed_line():
 def test_unspecified_damage_is_explicit():
     damaged = [c for c in build_case_table(ROOT) if c["condition"] == "damaged"]
     assert all(c["removed_line"] is None for c in damaged)
-    assert all("damaged line" in c["limitations"] for c in damaged)
+    assert all(c["limitations"] == "damaged line unspecified" for c in damaged)
 
 
 def test_catenary_hand_calculation():
@@ -58,6 +60,40 @@ def test_catenary_hand_calculation():
     assert result["top_tension_kn"] == pytest.approx(125)
     assert result["suspended_length_m"] == pytest.approx(75)
     assert result["anchor_radius_m"] == pytest.approx(94.31471805599453)
+
+
+@pytest.mark.parametrize(
+    "horizontal_kn,weight_kn_m,height_m,length_m",
+    [(100, 1, 25, 100), (40, 1, 24, 100), (2, 0.0004, 10, 400)],
+)
+def test_catenary_matches_existing_repository_screen(
+    horizontal_kn, weight_kn_m, height_m, length_m
+):
+    """Match grounded geometry after the reference's two-decimal rounding.
+
+    Convert kN/m to N/m and prescribe T=H+w*h, avoiding its geometry default.
+    Load the analytical module directly, without unrelated package integrations.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "mooring_design_reference", ROOT / "src/digitalmodel/orcaflex/mooring_design.py"
+    )
+    assert spec is not None and spec.loader is not None
+    reference = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(reference)
+    existing = reference.solve_catenary(
+        water_depth=height_m,
+        line_length=length_m,
+        submerged_weight_per_m=1000 * weight_kn_m,
+        pretension=horizontal_kn + weight_kn_m * height_m,
+    )
+    screened = catenary_screen(horizontal_kn, weight_kn_m, height_m, length_m)
+    for key, attribute in (
+        ("top_tension_kn", "top_tension"),
+        ("suspended_length_m", "suspended_length"),
+        ("grounded_length_m", "grounded_length"),
+        ("anchor_radius_m", "anchor_radius"),
+    ):
+        assert round(screened[key], 2) == pytest.approx(getattr(existing, attribute))
 
 
 @pytest.mark.parametrize(
@@ -130,7 +166,7 @@ def test_stored_metrics_and_comparison():
     """Hand check: max(40/100,80/200)=0.4; limit=0.5 -> utilisation=0.8.
 
     Offset norm sqrt(3²+4²)=5 m; screen 4 m -> difference=25.0%.
-    Tension screen 64 kN vs stored maximum 80 kN -> difference=25.0%.
+    Tension screen 64 kN vs screened line Mooring_L2 at 80 kN -> difference=25.0%.
     Limits/capacities are arbitrary test inputs, not code criteria.
     """
     case = build_case_table(ROOT)[0]
@@ -187,7 +223,7 @@ def test_result_validation(mutation):
         assess_case(case, data)
 
 
-def test_report_missing_rows_and_escaping():
+def test_report_keeps_missing_rows_visible():
     cases = build_case_table(ROOT)
     report = render_report(cases, {}, revision="00", date="2026-10-20")
     assert "Mooring analysis" in report
@@ -279,6 +315,55 @@ def test_report_rounds_comparison_including_echo():
     assert "66.666" not in report
 
 
+def test_offset_comparison_declares_direction_is_not_compared():
+    """A 4 m y-offset and a 4 m x-screen have equal magnitudes only."""
+    cases = build_case_table(ROOT)
+    case = cases[0]
+    result = metric(case)
+    result["offset_xy_m"] = [0, 4]
+    out = assess_case(case, result, screen=screen_record(offset_m=4))
+    assert out["offset_difference_pct"] == 0
+    report = render_report(
+        cases, {case["case_id"]: out}, revision="03", date="2026-10-21"
+    )
+    assert (
+        "Offset comparisons use magnitudes only; direction is not compared." in report
+    )
+
+
+def test_report_echo_preserves_small_nonzero_inputs():
+    cases = build_case_table(ROOT)
+    case = cases[0]
+    screen = screen_record(offset_m=0.0004)
+    screen["inputs"]["catenary"]["weight_kn_m"] = 0.0004
+    out = assess_case(case, metric(case), screen=screen)
+    report = render_report(
+        cases, {case["case_id"]: out}, revision="03", date="2026-10-21"
+    )
+    section = re.search(r'<section id="input-echo">(.*?)</section>', report, re.DOTALL)
+    assert section is not None
+    echoed = dict(
+        re.findall(
+            r"<tr><td>(.*?)</td><td>(.*?)</td></tr>",
+            html.unescape(section.group(1)),
+            re.DOTALL,
+        )
+    )
+    echoed_cases = json.loads(echoed["cases"])
+    assert len(echoed_cases) == 32
+    for original, displayed in zip(cases, echoed_cases):
+        viscosity = original["environment"]["values"]["KinematicViscosity"]
+        assert viscosity > 0
+        assert displayed["environment"]["values"]["KinematicViscosity"] == viscosity
+    prefix = f"assessments.{case['case_id']}.screen."
+    assert float(echoed[prefix + "inputs.catenary.weight_kn_m"]) == 0.0004
+    assert float(echoed[prefix + "offset_m"]) == 0.0004
+    assert json.loads(echoed[prefix + "inputs.linear_offset.force_xy_kn"]) == [
+        0.0004,
+        0,
+    ]
+
+
 @pytest.mark.parametrize("ratio", [0, -1, 1.1, float("nan"), float("inf")])
 def test_invalid_criteria_are_rejected(ratio):
     case = build_case_table(ROOT)[0]
@@ -289,6 +374,58 @@ def test_invalid_criteria_are_rejected(ratio):
             capacities_kn={name: 200 for name in case["active_lines"]},
             limit={"ratio": ratio, "source": "test-only"},
         )
+
+
+@pytest.mark.parametrize("with_result", [False, True])
+@pytest.mark.parametrize(
+    "limit",
+    [
+        0.5,
+        True,
+        [],
+        "0.5",
+        {},
+        {"ratio": 0.5},
+        {"source": "test-only"},
+        {"ratio": True, "source": "test-only"},
+        {"ratio": 0.5, "source": 4},
+        {"ratio": 1.1, "source": "test-only"},
+    ],
+)
+def test_invalid_limit_is_rejected_before_reporting(limit, with_result):
+    case = build_case_table(ROOT)[0]
+    with pytest.raises(ValueError, match="limit"):
+        assess_case(case, metric(case) if with_result else None, limit=limit)
+
+
+@pytest.mark.parametrize(
+    "field", ["basis_sha256", "tensions_kn", "offset_xy_m", "solver_version", "source"]
+)
+def test_missing_result_field_is_rejected_as_value_error(field):
+    case = build_case_table(ROOT)[0]
+    result = metric(case)
+    del result[field]
+    with pytest.raises(ValueError, match=field):
+        assess_case(case, result)
+
+
+@pytest.mark.parametrize("result", [0.5, [], "metrics"])
+def test_result_requires_a_record(result):
+    case = build_case_table(ROOT)[0]
+    with pytest.raises(ValueError, match="result"):
+        assess_case(case, result)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [("tensions_kn", None), ("tensions_kn", 1), ("offset_xy_m", None)],
+)
+def test_result_field_shape_is_rejected_as_value_error(field, value):
+    case = build_case_table(ROOT)[0]
+    result = metric(case)
+    result[field] = value
+    with pytest.raises(ValueError, match=field):
+        assess_case(case, result)
 
 
 def test_unspecified_damage_cannot_pass_supplied_criterion():

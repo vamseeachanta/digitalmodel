@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-# Enumeration prescribed by issue 2426, not standard-required directional coverage.
+# Proposed enumeration for issue 2426, not standard-required directional coverage.
 HEADINGS_DEG = tuple(range(0, 360, 45))
 TEMPLATE_ROOT = Path("docs/domains/orcaflex/templates/mooring_systems")
 CATENARY_SOURCE = (
@@ -80,7 +80,7 @@ def build_case_table(repo_root: Path, damaged_lines: dict | None = None) -> list
                         },
                         "model_status": "NOT_EVALUATED",
                         "limitations": (
-                            "damaged line"
+                            "damaged line unspecified"
                             if condition == "damaged" and selected is None
                             else "physical input readiness and native model validation pending"
                         ),
@@ -184,6 +184,36 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
     inputs or an input_manifest reference. Its tension is matched to line_id.
     Supplied extracted metrics do not establish native-output qualification.
     """
+    if limit is not None:
+        if not isinstance(limit, dict):
+            raise ValueError("limit must be a record with ratio and source")
+        ratio = _finite(limit.get("ratio"), "limit ratio", positive=True)
+        if (
+            ratio > 1
+            or not isinstance(limit.get("source"), str)
+            or not limit["source"].strip()
+        ):
+            raise ValueError("ratio limit requires a source and cannot exceed unity")
+    if result is not None:
+        if not isinstance(result, dict):
+            raise ValueError("result must be a record")
+        required = (
+            "basis_sha256",
+            "tensions_kn",
+            "offset_xy_m",
+            "solver_version",
+            "source",
+        )
+        missing = [field for field in required if field not in result]
+        if missing:
+            raise ValueError(f"result requires {', '.join(missing)}")
+        if not isinstance(result["tensions_kn"], dict):
+            raise ValueError("tensions_kn must be a line-to-tension record")
+        if (
+            not isinstance(result["offset_xy_m"], (list, tuple))
+            or len(result["offset_xy_m"]) != 2
+        ):
+            raise ValueError("offset_xy_m requires two horizontal components")
     out = {
         "case_id": case["case_id"],
         "status": "NOT_EVALUATED",
@@ -212,8 +242,6 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
         if _finite(value, "tension") < 0:
             raise ValueError("tension cannot be negative")
     xy = result["offset_xy_m"]
-    if len(xy) != 2:
-        raise ValueError("offset requires two horizontal components")
     out["offset_m"] = math.hypot(*[_finite(v, "offset") for v in xy])
     out["max_tension_kn"] = max(tensions.values())
     out["solver_version"] = result["solver_version"]
@@ -225,13 +253,6 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
     if capacities_kn is not None and limit is not None:
         if set(capacities_kn) != set(tensions):
             raise ValueError("capacities must cover exactly the active lines")
-        ratio = _finite(limit["ratio"], "limit", positive=True)
-        if (
-            ratio > 1
-            or not isinstance(limit.get("source"), str)
-            or not limit["source"].strip()
-        ):
-            raise ValueError("ratio limit requires a source and cannot exceed unity")
         utils = {
             name: tension
             / _finite(capacities_kn[name], "capacity", positive=True)
@@ -261,15 +282,24 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
     return out
 
 
-def _presentation_echo(value, key=""):
-    """Round report display only; assessment calculations remain unrounded."""
-    if isinstance(value, dict):
-        return {name: _presentation_echo(item, name) for name, item in value.items()}
-    if isinstance(value, list):
-        return [_presentation_echo(item) for item in value]
-    if isinstance(value, float):
-        return round(value, 1 if key.endswith("_pct") else 3)
-    return value
+def _presentation_echo(assessment):
+    """Round computed metrics for display; preserve input records unrounded."""
+    computed = {
+        "utilisation",
+        "offset_m",
+        "offset_difference_pct",
+        "tension_difference_pct",
+        "max_tension_kn",
+        "peak_mbl_ratio",
+    }
+    return {
+        key: (
+            round(value, 1 if key.endswith("_pct") else 3)
+            if key in computed and isinstance(value, float)
+            else value
+        )
+        for key, value in assessment.items()
+    }
 
 
 def render_report(cases, assessments, *, revision, date) -> str:
@@ -357,7 +387,12 @@ def render_report(cases, assessments, *, revision, date) -> str:
             date=date,
         ),
         provenance=provenance,
-        input_echo=_presentation_echo({"cases": cases, "assessments": assessments}),
+        input_echo={
+            "cases": cases,
+            "assessments": {
+                key: _presentation_echo(item) for key, item in assessments.items()
+            },
+        },
         sections=[
             Section(
                 key="summary",
@@ -418,12 +453,13 @@ def render_report(cases, assessments, *, revision, date) -> str:
                 blocks=[
                     TextBlock(
                         markdown=(
-                            "Case headings enumerate the issue scope; they are not code-required coverage. "
+                            "Case headings are a proposed enumeration; they are not code-required coverage. "
                             "Template environments are different between arrangements and cannot establish "
                             "a matched benchmark. Catenary screening assumes uniform submerged weight, "
                             "inextensible line and frictionless horizontal touchdown. Linear Kq=F offsets "
                             "exclude yaw and nonlinear redistribution. Percent differences use the screen "
                             "as denominator; tension comparisons use the identified active line. "
+                            "Offset comparisons use magnitudes only; direction is not compared. "
                             "The screen source and physical inputs or manifest reference are retained "
                             "in the input echo. A zero screen leaves the difference not established.\n\n"
                             + CATENARY_SOURCE
