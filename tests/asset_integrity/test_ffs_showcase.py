@@ -88,6 +88,27 @@ def test_showcase_dnv_uses_corrected_part_b_factor(preset_index):
     _assert_showcase_part_b(driver, driver.PRESETS[preset_index])
 
 
+def test_showcase_part_b_matches_hand_calculation(showcase_data):
+    driver = _load_driver()
+    preset = driver.PRESETS[1]
+    # For D=30, t=0.375, d=0.150, L=8 in and SMTS=66,700 psi:
+    # Q=sqrt(1+0.31*8**2/(30*0.375))=1.6624;
+    # capacity=(2*0.375*66700/29.625)*0.6/(1-0.4/Q)=1334.19 psi.
+    # Part B safe pressure=0.648*capacity=864.56 psi.
+    assert _part_b_reference(preset).capacity_pressure_psi == pytest.approx(
+        1334.19, abs=0.05
+    )
+    safe = driver._safe_pressure(
+        "DNV-RP-F101", 30.0, 0.375, 0.150, 8.0, 52_000.0, 66_700.0,
+    )
+    assert safe == pytest.approx(864.56, abs=0.05)
+    corroded = showcase_data["corroded"]
+    row = corroded["depths_pct"].index(40.0)
+    column = corroded["lengths"].index(8.0)
+    grid = corroded["grids"][preset[0] + "|DNV-RP-F101"]
+    assert grid["safe"][row][column] == pytest.approx(864.6, abs=0.05)
+
+
 def test_part_b_regression_rejects_deprecated_total_factor(monkeypatch):
     driver = _load_driver()
 
@@ -127,9 +148,9 @@ def test_showcase_notice_and_qualification_limits(showcase_data, monkeypatch, so
             encoding="utf-8"
         )
     notice = (
-        "Safe pressures from the DNV-RP-F101 option on this page were calculated "
-        "with a superseded usage factor and are being re-verified; do not use "
-        "them for decisions."
+        "DNV-RP-F101 safe pressures were corrected on 2026-10-20 to apply the "
+        "Part B modelling factor (F = F1·F2); independent verification is "
+        "pending; do not use them for decisions."
     )
     assert html.index("<body>") < html.index(notice) < html.index("<header>")
     assert 'role="alert"' in html

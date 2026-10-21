@@ -75,7 +75,6 @@ PRESETS = [
 METHODS = ["B31G", "Modified B31G", "RSTRENG", "DNV-RP-F101"]
 
 DESIGN_FACTOR = ASME_B318_CLASS1_DESIGN_FACTOR
-SAFETY_FACTOR = 1.39  # B31G safe-pressure safety factor
 
 
 def _maop_psi(D: float, t: float, smys: float) -> float:
@@ -377,7 +376,7 @@ def _render_html(data: dict) -> str:
 <body>
 <div class="wrap">
   <div class="panel callout" role="alert">
-    <b>Safe pressures from the DNV-RP-F101 option on this page were calculated with a superseded usage factor and are being re-verified; do not use them for decisions.</b>
+    <b>DNV-RP-F101 safe pressures were corrected on 2026-10-20 to apply the Part B modelling factor (F = F1·F2); independent verification is pending; do not use them for decisions.</b>
   </div>
 </div>
 <header>
@@ -400,7 +399,10 @@ def _render_html(data: dict) -> str:
       <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
       <tbody><tr><td>1</td><td>2026-10-20</td><td>Correct the Part B pressure input,
         mark representative examples and qualify implementation checks. Retain the
-        decision-use notice pending verification.</td></tr></tbody>
+        decision-use notice pending verification.</td></tr>
+      <tr><td>2</td><td>2026-10-20</td><td>Clarify the warning to state the corrected
+        Part B basis; retain the decision-use restriction pending independent
+        verification.</td></tr></tbody>
     </table>
   </div>
 
