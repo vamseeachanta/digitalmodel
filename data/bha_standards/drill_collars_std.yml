@@ -212,7 +212,11 @@ components:
   od: {value: 209.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '209,6', as_published_on: '2004'}
   id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
   length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
-  bevel_diameter: {value: 195.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '195,6', as_published_on: '2004'}
+  # Source-check status: issues #2716 and #2629; retain the supplied value.
+  bevel_diameter: {value: 195.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '195,6', as_published_on: '2004',
+    verification: pending,
+    verification_reason: 'Comparison against licensed ISO 10424-1:2004 Table 14 with its printed page is outstanding; an inch conversion does not verify the printed value.',
+    verification_issue: '#2629'}
   reference_bsr: {value: 2.93, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,93:1', as_published_on: '2004'}
   weight_per_length: {value: 160.71565813131622, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
 - component_id: DC-STD-NC61-90-B71.4

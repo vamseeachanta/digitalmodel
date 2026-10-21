@@ -103,6 +103,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+metocean = [
+    # API tested against the published metocean-stats 1.2.0 distribution.
+    "metocean-stats==1.2.0",
+]
 fowt = [
     "capytaine==3.0.0",
     "moorpy==1.3.0",
@@ -166,6 +170,8 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Exercise the optional adapter against the same published backend release.
+    "metocean-stats==1.2.0",
     "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",
