@@ -245,8 +245,9 @@ therefore invalidate readback, and expanded legacy tables retain the same digest
 
 Criteria are declared before any run in `config/cfd/kcs_step3_qa.json` and pinned
 by digest. Each group's basis is recorded in `threshold_basis`. The retained
-choices are assumed, based on previous experience; a maintainer decision on the
-new threshold groups is not recorded. These are provisional diagnostic thresholds, not
+choices are labelled `provisional; no basis recorded`; a dated maintainer
+decision or cited source is still required for the new threshold groups.
+These are provisional diagnostic thresholds, not
 experimental uncertainty: absolute limits are 0.1 for scaled resistance and
 phase (radians), 0.05 for normalized motions, and 0.001 for normalized incident
 wave amplitude. Each quantity's allowed window drift is one fifth of its
@@ -254,11 +255,17 @@ comparison limit. At least 32 regularly spaced samples per encounter cycle are
 required, with five discarded cycles followed by two complete five-cycle
 windows. Fit-residual RMS limits are 0.02 for scaled resistance, 0.01 for each
 normalized motion and 0.0002 for normalized incident wave elevation. These
-limits reject unstable or noisy content outside the retained harmonic basis.
+residuals diagnose content outside the retained harmonic basis.
 The CSV omits a duplicated terminal cycle endpoint. Residual, y+ and
 free-surface checks reuse step 1's observed-diagnostics routine and declared
 limits. These checks do not establish wave-resolution adequacy or reflection
 uncertainty for a future production campaign.
+
+Until every provisional group's `decision` is recorded in a reviewed policy
+revision, reports carry `status: PENDING_THRESHOLD_DECISION`. Quantity, fit,
+comparison, coarse-smoke and amplitude-GCI verdicts are `null`; computed values,
+errors, drift and GCI estimates remain available as diagnostics. The comparison
+and triplet CLI commands return a nonzero exit status for pending verdicts.
 
 At the fourth retained harmonic, 32 samples per encounter cycle give 8 samples
 per harmonic period, above the Nyquist minimum of 2. This does not derive the
@@ -277,8 +284,9 @@ PYTHONPATH=src python scripts/cfd/readback_kcs_step3.py compare --condition C1 -
 Use `admit --next-mesh medium` or `admit --next-mesh fine` with a native coarse
 history/metadata pair. The existing step-1 `require_run_admission` API routes
 explicit `case="2.10", condition_id="C1"` requests to the wave gate. Missing
-reference readback, criteria or passing coarse evidence refuses admission;
-the fixture shipped here therefore refuses all native admission. File readback
+reference readback, criteria or passing coarse evidence refuses admission.
+Medium/fine admission also requires recorded threshold decisions.
+The fixture shipped here therefore refuses all native admission. File readback
 recomputes the comparison instead of trusting a saved PASS. Evidence declarations
 and digests establish consistency, not external authenticity. A future launcher
 must enforce this API immediately before execution; no existing launcher is

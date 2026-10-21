@@ -39,6 +39,11 @@ def validate_policy(policy: dict) -> None:
         raise ValueError('criteria missing, malformed or changed; reviewed revision required')
 
 
+def _thresholds_pending(policy: dict) -> bool:
+    return any('decision' in group and group['decision'] is None
+               for group in policy['threshold_basis'].values())
+
+
 def load_policy(path: Path) -> dict:
     try:
         policy = json.loads(Path(path).read_text(encoding='utf-8'))
@@ -184,6 +189,7 @@ def compare_rows(rows: list[dict], metadata: dict, row: dict, policy: dict) -> d
     function does not claim to read a solver-specific force-file dialect.
     """
     validate_policy(policy)
+    pending = _thresholds_pending(policy)
     _basis(metadata, row, policy)
     windows = _windows(rows, policy)
     previous, last = [_harmonics(w, policy['history']['phase_amplitude_floor']) for w in windows]
@@ -197,18 +203,21 @@ def compare_rows(rows: list[dict], metadata: dict, row: dict, policy: dict) -> d
         drift = difference(actual, before) if evaluated else None
         quantities[key] = dict(computed=actual, reference=expected, units=spec['units'],
                                absolute_error=error, absolute_tolerance=spec['limit'],
-                               window_drift=drift, status='EVALUATED' if evaluated else 'NOT_EVALUATED',
-                               passed=bool(evaluated and error <= spec['limit'] and drift <= spec['maximum_window_drift']))
+                               window_drift=drift,
+                               status=('PENDING_THRESHOLD_DECISION' if pending else 'EVALUATED') if evaluated else 'NOT_EVALUATED',
+                               passed=None if pending else bool(evaluated and error <= spec['limit'] and drift <= spec['maximum_window_drift']))
     fit = {key: max(part['_fit_residual_rms'][key] for part in (previous, last))
            for key in (*SIGNALS, 'wave_over_lpp')}
-    fit_passed = all(value <= policy['history']['maximum_fit_residual_rms'][key] for key, value in fit.items())
-    passed = all(q['passed'] for q in quantities.values()) and fit_passed
+    fit_passed = None if pending else all(value <= policy['history']['maximum_fit_residual_rms'][key] for key, value in fit.items())
+    passed = None if pending else all(q['passed'] for q in quantities.values()) and fit_passed
+    status = 'PENDING_THRESHOLD_DECISION' if pending else 'EVALUATED'
     # In-memory calculations are diagnostics only; file hashes and observed
     # mesh/residual diagnostics are checked by compare_run before smoke PASS.
-    return dict(schema_version=1, comparison_passed=passed, coarse_smoke_passed=False,
+    return dict(schema_version=1, status=status, comparison_passed=passed,
+                coarse_smoke_passed=None if pending else False,
                 qualified=False, evidence_kind=metadata['evidence_kind'], mesh=metadata['mesh'],
                 condition_id=row['id'], reference_sha256=digest(row), criteria_sha256=digest(policy),
-                quantities=quantities, history_fit={'passed': fit_passed, 'maximum_window_rms': fit},
+                quantities=quantities, history_fit={'status': status, 'passed': fit_passed, 'maximum_window_rms': fit},
                 grid_uncertainty='NOT_EVALUATED')
 
 
@@ -227,9 +236,10 @@ def compare_run(history: Path, metadata: dict, row: dict, policy: dict) -> dict:
     report = compare_rows(rows, metadata, row, policy)
     diagnostics = _diagnostics(metadata, policy, {'values': {'lpp': {'value': row['conditions']['lpp_m']}}})
     report.update(history_sha256=sha, diagnostics=diagnostics)
-    report['comparison_passed'] = report['comparison_passed'] and diagnostics['passed']
-    report['coarse_smoke_passed'] = bool(report['comparison_passed'] and reference_is_qualified(row)
-                                          and metadata['evidence_kind'] == 'native' and metadata['mesh'] == 'coarse')
+    if report['comparison_passed'] is not None:
+        report['comparison_passed'] = report['comparison_passed'] and diagnostics['passed']
+        report['coarse_smoke_passed'] = bool(report['comparison_passed'] and reference_is_qualified(row)
+                                              and metadata['evidence_kind'] == 'native' and metadata['mesh'] == 'coarse')
     return report
 
 
@@ -251,6 +261,8 @@ def require_run_admission(next_mesh: str, reference_path: Path, criteria_path: P
                   reference_sha256=digest(row), criteria_sha256=digest(policy))
     if next_mesh == 'coarse':
         return result
+    if _thresholds_pending(policy):
+        raise ValueError('PENDING_THRESHOLD_DECISION: recorded threshold decisions are required')
     if coarse_history is None or coarse_metadata is None:
         raise ValueError('passing coarse smoke evidence is required')
     try:
@@ -273,6 +285,7 @@ def amplitude_gci(h: list[float], values: list[float], *, minimum_order: float =
 def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, policy: dict) -> dict:
     """GCI for positive harmonics only; no phase or signed-mean qualification."""
     validate_policy(policy)
+    pending = _thresholds_pending(policy)
     try:
         if len(histories) != 3 or len(metadata) != 3 or {m['mesh'] for m in metadata} != {'fine', 'medium', 'coarse'}:
             raise ValueError('three distinct meshes are required')
@@ -290,7 +303,7 @@ def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, poli
                 if a['free_surface'][key] <= 0 or b['free_surface'][key] <= 0 or not math.isclose(b['free_surface'][key] / a['free_surface'][key], b['h_m'] / a['h_m'], rel_tol=1e-6):
                     raise ValueError('surface spacing is not systematically refined')
         reports = [compare_run(path, meta, row, policy) for path, meta in pairs]
-        if not all(r['comparison_passed'] for r in reports):
+        if not pending and not all(r['comparison_passed'] for r in reports):
             raise ValueError('every grid requires passing comparison and convergence')
         keys = [f'{quantity}_a{n}' for quantity in SIGNALS for n in range(1, 5)] + ['wave_over_lpp_a1']
         limits = {key: policy['gci'][key] for key in
@@ -298,5 +311,6 @@ def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, poli
         gci = {k: amplitude_gci(h, [r['quantities'][k]['computed'] for r in reports], **limits) for k in keys}
     except (KeyError, TypeError, ZeroDivisionError) as exc:
         raise ValueError('systematic mesh evidence is incomplete') from exc
-    return dict(qualified=False, amplitude_gci_passed=all(g['gci_fine_pct'] <= policy['gci']['maximum_fine_percent'] for g in gci.values()),
+    return dict(qualified=False, status='PENDING_THRESHOLD_DECISION' if pending else 'EVALUATED',
+                amplitude_gci_passed=None if pending else all(g['gci_fine_pct'] <= policy['gci']['maximum_fine_percent'] for g in gci.values()),
                 gci=gci, runs=reports, limitations='Phase and signed zero-harmonic grid uncertainty NOT_EVALUATED; no overall engineering qualification.')

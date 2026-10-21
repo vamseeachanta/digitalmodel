@@ -62,8 +62,12 @@ def test_reference_has_six_conditions_and_no_invented_experimental_responses():
 def test_analytical_fourier_conventions_and_synthetic_nonqualification():
     rows, meta, condition, policy = inputs()
     report = qa.compare_rows(rows, meta, condition, policy)
-    assert report['comparison_passed']
-    assert not report['coarse_smoke_passed']
+    assert report['comparison_passed'] is None
+    assert report['coarse_smoke_passed'] is None
+    assert report['status'] == 'PENDING_THRESHOLD_DECISION'
+    assert all(q['passed'] is None for q in report['quantities'].values())
+    assert all(q['status'] == 'PENDING_THRESHOLD_DECISION' for q in report['quantities'].values())
+    assert report['history_fit']['passed'] is None
     assert not report['qualified']
     for quantity in qa.SIGNALS:
         assert report['quantities'][quantity + '_a0']['computed'] == pytest.approx(2)
@@ -71,8 +75,10 @@ def test_analytical_fourier_conventions_and_synthetic_nonqualification():
 
 
 @pytest.mark.parametrize('problem', ['missing', 'duplicate', 'nan', 'ragged', 'short', 'irregular', 'drift', 'perturbed'])
-def test_bad_history_refuses_or_fails(problem):
+def test_bad_history_refuses_or_fails(problem, monkeypatch):
     rows, meta, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
+    meta['criteria_sha256'] = qa.digest(policy)
     if problem == 'missing':
         del rows[0]['ct_x1000']
     elif problem == 'duplicate':
@@ -131,8 +137,10 @@ def test_zero_wave_condition_refuses_normalized_wave_readback():
         qa.compare_rows(rows, meta, condition, policy)
 
 
-def test_phase_below_floor_is_not_evaluated_and_cannot_pass():
+def test_phase_below_floor_is_not_evaluated_and_cannot_pass(monkeypatch):
     rows, meta, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
+    meta['criteria_sha256'] = qa.digest(policy)
     for row in rows:
         row['heave_over_a'] = 1
     report = qa.compare_rows(rows, meta, condition, policy)
@@ -145,6 +153,7 @@ def test_phase_below_floor_is_not_evaluated_and_cannot_pass():
 def test_step1_dispatch_refuses_missing_step3_prerequisites(mesh, problem, monkeypatch):
     from digitalmodel.solvers.openfoam.validation import kcs_step1
     rows, meta, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
     reference = {'reference_rows': [condition]}
     monkeypatch.setattr(qa, 'load_reference', lambda path: reference if problem != 'reference' else (_ for _ in ()).throw(ValueError('reference missing')))
     monkeypatch.setattr(qa, 'reference_is_qualified', lambda row: True)
@@ -186,13 +195,16 @@ def test_native_readback_and_admission_bind_current_files(tmp_path):
     reference_path = tmp_path / 'reference.json'
     reference_path.write_text(json.dumps(reference))
     report = qa.compare_run(history, meta, condition, policy)
-    assert report['coarse_smoke_passed']
+    assert report['coarse_smoke_passed'] is None
+    assert report['comparison_passed'] is None
+    assert report['status'] == 'PENDING_THRESHOLD_DECISION'
     for mesh in ('medium', 'fine'):
-        assert qa.require_run_admission(mesh, reference_path, POLICY, history, metadata_path, condition_id='C1')['admitted']
+        with pytest.raises(ValueError, match='PENDING_THRESHOLD_DECISION'):
+            qa.require_run_admission(mesh, reference_path, POLICY, history, metadata_path, condition_id='C1')
     meta['history_sha256'] = '0' * 64
     metadata_path.write_text(json.dumps(meta))
     with pytest.raises(ValueError, match='history'):
-        qa.require_run_admission('medium', reference_path, POLICY, history, metadata_path, condition_id='C1')
+        qa.compare_run(history, meta, condition, policy)
 
 
 @pytest.mark.parametrize('field', ['source_sha256', 'table_sha256', 'status'])
@@ -215,7 +227,8 @@ def test_three_grid_report_uses_systematic_evidence(monkeypatch):
         return {'comparison_passed': True, 'quantities': {key: {'computed': 1 + .001 * metadata['h_m'] ** 2} for key in qa.QUANTITIES}}
     monkeypatch.setattr(qa, 'compare_run', compare)
     report = qa.compare_triplet([Path('f'), Path('m'), Path('c')], metas, condition, policy)
-    assert report['amplitude_gci_passed']
+    assert report['amplitude_gci_passed'] is None
+    assert report['status'] == 'PENDING_THRESHOLD_DECISION'
     assert not report['qualified']
     assert report['gci']['ct_x1000_a1']['p'] == pytest.approx(2)
     metas[-1]['numerics'] = 'different'
@@ -233,13 +246,18 @@ def test_wrong_source_conditions_cannot_admit_coarse(monkeypatch):
         qa.require_run_admission('coarse', Path('ref'), Path('policy'), condition_id='C1')
 
 
-def test_growth_outside_retained_harmonics_fails_history_convergence():
+@pytest.mark.parametrize('decisions_recorded', [False, True])
+def test_growth_outside_retained_harmonics_fails_history_convergence(decisions_recorded, monkeypatch):
     rows, meta, condition, policy = inputs()
+    if decisions_recorded:
+        record_synthetic_decisions(policy, monkeypatch)
+        meta['criteria_sha256'] = qa.digest(policy)
     for row in rows[320:]:
         row['heave_over_a'] += 10 * math.sin(10 * math.pi * row['time_over_Te'])
     report = qa.compare_rows(rows, meta, condition, policy)
     assert not report['comparison_passed']
-    assert not report['history_fit']['passed']
+    assert report['history_fit']['passed'] is (False if decisions_recorded else None)
+    assert report['history_fit']['maximum_window_rms']['heave_over_a'] > 1
 
 
 def test_cli_reports_pending_reference_without_writing_worktree(monkeypatch):
@@ -308,7 +326,8 @@ def test_real_triplet_excludes_phases_from_thirteen_amplitude_gcis(tmp_path, pha
         'pitch_over_ka_a1', 'pitch_over_ka_a2', 'pitch_over_ka_a3', 'pitch_over_ka_a4',
         'wave_over_lpp_a1',
     }
-    assert report['amplitude_gci_passed']
+    assert report['amplitude_gci_passed'] is None
+    assert report['status'] == 'PENDING_THRESHOLD_DECISION'
     assert not report['qualified']
     assert report['gci']['ct_x1000_a1']['p'] == pytest.approx(2)
 
@@ -333,7 +352,9 @@ def test_triplet_forwards_all_policy_gci_bounds(tmp_path, monkeypatch):
         return original(h, values, **limits)
 
     monkeypatch.setattr(qa, 'amplitude_gci', enforce_bounds)
-    assert qa.compare_triplet(histories, metadata, condition, policy)['amplitude_gci_passed']
+    report = qa.compare_triplet(histories, metadata, condition, policy)
+    assert report['amplitude_gci_passed'] is None
+    assert len(report['gci']) == 13
 
 
 def test_shared_response_provenance_preserves_qualification_and_cell_overrides():
@@ -365,12 +386,18 @@ def test_shared_source_edit_invalidates_verified_readback(field):
 
 
 @pytest.mark.parametrize('command', ['compare', 'triplet'])
-def test_cli_success_reads_real_evidence_and_writes_report(tmp_path, command):
+@pytest.mark.parametrize('decisions_recorded', [False, True])
+def test_cli_reads_real_evidence_and_writes_verdict(tmp_path, command, decisions_recorded, monkeypatch):
     import importlib.util
     spec = importlib.util.spec_from_file_location('head_wave_cli', ROOT / 'scripts/cfd/readback_kcs_step3.py')
     cli = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cli)
     _, _, condition, policy = inputs()
+    criteria_path = POLICY
+    if decisions_recorded:
+        record_synthetic_decisions(policy, monkeypatch)
+        criteria_path = tmp_path / 'criteria.json'
+        criteria_path.write_text(json.dumps(policy))
     histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
     reference = qa.load_reference(FIXTURE)
     reference['reference_rows'][1] = condition
@@ -378,13 +405,84 @@ def test_cli_success_reads_real_evidence_and_writes_report(tmp_path, command):
     reference_path.write_text(json.dumps(reference))
     output = tmp_path / 'report.json'
     args = [command, '--condition', 'C1', '--reference', str(reference_path),
-            '--criteria', str(POLICY), '--output', str(output)]
+            '--criteria', str(criteria_path), '--output', str(output)]
     count = 3 if command == 'triplet' else 1
     for history, meta in zip(histories[:count], metadata[:count]):
         metadata_path = tmp_path / f'{meta["mesh"]}.json'
         metadata_path.write_text(json.dumps(meta))
         args.extend(['--history', str(history), '--metadata', str(metadata_path)])
-    assert cli.main(args) == 0
+    assert cli.main(args) == (0 if decisions_recorded else 1)
     report = json.loads(output.read_text())
-    assert report['amplitude_gci_passed' if command == 'triplet' else 'comparison_passed']
+    assert report['amplitude_gci_passed' if command == 'triplet' else 'comparison_passed'] is (True if decisions_recorded else None)
+    if not decisions_recorded:
+        assert report['status'] == 'PENDING_THRESHOLD_DECISION'
     assert not report['qualified']
+
+
+def record_synthetic_decisions(policy, monkeypatch):
+    """Model a separate policy revision for analytical controls only."""
+    for group in policy['threshold_basis'].values():
+        if 'decision' in group:
+            group['decision'] = '2000-01-01: synthetic decision for analytical controls only'
+    monkeypatch.setattr(qa, 'POLICY_SHA256', qa.digest(policy))
+
+
+@pytest.mark.parametrize('pending_group', [
+    None, 'harmonic_comparison', 'window_drift', 'sampling', 'windows',
+    'phase_amplitude_floor', 'fit_residual',
+])
+def test_each_threshold_decision_is_required_for_comparison(pending_group, monkeypatch):
+    rows, meta, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
+    if pending_group is not None:
+        policy['threshold_basis'][pending_group]['decision'] = None
+        monkeypatch.setattr(qa, 'POLICY_SHA256', qa.digest(policy))
+    meta['criteria_sha256'] = qa.digest(policy)
+    report = qa.compare_rows(rows, meta, condition, policy)
+    expected = True if pending_group is None else None
+    assert report['comparison_passed'] is expected
+    assert report['history_fit']['passed'] is expected
+    assert all(q['passed'] is expected for q in report['quantities'].values())
+    if pending_group is not None:
+        assert report['status'] == 'PENDING_THRESHOLD_DECISION'
+    for row in rows:
+        row['ct_x1000'] += 1
+    failed = qa.compare_rows(rows, meta, condition, policy)
+    assert failed['comparison_passed'] is (False if pending_group is None else None)
+    assert failed['quantities']['ct_x1000_a0']['absolute_error'] == pytest.approx(2)
+
+
+def test_recorded_decisions_require_a_reviewed_policy_pin():
+    rows, meta, condition, policy = inputs()
+    policy['threshold_basis']['harmonic_comparison']['decision'] = '2000-01-01: synthetic control'
+    meta['criteria_sha256'] = qa.digest(policy)
+    with pytest.raises(ValueError, match='reviewed revision'):
+        qa.compare_rows(rows, meta, condition, policy)
+
+
+def test_recorded_decisions_restore_file_verdicts_and_admission(tmp_path, monkeypatch):
+    _, _, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
+    condition['readback'].update(status='verified', source_sha256='a' * 64)
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
+    for meta in metadata:
+        meta['evidence_kind'] = 'native'
+    reference = qa.load_reference(FIXTURE)
+    reference['reference_rows'][1] = condition
+    reference_path, criteria_path = tmp_path / 'reference.json', tmp_path / 'criteria.json'
+    reference_path.write_text(json.dumps(reference))
+    criteria_path.write_text(json.dumps(policy))
+    metadata_path = tmp_path / 'coarse.json'
+    metadata_path.write_text(json.dumps(metadata[-1]))
+    report = qa.compare_run(histories[-1], metadata[-1], condition, policy)
+    assert report['comparison_passed'] is True
+    assert report['coarse_smoke_passed'] is True
+    assert qa.compare_triplet(histories, metadata, condition, policy)['amplitude_gci_passed'] is True
+    for mesh in ('medium', 'fine'):
+        assert qa.require_run_admission(mesh, reference_path, criteria_path, histories[-1],
+                                        metadata_path, condition_id='C1')['admitted'] is True
+    metadata[-1]['history_sha256'] = '0' * 64
+    metadata_path.write_text(json.dumps(metadata[-1]))
+    with pytest.raises(ValueError, match='history'):
+        qa.require_run_admission('medium', reference_path, criteria_path, histories[-1],
+                                 metadata_path, condition_id='C1')
