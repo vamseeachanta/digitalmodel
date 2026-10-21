@@ -9,6 +9,7 @@ fixture dimensions and criteria are synthetic geometric inputs, not solver limit
 """
 
 from dataclasses import asdict
+from fractions import Fraction
 import json
 import math
 
@@ -158,6 +159,37 @@ def test_flat_triangle_encoded_with_four_distinct_nodes_fails():
     assert panel.corner_angles_deg[1] == pytest.approx(180)
     assert panel.convex is False
     assert panel.checks["mapping_jacobian"].status == "FAIL"
+
+
+@pytest.mark.parametrize("height", [math.nextafter(9, -math.inf), 9,
+                                    math.nextafter(9, math.inf)])
+@pytest.mark.parametrize("axes", [(0, 1, 2), (2, 0, 1), (1, 2, 0)])
+@pytest.mark.parametrize("start", range(4))
+@pytest.mark.parametrize("reverse", [False, True])
+def test_oblique_corner_sign_survives_normalization(height, axes, start, reverse):
+    """At p1, J=1*(height-3)-3*2=height-9, with other turns positive.
+
+    Exact binary64 rationals distinguish zero from its immediate neighbours;
+    no geometric tolerance may merge those three cases. Permutation into the
+    coordinate planes, cyclic starts and reversed winding preserve this J.
+    """
+    expected = Fraction(height) - 9
+    points = np.array([[0, 0, 0], [1, 3, 0], [3, height, 0], [-2, 5, 0]])
+    points = np.roll(points[:, axes], start, axis=0)
+    if reverse:
+        points = points[::-1]
+    report = assess(points, criteria=QuadQualityCriteria(
+        basis="Synthetic oblique corner determinant", max_edge_ratio=100,
+        min_angle_deg=0, max_angle_deg=360, min_jacobian=0,
+    ))
+    panel = report.panels[0]
+    assert panel.min_projected_jacobian == pytest.approx(float(expected), rel=1e-12, abs=0)
+    assert panel.convex is (expected > 0)
+    status = "PASS" if expected > 0 else "FAIL"
+    assert panel.checks["convexity"].status == status
+    assert panel.checks["mapping_jacobian"].status == status
+    assert report.status == status
+    json.dumps(asdict(report), allow_nan=False)
 
 
 def test_warped_quad_is_not_qualified_by_projection():

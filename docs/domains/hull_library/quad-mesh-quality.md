@@ -11,6 +11,7 @@ All acceptance bounds are declared geometric inputs. Solver qualification remain
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Define reusable quad diagnostics and independent fixtures to expose angular skew, concavity and invalid maps. |
+| 2 | 2026-10-20 | Preserve corner determinant signs at collinearity so normalization cannot qualify a degenerate map. |
 
 ## Sources
 
@@ -81,6 +82,25 @@ selected by the signed turn. A full turn is 360 degrees by the definition of
 degrees. Edge ratio uses the original spatial edges. Normalization by the longest
 edge improves numerical scale handling; the Jacobian is restored with its square.
 
+Floating-point normalization can alter the sign of a nearly cancelling corner
+determinant. Each sign is therefore certified from the original binary64 input
+coordinates using the scalar
+`D_i = (e_previous cross e_i) dot ((p2-p0) cross (p3-p1))`.
+Its sign matches the projected Jacobian because the centre-normal length is
+positive. Coordinate differences, cross products and the dot product are enclosed
+by interval arithmetic; every operation is rounded outward with `nextafter`.
+An interval that cannot certify a sign, or disagreement with the normalized
+sign, triggers exact rational evaluation of the original input values.
+No geometric epsilon or additional acceptance bound is introduced.
+
+Ordinary magnitudes still use normalized arithmetic. On the exact path, `D_i`
+is divided by the fourth power of the normalization scale exactly, then by the
+normalized centre-normal length. Restoring the square of the scale gives the
+dimensional Jacobian. An exactly zero determinant remains zero for convexity,
+mapping and aggregate status; a nonzero magnitude that cannot be represented
+raises the numeric-domain error. This predicate qualifies the supplied binary64
+coordinates; it cannot recover precision lost before input conversion.
+
 ## API and statuses
 
 ```python
@@ -135,6 +155,7 @@ docstrings from the equations above, independently of the implementation.
 | Fold with nonsingular centre | `J=2-3v`; centre `1/2` but corner minimum -1. |
 | Four collinear or coincident vertices | All derivative cross products vanish. |
 | Quad with three consecutive collinear vertices | `J=2-2u+2v`, minimum zero despite nonzero enclosed area. |
+| Oblique corner with `p1=(1,3,0)`, `p2=(3,h,0)` | Corner determinant `h-9`: exact zero at `h=9`, with distinct positive and negative signs at adjacent binary64 values; cyclic starts, reversed winding and coordinate planes preserve the result. |
 | Warped quad, `x=u,y=v,z=uv` | Centre normal `(-1,-1,2)/sqrt(6)`; projected minimum `2/sqrt(6)` and plane distance `1/sqrt(6)` do not qualify the surface. |
 | Rotated, translated, reversed rectangle at scale 3 | Ratios and angles invariant; `J=18` from quadratic scale dependence. |
 

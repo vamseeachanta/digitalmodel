@@ -18,14 +18,82 @@ criterion, not a solver limit. Warped panels retain only a projected diagnostic.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from fractions import Fraction
 import math
-from typing import Literal
+from typing import Literal, TypeVar
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 Status = Literal["PASS", "FAIL", "NOT_EVALUATED"]
 Array = NDArray[np.float64]
+
+
+@dataclass(frozen=True)
+class _Interval:
+    """Enclose exact arithmetic on binary64 inputs with outward rounding."""
+
+    lower: float
+    upper: float
+
+    @classmethod
+    def _rounded(cls, values: list[float]) -> _Interval:
+        if not all(math.isfinite(value) for value in values):
+            return cls(-math.inf, math.inf)
+        return cls(math.nextafter(min(values), -math.inf),
+                   math.nextafter(max(values), math.inf))
+
+    def __add__(self, other: _Interval) -> _Interval:
+        return self._rounded([self.lower + other.lower, self.upper + other.upper])
+
+    def __sub__(self, other: _Interval) -> _Interval:
+        return self._rounded([self.lower - other.upper, self.upper - other.lower])
+
+    def __mul__(self, other: _Interval) -> _Interval:
+        return self._rounded([a * b for a in (self.lower, self.upper)
+                              for b in (other.lower, other.upper)])
+
+
+_Scalar = TypeVar("_Scalar", _Interval, Fraction)
+
+
+def _cross(a: list[_Scalar], b: list[_Scalar]) -> list[_Scalar]:
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]]
+
+
+def _corner_determinants(points: list[list[_Scalar]]) -> list[_Scalar]:
+    """Corner cross products dotted with the unnormalized centre normal."""
+    edges = [[points[(i + 1) % 4][j] - points[i][j] for j in range(3)]
+             for i in range(4)]
+    normal = _cross([points[2][j] - points[0][j] for j in range(3)],
+                    [points[3][j] - points[1][j] for j in range(3)])
+    corners = [_cross(edges[i - 1], edges[i]) for i in range(4)]
+    return [c[0] * normal[0] + c[1] * normal[1] + c[2] * normal[2] for c in corners]
+
+
+def _reliable_turns(points: Array, turns: Array, scale: float,
+                    normal_length: float) -> Array:
+    """Certify signs before normalization; resolve cancellation exactly."""
+    bounds = _corner_determinants([
+        [_Interval(float(x), float(x)) for x in point] for point in points
+    ])
+    exact = None
+    for i, bound in enumerate(bounds):
+        if ((bound.lower > 0 and turns[i] > 0)
+                or (bound.upper < 0 and turns[i] < 0)):
+            continue
+        if exact is None:
+            exact = _corner_determinants([
+                [Fraction(float(x)) for x in point] for point in points
+            ])
+        # Each determinant contains four coordinate differences. Divide out
+        # scale^4 exactly, then the normalized centre-normal length, to recover
+        # the normalized projected turn without a cancellation residual.
+        turns[i] = float(exact[i] / Fraction(scale) ** 4) / normal_length
+        if exact[i] != 0 and turns[i] == 0:
+            raise ValueError("panel Jacobian exceeds floating-point range")
+    return turns
 
 
 @dataclass(frozen=True)
@@ -131,8 +199,8 @@ def _panel_quality(
             checks[key] = QualityCheck("FAIL", "All panel vertices coincide.")
         return QuadPanelQuality(index, None, None, False, None, None, checks)
 
-    # Translation and scale normalization change no angles or signs; restore J
-    # with scale^2 below, as derived from the two map derivatives in [S2].
+    # Normalization preserves geometry in exact arithmetic. Certify corner signs
+    # from the original inputs below; restore J with scale^2 as derived in [S2].
     local = (points - points[0]) / scale
     edges = np.roll(local, -1, axis=0) - local
     lengths = np.hypot.reduce(edges, axis=1)
@@ -161,6 +229,7 @@ def _panel_quality(
     # Corner derivatives on [0,1]^2 equal the adjacent edges up to signs.
     # [S2] gives an affine projected determinant, so its minimum is a corner.
     turns = np.cross(np.roll(edges, 1, axis=0), edges) @ normal
+    turns = _reliable_turns(points, turns, scale, normal_length)
     normalized_minimum = float(np.min(turns))
     minimum = normalized_minimum * scale * scale
     if not math.isfinite(minimum) or (normalized_minimum != 0 and minimum == 0):
