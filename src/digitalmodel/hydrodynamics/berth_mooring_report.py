@@ -9,6 +9,7 @@ import json
 import math
 from pathlib import Path
 
+from digitalmodel.citations.registry import get_public_reference
 from digitalmodel.hydrodynamics.berth_mooring import (
     SOURCE_URLS,
     drag_load,
@@ -130,6 +131,12 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
             f"- {data['application_m'][1]:.1f} x {kn(load[0])} = {kn(load[2])} kN m."
         )
     return ReportSpec(
+        citations=[
+            get_public_reference(source_id)
+            for source_id in (
+                "NASA-DRAG-EQUATION", "ORCINA-LINKS-DATA", "PASSING-SHIP-METHOD"
+            )
+        ],
         document=DocumentMeta(
             number="B0000-RPT-013-01",
             revision="01",

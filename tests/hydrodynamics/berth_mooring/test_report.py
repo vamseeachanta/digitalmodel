@@ -53,6 +53,33 @@ def _summary(report):
     return next(s for s in report.sections if s.key == "summary").blocks[0].markdown
 
 
+def test_report_registers_three_public_method_references(report_data):
+    """The references table must agree with the three cited method sources."""
+    from digitalmodel.reporting import render_html
+
+    spec, manifest = report_data
+    report = build_report(spec, manifest)
+    assert {row["code_id"] for row in report.citations} == {
+        "NASA-DRAG-EQUATION", "ORCINA-LINKS-DATA", "PASSING-SHIP-METHOD",
+    }
+    assert all(row["retrieved_on"] == "2026-10-20" for row in report.citations)
+    from digitalmodel.hydrodynamics.berth_mooring import SOURCE_URLS
+    import re
+
+    assert {row["source_url"] or row["repository_path"] for row in report.citations} == set(SOURCE_URLS.values())
+    method = next(section for section in report.sections if section.key == "method")
+    dates = re.findall(r"retrieved (\d{4}-\d{2}-\d{2})", method.blocks[0].markdown)
+    assert len(dates) == 2
+    assert set(dates) == {row["retrieved_on"] for row in report.citations}
+    html = render_html(report)
+    references = html.split('<section id="references-cited">', 1)[1].split("</section>", 1)[0]
+    assert "NASA-DRAG-EQUATION" in references
+    assert "ORCINA-LINKS-DATA" in references
+    assert "PASSING-SHIP-METHOD" in references
+    assert "No external references cited." not in html
+    assert '<span class="k">Citations</span> 3' in html
+
+
 @pytest.mark.parametrize("partial", [False, True])
 def test_report_summary_exposes_missing_stored_criteria(report_data, partial):
     """A solver version cannot turn absent criteria into evaluated acceptance."""
