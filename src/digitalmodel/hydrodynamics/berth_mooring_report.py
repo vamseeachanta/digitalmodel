@@ -9,7 +9,7 @@ import json
 import math
 from pathlib import Path
 
-from digitalmodel.citations.registry import get_public_reference
+from digitalmodel.citations.public_references import get_public_reference
 from digitalmodel.hydrodynamics.berth_mooring import (
     SOURCE_URLS,
     drag_load,

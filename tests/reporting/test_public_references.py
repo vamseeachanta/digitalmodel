@@ -2,7 +2,7 @@
 
 from dataclasses import asdict
 
-from digitalmodel.citations import registry
+from digitalmodel.citations import public_references
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting import (
     DocumentMeta,
@@ -31,7 +31,7 @@ def references(html):
 
 
 def test_public_references_survive_mapping_and_json_round_trip():
-    original = [registry.get_public_reference(key) for key in (
+    original = [public_references.get_public_reference(key) for key in (
         "NASA-DRAG-EQUATION", "ORCINA-LINKS-DATA", "PASSING-SHIP-METHOD",
     )]
     spec = report([asdict(citation) for citation in original])
@@ -81,7 +81,7 @@ def test_wiki_only_reference_table_keeps_original_markup():
 
 
 def test_mixed_reference_rows_have_consistent_columns():
-    rows = references(render_html(report([wiki_reference(), registry.get_public_reference("NASA-DRAG-EQUATION"), registry.get_public_reference("PASSING-SHIP-METHOD")])))
+    rows = references(render_html(report([wiki_reference(), public_references.get_public_reference("NASA-DRAG-EQUATION"), public_references.get_public_reference("PASSING-SHIP-METHOD")])))
     data_rows = rows.split("<tbody>", 1)[1].split("</tbody>", 1)[0].split("<tr>")[1:]
     assert len(data_rows) == 3
     assert all(row.count("<td") == 8 for row in data_rows)
