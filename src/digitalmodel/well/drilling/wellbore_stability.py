@@ -400,7 +400,9 @@ def _band(values, tvd, *, max_unresolved_fraction=None, require_all_draws=False)
         "unresolved_fraction_check": (
             "ALL_DRAWS_REQUIRED"
             if require_all_draws
-            else "NOT_EVALUATED" if max_unresolved_fraction is None else "EVALUATED"
+            else "NOT_EVALUATED"
+            if max_unresolved_fraction is None
+            else "EVALUATED"
         ),
     }
     for name, value in zip(("p10", "p50", "p90"), quantiles):
@@ -481,7 +483,7 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             ),
         }
         curves["collapse"]["bias_direction"] = (
-            "low (unresolved draws are the weakest realisations)"
+            "unknown (unresolved draws may include numerical misses)"
             if curves["collapse"]["unresolved_draws"]
             else "none (all draws resolved)"
         )
@@ -571,8 +573,8 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             "max_unresolved_fraction": unresolved_limit,
             "failed_draw_policy": (
                 "collapse bands use resolved draws only within the supplied unresolved-fraction limit; "
-                "these conditional quantiles are biased low when draws are unresolved, "
-                "because the weakest realisations are excluded; "
+                "bias direction is unknown for unresolved draws because narrow stable intervals may be missed numerically; "
+                "downward bias is possible if omitted draws have higher collapse pressures than the resolved draws; "
                 "unresolved draws without a supplied limit, or no resolved draws, give an indeterminate band; "
                 "windows remain unavailable if any collapse or ceiling draw is unresolved; "
                 "invalid physical draws raise"

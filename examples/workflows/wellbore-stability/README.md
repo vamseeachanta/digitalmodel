@@ -127,12 +127,15 @@ When resolved draws exist and the unresolved fraction is at or below the
 supplied limit, P10/P50/P90 are calculated over resolved draws only. The band
 reports `RESOLVED_DRAWS_ONLY` if any draws are unresolved, otherwise
 `ALL_DRAWS_RESOLVED`. `quantile_basis` explicitly labels the conditional
-population. These percentiles do not estimate unconditional collapse quantiles;
-unresolved draws are the weakest realisations, with collapse above their own
-fracture-initiation pressure if a solution exists. Excluding them biases the
-resolved-only percentiles low, toward a lower mud-weight floor. The collapse
-band reports this direction in `bias_direction`; a supplied fraction limit
-does not correct the bias.
+population. These percentiles do not estimate unconditional collapse quantiles.
+Unresolved status alone does not establish bias direction: a scan can miss a
+narrow stable interval below fracture initiation, including a lower collapse
+pressure than those retained. Excluding such draws can shift percentiles upward.
+Downward bias remains a risk if omitted draws have higher collapse pressures
+than resolved draws. The collapse band therefore reports
+`unknown (unresolved draws may include numerical misses)` in `bias_direction`
+whenever any draw is unresolved; all-resolved bands report
+`none (all draws resolved)`. A supplied fraction limit does not correct bias.
 
 Above the supplied limit, or with no resolved draws, the band is
 `INDETERMINATE` with null percentiles and an explicit `indeterminate_reason`.

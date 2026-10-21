@@ -7,7 +7,7 @@ import json
 import math
 import subprocess
 import sys
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import numpy as np
@@ -250,6 +250,9 @@ def test_workflow_four_curves_bands_polar_and_validation_labels(tmp_path):
     assert a["model"]["units"]["pressure"] == "psi"
     assert len(a["window"]) == len(cfg["profile"])
     for row in a["window"]:
+        assert (
+            row["curves"]["collapse"]["bias_direction"] == "none (all draws resolved)"
+        )
         assert set(row["curves"]) == {
             "pore",
             "collapse",
@@ -376,8 +379,13 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     assert len(calls) == 5, "expected four draws followed by one nominal call"
     row = result["window"][0]
     band = row["curves"]["collapse"]
-    assert band["bias_direction"] == "low (unresolved draws are the weakest realisations)"
-    assert "biased low" in result["uncertainty"]["failed_draw_policy"]
+    assert (
+        band["bias_direction"]
+        == "unknown (unresolved draws may include numerical misses)"
+    )
+    policy = result["uncertainty"]["failed_draw_policy"]
+    assert "direction is unknown" in policy
+    assert "downward bias is possible if" in policy
     assert [band[name + "_psi"] for name in ("p10", "p50", "p90")] == pytest.approx(
         [110, 150, 190]
     )
@@ -394,6 +402,90 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     assert result["uncertainty"]["max_unresolved_fraction"] == 0.25
     assert json.loads((tmp_path / "summary.json").read_text()) == result
     assert json.loads((tmp_path / "window.json").read_text()) == result["window"]
+
+
+@pytest.fixture
+def numerical_miss_ensemble(monkeypatch):
+    """Prescribe two synthetic realizations while retaining real pressure searches."""
+    case = reference(
+        sv_psi=2005,
+        shmax_psi=2010,
+        shmin_psi=2000,
+        pore_pressure_psi=1000,
+        ucs_psi=12,
+        friction_angle_deg=0,
+        poisson_ratio=0,
+        tensile_strength_psi=0,
+    )
+
+    class FixedDraws:
+        def standard_normal(self, shape):
+            assert shape == (2, 5)
+            return np.array([[0.0] * 5, [1.0] * 5])
+
+    monkeypatch.setattr(np.random, "default_rng", lambda seed: FixedDraws())
+    return {
+        "defaults": asdict(case),
+        "profile": [{"tvd_ft": 1000}],
+        "ensemble": {
+            "samples": 2,
+            "sigma": {
+                "sv_psi": 2995,
+                "shmax_psi": 2990,
+                "shmin_psi": 3000,
+                "ucs_psi": 988,
+                "friction_angle_deg": 30,
+            },
+        },
+        "polar": {"inclinations_deg": []},
+    }
+
+
+@pytest.mark.parametrize("limit", [None, 0.0, 0.5])
+def test_numerical_miss_does_not_establish_low_bias(
+    tmp_path, numerical_miss_ensemble, limit
+):
+    """Synthetic missed root 2013 paired with 2750 gives full P50=2381.5 psi.
+
+    At theta=90 deg, axial=1005, hoop=2030-dP and radial=dP. For
+    zero friction, max-min=UCS=12 at dP=1013. The isotropic second draw
+    gives Pp+(8000-1000)/4=2750. Omitting the lower root raises P50.
+    The fraction limit is illustrative, without an engineering acceptance claim.
+    """
+    cfg = numerical_miss_ensemble
+    cfg["ensemble"]["max_unresolved_fraction"] = limit
+    case = StabilityInput(**cfg["defaults"])
+    coarse = pressure_bounds(case)
+    dense = pressure_bounds(case, pressure_samples=2049)
+    assert coarse["collapse"]["pressure_psi"] is None
+    assert coarse["collapse"]["numerical_status"] == "NO_FEASIBLE_SAMPLED_PRESSURE"
+    assert dense["collapse"]["pressure_psi"] == pytest.approx(2013, abs=1e-6)
+    assert dense["fracture_initiation"]["pressure_psi"] == pytest.approx(2990)
+    result = run_workflow(cfg, tmp_path)
+    row = result["window"][0]
+    band = row["curves"]["collapse"]
+    assert band["resolved_draws"] == band["unresolved_draws"] == 1
+    assert band["unresolved_fraction"] == 0.5
+    assert (
+        band["bias_direction"]
+        == "unknown (unresolved draws may include numerical misses)"
+    )
+    if limit == 0.5:
+        assert band["numerical_status"] == "RESOLVED_DRAWS_ONLY"
+        assert band["p50_psi"] == pytest.approx(2750, abs=1e-6)
+        assert _band([2013, 2750], 1000)["p50_psi"] == 2381.5
+        assert band["p50_psi"] > 2381.5
+    else:
+        assert band["numerical_status"] == "INDETERMINATE"
+        assert band["p50_psi"] is None
+        assert band["indeterminate_reason"] == (
+            "UNRESOLVED_FRACTION_LIMIT_NOT_SUPPLIED"
+            if limit is None
+            else "UNRESOLVED_FRACTION_EXCEEDS_LIMIT"
+        )
+    assert row["conservative_window"]["low_psi"] is None
+    assert row["conservative_window"]["feasible"] is False
+    assert json.loads((tmp_path / "summary.json").read_text()) == result
 
 
 @pytest.mark.parametrize("limit", [-0.1, 1.1, math.nan, math.inf, "0.25", True])
