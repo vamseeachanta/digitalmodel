@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Starting-shape admission: known limits</title>
+<style>body{font:1rem/1.6 system-ui,sans-serif;max-width:54rem;margin:3rem auto;padding:0 1rem}code{overflow-wrap:anywhere}</style>
+</head>
+<body>
+<h1>Starting-shape admission: known limits</h1>
+<p>The C06 screen compares the starting-shape polyline length with unstretched
+section lengths. A relative mismatch above 0.001 (0.1%) produces FAIL, and the
+YAML validator converts every starting-shape FAIL to ERROR. Consequently,
+<code>validate_file</code> returns <code>valid=False</code> even when the file
+has no other validation error. This policy currently applies to generated and
+hand-authored models alike. Rejection by this screen does not establish that a
+model cannot load or that its strain is physically invalid.</p>
+<h2>Repository impact</h2>
+<p>The <a href="https://github.com/vamseeachanta/digitalmodel/pull/2931#issuecomment-6306232192">second-provider review at c2ee2f80</a>
+reports a screen of 135 repository YAML files containing user-specified starting
+shapes. Of 44 files without other errors, 25 change from valid to invalid:
+22 in installation, two in pipeline and one in reference. Of these, 24 fail the
+arc-length check and one lacks the required table. The reported worst mismatch
+is about 0.10-1.7% in 22 of the 24 arc-length cases; the other two are about
+52% and 79%. These corpus counts are review evidence, not a repeated corpus
+measurement in this fix-up.</p>
+<p>Two repository-file regression cases establish the current public-validator
+behavior: the D04 library example passes, while a floating pipeline example is
+rejected solely for an arc-length mismatch between 0.26% and 0.27%, above the
+0.1% limit. These tests read the existing files directly; they do not invoke a
+solver or copy model data.</p>
+<h2>Decision still required</h2>
+<p>The maintainer must decide whether an arc-length FAIL on hand-authored models
+remains ERROR or becomes WARNING, and how generated models will be identified
+if the policies differ. The existing criterion does not establish whether its
+reference length should be stretched or unstretched. No severity change is
+made here. The regression records current behavior and will need a deliberate
+update if that policy changes.</p>
+<h2>Review description corrections</h2>
+<p>The original PR has 11 changed files at the reviewed head, not three. Its
+three original test modules collect 184 cases, including 73 starting-shape
+cases; this fix-up adds two repository-file cases. Collection counts are not
+passing-test counts. The claim that no linked issues or issue comments were
+present must be removed: the PR references
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2514">issue 2514</a>.
+Editing the original PR description remains a maintainer action.</p>
+</body>
+</html>
