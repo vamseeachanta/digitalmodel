@@ -179,3 +179,111 @@ def test_non_si_bundle_does_not_mix_stiffness_and_environment_units(
     html = path.read_text()
     assert "NOT_EVALUATED" in html
     assert "GM_T (transverse metacentric height)" not in html
+
+
+def test_native_hydrostatics_are_normalized_before_serialized_report(tmp_path):
+    """Native 600/900 kN m/rad yield 6/9 m, with 10 tonnes = 10000 kg.
+
+    Native SI uses tonnes, metres and kN (OrcaWave WebHelp, Data: Model,
+    Units). All restoring blocks share the kN-to-N factor; geometry does not.
+    """
+    from types import SimpleNamespace
+
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import OrcaWaveRunner
+
+    matrix = np.arange(36, dtype=float).reshape(6, 6)
+    matrix[3, 3], matrix[4, 4] = 600.0, 900.0
+    original = matrix.copy()
+    native = SimpleNamespace(
+        frequencies=np.array([0.1]), headings=np.array([0.0]),
+        addedMass=np.zeros((1, 6, 6)), damping=np.zeros((1, 6, 6)),
+        displacementRAOs=np.zeros((1, 1, 6), dtype=complex),
+        hydrostaticResults=[dict(
+            restoringMatrix=matrix, volume=10.0, mass=10.0,
+            centreOfMass=[1.0, 2.0, 3.0], centreOfBuoyancy=[4.0, 5.0, 6.0],
+            Awp=7.0,
+        )],
+    )
+    # Avoid initialization, executable discovery and licensed API calls.
+    runner = object.__new__(OrcaWaveRunner)
+    runner._result = SimpleNamespace(spec_name="synthetic")
+    runner._water_depth = 100.0
+    produced = runner._build_results_from_object(native, [])
+    bundle = type(produced).from_dict(json.loads(json.dumps(produced.to_dict())))
+    assert bundle.unit_system == "SI"
+    hs = bundle.hydrostatics
+    assert hs.mass == 10000.0
+    np.testing.assert_array_equal(hs.stiffness_matrix, original * 1000.0)
+    np.testing.assert_array_equal(matrix, original)
+    assert native.hydrostaticResults[0]["mass"] == 10.0
+    assert hs.displacement_volume == 10.0
+    assert hs.waterplane_area == 7.0
+    np.testing.assert_array_equal(hs.centre_of_gravity, [1.0, 2.0, 3.0])
+    np.testing.assert_array_equal(hs.centre_of_buoyancy, [4.0, 5.0, 6.0])
+    path = _build_html_report(
+        bundle, tmp_path, {},
+        environment=EnvironmentSpec(
+            water_depth=100.0, water_density=1000.0, gravity=10.0,
+        ),
+    )
+    assert path is not None
+    html = path.read_text()
+    assert "<td>6.0000 m</td>" in html
+    assert "<td>9.0000 m</td>" in html
+
+
+@pytest.mark.parametrize("expose_units", [False, True])
+def test_native_hydrostatic_mass_and_all_stiffness_blocks_use_si(expose_units):
+    """Ten tonnes is 10000 kg; each native kN-based cell gains factor 1000."""
+    from types import SimpleNamespace
+
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import OrcaWaveRunner
+
+    matrix = np.arange(36, dtype=float).reshape(6, 6)
+    native = SimpleNamespace(hydrostaticResults=[dict(
+        restoringMatrix=matrix, volume=10.0, mass=10.0,
+        centreOfMass=[1.0, 2.0, 3.0], centreOfBuoyancy=[4.0, 5.0, 6.0],
+        Awp=7.0,
+    )])
+    if expose_units:
+        native.UnitsSystem = "SI"
+    hs = OrcaWaveRunner._extract_hydrostatics(native, "synthetic")
+    assert hs.mass == 10000.0
+    np.testing.assert_array_equal(hs.stiffness_matrix, matrix * 1000.0)
+
+
+@pytest.mark.parametrize("units", ["US", "User", None, ""])
+def test_native_hydrostatics_reject_exposed_non_si_units(units):
+    """Unconfirmed native units cannot be scaled as tonnes and kN."""
+    from types import SimpleNamespace
+
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import OrcaWaveRunner
+
+    native = SimpleNamespace(
+        UnitsSystem=units,
+        hydrostaticResults=[dict(
+            restoringMatrix=np.eye(6), volume=10.0, mass=10.0,
+            centreOfMass=[0.0, 0.0, 0.0], centreOfBuoyancy=[0.0, 0.0, 0.0],
+            Awp=7.0,
+        )],
+    )
+    assert OrcaWaveRunner._extract_hydrostatics(native, "synthetic") is None
+
+
+def test_native_force_conversion_accepts_scalar():
+    """A synthetic 1.25 kN force corresponds to 1250 N."""
+    from digitalmodel.hydrodynamics.diffraction.diffraction_units import kn_to_n
+
+    assert kn_to_n(1.25) == 1250.0
+
+
+def test_native_force_conversion_preserves_array_input():
+    """Signed coupling entries retain their shape and native input values."""
+    from digitalmodel.hydrodynamics.diffraction.diffraction_units import kn_to_n
+
+    native = np.array([[0.0, 1.25], [-2.0, 3.0]])
+    original = native.copy()
+    converted = kn_to_n(native)
+
+    np.testing.assert_array_equal(converted, [[0.0, 1250.0], [-2000.0, 3000.0]])
+    np.testing.assert_array_equal(native, original)
