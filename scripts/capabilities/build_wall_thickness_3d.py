@@ -40,6 +40,7 @@ _OD_M = 0.3239
 _GRADE = "X65"
 # Rounded ksi conversions of assumed 65 ksi yield / 77 ksi tensile inputs;
 # these are not asserted as API 5L tabulated minima or qualified material data.
+# Yield is rounded down to the nearest 1 MPa; tensile to the nearest 0.1 MPa.
 _SMYS_PA = 448.0e6
 _SMTS_PA = 530.9e6
 _INTERNAL_PRESSURE_PA = 20.0e6

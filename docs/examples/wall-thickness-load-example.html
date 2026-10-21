@@ -23,7 +23,9 @@ arithmetic and limits needed to interpret the explorer.</td></tr>
 <tr><td>2</td><td>2026-10-21</td><td>The assumed product-specification level is
 stated to distinguish the material basis from a qualified design input.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>The assumed strength conversions are
-identified and source references are retained as text to avoid broken site links.</td></tr></tbody></table>
+identified and source references are retained as text to avoid broken site links.</td></tr>
+<tr><td>4</td><td>2026-10-21</td><td>The yield and tensile rounding rules are
+stated to explain the displayed precision; calculation inputs are unchanged.</td></tr></tbody></table>
 <p>Table 1. Revision history of the worked example.</p>
 <h2>Inputs</h2>
 <p>All case inputs are <strong>assumed, based on previous experience</strong>, inherited
@@ -38,7 +40,9 @@ from the existing reference case in <code>build_wall_thickness_explorer.py</code
 <tr><td>Fabrication tolerance (%) / safety class</td><td>12.5 / medium</td></tr>
 </tbody></table><p>Table 2. Assumed inputs; the inherited strategies apply geometry allowances differently.</p>
 <p>The strengths 448.0 / 530.9 MPa are rounded ksi conversions of assumed
-65 ksi yield / 77 ksi tensile inputs. They are not asserted as API 5L tabulated minima.
+65 ksi yield / 77 ksi tensile inputs. The yield input is rounded down to the nearest
+1 MPa; the tensile input is rounded to the nearest 0.1 MPa.
+They are not asserted as API 5L tabulated minima.
 The X65 label is illustrative; no edition, table or product-specification level is
 qualified for this example, and these values shall not establish material compliance.</p>
 <h2>Method and sources</h2>
