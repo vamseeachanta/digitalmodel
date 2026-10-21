@@ -19,7 +19,11 @@ Returns results as dataclasses and pandas DataFrames.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+import math
+from collections.abc import Iterable
+from dataclasses import dataclass
+from decimal import Decimal
+from numbers import Integral
 from typing import Any, Optional
 
 import json
@@ -120,9 +124,27 @@ class ComparisonRow:
 # ---------------------------------------------------------------------------
 
 # PRNSOL output: NODE    SX    SY    SZ    SXY   SYZ   SXZ
-_PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+", re.IGNORECASE)
-_PRNSOL_DATA_RE = re.compile(
-    r"^\s*(\d+)\s+([-\d.E+]+(?:\s+[-\d.E+]+)*)\s*$", re.IGNORECASE
+_PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+[A-Z]", re.IGNORECASE)
+_PRNSOL_PAGE_RE = re.compile(
+    r"^\s*(?:\*+\s+POST1\s+NODAL\s+STRESS\s+LISTING\s+\*+\s*|"
+    r"\*+\s+(?:MAPDL|ANSYS)\s+-\s+ENGINEERING\s+ANALYSIS\s+SYSTEM\b.*|"
+    r"[0-9]+\s+VERSION=.*|"
+    r"(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=.*)$",
+    re.IGNORECASE,
+)
+_PRNSOL_ELEMENT_RE = re.compile(
+    r"\bELEMENT\s+NODAL\b.*\bLISTING\b|^\s*ELEMENT\s*=", re.IGNORECASE,
+)
+_PRNSOL_IDENTITY_RE = re.compile(
+    r"\b(LOAD\s+STEP|SUBSTEP|TIME)\s*=\s*(\S+)", re.IGNORECASE,
+)
+# Intel Fortran Developer Guide, 2023.0, "E and D Editing": explicit E/D
+# exponents and overflow asterisks. Exponent-letter omission is deliberately
+# rejected here: without a verified field format its interpretation is ambiguous.
+# https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2023-0/e-and-d-editing.html
+_PRNSOL_NUMBER_RE = re.compile(
+    r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[ED][+-]?[0-9]+)?",
+    re.IGNORECASE,
 )
 
 # Summary line patterns
@@ -158,6 +180,49 @@ _REACTION_TOTAL_RE = re.compile(
 # ---------------------------------------------------------------------------
 # Extractor class
 # ---------------------------------------------------------------------------
+
+def _parse_prnsol_row(line: str, labels: list[str]) -> tuple[int, list[float]]:
+    """Reject truncated, overflowed or ambiguous scalar listing rows."""
+    tokens = line.split()
+    # The retained native stress listing uses a 10-character node field and
+    # E24.16 values. Adjacent negative fields can have no separating space.
+    # Use only that complete observed layout, never guess exponent boundaries.
+    native = line.rstrip()
+    if len(tokens) != len(labels) and len(native) == 10 + 24 * (len(labels) - 1):
+        tokens = [native[:10].strip()] + [
+            native[start:start + 24].strip() for start in range(10, len(native), 24)
+        ]
+    if not re.fullmatch(r"[0-9]+", tokens[0]) or int(tokens[0]) <= 0:
+        raise ValueError("PRNSOL row requires a positive integer node ID")
+    if len(tokens) != len(labels):
+        raise ValueError("PRNSOL row column count differs from its header")
+    values = []
+    for token in tokens[1:]:
+        if not _PRNSOL_NUMBER_RE.fullmatch(token):
+            raise ValueError(f"PRNSOL non-numeric or ambiguous numeric token {token!r}")
+        value = float(token.upper().replace("D", "E"))
+        if not math.isfinite(value):
+            raise ValueError("PRNSOL result must be finite")
+        values.append(value)
+    return int(tokens[0]), values
+
+
+def _check_prnsol_coverage(seen: set[int], expected_node_ids: Iterable[int]) -> None:
+    """Compare against independently supplied nodes, never listing-derived IDs."""
+    expected: set[int] = set()
+    for node_id in expected_node_ids:
+        if isinstance(node_id, bool) or not isinstance(node_id, Integral) or node_id <= 0:
+            raise ValueError("PRNSOL expected node IDs must be positive integers")
+        node_id = int(node_id)
+        if node_id in expected:
+            raise ValueError(f"PRNSOL duplicate expected node {node_id}")
+        expected.add(node_id)
+    if seen != expected:
+        raise ValueError(
+            f"PRNSOL node coverage mismatch: missing={sorted(expected - seen)}, "
+            f"unexpected={sorted(seen - expected)}"
+        )
+
 
 class ResultsExtractor:
     """Extract and parse ANSYS output file results.
@@ -214,9 +279,26 @@ class ResultsExtractor:
         return summary
 
     def parse_prnsol_block(
-        self, text_block: str, component: str = "SEQV"
+        self, text_block: str, component: str = "SEQV", *,
+        expected_node_ids: Iterable[int] | None = None,
     ) -> pd.DataFrame:
-        """Parse a PRNSOL output block into a DataFrame.
+        """Parse a scalar PRNSOL listing by its explicit column labels.
+
+        Source: ANSYS Mechanical APDL Command Reference, 2024 R2, PRNSOL,
+        Notes and Table 223. PRNSOL can average results and omit interior
+        nodes; this method does not establish unaveraged tensor, coordinate
+        system or shell-surface identity. Explicit LOAD STEP, SUBSTEP and TIME
+        values must agree across pages; missing values remain unverified.
+        Repeated node IDs are rejected because this scalar interface cannot
+        distinguish surfaces.
+        Space-separated rows and the retained native 10-character node plus
+        E24.16 field layout are supported; malformed rows raise ValueError.
+        Recognized page banners allow non-row preamble text but require a fresh
+        NODE header before more rows.
+
+        Unlike the earlier last-column fallback, the requested component must
+        appear in the header. The default SEQV therefore raises ValueError for
+        PRNSOL,S,COMP listings without SEQV; pass an explicit component such as SX.
 
         Parameters
         ----------
@@ -224,31 +306,79 @@ class ResultsExtractor:
             Text block from PRNSOL output.
         component : str
             Result component name.
+        expected_node_ids : Iterable[int] | None
+            Independently supplied selected-node population. If supplied,
+            require exact coverage, including rejection of an empty listing
+            when nodes are expected. None leaves completeness unverified.
 
         Returns
         -------
         pd.DataFrame
-            Columns: node_id, value.
+            Columns: node_id, value. attrs["result_identity"] contains the
+            explicitly captured LOAD STEP, SUBSTEP and TIME as Decimal values.
+            Missing fields are omitted; identity completeness across pages is
+            not established by this metadata.
         """
         records: list[dict] = []
+        seen: set[int] = set()
+        labels: list[str] = []
+        component = component.upper()
         in_data = False
+        awaiting_header = False
+        page_identity: dict[str, Decimal] = {}
 
         for line in text_block.splitlines():
+            if not line.strip():
+                continue
+            if _PRNSOL_ELEMENT_RE.search(line):
+                raise ValueError("PRNSOL cannot parse an element listing")
             if _PRNSOL_HEADER_RE.match(line):
+                labels = line.upper().split()
+                if len(set(labels)) != len(labels):
+                    raise ValueError("PRNSOL header has a duplicate column")
+                if component not in labels[1:]:
+                    raise ValueError(f"PRNSOL component {component!r} is absent")
                 in_data = True
+                awaiting_header = False
+                continue
+            if _PRNSOL_PAGE_RE.fullmatch(line):
+                identity_line = re.match(
+                    r"^\s*(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=", line, re.IGNORECASE,
+                )
+                matches = _PRNSOL_IDENTITY_RE.finditer(line) if identity_line else ()
+                for match in matches:
+                    field = " ".join(match[1].upper().split())
+                    token = match[2].upper().replace("D", "E")
+                    pattern = _PRNSOL_NUMBER_RE if field == "TIME" else r"[0-9]+"
+                    if not re.fullmatch(pattern, token):
+                        raise ValueError(f"PRNSOL invalid {field} value")
+                    identity_value = Decimal(token)
+                    if field in page_identity and page_identity[field] != identity_value:
+                        raise ValueError(f"PRNSOL {field} differs between pages")
+                    page_identity.setdefault(field, identity_value)
+                in_data = False
+                awaiting_header = True
+                continue
+            if awaiting_header:
+                if re.match(r"^\s*[+-]?[0-9]+(?:\s|$)", line):
+                    raise ValueError("PRNSOL page requires a fresh NODE header")
                 continue
             if in_data:
-                m = _PRNSOL_DATA_RE.match(line)
-                if m:
-                    node_id = int(m.group(1))
-                    values = m.group(2).split()
-                    # Take the last column as the primary value (often SEQV)
-                    value = float(values[-1]) if values else 0.0
-                    records.append({"node_id": node_id, "value": value})
-                elif line.strip() == "" or line.strip().startswith("MINIMUM"):
+                if line.strip().upper().startswith(("MINIMUM", "MAXIMUM")):
                     in_data = False
+                    continue
+                node_id, values = _parse_prnsol_row(line, labels)
+                if node_id in seen:
+                    raise ValueError(f"PRNSOL duplicate node {node_id}; surface identity unknown")
+                seen.add(node_id)
+                value = values[labels.index(component) - 1]
+                records.append({"node_id": node_id, "value": value})
 
-        return pd.DataFrame(records, columns=["node_id", "value"])
+        if expected_node_ids is not None:
+            _check_prnsol_coverage(seen, expected_node_ids)
+        result = pd.DataFrame(records, columns=["node_id", "value"])
+        result.attrs["result_identity"] = page_identity.copy()
+        return result
 
     def parse_element_table(
         self, text_block: str

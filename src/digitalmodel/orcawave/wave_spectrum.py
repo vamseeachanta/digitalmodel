@@ -14,6 +14,8 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 import warnings
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -125,7 +127,7 @@ def compute_spectral_moments(
     validate_spectral_grid(omega, s_omega)
     moments = {}
     for n in range(max_order + 1):
-        moments[f"m{n}"] = float(np.trapz(omega**n * s_omega, omega))
+        moments[f"m{n}"] = float(_trapezoid(omega**n * s_omega, omega))
     return SpectralMoments(**moments)
 
 
@@ -360,7 +362,7 @@ def heuristic_two_peak(
     s_total = s_wind + s_swell
 
     # Renormalize to target Hs
-    m0 = np.trapz(s_total, omega)
+    m0 = _trapezoid(s_total, omega)
     target_m0 = hs**2 / 16.0
     if m0 > 1e-30:
         s_total *= target_m0 / m0

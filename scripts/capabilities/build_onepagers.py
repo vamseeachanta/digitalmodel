@@ -409,13 +409,13 @@ SPECS: list[dict] = [
          bullets=["SI = log10(IAP / Ksp_cond) per family, supersaturation flagged at SI > 0",
                   "T/P sweep and bottomhole→wellhead SI trending along the production string",
                   "Waterflood mixing sweep (barium-rich formation water × sulfate-rich seawater)"]),
-    dict(id="wall-thickness-explorer", kind="work", title="Wall-thickness multi-code explorer",
+    dict(id="wall-thickness-explorer", kind="work", title="Wall-thickness tension and bending explorer",
          std="DNV-ST-F101 · API RP 1111 · ASME B31.4/8 · PD 8010-2 · ISO 13623",
-         path="structural/wall-thickness-explorer.html",
-         blurb="One 12.75-inch X65 deepwater line sized under all nine registered design codes at "
-               "once — a wall-thickness slider drives each code's governing utilization against the "
-               "1.0 limit, with the minimum wall to pass per code. Every point is a live "
-               "WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+         path="structural/wall-thickness-3d-explorer.html",
+         blurb="Wall thickness, effective tension and bending moment swept across nine design codes. "
+               "A fetched, bounded snapshot shows utilisation and governing check as a 3D surface "
+               "with a 2D fallback. Inputs are assumed, based on previous experience; "
+               "design qualification is not evaluated.",
          figures=[("9", "design codes"), ("369", "engine evaluations"), ("~19.5 mm", "min wall, pipeline codes")],
          bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",

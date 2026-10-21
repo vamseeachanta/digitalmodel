@@ -30,3 +30,36 @@ def test_full_study_export_rejects_a_truncated_grid(tmp_path):
     source.write_text(json.dumps({"meta": {"grid": {"row_count": 1}}, "rows": []}))
     with pytest.raises(ValueError, match="row count"):
         _publisher().wall_thickness_3d_rows(source)
+
+
+def test_document_snapshot_is_used_without_reopening_source(monkeypatch):
+    publisher = _publisher()
+    rows = [{"combined_utilisation": 0.5, "collapse_utilisation": None}]
+
+    def unexpected_load(_path):
+        pytest.fail("the supplied document snapshot must be used directly")
+
+    monkeypatch.setattr(publisher, "_load", unexpected_load)
+    assert publisher.wall_thickness_3d_rows(doc={"rows": rows}) is rows
+
+
+def test_explicit_source_keyword_preserves_full_study_rows(tmp_path):
+    rows = [{"combined_utilisation": 0.5}]
+    source = tmp_path / "study.json"
+    source.write_text(json.dumps({"meta": {"grid": {"row_count": 1}}, "rows": rows}))
+    assert _publisher().wall_thickness_3d_rows(source=source) == rows
+
+
+@pytest.mark.parametrize("document", [{"rows": []}, Path("other.json")])
+def test_multiple_study_inputs_are_rejected_before_reading(document, tmp_path):
+    with pytest.raises(ValueError, match="one study input"):
+        _publisher().wall_thickness_3d_rows(doc=document, source=tmp_path / "missing.json")
+
+
+def test_default_full_study_rejects_a_truncated_grid(monkeypatch):
+    publisher = _publisher()
+    monkeypatch.setattr(
+        publisher, "_load", lambda _path: {"meta": {"grid": {"row_count": 1}}, "rows": []}
+    )
+    with pytest.raises(ValueError, match="row count"):
+        publisher.wall_thickness_3d_rows()

@@ -64,19 +64,42 @@ def _uniform(n_el, length, ei, te, m):
 
 
 def test_tensioned_string_limit_matches_closed_form():
+    """Independent hand calculation for the synthetic uniform-string fixture.
+
+    Source: OpenStax, University Physics Volume 1 (2016), section 16.6,
+    equation 16.16 (normal-mode frequencies of a fixed-end string).
+    Substituting sin(n*pi*x/L) into m*w_tt - Te*w_xx = 0 gives
+    f_n = n*sqrt(Te/m)/(2*L). The fixture gives sqrt(Te/m) = 50 m/s,
+    so T_n = 12/n s: periods decrease as mode number increases.
+    """
     length, te, m = 300.0, 2.0e6, 800.0
     periods = tensioned_beam_periods(_uniform(300, length, 1.0, te, m), n_modes=5)
+    assert all(first > second for first, second in zip(periods, periods[1:]))
     for n, t in enumerate(periods, start=1):
         f = n / (2 * length) * math.sqrt(te / m)
         assert t == pytest.approx(1.0 / f, rel=5e-3)
 
 
 def test_untensioned_pinned_beam_matches_closed_form():
+    """Independent hand calculation for the synthetic pinned-beam fixture.
+
+    Substituting sin(n*pi*x/L) into EI*w_xxxx + m*w_tt = 0 gives
+    omega_n = (n*pi/L)**2*sqrt(EI/m), hence T_n = T_1/n**2.
+    Thus the existing closed-form comparison also fixes mode identity.
+    """
     length, ei, m = 50.0, 2.0e8, 400.0
     periods = tensioned_beam_periods(_uniform(100, length, ei, 0.0, m), n_modes=3)
+    assert all(first > second for first, second in zip(periods, periods[1:]))
     for n, t in enumerate(periods, start=1):
         omega = (n * math.pi / length) ** 2 * math.sqrt(ei / m)
         assert t == pytest.approx(2 * math.pi / omega, rel=5e-3)
+
+
+def test_beam_period_order_is_documented():
+    """The public contract must describe the order established by the hand checks."""
+    doc = " ".join(tensioned_beam_periods.__doc__.split())
+    assert "decreasing periods" in doc
+    assert "increasing natural frequency" in doc
 
 
 def test_stiff_end_springs_approach_clamped_beam():

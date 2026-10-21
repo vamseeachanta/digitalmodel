@@ -281,8 +281,23 @@ def envelope_for_operations(
     operations: Optional[list[Union[str, Operation]]] = None,
     **kwargs,
 ) -> dict[str, EnvelopeResult]:
-    """Compute envelopes for several operations (default: all four)."""
-    ops = operations if operations is not None else list(OPERATIONS)
+    """Compute envelopes for a non-empty selection of distinct operation keys.
+
+    ``None`` selects the catalogue in insertion order. An explicit empty list
+    or repeated resolved key raises ``ValueError`` before any calculation;
+    an unknown catalogue name raises ``KeyError`` at the same stage. Custom
+    operations and catalogue names share the result-key namespace. Results
+    retain selection order. See knowledge-pack item S10 and issue #2768.
+    """
+    selection = list(OPERATIONS) if operations is None else operations
+    ops = [resolve_operation(op) for op in selection]
+    if not ops:
+        raise ValueError('operations must not be empty')
+    seen = set()
+    for op in ops:
+        if op.key in seen:
+            raise ValueError(f'duplicate operation key: {op.key}')
+        seen.add(op.key)
     out: dict[str, EnvelopeResult] = {}
     for op in ops:
         result = operation_envelope(rao_set, op, **kwargs)

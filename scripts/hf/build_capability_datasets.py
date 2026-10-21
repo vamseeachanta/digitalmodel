@@ -36,10 +36,10 @@ def _load(rel: str) -> dict:
     return json.loads((_API / rel).read_text(encoding="utf-8"))
 
 
-def wall_thickness_rows() -> list[dict]:
+def wall_thickness_rows(doc: dict | None = None) -> list[dict]:
     """series[standard] -> rows. The standard becomes a column, so all six codes are
     comparable in one query instead of six sibling tables."""
-    doc = _load("structural/wall-thickness-explorer.json")
+    doc = _load("structural/wall-thickness-explorer.json") if doc is None else doc
     meta = doc.get("meta", {})
     out: list[dict] = []
     for standard, rows in doc["series"].items():
@@ -60,10 +60,10 @@ def wall_thickness_rows() -> list[dict]:
     return out
 
 
-def cathodic_protection_rows() -> list[dict]:
+def cathodic_protection_rows(doc: dict | None = None) -> list[dict]:
     """series[structure][climate][coating] -> rows. Three facet levels become three
     columns; 16 sibling tables become one queryable table."""
-    doc = _load("structural/cathodic-protection-explorer.json")
+    doc = _load("structural/cathodic-protection-explorer.json") if doc is None else doc
     out: list[dict] = []
     for structure, by_climate in doc["series"].items():
         for climate, by_coating in by_climate.items():
@@ -82,10 +82,20 @@ def cathodic_protection_rows() -> list[dict]:
     return out
 
 
-def wall_thickness_3d_rows(source: Path | None = None) -> list[dict]:
+def wall_thickness_3d_rows(
+    doc: dict | Path | None = None, *, source: Path | None = None
+) -> list[dict]:
     """The (t, T, M) study from build_wall_thickness_3d.py — already tidy, so this only
     reads it. 354,609 rows: 191 MB as JSON, ~1 MB as parquet, which is why the JSON is
     gitignored and only the published dataset is durable (#1915)."""
+    if isinstance(doc, Path):
+        if source is not None:
+            raise ValueError("provide only one study input")
+        source, doc = doc, None
+    if doc is not None:
+        if source is not None:
+            raise ValueError("provide only one study input")
+        return doc["rows"]
     doc = (
         json.loads(source.read_text(encoding="utf-8"))
         if source is not None else _load("structural/wall-thickness-3d.json")
@@ -95,10 +105,10 @@ def wall_thickness_3d_rows(source: Path | None = None) -> list[dict]:
     return doc["rows"]
 
 
-def galvanic_rows() -> list[dict]:
+def galvanic_rows(doc: dict | None = None) -> list[dict]:
     """environments[env] holds 16x16 matrices indexed by the `metals` list. Unpivot to one
     row per (environment, metal pair) — 16 x 16 x 3 = 768 rows."""
-    doc = _load("corrosion/galvanic-compatibility-explorer.json")
+    doc = _load("corrosion/galvanic-compatibility-explorer.json") if doc is None else doc
     metals = doc["metals"]
     labels = doc.get("labels") or metals
     index_v = doc.get("anodic_index_v") or []
@@ -128,6 +138,83 @@ def galvanic_rows() -> list[dict]:
     return out
 
 
+def ipr_rows(doc: dict | None = None) -> list[dict]:
+    """Preserve pressure and productivity facets from build_ipr_explorer.py.
+
+    Units follow ReservoirConditions and the generator's flow_rate call; values
+    are copied from the rounded sidecar, without applying Vogel coefficients.
+    """
+    doc = _load("structural/ipr-explorer.json") if doc is None else doc
+    return [
+        {
+            "reservoir_pressure_psi": float(pressure),
+            "productivity_index_bopd_psi": float(productivity),
+            "flowing_pressure_psi": point["pwf"],
+            "flow_rate_bopd": point["q"],
+            "qmax_bopd": curve["qmax"],
+        }
+        for pressure, by_productivity in doc["series"].items()
+        for productivity, curve in by_productivity.items()
+        for point in curve["curve"]
+    ]
+
+
+def _project_series(source: str, fields: dict[str, str], facet: str | None = None,
+                    doc: dict | None = None) -> list[dict]:
+    """Rename scalar observations without recalculating or rounding values.
+
+    Field units are defined by the corresponding build_*_explorer.py generator.
+    """
+    doc = _load(f"structural/{source}-explorer.json") if doc is None else doc
+    series = doc["series"]
+    groups = series.items() if facet else [(None, series)]
+    return [
+        {**({facet: key} if facet else {}),
+         **{target: point[origin] for origin, target in fields.items()}}
+        for key, points in groups
+        for point in points
+    ]
+
+
+def anchor_holding_rows(doc: dict | None = None) -> list[dict]:
+    rows = _project_series("anchor-holding", {
+        "w": "weight_kn", "h": "holding_capacity_kn",
+    }, "pair", doc)
+    for row in rows:
+        row["soil"], row["anchor"] = row.pop("pair").split("|")
+    return rows
+
+
+def ship_resistance_rows(doc: dict | None = None) -> list[dict]:
+    return _project_series("ship-resistance", {
+        "v": "speed_knots", "r": "resistance_kn", "p": "effective_power_kw",
+        "fn": "froude_number",
+    }, "hull", doc)
+
+
+def viv_rows(doc: dict | None = None) -> list[dict]:
+    return _project_series("viv", {
+        "v": "current_speed_m_s", "vr": "reduced_velocity",
+        "status": "status", "sf": "safety_factor",
+    }, "member", doc)
+
+
+def pore_pressure_rows(doc: dict | None = None) -> list[dict]:
+    return _project_series("pore-pressure", {
+        "z": "depth_ft", "sv": "overburden_ppg", "eaton": "eaton_ppg",
+        "bowers": "bowers_ppg", "pp": "pore_pressure_ppg", "mw": "mud_weight_ppg",
+    }, doc=doc)
+
+
+def field_economics_rows(doc: dict | None = None) -> list[dict]:
+    rows = _project_series("field-economics", {
+        "p": "oil_price_usd_bbl", "npv": "npv_musd", "pb": "payback_years",
+    }, "capex_musd", doc)
+    for row in rows:
+        row["capex_musd"] = float(row["capex_musd"])
+    return rows
+
+
 #: dataset id -> {table name: builder}. Grouped per the epic's decision 1 — one dataset
 #: per coherent projection, several capabilities to a dataset.
 DATASETS = {
@@ -139,6 +226,14 @@ DATASETS = {
         "cathodic_protection": cathodic_protection_rows,
         "galvanic_compatibility": galvanic_rows,
     },
+    "digitalmodel-artificial-lift": {"ipr": ipr_rows},
+    "digitalmodel-mooring": {"anchor_holding": anchor_holding_rows},
+    "digitalmodel-hydro": {
+        "ship_resistance": ship_resistance_rows,
+        "viv": viv_rows,
+    },
+    "digitalmodel-well": {"pore_pressure": pore_pressure_rows},
+    "digitalmodel-field-development": {"field_economics": field_economics_rows},
 }
 
 

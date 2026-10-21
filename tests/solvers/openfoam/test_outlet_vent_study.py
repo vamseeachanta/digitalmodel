@@ -88,7 +88,7 @@ def test_vent_top_variant_removes_the_submerged_pressure_outlet(study):
     )
 
     assert bcs[("outlet", "U")].bc_type is BoundaryType.NO_SLIP
-    assert bcs[("outlet", "p_rgh")].bc_type is BoundaryType.ZERO_GRADIENT
+    assert bcs[("outlet", "p_rgh")].bc_type is BoundaryType.FIXED_FLUX_PRESSURE
     assert bcs[("outlet", "alpha.water")].bc_type is BoundaryType.ZERO_GRADIENT
 
     # No patch that sits below the free surface may carry a pressure opening.

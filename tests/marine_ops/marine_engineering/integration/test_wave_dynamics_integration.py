@@ -19,6 +19,8 @@ from pathlib import Path
 
 from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class TestWaveDynamicsIntegration:
     """Integration tests for wave spectra and ship dynamics."""
@@ -202,7 +204,7 @@ class TestWaveDynamicsIntegration:
 
             # Response variance
             S_response = (RAO**2) * S_wave
-            response_var = np.trapz(S_response, omega)
+            response_var = _trapezoid(S_response, omega)
             response_amplitudes.append(np.sqrt(response_var))
 
         # Response should peak when Tp is near natural period (12s)
