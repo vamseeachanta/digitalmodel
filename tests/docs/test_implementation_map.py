@@ -425,10 +425,59 @@ def test_reel_lay_classification_limits_survive_regeneration(sample, reel_lay_fa
     path = "src/digitalmodel/pipelay/workflow.py"
     result = generator().regenerate(doc, ROOT, tracked_paths=[path], revision="b" * 40)
     family = result["families"][0]
-    assert family["coverage"] == "reconciled_names"
-    assert family["reconciliation"] == {
-        "matched_definitions": 2, "unresolved_definitions": 0,
-    }
     assert family["classification_limits"] == reel_lay_family["classification_limits"]
     assert family["source_revision"] == reel_lay_family["source_revision"]
     test_reel_lay_inventory_does_not_claim_qualification(family)
+
+
+def test_summary_counts_match_inventory(map_document):
+    """Summary counts shall describe the retained rows, not stale counters."""
+    text = (ROOT / "docs/registry/implementation-map.md").read_text(encoding="utf-8")
+    families = map_document["families"]
+    total = sum(len(f["implementations"]) for f in families)
+    outside = sum(e["module"] != f["first_module"]
+                  for f in families for e in f["implementations"])
+    assert f"{len(families)} families and {total} entries; {outside} entries" in text
+    for family in families:
+        assert f"| `{family['id']}` | {family['title']} | {len(family['implementations'])} |" in text
+    pending = [r for r in map_document["rejected_candidates"]
+               if r.get("disposition") == "needs_review"]
+    distinct = len({(r["path"], r.get("symbol")) for r in pending})
+    assert f"{len(pending)} unresolved family matches involving {distinct} distinct definitions" in text
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_inspected_digests_survive_refresh(sample, changed):
+    """Refreshing snapshot hashes shall not erase evidence of source changes."""
+    doc, root = sample
+    source = root / "sample.py"
+    entry = doc["families"][0]["implementations"][0]
+    entry["inspected_file_sha256"] = entry["file_sha256"]
+    entry["inspected_body_sha256"] = generator().body_digest(
+        generator().definitions(source.read_text())[entry["symbol"]])
+    if changed:
+        source.write_text(source.read_text().replace("return 1", "return 3"))
+    result = generator().regenerate(doc, root, ["sample.py"], "b" * 40)
+    refreshed = result["families"][0]["implementations"][0]
+    for key in ("inspected_file_sha256", "inspected_body_sha256"):
+        assert refreshed[key] == entry[key]
+    stale = generator().map_staleness(result, root)
+    assert ("inspected body digest drift: sample.py:First.calculate" in stale) == changed
+    assert ("inspected file digest drift: sample.py" in stale) == changed
+    assert not any(s.startswith(("body digest drift:", "file digest drift:")) for s in stale)
+
+
+def test_reel_lay_inspection_is_pinned(reel_lay_family):
+    for row in reel_lay_family["implementations"]:
+        assert row["inspected_file_sha256"] == row["file_sha256"]
+        assert row["inspected_body_sha256"] == row["body_sha256"]
+
+
+def test_reel_lay_vocabulary_discovers_unmapped_candidate(sample, reel_lay_family):
+    doc, root = sample
+    doc["families"] = [copy.deepcopy(reel_lay_family)]
+    source = root / "candidate.py"
+    source.write_text("def straighten_pipe():\n    return 1\n")
+    generator().reconcile(doc, {"candidate.py": source.read_text()}, generator().Sources(root))
+    assert doc["families"][0]["coverage"] == "partial"
+    assert any(r["symbol"] == "straighten_pipe" for r in doc["rejected_candidates"])

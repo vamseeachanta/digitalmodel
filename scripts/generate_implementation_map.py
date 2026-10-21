@@ -249,6 +249,9 @@ def map_staleness(doc: dict[str, Any], root: str | Path) -> list[str]:
         digest = row.get("file_sha256")
         if digest and hashlib.sha256(data).hexdigest() != digest:
             stale.add(f"file digest drift: {path}")
+        inspected = row.get("inspected_file_sha256")
+        if inspected and hashlib.sha256(data).hexdigest() != inspected:
+            stale.add(f"inspected file digest drift: {path}")
         symbol = row.get("symbol")
         node = sources.index(path).get(symbol) if symbol and Path(path).suffix == ".py" else None
         if node is not None:
@@ -256,6 +259,9 @@ def map_staleness(doc: dict[str, Any], root: str | Path) -> list[str]:
                 stale.add(f"line drift: {path}:{symbol}")
             if row.get("body_sha256") and body_digest(node) != row["body_sha256"]:
                 stale.add(f"body digest drift: {path}:{symbol}")
+            inspected_body = row.get("inspected_body_sha256")
+            if inspected_body and body_digest(node) != inspected_body:
+                stale.add(f"inspected body digest drift: {path}:{symbol}")
         elif row.get("line") is not None and not symbol:
             if not isinstance(row["line"], int) or not 1 <= row["line"] <= len(data.splitlines()):
                 stale.add(f"line drift: {path}")
