@@ -44,6 +44,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # Domain records bind retained inputs and outputs checked by contracts tests.
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
+    ("docs/registry/workflows.yaml",
+     ("contracts", "workflows", "subsea", "asset-integrity", "solver-smoke")),
     ("docs/maps/", ("contracts",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),

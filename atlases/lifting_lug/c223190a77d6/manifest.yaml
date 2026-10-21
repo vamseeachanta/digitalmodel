@@ -26,7 +26,7 @@ validation:
   passes: true
 provenance:
   basename: lifting_lug
-  code_version: 50ff7030
+  code_version: 6600d1de
   standards:
   - id: AISC-360-ASD
     edition: '2016'

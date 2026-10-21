@@ -26,7 +26,7 @@ validation:
   passes: true
 provenance:
   basename: span_rectification
-  code_version: 50ff7030
+  code_version: 6600d1de
   standards:
   - id: DNV-RP-F105
     edition: 2017-06

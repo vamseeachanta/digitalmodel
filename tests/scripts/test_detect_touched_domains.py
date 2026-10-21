@@ -21,6 +21,8 @@ SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domain
     ("path", "expected"),
     [
         ("docs/registry/module-routing.yaml", {"asset-integrity", "contracts", "workflows", "subsea"}),
+        ("docs/registry/workflows.yaml",
+         {"asset-integrity", "contracts", "workflows", "subsea", "solver-smoke"}),
         ("docs/maps/example.md", {"contracts"}),
         ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
          {"contracts", "orcaflex-solver"}),

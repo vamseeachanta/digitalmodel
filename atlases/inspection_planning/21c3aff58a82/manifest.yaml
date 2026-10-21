@@ -28,7 +28,7 @@ validation:
   passes: true
 provenance:
   basename: inspection_planning
-  code_version: 50ff7030
+  code_version: 6600d1de
   standards:
   - id: API-510
     edition: '2014'
