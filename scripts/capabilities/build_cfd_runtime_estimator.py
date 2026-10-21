@@ -187,7 +187,7 @@ calc();
 def main() -> None:
     compute = json.loads((_CFD / "sloshing-compute.json").read_text())
     machine = dict(compute.get("machine", {}))
-    machine["host"] = f'{machine.get("cores")}-core workstation'
+    machine["host"] = f"{c}-core workstation" if (c := machine.get("cores")) else "workstation"
     study = {
         "machine": machine,
         "profiles": _profiles(compute),

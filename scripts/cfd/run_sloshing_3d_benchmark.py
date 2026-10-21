@@ -3,7 +3,7 @@
 prerequisite).
 
 The 3D L-tank production run is gated on an UNMEASURED prerequisite: how well
-does interFoam strong-scale across MPI ranks on this box (a-l-2, 32 cores)? The
+does interFoam strong-scale across MPI ranks on a shared 32-core workstation? The
 run-time estimator only *predicts* ~1-2.5 h/case at 16-core assuming decent
 scaling. This benchmark measures it: it builds ONE representative 3D forced-roll
 case (a near-square plan-form, which is where 3D swirl matters — Faltinsen,
@@ -134,12 +134,12 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
     best = max((r for r in done if r["ranks"] > 1),
                key=lambda r: r.get("parallel_efficiency", 0), default=None)
     import os
-    host = os.uname().nodename
+    cores = os.cpu_count()
     manifest = {
         "meta": {"generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
                  "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
-                 "box": label or host,
-                 "hostname": host, "cores": os.cpu_count(),
+                 "box": f"{cores}-core workstation" if cores else "workstation",
+                 "cores": cores,
                  "epic": "#1429", "issue": "#1433",
                  "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
                  "geometry": "methodology near-square plan-form (NOT a real ballast tank; real breadth/depth from #640)",

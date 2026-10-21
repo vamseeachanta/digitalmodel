@@ -296,7 +296,7 @@ conclusions:
     All 10 new tests pass. All 27 existing CalculiX tests pass (no regression).
   governing_check: "Tip deflection error < 1% → 0.35% achieved — PASS"
   recommendations:
-    - "Install ccx on dev-primary for CI integration testing"
+    - "Install ccx on the CI workstation for integration testing"
     - "Extend to B32 quadratic beam integration test (currently type-mapping only)"
     - "Add frame/multi-member validation when WRK-1360 geometry data is available (WRK-1364)"
     - "Consider mesh convergence study as a separate validation case"

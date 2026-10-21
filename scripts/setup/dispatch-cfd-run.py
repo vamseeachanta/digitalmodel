@@ -69,7 +69,7 @@ def default_hosts() -> list[HostConfig]:
         HostConfig(
             name="gpu-claw",
             ssh_target=gpu_target,
-            manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-gpu-claw.json",
+            manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-8-core-workstation.json",
             dedicated=True,
         ),
         HostConfig(

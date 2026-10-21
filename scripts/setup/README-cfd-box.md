@@ -60,7 +60,7 @@ The prose alias `dev-gpu` denotes the host addressed by the first dispatcher key
 
 Host defaults:
 - `gpu-claw`: `CFD_GPU_CLAW_SSH` or `gpu-claw`; manifest
-  `docs/api/cfd/sloshing-3d-benchmark-gpu-claw.json`. For VPN-only addresses,
+  `docs/api/cfd/sloshing-3d-benchmark-8-core-workstation.json`. For VPN-only addresses,
   export `CFD_GPU_CLAW_SSH=user@<vpn-ip>` before dispatch.
 - `ace-linux-2`: `CFD_ACE_LINUX_2_SSH` or `ace-linux-2`;
   manifest `docs/api/cfd/sloshing-3d-benchmark.json`.
