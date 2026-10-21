@@ -1,11 +1,22 @@
 # Naval architecture knowledge pack
 
+Revision 3 supplements the historical evidence below with the missing-input
+contract and resonance regression for #2597. The original code pin and test
+records remain historical; the supplement does not requalify other methods.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 2 | 2026-10-15 | Existing pack records calculation interfaces and evidence. |
+| 3 | 2026-10-21 | Add completeness and resonance pitfalls, regression checks and worked inputs for #2597. |
+
 | Header field | Value |
 | --- | --- |
 | Module | naval_architecture |
 | Repository | digitalmodel |
 | Package path | src/digitalmodel/naval_architecture |
-| Pack revision | 2, 2026-10-15 |
+| Pack revision | 3, 2026-10-21 |
 | Code revision | `d96aad6b05f0da8b01be3cc490277bf8080bf663` |
 | Analysis family | EC — Python engineering calculations |
 | Quality manager role | Engineering calculations quality manager |
@@ -143,11 +154,23 @@ G3 NOT_APPLICABLE: no transient solver job is part of these Python calculation c
 
 C5 does not establish an AQG-signed report appendix; retain per-case inputs, hashes, results, deviations and independent review evidence before using the outputs in a report. (AQG r0, sections 9 and 11.)
 
+### Revision 3 supplement
+
+| Check | Gate | Executable route and criterion | Evidence |
+| --- | --- | --- | --- |
+| C11 | G0 | `tests/naval_architecture/test_compliance_missing_inputs.py`: no passing aggregate on missing or malformed required data; counts partition all intended checks | Synthetic input/status cases; ratio hand calculation in test docstring |
+| C12 | G2 | `tests/naval_architecture/test_heave_rao_resonance.py`: undamped resonance raises; finite damped and off-resonance values agree with the documented hand calculations | Mechanics Map, 2021 online edition, section 15.5; numerical tolerances in test docstrings |
+
+Worked inputs, method, answers and remaining rule-basis limits:
+[compliance-inputs-example.md](compliance-inputs-example.md).
+
 ## 6. Known failure modes and pitfalls
 sweep: not run (legacy pack)
 
 | Symptom / cause | Detection | Incident or open record | Date / evidence |
 | --- | --- | --- | --- |
+| Missing depth, measured section modulus or other required input previously produced a passing or omitted row; the empty aggregate also passed | C11: every intended row is reported; missing or invalid inputs are NOT_EVALUATED and cannot pass the aggregate | #2597 | 2026-10-21; `compliance.py`, `tests/naval_architecture/test_compliance_missing_inputs.py` |
+| The simplified heave oscillator previously returned a finite cap at undamped resonance | C12: the existing fix raises ValueError for an unbounded response and preserves finite near-resonance magnitudes | #2597 | 2026-10-21; `seakeeping.py::simple_heave_rao`, `tests/naval_architecture/test_heave_rao_resonance.py` |
 | Silent empty citation list when the resolver is unconfigured; other citation errors raise | C9; inspect returned `citations` count before relying on provenance | issue pending (6) | 2026-10-15 [src/digitalmodel/naval_architecture/fundamentals.py:L52-L88] |
 | Density lookup clamps outside its table; buoyancy water selectors treat any non-saltwater string as fresh water | No detection check exists for either out-of-table clamping or selector typos; the density boundary tests preserve the clamp rather than reject it | issue pending (6) | 2026-10-15 [src/digitalmodel/naval_architecture/fundamentals.py:L91-L125] [tests/naval_architecture/test_na_fundamentals.py:L72-L81] |
 | Existing curves-of-form example is expected to fail because the required ship table is unavailable | C10 preserves the XFAIL evidence; no missing-table detection check exists; the repository node does not qualify the calculation | #1751 | 2026-10-15 [tests/naval_architecture/test_en400_worked_examples.py:L115-L125] |
