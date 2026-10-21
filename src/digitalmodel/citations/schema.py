@@ -127,6 +127,7 @@ def _validate_reference_date(value: str) -> None:
 
 def _validate_public_url(value: str) -> None:
     message = "source_url must be an HTTPS URL without credentials or unsafe characters"
+    # Local report policy caps URLs at 2048 characters; this is not an RFC limit.
     if (
         not value.startswith("https://") or len(value) > 2048
         or any(
@@ -144,6 +145,10 @@ def _validate_public_url(value: str) -> None:
             or parts.password is not None or port == 0
         ):
             raise ValueError(message)
+        # RFC 1035 section 2.3.4: 63-octet labels and 255-octet wire names.
+        # https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
+        # ASCII presentation omits wire length/root octets: at most 253 characters.
+        # The same local cap applies when an optional trailing dot is supplied.
         label = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
         if len(host) > 253 or not re.fullmatch(rf"{label}(?:\.{label})*\.?", host):
             raise ValueError(message)
