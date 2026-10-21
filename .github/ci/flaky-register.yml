@@ -11,7 +11,7 @@
     - https://github.com/vamseeachanta/digitalmodel/actions/runs/38635174949
   cause: Last-bit floating-point differences; runner dependence is inferred, not measured.
   fix_pr: 2576
-  status: fixed
+  status: open
 - id: parametric.refresh
   kind: signal-exit
   first_seen: '2026-10-14'

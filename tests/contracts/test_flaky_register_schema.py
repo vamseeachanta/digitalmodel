@@ -6,6 +6,7 @@
 from datetime import date
 from pathlib import Path
 
+import pytest
 import yaml
 
 
@@ -35,9 +36,17 @@ def test_flaky_register_accepts_additional_entries(monkeypatch):
     test_flaky_register_schema()
 
 
-def test_repeated_failure_fix_is_recorded():
+@pytest.mark.parametrize("status", ["open", "fixed"])
+def test_flaky_register_accepts_valid_statuses(monkeypatch, status):
+    path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
+    rows = yaml.safe_load(path.read_text())
+    rows[0]["status"] = status
+    monkeypatch.setattr(yaml, "safe_load", lambda text: rows)
+    test_flaky_register_schema()
+
+
+def test_repeated_failure_without_passing_evidence_remains_open():
     path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
     row = yaml.safe_load(path.read_text())[0]
     assert row["kind"] == "repeated-failure"
-    assert row["status"] == "fixed"
-    assert row["fix_pr"] == 2576
+    assert row["status"] == "open"
