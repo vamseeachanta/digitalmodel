@@ -47,6 +47,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("docs/maps/", ("contracts",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
+    ("scripts/ci/generate_family_map.py", ("workflows",)),
+    ("config/ci/module-families.json", ("workflows",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
     ("src/digitalmodel/citations/", ("citations",)),
     (

@@ -5,6 +5,8 @@
 import copy
 import json
 import importlib.util
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -68,6 +70,16 @@ _source_modules = generator.source_modules
 _test_files = generator.test_files
 
 
+def _track_files(root):
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(key, None)
+    for args in (("init",), ("add", "--all")):
+        subprocess.run(
+            ["git", *args], cwd=root, env=env, check=True, capture_output=True
+        )
+
+
 def _report_inventory(assignments, expected):
     assert set(assignments.values()) <= FAMILIES, "Unknown family"
     if set(assignments) != expected:
@@ -75,13 +87,6 @@ def _report_inventory(assignments, expected):
             "Family inventory drift is report-only; run "
             "python scripts/ci/generate_family_map.py --write"
         )
-
-
-def _assert_exhaustive(assignments, expected):
-    actual = set(assignments)
-    assert expected - actual == set(), f"Unassigned: {sorted(expected - actual)}"
-    assert actual - expected == set(), f"Stale: {sorted(actual - expected)}"
-    assert set(assignments.values()) <= FAMILIES, "Unknown family"
 
 
 def test_schema_and_families(contract):
@@ -180,10 +185,11 @@ def test_registry_families_agree_with_contract(contract):
         "digitalmodel.example.child",
     ],
 )
-def test_missing_module_or_namespace_is_rejected(tmp_path, missing):
+def test_missing_module_or_namespace_is_advisory(tmp_path, missing, capsys):
     source = tmp_path / "src/digitalmodel/example/child.py"
     source.parent.mkdir(parents=True)
     source.write_text("", encoding="utf-8")
+    _track_files(tmp_path)
     modules = _source_modules(tmp_path)
     assert modules == {
         "digitalmodel",
@@ -191,21 +197,27 @@ def test_missing_module_or_namespace_is_rejected(tmp_path, missing):
         "digitalmodel.example.child",
     }
     assignments = dict.fromkeys(modules - {missing}, "platform")
-    with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive(assignments, modules)
+    _report_inventory(assignments, modules)
+    assert "report-only" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("tree", (*TEST_TREES, "new-test-tree"))
-def test_new_test_file_requires_an_explicit_home(tmp_path, tree):
+def test_new_test_files_receive_default_homes(tmp_path, tree, contract):
     test = tmp_path / tree / "nested/test_new.py"
     test.parent.mkdir(parents=True)
     test.write_text("", encoding="utf-8")
     other = test.with_name("other_test.py")
     other.write_text("", encoding="utf-8")
+    _track_files(tmp_path)
     files = _test_files(tmp_path)
     assert files == {f"{tree}/nested/test_new.py", f"{tree}/nested/other_test.py"}
-    with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive({f"{tree}/nested/test_new.py": "platform"}, files)
+    seed = copy.deepcopy(contract)
+    seed["test_file_to_family"][f"{tree}/nested/test_new.py"] = "solvers"
+    homes = generator.regenerate(tmp_path, seed)["test_file_to_family"]
+    assert homes == {
+        f"{tree}/nested/test_new.py": "solvers",
+        f"{tree}/nested/other_test.py": "platform",
+    }
 
 
 def test_duplicate_homes_are_rejected():
@@ -216,16 +228,14 @@ def test_duplicate_homes_are_rejected():
         )
 
 
-@pytest.mark.parametrize(
-    "assignments, expected, error",
-    [
-        ({"test.py": "unknown"}, {"test.py"}, "Unknown family"),
-        ({"deleted.py": "platform"}, set(), "Stale"),
-    ],
-)
-def test_unknown_and_stale_assignments_are_rejected(assignments, expected, error):
-    with pytest.raises(AssertionError, match=error):
-        _assert_exhaustive(assignments, expected)
+def test_unknown_family_is_rejected():
+    with pytest.raises(AssertionError, match="Unknown family"):
+        _report_inventory({"test.py": "unknown"}, {"test.py"})
+
+
+def test_stale_assignment_is_advisory(capsys):
+    _report_inventory({"deleted.py": "platform"}, set())
+    assert "report-only" in capsys.readouterr().out
 
 
 def test_domain_module_cannot_silently_become_engine(contract):
@@ -241,16 +251,64 @@ def test_domain_module_cannot_silently_become_engine(contract):
         ("venv", "pyvenv.cfg"),
         (".tox/py", "pyvenv.cfg"),
         (".nox/check", "pyvenv.cfg"),
-        (".claude/worktrees/child", ".git"),
+        ("checkouts/child", ".git"),
     ],
 )
 def test_inventory_prunes_environments_and_checkouts(tmp_path, directory, marker):
     nested = tmp_path / directory
     nested.mkdir(parents=True)
-    (nested / marker).write_text("", encoding="utf-8")
     (nested / "test_dependency.py").write_text("", encoding="utf-8")
     (tmp_path / "test_real.py").write_text("", encoding="utf-8")
+    _track_files(tmp_path)
+    (nested / marker).write_text("", encoding="utf-8")
     assert _test_files(tmp_path) == {"test_real.py"}
+
+
+def test_inventory_uses_only_tracked_files(tmp_path, contract):
+    source = tmp_path / "src/digitalmodel/structural/part.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("", encoding="utf-8")
+    (tmp_path / "test_real.py").write_text("", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("build/\n", encoding="utf-8")
+    _track_files(tmp_path)
+    before = generator.regenerate(tmp_path, contract)
+
+    ignored = tmp_path / "build/lib/digitalmodel/test_ignored.py"
+    ignored.parent.mkdir(parents=True)
+    ignored.write_text("from digitalmodel import run_contract\n", encoding="utf-8")
+    source.with_name("untracked.py").write_text(
+        "from digitalmodel import run_contract\n", encoding="utf-8"
+    )
+    (tmp_path / "test_untracked.py").write_text("", encoding="utf-8")
+
+    assert generator.regenerate(tmp_path, contract) == before
+    assert before["test_file_to_family"] == {"test_real.py": "platform"}
+    assert set(before["module_to_family"]) == {
+        "digitalmodel",
+        "digitalmodel.structural",
+        "digitalmodel.structural.part",
+    }
+
+
+@pytest.mark.parametrize("binding", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"])
+def test_inventory_ignores_inherited_git_bindings(tmp_path, monkeypatch, binding):
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "test_target.py").write_text("", encoding="utf-8")
+    _track_files(target)
+    caller = tmp_path / "caller"
+    caller.mkdir()
+    (caller / "test_caller.py").write_text("", encoding="utf-8")
+    _track_files(caller)
+    before = {path: path.read_bytes() for path in caller.rglob("*") if path.is_file()}
+    monkeypatch.setenv(
+        binding, str(caller if binding == "GIT_WORK_TREE" else caller / ".git")
+    )
+
+    assert _test_files(target) == {"test_target.py"}
+    assert {
+        path: path.read_bytes() for path in caller.rglob("*") if path.is_file()
+    } == before
 
 
 def test_measured_engine_edges_include_review_regressions(contract):
@@ -288,6 +346,8 @@ def test_prefix_rules_cover_new_files(contract):
         generator.prefix_family("new-tree/test_new.py", rules["test_prefixes"], "/")
         == "platform"
     )
+    for name in ("tests/new_directory/test_x.py", "scripts/new_directory/test_x.py"):
+        assert generator.prefix_family(name, rules["test_prefixes"], "/") == "platform"
 
 
 def test_pruning_without_filesystem_access(monkeypatch):
@@ -305,6 +365,13 @@ def test_pruning_without_filesystem_access(monkeypatch):
             yield str(root / name), [], ["test_example.py"]
 
     monkeypatch.setattr(generator.os, "walk", walk)
+    monkeypatch.setattr(
+        generator.subprocess,
+        "check_output",
+        lambda *args,
+        **kwargs: b"tests/test_example.py\0venv/test_example.py\0checkout/test_example.py\0linked/test_example.py\0",
+        raising=False,
+    )
     assert generator.test_files(root) == {"tests/test_example.py"}
 
 
@@ -316,10 +383,10 @@ def test_static_import_forms_are_measured(monkeypatch):
         Path,
         "read_text",
         lambda *args, **kwargs: (
-            "import digitalmodel\n"
-            "from digitalmodel.reporting import spec\n"
-            "from ..reporting import thickness\n"
-            "def local():\n    from digitalmodel import units\n"
+            "import digitalmodel.reporting.spec\n"
+            "from digitalmodel.reporting.thickness import value\n"
+            "from ..citations.registry import Citation\n"
+            "def local():\n    from digitalmodel.units import Unit\n"
         ),
     )
     modules = dict.fromkeys(
@@ -328,6 +395,8 @@ def test_static_import_forms_are_measured(monkeypatch):
             "digitalmodel.reporting",
             "digitalmodel.reporting.spec",
             "digitalmodel.reporting.thickness",
+            "digitalmodel.citations",
+            "digitalmodel.citations.registry",
             "digitalmodel.units",
         ],
         "ENGINE",

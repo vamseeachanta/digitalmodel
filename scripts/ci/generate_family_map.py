@@ -5,7 +5,8 @@
 Run ``python scripts/ci/generate_family_map.py --write`` after adding files.
 ``--check`` reports drift and exits zero while family selection is inactive.
 Dependency measurement covers static absolute and relative imports, including
-imports inside functions and TYPE_CHECKING blocks; dynamic imports are excluded.
+ENGINE package ancestors and imports inside functions and TYPE_CHECKING blocks;
+dynamic imports are excluded.
 """
 
 import argparse
@@ -13,6 +14,7 @@ import ast
 import copy
 import json
 import os
+import subprocess
 import warnings
 from pathlib import Path
 
@@ -21,7 +23,15 @@ CONTRACT = Path("config/ci/module-families.json")
 
 
 def python_files(root):
-    """Include new files but never descend into environments or checkouts."""
+    """Inventory tracked files, pruning environments and nested checkouts."""
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(key, None)
+    tracked = set(
+        os.fsdecode(
+            subprocess.check_output(["git", "ls-files", "-z"], cwd=root, env=env)
+        ).split("\0")
+    )
     for directory, subdirs, names in os.walk(root, followlinks=False):
         parent = Path(directory)
         subdirs[:] = sorted(
@@ -35,7 +45,11 @@ def python_files(root):
         )
         for name in sorted(names):
             path = parent / name
-            if name.endswith(".py") and not path.is_symlink():
+            if (
+                name.endswith(".py")
+                and path.relative_to(root).as_posix() in tracked
+                and not path.is_symlink()
+            ):
                 yield path
 
 
@@ -98,9 +112,14 @@ def measured_dependencies(root, modules, families):
                         parts[: len(parts) - node.level + 1] + ([base] if base else [])
                     )
                 targets = [base] + [base + "." + alias.name for alias in node.names]
-            dependencies[family].update(
-                t for t in targets if modules.get(t) == "ENGINE"
-            )
+            for target in targets:
+                parts = target.split(".")
+                ancestors = (".".join(parts[:i]) for i in range(1, len(parts) + 1))
+                dependencies[family].update(
+                    ancestor
+                    for ancestor in ancestors
+                    if modules.get(ancestor) == "ENGINE"
+                )
     return {family: sorted(values) for family, values in sorted(dependencies.items())}
 
 
