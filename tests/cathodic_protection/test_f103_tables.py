@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the cited DNV-RP-F103 table lookups (issues #2207, #2208).
 
 Every table value is asserted against the fixture CSVs under
@@ -30,8 +33,9 @@ from digitalmodel.cathodic_protection.f103_tables import (
     FluidTemperatureBand,
     LinepipeCoating,
 )
-from digitalmodel.citations import CitationResolutionError, validate_citation
+from digitalmodel.citations import Citation, CitedValue, CitationResolutionError, validate_citation
 from digitalmodel.citations.resolver import resolve_wiki_path
+from digitalmodel.citations.table_verification import verify_table_value
 
 DATASETS = (
     Path(__file__).resolve().parents[1]
@@ -58,6 +62,7 @@ EXPECTED = {
 }
 
 EDITION: F103Edition = "2010"
+# DNV-RP-F103 October 2010, Tables A.1 and A.2, x100 column headings.
 SCALE = 100.0
 
 # Representative temperature inside each band.
@@ -98,6 +103,37 @@ _FJC_2019_BY_TOKENS = {
 _MATERIAL_BY_LABEL = {"Al-Zn-In": AnodeMaterial.ALUMINIUM, "Zn": AnodeMaterial.ZINC}
 _TEMPERATURE_OF_ROW = {"≤30": 30.0, "60": 60.0, "80": 80.0, ">30to50": 50.0}
 _ROW_LABEL_IN_MODULE = {"≤30": "≤30", "60": "60", "80": "80", ">30to50": "> 30 to 50"}
+
+
+def _verify_f103(result, value, units, edition, section, note):
+    """Compare against CSV values and independently supplied source metadata.
+
+    DNV-RP-F103 October 2010 and DNVGL-RP-F103 September 2019 (amended
+    May 2021): table locators and provenance are recorded in the existing
+    dataset PROVENANCE.md and identity fixture frontmatter.
+    """
+    revision, filename, standard = {
+        "2010": ("2010", "dnv-rp-f103.md", "DNV-RP-F103 (October 2010)"),
+        "2019": ("2019-09", "dnv-rp-f103-2019.md", "DNVGL-RP-F103 (September 2019, amended May 2021)"),
+    }[edition]
+    expected = CitedValue(
+        value=value, units=units,
+        citation=Citation(
+            code_id="dnv-rp-f103", publisher="DNV", revision=revision,
+            section=section,
+            wiki_path="wikis/engineering-standards/wiki/standards/" + filename,
+            note=f"{note}; edition={edition} ({standard}); provenance=verified-{edition}-tables",
+        ),
+    )
+    verify_table_value(result, expected, repo_root=CITATION_FIXTURES)
+
+
+def _verify_coating_pair(pair, values, edition, section, label):
+    for actual, value, parameter, units in zip(
+        pair, values, ("a", "b"), ("dimensionless", "1/yr"), strict=True,
+    ):
+        _verify_f103(actual, value, units, edition, section,
+                     f"coating breakdown constant {parameter}, {label}")
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +215,7 @@ def table_a2_2010() -> dict[str, dict[str, object]]:
         code = row[0].split()[0]
         key = code.lower() if code == "None" else code
         out[key] = {
+            "infill": " ".join(row[1].split()),
             "max_temp": float(row[2]) if row[2] else None,
             "a_x100": float(row[4]),
             "b_x100": float(row[5]),
@@ -192,7 +229,10 @@ def table_a2_2019() -> dict[FieldJointCoating2019, dict[str, object]]:
     out: dict[FieldJointCoating2019, dict[str, object]] = {}
     for row in _data_rows(_read_table("2019", "a2")[2:]):
         key = _FJC_2019_BY_TOKENS[(row[0].split()[0], row[1].split()[0])]
-        out[key] = {"max_temp": float(row[2]), "a": float(row[4]), "b": float(row[5])}
+        out[key] = {
+            "infill": " ".join(row[1].split()),
+            "max_temp": float(row[2]), "a": float(row[4]), "b": float(row[5]),
+        }
     return out
 
 
@@ -307,6 +347,11 @@ def test_mean_current_density_matches_density_table(edition, exposure, band):
     if band not in tbl.temperature_bands(edition):
         return
     result = tbl.mean_current_density(exposure, _TEMPERATURE_IN_BAND[band], edition=edition)
+    _verify_f103(
+        result, density_table(edition)[(exposure, band)], "A/m2", edition,
+        {"2010": "Table 5-1", "2019": "Table 6-2"}[edition],
+        f"design mean current density, {exposure.value}, fluid temperature {band.value} °C",
+    )
     assert result.value == density_table(edition)[(exposure, band)]
     assert result.units == "A/m2"
     assert result.citation.section == EXPECTED[edition][3]
@@ -377,6 +422,10 @@ def test_fluid_temperature_band_boundaries_2019(fluid_temp_c, expected):
 def test_linepipe_coating_constants_match_table_a1_2010(coating):
     row = table_a1_2010()[coating.cds_number]
     a, b = tbl.linepipe_coating_constants(coating, edition=EDITION)
+    _verify_coating_pair(
+        (a, b), (row["a_x100"] / SCALE, row["b_x100"] / SCALE), "2010", "Table A.1",
+        f"{coating.value} (DNV-RP-F106 CDS No. {coating.cds_number}) (printed x100)",
+    )
     assert a.value == row["a_x100"] / SCALE
     assert b.value == row["b_x100"] / SCALE
     assert coating.max_temperature_c == row["max_temp"]
@@ -391,6 +440,10 @@ def test_linepipe_coating_constants_match_table_a1_2010(coating):
 def test_linepipe_coating_constants_match_table_a1_2019(coating, concrete):
     row = table_a1_2019()[(coating, concrete)]
     a, b = tbl.linepipe_coating_constants(coating, "2019", concrete_weight_coating=concrete)
+    _verify_coating_pair(
+        (a, b), (row["a"], row["b"]), "2019", "Table A-1",
+        f"{coating.value} (DNVGL-RP-F106 CDS {row['cds']}, concrete weight coating {'yes' if concrete else 'no'})",
+    )
     assert a.value == row["a"]
     assert b.value == row["b"]
     assert a.citation.section == "Table A-1"
@@ -454,6 +507,10 @@ def test_2019_only_coatings_raise_under_2010(coating):
 def test_field_joint_coating_constants_match_table_a2_2010(fjc):
     row = table_a2_2010()[fjc.value]
     a, b = tbl.field_joint_coating_constants(fjc, edition=EDITION)
+    _verify_coating_pair(
+        (a, b), (row["a_x100"] / SCALE, row["b_x100"] / SCALE), "2010", "Table A.2",
+        f"FJC {fjc.value} (infill {row['infill']}) (printed x100)",
+    )
     assert a.value == row["a_x100"] / SCALE
     assert b.value == row["b_x100"] / SCALE
     assert fjc.max_temperature_c == row["max_temp"]
@@ -466,6 +523,10 @@ def test_field_joint_coating_constants_match_table_a2_2010(fjc):
 def test_field_joint_coating_constants_match_table_a2_2019(fjc):
     row = table_a2_2019()[fjc]
     a, b = tbl.field_joint_coating_constants(fjc, edition="2019")
+    _verify_coating_pair(
+        (a, b), (row["a"], row["b"]), "2019", "Table A-2",
+        f"FJC {fjc.value} (DNVGL-RP-F102 (2011) system; infill {row['infill']})",
+    )
     assert a.value == row["a"]
     assert b.value == row["b"]
     assert fjc.max_temperature_c == row["max_temp"]
@@ -541,6 +602,11 @@ def test_anode_values_2019_match_table_6_3(material, environment, row):
     cap = tbl.anode_capacity(material, environment, "2019", temperature)
     pot = tbl.anode_closed_circuit_potential(material, environment, "2019", temperature)
     voltage = tbl.design_driving_voltage(material, "2019", environment, temperature)
+    basis = f"anode surface temperature row {_ROW_LABEL_IN_MODULE[row]} °C (requested {temperature:g} °C)"
+    _verify_f103(cap, capacity, "Ah/kg", "2019", "Table 6-3",
+                 f"design electrochemical capacity, {material.value}, {environment.value}, {basis}")
+    _verify_f103(pot, potential, "V (Ag/AgCl/seawater)", "2019", "Table 6-3",
+                 f"design closed circuit potential, {material.value}, {environment.value}, {basis}")
     assert cap.value == capacity
     assert pot.value == potential
     assert voltage.value == pytest.approx(-0.80 - potential)
