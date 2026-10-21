@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -902,6 +903,135 @@ def test_evidence_log_transport_failure_cannot_authorize_recovery(monkeypatch):
         raise subprocess.CalledProcessError(1, ["gh", "api"])
     monkeypatch.setattr(ci, "gh_text", unavailable)
     assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
+
+
+@pytest.mark.parametrize("kind,number", [("runs", 99), ("jobs", 7)])
+@pytest.mark.parametrize("outcome", ["FAILED", "ERROR"])
+def test_evidence_download_accepts_captured_escape_sequences(tmp_path, kind, number, outcome):
+    prefix = "repos/example/repository/actions"
+    responses = {
+        f"{prefix}/runs/99": evidence_response("run"),
+        f"{prefix}/runs/99/jobs?per_page=100": evidence_response("/jobs?"),
+        f"{prefix}/jobs/7": evidence_response(f"{prefix}/jobs/7"),
+        f"{prefix}/jobs/7/logs": (
+            "2026-10-15T12:00:00.000Z \x1b[36;1mRun tests\x1b[0m\n"
+            f"2026-10-15T12:00:01.000Z \x1b[31m{outcome} {EVIDENCE_NODE} - assertion\x1b[0m\n"),
+    }
+    executable = tmp_path / "gh"
+    executable.write_text(
+        f"#!{sys.executable}\nimport json, sys\n"
+        f"responses = json.loads({json.dumps(responses)!r})\n"
+        "args = sys.argv[1:]\n"
+        "assert args[0] == 'api'\n"
+        "endpoint = args[-1]\n"
+        "if endpoint.endswith('/logs'):\n"
+        "    if '--allow-escape-sequences' not in args:\n"
+        "        sys.exit('pass --allow-escape-sequences')\n"
+        "    sys.stdout.write(responses[endpoint])\n"
+        "else:\n"
+        "    assert '--allow-escape-sequences' not in args\n"
+        "    print(json.dumps(responses[endpoint]))\n")
+    executable.chmod(0o755)
+    url = f"https://github.com/example/repository/actions/{kind}/{number}"
+    completed = subprocess.run(
+        [sys.executable, "-c", "from scripts.ci.ci_baseline import verified_evidence; "
+         f"raise SystemExit(not verified_evidence({url!r}, 'example', {EVIDENCE_NODE!r}))"],
+        cwd=ROOT, env=dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"]),
+        text=True, capture_output=True, timeout=15)
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+
+
+@pytest.mark.parametrize("job_id", [7, None])
+def test_direct_job_evidence_rejects_wrong_or_missing_id(monkeypatch, job_id):
+    def metadata(endpoint):
+        response = evidence_response(endpoint)
+        if endpoint.endswith("/jobs/8"):
+            response = evidence_response("/jobs?")["jobs"][0]
+            if job_id is None:
+                response.pop("id")
+            else:
+                response["id"] = job_id
+        return response
+    monkeypatch.setattr(ci, "gh_json", metadata)
+    assert ci.verified_evidence(
+        "https://github.com/example/repository/actions/jobs/8", "example", EVIDENCE_NODE) is False
+
+
+@pytest.mark.parametrize("job_id", [None, "invalid"])
+def test_run_evidence_rejects_missing_or_nonnumeric_job_id(monkeypatch, job_id):
+    def metadata(endpoint):
+        response = evidence_response(endpoint)
+        if "jobs" in response:
+            if job_id is None:
+                response["jobs"][0].pop("id")
+            else:
+                response["jobs"][0]["id"] = job_id
+        return response
+    monkeypatch.setattr(ci, "gh_json", metadata)
+    assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
+
+
+def test_register_shares_parsed_job_log_without_sharing_node_decisions(tmp_path, monkeypatch):
+    second = "tests/test_new.py::test_second[case]"
+    missing = EVIDENCE_NODE + "[other]"
+    nodes = [EVIDENCE_NODE, second, missing]
+    urls = [EVIDENCE_URL, "https://github.com/example/repository/actions/jobs/7",
+            "https://api.github.com/repositories/123/actions/jobs/7"]
+    path = tmp_path / "register.yml"
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=urls) for node in nodes]))
+    downloads, parses = [], []
+    original_parser = ci.parse_log_text
+
+    def log(endpoint):
+        downloads.append(endpoint)
+        return f"FAILED {EVIDENCE_NODE} - assertion\nERROR {second} - setup\n"
+
+    def parse(content):
+        parses.append(content)
+        return original_parser(content)
+
+    monkeypatch.setattr(ci, "gh_text", log)
+    monkeypatch.setattr(ci, "parse_log_text", parse)
+    assert ci.register_decisions(path, nodes, "example") == {
+        EVIDENCE_NODE: "registered with evidence", second: "registered with evidence",
+        missing: "missing open entry with evidence"}
+    assert downloads == ["repos/example/repository/actions/jobs/7/logs"]
+    assert len(parses) == 1
+    monkeypatch.setattr(ci, "gh_text", lambda endpoint: f"ERROR {second} - setup\n")
+    assert ci.register_decisions(path, nodes, "example") == {
+        EVIDENCE_NODE: "missing open entry with evidence", second: "registered with evidence",
+        missing: "missing open entry with evidence"}
+
+
+@pytest.mark.parametrize("content", ["unparsed log", None])
+def test_register_caches_unusable_job_logs_only_within_one_evaluation(tmp_path, monkeypatch, content):
+    nodes = [EVIDENCE_NODE, "tests/test_new.py::test_second"]
+    path = tmp_path / "register.yml"
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])
+                                for node in nodes]))
+    downloads = []
+
+    def metadata(endpoint):
+        response = evidence_response(endpoint)
+        if "jobs" in response:
+            response["jobs"].append(dict(response["jobs"][0], id=8))
+        return response
+
+    def log(endpoint):
+        downloads.append(endpoint)
+        if endpoint.endswith("/jobs/8/logs"):
+            return "\n".join(f"FAILED {node} - assertion" for node in nodes)
+        if content is None:
+            raise subprocess.CalledProcessError(1, ["gh", "api", endpoint])
+        return content
+
+    monkeypatch.setattr(ci, "gh_json", metadata)
+    monkeypatch.setattr(ci, "gh_text", log)
+    assert ci.register_decisions(path, nodes, "example") == dict.fromkeys(
+        nodes, "missing open entry with evidence")
+    assert len(downloads) == 1
+    monkeypatch.setattr(ci, "gh_text", lambda endpoint: f"FAILED {EVIDENCE_NODE} - assertion\n")
+    assert ci.register_decisions(path, nodes, "example")[EVIDENCE_NODE] == "registered with evidence"
 
 
 @pytest.mark.parametrize("changes", [{"parsed": False}, {"exit_code": 2},
