@@ -19,8 +19,8 @@ All models expose the same interface:
     flowing_pressure(q)   → Pwf (psi)
 
 Vogel calibration: Vogel (1968), JPT 20(1), 83-92, doi:10.2118/1476-PA,
-Eq. (1), p. 88; stabilized-test example, p. 89. Readable source:
-https://blasingame.engr.tamu.edu/z_zCourse_Archive/P613_02A/Gas_IPR/00001476.pdf
+Eq. (1), p. 88; stabilized-test example, p. 89. Publisher locator:
+https://doi.org/10.2118/1476-PA
 """
 
 from __future__ import annotations
@@ -111,8 +111,10 @@ class VogelIpr:
     ) -> "VogelIpr":
         """Calibrate oil qmax from a stabilized test using Vogel (1968), Eq. (1).
 
-        Rate is oil BOPD; pressures use a consistent absolute datum. The
-        two-phase solution-gas-drive assumption is supplied by the caller.
+        Rate is oil BOPD; pressure ratios depend on the pressure datum. The
+        caller supplies the datum and two-phase solution-gas-drive basis.
+        The p. 89 benchmark uses its transcribed psi values without a datum
+        shift; a gauge or absolute label has not been verified for it.
         The reservoir must be at or below bubble point (p. 84). The PI field
         is unused. Shut-in tests cannot identify qmax; invalid observations
         raise ValueError rather than being clipped. This calibration does
