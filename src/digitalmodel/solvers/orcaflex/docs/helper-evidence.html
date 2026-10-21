@@ -24,9 +24,9 @@ it does not qualify native analyses or the full helper package.</p>
 
 <h2>Revision history</h2>
 <table>
+  <caption>Revision history for this evidence supplement.</caption>
   <tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
   <tr><td>1</td><td>2026-10-19</td><td>Maturity and parallel configuration are reconciled with source because the previous guidance prescribed unsupported defaults.</td></tr>
-  <caption>Revision history for this evidence supplement.</caption>
 </table>
 
 <h2>Source basis and reading boundary</h2>
@@ -39,6 +39,7 @@ The registry retains beta maturity at both revisions. Symbol locators are used
 because registry line numbers have moved. No engineering equation, empirical
 coefficient or acceptance limit is introduced.</p>
 <table>
+  <caption>Bounded source review; no source import or solver query is performed.</caption>
   <tr><th>Source and locator</th><th>Observed behavior</th><th>Qualification boundary</th></tr>
   <tr><td><a href="../../../../../docs/registry/module-routing.yaml">Routing registry</a>, module <code>solvers</code></td><td>Parent group maturity is beta.</td><td>The compatibility module's separate maturity does not qualify this package.</td></tr>
   <tr><td><a href="../orcaflex_optimized_parallel_v2.py">Optimized parallel helper</a>, <code>OrcaFlexOptimizedParallelAnalysis.__init__</code></td><td>Absent count enables dynamic allocation; explicit count is retained. Process execution is the default executor mode.</td><td>Constructor state alone establishes neither worker execution nor resource sufficiency.</td></tr>
@@ -46,7 +47,6 @@ coefficient or acceptance limit is introduced.</p>
   <tr><td>Same file, <code>SimpleResourceManager.calculate_optimal_threads</code></td><td>Allocation depends on file sizes, available memory and CPU count.</td><td>Size bands and memory allowance are source heuristics; independent optimality evidence is absent.</td></tr>
   <tr><td>Same file, <code>process_single_file_worker</code></td><td>The unavailable-interface branch reports implicit mock output without writing the named simulation.</td><td>Tracked by issue #2521; no result from this branch qualifies native completion.</td></tr>
   <tr><td><a href="../performance_monitor.py">Performance helper</a>, <code>ResourceManager.calculate_optimal_threads</code></td><td>A separate allocator has different size branches and is not selected by the optimized parallel helper.</td><td>Reading its logging, memory and batching utilities is not a runtime or benchmark qualification.</td></tr>
-  <caption>Bounded source review; no source import or solver query is performed.</caption>
 </table>
 <p>SHA-256 of the pinned optimized parallel source:
 <code>169c6ceb806ac0629bae99522f452ee10b55fdd19f6426e05b3267e767670718</code>.
@@ -62,26 +62,28 @@ The class body is extracted through the Python AST; module-level imports are
 excluded. Filesystem cases use temporary synthetic text, not engineering inputs.
 Conditional skips: none. Parameter variants are included in the listed entry.</p>
 <table>
+  <caption>Focused offline contracts; passing entries do not establish native runtime behavior.</caption>
   <tr><th>Test entry</th><th>Dependency status</th><th>Expected-value basis</th></tr>
   <tr data-test="test_constructor_selects_dynamic_allocation" data-status="offline"><td><code>test_constructor_selects_dynamic_allocation</code></td><td>offline</td><td>Constructor assignments; both executor-mode flags retain a None count and enable dynamic allocation.</td></tr>
   <tr data-test="test_constructor_preserves_explicit_count" data-status="offline"><td><code>test_constructor_preserves_explicit_count</code></td><td>offline</td><td>The synthetic caller count is retained and dynamic allocation is disabled.</td></tr>
   <tr data-test="test_empty_batch_returns_before_resource_probes" data-status="offline"><td><code>test_empty_batch_returns_before_resource_probes</code></td><td>offline</td><td>First branch returns no_files with empty results.</td></tr>
   <tr data-test="test_directory_early_returns" data-status="offline"><td><code>test_directory_early_returns</code></td><td>offline</td><td>Missing directory and existing empty directory select their respective return dictionaries.</td></tr>
-  <tr data-test="test_directory_delegates_matching_paths_and_config" data-status="offline"><td><code>test_directory_delegates_matching_paths_and_config</code></td><td>offline</td><td>A matching suffix selects the synthetic path; a spy records unchanged configuration.</td></tr>
+  <tr data-test="test_directory_delegates_matching_paths_and_config" data-status="offline"><td><code>test_directory_delegates_matching_paths_and_config</code></td><td>offline</td><td>The default pattern excludes a nested synthetic path; **/*.dat includes it. A spy records unchanged configuration in both cases.</td></tr>
+  <tr data-test="test_readme_parallel_claims_are_qualified" data-status="offline"><td><code>test_readme_parallel_claims_are_qualified</code></td><td>offline</td><td>Thread safety and historical performance are explicitly unqualified; fixed worker recommendations are absent.</td></tr>
+  <tr data-test="test_evidence_table_captions_are_first_children" data-status="offline"><td><code>test_evidence_table_captions_are_first_children</code></td><td>offline</td><td>HTML parsing confirms each table begins with its caption; CSS retains caption placement below the table.</td></tr>
   <tr data-test="test_readme_maturity_matches_parent_registry" data-status="offline"><td><code>test_readme_maturity_matches_parent_registry</code></td><td>offline</td><td>The parent solvers registry supplies the expected maturity.</td></tr>
   <tr data-test="test_guideline_examples_match_constructor_and_methods" data-status="offline"><td><code>test_guideline_examples_match_constructor_and_methods</code></td><td>offline</td><td>Documented calls bind to the source class signatures; invalid constructor keywords fail.</td></tr>
   <tr data-test="test_performance_guidance_exposes_evidence_boundary" data-status="offline"><td><code>test_performance_guidance_exposes_evidence_boundary</code></td><td>offline</td><td>The guide declares unverified performance and points to this evidence boundary.</td></tr>
   <tr data-test="test_evidence_page_classifies_every_new_test" data-status="offline"><td><code>test_evidence_page_classifies_every_new_test</code></td><td>offline</td><td>AST test names match the matrix; dependency statuses use the declared vocabulary.</td></tr>
   <tr data-test="test_evidence_page_links_resolve" data-status="offline"><td><code>test_evidence_page_links_resolve</code></td><td>offline</td><td>Each relative evidence link resolves to a repository file.</td></tr>
-  <caption>Focused offline contracts; passing entries do not establish native runtime behavior.</caption>
 </table>
 
 <h2>Existing harness boundaries</h2>
 <table>
+  <caption>Inspected harnesses are classified separately from the executed test matrix.</caption>
   <tr><th>Harness</th><th>Dependency status</th><th>Guard and evidence gap</th></tr>
   <tr><td><a href="../../../../../tests/solvers/orcaflex/test_production_optimization.py">test_production_optimization.py</a>, <code>test_production_files</code></td><td>offline, fixture-dependent</td><td>No pytest skip protects absent inputs: the function returns when no simulation files are found. It writes a report directory before that return. A passing invocation without fixtures supplies no performance evidence; this harness is not executed here.</td></tr>
   <tr><td><a href="../../../../../tests/solvers/orcaflex/baseline_performance_test.py">baseline_performance_test.py</a>, <code>BaselinePerformanceTest</code></td><td>interface-dependent</td><td>This is a command-line benchmark harness, not a collected pytest test class. Its transitive imports attempt a licensed-interface import, and its processing branch loads native models when available. No native call is authorized or run here.</td></tr>
-  <caption>Inspected harnesses are classified separately from the executed test matrix.</caption>
 </table>
 
 <h2>Remaining evidence</h2>

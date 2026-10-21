@@ -11,6 +11,7 @@ import ast
 import inspect
 import logging
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -86,17 +87,32 @@ def test_directory_early_returns(analysis_class, tmp_path, exists):
     }
 
 
-def test_directory_delegates_matching_paths_and_config(analysis_class, tmp_path):
+@pytest.mark.parametrize("recursive", [False, True])
+def test_directory_delegates_matching_paths_and_config(
+    analysis_class, tmp_path, recursive
+):
     """One synthetic text file matches; the other suffix is excluded by glob."""
     included = tmp_path / "included.dat"
     included.write_text("synthetic input; not a solver model", encoding="utf-8")
     (tmp_path / "excluded.txt").write_text("excluded", encoding="utf-8")
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    nested_file = nested / "nested.dat"
+    nested_file.write_text("synthetic input; not a solver model", encoding="utf-8")
     analysis = analysis_class()
     expected = object()
     analysis.process_files_parallel = Mock(return_value=expected)
     config = {"static": False}
-    assert analysis.process_directory(str(tmp_path), config=config) is expected
-    analysis.process_files_parallel.assert_called_once_with([str(included)], config)
+    kwargs = {"pattern": "**/*.dat"} if recursive else {}
+    assert (
+        analysis.process_directory(str(tmp_path), config=config, **kwargs) is expected
+    )
+    analysis.process_files_parallel.assert_called_once()
+    paths, actual_config = analysis.process_files_parallel.call_args.args
+    assert set(paths) == (
+        {str(included), str(nested_file)} if recursive else {str(included)}
+    )
+    assert actual_config is config
 
 
 def test_readme_maturity_matches_parent_registry():
@@ -105,7 +121,7 @@ def test_readme_maturity_matches_parent_registry():
     maturity = re.search(r"^    maturity: (\w+)$", group, re.MULTILINE)[1]
     readme = (MODULE / "MODULE_README.md").read_text(encoding="utf-8")
     assert f"**Status**: {maturity}" in readme
-    assert "Production Ready" not in readme
+    assert re.search(r"(?i)production[- ]ready", readme) is None
 
 
 def test_guideline_examples_match_constructor_and_methods(analysis_class):
@@ -172,3 +188,33 @@ def test_evidence_page_links_resolve():
     page = MODULE / "docs/helper-evidence.html"
     for target in re.findall(r'href="([^"]+)"', page.read_text(encoding="utf-8")):
         assert (page.parent / target).is_file(), target
+
+
+def test_readme_parallel_claims_are_qualified():
+    readme = (MODULE / "MODULE_README.md").read_text(encoding="utf-8")
+    assert "Thread-safe execution" not in readme
+    assert "thread safety NOT_EVALUATED" in readme
+    performance = readme.split("## Performance\n", 1)[1].split("## Testing", 1)[0]
+    assert "UNVERIFIED" in performance
+    assert "**Default**: 30 workers" not in performance
+    assert "For large models" not in performance
+
+
+def test_evidence_table_captions_are_first_children():
+    class TableParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.first_children = []
+            self.awaiting_child = False
+
+        def handle_starttag(self, tag, attrs):
+            if self.awaiting_child:
+                self.first_children.append(tag)
+                self.awaiting_child = False
+            if tag == "table":
+                self.awaiting_child = True
+
+    parser = TableParser()
+    parser.feed((MODULE / "docs/helper-evidence.html").read_text(encoding="utf-8"))
+    assert len(parser.first_children) == 4
+    assert all(tag == "caption" for tag in parser.first_children)

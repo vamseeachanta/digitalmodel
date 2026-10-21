@@ -440,16 +440,16 @@ orcaflex-universal --verbose --test
 
 ### Parallel Processing
 
-- **Default**: 30 workers
-- **Recommended**: Match CPU cores for small models
-- **Large models**: Reduce workers to avoid memory issues
-
-```python
-# Adjust workers based on model size
-runner = UniversalOrcaFlexRunner(max_workers=10)  # For large models
-```
+The optimized parallel helper defaults to dynamic allocation (`num_threads=None`).
+A fixed optimal worker count and model-size recommendations are **UNVERIFIED**.
+Worker selection requires a caller decision and independent benchmark evidence;
+see [helper configuration](THREAD_OPTIMIZATION_GUIDELINES.md).
 
 ### Benchmarks
+
+**UNVERIFIED**: the historical values below have no independent measurement
+record or input/result manifest. They are not worker-count recommendations.
+Performance qualification remains **NOT_EVALUATED**.
 
 | Models | Workers | Time | Speedup |
 |--------|---------|------|---------|
@@ -541,7 +541,7 @@ not possible on Linux. To transfer this work to a Windows machine:
 
 - **OrcaFlex API**: Full compatibility with OrcFxAPI
 - **File Formats**: Supports .yml, .dat, .sim files
-- **Parallel Processing**: Thread-safe execution
+- **Parallel Processing**: process or thread executors; thread safety NOT_EVALUATED (see [helper evidence](docs/helper-evidence.html))
 - **Error Handling**: Comprehensive exception handling
 
 ---
@@ -551,7 +551,7 @@ not possible on Linux. To transfer this work to a Windows machine:
 1. **OrcaFlex License**: Full functionality requires OrcaFlex installation
 2. **Platform**: Tested on Windows and Linux (Wine required for both GUI and Python API on Linux)
 3. **File Size**: Large .sim files may require significant memory
-4. **Parallel Limits**: Maximum 30 workers (configurable)
+4. **Parallel Limits**: Worker limits depend on the selected helper and configuration; no universal maximum is established here
 5. **Wine on Linux**: WineHQ repo `Suites` must match Ubuntu codename; Wine installs to `/opt/wine-stable/bin/` (not on PATH by default)
 6. **GUI Automation**: OrcaFlex Demo GUI cannot be automated headlessly (see below)
 
@@ -587,7 +587,7 @@ OrcaFlex Demo is a GUI application that cannot be used for headless/automated fi
 - ✅ Unified module structure
 - ✅ Comprehensive testing infrastructure
 - ✅ CI/CD automation
-- ✅ Production-ready documentation
+- ✅ Documentation available; qualification remains incomplete
 - ✅ Two CLI commands
 - ✅ Python API
 - ✅ Mock mode support
