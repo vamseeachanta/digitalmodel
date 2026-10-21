@@ -84,8 +84,8 @@ def cathodic_protection_rows() -> list[dict]:
 
 def wall_thickness_3d_rows(source: Path | None = None) -> list[dict]:
     """The (t, T, M) study from build_wall_thickness_3d.py — already tidy, so this only
-    reads it. 354,609 rows: 191 MB as JSON, ~1 MB as parquet, which is why the JSON is
-    gitignored and only the published dataset is durable (#1915)."""
+    reads it. The full JSON is gitignored; the published dataset is the durable
+    export (#1915). Serialized size depends on the row schema and encoding."""
     doc = (
         json.loads(source.read_text(encoding="utf-8"))
         if source is not None else _load("structural/wall-thickness-3d.json")

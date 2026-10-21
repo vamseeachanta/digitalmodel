@@ -361,6 +361,16 @@
   },
   {
     "id": "wall-thickness-explorer",
+    "title": "Wall-thickness multi-code explorer",
+    "summary": "One 12.75-inch X65 deepwater line sized under all nine registered design codes at once — a wall-thickness slider drives each code's governing utilization against the 1.0 limit, with the minimum wall to pass per code. Every point is a live WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+    "key_figure": {
+      "value": "9",
+      "label": "design codes"
+    },
+    "link": "docs/api/structural/wall-thickness-explorer.html"
+  },
+  {
+    "id": "wall-thickness-3d-explorer",
     "title": "Wall-thickness tension and bending explorer",
     "summary": "Wall thickness, effective tension and bending moment swept across nine design codes. A fetched, bounded snapshot shows utilisation and governing check as a 3D surface with a 2D fallback. Inputs are assumed, based on previous experience; design qualification is not evaluated.",
     "key_figure": {

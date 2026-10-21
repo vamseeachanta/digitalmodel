@@ -44,6 +44,20 @@ def test_committed_cards_are_fresh():
     assert json.loads(builder._OUT.read_text(encoding="utf-8")) == builder.build_cards()
 
 
+def test_regeneration_preserves_both_wall_thickness_explorer_links(tmp_path):
+    target = tmp_path / "capability-cards.json"
+    assert builder.main(["--output", str(target)]) == 0
+    cards = json.loads(target.read_text(encoding="utf-8"))
+    by_id = {card["id"]: card for card in cards}
+    assert len(by_id) == len(cards)
+    assert by_id["wall-thickness-explorer"]["link"] == (
+        "docs/api/structural/wall-thickness-explorer.html"
+    )
+    assert by_id["wall-thickness-3d-explorer"]["link"] == (
+        "docs/api/structural/wall-thickness-3d-explorer.html"
+    )
+
+
 def test_section_cards_link_to_the_published_capabilities_page():
     cards = {card["id"]: card for card in builder.build_cards()}
     for spec in builder.SPECS:

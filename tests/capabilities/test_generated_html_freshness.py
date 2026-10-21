@@ -97,7 +97,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
 
     assert checker.validate_registry(checker.REPO) == []
     assert len(checker.GENERATORS) == 23
-    assert len(outputs) == 23  # the 36 capabilities/api envelope pages were removed
+    assert len(outputs) == 24  # 23 HTML pages and the load explorer JSON
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -429,3 +429,56 @@ def test_registry_reports_registered_script_syntax_error(
         f"  x {errors[0]}\n"
     )
     assert "Traceback" not in text
+
+
+def test_load_explorer_registers_its_fetched_sidecar():
+    entry = next(entry for entry in checker.GENERATORS
+                 if entry.script.endswith("build_wall_thickness_3d_page.py"))
+    assert entry.sidecars == ("docs/api/structural/wall-thickness-3d-explorer.json",)
+
+
+def test_sidecar_alone_does_not_satisfy_globbed_html_output(monkeypatch):
+    from types import SimpleNamespace
+
+    entry = checker.Generator(
+        "unused.py", output_glob="missing-pages-*.html",
+        sidecars=("docs/api/structural/wall-thickness-3d-explorer.json",),
+    )
+    monkeypatch.setattr(checker, "run_script", lambda *args: SimpleNamespace(returncode=0))
+    assert "produced no registered" in checker.run_generator(checker.REPO, entry)
+
+
+@pytest.mark.parametrize("globbed", [False, True])
+@pytest.mark.parametrize("state", ["same", "drift", "missing_committed", "missing_generated"])
+def test_sidecar_freshness(tmp_path, monkeypatch, globbed, state):
+    entry = checker.Generator(
+        "build.py", outputs=() if globbed else ("page.html",),
+        output_glob="*.html" if globbed else None, sidecars=("page.json",),
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    repo, shadow = tmp_path / "repo", tmp_path / "shadow"
+    for root in (repo, shadow):
+        root.mkdir()
+        (root / "page.html").write_text("<html></html>", encoding="utf-8")
+    if state != "missing_committed":
+        (repo / "page.json").write_text('{"value":1}', encoding="utf-8")
+    if state != "missing_generated":
+        value = 2 if state == "drift" else 1
+        (shadow / "page.json").write_text(f'{{"value":{value}}}', encoding="utf-8")
+    drift = checker.compare_outputs(repo, shadow)
+    assert [path for path, _ in drift] == ([] if state == "same" else ["page.json"])
+
+
+def test_sidecar_must_be_recreated_by_generator(tmp_path):
+    entry = checker.Generator("build.py", ("page.html",), sidecars=("page.json",))
+    for relative in ("page.html", "page.json"):
+        (tmp_path / relative).write_text("stale", encoding="utf-8")
+    (tmp_path / "build.py").write_text(
+        'from pathlib import Path\nPath("page.html").write_text("fresh")\n',
+        encoding="utf-8",
+    )
+    checker.clear_generated_html(tmp_path, entry)
+    assert not (tmp_path / "page.json").exists()
+    assert "produced no registered" in checker.run_generator(tmp_path, entry)
+    # A missing committed sidecar must reach regeneration rather than unlink failing.
+    checker.clear_generated_html(tmp_path, entry)

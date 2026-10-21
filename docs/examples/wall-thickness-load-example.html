@@ -23,7 +23,7 @@ arithmetic and limits needed to interpret the explorer.</td></tr></tbody></table
 <p>Table 1. Initial issue of the worked example.</p>
 <h2>Inputs</h2>
 <p>All case inputs are <strong>assumed, based on previous experience</strong>, inherited
-from <a href="../../scripts/capabilities/build_wall_thickness_explorer.py">the existing
+from <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/scripts/capabilities/build_wall_thickness_explorer.py">the existing
 reference case</a>. No measured case or published design example is asserted.</p>
 <table><thead><tr><th>Input</th><th>Value</th></tr></thead><tbody>
 <tr><td>Outside diameter (mm)</td><td>323.9</td></tr>
@@ -36,7 +36,7 @@ reference case</a>. No measured case or published design example is asserted.</p
 </tbody></table><p>Table 2. Assumed inputs; the inherited strategies apply geometry allowances differently.</p>
 <h2>Method and sources</h2>
 <p>The source is the repository implementation of <strong>API STD 2RD (2013), Method 1</strong>:
-<a href="../../src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py">ApiStd2rdStrategy</a>,
+<a href="https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py">ApiStd2rdStrategy</a>,
 functions <code>compute_plastic_tension</code>, <code>compute_yield_moment</code>,
 <code>_check_burst</code>, <code>_check_collapse</code> and <code>_check_combined</code>.
 The standard text is not independently verified in this example. The coefficients are
@@ -54,7 +54,7 @@ pressure ratio, as specified by <code>_check_combined</code>.</li>
 <li>The combined utilisation is
 <code>u = (abs(T)/T_y + abs(M)/M_y)/F_corrected</code>.
 The independent arithmetic is written in full in
-<a href="../../tests/capabilities/test_wall_thickness_3d.py">the corner tests</a>;
+<a href="https://github.com/vamseeachanta/digitalmodel/blob/main/tests/capabilities/test_wall_thickness_3d.py">the corner tests</a>;
 the analyzer is not used to calculate those expected values.</li>
 </ol>
 <p>Each load endpoint is a sampling choice of 60.0% of its reference capacity, rounded
