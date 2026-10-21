@@ -7,10 +7,10 @@
 <title>Uncertainty loop — evidence before inspection decisions</title>
 <style>
 :root { color-scheme: light dark; --bg: #f5f7fa; --panel: #fff; --ink: #172b40;
-  --muted: #46576b; --line: #516d80; --accent: #005c57; --tint: #e2f2ed; }
+  --muted: #46576b; --line: #516d80; --loop-accent: #005c57; --tint: #e2f2ed; }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #111b26; --panel: #1a2a39; --ink: #edf2f6; --muted: #c1cfdb;
-    --line: #a4bfce; --accent: #8fe3cd; --tint: #173e3c; }
+    --line: #a4bfce; --loop-accent: #8fe3cd; --tint: #173e3c; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink);
@@ -18,7 +18,7 @@ body { margin: 0; background: var(--bg); color: var(--ink);
 main { max-width: 74rem; margin: auto; padding: 2rem; }
 h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); line-height: 1.2; }
 h2 { line-height: 1.3; }
-.eyebrow, .badge { font-weight: bold; color: var(--accent); }
+.eyebrow, .badge { font-weight: bold; color: var(--loop-accent); }
 .badge { display: inline-block; border: 2px solid currentColor; padding: .2rem .6rem; }
 .muted, .unit, caption { color: var(--muted); }
 section { margin-block: 2rem; }
@@ -30,25 +30,25 @@ th { background: var(--tint); }
 .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2rem; }
 .diagram { margin: 0; overflow-x: auto; }
 .diagram svg { display: block; width: 100%; min-width: 36rem; height: auto; }
-.diagram rect { fill: var(--panel); stroke: var(--accent); stroke-width: 2; }
+.diagram rect { fill: var(--panel); stroke: var(--loop-accent); stroke-width: 2; }
 .diagram text { fill: var(--ink); font: 16px system-ui, sans-serif; text-anchor: middle; }
-.diagram .edges { fill: none; stroke: var(--accent); stroke-width: 3; }
-.diagram marker path { fill: var(--accent); }
+.diagram .edges { fill: none; stroke: var(--loop-accent); stroke-width: 3; }
+.diagram marker path { fill: var(--loop-accent); }
 figcaption { color: var(--muted); margin-block: .6rem; }
 .loop { list-style: none; margin: 0; padding: 0 0 0 1.2rem;
-  border-left: .3rem solid var(--accent); }
+  border-left: .3rem solid var(--loop-accent); }
 details { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; }
 summary { cursor: pointer; padding: .9rem; font-weight: bold; }
-summary:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+summary:focus-visible { outline: .2rem solid var(--loop-accent); outline-offset: .2rem; }
 details[open] summary { border-bottom: 1px solid var(--line); }
 dl { padding: 0 1rem; }
-dt { font-weight: bold; color: var(--accent); }
+dt { font-weight: bold; color: var(--loop-accent); }
 dd { margin: 0 0 .8rem; overflow-wrap: anywhere; }
 .flow { margin: .4rem 0; color: var(--muted); }
-.return { color: var(--accent); font-weight: bold; }
-.feedback { border: 2px dashed var(--accent); }
+.return { color: var(--loop-accent); font-weight: bold; }
+.feedback { border: 2px dashed var(--loop-accent); }
 .feedback p { padding: 0 1rem; }
-.notice { background: var(--tint); border-left: .3rem solid var(--accent); padding: 1rem; }
+.notice { background: var(--tint); border-left: .3rem solid var(--loop-accent); padding: 1rem; }
 footer { border-top: 1px solid var(--line); padding-block: 1rem; }
 @media (max-width: 44rem) {
   main { padding: 1rem; }

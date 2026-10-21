@@ -36,9 +36,9 @@
   },
   "revision": "B",
   "sha256": {
-    "docs/domains/asset-integrity/uncertainty-loop.html": "615ffc5de5ab864c3322fe2650fe5ac77e234c79dc6a153e938c9f519867da75",
+    "docs/domains/asset-integrity/uncertainty-loop.html": "bfb9712ab7240352429ef675f9061998c137ffabaa154a0c033696cd78958bb6",
     "scripts/capabilities/build_uncertainty_loop.py": "c7330700436714fd61d90ce1edb7b6ee5c85fc6745083df180dea38a415517c4",
-    "scripts/capabilities/uncertainty_loop/page.html.template": "a3006756e4c09c912478905db9a802e44597fe291046cc1f260f0edb49a991f8",
+    "scripts/capabilities/uncertainty_loop/page.html.template": "c57819eefca8d01e354469c63eb22d97f843a7e08ead49422b416a61db824c80",
     "scripts/capabilities/uncertainty_loop/workflow.json": "44ae6698e7bb2a70af5e0972b9b64bec7ad5bcab0b2ff5bd515a32ff24e96377"
   },
   "status": "synthetic"
