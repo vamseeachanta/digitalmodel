@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subsea tree liquid choking differential — slice 1</title>
+<style>body{font:16px/1.5 system-ui,sans-serif;max-width:70rem;margin:2rem auto;padding:0 1rem;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd5dd;padding:.5rem;text-align:left}code{overflow-wrap:anywhere}caption{caption-side:bottom;text-align:left;padding:.5rem 0}h1,h2{line-height:1.2}</style></head>
+<body>
+<h1>Subsea tree liquid choking differential — slice 1</h1>
+<p>Refs <a href="https://github.com/vamseeachanta/digitalmodel/issues/2003">issue 2003</a>.
+The Plan-lite is recorded in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2003#issuecomment-6259076096">one issue comment</a>.
+Current main already includes the tree catalog, liquid screen and flow-capacity core from
+<a href="https://github.com/vamseeachanta/digitalmodel/pull/2494">PR 2494</a>.
+This slice extends that core; the broader issue remains open.</p>
+<h2>Delivered calculation and boundary</h2>
+<p><code>liquid_critical_drop(P1, Pv, FL, FF)</code> returns the no-attached-fittings
+liquid choking differential, in psi, for supplied fluid and valve factors.
+Both pressures are absolute. Vapor pressure is evaluated at inlet temperature and
+shall be below inlet pressure. FL shall correspond to the operating opening.
+The numerical input domain requires positive unit-interval factors; unity is a
+normalized ratio boundary, not a qualified equipment acceptance limit.
+No factor or property has a default. The result feeds the existing
+<code>liquid_choke_flow</code> for the same inlet and valve condition.</p>
+<p>Equation reference: Emerson/Fisher, <a href="https://www.emerson.com/is/content/emerson/en/final-control/pressure-management/jt-valves/documents/guide-control-valve-sourcebook-oil-gas-fisher-en-135836.pdf">Control Valve Sourcebook — Oil &amp; Gas</a>,
+2013 edition, Chapter 3: p. 3-5 gives FL²(P1 − FF·Pv); p. 3-3 steps 4–5 and
+Table 3-2 give differential capping and the US gpm/psi Cv relation.
+The public PDF text and equation page were inspected on 2026-10-18.
+Only the equation reference is retained; no source document or equipment table is copied.</p>
+<h2>Independent worked arithmetic</h2>
+<p>All inputs below are synthetic arithmetic fixtures, not measured properties,
+published equipment coefficients or qualified engineering inputs.</p>
+<table>
+<thead><tr><th>Case</th><th>Supplied inputs</th><th>Independent arithmetic</th><th>Expected result</th></tr></thead>
+<tbody>
+<tr><td>Choking differential</td><td>P1=100 psia, Pv=10 psia, FL=0.8, FF=0.9</td><td>0.8² × (100 − 0.9 × 10) = 0.64 × 91</td><td>58.24 psi</td></tr>
+<tr><td>Choked plateau</td><td>Same inlet/factors; P2=20 or 30 psia; Cv=10; SG=0.91</td><td>80 and 70 psi both exceed 58.24 psi; Q=10 × sqrt(58.24/0.91)=10 × 8</td><td>80 US gpm at both outlets</td></tr>
+<tr><td>Subcritical</td><td>Same inlet/factors; P2=85.44 psia; Cv=10; SG=0.91</td><td>100 − 85.44=14.56 &lt; 58.24 psi; Q=10 × sqrt(14.56/0.91)=10 × 4</td><td>40 US gpm</td></tr>
+<tr><td>Critical onset</td><td>P1=100 psia, Pv=0 psia, FL=0.5, FF=0.9; P2=75 psia; Cv=10; SG=1</td><td>0.5² × 100=25 psi; Q=10 × sqrt(25)=10 × 5</td><td>50 US gpm; critical onset</td></tr>
+</tbody><caption>Table 1. Synthetic examples applying the cited liquid equations; the test docstrings contain these hand calculations.</caption></table>
+<h2>Verification and defect review</h2>
+<p>Baseline: 51 tree tests passed. Test-first checkpoint: 31 added cases failed
+because the new calculation was absent, while 13 existing pressure-control cases passed.
+An additional two arithmetic regression cases failed before the underflow correction.
+Final result: <strong>84 passed, 0 failed, 0 skipped</strong> across the tree package,
+including 33 new cases and all 51 baseline cases. The pressure-control module has
+46 passing cases. Ruff passed for all three touched Python files; diff whitespace checks passed.</p>
+<p>Commands: <code>uv run --no-project --with 'pytest&gt;=7.4.3,&lt;9' --with pytest-asyncio==0.21.1 --with ruff python -m pytest tests/subsea/trees -q</code>;
+<code>uv run --no-project --with 'pytest&gt;=7.4.3,&lt;9' --with pytest-asyncio==0.21.1 --with ruff ruff check src/digitalmodel/subsea/trees/pressure_control.py src/digitalmodel/subsea/trees/__init__.py tests/subsea/trees/test_pressure_control.py</code>.
+The checked environment used pytest 8.4.2 and pytest-asyncio 0.21.1.</p>
+<p>The plan-stage defect review identified stale issue scope, attached-fittings
+applicability, absolute-pressure requirements and missing factor qualification.
+The plan bounds the change to the existing liquid core, requires supplied factors,
+and excludes fittings. The code-stage defect review identified premature
+underflow in FL squared: (10^-200)² × 10^300 = 10^-100 and
+(10^-300)² × 10^300 = 10^-300 remain representable final values.
+The calculation now evaluates FL × (FL × corrected pressure), and both regressions pass.
+A genuinely unrepresentable final differential is rejected rather than returned as zero.</p>
+<p>Review was performed inline by a single provider. Additional assistant dispatch
+was prohibited; independent cross-provider review is not established. No licensed
+solver was started, imported or queried. No blocking finding remains within the
+bounded slice; API qualification remains unestablished.</p>
+<p>The same numerical defect was reproduced in the existing HIPPS liquid-sizing
+core and promoted to <a href="https://github.com/vamseeachanta/digitalmodel/issues/2836">issue 2836</a>.
+That source module remains unchanged in this slice.</p>
+<table><thead><tr><th>Reviewed code/test path</th><th>SHA-256 of raw file bytes</th></tr></thead><tbody>
+<tr><td><code>src/digitalmodel/subsea/trees/pressure_control.py</code></td><td><code>a7a4aa268db8d8ef375c7db75e6fb83c2c1fb414be8192cfb8ac7e9cfb0da41d</code></td></tr>
+<tr><td><code>src/digitalmodel/subsea/trees/__init__.py</code></td><td><code>8db2e977c0c22e796926b4eccc80cf969a0d3150394f629c3712b174e3c69cf0</code></td></tr>
+<tr><td><code>tests/subsea/trees/test_pressure_control.py</code></td><td><code>3d796551993c2a2815507b51bbc2054cf9b3de842533f8ee9700468135248220</code></td></tr>
+</tbody><caption>Table 2. Code and test bytes bound to the inline review. The review packet also includes this report and the existing tree-package regression tests.</caption></table>
+<h2>OPEN and next slices</h2>
+<ul>
+<li>API 17D / API 6A edition-specific clause qualification and complete public equipment records remain unestablished. The existing rating tables are outside this slice and have not been requalified.</li>
+<li>API RP 14E coefficient selection and its clause-level qualification remain open. No erosion coefficient is introduced.</li>
+<li>Actual FL, FF, vapor pressure, Cv, specific gravity and turbulent-liquid applicability require a qualified basis for any engineering use.</li>
+<li>Attached-fitting corrections and cavitation or flashing damage assessments are not evaluated by this helper. Gas, multiphase and transient modelling remain outside this liquid calculation.</li>
+<li>Field topology composition remains in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2006">issue 2006</a>; the wider tree issue remains open for later slices.</li>
+</ul>
+<p>Public-artifact review: the outgoing set consists of the three code/test paths
+and this report. It contains equation references and synthetic fixtures; no
+restricted datasets or source PDFs are included. Source-specific qualification
+limits are stated above. Secret and outgoing-wording checks apply separately
+before publication. This report does not establish standards compliance.</p>
+</body></html>
