@@ -663,6 +663,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+    submodules:
+      rao_spectral_fatigue:
+        agent_pack: src/digitalmodel/rao_spectral_fatigue/docs/agent-pack.md
+        qa_family: EC
   - module: riser_configuration_screen
     entry_point: src/digitalmodel/riser_configuration_screen/
     maturity: development
