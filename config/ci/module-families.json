@@ -2674,6 +2674,7 @@
       "digitalmodel.reporting"
     ],
     "hydrodynamics": [
+      "digitalmodel",
       "digitalmodel.common.assumption_ledger",
       "digitalmodel.engine",
       "digitalmodel.reporting",
@@ -2726,6 +2727,7 @@
       "digitalmodel.units"
     ],
     "solvers": [
+      "digitalmodel",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.resolver",
@@ -2734,6 +2736,7 @@
       "digitalmodel.units"
     ],
     "structural": [
+      "digitalmodel",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.schema",
       "digitalmodel.common.assumption_ledger",

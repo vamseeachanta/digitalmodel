@@ -2,10 +2,13 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Static family-contract checks; no application or solver imports/collection."""
 
+import ast
 import copy
 import json
 import os
 from pathlib import Path
+import tokenize
+import warnings
 
 import pytest
 import yaml
@@ -77,6 +80,7 @@ def _test_files(root):
             name
             for name in subdirs
             if name not in {".git", ".venv", "__pycache__", "node_modules"}
+            and not (Path(directory) / name / "pyvenv.cfg").is_file()
         ]
         for name in names:
             if name.endswith(".py") and (
@@ -147,6 +151,43 @@ def test_family_engine_dependencies_reference_only_engine_modules(contract):
     for family, modules in dependencies.items():
         assert modules == sorted(set(modules)), family
         assert set(modules) <= set(contract["engine"]["modules"]), family
+    measured = _measured_engine_dependencies(ROOT, contract["module_to_family"])
+    for family, modules in measured.items():
+        missing = modules - set(dependencies[family])
+        assert not missing, (
+            f"Unlisted ENGINE dependencies for {family}: {sorted(missing)}"
+        )
+
+
+def _import_targets(node, module, is_package):
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if not isinstance(node, ast.ImportFrom):
+        return []
+    base = node.module or ""
+    if node.level:
+        package = module.split(".") if is_package else module.split(".")[:-1]
+        prefix = package[: len(package) - node.level + 1]
+        base = ".".join(prefix + ([base] if base else []))
+    return [base, *(f"{base}.{alias.name}" for alias in node.names)]
+
+
+def _measured_engine_dependencies(root, modules):
+    engine = {module for module, family in modules.items() if family == "ENGINE"}
+    measured = {family: set() for family in FAMILIES - {"ENGINE"}}
+    for path in (root / "src/digitalmodel").rglob("*.py"):
+        module = _module_for_source_path(path.relative_to(root))
+        family = modules[module]
+        if family == "ENGINE":
+            continue
+        with tokenize.open(path) as source, warnings.catch_warnings():
+            # Legacy escape warnings do not prevent static import measurement.
+            warnings.simplefilter("ignore", (SyntaxWarning, DeprecationWarning))
+            tree = ast.parse(source.read(), filename=str(path))
+        for node in ast.walk(tree):
+            targets = _import_targets(node, module, path.name == "__init__.py")
+            measured[family].update(engine.intersection(targets))
+    return measured
 
 
 def _module_for_source_path(source_path):
@@ -207,6 +248,77 @@ def test_new_test_file_requires_an_explicit_home(tmp_path, tree):
     assert files == {f"{tree}/nested/test_new.py", f"{tree}/nested/other_test.py"}
     with pytest.raises(AssertionError, match="Unassigned"):
         _assert_exhaustive({f"{tree}/nested/test_new.py": "platform"}, files)
+
+
+@pytest.mark.parametrize(
+    "environment",
+    [".venv", "venv", ".tox/py", ".nox/tests", "custom-environment"],
+)
+def test_virtual_environment_tests_are_not_repository_tests(tmp_path, environment):
+    environment = tmp_path / environment
+    dependency_test = environment / "lib/site-packages/dependency/test_vendor.py"
+    dependency_test.parent.mkdir(parents=True)
+    (environment / "pyvenv.cfg").write_text("include-system-site-packages = false\n")
+    dependency_test.write_text("raise RuntimeError('must never be imported')\n")
+    repository_test = tmp_path / "tests/test_repository.py"
+    repository_test.parent.mkdir()
+    repository_test.write_text("", encoding="utf-8")
+    assert _test_files(tmp_path) == {"tests/test_repository.py"}
+
+
+@pytest.mark.parametrize("directory", ["venv", ".tox", ".nox", "new-test-tree"])
+def test_environment_names_without_a_marker_still_require_a_home(tmp_path, directory):
+    test = tmp_path / directory / "test_repository.py"
+    test.parent.mkdir()
+    test.write_text("", encoding="utf-8")
+    assert _test_files(tmp_path) == {f"{directory}/test_repository.py"}
+
+
+@pytest.mark.parametrize("family", ["solvers", "hydrodynamics", "structural"])
+def test_missing_engine_facade_dependency_is_rejected(
+    contract, family, tmp_path, monkeypatch
+):
+    source = tmp_path / "src/digitalmodel" / family / "__init__.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("import digitalmodel\n", encoding="utf-8")
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    altered = copy.deepcopy(contract)
+    altered["family_to_engine_deps"][family] = [
+        module
+        for module in altered["family_to_engine_deps"][family]
+        if module != "digitalmodel"
+    ]
+    with pytest.raises(AssertionError, match="Unlisted ENGINE dependencies"):
+        test_family_engine_dependencies_reference_only_engine_modules(altered)
+
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        ("import digitalmodel\n", {"digitalmodel"}),
+        ("if False:\n    import digitalmodel as package\n", {"digitalmodel"}),
+        (
+            "def function():\n    from digitalmodel import engine\n",
+            {"digitalmodel", "digitalmodel.engine"},
+        ),
+        ("from .. import engine\n", {"digitalmodel", "digitalmodel.engine"}),
+        ("from ..engine import run\n", {"digitalmodel.engine"}),
+        ("import digitalmodel.engine\n", {"digitalmodel.engine"}),
+    ],
+)
+def test_engine_dependencies_are_measured_without_importing_sources(
+    tmp_path, source, expected
+):
+    source_path = tmp_path / "src/digitalmodel/example/consumer.py"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text(source + "raise RuntimeError('must never be imported')\n")
+    modules = {
+        "digitalmodel": "ENGINE",
+        "digitalmodel.engine": "ENGINE",
+        "digitalmodel.example.consumer": "platform",
+    }
+    measured = _measured_engine_dependencies(tmp_path, modules)
+    assert measured["platform"] == expected
 
 
 def test_duplicate_homes_are_rejected():
