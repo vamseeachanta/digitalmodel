@@ -2,7 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Regenerate the advisory family inventory without importing application code.
 
-Run ``python scripts/ci/generate_family_map.py --write`` after adding files.
+Run ``python scripts/ci/generate_family_map.py --write`` after staging new files.
 ``--check`` reports drift and exits zero while family selection is inactive.
 Dependency measurement covers static absolute and relative imports, including
 imports inside functions and TYPE_CHECKING blocks; dynamic imports are excluded.
@@ -13,6 +13,7 @@ import ast
 import copy
 import json
 import os
+import subprocess
 import warnings
 from pathlib import Path
 
@@ -20,8 +21,22 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = Path("config/ci/module-families.json")
 
 
+def tracked_python_paths(root):
+    """Read index membership without inheriting another checkout's bindings."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--cached"], cwd=root,
+        env={key: value for key, value in os.environ.items()
+             if not key.upper().startswith("GIT_")},
+        check=True, capture_output=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    return {os.fsdecode(path) for path in result.stdout.split(b"\0")
+            if path.endswith(b".py")}
+
+
 def python_files(root):
-    """Include new files but never descend into environments or checkouts."""
+    """Read tracked files, pruning environments, checkouts and linked paths."""
+    tracked = tracked_python_paths(root)
     for directory, subdirs, names in os.walk(root, followlinks=False):
         parent = Path(directory)
         subdirs[:] = sorted(
@@ -35,7 +50,8 @@ def python_files(root):
         )
         for name in sorted(names):
             path = parent / name
-            if name.endswith(".py") and not path.is_symlink():
+            if (path.relative_to(root).as_posix() in tracked
+                    and not path.is_symlink()):
                 yield path
 
 
@@ -98,9 +114,12 @@ def measured_dependencies(root, modules, families):
                         parts[: len(parts) - node.level + 1] + ([base] if base else [])
                     )
                 targets = [base] + [base + "." + alias.name for alias in node.names]
-            dependencies[family].update(
-                t for t in targets if modules.get(t) == "ENGINE"
-            )
+            for target in targets:
+                parts = target.split(".")
+                ancestors = (".".join(parts[:i]) for i in range(1, len(parts) + 1))
+                dependencies[family].update(
+                    name for name in ancestors if modules.get(name) == "ENGINE"
+                )
     return {family: sorted(values) for family, values in sorted(dependencies.items())}
 
 

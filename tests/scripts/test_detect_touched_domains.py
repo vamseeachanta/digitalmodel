@@ -17,6 +17,12 @@ import pytest
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
 
 
+def test_family_inventory_changes_select_workflows():
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    for path in ("scripts/ci/generate_family_map.py", "config/ci/module-families.json"):
+        assert {d.name for d in detector.touched_domains([path], domains)} == {"workflows"}
+
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
