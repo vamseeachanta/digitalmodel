@@ -71,9 +71,9 @@ _test_files = generator.test_files
 
 
 def _track_files(root):
-    env = os.environ.copy()
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
-        env.pop(key, None)
+    env = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
     for args in (("init",), ("add", "--all")):
         subprocess.run(
             ["git", *args], cwd=root, env=env, check=True, capture_output=True
@@ -290,8 +290,13 @@ def test_inventory_uses_only_tracked_files(tmp_path, contract):
     }
 
 
-@pytest.mark.parametrize("binding", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"])
-def test_inventory_ignores_inherited_git_bindings(tmp_path, monkeypatch, binding):
+@pytest.mark.parametrize(
+    "binding", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"]
+)
+@pytest.mark.parametrize("operation", ["inventory", "track"])
+def test_inventory_ignores_inherited_git_bindings(
+    tmp_path, monkeypatch, binding, operation
+):
     target = tmp_path / "target"
     target.mkdir()
     (target / "test_target.py").write_text("", encoding="utf-8")
@@ -301,11 +306,18 @@ def test_inventory_ignores_inherited_git_bindings(tmp_path, monkeypatch, binding
     (caller / "test_caller.py").write_text("", encoding="utf-8")
     _track_files(caller)
     before = {path: path.read_bytes() for path in caller.rglob("*") if path.is_file()}
-    monkeypatch.setenv(
-        binding, str(caller if binding == "GIT_WORK_TREE" else caller / ".git")
-    )
+    git_path = caller if binding == "GIT_WORK_TREE" else caller / ".git"
+    if binding == "GIT_INDEX_FILE":
+        git_path /= "index"
+    monkeypatch.setenv(binding, str(git_path))
 
-    assert _test_files(target) == {"test_target.py"}
+    expected = {"test_target.py"}
+    if operation == "track":
+        (target / "test_added.py").write_text("", encoding="utf-8")
+        _track_files(target)
+        expected.add("test_added.py")
+
+    assert _test_files(target) == expected
     assert {
         path: path.read_bytes() for path in caller.rglob("*") if path.is_file()
     } == before

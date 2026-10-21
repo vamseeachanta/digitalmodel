@@ -24,9 +24,9 @@ CONTRACT = Path("config/ci/module-families.json")
 
 def python_files(root):
     """Inventory tracked files, pruning environments and nested checkouts."""
-    env = os.environ.copy()
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
-        env.pop(key, None)
+    env = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
     tracked = set(
         os.fsdecode(
             subprocess.check_output(["git", "ls-files", "-z"], cwd=root, env=env)
