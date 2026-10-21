@@ -11,6 +11,7 @@ the omitted second moment; it does not establish compliance with a design standa
 | --- | --- | --- |
 | 1 | 2026-10-19 | Derive a peak-relative cutoff and independent regression moments to address the truncated tail. |
 | 2 | 2026-10-19 | Preserve the fatigue workflow grid, document reduced peak resolution and confirm source equation references to bound the effect of the automatic cutoff. |
+| 3 | 2026-10-20 | Replace shared production expectations with independent finite-grid fatigue references and regenerate the computed atlas after its spectrum source changed. |
 
 ## Sources and independent calculation
 
@@ -72,6 +73,58 @@ existing default sample count, moment and period budgets of `2.0 %` and
 `1.0 %` round the tail bounds upward to leave a quadrature allowance.
 They test this numerical change only. The tests also check caller-supplied
 bounds and reject invalid inputs to the automatic grid.
+
+## Independent finite-grid fatigue references
+
+The compatibility cases use manufactured `Hs = 4 m`, `Tp = 6 or 10 s`, and
+stress RAO gains `[1, 1, 1]` or `[0.5, 2, 1] MPa/m` at frequencies
+`[0.01, 0.15, 0.30] Hz`. The references use `w_i = 0.02 + 0.02 i rad/s`
+for `i = 0,...,99`. Scalar exponential evaluations of the spectrum above are
+normalized by an explicit trapezoidal sum to unit wave variance. Piecewise-linear
+RAO interpolation, clamped outside its endpoints, then gives
+`P_i = 2 pi H(f_i)^2 S(w_i)`, where `f_i = w_i/(2 pi)`.
+
+The fixed reference moments are calculated independently as
+
+```text
+M_n = sum_i (f_(i+1)-f_i) [P_i f_i^n + P_(i+1) f_(i+1)^n]/2, n = 0,1,2,4.
+```
+
+The damage references pin the existing finite-grid fatigue conventions. They
+do not validate those conventions against a design standard or an independent
+fatigue model. With manufactured S-N slope `3` and log intercept `12`, the
+legacy coefficient definitions used for the compatibility calculation are
+
+```text
+e = sqrt(1 - M_2^2/(M_0 M_4)), x = (M_1/M_0) sqrt(M_2/M_4)
+D1 = 2(x-e^2)/(1+e^2)
+R = (e-x-D1^2)/max(1-e-D1+D1^2, 10^-12)
+D2 = (1-e-D1+D1^2)/max(1-R, 10^-12), D3 = 1-D1-D2
+Q = 1.25(e-D3-D2 R)/max(D1, 10^-12).
+```
+
+After calculating these coefficients, `D1`, `D2` and `D3` are bounded below
+by zero; `Q` and `R` are bounded below by `10^-12`, as in the legacy behavior.
+The third moment of each unit-scale density is integrated separately by
+adaptive quadrature: `I_E = integral_0^inf u^3 exp(-u) du` and
+`I_R = integral_0^inf u^4 exp(-u^2/2) du`. This yields the independent annual
+damage reference
+
+```text
+E_Z3 = D1 Q^3 I_E + (D2 R^3 + D3) I_R
+D_year = 31557600 sqrt(M_4/M_2)/(2 pi) (2 sqrt(M_0))^3 E_Z3 / 10^12.
+```
+
+The regression stores the resulting reference moments and annual damage as
+numeric fixtures; no production spectrum, moment or damage function supplies
+an expectation. The numerical comparison tolerance is `10^-12` relative for
+moments and damage. These checks detect changes to the retained grid, PSD
+amplitude, frequency conversion, RAO transfer and default damage calculation.
+
+The computed spectral-fatigue atlas uses JONSWAP, whose grid is unchanged.
+Its provenance nevertheless tracks the entire spectrum source file. Regeneration
+through the existing registry builder refreshes its grid, surrogate, holdout
+validation and source fingerprint together; the earlier atlas version is retained.
 
 ## Known limits and later slices
 
