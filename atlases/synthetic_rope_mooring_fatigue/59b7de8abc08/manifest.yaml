@@ -34,7 +34,7 @@ validation:
   passes: true
 provenance:
   basename: synthetic_rope_mooring_fatigue
-  code_version: 50ff7030
+  code_version: 6600d1de
   standards:
   - id: DNV-OS-E301
     edition: 2018-07
