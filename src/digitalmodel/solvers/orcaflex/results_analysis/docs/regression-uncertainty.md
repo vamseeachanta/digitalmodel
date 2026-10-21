@@ -10,14 +10,21 @@ is the residual standard deviation; it is not the slope standard error.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-21 | Document residual uncertainty, input validation and limiting cases so returned intervals can be interpreted. |
+| 1 | 2026-10-21 | Define constant-response inference and confidence input conversion; clarify interval scope and predictor conditioning limits. |
 
 ## Inputs and method
 
 Inputs are two equally sized, one-dimensional numeric arrays and a finite
-confidence probability strictly between zero and one. A pair is removed when
+confidence probability strictly between zero and one. Confidence inputs are
+converted to float, including numeric text; invalid conversions and probabilities
+raise `ValueError`. A pair is removed when
 either value is NaN. At least three pairs must remain, all retained values must
 be finite, and the predictor must contain distinct values. Returned predictions
 and residuals follow the retained input order.
+
+The returned intervals describe the slope and intercept coefficients only.
+Mean-response confidence intervals and prediction intervals for individual
+observations are not returned; coefficient intervals are not prediction bands.
 
 For `n` retained pairs, define `Sxx = sum((x - xbar)**2)` and
 `Sxy = sum((x - xbar)*(y - ybar))`. The least-squares coefficients are
@@ -108,6 +115,11 @@ duplicating measured rows does not create independent observations.
 
 ## Zero variance and limits
 
+When every retained response equals the first retained response, the slope
+p-value and `r_squared` are explicitly NaN. Zero response variance makes both
+inferences undefined, including for decimal constants such as `y=0.1` over
+`x=(1,2,3,4,5,6,7)`, where fitting can leave small nonzero residuals.
+
 Exactly zero residual variance gives zero coefficient standard errors and
 collapsed intervals. A nonzero slope then has a limiting two-sided p-value of
 zero. A zero slope with zero standard error gives the undefined statistic
@@ -119,6 +131,10 @@ The Student inference assumes independent normal errors with constant variance
 and an appropriate linear model. This calculation does not establish those
 assumptions for time histories or repeated measurements. Collapsed intervals
 from synthetic perfect fits do not establish zero measurement uncertainty.
-Extremely scaled or ill-conditioned inputs and probabilities below the
-floating-point range remain numerical limitations. No solver execution or
+The predictor check rejects exactly constant retained values; it does not apply
+a scale-relative `Sxx` tolerance. Nearly constant inputs such as
+`x=(1,1,1+1e-15)` can pass this check and produce unreliable slopes and intervals.
+Qualification of such inputs remains follow-up work. Extremely scaled inputs
+and probabilities below the floating-point range also remain numerical
+limitations. No solver execution or
 engineering acceptance limit is part of this example.

@@ -149,19 +149,23 @@ class StatisticalAnalysisService:
         Args:
             x_data: Independent variable data
             y_data: Dependent variable data
-            confidence_level: Confidence level for intervals
+            confidence_level: Confidence probability, convertible to float
             
         Returns:
             RegressionResult for the pairs retained after NaN removal.
             Exactly zero residual variance gives collapsed coefficient
             intervals. The slope p-value is zero for a nonzero slope in that
             limit, and NaN for a zero slope (the statistic is then 0/0).
+            Constant retained responses give NaN for p_value and r_squared,
+            independently of floating-point fitting residuals. Intervals are
+            for coefficients only; mean-response and prediction intervals
+            are not returned.
 
         Raises:
             ValueError: Inputs are not observation vectors of equal length,
                 fewer than three valid pairs remain, retained values are not
                 finite, the predictor is constant, or confidence_level is
-                not finite and strictly between zero and one.
+                not convertible to a finite float strictly between zero and one.
 
         Notes:
             Inference assumes independent, normally distributed errors with
@@ -180,6 +184,12 @@ class StatisticalAnalysisService:
                 raise ValueError("X and Y data must have the same length")
 
             # Student quantile domain: NIST e-Handbook (2012), section 1.3.6.7.2.
+            try:
+                confidence_level = float(confidence_level)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError(
+                    "confidence_level must be finite and between 0 and 1"
+                ) from exc
             if not np.isfinite(confidence_level) or not 0 < confidence_level < 1:
                 raise ValueError("confidence_level must be finite and between 0 and 1")
 
@@ -199,6 +209,8 @@ class StatisticalAnalysisService:
             if np.all(x_clean == x_clean[0]):
                 raise ValueError("X data must contain at least two distinct values")
 
+            constant_response = np.all(y_clean == y_clean[0])
+
             # Perform regression
             model = LinearRegression()
             X_reshaped = x_clean.reshape(-1, 1)
@@ -207,7 +219,7 @@ class StatisticalAnalysisService:
             slope = model.coef_[0]
             intercept = model.intercept_
             y_pred = model.predict(X_reshaped)
-            r_squared = r2_score(y_clean, y_pred)
+            r_squared = np.nan if constant_response else r2_score(y_clean, y_pred)
             
             # Calculate statistics
             residuals = y_clean - y_pred
@@ -221,7 +233,9 @@ class StatisticalAnalysisService:
             x_mean = np.mean(x_clean)
             ss_xx = np.sum((x_clean - x_mean) ** 2)
             slope_se = std_error / np.sqrt(ss_xx)
-            if slope_se == 0:
+            if constant_response:
+                p_value = np.nan
+            elif slope_se == 0:
                 # SSE=0: the Student tail limit is zero for a nonzero slope;
                 # the zero-slope statistic is 0/0, so inference is undefined.
                 p_value = 0.0 if slope != 0 else np.nan

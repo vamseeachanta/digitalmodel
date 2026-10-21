@@ -129,7 +129,11 @@ def test_infinite_retained_values_rejected(value, axis):
         StatisticalAnalysisService().perform_linear_regression(data["x"], data["y"])
 
 
-@pytest.mark.parametrize("confidence_level", [0., 1., -0.1, 1.1, np.nan, np.inf])
+@pytest.mark.parametrize(
+    "confidence_level",
+    [0., 1., -0.1, 1.1, np.nan, np.inf, None, "invalid", 1j,
+     pytest.param(10**400, id="overflow")]
+)
 def test_invalid_confidence_level_rejected(confidence_level):
     """A finite two-sided Student quantile requires probability in (0,1).
 
@@ -140,6 +144,43 @@ def test_invalid_confidence_level_rejected(confidence_level):
         StatisticalAnalysisService().perform_linear_regression(
             np.arange(3, dtype=float), np.arange(3, dtype=float), confidence_level
         )
+
+
+@pytest.mark.parametrize("confidence_level", ["0.9", "0.99"])
+def test_numeric_confidence_text_matches_float(confidence_level):
+    """Numeric text denotes the same supplied probability as its float value."""
+    x = np.arange(1., 6.)
+    y = np.array([2., 4., 5., 4., 5.])
+    service = StatisticalAnalysisService()
+    expected = service.perform_linear_regression(x, y, float(confidence_level))
+    result = service.perform_linear_regression(x, y, confidence_level)
+    for coefficient in ["slope", "intercept"]:
+        assert result.confidence_intervals[coefficient] == pytest.approx(
+            expected.confidence_intervals[coefficient]
+        )
+
+
+@pytest.mark.parametrize("value", [0., 0.1, 0.3])
+@pytest.mark.parametrize("with_nan", [False, True])
+def test_constant_response_inference_is_undefined(value, with_nan):
+    """SST=0 and the zero-slope statistic are undefined for constant responses.
+
+    Decimal constants can leave small fitting residuals; that rounding must
+    not turn undefined inference into finite p-values or R-squared values.
+    Only retained pairs determine whether the response is constant.
+    """
+    x = np.arange(1., 8.)
+    y = np.full(7, value)
+    if with_nan:
+        x = np.append(x, [np.nan, 8.])
+        y = np.append(y, [1., np.nan])
+    with np.errstate(divide="raise", invalid="raise"):
+        result = StatisticalAnalysisService().perform_linear_regression(x, y)
+    assert math.isnan(result.p_value)
+    assert math.isnan(result.r_squared)
+    assert result.slope == pytest.approx(0.)
+    assert result.intercept == pytest.approx(value)
+    assert result.predicted_values == pytest.approx(np.full(7, value))
 
 
 @pytest.mark.parametrize("slope", [-1., 0., 1.])
@@ -161,8 +202,10 @@ def test_zero_residual_variance_has_explicit_inference(slope):
     assert result.confidence_intervals["intercept"] == (0., 0.)
     if slope:
         assert result.p_value == 0
+        assert result.r_squared == 1
     else:
         assert math.isnan(result.p_value)
+        assert math.isnan(result.r_squared)
 
 
 def test_small_nonzero_p_value_preserved():
