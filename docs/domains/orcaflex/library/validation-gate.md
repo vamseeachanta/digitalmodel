@@ -11,6 +11,8 @@ generator. Publication is a copy after validation, so an I/O failure during that
 The default enforces the existing validator rules. For example, the native
 format requires [unique object names](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Datafields.htm)
 and [case-insensitive name matching](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm).
+See the [object-reference worked example](reference-lookup.md) for inputs,
+matching rules and the expected missing-reference diagnostic.
 The validator also rejects `WaveType: No waves`, including raw extra trains;
 still-water input uses the existing zero-height Airy convention. No engineering
 factor or acceptance band changes in this correction.
