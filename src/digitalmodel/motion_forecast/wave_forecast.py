@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Phase-resolved wave forecast: horizon, directional spread, surface (#1357).
 
 The physics-honest pieces the offering owns, behind the ``WaveForecast`` protocol
@@ -188,6 +191,8 @@ class WaveFieldSource(Protocol):
 
 class SyntheticWaveField:
     """Deterministic stub source; the seam a real radar/lidar/HOS front-end fills."""
+
+    LIVE_INPUT = False
 
     def __init__(self, hs: float, tp: float, **kwargs):
         self._hs, self._tp, self._kw = hs, tp, kwargs

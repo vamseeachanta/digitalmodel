@@ -230,7 +230,7 @@
     <p style="margin:.2em 0 1em"><span class="pill">Illustrative tracer</span> &nbsp; Synthetic JONSWAP sea &middot; simplified analytic RAOs &middot; deterministic phases. Numbers demonstrate the workflow, not a certified vessel model.</p>
     <p style="margin:.2em 0"><b>Honest horizon.</b> The forecast is bounded by the <b>predictable zone</b> &mdash; a group-velocity wedge set by spectral bandwidth. Realistic short-crested seas give tens of seconds to ~1&ndash;2 min, not the 4&ndash;5 min sometimes marketed.</p>
     <p style="margin:.2em 0"><b>Two data modes.</b> <b>Measured</b> &mdash; the Python module supports a synthetic measured-motion stub or an offline CSV reader; MMS / MRU (motion-reference unit) integration and hardware time synchronisation are planned. <b>Predicted</b> &mdash; this demo transfers a synthetic phase-resolved wave forecast through simplified analytic RAOs across the predictable zone. Both modes support the same rolling go / no-go workflow.</p>
-    <p style="margin:.2em 0"><b>Where the value is.</b> The wave-sensing and motion-sensing front-end (X-band radar / lidar / up-wave buoy &rarr; phase-resolved surface; MMS / MRU for measured motion) is partner/licensed. This layer is the asset-motion transfer, the operability decision, and the learning loop (measured MMS vs forecast) &mdash; on AQWA / OrcaFlex RAOs.</p>
+    <p style="margin:.2em 0"><b>Where the value is.</b> The wave-sensing and motion-sensing front-end (X-band radar / lidar / up-wave buoy &rarr; phase-resolved surface; MMS / MRU for measured motion) is partner/licensed. This layer is the asset-motion transfer, the operability decision, and the learning loop (measured motion vs forecast; MMS / MRU input planned) &mdash; designed for OrcaFlex / AQWA RAO files; AQWA phase sign pending validation.</p>
     <p style="margin:.6em 0 .3em"><b>Criteria referenced.</b></p>
     <div class="chips">
       <span class="chip"><b>DNV-ST-N001</b> &mdash; lifts, DAF, snatch</span>
@@ -374,7 +374,7 @@ function drawTrace(cv, series, opts){
   ctx.fillStyle=css("--muted"); ctx.font="600 9.5px ui-monospace,monospace";
   ctx.fillText("NOW", X(state.now)+4, y0+9);
   ctx.fillStyle=css("--faint"); ctx.font="600 8.5px ui-monospace,monospace";
-  ctx.fillText("MMS MEASURED", x0+2, y0+9);
+  ctx.fillText("MEASURED (SYNTHETIC)", x0+2, y0+9);
   ctx.textAlign="right"; ctx.fillText("FORECAST +"+Math.round(horizon)+"s", x1-1, y0+9); ctx.textAlign="left";
 }
 

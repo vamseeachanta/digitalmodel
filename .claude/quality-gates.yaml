@@ -170,8 +170,9 @@ gates:
         "tests/unit/hydrodynamics/",
         "tests/test_attenuation_formula_check.py",
         "tests/test_ht_integration.py",
+        "tests/motion_forecast/",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/hydrodynamics/river_currents/ tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/hydrodynamics/river_currents/ tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py tests/motion_forecast/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -247,7 +248,11 @@ gates:
     order: 1
     description: "Domain tests for marine-engineering"
     domain: "marine-engineering"
-    test_roots: ["tests/marine_ops/marine_engineering/", "tests/marine_ops/fowt_quasi_static/"]
+    test_roots:
+      [
+        "tests/marine_ops/marine_engineering/",
+        "tests/marine_ops/fowt_quasi_static/",
+      ]
     command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test,fowt]' python -m pytest tests/marine_ops/marine_engineering/ tests/marine_ops/fowt_quasi_static/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"

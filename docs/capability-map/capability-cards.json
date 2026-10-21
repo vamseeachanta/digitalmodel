@@ -278,7 +278,7 @@
   {
     "id": "short-horizon-motion-forecast",
     "title": "Short-horizon motion forecast",
-    "summary": "Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved wave forecast transferred through the asset RAO to predict the next few motions — a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and helideck landings, bounded honestly by the predictable zone.",
+    "summary": "Illustrative synthetic sea and simplified analytic RAOs demonstrate a phase-resolved motion forecast and rolling go / no-go with lead time. Measured-motion input from MMS / MRU instruments is planned; the Python layer provides a synthetic stub and CSV reader.",
     "key_figure": null,
     "link": "docs/api/hydro/short-horizon-motion-forecast.html"
   },
