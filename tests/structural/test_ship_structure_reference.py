@@ -8,6 +8,7 @@ All dimensions below are arbitrary positive schema fixtures, not design inputs.
 import copy
 import importlib.util
 import json
+import socket
 from pathlib import Path
 
 import pytest
@@ -207,3 +208,56 @@ def test_invalid_source_metadata_is_rejected(field, value):
     data['sources'][0][field] = value
     with pytest.raises(ValidationError):
         validate_schema(data)
+
+
+@pytest.fixture(params=['default_formats', 'date_only'])
+def offline_url_validator(request, monkeypatch):
+    """Exercise authority validation without network or optional URI checking."""
+    module = load_validator()
+    if request.param == 'date_only':
+        monkeypatch.setattr(module, 'FormatChecker', lambda: FormatChecker(formats=['date']))
+
+    def reject_network(*args, **kwargs):
+        pytest.fail('Source metadata validation attempted network access')
+
+    monkeypatch.setattr(socket, 'socket', reject_network)
+    monkeypatch.setattr(socket, 'getaddrinfo', reject_network)
+    return module
+
+
+@pytest.mark.parametrize('url', [
+    'https://#source', 'https://?source', 'https://:443',
+    'https://example.org:invalid/reference', 'https://example.org:-1/reference',
+    'https://example.org:65536/reference', 'https://example.org:443:444/reference',
+    'https://[2001:db8::1]:invalid/reference',
+])
+def test_source_url_rejects_missing_hostname_or_invalid_port(offline_url_validator, url):
+    data = record()
+    data['sources'][0]['url'] = url
+    with pytest.raises((ValueError, ValidationError)):
+        offline_url_validator.validate_research(data)
+
+
+@pytest.mark.parametrize('url', [
+    'http://example.org/reference', 'https://example.org',
+    'https://example.org?edition=2#table',
+    'https://example.org/reference?edition=2#table',
+    'https://example.org:0/reference', 'https://example.org:65535/reference',
+    'https://[2001:db8::1]:443/reference',
+])
+def test_source_url_accepts_hostname_and_valid_port_without_network(offline_url_validator, url):
+    data = record()
+    data['sources'][0]['url'] = url
+    assert offline_url_validator.validate_research(data) is None
+
+
+@pytest.mark.parametrize('url', ['https://#source', 'https://?source', 'https://:443'])
+def test_cli_rejects_hostless_source_file(offline_url_validator, tmp_path, capsys, url):
+    data = record()
+    data['sources'][0]['url'] = url
+    path = tmp_path / 'research.json'
+    path.write_text(json.dumps(data), encoding='utf-8')
+    assert offline_url_validator.main([str(path)]) == 2
+    assert json.loads(capsys.readouterr().out) == {
+        'status': 'invalid_metadata', 'engineering_status': 'NOT_EVALUATED',
+    }

@@ -136,7 +136,7 @@
           "type": "string",
           "format": "uri",
           "pattern": "^https?://[^/\\s]+(/[^\\s]*)?$",
-          "$comment": "Require an absolute HTTP(S) source pointer even when the optional URI format checker is unavailable."
+          "$comment": "Bound HTTP(S) pointer syntax; the research validator also parses the authority to require a hostname and validate any port, independently of optional URI format support."
         },
         "edition": {
           "oneOf": [

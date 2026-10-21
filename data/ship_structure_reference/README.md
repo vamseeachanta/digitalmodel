@@ -70,7 +70,9 @@ references, unique source/product/section identifiers and finite JSON numbers.
 Duplicate JSON object keys are rejected at read time. Sections require explicit
 axes and property basis. Dimension kinds distinguish a supply envelope, a discrete
 catalogue and project geometry; none establishes stock availability. Source URLs
-are retained as metadata and are never fetched by this command.
+require a hostname and a valid port when supplied; authority parsing enforces
+these requirements even without the optional URI format checker. Source URLs
+are retained as metadata and are never fetched or resolved by this command.
 
 Success returns `metadata_valid`, `engineering_status: NOT_EVALUATED` and
 `publication_allowed: false`. Invalid records return exit code 2 without echoing

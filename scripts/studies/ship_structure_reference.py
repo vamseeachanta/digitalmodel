@@ -9,6 +9,7 @@ No source downloads, dataset publication or buckling computation is performed.
 import argparse
 import json
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
@@ -29,6 +30,12 @@ def validate_research(data):
     data = json.loads(json.dumps(data, allow_nan=False))
     schema = json.loads(SCHEMA_PATH.read_text(encoding='utf-8'))
     Draft202012Validator(schema, format_checker=FormatChecker()).validate(data)
+    for source in data['sources']:
+        pointer = urlsplit(source['url'])
+        if not pointer.hostname:
+            raise ValueError('Source URL requires a hostname')
+        # Access validates port syntax and range without resolving the hostname.
+        _ = pointer.port
     for collection, key in (('sources', 'key'), ('products', 'id'), ('sections', 'id')):
         identifiers = [row[key] for row in data[collection]]
         if len(identifiers) != len(set(identifiers)):
