@@ -167,6 +167,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      bemrosetta:
+        agent_pack: src/digitalmodel/hydrodynamics/bemrosetta/docs/agent-pack.md
+        qa_family: DF
       hydrodynamics:
         agent_pack: src/digitalmodel/hydrodynamics/docs/agent-pack.md
         qa_family: EC
@@ -387,6 +390,9 @@ modules:
     submodules:
       calculix:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
+        qa_family: FE
+      gmsh_meshing:
+        agent_pack: src/digitalmodel/solvers/gmsh_meshing/docs/agent-pack.md
         qa_family: FE
       ghs:
         agent_pack: src/digitalmodel/solvers/ghs/docs/agent-pack.md
@@ -697,6 +703,10 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_seakeeping
   - module: vessel_stability_screening
+    submodules:
+      vessel_stability_screening:
+        agent_pack: src/digitalmodel/vessel_stability_screening/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/vessel_stability_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/vessel-stability-screening.md
@@ -710,6 +720,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#viv_screening
   - module: weather_window
     entry_point: src/digitalmodel/weather_window/
+    submodules:
+      weather_window:
+        agent_pack: src/digitalmodel/weather_window/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]

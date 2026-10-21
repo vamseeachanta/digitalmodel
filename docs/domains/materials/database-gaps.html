@@ -24,9 +24,9 @@ closure; this correction does not establish product qualification. Non-API produ
 null. Aliases, including the distinct API and hull Grade A names, follow
 <code>grades.get</code>.</p>
 <p>Each record retains its existing citation, repository-relative locator,
-normalized SHA-256 and UTC retrieval date. Provenance is digest-only:
-<code>repository_revision</code> is null, with a reachable revision
-assigned after merge. The normalized digest is
+normalized SHA-256 and UTC retrieval date. The reachable source revision is
+<code>b4c10284fa7d28398e6fa02c262c219c0fec8fef</code>,
+recorded in <code>repository_revision</code>. The normalized digest is
 <code>4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90</code>.
 Normalization decodes UTF-8, replaces CRLF and lone CR with LF, and encodes UTF-8
 before hashing. The loader reports digest drift through
@@ -38,9 +38,9 @@ existing citation; editions not recorded there remain null. Repository
 That licence does not establish original standards reuse rights. The source was
 inspected on 2026-10-18 UTC; no original standard was fetched.
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/2778">#2778</a>
-tracks assigning the reachable revision and re-anchoring the knowledge-pack
-citations after merge. Any assigned revision must identify bytes matching the
-digest, and missing Git history must fail the check.</p>
+records the provenance assignment and knowledge-pack citation audit. The
+assigned revision identifies bytes matching the digest; missing Git history
+fails the provenance check. CI fetches full history for the materials gate.</p>
 <table>
 <thead><tr><th>Gap</th><th>Evidence and required next input</th></tr></thead>
 <tbody>

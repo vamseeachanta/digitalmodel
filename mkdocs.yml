@@ -5,6 +5,8 @@ site_dir: site
 
 nav:
   - Home: index.md
+  - Fitness for Service:
+      - Pipeline FFS Assessment: ffs/pipeline-ffs-assessment.html
 
   # ---------------------------------------------------------------------------
   # CFD — Computational Fluid Dynamics

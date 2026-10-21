@@ -51,13 +51,23 @@ class GeometryValidator:
         self.results = {}
         
     def validate_all(self, parallel: bool = True) -> Dict[str, MeshStatistics]:
-        """Validate all geometry files in parallel"""
+        """Validate available requested files, optionally in parallel.
+
+        Raise FileNotFoundError when no requested regular file is present.
+        Partial inputs and parse failures retain their legacy logging behavior;
+        this presence check does not qualify mesh validity or completeness.
+        """
 
         geometry_files = {
             "tug_30m_1_0.25 Mesh_Ascii.stl": "stl_ascii",
             "tug_30m_1_0.25 Mesh_Binary.stl": "stl_binary",
             "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
+
+        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 2, 2026).
+        # Missing requested input must fail before validation or pool creation.
+        if not any((self.geometry_path / name).is_file() for name in geometry_files):
+            raise FileNotFoundError("No requested geometry files found")
 
         logger.info(f"Validating {len(geometry_files)} geometry files...")
         logger.info(f"Geometry path: {self.geometry_path}")

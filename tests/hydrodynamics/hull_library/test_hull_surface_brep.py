@@ -25,6 +25,8 @@ from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
     MeshGeneratorConfig,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def _wigley_grid(nx=41, nz=11):
     x, z = np.meshgrid(
@@ -46,10 +48,9 @@ def _wigley_integral():
     fxz = 2 * xx * zz / (250 * 6.25**2)
     area = np.sqrt(1 + fx**2 + fz**2)
     k = (fxx * fzz - fxz**2) / area**4
-    trapz = getattr(np, "trapezoid", np.trapz)
 
     def integrate(v):
-        return trapz(trapz(v, z, axis=1), x)
+        return _trapezoid(_trapezoid(v, z, axis=1), x)
 
     return 100**2 * integrate(abs(k) * area) / integrate(area)
 
