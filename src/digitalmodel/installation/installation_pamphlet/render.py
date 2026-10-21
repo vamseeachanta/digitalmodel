@@ -40,13 +40,17 @@ const ENV = __ENV_JS__;
 const TPGRID = __TP_JS__;
 // interpolate limiting Hs at a given Tp for an operation
 function hsLimitAt(op, tp){
-  const e = ENV[op].hs_by_tp; const ks = TPGRID;
-  if(tp<=ks[0]) return e[ks[0].toFixed(1)];
-  if(tp>=ks[ks.length-1]) return e[ks[ks.length-1].toFixed(1)];
+  if(!ENV[op] || !Number.isFinite(tp)) return NaN;
+  const e = ENV[op].hs_by_tp, status = ENV[op].status_by_tp; const ks = TPGRID;
+  const at = t => { const k=t.toFixed(1);
+    return e[k] != null && (!status || status[k]==='evaluated') ? e[k] : NaN; };
+  for(const t of ks){ if(tp===t) return at(t); }
+  if(tp<=ks[0]) return at(ks[0]);
+  if(tp>=ks[ks.length-1]) return at(ks[ks.length-1]);
   for(let i=0;i<ks.length-1;i++){ if(tp>=ks[i]&&tp<=ks[i+1]){
-    const a=e[ks[i].toFixed(1)], b=e[ks[i+1].toFixed(1)];
+    const a=at(ks[i]), b=at(ks[i+1]);
     return a+(b-a)*(tp-ks[i])/(ks[i+1]-ks[i]); } }
-  return e[ks[0].toFixed(1)];
+  return NaN;
 }
 const SAMPLE = { // 48h demo forecast (calm-ish window mid-series)
   hours: Array.from({length:48},(_,i)=>i),
@@ -69,7 +73,9 @@ function moorRisk(hs, wind){ let l='low', n='Line tensions low; watch-circle nom
   else if(hs>=1.2||wind>=10){l='mod';n='Tension build-up; monitor watch-circle.';}
   return {l,n};
 }
-function verdict(hs, lim){ if(hs<=lim) return 'GO'; if(hs<=lim*1.25) return 'MARGINAL'; return 'NOGO'; }
+function verdict(hs, lim){
+  if(!Number.isFinite(hs) || !Number.isFinite(lim)) return 'UNAVAILABLE';
+  if(hs<=lim) return 'GO'; if(hs<=lim*1.25) return 'MARGINAL'; return 'NOGO'; }
 function nearestIdx(times){ const now=Date.now(); let bi=0,bd=1e18;
   times.forEach((t,i)=>{const dd=Math.abs(new Date(t).getTime()-now); if(dd<bd){bd=dd;bi=i;}}); return bi; }
 
@@ -86,23 +92,28 @@ function render(cur){ // cur = {hs,tp,wind,cur,times?,series?}
     dp_station_keeping:+document.getElementById('limDP').value, transit:+document.getElementById('limTR').value };
   const hs=cur.hs, tp=cur.tp, wind=cur.wind, ccur=cur.cur||0.4;
   document.getElementById('now').innerHTML = [
-    ['Wave Hs',hs.toFixed(2),'m'],['Peak Tp',tp.toFixed(1),'s'],['Wind (10 m)',wind.toFixed(1),'m/s'],['Current*',ccur.toFixed(2),'m/s']
+    ['Wave Hs',hs.toFixed(2),'m'],['Peak Tp',Number.isFinite(tp)?tp.toFixed(1):'unavailable','s'],['Wind (10 m)',wind.toFixed(1),'m/s'],['Current*',ccur.toFixed(2),'m/s']
   ].map(x=>`<div class="m"><div class="k">${x[0]}</div><div class="vv">${x[1]}</div><div class="u">${x[2]}</div></div>`).join('');
   const ops=[['Heavy lift','heavy_lift'],['DP station-keep','dp_station_keeping'],['Transit','transit']];
   document.getElementById('golist').innerHTML = ops.map(([nm,op])=>{
-    const lim=lims[op]; const vd=verdict(hs,lim);
+    const lim=Math.min(lims[op],hsLimitAt(op,tp)); const vd=verdict(hs,lim);
+    const limitText=Number.isFinite(lim)?`limit ${lim.toFixed(2)} m`:'limit unavailable';
     return `<div class="go ${vd}"><div class="t">${nm}</div>
       <div class="verdict v${vd}">${vd==='NOGO'?'NO-GO':vd}</div>
-      <div class="lim">Hs ${hs.toFixed(2)} vs limit ${lim.toFixed(2)} m</div></div>`;
+      <div class="lim">Hs ${hs.toFixed(2)} vs ${limitText}</div></div>`;
   }).join('');
   // next window vs heavy-lift limit (from forecast series if available)
   let winHtml='';
   if(cur.series){ const lim=lims.heavy_lift; const s=cur.series;
     let i0=nearestIdx(cur.times); let start=-1,len=0,best=0,bestStart=-1;
-    for(let i=i0;i<s.hs.length;i++){ if(s.hs[i]<=lim){ if(start<0)start=i; len++; if(len>best){best=len;bestStart=start;} } else {start=-1;len=0;} }
+    for(let i=i0;i<s.hs.length;i++){
+      const limit=Math.min(lim,hsLimitAt('heavy_lift',s.tp?.[i]));
+      if(Number.isFinite(s.hs[i]) && Number.isFinite(limit) && s.hs[i]<=limit){
+        if(start<0)start=i; len++; if(len>best){best=len;bestStart=start;}
+      } else {start=-1;len=0;} }
     if(best>0){ const hrs=best; const startsIn=Math.max(0,bestStart-i0);
-      winHtml=`<b>Next heavy-lift window</b> (Hs &le; ${lim.toFixed(2)} m): ~${hrs} h long, starting in ~${startsIn} h.`; }
-    else winHtml=`<b>No heavy-lift window</b> in forecast horizon at Hs &le; ${lim.toFixed(2)} m — raise the limit with vessel-specific RAO.`;
+      winHtml=`<b>Next heavy-lift window</b> (Hs within the evaluated limit at each forecast Tp; manual ceiling ${lim.toFixed(2)} m): ~${hrs} h long, starting in ~${startsIn} h.`; }
+    else winHtml='<b>No heavy-lift window</b> within evaluated forecast limits and the manual ceiling. Unavailable periods break the window.';
   } else { winHtml='<span class="mut2">Load live or demo data to compute the next weather window.</span>'; }
   document.getElementById('win').innerHTML = winHtml;
   // risk panels
@@ -119,7 +130,7 @@ async function refresh(){
   const lat=document.getElementById('lat').value, lon=document.getElementById('lon').value;
   document.getElementById('stamp').textContent='loading…';
   try{ const f=await fetchLive(lat,lon); const i=nearestIdx(f.times);
-    render({hs:f.hs[i],tp:f.tp[i]||9,wind:f.wind[i],cur:0.4,times:f.times,series:{hs:f.hs}});
+    render({hs:f.hs[i],tp:f.tp[i],wind:f.wind[i],cur:0.4,times:f.times,series:{hs:f.hs,tp:f.tp}});
     document.getElementById('stamp').textContent='live · '+new Date(f.times[i]).toUTCString().slice(5,22)+' UTC';
   }catch(e){ document.getElementById('stamp').textContent='live feed unavailable — using demo data';
     useSample(); }
@@ -127,7 +138,7 @@ async function refresh(){
 function useSample(){
   const i=12; // calm point
   const times=SAMPLE.hours.map(h=>new Date(Date.now()+(h-6)*3600e3).toISOString());
-  render({hs:SAMPLE.hs[i],tp:SAMPLE.tp[i],wind:SAMPLE.wind[i],cur:0.4,times,series:{hs:SAMPLE.hs}});
+  render({hs:SAMPLE.hs[i],tp:SAMPLE.tp[i],wind:SAMPLE.wind[i],cur:0.4,times,series:{hs:SAMPLE.hs,tp:SAMPLE.tp}});
   document.getElementById('stamp').textContent='demo data';
 }
 refresh(); setInterval(refresh, 600000); // auto-refresh every 10 min
@@ -142,6 +153,14 @@ def _live_monitor_script(envelopes: dict[str, Any], tp_grid: list[float], dpclas
         .replace("__TP_JS__", json.dumps(tp_grid))
         .replace("__DPCLASS__", str(dpclass))
     )
+
+
+def forecast_cell(value, status=None):
+    """Keep unavailable points and display caps distinct from forecast limits."""
+    if value is None:
+        return '<td>Unavailable (insufficient coverage)</td>'
+    suffix = ' (capped display bound)' if status == 'capped' else ''
+    return f'<td>{value:.2f}{suffix}</td>'
 
 
 def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = None) -> str:
@@ -159,6 +178,11 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         "basis_run_id": None,
     }
     DPCLASS = v["dp_class"]
+
+    owner = v.get("owner")
+    show_owner = owner and str(owner).strip().lower() != "withheld"
+    owner_suffix = f" &middot; {owner}" if show_owner else ""
+    owner_row = f"<tr><td>Owner / operator</td><td>{owner}</td></tr>" if show_owner else ""
 
     def prov_badge(status):
         lab, cls = PROV.get(status, ("?", "pv-prox"))
@@ -232,11 +256,24 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         leg = ""
         for i, (op, e) in enumerate(d["envelopes"].items()):
             col = colors.get(op, "#0a6cbf")
-            pts = " ".join(f"{X(t):.1f},{Y(e['hs_by_tp'][str(float(t))]):.1f}" for t in TP)
-            series += f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2.2"/>'
+            segments, segment = [], []
+            for t in TP:
+                hs = e['hs_by_tp'].get(str(float(t)))
+                if hs is None:
+                    if segment:
+                        segments.append(segment)
+                        segment = []
+                else:
+                    segment.append(f"{X(t):.1f},{Y(hs):.1f}")
+            if segment:
+                segments.append(segment)
+            series += ''.join(
+                f'<polyline points="{" ".join(points)}" fill="none" stroke="{col}" stroke-width="2.2"/>'
+                for points in segments
+            )
             series += "".join(
                 f'<circle cx="{X(t):.1f}" cy="{Y(e["hs_by_tp"][str(float(t))]):.1f}" r="2.6" fill="{col}"/>'
-                for t in TP
+                for t in TP if e['hs_by_tp'].get(str(float(t))) is not None
             )
             ly = mt + 4 + i * 16
             leg += (
@@ -270,7 +307,8 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         }
         return "".join(
             f"<tr><td class='l'>{labels.get(op, op)} <small>&alpha;={e['alpha']}</small></td>"
-            + "".join(f"<td>{e['hs_by_tp'][str(float(t))]:.2f}</td>" for t in TP)
+            + "".join(forecast_cell(e['hs_by_tp'].get(str(float(t))),
+                                    e.get('status_by_tp', {}).get(str(float(t)))) for t in TP)
             + "</tr>"
             for op, e in d["envelopes"].items()
         )
@@ -316,7 +354,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
             f'<div class="meter"><span style="width:{pct}%"></span></div>\n'
             f"<table><tr><th>Task</th><th>Analysis</th><th>Status</th><th>Basis</th><th>Licensed run</th></tr>{rows}</table>\n"
             '<div style="font-size:11px;color:#7fa0b8;margin-top:7px">Auto-upgrades as licensed runs land: <b>PENDING</b> &rarr; <b>PROXY</b> &rarr; <b>SHIP-PROXY</b> &rarr; <b>ACTUAL</b>.\n'
-            "Next upgrade: a vessel-specific BokaLift mesh diffraction (T3&rarr;ACTUAL) and per-structure OrcaFlex splash-zone runs (T5).</div></div>"
+            "Next upgrade: a vessel-specific HLV-A mesh diffraction (T3&rarr;ACTUAL) and per-structure OrcaFlex splash-zone runs (T5).</div></div>"
         )
 
     def cause_bars(rows):
@@ -418,7 +456,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
             comb = s.get("combined_hs_by_tp")
             if not comb:
                 continue
-            cells = "".join(f"<td>{comb[f'{float(t):.1f}']:.2f}</td>" for t in TP)
+            cells = "".join(forecast_cell(comb.get(f'{float(t):.1f}')) for t in TP)
             out += f"<tr><td class='l'>{s['item']}</td>{cells}</tr>"
         return out
 
@@ -450,7 +488,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         )
 
     envelope_note_tail = (
-        "These are still parametric — the vessel-specific BokaLift mesh diffraction (when that licensed run completes) replaces them and is expected to widen the limits further."
+        "These are still parametric — the vessel-specific HLV-A mesh diffraction (when that licensed run completes) replaces them and is expected to widen the limits further."
         if d["rao_provenance"] != "actual"
         else "Computed from the vessel-specific OrcaWave RAO solve."
     )
@@ -471,6 +509,8 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         def cell(b, t):
             lo = b["hs_by_tp_low"][str(float(t))]
             hi = b["hs_by_tp_high"][str(float(t))]
+            if lo is None or hi is None:
+                return forecast_cell(None)
             return f"<td>{lo:.2f}&ndash;{hi:.2f}</td>"
 
         rows = "".join(
@@ -575,7 +615,7 @@ small{{color:var(--mut)}}
 
 <header>
 <h1>Installation Vessel Pamphlet</h1>
-<div class="s"><b>{v['name']}</b> &middot; {v['type']} &middot; {v['owner']}</div>
+<div class="s"><b>{v['name']}</b> &middot; {v['type']}{owner_suffix}</div>
 <span class="tag">Desktop screening + live weather-window monitor &middot; {GEN}</span>
 </header>
 
@@ -591,7 +631,7 @@ confirm against vessel RAO, MWS approval and the bridge/DP &amp; mooring teams b
 <div class="grid">
 <div class="card"><h3>Particulars</h3><table class="kv">
 <tr><td>Vessel type</td><td>{v['type']}</td></tr>
-<tr><td>Owner / operator</td><td>{v['owner']}</td></tr>
+{owner_row}
 <tr><td>Max hook load</td><td>{v['max_hook_te']:,.0f} te</td></tr>
 <tr><td>Free deck area</td><td>{v['deck_area_m2']:,.0f} m&sup2;</td></tr>
 <tr><td>Deck strength</td><td>{v['deck_strength_t_per_m2'] or '— (TBC)'}</td></tr>

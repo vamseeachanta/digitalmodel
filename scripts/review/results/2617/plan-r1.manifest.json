@@ -1,0 +1,26 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-16T15:33:40+00:00",
+  "git_head": "c5e4ac3390942e326243093a9a6175716f0e7459",
+  "digest_domain": "raw-bytes",
+  "packet_path": "scripts/review/results/2617/plan-r1.packet.md",
+  "packet_bytes": 25627,
+  "packet_sha256": "881162794cd934e16de04e8ad0d24436130c99f996ad1acdf7276ee188e16ca8",
+  "files": [
+    {
+      "path": "docs/plans/issue-2617-qtf-variance.html",
+      "sha256": "3e4bb50343145a0e6e3c960419df85dc78433d1b0a533aeaaf7b6c6d5684f49c",
+      "bytes": 6419
+    },
+    {
+      "path": "src/digitalmodel/orcawave/drift_forces.py",
+      "sha256": "b33d7cc8f677d4f61a42f2f5d9b96c95c57943d3d600c58baf721548b4872fa6",
+      "bytes": 10079
+    },
+    {
+      "path": "tests/orcawave/test_drift_forces.py",
+      "sha256": "45a2e0336c1c19bfc737b89087697a4207924a4196c9cee6128b61f79852e3ec",
+      "bytes": 4845
+    }
+  ]
+}

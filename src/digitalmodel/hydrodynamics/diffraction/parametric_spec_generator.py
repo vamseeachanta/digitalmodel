@@ -349,6 +349,8 @@ def generate_diffraction_spec(
         frequencies=frequencies,
         wave_headings=wave_headings,
     )
+    # Keep relative mesh names anchored to the directory that owns the GDF.
+    spec._source_dir = output_dir.resolve()
 
     logger.info(
         "Built DiffractionSpec for '%s': mass=%.0f kg, "

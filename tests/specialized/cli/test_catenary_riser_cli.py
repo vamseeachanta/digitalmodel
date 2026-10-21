@@ -32,6 +32,7 @@ class TestSimpleCommand:
 
         # Mock result
         mock_result = MagicMock()
+        mock_result.converged = True
         mock_result.horizontal_tension = 500000.0  # N
         mock_result.top_tension = 650000.0  # N
         mock_result.touchdown_tension = 50000.0
@@ -76,6 +77,7 @@ class TestSimpleCommand:
         mock_analyzer.return_value = mock_analyzer_instance
 
         mock_result = MagicMock()
+        mock_result.converged = True
         mock_result.horizontal_tension = 480000.0
         mock_result.top_tension = 620000.0
         mock_result.touchdown_tension = 45000.0
@@ -114,6 +116,7 @@ class TestSimpleCommand:
         mock_analyzer.return_value = mock_analyzer_instance
 
         mock_result = MagicMock()
+        mock_result.converged = True
         mock_result.horizontal_tension = 520000.0
         mock_result.top_tension = 680000.0
         mock_result.touchdown_tension = 55000.0
@@ -152,6 +155,7 @@ class TestSimpleCommand:
         mock_analyzer.return_value = mock_analyzer_instance
 
         mock_result = MagicMock()
+        mock_result.converged = True
         mock_result.horizontal_tension = 500000.0
         mock_result.top_tension = 650000.0
         mock_result.touchdown_tension = 50000.0
@@ -183,8 +187,23 @@ class TestSimpleCommand:
         ])
 
         assert data['configuration']['diameter'] == 0.3
+        assert data['results']['converged'] is True
         assert data['results']['horizontal_tension_N'] == 500000.0
         assert data['results']['top_tension_N'] == 650000.0
+
+    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
+    def test_simple_refuses_unconverged_output(self, mock_analyzer, cli_runner, temp_output_dir):
+        """An unconverged analysis fails before creating an output file."""
+        mock_analyzer.return_value.analyze_riser.return_value = MagicMock(converged=False)
+        output_file = temp_output_dir / "unconverged.json"
+        result = cli_runner.invoke(cli, [
+            'simple', '--diameter', '0.3', '--thickness', '0.02',
+            '--length', '1600', '--water-depth', '1500', '--offset', '1200',
+            '--output', str(output_file),
+        ])
+        assert_cli_failure(result)
+        assert 'did not converge' in result.output
+        assert not output_file.exists()
 
     @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
     @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')

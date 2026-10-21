@@ -39,3 +39,14 @@ def viv_parameters():
         'mode_shapes': 10,  # Number of modes to consider
         'reduced_velocity_range': (2, 12),
     }
+
+@pytest.fixture(autouse=True)
+def viv_citation_metadata(tmp_path, monkeypatch):
+    """Supply declared metadata only; engineering references are pinned in tests."""
+    page = tmp_path / 'wikis/engineering-standards/wiki/standards/dnv-rp-c203-2011.md'
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        '---\ncode_id: DNV-RP-C203\npublisher: DNV\nrevision: 2011-10\n---\n',
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('LLM_WIKI_PATH', str(tmp_path))

@@ -4,20 +4,27 @@ Implements Newman's approximation for QTF, full QTF double-sum integration,
 mean drift force coefficient handling, and wind/current drift estimation.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Literal, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class MeanDriftCoefficients(BaseModel):
     """Frequency-dependent mean drift force coefficients for one heading."""
 
-    heading_deg: float = Field(..., description="Wave heading in degrees")
+    heading_deg: float = Field(
+        ..., ge=0, lt=360, description="Direction from, clockwise from bow"
+    )
+    frame: Literal["x_forward_y_port_z_up"]
+    heading_convention: Literal["from_clockwise_bow"]
     frequencies_rad_s: List[float] = Field(..., description="Frequency vector")
     surge_kn_m2: List[float] = Field(
         ...,
@@ -72,6 +79,8 @@ class DriftForceResult(BaseModel):
 class WindCurrentDrift(BaseModel):
     """Steady drift force from wind and current."""
 
+    frame: str = "x_forward_y_port_z_up"
+    heading_convention: str = "from_clockwise_bow"
     wind_speed_m_s: float
     current_speed_m_s: float
     heading_deg: float
@@ -89,6 +98,7 @@ class WindCurrentDrift(BaseModel):
 # ---------------------------------------------------------------------------
 # Mean drift forces
 # ---------------------------------------------------------------------------
+
 
 def compute_mean_drift_force(
     drift_coeffs: MeanDriftCoefficients,
@@ -114,9 +124,9 @@ def compute_mean_drift_force(
     d_sway = np.interp(omega, freqs, drift_coeffs.sway_kn_m2)
     d_yaw = np.interp(omega, freqs, drift_coeffs.yaw_knm_m2)
 
-    f_surge = float(np.trapz(2.0 * d_surge * wave_spectrum, omega))
-    f_sway = float(np.trapz(2.0 * d_sway * wave_spectrum, omega))
-    m_yaw = float(np.trapz(2.0 * d_yaw * wave_spectrum, omega))
+    f_surge = float(_trapezoid(2.0 * d_surge * wave_spectrum, omega))
+    f_sway = float(_trapezoid(2.0 * d_sway * wave_spectrum, omega))
+    m_yaw = float(_trapezoid(2.0 * d_yaw * wave_spectrum, omega))
 
     return f_surge, f_sway, m_yaw
 
@@ -124,6 +134,7 @@ def compute_mean_drift_force(
 # ---------------------------------------------------------------------------
 # Newman's approximation
 # ---------------------------------------------------------------------------
+
 
 def newman_approximation(
     drift_coeffs: MeanDriftCoefficients,
@@ -144,10 +155,13 @@ def newman_approximation(
         dof: Degree of freedom ('surge', 'sway', or 'yaw').
 
     Returns:
-        Slowly-varying force time series standard deviation spectrum.
+        Discrete one-sided slowly-varying force PSD at mu[k] = k * d_omega.
+        For a uniform increasing omega grid, variance is sum(result) * d_omega
+        (full bin weights, including the last bin). The zero-lag bin is zero:
+        equal-frequency pairs give constant mean load, not fluctuation variance.
+        This excludes the mean-load bin previously included in this function.
     """
     freqs = np.array(drift_coeffs.frequencies_rad_s)
-
     if dof == "surge":
         d_vals = np.array(drift_coeffs.surge_kn_m2)
     elif dof == "sway":
@@ -156,19 +170,15 @@ def newman_approximation(
         d_vals = np.array(drift_coeffs.yaw_knm_m2)
 
     d_interp = np.interp(omega, freqs, d_vals)
-
     n = len(omega)
     # Build Newman QTF matrix
-    qtf_newman = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            qtf_newman[i, j] = 0.5 * (d_interp[i] + d_interp[j])
-
+    qtf_newman = 0.5 * (d_interp[:, None] + d_interp[None, :])
     # Slowly-varying force spectrum (difference-frequency)
     # S_sv(mu) = 8 * integral( QTF(omega, omega+mu)^2 * S(omega) * S(omega+mu) d_omega )
     d_omega = omega[1] - omega[0] if len(omega) > 1 else 1.0
     sv_spectrum = np.zeros(n)
-    for k in range(n):
+    # k=0 contains only the constant diagonal loads for fixed wave amplitudes.
+    for k in range(1, n):
         total = 0.0
         for i in range(n - k):
             j = i + k
@@ -185,11 +195,17 @@ def full_qtf_slowly_varying(
 ) -> float:
     """Compute slowly-varying drift force std using full QTF integration.
 
-    sigma_sv^2 = 8 * double_sum( |QTF(omega_i, omega_j)|^2
-                                  * S(omega_i) * S(omega_j) * d_omega^2 )
+    sigma_sv^2 = 8 * sum_{i<j}( |QTF(omega_i, omega_j)|^2
+                               * S(omega_i) * S(omega_j) * d_omega^2 )
+
+    Uses a complete Hermitian difference-frequency QTF on a uniform increasing
+    frequency grid and fixed wave-component amplitudes sqrt(2*S*d_omega).
+    Diagonal terms give the mean drift load and are excluded from this std.
+    Compared to the former all-pairs sum, variance is approximately halved on
+    fine grids; a diagonal-only QTF now gives zero slowly-varying force.
 
     Args:
-        qtf: Full QTF matrix.
+        qtf: Complete Hermitian QTF matrix (both triangles, same frequency grid).
         wave_spectrum: Wave spectral density.
         omega: Frequency vector.
 
@@ -206,11 +222,17 @@ def full_qtf_slowly_varying(
 
     d_omega = freqs[1] - freqs[0] if len(freqs) > 1 else 1.0
 
-    # Double sum
+    # With a_i = sqrt(2*S_i*d_omega), Hermitian ordered terms (i,j) and (j,i)
+    # combine into ONE real sinusoid of amplitude 2*a_i*a_j*|Q_ij|. Its phase
+    # variance is amplitude^2/2 = 8*S_i*S_j*d_omega^2*|Q_ij|^2. Distinct
+    # unordered pairs have zero phase-ensemble covariance, so visit i<j once.
+    # i=j is constant in time and belongs to mean load, not this variance.
+    # Convention: Orcina, "Vessel theory: Wave drift and sum frequency loads",
+    # "Second order load theory" (F = Re sum_ij Q_ij a_i a_j exp(i*delta_w*t)).
     n = len(freqs)
     variance = 0.0
     for i in range(n):
-        for j in range(n):
+        for j in range(i + 1, n):
             variance += qtf_mag2[i, j] * s_interp[i] * s_interp[j]
     variance *= 8.0 * d_omega**2
 
@@ -220,6 +242,7 @@ def full_qtf_slowly_varying(
 # ---------------------------------------------------------------------------
 # Wind and current drift
 # ---------------------------------------------------------------------------
+
 
 def compute_wind_current_drift(
     wind_speed_m_s: float,
@@ -243,7 +266,10 @@ def compute_wind_current_drift(
     Args:
         wind_speed_m_s: Wind speed (m/s).
         current_speed_m_s: Current speed (m/s).
-        heading_deg: Environmental heading (deg, 0=head, 90=beam).
+        heading_deg: Direction FROM, clockwise from bow in [0,360).
+            Frame: +x forward, +y port, +z up; 0=head, 90=from starboard.
+            Positive yaw is bow to port. Lever arm is assumed +0.1*L in x.
+            Imported diffraction coefficients must be transformed to this frame.
         projected_wind_area_m2: Projected above-water area (m^2).
         projected_current_area_m2: Projected below-water area (m^2).
         vessel_length_m: Vessel length for yaw moment arm.
@@ -257,21 +283,27 @@ def compute_wind_current_drift(
     Returns:
         WindCurrentDrift with all force components.
     """
+    if not np.isfinite(heading_deg) or not 0 <= heading_deg < 360:
+        raise ValueError("Heading must be finite in [0, 360)")
     theta = np.deg2rad(heading_deg)
     cos_t = np.cos(theta)
     sin_t = np.sin(theta)
 
     # Wind forces
     q_wind = 0.5 * rho_air * wind_speed_m_s**2
-    fw_surge = q_wind * cx_wind * projected_wind_area_m2 * abs(cos_t) * np.sign(cos_t)
+    fw_surge = -q_wind * cx_wind * projected_wind_area_m2 * abs(cos_t) * np.sign(cos_t)
     fw_sway = q_wind * cy_wind * projected_wind_area_m2 * abs(sin_t) * np.sign(sin_t)
     # Yaw moment: assume moment arm ~ 0.1 * vessel length
     mw_yaw = fw_sway * 0.1 * vessel_length_m
 
     # Current forces
     q_curr = 0.5 * rho_water * current_speed_m_s**2
-    fc_surge = q_curr * cx_current * projected_current_area_m2 * abs(cos_t) * np.sign(cos_t)
-    fc_sway = q_curr * cy_current * projected_current_area_m2 * abs(sin_t) * np.sign(sin_t)
+    fc_surge = (
+        -q_curr * cx_current * projected_current_area_m2 * abs(cos_t) * np.sign(cos_t)
+    )
+    fc_sway = (
+        q_curr * cy_current * projected_current_area_m2 * abs(sin_t) * np.sign(sin_t)
+    )
     mc_yaw = fc_sway * 0.1 * vessel_length_m
 
     # Convert to kN

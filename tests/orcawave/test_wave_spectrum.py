@@ -1,7 +1,10 @@
 """Tests for orcawave.wave_spectrum module."""
 
+import math
+
 import numpy as np
 import pytest
+from scipy.integrate import quad
 
 from digitalmodel.orcawave.wave_spectrum import (
     SpectrumParameters,
@@ -12,8 +15,10 @@ from digitalmodel.orcawave.wave_spectrum import (
     jonswap,
     pierson_moskowitz,
     spectral_periods,
-    torsethaugen,
+    heuristic_two_peak,
 )
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 class TestPiersonMoskowitz:
@@ -22,7 +27,7 @@ class TestPiersonMoskowitz:
     def test_hs_preservation(self):
         omega = np.linspace(0.05, 3.0, 500)
         s = pierson_moskowitz(omega, hs=3.0, tp=10.0)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         hs_computed = 4.0 * np.sqrt(m0)
         np.testing.assert_allclose(hs_computed, 3.0, rtol=0.05)
 
@@ -45,7 +50,7 @@ class TestJONSWAP:
     def test_hs_preservation(self):
         omega = np.linspace(0.05, 3.0, 500)
         s = jonswap(omega, hs=4.0, tp=12.0, gamma=3.3)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         hs_computed = 4.0 * np.sqrt(m0)
         np.testing.assert_allclose(hs_computed, 4.0, rtol=0.05)
 
@@ -61,8 +66,8 @@ class TestJONSWAP:
         s_j = jonswap(omega, hs=3.0, tp=10.0, gamma=1.0)
         s_pm = pierson_moskowitz(omega, hs=3.0, tp=10.0)
         # With gamma=1 and renormalization, shapes should be similar
-        m0_j = np.trapz(s_j, omega)
-        m0_pm = np.trapz(s_pm, omega)
+        m0_j = _trapezoid(s_j, omega)
+        m0_pm = _trapezoid(s_pm, omega)
         np.testing.assert_allclose(m0_j, m0_pm, rtol=0.1)
 
 
@@ -79,15 +84,48 @@ class TestOtherSpectra:
         omega = np.linspace(0.1, 3.0, 200)
         s = issc_spectrum(omega, hs=3.0, tz=7.0)
         assert np.all(s >= 0)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         assert m0 > 0
 
-    def test_torsethaugen_hs_preservation(self):
-        omega = np.linspace(0.05, 3.0, 500)
-        s = torsethaugen(omega, hs=4.0, tp=12.0)
-        m0 = np.trapz(s, omega)
-        hs_computed = 4.0 * np.sqrt(m0)
-        np.testing.assert_allclose(hs_computed, 4.0, rtol=0.1)
+    @pytest.mark.parametrize("tp", [8.0, 16.0])
+    def test_heuristic_two_peak_independent_ordinates(self, tp):
+        # Scalar equations and adaptive quadrature do not call spectrum helpers.
+        hs = 4.0
+        threshold = 6.6 * hs ** (1 / 3)
+        components = (
+            [(hs, tp, 3.3), (hs / 10, threshold, 1.0)]
+            if tp <= threshold
+            else [(hs / 10, threshold, 3.3), (hs, tp, 1.0)]
+        )
+
+        def density(w):
+            result = 0.0
+            for height, period, gamma in components:
+                peak = 2 * math.pi / period
+                sigma = 0.07 if w <= peak else 0.09
+                enhancement = gamma ** math.exp(
+                    -0.5 * ((w - peak) / (sigma * peak)) ** 2
+                )
+                result += (
+                    (1 - 0.287 * math.log(gamma)) * 5 / 16 * height**2
+                    * peak**4 / w**5 * math.exp(-1.25 * (peak / w)**4)
+                    * enhancement
+                )
+            return result
+
+        omega = np.linspace(0.05, 3.0, 20000)
+        variance, error = quad(
+            density,
+            omega[0],
+            omega[-1],
+            points=[2 * math.pi / period for _, period, _ in components],
+            epsabs=1e-10,
+        )
+        assert error < 1e-8
+        actual = heuristic_two_peak(omega, hs=hs, tp=tp)
+        indices = np.searchsorted(omega, [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.5])
+        expected = [density(omega[i]) * (hs**2 / 16) / variance for i in indices]
+        np.testing.assert_allclose(actual[indices], expected, rtol=1e-6)
 
 
 class TestSpectralMoments:

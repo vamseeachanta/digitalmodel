@@ -3,12 +3,14 @@
 
 """Retry a bounded set of failed pytest IDs once and record recovered failures.
 
-The register is informational and is never read by this module. Child output is
-inherited so both attempts appear in full in the calling workflow log.
-Retries provide evidence only; the original exit code determines the gate.
+Report mode preserves the first exit code. Enforce mode requires register
+evidence for every recovered ID. Both attempts inherit console output.
+Signal retries are diagnostic and preserve the first exit code in both modes.
 """
 
 import argparse
+import html
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -16,8 +18,15 @@ import re
 import subprocess
 import sys
 import time
+from typing import Any, cast
 import xml.etree.ElementTree as ET
 
+_SPEC = importlib.util.spec_from_file_location("ci_baseline", Path(__file__).with_name("ci_baseline.py"))
+assert _SPEC is not None and _SPEC.loader is not None
+baseline_tools = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(baseline_tools)
+
+NO_RETRY_SHARDS = frozenset({"contracts"})
 TIMEOUT_CODES = {124, 137, 143, 130}
 VALUE_FLAGS = {
     "-p", "-o", "-c", "-m", "-k", "--override-ini", "--rootdir", "--confcutdir",
@@ -49,24 +58,7 @@ def decision(ids: list[str], code: int, maximum: int, collected: bool,
 
 def node_id(case: ET.Element) -> str:
     """Recover the node ID from pytest xunit1 or xunit2 testcase attributes."""
-    name = case.get("name", "")
-    classname = case.get("classname", "").split(".")
-    file = case.get("file")
-    if file:
-        parts = Path(file).with_suffix("").parts
-        classes = classname[len(parts):]
-    else:
-        for end in range(len(classname), 0, -1):
-            candidate = Path(*classname[:end]).with_suffix(".py")
-            if candidate.is_file():
-                file = candidate.as_posix()
-                classes = classname[end:]
-                break
-        else:
-            raise ValueError("testcase path cannot be established")
-    if not name or not Path(file).is_file():
-        raise ValueError("testcase identity cannot be established")
-    return "::".join([file, *classes, name])
+    return cast(str, baseline_tools.junit_id(case))
 
 
 def read_cases(path: Path) -> list[ET.Element]:
@@ -147,8 +139,8 @@ def fresh(path: Path, started: int) -> bool:
     return path.is_file() and path.stat().st_mtime_ns >= started
 
 
-def record(path: Path, ids: list[str], message: str, kind: str) -> None:
-    """Write compact evidence with run identity and observed runner CPU model."""
+def observation() -> dict:
+    """Describe the observed run without changing retry eligibility."""
     cpu = "unknown"
     try:
         for line in Path("/proc/cpuinfo").read_text().splitlines():
@@ -157,45 +149,110 @@ def record(path: Path, ids: list[str], message: str, kind: str) -> None:
                 break
     except OSError:
         pass
+    return {"sha": os.environ.get("GITHUB_SHA", "unknown"),
+            "run_id": os.environ.get("GITHUB_RUN_ID", "unknown"), "runner_cpu": cpu}
+
+
+def record(path: Path, code: int, retry_code: int) -> None:
+    """Record both signal attempts without clearing the original failure."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"ids": ids, "first_failure_message": message[:500],
-               "sha": os.environ.get("GITHUB_SHA", "unknown"),
-               "run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
-               "runner_cpu": cpu, "kind": kind}
+    payload = dict(observation(), kind="signal-exit", first_attempt_exit_code=code,
+                   retry_exit_code=retry_code, exit_code=code)
     path.write_text(json.dumps(payload, indent=2) + "\n")
-    for test_id in ids:
-        escaped = test_id.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-        print(f"::warning::flaky, passed on retry: {escaped}", flush=True)
+    message = f"signal exit {code}; retry exit: {retry_code}; returned {code}"
+    print(f"::warning::{message}", flush=True)
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
+            handle.write(f"### Signal retry\n\n{message}\n")
+
+
+def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
+    """Keep established failures and raw attributes of unidentified failures."""
+    failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
+    for case in read_cases(path):
+        failure = next((child for child in case if child.tag in {"failure", "error"}), None)
+        if failure is not None:
+            try:
+                node = node_id(case)
+            except ValueError:
+                unidentified.append({key: case.get(key, "") for key in ("classname", "name")})
+                continue
+            message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
+            failures.setdefault(node, message[:500])
+    return failures, unidentified
+
+
+def test_evidence(args: argparse.Namespace, payload: dict) -> None:
+    """Persist every first failure and append retry and register decisions."""
+    path = args.junit.parent / f"flaky-{args.shard}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n")
+    lines = [f"### First-attempt failures: {args.shard} ({args.mode})", "",
+             f"Retry decision: {payload['reason']}; retry exit: {payload.get('retry_exit_code', 'not run')}; "
+             f"enforce would return {payload['enforce_exit_code']}; returned {payload['exit_code']}.", ""]
+    for node, message in payload["first_attempt_failed"].items():
+        outcome = "passed on retry" if node in payload["recovered"] else "not recovered"
+        choice = payload["register"][node]
+        lines.extend([f"- <code>{html.escape(node)}</code>: {outcome}; {choice}",
+                      f"<pre>{html.escape(message)}</pre>"])
+        escaped = node.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::warning::flaky, {outcome}: {escaped}; {choice}", flush=True)
+    lines.append(f"{len(payload['unidentified_failures'])} failing cases without an established ID")
+    for case in payload["unidentified_failures"]:
+        lines.append(f"- Unidentified failure: classname=<code>{html.escape(case['classname'])}</code>; "
+                     f"name=<code>{html.escape(case['name'])}</code>; test ID could not be established.")
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
+            handle.write("\n".join(lines) + "\n")
 
 
 def retry_tests(args: argparse.Namespace, command: list[str], code: int, started: int) -> int:
-    """Retry each proven failed ID once while preserving the original failure."""
-    if not fresh(args.junit, started):
-        return code
-    result = junit_decision(args.junit, code, args.max_retry_ids)
-    if not result["retry"]:
-        return code
-    retry_report = args.junit.with_name(args.junit.stem + "-retry.xml")
-    try:
-        retry = retry_command(command, result["ids"], retry_report)
-    except (ValueError, StopIteration):
-        return code
-    failures = [case for case in read_cases(args.junit) if case.find("failure") is not None or case.find("error") is not None]
-    failure = next(child for child in failures[0] if child.tag in {"failure", "error"})
-    message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
-    retry_started = time.time_ns()
-    execute(retry)
-    passed: set[str] = set()
-    try:
-        if fresh(retry_report, retry_started):
-            passed = {node_id(case) for case in read_cases(retry_report)
-                      if not any(case.find(tag) is not None for tag in ("failure", "error", "skipped"))}
-    except (OSError, ET.ParseError, ValueError):
-        passed = set()
-    recovered = sorted(set(result["ids"]) & passed)
-    if recovered:
-        record(args.junit.parent / f"flaky-{args.shard}.json", recovered, message, "retry-pass")
-    return code
+    """Observe one diagnostic retry; only evidenced recovery may clear enforce."""
+    failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
+    result: dict[str, Any] = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
+    if fresh(args.junit, started):
+        result = junit_decision(args.junit, code, args.max_retry_ids)
+        try:
+            failures, unidentified = first_failures(args.junit)
+        except (OSError, ET.ParseError, ValueError):
+            pass
+    if args.shard in NO_RETRY_SHARDS:
+        result.update(retry=False, reason="no-retry-shard")
+    choices = baseline_tools.register_decisions(args.register, list(failures), args.shard)
+    payload = dict(observation(), ids=[], recovered=[], first_attempt_failed=failures,
+                   unidentified_failures=unidentified,
+                   first_attempt_exit_code=code, mode=args.mode, register=choices,
+                   kind="test-ids", reason=result["reason"])
+    enforce_code = code
+    if result["retry"]:
+        retry_report = args.junit.with_name(args.junit.stem + "-retry.xml")
+        try:
+            retry = retry_command(command, result["ids"], retry_report)
+        except (ValueError, StopIteration):
+            payload["reason"] = "ambiguous-retry-command"
+        else:
+            retry_started = time.time_ns()
+            retry_code = execute(retry)
+            payload["retry_exit_code"] = retry_code
+            passed: set[str] = set()
+            try:
+                if fresh(retry_report, retry_started):
+                    passed = {node_id(case) for case in read_cases(retry_report)
+                              if not any(case.find(tag) is not None for tag in ("failure", "error", "skipped"))}
+            except (OSError, ET.ParseError, ValueError):
+                pass
+            recovered = sorted(set(result["ids"]) & passed)
+            payload.update(ids=recovered, recovered=recovered, kind="retry-pass")
+            if (retry_code == 0 and set(result["ids"]) == set(recovered)
+                    and all(choices.get(node) == "registered with evidence" for node in result["ids"])):
+                enforce_code = 0
+    payload["enforce_exit_code"] = enforce_code
+    exit_code = code if args.mode == "report" else enforce_code
+    payload["exit_code"] = exit_code
+    test_evidence(args, payload)
+    return exit_code
 
 
 def main() -> int:
@@ -204,6 +261,8 @@ def main() -> int:
     parser.add_argument("--shard", default="shard")
     parser.add_argument("--junit", type=Path)
     parser.add_argument("--max-retry-ids", type=int, default=20)
+    parser.add_argument("--mode", choices=("report", "enforce"), default="report")
+    parser.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))
     parser.add_argument("--signal-retry", action="store_true")
     parser.add_argument("--decide-only", action="store_true")
     parser.add_argument("--from-log", type=Path)
@@ -221,15 +280,13 @@ def main() -> int:
         parser.error("--junit and a command after -- are required")
     started = time.time_ns()
     code = execute(command)
-    if code == 0 or code == 5 or code in TIMEOUT_CODES:
+    if code == 0:
         return code
-    if args.signal_retry:
-        if code < 128:
+    if args.signal_retry and args.shard not in NO_RETRY_SHARDS:
+        if code < 128 or code in TIMEOUT_CODES:
             return code
         retry_code = execute(command)
-        if retry_code == 0:
-            record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard],
-                   f"signal exit {code}", "signal-exit")
+        record(args.junit.parent / f"flaky-{args.shard}.json", code, retry_code)
         return code
     return retry_tests(args, command, code, started)
 

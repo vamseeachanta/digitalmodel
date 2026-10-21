@@ -1,7 +1,7 @@
 """
 ABOUTME: Wave spectrum library for OrcaWave motion response analysis.
 Implements JONSWAP, Pierson-Moskowitz, Bretschneider, ISSC, Ochi-Hubble
-(bimodal), and Torsethaugen spectra.  Provides spectral moments and
+(bimodal), and an explicitly synthetic two-peak heuristic.  Provides spectral moments and
 period relationships (Tp, Tz, T01, T02).
 
 Focused on OrcaWave workflows: spectrum discretisation for RAO-based
@@ -11,34 +11,75 @@ response computation and short-term statistics.
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+import warnings
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class SpectrumParameters(BaseModel):
     """Input parameters for a wave spectrum."""
 
+    model_config = ConfigDict(allow_inf_nan=False)
+
     spectrum_type: str = Field(
         default="JONSWAP",
-        description="Spectrum type: JONSWAP, PM, Bretschneider, ISSC, OchiHubble, Torsethaugen",
+        description="Spectrum type: JONSWAP, PM, Bretschneider, ISSC, OchiHubble, HeuristicTwoPeak",
     )
-    hs: float = Field(..., description="Significant wave height in metres", gt=0)
+    hs: float = Field(
+        ...,
+        description="Significant height in metres; first component for Ochi-Hubble",
+        gt=0,
+    )
     tp: float = Field(..., description="Peak period in seconds", gt=0)
     gamma: float = Field(
         default=3.3,
+        gt=0,
         description="JONSWAP peak enhancement factor (typically 1.0-7.0)",
     )
     # Ochi-Hubble second mode
-    hs2: Optional[float] = Field(default=None, description="Hs for swell component (Ochi-Hubble)")
-    tp2: Optional[float] = Field(default=None, description="Tp for swell component (Ochi-Hubble)")
-    gamma2: Optional[float] = Field(default=1.0, description="Gamma for swell component")
+    hs2: Optional[float] = Field(
+        default=None, description="Hs for swell component (Ochi-Hubble)"
+    )
+    tp2: Optional[float] = Field(
+        default=None, description="Tp for swell component (Ochi-Hubble)"
+    )
+    lambda1: Optional[float] = Field(
+        default=None, gt=0, description="Ochi-Hubble first shape"
+    )
+    lambda2: Optional[float] = Field(
+        default=None, gt=0, description="Ochi-Hubble second shape"
+    )
+
+    @model_validator(mode="after")
+    def explicit_components(self):
+        if self.spectrum_type.upper().replace("-", "").replace("_", "") in (
+            "OCHIHUBBLE",
+            "OH",
+        ):
+            if any(
+                v is None or v <= 0
+                for v in (self.hs2, self.tp2, self.lambda1, self.lambda2)
+            ):
+                raise ValueError(
+                    "Ochi-Hubble requires positive hs2, tp2, lambda1 and lambda2"
+                )
+        if not 1 <= self.gamma <= 7:
+            warnings.warn(
+                "JONSWAP gamma outside the usual range 1-7", UserWarning, stacklevel=2
+            )
+        return self
 
 
 class SpectrumResult(BaseModel):
     """Discretised wave spectrum output."""
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     frequencies: List[float] = Field(..., description="Frequency vector (rad/s)")
     spectral_density: List[float] = Field(
@@ -54,6 +95,8 @@ class SpectrumResult(BaseModel):
 class SpectralMoments(BaseModel):
     """Spectral moments m0 through m4."""
 
+    model_config = ConfigDict(allow_inf_nan=False)
+
     m0: float
     m1: float
     m2: float
@@ -64,6 +107,7 @@ class SpectralMoments(BaseModel):
 # ---------------------------------------------------------------------------
 # Spectral moment helpers
 # ---------------------------------------------------------------------------
+
 
 def compute_spectral_moments(
     omega: np.ndarray,
@@ -80,9 +124,10 @@ def compute_spectral_moments(
     Returns:
         SpectralMoments with m0 through m4.
     """
+    validate_spectral_grid(omega, s_omega)
     moments = {}
     for n in range(max_order + 1):
-        moments[f"m{n}"] = float(np.trapz(omega**n * s_omega, omega))
+        moments[f"m{n}"] = float(_trapezoid(omega**n * s_omega, omega))
     return SpectralMoments(**moments)
 
 
@@ -96,6 +141,8 @@ def spectral_periods(moments: SpectralMoments) -> Dict[str, float]:
         Dict with Tz (T02), T01, T_mean, bandwidth parameter epsilon.
     """
     m0, m1, m2, m4 = moments.m0, moments.m1, moments.m2, moments.m4
+    if min(m0, m1, m2, m4) <= 0:
+        raise ValueError("Spectral periods require positive moments")
     tz = 2.0 * np.pi * np.sqrt(m0 / max(m2, 1e-30))
     t01 = 2.0 * np.pi * m0 / max(m1, 1e-30)
     eps = np.sqrt(1.0 - m2**2 / max(m0 * m4, 1e-30))
@@ -105,6 +152,7 @@ def spectral_periods(moments: SpectralMoments) -> Dict[str, float]:
 # ---------------------------------------------------------------------------
 # Spectrum functions
 # ---------------------------------------------------------------------------
+
 
 def pierson_moskowitz(
     omega: np.ndarray,
@@ -158,6 +206,8 @@ def jonswap(
     Returns:
         Spectral density array.
     """
+    if not np.isfinite(gamma) or gamma <= 0:
+        raise ValueError("gamma must be positive and finite")
     omega_p = 2.0 * np.pi / tp
     s_pm = pierson_moskowitz(omega, hs, tp)
 
@@ -169,17 +219,15 @@ def jonswap(
     )
     enhancement = gamma ** np.exp(exponent)
 
-    # Normalisation factor so that Hs is preserved
-    # C_gamma ~ 1 - 0.287 * ln(gamma)
+    # DNV-RP-C205 (2014) 3.5.5: approximate analytic normalizer.
+    # Preserve this published shape, not a grid-dependent exact Hs rescaling.
     c_gamma = 1.0 - 0.287 * np.log(gamma)
 
+    if c_gamma <= 0:
+        raise ValueError(
+            "gamma exceeds the positive domain of the analytic JONSWAP normalizer"
+        )
     s_j = c_gamma * s_pm * enhancement
-
-    # Renormalize to exact Hs
-    m0 = np.trapz(s_j, omega)
-    target_m0 = hs**2 / 16.0
-    if m0 > 1e-30:
-        s_j *= target_m0 / m0
 
     return s_j
 
@@ -226,7 +274,9 @@ def issc_spectrum(
     s = np.zeros_like(omega)
     mask = omega > 0
     A = (hs**2 / (4.0 * np.pi)) * omega_z**4
-    s[mask] = A * omega[mask] ** (-5) * np.exp(-(1.0 / np.pi) * (omega_z / omega[mask]) ** 4)
+    s[mask] = (
+        A * omega[mask] ** (-5) * np.exp(-(1.0 / np.pi) * (omega_z / omega[mask]) ** 4)
+    )
     return s
 
 
@@ -279,26 +329,18 @@ def ochi_hubble(
     return _component(hs1, tp1, gamma1) + _component(hs2, tp2, gamma2)
 
 
-def torsethaugen(
+def heuristic_two_peak(
     omega: np.ndarray,
     hs: float,
     tp: float,
 ) -> np.ndarray:
-    """Torsethaugen double-peaked spectrum (simplified).
+    """Synthetic two-peak heuristic, not the published Torsethaugen model.
 
-    Splits into wind-sea and swell components based on Tp relative to
-    the fully-developed sea peak period.  Uses a simplified partition
-    following Torsethaugen & Haver (2004).
-
-    Args:
-        omega: Frequency vector (rad/s).
-        hs: Significant wave height (m).
-        tp: Peak period (s).
-
-    Returns:
-        Total spectral density array.
+    Uses a fixed 1 percent secondary variance before normalizing the sum.
+    The empirical partition and 6.6*Hs**(1/3) threshold are unqualified choices;
+    see docs/engineering-citations.md H1. Do not use as a named design spectrum.
     """
-    # Fully developed Tp: Tp_f ~ 6.6 * Hs^(1/3)  (simplified)
+    # Heuristic partition threshold, not a fully developed sea relation.
     tp_f = 6.6 * hs ** (1.0 / 3.0)
 
     if tp <= tp_f:
@@ -320,7 +362,7 @@ def torsethaugen(
     s_total = s_wind + s_swell
 
     # Renormalize to target Hs
-    m0 = np.trapz(s_total, omega)
+    m0 = _trapezoid(s_total, omega)
     target_m0 = hs**2 / 16.0
     if m0 > 1e-30:
         s_total *= target_m0 / m0
@@ -331,6 +373,7 @@ def torsethaugen(
 # ---------------------------------------------------------------------------
 # High-level API
 # ---------------------------------------------------------------------------
+
 
 def generate_spectrum(
     params: SpectrumParameters,
@@ -349,6 +392,15 @@ def generate_spectrum(
     Returns:
         SpectrumResult with frequencies, spectral density, and derived periods.
     """
+    if (
+        not np.all(np.isfinite([omega_min, omega_max]))
+        or omega_min <= 0
+        or omega_max <= omega_min
+        or n_freq < 2
+    ):
+        raise ValueError(
+            "Require positive increasing frequency bounds and at least two bins"
+        )
     omega = np.linspace(omega_min, omega_max, n_freq)
     stype = params.spectrum_type.upper().replace("-", "").replace("_", "")
 
@@ -359,24 +411,33 @@ def generate_spectrum(
     elif stype in ("BRETSCHNEIDER", "BS"):
         s = bretschneider(omega, params.hs, params.tp)
     elif stype == "ISSC":
-        tz = params.tp / 1.408  # approximate Tz from Tp for PM family
+        tz = params.tp / (5 * np.pi / 4) ** 0.25  # approximate Tz from Tp for PM family
         s = issc_spectrum(omega, params.hs, tz)
     elif stype in ("OCHIHUBBLE", "OH"):
-        hs2 = params.hs2 if params.hs2 is not None else 0.5 * params.hs
-        tp2 = params.tp2 if params.tp2 is not None else 2.0 * params.tp
-        g2 = params.gamma2 if params.gamma2 is not None else 1.0
-        s = ochi_hubble(omega, params.hs, params.tp, params.gamma, hs2, tp2, g2)
+        s = ochi_hubble(
+            omega,
+            params.hs,
+            params.tp,
+            params.lambda1,
+            params.hs2,
+            params.tp2,
+            params.lambda2,
+        )
+    elif stype == "HEURISTICTWOPEAK":
+        s = heuristic_two_peak(omega, params.hs, params.tp)
     elif stype in ("TORSETHAUGEN", "TH"):
-        s = torsethaugen(omega, params.hs, params.tp)
+        raise ValueError(
+            "Published Torsethaugen model unavailable; explicitly select HeuristicTwoPeak"
+        )
     else:
         raise ValueError(f"Unknown spectrum type: {params.spectrum_type}")
 
     moments = compute_spectral_moments(omega, s)
-    hs_computed = 4.0 * np.sqrt(max(moments.m0, 0.0))
+    hs_computed = 4.0 * np.sqrt(moments.m0)
 
     # Peak period from spectrum
     peak_idx = int(np.argmax(s))
-    tp_computed = 2.0 * np.pi / omega[peak_idx] if omega[peak_idx] > 0 else params.tp
+    tp_computed = 2.0 * np.pi / omega[peak_idx]
 
     periods = spectral_periods(moments)
 
@@ -388,3 +449,25 @@ def generate_spectrum(
         tz=periods["Tz"],
         t01=periods["T01"],
     )
+
+
+def torsethaugen(*args, **kwargs):
+    """Removed attribution: explicitly choose heuristic_two_peak instead."""
+    raise ValueError(
+        "Published Torsethaugen model unavailable; use heuristic_two_peak explicitly"
+    )
+
+
+def validate_spectral_grid(omega, density):
+    """Reject empty, unordered, nonfinite or mismatched spectral records."""
+    omega, density = np.asarray(omega), np.asarray(density)
+    if omega.ndim != 1 or omega.size < 2 or density.shape != omega.shape:
+        raise ValueError(
+            "Spectrum requires matching one-dimensional arrays with at least two bins"
+        )
+    if not np.all(np.isfinite(omega)) or not np.all(np.isfinite(density)):
+        raise ValueError("Spectrum arrays must be finite")
+    if np.any(omega <= 0) or np.any(np.diff(omega) <= 0) or np.any(density < 0):
+        raise ValueError(
+            "Require positive increasing frequencies and nonnegative density"
+        )

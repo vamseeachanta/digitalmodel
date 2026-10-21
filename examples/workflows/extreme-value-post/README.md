@@ -6,8 +6,16 @@ extremes** (10 / 50 / 100 / 1000-yr). This is the offline, license-free demo
 for the `extreme-value-post` use case (issues #961, #941, #938).
 
 - **Gumbel return value**: `x_T = μ + σ · (−ln(−ln(1 − 1/T)))`
-- **Weibull return value**: inverse CDF `weibull_min.ppf(1 − 1/T)` (3-param, `loc=0`)
+- **Weibull return value**: inverse CDF `weibull_min.ppf(1 − 1/T)` with shape,
+  location and scale fitted from the maxima.
 - Goodness-of-fit reported via a Kolmogorov–Smirnov statistic and p-value.
+
+Weibull fitting requires at least 10 finite, nonconstant maxima; 50 or more
+are recommended because small samples often yield a degenerate fit. A fit
+raises `ValueError` before computing return values if its shape is below 1
+or its location is within one millionth of the sample range of the minimum.
+Increasing the sample count alone does not establish fit reliability. This
+example has 30 illustrative block maxima; its fitted values are a demonstration.
 
 Block maxima are the inputs (one maximum per block — e.g. per storm-year of an
 OrcaFlex dynamic mooring/riser campaign). How they were produced is out of

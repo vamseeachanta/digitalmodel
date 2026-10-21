@@ -102,7 +102,8 @@ def tensioned_beam_periods(segments: Sequence[BeamSegment], n_modes: int, *,
                            point_springs: dict[int, float] | None = None,
                            pinned_nodes: tuple[int, ...] | None = None,
                            clamp_bottom: bool = False) -> list[float]:
-    """Transverse natural periods (s), ascending, of a beam pinned in translation at ``pinned_nodes``
+    """Transverse natural periods (s), in order of increasing natural frequency
+    (decreasing periods, fundamental mode first), of a beam pinned in translation at ``pinned_nodes``
     (default: both ends); ``clamp_bottom`` also fixes the rotation of the bottom node.
 
     Nodes are numbered 0 (top) to len(segments) (bottom); ``point_masses`` and

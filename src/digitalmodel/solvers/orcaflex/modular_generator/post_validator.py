@@ -54,7 +54,7 @@ _OBJECT_SECTIONS = (
     "MorisonElementTypes",
     "AttachedBuoys",
     "MultibodyGroups",
-    "PyModels",
+    "P-yModels",
     "WakeModels",
     "FlexJointTypes",
     "DragChainTypes",
@@ -87,12 +87,23 @@ _KNOWN_TOP_LEVEL_KEYS = (
 )
 
 
+def _object_name_key(name: Any) -> str:
+    """Return a comparison key, preserving source spelling outside lookup.
+
+    Orcina OrcaFlex webhelp, "The model", object names paragraph
+    (unversioned, accessed 2026-10-19) specifies case-insensitive names:
+    https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm
+    Stringification matches the registry's handling of numeric YAML names.
+    """
+    return str(name).casefold()
+
+
 @dataclass
 class ValidationWarning:
     """A single validation finding."""
 
     level: str  # "error", "warning"
-    category: str  # "reference", "duplicate", "coherence", "unrecognised"
+    category: str  # "reference", "duplicate", "wave_type", "coherence", "unrecognised"
     message: str
     file: str = ""
     object_name: str = ""
@@ -192,17 +203,7 @@ class PostGenerationValidator:
             )
             return warnings
 
-        # Build registry of all defined objects
-        defined_objects = self._build_object_registry(files)
-
-        # Run all checks
-        warnings.extend(self._check_line_type_references(files, defined_objects))
-        warnings.extend(self._check_vessel_references(files, defined_objects))
-        warnings.extend(self._check_winch_references(files, defined_objects))
-        warnings.extend(self._check_duplicate_names(defined_objects))
-        warnings.extend(self._check_connection_targets(files, defined_objects))
-
-        return warnings
+        return self.validate_data(files)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -296,7 +297,7 @@ class PostGenerationValidator:
             List of validation warnings for missing line type references.
         """
         warnings: list[ValidationWarning] = []
-        defined_lt = set(defined.get("LineTypes", {}).keys())
+        defined_lt = {_object_name_key(n) for n in defined.get("LineTypes", {})}
 
         if not defined_lt:
             # No line types defined at all; skip check (might be a
@@ -320,7 +321,7 @@ class PostGenerationValidator:
                         for row in value:
                             if isinstance(row, list) and len(row) >= 1:
                                 lt_name = row[0]
-                                if lt_name and lt_name not in defined_lt:
+                                if lt_name and _object_name_key(lt_name) not in defined_lt:
                                     warnings.append(
                                         ValidationWarning(
                                             level="error",
@@ -361,8 +362,7 @@ class PostGenerationValidator:
         # Shapes, Links, FlexJoints, other Lines, etc.
         valid_targets: set[str] = set()
         for section_names in defined.values():
-            valid_targets.update(str(n) for n in section_names.keys())
-        valid_targets.update(_BUILTIN_CONNECTIONS)
+            valid_targets.update(_object_name_key(n) for n in section_names)
 
         for file_name, data in files.items():
             lines = data.get("Lines")
@@ -390,7 +390,10 @@ class PostGenerationValidator:
                                 # OrcaFlex arc-length or node references.
                                 if isinstance(target, (int, float)):
                                     continue
-                                if target not in valid_targets:
+                                if (
+                                    target not in _BUILTIN_CONNECTIONS
+                                    and _object_name_key(target) not in valid_targets
+                                ):
                                     end_label = (
                                         "End A" if row_idx == 0 else "End B"
                                     )
@@ -429,8 +432,8 @@ class PostGenerationValidator:
             List of validation warnings for invalid winch references.
         """
         warnings: list[ValidationWarning] = []
-        defined_vessels = set(defined.get("Vessels", {}).keys())
-        defined_lines = set(defined.get("Lines", {}).keys())
+        defined_vessels = {_object_name_key(n) for n in defined.get("Vessels", {})}
+        defined_lines = {_object_name_key(n) for n in defined.get("Lines", {})}
 
         for file_name, data in files.items():
             winches = data.get("Winches")
@@ -446,7 +449,7 @@ class PostGenerationValidator:
                 # Connection is typically [vessel_name, line_name]
                 if len(connection) >= 1 and connection[0]:
                     vessel_ref = connection[0]
-                    if vessel_ref not in defined_vessels:
+                    if _object_name_key(vessel_ref) not in defined_vessels:
                         warnings.append(
                             ValidationWarning(
                                 level="error",
@@ -462,7 +465,7 @@ class PostGenerationValidator:
                         )
                 if len(connection) >= 2 and connection[1]:
                     line_ref = connection[1]
-                    if line_ref not in defined_lines:
+                    if _object_name_key(line_ref) not in defined_lines:
                         warnings.append(
                             ValidationWarning(
                                 level="error",
@@ -478,37 +481,6 @@ class PostGenerationValidator:
                         )
 
         return warnings
-
-    def _check_duplicate_names(
-        self, defined: dict[str, dict[str, str]]
-    ) -> list[ValidationWarning]:
-        """Check for duplicate object names within same type.
-
-        The object registry already collapses duplicates (last writer
-        wins), so we need to re-scan to detect them.  However the
-        registry is built from ``_build_object_registry`` which only
-        keeps the last occurrence.  Instead we do a fresh pass here.
-
-        For the purposes of this validator, we track names seen per
-        section and flag duplicates.
-
-        Args:
-            defined: Object registry (used to identify which sections exist).
-
-        Returns:
-            List of validation warnings for duplicate names.
-        """
-        # This method is intentionally lightweight.  The real duplicate
-        # detection happens in _check_duplicate_names_from_files which
-        # is called by validate_directory.  But since we have the
-        # registry already, we can't detect duplicates from it (they're
-        # collapsed).  We'll rely on validate_from_data for testing.
-        #
-        # In practice, duplicate objects within the same builder are
-        # very unlikely since builders generate from a single spec.
-        # Cross-builder duplicates (e.g. two builders both emitting
-        # a "Vessels" section) would be caught by YAML file merging.
-        return []
 
     def _check_connection_targets(
         self,
@@ -530,11 +502,10 @@ class PostGenerationValidator:
         """
         warnings: list[ValidationWarning] = []
 
-        # Build full set of valid targets (all named objects + built-ins)
+        # Build object lookup keys; built-in keywords are checked separately.
         all_names: set[str] = set()
         for section_names in defined.values():
-            all_names.update(section_names.keys())
-        all_names.update(_BUILTIN_CONNECTIONS)
+            all_names.update(_object_name_key(n) for n in section_names)
 
         for file_name, data in files.items():
             # Check Links
@@ -550,7 +521,8 @@ class PostGenerationValidator:
                             if (
                                 target
                                 and isinstance(target, str)
-                                and target not in all_names
+                                and target not in _BUILTIN_CONNECTIONS
+                                and _object_name_key(target) not in all_names
                             ):
                                 warnings.append(
                                     ValidationWarning(
@@ -581,7 +553,8 @@ class PostGenerationValidator:
                         if (
                             target
                             and isinstance(target, str)
-                            and target not in all_names
+                            and target not in _BUILTIN_CONNECTIONS
+                            and _object_name_key(target) not in all_names
                         ):
                             warnings.append(
                                 ValidationWarning(
@@ -625,6 +598,7 @@ class PostGenerationValidator:
         warnings.extend(self._check_vessel_references(files, defined_objects))
         warnings.extend(self._check_winch_references(files, defined_objects))
         warnings.extend(self._check_duplicate_names_from_files(files))
+        warnings.extend(self._check_wave_types(files))
         warnings.extend(self._check_connection_targets(files, defined_objects))
 
         return warnings
@@ -632,44 +606,55 @@ class PostGenerationValidator:
     def _check_duplicate_names_from_files(
         self, files: dict[str, Any]
     ) -> list[ValidationWarning]:
-        """Detect duplicate object names within same section across all files.
+        """Reject reused names across list-style object collections.
 
-        Args:
-            files: Loaded YAML data.
-
-        Returns:
-            List of warnings for any duplicates found.
+        Native names are unique and case-insensitive, including type objects:
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Datafields.htm
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm
         """
         warnings: list[ValidationWarning] = []
-        # section -> name -> list of source files
-        seen: dict[str, dict[str, list[str]]] = {}
-
+        seen: dict[str, list[str]] = {}
+        display_names: dict[str, str] = {}
         for file_name, data in files.items():
             for section in _OBJECT_SECTIONS:
                 objects = data.get(section)
-                if not objects or not isinstance(objects, list):
+                if not isinstance(objects, list):
                     continue
-                section_seen = seen.setdefault(section, {})
                 for obj in objects:
                     if isinstance(obj, dict) and "Name" in obj:
-                        name = obj["Name"]
-                        section_seen.setdefault(name, []).append(file_name)
+                        name = str(obj["Name"])
+                        key = name.casefold()
+                        display_names.setdefault(key, name)
+                        seen.setdefault(key, []).append(f"{file_name}:{section}")
+        for key, sources in seen.items():
+            name = display_names[key]
+            if len(sources) > 1:
+                warnings.append(ValidationWarning(
+                    level="error", category="duplicate",
+                    message=f"Duplicate object name '{name}' found in: {', '.join(sources)}",
+                    object_name=name,
+                ))
+        return warnings
 
-        for section, names in seen.items():
-            for name, sources in names.items():
-                if len(sources) > 1:
-                    warnings.append(
-                        ValidationWarning(
-                            level="warning",
-                            category="duplicate",
-                            message=(
-                                f"Duplicate {section} name '{name}' "
-                                f"found in: {', '.join(sources)}"
-                            ),
-                            object_name=name,
-                        )
-                    )
-
+    def _check_wave_types(self, files: dict[str, Any]) -> list[ValidationWarning]:
+        """Reject the known native-invalid still-water selector."""
+        warnings: list[ValidationWarning] = []
+        for file_name, data in files.items():
+            environment = data.get("Environment")
+            if not isinstance(environment, dict):
+                continue
+            trains = environment.get("WaveTrains", [])
+            if not isinstance(trains, list):
+                continue
+            for train in trains:
+                if not isinstance(train, dict):
+                    continue
+                if str(train.get("WaveType", "")).strip().casefold() == "no waves":
+                    warnings.append(ValidationWarning(
+                        level="error", category="wave_type", file=file_name,
+                        object_name=str(train.get("Name", "")),
+                        message="Unsupported WaveType 'No waves'; use zero-height Airy for still water",
+                    ))
         return warnings
 
     # ------------------------------------------------------------------

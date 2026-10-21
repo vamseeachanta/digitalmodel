@@ -22,6 +22,7 @@ def _make_drift_coeffs() -> MeanDriftCoefficients:
     sway = [8 * f**2 for f in freqs]
     yaw = [50 * f**2 for f in freqs]
     return MeanDriftCoefficients(
+        frame="x_forward_y_port_z_up", heading_convention="from_clockwise_bow",
         heading_deg=0.0,
         frequencies_rad_s=freqs,
         surge_kn_m2=surge,
@@ -87,10 +88,10 @@ class TestFullQTF:
     """Test full QTF slowly-varying computation."""
 
     def test_full_qtf_positive_std(self):
-        freqs = [0.3, 0.5, 0.8, 1.0]
+        freqs = [0.3, 0.5, 0.7, 0.9]
         n = len(freqs)
-        # Create simple diagonal-dominant QTF
-        real_part = np.eye(n) * 10.0
+        # A constant complete Newman QTF has nonzero off-diagonal beat loads.
+        real_part = np.full((n, n), 10.0)
         imag_part = np.zeros((n, n))
         qtf = QTFMatrix(
             dof="surge",
@@ -102,7 +103,7 @@ class TestFullQTF:
         omega = np.array(freqs)
         s_wave = pierson_moskowitz(omega, hs=3.0, tp=10.0)
         sigma = full_qtf_slowly_varying(qtf, s_wave, omega)
-        assert sigma >= 0
+        assert sigma > 0
 
 
 class TestWindCurrentDrift:

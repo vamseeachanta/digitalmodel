@@ -792,13 +792,15 @@ class OrcaWaveInputParser:
         """Map OrcaWave mesh format string back to spec enum value."""
         fmt_map = {
             "wamit gdf": "gdf",
-            "wamit dat": "dat",
-            "stl": "stl",
-            "gmsh": "msh",
-            "obj": "obj",
+            "aqwa dat": "aqwa_dat",
+            "gmsh msh": "msh",
+            "wavefront obj": "obj",
             "auto": "auto",
         }
-        return fmt_map.get(orcawave_fmt.lower(), "auto")
+        try:
+            return fmt_map[orcawave_fmt.lower()]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported OrcaWave mesh format {orcawave_fmt!r}") from exc
 
     @staticmethod
     def _reverse_tensor_origin(orcawave_origin: str) -> str:
@@ -833,14 +835,13 @@ class OrcaWaveInputParser:
 
     @staticmethod
     def _reverse_symmetry(orcawave_sym: str) -> str:
-        """Map OrcaWave symmetry string back to spec enum value."""
-        sym_map = {
-            "none": "none",
-            "xz plane": "xz",
-            "yz plane": "yz",
-            "xz and yz planes": "xz+yz",
-        }
-        return sym_map.get(orcawave_sym.lower(), "none")
+        """Refuse partial-mesh expansion that cannot round-trip as a full mesh."""
+        if str(orcawave_sym).lower() != "none":
+            raise ValueError(
+                f"Unsupported OrcaWave mesh symmetry {orcawave_sym!r}; "
+                "provide a full mesh with BodyMeshSymmetry None"
+            )
+        return "none"
 
 
 # ---------------------------------------------------------------------------

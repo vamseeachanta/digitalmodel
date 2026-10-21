@@ -1,0 +1,1 @@
+Gemini CLI: UNAVAILABLE, authentication/application eligibility rejection (IneligibleTierError / UNSUPPORTED_CLIENT), not a network outage. Antigravity fallback succeeded using stdin stream-json: event=user, message={role:user,content:[{type:text,text:packet}]}. Text stdin was ignored and was not counted as a review.

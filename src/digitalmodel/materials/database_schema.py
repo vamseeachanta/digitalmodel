@@ -43,13 +43,15 @@ class RepositoryProvenance:
 
     sha256 hashes the grade module bytes decoded as UTF-8, with every CRLF
     and lone CR replaced by LF, then encoded as UTF-8.
+    repository_revision may be None until a reachable merge revision is assigned;
+    the source digest remains mandatory.
     The repository licence describes software reuse. It does not establish
     redistribution rights for the original specification or qualify its values.
     """
 
     citation: str
     repository_path: str
-    repository_revision: str
+    repository_revision: str | None
     sha256: str
     retrieved_on_utc: str
     repository_terms: str = "MIT License"
@@ -58,8 +60,11 @@ class RepositoryProvenance:
 
     def __post_init__(self) -> None:
         for field in self.__dataclass_fields__:
+            if field == "repository_revision" and self.repository_revision is None:
+                continue
             _text(getattr(self, field), field)
-        if not re.fullmatch(r"[a-f0-9]{40}", self.repository_revision):
+        if (self.repository_revision is not None
+                and not re.fullmatch(r"[a-f0-9]{40}", self.repository_revision)):
             raise ValueError("repository_revision must be a full Git commit hash")
         if not re.fullmatch(r"[a-f0-9]{64}", self.sha256):
             raise ValueError("sha256 must be a lowercase SHA-256 digest")

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "froude_number": 0.26,
+  "body_condition": "fixed_even_keel",
+  "appendages": "none",
+  "basis": "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py",
+  "mesh_scales": [0.5, 1.0, 2.0],
+  "ranks": 8,
+  "timed_start_iterations": 100,
+  "full_iterations": 25000,
+  "averaging_iterations": 4000,
+  "resource_limits": {
+    "memory_reserve_gb": 6,
+    "minimum_disk_free_gb": 15,
+    "total_projected_solver_hours": 80
+  },
+  "comparison": {
+    "quantity": "total_resistance_coefficient",
+    "relative_tolerance_percent": 3.0,
+    "tolerance_basis": "assumed, based on previous experience; existing resistance validation module",
+    "require_opened_source": true,
+    "require_table_and_page": true,
+    "plot_digitisation": false,
+    "missing_source_result": "not available"
+  },
+  "grid_uncertainty": {
+    "method": "three-mesh grid convergence index",
+    "implementation": "src/digitalmodel/solvers/openfoam/grid_convergence.py",
+    "required_completed_meshes": 3,
+    "constant_refinement_ratio": 2.0,
+    "medium_mesh_target_percent": 1.0,
+    "target_basis": "assumed, based on previous experience; existing grid convergence module",
+    "incomplete_result": "not established"
+  },
+  "retention": {
+    "committed": ["force histories", "coefficient histories", "run log", "digest manifest", "report"],
+    "scratch": ["case inputs", "meshes", "field data", "native logs"],
+    "raw_header_redaction": "Only identifying header lines may be replaced; numerical results remain unchanged."
+  }
+}

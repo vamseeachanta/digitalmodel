@@ -15,7 +15,7 @@ Two lay methods are supported, selected by ``pipelay.method``:
 - ``Reel-Lay``: reel + straightener residual-curvature screening. The pipe is
   spooled onto a reel of given core radius, then passed through a
   straightener. The reeling bending strain ``D / (2 * R_reel)`` must stay below
-  the plastic-strain limit, and the residual ovalisation / out-of-straightness
+  the plastic-strain limit, and the residual curvature / out-of-straightness
   after straightening is reported.
 
 References:
@@ -34,53 +34,47 @@ from digitalmodel.orcaflex.pipelay_analysis import (
     JLayConfig,
     LayMethod,
     LayOperability,
-    PipelayPipeProperties,
     calculate_stinger_radius,
 )
+from digitalmodel.pipelay.validation import OUTPUT_DEFAULTS, validate_settings
 
 
-def _pipe_from_cfg(pipe_cfg: Dict[str, Any]) -> PipelayPipeProperties:
-    """Build pipe properties, accepting only known fields."""
-    allowed = set(PipelayPipeProperties.model_fields)
-    filtered = {k: v for k, v in (pipe_cfg or {}).items() if k in allowed}
-    return PipelayPipeProperties(**filtered)
-
-
-def _operability(operability_cfg: Dict[str, Any]) -> Dict[str, Any]:
+def _operability(operability_cfg: Dict[str, Any], *, welding_required=False) -> Dict[str, Any]:
     """Run the lay-rate vs sea-state operability assessment, if requested."""
-    allowed = set(LayOperability.model_fields)
-    filtered = {k: v for k, v in (operability_cfg or {}).items() if k in allowed}
-    op = LayOperability(**filtered)
+    op = LayOperability(**operability_cfg)
     return {
         "max_hs_lay_m": op.max_hs_lay,
         "max_hs_welding_m": op.max_hs_welding,
         "max_hs_abandonment_recovery_m": op.max_hs_aband_recovery,
-        "lay_rate_table": op.generate_operability_table(),
+        "operating_limit_m": min(op.max_hs_lay, op.max_hs_welding) if welding_required else op.max_hs_lay,
+        "operating_limit_basis": "lay_and_welding" if welding_required else "lay_only",
+        "lay_rate_table": op.generate_operability_table(welding_required=welding_required),
     }
 
 
 def run_jlay(settings: Dict[str, Any]) -> Dict[str, Any]:
     """J-lay sagbend screening (offline, analytical)."""
-    pipe = _pipe_from_cfg(settings.get("pipe", {}))
-    config = settings.get("config", {})
+    pipe, config, defaults = validate_settings(settings, LayMethod.J_LAY.value)
 
     jlay = JLayConfig(
-        water_depth=float(config.get("water_depth_m", 1500.0)),
+        water_depth=config["water_depth_m"],
         pipe=pipe,
-        tower_angle=float(config.get("tower_angle_deg", 0.0)),
-        top_tension=float(config.get("top_tension_kN", 800.0)),
+        tower_angle=config["tower_angle_deg"],
+        top_tension=config["top_tension_kN"],
     )
     sagbend = jlay.calculate_sagbend()
 
-    strain_limit = float(config.get("allowable_sagbend_strain", 0.002))
+    strain_limit = config["allowable_sagbend_strain"]
     sagbend_strain = sagbend["sagbend_bending_strain"]
-    utilisation = sagbend_strain / strain_limit if strain_limit > 0 else float("inf")
+    utilisation = sagbend_strain / strain_limit
 
     result: Dict[str, Any] = {
         "method": LayMethod.J_LAY.value,
         "water_depth_m": jlay.water_depth,
         "tower_angle_deg": jlay.tower_angle,
-        "top_tension_kN": jlay.top_tension,
+        "top_tension_kN": sagbend["derived_top_tension_kN"],
+        "supplied_top_tension_kN": jlay.top_tension,
+        "applied_defaults": defaults,
         "pipe_outer_diameter_m": pipe.outer_diameter,
         "pipe_submerged_weight_N_per_m": round(pipe.submerged_weight_per_m, 3),
         "sagbend": sagbend,
@@ -89,7 +83,7 @@ def run_jlay(settings: Dict[str, Any]) -> Dict[str, Any]:
         "screening_status": "pass" if utilisation <= 1.0 else "fail",
     }
     if "operability" in settings:
-        result["operability"] = _operability(settings["operability"])
+        result["operability"] = _operability(settings["operability"], welding_required=True)
     return result
 
 
@@ -105,42 +99,39 @@ def run_reel_lay(settings: Dict[str, Any]) -> Dict[str, Any]:
 
     Reference: Bai & Bai (2014) Ch. 6.
     """
-    pipe = _pipe_from_cfg(settings.get("pipe", {}))
-    config = settings.get("config", {})
+    pipe, config, defaults = validate_settings(settings, LayMethod.REEL_LAY.value)
+    result = _reel_result(pipe, config)
+    result['applied_defaults'] = defaults
+    if "operability" in settings:
+        result["operability"] = _operability(settings["operability"])
+    return result
 
-    reel_core_radius = float(config.get("reel_core_radius_m", 8.0))
-    if reel_core_radius <= 0.0:
-        raise ValueError("reel_core_radius_m must be positive")
-    allowable_reeling_strain = float(config.get("allowable_reeling_strain", 0.02))
-    straightener_efficiency = float(config.get("straightener_efficiency", 0.95))
-    if not 0.0 <= straightener_efficiency <= 1.0:
-        raise ValueError("straightener_efficiency must be in [0, 1]")
-    residual_span_m = float(config.get("residual_out_of_straightness_span_m", 12.0))
+
+def _reel_result(pipe, config) -> Dict[str, Any]:
+    """Evaluate screening-basis.md E5-E6 on validated input quantities."""
+    reel_core_radius = config["reel_core_radius_m"]
+    allowable_reeling_strain = config["allowable_reeling_strain"]
+    straightener_efficiency = config["straightener_efficiency"]
+    residual_span_m = config["residual_out_of_straightness_span_m"]
 
     D = pipe.outer_diameter
 
-    # Reeling bending strain at the reel core (worst case = innermost wrap).
+    # screening-basis.md E5-E6: innermost wrap and residual-curvature assumption.
     reeling_strain = D / (2.0 * reel_core_radius)
-    reeling_utilisation = (
-        reeling_strain / allowable_reeling_strain
-        if allowable_reeling_strain > 0
-        else float("inf")
-    )
+    reeling_utilisation = reeling_strain / allowable_reeling_strain
 
-    # Residual curvature after the straightener removes most of the reeling
-    # curvature. kappa_reel = 1/R_reel; residual = (1 - efficiency) * kappa_reel.
+    # E6: the straightener removes the supplied fraction of reel curvature.
     reel_curvature = 1.0 / reel_core_radius
     residual_curvature = (1.0 - straightener_efficiency) * reel_curvature
     residual_radius = (
-        1.0 / residual_curvature if residual_curvature > 0 else float("inf")
+        1.0 / residual_curvature if residual_curvature > 0 else None
     )
-    residual_strain = D / (2.0 * residual_radius) if residual_radius > 0 else 0.0
+    residual_strain = D * residual_curvature / 2.0
 
-    # Out-of-straightness (mid-span sagitta) over a measurement span from the
-    # residual curvature: delta = kappa * L^2 / 8.
+    # E6: small-slope mid-span sagitta, delta = kappa * L^2 / 8.
     residual_oos_m = residual_curvature * residual_span_m**2 / 8.0
 
-    result: Dict[str, Any] = {
+    return {
         "method": LayMethod.REEL_LAY.value,
         "reel_core_radius_m": reel_core_radius,
         "pipe_outer_diameter_m": D,
@@ -150,20 +141,20 @@ def run_reel_lay(settings: Dict[str, Any]) -> Dict[str, Any]:
         "reeling_strain_utilisation": round(reeling_utilisation, 4),
         "straightener_efficiency": straightener_efficiency,
         "residual_curvature_1_per_m": round(residual_curvature, 8),
-        "residual_radius_m": round(residual_radius, 1),
+        "residual_radius_m": round(residual_radius, 1) if residual_radius is not None else None,
+        "residual_radius_status": "finite" if residual_radius is not None else "unbounded_zero_curvature",
         "residual_bending_strain": round(residual_strain, 6),
         "residual_out_of_straightness_span_m": residual_span_m,
         "residual_out_of_straightness_m": round(residual_oos_m, 5),
         "screening_status": "pass" if reeling_utilisation <= 1.0 else "fail",
     }
-    if "operability" in settings:
-        result["operability"] = _operability(settings["operability"])
-    return result
 
 
 def router(cfg: dict) -> dict:
     """Engine entry point for ``basename: pipelay``."""
-    settings = cfg.get("pipelay") or {}
+    settings = cfg.get("pipelay", {})
+    if not isinstance(settings, dict):
+        raise ValueError('pipelay must be a mapping')
     method = str(settings.get("method", LayMethod.J_LAY.value)).strip().lower()
 
     if method in ("j-lay", "jlay", "j_lay"):
@@ -185,6 +176,8 @@ def router(cfg: dict) -> dict:
         1,
     )
 
+    result['applied_defaults'].update({f'outputs.{key}': value
+        for key, value in OUTPUT_DEFAULTS.items() if key not in settings.get('outputs', {})})
     summary_path = _write_summary(cfg, settings.get("outputs", {}), result)
     result["summary_json"] = str(summary_path)
 
@@ -194,10 +187,12 @@ def router(cfg: dict) -> dict:
 
 
 def _write_summary(cfg: dict, output_cfg: dict, payload: Dict[str, Any]) -> Path:
+    # Encode before creating output: unexpected non-finite values fail closed.
+    text = json.dumps(payload, indent=2, allow_nan=False)
     directory = Path(output_cfg.get("directory", "results/pipelay"))
     if not directory.is_absolute():
         directory = Path(cfg.get("_config_dir_path", Path.cwd())) / directory
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", "pipelay_summary.json")
-    summary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    summary_path.write_text(text, encoding="utf-8")
     return summary_path

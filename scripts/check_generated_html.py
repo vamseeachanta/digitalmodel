@@ -70,6 +70,22 @@ class Generator:
 
 
 GENERATORS = (
+    # The synthetic assessment and its digest manifest form one reproducible
+    # deliverable. Explicit inputs keep the shadow build independent of cwd.
+    Generator(
+        "scripts/reporting/build_pipeline_ffs_report.py",
+        ("docs/api/ffs/pipeline-ffs-assessment.html",
+         "docs/api/ffs/pipeline-ffs-assessment.manifest.json",
+         "docs/reports/pipeline-ffs-assessment.html",
+         "docs/reports/pipeline-ffs-assessment.manifest.json"),
+        inputs=(
+            "pyproject.toml",
+            "examples/workflows/pipeline-ffs-assessment/input.yml",
+            "examples/workflows/pipeline-ffs-assessment/assumptions.yml",
+            "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+            "examples/workflows/ffs-metal-loss/input.yml",
+        ),
+    ),
     Generator(
         "scripts/capabilities/build_installation_heading_explorer.py",
         ("docs/api/installation/installation-heading-explorer.html",),

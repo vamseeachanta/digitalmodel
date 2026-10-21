@@ -27,11 +27,9 @@ permissions:
   actions: read
 
 concurrency:
-  # Rapid merges to main supersede each other: the newest commit on main is the
-  # one whose sweep must complete. Nightly runs use a separate group so pushes
-  # cannot cancel the scheduled full sweep.
-  group: full-matrix-sweep-${{ github.ref }}-${{ github.event_name == 'schedule' && 'nightly' || 'push' }}
-  cancel-in-progress: true
+  # Each sweep keeps a separate group because cancelled runs publish no baseline.
+  group: full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   full-matrix:
@@ -91,6 +89,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Citation checks read source and map revisions recorded in packs;
+          # subsea also verifies a manifest pinned to an older commit.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -114,7 +116,7 @@ jobs:
         env:
           GATE_NAME: tests-${{ matrix.domain }}
         run: |
-          command=$(uv run --no-sources --with pyyaml python - <<'PY'
+          command=$(uv run --no-sources --with pyyaml==6.0.2 python - <<'PY'
           import os
           import yaml
 
@@ -129,11 +131,23 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Select trusted register
+        if: matrix.domain == 'orcaflex'
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
+
       - name: Run domain gate
         id: domain-gate
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          python scripts/ci/run_shard.py --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          if [ "${{ matrix.domain }}" = "orcaflex" ]; then
+            uv run --no-sources --with pyyaml==6.0.2 python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          else
+            ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          fi
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
@@ -241,6 +255,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            function healthWriteOrder(body, runNumber) {
+              const marker = (body || '').match(/^<!-- main-health-order: run_number=(\d+) run_id=\d+ sha=[0-9a-f]+ -->$/m);
+              const storedRunNumber = marker ? Number(marker[1]) : null;
+              return {storedRunNumber, skip: storedRunNumber !== null && storedRunNumber > runNumber};
+            }
             const fs = require('fs');
             const baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
             const previous = fs.existsSync('previous-baseline.json')
@@ -251,12 +270,18 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo,
               {owner, repo, state: 'all', labels: 'main-health', per_page: 100});
             const issue = issues.find(item => item.title === title && !item.pull_request);
+            const order = healthWriteOrder(issue?.body, context.runNumber);
+            if (order.skip) {
+              core.notice(`Skipping main-health update for run ${context.runNumber}; stored run ${order.storedRunNumber} is newer.`);
+              return;
+            }
             const active = Object.entries(baseline.tests);
             const resolved = Object.entries(previous.tests).filter(([id, row]) =>
               !baseline.tests[id] && baseline.shards[row.shard]?.parsed === true &&
               ['success', 'failure'].includes(baseline.shards[row.shard]?.conclusion));
             const cell = value => String(value).replaceAll('|', '&#124;').replaceAll('\n', ' ');
-            const lines = ['Main test failures by exact test id.', '',
+            const lines = [`<!-- main-health-order: run_number=${context.runNumber} run_id=${context.runId} sha=${context.sha} -->`,
+              'Main test failures by exact test id.', '',
               '| Test id | Shard | First seen run | Last seen run | Status |',
               '| --- | --- | --- | --- | --- |'];
             for (const [id, row] of active.slice(0, 200)) {

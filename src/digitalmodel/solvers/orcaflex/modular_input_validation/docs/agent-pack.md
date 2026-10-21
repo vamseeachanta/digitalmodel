@@ -141,6 +141,7 @@ Every count below has unit count (dimensionless); Boolean/status comparisons hav
 UNVERIFIED: U3 — no native load, statics, dynamics, diffraction or signed appendix acceptance result is established for this module by the offline runs; the downstream checks require external evidence. See section 10, issue pending (4).
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 These findings are source-observed limits, not failed engineering qualification measurements; proposed detection checks are distinguished from existing executable tests.
 

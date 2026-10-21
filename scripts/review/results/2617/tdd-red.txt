@@ -1,0 +1,70 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/vamsee/ws/_pm/pm-jobs/dm2617/worktree
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 8 items
+
+tests/orcawave/test_drift_force_variance.py FFFFF.FF                     [100%]
+
+=================================== FAILURES ===================================
+________ test_bichromatic_pair_variance_excludes_double_count[(10+0j)] _________
+tests/orcawave/test_drift_force_variance.py:131: in test_bichromatic_pair_variance_excludes_double_count
+    assert actual == pytest.approx(expected_variance, rel=1e-12)
+E   assert 312.5000000000005 == 50.0 ± 5.0e-11
+E     
+E     comparison failed
+E     Obtained: 312.5000000000005
+E     Expected: 50.0 ± 5.0e-11
+_________ test_bichromatic_pair_variance_excludes_double_count[(3+4j)] _________
+tests/orcawave/test_drift_force_variance.py:131: in test_bichromatic_pair_variance_excludes_double_count
+    assert actual == pytest.approx(expected_variance, rel=1e-12)
+E   assert 237.50000000000045 == 12.5 ± 1.3e-11
+E     
+E     comparison failed
+E     Obtained: 237.50000000000045
+E     Expected: 12.5 ± 1.3e-11
+___________ test_diagonal_qtf_has_mean_load_but_zero_fluctuation[1] ____________
+tests/orcawave/test_drift_force_variance.py:138: in test_diagonal_qtf_has_mean_load_but_zero_fluctuation
+    assert full_qtf_slowly_varying(qtf, np.ones(count), omega) == 0.0
+E   AssertionError: assert 28.284271247461902 == 0.0
+E    +  where 28.284271247461902 = full_qtf_slowly_varying(QTFMatrix(dof='surge', heading_deg=0.0, frequencies_rad_s=[0.7], real_part=[[10.0]], imag_part=[[0.0]]), array([1.]), array([0.7]))
+E    +    where array([1.]) = <function ones at 0x757bceb15620>(1)
+E    +      where <function ones at 0x757bceb15620> = np.ones
+___________ test_diagonal_qtf_has_mean_load_but_zero_fluctuation[4] ____________
+tests/orcawave/test_drift_force_variance.py:138: in test_diagonal_qtf_has_mean_load_but_zero_fluctuation
+    assert full_qtf_slowly_varying(qtf, np.ones(count), omega) == 0.0
+E   AssertionError: assert 5.656854249492379 == 0.0
+E    +  where 5.656854249492379 = full_qtf_slowly_varying(QTFMatrix(dof='surge', heading_deg=0.0, frequencies_rad_s=[0.7, 0.7999999999999999, 0.8999999999999999, 1.0], real_par..., 0.0, 0.0, 10.0]], imag_part=[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]), array([1., 1., 1., 1.]), array([0.7, 0.8, 0.9, 1. ]))
+E    +    where array([1., 1., 1., 1.]) = <function ones at 0x757bceb15620>(4)
+E    +      where <function ones at 0x757bceb15620> = np.ones
+____________ test_newman_full_agree_with_full_endpoint_bin_weights _____________
+tests/orcawave/test_drift_force_variance.py:146: in test_newman_full_agree_with_full_endpoint_bin_weights
+    assert newman[0] == 0.0
+E   assert 2125.000000000002 == 0.0
+_________________ test_narrow_band_monte_carlo_force_variance __________________
+tests/orcawave/test_drift_force_variance.py:164: in test_narrow_band_monte_carlo_force_variance
+    assert result["full_variance_kn2"] == pytest.approx(
+E   assert 50.005839732175204 == 24.926308458002424 ± 0.249263
+E     
+E     comparison failed
+E     Obtained: 50.005839732175204
+E     Expected: 24.926308458002424 ± 0.249263
+_____________ test_linear_surge_oscillator_std_matches_time_domain _____________
+tests/orcawave/test_drift_force_variance.py:175: in test_linear_surge_oscillator_std_matches_time_domain
+    assert result["predicted_std_m"] == pytest.approx(
+E   assert 0.5208166663999915 == 0.3535356427801949 ± 0.0176768
+E     
+E     comparison failed
+E     Obtained: 0.5208166663999915
+E     Expected: 0.3535356427801949 ± 0.0176768
+=========================== short test summary info ============================
+FAILED tests/orcawave/test_drift_force_variance.py::test_bichromatic_pair_variance_excludes_double_count[(10+0j)]
+FAILED tests/orcawave/test_drift_force_variance.py::test_bichromatic_pair_variance_excludes_double_count[(3+4j)]
+FAILED tests/orcawave/test_drift_force_variance.py::test_diagonal_qtf_has_mean_load_but_zero_fluctuation[1]
+FAILED tests/orcawave/test_drift_force_variance.py::test_diagonal_qtf_has_mean_load_but_zero_fluctuation[4]
+FAILED tests/orcawave/test_drift_force_variance.py::test_newman_full_agree_with_full_endpoint_bin_weights
+FAILED tests/orcawave/test_drift_force_variance.py::test_narrow_band_monte_carlo_force_variance
+FAILED tests/orcawave/test_drift_force_variance.py::test_linear_surge_oscillator_std_matches_time_domain
+========================= 7 failed, 1 passed in 10.17s =========================

@@ -216,7 +216,7 @@ class TestSlayConnections:
         )
         connections = lines[0][conn_key]
         assert connections[1][5] == 92  # 90 + slope
-        assert connections[1][3] == 0  # Anchored z is relative to the seabed
+        assert connections[1][3] == pytest.approx(0.384)  # Coated radius above the seabed
 
 
 # ---------------------------------------------------------------------------

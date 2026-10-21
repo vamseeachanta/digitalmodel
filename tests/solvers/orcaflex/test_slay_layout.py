@@ -41,7 +41,7 @@ def test_pipe_ends_are_separated_and_upper_end_can_take_winch_load():
     length = sum(segment.length for segment in spec.pipeline.segments)
     assert math.hypot(top[1] - bottom[1], spec.environment.water.depth + top[3]) < length
     stiffness = next(value for key, value in line.items() if key.startswith("ConnectionxBending"))
-    assert stiffness == [[0, 0, 0], [0, 0, 0]]
+    assert stiffness == [[], [0, None]]
 
 
 def test_vessel_supports_attach_pipeline_at_declared_roller_stations():
@@ -49,9 +49,9 @@ def test_vessel_supports_attach_pipeline_at_declared_roller_stations():
     vessel = VesselBuilder(spec, BuilderContext()).build()["Vessels"][0]
     assert vessel["SupportedLine"] == [spec.pipeline.name]
     supports = vessel["Supports"]
-    assert len(supports) == len(spec.equipment.stinger.rollers) > 1
+    assert len(supports) == len(spec.equipment.stinger.rollers) + 12
     assert len({tuple(support["SupportPosition"]) for support in supports}) == len(supports)
-    for roller, support in zip(spec.equipment.stinger.rollers, supports):
+    for roller, support in zip(spec.equipment.stinger.rollers, supports[12:]):
         assert support["SupportType"] == roller.support_type
         assert support["SupportCoordinateSystem"] == "Stinger"
         theta = roller.arc_length / spec.equipment.stinger.radius
@@ -105,4 +105,36 @@ def test_support_types_are_defined_before_vessel_references(tmp_path, case_index
             for support in vessel.get("Supports", []):
                 assert support["SupportType"] in defined
                 references += 1
-    assert references == len(spec.equipment.stinger.rollers) > 1
+    assert references == len(spec.equipment.stinger.rollers) + 12
+
+
+@pytest.mark.parametrize("case_id", [f"d{d}-t{t}" for d in range(2) for t in range(3)])
+def test_weight_only_screen_is_a_bound_not_the_stiff_design(case_id):
+    """A span correction alone and a tangent correction alone are insufficient."""
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import screen_case
+
+    screen = screen_case(CAMPAIGN, case_id)
+    current = screen["current"]
+    assert current["excess_m"] < 0
+    assert current["departure_deg"] - current["tip_angle_deg"] > screen["angle_tolerance_deg"]
+    length_only = screen["length_only"]
+    assert abs(length_only["excess_m"]) <= screen["length_tolerance_m"]
+    assert length_only["angle_mismatch_deg"] > screen["angle_tolerance_deg"]
+    angle_only = screen["angle_only"]
+    assert abs(angle_only["departure_deg"] - angle_only["tip_angle_deg"]) <= screen["angle_tolerance_deg"]
+    assert angle_only["excess_m"] > current["excess_m"]
+    assert abs(screen["combined"]["excess_m"]) <= screen["length_tolerance_m"]
+    table = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text())
+    declared = next(row for row in table["static_equilibrium_screen"]["all_cases"] if row["id"] == case_id)
+    for key in ("excess_m", "departure_deg"):
+        assert declared[key] == round(current[key], 1)
+    for declared_key, computed_key in (("angle_only_arc_m", "supported_arc_m"),
+                                       ("angle_only_tip_deg", "tip_angle_deg"),
+                                       ("angle_only_excess_m", "excess_m")):
+        assert declared[declared_key] == round(angle_only[computed_key], 1)
+    assert declared["combined_arc_m"] == round(screen["combined"]["supported_arc_m"], 1)
+    assert declared["combined_span_m"] == round(screen["combined"]["anchor_span_m"], 1)
+    assert current["suspended_length_m"] > current["suspended_span_m"] > 0
+    assert current["horizontal_tension_kn"] == pytest.approx(
+        screen["top_tension_kn"] - screen["weight_kn_m"] * screen["depth_m"])
+    assert current["taut_length_m"] + current["excess_m"] == pytest.approx(screen["pipe_length_m"])

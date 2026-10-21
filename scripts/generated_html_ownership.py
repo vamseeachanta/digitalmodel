@@ -31,6 +31,15 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/attestation_manifest.py": (
+        "writes a caller-selected attestation summary, not committed docs/api pages"
+    ),
+    "scripts/capabilities/build_onepagers.py": (
+        "writes JSON capability cards, not docs/api HTML"
+    ),
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
     "scripts/reporting/build_reference_jacket_analysis.py": (
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
@@ -70,6 +79,9 @@ DISCOVERY_FALSE_POSITIVES = {
     ),
     "scripts/debug_html_report.py": (
         "debugs an existing docs/reports HTML file; it does not target docs/api"
+    ),
+    "scripts/generate_implementation_map.py": (
+        "writes a YAML implementation inventory, not committed docs/api HTML pages"
     ),
     "scripts/generated_html_ownership.py": (
         "contains this ownership census; it does not write HTML"
@@ -238,15 +250,8 @@ MANUAL_PAGES = {
 }
 
 
-# Build-output pages are generated working-tree print sources of committed PDFs;
-# they are not committed pages and are not included in byte-for-byte drift checks.
-BUILD_OUTPUT_GENERATORS = {
-    "scripts/capabilities/build_onepagers.py": {
-        "command": "python3 scripts/capabilities/build_onepagers.py",
-        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
-        "reason": "kept self-contained print sources beside committed one-pager PDFs",
-    },
-}
+# No current generators emit uncommitted docs/api HTML print sources.
+BUILD_OUTPUT_GENERATORS = {}
 
 
 def _specification_ids(script, label: str) -> set[str]:

@@ -1,12 +1,14 @@
 # Catenary Riser Module
 
 **Version**: 1.0.0
-**Status**: ✅ Production Ready
+**Status**: Analytical screening; native qualification pending
 **Standards**: DNV-OS-F201, API RP 1111
 
 ## Overview
 
 Catenary riser analysis for offshore applications including simple catenary configurations, lazy wave risers with buoyancy modules, effective weight calculations, and OrcaFlex model generation.
+
+The simple analyzer uses a horizontal-tangent vertex model; see [governing equations and regression worksheet](docs/engineering-basis.md). Check `result.converged` before using analytical output. Top angles are from vertical. The public lazy-wave analyzer remains quarantined and raises `NotImplementedError`; its example below describes an unavailable route. Native statics/dynamics and export qualification remain pending; see [QA gates](docs/agent-pack.md#5-qa-gates).
 
 ## Core Features
 
@@ -21,7 +23,7 @@ Catenary riser analysis for offshore applications including simple catenary conf
 - Detailed weight breakdown
 - Buoyancy module effects
 
-✅ **Lazy Wave Analysis** (`lazy_wave.py`)
+**Lazy Wave Analysis — quarantined** (`lazy_wave.py`)
 - Sag and hog bend configuration
 - Buoyancy module integration
 - Arch geometry estimation
@@ -172,15 +174,18 @@ Helper function: `get_fluid('seawater')`, `get_fluid('oil')`, `get_fluid('mud')`
 
 Catenary parameter: `a = H / w`
 
-Arc length: `s = a × sinh(z / a)`
+Arc length: `s = sqrt(z² + 2az)` (E1)
 
-Horizontal distance: `x = a × (cosh(z / a) - 1)`
+Horizontal distance: `x = a × acosh(1 + z / a)` (E1)
 
-Tension: `T = √(H² + (w×s)²)`
+Tension: `T = H + w×z = √(H² + (w×s)²)` (E2)
 
-Angle from vertical: `θ = arctan(w×s / H)`
+Angle from vertical: `θ = atan2(H, w×s)` (E3)
+
+Governing references: [engineering-basis.md E1–E3](docs/engineering-basis.md).
 
 Where:
+
 - `H` = horizontal tension (N)
 - `w` = effective weight per length (N/m)
 - `z` = vertical height (m)
@@ -216,7 +221,7 @@ Negative effective weight = riser floats (add weight coating)
 
 ## Status
 
-**Implementation**: ✅ **Production Ready**
+**Implementation**: **Analytical screening; native qualification pending**
 - Core catenary analysis functional
 - CLI with 3 commands operational
 - Python API fully accessible

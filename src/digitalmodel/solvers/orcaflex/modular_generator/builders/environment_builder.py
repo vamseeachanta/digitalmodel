@@ -259,7 +259,7 @@ class EnvironmentBuilder(BaseBuilder):
 
         - Deterministic (Dean stream, Airy, etc.): WaveHeight + WavePeriod
         - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
-        - Other (User defined, No waves, etc.): no height/period emitted
+        - Other (User defined, User specified components, etc.): no height/period emitted
 
         When raw_properties contain WaveTrains, raw train entries are used
         as the base layer (matched by index) to preserve all original
@@ -340,7 +340,7 @@ class EnvironmentBuilder(BaseBuilder):
                         if "gamma" in explicitly_set or "WaveGamma" not in wave_train:
                             wave_train["WaveGamma"] = train.gamma
             # For other wave types (User defined, User specified components,
-            # No waves, etc.), omit height/period — OrcaFlex uses type-specific
+            # etc.), omit height/period — OrcaFlex uses type-specific
             # parameters that pass through via generic properties.
 
             # Add wave-type specific defaults, preserving any values already
@@ -379,12 +379,22 @@ class EnvironmentBuilder(BaseBuilder):
             train: Wave properties after spec overlays, or an extra raw train.
 
         Returns:
-            Existing values with selectors and gamma first, an explicit JONSWAP
-            selector when needed, and the remaining order retained.
+            Active gamma with selectors first, an explicit JONSWAP selector
+            when needed, and the remaining values and order retained.
         """
-        if (train.get("WaveType") in ("JONSWAP", "jonswap")
-                and "WaveGamma" in train and "WaveJONSWAPParameters" not in train):
-            train = dict(train, WaveJONSWAPParameters="Partially specified")
+        if train.get("WaveType") in ("JONSWAP", "jonswap"):
+            if train.get("WaveJONSWAPParameters") == "Automatic":
+                # Automatic parameters calculate gamma; inactive data cannot
+                # be assigned in text files. Filter a copy, including for extra
+                # raw trains, so later selector edits retain the source gamma.
+                # Orcina public help, online edition accessed 2026-10-19:
+                # Environment: Data for JONSWAP and ISSC spectra, spectral parameters
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Environment%2CDataforJONSWAPandISSCspectra.htm
+                # Text data files, Ordering issues
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+                train = {key: value for key, value in train.items() if key != "WaveGamma"}
+            elif "WaveGamma" in train and "WaveJONSWAPParameters" not in train:
+                train = dict(train, WaveJONSWAPParameters="Partially specified")
         selectors = ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma")
         ordered = {key: train[key] for key in selectors if key in train}
         ordered.update((key, value) for key, value in train.items() if key not in ordered)

@@ -155,7 +155,10 @@ def assert_reference_equal(actual, expected):
     """Keep structure and non-float leaves exact; tolerate float roundoff."""
     if isinstance(expected, float):
         assert isinstance(actual, float)
-        assert actual == pytest.approx(expected, rel=1e-12)
+        # The floor is about 20 * (100 * 2 * eps), the percentage-point
+        # cancellation bound for the difference leaves. With rel=1e-12,
+        # relative tolerance governs above magnitude 1 (abs / rel).
+        assert actual == pytest.approx(expected, rel=1e-12, abs=1e-12)
         return
     assert type(actual) is type(expected)
     if isinstance(expected, dict):
@@ -177,9 +180,25 @@ def test_reference_comparison_preserves_structure_and_float_precision():
     expected = {"result": [8.003624637684743, {"status": "converged", "count": 2}]}
     actual = {"result": [8.00362463768474, {"status": "converged", "count": 2}]}
     assert_reference_equal(actual, expected)
+    observed_pairs = (
+        ("hangoff_angle_deg", 8.00362463768474, 8.003624637684743),
+        ("top_tension_kN", 1988.952981550418, 1988.9529815504172),
+        ("top_tension_difference_pct", 0.0072850312434757925, 0.0072850312434313835),
+    )
+    for key, retained, reproduced in observed_pairs:
+        assert_reference_equal({key: reproduced}, {key: retained})
+        with pytest.raises(AssertionError):
+            assert_reference_equal({key: retained * (1 + 1e-9)}, {key: retained})
+    difference_pct = observed_pairs[-1][1]
+    with pytest.raises(AssertionError):
+        assert_reference_equal(
+            {"top_tension_difference_pct": difference_pct + 1e-7},
+            {"top_tension_difference_pct": difference_pct},
+        )
     for changed in (
         {"result": [expected["result"][0] * (1 + 1e-9), expected["result"][1]]},
         {"result": [actual["result"][0], {"status": "changed", "count": 2}]},
+        {"result": [actual["result"][0], {"status": "converged", "count": 3}]},
         {"changed": actual["result"]},
         {"result": actual["result"][:1]},
         {"result": [actual["result"][0], {"status": "converged", "count": 2.0}]},

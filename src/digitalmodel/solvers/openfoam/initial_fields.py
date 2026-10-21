@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .block_mesh import boundary_patch_types
 from .models import TurbulenceModel, TurbulenceType
 
 
@@ -135,6 +136,14 @@ def write_pressure_field(
         "top": {"type": "totalPressure", "p0": "uniform 0"},
         "sides": {"type": "symmetry"},
     }
+    for patch, kind in boundary_patch_types(boundary_conditions).items():
+        # OpenFOAM v2312 (2023), fixedFluxPressure, Description: match the
+        # prescribed velocity flux and compensate body forces (gravity).
+        # https://doc.openfoam.com/2312/tools/processing/boundary-conditions/rtm/derived/inlet/fixedFluxPressure/
+        if kind == "wall":
+            defaults[patch] = {
+                "type": "fixedFluxPressure" if is_multiphase else "zeroGradient"
+            }
     content = _foam_header("volScalarField", field_name)
     content += f"\ndimensions  {dims};\n\ninternalField   uniform 0;\n\n"
     content += _boundary_field(field_name, defaults, boundary_conditions)
@@ -144,24 +153,26 @@ def write_pressure_field(
 
 
 def write_turbulence_fields(
-    zero_dir: Path, turbulence_model: TurbulenceModel
+    zero_dir: Path, turbulence_model: TurbulenceModel, boundary_conditions=None
 ) -> None:
     """Write 0/k, 0/omega (or epsilon), and 0/nut turbulence fields.
 
     All RANS models require the turbulent viscosity field nut in addition
-    to the transported turbulence quantities.
+    to the transported turbulence quantities. Mesh wall patches, including
+    explicit no-slip closures, receive the same wall defaults as bottom.
+    Explicit field boundary conditions override those defaults.
     """
     tm = turbulence_model
     if tm.turbulence_type == TurbulenceType.LAMINAR:
         return
 
-    _write_k_field(zero_dir)
-    _write_nut_field(zero_dir)
+    _write_k_field(zero_dir, boundary_conditions)
+    _write_nut_field(zero_dir, boundary_conditions)
 
     if tm.turbulence_type == TurbulenceType.K_OMEGA_SST:
-        _write_omega_field(zero_dir)
+        _write_omega_field(zero_dir, boundary_conditions)
     elif tm.turbulence_type == TurbulenceType.K_EPSILON:
-        _write_epsilon_field(zero_dir)
+        _write_epsilon_field(zero_dir, boundary_conditions)
 
 
 _ALPHA_DEFAULTS = {
@@ -181,7 +192,11 @@ def write_alpha_water(zero_dir: Path, boundary_conditions=None) -> None:
     """
     content = _foam_header("volScalarField", "alpha.water")
     content += "\ndimensions  [0 0 0 0 0 0 0];\n\ninternalField   uniform 0;\n\n"
-    content += _boundary_field("alpha.water", _ALPHA_DEFAULTS, boundary_conditions)
+    defaults = {patch: dict(entries) for patch, entries in _ALPHA_DEFAULTS.items()}
+    for patch, kind in boundary_patch_types(boundary_conditions).items():
+        if kind == "wall":
+            defaults[patch] = {"type": "zeroGradient"}
+    content += _boundary_field("alpha.water", defaults, boundary_conditions)
     content += "\n" + _FOOTER
     (zero_dir / "alpha.water").write_text(content)
 
@@ -191,156 +206,70 @@ def write_alpha_water(zero_dir: Path, boundary_conditions=None) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _write_nut_field(zero_dir: Path) -> None:
-    """Write 0/nut turbulent viscosity field required by all RANS models."""
-    nut_content = _foam_header("volScalarField", "nut")
-    nut_content += """
-dimensions  [0 2 -1 0 0 0 0];
+def _write_turbulence_field(
+    zero_dir: Path, field: str, dimensions: str, initial: str,
+    wall_function: str, boundary_conditions=None,
+) -> None:
+    """Render wall defaults and explicit overrides using the mesh topology.
 
-internalField   uniform 0;
-
-boundaryField
-{
-    inlet
-    {
-        type    calculated;
-        value   uniform 0;
-    }
-    outlet
-    {
-        type    calculated;
-        value   uniform 0;
-    }
-    bottom
-    {
-        type    nutkWallFunction;
-        value   uniform 0;
-    }
-    top
-    {
-        type    calculated;
-        value   uniform 0;
-    }
-    sides
-    {
-        type    symmetry;
-    }
-}
-
-"""
-    nut_content += _FOOTER
-    (zero_dir / "nut").write_text(nut_content)
+    Wall types: OpenFOAM v2312 (2023), Usage sections for kqRWallFunction,
+    nutkWallFunction, epsilonWallFunction and omegaWallFunction API reference.
+    Sources: docs/domains/openfoam/closed_wall_boundaries.md.
+    No wall-law coefficients or acceptance limits are introduced here.
+    """
+    if field == "nut":
+        defaults = {
+            patch: {"type": "calculated", "value": initial}
+            for patch in ("inlet", "outlet", "bottom", "top")
+        }
+    else:
+        defaults = {
+            "inlet": {"type": "fixedValue", "value": initial},
+            "outlet": {"type": "zeroGradient"},
+            "bottom": {"type": "zeroGradient"},
+            "top": {"type": "zeroGradient"},
+        }
+    defaults["sides"] = {"type": "symmetry"}
+    for patch, kind in boundary_patch_types(boundary_conditions).items():
+        if kind == "wall":
+            defaults[patch] = {"type": wall_function, "value": initial}
+    content = _foam_header("volScalarField", field)
+    content += f"\ndimensions  {dimensions};\n\ninternalField   {initial};\n\n"
+    content += _boundary_field(field, defaults, boundary_conditions)
+    content += "\n" + _FOOTER
+    (zero_dir / field).write_text(content)
 
 
-def _write_k_field(zero_dir: Path) -> None:
-    k_content = _foam_header("volScalarField", "k")
-    k_content += """
-dimensions  [0 2 -2 0 0 0 0];
-
-internalField   uniform 0.001;
-
-boundaryField
-{
-    inlet
-    {
-        type    fixedValue;
-        value   uniform 0.001;
-    }
-    outlet
-    {
-        type    zeroGradient;
-    }
-    bottom
-    {
-        type    kqRWallFunction;
-        value   uniform 0.001;
-    }
-    top
-    {
-        type    zeroGradient;
-    }
-    sides
-    {
-        type    symmetry;
-    }
-}
-
-"""
-    k_content += _FOOTER
-    (zero_dir / "k").write_text(k_content)
+# These are the pre-existing field dimensions and solver initialization guesses,
+# retained unchanged from initial_fields.py. The guesses are assumed, based on
+# previous experience; they are not sourced inflow data or wall-law constants.
+# Units follow the OpenFOAM User Guide, online edition, section 2.2.6,
+# Dimensional units:
+# https://www.openfoam.com/documentation/user-guide/2-openfoam-cases/2-2-basic-inputoutput-file-format
+# Case-specific physical boundary values may be supplied as explicit overrides.
+def _write_nut_field(zero_dir: Path, boundary_conditions=None) -> None:
+    _write_turbulence_field(
+        zero_dir, "nut", "[0 2 -1 0 0 0 0]", "uniform 0",
+        "nutkWallFunction", boundary_conditions,
+    )
 
 
-def _write_omega_field(zero_dir: Path) -> None:
-    omega_content = _foam_header("volScalarField", "omega")
-    omega_content += """
-dimensions  [0 0 -1 0 0 0 0];
-
-internalField   uniform 1;
-
-boundaryField
-{
-    inlet
-    {
-        type    fixedValue;
-        value   uniform 1;
-    }
-    outlet
-    {
-        type    zeroGradient;
-    }
-    bottom
-    {
-        type    omegaWallFunction;
-        value   uniform 1;
-    }
-    top
-    {
-        type    zeroGradient;
-    }
-    sides
-    {
-        type    symmetry;
-    }
-}
-
-"""
-    omega_content += _FOOTER
-    (zero_dir / "omega").write_text(omega_content)
+def _write_k_field(zero_dir: Path, boundary_conditions=None) -> None:
+    _write_turbulence_field(
+        zero_dir, "k", "[0 2 -2 0 0 0 0]", "uniform 0.001",
+        "kqRWallFunction", boundary_conditions,
+    )
 
 
-def _write_epsilon_field(zero_dir: Path) -> None:
-    eps_content = _foam_header("volScalarField", "epsilon")
-    eps_content += """
-dimensions  [0 2 -3 0 0 0 0];
+def _write_omega_field(zero_dir: Path, boundary_conditions=None) -> None:
+    _write_turbulence_field(
+        zero_dir, "omega", "[0 0 -1 0 0 0 0]", "uniform 1",
+        "omegaWallFunction", boundary_conditions,
+    )
 
-internalField   uniform 0.001;
 
-boundaryField
-{
-    inlet
-    {
-        type    fixedValue;
-        value   uniform 0.001;
-    }
-    outlet
-    {
-        type    zeroGradient;
-    }
-    bottom
-    {
-        type    epsilonWallFunction;
-        value   uniform 0.001;
-    }
-    top
-    {
-        type    zeroGradient;
-    }
-    sides
-    {
-        type    symmetry;
-    }
-}
-
-"""
-    eps_content += _FOOTER
-    (zero_dir / "epsilon").write_text(eps_content)
+def _write_epsilon_field(zero_dir: Path, boundary_conditions=None) -> None:
+    _write_turbulence_field(
+        zero_dir, "epsilon", "[0 2 -3 0 0 0 0]", "uniform 0.001",
+        "epsilonWallFunction", boundary_conditions,
+    )

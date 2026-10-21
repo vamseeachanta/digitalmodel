@@ -1,0 +1,106 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 8.419335775032093e-16,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 8,
+  "worst_samples": [
+    {
+      "point": {
+        "span_length_ft": 109.54451150103323,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 0.4615305399401573,
+      "actual": 0.4615305399401577,
+      "rel_error": 8.419335775032093e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 48.98979485566356,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 2.3076526997007902,
+      "actual": 2.3076526997007885,
+      "rel_error": 7.697678422886485e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 69.2820323027551,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 1.1538263498503945,
+      "actual": 1.1538263498503942,
+      "rel_error": 1.9244196057216212e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 16.97056274847714
+      },
+      "predicted": 1.8357264816546053,
+      "actual": 1.835726481654605,
+      "rel_error": 1.2095734693814226e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 89.44271909999159,
+        "current_speed_in_s": 36.0
+      },
+      "predicted": 0.6922958099102363,
+      "actual": 0.6922958099102363,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 29.393876913398138
+      },
+      "predicted": 1.0598571783418107,
+      "actual": 1.0598571783418107,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 41.569219381653056
+      },
+      "predicted": 0.7494321978947345,
+      "actual": 0.7494321978947345,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "span_length_ft": 80.0,
+        "current_speed_in_s": 58.787753826796276
+      },
+      "predicted": 0.5299285891709054,
+      "actual": 0.5299285891709054,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "span_length_ft": [
+        7.697678422886485e-16,
+        1.9244196057216212e-16,
+        0.0,
+        8.419335775032093e-16
+      ],
+      "current_speed_in_s": [
+        1.2095734693814226e-16,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "densification_log": []
+}

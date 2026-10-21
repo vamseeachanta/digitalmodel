@@ -8,8 +8,10 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import subprocess
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -128,13 +130,33 @@ def extract(args: argparse.Namespace) -> None:
     """Persist extraction failure as explicit unparsed evidence."""
     row = dict(shard=args.shard, sha=args.sha, run_id=args.run, attempt=args.attempt,
                completed_at=args.completed_at, conclusion=args.conclusion,
-               parsed=False, failed=[], errored=[], collected=0, exit_code=args.exit_code)
+               parsed=False, failed=[], errored=[], collected=0, exit_code=args.exit_code,
+               first_attempt_exit_code=args.exit_code, first_attempt_failed={}, recovered=[])
     try:
         parser = parse_junit if args.command == "extract" else parse_log
         failed, errored, collected = parser(args.source)
         row.update(parsed=True, failed=failed, errored=errored, collected=collected)
-    except (OSError, ValueError, KeyError, ElementTree.ParseError):
-        pass
+        messages = {node: "" for node in failed + errored}
+        if args.command == "extract":
+            for case in ElementTree.parse(args.source).getroot().iter("testcase"):
+                failure = next((child for child in case if child.tag in {"failure", "error"}), None)
+                if failure is not None:
+                    messages[junit_id(case)] = (failure.get("message", "") + "\n" + (failure.text or "")).strip()[:500]
+        row["first_attempt_failed"] = messages
+        evidence = args.source.parent / f"flaky-{args.shard}.json"
+        if evidence.exists():
+            retry = read_json(evidence)
+            if (retry.get("sha") != args.sha or str(retry.get("run_id")) != args.run
+                    or retry.get("exit_code") != args.exit_code
+                    or set(retry["first_attempt_failed"]) != set(messages)
+                    or not set(retry["recovered"]) <= set(messages)):
+                raise ValueError("Retry evidence disagrees with first attempt")
+            row.update(first_attempt_failed=retry["first_attempt_failed"],
+                       first_attempt_exit_code=retry["first_attempt_exit_code"], recovered=retry["recovered"])
+            for field in ("failed", "errored"):
+                row[field] = [node for node in row[field] if node not in row["recovered"]]
+    except (OSError, ValueError, KeyError, TypeError, ElementTree.ParseError):
+        row["parsed"] = False
     write_json(args.out, row)
 
 
@@ -161,6 +183,8 @@ def publish(results: Path, previous: str, output: Path) -> None:
         baseline["tests"] = {key: value for key, value in baseline["tests"].items() if value["shard"] != shard}
         for field, status in (("failed", "failed"), ("errored", "error")):
             for node in row[field]:
+                if node in row.get("recovered", []):
+                    continue
                 old = previous_tests.get(node, {})
                 baseline["tests"][node] = dict(
                     status=status, shard=shard, sha=row["sha"], run_id=row["run_id"],
@@ -193,34 +217,133 @@ def classify(row: dict[str, Any], baseline: dict[str, Any], max_age: float, now:
     return True, "all failing ids are pre-existing on main"
 
 
+def verified_evidence(url: str, shard: str) -> bool:
+    """Require a completed failing same-shard job from this repository's main."""
+    repository = os.environ.get("GITHUB_REPOSITORY", "")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        return False
+    escaped = re.escape(repository)
+    match = re.fullmatch(
+        rf"https://(?:github\.com/{escaped}|api\.github\.com/(?:repos/{escaped}|repositories/[0-9]+))"
+        r"/actions/(runs|jobs)/([0-9]+)", url)
+    if not match:
+        return False
+    kind, number = match.groups()
+    prefix = f"repos/{repository}/actions"
+    try:
+        job = gh_json(f"{prefix}/jobs/{number}") if kind == "jobs" else None
+        run_id = job["run_id"] if job is not None else int(number)
+        run = gh_json(f"{prefix}/runs/{run_id}")
+        if (str(run.get("id")) != str(run_id) or run.get("head_branch") != "main"
+                or run.get("event") not in {"push", "schedule"} or run.get("status") != "completed"
+                or not isinstance(run.get("head_repository"), dict)
+                or run["head_repository"].get("full_name") != repository):
+            return False
+        jobs = [job] if job is not None else gh_json(f"{prefix}/runs/{run_id}/jobs?per_page=100")["jobs"]
+        return any(isinstance(item, dict)
+                   and item.get("name") in {f"tests-{shard}", f"sweep-tests-{shard}"}
+                   and item.get("status") == "completed" and item.get("conclusion") == "failure"
+                   and str(item.get("run_id")) == str(run_id)
+                   and item.get("head_sha") == run.get("head_sha") for item in jobs)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError):
+        return False
+
+
+def register_decisions(path: Path, ids: list[str], shard: str) -> dict[str, str]:
+    """Read trusted entries and verify every evidence URL before clearing an ID."""
+    try:
+        import yaml
+        with tempfile.TemporaryDirectory(prefix="ci-register-") as scratch:
+            if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+                path = Path(scratch) / "register.yml"
+                select_register(path)
+            rows = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+            raise ValueError("Invalid register")
+        entries = {row["id"]: row for row in rows}
+        if len(entries) != len(rows):
+            raise ValueError("Duplicate register IDs")
+    except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.CalledProcessError):
+        return {node: "register unreadable" for node in ids}
+    except yaml.YAMLError:
+        return {node: "register unreadable" for node in ids}
+    decisions = {}
+    checked: dict[str, bool] = {}
+    for node in ids:
+        row = entries.get(node, {})
+        evidence = row.get("evidence")
+        approved = (row.get("status") == "open" and isinstance(evidence, list) and bool(evidence)
+                    and all(isinstance(item, str) and item.strip() for item in evidence))
+        if approved:
+            for url in evidence:
+                if url not in checked:
+                    checked[url] = verified_evidence(url, shard)
+            approved = all(checked[url] for url in evidence)
+        decisions[node] = "registered with evidence" if approved else "missing open entry with evidence"
+    return decisions
+
+
 def compare_results(baseline_path: Path, results: Path, max_age: float, summary: Path,
-                    verdict: Path, now: datetime | None = None) -> int:
+                    verdict: Path, now: datetime | None = None,
+                    register: Path = Path(".github/ci/flaky-register.yml")) -> int:
     """Write comparison evidence; return one for every unprovable failure."""
     now = now or datetime.now(timezone.utc)
     report: dict[str, Any] = {"passed": False, "pre_existing": [], "shards": []}
     lines = ["## Main baseline comparison", "", "| Shard | Comparison | Main run |", "| --- | --- | --- |"]
     try:
-        baseline = read_json(baseline_path)
+        try:
+            baseline = read_json(baseline_path)
+            if not isinstance(baseline.get("tests"), dict) or not isinstance(baseline.get("shards"), dict):
+                raise ValueError("Invalid baseline structure")
+        except (OSError, ValueError):
+            baseline = {"tests": {}, "shards": {}}
+            lines.append("\nMain baseline unavailable; no id can be proven pre-existing.")
         rows = load_results(results)
         if not rows:
             raise ValueError("No shard results")
         outcomes = []
         for row in rows:
-            if row["conclusion"] == "success":
+            first = row.get("first_attempt_failed", {})
+            ids = sorted(set(row["failed"] + row["errored"]) | set(first))
+            if row["conclusion"] == "success" and not ids:
+                outcomes.append(row["parsed"] is True and row.get("exit_code") == 0
+                                and row.get("collected", 0) > 0
+                                and row.get("first_attempt_exit_code", 0) == 0)
                 continue
-            ok, reason = classify(row, baseline, max_age, now)
-            outcomes.append(ok)
+            choices = register_decisions(register, ids, row["shard"])
+            classifications = {}
+            reasons = []
             main = baseline["shards"].get(row["shard"], {})
-            report["shards"].append(dict(shard=row["shard"], pre_existing=ok, reason=reason))
-            lines.append(f"| {row['shard']} | {reason} | {main.get('run_id', 'unavailable')} |")
-            if ok:
-                for node in sorted(set(row["failed"] + row["errored"])):
+            for node in ids:
+                observation = dict(row, failed=[node], errored=[],
+                                   exit_code=row.get("first_attempt_exit_code", row.get("exit_code")))
+                # Success is accepted only as a completed, explicitly recovered attempt.
+                if (row["conclusion"] == "success" and node in first
+                        and node in row.get("recovered", []) and row.get("exit_code") == 0):
+                    observation["conclusion"] = "failure"
+                ok, reason = classify(observation, baseline, max_age, now)
+                registered = (node in row.get("recovered", []) and node in first
+                              and observation["conclusion"] == "failure"
+                              and observation.get("exit_code") == 1 and row.get("exit_code") in {0, 1}
+                              and row["parsed"] is True and row.get("collected", 0) > 0
+                              and "::" in node and choices[node] == "registered with evidence")
+                classifications[node] = "PRE-EXISTING" if ok else "FLAKY" if registered else "NEW"
+                if ok:
                     report["pre_existing"].append(node)
                     message = f"pre-existing on main: {node} (main {main['sha']} run {main['run_id']}, see main-health issue)"
                     lines.append(f"- {message}")
                     escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
                     print(f"::warning::{escaped}")
-        report["passed"] = bool(outcomes) and all(outcomes)
+                reasons.append(reason)
+                lines.append(f"| {row['shard']}: {node} | {classifications[node]} | {main.get('run_id', 'unavailable')} |")
+            ok = bool(ids) and all(value != "NEW" for value in classifications.values())
+            if not ids:
+                reasons.append("failed shard has incomplete evidence")
+            outcomes.append(ok)
+            reason = "; ".join(dict.fromkeys(reasons))
+            report["shards"].append(dict(shard=row["shard"], pre_existing=bool(ids) and all(
+                value == "PRE-EXISTING" for value in classifications.values()), reason=reason, ids=classifications))
+        report["passed"] = all(outcomes)
     except (OSError, ValueError, KeyError, TypeError) as error:
         lines.append(f"\nComparison fails closed: {type(error).__name__}.")
     summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -247,7 +370,7 @@ def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
 
 def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, Any]],
                         repository: str, now: datetime, max_age: float = 24) -> dict[str, Any] | None:
-    """Select the newest completed eligible sweep with an available baseline."""
+    """Stop at the newest eligible result; missing evidence forbids fallback."""
     for run in sorted(runs, key=lambda row: row["id"], reverse=True):
         if not is_main_sweep(run, repository) or run.get("conclusion") == "cancelled":
             continue
@@ -260,6 +383,8 @@ def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, An
                      and instant(item["created_at"]) <= now]
         if available:
             return run
+        print(f"Comparison fails closed: main sweep run {run['id']} has no available baseline.")
+        return None
     return None
 
 
@@ -287,6 +412,7 @@ def download_baseline(repository: str, output: Path, require_latest: bool = Fals
     selected = select_baseline_run(runs, artifacts, repository, now)
     if selected is None:
         return False
+    print(f"Reading baseline from main sweep run {selected['id']}.")
     run = gh_json(f"repos/{repository}/actions/runs/{selected['id']}")
     identity = ("id", "path", "head_branch", "event",
                 "head_sha", "status", "conclusion", "updated_at")
@@ -330,10 +456,42 @@ def reconcile_results(directory: Path, jobs: list[dict[str, Any]], prefix: str,
         write_json(directory / f"result-{shard}.json", row)
 
 
+def select_register(output: Path) -> None:
+    """Copy the base-tip register for PRs, or the checkout for other events.
+
+    Fetch and object-read failures propagate. An absent file is an empty
+    register, never a reason to fall back to the pull request's own entries.
+    """
+    path = ".github/ci/flaky-register.yml"
+    content = "[]\n"
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+        base = os.environ.get("GITHUB_BASE_REF", "")
+        if not base or not re.fullmatch(r"[A-Za-z0-9_./-]+", base):
+            raise ValueError("Invalid base branch")
+        env = {key: value for key, value in os.environ.items()
+               if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+
+        def git(*args: str) -> str:
+            return subprocess.check_output(["git", *args], text=True, env=env)
+
+        git("fetch", "--no-tags", "origin", f"refs/heads/{base}")
+        tip = git("rev-parse", "FETCH_HEAD").strip()
+        if not re.fullmatch(r"[0-9a-f]{40,64}", tip):
+            raise ValueError("Invalid fetched base tip")
+        if git("ls-tree", "--name-only", tip, "--", path).strip():
+            content = git("show", f"{tip}:{path}")
+    elif Path(path).is_file():
+        content = Path(path).read_text(encoding="utf-8")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(content, encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Dispatch the four artifact operations."""
+    """Dispatch artifact operations and trusted-register selection."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    sub = commands.add_parser("register")
+    sub.add_argument("--out", type=Path, required=True)
     for command, source in (("extract", "--junit"), ("extract-log", "--log")):
         sub = commands.add_parser(command)
         sub.add_argument(source, dest="source", type=Path, required=True)
@@ -350,17 +508,20 @@ def main(argv: list[str] | None = None) -> int:
     sub = commands.add_parser("compare")
     sub.add_argument("--baseline", type=Path, required=True)
     sub.add_argument("--results", type=Path, required=True)
+    sub.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))
     sub.add_argument("--max-age-hours", type=float, default=24)
     sub.add_argument("--summary", type=Path, required=True)
     sub.add_argument("--verdict", type=Path, required=True)
     sub.add_argument("--now", type=instant)
     args = parser.parse_args(argv)
-    if args.command in {"extract", "extract-log"}:
+    if args.command == "register":
+        select_register(args.out)
+    elif args.command in {"extract", "extract-log"}:
         extract(args)
     elif args.command == "publish":
         publish(args.results, args.previous, args.out)
     else:
-        return compare_results(args.baseline, args.results, args.max_age_hours, args.summary, args.verdict, args.now)
+        return compare_results(args.baseline, args.results, args.max_age_hours, args.summary, args.verdict, args.now, args.register)
     return 0
 
 

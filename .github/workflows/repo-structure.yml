@@ -1,0 +1,40 @@
+name: Repository Structure
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Read-only checks can stop superseded runs within the same workflow/ref.
+# GitHub Actions workflow syntax, concurrency (unversioned):
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  repo-structure:
+    name: Repository structure contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Validate repository structure
+        run: >-
+          uv run --no-project --with pyyaml python
+          scripts/maintenance/verify_repo_structure.py
+          --repo . --config config/repo_structure.yml
+      - name: Test structure contract and enforcement
+        run: >-
+          uv run --no-project --with pytest --with pytest-asyncio --with pyyaml
+          python -m pytest tests/repo_structure
+          -q -p no:cacheprovider --basetemp="$RUNNER_TEMP/repo-structure-tests"

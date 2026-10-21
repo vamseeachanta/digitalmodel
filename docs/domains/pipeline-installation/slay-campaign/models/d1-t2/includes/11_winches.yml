@@ -3,7 +3,7 @@ Winches:
   WinchType: Simple
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
   - - Generic lay hull
-    - -81.1
+    - -21.099999999999994
     - 0.0
     - 0.0
   - - Generic pipe

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- ansys: scalar PRNSOL parsing now requires the requested component in the
+  NODE header instead of falling back to the last column. The default `SEQV`
+  raises `ValueError` for `PRNSOL,S,COMP` listings without that column; callers
+  must request a listed component, for example `component="SX"`. Recognized
+  page banners require a fresh NODE header; integral NumPy node IDs are accepted
+  in independently supplied coverage manifests.
+  Complete MAPDL and older ANSYS page headers, including numeric VERSION lines,
+  are accepted. Element nodal listing banners and element markers are rejected.
+  Captured result identity is exposed in DataFrame attributes; missing fields
+  remain unverified. Non-row page preambles are accepted, while differing
+  explicit load steps, substeps or times are rejected. Native full-precision
+  E24.16 stress fields are supported even when adjacent negative values have
+  no separating space.
+
+- Correct PIANC depth bands to 3.0/1.5/1.2; h/T=1.8 is medium-deep and
+  h/T=1.4 is shallow. Document exact boundaries and uncited x1.2/x1.5 bank
+  multipliers. Turning estimates and IMO turning checks refuse supplied h/T
+  <= 4 and flag missing depth as unverified (#1704).
+
 - cathodic_protection: title published, reference and illustrative jacket reports as analyses; state computed recommended quantities, distinguish public sources from declared inputs, use one-decimal comparison differences, and remove citation residue. Existing calculation results and released reports are unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
 
 - cathodic_protection: complete the openly licensed reference-jacket member schedule, scaled elevation, zone-area derivation and draft analysis; disclose the structural mass discrepancy and unresolved splash division. A dimension-consistent mass-only anode arrangement passes the aggregate checks; existing results and protected reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
