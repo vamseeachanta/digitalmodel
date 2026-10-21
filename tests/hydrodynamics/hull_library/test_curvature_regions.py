@@ -6,6 +6,7 @@ All geometry, areas and curvature values below are synthetic test inputs.
 """
 
 from dataclasses import asdict
+from decimal import Decimal, localcontext
 import json
 
 import numpy as np
@@ -190,3 +191,61 @@ def test_half_span_cuts_coincide_despite_decimal_rounding():
     )
     assert result.lower_cut == result.upper_cut
     assert result.lower_cut == pytest.approx(0.3)
+    middle = result.regions["middle"]
+    assert middle.status == "EVALUATED"
+    assert middle.area == middle.valid_area == 2
+    assert middle.I_D_contribution == 0
+
+
+@pytest.mark.parametrize("coordinates,fraction", [
+    ([0.1, 0.3, 0.5], 0.5),
+    ([0.1, 0.2, 0.5], 0.25),
+    ([-0.5, -0.3, -0.1], 0.5),
+])
+def test_decimal_cut_samples_retain_area_and_intensity(coordinates, fraction):
+    result = summarize_curvature_regions(
+        coordinates, [1] * 3, [1] * 3, [True] * 3,
+        lref=1, end_fraction=fraction,
+    )
+    middle = result.regions["middle"]
+    assert middle.status == "EVALUATED"
+    assert middle.area == middle.valid_area == 1
+    assert middle.I_D_contribution == pytest.approx(1 / 3)
+    assert middle.intensity_share == pytest.approx(1 / 3)
+    assert sum(r.area for r in result.regions.values()) == 3
+
+
+def test_underflow_cannot_silently_erase_finite_intensity():
+    """Decimal establishes nonzero intensity independently of float ordering."""
+    with localcontext() as context:
+        context.prec = 80
+        small, large = Decimal("1e-200"), Decimal("1e200")
+        expected = small * large * Decimal("1e100") ** 2 / (small + large)
+    assert float(expected) == 1
+    with pytest.raises(ValueError, match="numerical range"):
+        summarize_curvature_regions(
+            [0, 1], [1e200, 0], [1e-200, 1e200], [True, True],
+            lref=1e100, end_fraction=0.25,
+        )
+
+
+@pytest.mark.parametrize("cut,direction", [(1.0, -np.inf), (3.0, np.inf)])
+def test_boundary_rounding_band_is_limited_to_one_ulp(cut, direction):
+    adjacent = np.nextafter(cut, direction)
+    outside = np.nextafter(adjacent, direction)
+    result = summarize_curvature_regions(
+        [0, outside, adjacent, cut, 4], [1] * 5, [1] * 5, [True] * 5,
+        lref=1, end_fraction=0.25,
+    )
+    assert result.regions["middle"].area == 2
+    assert result.regions["middle"].I_D_contribution == pytest.approx(2 / 5)
+    assert sum(r.area for r in result.regions.values()) == 5
+
+
+def test_zero_cut_rounding_band_does_not_reject_zero_curvature():
+    result = summarize_curvature_regions(
+        [-1, 0, 1], [0] * 3, [1] * 3, [True] * 3,
+        lref=1, end_fraction=0.5,
+    )
+    assert result.I_D == 0
+    assert result.regions["middle"].area == 1

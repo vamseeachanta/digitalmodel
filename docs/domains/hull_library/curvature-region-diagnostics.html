@@ -59,7 +59,10 @@ and stern.</p>
 <p>For coordinate limits x_min and x_max, the lower cut is
 x_min + f (x_max - x_min), and the upper cut is x_max - f (x_max - x_min).
 The two end intervals use strict inequalities. Exact cut vertices belong to the
-middle. The mathematical bound 0 &lt; f &le; 1/2 prevents overlapping end intervals;
+middle, including the immediately adjacent binary64 value outside each cut
+(one ULP outward). This explicit rounding band retains decimal boundary samples;
+samples farther outside remain in the end regions. The mathematical bound
+0 &lt; f &le; 1/2 prevents overlapping end intervals;
 it is not a fabrication limit. The full coordinate span includes invalid samples.
 Vertices are assigned as whole quadrature samples; triangles are not clipped.</p>
 <p>Areas shall come from the same represented quadrature as the curvature.
@@ -80,6 +83,10 @@ are absent, represented by None rather than zero.</td></tr>
 <p>A developable input with valid area gives I_D = 0; intensity shares are then
 undefined because their denominator is zero. No default end fraction, fairness
 threshold, fabrication limit, or estimator reliability decision is applied.</p>
+<p>Underflow during weight normalization or density multiplication raises
+ValueError instead of silently discarding nonzero intensity. This explicit
+numerical policy also rejects cases that a different ordering could recover;
+finite inputs alone do not guarantee evaluation within binary64 arithmetic.</p>
 <h2>Use</h2>
 <pre>from digitalmodel.hydrodynamics.hull_library.curvature_regions import (
     summarize_curvature_regions,

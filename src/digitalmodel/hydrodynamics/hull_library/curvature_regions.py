@@ -85,12 +85,18 @@ def _weighted_regions(x, k, area, valid, lref, end_fraction):
     # I_D = sum(A_i q_D_i) / sum(A_i) on valid samples. Use areas, not counts.
     contribution = np.zeros_like(area)
     if valid_area > 0:
-        contribution[valid] = (area[valid] / valid_area) * np.abs(k[valid]) * lref * lref
+        # Reject lost weights/products, even if later factors could recover them.
+        with np.errstate(under="raise"):
+            contribution[valid] = (area[valid] / valid_area) * np.abs(k[valid]) * lref * lref
     intensity = float(np.sum(contribution))
+    # Include one adjacent float on either side of a cut in the middle.
+    # This admits decimal cut samples without a scale-dependent isclose band.
+    lower_boundary = np.nextafter(lower, -np.inf)
+    upper_boundary = np.nextafter(upper, np.inf)
     selections = {
-        "lower_end": x < lower,
-        "middle": (x >= lower) & (x <= upper),
-        "upper_end": x > upper,
+        "lower_end": x < lower_boundary,
+        "middle": (x >= lower_boundary) & (x <= upper_boundary),
+        "upper_end": x > upper_boundary,
     }
     regions = {}
     for name, selected in selections.items():
@@ -131,7 +137,11 @@ def summarize_curvature_regions(
     Coordinates and lref share a length unit; area uses its square and K its
     inverse square. The longitudinal axis and its direction are chosen by the
     caller. End cuts use the full coordinate span, including invalid samples.
-    Exact cut vertices belong to the middle; no triangle clipping is performed.
+    Cut vertices and their immediately adjacent binary64 values belong to the
+    middle (one ULP outward per cut); no triangle clipping is performed.
+    Underflow during weight normalization or density multiplication is rejected
+    with ValueError, even when a different arithmetic ordering could recover a
+    representable result. This prevents nonzero intensity being reported as zero.
 
     Missing curvature is excluded only through an explicit boolean valid mask.
     Status is PARTIAL when positive area is excluded and NOT_EVALUATED when no
