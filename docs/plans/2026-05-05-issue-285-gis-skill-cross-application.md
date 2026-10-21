@@ -34,5 +34,5 @@ Post a close comment on #285 enumerating: (a) which acceptance bullets verified 
 
 ## Open questions
 
-- The issue lists a secondary workstation as the working machine but the gis module clearly landed via the primary workstation branch — was there a session that cross-machine-merged the work? If a CI run is required for close-out, identify the machine that should host the verification before this plan executes.
-- Should this plan recommend `archived` → `closed` directly, or is the WRK ledger expecting a `Reclaim` artifact step we should not skip?
+- The issue lists a secondary workstation as the working machine but the gis module clearly landed via the primary workstation branch — was there a session that cross-machine-merged the work? If a CI run is required for close-out, identify the workstation to host the verification before this plan executes.
+- Should this plan recommend `archived` → `closed` directly, or is the WRK ledger expecting a `Reclaim` artifact step that this plan does not skip?

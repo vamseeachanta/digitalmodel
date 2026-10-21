@@ -22,7 +22,7 @@ No OpenFOAM scaffold exists in `src/digitalmodel/`. There is a `solvers/openfoam
    - Tutorial inventory: `interDyMFoam` motion of floating bodies in waves (`$FOAM_TUTORIALS/multiphase/interFoam/RAS/floatingObject` etc.)
    - Mesh-motion strategy comparison table (morphing | overset/chimera | sliding-mesh) with mooring-vs-seakeeping guidance
    - Wave-library decision: `olaFlow` for new work; document `waves2Foam` only as legacy
-   - Benchmark catalog: Wigley hull (most-cited), DTMB 5415 (US Navy frigate), KCS (KRISO container ship) with experimental-data citation links
+   - Benchmark catalog: Wigley hull (most-cited), DTMB 5415 (United States Navy frigate), KCS (KRISO container ship) with experimental-data citation links
    - Tool-chain map: snappyHexMesh / cfMesh, ParaView post, PyFoam scripting
 
 3. **Phase 2 spike: Wigley hull setup.** New directory `src/digitalmodel/hydrodynamics/openfoam_seakeeping/`:
