@@ -195,3 +195,92 @@ executable and point `settings.json` at the combined command:
 The renderer emits one `lane:case it/end s/it w<write> m<drift%>` segment per
 lane, separated by ` │ `, then cache age. It marks unreachable lanes and stale
 caches without blocking the prompt. Use `--width COLUMNS` to bound the segment.
+
+## Step 3: Case 2.10 regular head waves (offline)
+
+The Case 2.10 fixture is
+`tests/fixtures/test_vectors/marine/kcs_head_wave_efd.json`. It records the six
+published conditions, C0 through C5, with field units and source locators.
+C0 is the calm-water baseline; the wave reader deliberately rejects C0 because
+normalization by wave amplitude is undefined there. Case 2.1 results cannot be
+substituted: the model and test conditions differ.
+
+Sources: [Case 2.10 instructions](https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html),
+Conditions, Requested computations 2.10-1, Fourier Series Instructions and Symbols;
+[workshop corrections](https://t2015.nmri.go.jp/LatestNews.html), September 9,
+10 and 14, 2015. The corrected workbook is
+`[Identifier]_6conditions_2-10_20150914.xlsx`; `Case2.10-2.zip` contains reconstructed
+Fourier histories, not raw experimental signals. No licence statement was found:
+the data is cited and read back, not redistributed. Neither file was downloaded.
+Every experimental response remains a required `NOT_EVALUATED` input, with null
+value, sheet and cell. The source SHA-256 and response-table SHA-256 also remain
+pending. The public condition page does not supply the experimental response
+values; no plot-axis limit or prescribed wave height is substituted for a result.
+
+The reader covers the quantities requested by 2.10-1: resistance coefficient
+scaled by 1000, normalized heave and pitch, harmonic amplitudes zero through four,
+phases one through four, and the incident-wave first harmonic. It does not invent
+an added-resistance coefficient or treat a total coefficient as added resistance.
+A future native-output adapter must supply CSV columns `time_over_Te`, `ct_x1000`,
+`heave_over_a`, `pitch_over_ka`, and `wave_over_lpp`. Here `a=Hs/2`,
+`k=2*pi/lambda`, and `Te=1/(sqrt(g/(2*pi*lambda))+U/lambda)`, as specified under
+Symbols. Pitch is converted to radians before normalization. Heave and pitch are
+at the centre of gravity, positive upward and bow upward; the incident wave is
+measured at FP. Metadata must declare the exact fixture conditions, conventions,
+units, mesh, evidence kind, history hash, reference hash and criteria hash.
+
+The signed zero harmonic equals twice the mean in waves. The C0 entries retain
+means. Harmonics are fitted in physical encounter time; phase is shifted by
+`n * incident_fundamental_phase` to the workshop crest-at-FP time origin, then
+wrapped into a circular angle. This avoids applying one fundamental phase shift
+to every harmonic. A harmonic below the declared amplitude floor has undefined
+phase and cannot produce a passing complete comparison.
+
+Criteria are declared before any run in `config/cfd/kcs_step3_qa.json` and pinned
+by digest. The choices are provisional project diagnostic thresholds, not
+experimental uncertainty: absolute limits are 0.1 for scaled resistance and
+phase (radians), 0.05 for normalized motions, and 0.001 for normalized incident
+wave amplitude. Each quantity's allowed window drift is one fifth of its
+comparison limit. At least 32 regularly spaced samples per encounter cycle are
+required, with five discarded cycles followed by two complete five-cycle
+windows. Fit-residual RMS limits are 0.02 for scaled resistance, 0.01 for each
+normalized motion and 0.0002 for normalized incident wave elevation. These
+limits reject unstable or noisy content outside the retained harmonic basis.
+The CSV omits a duplicated terminal cycle endpoint. Residual, y+ and
+free-surface checks reuse step 1's observed-diagnostics routine and declared
+limits. These checks do not establish wave-resolution adequacy or reflection
+uncertainty for a future production campaign.
+
+Offline CLI (all arguments are existing local evidence; no solver is launched):
+
+```text
+PYTHONPATH=src python scripts/cfd/readback_kcs_step3.py compare --condition C1 --reference tests/fixtures/test_vectors/marine/kcs_head_wave_efd.json --criteria config/cfd/kcs_step3_qa.json --history history.csv --metadata metadata.json --output comparison.json
+```
+
+Use `admit --next-mesh medium` or `admit --next-mesh fine` with a native coarse
+history/metadata pair. The existing step-1 `require_run_admission` API routes
+explicit `case="2.10", condition_id="C1"` requests to the wave gate. Missing
+reference readback, criteria or passing coarse evidence refuses admission;
+the fixture shipped here therefore refuses all native admission. File readback
+recomputes the comparison instead of trusting a saved PASS. Evidence declarations
+and digests establish consistency, not external authenticity. A future launcher
+must enforce this API immediately before execution; no existing launcher is
+claimed to be protected by this offline change.
+
+Use `triplet` with three repeated `--history`/`--metadata` pairs, one per mesh.
+Metadata also requires `h_m`, identical `mesh_family` and `numerics`,
+`refinement_axes="xyz"`, and observed `free_surface.dx_m`/`dz_m` proportional to
+cell size. Positive nonzero harmonics reuse step 1's three-grid GCI procedure.
+Phases and signed zero harmonics have no grid-uncertainty method in this slice;
+`qualified` therefore stays false even when amplitude GCI passes. Degenerate,
+oscillatory, divergent and nonpositive amplitude series refuse GCI.
+
+Compute belongs on the GPU host or Grace-class host, never on the
+licensed-solver workstation. Heavy outputs belong in the shared data store with
+a digest manifest and fetch script; only the manifest belongs in the repository.
+No CFD run or mesh generation is part of this slice. Remaining ladder work:
+step 1 needs verified source readback and native systematic-grid evidence;
+step 2 needs the proceedings reference tables; step 3 needs response readback,
+source qualification, native-output conversion and coarse evidence before any
+medium/fine run; step 4 needs authorized access to the captive-test data;
+step 5 remains unscoped. Overall engineering qualification remains unestablished.
