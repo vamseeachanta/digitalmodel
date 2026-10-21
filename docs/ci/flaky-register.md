@@ -10,7 +10,12 @@ Repeated failures without a passing run on the same tree use
 The register is informational: it never selects tests or changes gate conclusions.
 Each entry records a unique test or command ID, kind, first and last observation
 dates, nonempty run evidence, cause (including uncertainty), fix pull request
-number or `pending`, and `open` or `fixed` status.
+number or `pending`, and `open` or `fixed` status. A `fixed` entry requires a
+nonempty `passing_evidence` list of Actions run URLs and a positive integer
+`fix_pr`; `pending` is permitted only while the entry remains open.
+The schema checks these fields structurally. Review of the linked runs and pull
+request must establish the passing result and merged state before closure;
+URL presence alone does not verify either condition.
 
 `scripts/ci/run_shard.py --shard NAME --junit reports/junit-NAME.xml --max-retry-ids 20 -- COMMAND`
 runs the original command unchanged. After exit 1, a fresh parsed JUnit report
