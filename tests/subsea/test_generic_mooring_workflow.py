@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Independent hand calculations for the generic mooring workflow.
 
 All numbers below are invented mathematical test inputs, not design data.
@@ -288,6 +291,39 @@ def test_criterion_snapshot_survives_caller_mutation(pending):
     assert "synthetic basis" in report
     assert "replacement" not in report
     assert re.search(r"criterion.ratio</td><td>0\.5</td>", report)
+
+
+@pytest.mark.parametrize(
+    "replacement_ratio,replacement_source",
+    [(0.3, "replacement criterion"), (0.0, "replacement criterion"), (0.5, "")],
+)
+def test_criterion_snapshot_governs_during_assessment(
+    replacement_ratio, replacement_source
+):
+    """80/200/0.5=0.8 must use the captured criterion during metric reads."""
+    case = build_case_table(ROOT)[0]
+    limit = {"ratio": 0.5, "source": "original synthetic criterion"}
+    expected = copy.deepcopy(limit)
+
+    class MutatingResult(dict):
+        def __getitem__(self, key):
+            value = super().__getitem__(key)
+            if key == "basis_sha256":
+                limit.update(ratio=replacement_ratio, source=replacement_source)
+            return value
+
+    out = assess_case(
+        case,
+        MutatingResult(metric(case)),
+        capacities_kn={name: 200 for name in case["active_lines"]},
+        limit=limit,
+    )
+
+    assert limit == {"ratio": replacement_ratio, "source": replacement_source}
+    assert out["criterion"] == expected
+    assert out["status"] == "PASS"
+    assert out["limit_ratio"] == expected["ratio"]
+    assert out["utilisation"] == pytest.approx(0.8)
 
 
 def test_report_rejects_unknown_assessment():

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline generic-vessel case inventory, analytical screens and metric review.
 
 No solver integration is imported. API RP 2SK and DNV-OS-E301 limits are
@@ -184,6 +187,7 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
     inputs or an input_manifest reference. Its tension is matched to line_id.
     Supplied extracted metrics do not establish native-output qualification.
     """
+    criterion = deepcopy(limit)
     out = {
         "case_id": case["case_id"],
         "status": "NOT_EVALUATED",
@@ -194,7 +198,7 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
         "offset_difference_pct": None,
         "tension_difference_pct": None,
         "reason": "stored results absent",
-        "criterion": deepcopy(limit),
+        "criterion": criterion,
     }
     if screen is not None:
         out["screen"] = _validated_screen(screen, case["active_lines"])
@@ -222,14 +226,14 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
     if case["condition"] == "damaged" and case["removed_line"] is None:
         out["reason"] = "damaged line unspecified"
         return out
-    if capacities_kn is not None and limit is not None:
+    if capacities_kn is not None and criterion is not None:
         if set(capacities_kn) != set(tensions):
             raise ValueError("capacities must cover exactly the active lines")
-        ratio = _finite(limit["ratio"], "limit", positive=True)
+        ratio = _finite(criterion["ratio"], "limit", positive=True)
         if (
             ratio > 1
-            or not isinstance(limit.get("source"), str)
-            or not limit["source"].strip()
+            or not isinstance(criterion.get("source"), str)
+            or not criterion["source"].strip()
         ):
             raise ValueError("ratio limit requires a source and cannot exceed unity")
         utils = {
