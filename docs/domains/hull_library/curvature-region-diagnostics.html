@@ -26,7 +26,10 @@ NOT_EVALUATED.</p>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-19</td><td>Add explicit area-weighted region contributions,
 coverage and independent hand controls to separate end-region effects.</td></tr>
-<caption>Table 1. Initial diagnostic method revision.</caption>
+<tr><td>2</td><td>2026-10-21</td><td>Bound cut rounding by coordinate magnitude
+to retain decimal boundary samples, align the cut formula with the calculation,
+and clarify strict underflow rejection and its error message.</td></tr>
+<caption>Table 1. Diagnostic method revisions.</caption>
 </table>
 <h2>Method and source</h2>
 <p><a href="https://arxiv.org/html/2609.27544v1">Geometry-Based Metrics for
@@ -57,9 +60,17 @@ square and Gaussian curvature its inverse square. No unit conversion is inferred
 The axis direction is supplied by the caller; lower and upper do not imply bow
 and stern.</p>
 <p>For coordinate limits x_min and x_max, the lower cut is
-x_min + f (x_max - x_min), and the upper cut is x_max - f (x_max - x_min).
-The two end intervals use strict inequalities. Exact cut vertices belong to the
-middle. The mathematical bound 0 &lt; f &le; 1/2 prevents overlapping end intervals;
+x_min + f (x_max - x_min), and the upper cut is
+x_min + (1 - f) (x_max - x_min), using the same origin for both cuts.
+The middle extends outward from each computed cut by
+tol = 2 spacing(max(|x_min|, |x_max|, x_max - x_min)), where spacing is the binary64
+distance to the next larger value at that operand magnitude. The span is included
+because it can exceed both coordinate magnitudes when the interval crosses zero.
+This operand-scale band
+accounts for cut rounding, including cancellation near zero. Samples at either
+expanded boundary belong to the middle; samples strictly outside belong to the
+corresponding end region. The mathematical bound
+0 &lt; f &le; 1/2 prevents overlapping end intervals;
 it is not a fabrication limit. The full coordinate span includes invalid samples.
 Vertices are assigned as whole quadrature samples; triangles are not clipped.</p>
 <p>Areas shall come from the same represented quadrature as the curvature.
@@ -80,6 +91,12 @@ are absent, represented by None rather than zero.</td></tr>
 <p>A developable input with valid area gives I_D = 0; intensity shares are then
 undefined because their denominator is zero. No default end fraction, fairness
 threshold, fabrication limit, or estimator reliability decision is applied.</p>
+<p>Underflow during weight normalization or density multiplication raises
+ValueError instead of silently discarding nonzero intensity. Any signaled
+underflow is rejected, even when the lost term cannot materially change the
+total or a different ordering could recover a representable result. The error
+message includes the numerical cause, distinguishing underflow from overflow.
+Finite inputs alone do not guarantee evaluation within binary64 arithmetic.</p>
 <h2>Use</h2>
 <pre>from digitalmodel.hydrodynamics.hull_library.curvature_regions import (
     summarize_curvature_regions,
