@@ -3,9 +3,10 @@
 
 """Serial ROV planning on uniformly spaced interval Hs samples.
 
-Source: DNV-ST-N001, December 2023, 2.6.2.1 (TR=TPOP+TC), 2.6.7.3 /
-Figure 2-4 (weather window), 2.6.9.2 (OPWF=alpha*OPLIM), pp. 67-74, read at
-https://studylib.net/doc/27896128/dnv-st-n001-2023 .
+Reference: DNV-ST-N001, Marine operations and marine warranty, December 2023,
+clauses 2.6.2.1, 2.6.7.3 / Figure 2-4 and 2.6.9.2. Publisher:
+https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/
+Clause verification against the official edition is NOT_EVALUATED.
 ``from_operation_periods`` adds caller-assessed planned and contingency counts;
 all Hs decisions delegate to ``seastate_limits.seastate_operability``.
 
@@ -186,7 +187,10 @@ def plan_intervention(
         hs: Uniformly spaced interval wave heights [m], allowing an empty horizon.
         hs_limit: Caller-qualified rated significant-wave-height limit [m].
         step_hours: Duration represented by each sample [h].
-        alpha: Caller-selected forecast allowance passed to the existing screen.
+        alpha: Caller-qualified forecast allowance applied to every task. The
+            caller must pass the most onerous (smallest) factor qualified for
+            the planned operation periods of all tasks. The default is an
+            arithmetic identity, not a qualified forecast allowance.
 
     Returns:
         Complete plan with campaign metrics, or a partial plan with failure reasons.
