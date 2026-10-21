@@ -47,10 +47,12 @@ from __future__ import annotations
 import html as _html
 import math
 import sys
-from dataclasses import dataclass, field, asdict, is_dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Union
+
+from digitalmodel._output_paths import validate_output_paths
 
 
 # ---------------------------------------------------------------------------
@@ -785,16 +787,19 @@ def generate_riser_report(
     Returns
     -------
     dict mapping ``"html"`` (and optionally ``"markdown"``) to written paths.
+
+    Raises ``ValueError`` before writing if the paired destinations alias.
     """
     output_path = Path(output_path)
+    md_path = output_path.with_suffix(".md") if markdown else None
+    validate_output_paths(output_path, *([md_path] if md_path is not None else []))
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     html_str = render_html(data)
     output_path.write_text(html_str, encoding="utf-8")
     written = {"html": output_path}
 
-    if markdown:
-        md_path = output_path.with_suffix(".md")
+    if md_path is not None:
         md_path.write_text(render_markdown(data), encoding="utf-8")
         written["markdown"] = md_path
 

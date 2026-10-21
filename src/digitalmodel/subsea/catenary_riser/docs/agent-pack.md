@@ -61,7 +61,7 @@ DNV-OS-F201, *Dynamic Risers*, and API RP 1111, *Design, Construction, Operation
 
 API 5L is named in material presets without a cited edition or table; preset strengths are not reproduced here, and clause text not checked against the licensed copy. [src/digitalmodel/subsea/catenary_riser/models.py:L56-L73]
 
-The updated report sample names DNV-OS-F201:2010 and DNVGL-RP-C203:2016 §2.2 equation (2.2.1). The latter is the cited accumulated-damage criterion in E5; the illustrative DFF=2 input is not a prescribed safety-class selection. Other sample code/curve labels do not establish verified applicability. The sample now reports fatigue FAIL because 41 years is less than the illustrative 50-year requirement. [src/digitalmodel/subsea/catenary_riser/report.py:L113-L127] [src/digitalmodel/subsea/catenary_riser/report.py:L323-L329]
+The updated report sample names DNV-OS-F201:2010 and DNVGL-RP-C203:2016 §2.2 equation (2.2.1). The latter is the cited accumulated-damage criterion in E5; the illustrative DFF=2 input is not a prescribed safety-class selection. Other sample code/curve labels do not establish verified applicability. The sample now reports fatigue FAIL because 41 years is less than the illustrative 50-year requirement. [src/digitalmodel/subsea/catenary_riser/report.py:L115-L129] [src/digitalmodel/subsea/catenary_riser/report.py:L325-L331]
 
 UNVERIFIED: governing editions, clauses, applicability and calculation Citation sidecars are not established for this package; #2755.
 
@@ -151,16 +151,16 @@ Audit corrections (#2751); current function names supersede historical line entr
 | `legacy/catenaryMethods.py:389`: Buoyancy calculation converts weight using fixed gravity [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L389-L389] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
 | `legacy/catenaryMethods.py:452`: External declination is truncated with int [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L452-L452] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
 | `legacy/pipeProperties.py:73`: Equivalent-pipe calculations apply inch-to-metre area conversion and configured gravity; input unit agreement is assumed [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L73-L181] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
-| `report.py:67`: Classification uses a fixed marginal-utilization fraction [src/digitalmodel/subsea/catenary_riser/report.py:L67-L79] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:145`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L145-L151] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:188`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L188-L197] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:211`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L211-L213] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:225`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L225-L228] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:229`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L229-L232] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:233`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L233-L236] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:343`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L343-L344] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:354`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L354-L356] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:610` (`render_html`): Any builder incompatibility silently selects fallback HTML; the exception handler is at L635-L638 [src/digitalmodel/subsea/catenary_riser/report.py:L610-L638] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:69`: Classification uses a fixed marginal-utilization fraction [src/digitalmodel/subsea/catenary_riser/report.py:L69-L81] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:147`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L147-L153] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:190`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L190-L199] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:213`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L213-L215] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:227`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L227-L230] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:231`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L231-L234] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:235`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L235-L238] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:345`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L345-L346] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:356`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L356-L358] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:612` (`render_html`): Any builder incompatibility silently selects fallback HTML; the exception handler is at L637-L640 [src/digitalmodel/subsea/catenary_riser/report.py:L612-L640] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 
 sweep: 88 found
 
@@ -218,8 +218,8 @@ Additional branch and placeholder sweep:
 | `legacy/orcaflexModel.py:522` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L522-L523] | Support-type helper is an unimplemented pass returning None; no detection check exists; #2753. |
 | `legacy/orcaflexModel.py:1203` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1203-L1204] | Winch helper is an unimplemented pass returning None; no detection check exists; #2753. |
 | `legacy/orcaflexModel.py:1207` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1207-L1208] | Group helper is an unimplemented pass returning None; no detection check exists; #2753. |
-| `report.py:153` [src/digitalmodel/subsea/catenary_riser/report.py:L153-L155] | Unrecognized provenance mode falls back to uppercase input; no detection check exists; #2753. |
-| `report.py:475` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L475-L481] | Unrecognized status has empty styling; no detection check exists; #2753. |
+| `report.py:155` [src/digitalmodel/subsea/catenary_riser/report.py:L155-L157] | Unrecognized provenance mode falls back to uppercase input; no detection check exists; #2753. |
+| `report.py:477` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L477-L483] | Unrecognized status has empty styling; no detection check exists; #2753. |
 | `legacy/orcaflexModel.py:1222` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1222-L1288] | Empty load lists or disabled analysis flags produce no model files; no detection check exists; #2753. |
 | `legacy/catenary_riser.py:32` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L32-L167] | Disabled riser analysis branches omit their computations; no detection check exists; #2753. |
 
@@ -1346,7 +1346,7 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L1-L185].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L1-L47].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/models.py:L1-L460].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L825].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L830].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L1-L286].
 
 The main-path documentation includes the package README, domain README, durable workflow registry, generic static coverage note and canonicalization handoff.
