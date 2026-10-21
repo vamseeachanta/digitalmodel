@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Fallback synthetic phased-sea generator (digitalmodel #1358).
 
 Produces a :class:`WaveForecast` of discrete phased components from a JONSWAP
@@ -101,3 +104,6 @@ def synthesize_forecast(
         phase_reference_location=phase_reference_location,
         water_depth=water_depth,
     )
+
+
+synthesize_forecast.LIVE_INPUT = False  # type: ignore[attr-defined]

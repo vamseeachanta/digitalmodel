@@ -1,5 +1,6 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Build one deterministic capability-card file using only the standard library.
 
 The website remains the human capability surface. Missing source key figures
@@ -307,14 +308,14 @@ SPECS: list[dict] = [
                               "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
     dict(id="short-horizon-motion-forecast", kind="work",
          title="Short-horizon motion forecast",
-         std="MMS / MRU feed · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437",
+         std="Synthetic motion demo · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437",
          path="hydro/short-horizon-motion-forecast.html",
-         blurb="Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved "
-               "wave forecast transferred through the asset RAO to predict the next few motions — "
-               "a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and "
-               "helideck landings, bounded honestly by the predictable zone.",
-         figures=[], bullets=["Two data modes: measured (MMS/MRU) 'now' + predicted forecast",
-                              "6-DOF vessel & structure-interface motion via AQWA / OrcaFlex RAOs",
+         blurb="Illustrative synthetic sea and simplified analytic RAOs demonstrate a "
+               "phase-resolved motion forecast and rolling go / no-go with lead time. "
+               "Measured-motion input from MMS / MRU instruments is planned; "
+               "the Python layer provides a synthetic stub and CSV reader.",
+         figures=[], bullets=["Synthetic measured history and predicted forecast",
+                              "Designed for OrcaFlex / AQWA RAO files; AQWA phase sign pending validation",
                               "Rolling GO / CAUTION / NO-GO with lead-time to first breach"]),
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
          std="Gibbs wave equation · Bezerra projections + scale features", path="capabilities/#artificial-lift",
