@@ -53,3 +53,11 @@ https://github.com/FreeCAD/FreeCAD-macros
 
 <https://mechnexus.com/category/freecad-articles/>
 
+## Parametric CAD judge pilot
+
+The [flanged spool pilot](../../../examples/freecad/flanged_spool/README.md)
+under #2804 and #2272 joins the FreeCAD design-tools and gmsh meshing modules.
+It documents an independent annulus/frustum steel-volume calculation, geometry
+measurements, fixed mesh-quality limits, and a planted thickness defect test.
+Native CAD/mesh acceptance remains unverified when those dependencies are absent;
+the comparator and judge rejection tests run separately.

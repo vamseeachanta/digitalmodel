@@ -195,6 +195,10 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      bemrosetta:
+        agent_pack: src/digitalmodel/hydrodynamics/bemrosetta/docs/agent-pack.md
+        ci_family: hydrodynamics
+        qa_family: DF
       hydrodynamics:
         agent_pack: src/digitalmodel/hydrodynamics/docs/agent-pack.md
         ci_family: hydrodynamics
@@ -463,6 +467,10 @@ modules:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
         ci_family: solvers
         qa_family: FE
+      gmsh_meshing:
+        agent_pack: src/digitalmodel/solvers/gmsh_meshing/docs/agent-pack.md
+        ci_family: solvers
+        qa_family: FE
       ghs:
         agent_pack: src/digitalmodel/solvers/ghs/docs/agent-pack.md
         ci_family: solvers
@@ -497,6 +505,10 @@ modules:
         qa_family: MR
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
+        ci_family: solvers
+        qa_family: MR
+      orcaflex/universal:
+        agent_pack: src/digitalmodel/solvers/orcaflex/universal/docs/agent-pack.md
         ci_family: solvers
         qa_family: MR
       orcaflex/results_analysis:
@@ -838,6 +850,11 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_seakeeping
   - module: vessel_stability_screening
     ci_family: naval-architecture
+    submodules:
+      vessel_stability_screening:
+        agent_pack: src/digitalmodel/vessel_stability_screening/docs/agent-pack.md
+        ci_family: naval-architecture
+        qa_family: EC
     entry_point: src/digitalmodel/vessel_stability_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/vessel-stability-screening.md
@@ -853,6 +870,11 @@ modules:
   - module: weather_window
     ci_family: marine-operations
     entry_point: src/digitalmodel/weather_window/
+    submodules:
+      weather_window:
+        agent_pack: src/digitalmodel/weather_window/docs/agent-pack.md
+        ci_family: marine-operations
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]

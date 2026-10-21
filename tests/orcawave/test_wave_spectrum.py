@@ -18,6 +18,8 @@ from digitalmodel.orcawave.wave_spectrum import (
     heuristic_two_peak,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class TestPiersonMoskowitz:
     """Test Pierson-Moskowitz spectrum."""
@@ -25,7 +27,7 @@ class TestPiersonMoskowitz:
     def test_hs_preservation(self):
         omega = np.linspace(0.05, 3.0, 500)
         s = pierson_moskowitz(omega, hs=3.0, tp=10.0)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         hs_computed = 4.0 * np.sqrt(m0)
         np.testing.assert_allclose(hs_computed, 3.0, rtol=0.05)
 
@@ -48,7 +50,7 @@ class TestJONSWAP:
     def test_hs_preservation(self):
         omega = np.linspace(0.05, 3.0, 500)
         s = jonswap(omega, hs=4.0, tp=12.0, gamma=3.3)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         hs_computed = 4.0 * np.sqrt(m0)
         np.testing.assert_allclose(hs_computed, 4.0, rtol=0.05)
 
@@ -64,8 +66,8 @@ class TestJONSWAP:
         s_j = jonswap(omega, hs=3.0, tp=10.0, gamma=1.0)
         s_pm = pierson_moskowitz(omega, hs=3.0, tp=10.0)
         # With gamma=1 and renormalization, shapes should be similar
-        m0_j = np.trapz(s_j, omega)
-        m0_pm = np.trapz(s_pm, omega)
+        m0_j = _trapezoid(s_j, omega)
+        m0_pm = _trapezoid(s_pm, omega)
         np.testing.assert_allclose(m0_j, m0_pm, rtol=0.1)
 
 
@@ -82,7 +84,7 @@ class TestOtherSpectra:
         omega = np.linspace(0.1, 3.0, 200)
         s = issc_spectrum(omega, hs=3.0, tz=7.0)
         assert np.all(s >= 0)
-        m0 = np.trapz(s, omega)
+        m0 = _trapezoid(s, omega)
         assert m0 > 0
 
     @pytest.mark.parametrize("tp", [8.0, 16.0])

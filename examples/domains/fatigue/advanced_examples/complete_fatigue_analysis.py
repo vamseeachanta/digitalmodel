@@ -48,6 +48,8 @@ from digitalmodel.structural.fatigue import (
     quick_fatigue_analysis, create_fatigue_report
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def generate_synthetic_stress_history(duration=3600, dt=0.1, seed=42):
     """
@@ -351,7 +353,7 @@ def demonstrate_frequency_domain_analysis(time, stress):
 
     print(f"PSD calculated:")
     print(f"  Frequency range: {freq[0]:.4f} to {freq[-1]:.2f} Hz")
-    print(f"  RMS from PSD: {np.sqrt(np.trapz(psd, freq)):.2f} MPa")
+    print(f"  RMS from PSD: {np.sqrt(_trapezoid(psd, freq)):.2f} MPa")
     print(f"  RMS from time series: {np.std(stress_detrended):.2f} MPa")
 
     # Compare frequency domain methods

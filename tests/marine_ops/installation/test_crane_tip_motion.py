@@ -21,6 +21,8 @@ from digitalmodel.marine_ops.installation.models import (
     Vessel,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class TestComplexRAOConversion:
     """Complex RAO amplitude/phase roundtrip."""
@@ -154,8 +156,8 @@ class TestJONSWAPSpectrum:
         omega = np.linspace(0.1, 3.0, 500)
         S1 = _jonswap_spectrum(omega, hs=1.0, wp=0.8)
         S2 = _jonswap_spectrum(omega, hs=2.0, wp=0.8)
-        m0_1 = np.trapz(S1, omega)
-        m0_2 = np.trapz(S2, omega)
+        m0_1 = _trapezoid(S1, omega)
+        m0_2 = _trapezoid(S2, omega)
         assert m0_2 / m0_1 == pytest.approx(4.0, rel=0.05)
 
     def test_gamma_1_gives_pm(self):
