@@ -851,11 +851,16 @@ ALL_GENERATORS: dict[str, Callable] = {
 }
 
 # Direct generation and physical-label validation retain the full registry.
-# Seed-only labelled datasets cannot distinguish this default from NORMAL.
+# Seed-only labelled datasets cannot distinguish these defaults from NORMAL.
 SYNTHETIC_LABEL_EXCLUSIONS: dict[str, str] = {
     "PLUNGER_UNDERTRAVEL": (
         "Default cards duplicate NORMAL; a distinguishing matched-travel "
         "basis is required before synthetic training or benchmark scoring."
+    ),
+    "TUBING_MOVEMENT": (
+        "Default load differences from NORMAL are below the configured noise "
+        "scale; a distinguishing basis is required before synthetic training "
+        "or benchmark scoring."
     ),
 }
 
@@ -1105,10 +1110,11 @@ def surface_card_from_pump_card(
 def generate_training_dataset(
     samples_per_mode: int = 200,
 ) -> tuple[list[CardData], list[str]]:
-    """Generate training cards for the 19 eligible synthetic labels.
+    """Generate training cards for the 18 eligible synthetic labels.
 
-    PLUNGER_UNDERTRAVEL is excluded because its defaults duplicate NORMAL;
-    see SYNTHETIC_LABEL_EXCLUSIONS for the condition for restoring the label.
+    PLUNGER_UNDERTRAVEL and TUBING_MOVEMENT defaults lack a distinguishing
+    signature above NORMAL's configured noise scale. See
+    SYNTHETIC_LABEL_EXCLUSIONS for the conditions for restoring these labels.
 
     Args:
         samples_per_mode: Number of synthetic cards per failure mode.

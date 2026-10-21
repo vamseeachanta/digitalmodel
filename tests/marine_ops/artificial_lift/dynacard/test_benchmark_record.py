@@ -43,7 +43,7 @@ def test_builder_is_balanced_deterministic_and_synthetic():
     a = api()
     x = a.build_hold_out_test_set(samples_per_mode=1)
     y = a.build_hold_out_test_set(samples_per_mode=1)
-    assert len(x) == 19
+    assert len(x) == 18
     assert [c.card.model_dump() for c in x] == [c.card.model_dump() for c in y]
     assert all(c.provenance.kind == "synthetic" for c in x)
     with pytest.raises(ValueError):

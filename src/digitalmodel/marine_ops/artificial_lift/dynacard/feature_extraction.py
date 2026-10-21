@@ -89,8 +89,8 @@ class FeatureExtractor:
         differed only in stroke length and gave the same projection vector
         (dm#1884). These disjoint ranges are historical: current defaults share
         a stroke draw, and undertravel defaults also duplicate NORMAL's noise.
-        Synthetic labelled datasets exclude undertravel until a distinguishing
-        matched-travel basis exists.
+        Synthetic labelled datasets exclude undertravel and tubing movement
+        until a distinguishing matched-travel basis exists.
 
         Returns (3,): stroke length, load range, and enclosed card area, all
         in the card's own units. Trees split on raw magnitudes happily, and

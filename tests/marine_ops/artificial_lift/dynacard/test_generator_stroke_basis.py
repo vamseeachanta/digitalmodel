@@ -63,11 +63,37 @@ def test_training_features_preserve_indistinguishable_defaults():
     assert returned_labels.tolist() == labels
 
 
+def _normal_noise_sigma(seed):
+    """Configured noise scale, independent of the observed card variation."""
+    rng = np.random.default_rng(seed)
+    high = rng.uniform(12000, 18000)
+    low = rng.uniform(4000, 7000)
+    return 0.03 * (high - low)
+
+
+def test_tubing_defaults_need_exclusion_or_distinguishing_signature():
+    """This screening criterion does not establish statistical separability."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
+        SYNTHETIC_LABEL_EXCLUSIONS,
+    )
+
+    for seed in (*range(8), *range(1000, 1008)):
+        normal = generate_normal_card(seed)
+        tubing = generate_tubing_movement_card(seed)
+        if normal.position == tubing.position:
+            difference = np.max(np.abs(np.asarray(normal.load) - tubing.load))
+            assert (
+                "TUBING_MOVEMENT" in SYNTHETIC_LABEL_EXCLUSIONS
+                or difference >= _normal_noise_sigma(seed)
+            )
+
+
 @pytest.mark.parametrize("builder", ["training", "hold_out"])
-def test_labelled_synthetic_sets_exclude_indistinguishable_undertravel(builder):
-    """Seed-matched duplicate defaults cannot carry contradictory labels."""
+def test_labelled_synthetic_sets_exclude_indistinguishable_defaults(builder):
+    """All seed-matched label pairs must pass the requested noise screen."""
     from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
         ALL_GENERATORS,
+        SYNTHETIC_LABEL_EXCLUSIONS,
         generate_training_dataset,
     )
     from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.test_set_builder import (
@@ -75,20 +101,46 @@ def test_labelled_synthetic_sets_exclude_indistinguishable_undertravel(builder):
     )
 
     if builder == "training":
-        cards, labels = generate_training_dataset(samples_per_mode=1)
+        cards, labels = generate_training_dataset(samples_per_mode=8)
+        first_seed = 0
     else:
-        records = build_hold_out_test_set(samples_per_mode=1)
+        records = build_hold_out_test_set(samples_per_mode=8)
         cards = [record.card for record in records]
         labels = [record.label for record in records]
+        first_seed = 1000
 
-    for (left, left_label), (right, right_label) in itertools.combinations(
-        zip(cards, labels), 2
-    ):
-        assert left.position != right.position or left.load != right.load, (
-            f"Identical synthetic cards have labels {left_label} and {right_label}"
-        )
-    assert set(labels) == set(ALL_GENERATORS) - {"PLUNGER_UNDERTRAVEL"}
-    assert len(cards) == 19
+    for offset in range(8):
+        for (left, left_label), (right, right_label) in itertools.combinations(
+            zip(cards[offset::8], labels[offset::8]), 2
+        ):
+            if left.position == right.position:
+                difference = np.max(np.abs(np.asarray(left.load) - right.load))
+                assert difference >= _normal_noise_sigma(first_seed + offset), (
+                    f"Sub-noise synthetic cards have labels {left_label} and {right_label}"
+                )
+    excluded = {"PLUNGER_UNDERTRAVEL", "TUBING_MOVEMENT"}
+    assert set(SYNTHETIC_LABEL_EXCLUSIONS) == excluded
+    assert all(reason.strip() for reason in SYNTHETIC_LABEL_EXCLUSIONS.values())
+    assert set(labels) == set(ALL_GENERATORS) - excluded
+    assert len(cards) == 18 * 8
+
+
+def test_training_progress_counts_generated_labels(monkeypatch, capsys):
+    from digitalmodel.marine_ops.artificial_lift.dynacard import training
+
+    class GenerationObserved(Exception):
+        pass
+
+    counts = []
+
+    def stop_before_fitting(cards, labels):
+        counts.append(len(set(labels)))
+        raise GenerationObserved
+
+    monkeypatch.setattr(training, "_extract_features_for_dataset", stop_before_fitting)
+    with pytest.raises(GenerationObserved):
+        training.train_and_export(samples_per_mode=1)
+    assert f"({counts[0]} modes)" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("generator", LOSS_GENERATORS)

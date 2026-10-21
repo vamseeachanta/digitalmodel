@@ -152,8 +152,9 @@ def build_hold_out_test_set(
 ) -> list[LabelledCard]:
     """Generate balanced synthetic pump cards with explicit generator labels.
 
-    PLUNGER_UNDERTRAVEL is excluded because its defaults duplicate NORMAL;
-    see SYNTHETIC_LABEL_EXCLUSIONS for the condition for restoring the label.
+    PLUNGER_UNDERTRAVEL and TUBING_MOVEMENT defaults lack a distinguishing
+    signature above NORMAL's configured noise scale. See
+    SYNTHETIC_LABEL_EXCLUSIONS for the conditions for restoring these labels.
 
     The seed floor preserves the original builder convention, not a proof of
     independence from an arbitrary training run. The caller must compare the
