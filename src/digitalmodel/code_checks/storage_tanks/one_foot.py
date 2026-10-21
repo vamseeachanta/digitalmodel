@@ -9,8 +9,8 @@ qualified code source. Method coefficients, applicability limit (5.6.3.1),
 diameter-specific nominal floor (5.6.1.1) and material allowables are caller
 inputs: no unverified standard values or material tables are embedded here.
 
-Without resolved method AND material Citations, numbers are illustrative and
-code qualification is NOT_EVALUATED. Supplied Citations resolve fail-closed;
+Without resolved method, material AND applicability Citations, numbers are
+illustrative and code qualification is NOT_EVALUATED. Supplied Citations resolve fail-closed;
 the caller owns the upstream source selection and edition-specific values.
 CALCULATED means only these shell equations were evaluated, not tank approval.
 """
@@ -41,6 +41,9 @@ class OneFootBasis:
     ``coefficient`` has units MPa*mm/m²; ``head_offset_m`` is the design-point
     offset. ``minimum_nominal_mm`` is supplied for the actual tank diameter,
     not a universal floor. Missing floor/diameter evidence is never inferred.
+    The two applicability citations must identify the same code and edition
+    as the method citation. Resolution checks source metadata, not the numeric
+    contents; the caller remains responsible for edition-specific value selection.
     """
 
     coefficient: float
@@ -49,6 +52,8 @@ class OneFootBasis:
     minimum_nominal_mm: float | None
     source: str
     citation: Citation | None = None
+    diameter_limit_citation: Citation | None = None
+    minimum_nominal_citation: Citation | None = None
 
 
 @dataclass(frozen=True)
@@ -143,11 +148,26 @@ def _qualification(inputs: TankDesign, wiki_root: Path | None) -> tuple:
             gaps.append(f"NOT_EVALUATED: qualified {label} source is missing")
         else:
             validate_citation(citation, repo_root=wiki_root)
-            citations.append(citation)
-    if inputs.basis.diameter_limit_m is None:
-        gaps.append("NOT_EVALUATED: API 650 5.6.3.1 diameter limit is missing")
-    if inputs.basis.minimum_nominal_mm is None:
-        gaps.append("NOT_EVALUATED: API 650 5.6.1.1 nominal floor is missing")
+            if citation not in citations:
+                citations.append(citation)
+    basis = inputs.basis
+    for field, label, citation in (
+        ("diameter_limit_m", "API 650 5.6.3.1 diameter limit", basis.diameter_limit_citation),
+        ("minimum_nominal_mm", "API 650 5.6.1.1 nominal floor", basis.minimum_nominal_citation),
+    ):
+        if citation is not None:
+            validate_citation(citation, repo_root=wiki_root)
+            if basis.citation is not None and any(
+                getattr(citation, key) != getattr(basis.citation, key)
+                for key in ("code_id", "publisher", "revision")
+            ):
+                raise ValueError("Method and applicability sources must identify the same edition")
+            if citation not in citations:
+                citations.append(citation)
+        if getattr(basis, field) is None:
+            gaps.append(f"NOT_EVALUATED: {label} is missing")
+        elif citation is None:
+            gaps.append(f"NOT_EVALUATED: qualified {label} source is missing")
     return tuple(citations), tuple(gaps)
 
 

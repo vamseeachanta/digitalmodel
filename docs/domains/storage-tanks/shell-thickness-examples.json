@@ -112,8 +112,10 @@
     "basis": {
       "citation": null,
       "coefficient": 4.9,
+      "diameter_limit_citation": null,
       "diameter_limit_m": 60,
       "head_offset_m": 0.3,
+      "minimum_nominal_citation": null,
       "minimum_nominal_mm": 6,
       "source": "Public issue 2958 equation; limits and floor assumed, based on previous experience; illustrative input, not a code-table value"
     },
@@ -153,11 +155,17 @@
     "test_level_m": 18,
     "water_unit_weight_kn_m3": 9.8
   },
+  "not_evaluated": [
+    "NOT_EVALUATED: qualified method edition and coefficients source is missing",
+    "NOT_EVALUATED: qualified material allowables source is missing",
+    "NOT_EVALUATED: qualified API 650 5.6.3.1 diameter limit source is missing",
+    "NOT_EVALUATED: qualified API 650 5.6.1.1 nominal floor source is missing"
+  ],
   "qualified_engineering_input": false,
   "schema": "shell-thickness-examples/v1",
   "sha256": {
-    "one-foot-worked-example.html": "d4f2faa72ef63ac48efd77dcb01757f017f85e9d4428ec07e9c4402275cdacbf",
-    "pressure-vessel-example.html": "74ed2c5329a4c49b6db8522ed23e6039f8d74f233e22a12139a06f65fff412b0"
+    "one-foot-worked-example.html": "39759de34206a7046df7e27bf674d36acdfb6f2d8234ee039018acd9d265cda5",
+    "pressure-vessel-example.html": "a6e05ac62d0686c09da9c26aab10cab280c0dd627c12fb4a4405918ec3fa2a17"
   },
   "shell_mass_kg": 165404.8532115026,
   "source": "Public issue 2958; standard edition unverified",

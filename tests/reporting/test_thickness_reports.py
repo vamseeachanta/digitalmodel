@@ -275,3 +275,54 @@ def test_shared_number_validator_accepts_zero_only_when_requested():
     validate_number("wall", 0, zero=True)
     with pytest.raises(ValueError):
         validate_number("wall", -1, zero=True)
+
+
+def test_tank_chart_hover_pairs_each_requirement_with_its_selected_plate():
+    """Independent test_one_foot arithmetic: 20-18.846=1.154 mm margin.
+
+    Course 7 has 6-5.616=0.384 mm design margin, before the floor governs.
+    This checks the course boundary pairing, where duplicate height knots occur.
+    """
+    spec = tank_report(
+        shell_result(), document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    figure = next(b.plotly for b in blocks(spec, FigureBlock) if b.figure_id == "tank-thickness")
+    trace = figure["data"][0]
+    assert trace["customdata"][0] == pytest.approx([20, 1.154])
+    assert trace["customdata"][12] == pytest.approx([6, 0.384])
+    assert "Nominal limit" in trace["hovertemplate"]
+    assert "Margin" in trace["hovertemplate"]
+
+
+def test_vessel_hover_exposes_negative_margin_at_design_pressure():
+    """UG-27 synthetic case requires 12 mm; a 10 mm shell is short by 2 mm."""
+    spec = vessel_spec(geometry=VesselGeometry(
+        inner_diameter_mm=200, wall_thickness_mm=10, corrosion_allowance_mm=2,
+    ))
+    figure = blocks(spec, FigureBlock)[0].plotly
+    shell = figure["data"][0]
+    assert shell["customdata"][-1] == pytest.approx([10, -2])
+    assert "Nominal limit" in shell["hovertemplate"]
+
+
+def test_tank_basis_lists_the_evidence_for_each_rule():
+    spec = tank_report(
+        shell_result(), document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    evidence = next(b for b in blocks(spec, TableBlock) if b.title == "Source qualification")
+    assert len(evidence.rows) == 4
+    assert {row[0] for row in evidence.rows} == {
+        "Method coefficients", "Material allowables", "Diameter limit", "Nominal floor",
+    }
+    assert all("NOT_EVALUATED" in row for row in evidence.rows)
+
+
+@pytest.mark.parametrize("limits", [{"Unknown": [10]}, {"Required": [10, 12]}])
+def test_nominal_hover_rejects_unpaired_limits(limits):
+    from digitalmodel.reporting.thickness import nominal_limit_hover
+
+    figure = {"data": [{"name": "Required", "y": [12]}]}
+    with pytest.raises(ValueError):
+        nominal_limit_hover(figure, limits)

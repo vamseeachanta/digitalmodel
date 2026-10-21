@@ -218,7 +218,10 @@ def test_resolved_synthetic_citations_emit_sidecar(tank, tmp_path):
     )
     cited = replace(
         tank,
-        basis=replace(tank.basis, citation=citation),
+        basis=replace(
+            tank.basis, citation=citation, diameter_limit_citation=citation,
+            minimum_nominal_citation=citation,
+        ),
         material=replace(tank.material, citation=citation),
     )
     result = design_shell(cited, wiki_root=tmp_path)
@@ -263,3 +266,59 @@ def test_lower_test_fill_does_not_reduce_hydrotest_sizing(tank, test_level):
     assert row.test_mm == pytest.approx(16.261875)
     assert row.governing_case == "hydrostatic test"
     assert row.selected_mm == 18
+
+
+def _synthetic_citation(tmp_path, revision="test"):
+    """Metadata fixture only; it does not establish an API edition or values."""
+    from digitalmodel.citations.schema import Citation
+
+    citation = Citation(
+        code_id="SYNTHETIC-TEST", publisher="synthetic", revision=revision,
+        section="Synthetic arithmetic only", source_sibling="generic",
+        wiki_path=f"wikis/engineering/wiki/concepts/basis-{revision}.md",
+    )
+    path = tmp_path / citation.wiki_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\ncode_id: SYNTHETIC-TEST\npublisher: synthetic\nrevision: {revision}\n---\n"
+    )
+    return citation
+
+
+def test_method_citation_does_not_qualify_uncited_limits(tank, tmp_path):
+    citation = _synthetic_citation(tmp_path)
+    inputs = replace(
+        tank, basis=replace(tank.basis, citation=citation),
+        material=replace(tank.material, citation=citation),
+    )
+    result = design_shell(inputs, wiki_root=tmp_path)
+    assert result.status == "NOT_EVALUATED"
+    assert any("5.6.3.1" in gap for gap in result.not_evaluated)
+    assert any("5.6.1.1" in gap for gap in result.not_evaluated)
+
+
+@pytest.mark.parametrize("missing", ["diameter_limit_citation", "minimum_nominal_citation"])
+def test_each_applicability_rule_needs_its_own_evidence(tank, tmp_path, missing):
+    citation = _synthetic_citation(tmp_path)
+    basis = replace(
+        tank.basis, citation=citation, diameter_limit_citation=citation,
+        minimum_nominal_citation=citation,
+    )
+    basis = replace(basis, **{missing: None})
+    result = design_shell(
+        replace(tank, basis=basis, material=replace(tank.material, citation=citation)),
+        wiki_root=tmp_path,
+    )
+    assert result.status == "NOT_EVALUATED"
+    assert len(result.not_evaluated) == 1
+
+
+def test_mixed_method_and_limit_editions_are_rejected(tank, tmp_path):
+    citation = _synthetic_citation(tmp_path)
+    other = _synthetic_citation(tmp_path, revision="other")
+    basis = replace(
+        tank.basis, citation=citation, diameter_limit_citation=other,
+        minimum_nominal_citation=citation,
+    )
+    with pytest.raises(ValueError, match="same edition"):
+        design_shell(replace(tank, basis=basis), wiki_root=tmp_path)
