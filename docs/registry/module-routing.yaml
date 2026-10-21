@@ -140,6 +140,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#fatigue
   - module: field_development
     entry_point: src/digitalmodel/field_development/
+    submodules:
+      field_development:
+        agent_pack: src/digitalmodel/field_development/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/field_development/]
