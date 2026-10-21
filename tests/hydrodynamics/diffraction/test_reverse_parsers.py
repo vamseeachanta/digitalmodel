@@ -41,6 +41,8 @@ def _generate_aqwa_dat(spec: DiffractionSpec, tmp_path: Path) -> Path:
     from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
     backend = AQWABackend()
+    if spec._source_dir is None:
+        spec._source_dir = FIXTURES_DIR
     return backend.generate_single(spec, tmp_path)
 
 
@@ -51,6 +53,8 @@ def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
     )
 
     backend = OrcaWaveBackend()
+    if spec._source_dir is None:
+        spec._source_dir = FIXTURES_DIR
     return backend.generate_single(spec, tmp_path)
 
 
@@ -800,6 +804,9 @@ class TestOrcaWaveInputParserSolveType:
 
         out_dir = tmp_path / "regen"
         out_dir.mkdir()
+        # The parser retains a mesh reference; generation now requires its data.
+        spec.vessel.geometry = _load_ship_spec().vessel.geometry
+        spec._source_dir = FIXTURES_DIR
         regen_path = OrcaWaveBackend().generate_single(spec, out_dir)
 
         with open(regen_path) as f:
@@ -863,6 +870,9 @@ class TestOrcaWaveInputParserInertiaOrigin:
 
         out_dir = tmp_path / "regen"
         out_dir.mkdir()
+        # The parser retains a mesh reference; generation now requires its data.
+        spec.vessel.geometry = _load_ship_spec().vessel.geometry
+        spec._source_dir = FIXTURES_DIR
         regen_path = OrcaWaveBackend().generate_single(spec, out_dir)
 
         with open(regen_path) as f:
@@ -957,6 +967,8 @@ class TestCrossConversion:
         # Step 2: Parse the .dat back to spec
         aqwa_parser = AQWAInputParser()
         intermediate_spec = aqwa_parser.parse(dat_path)
+        intermediate_spec.vessel.geometry = original.vessel.geometry
+        intermediate_spec._source_dir = original._source_dir
 
         # Step 3: Generate OrcaWave .yml from the intermediate spec
         orcawave_dir = tmp_path / "orcawave"
@@ -991,6 +1003,8 @@ class TestCrossConversion:
         # Step 2: Parse the .yml back to spec
         orcawave_parser = OrcaWaveInputParser()
         intermediate_spec = orcawave_parser.parse(yml_path)
+        intermediate_spec.vessel.geometry = original.vessel.geometry
+        intermediate_spec._source_dir = original._source_dir
 
         # Step 3: Generate AQWA .dat from the intermediate spec
         aqwa_dir = tmp_path / "aqwa"
