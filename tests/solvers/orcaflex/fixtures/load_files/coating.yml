@@ -1,0 +1,13 @@
+# Symbolic YAML/reference fixture, not a complete solver model.
+# Key layout: docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/
+# manual/includes/02_var_data.yml and manual/includes/05_line_types.yml.
+General:
+  UnitsSystem: SI
+Environment:
+  SeabedModel: Flat
+VariableData:
+  Coatingsorlinings:
+    - Name: coating_defined
+LineTypes:
+  - Name: coated_line
+    CoatingThickness: coating_defined
