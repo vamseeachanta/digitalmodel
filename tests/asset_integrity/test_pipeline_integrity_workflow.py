@@ -10,6 +10,7 @@ material specifications. Expected numbers are hand calculations shown below.
 
 from dataclasses import asdict, replace
 import json
+import math
 
 import pytest
 
@@ -137,9 +138,41 @@ def test_applicability_requires_boolean(case):
         replace(case, formula_applicable="yes")
 
 
-def test_rejects_nonfinite_calculated_capacity(case):
+def test_finite_capacity_does_not_overflow_intermediate_strength(case):
+    # (2 * 1e308 * 10 / 500) * 0.5 = 2e306 MPa, finite in binary64.
+    result = assess_pressure_design(replace(case, yield_strength_mpa=1e308))
+    assert result.design_pressure_mpa == pytest.approx(2e306)
+    assert result.utilisation_ratio == pytest.approx(2e-306, abs=0)
+    assert result.required_wall_thickness_mm == pytest.approx(2e-305, abs=0)
+    assert result.meets_pressure_design is True
+
+
+def test_rejects_capacity_underflow_to_zero(case):
     with pytest.raises(ValueError, match="calculated"):
-        assess_pressure_design(replace(case, yield_strength_mpa=1e308))
+        assess_pressure_design(replace(case, yield_strength_mpa=math.ulp(0.0)))
+
+
+@pytest.mark.parametrize("field", ["design_factor", "joint_factor", "temperature_factor"])
+@pytest.mark.parametrize("value", [math.nextafter(1.0, math.inf), 72.0])
+def test_rejects_factors_above_unity(case, field, value):
+    with pytest.raises(ValueError, match=field):
+        replace(case, **{field: value})
+
+
+def test_accepts_unity_factors(case):
+    result = assess_pressure_design(replace(case, design_factor=1.0))
+    assert result.design_pressure_mpa == pytest.approx(8.0)
+
+
+@pytest.mark.parametrize(
+    "demand,meets",
+    [(math.nextafter(4.0, 0.0), True), (4.0, True),
+     (math.nextafter(4.0, math.inf), False)],
+)
+def test_pressure_screen_boundary_without_tolerance(case, demand, meets):
+    result = assess_pressure_design(replace(case, pressure_mpa=demand))
+    assert result.meets_pressure_design is meets
+    assert result.integrity_status == "NOT_EVALUATED"
 
 
 @pytest.mark.parametrize("value", [True, None, "200"])
