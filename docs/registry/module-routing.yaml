@@ -740,6 +740,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#weather_window
   - module: well_access
     entry_point: src/digitalmodel/well_access/
+    submodules:
+      well_access:
+        agent_pack: src/digitalmodel/well_access/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well_access/]
