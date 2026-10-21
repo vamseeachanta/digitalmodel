@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/attestation_manifest.py": (
+        "writes a caller-selected attestation summary, not committed docs/api pages"
+    ),
     "scripts/capabilities/build_onepagers.py": (
         "writes JSON capability cards, not docs/api HTML"
     ),

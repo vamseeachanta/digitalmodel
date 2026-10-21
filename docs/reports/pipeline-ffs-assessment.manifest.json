@@ -744,7 +744,7 @@
     ]
   },
   "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
-  "builder_sha256_lf": "ad81a13a40e4aebe4547c2ca5482d4294a2add2d0d72b011cd9ee11fc7638b4a",
+  "builder_sha256_lf": "57859a20450f7720f1039778347b95f35d5a131396d4137f11a053524d022bd5",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
@@ -765,7 +765,7 @@
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
     "src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90",
     "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
-    "src/digitalmodel/reporting/engine.py": "c2166904cb93dedf00e8f80955eabc23c187fa8b778f70176db93cb1409531de",
+    "src/digitalmodel/reporting/engine.py": "f79f7b30faacf70af10d1469c75a4f334ba25f55fbe5a2f6f7a980966897ab50",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
   "configuration_sha256_lf": "1920f2066019de88764275b269c47eb37d37c4e7da8b87256a74f7bb197ca3c9",

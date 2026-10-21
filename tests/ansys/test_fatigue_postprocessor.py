@@ -353,3 +353,71 @@ def test_equivalent_stress_difference_limitation_and_counterexample():
         assert "not the von Mises of the stress difference" in text
         assert "underestimate" in text
         assert "negative" in text
+
+
+@pytest.mark.parametrize("pairs", [None, [(3, 1), (5, 2)]])
+def test_extraction_comments_identify_scalar_differences(pairs):
+    """SET pairs are synthetic indices; SADD subtracts equivalent scalars.
+
+    Source: generate_stress_range_extraction emits S,EQV tables and SADD,
+    not stress-component differences (the counterexample above applies).
+    """
+    text = _fp().generate_stress_range_extraction(load_step_pairs=pairs)
+    comments = [line for line in text.splitlines() if line.startswith("!")]
+    assert "! --- Signed Equivalent-Stress Differences ---" in comments
+    assert not any("stress range" in line.lower() for line in comments)
+    assert any("Signed scalar difference" in line for line in comments)
+
+
+def test_sn_export_states_parameter_only_limitations():
+    """Source: generate_sn_curve_apdl emits parameters, no life calculation.
+
+    The Python evaluator ignores threshold and environment metadata.
+    """
+    text = _fp().generate_sn_curve_apdl(SNcurve.from_dnv("D"))
+    assert "! Parameter definitions only; no fatigue evaluation is performed." in text
+    assert "! S_THRESH is metadata; the Python evaluator applies no cut-off." in text
+    assert "! Positive stress ranges use finite S-N extrapolation in Python." in text
+    assert "! Environment is metadata only; it does not select curve values." in text
+
+
+def test_w1_life_matches_hand_calculation():
+    """Hand calculation using the existing _VERIFIED_AIR_ROWS W1 record.
+
+    Source for that record: DNV-RP-C203 (October 2011), clause 2.4.4,
+    Table 2-1. At the synthetic range 100 MPa, log10(S) = 2. Substitution
+    of the stored first-segment intercept and slope gives log10(N) = 5.261,
+    below the stored transition; hence N = 10**5.261 cycles.
+    No curve parameter is inferred or re-transcribed here.
+    """
+    actual = _fp().calculate_cycles_to_failure(100.0, SNcurve.from_dnv("W1"))
+    assert actual == pytest.approx(10**5.261)
+
+
+def test_below_threshold_life_and_damage_match_hand_calculation():
+    """Hand calculation using the existing _VERIFIED_AIR_ROWS D record.
+
+    Source for that record: DNV-RP-C203 (October 2011), clause 2.4.4,
+    Table 2-1. Half its stored limit gives the synthetic range 26.315 MPa.
+    Substitution into log10(N) = log_a2 - m2*log10(S) gives N rounded
+    to the nearest cycle = 319877084. For a synthetic 1000 applied cycles,
+    Miner damage = 1000/319877084 (within rounding of the cycle count).
+    Thickness correction is off, SCF and DFF are unity by construction.
+    This pins existing extrapolation, not a standard's acceptance criterion.
+    """
+    expected_cycles = 319_877_084  # Rounded hand result derived above.
+    sn = SNcurve.from_dnv("D")
+    stress = sn.threshold_mpa / 2  # Synthetic half-limit case derived above.
+    config = FatigueConfig(
+        sn_curve=sn,
+        load_cases=[FatigueLoadCase(stress_range_mpa=stress, num_cycles=1000)],
+        thickness_correction=False,
+        scf=1.0,
+        design_fatigue_factor=1.0,
+    )
+    assert _fp().calculate_cycles_to_failure(stress, sn) == pytest.approx(
+        expected_cycles
+    )
+    assert _fp().calculate_fatigue_damage(config).total_damage == pytest.approx(
+        1000 / expected_cycles
+    )
