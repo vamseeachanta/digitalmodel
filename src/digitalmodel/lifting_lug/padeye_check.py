@@ -10,9 +10,13 @@ Rounded heads, cheek plates, eccentric forces and oblique loads are excluded.
 Sources read for this implementation:
 * OpenStax, University Physics Volume 1 (2016), section 12.3: stress = force/area.
   https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus
-* Stress Analysis Manual (October 1986), section 9.2, equations (9-3a), (9-6a):
+* Stress Analysis Manual (October 1986), sections 9.3.1 and 9.3.2,
+  equations (9-3a), (9-6a):
   projected bearing and net-section areas; empirical strength factors are NOT
   implemented. https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual
+* NASA/TM-20230000313 (2023), page 58, equation (7.17): net-ligament
+  shear area with hole diameter; no material limits or clevis load sharing
+  are adopted. https://ntrs.nasa.gov/citations/20230000313
 * IMO MSC.1/Circ.1663 (2023), annex 3.1: applicable class or accepted standards
   are needed for design. This guideline supplies no plate stress allowables.
 
@@ -250,9 +254,10 @@ def check_padeye(
 ) -> PadeyeResult:
     """Calculate nominal demands and supplied-limit comparisons in N, mm, MPa.
 
-    Shear tear-out uses two straight planes from the hole tangent to the straight
-    loaded edge. It is a nominal area idealisation, not an ultimate lug capacity
-    model. The manual's empirical coefficients and interaction are excluded.
+    Shear tear-out uses the net-ligament convention in NASA/TM-20230000313
+    (2023), page 58, equation (7.17): twice thickness times the clear ligament
+    e-h/2. This is not the area of physical tangent shear planes or an ultimate
+    lug capacity model. Empirical coefficients and interaction are excluded.
     """
     criteria = criteria if criteria is not None else ScreeningCriteria()
     design_load = (
@@ -266,8 +271,8 @@ def check_padeye(
     bearing_area = plate.pin_diameter_mm * plate.thickness_mm
     # Rectangular net area, consistent with Stress Analysis Manual (1986), 9-6a.
     net_area = (plate.width_mm - plate.hole_diameter_mm) * plate.thickness_mm
-    # Two planes, each of length e-D/2: geometric area derivation + F/A,
-    # OpenStax (2016), 12.3. The factors 2 are plane count and diameter/radius.
+    # NASA/TM-20230000313 (2023), p. 58, eq. (7.17): A_s=2*t*(e-h/2).
+    # Its d denotes hole diameter, mapped to h here, not pin diameter.
     shear_area = (
         2
         * (plate.loaded_edge_distance_mm - plate.hole_diameter_mm / 2)

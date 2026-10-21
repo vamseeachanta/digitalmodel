@@ -5,7 +5,8 @@
 All dimensions, loads and comparison limits below are synthetic test inputs,
 defined here rather than taken from a standard. Mechanics basis: OpenStax,
 University Physics Volume 1 (2016), section 12.3, force divided by resisting
-area. The two shear planes and the weld throat area are geometric derivations.
+area. Net-ligament shear area follows NASA/TM-20230000313 (2023), page 58,
+equation (7.17), with hole diameter; the weld throat area is geometric.
 No synthetic comparison limit establishes ABS acceptance.
 """
 

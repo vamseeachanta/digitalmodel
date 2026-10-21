@@ -58,6 +58,18 @@ CHANGES = [
         "section": "weld-results",
         "change": "Nominal weld comparison and effective throat requirement calculated.",
     },
+    {
+        "section": "method",
+        "change": "Review correction: source the net-ligament convention and replace tangent planes with a ligament dimension; numerical results unchanged.",
+    },
+    {
+        "section": "references",
+        "change": "Review correction: locate manual equations in sections 9.3.1 and 9.3.2.",
+    },
+    {
+        "section": "summary",
+        "change": "Review correction: identify the synthetic example as not for issue and preserve UTF-8/LF report bytes across platforms.",
+    },
 ]
 SECTIONS = [
     ("summary", "Summary"),
@@ -139,7 +151,9 @@ SCHEMATIC = """<svg viewBox="0 0 880 470" role="img" aria-label="Centred plate, 
 <text x="135" y="323">Width: 160.0 mm</text>
 <path d="M405 225V70M380 70H415M295 225H415" stroke="#364b59" fill="none"/>
 <text x="415" y="145">Centre to edge:</text><text x="415" y="165">100.0 mm</text>
-<path d="M187 225V70M293 225V70" stroke="#aa4b20" stroke-dasharray="6 4"/>
+<path d="M155 172V70" stroke="#aa4b20" fill="none" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<path d="M150 172H240" stroke="#aa4b20"/>
+<text x="20" y="48">Net ligament: 70.0 mm</text>
 <text x="30" y="403">Front view: hole 60.0 mm; pin 50.0 mm</text>
 <path d="M80 365H400V385H80Z" fill="#aebec7" stroke="#364b59"/>
 <path d="M105 355H375M105 360H375" stroke="#aa4b20" stroke-width="3"/>
@@ -258,7 +272,8 @@ def render_report() -> str:
         ],
     )
     # Independent hand values, derived in test_padeye_check's docstring:
-    # F=180000 N; A=1000,2000,2800,2400 mm2 (OpenStax 2016, 12.3).
+    # F=180000 N; A=1000,2000,2800,2400 mm2; F/A: OpenStax 2016, 12.3.
+    # Shear area convention: NASA/TM-20230000313 (2023), p. 58, eq. (7.17).
     hand = (180, 90, 450 / 7, 75)
     validation = _table(
         (
@@ -317,7 +332,7 @@ def render_report() -> str:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padeye and lift point analysis</title><style>{STYLE}</style></head>
 <body><main><header><p class="title">Padeye and lift point analysis</p>
-<p>Draft for client review</p><p>Synthetic example · Revision 0 · {DATE}</p></header>
+<p>Synthetic example - not for issue</p><p>Synthetic example · Revision 0 · {DATE}</p></header>
 <nav aria-label="Report contents">{nav}</nav>
 <section id="summary"><h2>1. Summary</h2>
 <p>The lift point is a single plate with a centred pin hole and a balanced welded base.
@@ -351,6 +366,8 @@ No material strength, code coefficient or acceptance limit is inferred.</p></sec
 across the load, and edge distance is measured along the load from the hole centre.</p>
 <figure>{SCHEMATIC}<figcaption>Figure 1. Physical load path and idealised attachment.
 The pin and hole are concentric for dimension display; clearance contact is not modelled.
+The orange dimension marks the clear net ligament from the nearest hole boundary to the loaded edge,
+not physical tangent shear planes. The nominal shear area uses twice this ligament times thickness.
 The support reaction is equal and opposite to the applied axial force. No mesh is used.</figcaption></figure>
 </section>
 <section id="method"><h2>4. Calculation method</h2>
@@ -361,8 +378,11 @@ D is the dynamic amplification input; K is the skew input. The force is P = S ×
 Here P = 100.0 × 1.2 × 1.5 = {result.design_load_kn:.1f} kN.</p>
 <p>For thickness t, plate width w, pin diameter d, hole diameter h and centre-to-edge distance e,
 the projected bearing area is d × t, the net tensile area is (w − h) × t,
-and the nominal two-plane shear area is 2 × (e − h/2) × t.
-The shear expression is a geometric screening idealisation; empirical lug interaction is excluded.</p>
+and the nominal net-ligament shear area is 2 × (e − h/2) × t.
+This convention follows NASA/TM-20230000313 (2023), page 58, equation 7.17,
+whose hole diameter d is mapped to h here. Only the area convention is adopted;
+its material limits and clevis load sharing are excluded. It is not a derivation
+of physical tangent-plane area or an AISC D5 check. Empirical lug interaction is excluded.</p>
 <p>The nominal stress is P divided by the corresponding area, with force in newtons and area in square millimetres
 giving megapascals (MPa). For effective throat a and total effective weld length L, the weld area is a × L.
 The weld quantity is a nominal resultant stress on the throat, rather than resolved shear stress.</p>
@@ -411,8 +431,10 @@ The ABS rule endpoint could not be resolved; no ABS design equation or allowable
 <h3>9.2 Source locators</h3><ul>
 <li><a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">OpenStax, University Physics Volume 1 (2016), section 12.3</a>:
 nominal normal and shear stress as force divided by area.</li>
-<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), section 9.2, equations 9-3a and 9-6a</a>:
+<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), sections 9.3.1 and 9.3.2, equations 9-3a and 9-6a</a>:
 projected bearing and net-section geometry; the empirical strength factors are excluded.</li>
+<li><a href="https://ntrs.nasa.gov/citations/20230000313">NASA/TM-20230000313 (2023), page 58, equation 7.17</a>:
+nominal net-ligament shear area, using hole diameter. No material allowable or clevis load sharing is adopted.</li>
 <li><a href="https://ww2.eagle.org/content/dam/eagle/Images/rules-and-resources/regulatory-updates/solas-requirements/guidelines-hyperlinks/msc1-circ1663-guidelines-for-lifting-appliances%20(4).pdf">IMO MSC.1/Circ.1663 (2023), annex 3.1 and 3.2</a>:
 design, construction, installation, testing and examination basis.</li>
 <li><a href="https://ww2.eagle.org/en/rules-and-resources/regulatory-updates/SOLAS-requirements-on-board-ships.html">ABS public lifting guidance</a> identifies Publication 152,
@@ -469,7 +491,7 @@ def write_report(directory: Path) -> None:
     """Write the standalone HTML and a digest-bound, deterministic change panel."""
     directory.mkdir(parents=True, exist_ok=True)
     page = render_report()
-    (directory / "report.html").write_text(page, encoding="utf-8")
+    (directory / "report.html").write_text(page, encoding="utf-8", newline="\n")
     changes = {
         "report": "Padeye and lift point analysis",
         "revision": 0,
@@ -478,7 +500,7 @@ def write_report(directory: Path) -> None:
         "changes": CHANGES,
     }
     (directory / "changes.json").write_text(
-        json.dumps(changes, indent=2) + "\n", encoding="utf-8"
+        json.dumps(changes, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
 
 
