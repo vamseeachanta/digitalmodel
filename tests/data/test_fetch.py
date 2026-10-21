@@ -305,3 +305,31 @@ def test_ordinary_payload_names_remain_allowed(fetch_module, store_case, path):
     manifest.write_text(manifest.read_text().replace("data/sample.dat", path))
     assert fetch_module.main([store_id], repo_root=root) == 0
     assert (root / path).read_bytes() == payload
+
+@pytest.mark.parametrize("path", [
+    "GIT~1/config", "git~1./hooks/pre-commit", "nested/Git~1 /HEAD",
+] + [
+    f"nested/.g{chr(codepoint)}it/config"
+    for codepoint in (*range(0x200C, 0x2010), *range(0x202A, 0x202F),
+                      *range(0x206A, 0x2070), 0xFEFF)
+])
+def test_git_metadata_aliases_rejected_before_io(fetch_module, monkeypatch, path):
+    """Portable aliases must fail at both entry points before any filesystem IO."""
+    def unexpected_io(*args, **kwargs):
+        pytest.fail("Metadata alias reached filesystem or blob retrieval")
+
+    monkeypatch.setattr(fetch_module, "stage_blob", unexpected_io)
+    monkeypatch.setattr(Path, "is_symlink", unexpected_io)
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.manifest_path(path)
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.fetch_row(Path("repo"), {"path": path})
+
+
+@pytest.mark.parametrize("path", [
+    ".gitignore", ".github/workflows/job.yml", "data/git.dat",
+    "data/git~10.dat", "data/.git-backup/config", "data/caf\u00e9.dat",
+])
+def test_nonmetadata_names_remain_unchanged(fetch_module, path):
+    """Alias comparison must not rewrite or broadly reject payload names."""
+    assert str(fetch_module.manifest_path(path)) == path
