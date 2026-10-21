@@ -14,14 +14,25 @@ import math
 from pathlib import Path
 
 LABEL = 'SIMULATED DEMO, not connected offshore'
-CRITERIA = ('Acceptance criteria come from a workbook whose applicability is '
-            'unresolved; alert levels are provisional.')
+CRITERIA = ('Acceptance criteria are provisional demonstration assumptions; '
+            'engineering applicability is unresolved.')
 NUMERICAL_BASIS: dict = {
-    'revision': 1,
+    'revision': 2,
     'status': 'assumed, based on previous experience',
     'kN_per_Te': 9.81,
     'load_limits_Te': {'Master-link load-path proxy: TopRigging End B': 17.7,
                        'Sling2 End B tension': 10.89},
+    'load_limit_sources': {
+        'Master-link load-path proxy: TopRigging End B': 'assumed, based on previous experience',
+        'Sling2 End B tension': 'assumed, based on previous experience',
+    },
+    'forecast_settings': {
+        'method': 'History-only ridge autoregression; fixed order 40, ridge 0.001',
+        'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
+        'stride_samples': 10, 'min_calibration_windows': 10, 'horizon_s': 120,
+        'time_origin_s': 0,
+        'window_count_rule': 'N = floor((NOW / 0.5 - 359) / 10) + 1',
+    },
     'alert_probability': 0.2,
     'load_limit_rule': 'limit_kN = assumed_limit_Te * kN_per_Te',
     'probability_rule': 'p = count(max(forecast + error_trajectory) > limit) / window_count',
@@ -31,7 +42,6 @@ NUMERICAL_BASIS: dict = {
         'src/digitalmodel/workflows/installation_forecast.py:exceedance_forecast',
     ],
     'limitations': [
-        'These assumptions expose the existing demonstration inputs; their original derivation is not established.',
         'The conversion is a demonstration convention, not a certified component capacity or a standards criterion.',
         'The alert cutoff is illustrative; no offshore risk tolerance or operational calibration is established.',
         'Calibration error trajectories are not published; individual recorded probabilities cannot be independently recomputed.',
@@ -65,6 +75,17 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
             if (alert['alert_probability'] != basis['alert_probability']
                     or alert['alert'] is not (alert['window_probability'] >= basis['alert_probability'])):
                 raise ValueError('Alert result differs from the numerical basis')
+            settings = basis['forecast_settings']
+            first = 3 * settings['order'] - 1
+            dt = settings['sample_interval_s']
+            count = math.floor((frame['now_s'] / dt - first - settings['horizon_s'] / dt)
+                               / settings['stride_samples']) + 1
+            windows = alert['calibration_windows']
+            if windows != count or windows < settings['min_calibration_windows']:
+                raise ValueError('Window count differs from the calibration settings')
+            numerator = alert['window_probability'] * windows
+            if not math.isclose(numerator, round(numerator), rel_tol=0, abs_tol=1e-9):
+                raise ValueError('Probability differs from the integer calibration count')
 
 
 def numerical_basis_html() -> str:
@@ -72,7 +93,9 @@ def numerical_basis_html() -> str:
     basis, rows = NUMERICAL_BASIS, []
     for label, limit in basis['load_limits_Te'].items():
         rows.append(f'<tr><td>{escape(label)}</td><td>{limit:.3f}</td>'
-                    f'<td>{limit * basis["kN_per_Te"]:.3f}</td></tr>')
+                    f'<td>{limit * basis["kN_per_Te"]:.3f}</td>'
+                    f'<td>{escape(basis["load_limit_sources"][label])}</td></tr>')
+    settings = basis['forecast_settings']
     example = basis['worked_example']
     example_rows = ''.join(
         f'<tr><td>{errors[0]:g}, {errors[1]:g}</td>'
@@ -81,17 +104,27 @@ def numerical_basis_html() -> str:
     limitations = ''.join(f'<li>{escape(item)}</li>' for item in basis['limitations'])
     references = ''.join(f'<li><code>{escape(item)}</code></li>' for item in basis['implementation_references'])
     return f'''<section><h2>Numerical basis and assumptions</h2>
-<p>Load limits and the alert cutoff are {basis['status']}. They are provisional demonstration
-settings; no component capacity, workbook applicability or operational acceptance is established.</p>
+<p>The source of each load limit is stated below. These are provisional demonstration
+settings; no component capacity or operational acceptance is established.</p>
 <p>Load conversion: limit (kN) = assumed limit (Te) × {basis['kN_per_Te']:.3f} kN/Te.
 Te denotes the tonne-force equivalent used by this demonstration.</p>
-<table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th></tr></thead>
+<table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th><th>Source</th></tr></thead>
 <tbody>{''.join(rows)}</tbody></table><p>Table 2. Assumed loads and their conversion.</p>
-<p>The alert cutoff is {basis['alert_probability']:.1%}, also written as {basis['alert_probability']:.3f}.
+<p>The alert cutoff is {basis['alert_probability']:.1%}, also written as {basis['alert_probability']:.3f};
+it is {basis['status']}.
 For each complete calibration window, its joint error trajectory is added to the current forecast.
 The window exceeds the load limit only if its maximum is strictly greater than the limit.
 The empirical probability is the number of exceeding windows divided by the window count;
 an alert occurs when that probability is greater than or equal to the cutoff.</p>
+<h3>Forecast and calibration settings</h3>
+<p>{escape(settings['method'])}. Sampling interval: {settings['sample_interval_s']:g} s;
+forecast horizon: {settings['horizon_s']:g} s; calibration stride: {settings['stride_samples']} samples;
+minimum of {settings['min_calibration_windows']} complete calibration windows.</p>
+<p>The simulated time axis starts at {settings['time_origin_s']:g} s. The first back-test origin is
+sample 119 (three orders of training minus one); its 120 s horizon contains 240 samples.
+Thus 359 = 119 + 240, and the complete-window count for the displayed origins is
+<code>{escape(settings['window_count_rule'])}</code>, with NOW in seconds.
+At NOW 240, 300, 360, 420 and 480 s, N is 13, 25, 37, 49 and 61 respectively.</p>
 <h3>Independently worked arithmetic example</h3>
 <p>A hypothetical two-sample forecast is 100 and 110 kN, with a 110 kN load limit.
 Adding the following five error trajectories gives the maxima shown.</p>
@@ -161,6 +194,7 @@ def render(payload: dict, config: dict) -> str:
         for source in frame['channels']:
             channel = {key: source[key] for key in
                        ('label', 'units', 'history', 'forecast', 'assumed_limit')}
+            channel['method'] = source.get('method', NUMERICAL_BASIS['forecast_settings']['method'])
             figures.append(chart(channel, frame['now_s']))
             if channel['assumed_limit'] is not None:
                 figures.append(f'<p>Provisional load limit: {channel["assumed_limit"]:.3f} '
@@ -173,7 +207,15 @@ def render(payload: dict, config: dict) -> str:
                 assert e['horizon_s'] == channel['forecast']['times'][-1] - frame['now_s']
                 figures.append('<p>Provisional exceedance probability: '
                                f'{e["window_probability"]:.3f}; alert threshold: {e["alert_probability"]:.3f}; '
-                               f'alert: {str(e["alert"]).lower()}. Calibration windows: {e["calibration_windows"]}.</p>')
+                               f'alert: {str(e["alert"]).lower()}. '
+                               f'({round(e["window_probability"] * e["calibration_windows"])} of '
+                               f'{e["calibration_windows"]} calibration windows).</p>')
+                if frame['now_s'] == 420 and channel['label'] == next(iter(NUMERICAL_BASIS['load_limits_Te'])):
+                    peak = max(channel['forecast']['values'])
+                    limit = channel['assumed_limit']
+                    figures.append(f'<p>At NOW 420 s the plotted peak, {peak:.3f} kN, is '
+                                   f'{limit - peak:.1f} kN below the {limit:.3f} kN limit; '
+                                   'the alert comes from the back-test error spread.</p>')
             channels.append(channel)
         frames.append({'now_s': frame['now_s'], 'channels': channels})
         sections.append(f'<section><h2>NOW {frame["now_s"]:g} s</h2>' + ''.join(figures) + '</section>')
@@ -194,8 +236,8 @@ orange dashed: provisional load limit. All recorded forecast origins are shown b
 its scores are illustrative, not an unbiased skill estimate. Probabilities use back-tested error
 trajectories ending before NOW. Overlapping calibration windows are not independent trials.
 The probabilities are empirical estimates, not qualified offshore risk predictions.</p>
-<p>Source criteria originate from a splash-zone workbook; applicability to this deep-submerged
-arrangement remains unresolved. Load-path proxies and hardware mapping are unconfirmed.
+<p>Engineering applicability to this deep-submerged arrangement remains unresolved.
+Load-path proxies and hardware mapping are unconfirmed.
 Crane, geometric slack, re-tension, interference and whole-line criteria remain unresolved.</p>
 <p>Forecast sampling can miss short peaks between samples. No offshore forecast skill
 or operational risk calibration is established by this demonstration.</p>
@@ -203,12 +245,26 @@ or operational risk calibration is established by this demonstration.</p>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
 <tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
+<tr><td>2</td><td>2026-10-21</td><td>Load sources, forecast settings and window counts are stated consistently; retained provenance is identified.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 {numerical_basis_html()}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
 wave-preview forecast, withheld truth or full envelope dataset is published.</footer>
 <script type="application/json" id="forecast-data">{encoded}</script></main></body></html>
 '''
+
+
+def manifest_bytes(encoded: bytes, sources: dict, sanitization: dict,
+                   carry_over: dict | None = None) -> bytes:
+    """Serialize fresh artifact metadata with explicitly retained source evidence."""
+    manifest = {'sha256': digest(encoded), 'size_bytes': len(encoded),
+                'source_sha256': sources,
+                'numerical_basis': NUMERICAL_BASIS,
+                'sanitization': sanitization,
+                'reduction': 'Selected history-only scenario; chart arrays and alert values only.'}
+    if carry_over is not None:
+        manifest['provenance_carry_over'] = carry_over
+    return (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
 
 
 def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) -> None:
@@ -222,20 +278,16 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
     if not terms or any(term.casefold() in html.casefold() for term in terms):
         raise ValueError('Sanitization scan failed or empty')
     encoded = html.encode('utf-8')
-    manifest = {'sha256': digest(encoded), 'size_bytes': len(encoded),
-                'source_sha256': {'reviewed_payload': digest(raw), 'reviewed_config': digest(config_raw)},
-                'numerical_basis': NUMERICAL_BASIS,
-                'sanitization': {'findings': 0, 'terms_checked': len(terms),
-                                 'substring_fingerprints': [
-                                     {'length': len(term.casefold()),
-                                      'sha256': digest(term.casefold().encode('utf-8'))}
-                                     for term in terms]},
-                'reduction': 'Selected history-only scenario; chart arrays and alert values only.'}
-    manifest_text = json.dumps(manifest, indent=2) + '\n'
+    sources = {'reviewed_payload': digest(raw), 'reviewed_config': digest(config_raw)}
+    sanitization = {'findings': 0, 'terms_checked': len(terms), 'substring_fingerprints': [
+        {'length': len(term.casefold()), 'sha256': digest(term.casefold().encode('utf-8'))}
+        for term in terms]}
+    manifest_raw = manifest_bytes(encoded, sources, sanitization)
+    manifest_text = manifest_raw.decode('utf-8')
     if any(term.casefold() in manifest_text.casefold() for term in terms):
         raise ValueError('Manifest sanitization scan failed')
     output.write_bytes(encoded)
-    output.with_suffix('.manifest.json').write_bytes(manifest_text.encode('utf-8'))
+    output.with_suffix('.manifest.json').write_bytes(manifest_raw)
     assert output.read_bytes() == encoded
 
 

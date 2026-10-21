@@ -20,8 +20,8 @@ from scripts.capabilities.build_capabilities_inventory import registered_site_pa
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / 'docs/api/installation/installation-forecast.html'
 LABEL = 'SIMULATED DEMO, not connected offshore'
-CRITERIA = ('Acceptance criteria come from a workbook whose applicability is '
-            'unresolved; alert levels are provisional.')
+CRITERIA = ('Acceptance criteria are provisional demonstration assumptions; '
+            'engineering applicability is unresolved.')
 
 
 class Resources(HTMLParser):
@@ -139,6 +139,77 @@ def test_builder_publishes_numerical_basis(tmp_path):
     manifest = json.loads(output.with_suffix('.manifest.json').read_text())
     assert manifest['numerical_basis'] == builder.NUMERICAL_BASIS
     assert manifest['sha256'] == hashlib.sha256(output.read_bytes()).hexdigest()
+
+
+def test_load_sources_have_one_consistent_declaration():
+    text = render_embedded_scenario()
+    assert 'workbook' not in text.casefold()
+    assert 'original derivation is not established' not in text
+    basis = builder.NUMERICAL_BASIS
+    for label, limit in basis['load_limits_Te'].items():
+        source = basis['load_limit_sources'][label]
+        assert source == 'assumed, based on previous experience'
+        assert (f'<td>{limit:.3f}</td><td>{limit * 9.81:.3f}</td>'
+                f'<td>{source}</td>') in text
+
+
+def test_forecast_settings_explain_calibration_counts():
+    text = render_embedded_scenario()
+    settings = builder.NUMERICAL_BASIS['forecast_settings']
+    assert settings['order'] == 40
+    assert settings['ridge'] == 0.001
+    assert settings['sample_interval_s'] == 0.5
+    assert settings['stride_samples'] == 10
+    assert settings['min_calibration_windows'] == 10
+    assert settings['horizon_s'] == 120
+    assert 'N = floor((NOW / 0.5 - 359) / 10) + 1' in text
+    assert 'minimum of 10 complete calibration windows' in text
+    assert 'fixed order 40, ridge 0.001' in text
+    for frame, count in zip(embedded_scenario(text)['frames'], [13, 25, 37, 49, 61], strict=True):
+        for channel in frame['channels']:
+            assert 'fixed order 40, ridge 0.001' in channel['method']
+            if 'exceedance' in channel:
+                assert channel['exceedance']['calibration_windows'] == count
+
+
+def test_probability_displays_integer_window_counts():
+    text = render_embedded_scenario()
+    for numerator, denominator in [(0, 13), (3, 25), (1, 37), (14, 49), (23, 61)]:
+        assert f'({numerator} of {denominator} calibration windows)' in text
+
+
+@pytest.mark.parametrize(('field', 'value'), [
+    ('calibration_windows', 14), ('window_probability', 0.1),
+])
+def test_render_rejects_inconsistent_calibration_counts(field, value):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    scenario['frames'][0]['channels'][1]['exceedance'][field] = value
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='calibration'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_alert_explanation_compares_peak_with_limit():
+    text = render_embedded_scenario()
+    assert 'At NOW 420 s' in text
+    assert '108.897 kN' in text
+    assert '64.7 kN below the 173.637 kN limit' in text
+    assert 'alert comes from the back-test error spread' in text
+
+
+def test_manifest_bytes_follow_builder_order_with_disclosed_carry_over():
+    raw = PAGE.with_suffix('.manifest.json').read_bytes()
+    manifest = json.loads(raw)
+    ordered = {key: manifest[key] for key in (
+        'sha256', 'size_bytes', 'source_sha256', 'numerical_basis',
+        'sanitization', 'reduction', 'provenance_carry_over',
+    )}
+    assert raw == (json.dumps(ordered, indent=2) + '\n').encode('utf-8')
+    carry_over = manifest['provenance_carry_over']
+    assert carry_over['fields'] == ['source_sha256', 'sanitization']
+    assert 'not re-read' in carry_over['reason']
+    assert raw == builder.manifest_bytes(PAGE.read_bytes(), manifest['source_sha256'],
+                                         manifest['sanitization'], carry_over)
 
 
 def test_navigation_is_registered():
