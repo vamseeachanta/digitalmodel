@@ -21,7 +21,8 @@ from digitalmodel.marine_ops.operation_envelope import (
     resolve_operation,
 )
 
-FREQS = np.array([0.2, 0.4, 0.6, 0.8, 1.0, 1.2])
+# Synthetic full spectral coverage; narrow-band rejection has a dedicated test.
+FREQS = np.array([0.001, 0.1, 0.5, 1.0, 5.0, 15.0])
 HEADS = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
 
 
@@ -130,9 +131,13 @@ def test_envelope_for_all_operations_and_plot(tmp_path):
     rao = _rao_set(heave=1.0, roll=0.5, pitch=0.3)
     results = envelope_for_operations(rao, tp_range_s=[8.0, 12.0, 16.0])
     assert set(results) == {"transit", "dp_station_keeping", "heavy_lift", "offloading"}
-    for env in results.values():
+    expected = dict(transit=5.4, dp_station_keeping=3.6, heavy_lift=2.55, offloading=4.5)
+    for key, env in results.items():
         assert len(env.points) == 3
         assert all(p.hs_limit_m > 0 for p in env.points)
+        for point in env.points:
+            assert point.hs_limit_m == pytest.approx(expected[key], rel=1e-3)
+            assert point.governing_dof == 'heave'
 
     out = plot_envelopes(results, tmp_path / "fpso_envelope.png")
     # matplotlib is a project dep, so the plot should be written.
@@ -146,3 +151,19 @@ def test_envelope_to_dict_roundtrips_points():
     assert d["operation"] == "dp_station_keeping"
     assert len(d["points"]) == 2
     assert env.hs_limit_at(10.0) == d["points"][0]["hs_limit_m"]
+    assert env.hs_limit_at(10.0) == pytest.approx(3.6, rel=1e-3)
+    assert env.hs_limit_at(11.0) is None
+    assert set(d) == {'vessel', 'operation', 'alpha', 'points', 'criterion_type',
+                      'alpha_source', 'citation_sidecar'}
+    assert d['alpha'] == .9
+    for point, tp in zip(d['points'], [10., 14.]):
+        assert set(point) == {'tp_s', 'hs_limit_m', 'hs_forecast_limit_m', 'governing_dof',
+                              'governing_heading_deg', 'evaluated', 'status',
+                              'extrapolated_energy_fraction', 'captured_variance_fraction'}
+        assert point['tp_s'] == tp
+        assert point['hs_limit_m'] == pytest.approx(3.6, rel=1e-3)
+        assert point['hs_forecast_limit_m'] == pytest.approx(3.6, rel=1e-3)
+        assert point['governing_dof'] == 'heave'
+        assert point['governing_heading_deg'] == 0.
+        assert point['evaluated'] is True
+        assert point['status'] == 'evaluated'

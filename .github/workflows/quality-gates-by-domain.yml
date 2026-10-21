@@ -16,6 +16,8 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
+    # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -44,7 +46,77 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -60,7 +132,7 @@ jobs:
         id: detect
         env:
           EVENT_NAME: ${{ github.event_name }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_SHA: ${{ steps.build_merge.outputs.tip }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
           PUSH_AFTER_SHA: ${{ github.event.after }}
@@ -122,6 +194,77 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -137,6 +280,7 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/scripts/test_reporting_ci_registration.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
@@ -165,6 +309,76 @@ jobs:
           # Citation checks read source and map revisions recorded in packs;
           # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -188,7 +402,7 @@ jobs:
         env:
           GATE_NAME: tests-${{ matrix.domain }}
         run: |
-          command=$(uv run --no-sources --with pyyaml python - <<'PY'
+          command=$(uv run --no-sources --with pyyaml==6.0.2 python - <<'PY'
           import os
           import yaml
 
@@ -211,10 +425,12 @@ jobs:
 
       - name: Run domain gate
         id: domain-gate
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set +e
           if [ "${{ matrix.domain }}" = "orcaflex" ]; then
-            uv run --no-sources --with pyyaml python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+            uv run --no-sources --with pyyaml==6.0.2 python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           else
             ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           fi
@@ -301,8 +517,78 @@ jobs:
           fi
 
       - name: Checkout baseline tools
-        if: needs.detect-domains.outputs.has-domains == 'true'
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Download domain results
         if: needs.detect-domains.outputs.has-domains == 'true'
@@ -338,8 +624,9 @@ jobs:
 
           if [ "$HAS_DOMAINS" = "true" ]; then
             if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-              python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
-              uv run --no-sources --with pyyaml python - <<'PYTHON'
+              comparison=1
+              if python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml" &&
+                uv run --no-project --with pyyaml==6.0.2 python - <<'PYTHON'
           import os
           from pathlib import Path
           from scripts.ci.ci_baseline import download_baseline, gh_json, instant, reconcile_results
@@ -354,18 +641,26 @@ jobs:
           download_baseline(repository, Path("baseline.json"), require_latest=True,
                             now=instant(aggregate["started_at"]))
           PYTHON
-              if uv run --no-sources --with pyyaml python scripts/ci/ci_baseline.py compare \
-                --baseline baseline.json --results baseline-results --max-age-hours 24 \
-                --register "$RUNNER_TEMP/flaky-register.yml" \
-                --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
-                comparison=0
+              then
+                if uv run --no-project --with pyyaml==6.0.2 python scripts/ci/ci_baseline.py compare \
+                  --baseline baseline.json --results baseline-results --max-age-hours 24 \
+                  --register "$RUNNER_TEMP/flaky-register.yml" \
+                  --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
+                  comparison=0
+                else
+                  comparison=$?
+                fi
+                if [ -f baseline-summary.md ]; then
+                  cat baseline-summary.md >> "$GITHUB_STEP_SUMMARY"
+                fi
               else
-                comparison=$?
+                if [ "$CI_BASELINE_MODE" = "report" ]; then
+                  echo "baseline unavailable (report mode)"
+                fi
               fi
-              cat baseline-summary.md >> "$GITHUB_STEP_SUMMARY"
               if [ "$CI_BASELINE_MODE" = "report" ]; then
                 echo "Report mode: comparison=$comparison; failed shards still fail the gate."
-              elif [ "$CI_BASELINE_MODE" = "enforce" ] && [ "$DOMAIN_RESULT" != "success" ]; then
+              elif [ "$CI_BASELINE_MODE" = "enforce" ]; then
                 exit "$comparison"
               fi
             fi

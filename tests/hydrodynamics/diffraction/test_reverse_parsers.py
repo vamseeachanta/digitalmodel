@@ -1010,12 +1010,25 @@ class TestCrossConversion:
 class TestParseExistingOrcaWaveFile:
     """Test parsing a real OrcaWave .yml example file."""
 
-    def test_example_symmetry_refusal_and_full_mesh_properties(self, tmp_path):
-        """Refuse declared symmetry and retain full-mesh property coverage."""
+    def test_parse_l01_default_vessel(self, tmp_path, monkeypatch):
+        """Resolve the tracked example independently of the working directory.
+
+        Source: docs/domains/orcawave/examples/L01_default_vessel/
+        L01 Default vessel.yml (OrcaWave 11.5e, 2025), Environment and Bodies.
+        Expected depth is WaterDepth = 400 m. SI density and mass convert
+        tonnes to kilograms: 1.025 * 1000 = 1025 kg/m^3 and
+        9017.95 * 1000 = 9017950 kg. Counting the literal PeriodOrFrequency
+        and WaveHeading entries gives 24 periods and 9 headings.
+
+        The original xz symmetry is refused. Changing only its declaration
+        exercises property parsing; it does not validate the mesh geometry.
+        """
         from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
+        # An external working directory must not affect fixture discovery.
+        monkeypatch.chdir(tmp_path)
         example_path = Path(__file__).resolve().parents[3] / (
             "docs/domains/orcawave/examples/L01_default_vessel/L01 Default vessel.yml"
         )

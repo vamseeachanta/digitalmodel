@@ -5,6 +5,7 @@
 
 import importlib.util
 import json
+import os
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +19,24 @@ ci = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ci)
 SCR = "tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis"
 NOW = datetime(2026, 10, 15, 12, tzinfo=timezone.utc)
+
+
+EVIDENCE_URL = "https://github.com/example/repository/actions/runs/99"
+
+
+def evidence_response(endpoint, **changes):
+    if "/jobs?" in endpoint:
+        return {"jobs": [dict(name="tests-example", run_id=99, head_sha="mainsha",
+                              status="completed", conclusion="failure")]}
+    return dict(dict(id=99, event="push", head_branch="main", status="completed",
+                     head_sha="mainsha", head_repository={"full_name": "example/repository"}), **changes)
+
+
+@pytest.fixture(autouse=True)
+def evidence_metadata(monkeypatch):
+    monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
+    monkeypatch.setattr(ci, "gh_json", evidence_response)
 
 
 def run_health_writer(body, *, active=True, existing=True):
@@ -410,9 +429,9 @@ def test_missing_exit_code_fails_closed(tmp_path):
     assert compare(tmp_path, base, [row])[0] == 1
 
 
-def test_only_success_rows_fail_closed(tmp_path):
+def test_only_success_rows_pass_comparison(tmp_path):
     base = baseline(tmp_path)
-    assert compare(tmp_path, base, [result(conclusion="success", ids=())])[0] == 1
+    assert compare(tmp_path, base, [result(conclusion="success", ids=(), exit_code=0, collected=1)])[0] == 0
 
 
 def sweep(run_id=100, **updates):
@@ -574,6 +593,7 @@ def test_workflows_pilot_only_orcaflex_in_report_mode():
         gate = next(step for step in workflow["jobs"][job]["steps"]
                     if step["name"] == "Run domain gate")
         run = gate["run"]
+        assert gate["env"]["GH_TOKEN"] == "${{ github.token }}"
         assert run.count("scripts/ci/run_shard.py") == 1
         assert 'if [ "${{ matrix.domain }}" = "orcaflex" ]; then' in run
         assert "--mode report" in run and "--with pyyaml" in run
@@ -590,13 +610,13 @@ def test_aggregate_compares_successful_shards_too():
     steps = workflow["jobs"]["domain-tests-required"]["steps"]
     for name in ("Checkout baseline tools", "Download domain results"):
         step = next(step for step in steps if step["name"] == name)
-        assert "domain-tests.result" not in step["if"]
+        assert "domain-tests.result" not in step.get("if", "")
     enforce = next(step for step in steps if step["name"] == "Enforce required domain result")
     assert 'if [ "$HAS_DOMAINS" = "true" ]; then' in enforce["run"]
 
 
 @pytest.mark.parametrize("recovered", [False, True])
-@pytest.mark.parametrize("evidence", [[], ["observed run"]])
+@pytest.mark.parametrize("evidence", [[], [EVIDENCE_URL]])
 def test_comparison_requires_recovery_and_register_evidence(tmp_path, recovered, evidence):
     node = "tests/test_new.py::test_racy"
     base = baseline(tmp_path)
@@ -727,3 +747,136 @@ def test_register_transport_failure_never_falls_back(tmp_path, monkeypatch, fail
     with pytest.raises(subprocess.CalledProcessError):
         ci.select_register(output)
     assert not output.exists()
+
+
+@pytest.mark.parametrize("failure", ["register", "metadata"])
+@pytest.mark.parametrize("mode,domain,expected", [
+    ("report", "success", 0), ("report", "failure", 1),
+    ("enforce", "success", 1), ("enforce", "failure", 1),
+])
+def test_baseline_transport_failure_obeys_mode(tmp_path, mode, domain, expected, failure):
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
+                if s["name"] == "Enforce required domain result")
+    # Fail the runtime boundary, without network access or project synchronization.
+    for executable in ("python", "uv"):
+        path = tmp_path / executable
+        code = 0 if executable == "python" and failure == "metadata" else 7
+        path.write_text(f"#!/bin/sh\nexit {code}\n")
+        path.chmod(0o755)
+    env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
+               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
+               DOMAIN_RESULT=domain, GITHUB_EVENT_NAME="pull_request", CI_BASELINE_MODE=mode,
+               RUNNER_TEMP=str(tmp_path), GITHUB_STEP_SUMMARY=str(tmp_path / "summary"))
+    completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
+                               env=env, text=True, capture_output=True)
+    assert completed.returncode == expected, completed.stdout + completed.stderr
+    if mode == "report":
+        assert "baseline unavailable (report mode)" in completed.stdout
+
+
+def test_comparison_runtime_is_isolated_and_pinned():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
+                if s["name"] == "Enforce required domain result")
+    assert "--no-sources" not in step["run"]
+    assert step["run"].count("--no-project --with pyyaml==6.0.2") == 2
+
+
+def test_enforce_applies_comparison_to_successful_domains():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
+                if s["name"] == "Enforce required domain result")
+    assert 'elif [ "$CI_BASELINE_MODE" = "enforce" ]; then' in step["run"]
+
+
+@pytest.mark.parametrize("change", [
+    {"event": "pull_request"}, {"head_branch": "feature"}, {"status": "in_progress"},
+    {"head_repository": {"full_name": "other/repository"}}, {"head_repository": None},
+])
+def test_pr_or_untrusted_run_evidence_is_new(tmp_path, monkeypatch, change):
+    monkeypatch.setattr(ci, "gh_json", lambda endpoint: evidence_response(endpoint, **change))
+    node = "tests/test_new.py::test_racy"
+    path = tmp_path / "register.yml"
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]))
+    row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
+                 first_attempt_failed={node: "assertion"}, recovered=[node])
+    verdict = tmp_path / "verdict.json"
+    assert ci.compare_results(baseline(tmp_path), write_results(tmp_path, row), 24,
+                              tmp_path / "s", verdict, NOW, path) == 1
+    assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == "NEW"
+
+
+def test_pr_added_register_cannot_certify_comparison(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setattr(ci, "select_register", lambda out: out.write_text("[]\n"))
+    node = "tests/test_new.py::test_racy"
+    path = tmp_path / "register.yml"
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]))
+    row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
+                 first_attempt_failed={node: "assertion"}, recovered=[node])
+    assert ci.compare_results(baseline(tmp_path), write_results(tmp_path, row), 24,
+                              tmp_path / "s", tmp_path / "v", NOW, path) == 1
+
+
+@pytest.mark.parametrize("field,value", [
+    ("name", "tests-other"), ("conclusion", "success"), ("status", "in_progress"),
+    ("run_id", 100), ("head_sha", "different"),
+])
+def test_evidence_requires_failed_same_shard_job(monkeypatch, field, value):
+    def metadata(endpoint):
+        response = evidence_response(endpoint)
+        if "jobs" in response:
+            response["jobs"][0][field] = value
+        return response
+    monkeypatch.setattr(ci, "gh_json", metadata)
+    assert ci.verified_evidence(EVIDENCE_URL, "example") is False
+
+
+@pytest.mark.parametrize("event", ["push", "schedule"])
+def test_main_run_evidence_is_accepted(monkeypatch, event):
+    monkeypatch.setattr(ci, "gh_json", lambda endpoint: evidence_response(endpoint, event=event))
+    assert ci.verified_evidence(EVIDENCE_URL, "example") is True
+
+
+def test_evidence_transport_failure_cannot_authorize_recovery(monkeypatch):
+    def unavailable(endpoint):
+        raise subprocess.CalledProcessError(1, ["gh", "api"])
+    monkeypatch.setattr(ci, "gh_json", unavailable)
+    assert ci.verified_evidence(EVIDENCE_URL, "example") is False
+
+
+@pytest.mark.parametrize("changes", [{"parsed": False}, {"exit_code": 2},
+                                      {"collected": 0}, {"first_attempt_exit_code": 1}])
+def test_success_without_complete_execution_stays_red(tmp_path, changes):
+    row = result(conclusion="success", ids=(), **dict({"exit_code": 0, "collected": 1}, **changes))
+    assert compare(tmp_path, baseline(tmp_path), [row])[0] == 1
+
+
+@pytest.mark.parametrize("comparison", [0, 1])
+def test_enforce_returns_verdict_for_green_domains(tmp_path, comparison):
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
+                if s["name"] == "Enforce required domain result")
+    python = tmp_path / "python"
+    python.write_text("#!/bin/sh\nexit 0\n")
+    python.chmod(0o755)
+    uv = tmp_path / "uv"
+    uv.write_text("#!/bin/sh\ncase \"$*\" in *'ci_baseline.py compare'*) "
+                  f"echo comparison > baseline-summary.md; exit {comparison};; "
+                  "*) echo 2026-10-15T12:00:00Z > baseline-time.txt; exit 0;; esac\n")
+    uv.chmod(0o755)
+    env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
+               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
+               DOMAIN_RESULT="success", GITHUB_EVENT_NAME="pull_request", CI_BASELINE_MODE="enforce",
+               RUNNER_TEMP=str(tmp_path), GITHUB_STEP_SUMMARY=str(tmp_path / "summary"))
+    completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
+                               env=env, text=True, capture_output=True)
+    assert completed.returncode == comparison, completed.stdout + completed.stderr
+
+
+@pytest.mark.parametrize("name", ["quality-gates-by-domain.yml", "full-matrix-sweep.yml"])
+def test_register_runtime_dependency_is_pinned(name):
+    workflow = (ROOT / ".github/workflows" / name).read_text()
+    assert "--with pyyaml " not in workflow
+    assert "--with pyyaml==6.0.2 " in workflow

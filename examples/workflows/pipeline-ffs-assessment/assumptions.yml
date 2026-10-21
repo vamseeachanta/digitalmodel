@@ -1,0 +1,39 @@
+scope: Synthetic local metal loss; no licensed factors or equation constants are reproduced.
+report_label: assumed for this assessment
+assumptions:
+- parameter: Corrosion rate
+  value: 0.005; sensitivities 0.0025 and 0.01
+  units: in/yr
+  source: examples/workflows/ffs-metal-loss/input.yml
+  basis_as_written: corrosion_rate_in_per_yr; half and double rate requested for this assessment
+  report_label: assumed for this assessment; to be replaced by a rate from repeat inspection
+- parameter: Re-inspection interval
+  value: half the remaining life; immediate action when life is zero
+  units: yr
+  source: examples/workflows/pipeline-ffs-assessment/input.yml
+  basis_as_written: Assessed interval assumption
+- parameter: Section B supplementary strength, loads and geometry
+  value: SMTS 66,700 psi; axial stress 10,000 psi; arc width 4 in; row spacing 1 in
+  units: psi and in
+  source: examples/workflows/pipeline-ffs-assessment/input.yml
+  basis_as_written: Strength, load and arc width copied from Section A; 1 in row spacing assumed for this assessment
+- parameter: Decision precedence
+  value: Applicability and severe loss first; sampling adequacy before the strength-factor referral; re-rating and acceptance follow
+  units: order
+  source: scripts/reporting/build_pipeline_ffs_report.py
+  report_label: assumed for this assessment
+- parameter: Remaining-life routes
+  value: Section A projects to design pressure on the fixed-geometry reduced local-loss rating; Section B projects to the required pressure wall
+  units: basis
+  source: scripts/reporting/build_pipeline_ffs_report.py
+  report_label: assumed for this assessment; not an API Level 1 criterion
+- parameter: Location class
+  value: Location Class 1, Division 2
+  units: classification
+  source: src/digitalmodel/asset_integrity/assessment/level1_screener.py
+  report_label: assumed for both synthetic sections
+method_sources:
+- ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, 2012
+- DNV-RP-F101, Corroded Pipelines, January 2015
+- API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 2, Fitness-For-Service Engineering Assessment Procedure; Part 5, Assessment of Local Metal Loss
+- ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; 841, Steel Pipe

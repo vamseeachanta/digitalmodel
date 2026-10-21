@@ -22,6 +22,8 @@ from datetime import datetime, timedelta
 
 from .properties import ReservoirProperties, RockProperties, FluidProperties, PVTProperties
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 @dataclass
 class WellData:
@@ -147,9 +149,9 @@ class MaterialBalance:
         df['days'] = (df['date'] - df['date'].iloc[0]).dt.days
         
         # Calculate cumulative production using trapezoidal rule
-        cum_oil = np.trapz(df['oil_rate'], df['days'])
-        cum_gas = np.trapz(df['gas_rate'], df['days'])
-        cum_water = np.trapz(df['water_rate'], df['days'])
+        cum_oil = _trapezoid(df['oil_rate'], df['days'])
+        cum_gas = _trapezoid(df['gas_rate'], df['days'])
+        cum_water = _trapezoid(df['water_rate'], df['days'])
         
         return {
             'oil': cum_oil,

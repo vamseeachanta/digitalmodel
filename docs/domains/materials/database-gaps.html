@@ -15,20 +15,32 @@ keys. <code>database.py</code> supplies <code>load_database()</code>,
 <code>record.key</code>. Keys comprise specification, edition, designation and
 product level; unknown edition and inapplicable level use explicit key tokens.</p>
 <p>Product-level selection follows <code>grades.smts_mpa</code>: stored PSL1
-minima receive separate records. A PSL1 request without a stored PSL1 minimum
-returns the PSL2 record, retaining the repository helper's value fallback.
-This does not establish PSL1 product qualification. Non-API product levels are
+minima receive separate records. API 5L 46th-edition 9.3.1/Table 6 SI minima
+apply through X70. A PSL1 request without a stored PSL1 minimum, or an unknown
+API product-level token, raises <code>ValueError</code>. Licensed-text
+verification by the maintainer remains required before
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2726">#2726</a>
+closure; this correction does not establish product qualification. Non-API product levels are
 null. Aliases, including the distinct API and hull Grade A names, follow
 <code>grades.get</code>.</p>
-<p>Each record retains its existing citation and the inspected source revision,
-repository-relative locator, SHA-256 and UTC retrieval date. The pinned source
-digest is checked at load time; a changed grade module requires inspection and
-refresh of the provenance constants. API edition metadata is extracted from the
+<p>Each record retains its existing citation, repository-relative locator,
+normalized SHA-256 and UTC retrieval date. The reachable source revision is
+<code>b4c10284fa7d28398e6fa02c262c219c0fec8fef</code>,
+recorded in <code>repository_revision</code>. The normalized digest is
+<code>4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90</code>.
+Normalization decodes UTF-8, replaces CRLF and lone CR with LF, and encodes UTF-8
+before hashing. The loader reports digest drift through
+<code>source_digest_matches</code>; the provenance tests require a match.
+A changed grade module requires inspection and refresh of the provenance
+constants and documentation. API edition metadata is extracted from the
 existing citation; editions not recorded there remain null. Repository
 <a href="../../../LICENSE">LICENSE</a> states <q>MIT License</q> for software.
 That licence does not establish original standards reuse rights. The source was
-inspected on 2026-10-11 UTC at revision
-<code>f21a12af5349c1656137a7b9daa091ec8f968738</code>; no original standard was fetched.</p>
+inspected on 2026-10-18 UTC; no original standard was fetched.
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2778">#2778</a>
+records the provenance assignment and knowledge-pack citation audit. The
+assigned revision identifies bytes matching the digest; missing Git history
+fails the provenance check. CI fetches full history for the materials gate.</p>
 <table>
 <thead><tr><th>Gap</th><th>Evidence and required next input</th></tr></thead>
 <tbody>

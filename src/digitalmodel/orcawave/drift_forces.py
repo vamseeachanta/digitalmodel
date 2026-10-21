@@ -17,6 +17,8 @@ from digitalmodel.orcawave.slow_drift_response import (
     surge_response_kernel as surge_response_kernel,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -130,9 +132,9 @@ def compute_mean_drift_force(
     d_sway = np.interp(omega, freqs, drift_coeffs.sway_kn_m2)
     d_yaw = np.interp(omega, freqs, drift_coeffs.yaw_knm_m2)
 
-    f_surge = float(np.trapz(2.0 * d_surge * wave_spectrum, omega))
-    f_sway = float(np.trapz(2.0 * d_sway * wave_spectrum, omega))
-    m_yaw = float(np.trapz(2.0 * d_yaw * wave_spectrum, omega))
+    f_surge = float(_trapezoid(2.0 * d_surge * wave_spectrum, omega))
+    f_sway = float(_trapezoid(2.0 * d_sway * wave_spectrum, omega))
+    m_yaw = float(_trapezoid(2.0 * d_yaw * wave_spectrum, omega))
 
     return f_surge, f_sway, m_yaw
 

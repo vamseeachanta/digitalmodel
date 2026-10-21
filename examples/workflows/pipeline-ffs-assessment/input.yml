@@ -1,0 +1,29 @@
+title: 'Fitness-for-service assessment: two corroded pipeline sections, remaining strength and operating decision'
+digest_convention: SHA-256 of UTF-8 source bytes with CRLF normalised to LF
+sections:
+  - name: Section A, 24 in line
+    path: examples/workflows/pipeline-corroded-defect-screen/synthetic.yml
+    sha256_lf: 757e5f95cde8bc80e82b657542e1571c84d7bd0ac065344912498a861b1de1b8
+  - name: Section B, 12.75 in line
+    path: examples/workflows/ffs-metal-loss/input.yml
+    sha256_lf: f138227cfaacd65046f41f98806f49f347d1ae494782dd37930b5222104cf41f
+corrosion_rate_in_per_yr: 0.005
+rate_basis: assumed for this assessment; to be replaced by a rate from repeat inspection
+sensitivity_multipliers: [0.5, 1.0, 2.0]
+interval_life_fraction: 0.5
+section_b_supplement:
+  smts_psi: 66700.0
+  axial_stress_psi: 10000.0
+  axial_positions_in: [0, 1, 2, 3, 4, 5]
+  circumferential_width_in: 4.0
+supplement_basis: Supplementary strength, axial stress and circumferential extent are copied from Section A; 1 in row spacing is an assessment assumption.
+revision_history:
+  - rev: '00'
+    date: '2026-10-13'
+    description: First draft for review
+    prepared: '—'
+    checked: '—'
+    approved: '—'
+  - rev: '01'
+    date: '2026-10-14'
+    description: Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is not a code criterion; it is now shown as a diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation.

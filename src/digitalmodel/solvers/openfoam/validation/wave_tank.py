@@ -37,6 +37,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
 
+import numpy as np
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 GRAVITY = 9.81
 
 # Verified-run gates (reference 500x55 mesh, 30 s: H max err 4.7%, decay 4.6%,
@@ -516,7 +520,7 @@ def extract_wave_quality(
             seg = e[(t >= a) & (t < b)]
             if len(seg) > 4:
                 heights.append(float(seg.max() - seg.min()))
-        amp = np.trapz(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
+        amp = _trapezoid(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
         gauges.append({
             "x": xg,
             "H": float(np.mean(heights)) if heights else float("nan"),
