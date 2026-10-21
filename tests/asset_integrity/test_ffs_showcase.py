@@ -94,7 +94,9 @@ def test_showcase_part_b_matches_hand_calculation(showcase_data):
     # For D=30, t=0.375, d=0.150, L=8 in and SMTS=66,700 psi:
     # Q=sqrt(1+0.31*8**2/(30*0.375))=1.6624;
     # capacity=(2*0.375*66700/29.625)*0.6/(1-0.4/Q)=1334.19 psi.
-    # Part B safe pressure=0.648*capacity=864.56 psi.
+    # F = F1·F2 = 0.9 × 0.72 = 0.648 is the Part B total usage factor;
+    # F1 is the modelling factor; F2 is the ASME B31.8 class-1 design factor.
+    # Part B safe pressure=F*capacity=864.56 psi.
     assert _part_b_reference(preset).capacity_pressure_psi == pytest.approx(
         1334.19, abs=0.05
     )
