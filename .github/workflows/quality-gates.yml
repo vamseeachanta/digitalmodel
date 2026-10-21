@@ -135,7 +135,18 @@ jobs:
       - name: Check engineering register changes
         env:
           REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+        run: |
+          set -euo pipefail
+          base="${REGISTER_BASE:-}"
+          if [ -z "$base" ] || [ "$base" = 0000000000000000000000000000000000000000 ]; then
+            if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+              echo "::error::Missing pull request base"
+              exit 1
+            fi
+            base="$(git merge-base origin/main HEAD)"
+          fi
+          git rev-parse --verify --end-of-options "${base}^{commit}" >/dev/null
+          python scripts/enforcement/check-engineering-register.py --diff "$base"
 
       - name: Create reports directory
         run: mkdir -p reports
