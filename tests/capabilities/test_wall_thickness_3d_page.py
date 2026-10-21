@@ -12,6 +12,44 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_pressure_and_load_explorers_have_distinct_cards():
+    cards = json.loads((REPO_ROOT / "docs/capability-map/capability-cards.json").read_text(encoding="utf-8"))
+    by_id = {card["id"]: card for card in cards}
+    assert len(by_id) == len(cards)
+    assert by_id["wall-thickness-explorer"]["link"] == "docs/api/structural/wall-thickness-explorer.html"
+    assert by_id["wall-thickness-3d-explorer"]["link"] == "docs/api/structural/wall-thickness-3d-explorer.html"
+
+
+def test_worked_example_source_links_resolve_outside_docs_site():
+    from html.parser import HTMLParser
+    from urllib.parse import urljoin
+
+    class Links(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.hrefs = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "a":
+                self.hrefs.extend(value for name, value in attrs if name == "href")
+
+    parser = Links()
+    parser.feed((REPO_ROOT / "docs/examples/wall-thickness-load-example.html").read_text(encoding="utf-8"))
+    paths = (
+        "scripts/capabilities/build_wall_thickness_explorer.py",
+        "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "tests/capabilities/test_wall_thickness_3d.py",
+    )
+    for path in paths:
+        link, = [href for href in parser.hrefs if href.endswith(path)]
+        assert urljoin("https://example.invalid/examples/worked.html", link) == (
+            "https://github.com/vamseeachanta/digitalmodel/blob/main/" + path
+        )
+        assert (REPO_ROOT / path).is_file()
+
+
 SCRIPT = (
     REPO_ROOT
     / "scripts"
@@ -294,7 +332,7 @@ assert.match(element('summary').innerHTML,/Range/);
 
 def test_capability_card_links_to_the_delivered_load_explorer():
     cards = json.loads((REPO_ROOT / "docs/capability-map/capability-cards.json").read_text())
-    card = next(card for card in cards if card["id"] == "wall-thickness-explorer")
+    card = next(card for card in cards if card["id"] == "wall-thickness-3d-explorer")
     assert card["link"] == "docs/api/structural/wall-thickness-3d-explorer.html"
     assert "tension" in card["summary"].lower()
     assert "assumed" in card["summary"].lower()

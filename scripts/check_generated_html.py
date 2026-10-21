@@ -67,6 +67,7 @@ class Generator:
     # deterministically from the repository.
     prerequisites: tuple[str, ...] = ()
     inputs: tuple[str, ...] = ()
+    sidecars: tuple[str, ...] = ()
 
 
 GENERATORS = (
@@ -138,6 +139,7 @@ GENERATORS = (
         "scripts/capabilities/build_wall_thickness_3d_page.py",
         ("docs/api/structural/wall-thickness-3d-explorer.html",),
         prerequisites=("scripts/capabilities/build_wall_thickness_3d.py",),
+        sidecars=("docs/api/structural/wall-thickness-3d-explorer.json",),
     ),
     Generator(
         "scripts/capabilities/build_wall_thickness_explorer.py",
@@ -225,6 +227,7 @@ def validate_page_census(repo: Path) -> list[str]:
     owned = {
         path.relative_to(repo).as_posix()
         for path in all_registered_outputs(repo)
+        if path.suffix.lower() == ".html"
     }
     pages = docs_api_pages(repo)
     errors = []
@@ -337,7 +340,7 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
         if source.exists():
             shutil.copytree(source, shadow / relative)
     for entry in GENERATORS:
-        for relative in (*entry.inputs, *entry.outputs):
+        for relative in (*entry.inputs, *entry.outputs, *entry.sidecars):
             source, target = repo / relative, shadow / relative
             if source.is_file():
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -346,15 +349,15 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:
     """Resolve the explicit or globbed outputs of a registered generator."""
-    if entry.output_glob:
-        return {path for path in root.glob(entry.output_glob)}
-    return {root / path for path in entry.outputs}
+    pages = (set(root.glob(entry.output_glob)) if entry.output_glob
+             else {root / path for path in entry.outputs})
+    return pages | {root / path for path in entry.sidecars}
 
 
 def clear_generated_html(shadow: Path, entry: Generator) -> None:
     """Remove registered outputs from the isolated shadow tree."""
     for path in output_paths(shadow, entry):
-        path.unlink()
+        path.unlink(missing_ok=True)
 
 
 def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[str]:
@@ -369,6 +372,7 @@ def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[
         capture_output=True,
         text=True,
         timeout=600,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
 
 
@@ -402,8 +406,9 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
         detail = result.stderr.strip() or result.stdout.strip()
         return f"{entry.script} failed ({result.returncode}): {detail}"
     produced = output_paths(shadow, entry)
-    if not produced or any(not path.is_file() for path in produced):
-        return f"{entry.script} produced no registered HTML output"
+    missing_pages = entry.output_glob and not any(shadow.glob(entry.output_glob))
+    if missing_pages or not produced or any(not path.is_file() for path in produced):
+        return f"{entry.script} produced no registered output or omitted a registered file"
     return None
 
 
