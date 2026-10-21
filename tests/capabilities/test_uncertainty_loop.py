@@ -224,3 +224,51 @@ def test_freshness_gate_rebuilds_both_uncertainty_outputs(builder, tmp_path, mon
     (tmp_path / entry.outputs[0]).write_text("stale", encoding="utf-8")
     (tmp_path / entry.outputs[1]).write_text("{}", encoding="utf-8")
     assert {path for path, _ in checker.compare_outputs(builder.ROOT, tmp_path)} == set(entry.outputs)
+
+
+def test_regenerated_loop_preserves_core_brand_tokens(builder, tmp_path):
+    """Check this page directly even when unrelated generators cannot run."""
+    from scripts import brand_guard
+
+    builder.build(output_dir=tmp_path)
+    page = (tmp_path / builder.PAGE_NAME).read_text(encoding="utf-8")
+    assert brand_guard.CORE_RE.search(page) is None
+    assert "var(--loop-accent)" in page
+
+
+def test_hash_bound_loop_files_pin_lf(builder):
+    """All hashed inputs and compared outputs need explicit checkout policy."""
+    import subprocess
+
+    paths = [
+        "scripts/capabilities/build_uncertainty_loop.py",
+        "scripts/capabilities/uncertainty_loop/workflow.json",
+        "scripts/capabilities/uncertainty_loop/page.html.template",
+        "docs/domains/asset-integrity/uncertainty-loop.html",
+        "docs/domains/asset-integrity/uncertainty-loop.manifest.json",
+    ]
+    result = subprocess.run(
+        ["git", "check-attr", "text", "eol", "--", *paths],
+        cwd=builder.ROOT, check=True, capture_output=True, text=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    assert result.stdout.splitlines() == [
+        line for path in paths
+        for line in (f"{path}: text: set", f"{path}: eol: lf")
+    ]
+    for path in paths:
+        assert b"\r\n" not in (builder.ROOT / path).read_bytes()
+        # Read-only checkout conversion exercises autocrlf without changing
+        # repository configuration, the index, or working-tree files.
+        converted = subprocess.run(
+            ["git", "-c", "core.autocrlf=true", "cat-file", "--filters",
+             f"--path={path}", f"HEAD:{path}"],
+            cwd=builder.ROOT, check=True, capture_output=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        ).stdout
+        original = subprocess.run(
+            ["git", "show", f"HEAD:{path}"],
+            cwd=builder.ROOT, check=True, capture_output=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        ).stdout
+        assert converted == original
