@@ -48,6 +48,17 @@ def load_detector_module():
     return module
 
 
+@pytest.mark.parametrize("path", [
+    "scripts/ci/generate_family_map.py",
+    "config/ci/module-families.json",
+])
+def test_family_inventory_routes_to_workflows(path: str) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == {"workflows"}
+
+
 @pytest.mark.parametrize(("path", "expected"), [
     ("src/digitalmodel/orcaflex/installation_analysis.py",
      {"orcaflex", "marine-ops-other", "workflows"}),
