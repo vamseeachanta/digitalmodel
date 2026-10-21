@@ -19,8 +19,8 @@ The implementation basis is repository revision
   returned count is adopted only for dynamic allocation. An explicit count is
   retained, although the recommendation is still calculated for logging.
 - `process_directory` in the same file accepts `directory`, `pattern` and
-  `config`, searches the supplied directory without recursion, and delegates
-  matching paths. Its default pattern is `*.dat`.
+  `config` and delegates matching paths. The default `*.dat` pattern searches
+  only the supplied directory; a caller pattern containing `**` recurses.
 - [ResourceManager.calculate_optimal_threads](performance_monitor.py) is a
   separate implementation. The optimized parallel helper uses
   `SimpleResourceManager`, not this `ResourceManager` class. Their size
