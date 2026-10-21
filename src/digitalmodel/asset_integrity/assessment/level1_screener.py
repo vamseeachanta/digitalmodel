@@ -12,7 +12,7 @@ design code:
 | Code             | Equation                                                  |
 +==================+===========================================================+
 | B31.8            | t = P * D / (2 * SMYS * F * E_joint * T_derating)        |
-|                  | F = 0.72 (Class 1, Div 1), E_joint = 1.0, T = 1.0       |
+|                  | F = 0.72 (Class 1, Div 2), E_joint = 1.0, T = 1.0       |
 +------------------+-----------------------------------------------------------+
 | B31.4            | t = P * D / (2 * SMYS * F * E_joint)                     |
 |                  | F = 0.72, E_joint = 1.0 (typical liquid transmission)    |

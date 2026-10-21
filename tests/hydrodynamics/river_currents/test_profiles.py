@@ -11,6 +11,8 @@ from digitalmodel.hydrodynamics.river_currents import (
     river_velocity_profile,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Power-law profile
@@ -50,7 +52,7 @@ def test_power_law_depth_averaged_matches_analytical_integral():
     # Numerical confirmation of the closed form.
     z = np.linspace(0.0, H, 20001)
     u = power_law_profile(z, H, u_s, exponent_m=m)
-    numeric = np.trapz(u, z) / H
+    numeric = _trapezoid(u, z) / H
     assert numeric == pytest.approx(analytic, rel=1e-4)
 
 
@@ -104,7 +106,7 @@ def test_log_law_depth_averaged_matches_analytical_and_numerical():
     # Numerical confirmation over [z0, H] (region where log law is positive).
     z = np.linspace(z0, H, 200001)
     u = log_law_profile(z, ustar, z0, von_karman=kappa)
-    numeric = np.trapz(u, z) / H
+    numeric = _trapezoid(u, z) / H
     assert numeric == pytest.approx(analytic, rel=1e-4)
 
 

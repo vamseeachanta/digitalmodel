@@ -151,6 +151,7 @@ Current Tier 1 priorities:
 - [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md) -- Canonical repo-wide operator map for source, tests, docs, and issue routing
 - [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
+- [Demonstration pack retirement](docs/maintenance/demo-pack-retirement.md) -- Regression scope, report compatibility and a worked scan example
 
 ## CLI Tools
 

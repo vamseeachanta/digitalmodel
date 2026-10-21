@@ -56,15 +56,17 @@ def _collect_case(index, case, current, matrix):
                 # Issue 2138: present channels alone do not establish expected coverage.
                 run = Path(current['run_dir'])
                 receipt = _read(run / 'run.json')
+                if receipt.get('simulation_sha256') != row['simulation_sha256']:
+                    raise ValueError('Receipt changed during verification')
                 verify_profile_metadata(run, receipt, metadata)
                 traces = run / 'installation_traces/traces.npz'
                 verify_profile_arrays(traces, receipt, metadata)
                 if compute_hash(traces) != row['trace_sha256']:
-                    raise ValueError('Traces changed during profile verification')
+                    raise ValueError('Traces changed during verification')
             except (OSError, ValueError, KeyError, TypeError) as error:
                 return dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')},
-                            run_dir=str(run), status='FAILED',
-                            reason=f'Expected trace-profile verification failed: {error}')
+                            run_dir=current['run_dir'], status='FAILED',
+                            reason=f'Profile evidence verification failed: {error}')
             row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
                        metadata_sha256=sha256(raw).hexdigest(),
                        limitations=metadata.get('limitations', []))
@@ -188,7 +190,7 @@ def _scatter(cases):
                    for row, value in points)
     ticks = ''.join(f'<text x="{55 + p * 29}" y="268">{p}</text>' for p in range(4, 17, 2))
     yticks = ''.join(f'<text x="5" y="{249 - y * .34}">{y}</text>' for y in (0, 200, 400, 600))
-    return (f'<svg viewBox="0 0 600 300" role="img" aria-label="Sling 5 End B low-tension duration by Tp">'
+    return ('<svg viewBox="0 0 600 300" role="img" aria-label="Sling 5 End B low-tension duration by Tp">'
             '<path d="M55 30V245H545" fill="none" stroke="#637383"/>' + dots + ticks + yticks +
             '<text x="245" y="293">Peak period Tp (s)</text>'
             '<text x="60" y="20">Total tension ≤0 duration (s), per 600 s record</text></svg>')
