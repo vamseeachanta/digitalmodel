@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from copy import deepcopy
 from pathlib import Path
 
 import yaml
@@ -193,7 +194,7 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
         "offset_difference_pct": None,
         "tension_difference_pct": None,
         "reason": "stored results absent",
-        "criterion": limit,
+        "criterion": deepcopy(limit),
     }
     if screen is not None:
         out["screen"] = _validated_screen(screen, case["active_lines"])

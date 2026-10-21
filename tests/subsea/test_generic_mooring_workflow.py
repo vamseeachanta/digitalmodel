@@ -248,6 +248,48 @@ def test_report_shows_limit_source_and_result_source():
     assert "synthetic hand calculation; not native results" in report
 
 
+@pytest.mark.parametrize(
+    "pending", [None, "missing_results", "missing_capacities", "unspecified_damage"]
+)
+def test_criterion_snapshot_survives_caller_mutation(pending):
+    """80/200/0.5=0.8 passes; replacing 0.5 with 0.3 would fail."""
+    cases = build_case_table(ROOT)
+    case = cases[8] if pending == "unspecified_damage" else cases[0]
+    limit = {
+        "ratio": 0.5,
+        "source": "original synthetic criterion",
+        "metadata": {"conditions": ["synthetic basis"]},
+    }
+    expected = copy.deepcopy(limit)
+    out = assess_case(
+        case,
+        None if pending == "missing_results" else metric(case),
+        capacities_kn=(
+            None
+            if pending == "missing_capacities"
+            else {name: 200 for name in case["active_lines"]}
+        ),
+        limit=limit,
+    )
+    limit["ratio"] = 0.3
+    limit["source"] = "replacement synthetic criterion"
+    limit["metadata"]["conditions"][0] = "replacement basis"
+    assert out["criterion"] == expected
+    if pending is None:
+        assert out["status"] == "PASS"
+        assert out["utilisation"] == pytest.approx(0.8)
+        assert out["limit_ratio"] == 0.5
+    else:
+        assert out["status"] == "NOT_EVALUATED"
+    report = render_report(
+        cases, {case["case_id"]: out}, revision="02", date="2026-10-20"
+    )
+    assert "original synthetic criterion" in report
+    assert "synthetic basis" in report
+    assert "replacement" not in report
+    assert re.search(r"criterion.ratio</td><td>0\.5</td>", report)
+
+
 def test_report_rejects_unknown_assessment():
     cases = build_case_table(ROOT)
     with pytest.raises(ValueError, match="unknown case"):
