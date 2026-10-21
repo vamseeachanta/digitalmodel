@@ -224,6 +224,25 @@ def test_shared_delivery_range_failure_is_rejected(tube):
         distribute_chemical(3e-6, demands(), tube, FLUID, 10000, 0)
 
 
+@pytest.mark.parametrize("error", [
+    ValueError("upstream validation rejected the input"),
+    ZeroDivisionError("upstream denominator rounded to zero"),
+])
+def test_shared_delivery_preserves_error_detail_and_cause(monkeypatch, error):
+    """Upstream diagnostics must survive the stage-specific ValueError wrapper."""
+    def reject_delivery(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(
+        "digitalmodel.subsea.manifolds.chemical_injection.check_delivery",
+        reject_delivery,
+    )
+    with pytest.raises(ValueError) as caught:
+        distribute_chemical(3e-6, demands(), TUBE, FLUID, 10000, 0)
+    assert str(caught.value) == f"shared delivery: {error}"
+    assert caught.value.__cause__ is error
+
+
 def test_active_allocated_rate_underflow_is_rejected():
     """Tiny target / total target is ~1e-320; Q=1e-6 makes q round to zero."""
     tiny = InjectionDemand(1e-300, 1e-20, 0, 0)

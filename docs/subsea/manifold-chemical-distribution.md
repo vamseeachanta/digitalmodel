@@ -6,6 +6,12 @@ extends the chemical core with cited arithmetic, independent examples and
 checks for numerical range failures. It does not complete the issue's API
 qualification or public equipment data requirements.
 
+## Revision history
+
+| Revision | Date | Change | Reason |
+| --- | --- | --- | --- |
+| 1 | 2026-10-20 | Revision record added; shared-delivery diagnostics clarified. | Review traceability and preservation of upstream validation details. |
+
 ## Equations and sources
 
 | Quantity | Equation | Readable basis |
@@ -122,7 +128,9 @@ The wrapper checks target sums, static and node pressures, every numerical
 shared-delivery result, allocation, branch loss, pressure margin, dose ratios
 and added restrictions. A positive demand or active allocation that rounds
 to zero is rejected, as is a squared flow that becomes zero or non-finite.
-Errors identify the calculation stage and raise `ValueError`; no arbitrary
+Errors identify the calculation stage and raise `ValueError`. Shared-delivery
+exceptions retain the original message and chained cause so validation errors
+are not relabelled as arithmetic range failures. No arbitrary
 minimum rate or maximum pressure is introduced. Normal floating-point rounding
 and the physical model's applicability remain separate limitations.
 
