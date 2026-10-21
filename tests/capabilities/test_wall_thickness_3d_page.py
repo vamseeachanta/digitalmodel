@@ -294,7 +294,7 @@ assert.match(element('summary').innerHTML,/Range/);
 
 def test_capability_card_links_to_the_delivered_load_explorer():
     cards = json.loads((REPO_ROOT / "docs/capability-map/capability-cards.json").read_text())
-    card = next(card for card in cards if card["id"] == "wall-thickness-explorer")
+    card = next(card for card in cards if card["id"] == "wall-thickness-load-explorer")
     assert card["link"] == "docs/api/structural/wall-thickness-3d-explorer.html"
     assert "tension" in card["summary"].lower()
     assert "assumed" in card["summary"].lower()

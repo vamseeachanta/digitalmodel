@@ -19,8 +19,10 @@ with the implemented equations at the tested corners; design qualification remai
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-10-19</td><td>The load-grid example records the inputs,
-arithmetic and limits needed to interpret the explorer.</td></tr></tbody></table>
-<p>Table 1. Initial issue of the worked example.</p>
+arithmetic and limits needed to interpret the explorer.</td></tr>
+<tr><td>2</td><td>2026-10-21</td><td>The assumed product-specification level is
+stated to distinguish the material basis from a qualified design input.</td></tr></tbody></table>
+<p>Table 1. Revision history of the worked example.</p>
 <h2>Inputs</h2>
 <p>All case inputs are <strong>assumed, based on previous experience</strong>, inherited
 from <a href="../../scripts/capabilities/build_wall_thickness_explorer.py">the existing
@@ -34,6 +36,8 @@ reference case</a>. No measured case or published design example is asserted.</p
 <tr><td>Internal / external pressure (MPa)</td><td>20.0 / 10.0</td></tr>
 <tr><td>Fabrication tolerance (%) / safety class</td><td>12.5 / medium</td></tr>
 </tbody></table><p>Table 2. Assumed inputs; the inherited strategies apply geometry allowances differently.</p>
+<p>API 5L X65 PSL1 is assumed for this example. The product-specification level
+and material properties are not independently qualified.</p>
 <h2>Method and sources</h2>
 <p>The source is the repository implementation of <strong>API STD 2RD (2013), Method 1</strong>:
 <a href="../../src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py">ApiStd2rdStrategy</a>,

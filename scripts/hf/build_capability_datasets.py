@@ -86,8 +86,8 @@ def wall_thickness_3d_rows(
     doc: dict | Path | None = None, *, source: Path | None = None
 ) -> list[dict]:
     """The (t, T, M) study from build_wall_thickness_3d.py — already tidy, so this only
-    reads it. 354,609 rows: 191 MB as JSON, ~1 MB as parquet, which is why the JSON is
-    gitignored and only the published dataset is durable (#1915)."""
+    reads it. The full JSON study is gitignored; generate it separately and supply
+    its path before preparing the dataset for publication (#1915)."""
     if isinstance(doc, Path):
         if source is not None:
             raise ValueError("provide only one study input")
