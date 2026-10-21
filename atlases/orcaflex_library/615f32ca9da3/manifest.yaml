@@ -1,4 +1,4 @@
-atlas_id: 3139c23c4efc
+atlas_id: 615f32ca9da3
 basename: orcaflex_library
 physics: linear
 response: max_effective_tension_N
@@ -30,7 +30,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder max line tension \u2014 replace with a licensed OrcaFlex\
-      \ run per case (operator, 32-core workstation)."
+      \ run per case (operator, licensed-solver workstation)."
   coverage:
     key_axis: case
     covered_cases:

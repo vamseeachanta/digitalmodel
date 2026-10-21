@@ -1,9 +1,11 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Library metadata describes compute capacity without internal aliases."""
+"""Library metadata uses reproducible IDs and public workstation roles."""
 
+import hashlib
 import importlib
+import json
 from pathlib import Path
 
 import pytest
@@ -24,10 +26,13 @@ LIBRARIES = (
 
 def assert_no_internal_alias(root):
     """Scan every emitted file, including binary output, without an empty pass."""
-    files = sorted(path for path in root.rglob("*") if path.is_file())
+    files = [root] if root.is_file() else sorted(
+        path for path in root.rglob("*") if path.is_file()
+    )
     assert files, "No library output was scanned"
+    scan_root = root.parent if root.is_file() else root
     offenders = [
-        path.relative_to(root).as_posix()
+        path.relative_to(scan_root).as_posix()
         for path in files
         if INTERNAL_ALIAS.encode("ascii") in path.read_bytes().lower()
     ]
@@ -36,17 +41,19 @@ def assert_no_internal_alias(root):
 
 @pytest.mark.parametrize("suffix", (".yaml", ".json", ".txt", ".parquet"))
 @pytest.mark.parametrize("uppercase", (False, True))
-def test_scan_rejects_planted_alias(tmp_path, suffix, uppercase):
+@pytest.mark.parametrize("scan_file", (False, True))
+def test_scan_rejects_planted_alias(tmp_path, suffix, uppercase, scan_file):
     alias = INTERNAL_ALIAS.upper() if uppercase else INTERNAL_ALIAS
     output = tmp_path / "nested" / f"output{suffix}"
     output.parent.mkdir()
     output.write_bytes(b"\xff " + alias.encode("ascii"))
-    with pytest.raises(AssertionError, match="nested/output"):
-        assert_no_internal_alias(tmp_path)
+    match = "output" if scan_file else "nested/output"
+    with pytest.raises(AssertionError, match=match):
+        assert_no_internal_alias(output if scan_file else tmp_path)
 
 
-def test_scan_accepts_workstation_capacity(tmp_path):
-    (tmp_path / "manifest.yaml").write_text("note: 32-core workstation\n")
+def test_scan_accepts_workstation_role(tmp_path):
+    (tmp_path / "manifest.yaml").write_text("note: licensed-solver workstation\n")
     assert_no_internal_alias(tmp_path)
 
 
@@ -79,6 +86,7 @@ def test_generated_library_has_no_internal_alias(
     assert_no_internal_alias(tmp_path / "atlases" / basename)
     assert_library_loads(tmp_path / "atlases", basename, rows)
     generated = Atlas.load(tmp_path / "atlases", basename)
+    assert "licensed-solver workstation" in generated.provenance["solver"]["note"]
     committed = Atlas.load(ROOT / "atlases", basename)
     assert generated.surrogate_spec() == committed.surrogate_spec()
     assert generated.provenance == committed.provenance
@@ -87,7 +95,35 @@ def test_generated_library_has_no_internal_alias(
 @pytest.mark.parametrize("builder_name,basename,rows", LIBRARIES)
 def test_committed_library_has_no_internal_alias(builder_name, basename, rows):
     assert_no_internal_alias(ROOT / "atlases" / basename)
+    assert_no_internal_alias(
+        ROOT / "docs/plans/parametric-refresh/licensed-libraries.md"
+    )
+    builders = sorted((ROOT / "scripts/parametric").glob("build_*library.py"))
+    assert builders, "No library builder was scanned"
+    for builder in builders:
+        assert_no_internal_alias(builder)
     manifests = sorted((ROOT / "atlases" / basename).glob("*/manifest.yaml"))
     assert manifests, "No committed library manifest was scanned"
     for manifest in manifests:
         assert_library_loads(ROOT / "atlases", basename, rows, manifest.parent.name)
+
+
+@pytest.mark.parametrize("builder_name,basename,rows", LIBRARIES)
+def test_committed_library_directory_matches_manifest_hash(builder_name, basename, rows):
+    directories = sorted(
+        path for path in (ROOT / "atlases" / basename).iterdir() if path.is_dir()
+    )
+    assert directories, "No committed library directory was checked"
+    for directory in directories:
+        manifest = yaml.safe_load((directory / "manifest.yaml").read_text())
+        provenance = manifest["provenance"]
+        blob = json.dumps(
+            {
+                "axes": manifest["axes"],
+                "solver": provenance["solver"],
+                "cases": provenance["coverage"]["covered_cases"],
+            },
+            sort_keys=True,
+        )
+        expected_id = hashlib.sha256(blob.encode()).hexdigest()[:12]
+        assert directory.name == manifest["atlas_id"] == expected_id

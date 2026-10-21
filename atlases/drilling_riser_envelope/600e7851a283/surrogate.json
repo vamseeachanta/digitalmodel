@@ -1,8 +1,8 @@
 {
-  "basename": "drilling_riser_drift_off",
-  "atlas_id": "42d8f236a341",
+  "basename": "drilling_riser_envelope",
+  "atlas_id": "600e7851a283",
   "physics": "linear",
-  "response": "drift_amp",
+  "response": "von_mises_daf",
   "axes": [
     {
       "name": "mode",
@@ -10,6 +10,17 @@
         "drilling",
         "connected",
         "hang_off"
+      ]
+    },
+    {
+      "name": "offset_pct",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        2.0,
+        4.0,
+        6.0,
+        8.0
       ]
     },
     {
@@ -31,6 +42,15 @@
         3.0,
         5.0,
         7.0
+      ]
+    },
+    {
+      "name": "tp_s",
+      "scale": "linear",
+      "grid": [
+        8.0,
+        12.0,
+        16.0
       ]
     }
   ]

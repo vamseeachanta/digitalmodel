@@ -67,7 +67,7 @@ def main() -> None:
             "licensed": False,
             "run_date": "STUB",
             "note": "synthetic placeholder heave RAO — replace with a licensed "
-                    "diffraction run per case (operator, 32-core workstation).",
+                    "diffraction run per case (operator, licensed-solver workstation).",
         },
         coverage_note=(
             "STUB diffraction heave-RAO library, 3 canonical vessel cases. "

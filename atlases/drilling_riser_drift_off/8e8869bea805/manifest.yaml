@@ -1,4 +1,4 @@
-atlas_id: d53bddd904d1
+atlas_id: 8e8869bea805
 basename: drilling_riser_drift_off
 physics: linear
 response: drift_amp
@@ -37,7 +37,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder drift-off dynamic amplification \u2014 replace with\
-      \ a licensed OrcaFlex time-domain run per operating mode (operator step, 32-core\
+      \ a licensed OrcaFlex time-domain run per operating mode (operator step, licensed-solver\
       \ workstation)."
   coverage:
     key_axis: mode

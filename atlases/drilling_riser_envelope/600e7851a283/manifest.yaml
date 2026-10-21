@@ -1,4 +1,4 @@
-atlas_id: fd96663f7ac3
+atlas_id: 600e7851a283
 basename: drilling_riser_envelope
 physics: linear
 response: von_mises_daf
@@ -51,7 +51,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder von-Mises dynamic amplification \u2014 replace with\
-      \ a licensed OrcaFlex time-domain run per operating mode (operator step, 32-core\
+      \ a licensed OrcaFlex time-domain run per operating mode (operator step, licensed-solver\
       \ workstation)."
   coverage:
     key_axis: mode
