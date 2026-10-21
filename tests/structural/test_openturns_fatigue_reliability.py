@@ -48,6 +48,13 @@ def test_hand_calculation_intercept_uncertainty(beta):
     result = model()
     life = math.exp(1.5 - beta)
     assert result.reliability_index(life) == pytest.approx(beta, abs=1e-12)
+
+
+@pytest.mark.parametrize("beta", [2, 0, -2])
+def test_intercept_uncertainty_probability(beta):
+    pytest.importorskip("openturns")
+    result = model()
+    life = math.exp(1.5 - beta)
     expected = math.erfc(beta / math.sqrt(2)) / 2
     assert result.failure_probability(life) == pytest.approx(
         expected, rel=1e-12, abs=1e-12
@@ -62,6 +69,11 @@ def test_hand_calculation_both_uncertainties():
     """
     result = model(stress_range=math.e, cov_stress=math.sqrt(math.expm1(1)))
     assert result.reliability_index(1) == pytest.approx(0.5 / math.sqrt(5))
+
+
+def test_both_uncertainties_probability():
+    pytest.importorskip("openturns")
+    result = model(stress_range=math.e, cov_stress=math.sqrt(math.expm1(1)))
     assert result.failure_probability(1) == pytest.approx(
         math.erfc(0.5 / math.sqrt(10)) / 2
     )
@@ -71,6 +83,11 @@ def test_hand_calculation_stress_uncertainty_only():
     """A=1, E[S]=1, var_lnS=1, m=2, Nd=1: g ~ N(1,4)."""
     result = model(A=1, cov_sn=0, cov_stress=math.sqrt(math.expm1(1)))
     assert result.reliability_index(1) == pytest.approx(0.5)
+
+
+def test_stress_uncertainty_probability():
+    pytest.importorskip("openturns")
+    result = model(A=1, cov_sn=0, cov_stress=math.sqrt(math.expm1(1)))
     assert result.failure_probability(1) == pytest.approx(
         math.erfc(0.5 / math.sqrt(2)) / 2
     )
@@ -95,8 +112,12 @@ def test_beta_preserved_when_probability_underflows():
     """
     result = model()
     life = math.exp(1.5 - 40)
-    assert result.failure_probability(life) == 0
     assert result.reliability_index(life) == pytest.approx(40)
+
+
+def test_probability_underflow():
+    pytest.importorskip("openturns")
+    assert model().failure_probability(math.exp(1.5 - 40)) == 0
 
 
 def test_nonunit_deterministic_boundary():
@@ -193,3 +214,36 @@ def test_module_import_does_not_load_optional_dependency():
         ],
         check=True,
     )
+
+
+@pytest.mark.parametrize("cov", [1e-160, 1e-200, 1e-300])
+@pytest.mark.parametrize("uncertainty", ["intercept", "stress", "both"])
+def test_tiny_positive_uncertainty_index(cov, uncertainty):
+    """For tiny c, sigma_lnX=c to float precision; normalize before squaring.
+
+    At A=S=Nd=1 and m=2, beta is -c/2, c/2, or c/(2*sqrt(5))
+    for intercept-only, stress-only, or equal independent uncertainty.
+    """
+    result = model(
+        A=1,
+        cov_sn=cov if uncertainty != "stress" else 0,
+        cov_stress=cov if uncertainty != "intercept" else 0,
+    )
+    expected = {
+        "intercept": -cov / 2,
+        "stress": cov / 2,
+        "both": cov / (2 * math.sqrt(5)),
+    }[uncertainty]
+    assert result.reliability_index(1) == pytest.approx(expected, rel=1e-12, abs=0)
+
+
+@pytest.mark.parametrize("uncertainty", ["intercept", "stress", "both"])
+def test_tiny_positive_uncertainty_probability(uncertainty):
+    """The normal integral at these near-zero indices rounds to one half."""
+    pytest.importorskip("openturns")
+    result = model(
+        A=1,
+        cov_sn=1e-200 if uncertainty != "stress" else 0,
+        cov_stress=1e-200 if uncertainty != "intercept" else 0,
+    )
+    assert result.failure_probability(1) == 0.5
