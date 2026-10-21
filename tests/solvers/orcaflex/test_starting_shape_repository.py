@@ -23,7 +23,7 @@ def test_library_starting_shape_passes():
     assert not any(f.status == "FAIL" for f in result.starting_shapes)
 
 
-def test_hand_authored_model_is_rejected_only_by_arc_length_screen():
+def test_repository_model_is_rejected_only_by_arc_length_screen():
     source = ROOT / (
         "docs/domains/orcaflex/pipeline/installation/floating/"
         "30in_pipeline/monolithic.yml"
@@ -33,7 +33,7 @@ def test_hand_authored_model_is_rejected_only_by_arc_length_screen():
     assert not result.valid
     assert len(failed) == 1
     assert failed[0].check == "arc_length"
-    # The mismatch is about 0.265%, above the C06 limit of 0.1%.
+    # Relative mismatch: |165.437101 - 165.000| / 165.000, above 0.1%.
     assert 0.0026 < failed[0].actual < 0.0027
     assert failed[0].limit == 0.001
     assert len(result.errors) == 1
