@@ -36,9 +36,13 @@ def router(cfg: dict) -> dict:
         raise ValueError("parametric_query.atlas (workflow basename) is required")
     point = settings.get("point") or {}
     policy = settings.get("policy") or {}
-    unknown_policy = set(policy) - {"on_out_of_range"}
+    unknown_policy = set(policy) - {"on_out_of_range", "confidence"}
     if unknown_policy:
         raise ValueError(f"unknown policy keys: {sorted(unknown_policy)}")
+    # Deprecated compatibility with shipped inputs. Validation is always
+    # enforced below; this legacy spelling cannot relax the confidence gate.
+    if "confidence" in policy and policy["confidence"] != "required":
+        raise ValueError("deprecated policy.confidence only permits 'required'")
     on_out_of_range = policy.get("on_out_of_range", "escalate")
     if on_out_of_range not in {"escalate", "error"}:
         raise ValueError(

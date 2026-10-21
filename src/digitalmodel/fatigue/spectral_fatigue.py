@@ -43,7 +43,11 @@ _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 # ---------------------------------------------------------------------------
 
 class SpectralMoments(BaseModel):
-    """Spectral moments of a stress PSD.
+    """Cyclic-frequency moments of a one-sided stress PSD in MPa²/Hz.
+
+    Each moment is m_n = integral(f**n * S(f) df), with f in Hz and
+    units MPa² * Hz**n. The rates below are in cycles per second.
+    Angular-frequency moments must first be divided by (2*pi)**n.
 
     Attributes
     ----------
@@ -284,9 +288,8 @@ def _dirlik_coefficients(moments: SpectralMoments) -> tuple[float, ...]:
     d3 = 1.0 - d1 - d2
     q = 1.25 * (gamma - d3 - d2*r) / d1
     if (not all(math.isfinite(v) for v in (d1, d2, d3, q, r))
-            or min(d1, d2, d3) < 0 or q <= 0
-            or not math.isclose(d1+d2+d3, 1.0, rel_tol=0, abs_tol=1e-12)):
-        raise ValueError("Dirlik mixture weights must be nonnegative and sum to unity")
+            or min(d1, d2, d3) < 0 or q <= 0):
+        raise ValueError("Dirlik mixture requires finite nonnegative weights and a positive Q")
     return d1, d2, d3, q, r
 
 

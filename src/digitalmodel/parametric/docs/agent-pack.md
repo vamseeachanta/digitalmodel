@@ -13,6 +13,7 @@ qualification of the complete response collection remains open.
 |---|---|---|
 | 0 | 2026-10-15 | Original pinned inventory and regression evidence. |
 | 1 | 2026-10-21 | Added audit safeguards, an arithmetic example and explicit gate outputs to prevent invalid evidence from passing screening. |
+| 2 | 2026-10-21 | Restored legacy query-policy compatibility, corrected fatigue example outcomes and recorded the holdout rebuild cost. |
 
 | Header | Value |
 |---|---|
@@ -117,8 +118,18 @@ These are formula and arithmetic checks, not material qualification.
   error for each interval. These are sampled errors, not a mathematical bound
   over an entire cell. Previously published validation maps retain their original
   sampling basis until rebuilt.
+  With `k` continuous axes, each axis interval uses at most `3^(k-1)+1`
+  response evaluations per categorical slice. Duplicate lines collapse; a
+  one-dimensional interval uses one evaluation. The spectral grid has 60 knots
+  and 14 axis intervals: holdouts increase from 14 to 56, so one rebuild round
+  increases from 74 to 116 response calls (56.8%). Each adaptive round repeats
+  grid and holdout evaluations; expensive responses require a corresponding
+  runtime budget. This count covers response calls, not elapsed time or solver
+  qualification.
 - Empty fatigue bins and non-positive cycle counts escalate. Capacity queries
   require and record the factor of safety. Unknown query and policy keys raise.
+  The deprecated `policy.confidence: required` remains accepted for existing
+  inputs; validation remains mandatory and other confidence values raise.
   Response keyword arguments are retained in result provenance.
 - Unvalidated computed atlases cannot be served. A failed manual build leaves
   the installed default unchanged. Missing error evidence remains unknown;

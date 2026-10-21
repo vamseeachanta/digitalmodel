@@ -5,6 +5,7 @@ written out below, rather than the response implementations under test.
 """
 
 import math
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -123,7 +124,33 @@ def test_unknown_point_key_rejected(monkeypatch, tmp_path, key):
 def test_unknown_policy_key_rejected():
     with pytest.raises(ValueError, match="unknown policy"):
         query.router({"parametric_query": {"atlas": "pile_capacity",
-                     "policy": {"confidence": "required"}}})
+                     "policy": {"confidnce": "required"}}})
+
+
+@pytest.mark.parametrize("legacy_policy", [False, True])
+def test_shipped_query_defaults_serve_validated_capacity(monkeypatch, tmp_path, legacy_policy):
+    """The engine merges this base policy into every atlas-query input."""
+    defaults = Path(query.__file__).parents[1] / "base_configs/modules/parametric_query/parametric_query.yml"
+    cfg = yaml.safe_load(defaults.read_text())
+    cfg["parametric_query"].update(
+        atlas="pile_capacity", output_dir=str(tmp_path),
+        point={"x": 0.5, "demand_kN": 20.0, "factor_of_safety": 2.0},
+    )
+    if legacy_policy:
+        cfg["parametric_query"]["policy"]["confidence"] = "required"
+    monkeypatch.setattr(Atlas, "load", lambda *args: _atlas())
+    monkeypatch.setattr(query, "_staleness", lambda _: None)
+    result = query.router(cfg)["parametric_query"]["result"]
+    assert result["value"] == pytest.approx(0.4)
+    assert result["confidence"]["band"] == pytest.approx([0.4, 0.4])
+    assert result["screening_status"] == "pass"
+
+
+@pytest.mark.parametrize("confidence", ["optional", "ignore", None])
+def test_deprecated_confidence_cannot_disable_validation(confidence):
+    with pytest.raises(ValueError, match="confidence"):
+        query.router({"parametric_query": {"atlas": "pile_capacity",
+                     "policy": {"confidence": confidence}}})
 
 
 def test_provenance_includes_response_kwargs():
@@ -132,12 +159,14 @@ def test_provenance_includes_response_kwargs():
     assert query._provenance(atlas)["response_kwargs"] == {"basis": "synthetic"}
 
 
-def test_failed_validation_query_escalates(monkeypatch, tmp_path):
+@pytest.mark.parametrize("legacy_policy", [False, True])
+def test_failed_validation_query_escalates(monkeypatch, tmp_path, legacy_policy):
     atlas = _atlas()
     atlas.validation["passes"] = False
     monkeypatch.setattr(Atlas, "load", lambda *args: atlas)
     monkeypatch.setattr(query, "_staleness", lambda _: None)
     result = query.router({"parametric_query": {"atlas": "pile_capacity",
+                          "policy": {"confidence": "required"} if legacy_policy else {},
                           "output_dir": str(tmp_path)}})["parametric_query"]["result"]
     assert result["action"] == "escalate"
     assert "validation" in result["reason"]

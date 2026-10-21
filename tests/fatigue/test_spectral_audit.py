@@ -18,17 +18,17 @@ def test_line_spectrum_has_cyclic_frequency_rate():
     """Variance 100 MPa² at .1 Hz gives moments [100,10,1,.01].
 
     Eq. (5), expressed in ranges: E[r³]=(2 sqrt(200))³ Gamma(2.5).
-    Synthetic m=3, log10(A)=12.164; D/year=.1 E[r³]/A * 31557600.
+    Synthetic m=3, log10(A)=12; D/year=.1 E[r³]/A * 31557600.
     Julian year conversion = 365.25 d * 24 h/d * 3600 s/h.
     """
     moments = SpectralMoments(m0=100, m1=10, m2=1, m4=0.01)
     assert moments.nu_0 == pytest.approx(0.1)
     assert moments.nu_p == pytest.approx(0.1)
-    expected = 0.1 * (2 * math.sqrt(200))**3 * math.gamma(2.5) / 10**12.164
-    result = narrow_band_damage(moments, 3, 12.164)
+    expected = 0.1 * (2 * math.sqrt(200))**3 * math.gamma(2.5) / 10**12
+    result = narrow_band_damage(moments, 3, 12)
     assert result.damage_rate == pytest.approx(expected, rel=1e-12)
     assert result.damage_per_year == pytest.approx(expected * 31557600, rel=1e-12)
-    assert dirlik_damage(moments, 3, 12.164).damage_rate == pytest.approx(expected, rel=0.02)
+    assert dirlik_damage(moments, 3, 12).damage_rate == pytest.approx(expected, rel=0.02)
 
 
 def test_published_bimodal_parameters():
