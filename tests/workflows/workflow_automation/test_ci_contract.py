@@ -1,8 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Regression contracts for the workflow automation CI job (issue #1958).
 
 Expected dependencies come from the workflow's coverage and benchmark consumers
@@ -81,6 +79,19 @@ def test_manual_dispatch_is_available(workflow):
     assert "workflow_dispatch" in workflow["on"]
 
 
+def test_matrix_versions_finish_independently(workflow):
+    """A failure on one interpreter must not cancel evidence from another."""
+    assert workflow["jobs"]["test"]["strategy"]["fail-fast"] == "false"
+
+
+@pytest.mark.parametrize("name", ["Test CLI commands", "Verify package installation"])
+def test_diagnostics_run_after_failures_unless_cancelled(workflow, name):
+    """Keep CLI and import outcomes visible after an earlier step fails."""
+    steps = workflow["jobs"]["test"]["steps"]
+    step = next(step for step in steps if step.get("name") == name)
+    assert step.get("if") == "${{ !cancelled() }}"
+
+
 @pytest.mark.parametrize("event", ["push", "pull_request"])
 def test_dependency_and_workflow_changes_trigger_ci(workflow, event):
     """Each listed file can alter installation, collection or the job itself."""
@@ -116,21 +127,64 @@ def test_coverage_collection_and_upload_remain_enabled(workflow):
 
 
 def test_workflow_selects_repository_coverage_gate(workflow):
-    """A green heartbeat must satisfy the declared repository threshold."""
-    steps = workflow["jobs"]["test"]["steps"]
-    command = next(
-        step["run"]
-        for step in steps
+    """Collect with repository settings without masking the test outcome."""
+    job = workflow["jobs"]["test"]
+    step = next(
+        step
+        for step in job["steps"]
         if step.get("name") == "Run workflow automation tests"
     )
-    assert "--cov-config=pyproject.toml" in shlex.split(command)
+    assert "continue-on-error" not in job
+    assert "continue-on-error" not in step
+    assert shlex.split(step["run"]) == [
+        "uv",
+        "run",
+        "--no-sync",
+        "pytest",
+        "tests/workflows/workflow_automation/",
+        "-v",
+        "--cov=digitalmodel.workflows.workflow_automation",
+        "--cov-config=pyproject.toml",
+        "--cov-fail-under=0",
+        "--cov-report=xml",
+        "--cov-report=term",
+    ]
     coverage = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
     assert coverage["report"]["fail_under"] == 80.0
 
 
-@pytest.mark.parametrize("section", ["run", "report", "html", "xml", "json"])
+def test_final_step_enforces_configured_coverage_after_diagnostics(workflow):
+    """The unchanged threshold must fail independently of tests and imports."""
+    steps = workflow["jobs"]["test"]["steps"]
+    gate = steps[-1]
+    assert "continue-on-error" not in gate
+    assert gate.get("name") == "Enforce coverage threshold"
+    assert gate.get("if") == "${{ !cancelled() }}"
+    assert shlex.split(gate["run"]) == [
+        "uv",
+        "run",
+        "--no-sync",
+        "coverage",
+        "report",
+        "--rcfile=pyproject.toml",
+    ]
+    for name in [
+        "Run workflow automation tests",
+        "Upload coverage",
+        "Test CLI commands",
+        "Verify package installation",
+    ]:
+        assert any(step.get("name") == name for step in steps[:-1])
+
+
+@pytest.mark.parametrize(
+    "section", tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
+)
 def test_coverage_configurations_agree(section):
-    """Default discovery and explicit TOML selection must share settings."""
+    """Each TOML-declared setting must agree with the default INI configuration.
+
+    INI-only settings and sections are outside this comparison.
+    """
     coverage = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["coverage"]
     config = configparser.ConfigParser(interpolation=None)
     config.read(REPO / ".coveragerc")
