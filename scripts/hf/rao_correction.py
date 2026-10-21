@@ -127,6 +127,18 @@ def _card(root: Path, policy: dict, issued: str, mode: str) -> str:
             "and prior reliability flags remain in effect."
         )
     )
+    row = f"| {issued} | {heading}; issue #3122. |\n"
+    history = "### Revision history\n\n| Date | Change and reason |\n|---|---|\n"
+    if history in original:
+        start = original.index(history) + len(history)
+        end = start
+        for line in original[start:].splitlines(keepends=True):
+            if not line.startswith("|"):
+                break
+            end += len(line)
+        original = original[:end] + row + original[end:]
+    else:
+        original += "\n\n" + history + row
     return (
         original
         + f"\n\n## {heading}\n\n{notice}\n\n"
@@ -134,8 +146,6 @@ def _card(root: Path, policy: dict, issued: str, mode: str) -> str:
         + json.dumps(policy, sort_keys=True)
         + "\n\nEngineering qualification and external claims review remain separate "
         "from byte-integrity verification. No upload is performed.\n\n"
-        + "### Revision history\n\n| Date | Change and reason |\n|---|---|\n"
-        + f"| {issued} | {heading}; issue #3122. |\n"
     )
 
 
@@ -284,6 +294,7 @@ def correct(
     if record["mode"] != "flag":
         raise ValueError("Replacement requires a verified warning bundle")
     _destination(flagged, target)
+    _destination(original, target)
     evidence = _gates(candidate, report)
     affected = _affected(record["affected"])
     baseline = _table(original / "rao.parquet")
@@ -326,7 +337,18 @@ def correct(
         key = _key(row, keys)
         if key not in expected or key in replacements:
             raise ValueError("Unexpected or duplicate replacement key")
-        if any(row[name] != expected[key][name] for name in fields - set(values)):
+        if any(
+            not (
+                row[name] == expected[key][name]
+                or (
+                    isinstance(row[name], float)
+                    and isinstance(expected[key][name], float)
+                    and math.isnan(row[name])
+                    and math.isnan(expected[key][name])
+                )
+            )
+            for name in fields - set(values)
+        ):
             raise ValueError("Replacement changed an undeclared field")
         if any(row[name] is None or not math.isfinite(row[name]) for name in values):
             raise ValueError("Replacement values must be finite and non-null")

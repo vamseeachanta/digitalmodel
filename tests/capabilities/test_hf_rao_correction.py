@@ -461,3 +461,78 @@ def test_cli_correction_and_final_claims_check(case, tmp_path):
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["claims_verifier"] == "PASS_RECORDED"
     assert json.loads(result.stdout)["publication"] == "NOT_EVALUATED"
+
+
+def test_correction_cannot_write_inside_original(case, tmp_path):
+    source, flagged, _, replacement, report = candidate(case, tmp_path)
+    before = rc._files(source)
+    output = source / "nested" / "corrected"
+    with pytest.raises(ValueError, match="outside the source"):
+        rc.correct(
+            source,
+            flagged,
+            output,
+            replacement,
+            report,
+            ["vessel_id", "freq_rad_s"],
+            ["magnitude"],
+            "2026-10-21",
+        )
+    assert not output.parent.exists()
+    assert rc._files(source) == before
+    rc.verify(source, flagged)
+
+
+def test_unchanged_auxiliary_nan_is_preserved(case, tmp_path):
+    source, _, _ = case
+    table = pq.read_table(source / "rao.parquet").append_column(
+        "auxiliary", pa.array([float("nan")] * 3)
+    )
+    pq.write_table(table, source / "rao.parquet")
+    source, flagged, _, replacement, report = candidate(case, tmp_path)
+    output = tmp_path / "corrected"
+    rc.correct(
+        source,
+        flagged,
+        output,
+        replacement,
+        report,
+        ["vessel_id", "freq_rad_s"],
+        ["magnitude"],
+        "2026-10-21",
+    )
+    result = pq.read_table(output / "rao.parquet")
+    assert result["magnitude"].to_pylist() == [3.0, 5.0, 8.0]
+    assert all(value != value for value in result["auxiliary"].to_pylist())
+
+
+@pytest.mark.parametrize("existing_history", [False, True])
+def test_correction_appends_one_revision_history(case, tmp_path, existing_history):
+    source, _, _ = case
+    if existing_history:
+        card = source / "README.md"
+        card.write_text(
+            card.read_text() + "\n### Revision history\n\n"
+            "| Date | Change and reason |\n|---|---|\n"
+            "| 2026-10-20 | Initial observations. |\n\n## Notes\n\nRetained.\n"
+        )
+    source, flagged, _, replacement, report = candidate(case, tmp_path)
+    output = tmp_path / "corrected"
+    rc.correct(
+        source,
+        flagged,
+        output,
+        replacement,
+        report,
+        ["vessel_id", "freq_rad_s"],
+        ["magnitude"],
+        "2026-10-22",
+    )
+    card = (output / "README.md").read_text()
+    assert card.count("### Revision history") == 1
+    assert card.count("| Date | Change and reason |") == 1
+    assert "| 2026-10-21 | Half-model warning; issue #3122. |" in card
+    assert "| 2026-10-22 | Full-body RAO replacement; issue #3122. |" in card
+    if existing_history:
+        assert "| 2026-10-20 | Initial observations. |" in card
+        assert "## Notes\n\nRetained." in card
