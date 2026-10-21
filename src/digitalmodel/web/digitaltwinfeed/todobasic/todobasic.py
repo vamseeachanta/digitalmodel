@@ -4,7 +4,7 @@ Provides a simple RESTful-style TODO list API using Flask blueprint
 routing with HTTP basic authentication for all task endpoints.
 """
 
-from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_verify_password
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
 from flask_httpauth import HTTPBasicAuth
 
@@ -13,17 +13,20 @@ auth = HTTPBasicAuth()
 todobasic = Blueprint('todobasic', __name__, template_folder='templates')
 
 
-@auth.get_password
-def get_password(username):
-    """Retrieve the password for HTTP basic authentication.
+# Flask-HTTPAuth 4.8.1, HTTPBasicAuth.verify_password: this callback bypasses
+# the deprecated get_password path and returns a boolean authentication result.
+@auth.verify_password
+def verify_password(username, password):
+    """Verify the credentials for HTTP basic authentication.
 
     Args:
         username: The username to authenticate.
+        password: The password presented by the request.
 
     Returns:
-        The password string if username is valid, None otherwise.
+        True if both credentials match the configured values, False otherwise.
     """
-    return basic_auth_password_for(username)
+    return basic_auth_verify_password(username, password)
 
 
 @auth.error_handler

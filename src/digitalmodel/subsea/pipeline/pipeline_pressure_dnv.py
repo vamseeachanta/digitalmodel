@@ -40,7 +40,20 @@ def dnv_collapse_pressure(
     E: float = _E_STEEL,
     nu: float = _NU_STEEL,
 ) -> float:
-    """Characteristic collapse pressure per DNV-ST-F101 Eq. (5.9).
+    """Solve the existing DNV-type collapse interaction equation.
+
+    Public equation source: EPRG, Deeper, Longer and Thicker: Challenges
+    for the Design of Subsea Pipelines (June 2022), section 3.1, Eq. (3):
+    https://www.eprg.net/fileadmin/EPRG_Dokumente/00222_Position_Paper_-_Final__EPRG__49__2_29_.pdf
+    Component coefficients and powers: TU Delft, Local Buckling and
+    Collapse of Thick Walled pipe (2016), Eqs. (3.9), (3.10):
+    https://repository.tudelft.nl/file/File_09e16762-ff32-49eb-bff8-85cffa889063
+
+    This numerical solution retains the existing plastic component model,
+    without fabrication or material-strength reduction factors. Legacy
+    ovality and elastic-property defaults are assumed, based on previous
+    experience; they are not qualified project inputs. This function alone
+    leaves compliance with DNV-ST-F101 (2021), System collapse, NOT_EVALUATED.
 
     Solved numerically from the cubic interaction equation::
 
@@ -60,25 +73,38 @@ def dnv_collapse_pressure(
 
     Returns:
         Characteristic collapse pressure p_c [MPa].
+
+    Raises:
+        ValueError: Inputs are nonfinite or outside the mathematical domain.
     """
+    values = (D, t, mat.SMYS, E, nu, f_0)
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("Collapse inputs must be finite")
+    if D <= 0.0 or not 0.0 < t < D / 2.0:
+        raise ValueError("Collapse geometry requires D > 0 and 0 < t < D/2")
+    if E <= 0.0 or mat.SMYS <= 0.0 or not -1.0 < nu < 1.0 or f_0 < 0.0:
+        raise ValueError("Collapse requires E, SMYS > 0, |nu| < 1 and f_0 >= 0")
+
+    # Component definitions: TU Delft (2016), Eqs. (3.9), (3.10), cited above.
     p_el = 2.0 * E * (t / D) ** 3 / (1.0 - nu ** 2)
     p_p = mat.SMYS * 2.0 * t / D
     coeff = p_el * p_p * f_0 * (D / t)
 
     if f_0 == 0.0 or coeff == 0.0:
-        return p_el * p_p / math.sqrt(p_el ** 2 + p_p ** 2)
+        return min(p_el, p_p)
 
     def _g(pc: float) -> float:
         return (pc - p_el) * (pc ** 2 - p_p ** 2) - pc * coeff
 
-    lo, hi = 0.0, max(p_el, p_p) * 1.5
-    if _g(lo) * _g(hi) > 0:
-        hi = max(p_el, p_p) * 3.0
-
-    tol = 1e-6 * max(p_el, p_p, 1.0)
-    for _ in range(300):
+    # EPRG (2022), Eq. (3): g(0)>0 and g(min(p_el,p_p))<0 for f_0>0.
+    # On this interval (p_el-p)*(p_p**2-p**2)/p decreases strictly,
+    # so it contains exactly one root. Larger roots are not collapse onset.
+    lo, hi = 0.0, min(p_el, p_p)
+    # Numerical budget only: 64 halvings reduce the original bracket by 2**-64,
+    # beyond binary64's 53-bit significand. Stop sooner on rounded stagnation.
+    for _ in range(64):
         mid = (lo + hi) / 2.0
-        if hi - lo < tol:
+        if mid == lo or mid == hi:
             return mid
         if _g(mid) > 0:
             lo = mid

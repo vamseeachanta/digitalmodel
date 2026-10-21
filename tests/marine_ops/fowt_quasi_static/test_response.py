@@ -7,6 +7,8 @@ import math
 import numpy as np
 import pytest
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def test_response_uses_the_boundary_element_phasor_convention():
     import xarray as xr
@@ -39,8 +41,8 @@ def test_gamma_one_spectral_moments_match_closed_form():
     omega = np.geomspace(0.0001, 1000, 100000)
     hs, tp = 2.0, 8.0
     density = spectrum(omega, hs, tp, 1.0)
-    m0 = np.trapz(density, omega)
-    m2 = np.trapz(omega**2*density, omega)
+    m0 = _trapezoid(density, omega)
+    m2 = _trapezoid(omega**2*density, omega)
     wp = 2*math.pi/tp
     assert m0 == pytest.approx(hs**2/16, rel=0.001)
     assert m2 == pytest.approx(hs**2/16*math.sqrt(1.25*math.pi)*wp**2, rel=0.001)

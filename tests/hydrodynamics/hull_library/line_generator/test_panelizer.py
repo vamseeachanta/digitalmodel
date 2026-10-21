@@ -21,6 +21,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class TestPanelizerConfig:
     """Tests for PanelizerConfig."""
@@ -297,10 +299,9 @@ def _compute_volume_from_surface(surface) -> float:
     y_grid = surface.y_grid  # shape (n_x+1, n_z+1)
 
     # np.trapezoid was introduced in numpy 2.0 (replacing np.trapz)
-    _trapz = getattr(np, "trapezoid", np.trapz) if hasattr(np, "trapz") else np.trapezoid
     # Integrate y over z for each x position
-    area_x = _trapz(y_grid, z_grid, axis=1)  # shape (n_x+1,)
+    area_x = _trapezoid(y_grid, z_grid, axis=1)  # shape (n_x+1,)
     # Integrate area over x
-    half_volume = _trapz(area_x, x_grid)
+    half_volume = _trapezoid(area_x, x_grid)
     # Full volume = 2 * half_volume (port + starboard)
     return float(2.0 * half_volume)
