@@ -431,3 +431,30 @@ def test_invalid_screen_basis_is_rejected(field, value):
         screen[field] = value
     with pytest.raises(ValueError, match="screen"):
         assess_case(case, metric(case), screen=screen)
+
+
+def test_criterion_snapshot_survives_caller_mutation_before_rendering():
+    """80/(200*0.5)=0.8 must retain its original criterion and source."""
+    cases = build_case_table(ROOT)
+    case = cases[0]
+    limit = {"ratio": 0.5, "source": "original synthetic criterion"}
+    out = assess_case(
+        case,
+        metric(case),
+        capacities_kn={name: 200 for name in case["active_lines"]},
+        limit=limit,
+    )
+    limit.update(ratio=0.3, source="replacement synthetic criterion")
+    assert out["status"] == "PASS"
+    assert out["utilisation"] == pytest.approx(0.8)
+    assert out["limit_ratio"] == 0.5
+    assert out["criterion"] == {
+        "ratio": 0.5,
+        "source": "original synthetic criterion",
+    }
+    report = render_report(
+        cases, {case["case_id"]: out}, revision="01", date="2026-10-21"
+    )
+    assert "original synthetic criterion" in report
+    assert "replacement synthetic criterion" not in report
+    assert f"assessments.{case['case_id']}.criterion.ratio</td><td>0.5" in report

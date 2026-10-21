@@ -6,6 +6,7 @@ intentionally absent: the caller supplies a condition-specific criterion.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -193,7 +194,7 @@ def assess_case(case, result=None, *, capacities_kn=None, limit=None, screen=Non
         "offset_difference_pct": None,
         "tension_difference_pct": None,
         "reason": "stored results absent",
-        "criterion": limit,
+        "criterion": copy.deepcopy(limit),
     }
     if screen is not None:
         out["screen"] = _validated_screen(screen, case["active_lines"])
