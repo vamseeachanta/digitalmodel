@@ -37,6 +37,8 @@ from digitalmodel.orcawave.vessel_database import (
     VesselParameters,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 @pytest.mark.parametrize("gamma", [0, -1, float("nan"), float("inf")])
 def test_10_gamma_validation(gamma):
@@ -138,7 +140,7 @@ def test_12_jonswap_published_ordinates():
         )
         assert actual[i] == pytest.approx(expected, rel=1e-9)
     # Independent continuous-model variance (A_gamma is an approximation).
-    assert np.trapz(actual, omega) == pytest.approx(1.002416202474, rel=0.0001)
+    assert _trapezoid(actual, omega) == pytest.approx(1.002416202474, rel=0.0001)
 
 
 def test_12_issc_period_ratio():

@@ -16,9 +16,9 @@ from types import MappingProxyType
 from . import grades
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
-# Revision status: assigned after merge, when the source is reachable from main.
-# Until then, provenance is pinned by the mandatory normalized digest only.
-_SOURCE_REVISION = None
+# PR #2741 merge, reachable from main; normalized grades.py digest checked.
+# Repository traceability does not establish original-standard qualification.
+_SOURCE_REVISION = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
 # SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
 # then encoded as UTF-8.
 _SOURCE_SHA256 = "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"

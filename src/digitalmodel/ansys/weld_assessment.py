@@ -31,6 +31,8 @@ from typing import Optional
 
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Configuration dataclasses
@@ -341,11 +343,11 @@ class WeldAssessmentGenerator:
         x = np.linspace(-t / 2, t / 2, n)
 
         # Membrane stress: (1/t) * integral(sigma dx) over thickness
-        sigma_m = float(np.trapz(s, x) / t)
+        sigma_m = float(_trapezoid(s, x) / t)
 
         # Bending stress: (6/t^2) * integral(sigma * x dx) over thickness
         # This gives the max bending stress at the surface
-        sigma_b = float(6.0 * np.trapz(s * x, x) / (t ** 2))
+        sigma_b = float(6.0 * _trapezoid(s * x, x) / (t ** 2))
 
         # Peak stress at surfaces
         sigma_mb = sigma_m + sigma_b
