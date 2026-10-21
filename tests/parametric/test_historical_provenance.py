@@ -1,0 +1,205 @@
+"""Historical provenance uses retained bytes, never the live response code."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+from pathlib import Path
+
+import pytest
+
+from digitalmodel.parametric import historical_provenance as history
+
+ROOT = Path(__file__).resolve().parents[2]
+INDEX = ROOT / "atlases" / "historical-provenance.json"
+
+
+def test_independent_raw_fingerprint_vector():
+    """Hand construction of the legacy refresh.py hash, not a response solve.
+
+    Source stream = UTF-8(path) || raw bytes in declared order. Input hash =
+    SHA256(raw input). Final hash = SHA256(sorted-key JSON of the five fields).
+    The toy bytes and empty standards are test inputs, not engineering values.
+    """
+    spec = {"physics": "linear", "response": "value", "axes": []}
+    basis = {
+        "spec": spec,
+        "response_kwargs": {},
+        "standards": [],
+        "input_sha256": hashlib.sha256(b"input\r\n").hexdigest(),
+        "source_sha256": hashlib.sha256(b"a.pyx\r\nb.pyy\n").hexdigest(),
+    }
+    expected = hashlib.sha256(json.dumps(basis, sort_keys=True).encode()).hexdigest()
+    assert history.legacy_fingerprint(
+        spec, {}, [], b"input\r\n", [("a.py", b"x\r\n"), ("b.py", b"y\n")]
+    ) == expected
+
+
+@pytest.fixture(scope="module")
+def inventory():
+    return json.loads(INDEX.read_text())
+
+
+def test_inventory_covers_every_computed_manifest(inventory):
+    import yaml
+
+    expected = set()
+    for path in (ROOT / "atlases").glob("*/*/manifest.yaml"):
+        provenance = yaml.safe_load(path.read_text())["provenance"]
+        if provenance.get("code_version") and provenance.get("content_fingerprint"):
+            expected.add(path.relative_to(ROOT).as_posix())
+    assert {row["manifest"] for row in inventory["atlases"]} == expected
+
+
+def test_all_retained_bases_reconstruct(inventory):
+    for row in inventory["atlases"]:
+        result = history.verify_git(row, ROOT, retained_ref="origin/main")
+        assert result["status"] == row["status"], row["manifest"]
+        if result["status"] == "VERIFIED":
+            assert result["fingerprint"] == row["content_fingerprint"]
+        else:
+            assert result["reason"] == row["reason"]
+
+
+def test_historical_viv_standards_are_not_current_defaults(inventory):
+    row = next(r for r in inventory["atlases"] if "/862a28080fc9/" in r["manifest"])
+    assert row["basis"]["standards"] == [{"id": "DNV-RP-F105", "edition": "2017-06"}]
+    assert history.verify_git(row, ROOT)["status"] == "VERIFIED"
+
+
+@pytest.fixture
+def retained_record(inventory):
+    return copy.deepcopy(next(r for r in inventory["atlases"] if r["status"] == "VERIFIED"))
+
+
+def test_archive_reconstruction_without_git(retained_record, tmp_path):
+    row = retained_record
+    reader = history.git_reader(ROOT, row["source_revision"])
+    for name in row["sources"]:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(reader(name))
+    assert history.verify_sources(row, history.archive_reader(tmp_path)) == row["content_fingerprint"]
+
+
+@pytest.mark.parametrize("damage", ["missing", "changed", "crlf", "symlink"])
+def test_archive_rejects_unavailable_or_mismatched_bytes(retained_record, tmp_path, damage):
+    row = retained_record
+    reader = history.git_reader(ROOT, row["source_revision"])
+    for name in row["sources"]:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(reader(name))
+    name = next(iter(row["sources"]))
+    path = tmp_path / name
+    if damage == "missing":
+        # Exercise an absent archive without deleting retained evidence.
+        archive = tmp_path / "absent"
+    elif damage == "symlink":
+        archive = tmp_path / "redirected"
+        archive.symlink_to(tmp_path, target_is_directory=True)
+    else:
+        archive = tmp_path
+        path.write_bytes(path.read_bytes() + (b"\r\n" if damage == "crlf" else b"changed"))
+    with pytest.raises(history.EvidenceError):
+        history.verify_sources(row, history.archive_reader(archive))
+
+
+@pytest.mark.parametrize("field", ["source_revision", "content_fingerprint", "basis", "sources"])
+def test_git_rejects_mismatched_evidence(retained_record, field):
+    row = retained_record
+    if field == "source_revision":
+        row[field] = "0" * 40  # Synthetic unavailable object ID, not an engineering limit.
+    elif field == "content_fingerprint":
+        row[field] = "0" * 64
+    elif field == "basis":
+        row[field]["standards"] = [{"id": "unavailable", "edition": "unknown"}]
+    else:
+        row[field].pop(next(iter(row[field])))
+    with pytest.raises(history.EvidenceError):
+        history.verify_git(row, ROOT)
+
+
+def test_git_rejects_unretained_revision(retained_record):
+    with pytest.raises(history.EvidenceError, match="retained"):
+        history.verify_git(retained_record, ROOT, retained_ref="missing-retention-ref")
+
+
+@pytest.mark.parametrize("path", ["../escape", "/absolute", "a/../b", "a\\b"])
+def test_archive_paths_are_relative_and_unredirected(path, tmp_path):
+    with pytest.raises(history.EvidenceError):
+        history.archive_reader(tmp_path)(path)
+
+
+def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
+    row = retained_record
+    for name in row["artifacts"]:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((ROOT / name).read_bytes())
+    manifest = tmp_path / row["manifest"]
+    manifest.write_bytes(manifest.read_bytes() + b"# changed\n")
+    with pytest.raises(history.EvidenceError, match="digest"):
+        history.verify_artifacts(row, tmp_path)
+
+
+def test_wrapper_is_bound_even_when_legacy_hash_omits_it(retained_record):
+    row = retained_record
+    original = history.git_reader(ROOT, row["source_revision"])
+
+    def changed(name):
+        data = original(name)
+        return data + b"# changed wrapper\n" if name == history.WRAPPER else data
+
+    with pytest.raises(history.EvidenceError, match="Source digest mismatch"):
+        history.verify_sources(row, changed)
+
+
+def test_missing_wrapper_digest_is_rejected(retained_record):
+    row = retained_record
+    row["sources"].pop(history.WRAPPER)
+    with pytest.raises(history.EvidenceError, match="inventory mismatch"):
+        history.verify_sources(row, history.git_reader(ROOT, row["source_revision"]))
+
+
+def test_unsupported_algorithm_is_rejected(retained_record):
+    retained_record["algorithm"] = "unknown"
+    with pytest.raises(history.EvidenceError, match="Unsupported"):
+        history.verify_sources(retained_record, lambda name: b"")
+
+
+def test_declared_gap_does_not_hide_source_corruption(inventory):
+    row = next(r for r in inventory["atlases"] if r["status"] == "NOT_EVALUATED")
+    row = copy.deepcopy(row)
+    name = next(iter(row["sources"]))
+    row["sources"][name] = "0" * 64
+    with pytest.raises(history.EvidenceError, match="Source digest mismatch"):
+        history.verify_git(row, ROOT)
+
+
+@pytest.mark.parametrize("status", ["VERIFIED", "NOT_EVALUATED", "REJECTED"])
+def test_cli_reports_status_and_refuses_incomplete_audit(
+    retained_record, tmp_path, monkeypatch, capsys, status,
+):
+    index = tmp_path / "index.json"
+    index.write_text(json.dumps({"atlases": [retained_record]}))
+
+    def verify(*args, **kwargs):
+        if status == "REJECTED":
+            raise history.EvidenceError("Unavailable evidence")
+        return {"status": status}
+
+    monkeypatch.setattr(history, "verify_git", verify)
+    assert history.main(["--index", str(index)]) == int(status != "VERIFIED")
+    assert json.loads(capsys.readouterr().out)["status"] == status
+
+
+def test_documented_worked_example(monkeypatch):
+    document = ROOT / "docs/plans/parametric-refresh/historical-provenance.md"
+    text = document.read_text()
+    example = text.split("```python\n", 1)[1].split("```", 1)[0]
+    monkeypatch.chdir(ROOT)
+    namespace = {}
+    exec(compile(example, document.name, "exec"), namespace)
+    assert namespace["answer"]["fingerprint"] in text
