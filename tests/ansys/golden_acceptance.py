@@ -4,6 +4,8 @@ import json
 import math
 from pathlib import Path, PureWindowsPath
 
+from digitalmodel.ansys.results_extractor import ResultsExtractor
+
 
 def number(value):
     assert isinstance(value, (float, int)) and not isinstance(value, bool)
@@ -37,15 +39,10 @@ def _unique_object(pairs):
 
 
 def parse_digest(text):
-    tokens = text.strip().replace("\n", ",").split(",")
-    tokens = [token.strip() for token in tokens if token.strip()]
-    assert tokens and len(tokens) % 2 == 0, "incomplete digest"
-    result = {}
-    for label, raw in zip(tokens[::2], tokens[1::2]):
-        label = label.strip().lower()
-        assert label not in result, f"duplicate digest key {label}"
-        result[label] = number(float(raw))
-    return result
+    try:
+        return ResultsExtractor().parse_result_digest(text)
+    except ValueError as exc:
+        raise AssertionError(str(exc)) from exc
 
 
 def load_golden(case_dir):
