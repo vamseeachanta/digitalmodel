@@ -1,5 +1,6 @@
 # Naval architecture knowledge pack
 
+Revision 4 tightens input validation and identifies the limited stability scope.
 Revision 3 supplements the historical evidence below with the missing-input
 contract and resonance regression for #2597. The original code pin and test
 records remain historical; the supplement does not requalify other methods.
@@ -10,14 +11,16 @@ records remain historical; the supplement does not requalify other methods.
 | --- | --- | --- |
 | 2 | 2026-10-15 | Existing pack records calculation interfaces and evidence. |
 | 3 | 2026-10-21 | Add completeness and resonance pitfalls, regression checks and worked inputs for #2597. |
+| 4 | 2026-10-21 | Reject malformed direct inputs and incomplete curves, clarify stability scope and pin revision 3 evidence. |
 
 | Header field | Value |
 | --- | --- |
 | Module | naval_architecture |
 | Repository | digitalmodel |
 | Package path | src/digitalmodel/naval_architecture |
-| Pack revision | 3, 2026-10-21 |
-| Code revision | `d96aad6b05f0da8b01be3cc490277bf8080bf663` |
+| Pack revision | 4, 2026-10-21 |
+| Historical code revision | `d96aad6b05f0da8b01be3cc490277bf8080bf663` |
+| Revision 3 code revision (C11/C12) | `902f77a12f4efda52cbfbc1e400e7ada93ca919f` |
 | Analysis family | EC — Python engineering calculations |
 | Quality manager role | Engineering calculations quality manager |
 | Status | DRAFT |
@@ -155,6 +158,9 @@ G3 NOT_APPLICABLE: no transient solver job is part of these Python calculation c
 C5 does not establish an AQG-signed report appendix; retain per-case inputs, hashes, results, deviations and independent review evidence before using the outputs in a report. (AQG r0, sections 9 and 11.)
 
 ### Revision 3 supplement
+
+The C11/C12 evidence is pinned to the revision 3 code revision in the header;
+the earlier checks retain the historical code revision.
 
 | Check | Gate | Executable route and criterion | Evidence |
 | --- | --- | --- | --- |

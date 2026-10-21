@@ -10,6 +10,7 @@ approval or a class-rule assessment.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-21 | Record missing-data behavior and oscillator answers for #2597. |
+| 2 | 2026-10-21 | Align direct and aggregate validation, require curve coverage and identify the limited stability scope. |
 
 ## Input contract
 
@@ -19,11 +20,20 @@ nonfinite scalar, nonpositive principal dimension, empty curve, mismatched
 curve lengths or nonincreasing angles prevents evaluation of the affected row.
 Curve inputs are lists or tuples of finite numbers. Zero trim and zero
 freeboard are valid supplied values. No GM, propeller diameter or actual
-section modulus is inferred from absent data.
+section modulus is inferred from absent data. Direct `check_*` calls apply the
+same validation and return `status` on evaluated and unevaluated rows. Finite
+real scalars, including NumPy real scalars, are supported; booleans are rejected.
+The block coefficient requires `0 < cb <= 1`; displacement is positive and
+the supplied section modulus is nonnegative. Caller-supplied ratio bounds are
+finite, positive and ordered.
+
+GZ angles start at zero and cover at least 40 degrees. A truncated interval
+returns `NOT_EVALUATED` without criterion results. The interface does not take a
+downflooding angle and cannot evaluate an alternative integration endpoint.
 
 | Check | Required input keys |
 | --- | --- |
-| Intact stability | `angles_deg`, `gz_m`, `gm_m` |
+| Intact stability, Part A 2.2 only | `angles_deg`, `gz_m`, `gm_m` |
 | Freeboard | `freeboard_m`, `lwl_m` |
 | Beam/draft | `beam_m`, `draft_m` |
 | Length/beam | `lwl_m`, `beam_m` |
@@ -39,6 +49,11 @@ rows pass. `failed` counts evaluated failures; `not_evaluated` counts missing
 or invalid rows. Their sum with `passed` equals `total`. Consumers that used
 `not row['pass']` to count failures can now distinguish unknown evidence.
 An empty input produces only unevaluated rows.
+
+The stability row and aggregate name identify the Part A 2.2 scope. The Part A
+2.3 severe wind and rolling criterion is not evaluated. A passing aggregate
+therefore denotes these preliminary screens only; it does not establish full
+intact-stability compliance.
 
 ## Worked example: partial compliance input
 
@@ -96,5 +111,7 @@ edition and clause have not been qualified here. No new engineering limit is
 introduced. A `PASS` denotes the implemented preliminary screen only. Supply
 missing measurements, adopt the applicable published rule basis and obtain
 an approved stability and structural assessment before drawing a compliance
-conclusion. GZ coverage and downflooding applicability still require a review
-of the supplied curve; this change checks curve structure only.
+conclusion. The legacy strength coefficient, section-modulus unit conversion
+and per-clause stability citations remain unqualified. GZ coverage is checked
+over the implemented integration interval; downflooding applicability and the
+weather criterion still require a separate assessment.
