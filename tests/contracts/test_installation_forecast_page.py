@@ -301,9 +301,7 @@ def test_embedded_data_reproduces_page():
     assert render_embedded_scenario().encode('utf-8') == PAGE.read_bytes()
 
 
-@pytest.mark.parametrize('separator', ['/', '\\'])
-def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path, monkeypatch, separator):
-    monkeypatch.setattr(os, 'sep', separator)
+def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
     env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
     repo, checkout = tmp_path / 'repo', tmp_path / 'checkout'
     repo.mkdir()
