@@ -13,7 +13,8 @@ from digitalmodel.workflows import campaign_state as state
 def test_repeated_poll_does_not_refresh_progress_age():
     """Counter 4→5 at t=20; at t=31 age=31−20=11 exceeds input limit 10."""
     evidence = state.observe_progress({}, counter=4, now=10)
-    assert evidence == {"progress_counter": 4, "progress_counter_at": None}
+    assert evidence == {"progress_counter": 4, "progress_counter_at": None,
+                        "progress_observed_at": 10}
     evidence = state.observe_progress(evidence, counter=5, now=20)
     evidence["process_alive"] = True
     original = deepcopy(evidence)
@@ -55,6 +56,37 @@ def test_observation_rejects_reversed_clock():
     with pytest.raises(ValueError, match="time"):
         state.observe_progress({"progress_counter": 4, "progress_counter_at": 20},
                                counter=5, now=19)
+
+
+@pytest.mark.parametrize("samples", [
+    ((4, 100),),
+    ((4, 10), (5, 20), (5, 100)),
+    ((4, 10), (5, 20), (1, 100)),
+], ids=["first-sample", "unchanged-poll", "counter-reset"])
+@pytest.mark.parametrize("counter_change", [-1, 0, 1],
+                         ids=["reset", "unchanged", "advance"])
+def test_observation_rejects_reversal_after_latest_sample(samples, counter_change):
+    """Every history ends at t=100; t=25 is rejected for every counter change."""
+    evidence = {"process_alive": True}
+    for counter, now in samples:
+        evidence = state.observe_progress(evidence, counter=counter, now=now)
+    original = deepcopy(evidence)
+    assert state.classify_lane(evidence, 100, 10) == state.LaneState.STALLED
+    with pytest.raises(ValueError, match="time"):
+        state.observe_progress(evidence, counter=samples[-1][0] + counter_change,
+                               now=25)
+    assert evidence == original
+    assert state.classify_lane(evidence, 100, 10) == state.LaneState.STALLED
+
+
+def test_equal_observation_time_preserves_advancement_age():
+    """At t=100 age=100-20=80; another t=100 poll cannot reduce that age."""
+    evidence = state.observe_progress({"process_alive": True}, counter=4, now=10)
+    evidence = state.observe_progress(evidence, counter=5, now=20)
+    evidence = state.observe_progress(evidence, counter=5, now=100)
+    polled = state.observe_progress(evidence, counter=5, now=100)
+    assert polled["progress_counter_at"] == 20
+    assert state.classify_lane(polled, 100, 10) == state.LaneState.STALLED
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1, True, "10", None])

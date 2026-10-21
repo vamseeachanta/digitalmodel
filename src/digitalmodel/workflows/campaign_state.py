@@ -84,6 +84,7 @@ def observe_progress(evidence, *, counter, now) -> dict:
 
     Issue 2298, contract item 2: only a strict counter increase refreshes age.
     The first sample or a counter reset requires another observed increase.
+    Every sample records its observation time; earlier samples are rejected.
     Counters and timestamps must use consistent units and one clock domain.
     """
     for name, value in (("counter", counter), ("now", now)):
@@ -91,15 +92,18 @@ def observe_progress(evidence, *, counter, now) -> dict:
             raise ValueError(f"{name} must be a finite nonnegative number")
     previous = evidence.get("progress_counter")
     advanced_at = evidence.get("progress_counter_at")
-    if _finite_nonnegative(advanced_at) and advanced_at > now:
-        raise ValueError("Observation time precedes recorded progress time")
+    observed_at = evidence.get("progress_observed_at")
+    for recorded_at in (observed_at, advanced_at):
+        if _finite_nonnegative(recorded_at) and recorded_at > now:
+            raise ValueError("Observation time precedes recorded sample or progress time")
     if not _finite_nonnegative(previous) or counter < previous:
         advanced_at = None
     elif counter > previous:
         advanced_at = now
     elif not _finite_nonnegative(advanced_at):
         advanced_at = None
-    return dict(evidence, progress_counter=counter, progress_counter_at=advanced_at)
+    return dict(evidence, progress_counter=counter, progress_counter_at=advanced_at,
+                progress_observed_at=now)
 
 
 def classify_lane(evidence, now, stall_after) -> LaneState:
