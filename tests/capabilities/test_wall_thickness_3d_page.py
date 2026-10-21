@@ -305,3 +305,26 @@ def test_worked_example_records_inputs_method_answer_and_limits():
     text = example.read_text(encoding="utf-8")
     for phrase in ("Revision history", "Inputs", "Method", "Answer", "NOT_EVALUATED", "assumed, based on previous experience"):
         assert phrase in text
+
+
+def test_worked_example_identifies_assumed_strength_conversion_basis():
+    text = (REPO_ROOT / "docs/examples/wall-thickness-load-example.html").read_text()
+    assert "rounded ksi conversions" in text
+    assert "65 ksi" in text and "77 ksi" in text
+    assert "not asserted as API 5L tabulated minima" in text
+    assert "API 5L X65 PSL1 is assumed" not in text
+
+
+def test_worked_example_links_stay_inside_the_docs_site():
+    from html.parser import HTMLParser
+
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == "a":
+                href = dict(attrs).get("href", "")
+                assert not href.startswith("../../")
+
+    text = (REPO_ROOT / "docs/examples/wall-thickness-load-example.html").read_text()
+    Links().feed(text)
+    assert "ApiStd2rdStrategy" in text
+    assert "test_wall_thickness_3d.py" in text
