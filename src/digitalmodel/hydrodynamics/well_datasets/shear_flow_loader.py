@@ -176,3 +176,32 @@ def _to_numpy(value: Any) -> np.ndarray:
     if hasattr(value, "numpy"):
         return value.numpy()  # type: ignore[return-value]
     return np.asarray(value)
+
+
+def vorticity_from_velocity(
+    velocity: np.ndarray, *, dx_m: float, dy_m: float
+) -> np.ndarray:
+    """Compute z vorticity in inverse seconds from one SI velocity snapshot.
+
+    The Cartesian uniform grid uses shape (2, H, W): components (u, v),
+    rows along y and columns along x. Both grid increments are required in
+    metres; velocities are in metres per second. Return shape (1, H, W).
+
+    Basis: OpenStax Calculus Volume 3 (2016), section 6.5, Definition of Curl:
+    omega_z = dv/dx - du/dy. Centred differences are used in the interior and
+    one-sided differences at boundaries, with no periodic wrap. A linear field
+    is differentiated exactly apart from floating-point arithmetic; turbulent
+    fields require an independent grid-convergence assessment.
+    """
+    for name, spacing in (("dx_m", dx_m), ("dy_m", dy_m)):
+        if not np.isscalar(spacing) or not np.isfinite(spacing) or spacing <= 0:
+            raise ValueError(f"{name} must be positive and finite")
+    values = np.asarray(velocity, dtype=float)
+    if values.ndim != 3 or values.shape[0] != 2 or min(values.shape[1:]) < 2:
+        raise ValueError("velocity shape must be (2, H, W), with H and W >= 2")
+    if not np.isfinite(values).all():
+        raise ValueError("velocity must contain only finite values")
+    # Definition of curl, source above; NumPy differentiates along the named axis.
+    dv_dx = np.gradient(values[1], dx_m, axis=1)
+    du_dy = np.gradient(values[0], dy_m, axis=0)
+    return (dv_dx - du_dy)[np.newaxis, ...]
