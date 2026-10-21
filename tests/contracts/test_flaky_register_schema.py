@@ -17,7 +17,18 @@ def test_flaky_register_schema():
     assert isinstance(rows, list)
     assert len({row["id"] for row in rows}) == len(rows)
     for row in rows:
-        assert set(row) == {"id", "kind", "first_seen", "last_seen", "evidence", "cause", "fix_pr", "status"}
+        required = {"id", "kind", "first_seen", "last_seen", "evidence", "cause", "fix_pr", "status"}
+        assert required <= set(row) <= required | {"passing_evidence"}
+        if row["status"] == "fixed":
+            assert "passing_evidence" in row
+            assert type(row["fix_pr"]) is int and row["fix_pr"] > 0
+        if "passing_evidence" in row:
+            passing = row["passing_evidence"]
+            assert isinstance(passing, list) and passing
+            assert all(
+                isinstance(url, str) and url.startswith("https://github.com/")
+                and "/actions/runs/" in url for url in passing
+            )
         assert isinstance(row["id"], str) and row["id"]
         assert row["kind"] in {"retry-pass", "same-tree-mismatch", "signal-exit", "repeated-failure"}
         assert row["status"] in {"open", "fixed"}
@@ -41,6 +52,8 @@ def test_flaky_register_accepts_valid_statuses(monkeypatch, status):
     path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
     rows = yaml.safe_load(path.read_text())
     rows[0]["status"] = status
+    if status == "fixed":
+        rows[0]["passing_evidence"] = list(rows[0]["evidence"])
     monkeypatch.setattr(yaml, "safe_load", lambda text: rows)
     test_flaky_register_schema()
 
@@ -50,3 +63,26 @@ def test_repeated_failure_without_passing_evidence_remains_open():
     row = yaml.safe_load(path.read_text())[0]
     assert row["kind"] == "repeated-failure"
     assert row["status"] == "open"
+
+
+@pytest.mark.parametrize("passing_evidence", [None, [], "not-a-list", ["not-a-run"], [1]])
+def test_fixed_register_rejects_invalid_passing_evidence(monkeypatch, passing_evidence):
+    path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
+    rows = yaml.safe_load(path.read_text())
+    rows[0]["status"] = "fixed"
+    if passing_evidence is not None:
+        rows[0]["passing_evidence"] = passing_evidence
+    monkeypatch.setattr(yaml, "safe_load", lambda text: rows)
+    with pytest.raises(AssertionError):
+        test_flaky_register_schema()
+
+
+@pytest.mark.parametrize("fix_pr", ["pending", True, 0, -1, "2576"])
+def test_fixed_register_rejects_invalid_fix_pr(monkeypatch, fix_pr):
+    path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
+    rows = yaml.safe_load(path.read_text())
+    rows[0].update(status="fixed", fix_pr=fix_pr,
+                   passing_evidence=list(rows[0]["evidence"]))
+    monkeypatch.setattr(yaml, "safe_load", lambda text: rows)
+    with pytest.raises(AssertionError):
+        test_flaky_register_schema()
