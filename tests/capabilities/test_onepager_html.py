@@ -58,6 +58,18 @@ def test_regeneration_preserves_both_wall_thickness_explorer_links(tmp_path):
     )
 
 
+@pytest.mark.parametrize("card_id", [
+    "wall-thickness-explorer", "wall-thickness-3d-explorer",
+])
+def test_generated_wall_thickness_cards_preserve_identity(card_id):
+    generated = {card["id"]: card for card in builder.build_cards()}
+    committed = {card["id"]: card for card in
+                 json.loads(builder._OUT.read_text(encoding="utf-8"))}
+    assert card_id in generated
+    assert generated[card_id] == committed[card_id]
+    assert generated[card_id]["link"] == f"docs/api/structural/{card_id}.html"
+
+
 def test_section_cards_link_to_the_published_capabilities_page():
     cards = {card["id"]: card for card in builder.build_cards()}
     for spec in builder.SPECS:
