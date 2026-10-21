@@ -429,8 +429,9 @@ SPECS: list[dict] = [
                "3D surface with a 2D fallback. Inputs are assumed, based on previous experience; "
                "design qualification is not evaluated.",
          figures=[("9", "design codes")],
-         bullets=["Utilisation and governing check across wall thickness, tension and bending",
-                  "Bounded snapshot with a 3D surface and 2D fallback"]),
+         bullets=["Wall thickness, effective tension and bending moment across nine design codes",
+                  "Bounded snapshot with a 3D surface and a 2D fallback",
+                  "Assumed inputs; design qualification is not evaluated"]),
     dict(id="sloshing-explorer", kind="work", title="Tank sloshing natural-period & resonance explorer",
          std="Faltinsen linear potential theory · McIver · API 650 Annex E",
          path="structural/sloshing-explorer.html",
