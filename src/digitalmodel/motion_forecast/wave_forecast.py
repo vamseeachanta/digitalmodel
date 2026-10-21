@@ -161,6 +161,9 @@ def synthesize_directional_forecast(
 
 # ---- free surface -----------------------------------------------------------
 
+synthesize_directional_forecast.LIVE_INPUT = False  # type: ignore[attr-defined]
+
+
 def surface_elevation(forecast: WaveForecast, x: float, y: float, t):
     """Free-surface elevation eta(x, y, t) (m), LWT.
 
