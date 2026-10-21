@@ -151,10 +151,10 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
         "scaling": sorted(rows, key=lambda r: r["ranks"]),
         "best_efficiency_rank": best,
     }
-    # A label writes a per-box manifest (…-<label>.json) so multiple boxes'
-    # results coexist for head-to-head comparison; no label keeps the base name.
-    out = (_MANIFEST.with_name(f"{_MANIFEST.stem}-{label}{_MANIFEST.suffix}")
-           if label else _MANIFEST)
+    # Default to capacity wording; an explicit label distinguishes equal-capacity
+    # workstations without changing the committed reference manifest.
+    suffix = label or (f"{cores}-core-workstation" if cores else "workstation")
+    out = _MANIFEST.with_name(f"{_MANIFEST.stem}-{suffix}{_MANIFEST.suffix}")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(manifest, indent=2) + "\n")
     manifest["_out_path"] = str(out.relative_to(_REPO))
@@ -169,7 +169,7 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("--dt", type=float, default=0.001)
     ap.add_argument("--ranks", type=int, nargs="+", default=[1, 2, 4, 8, 16, 24, 32])
     ap.add_argument("--label", default=None,
-                    help="per-box tag; writes sloshing-3d-benchmark-<label>.json so boxes coexist")
+                    help="optional public tag; defaults to <cores>-core-workstation")
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)
     print(f"3D benchmark: cpb={args.cpb}, end={args.end_time}s, ranks={args.ranks}")

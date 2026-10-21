@@ -1,13 +1,13 @@
 # CFD execution box — onboarding runbook (digitalmodel #1495)
 
 Bring a fresh Ubuntu 24.04 box to a working, **reproducible** CFD-execution state
-(matching `ace-linux-2`), benchmark it against a-l-2, and — if it wins — make it
+(matching the shared workstation), benchmark it against that reference, and — if it wins — make it
 the dedicated CFD node. interFoam is **CPU/MPI-bound**; "compute power" = cores +
 memory bandwidth, not GPU.
 
 ## Topology
-The box is **headless** and reached by **SSH from ace-linux-1** (`ssh <cfdbox>` on
-a-l-1). Because it's headless: `gh` and cloud auth use **tokens, not browser
+The box is **headless** and reached by **SSH from the control workstation** (`ssh <cfdbox>`).
+Because it's headless: `gh` and cloud auth use **tokens, not browser
 flows**. Because CFD outputs must survive the box, **key data (inputs / reduced
 outputs / reports) is synced to a cloud remote** (see §5).
 
@@ -27,24 +27,29 @@ cd $HOME/digitalmodel
 scripts/setup/verify-cfd-box.sh                 # toolchain + tiny serial/2-rank MPI smoke
 ```
 
-## 3. Benchmark vs a-l-2
+## 3. Benchmark vs the shared workstation
 ```bash
 scripts/setup/verify-cfd-box.sh --benchmark $HOME/cfd_work
-# → writes docs/api/cfd/sloshing-3d-benchmark-<hostname>.json (per-box, doesn't clobber a-l-2's)
+# → writes docs/api/cfd/sloshing-3d-benchmark-<cores>-core-workstation.json
 ```
-`docs/api/cfd/sloshing-3d-benchmark.json` is the **a-l-2 baseline** (already in the
+`docs/api/cfd/sloshing-3d-benchmark.json` is the **shared-workstation reference** (already in the
 repo). Compare:
 ```bash
 .venv/bin/python scripts/setup/compare-cfd-benchmark.py \
     docs/api/cfd/sloshing-3d-benchmark.json \
-    docs/api/cfd/sloshing-3d-benchmark-<hostname>.json
+    docs/api/cfd/sloshing-3d-benchmark-<cores>-core-workstation.json
 ```
 Matched case (cpb=60 / 216k cells, 0.30 s window, core ladder). Judge on **peak
-throughput AND wall-clock predictability** — a-l-2's real limit was contention on
+throughput AND wall-clock predictability** — the reference workstation's limit was contention on
 a shared box, not the solver.
 
+The suffix uses the Python CPU count, or `workstation` if it is unavailable.
+Refreshes preserve the unsuffixed reference. Workstations with equal CPU counts
+share a default output name; use the collector's explicit `--label` with a
+public role tag when their results must coexist.
+
 ## 4. Dispatch between CFD Linux hosts
-Use the dispatcher from `ace-linux-1` when both `dev-gpu` and `ace-linux-2` are
+Dispatch from the control workstation when dedicated and shared compute are
 available over SSH. It probes each host for reachability, core count, and current
 load, then selects the fastest eligible host from the benchmark manifests.
 
@@ -56,20 +61,22 @@ uv run python scripts/setup/dispatch-cfd-run.py --ranks 8 --dry-run -- \
 Remove `--dry-run` to execute the command on the selected host. The remote
 command runs with OpenFOAM v2312 sourced, from `~/digitalmodel`, and receives:
 `CFD_DISPATCH_HOST`, `CFD_DISPATCH_RANKS`, and `CFD_DISPATCH_S_PER_STEP`.
-The prose alias `dev-gpu` denotes the host addressed by the first dispatcher key in the Host defaults list below.
-
 Host defaults:
-- `gpu-claw`: `CFD_GPU_CLAW_SSH` or `gpu-claw`; manifest
-  `docs/api/cfd/sloshing-3d-benchmark-8-core-workstation.json`. For VPN-only addresses,
-  export `CFD_GPU_CLAW_SSH=user@<vpn-ip>` before dispatch.
-- `ace-linux-2`: `CFD_ACE_LINUX_2_SSH` or `ace-linux-2`;
+- `dedicated-cfd`: SSH role alias `dedicated-cfd`; manifest
+  `docs/api/cfd/sloshing-3d-benchmark-8-core-workstation.json`.
+- `shared-cfd`: SSH role alias `shared-cfd`;
   manifest `docs/api/cfd/sloshing-3d-benchmark.json`.
+
+Configure these role aliases in SSH configuration, retain the existing SSH
+override variables, or supply `--host role=ssh-target,manifest,dedicated` (use
+`shared` for shared compute). A different CPU capacity or explicit benchmark
+label requires the corresponding manifest through `--host`.
 
 For offline planning or tests, bypass SSH probes:
 ```bash
 uv run python scripts/setup/dispatch-cfd-run.py \
-    --assume-probe gpu-claw=8,0.5 \
-    --assume-probe ace-linux-2=32,8.0 \
+    --assume-probe dedicated-cfd=8,0.5 \
+    --assume-probe shared-cfd=32,8.0 \
     --ranks 8 --dry-run -- echo run-on-{host}-np-{ranks}
 ```
 
@@ -94,10 +101,10 @@ Syncs the **small durable set** — input configs, result manifests, reports/HTM
   → new host) and the `cfd-execution-box` memory note.
 - Re-calibrate the run-time estimator to the new box.
 - Move heavy sweeps (e.g. the gated 3D L-tank, #1433, once #640 geometry lands) here;
-  free a-l-2 for interactive/dev work.
+  free the shared workstation for interactive work.
 
 ## Reproducibility notes
 - The benchmark is only comparable at the **same OpenFOAM build** (v2312 2312.260127-2)
   and the **same mesh size**; the provisioner pins v2312 for exactly this reason.
 - Run the benchmark on an **idle** box for clean high-core numbers (that was the
-  a-l-2 failure mode).
+  shared-workstation failure mode).

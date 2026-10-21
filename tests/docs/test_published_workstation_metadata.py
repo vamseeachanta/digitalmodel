@@ -3,8 +3,11 @@
 
 """Published documentation describes compute capacity without internal aliases."""
 
+import importlib.util
 import json
 import os
+import socket
+import sys
 from pathlib import Path
 
 import pytest
@@ -128,11 +131,53 @@ def test_benchmark_collect_publishes_capacity(tmp_path, monkeypatch, label, core
     monkeypatch.setattr(os, "cpu_count", lambda: cores)
     monkeypatch.setattr(os, "uname", lambda: pytest.fail("Metadata must not query a hostname"),
                         raising=False)
+    monkeypatch.setattr(socket, "gethostname", lambda: INTERNAL_HOSTS[-1])
     manifest = benchmark.collect(60, 0.3, [], label=label)
+    suffix = label or (f"{cores}-core-workstation" if cores else "workstation")
+    assert Path(manifest["_out_path"]).name == f"benchmark-{suffix}.json"
+    assert INTERNAL_HOSTS[-1] not in manifest["_out_path"]
     saved = json.loads((tmp_path / manifest["_out_path"]).read_text(encoding="utf-8"))
     assert saved["meta"]["box"] == expected
     assert saved["meta"]["cores"] == cores
     assert "hostname" not in saved["meta"]
+
+
+def test_benchmark_refresh_matches_dedicated_dispatch_manifest(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        "refresh_dispatch", ROOT / "scripts/setup/dispatch-cfd-run.py")
+    dispatch = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, dispatch)
+    spec.loader.exec_module(dispatch)
+    monkeypatch.setattr(dispatch, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(benchmark, "_REPO", tmp_path)
+    monkeypatch.setattr(benchmark, "_MANIFEST",
+                        tmp_path / "docs/api/cfd/sloshing-3d-benchmark.json")
+    monkeypatch.setattr(os, "cpu_count", lambda: 8)
+    monkeypatch.setattr(socket, "gethostname", lambda: INTERNAL_HOSTS[-1])
+    manifest = benchmark.collect(60, 0.3, [])
+    host = next(host for host in dispatch.default_hosts() if host.dedicated)
+    assert tmp_path / manifest["_out_path"] == host.manifest
+
+
+def test_benchmark_refresh_does_not_supply_a_hostname_label():
+    script = (ROOT / "scripts/setup/verify-cfd-box.sh").read_text(encoding="utf-8")
+    refresh = script.split('if [[ "${1:-}" == "--benchmark" ]]; then', 1)[1]
+    assert "hostname" not in refresh
+    assert "--label" not in refresh
+
+
+@pytest.mark.parametrize("relative", [
+    "scripts/setup/README-cfd-box.md",
+    "scripts/setup/dispatch-cfd-run.py",
+    "scripts/setup/verify-cfd-box.sh",
+])
+def test_setup_publication_files_have_no_internal_aliases(relative):
+    aliases = INTERNAL_HOSTS + tuple("-".join(parts) for parts in (
+        ("ace", "linux", "1"), ("ace", "linux", "2"),
+        ("a", "l", "1"), ("dev", "gpu"),
+    ))
+    text = (ROOT / relative).read_text(encoding="utf-8").casefold()
+    assert not any(alias in text for alias in aliases), relative
 
 
 def test_published_benchmark_uses_capacity_filename():
