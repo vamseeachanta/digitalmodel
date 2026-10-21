@@ -181,7 +181,7 @@ def distribute_chemical(
                 vertical_drop=vertical_drop_m,
             )
         except (ArithmeticError, ValueError) as exc:
-            raise ValueError("shared delivery: arithmetic outside numeric range") from exc
+            raise ValueError(f"shared delivery: {exc}") from exc
         _finite(
             "shared delivery", delivery.flow_rate, delivery.velocity, delivery.reynolds,
             delivery.friction_factor, delivery.friction_drop, delivery.static_pressure,
