@@ -29,11 +29,11 @@ References
 """
 
 import math
-from typing import Optional, Tuple, Union
+from typing import Union
 
 import numpy as np
 from scipy import special
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
@@ -65,12 +65,14 @@ class SpectralMoments(BaseModel):
     @property
     def nu_p(self) -> float:
         """Expected number of peaks per second (peak rate)."""
-        return math.sqrt(self.m4 / self.m2) / (2.0 * math.pi)
+        # Cyclic-frequency moments: Metals (2021) 11, 1333, section 2.1,
+        # Eq. (1) and the following rate definitions (Hz form).
+        return math.sqrt(self.m4 / self.m2)
 
     @property
     def nu_0(self) -> float:
         """Expected zero-upcrossing rate per second."""
-        return math.sqrt(self.m2 / self.m0) / (2.0 * math.pi)
+        return math.sqrt(self.m2 / self.m0)
 
     @property
     def bandwidth_parameter(self) -> float:
@@ -179,7 +181,6 @@ def narrow_band_damage(
     """
     m = sn_slope
     A = 10.0 ** sn_intercept
-    rms = moments.rms
     nu0 = moments.nu_0
 
     # E[S^m] for Rayleigh distribution with scale √(2·m0)
@@ -187,7 +188,6 @@ def narrow_band_damage(
     E_Sm = (2.0 * math.sqrt(2.0 * moments.m0)) ** m * gamma_m
 
     damage_rate = nu0 * E_Sm / A
-    damage = damage_rate * duration
 
     # Equivalent stress range
     s_eq = (E_Sm) ** (1.0 / m) if E_Sm > 0 else 0.0
@@ -260,6 +260,36 @@ def wirsching_light_damage(
 # Dirlik method
 # ---------------------------------------------------------------------------
 
+def _dirlik_coefficients(moments: SpectralMoments) -> tuple[float, ...]:
+    """Metals (2021) 11, 1333, Eq. (8), doi:10.3390/met11091333.
+
+    The dimensionless 1e-12 tolerance handles floating-point roundoff only;
+    it is not an engineering acceptance limit. Invalid mixture weights raise.
+    """
+    gamma = moments.irregularity_factor
+    xm = moments.m1 / moments.m0 * math.sqrt(moments.m2 / moments.m4)
+    if math.isclose(gamma, 1.0, rel_tol=0, abs_tol=1e-12) and math.isclose(
+        xm, 1.0, rel_tol=0, abs_tol=1e-12
+    ):
+        # Exact line spectrum: the limiting PDF is the standard Rayleigh term.
+        return 0.0, 0.0, 1.0, 0.0, 1.0
+    d1 = 2.0 * (xm - gamma**2) / (1.0 + gamma**2)
+    denominator = 1.0 - gamma - d1 + d1**2
+    if d1 <= 0 or denominator == 0:
+        raise ValueError("Dirlik mixture is undefined for these moments")
+    r = (gamma - xm - d1**2) / denominator
+    if r == 1:
+        raise ValueError("Dirlik mixture has a singular Rayleigh scale")
+    d2 = denominator / (1.0 - r)
+    d3 = 1.0 - d1 - d2
+    q = 1.25 * (gamma - d3 - d2*r) / d1
+    if (not all(math.isfinite(v) for v in (d1, d2, d3, q, r))
+            or min(d1, d2, d3) < 0 or q <= 0
+            or not math.isclose(d1+d2+d3, 1.0, rel_tol=0, abs_tol=1e-12)):
+        raise ValueError("Dirlik mixture weights must be nonnegative and sum to unity")
+    return d1, d2, d3, q, r
+
+
 def dirlik_damage(
     moments: SpectralMoments,
     sn_slope: float,
@@ -284,28 +314,12 @@ def dirlik_damage(
     SpectralFatigueResult
     """
     m0 = moments.m0
-    m1 = moments.m1
-    m2 = moments.m2
-    m4 = moments.m4
     m_sn = sn_slope
     A = 10.0 ** sn_intercept
 
-    xm = m1 / m0 * math.sqrt(m2 / m4)
     eps = moments.bandwidth_parameter
 
-    # Dirlik parameters
-    D1 = 2.0 * (xm - eps ** 2) / (1.0 + eps ** 2)
-    R = (eps - xm - D1 ** 2) / max(1.0 - eps - D1 + D1 ** 2, 1e-12)
-    D2 = (1.0 - eps - D1 + D1 ** 2) / max(1.0 - R, 1e-12)
-    D3 = 1.0 - D1 - D2
-    Q = 1.25 * (eps - D3 - D2 * R) / max(D1, 1e-12)
-
-    # Ensure physical parameters
-    D1 = max(D1, 0.0)
-    D2 = max(D2, 0.0)
-    D3 = max(D3, 0.0)
-    Q = max(Q, 1e-12)
-    R = max(R, 1e-12)
+    D1, D2, D3, Q, R = _dirlik_coefficients(moments)
 
     sqrt_m0 = math.sqrt(m0)
 
@@ -368,7 +382,6 @@ def benasciutti_tovo_damage(
 
     # Wide-band (range-counting) correction factor
     # Benasciutti-Tovo Eq. (13)
-    b_bt = (alpha2 - 1.0) ** 2
     lam_wb = alpha2 ** (2.0 - m)
 
     # Interpolation weight

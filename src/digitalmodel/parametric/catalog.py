@@ -48,6 +48,8 @@ def _summarize(atlas: Atlas) -> dict[str, Any]:
         "axes": ", ".join(_axis_summary(a) for a in atlas.axes),
         "cells": len(atlas.grid),
         "max_err": err,
+        "validation": ("not established" if kind == "library" else
+                       "pass" if atlas.validation.get("passes") is True else "fail"),
         "provenance": provenance,
     }
 
@@ -62,11 +64,11 @@ def build_catalog(atlas_root: Path = DEFAULT_ATLAS_ROOT) -> list[dict[str, Any]]
 
 def render_markdown(rows: list[dict[str, Any]]) -> str:
     head = ("| Atlas | Kind | Response | Physics | Axes (ranges; * = derived) | "
-            "Cells | Held-out err | Provenance |\n"
-            "|---|---|---|---|---|---|---|---|\n")
+            "Cells | Held-out err | Validation | Provenance |\n"
+            "|---|---|---|---|---|---|---|---|---|\n")
     body = "".join(
         f"| {r['atlas']} | {r['kind']} | {r['response']} | {r['physics']} | "
-        f"{r['axes']} | {r['cells']} | {r['max_err']} | {r['provenance']} |\n"
+        f"{r['axes']} | {r['cells']} | {r['max_err']} | {r['validation']} | {r['provenance']} |\n"
         for r in rows
     )
     return (f"# Parametric atlas catalog\n\n{len(rows)} atlases.\n\n{head}{body}")

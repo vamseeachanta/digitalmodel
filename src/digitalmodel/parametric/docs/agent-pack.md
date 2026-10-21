@@ -1,5 +1,19 @@
 # Parametric module knowledge pack
 
+## Summary
+
+The original inventory remains pinned to the code revision below. The audit
+addendum covers invalid validation evidence, query controls and spectral rate
+corrections under #2746. These changes establish screening safeguards; independent
+qualification of the complete response collection remains open.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 0 | 2026-10-15 | Original pinned inventory and regression evidence. |
+| 1 | 2026-10-21 | Added audit safeguards, an arithmetic example and explicit gate outputs to prevent invalid evidence from passing screening. |
+
 | Header | Value |
 |---|---|
 | Module | parametric |
@@ -75,22 +89,75 @@ Independent engineering validation remains open under #816; no case is designate
 | Off-grid cycle count | Synthetic grid; damage equals the same response function, dimensionless | Relative 1e-6, regression assertion | `tests/parametric/test_atlas.py::test_n_cycles_is_exactly_linear` | PASS; [tests/parametric/test_atlas.py:L52-L58] |
 | Covered library knot | Synthetic oscillator heave ratio, m/m; expected value from `_stub` | Relative 1e-9, regression assertion | `tests/parametric/test_library.py::test_covered_case_interpolates_within` | PASS; [tests/parametric/test_library.py:L18-L44] [tests/parametric/test_library.py:L56-L66] |
 
+### Audit worked example: explicit capacity factor
+
+Inputs are synthetic, with no material or standard qualification implied. An
+atlas holds a constant capacity of 100.0 kN at coordinates 0.0 and 1.0. Querying
+at 0.5 gives 100.0 kN by linear interpolation. With demand 20.0 kN and an explicitly
+supplied factor of safety 2.0, utilisation is demand × factor / capacity = 0.4
+(unit=1). A measured interpolation error of 0.0 gives the same endpoints in the
+screening band. This is the hand calculation asserted by
+`tests/parametric/test_audit_safety.py::test_capacity_records_factor`.
+Omitting the factor raises `ValueError`; absence of interpolation validation
+produces no numeric band in a value query and escalates a capacity verdict.
+
+The spectral example in `tests/fatigue/test_spectral_audit.py` uses a line at
+0.1 Hz and synthetic S-N inputs. Cyclic-frequency moments give a crossing rate
+of 0.1/s. The expected damage is integrated analytically from the Rayleigh
+range distribution. The additional bimodal example uses the dimensionless
+parameters of Table 1 and independently evaluates Equations (8)–(9) from
+[Metals (2021), 11, 1333](https://doi.org/10.3390/met11091333). The source was
+opened through the publisher's public PDF; no licensed publication was copied.
+These are formula and arithmetic checks, not material qualification.
+
+### Audit safeguard scope
+
+- Non-finite grid responses and invalid holdouts fail the generation gate.
+  Boundary, median and seeded interior lines contribute to the worst sampled
+  error for each interval. These are sampled errors, not a mathematical bound
+  over an entire cell. Previously published validation maps retain their original
+  sampling basis until rebuilt.
+- Empty fatigue bins and non-positive cycle counts escalate. Capacity queries
+  require and record the factor of safety. Unknown query and policy keys raise.
+  Response keyword arguments are retained in result provenance.
+- Unvalidated computed atlases cannot be served. A failed manual build leaves
+  the installed default unchanged. Missing error evidence remains unknown;
+  library value queries carry no numeric confidence band without validation.
+- Library construction and loading require exactly one finite response at every
+  declared Cartesian knot. Zero sliding capacity gives infinite utilisation for
+  the positive reference load. Unavailable staleness evidence escalates.
+- The direct-consumer gate remains BLOCKED under #2746: the citation resolver
+  raises `CitationResolutionError` with `reason=page_missing` for the required
+  standard page. The sweep records failed cases, so `max_utilisation` is absent.
+  Citation enforcement remains intact; this disposition replaces the draft marker.
+- Current checks: the parametric suite has 106 passed cases and the spectral
+  suite has 18 passed cases, including 32 new audit cases across both suites.
+  The five direct-consumer files have 45 passed cases and three baseline
+  failures: the two serving cases above and
+  `test_operability_atlas.py::test_rebuild_is_byte_identical`, which compares
+  Parquet bytes. All three failures were reproduced before implementation;
+  their test and producing code remain unchanged.
+- Wrapper-source fingerprint migration (audit item 9) remains a later slice.
+  Changing the fingerprint basis requires a coordinated rebuild of the computed
+  atlas collection. Existing fingerprints still cover downstream source files;
+  they do not yet cover response wrappers or their fixed reference inputs.
+
 ## 5. QA gates
 
 The applicable family is Python calculations: G0, G1, G2 and G5 apply; G3 and G4 are not applicable to the offline interpolation package (AQG r0, section 10, Python calculations).
 
 | Gate | Check ID | Executable check and numeric pass criterion | Evidence and limit |
 |---|---|---|---|
-| G0 | P0 | `tests/parametric/test_atlas.py::test_derived_axis_collapses_raw_inputs`: stress transform returns the same dimensionless damage within relative 1e-9; 0 out-of-range acceptance flags | Tests tension/area route, not all response units; [tests/parametric/test_atlas.py:L340-L370] |
-| G1 | P1 | Run `python -m pytest tests/parametric`: 0 failed tests, unit=count | Offline package import and tests; no solver load occurs in library construction; [tests/parametric/test_drilling_riser_envelope_library.py:L10-L36] |
-| G1 | P1b | Run the five direct-consumer test files listed in section 10: 0 failed tests, unit=count | Observed 46 PASS and 2 baseline FAIL; not cleared; issue pending (4); [tests/parametrics/test_atlas_serving.py:L20-L74] |
-| G2 | P2 | `tests/parametric/test_atlas.py::test_n_cycles_is_exactly_linear`: response-to-direct-computation relative difference at most 1e-6, unit=1 | Regression consistency only; independent engineering validation remains open under #816; [tests/parametric/test_atlas.py:L52-L58] |
-| G3 | — | NOT_APPLICABLE: no dynamic time integration in `Atlas.predict` | [src/digitalmodel/parametric/atlas.py:L156-L200] |
-| G4 | — | NOT_APPLICABLE: libraries consume scalar recorded rows rather than solve diffraction | [src/digitalmodel/parametric/library.py:L35-L53] |
-| G5 | P5a | `tests/parametric/test_atlas_coverage.py::test_every_committed_atlas_is_current`: 0 stale computed atlases, unit=count | Freshness regression; [tests/parametric/test_atlas_coverage.py:L40-L48] |
-| G5 | P5b | `tests/parametric/test_drilling_riser_envelope_library.py::test_query_covered_point_carries_stub_solver_block`: 0 absent stub provenance blocks, unit=count | Stub disclosure, not solver qualification; [tests/parametric/test_drilling_riser_envelope_library.py:L49-L55] |
-| G5 | P5c | `tests/parametric/test_refresh.py::test_failed_rebuild_keeps_previous_and_stale`: 0 replaced failed atlases, unit=count | Installation preservation; [tests/parametric/test_refresh.py:L281-L288] |
-| G5 | P5d | `tests/parametric/test_atlas.py::test_out_of_range_does_not_extrapolate`: 0 out-of-domain points accepted, unit=count | Bounding-box regression; [tests/parametric/test_atlas.py:L61-L72] |
+| G0 | P0 | `tests/parametric/test_atlas.py::test_derived_axis_collapses_raw_inputs`: `Atlas.predict` through the stress transform returns the same dimensionless damage within relative 1e-9; 0 out-of-range acceptance flags | Tests tension/area route, not all response units; [tests/parametric/test_atlas.py:L340-L370] |
+| G1 | P1 | `Atlas.load`, `Atlas.predict` and query outputs: run `python -m pytest tests/parametric`, 0 failed tests, unit=count | Offline package import and tests; no solver load occurs in library construction; [tests/parametric/test_drilling_riser_envelope_library.py:L10-L36] |
+| G1 | P1b | `atlas_from_summary` and downstream query outputs: run the five direct-consumer test files listed in section 10, 0 failed tests, unit=count | Gate BLOCKED under #2746: the serving pilot cannot resolve its required citation page; the requested summary response is consequently absent; [tests/parametrics/test_atlas_serving.py:L20-L74] |
+| G2 | P2 | `tests/parametric/test_atlas.py::test_n_cycles_is_exactly_linear`: `Atlas.predict` versus `RESPONSE_FUNCS["mooring_fatigue"]` relative difference at most 1e-6, unit=1 | Regression consistency only; independent engineering validation remains open under #816; [tests/parametric/test_atlas.py:L52-L58] |
+| G3 | — | NOT_APPLICABLE: `Atlas.predict` performs 0 dynamic time steps, unit=count | [src/digitalmodel/parametric/atlas.py:L156-L200] |
+| G4 | — | NOT_APPLICABLE: `build_library_atlas` performs 0 diffraction solves, unit=count | [src/digitalmodel/parametric/library.py:L35-L53] |
+| G5 | P5a | `tests/parametric/test_atlas_coverage.py::test_every_committed_atlas_is_current`: `refresh.refresh_status` reports 0 stale computed atlases, unit=count | Freshness regression; [tests/parametric/test_atlas_coverage.py:L40-L48] |
+| G5 | P5b | `tests/parametric/test_drilling_riser_envelope_library.py::test_query_covered_point_carries_stub_solver_block`: `query._handle_value` provenance has 0 absent stub solver blocks, unit=count | Stub disclosure, not solver qualification; [tests/parametric/test_drilling_riser_envelope_library.py:L49-L55] |
+| G5 | P5c | `tests/parametric/test_refresh.py::test_failed_rebuild_keeps_previous_and_stale`: `refresh.main` returns exit status 2, unit=exit-code, and replaces 0 failed atlases, unit=count | Installation preservation; [tests/parametric/test_refresh.py:L281-L288] |
+| G5 | P5d | `tests/parametric/test_atlas.py::test_out_of_range_does_not_extrapolate`: `Atlas.predict` accepts 0 out-of-domain points, unit=count | Bounding-box regression; [tests/parametric/test_atlas.py:L61-L72] |
 
 G1 has no program-specific solver load route because this package writes query-result YAML and atlas data rather than native solver inputs; recorded-library provenance is not evidence of a fresh solver load. [src/digitalmodel/parametric/query.py:L339-L356] [src/digitalmodel/parametric/atlas.py:L244-L288]
 
@@ -104,7 +171,7 @@ The sweep inventories conversion, fallback, skip and fixed-input sites; inclusio
 | Staleness failure can serve an unchecked answer | Library exceptions, absent fingerprint, fingerprint exceptions return no stale reason; [src/digitalmodel/parametric/query.py:L72-L97] | no detection check exists for exception paths | issue pending (2) |
 | Failed rebuild replacement and exit status | Current implementation gates replacement and counts failures; historical issue status alone does not establish a current defect; [src/digitalmodel/parametric/refresh.py:L313-L330] [src/digitalmodel/parametric/refresh.py:L362-L378] | P5c | #2348; #2451 |
 | Import can produce an unrelated sample CSV | Reference mooring response calls the downstream workflow chain; [src/digitalmodel/parametric/generate.py:L253-L272] | no detection check exists in the module suite for import-side output | #2442; #2071 |
-| Consumer atlas cannot be built | Summary lacks the requested `max_utilisation` response; [tests/parametrics/test_atlas_serving.py:L20-L39] [src/digitalmodel/parametrics/atlas_bridge.py:L39-L48] | P1b; both serving tests fail before the query route | issue pending (4) |
+| Consumer atlas cannot be built | Summary lacks the requested `max_utilisation` response; [tests/parametrics/test_atlas_serving.py:L20-L39] [src/digitalmodel/parametrics/atlas_bridge.py:L39-L48] | P1b; both serving tests fail before the query route | #2746 |
 | Stub output is not a solver result | Library expectation explicitly remains STUB; [src/digitalmodel/parametric/refresh.py:L144-L165] | P5b | #801; #1469 |
 
 Sweep commands (text only; solver interfaces are not imported):
@@ -1885,7 +1952,7 @@ Map follow-up: generic atlas interpolation, refresh/install, library identity, s
 
 | Item | Coverage or limitation | Tracking |
 |---|---|---|
-| Direct-consumer tests | Five additional files collect 48 tests: 46 pass and 2 fail because the serving summary lacks the requested response; detailed cause remains unresolved | issue pending (4) |
+| Direct-consumer tests | Five additional files collect 48 tests: 46 pass and 2 fail because the serving summary lacks the requested response; detailed cause remains unresolved | #2746 |
 | Independent worked example | No independent reference is designated by section 4; same-model holdout checks remain regression | #816 |
 | Standards and conventions | clause/table IDs, titles, downstream edition agreement, citation sidecars and global frame/phase declarations remain unqualified | issue pending (1) |
 | Ownership and log | deputy appointment and shared-log registration remain unestablished | issue pending (1) |
