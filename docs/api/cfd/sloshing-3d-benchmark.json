@@ -2,7 +2,7 @@
   "meta": {
     "generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
     "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
-    "box": "a-l-2 / dev-secondary (32 cores)",
+    "box": "32-core workstation",
     "epic": "#1429",
     "issue": "#1433",
     "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",

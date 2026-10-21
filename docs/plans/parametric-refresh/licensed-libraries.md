@@ -39,7 +39,7 @@ a hydrodynamic result.
 
 ## Operator runbook to populate a real library
 
-1. On the licensed machine (dev-secondary, per the CFD/OrcaWave convention),
+1. On the licensed workstation (per the CFD/OrcaWave convention),
    run diffraction for each canonical case in `build_diffraction_library.py`
    `CASES` — one run yields the full frequency × heading response for that
    vessel/draft.

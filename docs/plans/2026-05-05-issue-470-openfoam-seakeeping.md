@@ -64,5 +64,5 @@ No OpenFOAM scaffold exists in `src/digitalmodel/`. There is a `solvers/openfoam
 
 ## Open Questions
 
-- Where does OpenFOAM live in target environments? `dev-secondary` (NVIDIA T400) is mentioned in #464 — confirm OpenFOAM 11/12 install path before the runner module assumes a binary location. Default: read `OPENFOAM_BIN` env var, fail with actionable message if absent.
+- Where does OpenFOAM live in target environments? A workstation with an NVIDIA T400 is mentioned in #464 — confirm OpenFOAM 11/12 install path before the runner module assumes a binary location. Default: read `OPENFOAM_BIN` env var, fail with actionable message if absent.
 - Capytaine BEM vs CFD validation (Phase 4) is contingent on hull mesh parity — the OC4 semi-sub or Wigley hull mesh must be re-usable across solvers. Coordinate with #465's hull-benchmark pick.

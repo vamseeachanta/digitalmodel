@@ -810,7 +810,7 @@ def _compute_section(compute):
     head = f'<p>{_esc(an["headline"])}</p>' if an.get("headline") else ""
     return f"""
 <h2>6 &middot; Compute &amp; runtime — machine effectiveness</h2>
-<p>What a 2D interFoam sloshing case costs on this box (<b>{_esc(m.get("host"))}</b>, {m.get("cores")} cores,
+<p>What a 2D interFoam sloshing case costs on a {m.get("cores")}-core workstation (
 {_esc(m.get("solver"))}), so future compute can be predicted. The mesh-normalised cost (&micro;s of wall per
 cell&middot;timestep) is the machine invariant. Its <b>intrinsic</b> value is ~12&ndash;17&micro;s across classes;
 the higher per-class figures in the table below are the <b>same work inflated ~1.5&ndash;2.3&times; by

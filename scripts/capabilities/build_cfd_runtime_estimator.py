@@ -186,8 +186,10 @@ calc();
 
 def main() -> None:
     compute = json.loads((_CFD / "sloshing-compute.json").read_text())
+    machine = dict(compute.get("machine", {}))
+    machine["host"] = f'{machine.get("cores")}-core workstation'
     study = {
-        "machine": compute.get("machine", {}),
+        "machine": machine,
         "profiles": _profiles(compute),
     }
     html = _HTML.replace("__DATA__", json.dumps(study, separators=(",", ":")))

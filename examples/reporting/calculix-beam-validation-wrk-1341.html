@@ -310,7 +310,7 @@ The validation proceeds in 4 steps:
     <h3>Step 3: CalculiX B31 simulation</h3>
     <div class="calc-detail">10-element B31 cantilever beam, fixed at root (all 6 DOFs constrained),
 concentrated load P = 1000 N applied at tip node in Y-direction.
-ccx v2.21 on dev-secondary. Beam section: RECT 0.1 × 0.1 m, orientation (0,0,1).
+ccx v2.21 on a 32-core workstation. Beam section: RECT 0.1 × 0.1 m, orientation (0,0,1).
 ccx expanded beam nodes at tip (nodes 92-95) all report dy = 1.9116 × 10⁻⁴ m.
 </div>
     <div class="calc-clause"><em>Ref: CalculiX User Manual v2.21, §6.2.10</em></div>
@@ -429,9 +429,9 @@ and its scaling properties (L³ and I dependencies).
 
 <div class="card">
   <h2>Verification</h2>
-  <p><strong>Checker:</strong> ccx v2.21 (dev-secondary)</p>
+  <p><strong>Checker:</strong> ccx v2.21 (32-core workstation)</p>
   <p><strong>Date:</strong> 2026-03-22</p>
-  <p><strong>Method:</strong> Independent numerical verification using CalculiX ccx v2.21 on dev-secondary.
+  <p><strong>Method:</strong> Independent numerical verification using CalculiX ccx v2.21 on a 32-core workstation.
 10-element B31 cantilever beam with tip load P = 1000 N.
 ccx result (dy = 1.9116e-04 m) compared against hand-calculated
 Euler-Bernoulli result (δ = 1.9048e-04 m). Error: 0.35%.
