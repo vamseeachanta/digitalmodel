@@ -10,13 +10,15 @@ stored in the fixture; none is obtained from a call to the model.
 
 The p. 89 worked solution prints 162 and 146 BOPD, with graph-read factors
 0.40 and 0.90. Its subsequent prose says 145, inconsistently; the worked
-solution is the comparator. An absolute allowance of half its last displayed
-BOPD is chosen for printed results. Arithmetic checks use 1e-10 in output
-units, far below the printed precision but above floating-point roundoff for
+solution is the comparator. The exact qmax, 162.5, lies on the display
+boundary of the printed 162. Half a displayed BOPD plus the arithmetic
+allowance is used, without assuming a round-half-up convention. Arithmetic
+checks use 1e-10 in output units, far below the printed precision but above floating-point roundoff for
 these inputs. These are reproduction criteria, not empirical accuracy limits.
 """
 
 import json
+import math
 import sys
 from dataclasses import replace
 from pathlib import Path
@@ -59,10 +61,16 @@ def calibrated(reservoir, vogel_example):
     )
 
 
-def test_published_example(calibrated, vogel_example):
+@pytest.mark.parametrize("roundoff_steps", [0, 1])
+def test_published_example(calibrated, vogel_example, roundoff_steps):
     """Reproduce the two integer outputs of Vogel (1968), p. 89 solution."""
+    for _ in range(roundoff_steps):
+        calibrated.qmax_bopd = math.nextafter(calibrated.qmax_bopd, math.inf)
     expected = vogel_example["published_outputs"]
-    tolerance = expected["absolute_tolerance_bopd"]
+    tolerance = (
+        vogel_example["acceptance"]["display_absolute_tolerance_bopd"]
+        + ARITHMETIC_ABS_TOL
+    )
     assert calibrated.qmax_bopd == pytest.approx(
         expected["qmax_bopd"], abs=tolerance, rel=0
     )
@@ -136,7 +144,8 @@ def test_calibration_rejects_outside_domain(reservoir, vogel_example, field, inv
         rate = invalid
     else:
         pwf = invalid
-    with pytest.raises(ValueError):
+    message = "test pressure" if field == "pwf" else "positive"
+    with pytest.raises(ValueError, match=message):
         VogelIpr.from_test_point(reservoir, rate, pwf)
 
 
