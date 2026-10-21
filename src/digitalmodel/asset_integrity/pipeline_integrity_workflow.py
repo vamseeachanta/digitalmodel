@@ -60,6 +60,11 @@ class PressureDesignInput:
                 raise ValueError(f"{name} must be finite and non-negative")
             if name != "pressure_mpa" and value == 0:
                 raise ValueError(f"{name} must be positive")
+        # 49 CFR §§192.111, 192.113 and 192.115, 2025 annual edition:
+        # tabulated F, E and T do not exceed 1; selection remains caller-supplied.
+        for name in ("design_factor", "joint_factor", "temperature_factor"):
+            if getattr(self, name) > 1:
+                raise ValueError(f"{name} must not exceed 1")
         # Circular bore geometry: inside diameter = outside diameter - 2*t.
         if self.nominal_wall_thickness_mm >= self.outer_diameter_mm / 2:
             raise ValueError("Nominal wall thickness must leave a positive bore")
@@ -110,12 +115,11 @@ def assess_pressure_design(inp: PressureDesignInput) -> PressureDesignResult:
 
     # 49 CFR §192.105(a), 2025 annual edition: P = (2*S*t/D)*F*E*T.
     # The coefficient 2 is part of that equation; no tabulated factors default.
-    stress_basis = (
-        2 * inp.yield_strength_mpa * inp.design_factor
-        * inp.joint_factor * inp.temperature_factor
-    )
+    # Scale by geometry first to avoid overflowing 2*S for finite capacity.
     design_pressure = (
-        stress_basis * inp.nominal_wall_thickness_mm / inp.outer_diameter_mm
+        (inp.nominal_wall_thickness_mm / inp.outer_diameter_mm)
+        * 2 * inp.yield_strength_mpa * inp.design_factor
+        * inp.joint_factor * inp.temperature_factor
     )
     if not math.isfinite(design_pressure) or design_pressure <= 0:
         raise ValueError("The calculated design pressure must be finite and positive")
@@ -130,7 +134,8 @@ def assess_pressure_design(inp: PressureDesignInput) -> PressureDesignResult:
         design_pressure_mpa=design_pressure,
         required_wall_thickness_mm=required_wall,
         utilisation_ratio=utilisation,
-        # §192.105(a), 2025 edition: demand must not exceed design pressure.
+        # Definitional screen against the §192.105(a) design pressure,
+        # not an implementation of the §192.619 operating-pressure limits.
         # Compare pressures directly, without rounding at the boundary.
         meets_pressure_design=inp.pressure_mpa <= design_pressure,
     )
