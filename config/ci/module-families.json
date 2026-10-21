@@ -2,6 +2,7 @@
   "schema_version": 1,
   "description": "Advisory CI family inventory; no family selection or required coverage gate is activated.",
   "provenance": {
+    "historical_basis": "source_revision and input digests describe the original hand inventory, not the current generated tree.",
     "plan": "https://github.com/vamseeachanta/digitalmodel/pull/2845",
     "source_revision": "48f597b9d669ede3c2a3b9f3861420c933a69a27",
     "input_map_sha256": "c66c45d4232732abd004532634881287668e22ef0483bc838e0e93890de3db5a",
@@ -2688,9 +2689,11 @@
   },
   "family_to_engine_deps": {
     "data": [
+      "digitalmodel",
       "digitalmodel.units"
     ],
     "energy-production": [
+      "digitalmodel",
       "digitalmodel.reporting"
     ],
     "hydrodynamics": [
@@ -2703,9 +2706,11 @@
       "digitalmodel.run_contract"
     ],
     "integrity": [
+      "digitalmodel",
       "digitalmodel.citations",
       "digitalmodel.citations.schema",
       "digitalmodel.infrastructure.utils.private_paths",
+      "digitalmodel.reporting",
       "digitalmodel.reporting.adapters",
       "digitalmodel.reporting.figures",
       "digitalmodel.reporting.provenance",
@@ -2714,11 +2719,15 @@
       "digitalmodel.units"
     ],
     "marine-operations": [
+      "digitalmodel",
       "digitalmodel.infrastructure.utils.private_paths",
+      "digitalmodel.reporting",
       "digitalmodel.reporting._renderer",
       "digitalmodel.units"
     ],
     "naval-architecture": [
+      "digitalmodel",
+      "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.schema"
     ],
@@ -2728,6 +2737,7 @@
       "digitalmodel.citations.registry",
       "digitalmodel.citations.schema",
       "digitalmodel.infrastructure.utils.private_paths",
+      "digitalmodel.reporting",
       "digitalmodel.reporting.engine",
       "digitalmodel.reporting.pdf",
       "digitalmodel.reporting.provenance",
@@ -2745,6 +2755,7 @@
     ],
     "structural": [
       "digitalmodel",
+      "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.schema",
       "digitalmodel.common.assumption_ledger",
@@ -2756,6 +2767,7 @@
       "digitalmodel.units"
     ],
     "subsea": [
+      "digitalmodel",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.resolver",
@@ -2763,11 +2775,13 @@
       "digitalmodel.units"
     ],
     "workflows": [
+      "digitalmodel",
+      "digitalmodel.citations",
       "digitalmodel.citations.schema",
       "digitalmodel.engine"
     ]
   },
-  "test_home_rule": "Existing file homes are preserved. New files use the longest directory prefix in assignment_rules, defaulting to platform. Environments, nested checkouts and linked directories are excluded. Inventory drift is report-only until family gates are activated.",
+  "test_home_rule": "Only Git-tracked Python files are inventoried. Existing file homes are preserved. Newly tracked files use the longest directory prefix in assignment_rules, defaulting to platform. Environments, nested checkouts and linked directories are excluded. Inventory drift is report-only until family gates are activated.",
   "test_file_to_family": {
     "docs/domains/dom_poc_1/test_pipeline_lateral_buckling.py": "subsea",
     "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/test_postproc.py": "solvers",
@@ -4792,11 +4806,9 @@
       "examples/demos/gtm/tests": "marine-operations",
       "examples/domains/workflows": "workflows",
       "examples/prototypes/orcaflex-agent": "solvers",
-      "scripts": "ENGINE",
       "src/digitalmodel/marine_ops/artificial_lift/dynacard/benchmark": "marine-operations",
       "src/digitalmodel/power/commissioning": "energy-production",
       "src/digitalmodel/production_engineering": "energy-production",
-      "tests": "structural",
       "tests/ansys": "structural",
       "tests/asset_integrity": "integrity",
       "tests/benchmarks": "platform",
@@ -5007,5 +5019,5 @@
       "tests/workflows/workflow_automation": "workflows"
     }
   },
-  "dependency_measurement": "Static absolute and relative AST imports, including function-local and TYPE_CHECKING imports; dynamic imports are not measured."
+  "dependency_measurement": "Static absolute and relative AST imports and every ENGINE ancestor of each target, including function-local and TYPE_CHECKING imports; dynamic imports are not measured."
 }

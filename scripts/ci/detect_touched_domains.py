@@ -37,6 +37,8 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("scripts/ci/generate_family_map.py", ("workflows",)),
+    ("config/ci/module-families.json", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),

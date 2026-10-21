@@ -5,6 +5,7 @@
 import copy
 import json
 import importlib.util
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -77,7 +78,7 @@ def _report_inventory(assignments, expected):
         )
 
 
-def _assert_exhaustive(assignments, expected):
+def _assert_generated_inventory(assignments, expected):
     actual = set(assignments)
     assert expected - actual == set(), f"Unassigned: {sorted(expected - actual)}"
     assert actual - expected == set(), f"Stale: {sorted(actual - expected)}"
@@ -180,7 +181,7 @@ def test_registry_families_agree_with_contract(contract):
         "digitalmodel.example.child",
     ],
 )
-def test_missing_module_or_namespace_is_rejected(tmp_path, missing):
+def test_generated_modules_include_every_namespace(tmp_path, missing, tracked_fixture):
     source = tmp_path / "src/digitalmodel/example/child.py"
     source.parent.mkdir(parents=True)
     source.write_text("", encoding="utf-8")
@@ -192,11 +193,11 @@ def test_missing_module_or_namespace_is_rejected(tmp_path, missing):
     }
     assignments = dict.fromkeys(modules - {missing}, "platform")
     with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive(assignments, modules)
+        _assert_generated_inventory(assignments, modules)
 
 
 @pytest.mark.parametrize("tree", (*TEST_TREES, "new-test-tree"))
-def test_new_test_file_requires_an_explicit_home(tmp_path, tree):
+def test_tracked_test_files_are_inventoried(tmp_path, tree, tracked_fixture):
     test = tmp_path / tree / "nested/test_new.py"
     test.parent.mkdir(parents=True)
     test.write_text("", encoding="utf-8")
@@ -204,8 +205,7 @@ def test_new_test_file_requires_an_explicit_home(tmp_path, tree):
     other.write_text("", encoding="utf-8")
     files = _test_files(tmp_path)
     assert files == {f"{tree}/nested/test_new.py", f"{tree}/nested/other_test.py"}
-    with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive({f"{tree}/nested/test_new.py": "platform"}, files)
+    _report_inventory({}, files)
 
 
 def test_duplicate_homes_are_rejected():
@@ -223,9 +223,9 @@ def test_duplicate_homes_are_rejected():
         ({"deleted.py": "platform"}, set(), "Stale"),
     ],
 )
-def test_unknown_and_stale_assignments_are_rejected(assignments, expected, error):
+def test_generated_inventory_rejects_unknown_and_stale_entries(assignments, expected, error):
     with pytest.raises(AssertionError, match=error):
-        _assert_exhaustive(assignments, expected)
+        _assert_generated_inventory(assignments, expected)
 
 
 def test_domain_module_cannot_silently_become_engine(contract):
@@ -244,7 +244,7 @@ def test_domain_module_cannot_silently_become_engine(contract):
         (".claude/worktrees/child", ".git"),
     ],
 )
-def test_inventory_prunes_environments_and_checkouts(tmp_path, directory, marker):
+def test_inventory_prunes_environments_and_checkouts(tmp_path, directory, marker, tracked_fixture):
     nested = tmp_path / directory
     nested.mkdir(parents=True)
     (nested / marker).write_text("", encoding="utf-8")
@@ -305,30 +305,33 @@ def test_pruning_without_filesystem_access(monkeypatch):
             yield str(root / name), [], ["test_example.py"]
 
     monkeypatch.setattr(generator.os, "walk", walk)
+    monkeypatch.setattr(generator, "tracked_python_paths", lambda _: {
+        f"{name}/test_example.py" for name in ("venv", "checkout", "linked", "tests")
+    })
     assert generator.test_files(root) == {"tests/test_example.py"}
 
 
-def test_static_import_forms_are_measured(monkeypatch):
+@pytest.mark.parametrize("statement", [
+    "from digitalmodel.reporting.spec import value",
+    "import digitalmodel.reporting.spec",
+    "from ..reporting.spec import value",
+    "def local():\n    from digitalmodel.reporting import spec",
+    "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from digitalmodel.reporting import spec",
+])
+def test_static_import_forms_are_measured(monkeypatch, statement):
     root = Path("fixture")
     source = root / "src/digitalmodel/example/child.py"
     monkeypatch.setattr(generator, "python_files", lambda _: iter([source]))
     monkeypatch.setattr(
         Path,
         "read_text",
-        lambda *args, **kwargs: (
-            "import digitalmodel\n"
-            "from digitalmodel.reporting import spec\n"
-            "from ..reporting import thickness\n"
-            "def local():\n    from digitalmodel import units\n"
-        ),
+        lambda *args, **kwargs: statement,
     )
     modules = dict.fromkeys(
         [
             "digitalmodel",
             "digitalmodel.reporting",
             "digitalmodel.reporting.spec",
-            "digitalmodel.reporting.thickness",
-            "digitalmodel.units",
         ],
         "ENGINE",
     )
@@ -354,3 +357,60 @@ def test_unannotated_registry_addition_is_advisory(contract, monkeypatch, capsys
     )
     test_registry_families_agree_with_contract(contract)
     assert "report-only" in capsys.readouterr().out
+
+
+@pytest.fixture
+def tracked_fixture(monkeypatch, tmp_path):
+    # Model index membership without mutating any repository metadata.
+    monkeypatch.setattr(generator, "tracked_python_paths", lambda _: {
+        path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*.py")
+    })
+
+
+def test_inventory_excludes_ignored_and_untracked_files(tmp_path, monkeypatch):
+    tracked = "tests/test_kept.py"
+    for name in (tracked, "build/lib/demo/test_ignored.py",
+                 "src/digitalmodel/structural/untracked.py"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("from digitalmodel import run_contract\n", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("build/\n", encoding="utf-8")
+
+    def listing(args, **kwargs):
+        assert args == ["git", "ls-files", "-z", "--cached"]
+        assert kwargs["cwd"] == tmp_path
+        assert not any(key.startswith("GIT_") for key in kwargs["env"])
+        return SimpleNamespace(stdout=tracked.encode() + b"\0")
+
+    monkeypatch.setenv("GIT_DIR", "unrelated")
+    monkeypatch.setattr(generator.subprocess, "run", listing)
+    assert _test_files(tmp_path) == {tracked}
+    assert _source_modules(tmp_path) == set()
+
+
+def test_index_membership_filters_walk_results(monkeypatch):
+    root = Path("fixture")
+
+    def listing(args, **kwargs):
+        assert args == ["git", "ls-files", "-z", "--cached"]
+        assert kwargs["cwd"] == root
+        assert not any(key.upper().startswith("GIT_") for key in kwargs["env"])
+        assert kwargs["check"] is True
+        return SimpleNamespace(stdout=b"tests/test_kept.py\0")
+
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        monkeypatch.setenv(key, "unrelated")
+    monkeypatch.setattr(generator.subprocess, "run", listing)
+    monkeypatch.setattr(Path, "is_symlink", lambda _: False)
+    monkeypatch.setattr(generator.os, "walk", lambda *args, **kwargs: iter([
+        (str(root / "tests"), [], ["test_kept.py", "test_untracked.py"]),
+        (str(root / "build/lib"), [], ["test_ignored.py"]),
+    ]))
+    assert _test_files(root) == {"tests/test_kept.py"}
+
+
+@pytest.mark.parametrize("name", ["tests/new_dir/test_x.py", "scripts/new_dir/test_x.py"])
+def test_unknown_test_directory_uses_platform_default(contract, name):
+    assert generator.prefix_family(
+        name, contract["assignment_rules"]["test_prefixes"], "/"
+    ) == "platform"
