@@ -89,10 +89,10 @@ def _weighted_regions(x, k, area, valid, lref, end_fraction):
         with np.errstate(under="raise"):
             contribution[valid] = (area[valid] / valid_area) * np.abs(k[valid]) * lref * lref
     intensity = float(np.sum(contribution))
-    # Include one adjacent float on either side of a cut in the middle.
-    # This admits decimal cut samples without a scale-dependent isclose band.
-    lower_boundary = np.nextafter(lower, -np.inf)
-    upper_boundary = np.nextafter(upper, np.inf)
+    # Cancellation at a cut carries error on the coordinate operands' scale.
+    tolerance = 2 * np.spacing(max(abs(x.min()), abs(x.max()), span))
+    lower_boundary = lower - tolerance
+    upper_boundary = upper + tolerance
     selections = {
         "lower_end": x < lower_boundary,
         "middle": (x >= lower_boundary) & (x <= upper_boundary),
@@ -137,11 +137,13 @@ def summarize_curvature_regions(
     Coordinates and lref share a length unit; area uses its square and K its
     inverse square. The longitudinal axis and its direction are chosen by the
     caller. End cuts use the full coordinate span, including invalid samples.
-    Cut vertices and their immediately adjacent binary64 values belong to the
-    middle (one ULP outward per cut); no triangle clipping is performed.
+    The middle extends outward from each computed cut by twice the binary64
+    spacing at max(abs(x_min), abs(x_max), x_max - x_min), accounting for
+    operand-scale rounding even near a zero cut; no triangle clipping is performed.
     Underflow during weight normalization or density multiplication is rejected
-    with ValueError, even when a different arithmetic ordering could recover a
-    representable result. This prevents nonzero intensity being reported as zero.
+    with ValueError, even if the lost term cannot materially change the total
+    or a different arithmetic ordering could recover a representable result.
+    This prevents nonzero intensity being reported as zero.
 
     Missing curvature is excluded only through an explicit boolean valid mask.
     Status is PARTIAL when positive area is excluded and NOT_EVALUATED when no
@@ -155,4 +157,4 @@ def summarize_curvature_regions(
         with np.errstate(over="raise", invalid="raise", divide="raise"):
             return _weighted_regions(x, k, area, mask, lref, end_fraction)
     except FloatingPointError as exc:
-        raise ValueError("curvature quadrature exceeds finite numerical range") from exc
+        raise ValueError(f"curvature quadrature numerical range error: {exc}") from exc
