@@ -142,28 +142,89 @@ def evaluate(root):
     return serialise({"sources": sources, "sections": output})
 
 
-def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
-    """Invert the existing rating numerically with fixed flaw extent/background."""
-    trial = frame.copy()
+def _local_loss_projection(frame, component, reference_wall, uncorroded_rating):
+    """Return a qualified domain and evaluator, preserving the received grid."""
+    trial = frame.astype(float).copy()
     minimum = float(frame.min().min())
     mask = frame == minimum
-    low, high = 0.0, minimum
     local = Level2Engine("LML", component.nominal_od_in, component.nominal_wt_in,
                          reference_wall, component.rsf_a)
-    while math.nextafter(low, high) < high:
-        middle = (low + high) / 2
-        trial[mask] = middle
+    domain = local.local_loss_projection_domain(frame)
+
+    def evaluate(wall):
+        trial[mask] = wall
         result = local.evaluate(trial)
         if not result["applicability"].ok:
-            raise ValueError("Projected local-loss geometry is outside applicability")
+            raise ValueError("Projection-domain qualification disagrees with the engine")
+        # At M=1, RSF=1 for every positive wall. Use its right-hand limit at
+        # zero instead of the engine's 0/0 fallback (legacy Part 5 relation).
+        rsf = 1.0 if wall == 0 and result["folias_factor"] == 1 else result["rsf"]
         rating = reduced_mawp(Q_(uncorroded_rating, "psi"))(
-            result["rsf"], component.rsf_a,
+            rsf, component.rsf_a,
         ).value.to("psi").magnitude
-        if rating < component.design_pressure_psi:
+        if not math.isfinite(rating):
+            raise ValueError("Projected pressure is not finite")
+        return {"wall_in": wall, "pressure_psi": float(rating),
+                "flaw_length_in": result["flaw_length_in"],
+                "applicability": result["applicability"].to_dict(),
+                "endpoint_kind": "right-hand limit" if wall == 0 else "evaluated"}
+    return domain, evaluate
+
+
+def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
+    """Qualify a pressure crossing inside the existing engine's wall domain.
+
+    Bisection requires opposite-sign endpoint residuals: NIST DLMF 3.8(iii),
+    https://dlmf.nist.gov/3.8#iii (Bisection Method). Engineering coefficients
+    remain in the existing API 579-1/ASME FFS-1 (2021) implementation.
+    """
+    target = component.design_pressure_psi
+    if not all(math.isfinite(v) and v > 0 for v in
+               (target, uncorroded_rating, component.rsf_a)):
+        raise ValueError("Pressures and allowable RSF must be positive finite inputs")
+    domain, evaluate = _local_loss_projection(frame, component, reference_wall, uncorroded_rating)
+    evidence = {"domain_wall_in": domain, "target_pressure_psi": target,
+                "initial_bracket": [], "final_bracket": [], "monotonic": False}
+
+    def finish(status, wall, reason):
+        return {**evidence, "status": status, "wall_in": wall, "reason": reason}
+
+    if domain is None:
+        return finish("INAPPLICABLE", None, "Current geometry has no applicable depletion interval")
+    low, high = [evaluate(wall) for wall in domain]
+    evidence["initial_bracket"] = [low, high]
+    evidence["final_bracket"] = [low, high]
+    # For fixed M>=1, d(RSF)/d(Rt)=M(M-1)/(M-1+Rt)^2 >= 0.
+    # As wall increases, degraded rows can only disappear, also increasing RSF.
+    # Check sampled ordering as well; tolerate only one pressure ULP of rounding.
+    if low["pressure_psi"] > high["pressure_psi"]:
+        return finish("NON_MONOTONIC", None, "Endpoint pressures decrease with wall")
+    evidence["monotonic"] = True
+    if high["pressure_psi"] < target:
+        return finish("TARGET_UNREACHABLE", high["wall_in"], "Current rating is already below demand")
+    if low["pressure_psi"] >= target:
+        status = "BOUNDARY" if low["pressure_psi"] == target else "BOUNDED"
+        return finish(status, low["wall_in"], "No failing pressure endpoint inside applicability; life is censored")
+    return _bisect_local_loss(evaluate, evidence, finish, low, high, target)
+
+
+def _bisect_local_loss(evaluate, evidence, finish, low, high, target):
+    """Retain an applicable failing/passing bracket, checking every new sample."""
+    while math.nextafter(low["wall_in"], high["wall_in"]) < high["wall_in"]:
+        middle = evaluate((low["wall_in"] + high["wall_in"]) / 2)
+        if not (math.nextafter(low["pressure_psi"], -math.inf) <= middle["pressure_psi"]
+                <= math.nextafter(high["pressure_psi"], math.inf)):
+            evidence["monotonic"] = False
+            return finish("NON_MONOTONIC", None, "Interior pressure violates bracket ordering")
+        if middle["pressure_psi"] < target:
             low = middle
         else:
             high = middle
-    return high
+        evidence["final_bracket"] = [low, high]
+    if low["flaw_length_in"] != high["flaw_length_in"]:
+        return finish("BOUNDED", high["wall_in"], "Flaw-extent boundary censors the crossing; no continuous root is established")
+    status = "BOUNDARY" if high["wall_in"] == evidence["domain_wall_in"][1] else "CROSSING"
+    return finish(status, high["wall_in"], "Passing wall retained with adjacent failing wall")
 
 
 def evaluate_section(data, component, cfg):
@@ -195,9 +256,15 @@ def evaluate_section(data, component, cfg):
     # engine relation is called directly; no standard equation is duplicated.
     life_limit = detailed.t_min_in
     life_basis = "point-minimum pressure wall"
+    life_search = None
     if detailed.t_measured_min_in < detailed.t_min_in:
-        life_limit = local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating)
+        life_search = local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating)
+        life_limit = life_search["wall_in"]
+        if life_limit is None:
+            raise ValueError(f"Local-loss life is not established: {life_search['status']}")
         life_basis = "fixed-geometry reduced local-loss rating"
+        if life_search["status"] in {"BOUNDED", "BOUNDARY"}:
+            life_basis += "; censored at the supported boundary"
     life_rows = []
     for factor in cfg["sensitivity_multipliers"]:
         current_rate = rate * factor
@@ -236,7 +303,7 @@ def evaluate_section(data, component, cfg):
         "reference_wall_in": reference_wall,
         "uncorroded_rating_psi": uncorroded_rating, "local_loss_rating_psi": local_rating,
         "sufficiency": asdict(sufficiency), "applicability": app.to_dict(),
-        "life_limit_wall_in": life_limit, "life_basis": life_basis,
+        "life_limit_wall_in": life_limit, "life_basis": life_basis, "life_search": life_search,
         "remaining_life_yr": life, "interval_yr": interval, "life_sensitivity": life_rows,
         "strength_decision": decision.to_dict(), "decision": final,
         "pressure_rating_psi": rating,
@@ -477,7 +544,9 @@ def design_blocks(result):
              "it does not establish a complete Part 5 Level 2 evaluation. "
              "Section A life is projected to the wall at which its reduced local-loss rating reaches design pressure. "
              "The flaw length, background wall, bulging factor, material and loads are held fixed; lateral growth is not modelled. "
-             "Applicability is checked along this projection. Other failure modes or six-method ratings may limit life earlier. "
+             "An applicable passing and failing pressure bracket is established before this projection is searched. "
+             "A supported boundary without a pressure crossing gives a censored life bound; inapplicable geometry does not establish life. "
+             "Other failure modes or six-method ratings may limit life earlier. "
              "Section B retains the point-minimum pressure-wall projection. Neither projection is operating authorization. "
              "Re-inspection at half the projected life is an assessment assumption; zero means immediate action. "
              "Interim operation is a decision for the maintainer of the pipeline record when measurements are inadequate."),

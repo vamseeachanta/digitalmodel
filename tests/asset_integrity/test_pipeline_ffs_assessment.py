@@ -597,6 +597,7 @@ def test_revision_history_follows_summary(tmp_path, result):
     assert rows.rows == [
         ["00", "2026-10-13", "First draft for review"],
         ["01", "2026-10-14", "Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is not a code criterion; it is now shown as a diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation."],
+        ["02", "2026-10-21", "Established the supported wall interval and a passing and failing pressure bracket before the life search; retained numerical evidence and identified boundary censoring and unreachable targets. Both synthetic section results are unchanged."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)

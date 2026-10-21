@@ -103,6 +103,65 @@
         },
         "life_basis": "fixed-geometry reduced local-loss rating",
         "life_limit_wall_in": 0.1422800971996928,
+        "life_search": {
+          "domain_wall_in": [
+            0.0,
+            0.2
+          ],
+          "final_bracket": [
+            {
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "endpoint_kind": "evaluated",
+              "flaw_length_in": 6.0,
+              "pressure_psi": 799.9999999999999,
+              "wall_in": 0.14228009719969278
+            },
+            {
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "endpoint_kind": "evaluated",
+              "flaw_length_in": 6.0,
+              "pressure_psi": 800.0000000000002,
+              "wall_in": 0.1422800971996928
+            }
+          ],
+          "initial_bracket": [
+            {
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "endpoint_kind": "right-hand limit",
+              "flaw_length_in": 6.0,
+              "pressure_psi": 0.0,
+              "wall_in": 0.0
+            },
+            {
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "endpoint_kind": "evaluated",
+              "flaw_length_in": 6.0,
+              "pressure_psi": 1021.9837434987936,
+              "wall_in": 0.2
+            }
+          ],
+          "monotonic": true,
+          "reason": "Passing wall retained with adjacent failing wall",
+          "status": "CROSSING",
+          "target_pressure_psi": 800.0,
+          "wall_in": 0.1422800971996928
+        },
         "life_sensitivity": [
           [
             0.0025,
@@ -467,6 +526,7 @@
         },
         "life_basis": "point-minimum pressure wall",
         "life_limit_wall_in": 0.1702724358974359,
+        "life_search": null,
         "life_sensitivity": [
           [
             0.0025,
@@ -744,7 +804,7 @@
     ]
   },
   "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
-  "builder_sha256_lf": "57859a20450f7720f1039778347b95f35d5a131396d4137f11a053524d022bd5",
+  "builder_sha256_lf": "5870032568bbe257682d83a5280fa58467bfec998a104593f4dd2a75e51c452a",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
@@ -752,7 +812,7 @@
     "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "68dc2e60c87e65799956e0c0fbcadcbfa115ad948e3493222d99d611972216b9",
     "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "ef3c73a838a00e08980f67ca34d94791347efd9abf7ddb32f9481751bfc9f969",
     "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "84fb0b073f02ee9a0f1be532f977c4054dfb8ab44e6a699b3addd0de774d1d62",
-    "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "b4f89518bc99c54d16fde53346a086cddd5651b5c64e034ee4fa840de5babf78",
+    "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "a04abff8b96281dd467208848241d987c1ebfd118c90690566cd480bdbb7402e",
     "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py": "751138e77faf469a0024ea71d0e72689e7ed57dd262eb796de5de3806919f22e",
     "src/digitalmodel/asset_integrity/assessment/pitting.py": "6f83709c73fc060d2ace267ebb7750a7e443ed3d35d857ab186f77f7f64e24de",
     "src/digitalmodel/asset_integrity/circumferential_defect.py": "d1ae4a23f5e6d8605a40292a976ef1523391ed98ef8c103e0febfb7227c7c952",
@@ -768,7 +828,7 @@
     "src/digitalmodel/reporting/engine.py": "f79f7b30faacf70af10d1469c75a4f334ba25f55fbe5a2f6f7a980966897ab50",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
-  "configuration_sha256_lf": "1920f2066019de88764275b269c47eb37d37c4e7da8b87256a74f7bb197ca3c9",
+  "configuration_sha256_lf": "4a77c41ecddf0485cd2785daa97a6037d93b49701e66facb62ae921c994b69da",
   "data_status": "synthetic, for demonstration",
   "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
   "excluded_outputs": [
@@ -776,6 +836,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "479cd00c7a447ad5c56d4a6d214b4adb7da46d294cf970e8ac8b3f728355cb3c",
+  "report_sha256": "6719e7a142fd640792a340286f1008ceedee0244f7a0363cbf52b50d2132963b",
   "schema_version": 1
 }
