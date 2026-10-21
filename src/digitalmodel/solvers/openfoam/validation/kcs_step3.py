@@ -19,7 +19,7 @@ UNITS = {key: '1' for key in ('time_over_Te', *SIGNALS, 'wave_over_lpp')}
 QUANTITIES = {f'{q}_{kind}{n}': ('rad' if kind == 'phase' else '1')
               for q in SIGNALS for kind, ns in [('a', range(5)), ('phase', range(1, 5))] for n in ns}
 QUANTITIES['wave_over_lpp_a1'] = '1'
-POLICY_SHA256 = 'bb9c481d16e31f529bf6a58ef2a1fcd38259eaac11dc88731e50844b831d914e'
+POLICY_SHA256 = '670417ea4566dff60c453365f9f7c0c778fe15f78c5c9964a4cc6d86c9fb22f9'
 
 CONDITION_SHA256 = {'C0': 'cc535717fe99826d5865adaffa2b6b8dd7735775ff0e44c194514df0a81bdd79', 'C1': 'b78de3330990056c4fc22ee44e30020f61169df15c37d2093d8f49325f8ad58d', 'C2': '225b8f6fa082a1037e681ca224afa133f65d6ab5b68251a80bef2f955aee69a6', 'C3': 'fddc7fd84a8ad860ad16af77c684bf83672a9f5507f63a7a2af405282ad8a937', 'C4': '3593a8090424128d694321c9e5640f0a388ebaff41246bd5e681687cfcdaa65c', 'C5': '170d3fd903ef6d58549b71d36be23c9c717c5d53f3a00ec5ed1ec1f5a9eb46ce'}
 
@@ -67,6 +67,12 @@ def _sha(value) -> bool:
     return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
 
 
+def response_table_digest(row: dict) -> str:
+    """Bind values, locators and inherited provenance in the readback hash."""
+    return digest({key: {**row.get('response_provenance', {}), **cell}
+                   for key, cell in row['responses'].items()})
+
+
 def reference_is_qualified(row: dict) -> bool:
     """Check readback evidence, not the authenticity of external declarations."""
     try:
@@ -75,9 +81,10 @@ def reference_is_qualified(row: dict) -> bool:
             return False
         evidence = row['readback']
         if (evidence['status'] != 'verified' or not _sha(evidence['source_sha256'])
-                or evidence['table_sha256'] != digest(row['responses'])):
+                or evidence['table_sha256'] != response_table_digest(row)):
             return False
         for key, cell in row['responses'].items():
+            cell = {**row.get('response_provenance', {}), **cell}
             if (cell['status'] != 'verified' or cell['units'] != QUANTITIES[key]
                     or type(cell['value']) not in (int, float) or not math.isfinite(cell['value'])
                     or cell['froude'] != row['conditions']['froude']
@@ -105,7 +112,7 @@ def _basis(metadata: dict, row: dict, policy: dict) -> None:
         if metadata['conditions'] != row['conditions'] or metadata['units'] != UNITS or metadata['conventions'] != row['conventions']:
             raise ValueError('condition, unit or convention mismatch')
         conditions = row['conditions']
-        if (conditions['froude'] != .261 or conditions['body_condition'] != 'free_to_heave_and_pitch'
+        if (conditions['body_condition'] != 'free_to_heave_and_pitch'
                 or conditions['appendages'] != 'rudder' or conditions['heading'] != 'head'
                 or conditions['wave_height_m'] <= 0 or conditions['wavelength_m'] <= 0):
             raise ValueError('invalid wave condition')
@@ -257,9 +264,10 @@ def require_run_admission(next_mesh: str, reference_path: Path, criteria_path: P
     return result
 
 
-def amplitude_gci(h: list[float], values: list[float]) -> dict:
+def amplitude_gci(h: list[float], values: list[float], *, minimum_order: float = .5,
+                  maximum_order: float = 3, maximum_asymptotic_deviation: float = .05) -> dict:
     """Reuse step 1 GCI; phases and signed/zero means are outside this method."""
-    return three_grid_gci(h, values)
+    return three_grid_gci(h, values, minimum_order, maximum_order, maximum_asymptotic_deviation)
 
 
 def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, policy: dict) -> dict:
@@ -284,8 +292,10 @@ def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, poli
         reports = [compare_run(path, meta, row, policy) for path, meta in pairs]
         if not all(r['comparison_passed'] for r in reports):
             raise ValueError('every grid requires passing comparison and convergence')
-        keys = [k for k in QUANTITIES if '_a' in k and not k.endswith('a0')]
-        gci = {k: amplitude_gci(h, [r['quantities'][k]['computed'] for r in reports]) for k in keys}
+        keys = [f'{quantity}_a{n}' for quantity in SIGNALS for n in range(1, 5)] + ['wave_over_lpp_a1']
+        limits = {key: policy['gci'][key] for key in
+                  ('minimum_order', 'maximum_order', 'maximum_asymptotic_deviation')}
+        gci = {k: amplitude_gci(h, [r['quantities'][k]['computed'] for r in reports], **limits) for k in keys}
     except (KeyError, TypeError, ZeroDivisionError) as exc:
         raise ValueError('systematic mesh evidence is incomplete') from exc
     return dict(qualified=False, amplitude_gci_passed=all(g['gci_fine_pct'] <= policy['gci']['maximum_fine_percent'] for g in gci.values()),

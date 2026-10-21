@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2024 Digital Model Project
+# Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Analytical, offline Case 2.10 controls; no solver or external data access."""
 import copy
@@ -39,7 +39,7 @@ def inputs():
             n = int(key[-1])
             value = 2.0 if n == 0 else 0.1 / n
         cell.update(value=value, status='verified', sheet='synthetic worksheet', cell=key)
-    condition['readback'] = {'status': 'synthetic', 'source_sha256': None, 'table_sha256': qa.digest(condition['responses'])}
+    condition['readback'] = {'status': 'synthetic', 'source_sha256': None, 'table_sha256': qa.response_table_digest(condition)}
     meta = {'mesh': 'coarse', 'evidence_kind': 'synthetic', 'condition_id': condition['id'],
             'reference_sha256': qa.digest(condition), 'criteria_sha256': qa.digest(policy),
             'conditions': condition['conditions'], 'units': qa.UNITS,
@@ -54,6 +54,7 @@ def test_reference_has_six_conditions_and_no_invented_experimental_responses():
         assert all(c['value'] is None and c['status'] == 'NOT_EVALUATED' for c in condition['responses'].values())
         assert not qa.reference_is_qualified(condition)
         for cell in condition['responses'].values():
+            cell = {**condition.get('response_provenance', {}), **cell}
             assert cell['source_document'] and cell['page'] and cell['published_data_file']
             assert cell['units'] and cell['licence_note'] and cell['froude'] == .261
 
@@ -164,7 +165,7 @@ def test_gci_rejects_degenerate_or_nonpositive_amplitudes(values):
         qa.amplitude_gci([1, 2, 4], values)
 
 
-def test_native_readback_and_admission_bind_current_files(monkeypatch):
+def test_native_readback_and_admission_bind_current_files(tmp_path):
     import hashlib
     rows, meta, condition, policy = inputs()
     condition['readback']['status'] = 'verified'
@@ -176,17 +177,22 @@ def test_native_readback_and_admission_bind_current_files(monkeypatch):
     csv = ','.join(qa.UNITS) + '\n' + '\n'.join(','.join(str(r[k]) for k in qa.UNITS) for r in rows) + '\n'
     data = csv.encode()
     meta['history_sha256'] = hashlib.sha256(data).hexdigest()
-    monkeypatch.setattr(Path, 'read_bytes', lambda self: data)
-    report = qa.compare_run(Path('history.csv'), meta, condition, policy)
+    history = tmp_path / 'history.csv'
+    history.write_bytes(data)
+    metadata_path = tmp_path / 'metadata.json'
+    metadata_path.write_text(json.dumps(meta))
+    reference = qa.load_reference(FIXTURE)
+    reference['reference_rows'][1] = condition
+    reference_path = tmp_path / 'reference.json'
+    reference_path.write_text(json.dumps(reference))
+    report = qa.compare_run(history, meta, condition, policy)
     assert report['coarse_smoke_passed']
-    monkeypatch.setattr(qa, 'load_reference', lambda path: {'reference_rows': [condition]})
-    monkeypatch.setattr(qa, 'load_policy', lambda path: policy)
-    monkeypatch.setattr(Path, 'read_text', lambda self, **kwargs: json.dumps(meta))
     for mesh in ('medium', 'fine'):
-        assert qa.require_run_admission(mesh, Path('ref'), Path('policy'), Path('history'), Path('meta'), condition_id='C1')['admitted']
+        assert qa.require_run_admission(mesh, reference_path, POLICY, history, metadata_path, condition_id='C1')['admitted']
     meta['history_sha256'] = '0' * 64
+    metadata_path.write_text(json.dumps(meta))
     with pytest.raises(ValueError, match='history'):
-        qa.require_run_admission('medium', Path('ref'), Path('policy'), Path('history'), Path('meta'), condition_id='C1')
+        qa.require_run_admission('medium', reference_path, POLICY, history, metadata_path, condition_id='C1')
 
 
 @pytest.mark.parametrize('field', ['source_sha256', 'table_sha256', 'status'])
@@ -254,5 +260,131 @@ def test_mixed_condition_reference_cannot_qualify_even_with_updated_digest():
     condition['readback'].update(status='verified', source_sha256='a' * 64)
     condition['responses']['ct_x1000_a1']['condition_id'] = 'C2'
     condition['responses']['ct_x1000_a1']['wave_conditions'] = 'C2: see conditions'
-    condition['readback']['table_sha256'] = qa.digest(condition['responses'])
+    condition['readback']['table_sha256'] = qa.response_table_digest(condition)
     assert not qa.reference_is_qualified(condition)
+
+
+def analytic_triplet(tmp_path, condition, policy, phases='negative'):
+    import hashlib
+    histories, metadata = [], []
+    for mesh, scale in [('fine', 1), ('medium', 2), ('coarse', 4)]:
+        rows, meta, _, _ = inputs()
+        offset = {1: -.005, 2: .005, 4: 0}[scale]
+        for row in rows:
+            t = row['time_over_Te']
+            for quantity in qa.SIGNALS:
+                row[quantity] = 1 + sum(
+                    (.1 / n + .00001 * scale ** 2) * math.cos(
+                        2 * math.pi * n * t + n * .4
+                        + (-.2 * n if phases == 'negative' else .2 * n + offset))
+                    for n in range(1, 5))
+            row['wave_over_lpp'] = (.1 + .00001 * scale ** 2) * math.cos(2 * math.pi * t + .4)
+        data = (','.join(qa.UNITS) + '\n' + '\n'.join(
+            ','.join(str(row[k]) for k in qa.UNITS) for row in rows) + '\n').encode()
+        history = tmp_path / f'{mesh}.csv'
+        history.write_bytes(data)
+        meta.update(mesh=mesh, h_m=.001 * scale, mesh_family='analytic', numerics='identical',
+                    refinement_axes='xyz', free_surface={'dx_m': .01 * scale, 'dz_m': .001 * scale},
+                    residuals={'p_rgh': 1e-5, 'U': 1e-6}, y_plus={'min': .1, 'mean': .5, 'max': 1},
+                    reference_sha256=qa.digest(condition), criteria_sha256=qa.digest(policy),
+                    history_sha256=hashlib.sha256(data).hexdigest())
+        histories.append(history)
+        metadata.append(meta)
+    return histories, metadata
+
+
+@pytest.mark.parametrize('phases', ['negative', 'nonmonotone'])
+def test_real_triplet_excludes_phases_from_thirteen_amplitude_gcis(tmp_path, phases):
+    _, _, condition, policy = inputs()
+    if phases == 'negative':
+        for key, cell in condition['responses'].items():
+            if '_phase' in key:
+                cell['value'] = -.2 * int(key[-1])
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, phases)
+    report = qa.compare_triplet(histories, metadata, condition, policy)
+    assert set(report['gci']) == {
+        'ct_x1000_a1', 'ct_x1000_a2', 'ct_x1000_a3', 'ct_x1000_a4',
+        'heave_over_a_a1', 'heave_over_a_a2', 'heave_over_a_a3', 'heave_over_a_a4',
+        'pitch_over_ka_a1', 'pitch_over_ka_a2', 'pitch_over_ka_a3', 'pitch_over_ka_a4',
+        'wave_over_lpp_a1',
+    }
+    assert report['amplitude_gci_passed']
+    assert not report['qualified']
+    assert report['gci']['ct_x1000_a1']['p'] == pytest.approx(2)
+
+
+@pytest.mark.parametrize('limits,reason', [
+    ({'minimum_order': 2.1}, 'order'),
+    ({'maximum_order': 1.9}, 'order'),
+])
+def test_amplitude_gci_enforces_declared_bounds(limits, reason):
+    with pytest.raises(ValueError, match=reason):
+        qa.amplitude_gci([1, 2, 4], [1.001, 1.004, 1.016], **limits)
+
+
+def test_triplet_forwards_all_policy_gci_bounds(tmp_path, monkeypatch):
+    _, _, condition, policy = inputs()
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
+    original = qa.amplitude_gci
+
+    def enforce_bounds(h, values, **limits):
+        assert limits == {'minimum_order': .5, 'maximum_order': 3.,
+                          'maximum_asymptotic_deviation': .05}
+        return original(h, values, **limits)
+
+    monkeypatch.setattr(qa, 'amplitude_gci', enforce_bounds)
+    assert qa.compare_triplet(histories, metadata, condition, policy)['amplitude_gci_passed']
+
+
+def test_shared_response_provenance_preserves_qualification_and_cell_overrides():
+    _, _, condition, _ = inputs()
+    fields = ('froude', 'wave_conditions', 'source_document', 'source_url', 'page',
+              'published_data_file', 'licence_note', 'condition_id')
+    cell_provenance = {**condition.get('response_provenance', {}),
+                       **condition['responses']['ct_x1000_a1']}
+    condition['response_provenance'] = {
+        key: cell_provenance[key] for key in fields}
+    for cell in condition['responses'].values():
+        for key in fields:
+            cell.pop(key, None)
+    condition['readback'].update(status='verified', source_sha256='a' * 64,
+                                 table_sha256=qa.response_table_digest(condition))
+    assert qa.reference_is_qualified(condition)
+    condition['responses']['ct_x1000_a1']['condition_id'] = 'C2'
+    condition['readback']['table_sha256'] = qa.response_table_digest(condition)
+    assert not qa.reference_is_qualified(condition)
+
+
+@pytest.mark.parametrize('field', ['source_url', 'page'])
+def test_shared_source_edit_invalidates_verified_readback(field):
+    _, _, condition, _ = inputs()
+    condition['readback'].update(status='verified', source_sha256='a' * 64)
+    assert qa.reference_is_qualified(condition)
+    condition['response_provenance'][field] = 'different source locator'
+    assert not qa.reference_is_qualified(condition)
+
+
+@pytest.mark.parametrize('command', ['compare', 'triplet'])
+def test_cli_success_reads_real_evidence_and_writes_report(tmp_path, command):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('head_wave_cli', ROOT / 'scripts/cfd/readback_kcs_step3.py')
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    _, _, condition, policy = inputs()
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
+    reference = qa.load_reference(FIXTURE)
+    reference['reference_rows'][1] = condition
+    reference_path = tmp_path / 'reference.json'
+    reference_path.write_text(json.dumps(reference))
+    output = tmp_path / 'report.json'
+    args = [command, '--condition', 'C1', '--reference', str(reference_path),
+            '--criteria', str(POLICY), '--output', str(output)]
+    count = 3 if command == 'triplet' else 1
+    for history, meta in zip(histories[:count], metadata[:count]):
+        metadata_path = tmp_path / f'{meta["mesh"]}.json'
+        metadata_path.write_text(json.dumps(meta))
+        args.extend(['--history', str(history), '--metadata', str(metadata_path)])
+    assert cli.main(args) == 0
+    report = json.loads(output.read_text())
+    assert report['amplitude_gci_passed' if command == 'triplet' else 'comparison_passed']
+    assert not report['qualified']

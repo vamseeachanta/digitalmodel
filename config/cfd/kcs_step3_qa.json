@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "criteria_id": "kcs-step3-v1",
+  "criteria_id": "kcs-step3-v2",
   "case": "2.10",
-  "tolerance_basis": "Project-selected provisional diagnostic thresholds; not published experimental uncertainty. No engineering qualification is granted.",
+  "tolerance_basis": "assumed, based on previous experience; retained provisional diagnostic thresholds, not experimental uncertainty. Maintainer selection of the new threshold groups is not recorded. No engineering qualification is granted.",
   "tolerances": {
     "ct_x1000_a0": {
       "kind": "absolute",
@@ -202,5 +202,42 @@
     "maximum_order": 3.0,
     "maximum_asymptotic_deviation": 0.05
   },
-  "retention": "Inputs, native histories, diagnostics and heavy outputs go to the shared data store with a digest manifest; the repository retains the manifest only."
+  "retention": "Inputs, native histories, diagnostics and heavy outputs go to the shared data store with a digest manifest; the repository retains the manifest only.",
+  "threshold_basis": {
+    "harmonic_comparison": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; the existing absolute limits for scaled resistance, normalized motions, phase and incident amplitude are retained. Their numerical values cannot be derived from the harmonic expansion or experimental uncertainty in the available evidence."
+    },
+    "window_drift": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; each maximum_window_drift equals one fifth of its comparison limit. The factor is a provisional diagnostic choice, not a derived uncertainty."
+    },
+    "sampling": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; 32 samples per encounter cycle provide 8 samples per period of the fourth retained harmonic, above the Nyquist minimum of 2. This arithmetic does not derive the choice of 32 or establish sampling adequacy for unretained content. The uniform-spacing relative tolerance is retained from config/cfd/kcs_step1_qa.json."
+    },
+    "windows": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; five discarded encounter cycles and two five-cycle comparison windows require at least fifteen complete cycles. This arithmetic does not establish that transients have decayed."
+    },
+    "phase_amplitude_floor": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; the retained dimensionless floor marks phase as undefined for a near-zero amplitude. Its magnitude is not derived from experimental uncertainty."
+    },
+    "fit_residual": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "assumed, based on previous experience; the retained RMS limits equal the corresponding non-phase window-drift limits. A fit residual diagnoses content outside the retained basis; this equality does not derive an uncertainty limit."
+    },
+    "residual_mesh_gci": {
+      "status": "inherited",
+      "source": "config/cfd/kcs_step1_qa.json",
+      "basis": "Residual, mesh and GCI limits are unchanged from the step-1 policy. The GCI procedure and its method references are inherited from three_grid_gci in src/digitalmodel/solvers/openfoam/validation/kcs_step1.py."
+    }
+  }
 }

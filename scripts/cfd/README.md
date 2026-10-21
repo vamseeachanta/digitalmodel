@@ -236,8 +236,17 @@ wrapped into a circular angle. This avoids applying one fundamental phase shift
 to every harmonic. A harmonic below the declared amplitude floor has undefined
 phase and cannot produce a passing complete comparison.
 
+Response cells inherit shared source and condition metadata from each row's
+`response_provenance`. Cell-specific sheet and cell locators remain explicit;
+cell overrides are checked against the row condition before qualification.
+`readback.table_sha256` is computed with `response_table_digest(row)`, which
+expands inherited fields into each response before hashing. Shared-source edits
+therefore invalidate readback, and expanded legacy tables retain the same digest.
+
 Criteria are declared before any run in `config/cfd/kcs_step3_qa.json` and pinned
-by digest. The choices are provisional project diagnostic thresholds, not
+by digest. Each group's basis is recorded in `threshold_basis`. The retained
+choices are assumed, based on previous experience; a maintainer decision on the
+new threshold groups is not recorded. These are provisional diagnostic thresholds, not
 experimental uncertainty: absolute limits are 0.1 for scaled resistance and
 phase (radians), 0.05 for normalized motions, and 0.001 for normalized incident
 wave amplitude. Each quantity's allowed window drift is one fifth of its
@@ -250,6 +259,14 @@ The CSV omits a duplicated terminal cycle endpoint. Residual, y+ and
 free-surface checks reuse step 1's observed-diagnostics routine and declared
 limits. These checks do not establish wave-resolution adequacy or reflection
 uncertainty for a future production campaign.
+
+At the fourth retained harmonic, 32 samples per encounter cycle give 8 samples
+per harmonic period, above the Nyquist minimum of 2. This does not derive the
+choice of 32 or establish adequacy for higher-frequency content. The window
+settings require at least fifteen complete cycles; this duration does not prove
+transients have decayed. Fit-residual limits equal the corresponding non-phase
+window-drift limits. These arithmetic relationships do not supply a physical or
+experimental uncertainty basis for the retained numerical thresholds.
 
 Offline CLI (all arguments are existing local evidence; no solver is launched):
 
@@ -270,7 +287,12 @@ claimed to be protected by this offline change.
 Use `triplet` with three repeated `--history`/`--metadata` pairs, one per mesh.
 Metadata also requires `h_m`, identical `mesh_family` and `numerics`,
 `refinement_axes="xyz"`, and observed `free_surface.dx_m`/`dz_m` proportional to
-cell size. Positive nonzero harmonics reuse step 1's three-grid GCI procedure.
+cell size. Exactly thirteen positive nonzero amplitudes reuse step 1's three-grid
+GCI procedure: four per response signal and the incident-wave fundamental. The
+declared minimum order, maximum order and asymptotic-deviation bounds are passed
+to that procedure. For equal refinement ratios, the fitted three-point power law
+makes the asymptotic ratio an algebraic consistency check; it does not independently
+establish the asymptotic range.
 Phases and signed zero harmonics have no grid-uncertainty method in this slice;
 `qualified` therefore stays false even when amplitude GCI passes. Degenerate,
 oscillatory, divergent and nonpositive amplitude series refuse GCI.

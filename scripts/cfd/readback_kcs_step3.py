@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2024 Digital Model Project
+# Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline Case 2.10 readback and admission; no solver commands."""
 from __future__ import annotations
