@@ -22,16 +22,29 @@ DRAFT_GUARD = (
 
 @pytest.fixture
 def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
-    """Capture the checker boundary in disposable Git metadata without commits."""
+    """Capture the checker boundary in an independent, two-commit repository."""
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("GIT_")}
     repository = tmp_path / "repository"
     subprocess.run(
-        ["git", "clone", "--shared", "--no-checkout", str(ROOT), str(repository)],
+        ["git", "init", "--quiet", "-b", "main", str(repository)],
         env=env, capture_output=True, text=True, check=True,
     )
+    # Keep byte-counted import records on LF across platforms, with no identity edits.
+    subprocess.run(
+        ["git", "fast-import", "--quiet"], cwd=repository, env=env,
+        input=(
+            b"commit refs/heads/main\nmark :1\n"
+            b"committer Test <test@example.invalid> 1700000000 +0000\n"
+            b"data 4\nbase\n\n"
+            b"commit refs/heads/main\n"
+            b"committer Test <test@example.invalid> 1700000001 +0000\n"
+            b"data 4\nhead\nfrom :1\n\ndone\n"
+        ),
+        capture_output=True, check=True,
+    )
     base = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repository, env=env,
+        ["git", "rev-parse", "HEAD^"], cwd=repository, env=env,
         capture_output=True, text=True, check=True,
     ).stdout.strip()
     subprocess.run(
@@ -46,6 +59,19 @@ def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
     return repository, env, base
 
 
+def test_register_repository_is_minimal(register_repository) -> None:
+    """The checker fixture must not copy or borrow the project object database."""
+    repository, env, _ = register_repository
+    for arguments, expected in ((["rev-list", "--count", "HEAD"], "2"),
+                                (["ls-tree", "-r", "HEAD"], "")):
+        result = subprocess.run(
+            ["git", *arguments], cwd=repository, env=env,
+            capture_output=True, text=True, check=True,
+        )
+        assert result.stdout.strip() == expected
+    assert not (repository / ".git/objects/info/alternates").exists()
+
+
 @pytest.mark.parametrize("event,base,success", (
     ("workflow_dispatch", None, True),
     ("workflow_dispatch", "", True),
@@ -58,7 +84,7 @@ def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
 ))
 def test_register_diff_base(register_repository, event, base, success) -> None:
     """Manual runs derive a commit base; explicit bases remain fail-closed."""
-    repository, env, head = register_repository
+    repository, env, base_commit = register_repository
     env = {key: value for key, value in env.items() if key != "REGISTER_BASE"}
     env["GITHUB_EVENT_NAME"] = event
     if base is not None:
@@ -75,7 +101,15 @@ def test_register_diff_base(register_repository, event, base, success) -> None:
     )
     assert (result.returncode == 0) == success, result.stderr
     if success:
-        assert json.loads(result.stdout) == ["--diff", "HEAD" if base == "HEAD" else head]
+        if base != "HEAD":
+            parent = subprocess.run(
+                ["git", "rev-parse", "HEAD^"], cwd=repository, env=env,
+                capture_output=True, text=True, check=True,
+            ).stdout.strip()
+            assert base_commit == parent
+        assert json.loads(result.stdout) == [
+            "--diff", "HEAD" if base == "HEAD" else base_commit,
+        ]
     else:
         assert result.stdout.strip() == "" or "::error::" in result.stdout
 
