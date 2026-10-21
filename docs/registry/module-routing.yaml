@@ -361,6 +361,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#production_engineering
   - module: reservoir
     entry_point: src/digitalmodel/reservoir/
+    submodules:
+      reservoir:
+        agent_pack: src/digitalmodel/reservoir/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/reservoir/
     key_tests: [tests/reservoir/]
