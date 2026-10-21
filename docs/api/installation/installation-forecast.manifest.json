@@ -1,14 +1,15 @@
 {
-  "sha256": "22cce616559bdb6b4555c4ec1669138b35016d8c254f33f6521b4bb28f8f5ad7",
-  "size_bytes": 321282,
+  "sha256": "af67f0fc0f42a09638d736224afd01cf964067245fc014a3952665569eb0fad6",
+  "size_bytes": 322003,
   "source_sha256": {
     "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
     "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
   },
   "numerical_basis": {
-    "revision": 2,
+    "revision": 3,
     "status": "assumed, based on previous experience",
     "kN_per_Te": 9.81,
+    "conversion_convention": "9.81 kN/Te is a rounded demonstration convention. The exact reference conversion is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), Declaration 2, Declaration on the unit of mass and on the definition of weight; conventional value of standard gravity. The rounded conversion increases the load limits by less than 0.1 %. The published demonstration limits and series are retained.",
     "load_limits_Te": {
       "Master-link load-path proxy: TopRigging End B": 17.7,
       "Sling2 End B tension": 10.89

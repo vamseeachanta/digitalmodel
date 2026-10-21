@@ -189,12 +189,56 @@ def test_render_rejects_inconsistent_calibration_counts(field, value):
         builder.render({'demo': {'scenarios': [scenario]}}, config)
 
 
-def test_alert_explanation_compares_peak_with_limit():
+@pytest.mark.parametrize(('now', 'peak', 'margin'), [
+    (420, '108.897', '64.740'), (480, '97.641', '75.996'),
+])
+def test_alert_explanation_compares_peak_with_limit(now, peak, margin):
     text = render_embedded_scenario()
-    assert 'At NOW 420 s' in text
-    assert '108.897 kN' in text
-    assert '64.7 kN below the 173.637 kN limit' in text
-    assert 'alert comes from the back-test error spread' in text
+    assert (f'At NOW {now} s the plotted peak, {peak} kN, is '
+            f'{margin} kN below the 173.637 kN limit; '
+            'the alert comes from the back-test error spread.') in text
+
+
+def test_alert_explanation_is_absent_when_alert_is_false():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    alert = scenario['frames'][3]['channels'][1]['exceedance']
+    alert.update(window_probability=0, alert=False)
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    text = builder.render({'demo': {'scenarios': [scenario]}}, config)
+    assert 'At NOW 420 s the plotted peak' not in text
+    assert 'At NOW 480 s the plotted peak' in text
+
+
+@pytest.mark.parametrize('excess', [0, 1])
+def test_alert_explanation_rejects_peak_at_or_above_limit(excess):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    channel = scenario['frames'][4]['channels'][1]
+    channel['forecast']['values'][0] = channel['assumed_limit'] + excess
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='peak.*limit'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_alert_explanation_covers_other_load_channels():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    channel = scenario['frames'][4]['channels'][2]
+    channel['exceedance'].update(window_probability=23 / 61, alert=True)
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    text = builder.render({'demo': {'scenarios': [scenario]}}, config)
+    assert text.count('At NOW 480 s the plotted peak') == 2
+    assert f'below the {channel["assumed_limit"]:.3f} kN limit' in text
+
+
+def test_conversion_is_disclosed_as_rounded_demonstration_convention():
+    text = render_embedded_scenario()
+    assert 'rounded demonstration convention' in text
+    assert '9.806 65 kN/Te' in text
+    assert '3rd CGPM (1901), Declaration 2' in text
+    assert 'conventional value of standard gravity' in text
+    # Standard gravity gives the exact tonne-force conversion; 9.81 is retained.
+    relative_increase = (Decimal('9.81') / Decimal('9.80665') - 1) * 100
+    assert 0 < relative_increase < Decimal('0.1')
+    assert 'less than 0.1 %' in text
 
 
 def test_manifest_bytes_follow_builder_order_with_disclosed_carry_over():
@@ -257,7 +301,9 @@ def test_embedded_data_reproduces_page():
     assert render_embedded_scenario().encode('utf-8') == PAGE.read_bytes()
 
 
-def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
+@pytest.mark.parametrize('separator', ['/', '\\'])
+def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path, monkeypatch, separator):
+    monkeypatch.setattr(os, 'sep', separator)
     env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
     repo, checkout = tmp_path / 'repo', tmp_path / 'checkout'
     repo.mkdir()
@@ -273,7 +319,7 @@ def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
 
     git('init', '--quiet')
     git('add', '--', *map(str, paths))
-    git('checkout-index', '--all', '--prefix=' + str(checkout) + os.sep)
+    git('checkout-index', '--all', '--prefix=' + checkout.as_posix() + '/')
     page = checkout / PAGE.relative_to(ROOT)
     manifest_bytes = page.with_suffix('.manifest.json').read_bytes()
     manifest = json.loads(manifest_bytes)

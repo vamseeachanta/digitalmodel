@@ -17,9 +17,17 @@ LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Acceptance criteria are provisional demonstration assumptions; '
             'engineering applicability is unresolved.')
 NUMERICAL_BASIS: dict = {
-    'revision': 2,
+    'revision': 3,
     'status': 'assumed, based on previous experience',
     'kN_per_Te': 9.81,
+    'conversion_convention': (
+        '9.81 kN/Te is a rounded demonstration convention. The exact reference conversion '
+        'is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), '
+        'Declaration 2, Declaration on the unit of mass and on the definition of weight; '
+        'conventional value of standard gravity. '
+        'The rounded conversion increases the load limits by less than 0.1 %. '
+        'The published demonstration limits and series are retained.'
+    ),
     'load_limits_Te': {'Master-link load-path proxy: TopRigging End B': 17.7,
                        'Sling2 End B tension': 10.89},
     'load_limit_sources': {
@@ -108,6 +116,7 @@ def numerical_basis_html() -> str:
 settings; no component capacity or operational acceptance is established.</p>
 <p>Load conversion: limit (kN) = assumed limit (Te) × {basis['kN_per_Te']:.3f} kN/Te.
 Te denotes the tonne-force equivalent used by this demonstration.</p>
+<p>{escape(basis['conversion_convention'])}</p>
 <table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th><th>Source</th></tr></thead>
 <tbody>{''.join(rows)}</tbody></table><p>Table 2. Assumed loads and their conversion.</p>
 <p>The alert cutoff is {basis['alert_probability']:.1%}, also written as {basis['alert_probability']:.3f};
@@ -210,11 +219,13 @@ def render(payload: dict, config: dict) -> str:
                                f'alert: {str(e["alert"]).lower()}. '
                                f'({round(e["window_probability"] * e["calibration_windows"])} of '
                                f'{e["calibration_windows"]} calibration windows).</p>')
-                if frame['now_s'] == 420 and channel['label'] == next(iter(NUMERICAL_BASIS['load_limits_Te'])):
+                if e['alert']:
                     peak = max(channel['forecast']['values'])
                     limit = channel['assumed_limit']
-                    figures.append(f'<p>At NOW 420 s the plotted peak, {peak:.3f} kN, is '
-                                   f'{limit - peak:.1f} kN below the {limit:.3f} kN limit; '
+                    if peak >= limit:
+                        raise ValueError('Alert explanation requires a forecast peak below the load limit')
+                    figures.append(f'<p>At NOW {frame["now_s"]:g} s the plotted peak, {peak:.3f} kN, is '
+                                   f'{limit - peak:.3f} kN below the {limit:.3f} kN limit; '
                                    'the alert comes from the back-test error spread.</p>')
             channels.append(channel)
         frames.append({'now_s': frame['now_s'], 'channels': channels})
@@ -246,6 +257,7 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
 <tr><td>2</td><td>2026-10-21</td><td>Load sources, forecast settings and window counts are stated consistently; retained provenance is identified.</td></tr>
+<tr><td>3</td><td>2026-10-21</td><td>Each alert is explained using a checked peak margin; the rounded load conversion is distinguished from its exact reference.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 {numerical_basis_html()}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
