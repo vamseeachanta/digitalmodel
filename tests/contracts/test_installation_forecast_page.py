@@ -317,7 +317,9 @@ def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
 
     git('init', '--quiet')
     git('add', '--', *map(str, paths))
-    git('checkout-index', '--all', '--prefix=' + checkout.as_posix() + '/')
+    prefix = checkout.as_posix() + '/'
+    assert '\\' not in prefix
+    git('checkout-index', '--all', '--prefix=' + prefix)
     page = checkout / PAGE.relative_to(ROOT)
     manifest_bytes = page.with_suffix('.manifest.json').read_bytes()
     manifest = json.loads(manifest_bytes)
