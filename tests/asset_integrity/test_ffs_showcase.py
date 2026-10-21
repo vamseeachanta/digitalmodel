@@ -116,6 +116,26 @@ def test_embedded_dnv_grid_uses_corrected_part_b_factor(showcase_data, preset_in
     assert grid["ratio"][row][column] == round(expected / grid["maop"], 4)
 
 
+def test_showcase_part_b_matches_hand_calculation(showcase_data):
+    driver = _load_driver()
+    # D=30 in, t=0.375 in, d/t=0.4, L=8 in, SMTS=66,700 psi:
+    # Q=sqrt(1+0.31*8**2/(30*0.375))=1.6624;
+    # capacity=2*0.375*66700/(30-0.375)*0.6/(1-0.4/Q)=1334.19 psi;
+    # safe=capacity*0.9*0.72=864.56 psi (Part B F1*F2).
+    capacity = _part_b_reference(driver.PRESETS[1]).capacity_pressure_psi
+    safe = driver._safe_pressure(
+        "DNV-RP-F101", 30.0, 0.375, 0.150, 8.0, 52000.0, 66700.0,
+    )
+    assert capacity == pytest.approx(1334.19, abs=0.05)
+    assert safe == pytest.approx(864.56, abs=0.05)
+    corroded = showcase_data["corroded"]
+    grid = corroded["grids"][driver.PRESETS[1][0] + "|DNV-RP-F101"]
+    row = corroded["depths_pct"].index(40.0)
+    column = corroded["lengths"].index(8.0)
+    assert grid["safe"][row][column] == 864.6
+    assert grid["ratio"][row][column] == 0.9237
+
+
 @pytest.mark.parametrize("source", ["generator", "published"])
 def test_showcase_notice_and_qualification_limits(showcase_data, monkeypatch, source):
     driver = _load_driver()
@@ -127,9 +147,9 @@ def test_showcase_notice_and_qualification_limits(showcase_data, monkeypatch, so
             encoding="utf-8"
         )
     notice = (
-        "Safe pressures from the DNV-RP-F101 option on this page were calculated "
-        "with a superseded usage factor and are being re-verified; do not use "
-        "them for decisions."
+        "DNV-RP-F101 safe pressures were corrected on 2026-10-20 to apply the "
+        "Part B modelling factor (F = F1\u00b7F2); independent verification is "
+        "pending; do not use them for decisions."
     )
     assert html.index("<body>") < html.index(notice) < html.index("<header>")
     assert 'role="alert"' in html
