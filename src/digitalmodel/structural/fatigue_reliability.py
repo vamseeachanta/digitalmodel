@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -147,6 +150,9 @@ class FatigueReliability:
         NIST 1.3.6.6.1 standardization gives beta=mu_g/sigma_g. The direct
         ratio retains finite indices when the reported probability underflows.
         At zero variance the normal quantile limits are signed infinities.
+        With positive subnormal sigma, a nonzero log margin can exceed the
+        float range after division: beta is then signed infinity, and Pf
+        reaches the corresponding limit of zero or one.
         """
         margin, sigma = self._standardized_margin(target_life)
         if sigma == 0:
