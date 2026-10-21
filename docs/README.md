@@ -53,6 +53,15 @@ Raw inventory surfaces are discovery aids only. Broad generated indexes, histori
 reports, logs, cached outputs, and large extracted inventories can help locate
 candidate files, but they do not replace the curated routing surfaces above.
 
+## Knowledge pack review evidence
+
+The [pipelay review and clearance index](registry/pipelay-review-clearance.json)
+links durable lesson entries, review responsibilities and C01–C07 evidence to
+the analytical knowledge pack. Assignments and clearance remain
+`NOT_EVALUATED`; offline regression does not establish native installation
+clearance. The index specifies evidence requirements and contains no executed
+review receipt.
+
 ## Repo-vs-Bulk-Artifact-Store
 
 The universal placement rule is repo-vs-bulk-artifact-store. Keep source, tests,

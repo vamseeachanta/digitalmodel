@@ -30,6 +30,8 @@ from typing import Optional
 
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # Gravitational acceleration [m/s²]
 _G: float = 9.80665
 
@@ -256,9 +258,8 @@ def spectral_moments(omega: np.ndarray, Sv: np.ndarray) -> tuple[float, float]:
     (M0, M2) : tuple[float, float]
         Zeroth and second spectral moments.
     """
-    _trapz = getattr(np, "trapezoid", None) or np.trapz  # numpy 2.x compat
-    M0 = float(_trapz(Sv, omega))
-    M2 = float(_trapz(omega**2 * Sv, omega))
+    M0 = float(_trapezoid(Sv, omega))
+    M2 = float(_trapezoid(omega**2 * Sv, omega))
     return M0, M2
 
 
