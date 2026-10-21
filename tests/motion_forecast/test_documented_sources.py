@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Public input claims must agree with the implemented measured sources."""
@@ -35,16 +32,31 @@ def _offline_source_names(source, *, require_readers=True):
     tree = ast.parse(source)
     readers = []
     function_types = (ast.FunctionDef, ast.AsyncFunctionDef)
-    for node in tree.body:
+    parents = {child: parent for parent in ast.walk(tree)
+               for child in ast.iter_child_nodes(parent)}
+    protocols = {node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+                 and any(ast.unparse(base).endswith("Protocol") for base in node.bases)}
+    for node in ast.walk(tree):
+        ancestor = parents.get(node)
+        lineage = []
+        while ancestor is not None:
+            lineage.append(ancestor)
+            ancestor = parents.get(ancestor)
+        if any(parent in protocols for parent in lineage) or node in protocols:
+            continue
         if isinstance(node, ast.ClassDef):
-            if any(ast.unparse(base).endswith("Protocol") for base in node.bases):
-                continue
             if any(isinstance(method, function_types) and method.name == "read"
                    for method in node.body):
                 readers.append((node, node.body, "LIVE_INPUT"))
         elif isinstance(node, function_types) and node.returns is not None:
-            if ast.unparse(node.returns).strip("'\"").split(".")[-1] == "MeasuredMotion":
-                readers.append((node, tree.body, node.name + ".LIVE_INPUT"))
+            if not re.search(r"\b(?:MeasuredMotion|WaveForecast)\b", ast.unparse(node.returns)):
+                continue
+            parent = parents[node]
+            if isinstance(parent, ast.ClassDef) and node.name == "read":
+                continue  # The concrete reader class supplies this declaration.
+            scope = next(parent for parent in lineage
+                         if isinstance(parent, (ast.Module, ast.ClassDef, *function_types)))
+            readers.append((node, scope.body, node.name + ".LIVE_INPUT"))
     assert readers or not require_readers, "No concrete measured sources discovered; review the claim guard"
     for reader, body, attribute in readers:
         flags = []
@@ -102,6 +114,8 @@ class _ClaimText(HTMLParser):
 def _document_text(relative):
     """Select this capability's authored and generated metadata without execution."""
     document = (ROOT / relative).read_text(encoding="utf-8")
+    if relative == "README.md":
+        return _motion_readme_text(document)
     if relative.endswith("capability-cards.json"):
         card = next(card for card in json.loads(document)
                     if card["id"] == "short-horizon-motion-forecast")
@@ -118,12 +132,31 @@ def _document_text(relative):
     return document
 
 
+def _motion_readme_text(document):
+    """Select motion-forecast sections, including their nested headings."""
+    selected = []
+    level = None
+    for line in document.splitlines():
+        heading = re.match(r"^(#{1,6})\s+(.*)", line)
+        if heading:
+            depth, title = len(heading[1]), heading[2]
+            if level is not None and depth <= level:
+                level = None
+            if re.search(r"motion[-_ ]forecast", title, re.I):
+                level = depth if level is None else level
+        if level is not None:
+            selected.append(line)
+    return "\n".join(selected)
+
+
 def _unsupported_live_claims(document):
     """Check claims per clause; a limitation cannot excuse a subsequent claim."""
     # Canvas labels are executable strings rather than visible HTML text.
     label_claims = re.findall(r"\b(?:mms\s+measured|measured\s+mms)\b", unescape(document), re.I)
     # A site-availability prefix is exempt only when followed by a real link.
     document = re.sub(r"\bLive:\s*\[[^\]]+\]\(https?://[^)]+\)", "", document, flags=re.I)
+    # Inline repository references are evidence locations, not sensor claims.
+    document = re.sub(r"`(?:[\w.-]+/)+[\w.-]+\.(?:md|py|html)`", "", document)
     parser = _ClaimText()
     parser.feed(document)
     text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", "".join(parser.parts))
@@ -131,13 +164,20 @@ def _unsupported_live_claims(document):
     claims = list(label_claims)
     for sentence in re.split(r"[.!?;]", text):
         clauses = re.split(r"\b(?:and|or|but|however|yet)\b", sentence)
-        if re.search(r"\b(?:live|real[- ]?time|onboard)\b", sentence):
+        if re.search(r"\b(?:live|real[- ]?time|onboard|mms|mru)\b", sentence):
             for continuation in clauses[1:]:
-                current_use = re.search(r"\b(?:already|currently|now|drives?|uses?|runs?|powers?|feeds?)\b", continuation)
+                current_use = re.search(r"\b(?:already|currently|now|drives?|use[sd]?|driven|fed|runs?|powers?|feeds?)\b", continuation)
                 offline = re.search(r"\b(?:synthetic|csv|stub)\b", continuation)
                 future = re.search(r"\b(?:planned|not (?:implemented|supported|available)|will)\b", continuation)
                 if current_use and not (offline or future):
                     claims.append(continuation.strip())
+        if re.search(r"\b(?:mms|mru)\b", sentence):
+            limitation = re.search(
+                r"\b(?:planned|not (?:implemented|supported|available)|no (?:live )?mms|without (?:live )?mms)\b",
+                sentence,
+            )
+            if not limitation:
+                claims.append(sentence.strip())
         for clause in clauses:
             for live in re.finditer(r"\b(?:live|real[- ]?time|onboard)\b", clause):
                 before, after = clause[:live.start()], clause[live.end():]
@@ -181,6 +221,12 @@ def test_public_input_claims_match_implemented_sources(relative):
     '<span title="Real-time vessel measurements">trace</span>',
     'Live MMS ingest is planned, but this demo uses a live MRU feed.',
     'No live MMS feed is implemented; this demo uses live sensor data.',
+    'Measured: vessel & structure motions from the MMS / MRU give the now ground truth.',
+    'Anchored to vessel motions measured by the MRU.',
+    'Live MMS / MRU ingest is planned and is used by this demo.',
+    '<p title="MMS-driven forecast">',
+    '`MMS-driven forecast`',
+    'MMS input is planned but the forecast is fed by it.',
 ))
 def test_negative_control_rejects_injected_claim_on_each_surface(relative, claim):
     document = _document_text(relative)
@@ -197,6 +243,9 @@ def test_negative_control_rejects_injected_claim_on_each_surface(relative, claim
     'Real-time MMS / MRU input is planned.',
     'No live MMS feed is implemented.',
     'Live: [engineering capabilities](https://example.org/capabilities/)',
+    'MMS / MRU integration and hardware time synchronisation are planned.',
+    'MMS / MRU input planned',
+    '`docs/plans/mms-ingest.md`',
 ))
 def test_accurate_limitations_and_site_links_are_permitted(description):
     assert not _unsupported_live_claims(description)
@@ -239,6 +288,34 @@ def test_docstrings_cannot_approve_new_sources(reader):
         _offline_source_names(source + "\n" + reader)
 
 
+@pytest.mark.parametrize("reader", (
+    'def NetworkReader() -> MeasuredMotion | None: pass',
+    'def NetworkReader() -> "Optional[MeasuredMotion]": pass',
+    'def NetworkReader() -> models.WaveForecast: pass',
+    'class Factory:\n    @staticmethod\n    def NetworkReader() -> WaveForecast: pass',
+    'def factory():\n    async def NetworkReader() -> MeasuredMotion: pass',
+))
+def test_wrapped_and_nested_source_annotations_require_flags(reader):
+    with pytest.raises(AssertionError, match="new source NetworkReader"):
+        _offline_source_names(reader)
+
+
+def test_readme_scan_is_limited_to_motion_forecast():
+    document = (
+        '# Library\n\n## Other capability\nLive telemetry.\n\n'
+        '## Motion forecast\nSynthetic inputs.\n'
+        '### Inputs\nMMS input is planned.\n'
+        '## Another capability\nReal-time telemetry.\n'
+    )
+    assert not _unsupported_live_claims(_motion_readme_text(document))
+    document = document.replace('Synthetic inputs.', 'MMS-driven forecast.')
+    assert _unsupported_live_claims(_motion_readme_text(document))
+
+
+def test_readme_without_motion_section_has_no_motion_claims():
+    assert _motion_readme_text('# Library\n\nLive telemetry.\n') == ""
+
+
 @pytest.mark.parametrize("declaration", ("True", "False or True", "None", "0"))
 def test_source_flag_requires_literal_false(declaration):
     reader = (
@@ -254,6 +331,9 @@ def test_source_flag_requires_literal_false(declaration):
     'class FileReader:\n    LIVE_INPUT: bool = False\n    def read(self): pass\n',
     'async def FileReader() -> MeasuredMotion:\n    pass\nFileReader.LIVE_INPUT = False\n',
     'def FileReader() -> "MeasuredMotion":\n    pass\nFileReader.LIVE_INPUT: bool = False\n',
+    'def FileReader() -> "MeasuredMotion | None": pass\nFileReader.LIVE_INPUT = False\n',
+    'class Factory:\n    @staticmethod\n    def FileReader() -> WaveForecast: pass\n    FileReader.LIVE_INPUT = False\n',
+    'def factory():\n    def FileReader() -> WaveForecast: pass\n    FileReader.LIVE_INPUT = False\n',
 ))
 def test_offline_source_flag_is_read_from_code(reader):
     assert _offline_source_names(reader) == ["FileReader"]
@@ -283,15 +363,3 @@ def test_hosted_shard_runs_documented_motion_root():
     assert gate["failure_action"] == "block"
     assert "tests/motion_forecast/" in gate["test_roots"]
     assert "tests/motion_forecast/" in shlex.split(gate["command"])
-
-
-if __name__ == "__main__":
-    # Compare parsed values so required formatter changes cannot hide gate edits.
-    before = yaml.safe_load(Path(sys.argv[1]).read_text())
-    after = yaml.safe_load(Path(sys.argv[2]).read_text())
-    gate = before["gates"]["tests-hydrodynamics-other"]
-    gate["test_roots"].append("tests/motion_forecast/")
-    assert gate["command"].count(" -rfE") == 1
-    gate["command"] = gate["command"].replace(" -rfE", " tests/motion_forecast/ -rfE")
-    assert before == after, "Gate values changed beyond the motion-test additions"
-    print("Only the motion-test root and command argument were added; parsed values preserved")
