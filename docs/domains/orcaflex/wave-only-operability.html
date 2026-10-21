@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wave-only operability analysis</title>
+  <style>
+    body { font: 1rem/1.6 system-ui, sans-serif; max-width: 58rem; margin: 2rem auto; padding: 0 1rem; color: #17212b; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #b9c6d2; padding: .5rem; text-align: left; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    pre { background: #edf2f6; padding: 1rem; overflow-x: auto; }
+    code { font-size: .95em; }
+    a { color: #164b89; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Wave-only operability analysis</h1>
+  <h2>Summary</h2>
+  <p><code>OperabilityInput</code> evaluates Hs and optional Tp limits using a wave
+    scatter diagram. A supplied wind or current limit is rejected because the
+    diagram contains no joint wind/current observations. In the synthetic example,
+    the wave criteria give 40.0% operability; combined operability is
+    <strong>NOT_EVALUATED</strong>. No combined percentage is returned.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-21</td><td>Document unsupported-criterion rejection and the wave-only example to prevent incomplete assessments.</td></tr></tbody>
+    <caption>Table 1. Revision history.</caption>
+  </table>
+
+  <h2>Inputs and method</h2>
+  <p>All values below are synthetic demonstration choices, not measured data,
+    site operating limits or values from a standard. Both limits are explicitly
+    supplied by the caller.</p>
+  <table>
+    <thead><tr><th>Hs upper edge (m)</th><th>Occurrence at Tp upper edge 6.0 s</th><th>Occurrence at Tp upper edge 8.0 s</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>0.1</td><td>0.2</td></tr>
+      <tr><td>2.0</td><td>0.3</td><td>0.4</td></tr>
+    </tbody>
+    <caption>Table 2. Synthetic Hs/Tp joint probabilities, summing to unity.</caption>
+  </table>
+  <p>The selected criteria are Hs &le; 2.0 m and Tp &le; 6.0 s. Accepted disjoint
+    cells are summed: P = 0.1 + 0.3 = 0.4. Operability is 100P = 40.0%;
+    non-operability is 100(1 &minus; P) = 60.0%.
+    The addition and complement rules are described in
+    <a href="https://openstax.org/books/introductory-statistics-2e/pages/3-3-two-basic-rules-of-probability">Introductory Statistics 2e (OpenStax, 2023), section 3.3</a>.
+    No assumption of independent wind, current and waves is made.</p>
+
+  <h2>Run the worked example</h2>
+  <p>The example prints its inputs, the wave-only result and the rejected criteria.</p>
+  <pre><code>PYTHONPATH=src python3 examples/solvers/orcaflex/wave_only_operability.py</code></pre>
+  <table>
+    <thead><tr><th>Request</th><th>Result</th><th>Disposition</th></tr></thead>
+    <tbody>
+      <tr><td>Hs &le; 2.0 m, Tp &le; 6.0 s</td><td>40.0% operability; 60.0% non-operability</td><td>Wave-only assessment</td></tr>
+      <tr><td>Same wave criteria plus wind &le; 1.0 m/s</td><td>NOT_EVALUATED</td><td>Input rejected; no wind occurrence data</td></tr>
+      <tr><td>Same wave criteria plus current &le; 1.0 m/s</td><td>NOT_EVALUATED</td><td>Input rejected; no current occurrence data</td></tr>
+    </tbody>
+    <caption>Table 3. Independent expected answers for the synthetic example.</caption>
+  </table>
+  <p>The example converts validation errors into <code>NOT_EVALUATED</code>
+    entries for display. The API raises <code>pydantic.ValidationError</code>
+    during construction or JSON validation, naming unsupported active fields.
+    The calculation also raises <code>ValueError</code> if those fields are set
+    through assignment, <code>model_copy(update=...)</code> or
+    <code>model_construct(...)</code>. This second check runs before the wave
+    probability is evaluated. Pydantic documents the trusted-data bypasses in its
+    <a href="https://docs.pydantic.dev/latest/concepts/models/">model documentation</a>.</p>
+
+  <h2>Limits and way forward</h2>
+  <p>Omitted or explicitly <code>None</code> wind/current limits request a
+    wave-only assessment. Removing an actual operational requirement merely to
+    obtain a percentage does not establish combined operability. A combined
+    assessment requires a separate interface with synchronized wave, wind and
+    current observations or their joint occurrence distribution, and explicit
+    operating limits. That interface is outside this correction.</p>
+  <p>The default synthetic scatter remains demonstration data. This correction
+    does not qualify site data, normalize supplied occurrence counts, calculate
+    combined persistence, or establish compliance with marine-operation standards.</p>
+  <p>Implementation:
+    <a href="../../../src/digitalmodel/orcaflex/weather_window.py">weather_window.py</a>.
+    Example:
+    <a href="../../../examples/solvers/orcaflex/wave_only_operability.py">wave_only_operability.py</a>.
+    Independent expected values and regression cases:
+    <a href="../../../tests/orcaflex/test_operability_limits.py">test_operability_limits.py</a>.</p>
+</main>
+</body>
+</html>
