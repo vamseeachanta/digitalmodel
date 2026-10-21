@@ -69,7 +69,7 @@ def test_liquid_inverse_rejects_unrepresentable_coefficient(rate, unit_constant)
 
 
 def test_liquid_choking_overflow_is_a_value_error():
-    """Constructed FLP/Fp=1e200: its square overflows before limiting dp.
+    """Constructed FLP/Fp=1e200: the final differential 1e402 overflows.
 
     Domain failures shall use ValueError rather than leaking OverflowError.
     This is a representability check, not a permitted valve-factor range.
@@ -130,6 +130,34 @@ def test_true_zero_capacity_and_demand():
     assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
     with pytest.raises(ValueError, match="positive pressure drop"):
         required_liquid_coefficient(rate=1.0, **inputs)
+
+
+@pytest.mark.parametrize(
+    "coefficient, changes, effective, choked",
+    [(0.0, dict(specific_gravity=1e-310), 25.0, True),
+     (1e300, dict(unit_constant=1e10, p_downstream=100.0), 0.0, False)],
+)
+def test_exact_zero_capacity_avoids_nonfinite_intermediates(
+    coefficient, changes, effective, choked,
+):
+    """Constructed q=N1*Fp*C*sqrt(dp/SG) is zero when C or dp is zero.
+
+    The first case has dp/SG=2.5e311; the second has N1*C=1e310.
+    Neither overflowing intermediate changes the exact zero result.
+    """
+    inputs = liquid_inputs(**changes)
+    result = liquid_capacity(coefficient=coefficient, **inputs)
+    assert result.rate == 0.0
+    assert result.effective_drop == effective
+    assert result.choked is choked
+    assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
+
+
+@pytest.mark.parametrize("recovery, pressure", [(1e-200, 1e300), (2.0**700, 2.0**-1000)])
+def test_zero_demand_accepts_representable_scaled_choking(recovery, pressure):
+    """Hand-derived limits 1e-100 and 2^400 are representable; demand is zero."""
+    inputs = liquid_inputs(recovery_factor=recovery, p_upstream=pressure)
+    assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
 
 
 @pytest.mark.parametrize("downstream", [0.0, 100.0])
