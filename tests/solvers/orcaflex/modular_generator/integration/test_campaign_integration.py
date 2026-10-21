@@ -5,6 +5,7 @@ with existing spec files, and consistency between preview and generation.
 """
 from __future__ import annotations
 
+import runpy
 from pathlib import Path
 
 import pytest
@@ -14,14 +15,70 @@ import yaml
 # ------------------------------------------------------------------
 # Paths to existing spec files used in backward-compatibility tests
 # ------------------------------------------------------------------
-FLOATING_SPEC = Path(
-    "D:/workspace-hub/digitalmodel/docs/domains/orcaflex/pipeline"
+# The test lives in tests/solvers/orcaflex/modular_generator/integration;
+# its sixth ancestor is the repository root (source: this repository tree).
+REPO_ROOT = Path(__file__).resolve().parents[5]
+FLOATING_SPEC = REPO_ROOT / (
+    "docs/domains/orcaflex/pipeline"
     "/installation/floating/30in_pipeline/spec.yml"
 )
-SLAY_SPEC = Path(
-    "D:/workspace-hub/digitalmodel/docs/domains/orcaflex/pipeline"
+SLAY_SPEC = REPO_ROOT / (
+    "docs/domains/orcaflex/pipeline"
     "/installation/s-lay/SB-SA/spec.yml"
 )
+
+
+@pytest.mark.parametrize("spec_name", ["FLOATING_SPEC", "SLAY_SPEC"])
+def test_campaign_fixture_is_in_checkout(spec_name):
+    """Issue #2517 requires both tracked specs to exist in this checkout.
+
+    The project configuration supplies an independent root; the expected result
+    is file membership, without generation or engineering calculations.
+    """
+    repo_root = next(
+        parent
+        for parent in Path(__file__).resolve().parents
+        if (parent / "pyproject.toml").is_file()
+    )
+    spec_path = globals()[spec_name]
+    assert spec_path.is_relative_to(repo_root)
+    assert spec_path.is_file()
+
+
+@pytest.mark.parametrize("spec_name", ["FLOATING_SPEC", "SLAY_SPEC"])
+def test_campaign_fixture_paths_follow_relocated_checkout(
+    spec_name, tmp_path, monkeypatch
+):
+    """Resolve from the test location after copying to a synthetic checkout.
+
+    Expected paths are the synthetic root plus each tracked fixture's relative
+    path. Empty fixture placeholders suffice: this test exercises only path
+    declarations and skip conditions, without running the generated models.
+    Changing the working directory also rules out resolution from the caller.
+    """
+    source_file = Path(__file__).resolve()
+    repo_root = next(
+        parent
+        for parent in source_file.parents
+        if (parent / "pyproject.toml").is_file()
+    )
+    checkout = tmp_path / "checkout"
+    relocated_module = checkout / source_file.relative_to(repo_root)
+    relocated_module.parent.mkdir(parents=True)
+    relocated_module.write_text(source_file.read_text())
+    for name in ("FLOATING_SPEC", "SLAY_SPEC"):
+        fixture = checkout / globals()[name].relative_to(repo_root)
+        fixture.parent.mkdir(parents=True, exist_ok=True)
+        fixture.touch()
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+
+    namespace = runpy.run_path(str(relocated_module))
+
+    expected = checkout / globals()[spec_name].relative_to(repo_root)
+    assert namespace[spec_name] == expected
+    assert namespace[spec_name].is_file()
 
 
 # ------------------------------------------------------------------

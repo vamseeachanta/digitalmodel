@@ -18,6 +18,8 @@ from scipy.optimize import brentq, linear_sum_assignment
 
 from .basis import aggregate
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def spectrum(omega: np.ndarray, hs: float, tp: float, gamma: float) -> np.ndarray:
     """Return a normalised JONSWAP spectrum in m² per rad/s."""
@@ -39,8 +41,8 @@ def wave_statistics(omega: np.ndarray, rao: np.ndarray, density: np.ndarray,
                      duration: float) -> dict:
     """Return RMS, significant single amplitude and most probable maximum."""
     energy = abs(rao)**2*density
-    m0 = float(np.trapz(energy, omega))
-    m2 = float(np.trapz(omega**2*energy, omega))
+    m0 = float(_trapezoid(energy, omega))
+    m2 = float(_trapezoid(omega**2*energy, omega))
     if m0 == 0 or m2 == 0:
         return {"rms": 0.0, "significant": 0.0, "maximum": 0.0, "m0": m0, "m2": m2}
     cycles = duration/(2*math.pi*math.sqrt(m0/m2))

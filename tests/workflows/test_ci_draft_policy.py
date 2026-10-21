@@ -36,9 +36,17 @@ def test_pull_request_draft_policy(path: Path) -> None:
     if "pull_request" not in triggers:
         return
 
-    assert (triggers["pull_request"] or {}).get("types") == [
+    expected_types = [
         "opened", "reopened", "synchronize", "ready_for_review",
     ]
+    if path.name in {
+        "gmsh-meshing-tests.yml", "parametric-atlas-drift.yml",
+        "quality-gates-by-domain.yml", "quality-gates.yml",
+    }:
+        expected_types = [
+            "opened", "synchronize", "reopened", "edited", "ready_for_review",
+        ]
+    assert (triggers["pull_request"] or {}).get("types") == expected_types
     assert "workflow_dispatch" in triggers
     jobs = workflow["jobs"]
     assert {job_id: job.get("name", job_id) for job_id, job in jobs.items()} == (

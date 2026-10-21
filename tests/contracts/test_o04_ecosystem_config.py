@@ -38,7 +38,10 @@ def test_required_quality_gate_context_fails_closed():
     assert len(matches) == 1
     job = matches[0]
     assert job["needs"] == "quality-gates"
-    assert job["if"] == "always()"
+    assert job["if"] == (
+        "(github.event_name != 'pull_request' || github.event.pull_request.draft == false)"
+        " && (always())"
+    )
     assert "strategy" not in job
     assert "continue-on-error" not in job
     assert job["permissions"] == {}

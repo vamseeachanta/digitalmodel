@@ -31,6 +31,8 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from pydantic import BaseModel, Field
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -281,10 +283,10 @@ def through_thickness_linearisation(
     s = s[order]
 
     # Membrane: average stress
-    sigma_m = float(np.trapz(s, y) / t)
+    sigma_m = float(_trapezoid(s, y) / t)
 
     # Bending: first moment about mid-thickness
-    sigma_b = float(6.0 / t ** 2 * np.trapz(s * (t / 2.0 - y), y))
+    sigma_b = float(6.0 / t ** 2 * _trapezoid(s * (t / 2.0 - y), y))
 
     # Surface stress (at y=0)
     sigma_surface = float(np.interp(0.0, y, s))

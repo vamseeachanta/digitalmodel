@@ -7,6 +7,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only checks can stop superseded runs within the same workflow/ref.
+# GitHub Actions workflow syntax, concurrency (unversioned):
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
