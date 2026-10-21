@@ -65,6 +65,20 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
     }
 
 
+def test_discovery_includes_asset_integrity_demo_generator(tmp_path: Path) -> None:
+    script = tmp_path / "examples/demos/asset_integrity/ffs_showcase.py"
+    script.parent.mkdir(parents=True)
+    script.write_text(
+        'from pathlib import Path\n'
+        'output = Path("docs/api/ffs/ffs-showcase.html")\n'
+        'output.write_text("<html></html>")\n',
+        encoding="utf-8",
+    )
+    assert checker.discover_candidate_generators(tmp_path) == {
+        "examples/demos/asset_integrity/ffs_showcase.py"
+    }
+
+
 def test_shadow_copies_inputs_instead_of_linking_live_checkout(
     tmp_path: Path,
 ) -> None:
@@ -96,8 +110,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 25  # the 36 capabilities/api envelope pages were removed
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 26  # the 36 capabilities/api envelope pages were removed
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -116,7 +130,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
     # The solved-case verification page is counted as manual because its
     # solver output is unavailable for repository-only regeneration.
-    assert len(checker.MANUAL_PAGES) == 12
+    assert len(checker.MANUAL_PAGES) == 11
     assert set(checker.MANUAL_PAGES) == {
         'docs/api/buckling/ship-panel-buckling.html',
         'docs/api/buckling/ship-plate-buckling.html',
@@ -126,7 +140,6 @@ def test_registry_has_reasoned_complete_ownership() -> None:
         'docs/api/cfd/tank-sloshing-verification.html',
         'docs/api/ffs/build-wave-2026-07.html',
         'docs/api/ffs/ffs-field-dashboard.html',
-        'docs/api/ffs/ffs-showcase.html',
         'docs/api/hydro/rudder-maneuvering-explorer.html',
         'docs/api/hydro/short-horizon-motion-forecast.html',
         'docs/api/subsea/offshore-cross-section-report.html',
@@ -429,3 +442,13 @@ def test_registry_reports_registered_script_syntax_error(
         f"  x {errors[0]}\n"
     )
     assert "Traceback" not in text
+
+
+def test_showcase_has_reproducible_generator_ownership():
+    entry, = (
+        entry for entry in checker.GENERATORS
+        if entry.script == "examples/demos/asset_integrity/ffs_showcase.py"
+    )
+    assert entry.outputs == ("docs/api/ffs/ffs-showcase.html",)
+    assert entry.script in entry.inputs
+    assert entry.outputs[0] not in checker.MANUAL_PAGES
