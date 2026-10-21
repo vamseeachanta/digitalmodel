@@ -205,7 +205,8 @@ def _environment() -> Environment:
 # ---------------------------------------------------------------------------
 
 
-def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER) -> str:
+def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
+                assessment_presentation: bool = False) -> str:
     """Render the spec to a self-contained HTML document.
 
     Raises :class:`~digitalmodel.reporting.provenance.ProvenanceError` when the
@@ -215,6 +216,8 @@ def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER) -
     spec.provenance.require()
     house_css, _script = _template_parts(_DEFAULT_TEMPLATE)
     template_name = "verification_report.html.j2" if spec.verification_presentation else TEMPLATE_NAME
+    if assessment_presentation:
+        template_name = "assessment_report.html.j2"
     template = _environment().get_template(template_name)
     return template.render(
         brand=BRAND,
