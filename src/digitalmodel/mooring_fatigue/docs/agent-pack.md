@@ -5,7 +5,7 @@
 | Module | `mooring_fatigue` |
 | Repository | `digitalmodel` |
 | Package path | `src/digitalmodel/mooring_fatigue` |
-| Pack revision | 1 |
+| Pack revision | 2 |
 | Code revision | `29a87f1aba14aa22067794846aa5c2ec8bf407c1` |
 | Analysis family | Engineering calculations (`EC`), AQG r0 Python calculations |
 | Quality role | Engineering calculations quality manager |
@@ -35,6 +35,7 @@ UNVERIFIED: construction-specific curve suitability, the area basis and a numeri
 |---|---|---|
 | 0 | 2026-10-18 | Initial source-cited pack, regression evidence and implementation inventory. |
 | 1 | 2026-10-19 | State curve and area limitations; correct tolerances, incident exposure, history caveats and map classifications. |
+| 2 | 2026-10-21 | Correct the historical CP-knee damage direction and replace the transient map branch with the pinned commit and pull request. |
 
 ## 2. Inputs and outputs
 
@@ -232,7 +233,7 @@ S01–S32 were recorded on 2026-10-18; S33–S35 were added on 2026-10-19. All s
 
 No `continue`, explicit `return None`, error-path empty-list/dictionary return, epoch default or empty-result cache write occurs in the package; `_write_csv` rejects empty rows. [src/digitalmodel/mooring_fatigue/workflow.py:L1-L286]
 
-Historical incident #2165 recorded two non-conservative defects: free-corrosion curves copied CP parameters (exposing the v2 workflow), and the CP knee used 1e7 rather than 1e6 cycles (exposing v1). Current source separates free-corrosion parameters and uses the corrected CP knee; `test_sn_curve_atlases_track_the_c203_sources` now checks that both curve and table sources participate in drift detection, but it is not an independent numerical benchmark of this module. [tests/parametric/test_refresh.py:L108-L116] [src/digitalmodel/fatigue/sn_curves.py:L1-L20] [src/digitalmodel/fatigue/c203_editions.py:L19-L37]
+Historical incident [#2165](https://github.com/vamseeachanta/digitalmodel/issues/2165) recorded two defects: free-corrosion curves copied CP parameters (non-conservative per the incident record; exposed v2), and the CP knee used 1e7 rather than 1e6 cycles (exposed v1; allowable cycles at or below the corrected curve, so damage was overstated). Current source separates free-corrosion parameters and uses the corrected CP knee; `test_sn_curve_atlases_track_the_c203_sources` now checks that both curve and table sources participate in drift detection, but it is not an independent numerical benchmark of this module. [tests/parametric/test_refresh.py:L108-L116] [src/digitalmodel/fatigue/sn_curves.py:L1-L20] [src/digitalmodel/fatigue/c203_editions.py:L19-L37]
 
 No detection check exists here for cross-edition equivalence or construction-specific qualification; issue pending (2). [src/digitalmodel/fatigue/c203_editions.py:L19-L26] [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85]
 
@@ -266,7 +267,7 @@ Solver version constraints are not part of this package's imports or evaluation 
 
 ### Map revision and counted family
 
-Implementation-map source revision: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` (`origin/codex/implmap-work`); declared data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; citations to `docs/registry/implementation-map.yaml` resolve at the source revision, all other repository citations at the header code revision.
+Implementation-map source revision: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` (preserved through [#2545](https://github.com/vamseeachanta/digitalmodel/pull/2545)); declared data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; citations to `docs/registry/implementation-map.yaml` resolve at the source revision, all other repository citations at the header code revision.
 
 The module's only map family is `sn-curves-and-miner-damage`: 4 in-package rows; all 392 family rows, including those outside the package and under `scripts/`, are inventoried below. [docs/registry/implementation-map.yaml:L16807-L16812] [docs/registry/implementation-map.yaml:L18397-L18441]
 
