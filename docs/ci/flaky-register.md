@@ -1,9 +1,14 @@
 # Flaky register
 
 Entries are added by pull request from `flaky-*.json` artifacts or documented
-run evidence. Closure requires passing evidence establishing resolution, alongside
-the merged fix pull request in `fix_pr`; a merged pull request alone does not
-establish that a failure is resolved.
+run evidence. A `fixed` entry requires a nonempty `passing_evidence` list of
+GitHub Actions run API URLs with numeric repository and run IDs, alongside a
+positive integer `fix_pr`. Closure requires checking that those runs pass the
+affected test or command on the corrected tree and that the fix pull request is
+merged. The schema checks the field structure and URL format; it does not fetch
+run outcomes or merge status. A merged pull request alone does not establish
+that a failure is resolved. Open entries retain the existing fields without
+`passing_evidence`.
 Repeated failures without a passing run on the same tree use
 `kind: repeated-failure`, rather than claiming a same-tree mismatch.
 
