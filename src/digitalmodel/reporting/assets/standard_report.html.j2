@@ -157,12 +157,21 @@
     <section id="references-cited">
       <div class="l1head"><span class="secnum"></span><h2>References cited</h2></div>
 {%- if citations %}
+{%- set public_references = citations|selectattr('source_url')|list or citations|selectattr('repository_path')|list %}
       <div class="tbl-wrap">
         <table class="refs-table">
+{%- if public_references %}
+          <thead><tr><th>#</th><th>Code</th><th>Publisher</th><th>Revision</th><th>Section</th><th>Source</th><th>Retrieved / accessed</th><th>Note</th></tr></thead>
+{%- else %}
           <thead><tr><th>#</th><th>Code</th><th>Revision</th><th>Section</th><th>Wiki path</th><th>Note</th></tr></thead>
+{%- endif %}
           <tbody>
 {%- for c in citations %}
+{%- if public_references %}
+            <tr><td>{{ loop.index }}</td><td>{{ c.code_id }}</td><td>{{ c.publisher }}</td><td>{{ c.revision }}</td><td>{{ c.section }}</td><td class="path">{% if c.source_url %}<a href="{{ c.source_url|e }}" rel="noopener noreferrer">{{ c.source_url|e }}</a>{% elif c.repository_path %}{{ c.repository_path|e }}{% else %}{{ c.wiki_path|e }}{% endif %}</td><td>{{ c.retrieved_on|e }}</td><td>{{ c.note }}</td></tr>
+{%- else %}
             <tr><td>{{ loop.index }}</td><td>{{ c.code_id }}</td><td>{{ c.revision }}</td><td>{{ c.section }}</td><td class="path">{{ c.wiki_path }}</td><td>{{ c.note }}</td></tr>
+{%- endif %}
 {%- endfor %}
           </tbody>
         </table>

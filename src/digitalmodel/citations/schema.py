@@ -9,9 +9,12 @@ Contract: docs/standards/calc-output-citation.md (workspace-hub).
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+import unicodedata
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any, Mapping, Optional
+from urllib.parse import urlsplit
 
 _WIKI_PATH_PREFIX = "wikis/"
 _FORBIDDEN_SEGMENTS = ("..", "")
@@ -43,7 +46,7 @@ class Citation:
     publisher: str
     revision: str
     section: str
-    wiki_path: str
+    wiki_path: str = ""
     note: str = ""
     # Wiki sibling routing fields (workspace-hub#2778, calc-citation-contract.md Rule 8).
     # source_sibling: required — "generic" (sourced from vamseeachanta/llm-wiki) or a
@@ -55,9 +58,14 @@ class Citation:
     #                 None for client-level or generic citations.
     source_sibling: str = "generic"
     source_project: Optional[str] = None
+    # Report references are metadata only; wiki routing applies only to wiki_path.
+    source_url: str = ""
+    repository_path: str = ""
+    # Calendar validity only: historical metadata is checked without reading a clock.
+    retrieved_on: str = ""
 
     def __post_init__(self) -> None:
-        for f in ("code_id", "publisher", "revision", "section", "wiki_path"):
+        for f in ("code_id", "publisher", "revision", "section"):
             v = getattr(self, f)
             if not isinstance(v, str) or not v.strip():
                 raise CitationValidationError(f"Citation.{f} must be a non-empty string")
@@ -74,7 +82,24 @@ class Citation:
                 raise CitationValidationError(
                     "Citation.source_project, when set, must be a non-empty string"
                 )
-        _validate_wiki_path(self.wiki_path)
+        locators = (self.wiki_path, self.source_url, self.repository_path)
+        if any(not isinstance(value, str) for value in locators):
+            raise CitationValidationError("Citation locators must be strings")
+        if sum(bool(value) for value in locators) != 1:
+            raise CitationValidationError("Citation requires exactly one locator")
+        if self.wiki_path:
+            _validate_wiki_path(self.wiki_path)
+        else:
+            if self.source_sibling != "generic" or self.source_project is not None:
+                raise CitationValidationError("Public references cannot use wiki routing")
+            if self.source_url:
+                _validate_public_url(self.source_url)
+            else:
+                _validate_repository_path(self.repository_path)
+        if not isinstance(self.retrieved_on, str):
+            raise CitationValidationError("retrieved_on must be a YYYY-MM-DD calendar date")
+        if not self.wiki_path or self.retrieved_on:
+            _validate_reference_date(self.retrieved_on)
 
 
 @dataclass(frozen=True)
@@ -82,6 +107,62 @@ class CitedValue:
     value: float
     citation: Citation
     units: str = ""
+
+    def __post_init__(self) -> None:
+        # Missing/malformed payloads remain the downstream validator's concern.
+        if isinstance(self.citation, Citation) and not self.citation.wiki_path:
+            raise CitationValidationError(
+                "CitedValue cannot use a reference-only citation"
+            )
+
+
+def _validate_reference_date(value: str) -> None:
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+        raise CitationValidationError("retrieved_on must be a YYYY-MM-DD calendar date")
+    try:
+        date.fromisoformat(value)
+    except ValueError as exc:
+        raise CitationValidationError("retrieved_on must be a real calendar date") from exc
+
+
+def _validate_public_url(value: str) -> None:
+    message = "source_url must be an HTTPS URL without credentials or unsafe characters"
+    # The 2048-character URL cap is local policy for report references.
+    if (
+        not value.startswith("https://") or len(value) > 2048
+        or any(
+            c.isspace() or unicodedata.category(c) in {"Cc", "Cf"}
+            or c in "\\<>\"'`" for c in value
+        )
+    ):
+        raise CitationValidationError(message)
+    try:
+        parts = urlsplit(value)
+        host = parts.hostname
+        port = parts.port
+        if (
+            not host or not host.isascii() or parts.username is not None
+            or parts.password is not None or port == 0
+        ):
+            raise ValueError(message)
+        # RFC 1035 (November 1987), section 2.3.4, "Size limits":
+        # https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
+        # Labels allow 63 octets; names allow 255 octets in wire format.
+        # ASCII dotted text without the terminal dot allows 253 characters;
+        # the same local cap is retained when a terminal dot is supplied.
+        label = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+        if len(host) > 253 or not re.fullmatch(rf"{label}(?:\.{label})*\.?", host):
+            raise ValueError(message)
+    except ValueError as exc:
+        raise CitationValidationError(message) from exc
+
+
+def _validate_repository_path(value: str) -> None:
+    if (
+        not value.startswith("docs/") or not re.fullmatch(r"[A-Za-z0-9._/-]+", value)
+        or any(segment in ("", ".", "..") for segment in value.split("/"))
+    ):
+        raise CitationValidationError("repository_path must be a relative docs/ file locator")
 
 
 def _validate_wiki_path(wiki_path: str) -> None:
@@ -141,6 +222,9 @@ def _join_with_layout_detection(base: Path, wiki_path: str) -> Path:
 def validate_citation(citation: Citation, *, repo_root: Optional[Path] = None) -> None:
     """Fail-closed resolution check.
 
+    Public URL/repository references are report metadata only and raise
+    ``CitationResolutionError(reason="reference_only")`` before any file access.
+
     Raises CitationResolutionError if:
     - the cited wiki page does not exist
     - the page frontmatter lacks code_id / publisher / revision
@@ -152,6 +236,10 @@ def validate_citation(citation: Citation, *, repo_root: Optional[Path] = None) -
 
     Does NOT validate the `section` locator — that's a human-readable field.
     """
+    if not citation.wiki_path:
+        raise CitationResolutionError(
+            code_id=citation.code_id, wiki_path="", reason="reference_only"
+        )
     if repo_root is None:
         # Defer to resolver for path resolution
         from digitalmodel.citations.resolver import resolve_wiki_path
