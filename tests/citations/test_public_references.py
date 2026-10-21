@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 import pytest
 
-from digitalmodel.citations import registry
+from digitalmodel.citations import public_references
 from digitalmodel.citations.schema import (
     Citation,
     CitedValue,
@@ -12,6 +12,19 @@ from digitalmodel.citations.schema import (
     CitationValidationError,
     validate_citation,
 )
+
+
+def test_calculation_registry_preserves_screening_source_digest():
+    import hashlib
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    basis = json.loads((root / "docs/domains/mooring/screening/basis.json").read_text(encoding="utf-8"))
+    path = "src/digitalmodel/citations/registry.py"
+    # Regress canonical source content independently of checkout EOL conversion.
+    source = (root / path).read_text(encoding="utf-8").encode("utf-8")
+    assert hashlib.sha256(source).hexdigest() == basis["source_files"][path]
 
 
 def reference(**overrides):
@@ -47,7 +60,7 @@ def reference(**overrides):
 def test_registered_reference_preserves_source_and_access_date(
     source_id, publisher, locator
 ):
-    citation = registry.get_public_reference(source_id)
+    citation = public_references.get_public_reference(source_id)
     assert isinstance(citation, Citation)
     assert citation.code_id == source_id
     assert citation.publisher == publisher
@@ -58,7 +71,7 @@ def test_registered_reference_preserves_source_and_access_date(
 
 
 def test_method_note_does_not_claim_retrieval_of_original_papers():
-    citation = registry.get_public_reference("PASSING-SHIP-METHOD")
+    citation = public_references.get_public_reference("PASSING-SHIP-METHOD")
     assert citation.revision == "01fc9c59728739b7c961a0a7fc77bb62846ef054"
     assert "original papers were not newly retrieved" in citation.note
     assert "access" in citation.note.lower()
@@ -66,7 +79,7 @@ def test_method_note_does_not_claim_retrieval_of_original_papers():
 
 def test_unknown_reference_is_not_silently_registered():
     with pytest.raises(ValueError, match="Unknown public reference"):
-        registry.get_public_reference("UNREGISTERED")
+        public_references.get_public_reference("UNREGISTERED")
 
 
 @pytest.mark.parametrize(
@@ -127,7 +140,7 @@ def test_public_reference_requires_real_iso_access_date(date, repository):
 
 @pytest.mark.parametrize("source_id", ["NASA-DRAG-EQUATION", "ORCINA-LINKS-DATA", "PASSING-SHIP-METHOD"])
 def test_public_reference_is_not_a_validated_calculation_source(source_id, tmp_path):
-    citation = registry.get_public_reference(source_id)
+    citation = public_references.get_public_reference(source_id)
     with pytest.raises(CitationResolutionError) as error:
         validate_citation(citation, repo_root=tmp_path)
     assert error.value.reason == "reference_only"
@@ -181,7 +194,7 @@ def test_missing_citation_can_reach_downstream_validation():
 
 
 def test_link_reference_distinguishes_tethers_from_compression_springs():
-    note = registry.get_public_reference("ORCINA-LINKS-DATA").note
+    note = public_references.get_public_reference("ORCINA-LINKS-DATA").note
     assert "Tethers are tension-only" in note
     assert "spring/dampers can carry compression" in note
 
@@ -189,7 +202,7 @@ def test_link_reference_distinguishes_tethers_from_compression_springs():
 @pytest.mark.parametrize("source_id", [None, [], {}])
 def test_invalid_source_id_is_rejected_with_value_error(source_id):
     with pytest.raises(ValueError, match="Unknown public reference"):
-        registry.get_public_reference(source_id)
+        public_references.get_public_reference(source_id)
 
 
 def test_registered_method_note_matches_its_pinned_revision():
@@ -197,17 +210,21 @@ def test_registered_method_note_matches_its_pinned_revision():
     from pathlib import Path
     import subprocess
 
-    citation = registry.get_public_reference("PASSING-SHIP-METHOD")
+    citation = public_references.get_public_reference("PASSING-SHIP-METHOD")
     root = Path(__file__).resolve().parents[2]
     note = root / citation.repository_path
     assert note.is_file()
     env = dict(os.environ)
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         env.pop(name, None)
-    result = subprocess.run(["git", "show", f"{citation.revision}:{citation.repository_path}"], cwd=root, env=env, capture_output=True)
+    result = subprocess.run(["git", "rev-parse", f"{citation.revision}:{citation.repository_path}"], cwd=root, env=env, capture_output=True)
     if result.returncode:
         shallow = subprocess.check_output(["git", "rev-parse", "--is-shallow-repository"], cwd=root, env=env, text=True).strip()
         if shallow == "true":
             pytest.skip("Pinned method-note revision is absent from this shallow checkout")
     assert result.returncode == 0, "Pinned method-note revision cannot be read"
-    assert result.stdout == note.read_bytes()
+    working_oid = subprocess.check_output(
+        ["git", "hash-object", f"--path={citation.repository_path}", citation.repository_path],
+        cwd=root, env=env,
+    )
+    assert result.stdout.strip() == working_oid.strip()
