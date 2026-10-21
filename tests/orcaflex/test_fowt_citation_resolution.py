@@ -157,3 +157,39 @@ def test_unreadable_page_fails_with_citation_identity(
     assert caught.value.__suppress_context__
     assert "synthetic private read diagnostic" not in str(caught.value)
     assert str(page) not in str(caught.value)
+
+
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+@pytest.mark.parametrize("failure_at", ["lookup", "final_check"])
+def test_page_lookup_permission_failure_has_citation_identity(
+    tmp_path: Path, monkeypatch, layout: str, failure_at: str
+) -> None:
+    """Directory traversal failures obey citation contract section 4.1.
+
+    Inject the filesystem failure for portability across permission models.
+    Exercise the real resolver and the subsequent call-site file check.
+    """
+    page = tmp_path / layout / WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_text("synthetic page", encoding="utf-8")
+    is_file = Path.is_file
+    page_checks = 0
+
+    def denied_lookup(path):
+        nonlocal page_checks
+        if path == page:
+            page_checks += 1
+            if failure_at == "lookup" or page_checks == 2:
+                raise PermissionError(f"synthetic traversal diagnostic: {page}")
+        return is_file(path)
+
+    monkeypatch.setattr(Path, "is_file", denied_lookup)
+    with pytest.raises(CitationResolutionError) as caught:
+        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert page_checks == (1 if failure_at == "lookup" else 2)
+    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.wiki_path == WIKI_PATH
+    assert caught.value.reason == "page_unreadable:PermissionError"
+    assert caught.value.__suppress_context__
+    assert "synthetic traversal diagnostic" not in str(caught.value)
+    assert str(page) not in str(caught.value)
