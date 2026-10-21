@@ -4,6 +4,7 @@
 
 from html.parser import HTMLParser
 import hashlib
+import io
 import json
 from pathlib import Path
 import shutil
@@ -13,6 +14,7 @@ import pytest
 
 from digitalmodel.lifting_lug.padeye_report import (
     REVIEW_SCRIPT,
+    SCHEMATIC,
     SECTIONS,
     render_report,
     sample_case,
@@ -62,7 +64,7 @@ def test_single_file_report_has_reviewable_basis_and_ten_sections():
     assert not parsed.external_assets
     assert parsed.svg_titles >= 6
     for phrase in (
-        "Draft for client review",
+        "Synthetic example - not for issue",
         "Revision history",
         "ASSUMED - to be confirmed",
         "NOT_EVALUATED",
@@ -80,6 +82,62 @@ def test_single_file_report_has_reviewable_basis_and_ten_sections():
         assert phrase in page
     assert page.index("Revision history") < page.index('id="basis"')
     assert "<b>" not in page and "<strong>" not in page
+
+
+def test_report_identifies_net_ligament_convention_and_correct_locators():
+    page = render_report()
+    assert "NASA/TM-20230000313" in page
+    assert "equation 7.17" in page
+    assert "net-ligament" in page
+    assert "sections 9.3.1 and 9.3.2" in page
+    assert "not physical tangent shear planes" in page
+    assert "Net ligament: 70.0 mm" in SCHEMATIC
+    assert "M187 225V70M293 225V70" not in SCHEMATIC
+
+
+def test_written_report_uses_exact_utf8_lf_bytes(tmp_path):
+    write_report(tmp_path)
+    page = (tmp_path / "report.html").read_bytes()
+    change_bytes = (tmp_path / "changes.json").read_bytes()
+    assert page == render_report().encode("utf-8")
+    assert b"\r" not in page
+    assert b"\r" not in change_bytes
+    assert json.loads(change_bytes)["report_digest"] == hashlib.sha256(page).hexdigest()
+
+
+def test_report_bytes_with_windows_default_text_translation(monkeypatch):
+    """Simulate Windows text I/O even on a Linux test runner."""
+    saved = {}
+
+    class SavedBytes(io.BytesIO):
+        def close(self):
+            saved[self.name] = self.getvalue()
+            super().close()
+
+    def open_output(
+        path, mode="r", buffering=-1, encoding=None, errors=None, newline=None
+    ):
+        assert mode in {"w", "wb"}
+        stream = SavedBytes()
+        stream.name = path.name
+        if "b" in mode:
+            return stream
+        return io.TextIOWrapper(
+            stream,
+            encoding=encoding,
+            errors=errors,
+            newline="\r\n" if newline is None else newline,
+        )
+
+    monkeypatch.setattr(Path, "mkdir", lambda *args, **kwargs: None)
+    monkeypatch.setattr(Path, "open", open_output)
+    write_report(Path("synthetic-output"))
+    assert saved["report.html"] == render_report().encode("utf-8")
+    assert b"\r" not in saved["changes.json"]
+    assert (
+        json.loads(saved["changes.json"])["report_digest"]
+        == hashlib.sha256(saved["report.html"]).hexdigest()
+    )
 
 
 def test_committed_report_and_change_panel_are_reproducible(tmp_path):

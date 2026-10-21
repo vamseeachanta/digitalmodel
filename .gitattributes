@@ -107,3 +107,6 @@ data/bha_database/*.yaml -text
 
 # B3 benchmark inputs are bound by raw-byte MANIFEST digests.
 docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
+
+# Preserve the exact report bytes bound by the change-panel digest.
+docs/reports/padeye-lift-point/** -text
