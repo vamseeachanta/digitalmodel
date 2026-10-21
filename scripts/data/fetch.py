@@ -32,8 +32,10 @@ def manifest_path(value):
         raise ValueError("Invalid manifest path")
     # Git repository-layout (Git 2.51.1): .git is a directory or a gitfile.
     # https://git-scm.com/docs/gitrepository-layout
-    # Fold case and Windows trailing-dot/space aliases for portable manifests.
-    if any(part.rstrip(" .").casefold() == ".git" for part in path.parts):
+    # Reject NTFS short names and HFS+ ignorable characters on every platform.
+    folded = (re.sub(r"[\u200c-\u200f\u202a-\u202e\u206a-\u206f\ufeff]", "", part)
+              .rstrip(" .").casefold() for part in path.parts)
+    if any(part in {".git", "git~1"} for part in folded):
         raise ValueError("Git metadata destination is not permitted")
     return path
 
