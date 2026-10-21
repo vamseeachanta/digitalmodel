@@ -77,7 +77,7 @@ def test_flaky_register_rejects_fixed_without_passing_evidence(monkeypatch):
 def test_flaky_register_rejects_invalid_passing_evidence(monkeypatch, passing_evidence):
     path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
     rows = yaml.safe_load(path.read_text())
-    rows[0].update(status="fixed", passing_evidence=passing_evidence)
+    rows[0].update(status="fixed", fix_pr=1, passing_evidence=passing_evidence)
     monkeypatch.setattr(yaml, "safe_load", lambda text: rows)
     with pytest.raises(AssertionError):
         test_flaky_register_schema()
