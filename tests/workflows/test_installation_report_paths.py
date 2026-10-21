@@ -4,8 +4,9 @@ from copy import deepcopy
 from hashlib import sha256
 from html.parser import HTMLParser
 import json
+import os
 import shutil
-from urllib.parse import unquote
+from urllib.parse import unquote, urljoin, urlsplit
 
 import pytest
 
@@ -140,6 +141,48 @@ def test_mapping_rejects_symlink_escape(tmp_path):
         _display_cases(summary("retained"),
                        {"dataset_root": "dataset", "case_run_dirs": {"0": "case"}},
                        tmp_path)
+
+
+@pytest.mark.parametrize("kind", ["partial", "capability", "full"])
+@pytest.mark.parametrize("entry, encoded", [
+    ("runs/%2e%2e/%2e%2e/outside", "runs/%252e%252e/%252e%252e/outside"),
+    ("runs/case#1", "runs/case%231"),
+    ("runs/50%25load", "runs/50%2525load"),
+    ("runs/case space", "runs/case%20space"),
+])
+def test_mapping_links_encode_filesystem_names(tmp_path, kind, entry, encoded):
+    """One parent step reaches the literal directory, without URL interpretation."""
+    base = tmp_path / "reports"
+    base.mkdir()
+    target = tmp_path / entry / "extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("retained extraction", encoding="utf-8")
+    config = {"dataset_root": "..", "case_run_dirs": {"0": entry}}
+    links = Links()
+    links.feed(render(kind, summary("retained"), config, base))
+    expected = f"../{encoded}/extracted/report.html"
+    assert expected in links.targets
+    parsed = urlsplit(urljoin("https://example.invalid/dataset/reports/full.html", expected))
+    assert not parsed.fragment and not parsed.query
+    assert unquote(parsed.path) == f"/dataset/{entry}/extracted/report.html"
+    assert (base / unquote(expected)).read_text() == "retained extraction"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX resolves symlinks before parent steps")
+def test_symlinked_reports_check_the_emitted_lexical_tree(tmp_path):
+    """The lexical dataset's escaping case must not hide behind a physical parent."""
+    dataset = tmp_path / "dataset"
+    physical = tmp_path / "physical"
+    outside = tmp_path / "outside"
+    dataset.mkdir()
+    (physical / "reports").mkdir(parents=True)
+    outside.mkdir()
+    (dataset / "reports").symlink_to(physical / "reports", target_is_directory=True)
+    (dataset / "case").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="outside dataset"):
+        _display_cases(summary("retained"),
+                       {"dataset_root": "..", "case_run_dirs": {"0": "case"}},
+                       dataset / "reports")
 
 
 def test_no_mapping_keeps_existing_link_behavior(tmp_path):

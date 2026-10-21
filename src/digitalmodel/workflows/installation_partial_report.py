@@ -10,6 +10,7 @@ from html import escape
 import json
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 from digitalmodel.infrastructure.persistence.provenance import compute_hash
 from digitalmodel.workflows.installation_report_paths import display_cases
@@ -200,7 +201,7 @@ def _case_details(cases, base):
         if case['status'] != 'VERIFIED':
             continue
         report = Path(case['run_dir']) / 'extracted/report.html'
-        link = escape(os.path.relpath(report, base).replace('\\', '/'), quote=True)
+        link = escape(quote(os.path.relpath(report, base).replace('\\', '/'), safe='/'), quote=True)
         rows = []
         for key, channel in case['channels'].items():
             rows.append([escape(key), escape(str(channel.get('position', ''))), escape(channel['units']),
