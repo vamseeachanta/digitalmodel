@@ -335,6 +335,9 @@ modules:
       microgrid:
         agent_pack: src/digitalmodel/power/microgrid/docs/agent-pack.md
         qa_family: EC
+      protocols:
+        agent_pack: src/digitalmodel/power/protocols/docs/agent-pack.md
+        qa_family: EC
   - module: process_diagrams
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
