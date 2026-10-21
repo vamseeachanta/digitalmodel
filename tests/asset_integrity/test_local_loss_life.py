@@ -22,7 +22,7 @@ builder = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(builder)
 
 
-def component(pressure=500.0, od=12.0):
+def component(pressure=800.0, od=12.0):
     """All values are synthetic test inputs, including the unit allowable RSF."""
     return SimpleNamespace(nominal_od_in=od, nominal_wt_in=1.0,
                            rsf_a=1.0, design_pressure_psi=pressure)
@@ -36,24 +36,25 @@ def grid(wall=0.6, spacing=1.0):
 def test_applicable_crossing_has_passing_and_failing_evidence():
     """Independent inversion of the documented legacy simplified relation.
 
-    API 579-1/ASME FFS-1 (2021), Part 5, Assessment of Local Metal Loss;
-    Table 4.4 simplified form as documented in level2_engine.py:
+    The simplified form implemented by Level2Engine._folias_factor:
     D=12-2*1=10 in, L=2*1=2 in, lambda=1.285*2/sqrt(10),
-    M=sqrt(1+0.48*lambda**2). Synthetic P0=1000 psi, demand=500 psi,
-    allowable RSF=1, hence r=1/2 and t=r*(M-1)/(M-r) in.
+    M=sqrt(1+0.48*lambda**2). Synthetic P0=1000 psi, demand=800 psi,
+    allowable RSF=1, hence r=0.8 and t=r*(M-1)/(M-r) in.
     This algebraic inverse is independent of the bisection under test.
     """
-    lam = 1.285 * 2 / math.sqrt(10)  # Source: cited legacy Table 4.4 form.
+    lam = 1.285 * 2 / math.sqrt(10)  # Source: Level2Engine._folias_factor.
     mt = math.sqrt(1 + 0.48 * lam**2)  # Same source; no new coefficient.
-    expected = 0.5 * (mt - 1) / (mt - 0.5)
+    expected = 0.8 * (mt - 1) / (mt - 0.8)
     result = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
     assert result["status"] == "CROSSING"
     assert result["wall_in"] == pytest.approx(expected)
     assert result["monotonic"] is True
+    assert result["qualification_scope"] == "lambda-range only"
     for bracket in (result["initial_bracket"], result["final_bracket"]):
         low, high = bracket
-        assert low["applicability"]["ok"] and high["applicability"]["ok"]
-        assert low["pressure_psi"] < 500 <= high["pressure_psi"]
+        assert high["applicability"]["ok"]
+        assert low["pressure_psi"] < 800 <= high["pressure_psi"]
+    assert result["final_bracket"][0]["applicability"]["ok"]
     assert math.nextafter(result["final_bracket"][0]["wall_in"], math.inf) == result["wall_in"]
 
 
@@ -61,7 +62,7 @@ def test_crossing_outside_applicability_is_censored_without_invalid_evaluation(m
     """Long synthetic flaw: current Rt=1; any loss below reference is flagged.
 
     The existing engine's applicability exception at Rt=1 is the boundary.
-    Demand=500 psi < the 1000 psi boundary rating, so no applicable root exists.
+    Demand=800 psi < the 1000 psi boundary rating, so no applicable root exists.
     """
     original = Level2Engine.evaluate
     evaluated = []
@@ -95,16 +96,31 @@ def test_target_above_current_capacity_has_no_future_crossing():
     assert result["wall_in"] == 0.6  # Current demand already fails: zero life.
 
 
-def test_no_crossing_for_constant_short_flaw_rating():
+@pytest.mark.parametrize("pressure", [800.0, 1000.0])
+def test_no_crossing_for_constant_short_flaw_rating(pressure):
     """M=1 short-flaw branch gives RSF=1 for every positive wall.
 
     The zero-wall numerical singularity must not manufacture a pressure root.
-    Synthetic demand=500 psi remains below the constant 1000 psi rating.
+    Synthetic demand is at or below the constant 1000 psi rating.
     """
-    result = builder.local_loss_limit_wall(grid(spacing=0.01), component(), 1.0, 1000.0)
-    assert result["status"] == "BOUNDED"
-    assert result["wall_in"] == 0.0
+    result = builder.local_loss_limit_wall(grid(spacing=0.01), component(pressure), 1.0, 1000.0)
+    assert result["status"] == "INAPPLICABLE"
+    assert result["wall_in"] is None
     assert result["initial_bracket"][0]["pressure_psi"] == 1000.0
+    assert not result["initial_bracket"][0]["applicability"]["ok"]
+    assert result["initial_bracket"][0]["endpoint_kind"] == "right-hand limit"
+
+
+def test_zero_wall_evidence_is_unqualified_for_nonunit_bulging():
+    """An evaluated zero wall is not the short-flaw right-hand limit."""
+    result = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
+    endpoint = result["initial_bracket"][0]
+    assert endpoint["wall_in"] == 0.0
+    assert not endpoint["applicability"]["ok"]
+    assert endpoint["applicability"]["flags"] == ["ZERO_WALL_UNQUALIFIED"]
+    assert endpoint["endpoint_kind"] == "evaluated"
+    assert result["qualification_scope"] == "lambda-range only"
+    assert all(point["wall_in"] > 0 for point in result["final_bracket"])
 
 
 def test_target_at_current_wall_is_boundary_censored():
@@ -153,7 +169,7 @@ def test_flaw_extent_jump_is_reported_as_a_bound():
     At t=0.9 in, one-row M=sqrt(1+0.48*(1.285/sqrt(10))**2);
     just below it, two-row M=sqrt(1+0.48*(1.285*2/sqrt(10))**2).
     P=1000*0.9/(1-0.1/M) brackets 990 psi. The source for M is the
-    legacy Table 4.4 form documented in level2_engine.py (2021 edition).
+    simplified implementation in Level2Engine._folias_factor.
     No continuous root exists at that geometry jump.
     """
     result = builder.local_loss_limit_wall(grid(0.95), component(990.0), 1.0, 1000.0)
@@ -218,8 +234,8 @@ def test_projection_supports_numeric_grid_dtypes(dtype):
     continuous root. Integer or single-precision storage must not quantize trials.
     """
     frame = grid(1.0).astype(dtype)
-    mt = math.sqrt(1 + 0.48 * (1.285 * 2 / math.sqrt(10))**2)  # Legacy Table 4.4, 2021; see hand case.
-    expected = 0.5 * (mt - 1) / (mt - 0.5)
+    mt = math.sqrt(1 + 0.48 * (1.285 * 2 / math.sqrt(10))**2)  # Level2Engine._folias_factor; see hand case.
+    expected = 0.8 * (mt - 1) / (mt - 0.8)
     result = builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
     assert result["status"] == "CROSSING"
     assert result["wall_in"] == pytest.approx(expected)

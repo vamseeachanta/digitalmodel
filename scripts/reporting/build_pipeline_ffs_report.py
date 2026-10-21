@@ -143,7 +143,7 @@ def evaluate(root):
 
 
 def _local_loss_projection(frame, component, reference_wall, uncorroded_rating):
-    """Return a qualified domain and evaluator, preserving the received grid."""
+    """Return a lambda-range domain and evaluator, preserving the received grid."""
     trial = frame.astype(float).copy()
     minimum = float(frame.min().min())
     mask = frame == minimum
@@ -155,24 +155,34 @@ def _local_loss_projection(frame, component, reference_wall, uncorroded_rating):
         trial[mask] = wall
         result = local.evaluate(trial)
         if not result["applicability"].ok:
-            raise ValueError("Projection-domain qualification disagrees with the engine")
+            raise ValueError("Lambda-range qualification disagrees with the engine")
         # At M=1, RSF=1 for every positive wall. Use its right-hand limit at
         # zero instead of the engine's 0/0 fallback (legacy Part 5 relation).
-        rsf = 1.0 if wall == 0 and result["folias_factor"] == 1 else result["rsf"]
+        right_hand_limit = wall == 0 and result["folias_factor"] == 1
+        rsf = 1.0 if right_hand_limit else result["rsf"]
         rating = reduced_mawp(Q_(uncorroded_rating, "psi"))(
             rsf, component.rsf_a,
         ).value.to("psi").magnitude
         if not math.isfinite(rating):
             raise ValueError("Projected pressure is not finite")
+        applicability = result["applicability"].to_dict()
+        if wall == 0:
+            applicability = Applicability(
+                ok=False, flags=["ZERO_WALL_UNQUALIFIED"],
+                notes=["A zero-wall mathematical endpoint does not qualify a perforated wall"],
+            ).to_dict()
         return {"wall_in": wall, "pressure_psi": float(rating),
                 "flaw_length_in": result["flaw_length_in"],
-                "applicability": result["applicability"].to_dict(),
-                "endpoint_kind": "right-hand limit" if wall == 0 else "evaluated"}
+                "applicability": applicability,
+                "endpoint_kind": "right-hand limit" if right_hand_limit else "evaluated"}
     return domain, evaluate
 
 
 def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
-    """Qualify a pressure crossing inside the existing engine's wall domain.
+    """Bracket a pressure crossing within lambda-range applicability only.
+
+    Remaining-thickness ratio, minimum remaining wall and the other Part 5
+    prerequisites are not checked here; full applicability is not established.
 
     Bisection requires opposite-sign endpoint residuals: NIST DLMF 3.8(iii),
     https://dlmf.nist.gov/3.8#iii (Bisection Method). Engineering coefficients
@@ -184,13 +194,14 @@ def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
         raise ValueError("Pressures and allowable RSF must be positive finite inputs")
     domain, evaluate = _local_loss_projection(frame, component, reference_wall, uncorroded_rating)
     evidence = {"domain_wall_in": domain, "target_pressure_psi": target,
+                "qualification_scope": "lambda-range only",
                 "initial_bracket": [], "final_bracket": [], "monotonic": False}
 
     def finish(status, wall, reason):
         return {**evidence, "status": status, "wall_in": wall, "reason": reason}
 
     if domain is None:
-        return finish("INAPPLICABLE", None, "Current geometry has no applicable depletion interval")
+        return finish("INAPPLICABLE", None, "Current geometry has no lambda-range depletion interval")
     low, high = [evaluate(wall) for wall in domain]
     evidence["initial_bracket"] = [low, high]
     evidence["final_bracket"] = [low, high]
@@ -203,13 +214,16 @@ def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
     if high["pressure_psi"] < target:
         return finish("TARGET_UNREACHABLE", high["wall_in"], "Current rating is already below demand")
     if low["pressure_psi"] >= target:
+        if not low["applicability"]["ok"]:
+            return finish("INAPPLICABLE", None,
+                          "Life is not established: no pressure crossing before the unqualified zero-wall endpoint")
         status = "BOUNDARY" if low["pressure_psi"] == target else "BOUNDED"
-        return finish(status, low["wall_in"], "No failing pressure endpoint inside applicability; life is censored")
+        return finish(status, low["wall_in"], "No failing pressure endpoint inside the lambda range; life is censored")
     return _bisect_local_loss(evaluate, evidence, finish, low, high, target)
 
 
 def _bisect_local_loss(evaluate, evidence, finish, low, high, target):
-    """Retain an applicable failing/passing bracket, checking every new sample."""
+    """Retain a lambda-range failing/passing bracket, checking every sample."""
     while math.nextafter(low["wall_in"], high["wall_in"]) < high["wall_in"]:
         middle = evaluate((low["wall_in"] + high["wall_in"]) / 2)
         if not (math.nextafter(low["pressure_psi"], -math.inf) <= middle["pressure_psi"]
@@ -262,7 +276,7 @@ def evaluate_section(data, component, cfg):
         life_limit = life_search["wall_in"]
         if life_limit is None:
             raise ValueError(f"Local-loss life is not established: {life_search['status']}")
-        life_basis = "fixed-geometry reduced local-loss rating"
+        life_basis = "fixed-geometry reduced local-loss rating; lambda-range applicability only"
         if life_search["status"] in {"BOUNDED", "BOUNDARY"}:
             life_basis += "; censored at the supported boundary"
     life_rows = []
@@ -533,7 +547,7 @@ def design_blocks(result):
         text("# 3.3 Environmental data\n\nNot applicable. Internal pressure and separate tensile axial membrane stress only.\n\n"
              "# 3.4 Vessel data\n\nNot applicable."),
         text("# 3.5 Criteria\n\nAllowable-to-demand ratio ≥ 1 (100.0%) with no applicability flag is the current-strength criterion. "
-             "The method applicability limits are applied without reproducing their licensed values (References 1–3). "
+             "The implemented method applicability checks are applied without reproducing their licensed values (References 1–3). "
              f"The assessment defaults require at least {MeasurementSufficiency().min_readings} valid readings and a "
              f"minimum of {MeasurementSufficiency().min_lml_profile_cells} degraded cells resolving a local flaw. "
              "These are configurable engineering criteria informed by inspection practice, not code mandates. "
@@ -544,8 +558,11 @@ def design_blocks(result):
              "it does not establish a complete Part 5 Level 2 evaluation. "
              "Section A life is projected to the wall at which its reduced local-loss rating reaches design pressure. "
              "The flaw length, background wall, bulging factor, material and loads are held fixed; lateral growth is not modelled. "
-             "An applicable passing and failing pressure bracket is established before this projection is searched. "
-             "A supported boundary without a pressure crossing gives a censored life bound; inapplicable geometry does not establish life. "
+             "The pressure projection checks lambda-range applicability only. "
+             "Remaining-thickness ratio and minimum-wall limits are not checked; full Part 5 applicability is not established. "
+             "A passing and failing pressure bracket is established within that range before searching. "
+             "A positive supported boundary without a pressure crossing gives a censored life bound; "
+             "an unqualified zero-wall endpoint or inapplicable geometry does not establish life. "
              "Other failure modes or six-method ratings may limit life earlier. "
              "Section B retains the point-minimum pressure-wall projection. Neither projection is operating authorization. "
              "Re-inspection at half the projected life is an assessment assumption; zero means immediate action. "

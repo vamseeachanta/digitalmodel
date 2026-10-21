@@ -259,6 +259,42 @@ def test_local_loss_and_reference_wall(result):
         assert section["pressure_rating_psi"] <= demand
 
 
+@pytest.mark.parametrize("status", ["INAPPLICABLE", "NON_MONOTONIC"])
+def test_section_refuses_unestablished_local_loss_life(result, monkeypatch, status):
+    """The report cannot issue life or an interval without a wall limit."""
+    section = result["sections"][0]
+    calls = []
+
+    def unestablished(*args):
+        calls.append(args)
+        return {"status": status, "wall_in": None}
+
+    monkeypatch.setattr(builder, "local_loss_limit_wall", unestablished)
+    with pytest.raises(ValueError, match=f"Local-loss life is not established: {status}"):
+        builder.evaluate_section(section["inputs"], FFSComponent(**section["component"]),
+                                 builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"))
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("status", ["BOUNDED", "BOUNDARY"])
+def test_section_labels_supported_boundary_life_as_censored(result, monkeypatch, status):
+    """A positive supported boundary gives a censored projection and interval."""
+    section = result["sections"][0]
+    limit = section["life_limit_wall_in"]
+    search = {"status": status, "wall_in": limit}
+    monkeypatch.setattr(builder, "local_loss_limit_wall", lambda *args: search)
+    actual = builder.evaluate_section(
+        section["inputs"], FFSComponent(**section["component"]),
+        builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"),
+    )
+    assert actual["life_search"] == search
+    assert actual["life_limit_wall_in"] == limit
+    assert actual["life_basis"].endswith("; censored at the supported boundary")
+    assert actual["remaining_life_yr"] == section["remaining_life_yr"]
+    assert actual["interval_yr"] == section["interval_yr"]
+    assert actual["life_sensitivity"] == section["life_sensitivity"]
+
+
 def test_tampered_source_digest_is_rejected(tmp_path):
     workflow = tmp_path / builder.WORKFLOW
     workflow.mkdir(parents=True)
@@ -598,6 +634,7 @@ def test_revision_history_follows_summary(tmp_path, result):
         ["00", "2026-10-13", "First draft for review"],
         ["01", "2026-10-14", "Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is not a code criterion; it is now shown as a diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation."],
         ["02", "2026-10-21", "Established the supported wall interval and a passing and failing pressure bracket before the life search; retained numerical evidence and identified boundary censoring and unreachable targets. Both synthetic section results are unchanged."],
+        ["03", "2026-10-21", "Excluded zero-wall endpoints from numerical life and limited pressure-projection qualification to the checked shell-parameter range because the remaining-thickness limits are not checked. Both synthetic section results are unchanged."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)
@@ -715,3 +752,14 @@ def test_criteria_qualify_point_minimum_strength_relation(tmp_path):
     criteria = page.split("<h3>3.5 Criteria</h3>")[1].split("<h3>")[0]
     assert "simplified closed form evaluated at the point-minimum thickness" in criteria
     assert "complete Part 5 Level 2 evaluation" in criteria
+
+
+def test_projection_discloses_lambda_only_qualification(tmp_path, result):
+    """The report and retained evidence cannot imply full Part 5 applicability."""
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    criteria = page.split("<h3>3.5 Criteria</h3>")[1].split("<h3>")[0]
+    assert "lambda-range applicability only" in criteria
+    assert "Remaining-thickness ratio and minimum-wall limits are not checked" in criteria
+    section = result["sections"][0]
+    assert "lambda-range applicability only" in section["life_basis"]
+    assert section["life_search"]["qualification_scope"] == "lambda-range only"

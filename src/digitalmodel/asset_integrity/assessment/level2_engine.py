@@ -122,12 +122,13 @@ class Level2Engine:
         return self._evaluate_lml(grid_df)
 
     def local_loss_projection_domain(self, grid_df: pd.DataFrame):
-        """Applicable closed wall interval when only current minima decrease.
+        """Lambda-range wall interval when only current minima decrease.
 
         Geometry is checked without evaluating an unsupported strength result.
-        The existing Table 4.4 cap and Rt=1 exception govern this interval.
+        The existing Table 4.4 cap and Rt=1 exception govern this interval;
+        remaining-thickness ratio and minimum-wall limits are not checked.
         Zero is a mathematical endpoint, not a qualified perforated wall.
-        ``None`` means the current geometry is already outside applicability.
+        ``None`` means the current geometry is outside that lambda range.
         """
         values = grid_df.to_numpy(dtype=float)
         present = values[~np.isnan(values)]
