@@ -53,6 +53,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     hz_to_rad_per_s,
+    kn_to_n,
     radians_to_degrees,
     rad_per_s_to_period_s,
     tonnes_to_kg,
@@ -640,8 +641,8 @@ class OrcaWaveRunner:
     ) -> DiffractionResults:
         """Build a :class:`DiffractionResults` from a live OrcFxAPI object.
 
-        Load-bearing assumption (unverified on this license-free host; tracked
-        on ``licensed-win-1`` / #610): result attributes are populated after
+        Load-bearing assumption (pending validation on a licensed host; #610):
+        result attributes are populated after
         ``Calculate()`` without ``LoadResults()``. If the live attributes are
         empty or raise, this method falls back to ``d.LoadResults(.owr)`` and
         re-reads — acceptable because OrcFxAPI is already present on the success
@@ -825,13 +826,16 @@ class OrcaWaveRunner:
     ) -> HydrostaticResults | None:
         """Extract native SI hydrostatics into kg/N units; None if unavailable."""
         try:
+            # Older objects may omit the setting; generated inputs use SI.
+            if getattr(diffraction, "UnitsSystem", "SI") != "SI":
+                return None
             hs = diffraction.hydrostaticResults[0]
             # Generated models use native SI: tonnes, metres and kN.
             # Every restoring block has one force factor, with unchanged
             # length/radian factors: kN -> N scales the entire matrix.
             # OrcaWave WebHelp, Data: Model, Units:
             # https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Model.htm#Units
-            restoring = np.asarray(hs["restoringMatrix"], dtype=float) * 1000.0
+            restoring = kn_to_n(np.asarray(hs["restoringMatrix"], dtype=float))
             return HydrostaticResults(
                 vessel_name=vessel_name,
                 displacement_volume=float(hs["volume"]),
