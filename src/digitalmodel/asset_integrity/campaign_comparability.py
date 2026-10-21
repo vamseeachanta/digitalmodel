@@ -80,17 +80,6 @@ _T95: Mapping[int, float] = {
 }
 _Z95 = 1.959964
 
-# Chi-square quantiles for a variance interval, small degrees of freedom.
-_CHI2_LO: Mapping[int, float] = {
-    1: 0.000982, 2: 0.0506, 3: 0.216, 4: 0.484, 5: 0.831, 6: 1.237, 7: 1.690,
-    8: 2.180, 9: 2.700, 10: 3.247, 11: 3.816, 12: 4.404, 15: 6.262, 20: 9.591,
-}
-_CHI2_HI: Mapping[int, float] = {
-    1: 5.024, 2: 7.378, 3: 9.348, 4: 11.143, 5: 12.833, 6: 14.449, 7: 16.013,
-    8: 17.535, 9: 19.023, 10: 20.483, 11: 21.920, 12: 23.337, 15: 27.488,
-    20: 34.170,
-}
-
 
 def t_quantile_95(df: int) -> float:
     """Two-sided 95% Student t quantile.
@@ -110,13 +99,6 @@ def t_quantile_95(df: int) -> float:
             + (z ** 3 + z) / (4.0 * v)
             + (5.0 * z ** 5 + 16.0 * z ** 3 + 3.0 * z) / (96.0 * v ** 2)
             + (3.0 * z ** 7 + 19.0 * z ** 5 + 17.0 * z ** 3 - 15.0 * z) / (384.0 * v ** 3))
-
-
-def _chi2(table: Mapping[int, float], df: int) -> float | None:
-    for k in sorted(table):
-        if df <= k:
-            return table[k]
-    return None
 
 
 @dataclass(frozen=True)
@@ -162,6 +144,10 @@ def gauge_from_short_interval(differences: Sequence[float]) -> GaugeEstimate:
     appear here as scatter. Stability is an assumption to be justified
     separately, never a conclusion of this function.
 
+    The scatter interval assumes independent, normally distributed differences.
+    Chi-square quantiles are evaluated at the actual sample degrees of freedom,
+    including sample sizes beyond the former lookup table.
+
     :param differences: first reading minus second, one per article, in
         whatever length unit the caller is working in.
     :raises ValueError: fewer than two articles.
@@ -169,15 +155,23 @@ def gauge_from_short_interval(differences: Sequence[float]) -> GaugeEstimate:
     n = len(differences)
     if n < 2:
         raise ValueError("need at least two articles to estimate scatter")
+    from scipy.stats import chi2
+
     mean = st.mean(differences)
     sd = st.stdev(differences)
     df = n - 1
     half = t_quantile_95(df) * sd / math.sqrt(n)
     ci = (mean - half, mean + half)
 
-    lo, hi = _chi2(_CHI2_HI, df), _chi2(_CHI2_LO, df)
-    sd_ci = ((sd * math.sqrt(df / lo), sd * math.sqrt(df / hi))
-             if lo and hi else None)
+    # NIST/SEMATECH e-Handbook, online edition accessed 2026-10-19,
+    # section 1.3.5.8: SD interval s*sqrt((n-1)/q), with equal tails
+    # alpha/2=0.025 and 1-alpha/2=0.975 for 95% confidence. Its chi-square
+    # CDF is defined in section 1.3.6.6.6; do not round df to a table row.
+    # https://www.itl.nist.gov/div898/handbook/eda/section3/eda358.htm
+    # https://www.itl.nist.gov/div898/handbook/eda/section3/eda3666.htm
+    q_lower = float(chi2.ppf(0.025, df))
+    q_upper = float(chi2.ppf(0.975, df))
+    sd_ci = (sd * math.sqrt(df / q_upper), sd * math.sqrt(df / q_lower))
 
     established = not (ci[0] <= 0.0 <= ci[1])
     return GaugeEstimate(

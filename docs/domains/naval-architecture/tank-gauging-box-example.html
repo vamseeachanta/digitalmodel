@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Box-tank gauging analysis</title>
+  <style>
+    body { max-width: 68rem; margin: 2rem auto; padding: 0 1rem;
+      font: 1rem/1.6 system-ui, sans-serif; color: #172b3a; background: #fafcfd; }
+    h1, h2 { line-height: 1.2; color: #12445c; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #bacbd3; padding: .5rem; text-align: left; }
+    th { background: #e8f1f5; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    code, pre { background: #eef3f5; }
+    pre { padding: 1rem; overflow-x: auto; }
+    .basis { border-left: .3rem solid #337c98; padding-left: 1rem; }
+  </style>
+</head>
+<body>
+<main>
+<h1>Box-tank gauging analysis</h1>
+<h2>Summary</h2>
+<p>A synthetic rectangular tank is used to check sounding, ullage, volume,
+attitude correction, mass and free-surface GM loss by hand. At a level
+sounding of 1.50 m the volume is 60.0 m³. A positive 1° surface slope at a
+gauge offset of +2.00 m gives centre sounding 1.47 m and volume 58.6 m³.
+At the stated reference density, the level slack tank produces a GM loss of
+0.0427 m for the stated displacement. These are calculation checks; an
+overall stability criterion and real tank calibration are not established.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>Initial synthetic hand calculation
+to qualify the bounded tank-gauging helpers.</td></tr></tbody>
+<caption>Table 1. The initial issue establishes the calculation basis.</caption>
+</table>
+
+<h2>Inputs and governing cases</h2>
+<p class="basis">All numerical inputs below are chosen synthetic values;
+none represents a material specification, a measured tank or an acceptance
+limit. The temperature coefficient is an example input, not a recommended
+property of any liquid.</p>
+<table>
+<thead><tr><th>Input</th><th>Value</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td>Longitudinal length L (m)</td><td>10.0</td><td>Synthetic box</td></tr>
+<tr><td>Transverse breadth B (m)</td><td>4.00</td><td>Synthetic box</td></tr>
+<tr><td>Reference height H (m)</td><td>3.00</td><td>Common tank-axis datum</td></tr>
+<tr><td>Gauge sounding h<sub>g</sub> (m)</td><td>1.50</td><td>Chosen reading</td></tr>
+<tr><td>Gauge offsets x, y (m)</td><td>+2.00, 0</td><td>Measured from tank centre</td></tr>
+<tr><td>Trim and list surface slopes (°)</td><td>+1.00, 0</td><td>Attitude case only; level case uses zero</td></tr>
+<tr><td>Density at 15 °C (kg/m³)</td><td>800</td><td>Synthetic liquid</td></tr>
+<tr><td>Volumetric expansion coefficient β (1/°C)</td><td>0.001</td><td>Synthetic input for the linear model</td></tr>
+<tr><td>Second temperature (°C)</td><td>40.0</td><td>Equal measured-volume comparison</td></tr>
+<tr><td>Displacement mass (kg)</td><td>1.00 × 10<sup>6</sup></td><td>Synthetic floating condition</td></tr>
+<tr><td>Solid GM (m)</td><td>1.00</td><td>Illustrative input; no required minimum supplied</td></tr>
+</tbody>
+<caption>Table 2. Inputs apply only to the cases defined here.</caption>
+</table>
+
+<h2>Method and independent hand calculation</h2>
+<ol>
+<li><strong>Level calibration.</strong> The horizontal area is LB = 40 m²,
+so V = 40h. Table points (h in m, V in m³) are (0,0), (1,40), (2,80),
+(3,120). Between adjacent points, V = V₀ + (h − h₀)(V₁ − V₀)/(h₁ − h₀)
+<a href="#source-linear">[1]</a>. At h = 1.5 m, V = 60 m³.
+The inverse gives h = V/40 = 1.5 m. Ullage is the complementary depth
+u = H − h = 1.5 m; an ullage table has descending volumes as u increases.</li>
+<li><strong>Attitude correction.</strong> Define h(x,y) = h<sub>c</sub> +
+x tan(trim) + y tan(list), with positive slopes rising towards positive
+offsets. Thus h<sub>c</sub> = 1.5 − 2 tan(1°)
+<a href="#source-trig">[2]</a>. The correction is 0.0349 m,
+giving h<sub>c</sub> = 1.47 m and V = 58.6 m³ to three significant
+figures. Here the centre-to-end distance is 5 m; end depths are
+h<sub>c</sub> ± 5 tan(1°), or 1.38 and 1.55 m. Both lie between 0 and
+3 m, so this plane does not clip the roof or bottom. Its integrated volume
+equals LB h<sub>c</sub> because the signed x term integrates to zero.</li>
+<li><strong>Mass at equal measured volume.</strong> At 15 °C, a measured
+60 m³ has mass 60 × 800 = 48,000 kg <a href="#source-density">[3]</a>.
+At 40 °C, the linear expansion factor is 1 + 0.001(40 − 15) = 1.025
+<a href="#source-thermal">[4]</a>. Density is 800/1.025 = 32000/41 kg/m³,
+or 780 kg/m³ to three significant figures. A measured 60 m³ then has
+mass 1920000/41 kg, or 46,800 kg to three significant figures.
+These are two equal-volume cases. A sealed batch initially occupying
+60 m³ instead expands to 61.5 m³ and retains mass 48,000 kg.</li>
+<li><strong>Free surface in the level slack case.</strong> Independent
+integration gives i<sub>t</sub> = L ∫ y² dy from −B/2 to +B/2 =
+10 × (2³ − (−2)³)/3 = 160/3 m⁴. The textbook relation is
+i<sub>t</sub> = LB³/12 <a href="#source-en400">[5]</a>.
+At reference density, FSM = 800 × 160/3 = 128000/3 kg m.
+GM loss = FSM/displacement mass = 16/375 m = 0.0427 m to three
+significant figures. Effective GM = 1 − 16/375 = 359/375 m, or 0.957 m.
+No stability acceptance follows without a governing criterion.</li>
+</ol>
+
+<h2>Code result against hand calculation</h2>
+<table>
+<thead><tr><th>Quantity</th><th>Hand result</th><th>Code result</th></tr></thead>
+<tbody>
+<tr><td>Level ullage (m)</td><td>1.50</td><td>1.50</td></tr>
+<tr><td>Level volume (m³)</td><td>60.0</td><td>60.0</td></tr>
+<tr><td>Inverse sounding (m)</td><td>1.50</td><td>1.50</td></tr>
+<tr><td>Attitude-corrected centre sounding (m)</td><td>1.47</td><td>1.47</td></tr>
+<tr><td>Attitude-corrected volume (m³)</td><td>58.6</td><td>58.6</td></tr>
+<tr><td>Mass of 60 m³ at 15 °C (kg)</td><td>48,000</td><td>48,000</td></tr>
+<tr><td>Mass of 60 m³ at 40 °C (kg)</td><td>46,800</td><td>46,800</td></tr>
+<tr><td>Reference-density slack FSM (kg m)</td><td>42,700</td><td>42,700</td></tr>
+<tr><td>GM loss (m)</td><td>0.0427</td><td>0.0427</td></tr>
+<tr><td>Effective GM (m)</td><td>0.957</td><td>0.957</td></tr>
+</tbody>
+<caption>Table 3. Results are shown to three significant figures;
+automated checks use unrounded independent values and floating-point tolerances.</caption>
+</table>
+<pre><code>from digitalmodel.naval_architecture.tank_gauging import (
+    CalibrationTable, centre_sounding, density_at_temperature,
+    gm_loss_m, liquid_mass_kg, rectangular_free_surface_moment_kg_m,
+    sounding_to_ullage,
+)
+
+table = CalibrationTable(((0, 0), (1, 40), (2, 80), (3, 120)), "sounding", 3)
+centre = centre_sounding(1.5, 3, x_gauge_m=2, trim_deg=1)
+rho40 = density_at_temperature(800, 15, 40, 0.001)
+fsm = rectangular_free_surface_moment_kg_m(10, 4, 800, fill_state="slack")
+results = {
+    "ullage_m": sounding_to_ullage(1.5, 3),
+    "volume_m3": table.volume_at(1.5),
+    "inverse_sounding_m": table.depth_at_volume(60),
+    "centre_sounding_m": centre,
+    "corrected_volume_m3": table.volume_at(centre),
+    "mass15_kg": liquid_mass_kg(60, 800),
+    "mass40_kg": liquid_mass_kg(60, rho40),
+    "fsm_kg_m": fsm,
+    "gm_loss_m": gm_loss_m(fsm, 1000000),
+    "effective_gm_m": 1 - gm_loss_m(fsm, 1000000),
+}
+for name, value in results.items():
+    print(name, format(value, ".3g"))</code></pre>
+
+<h2>Limits and way forward</h2>
+<p>The datum and readings are tank-axis depths. The angle convention describes
+two independent planar slopes. General hull trim/list rotations, inclined
+measurement tapes and clipped tank surfaces require additional geometry.
+The free-surface expression is a static small-angle model for a fully exposed
+rectangular surface. Empty and pressed-full states have zero free surface;
+nearly full slack tanks do not. Baffles, subdivisions, sloshing and a full
+stability assessment are not evaluated. The thermal coefficient and its
+qualified range require a fluid-specific source before engineering use.</p>
+<p>Later work will add attitude-indexed calibration tables with an explicit
+correction convention and clipping qualification. Correction columns are
+currently refused. Real calibration data and custody-transfer procedures
+remain outside this example.</p>
+
+<h2>Sources and reproducibility</h2>
+<p>The public sources below were opened on 2026-10-19. Equations are used as
+the calculation basis; no published material coefficient or numerical
+example is adopted. The synthetic hand calculations above supply the expected
+values in the three tank-gauging test modules under
+<code>tests/naval_architecture/</code>. The executable example reproduces all
+rows of Table 3.</p>
+<ol>
+<li id="source-linear"><a href="https://openstax.org/books/precalculus-2e/pages/2-1-linear-functions">OpenStax,
+Precalculus 2e (2021), §2.1, Linear Functions</a>: point-slope line and
+two-point interpolation.</li>
+<li id="source-trig"><a href="https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry">OpenStax,
+Precalculus 2e (2021), §5.4, Right Triangle Trigonometry</a>: slope from tangent.</li>
+<li id="source-density"><a href="https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure">OpenStax,
+University Physics vol. 1 (2016), §14.1, Fluids, Density, and Pressure</a>:
+mass divided by volume.</li>
+<li id="source-thermal"><a href="https://openstax.org/books/university-physics-volume-2/pages/1-3-thermal-expansion">OpenStax,
+University Physics vol. 2 (2016), §1.3, Thermal Expansion, eq. 1.4</a>:
+linear volume expansion.</li>
+<li id="source-en400"><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes_Summer_2020.pdf">USNA,
+EN400 Principles of Ship Performance (Summer 2020), §4.8.3 and §4.8.3.1,
+printed pages 4-29–4-30</a>: rectangular second moment and free-surface GM loss.</li>
+</ol>
+</main>
+</body>
+</html>

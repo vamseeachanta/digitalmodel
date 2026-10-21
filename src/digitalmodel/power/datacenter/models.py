@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import math
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -45,6 +46,8 @@ class PowerComponent:
 class UPSModule(PowerComponent):
     """Uninterruptible Power Supply module.
 
+    Construction requires a finite, positive rated_kva (local input contract).
+
     Attributes
     ----------
     battery_runtime_min : float
@@ -58,6 +61,11 @@ class UPSModule(PowerComponent):
     bypass_enabled: bool = True
 
     def __post_init__(self) -> None:
+        # Python 3.11 Library Reference, math.isfinite (NaN/infinities excluded):
+        # https://docs.python.org/3.11/library/math.html#math.isfinite
+        if not math.isfinite(self.rated_kva):
+            raise ValueError(f"rated_kva must be finite, got {self.rated_kva}")
+        # Local positive-rating contract: issue 2749, item 2 (not a design limit).
         if self.rated_kva <= 0:
             raise ValueError(f"rated_kva must be positive, got {self.rated_kva}")
         if not 0.0 < self.efficiency <= 1.0:
@@ -79,6 +87,9 @@ class UPSModule(PowerComponent):
 class STSModule(PowerComponent):
     """Static Transfer Switch — automatic source transfer between paths.
 
+    Construction requires a finite, positive rated_kva and a finite,
+    nonnegative transfer_time_ms (local input contract).
+
     Attributes
     ----------
     transfer_time_ms : float
@@ -97,8 +108,18 @@ class STSModule(PowerComponent):
     retransfer_enabled: bool = True
 
     def __post_init__(self) -> None:
+        # Python 3.11 Library Reference, math.isfinite (NaN/infinities excluded):
+        # https://docs.python.org/3.11/library/math.html#math.isfinite
+        if not math.isfinite(self.rated_kva):
+            raise ValueError(f"rated_kva must be finite, got {self.rated_kva}")
+        # Local positive-rating contract: issue 2749, item 2 (not a design limit).
         if self.rated_kva <= 0:
             raise ValueError(f"rated_kva must be positive, got {self.rated_kva}")
+        if not math.isfinite(self.transfer_time_ms):
+            raise ValueError(
+                f"transfer_time_ms must be finite, got {self.transfer_time_ms}"
+            )
+        # Local nonnegative-time contract: issue 2749, item 2.
         if self.transfer_time_ms < 0:
             raise ValueError(
                 f"transfer_time_ms must be non-negative, got {self.transfer_time_ms}"
