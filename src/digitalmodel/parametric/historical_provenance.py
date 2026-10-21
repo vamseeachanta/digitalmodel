@@ -53,9 +53,14 @@ def archive_reader(root: Path) -> Reader:
     root = Path(root).absolute()
 
     def read(name: str) -> bytes:
-        path = root / _relative(name)
-        if any(part.is_symlink() for part in (path, *path.parents)):
+        name = _relative(name)
+        if root.is_symlink():
             raise EvidenceError(f"Redirected evidence: {name}")
+        path = root
+        for part in PurePosixPath(name).parts:
+            path = path / part
+            if path.is_symlink():
+                raise EvidenceError(f"Redirected evidence: {name}")
         try:
             return path.read_bytes()
         except OSError:
@@ -176,8 +181,8 @@ def verify_sources(record: dict, read: Reader) -> str:
     return fingerprint
 
 
-def verify_artifacts(record: dict, root: Path) -> None:
-    """Bind the evidence to the unchanged manifest, grid and validation files."""
+def verify_artifacts(record: dict, root: Path, *, revision: str | None = None) -> None:
+    """Check raw artifact bytes from an archive or a pinned Git revision."""
     manifest = PurePosixPath(_relative(record["manifest"]))
     expected_paths = {
         str(manifest.parent / name)
@@ -185,7 +190,7 @@ def verify_artifacts(record: dict, root: Path) -> None:
     }
     if set(record["artifacts"]) != expected_paths:
         raise EvidenceError("Atlas artifact inventory mismatch")
-    read = archive_reader(root)
+    read = git_reader(root, revision) if revision is not None else archive_reader(root)
     for name, expected in record["artifacts"].items():
         if sha256(read(name)) != expected:
             raise EvidenceError(f"Artifact digest mismatch: {name}")
@@ -197,20 +202,37 @@ def verify_artifacts(record: dict, root: Path) -> None:
         raise EvidenceError("Manifest provenance mismatch")
 
 
+def _working_tree_drift(record: dict, root: Path) -> list[str]:
+    read = archive_reader(root)
+    drift = []
+    for name, expected in record["artifacts"].items():
+        try:
+            unchanged = sha256(read(name)) == expected
+        except EvidenceError:
+            unchanged = False
+        if not unchanged:
+            drift.append(name)
+    return sorted(drift)
+
+
 def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main") -> dict:
-    """Require ancestry, authenticated sources and matching live artifacts."""
+    """Verify committed evidence and report checkout artifact drift separately."""
     read = git_reader(root, record["source_revision"])
     _git(root, "merge-base", "--is-ancestor", record["source_revision"], retained_ref)
-    verify_artifacts(record, root)
+    revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
+    verify_artifacts(record, root, revision=revision)
     try:
         fingerprint = verify_sources(record, read)
     except FingerprintMismatch:
         if record["status"] != "NOT_EVALUATED" or record.get("reason") != MISMATCH:
             raise
-        return {"status": "NOT_EVALUATED", "reason": MISMATCH}
-    if record["status"] != "VERIFIED":
-        raise EvidenceError("Recorded status contradicts reconstructed evidence")
-    return {"status": "VERIFIED", "fingerprint": fingerprint}
+        result: dict = {"status": "NOT_EVALUATED", "reason": MISMATCH}
+    else:
+        if record["status"] != "VERIFIED":
+            raise EvidenceError("Recorded status contradicts reconstructed evidence")
+        result = {"status": "VERIFIED", "fingerprint": fingerprint}
+    result["working_tree_drift"] = _working_tree_drift(record, root)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -218,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--index", type=Path, default=ROOT / "atlases/historical-provenance.json")
     parser.add_argument("--retained-ref", default="origin/main")
     args = parser.parse_args(argv)
-    inventory = json.loads(args.index.read_text())
+    inventory = json.loads(args.index.read_text(encoding="utf-8"))
     incomplete = False
     for record in inventory["atlases"]:
         try:

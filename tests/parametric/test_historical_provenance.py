@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -38,7 +39,7 @@ def test_independent_raw_fingerprint_vector():
 
 @pytest.fixture(scope="module")
 def inventory():
-    return json.loads(INDEX.read_text())
+    return json.loads(INDEX.read_text(encoding="utf-8"))
 
 
 def test_inventory_covers_every_computed_manifest(inventory):
@@ -46,7 +47,7 @@ def test_inventory_covers_every_computed_manifest(inventory):
 
     expected = set()
     for path in (ROOT / "atlases").glob("*/*/manifest.yaml"):
-        provenance = yaml.safe_load(path.read_text())["provenance"]
+        provenance = yaml.safe_load(path.read_text(encoding="utf-8"))["provenance"]
         if provenance.get("code_version") and provenance.get("content_fingerprint"):
             expected.add(path.relative_to(ROOT).as_posix())
     assert {row["manifest"] for row in inventory["atlases"]} == expected
@@ -132,6 +133,37 @@ def test_archive_paths_are_relative_and_unredirected(path, tmp_path):
         history.archive_reader(tmp_path)(path)
 
 
+def test_archive_allows_symlink_above_root(tmp_path):
+    parent = tmp_path / "parent"
+    root = parent / "archive"
+    root.mkdir(parents=True)
+    (root / "evidence.txt").write_bytes(b"retained bytes\r\n")
+    linked_parent = tmp_path / "linked-parent"
+    linked_parent.symlink_to(parent, target_is_directory=True)
+    assert history.archive_reader(linked_parent / "archive")("evidence.txt") == b"retained bytes\r\n"
+
+
+@pytest.mark.parametrize("location", ["root", "directory", "file"])
+def test_archive_rejects_links_at_or_below_root(tmp_path, location):
+    original = tmp_path / "original"
+    original.mkdir()
+    (original / "evidence.txt").write_bytes(b"retained bytes\n")
+    root = tmp_path / "archive"
+    if location == "root":
+        root.symlink_to(original, target_is_directory=True)
+        name = "evidence.txt"
+    else:
+        root.mkdir()
+        if location == "directory":
+            (root / "nested").symlink_to(original, target_is_directory=True)
+            name = "nested/evidence.txt"
+        else:
+            (root / "evidence.txt").symlink_to(original / "evidence.txt")
+            name = "evidence.txt"
+    with pytest.raises(history.EvidenceError, match="Redirected evidence"):
+        history.archive_reader(root)(name)
+
+
 def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
     row = retained_record
     for name in row["artifacts"]:
@@ -142,6 +174,63 @@ def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
     manifest.write_bytes(manifest.read_bytes() + b"# changed\n")
     with pytest.raises(history.EvidenceError, match="digest"):
         history.verify_artifacts(row, tmp_path)
+
+
+@pytest.fixture(params=["VERIFIED", "NOT_EVALUATED"])
+def artifact_checkout(inventory, tmp_path, monkeypatch, request):
+    """Share read-only Git objects while keeping artifact edits temporary."""
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        monkeypatch.delenv(key, raising=False)
+    row = copy.deepcopy(next(r for r in inventory["atlases"] if r["status"] == request.param))
+    git_dir = subprocess.check_output(
+        ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
+    ).strip()
+    (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8")
+    for name in row["artifacts"]:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(subprocess.check_output(["git", "-C", str(ROOT), "show", f"HEAD:{name}"]))
+    return row, tmp_path
+
+
+@pytest.mark.parametrize("damage", ["crlf", "changed", "missing", "symlink"])
+def test_git_verifies_committed_artifacts_and_reports_checkout_drift(artifact_checkout, damage):
+    row, root = artifact_checkout
+    if damage == "crlf":
+        changed = []
+        for name in row["artifacts"]:
+            if Path(name).suffix in {".yaml", ".json"}:
+                path = root / name
+                path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+                changed.append(name)
+    else:
+        name = row["manifest"]
+        changed = [name]
+        path = root / name
+        if damage == "changed":
+            path.write_bytes(path.read_bytes() + b"# changed\n")
+        else:
+            retained = path.with_name("retained-" + path.name)
+            path.rename(retained)
+            if damage == "symlink":
+                path.symlink_to(retained)
+    result = history.verify_git(row, root)
+    assert result["status"] == row["status"]
+    assert result["working_tree_drift"] == sorted(changed)
+
+
+def test_git_reports_no_drift_for_exact_checkout(artifact_checkout):
+    row, root = artifact_checkout
+    result = history.verify_git(row, root)
+    assert result["status"] == row["status"]
+    assert result["working_tree_drift"] == []
+
+
+def test_git_rejects_committed_artifact_digest_mismatch(artifact_checkout):
+    row, root = artifact_checkout
+    row["artifacts"][row["manifest"]] = "0" * 64
+    with pytest.raises(history.EvidenceError, match="Artifact digest mismatch"):
+        history.verify_git(row, root)
 
 
 def test_wrapper_is_bound_even_when_legacy_hash_omits_it(retained_record):
@@ -183,7 +272,7 @@ def test_cli_reports_status_and_refuses_incomplete_audit(
     retained_record, tmp_path, monkeypatch, capsys, status,
 ):
     index = tmp_path / "index.json"
-    index.write_text(json.dumps({"atlases": [retained_record]}))
+    index.write_text(json.dumps({"atlases": [retained_record]}), encoding="utf-8")
 
     def verify(*args, **kwargs):
         if status == "REJECTED":
@@ -195,9 +284,25 @@ def test_cli_reports_status_and_refuses_incomplete_audit(
     assert json.loads(capsys.readouterr().out)["status"] == status
 
 
+def test_cli_reads_utf8_index_under_legacy_default(retained_record, tmp_path, monkeypatch, capsys):
+    index = tmp_path / "index.json"
+    index.write_text(
+        json.dumps({"atlases": [retained_record], "description": "\u00e9vidence"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    read_text = Path.read_text
+
+    def legacy_read_text(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or "ascii", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", legacy_read_text)
+    assert history.main(["--index", str(index)]) == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "VERIFIED"
+
+
 def test_documented_worked_example(monkeypatch):
     document = ROOT / "docs/plans/parametric-refresh/historical-provenance.md"
-    text = document.read_text()
+    text = document.read_text(encoding="utf-8")
     example = text.split("```python\n", 1)[1].split("```", 1)[0]
     monkeypatch.chdir(ROOT)
     namespace = {}

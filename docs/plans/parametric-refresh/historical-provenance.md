@@ -12,6 +12,7 @@ qualification of the engineering methods or proof of a historical execution.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-21 | Record historical source evidence and expose reconstruction gaps without changing numerical artifacts. |
+| 1 | 2026-10-21 | Check committed artifact bytes, report checkout drift, allow symlinked archive parents, and read indexes as UTF-8 for portable verification. |
 
 ## Inventory and interpretation
 
@@ -80,7 +81,7 @@ import json
 from pathlib import Path
 from digitalmodel.parametric.historical_provenance import verify_git
 
-index = json.loads(Path("atlases/historical-provenance.json").read_text())
+index = json.loads(Path("atlases/historical-provenance.json").read_text(encoding="utf-8"))
 record = next(row for row in index["atlases"]
               if row["manifest"] == "atlases/rao_tabulation/6b27320669f6/manifest.yaml")
 answer = verify_git(record, Path.cwd(), retained_ref="origin/main")
@@ -104,12 +105,19 @@ python -m digitalmodel.parametric.historical_provenance
 
 Each output line gives the manifest and status. The command returns nonzero if
 any entry is rejected or remains `NOT_EVALUATED`; the known gaps are not silently
-counted as successful reconstruction.
+counted as successful reconstruction. Git results also include
+`working_tree_drift`, a list of artifact paths whose checkout bytes differ from
+the index or are missing or redirected. `VERIFIED` describes committed evidence;
+checkout drift does not change that status or the command's exit code. Check
+the drift list before using checkout artifacts as engineering inputs.
 
 ## Source archives and Git history requirements
 
 A Git checkout needs the indexed commits and blobs, their complete ancestry to
-the retained ref, and the unchanged atlas files. A shallow clone, missing object,
+the retained ref, and matching committed atlas files at `HEAD`. Artifact digests
+are checked against those committed blobs, so automatic LF-to-CRLF checkout
+conversion does not reject committed evidence. Checkout differences are reported
+separately in `working_tree_drift`. A shallow clone, missing object,
 missing ref or detached temporary branch alone is insufficient. The verifier
 does not fetch, modify Git metadata or silently use current source files.
 Keep the index in retained history alongside the atlas artifacts. Its digests
@@ -117,13 +125,17 @@ are trusted reviewable metadata, not signatures or an independent trust service.
 
 For a source archive, retain every file named in an entry's `sources` map at its
 repository-relative path, preserving exact bytes and line endings. The archive
-must be accompanied by the trusted index and unchanged atlas artifacts.
+must be accompanied by the trusted UTF-8 index and unchanged atlas artifacts.
+Artifact bytes and line endings must also be preserved exactly: converting LF
+YAML or JSON artifacts to CRLF changes their digests and is rejected by archive
+verification. Binary grid files must remain byte-for-byte unchanged.
 After extracting it, call `verify_sources(record, archive_reader(source_root))`
 and `verify_artifacts(record, artifact_root)`. No Git installation is required
 for those operations. Archive verification establishes byte agreement and
 fingerprint reconstruction; it cannot establish Git ancestry. A digest map
-alone cannot recover missing bytes. Symbolic links, missing files, changed bytes,
-omitted wrapper digests and unsupported algorithms are rejected.
+alone cannot recover missing bytes. Symbolic links at or below the archive root,
+missing files, changed bytes, omitted wrapper digests and unsupported algorithms
+are rejected. Symlinked parent directories above the archive root are allowed.
 
 ## Follow-up
 
