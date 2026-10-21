@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 """Tests for the cited DNV-RP-F103 table lookups (issues #2207, #2208).
 
 Every table value is asserted against the fixture CSVs under

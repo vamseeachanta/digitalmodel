@@ -74,7 +74,7 @@ def checker_case(name):
         "abs-zinc": (a.tbl, "zinc_properties", lambda:
             a.test_zinc(a._rows("section-3-table-2.csv")[0])),
         "abs-protection": (a.tbl, "protection_potential", lambda:
-            a.test_protection(a._rows("section-2-table-1.csv")[0], False)),
+            a.test_protection(next(r for r in a._rows("section-2-table-1.csv") if r["condition"] == "aerobic"))),
     }
     return cases[name]
 
@@ -87,7 +87,15 @@ CASES = (
     "abs-coating", "abs-average-density", "abs-design-density",
     "abs-aluminium", "abs-zinc", "abs-protection",
 )
-MUTATIONS = ("units", "revision", "wiki_path", "note", "second-units")
+MUTATIONS = ("units", "revision", "wiki_path", "note", "section")
+TUPLE_CASES = {
+    "b401-coating", "f103-linepipe-2010", "f103-linepipe-2019",
+    "f103-joint-2010", "f103-joint-2019", "abs-coating",
+    "abs-average-density", "abs-design-density", "abs-aluminium", "abs-zinc",
+}
+PROBES = tuple((case, mutation) for case in CASES for mutation in MUTATIONS) + tuple(
+    (case, "second-units") for case in CASES if case in TUPLE_CASES
+)
 
 
 def run_probe(case, mutation):
@@ -122,29 +130,31 @@ def run_probe(case, mutation):
         raise RuntimeError("table checker accepted a metadata mutation")
 
 
-@pytest.mark.parametrize("case", CASES)
-@pytest.mark.parametrize("mutation", MUTATIONS)
+@pytest.mark.parametrize(("case", "mutation"), PROBES)
 def test_csv_checker_rejects_metadata_mutation(case, mutation):
     run_probe(case, mutation)
 
 
-@pytest.mark.parametrize("case", CASES)
-@pytest.mark.parametrize("mutation", ("match", *MUTATIONS))
-def test_csv_checker_under_optimized_python(case, mutation):
+def test_csv_checker_under_optimized_python():
     program = """
 import importlib.util
 import sys
 spec = importlib.util.spec_from_file_location('probes', sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-module.run_probe(sys.argv[2], sys.argv[3])
+for case in module.CASES:
+    module.run_probe(case, "match")
+for case, mutation in module.PROBES:
+    module.run_probe(case, mutation)
+print(len(module.CASES), len(module.PROBES))
 """
     env = dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path))
     result = subprocess.run(
-        [sys.executable, "-O", "-c", program, __file__, case, mutation],
+        [sys.executable, "-O", "-c", program, __file__],
         env=env, capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"{len(CASES)} {len(PROBES)}"
 
 
 def test_documented_worked_example(tmp_path):

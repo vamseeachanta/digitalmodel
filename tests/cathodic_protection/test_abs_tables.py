@@ -29,6 +29,14 @@ def _rows(filename):
         return list(csv.DictReader(handle))
 
 
+def _supported_rows(rows, field, expected):
+    selected = [row for row in rows if row[field] in expected]
+    keys = [row[field] for row in selected]
+    if len(keys) != len(expected) or set(keys) != set(expected):
+        raise ValueError(f"{field} coverage differs from supported production keys")
+    return selected
+
+
 def _verify(actual, value, units, section, note):
     expected = CitedValue(
         value=float(value), units=units,
@@ -42,7 +50,7 @@ def _verify(actual, value, units, section, note):
     verify_table_value(actual, expected, repo_root=CITATION_FIXTURES)
 
 
-@pytest.mark.parametrize("row", [r for r in _rows("section-2-table-4.csv") if r["durability"] != "all"])
+@pytest.mark.parametrize("row", _supported_rows(_rows("section-2-table-4.csv"), "durability", {"low", "medium", "high"}))
 def test_coating(row):
     key = row["durability"]
     low, high = tbl.coating_breakdown_range(key)
@@ -68,7 +76,7 @@ SITUATIONS = {
 }
 
 
-@pytest.mark.parametrize("row", [r for r in _rows("section-2-table-3.csv") if r["situation"] in SITUATIONS])
+@pytest.mark.parametrize("row", _supported_rows(_rows("section-2-table-3.csv"), "situation", set(SITUATIONS)))
 @pytest.mark.parametrize("condition", ("bare", "coated"))
 def test_design_density(row, condition):
     situation = SITUATIONS[row["situation"]]
@@ -78,7 +86,7 @@ def test_design_density(row, condition):
     _verify(high, row[f"{condition}_high_mA_m2"], "mA/m2", "Section 2, Table 3", f"{note} upper bound")
 
 
-@pytest.mark.parametrize("row", [r for r in _rows("section-3-table-4.csv") if r["alloy"] in {"A1", "A2", "A3", "A4"}])
+@pytest.mark.parametrize("row", _supported_rows(_rows("section-3-table-4.csv"), "alloy", {"A1", "A2", "A3", "A4"}))
 def test_aluminium(row):
     key = row["alloy"]
     potential, capacity = tbl.aluminium_properties(key)
@@ -86,7 +94,16 @@ def test_aluminium(row):
     _verify(capacity, row["capacity_Ah_kg"], "Ah/kg", "Section 3, Table 4", f"{key} practical capacity")
 
 
-@pytest.mark.parametrize("row", _rows("section-3-table-2.csv"))
+ZINC_ROWS = _supported_rows(
+    [{**row, "alloy_temperature": (row["alloy"], row["temperature_C"])}
+     for row in _rows("section-3-table-2.csv")],
+    "alloy_temperature",
+    {("Z1", "5-25"), ("Z2", "5-25"), ("Z3", "5-25"),
+     ("Z4", "5-25"), ("Z4", "60-80")},
+)
+
+
+@pytest.mark.parametrize("row", ZINC_ROWS)
 def test_zinc(row):
     key = row["alloy"]
     # Select the lower end of the existing CSV temperature range, not a limit
@@ -97,7 +114,60 @@ def test_zinc(row):
     _verify(capacity, row["capacity_Ah_kg"], "Ah/kg", "Section 3, Table 2", f"{key} practical capacity")
 
 
-@pytest.mark.parametrize(("anaerobic", "row"), zip((False, True), _rows("section-2-table-1.csv")[:2], strict=True))
-def test_protection(row, anaerobic):
+PROTECTION_CONDITIONS = {
+    "aerobic": False,
+    "anaerobic active sulfate-reducing bacteria": True,
+}
+
+
+@pytest.mark.parametrize("row", _supported_rows(
+    _rows("section-2-table-1.csv"), "condition", set(PROTECTION_CONDITIONS),
+))
+def test_protection(row):
+    anaerobic = PROTECTION_CONDITIONS[row["condition"]]
     _verify(tbl.protection_potential(anaerobic), row["minimum_negative_potential_V"],
             "V", "Section 2, Table 1", "steel protection potential")
+
+
+@pytest.mark.parametrize("rows", ([], [{"key": "a"}], [{"key": "a"}, {"key": "a"}]))
+def test_supported_rows_rejects_missing_or_duplicate_keys(rows):
+    with pytest.raises(ValueError, match="coverage"):
+        _supported_rows(rows, "key", {"a", "b"})
+
+
+def test_supported_rows_ignores_order_and_unsupported_rows():
+    rows = [{"key": "b"}, {"key": "other"}, {"key": "a"}]
+    assert _supported_rows(rows, "key", {"a", "b"}) == [rows[0], rows[2]]
+
+
+@pytest.mark.parametrize(("filename", "field", "key"), (
+    ("section-2-table-4.csv", "durability", "low"),
+    ("section-2-table-3.csv", "situation", next(iter(SITUATIONS))),
+    ("section-3-table-4.csv", "alloy", "A1"),
+    ("section-3-table-2.csv", "alloy", "Z1"),
+    ("section-2-table-1.csv", "condition", "aerobic"),
+))
+@pytest.mark.parametrize("damage", ("missing", "duplicate", "label", "header"))
+def test_collection_rejects_csv_coverage_drift(monkeypatch, filename, field, key, damage):
+    import runpy
+
+    original = csv.DictReader
+
+    def damaged_reader(handle):
+        rows = list(original(handle))
+        if Path(handle.name).name == filename:
+            row = next(row for row in rows if row[field] == key)
+            if damage == "missing":
+                rows.remove(row)
+            elif damage == "duplicate":
+                rows.append(dict(row))
+            elif damage == "label":
+                row[field] = "unsupported"
+            else:
+                for row in rows:
+                    row["unexpected_header"] = row.pop(field)
+        return rows
+
+    monkeypatch.setattr(csv, "DictReader", damaged_reader)
+    with pytest.raises((ValueError, KeyError)):
+        runpy.run_path(__file__)
