@@ -3,6 +3,7 @@
 
 """Public forecast artifact disclosure and integrity contract."""
 import hashlib
+import inspect
 import json
 import os
 import re
@@ -53,7 +54,7 @@ def test_manifest_integrity():
 def test_numerical_basis_explains_published_limits_and_alerts():
     text = PAGE.read_text(encoding='utf-8')
     basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
-    assert basis['status'] == 'assumed, based on previous experience'
+    assert basis['status'] == 'provisional; no basis recorded'
     conversion = Decimal(str(basis['kN_per_Te']))
     assert conversion == Decimal('9.81')
     loads = basis['load_limits_Te']
@@ -71,7 +72,8 @@ def test_numerical_basis_explains_published_limits_and_alerts():
             alert = channel['exceedance']
             assert Decimal(str(alert['alert_probability'])) == cutoff
             assert alert['alert'] is (Decimal(str(alert['window_probability'])) >= cutoff)
-    assert 'assumed, based on previous experience' in text
+    assert basis['status'] in text
+    assert 'assumed, based on previous experience' not in text
     assert 'Calibration error trajectories are not published' in text
     assert 'Revision history' in text
 
@@ -105,18 +107,28 @@ def test_limit_sources_are_explicit_without_workbook_attribution():
 
 
 def test_forecast_settings_derive_counts_and_display_probability_fractions():
+    from digitalmodel.workflows.installation_forecast import exceedance_forecast
+
     text = render_embedded_scenario()
     settings = builder.NUMERICAL_BASIS['forecast_settings']
-    assert settings == {'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
-                        'horizon_s': 120, 'stride_samples': 10, 'min_calibration_windows': 10,
-                        'trace_start_s': 0}
+    defaults = inspect.signature(exceedance_forecast).parameters
+    for setting, parameter in [('order', 'order'), ('ridge', 'ridge'), ('horizon_s', 'horizon_s'),
+                               ('stride_samples', 'stride'), ('min_calibration_windows', 'min_calibration')]:
+        assert settings[setting] == defaults[parameter].default
     assert 'fixed order 40, ridge 0.001' in text
     assert 'N = floor((NOW / 0.5 - 359) / 10) + 1' in text
     counts, exceedances = [], []
     for frame in embedded_scenario(text)['frames']:
-        n = (int(frame['now_s'] / 0.5) - 359) // 10 + 1
+        origin = round((frame['now_s'] - settings['trace_start_s']) / settings['sample_interval_s'])
+        steps = round(settings['horizon_s'] / settings['sample_interval_s'])
+        n = len(range(3 * settings['order'] - 1, origin - steps + 1, settings['stride_samples']))
         counts.append(n)
         for channel in frame['channels']:
+            for series in ('history', 'forecast'):
+                times = channel[series]['times']
+                assert all(b - a == pytest.approx(settings['sample_interval_s'])
+                           for a, b in zip(times, times[1:]))
+            assert channel['forecast']['times'][-1] - frame['now_s'] == settings['horizon_s']
             if 'exceedance' not in channel:
                 continue
             e = channel['exceedance']
@@ -136,8 +148,49 @@ def test_alert_explanation_uses_retained_peak_and_limit():
     channel = next(c for c in frame['channels'] if c['label'].startswith('Master-link'))
     peak, limit = max(channel['forecast']['values']), channel['assumed_limit']
     assert channel['exceedance']['alert'] is True
-    assert f'{peak:.3f} kN is {limit - peak:.3f} kN below the {limit:.3f} kN limit' in text
+    assert f'{peak:.1f} kN is {limit - peak:.1f} kN below the {limit:.1f} kN limit' in text
     assert 'alert comes from the back-test error spread' in text
+
+
+def test_conversion_records_public_standard_gravity_source():
+    text = render_embedded_scenario()
+    source = builder.NUMERICAL_BASIS['kN_per_Te_source']
+    assert 'physics.nist.gov' in source
+    assert '9.80665' in source
+    assert 'rounded' in source
+    assert source in text
+
+
+@pytest.mark.parametrize(('frame_index', 'channel_index', 'alert', 'above_limit', 'explained'), [
+    (-1, 1, True, False, True), (-1, 2, True, False, True),
+    (-1, 1, False, False, False), (-1, 1, True, True, False),
+    (3, 1, False, False, False), (3, 1, True, True, False),
+])
+def test_error_spread_explanation_follows_each_channel(frame_index, channel_index, alert, above_limit, explained):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    frame = scenario['frames'][frame_index]
+    channel = frame['channels'][channel_index]
+    channel['exceedance'].update(alert=alert, window_probability=float(alert))
+    channel['forecast']['values'] = [channel['assumed_limit'] + (1 if above_limit else -1)] * len(
+        channel['forecast']['values'])
+    frame['channels'], scenario['frames'] = [channel], [frame]
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    text = builder.render({'demo': {'scenarios': [scenario]}}, config)
+    assert ('alert comes from the back-test error spread' in text) is explained
+    if explained:
+        assert f'At NOW {frame["now_s"]:g} s the plotted forecast peak' in text
+
+
+def test_calibration_text_is_derived_when_settings_change(monkeypatch):
+    settings = dict(builder.NUMERICAL_BASIS['forecast_settings'], order=3, horizon_s=20,
+                    sample_interval_s=2, stride_samples=3, trace_start_s=4)
+    monkeypatch.setitem(builder.NUMERICAL_BASIS, 'forecast_settings', settings)
+    text = builder.numerical_basis_html([{'now_s': 40}, {'now_s': 46}])
+    assert '3 * 3 - 1 = 8' in text
+    assert '10-sample horizon' in text
+    assert 'ends at sample 18' in text
+    assert 'N = floor(((NOW - 4) / 2 - 18) / 3) + 1' in text
+    assert 'This gives 1 and 2 complete windows' in text
 
 
 def test_manifest_bytes_follow_builder_order_and_record_carry_over():
@@ -230,6 +283,8 @@ def render_embedded_scenario():
 
 def test_display_values_have_no_float_artifacts():
     text = re.sub(r'<script\b[^>]*>.*?</script>', '', PAGE.read_text(encoding='utf-8'), flags=re.S)
+    # Preserve the exact public source constant while checking displayed results.
+    text = text.replace('9.80665 m/s^2', '')
     assert not re.search(r'\d+\.\d{4,}', text)
 
 

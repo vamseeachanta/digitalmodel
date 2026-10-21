@@ -1,14 +1,15 @@
 {
-  "sha256": "2f1de10d9d5092e30390f0bdf86f1580169020d03977f407aaad7db2334301aa",
-  "size_bytes": 320633,
+  "sha256": "03436cae0770adeb66a62fdc7ba73283fedd3575fa7a52fd65e72378d5a23a47",
+  "size_bytes": 321130,
   "source_sha256": {
     "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
     "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
   },
   "numerical_basis": {
-    "revision": 2,
-    "status": "assumed, based on previous experience",
+    "revision": 3,
+    "status": "provisional; no basis recorded",
     "kN_per_Te": 9.81,
+    "kN_per_Te_source": "NIST standard acceleration of gravity (https://physics.nist.gov/cgi-bin/cuu/Value?gn): 9.80665 m/s^2, rounded to 9.81 for the retained conversion.",
     "load_limits_Te": {
       "Master-link load-path proxy: TopRigging End B": 17.7,
       "Sling2 End B tension": 10.89

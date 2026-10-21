@@ -16,10 +16,29 @@ from pathlib import Path
 LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Load limits are provisional demonstration assumptions; '
             'engineering applicability is unresolved.')
+FORECAST_SETTINGS = {'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
+                     'horizon_s': 120, 'stride_samples': 10, 'min_calibration_windows': 10,
+                     'trace_start_s': 0}
+
+
+def calibration_geometry(settings: dict) -> tuple[int, int, int, str]:
+    """Derive the complete-window bounds and displayed rule from the settings."""
+    first = 3 * settings['order'] - 1
+    steps = round(settings['horizon_s'] / settings['sample_interval_s'])
+    last = first + steps
+    clock = 'NOW' if settings['trace_start_s'] == 0 else f'(NOW - {settings["trace_start_s"]:g})'
+    rule = (f'N = floor(({clock} / {settings["sample_interval_s"]:g} - {last}) / '
+            f'{settings["stride_samples"]}) + 1')
+    return first, steps, last, rule
+
+
 NUMERICAL_BASIS: dict = {
-    'revision': 2,
-    'status': 'assumed, based on previous experience',
+    'revision': 3,
+    'status': 'provisional; no basis recorded',
     'kN_per_Te': 9.81,
+    'kN_per_Te_source': 'NIST standard acceleration of gravity '
+                        '(https://physics.nist.gov/cgi-bin/cuu/Value?gn): '
+                        '9.80665 m/s^2, rounded to 9.81 for the retained conversion.',
     'load_limits_Te': {'Master-link load-path proxy: TopRigging End B': 17.7,
                        'Sling2 End B tension': 10.89},
     'load_limit_sources': {
@@ -28,10 +47,8 @@ NUMERICAL_BASIS: dict = {
         'Sling2 End B tension':
             'Retained reviewed demonstration input for the sling; original derivation is unverified.',
     },
-    'forecast_settings': {'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
-                          'horizon_s': 120, 'stride_samples': 10, 'min_calibration_windows': 10,
-                          'trace_start_s': 0},
-    'calibration_count_rule': 'N = floor((NOW / 0.5 - 359) / 10) + 1',
+    'forecast_settings': FORECAST_SETTINGS,
+    'calibration_count_rule': calibration_geometry(FORECAST_SETTINGS)[3],
     'alert_probability': 0.2,
     'load_limit_rule': 'limit_kN = assumed_limit_Te * kN_per_Te',
     'probability_rule': 'p = count(max(forecast + error_trajectory) > limit) / window_count',
@@ -76,7 +93,7 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
                 raise ValueError('Alert result differs from the numerical basis')
 
 
-def numerical_basis_html() -> str:
+def numerical_basis_html(frames: list[dict]) -> str:
     """Expose the assumptions and a hand-worked example independently of the series."""
     basis, rows = NUMERICAL_BASIS, []
     for label, limit in basis['load_limits_Te'].items():
@@ -84,6 +101,12 @@ def numerical_basis_html() -> str:
                     f'<td>{limit * basis["kN_per_Te"]:.3f}</td>'
                     f'<td>{escape(basis["load_limit_sources"][label])}</td></tr>')
     settings = basis['forecast_settings']
+    first, steps, last, count_rule = calibration_geometry(settings)
+    counts = [max(0, (round((frame['now_s'] - settings['trace_start_s']) /
+                           settings['sample_interval_s']) - last) // settings['stride_samples'] + 1)
+              for frame in frames]
+    counts_text = ', '.join(map(str, counts[:-1])) + (' and ' if len(counts) > 1 else '')
+    counts_text += str(counts[-1]) if counts else '0'
     example = basis['worked_example']
     example_rows = ''.join(
         f'<tr><td>{errors[0]:g}, {errors[1]:g}</td>'
@@ -92,19 +115,20 @@ def numerical_basis_html() -> str:
     limitations = ''.join(f'<li>{escape(item)}</li>' for item in basis['limitations'])
     references = ''.join(f'<li><code>{escape(item)}</code></li>' for item in basis['implementation_references'])
     return f'''<section><h2>Numerical basis and assumptions</h2>
-<p>The retained assumption status is "{basis['status']}". These are provisional demonstration
+<p>The load-limit basis status is "{basis['status']}". These are provisional demonstration
 settings; no component capacity, workbook applicability or operational acceptance is established.</p>
 <p>Load conversion: limit (kN) = assumed limit (Te) × {basis['kN_per_Te']:.3f} kN/Te.
 Te denotes the tonne-force equivalent used by this demonstration.</p>
+<p>Conversion source: {escape(basis['kN_per_Te_source'])}</p>
 <table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th><th>Source</th></tr></thead>
 <tbody>{''.join(rows)}</tbody></table><p>Table 2. Assumed loads and their conversion.</p>
 <p>History-only ridge autoregression; fixed order {settings['order']}, ridge {settings['ridge']:.3f}.
 Sampling interval: {settings['sample_interval_s']:g} s; horizon: {settings['horizon_s']:g} s;
 calibration stride: {settings['stride_samples']} samples;
 minimum calibration: {settings['min_calibration_windows']} windows. The trace starts at {settings['trace_start_s']} s.</p>
-<p>The first back-test origin is sample 3 * 40 - 1 = 119; its 240-sample horizon
-ends at sample 359. For the displayed origins, {basis['calibration_count_rule']}.
-This gives 13, 25, 37, 49 and 61 complete windows. Displayed exceeding-window counts
+<p>The first back-test origin is sample 3 * {settings['order']} - 1 = {first}; its {steps}-sample horizon
+ends at sample {last}. For the displayed origins, {count_rule}.
+This gives {counts_text} complete windows. Displayed exceeding-window counts
 are reconstructed as k = round(p * N) from the retained unrounded probabilities;
 the unpublished error trajectories are required to reproduce which windows exceed.</p>
 <p>The alert cutoff is {basis['alert_probability']:.1%}, also written as {basis['alert_probability']:.3f}.
@@ -197,11 +221,11 @@ def render(payload: dict, config: dict) -> str:
                                f'{round(e["window_probability"] * e["calibration_windows"])} of '
                                f'{e["calibration_windows"]} windows exceed the limit. '
                                f'Calibration windows: {e["calibration_windows"]}.</p>')
-                if frame['now_s'] == 420 and channel['label'].startswith('Master-link'):
-                    peak = max(channel['forecast']['values'])
-                    limit = channel['assumed_limit']
-                    figures.append(f'<p>At NOW 420 s the plotted forecast peak of {peak:.3f} kN is '
-                                   f'{limit - peak:.3f} kN below the {limit:.3f} kN limit; '
+                peak = max(channel['forecast']['values'])
+                limit = channel['assumed_limit']
+                if e['alert'] is True and limit is not None and peak < limit:
+                    figures.append(f'<p>At NOW {frame["now_s"]:g} s the plotted forecast peak of {peak:.1f} kN is '
+                                   f'{limit - peak:.1f} kN below the {limit:.1f} kN limit; '
                                    'the alert comes from the back-test error spread.</p>')
             channels.append(channel)
         frames.append({'now_s': frame['now_s'], 'channels': channels})
@@ -234,8 +258,9 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
 <tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>
+<tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
-{numerical_basis_html()}{''.join(sections)}
+{numerical_basis_html(frames)}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
 wave-preview forecast, withheld truth or full envelope dataset is published.</footer>
 <script type="application/json" id="forecast-data">{encoded}</script></main></body></html>
