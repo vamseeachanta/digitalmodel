@@ -38,6 +38,10 @@ def _log_std(cov: float) -> float:
     """Invert the handbook lognormal CoV formula without large-CoV overflow."""
     # NIST section 1.3.6.6.9: ln(1+c^2) = 2*ln(hypot(1,c)).
     # The equivalent log1p form preserves precision for small c.
+    # sqrt(log1p(c*c)) = c*(1 - c*c/4 + ...). Below sqrt(ulp(1)),
+    # the relative correction is below float precision; avoid squaring c.
+    if cov < math.sqrt(math.ulp(1.0)):
+        return cov
     variance = 2 * math.log(math.hypot(1, cov)) if cov > 1 else math.log1p(cov * cov)
     return math.sqrt(variance)
 
@@ -76,24 +80,34 @@ class FatigueReliability:
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be nonnegative and finite")
 
-    def _margin(self, life: float) -> tuple[float, float]:
+    def _standardized_margin(self, life: float) -> tuple[float, float]:
         if not math.isfinite(life) or life <= 0:
             raise ValueError("life in cycles must be positive and finite")
         sigma_a = _log_std(self.cov_sn)
         sigma_s = _log_std(self.cov_stress)
         # NIST 1.3.6.6.9 moments, substituted into the S-N log margin above.
-        # Sum the mean corrections separately to retain small uncertainty.
+        # Keep the deterministic log margin separate from variance corrections.
         terms = (
             math.log(self.A),
             -self.m * math.log(self.stress_range),
-            -(sigma_a**2) / 2,
-            self.m * sigma_s**2 / 2,
             -math.log(life),
         )
         sigma = math.hypot(sigma_a, self.m * sigma_s)
         if not all(math.isfinite(term) for term in terms) or not math.isfinite(sigma):
             raise ValueError("log margin exceeds floating-point range")
-        return math.fsum(terms), sigma
+        mean = math.fsum(terms)
+        if sigma == 0:
+            return mean, sigma
+        # Divide before multiplying: sigma_a**2 and sigma_s**2 may underflow
+        # even when their contributions to beta remain representable.
+        beta = math.fsum(
+            (
+                mean / sigma,
+                -(sigma_a / sigma) * sigma_a / 2,
+                (self.m * sigma_s / sigma) * sigma_s / 2,
+            )
+        )
+        return beta, sigma
 
     def _deterministic_failure(self, life: float, log_margin: float) -> bool:
         # Use the original N=A/S**m equation when representable so that an
@@ -112,10 +126,10 @@ class FatigueReliability:
         Install ``digitalmodel[reliability]`` to evaluate a random margin.
         A deterministic margin is evaluated directly, including equality.
         """
-        mean, sigma = self._margin(design_life)
+        margin, sigma = self._standardized_margin(design_life)
         if sigma == 0:
             # Point-mass probability of the documented event g <= 0.
-            return float(self._deterministic_failure(design_life, mean))
+            return float(self._deterministic_failure(design_life, margin))
         try:
             import openturns as ot
         except ModuleNotFoundError as exc:
@@ -125,7 +139,7 @@ class FatigueReliability:
                 "Install digitalmodel[reliability] for OpenTURNS probabilities"
             ) from exc
         # OpenTURNS 1.26 Normal.computeCDF evaluates P(g <= threshold).
-        return float(ot.Normal(mean, sigma).computeCDF(0))
+        return float(ot.Normal().computeCDF(-margin))
 
     def reliability_index(self, target_life: float) -> float:
         """Return beta for target_life in cycles without inverting rounded Pf.
@@ -134,11 +148,11 @@ class FatigueReliability:
         ratio retains finite indices when the reported probability underflows.
         At zero variance the normal quantile limits are signed infinities.
         """
-        mean, sigma = self._margin(target_life)
+        margin, sigma = self._standardized_margin(target_life)
         if sigma == 0:
             return (
                 -math.inf
-                if self._deterministic_failure(target_life, mean)
+                if self._deterministic_failure(target_life, margin)
                 else math.inf
             )
-        return mean / sigma
+        return margin
