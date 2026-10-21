@@ -823,14 +823,19 @@ class OrcaWaveRunner:
     def _extract_hydrostatics(
         diffraction: Any, vessel_name: str
     ) -> HydrostaticResults | None:
-        """Best-effort hydrostatics extraction; None if unavailable."""
+        """Extract native SI hydrostatics into kg/N units; None if unavailable."""
         try:
             hs = diffraction.hydrostaticResults[0]
-            restoring = np.asarray(hs["restoringMatrix"], dtype=float)
+            # Generated models use native SI: tonnes, metres and kN.
+            # Every restoring block has one force factor, with unchanged
+            # length/radian factors: kN -> N scales the entire matrix.
+            # OrcaWave WebHelp, Data: Model, Units:
+            # https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Model.htm#Units
+            restoring = np.asarray(hs["restoringMatrix"], dtype=float) * 1000.0
             return HydrostaticResults(
                 vessel_name=vessel_name,
                 displacement_volume=float(hs["volume"]),
-                mass=float(hs["mass"]),
+                mass=float(tonnes_to_kg(hs["mass"])),
                 centre_of_gravity=list(np.asarray(hs["centreOfMass"], dtype=float)),
                 centre_of_buoyancy=list(
                     np.asarray(hs["centreOfBuoyancy"], dtype=float)
