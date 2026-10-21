@@ -5,7 +5,8 @@ from hashlib import sha256
 from html.parser import HTMLParser
 import json
 import shutil
-from urllib.parse import unquote
+from urllib.parse import unquote, urljoin, urlsplit
+from urllib.request import url2pathname
 
 import pytest
 
@@ -80,6 +81,35 @@ def test_relocated_links_preserve_pinned_evidence(tmp_path, kind, retained):
 
 
 @pytest.mark.parametrize("kind", ["partial", "capability", "full"])
+@pytest.mark.parametrize("entry, expected", [
+    ("runs/%2e%2e/%2e%2e/outside",
+     "../runs/%252e%252e/%252e%252e/outside/extracted/report.html"),
+    ("runs/case#1", "../runs/case%231/extracted/report.html"),
+    ("runs/50%25load", "../runs/50%2525load/extracted/report.html"),
+])
+def test_mapped_links_encode_url_characters(tmp_path, kind, entry, expected):
+    """Literal directory names remain inside the dataset after URL readback."""
+    target = tmp_path / entry / "extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("retained extraction", encoding="utf-8")
+    base = tmp_path / "reports"
+    base.mkdir()
+    data = summary("retained")
+    frozen = deepcopy(data)
+    config = {"dataset_root": "..", "case_run_dirs": {"0": entry}}
+    frozen_config = deepcopy(config)
+    links = Links()
+    links.feed(render(kind, data, config, base))
+    assert expected in links.targets
+    resolved = urlsplit(urljoin((base / "full.html").as_uri(), expected))
+    assert resolved.query == resolved.fragment == ""
+    assert url2pathname(resolved.path) == str(target)
+    assert (base / unquote(expected)).read_text() == "retained extraction"
+    assert data == frozen
+    assert config == frozen_config
+
+
+@pytest.mark.parametrize("kind", ["partial", "capability", "full"])
 def test_links_through_symlinked_dataset_remain_portable(tmp_path, kind):
     """A linked dataset and its copied tree share the same relative report link."""
     dataset = tmp_path / "physical"
@@ -140,6 +170,45 @@ def test_mapping_rejects_symlink_escape(tmp_path):
         _display_cases(summary("retained"),
                        {"dataset_root": "dataset", "case_run_dirs": {"0": "case"}},
                        tmp_path)
+
+
+@pytest.mark.parametrize("kind", ["partial", "capability", "full"])
+@pytest.mark.parametrize("escaping", [True, False])
+def test_symlinked_reports_validate_the_lexical_dataset(tmp_path, kind, escaping):
+    """URL parent traversal uses the dataset containing the reports link."""
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    physical = tmp_path / "physical"
+    (physical / "reports").mkdir(parents=True)
+    outside = tmp_path / "outside"
+    target = outside / "case/extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("outside extraction", encoding="utf-8")
+    linked_root, plain_root = (dataset, physical) if escaping else (physical, dataset)
+    target = plain_root / "runs/case/extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("retained extraction", encoding="utf-8")
+    base = dataset / "reports"
+    try:
+        base.symlink_to(physical / "reports", target_is_directory=True)
+        (linked_root / "runs").symlink_to(outside, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"Directory symlink unavailable: {error}")
+    data = summary("retained")
+    frozen = deepcopy(data)
+    config = {"dataset_root": "..", "case_run_dirs": {"0": "runs/case"}}
+    if escaping:
+        with pytest.raises(ValueError, match="outside dataset"):
+            render(kind, data, config, base)
+    else:
+        links = Links()
+        links.feed(render(kind, data, config, base))
+        expected = "../runs/case/extracted/report.html"
+        assert expected in links.targets
+        resolved = urlsplit(urljoin((base / "full.html").as_uri(), expected))
+        assert url2pathname(resolved.path) == str(target)
+        assert target.read_text() == "retained extraction"
+    assert data == frozen
 
 
 def test_no_mapping_keeps_existing_link_behavior(tmp_path):
