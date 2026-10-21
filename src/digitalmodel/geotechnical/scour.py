@@ -418,6 +418,8 @@ def critical_shear_stress(
     _riprap_number("water_density_kg_m3", water_density_kg_m3)
     _riprap_number("critical_shields", critical_shields)
     _riprap_number("gravity_ms2", gravity_ms2)
+    if particle_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("particle_density_kg_m3 must exceed water_density_kg_m3")
     return critical_sediment_motion(
         sediment_d50_m=grain_diameter_m,
         sediment_density_kg_m3=particle_density_kg_m3,

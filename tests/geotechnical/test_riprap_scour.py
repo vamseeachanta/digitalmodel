@@ -244,6 +244,15 @@ def test_critical_shear_uses_explicit_shields_and_gravity():
     ) == pytest.approx(3.125)
 
 
+@pytest.mark.parametrize("particle_density", [900.0, 1000.0])
+def test_critical_shear_density_error_names_public_parameters(particle_density):
+    with pytest.raises(
+        ValueError,
+        match=r"^particle_density_kg_m3 must exceed water_density_kg_m3$",
+    ):
+        critical_shear_stress(0.005, particle_density, 1000.0)
+
+
 @pytest.mark.parametrize("gravity", [0, -1, math.nan, math.inf, True, "10"])
 def test_critical_shear_rejects_invalid_gravity(gravity):
     with pytest.raises(ValueError, match="gravity_ms2"):
