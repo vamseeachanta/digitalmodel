@@ -20,8 +20,8 @@ from scripts.capabilities.build_capabilities_inventory import registered_site_pa
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / 'docs/api/installation/installation-forecast.html'
 LABEL = 'SIMULATED DEMO, not connected offshore'
-CRITERIA = ('Acceptance criteria come from a workbook whose applicability is '
-            'unresolved; alert levels are provisional.')
+CRITERIA = ('Load limits are provisional demonstration assumptions; '
+            'engineering applicability is unresolved.')
 
 
 class Resources(HTMLParser):
@@ -91,6 +91,64 @@ def test_independent_worked_probability_example():
     text = PAGE.read_text(encoding='utf-8')
     assert '3 / 5 = 60.0 %' in text
     assert '20.0 %' in text
+
+
+def test_limit_sources_are_explicit_without_workbook_attribution():
+    text = render_embedded_scenario()
+    basis = builder.NUMERICAL_BASIS
+    assert set(basis['load_limit_sources']) == set(basis['load_limits_Te'])
+    for source in basis['load_limit_sources'].values():
+        assert source in text
+        assert 'original derivation is unverified' in source
+    assert 'Acceptance criteria come from a workbook' not in text
+    assert 'Source criteria originate from a splash-zone workbook' not in text
+
+
+def test_forecast_settings_derive_counts_and_display_probability_fractions():
+    text = render_embedded_scenario()
+    settings = builder.NUMERICAL_BASIS['forecast_settings']
+    assert settings == {'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
+                        'horizon_s': 120, 'stride_samples': 10, 'min_calibration_windows': 10,
+                        'trace_start_s': 0}
+    assert 'fixed order 40, ridge 0.001' in text
+    assert 'N = floor((NOW / 0.5 - 359) / 10) + 1' in text
+    counts, exceedances = [], []
+    for frame in embedded_scenario(text)['frames']:
+        n = (int(frame['now_s'] / 0.5) - 359) // 10 + 1
+        counts.append(n)
+        for channel in frame['channels']:
+            if 'exceedance' not in channel:
+                continue
+            e = channel['exceedance']
+            assert e['calibration_windows'] == n
+            k = round(e['window_probability'] * n)
+            assert e['window_probability'] == pytest.approx(k / n, abs=1e-12)
+            assert f'{k} of {n} windows' in text
+            if channel['label'].startswith('Master-link'):
+                exceedances.append(k)
+    assert counts == [13, 25, 37, 49, 61]
+    assert exceedances == [0, 3, 1, 14, 23]
+
+
+def test_alert_explanation_uses_retained_peak_and_limit():
+    text = render_embedded_scenario()
+    frame = next(f for f in embedded_scenario(text)['frames'] if f['now_s'] == 420)
+    channel = next(c for c in frame['channels'] if c['label'].startswith('Master-link'))
+    peak, limit = max(channel['forecast']['values']), channel['assumed_limit']
+    assert channel['exceedance']['alert'] is True
+    assert f'{peak:.3f} kN is {limit - peak:.3f} kN below the {limit:.3f} kN limit' in text
+    assert 'alert comes from the back-test error spread' in text
+
+
+def test_manifest_bytes_follow_builder_order_and_record_carry_over():
+    raw = PAGE.with_suffix('.manifest.json').read_bytes()
+    manifest = json.loads(raw)
+    keys = ['sha256', 'size_bytes', 'source_sha256', 'numerical_basis',
+            'sanitization', 'reduction', 'provenance_note']
+    assert list(manifest) == keys
+    assert 'carried over from revision 0' in manifest['provenance_note']
+    assert 'not revalidated against external inputs' in manifest['provenance_note']
+    assert raw == (json.dumps({key: manifest[key] for key in keys}, indent=2) + '\n').encode()
 
 
 @pytest.mark.parametrize('channel_index', [1, 2])
