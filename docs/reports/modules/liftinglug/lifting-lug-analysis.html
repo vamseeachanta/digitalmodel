@@ -105,7 +105,7 @@ summary{cursor:pointer}.chart-point:focus{outline:2px solid var(--accent)}
 
 <header><div class="kicker">Lifting attachments · strength screening</div>
 <h1>Lifting lug screening analysis</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report navigation"><a href="#summary">Executive summary</a> ·
 <a href="#basis">Design data</a> · <a href="#example">Worked example</a> ·
 <a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendices</a></nav>
@@ -125,7 +125,8 @@ This rounded-down value passes only the implemented screens.</li>
 <li>Material certification, load basis, connection resistance and code applicability are required before design release.</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>A</td><td>2026-10-21</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr></tbody></table>
+<tbody><tr><td>A</td><td>2026-10-21</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Explicit text output, hand-calculation tests, conceptual geometry and field precision address reproducibility and interpretation.</td></tr></tbody></table>
 </section>
 
 <section aria-labelledby="introduction"><h2 id="introduction">2 Introduction</h2>
@@ -141,7 +142,7 @@ padeye studies are outside this workflow. Vessel heading, a sea-state envelope a
 NOT_EVALUATED because the module has no hydrodynamic response or weather inputs. No installability statement is made.</p>
 </section>
 
-<section aria-labelledby="controls"><h2 id="controls">3 Summary</h2>
+<section aria-labelledby="controls"><h2 id="controls">3 Load Sensitivity</h2>
 <p>The most-loaded leg tension is supplied after the sling-angle and centre-of-gravity effects are resolved.
 Separate dynamic amplification and skew allowances are then applied, as described in the
 <a href="#source-guide">example guide</a>.</p>
@@ -192,10 +193,12 @@ The base reaction is illustrative; weld and parent plate resistance are outside 
 <figcaption>The public example geometry is represented by a round head of radius
 <span data-number="lug.outer_radius_mm">110.0</span> mm, a hole of diameter <span data-number="lug.hole_diameter_mm">80.0</span> mm,
 a pin of diameter <span data-number="lug.pin_diameter_mm">75.0</span> mm and a main plate
-<span data-number="lug.plate_thickness_mm">40.0</span> mm thick. Cheek thickness per side is
-<span data-number="lug.cheek_plate_thickness_mm">0.0</span> mm; total thickness is <span data-number="total_thickness_mm">40.0</span> mm.
+<span data-number="lug.plate_thickness_mm">40.000</span> mm thick. Cheek thickness per side is
+<span data-number="lug.cheek_plate_thickness_mm">0.000</span> mm; total thickness is <span data-number="total_thickness_mm">40.000</span> mm.
 Dimensions come from the <a href="#source-example">example input</a>.
 The lower plate length, pin length and restraint depiction are illustrative; no fabrication drawing is available.
+The dashed tear-out planes are conceptual, not to scale; the
+calculation uses a loaded ligament of <span data-number="ligament_mm">70.0</span> mm from the hole to the loaded edge.
 The sling direction is an assumed axial in-plane load. Contact offset, welds and base flexibility are not modelled.</figcaption></figure>
 <h3>Criteria and rationale</h3>
 <p>The implemented bearing, tension and shear factors are respectively <span data-number="bearing_factor">0.90</span>,
@@ -248,7 +251,7 @@ No example input or calculated stress is transcribed into the report.</p>
 <p>The input static tension is <span data-number="load.static_load_kN">420.0</span> kN and the dynamic factor is
 <span data-number="load.dynamic_amplification_factor">2.0</span>; with the governing skew factor of <span data-number="skew_load_factor">1.1</span>,
 the returned design load is <span data-number="design_load_kN">924.0</span> kN. The calculated total thickness is
-<span data-number="total_thickness_mm">40.0</span> mm and the loaded ligament is <span data-number="ligament_mm">70.0</span> mm.
+<span data-number="total_thickness_mm">40.000</span> mm and the loaded ligament is <span data-number="ligament_mm">70.0</span> mm.
 The geometry, yield input and factors are listed with their sources in the appendix.</p>
 <table><thead><tr><th>Component</th><th>Demand (MPa)</th><th>Limit (MPa)</th><th>Utilization (%)</th><th>Result</th><th>Source</th></tr></thead>
 <tbody><tr><td>Pin-hole bearing</td><td><span data-number="pin_bearing.demand_mpa">308.0</span></td><td><span data-number="pin_bearing.allowable_mpa">319.5</span></td><td><span data-number="pin_bearing.utilization">96.4</span></td><td>The screen passes.</td><td><a href="#source-code">Module output</a></td></tr>
@@ -271,9 +274,11 @@ Physical validation of this circular-lug screen is not established by those chec
 and nominal stresses with hand-calculated expressions. They also exercise missing and invalid skew factors,
 unsupported sling counts, and below-minimum factors with otherwise passing strength results.
 Those tests demonstrate agreement with the coded formulas and the intended input guards.</p>
-<p>The <a href="#source-rebuild">report rebuild tests</a> compare every displayed example field with a fresh
-public-interface result, compare all plotted cases, and check the rounded-down restriction.
-The committed page is rebuilt byte for byte with its change data. No field-load measurements or destructive-test
+<p>The <a href="#source-rebuild">report rebuild tests</a> compare displayed example fields with independent
+hand-calculated literals and all plotted cases with hand arithmetic and fresh public-interface results.
+The rounded-down restriction and the next load increment are checked for passing and failing screens respectively.
+The committed page is rebuilt byte for byte with its change data, including a simulated CRLF platform.
+No field-load measurements or destructive-test
 results are supplied with the workflow example. The wider repository contains finite-element padeye material,
 but no matched comparison to this example is established here; no numerical agreement with it is claimed.</p>
 </section>
@@ -345,8 +350,8 @@ Both stylesheets are inlined for offline reading.</li></ul>
 <p>The numerical input record and unresolved assumptions are retained below.
 The quality checks distinguish reproducible software evidence from missing design evidence.</p>
 <h3>Numerical input record</h3>
-<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Main plate thickness</td><td><span data-number="lug.plate_thickness_mm">40.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
-<tr><td>Cheek thickness per side</td><td><span data-number="lug.cheek_plate_thickness_mm">0.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Main plate thickness</td><td><span data-number="lug.plate_thickness_mm">40.000</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Cheek thickness per side</td><td><span data-number="lug.cheek_plate_thickness_mm">0.000</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
 <tr><td>Pin diameter</td><td><span data-number="lug.pin_diameter_mm">75.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
 <tr><td>Hole diameter</td><td><span data-number="lug.hole_diameter_mm">80.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
 <tr><td>Outer radius from hole centre</td><td><span data-number="lug.outer_radius_mm">110.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
@@ -354,7 +359,7 @@ The quality checks distinguish reproducible software evidence from missing desig
 <tr><td>Most-loaded leg static tension</td><td><span data-number="load.static_load_kN">420.0</span></td><td>kN</td><td><a href="#source-example">Example input</a></td></tr>
 <tr><td>Dynamic amplification factor</td><td><span data-number="load.dynamic_amplification_factor">2.0</span></td><td>dimensionless</td><td><a href="#source-example">Example input</a></td></tr>
 <tr><td>Entered skew factor</td><td><span data-number="load.skew_load_factor">1.1</span></td><td>dimensionless</td><td><a href="#source-example">Example input</a></td></tr>
-<tr><td>Sling count</td><td><span data-number="load.num_slings">2.0</span></td><td>legs</td><td><a href="#source-example">Example input</a></td></tr></tbody></table>
+<tr><td>Sling count</td><td><span data-number="load.num_slings">2</span></td><td>legs</td><td><a href="#source-example">Example input</a></td></tr></tbody></table>
 <h3>Data register</h3>
 <table><thead><tr><th>Data or assumption</th><th>Status and consequence</th><th>Required evidence</th></tr></thead><tbody>
 <tr><td>Example geometry, force, amplification and material</td><td>ASSUMED - to be confirmed. Published configuration values are used as supplied.</td><td>Approved geometry, material certificate and resolved lift-load basis.</td></tr>
@@ -384,7 +389,7 @@ the report. Import that file to continue reviewing. Unsaved comments are lost wh
 </section>
 </main>
 <script id="chart-data" type="application/json">{"limit_percent":100.0,"cases":[{"static_load_kN":105.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":77.0,"allowable_mpa":319.5,"utilization_percent":24.1},{"component":"net_tension","demand_mpa":41.3,"allowable_mpa":213.0,"utilization_percent":19.4},{"component":"shear_tearout","demand_mpa":41.3,"allowable_mpa":142.0,"utilization_percent":29.0}]},{"static_load_kN":122.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":89.8,"allowable_mpa":319.5,"utilization_percent":28.1},{"component":"net_tension","demand_mpa":48.1,"allowable_mpa":213.0,"utilization_percent":22.6},{"component":"shear_tearout","demand_mpa":48.1,"allowable_mpa":142.0,"utilization_percent":33.9}]},{"static_load_kN":140.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":102.7,"allowable_mpa":319.5,"utilization_percent":32.1},{"component":"net_tension","demand_mpa":55.0,"allowable_mpa":213.0,"utilization_percent":25.8},{"component":"shear_tearout","demand_mpa":55.0,"allowable_mpa":142.0,"utilization_percent":38.7}]},{"static_load_kN":157.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":115.5,"allowable_mpa":319.5,"utilization_percent":36.2},{"component":"net_tension","demand_mpa":61.9,"allowable_mpa":213.0,"utilization_percent":29.0},{"component":"shear_tearout","demand_mpa":61.9,"allowable_mpa":142.0,"utilization_percent":43.6}]},{"static_load_kN":175.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":128.3,"allowable_mpa":319.5,"utilization_percent":40.2},{"component":"net_tension","demand_mpa":68.8,"allowable_mpa":213.0,"utilization_percent":32.3},{"component":"shear_tearout","demand_mpa":68.8,"allowable_mpa":142.0,"utilization_percent":48.4}]},{"static_load_kN":192.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":141.2,"allowable_mpa":319.5,"utilization_percent":44.2},{"component":"net_tension","demand_mpa":75.6,"allowable_mpa":213.0,"utilization_percent":35.5},{"component":"shear_tearout","demand_mpa":75.6,"allowable_mpa":142.0,"utilization_percent":53.3}]},{"static_load_kN":210.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":154.0,"allowable_mpa":319.5,"utilization_percent":48.2},{"component":"net_tension","demand_mpa":82.5,"allowable_mpa":213.0,"utilization_percent":38.7},{"component":"shear_tearout","demand_mpa":82.5,"allowable_mpa":142.0,"utilization_percent":58.1}]},{"static_load_kN":227.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":166.8,"allowable_mpa":319.5,"utilization_percent":52.2},{"component":"net_tension","demand_mpa":89.4,"allowable_mpa":213.0,"utilization_percent":42.0},{"component":"shear_tearout","demand_mpa":89.4,"allowable_mpa":142.0,"utilization_percent":62.9}]},{"static_load_kN":245.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":179.7,"allowable_mpa":319.5,"utilization_percent":56.2},{"component":"net_tension","demand_mpa":96.2,"allowable_mpa":213.0,"utilization_percent":45.2},{"component":"shear_tearout","demand_mpa":96.2,"allowable_mpa":142.0,"utilization_percent":67.8}]},{"static_load_kN":262.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":192.5,"allowable_mpa":319.5,"utilization_percent":60.3},{"component":"net_tension","demand_mpa":103.1,"allowable_mpa":213.0,"utilization_percent":48.4},{"component":"shear_tearout","demand_mpa":103.1,"allowable_mpa":142.0,"utilization_percent":72.6}]},{"static_load_kN":280.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":205.3,"allowable_mpa":319.5,"utilization_percent":64.3},{"component":"net_tension","demand_mpa":110.0,"allowable_mpa":213.0,"utilization_percent":51.6},{"component":"shear_tearout","demand_mpa":110.0,"allowable_mpa":142.0,"utilization_percent":77.5}]},{"static_load_kN":297.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":218.2,"allowable_mpa":319.5,"utilization_percent":68.3},{"component":"net_tension","demand_mpa":116.9,"allowable_mpa":213.0,"utilization_percent":54.9},{"component":"shear_tearout","demand_mpa":116.9,"allowable_mpa":142.0,"utilization_percent":82.3}]},{"static_load_kN":315.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":231.0,"allowable_mpa":319.5,"utilization_percent":72.3},{"component":"net_tension","demand_mpa":123.8,"allowable_mpa":213.0,"utilization_percent":58.1},{"component":"shear_tearout","demand_mpa":123.8,"allowable_mpa":142.0,"utilization_percent":87.1}]},{"static_load_kN":332.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":243.8,"allowable_mpa":319.5,"utilization_percent":76.3},{"component":"net_tension","demand_mpa":130.6,"allowable_mpa":213.0,"utilization_percent":61.3},{"component":"shear_tearout","demand_mpa":130.6,"allowable_mpa":142.0,"utilization_percent":92.0}]},{"static_load_kN":350.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":256.7,"allowable_mpa":319.5,"utilization_percent":80.3},{"component":"net_tension","demand_mpa":137.5,"allowable_mpa":213.0,"utilization_percent":64.6},{"component":"shear_tearout","demand_mpa":137.5,"allowable_mpa":142.0,"utilization_percent":96.8}]},{"static_load_kN":361.4,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":265.0,"allowable_mpa":319.5,"utilization_percent":83.0},{"component":"net_tension","demand_mpa":142.0,"allowable_mpa":213.0,"utilization_percent":66.7},{"component":"shear_tearout","demand_mpa":142.0,"allowable_mpa":142.0,"utilization_percent":100.0}]},{"static_load_kN":367.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":269.5,"allowable_mpa":319.5,"utilization_percent":84.4},{"component":"net_tension","demand_mpa":144.4,"allowable_mpa":213.0,"utilization_percent":67.8},{"component":"shear_tearout","demand_mpa":144.4,"allowable_mpa":142.0,"utilization_percent":101.7}]},{"static_load_kN":385.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":282.3,"allowable_mpa":319.5,"utilization_percent":88.4},{"component":"net_tension","demand_mpa":151.3,"allowable_mpa":213.0,"utilization_percent":71.0},{"component":"shear_tearout","demand_mpa":151.3,"allowable_mpa":142.0,"utilization_percent":106.5}]},{"static_load_kN":402.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":295.2,"allowable_mpa":319.5,"utilization_percent":92.4},{"component":"net_tension","demand_mpa":158.1,"allowable_mpa":213.0,"utilization_percent":74.2},{"component":"shear_tearout","demand_mpa":158.1,"allowable_mpa":142.0,"utilization_percent":111.4}]},{"static_load_kN":420.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":308.0,"allowable_mpa":319.5,"utilization_percent":96.4},{"component":"net_tension","demand_mpa":165.0,"allowable_mpa":213.0,"utilization_percent":77.5},{"component":"shear_tearout","demand_mpa":165.0,"allowable_mpa":142.0,"utilization_percent":116.2}]},{"static_load_kN":437.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":320.8,"allowable_mpa":319.5,"utilization_percent":100.4},{"component":"net_tension","demand_mpa":171.9,"allowable_mpa":213.0,"utilization_percent":80.7},{"component":"shear_tearout","demand_mpa":171.9,"allowable_mpa":142.0,"utilization_percent":121.0}]},{"static_load_kN":455.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":333.7,"allowable_mpa":319.5,"utilization_percent":104.4},{"component":"net_tension","demand_mpa":178.8,"allowable_mpa":213.0,"utilization_percent":83.9},{"component":"shear_tearout","demand_mpa":178.8,"allowable_mpa":142.0,"utilization_percent":125.9}]},{"static_load_kN":472.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":346.5,"allowable_mpa":319.5,"utilization_percent":108.5},{"component":"net_tension","demand_mpa":185.6,"allowable_mpa":213.0,"utilization_percent":87.1},{"component":"shear_tearout","demand_mpa":185.6,"allowable_mpa":142.0,"utilization_percent":130.7}]},{"static_load_kN":490.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":359.3,"allowable_mpa":319.5,"utilization_percent":112.5},{"component":"net_tension","demand_mpa":192.5,"allowable_mpa":213.0,"utilization_percent":90.4},{"component":"shear_tearout","demand_mpa":192.5,"allowable_mpa":142.0,"utilization_percent":135.6}]},{"static_load_kN":507.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":372.2,"allowable_mpa":319.5,"utilization_percent":116.5},{"component":"net_tension","demand_mpa":199.4,"allowable_mpa":213.0,"utilization_percent":93.6},{"component":"shear_tearout","demand_mpa":199.4,"allowable_mpa":142.0,"utilization_percent":140.4}]},{"static_load_kN":525.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":385.0,"allowable_mpa":319.5,"utilization_percent":120.5},{"component":"net_tension","demand_mpa":206.2,"allowable_mpa":213.0,"utilization_percent":96.8},{"component":"shear_tearout","demand_mpa":206.2,"allowable_mpa":142.0,"utilization_percent":145.2}]}],"names":{"pin_bearing":"Pin-hole bearing","net_tension":"Net-section tension","shear_tearout":"Shear tear-out"}}</script>
-<script id="changes-data" type="application/json">{"document":"Lifting lug screening analysis","revisions":[{"revision":"A","date":"2026-10-21","changes":["The published example is evaluated for bearing, net tension and shear tear-out.","A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.","Unconfirmed material, loading and strength-factor bases are registered for engineering review."]}]}</script>
+<script id="changes-data" type="application/json">{"document":"Lifting lug screening analysis","revisions":[{"revision":"A","date":"2026-10-21","changes":["The published example is evaluated for bearing, net tension and shear tear-out.","A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.","Unconfirmed material, loading and strength-factor bases are registered for engineering review."]},{"revision":"B","date":"2026-10-22","changes":["UTF-8 and LF output are explicit so the report rebuilds across platforms.","Independent hand calculations check reported stresses, utilization, exceedance and load restriction.","Conceptual tear-out planes, field precision and the load sensitivity heading are clarified for maintainer review."]}]}</script>
 <script>
 "use strict";
 const data = JSON.parse(document.getElementById("chart-data").textContent);
@@ -484,7 +489,7 @@ document.getElementById("add-comment").addEventListener("click", () => {
   renderComments(); field.value = ""; status.textContent = "Comments have changed. Save the comments file before closing.";
 });
 document.getElementById("save-comments").addEventListener("click", async () => {
-  const payload = JSON.stringify({document: changes.document, revision: changes.revisions[0].revision, comments}, null, 2) + "\n";
+  const payload = JSON.stringify({document: changes.document, revision: changes.revisions.at(-1).revision, comments}, null, 2) + "\n";
   try {
     if (window.showSaveFilePicker) {
       const handle = await window.showSaveFilePicker({suggestedName: "lifting-lug-analysis.comments.json",
@@ -503,7 +508,7 @@ document.getElementById("import-comments").addEventListener("change", async even
   const file = event.target.files[0]; if (!file) return;
   try {
     const loaded = JSON.parse(await file.text());
-    const valid = loaded.document === changes.document && loaded.revision === changes.revisions[0].revision &&
+    const valid = loaded.document === changes.document && loaded.revision === changes.revisions.at(-1).revision &&
       Array.isArray(loaded.comments) && loaded.comments.every(c =>
         c && typeof c.text === "string" && sections.some(s => s.id === c.section));
     if (!valid) throw new Error("Invalid comments file");

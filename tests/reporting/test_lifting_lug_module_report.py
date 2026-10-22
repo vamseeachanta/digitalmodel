@@ -5,7 +5,6 @@
 import copy
 import importlib.util
 import json
-import math
 import os
 import re
 import shutil
@@ -22,6 +21,11 @@ from digitalmodel.lifting_lug import workflow
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/liftinglug"
 EXAMPLE = ROOT / "examples/workflows/lifting-lug-design/input.yml"
+
+
+def read_utf8_lf(path):
+    with path.open(encoding="utf-8", newline="\n") as source:
+        return source.read()
 
 
 class Page(HTMLParser):
@@ -67,41 +71,33 @@ def rebuilt(tmp_path):
     spec.loader.exec_module(builder)
     output = tmp_path / "report"
     builder.build(output, tmp_path / "calculations")
-    text = (output / "lifting-lug-analysis.html").read_text(encoding="utf-8")
+    text = read_utf8_lf(output / "lifting-lug-analysis.html")
     return builder, output, text
 
 
 def direct_result(tmp_path):
-    cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    cfg = yaml.safe_load(read_utf8_lf(EXAMPLE))
     cfg["lifting_lug"]["outputs"]["directory"] = str(tmp_path)
     return workflow.router(cfg)["lifting_lug"]
 
 
-def expected_numbers(result):
-    """Use module results, not rounded report data, as the numerical oracle."""
-    values = {f"lug.{k}": v for k, v in result["lug"].items()}
-    values.update({f"load.{k}": v for k, v in result["load"].items()
-                   if isinstance(v, (int, float))})
-    for key in ("design_load_kN", "total_thickness_mm", "skew_load_factor",
-                "skew_load_factor_minimum"):
-        values[key] = result[key]
-    for check in result["checks"]:
-        for key in ("demand_mpa", "allowable_mpa", "utilization"):
-            value = check[key] * (100 if key == "utilization" else 1)
-            values[f"{check['name']}.{key}"] = value
-    values.update({
-        "bearing_factor": workflow.BEARING_FACTOR,
-        "tension_factor": workflow.TENSION_FACTOR,
-        "shear_factor": workflow.SHEAR_FACTOR,
-        "limit_percent": 100.0,
-        "governing_percent": result["governing_utilization"] * 100,
-        "exceedance_percent": (result["governing_utilization"] - 1) * 100,
-        "ligament_mm": result["lug"]["outer_radius_mm"]
-        - result["lug"]["hole_diameter_mm"] / 2,
-        "static_cap_kN": math.floor(result["load"]["static_load_kN"]
-                                     / result["governing_utilization"] * 10) / 10,
-    })
-    return values
+def test_report_writes_utf8_lf_on_a_crlf_platform(rebuilt, tmp_path, monkeypatch):
+    builder, _, _ = rebuilt
+    write_text = Path.write_text
+
+    def platform_write(path, text, encoding=None, errors=None, newline=None):
+        # Emulate Windows' default translation even when this test runs on POSIX.
+        return write_text(path, text, encoding=encoding, errors=errors,
+                          newline="\r\n" if newline is None else newline)
+
+    monkeypatch.setattr(Path, "write_text", platform_write)
+    output = tmp_path / "crlf-platform"
+    builder.build(output, tmp_path / "crlf-calculations")
+    for name in ("lifting-lug-analysis.html", "changes.json"):
+        content = (output / name).read_bytes()
+        assert b"\r" not in content
+        assert content.decode("utf-8").endswith("\n")
+        assert content == (REPORT / name).read_bytes()
 
 
 def test_rebuild_matches_committed_report_and_changes(rebuilt):
@@ -110,17 +106,52 @@ def test_rebuild_matches_committed_report_and_changes(rebuilt):
         assert (output / name).read_bytes() == (REPORT / name).read_bytes()
 
 
-def test_every_displayed_example_number_matches_module(rebuilt, tmp_path):
+def test_every_displayed_example_number_matches_hand_literals(rebuilt):
     _, _, text = rebuilt
     page = Page(text)
-    expected = expected_numbers(direct_result(tmp_path / "oracle"))
+    # Public input: P = 420 * 2 * 1.1 = 924 kN; t = 40 + 2 * 0 = 40 mm.
+    # Ligament = 110 - 80/2 = 70 mm; areas = 75*40 and 2*40*70 mm².
+    # Demands = 924000/3000 = 308 and 924000/5600 = 165 MPa.
+    # Limits = (0.90, 0.60, 0.40)*355 = (319.5, 213, 142) MPa.
+    # Percentages = 100*(308/319.5, 165/213, 165/142); excess = last - 100.
+    # Restriction = floor((420*142/165)*10)/10 = 361.4 kN.
+    expected = {
+        "lug.plate_thickness_mm": "40.000",
+        "lug.cheek_plate_thickness_mm": "0.000",
+        "lug.pin_diameter_mm": "75.0",
+        "lug.hole_diameter_mm": "80.0",
+        "lug.outer_radius_mm": "110.0",
+        "lug.yield_strength_mpa": "355.0",
+        "load.num_slings": "2",
+        "load.static_load_kN": "420.0",
+        "load.dynamic_amplification_factor": "2.0",
+        "load.skew_load_factor": "1.1",
+        "design_load_kN": "924.0",
+        "total_thickness_mm": "40.000",
+        "skew_load_factor": "1.1",
+        "skew_load_factor_minimum": "1.1",
+        "pin_bearing.demand_mpa": "308.0",
+        "pin_bearing.allowable_mpa": "319.5",
+        "pin_bearing.utilization": "96.4",
+        "net_tension.demand_mpa": "165.0",
+        "net_tension.allowable_mpa": "213.0",
+        "net_tension.utilization": "77.5",
+        "shear_tearout.demand_mpa": "165.0",
+        "shear_tearout.allowable_mpa": "142.0",
+        "shear_tearout.utilization": "116.2",
+        "bearing_factor": "0.90",
+        "tension_factor": "0.60",
+        "shear_factor": "0.40",
+        "limit_percent": "100.0",
+        "governing_percent": "116.2",
+        "exceedance_percent": "16.2",
+        "ligament_mm": "70.0",
+        "static_cap_kN": "361.4",
+    }
     assert {key for key, _ in page.numbers} == set(expected)
     assert len(page.numbers) > len(expected)
     for key, displayed in page.numbers:
-        places = 2 if key.endswith("factor") and key.split(".")[0] in {
-            "bearing_factor", "tension_factor", "shear_factor"
-        } else 1
-        assert displayed == f"{expected[key]:.{places}f}", key
+        assert displayed == expected[key], key
     # Every decimal visible outside the chart is a labelled numerical field.
     stripped = re.sub(r'<span data-number="[^"]+">[^<]+</span>', "", text)
     stripped = re.sub(r"<(script|style|svg)\b.*?</\1>", "", stripped, flags=re.S)
@@ -137,16 +168,27 @@ def chart_data(text):
     return json.loads(match[1])
 
 
-def test_every_chart_point_is_a_module_call(rebuilt, tmp_path):
+def test_every_chart_point_matches_module_and_hand_arithmetic(rebuilt, tmp_path):
     data = chart_data(rebuilt[2])
     assert data["limit_percent"] == 100.0
     assert len(data["cases"]) > 10
     for index, case in enumerate(data["cases"]):
-        cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+        cfg = yaml.safe_load(read_utf8_lf(EXAMPLE))
         cfg["lifting_lug"]["load"]["static_load_kN"] = case["static_load_kN"]
         cfg["lifting_lug"]["outputs"]["directory"] = str(tmp_path / str(index))
         result = workflow.router(cfg)["lifting_lug"]
         assert case["status"] == result["screening_status"]
+        # Independent areas and limits from the hand calculation above.
+        expected_utilizations = []
+        for plotted, area, limit in zip(case["checks"], (3000, 5600, 5600),
+                                        (319.5, 213.0, 142.0), strict=True):
+            demand = case["static_load_kN"] * 2 * 1.1 * 1000 / area
+            utilization = 100 * demand / limit
+            expected_utilizations.append(utilization)
+            assert plotted["demand_mpa"] == round(demand, 1)
+            assert plotted["allowable_mpa"] == limit
+            assert plotted["utilization_percent"] == round(utilization, 1)
+        assert case["status"] == ("pass" if max(expected_utilizations) <= 100 else "fail")
         for actual, plotted in zip(result["checks"], case["checks"], strict=True):
             assert plotted["component"] == actual["name"]
             assert plotted["demand_mpa"] == float(f"{actual['demand_mpa']:.1f}")
@@ -157,8 +199,9 @@ def test_every_chart_point_is_a_module_call(rebuilt, tmp_path):
 
 def test_recommended_load_is_rounded_down_and_passes(rebuilt, tmp_path):
     result = direct_result(tmp_path / "original")
-    cap = expected_numbers(result)["static_cap_kN"]
-    cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    cap = 361.4  # floor((420 * 142 / 165) * 10) / 10, independent of the router.
+    assert dict(Page(rebuilt[2]).numbers)["static_cap_kN"] == "361.4"
+    cfg = yaml.safe_load(read_utf8_lf(EXAMPLE))
     cfg["lifting_lug"]["load"]["static_load_kN"] = cap
     cfg["lifting_lug"]["outputs"]["directory"] = str(tmp_path / "limited")
     limited = workflow.router(copy.deepcopy(cfg))["lifting_lug"]
@@ -180,7 +223,10 @@ def test_report_is_offline_house_style_with_resolving_citations(rebuilt):
             assert link[1:] in page.ids
         elif not link.startswith("https:"):
             assert (REPORT / link).resolve().is_file(), link
-    assert "Draft for client review" in text
+    assert "Draft for maintainer review" in text
+    assert '<h2 id="controls">3 Load Sensitivity</h2>' in text
+    assert "The dashed tear-out planes are conceptual, not to scale" in text
+    assert 'calculation uses a loaded ligament of <span data-number="ligament_mm">70.0</span> mm' in text
     assert "NOT_EVALUATED" in text
     assert "ASSUMED - to be confirmed" in text
     assert "No field-load measurements" in text
@@ -189,7 +235,7 @@ def test_report_is_offline_house_style_with_resolving_citations(rebuilt):
 
 def test_comment_and_change_panels_are_embedded(rebuilt):
     _, output, text = rebuilt
-    changes = json.loads((output / "changes.json").read_text())
+    changes = json.loads(read_utf8_lf(output / "changes.json"))
     embedded = re.search(r'<script id="changes-data" type="application/json">(.*?)</script>',
                          text, re.S)
     assert json.loads(embedded[1]) == changes
@@ -204,7 +250,7 @@ def test_report_numbers_follow_changed_module_results(rebuilt, tmp_path, monkeyp
     builder, _, _ = rebuilt
     unchanged = direct_result(tmp_path / "unchanged")["checks"][-1]["allowable_mpa"]
     monkeypatch.setattr(builder.workflow, "SHEAR_FACTOR", builder.workflow.SHEAR_FACTOR * 0.95)
-    cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    cfg = yaml.safe_load(read_utf8_lf(EXAMPLE))
     result = builder.evaluate(cfg, tmp_path / "changed")
     values = builder.numerical_fields(result)
     chart = builder.chart_cases(cfg, values, tmp_path / "sweep")
@@ -270,13 +316,17 @@ vm.runInNewContext(input.code, context);
   const exported = JSON.parse(saved);
   assert.equal(exported.comments[0].text, "<img onerror=invalid> Check the load basis.");
   assert.equal(exported.comments[0].section, headings[0].id);
-  assert.equal(exported.revision, input.changes.revisions[0].revision);
+  assert.equal(exported.revision, input.changes.revisions.at(-1).revision);
   assert.match(get("comment-status").textContent, /have been saved/);
   await get("import-comments").events.change({target: {files: [{text: async () => saved}]}});
   assert.match(get("comment-status").textContent, /have been imported/);
   assert.match(get("comment-list").children[0].textContent, /<img onerror=invalid>/);
   const invalid = {...exported, revision: "unknown"};
   await get("import-comments").events.change({target: {files: [{text: async () => JSON.stringify(invalid)}]}});
+  assert.match(get("comment-status").textContent, /not a comments file/);
+  assert.equal(get("comment-list").children.length, 1);
+  const oldRevision = {...exported, revision: input.changes.revisions[0].revision};
+  await get("import-comments").events.change({target: {files: [{text: async () => JSON.stringify(oldRevision)}]}});
   assert.match(get("comment-status").textContent, /not a comments file/);
   assert.equal(get("comment-list").children.length, 1);
   window.showSaveFilePicker = undefined;

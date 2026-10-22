@@ -9,6 +9,15 @@
         "A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.",
         "Unconfirmed material, loading and strength-factor bases are registered for engineering review."
       ]
+    },
+    {
+      "revision": "B",
+      "date": "2026-10-22",
+      "changes": [
+        "UTF-8 and LF output are explicit so the report rebuilds across platforms.",
+        "Independent hand calculations check reported stresses, utilization, exceedance and load restriction.",
+        "Conceptual tear-out planes, field precision and the load sensitivity heading are clarified for maintainer review."
+      ]
     }
   ]
 }

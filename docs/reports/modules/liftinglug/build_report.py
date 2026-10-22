@@ -36,6 +36,13 @@ CHANGES = {
             "A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.",
             "Unconfirmed material, loading and strength-factor bases are registered for engineering review.",
         ],
+    }, {
+        "revision": "B", "date": "2026-10-22",
+        "changes": [
+            "UTF-8 and LF output are explicit so the report rebuilds across platforms.",
+            "Independent hand calculations check reported stresses, utilization, exceedance and load restriction.",
+            "Conceptual tear-out planes, field precision and the load sensitivity heading are clarified for maintainer review.",
+        ],
     }],
 }
 NAMES = {
@@ -45,11 +52,16 @@ NAMES = {
 }
 
 
+def read_utf8_lf(path: Path) -> str:
+    """Read source text with explicit encoding and LF newline handling."""
+    with path.open(encoding="utf-8", newline="\n") as source:
+        return source.read()
+
+
 def house_style() -> str:
     """Inline existing brand tokens and the established report layout unchanged."""
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(
-        encoding="utf-8")
+    brand = read_utf8_lf(ROOT / "docs/api/_assets/brand.css")
+    exemplar = read_utf8_lf(ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html")
     layout = re.search(r"<style>(.*?)</style>", exemplar, re.S)[1]
     style = re.sub(r"/\*.*?\*/", "", brand + "\n" + layout, flags=re.S)
     return "\n".join(line.rstrip() for line in style.splitlines()).strip()
@@ -151,13 +163,23 @@ a pin of diameter {number('lug.pin_diameter_mm')} mm and a main plate
 {number('lug.cheek_plate_thickness_mm')} mm; total thickness is {number('total_thickness_mm')} mm.
 Dimensions come from the <a href="#source-example">example input</a>.
 The lower plate length, pin length and restraint depiction are illustrative; no fabrication drawing is available.
+The dashed tear-out planes are conceptual, not to scale; the
+calculation uses a loaded ligament of {number('ligament_mm')} mm from the hole to the loaded edge.
 The sling direction is an assumed axial in-plane load. Contact offset, welds and base flexibility are not modelled.</figcaption></figure>'''
 
 
 def render(result: dict, values: dict, chart: dict) -> str:
     """Write one coherent engineering narrative with calculated numerical fields."""
     def n(key):
-        places = 2 if key in {"bearing_factor", "tension_factor", "shear_factor"} else 1
+        places = {
+            "lug.plate_thickness_mm": 3,
+            "lug.cheek_plate_thickness_mm": 3,
+            "total_thickness_mm": 3,
+            "load.num_slings": 0,
+            "bearing_factor": 2,
+            "tension_factor": 2,
+            "shear_factor": 2,
+        }.get(key, 1)
         return f'<span data-number="{key}">{values[key]:.{places}f}</span>'
 
     def row(label, key, unit, source="source-example"):
@@ -184,7 +206,7 @@ def render(result: dict, values: dict, chart: dict) -> str:
     body = f'''
 <header><div class="kicker">Lifting attachments · strength screening</div>
 <h1>Lifting lug screening analysis</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report navigation"><a href="#summary">Executive summary</a> ·
 <a href="#basis">Design data</a> · <a href="#example">Worked example</a> ·
 <a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendices</a></nav>
@@ -204,7 +226,8 @@ This rounded-down value passes only the implemented screens.</li>
 <li>Material certification, load basis, connection resistance and code applicability are required before design release.</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>A</td><td>{REVISION}</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr></tbody></table>
+<tbody><tr><td>A</td><td>{REVISION}</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Explicit text output, hand-calculation tests, conceptual geometry and field precision address reproducibility and interpretation.</td></tr></tbody></table>
 </section>
 
 <section aria-labelledby="introduction"><h2 id="introduction">2 Introduction</h2>
@@ -220,7 +243,7 @@ padeye studies are outside this workflow. Vessel heading, a sea-state envelope a
 NOT_EVALUATED because the module has no hydrodynamic response or weather inputs. No installability statement is made.</p>
 </section>
 
-<section aria-labelledby="controls"><h2 id="controls">3 Summary</h2>
+<section aria-labelledby="controls"><h2 id="controls">3 Load Sensitivity</h2>
 <p>The most-loaded leg tension is supplied after the sling-angle and centre-of-gravity effects are resolved.
 Separate dynamic amplification and skew allowances are then applied, as described in the
 <a href="#source-guide">example guide</a>.</p>
@@ -314,9 +337,11 @@ Physical validation of this circular-lug screen is not established by those chec
 and nominal stresses with hand-calculated expressions. They also exercise missing and invalid skew factors,
 unsupported sling counts, and below-minimum factors with otherwise passing strength results.
 Those tests demonstrate agreement with the coded formulas and the intended input guards.</p>
-<p>The <a href="#source-rebuild">report rebuild tests</a> compare every displayed example field with a fresh
-public-interface result, compare all plotted cases, and check the rounded-down restriction.
-The committed page is rebuilt byte for byte with its change data. No field-load measurements or destructive-test
+<p>The <a href="#source-rebuild">report rebuild tests</a> compare displayed example fields with independent
+hand-calculated literals and all plotted cases with hand arithmetic and fresh public-interface results.
+The rounded-down restriction and the next load increment are checked for passing and failing screens respectively.
+The committed page is rebuilt byte for byte with its change data, including a simulated CRLF platform.
+No field-load measurements or destructive-test
 results are supplied with the workflow example. The wider repository contains finite-element padeye material,
 but no matched comparison to this example is established here; no numerical agreement with it is claimed.</p>
 </section>
@@ -537,7 +562,7 @@ document.getElementById("add-comment").addEventListener("click", () => {
   renderComments(); field.value = ""; status.textContent = "Comments have changed. Save the comments file before closing.";
 });
 document.getElementById("save-comments").addEventListener("click", async () => {
-  const payload = JSON.stringify({document: changes.document, revision: changes.revisions[0].revision, comments}, null, 2) + "\n";
+  const payload = JSON.stringify({document: changes.document, revision: changes.revisions.at(-1).revision, comments}, null, 2) + "\n";
   try {
     if (window.showSaveFilePicker) {
       const handle = await window.showSaveFilePicker({suggestedName: "lifting-lug-analysis.comments.json",
@@ -556,7 +581,7 @@ document.getElementById("import-comments").addEventListener("change", async even
   const file = event.target.files[0]; if (!file) return;
   try {
     const loaded = JSON.parse(await file.text());
-    const valid = loaded.document === changes.document && loaded.revision === changes.revisions[0].revision &&
+    const valid = loaded.document === changes.document && loaded.revision === changes.revisions.at(-1).revision &&
       Array.isArray(loaded.comments) && loaded.comments.every(c =>
         c && typeof c.text === "string" && sections.some(s => s.id === c.section));
     if (!valid) throw new Error("Invalid comments file");
@@ -569,7 +594,7 @@ document.getElementById("import-comments").addEventListener("change", async even
 
 def build(output_dir: Path, work_dir: Path) -> None:
     """Compute the public example and write deterministic report deliverables."""
-    cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    cfg = yaml.safe_load(read_utf8_lf(EXAMPLE))
     result = evaluate(cfg, work_dir / "example")
     values = numerical_fields(result)
     chart = chart_cases(cfg, values, work_dir / "sensitivity")
@@ -578,8 +603,10 @@ def build(output_dir: Path, work_dir: Path) -> None:
     if evaluate(limited, work_dir / "restriction")["screening_status"] != "pass":
         raise ValueError("Calculated restriction does not pass the module screen")
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "lifting-lug-analysis.html").write_text(render(result, values, chart), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (output_dir / "lifting-lug-analysis.html").write_text(
+        render(result, values, chart), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
