@@ -6,14 +6,15 @@ Field coverage follows the public practitioner checklist (undated; accessed
 2026-10-20), questions 1-33:
 https://www.inspection-for-industry.com/api-579-part-9-crack-like-flaws-assessment.html
 This is an intake reference, not a source of standard-derived coefficients.
-API 579-1/ASME FFS-1 (2016), Part 9 and Annexes C/D/E remain qualification
-requirements. No licensed tables, default factors or derived limits ship here.
+API 579-1/ASME FFS-1 (2016), Part 9 and (2007), Annexes C/D/E remain
+qualification requirements. The annex crosswalk to later editions is unverified.
+No licensed tables, default factors or derived limits ship here.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import date, datetime, timezone
 import math
 
 
@@ -59,25 +60,25 @@ FIELD_SPECS = {
 # References are outstanding requirements, not resolved Citation sidecars.
 # They shall not be lifted into provenance as qualified calculation sources.
 METHOD_REQUIREMENTS = (
-    ("fad", "Part 9: Level 2 failure assessment diagram",
+    ("fad", "Part 9: Level 2 failure assessment diagram", "2016",
      "The shared crack_fad.fad_curve_api579_level2 exists; its edition, cutoff "
      "and applicability require source qualification for this workflow."),
-    ("partial_safety_factors", "Part 9: partial safety factors",
+    ("partial_safety_factors", "Part 9: partial safety factors", "2016",
      "Category-keyed factors and category selection require a verified table; "
      "no unity factor or category is assumed."),
-    ("annex_c_k", "Annex C: stress intensity factor solutions",
+    ("annex_c_k", "Annex C: stress intensity factor solutions", "2007",
      "Cylinder longitudinal/circumferential and sphere influence coefficients, "
      "crack-front locations, interpolation and validity ranges are unqualified."),
-    ("annex_d_reference_stress", "Annex D: reference stress solutions",
+    ("annex_d_reference_stress", "Annex D: reference stress solutions", "2007",
      "A geometry-matched reference-stress solution is required; plate stress "
      "and uncracked pressure stress shall not substitute for a cylinder solution."),
-    ("annex_e_residual", "Annex E: residual stress distributions",
+    ("annex_e_residual", "Annex E: residual stress distributions", "2007",
      "Weld type, PWHT and pressure-test effects require a qualified profile "
      "and plasticity-interaction method; absent stress is not zero stress."),
-    ("growth", "Part 9: crack growth and assessment period",
+    ("growth", "Part 9: crack growth and assessment period", "2016",
      "Growth parameters, threshold, environment and assessment period require "
      "qualification; remaining life and leak-before-break are not calculated."),
-    ("published_example", "Part 9: worked examples",
+    ("published_example", "Part 9: worked examples", "2016",
      "No published-example benchmark has been qualified for this workflow."),
 )
 
@@ -160,10 +161,13 @@ def _growth_parameters_valid(parameters):
         _valid(k, "text") and _valid(v, "finite") for k, v in values.items())
 
 
-def _consistency_issues(observed, issues):
+def _consistency_issues(observed, issues, as_of):
     def issue(path, reason):
         issues.append({"field": path, "kind": "inconsistent", "reason": reason})
 
+    inspected = observed.get("inspection.date")
+    if inspected is not None and date.fromisoformat(inspected) > as_of:
+        issue("inspection.date", "Inspection date is after the assessment date.")
     a = observed.get("flaw.depth_mm")
     t = observed.get("geometry.thickness_mm")
     uncertainty = observed.get("flaw.sizing_uncertainty_mm")
@@ -189,18 +193,26 @@ def _consistency_issues(observed, issues):
         issue("material.toughness_zone", "Document controlling toughness for the flaw zone.")
     temperatures = (observed.get("loads.temperature_c"),
                     observed.get("material.toughness_temperature_c"))
+    # The Celsius scale places absolute zero at -273.15 C (SI Brochure, 9th ed.,
+    # section 2.3.1, "The kelvin", p. 129); this is not an FFS code limit.
+    for field in ("loads.temperature_c", "material.toughness_temperature_c"):
+        value = observed.get(field)
+        if value is not None and value < -273.15:
+            issue(field, "Temperature is below absolute zero (-273.15 C).")
     if None not in temperatures and temperatures[0] != temperatures[1]:
         # Neither a temperature correction nor its acceptance is inferred.
         issue("material.temperature_basis", "Toughness temperature differs from the load case; "
               "a temperature-qualified material assessment is required.")
     if observed.get("loads.cyclic") is True and observed.get("growth.mechanism") == "none":
         issue("growth.mechanism", "Cyclic loading requires a documented growth assessment.")
+    if observed.get("growth.mechanism") == "unknown":
+        issue("growth.mechanism", "The growth mechanism is unresolved; qualify it before review.")
 
 
 def _applicability_flags(observed):
-    flags = ["STANDARD_METHODS_UNQUALIFIED", "ANNEX_C_SOLUTION_UNQUALIFIED"]
-    if observed.get("standard_edition") != "2016":
-        flags.append("EDITION_CROSSWALK_UNQUALIFIED")
+    # The requirements mix 2007 annexes and 2016 Part 9; no edition mapping is qualified.
+    flags = ["STANDARD_METHODS_UNQUALIFIED", "ANNEX_C_SOLUTION_UNQUALIFIED",
+             "EDITION_CROSSWALK_UNQUALIFIED"]
     if observed.get("geometry.location") in ("weld", "haz", "nozzle"):
         flags.append("WELD_OR_DISCONTINUITY_REVIEW")
     if observed.get("environment.hydrogen_service") is True:
@@ -212,24 +224,32 @@ def _applicability_flags(observed):
     return flags
 
 
-def assess_inspection(data: Mapping) -> dict:
+def assess_inspection(data: Mapping, *, as_of: date | None = None) -> dict:
     """Return missing measurements and named calculation blockers, never a pass.
 
     COMPLETE_FOR_REVIEW means only that the declared intake fields are present
     and internally consistent. It does not establish data authenticity, standard
     applicability, material suitability, engineering sufficiency or service life.
     The result contains no unresolved standard-derived numeric constants.
+    Future inspections are checked against as_of, defaulting to the current UTC
+    date. Supply a calendar date to reproduce a historical intake decision.
+    A future inspection can become eligible for intake when that date is reached.
     """
     if not isinstance(data, Mapping):
         raise ValueError("part9_inspection must be a mapping")
+    if as_of is None:
+        as_of = datetime.now(timezone.utc).date()
+    if type(as_of) is not date:
+        raise ValueError("as_of must be a calendar date")
     observed, issues = {}, []
     for path, kind in FIELD_SPECS.items():
         _require(data, observed, issues, path, kind)
     _conditional_fields(data, observed, issues)
-    _consistency_issues(observed, issues)
+    _consistency_issues(observed, issues, as_of)
     checks = [{"id": key, "status": "NOT_EVALUATED", "source_required": section,
-               "standard": "API 579-1/ASME FFS-1", "edition": "2016",
-               "reason": reason} for key, section, reason in METHOD_REQUIREMENTS]
+               "standard": "API 579-1/ASME FFS-1",
+               "edition": edition,
+               "reason": reason} for key, section, edition, reason in METHOD_REQUIREMENTS]
     return {
         "component_id": observed.get("component_id", "unspecified"),
         "assessment_type": "API579_PART9_INSPECTION_READINESS",

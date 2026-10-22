@@ -1288,8 +1288,9 @@ workflows:
     basename: api579_part9_crack_fad
     title: Part 9 inspection readiness with explicit calculation blockers
     input: examples/workflows/api579-part9-crack-fad/input.yml
-    outputs: []
-    test: tests/asset_integrity/test_part9_workflow.py::test_registry_row_and_engine_route
+    outputs:
+      - examples/workflows/api579-part9-crack-fad/results/part9-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-part9-crack-fad]
     runtime: offline
     result:
       kind: in_memory

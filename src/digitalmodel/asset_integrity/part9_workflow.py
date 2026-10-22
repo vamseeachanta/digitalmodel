@@ -49,9 +49,9 @@ def _report(result, issue_date):
 def router(cfg: dict) -> dict:
     """Expose one fail-closed result for engine and registry/API consumers.
 
-    An optional part9_report.output_dir requests persistence. Written paths are
-    stored in report metadata outside the in-memory result so temporary engine
-    roots cannot change its result hash. The reported issue date is caller-owned.
+    An optional part9_report.output_dir requests persistence. Rendered HTML and
+    written paths stay in report metadata outside the in-memory result so report
+    dates and temporary roots cannot change its hash. The issue date is caller-supplied.
     """
     result = assess_inspection(cfg.get("part9_inspection"))
     report_cfg = cfg.get("part9_report", {})
@@ -61,14 +61,14 @@ def router(cfg: dict) -> dict:
     if issue_date is not None:
         if not isinstance(issue_date, str) or date.fromisoformat(issue_date).isoformat() != issue_date:
             raise ValueError("part9_report.issue_date must be an ISO date")
-    result["report_html"] = _report(result, issue_date or "not issued")
+    cfg["part9_report"] = {**report_cfg, "report_html": _report(result, issue_date or "not issued")}
     if report_cfg.get("output_dir"):
         output = Path(report_cfg["output_dir"])
         if not output.is_absolute():
             output = Path(cfg.get("_config_dir_path", ".")) / output
         output.mkdir(parents=True, exist_ok=True)
         path = output / "part9-report.html"
-        path.write_text(result["report_html"], encoding="utf-8")
-        cfg["part9_report"]["written_path"] = str(path)
+        path.write_text(cfg["part9_report"]["report_html"], encoding="utf-8", newline="\n")
+        cfg["part9_report"]["written_path"] = path.as_posix()
     cfg["api579_part9_crack_fad"] = result
     return cfg
