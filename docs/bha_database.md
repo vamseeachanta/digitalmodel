@@ -5,6 +5,10 @@ components and assemblies in this PR are `SYNTHETIC-EXAMPLE`, with assumed
 quantities; none establishes an equipment rating or qualified drilling design.
 The three examples are rotary pendulum, rotary building and motor assemblies.
 
+The [module analysis](reports/modules/bhadatabase/report.html) presents the
+documented building example, calculation basis, existing test evidence and
+limits of use in a single HTML report with section comments.
+
 ## Revision history
 
 | Revision | Date | Change and reason |

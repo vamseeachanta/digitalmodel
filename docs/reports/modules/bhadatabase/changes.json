@@ -1,0 +1,10 @@
+{
+  "report": "bottom-hole-assembly-database",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "description": "The synthetic building assembly dimensions, static weights and assumed advisory limit are presented with their data basis. Equipment qualification and the separate nominal-table source comparison remain unevaluated."
+    }
+  ]
+}
