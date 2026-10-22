@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mooring fatigue module analysis</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+</head><body class="hs-doc">
+<header><h1>Mooring fatigue module analysis</h1><p>Draft for client review</p><p>Revision A | 2026-10-22</p></header>
+<div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Design Data</a></li><li><a href="#section-4">Analysis Methodology</a></li><li><a href="#section-5">Detailed Results</a></li><li><a href="#section-6">Key Findings</a></li><li><a href="#section-7">Limitations</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Acronyms and Symbols</a></li><li><a href="#appendices">Appendices</a></li>
+<li><a href="#comment-panel">Document comments</a></li></ol></nav><main>
+<details id="change-panel"><summary>Engineering changes since the previous revision</summary><ul><li>The public metallic-line example is evaluated against the selected stress–life curve.</li><li>The governing damage is compared with the design fatigue factor limit.</li><li>The load-duration and component-curve gaps are identified before engineering acceptance.</li></ul>
+<details><summary>Change record</summary><pre id="change-record"></pre></details></details>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The mooring fatigue module is a metallic-line fatigue screening tool. Analysis is performed to determine cumulative fatigue damage under the documented public loading example, and the key results are summarized below.</p>
+<ul><li>The example is retained as a calculation demonstration.
+<ul><li>wire-01 governs at damage <span data-value="governing_damage" data-format=".4f">0.0170</span> against the <span data-value="damage_limit" data-format=".4f">0.3333</span> screening limit. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></li>
+<li>The governing fatigue life is <span data-value="governing_life" data-format=".1f">1467.3</span> years against <span data-value="line.1.required_life_years" data-format=".1f">75.0</span> years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></li></ul></li>
+<li>Engineering acceptance is deferred pending a component and exposure basis.
+<ul><li>The selected generic curve is used for both metallic material labels; chain and wire qualification is NOT_EVALUATED. <a href="#source-2">[Reference 2]</a></li>
+<li>Confirm the exposure duration and component stress–life basis before adopting an operating or inspection limit. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></li></ul></li></ul>
+<figure id="damage-chart">
+<svg viewBox="0 0 800 340" role="img" aria-labelledby="damage-title damage-desc">
+<title id="damage-title">Metallic-line example: damage against the screening limit</title>
+<desc id="damage-desc">Damage is shown by component with the design fatigue factor limit drawn. Focus or hover over each marker for the demand and limit.</desc>
+<path d="M90 40 V270 H740" fill="none" stroke="var(--ink)"/>
+<text x="20" y="35">Damage (dimensionless)</text>
+<text x="90" y="290">0</text>
+<line x1="90" x2="740" y1="78.7" y2="78.7" stroke="var(--ink)" stroke-dasharray="7 5" data-limit="damage_limit"/>
+<text x="105" y="68.7">Screening limit</text>
+<g tabindex="0" role="img" aria-label="Public example; component chain-01; demand 0.0023; limit 0.3333; units: dimensionless damage." data-detail="Public example; component chain-01; demand 0.0023; limit 0.3333; units: dimensionless damage."><circle cx="220" cy="268.7" r="9" fill="var(--report-accent)"/><text x="220" y="300" text-anchor="middle">chain-01</text><title>Public example; component chain-01; demand 0.0023; limit 0.3333; units: dimensionless damage.</title></g><g tabindex="0" role="img" aria-label="Public example; component wire-01; demand 0.0170; limit 0.3333; units: dimensionless damage." data-detail="Public example; component wire-01; demand 0.0170; limit 0.3333; units: dimensionless damage."><circle cx="520" cy="260.2" r="9" fill="var(--report-accent)"/><text x="520" y="300" text-anchor="middle">wire-01</text><title>Public example; component wire-01; demand 0.0170; limit 0.3333; units: dimensionless damage.</title></g><text x="400" y="330" text-anchor="middle">Component</text>
+</svg>
+<p id="chart-detail" aria-live="polite">Focus or hover over a component marker to read its demand and limit.</p>
+<figcaption>Figure A. The screening criterion is met when line damage does not exceed <span data-value="damage_limit" data-format=".4f">0.3333</span>.
+The criterion is derived from the example design fatigue factor of <span data-value="dff" data-format=".1f">3.0</span>; it is not a component qualification. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></figcaption>
+</figure>
+<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><caption>Revision history</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-22</td><td>The metallic-line workflow is documented to distinguish a reproducible screening calculation from a component assessment.</td></tr></tbody></table></div></div>
+</section>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The metallic-line fatigue calculation is described for tension ranges supplied at a mooring component. A screening analysis is performed; platform motion, water depth and mooring equilibrium are not solved by this module. <a href="#source-2">[Reference 2]</a></p>
+<p>The documented public example is used without changing its loads, areas, curve choice or design fatigue factor. It is a published software example rather than a measured loading record or an experimental benchmark. <a href="#source-1">[Reference 1]</a></p>
+<p>The main workflow is tension-range bins to nominal stress ranges, cumulative damage, fatigue life and screening margin. Other input routes are listed under Not covered.</p>
+</section>
+<section id="section-3"><h2>3. Design Data</h2>
+<p>The public example inputs are retained as the calculation basis. Their suitability for a physical mooring system is not established. <a href="#source-1">[Reference 1]</a></p>
+<h3>Site, host and component data</h3>
+<p>Water depth, host response, mooring length, anchor position, pretension, local geometry and measured stress concentration are NOT_EVALUATED because they are absent from the example. Effective load-bearing areas are supplied directly; they are not inferred from a chain diameter or wire construction. <a href="#source-1">[Reference 1]</a></p>
+<div class="table-wrap"><table><caption>Table A. Public example component inputs.</caption><thead><tr><th scope="col">Component</th><th scope="col">Material label</th><th scope="col">Effective area (mm²)</th><th scope="col">Source</th></tr></thead><tbody><tr><td>chain-01</td><td>CHAIN</td><td><span data-value="line.0.area" data-format=".1f">8000.0</span></td><td><a href="#source-1">[Reference 1]</a></td></tr><tr><td>wire-01</td><td>STEEL-WIRE</td><td><span data-value="line.1.area" data-format=".1f">5200.0</span></td><td><a href="#source-1">[Reference 1]</a></td></tr></tbody></table></div>
+<p>The supplied design life is <span data-value="design_life" data-format=".1f">25.0</span> years and the design fatigue factor is <span data-value="dff" data-format=".1f">3.0</span>. The selected curve is category D in seawater with cathodic protection. These are example settings, not prescribed design criteria. <a href="#source-1">[Reference 1]</a></p>
+<h3>Criteria and data status</h3>
+<p>The screening criterion is defined by the implemented margin: predicted life divided by required life is at least unity. Required life is design life multiplied by the supplied design fatigue factor. Thus the example damage limit is <span data-value="damage_limit" data-format=".4f">0.3333</span>. This criterion is used because it is the module decision rule; no regulatory acceptance is inferred. <a href="#source-2">[Reference 2]</a></p>
+<p>The curve record cites DNV-RP-C203, October 2011, Fatigue Design of Offshore Steel Structures, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The implementation also carries a later edition label whose numerical equivalence is not established by that record. No licensed coefficient is reproduced here. <a href="#source-3">[Reference 3]</a></p>
+<p>ASSUMED - to be confirmed: the supplied cycle bins represent the entire design-life exposure. ASSUMED - to be confirmed: the supplied areas and selected curve form a consistent nominal stress basis. No missing physical dimension or material coefficient is assigned. The data register is provided in Appendix B.</p>
+</section>
+<section id="section-4"><h2>4. Analysis Methodology</h2>
+<p>The supplied tension ranges are converted to nominal axial stress ranges before the existing stress–life helper is called. Damage is accumulated line by line and the line with greatest damage is selected as governing. <a href="#source-2">[Reference 2]</a></p>
+<figure id="system-sketch"><svg viewBox="0 0 900 290" role="img" aria-labelledby="system-title system-desc">
+<title id="system-title">Mooring line and local calculation boundary</title>
+<desc id="system-desc">An inclined line joins a floating support to an anchor on the seabed. A segment near the fairlead is isolated with axial tension at both ends. Its effective area and cyclic tension range are inputs. Dimensions and environmental loading are not supplied.</desc>
+<path d="M40 78 Q95 68 150 78 T260 78 M40 230 H860" fill="none" stroke="var(--ink)"/>
+<path d="M100 42 H240 L220 70 H120 Z" fill="none" stroke="var(--ink)"/>
+<path d="M215 70 Q265 210 410 230 L430 230" fill="none" stroke="var(--report-accent)" stroke-width="4"/>
+<path d="M395 220 L410 240 L425 220 M410 230 V250 M390 250 H430" fill="none" stroke="var(--ink)"/>
+<text x="105" y="30">Floating support</text><text x="45" y="110">Water surface</text>
+<text x="60" y="255">Seabed</text><text x="345" y="278">Anchor restraint</text>
+<text x="260" y="120">Inclined mooring line</text>
+<rect x="540" y="95" width="190" height="44" fill="none" stroke="var(--report-accent)"/>
+<path d="M490 117 H540 M730 117 H790 M490 117 L504 109 M490 117 L504 125 M790 117 L776 109 M790 117 L776 125" fill="none" stroke="var(--ink)"/>
+<text x="535" y="70">Local axial segment</text><text x="580" y="123">Effective area A</text>
+<text x="485" y="168">Applied tension range ΔT at each end</text>
+<text x="485" y="195">Stress range Δσ = ΔT / A</text>
+<text x="485" y="225">No geometry or equilibrium solution</text>
+</svg><figcaption>Figure B. The local calculation boundary is shown within a physical mooring arrangement. The drawing is schematic and is not to scale; geometry, mesh and global boundary conditions are not supplied. No spatial mesh is used in the fatigue accumulation. <a href="#source-2">[Reference 2]</a></figcaption></figure>
+<h3>Stress–life and cumulative damage equations</h3>
+<p>Nominal stress range is calculated as Δσ = ΔT / A with force and area expressed in consistent units. A tension in kilonewtons is converted to newtons before division by area in square millimetres; the resulting stress is in megapascals. No additional stress concentration or thickness correction is applied in this route. <a href="#source-2">[Reference 2]</a></p>
+<p>The helper represents the selected curve by N = Nₖ(Δσ / Sₖ)<sup>−m</sup>. Here N is allowable cycles, Nₖ is the knee cycle count, Sₖ is the knee stress range, and m is the applicable segment slope. The below-knee segment is anchored continuously at the knee. Both segments remain finite; an endurance cut-off is not applied. The stored curve source and the helper implementation are distinguished in the reference record. <a href="#source-3">[Reference 3]</a> <a href="#source-4">[Reference 4]</a></p>
+<p>Miner damage is calculated as D = Σ(nᵢ / Nᵢ), where nᵢ is applied cycles and Nᵢ is allowable cycles for bin i. Fatigue life is calculated as L = T / D, required life as Lᵣ = T × F, and screening margin as M = L / Lᵣ. T is the supplied design life and F is the supplied design fatigue factor. The decision M ≥ unity is equivalent to D ≤ the reciprocal of F. These are the implemented equations, conditional on the assumed lifetime exposure. <a href="#source-2">[Reference 2]</a></p>
+<h3>Inputs, execution and outputs</h3>
+<p>The documented command-line entry calls the engine with an input configuration. The same mooring workflow is called directly for the example calculation in this report. Required settings are positive design life, positive design fatigue factor, and a non-empty list of metallic lines with non-empty cycle bins. For tension bins, effective area is required. Curve and environment are selected explicitly here. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<p>The returned configuration contains the governing line, damage, life, margin, screening status and line summaries. Separate comma-separated-value files contain per-bin tension range, stress range, applied cycles, allowable cycles and damage, and per-line total damage, predicted life, required life, margin and screening decision. The caller configuration is modified in place. <a href="#source-2">[Reference 2]</a></p>
+<p>Reproduction instructions and exact interface locators are retained in section 9.2. Engineering inputs and results are kept separate from the comment file.</p>
+</section>
+<section id="section-5"><h2>5. Detailed Results</h2>
+<p>The documented example is calculated by calling the module with its original input data. The <span data-value="bin_count" data-format=".0f">6</span> tension bins across <span data-value="line_count" data-format=".0f">2</span> metallic lines are processed; no result value is inserted independently of the returned calculation. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<h3>Damage and life</h3>
+<p>wire-01 governs at damage <span data-value="governing_damage" data-format=".4f">0.0170</span> against the <span data-value="damage_limit" data-format=".4f">0.3333</span> screening limit. The governing fatigue life is <span data-value="governing_life" data-format=".1f">1467.3</span> years against <span data-value="line.1.required_life_years" data-format=".1f">75.0</span> years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<div class="table-wrap"><table><caption>Table B. Returned line summaries; this is a screening calculation, not a component qualification.</caption><thead><tr><th scope="col">Component</th><th scope="col">Damage (dimensionless)</th><th scope="col">Predicted life (years)</th><th scope="col">Required life (years)</th><th scope="col">Margin (dimensionless)</th><th scope="col">Screening status</th><th scope="col">Source</th></tr></thead><tbody><tr><td>chain-01</td><td><span data-value="line.0.total_damage" data-format=".4f">0.0023</span></td><td><span data-value="line.0.fatigue_life_years" data-format=".1f">10953.7</span></td><td><span data-value="line.0.required_life_years" data-format=".1f">75.0</span></td><td><span data-value="line.0.dff_margin" data-format=".1f">146.0</span></td><td>The screening criterion is met.</td><td><a href="#source-2">[Reference 2]</a></td></tr><tr><td>wire-01</td><td><span data-value="line.1.total_damage" data-format=".4f">0.0170</span></td><td><span data-value="line.1.fatigue_life_years" data-format=".1f">1467.3</span></td><td><span data-value="line.1.required_life_years" data-format=".1f">75.0</span></td><td><span data-value="line.1.dff_margin" data-format=".1f">19.6</span></td><td>The screening criterion is met.</td><td><a href="#source-2">[Reference 2]</a></td></tr></tbody></table></div>
+<p>The governing margin is <span data-value="governing_margin" data-format=".1f">19.6</span> against unity. The apparent life reserve depends on the same generic curve being suitable for the nominal stress input. No inspection interval or operational service life is established. The full bin calculation is provided in Appendix A. <a href="#source-2">[Reference 2]</a></p>
+<h3>Existing validation evidence</h3>
+<p>The existing registry test exercises the public mooring example through the engine. It checks the governing line, bin count, positive stresses and damages, monotonic allowable cycles, and the life and margin identities. The shared fatigue tests check damage accumulation, curve behaviour and cycle counting. These are software checks; physical chain and wire validation is NOT_EVALUATED. <a href="#source-5">[Reference 5]</a></p>
+<p>The report rebuild check compares every displayed worked-example observation, including repeated summary values, with a fresh module call and returned per-bin file. Independent arithmetic checks the stress conversion, damage sum, life and margin equations. The evidence establishes reproducibility and arithmetic consistency, not component curve selection or measured fatigue performance. <a href="#source-6">[Reference 6]</a></p>
+</section>
+<section id="section-6"><h2>6. Key Findings</h2>
+<p>The workflow is available for metallic-line screening and its example results are reproducible through the direct module interface. The greatest total damage controls the reported line because the same design life and design fatigue factor apply to every line. <a href="#source-2">[Reference 2]</a></p>
+<p>The material labels control eligibility only: the same curve is passed to chain and wire. This is the governing qualification gap for physical use. The result is sensitive to effective area, exposure cycles, corrosion protection and curve applicability; none is established for a real installation by the example. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<p>The public example is suitable for checking input and output handling. It does not establish mooring resistance, a watch circle, an inspection date or a permissible environmental envelope.</p>
+</section>
+<section id="section-7"><h2>7. Limitations</h2>
+<p>The calculation is limited to the supplied stress basis and cycle exposure. Acceptance of a physical mooring is deferred until that basis is established. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<p>Global equilibrium, pretension response, seabed contact, bending, chain interlink contact, out-of-plane bending, fretting, mean-stress correction, local stress concentration, corrosion wastage and thickness correction are not evaluated in this workflow. Neither synthetic rope damage nor residual strength is evaluated. Synthetic material labels are rejected. <a href="#source-2">[Reference 2]</a></p>
+<p>Input checks reject missing or nonpositive required scalars and empty line or bin lists. Finite-value checks and rejection of simultaneous input representations are not comprehensive. When several representations are supplied, stress bins take precedence over tension bins, then stress history, then tension history. Supply one representation and independently check finite input values. <a href="#source-2">[Reference 2]</a></p>
+<p>The exposure period is not inferred or annualised. Increasing design life while holding lifetime cycle bins fixed changes the reported life without changing damage; design life is not an automatic loading multiplier. Raw calculated life is therefore not a service-life recommendation. <a href="#source-2">[Reference 2]</a></p>
+<h3>Not covered</h3>
+<p>Stress-range bins, stress histories, tension histories, history repetition factors, histogram sensitivity, alternative environments, parametric atlases and synthetic-rope workflows are not demonstrated here. The history route uses rainflow counting followed by bin-centre histogramming; binning convergence and repeat-block boundary effects require separate checks before use. <a href="#source-2">[Reference 2]</a> <a href="#source-4">[Reference 4]</a></p>
+</section>
+<section id="section-8"><h2>8. Recommendations</h2>
+<p>Acceptance is to be based on component evidence and a documented exposure model. The public example remains a screening calculation until those records are supplied. <a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></p>
+<p>Obtain a component-specific stress–life or tension–life basis, effective area and local stress definition for each metallic component. Confirm the selected environment and corrosion protection, then assess the applicability of the cited fatigue method before evaluating service loads. The present material labels do not perform that selection. <a href="#source-2">[Reference 2]</a> <a href="#source-3">[Reference 3]</a></p>
+<p>Document the period represented by each cycle bin and scale the loading to the design exposure before calculation. Retain the original counts, scaling basis and effective area with the assessment. This action addresses the exposure assumption underlying L = T / D. <a href="#source-2">[Reference 2]</a></p>
+<p>Suspend acceptance when calculated damage exceeds the reciprocal of the adopted design fatigue factor, or when the adopted curve, protection condition or exposure basis ceases to apply. Recalculate using measured or qualified loads and component data; reduce the permitted loading or replace the affected component before accepting a result that exceeds that limit. This trigger follows the implemented margin criterion and does not assign an unsupported calendar deadline. <a href="#source-2">[Reference 2]</a></p>
+<p>Add an independent component benchmark with documented geometry, load range, exposure duration and permissible damage before adopting this workflow for an installation. Add explicit finite-input and mutually exclusive input checks, and qualify the history binning separately. No passing software check substitutes for these data. <a href="#source-2">[Reference 2]</a> <a href="#source-5">[Reference 5]</a></p>
+</section>
+<section id="section-9"><h2>9. References</h2>
+<p>The reference basis is separated into publications and software records. Publication identifiers establish the method source; implementation records establish what was actually calculated.</p>
+<h3>9.1 Publications</h3>
+<p id="source-3">Reference 3. DNV-RP-C203, Fatigue Design of Offshore Steel Structures, October 2011, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The stored-value record states that it was checked against this edition. The later implementation label does not establish numerical equivalence to that later edition. Licensed coefficients and limits are not reproduced.</p>
+<p id="source-4">Reference 4. pyLife, WoehlerCurve API documentation, stable documentation accessed 22 October 2026. The calculation uses the installed pyLife helper with the range-based knee supplied by the module; closed-loop and residual-cycle handling are defined in the repository rainflow helper. <a href="https://pylife.readthedocs.io/en/stable/materiallaws/woehlercurve.html">Public stress–life API documentation</a>.</p>
+<h3>9.2 Software records and reproduction</h3>
+<p id="source-1">Reference 1. The public example input and documented command are held in <code>examples/workflows/mooring-fatigue/input.yml</code> and <code>examples/workflows/mooring-fatigue/README.md</code>. No measured or external benchmark provenance is supplied there.</p>
+<p id="source-2">Reference 2. The calculation entry point is <code>digitalmodel.mooring_fatigue.workflow.router(cfg)</code> in <code>src/digitalmodel/mooring_fatigue/workflow.py</code>, also routed through <code>src/digitalmodel/engine.py</code>. The curve and Miner helpers are <code>src/digitalmodel/fatigue/sn_curves.py</code> and <code>src/digitalmodel/fatigue/damage.py</code>. The stored edition basis is <code>src/digitalmodel/fatigue/c203_sn_tables.py</code> and <code>src/digitalmodel/fatigue/c203_editions.py</code>. History handling is <code>src/digitalmodel/fatigue/rainflow.py</code>.</p>
+<p id="source-5">Reference 5. Existing evidence is held in <code>tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]</code>, <code>tests/fatigue/test_damage.py</code>, <code>tests/fatigue/test_sn_curves.py</code>, <code>tests/fatigue/test_rainflow.py</code> and <code>tests/fatigue/test_c203_sn_values.py</code>. These tests are distinct from physical benchmark data.</p>
+<p id="source-6">Reference 6. Rebuild and observation checks are held in <code>tests/reporting/test_mooring_fatigue_module_report.py</code>. The generator is <code>scripts/reporting/build_mooring_fatigue_module_report.py</code>. The layout exemplar is <code>docs/reports/pipeline-ffs-assessment.html</code>; its stylesheet is inlined without alteration. The required body class is retained; an exemplar using that class was not present in the inspected source.</p>
+<p>From the repository root, with the source tree on the Python import path, run <code>python scripts/reporting/build_mooring_fatigue_module_report.py --work-dir &lt;temporary calculation folder&gt;</code>. The module runtime dependencies, including NumPy, pandas, pyLife, PyYAML and Pydantic, are required. The two report deliverables are regenerated; calculation files remain in the explicitly supplied temporary folder.</p>
+</section>
+<section id="section-10"><h2>10. Acronyms and Symbols</h2>
+<p>The symbols used in the equations and tables are defined below. Stress and tension are ranges throughout; no amplitude conversion is applied.</p>
+<p>A is effective load-bearing area. ΔT is cyclic tension range. Δσ is nominal stress range. N is allowable cycles. Nₖ and Sₖ are knee cycles and knee stress range. m is the active stress–life slope. The subscript identifies a cycle bin. nᵢ is the applied cycles in that bin. D is cumulative Miner damage. T is design life. F is design fatigue factor. L is extrapolated fatigue life. Lᵣ is required fatigue life. M is screening margin.</p>
+<p>MPa means megapascal; kN means kilonewton; mm² means square millimetre. DFF means design fatigue factor. S–N means stress–life. CP means cathodic protection. CSV means comma-separated values. API means application programming interface. JSON means JavaScript Object Notation. NOT_EVALUATED means that an engineering result has not been established from the available data.</p>
+</section>
+<div id="appendices"><h3>Appendix A. Worked-example bin detail</h3>
+<p>Input ranges and counts are shown with the module-returned stress conversion, allowable cycles and damage. Values are rounded for display only; comparisons are made before rounding.</p>
+<div class="table-wrap"><table><caption>Table C. Full bin calculation from the documented example.</caption><thead><tr><th scope="col">Component</th><th scope="col">Tension range (kN)</th><th scope="col">Stress range (MPa)</th><th scope="col">Applied cycles</th><th scope="col">Allowable cycles</th><th scope="col">Damage (dimensionless)</th><th scope="col">Source</th></tr></thead><tbody><tr><td>chain-01</td><td><span data-value="bin.0.tension_range_kN" data-format=".1f">220.0</span></td><td><span data-value="bin.0.stress_range_MPa" data-format=".1f">27.5</span></td><td><span data-value="bin.0.cycles" data-format=".0f">150000</span></td><td><span data-value="bin.0.allowable_cycles" data-format=".0f">257041471</span></td><td><span data-value="bin.0.damage" data-format=".4f">0.0006</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>chain-01</td><td><span data-value="bin.1.tension_range_kN" data-format=".1f">300.0</span></td><td><span data-value="bin.1.stress_range_MPa" data-format=".1f">37.5</span></td><td><span data-value="bin.1.cycles" data-format=".0f">60000</span></td><td><span data-value="bin.1.allowable_cycles" data-format=".0f">54514286</span></td><td><span data-value="bin.1.damage" data-format=".4f">0.0011</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>chain-01</td><td><span data-value="bin.2.tension_range_kN" data-format=".1f">380.0</span></td><td><span data-value="bin.2.stress_range_MPa" data-format=".1f">47.5</span></td><td><span data-value="bin.2.cycles" data-format=".0f">10000</span></td><td><span data-value="bin.2.allowable_cycles" data-format=".0f">16718550</span></td><td><span data-value="bin.2.damage" data-format=".4f">0.0006</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>wire-01</td><td><span data-value="bin.3.tension_range_kN" data-format=".1f">180.0</span></td><td><span data-value="bin.3.stress_range_MPa" data-format=".1f">34.6</span></td><td><span data-value="bin.3.cycles" data-format=".0f">180000</span></td><td><span data-value="bin.3.allowable_cycles" data-format=".0f">81343126</span></td><td><span data-value="bin.3.damage" data-format=".4f">0.0022</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>wire-01</td><td><span data-value="bin.4.tension_range_kN" data-format=".1f">260.0</span></td><td><span data-value="bin.4.stress_range_MPa" data-format=".1f">50.0</span></td><td><span data-value="bin.4.cycles" data-format=".0f">90000</span></td><td><span data-value="bin.4.allowable_cycles" data-format=".0f">12936496</span></td><td><span data-value="bin.4.damage" data-format=".4f">0.0070</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>wire-01</td><td><span data-value="bin.5.tension_range_kN" data-format=".1f">360.0</span></td><td><span data-value="bin.5.stress_range_MPa" data-format=".1f">69.2</span></td><td><span data-value="bin.5.cycles" data-format=".0f">20000</span></td><td><span data-value="bin.5.allowable_cycles" data-format=".0f">2541973</span></td><td><span data-value="bin.5.damage" data-format=".4f">0.0079</span></td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr></tbody></table></div>
+<h3>Appendix B. Data register</h3>
+<div class="table-wrap"><table><caption>Table D. Data held and data required.</caption><thead><tr><th scope="col">Data</th><th scope="col">Status and consequence</th><th scope="col">Required action</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Cycle exposure</td><td>ASSUMED - to be confirmed: bins cover the entire design life.</td><td>Document exposure and repeat scaling before acceptance.</td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>Area and curve pairing</td><td>ASSUMED - to be confirmed: the supplied area and curve define a consistent nominal stress basis.</td><td>Supply chain and wire component evidence.</td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>Protection condition</td><td>ASSUMED - to be confirmed: the selected protected environment applies throughout the exposure.</td><td>Supply a corrosion protection basis and monitoring trigger.</td><td><a href="#source-1">[Reference 1]</a></td></tr><tr><td>Geometry and local stresses</td><td>NOT_EVALUATED; no missing dimension is assigned.</td><td>Supply dimensions, stress concentration and bending basis.</td><td><a href="#source-1">[Reference 1]</a> <a href="#source-2">[Reference 2]</a></td></tr><tr><td>Physical validation</td><td>NOT_EVALUATED; no measured chain or wire benchmark is supplied by the example.</td><td>Supply an independent component benchmark.</td><td><a href="#source-1">[Reference 1]</a> <a href="#source-5">[Reference 5]</a></td></tr></tbody></table></div>
+<h3>Appendix C. Quality assurance pre-flight</h3>
+<p>The calculation is rebuilt through the module rather than a parallel fatigue formula. All displayed worked-example observations are checked against a separate module call. Per-bin stress conversion and damage summation are checked independently, followed by the life and margin identities. Material rejection and a damage-limit exceedance are exercised by the report tests. These checks are arithmetic and software evidence only. <a href="#source-6">[Reference 6]</a></p>
+<p>The document checks cover the ten-section frame, revision location, unique anchors, working internal references, unchanged exemplar stylesheet, absence of remote script dependencies and visible wording. Browser interaction and component fatigue performance require separate assessment.</p>
+<p>The screening criterion is met when damage does not exceed its adopted limit. The screening criterion is not met when that limit is exceeded. NOT_EVALUATED is used when the engineering basis is absent. No engineering status is inferred from a successful rebuild.</p></div>
+<div id="comment-panel" data-basis="4bdc27440db2025b804575f9cbf061a18f91d8991b266e571b444e71d25ff26e"><h3>Document comments</h3>
+<p>Comments are saved separately from the calculation. Select report text, capture the quote, choose the section and add a comment. Save the comment file beside this report. Where a save dialog is unavailable, move the downloaded file beside the report. Load that file when reopening; unsaved comments are lost when the page closes.</p>
+<p><button id="capture-quote" type="button">Capture selected text</button>
+<label>Section <select id="comment-section"><option value="section-1">Executive Summary</option><option value="section-2">Introduction</option><option value="section-3">Design Data</option><option value="section-4">Analysis Methodology</option><option value="section-5">Detailed Results</option><option value="section-6">Key Findings</option><option value="section-7">Limitations</option><option value="section-8">Recommendations</option><option value="section-9">References</option><option value="section-10">Acronyms and Symbols</option><option value="appendices">Appendices</option></select></label></p>
+<p><label>Quoted text <textarea id="comment-quote" rows="3" cols="65"></textarea></label></p>
+<p><label>Comment <textarea id="comment-text" rows="4" cols="65"></textarea></label></p>
+<p><button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load matching comments <input id="load-comments" type="file" accept=".json"></label></p>
+<p id="comment-status" aria-live="polite">No comments are saved automatically.</p>
+<pre id="comment-preview" aria-label="Comment preview">[]</pre></div>
+</main></div>
+<script type="application/json" id="change-data">{"report": "Mooring fatigue module analysis", "revision": "A", "date": "2026-10-22", "changes": ["The public metallic-line example is evaluated against the selected stress–life curve.", "The governing damage is compared with the design fatigue factor limit.", "The load-duration and component-curve gaps are identified before engineering acceptance."]}</script>
+<script>
+(() => {
+  'use strict';
+  const el = id => document.getElementById(id);
+  const changes = JSON.parse(el('change-data').textContent);
+  el('change-record').textContent = JSON.stringify(changes, null, 2);
+  for (const marker of document.querySelectorAll('[data-detail]')) {
+    const show = () => { el('chart-detail').textContent = marker.dataset.detail; };
+    marker.addEventListener('pointerenter', show);
+    marker.addEventListener('focus', show);
+  }
+  const basis = el('comment-panel').dataset.basis;
+  let comments = [];
+  const message = text => { el('comment-status').textContent = text; };
+  const preview = () => { el('comment-preview').textContent = JSON.stringify(comments, null, 2); };
+  el('capture-quote').onclick = () => {
+    el('comment-quote').value = String(window.getSelection()).slice(0, 10000);
+    message('Selected text captured. Select its section before adding the comment.');
+  };
+  el('add-comment').onclick = () => {
+    const text = el('comment-text').value.trim();
+    if (!text) return message('Enter a comment.');
+    comments.push({id: crypto.randomUUID(), section: el('comment-section').value,
+      quote: el('comment-quote').value, text, date: new Date().toISOString()});
+    el('comment-text').value = '';
+    preview();
+    message('Comment added. Save comments before closing this page.');
+  };
+  el('load-comments').onchange = async () => {
+    try {
+      const file = el('load-comments').files[0];
+      if (!file) return;
+      if (file.size > 1000000) throw new Error('The comment file exceeds the size limit.');
+      const incoming = JSON.parse(await file.text());
+      const sections = new Set([...el('comment-section').options].map(option => option.value));
+      if (incoming.report !== changes.report || incoming.revision !== changes.revision ||
+          incoming.basis !== basis || !Array.isArray(incoming.comments) ||
+          incoming.comments.some(c => !c || typeof c.id !== 'string' ||
+            typeof c.text !== 'string' || typeof c.quote !== 'string' ||
+            typeof c.date !== 'string' || !sections.has(c.section)))
+        throw new Error('Comments do not match this report and calculation basis.');
+      const merged = new Map(comments.map(c => [c.id, c]));
+      for (const comment of incoming.comments) {
+        if (merged.has(comment.id) && JSON.stringify(merged.get(comment.id)) !== JSON.stringify(comment))
+          throw new Error('A comment identifier has conflicting text; retain both files for reconciliation.');
+        merged.set(comment.id, comment);
+      }
+      comments = [...merged.values()];
+      preview();
+      message('Matching comments loaded. Save comments to retain additions.');
+    } catch (error) { message(error.message); }
+    el('load-comments').value = '';
+  };
+  el('save-comments').onclick = async () => {
+    const data = JSON.stringify({report: changes.report, revision: changes.revision,
+      basis, comments}, null, 2) + '\n';
+    try {
+      if (typeof window.showSaveFilePicker === 'function') {
+        const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+          types: [{description: 'Comments', accept: {'application/json': ['.json']}}]});
+        const writable = await handle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        if (await (await handle.getFile()).text() !== data) throw new Error('Saved comments differ.');
+        message('Comments saved and read back. Keep the comment file beside the report.');
+      } else {
+        const url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'report.comments.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message('Download requested. Move report.comments.json beside the report and reload it to check the saved copy.');
+      }
+    } catch (error) { message(error.message); }
+  };
+})();
+</script>
+</body></html>
