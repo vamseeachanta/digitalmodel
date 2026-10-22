@@ -1,28 +1,38 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Check changed Python calls with Ruff PLW1514 and explicit write newlines.
+"""Check changed Python calls with Ruff PLW1514 for explicit text encodings.
 
 The default scope is ``git diff -U0 origin/main...HEAD``. ``--whole-tree``
 checks all tracked Python files for a separate cleanup audit. Ruff 0.15.1,
 pinned in uv.lock, must be available in the invoking Python environment.
 Multiline calls are checked when any line in the call changes. Encoding
-resolution follows Ruff; the newline supplement matches open/write_text
-syntax and treats dynamic modes as potentially writable text.
+resolution follows Ruff, including its limits on inferred object types.
 """
 
 import argparse
 import ast
 import io
 import json
+import os
 import re
 import subprocess
 import sys
 import tokenize
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+RUFF_VERSION = "0.15.1"
 HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.MULTILINE)
+
+
+class ChangedLines(set):
+    """Added line numbers plus new-side anchors for deletion-only hunks."""
+
+    def __init__(self):
+        super().__init__()
+        self.deletions = set()
 
 
 def git(root, *args):
@@ -34,47 +44,78 @@ def git(root, *args):
         check=False,
         encoding="utf-8",
         errors="strict",
+        env={
+            key: value
+            for key, value in os.environ.items()
+            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}
+        },
     )
     if result.returncode:
-        raise RuntimeError("Git scope discovery failed; check the base ref and history")
+        raise RuntimeError(
+            f"Git scope discovery failed: {result.stderr[-2000:].strip()}"
+        )
     return result.stdout
 
 
 def added_lines(patch):
     """Return new-side line numbers from zero-context unified diff hunks."""
-    lines = set()
-    for match in HUNK.finditer(patch):
+    lines = ChangedLines()
+    hunks = list(HUNK.finditer(patch))
+    for index, match in enumerate(hunks):
         start, count = int(match[1]), int(match[2] or 1)
-        lines.update(range(start, start + count))
+        if count == 0:
+            lines.deletions.add(start)
+            continue
+        end = hunks[index + 1].start() if index + 1 < len(hunks) else len(patch)
+        body = patch[match.end() : end].splitlines()[1:]
+        removed = Counter(line[1:] for line in body if line.startswith("-"))
+        row = start
+        for line in body:
+            if line.startswith("+"):
+                if removed[line[1:]]:
+                    removed[line[1:]] -= 1
+                else:
+                    lines.add(row)
+                row += 1
+            elif line.startswith(" "):
+                row += 1
     return lines
 
 
 def diff_scope(root, base):
-    """Disable rename detection so a moved Python file cannot evade checking."""
+    """Preserve unchanged lines across renames and isolate diff display settings."""
     revision = f"{base}...HEAD"
     names = git(
         root,
         "diff",
-        "--no-renames",
-        "--diff-filter=ACM",
-        "--name-only",
+        "-M",
+        "--no-color",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--diff-filter=ACMR",
+        "--name-status",
         "-z",
         revision,
         "--",
     )
     scope = {}
-    for path in names.split("\0"):
+    entries = iter(names.rstrip("\0").split("\0")) if names else iter(())
+    for status in entries:
+        old = next(entries)
+        path = next(entries) if status.startswith(("R", "C")) else old
         if path.endswith(".py"):
             patch = git(
                 root,
                 "diff",
-                "--no-renames",
+                "-M",
+                "--no-color",
+                "--inter-hunk-context=0",
                 "--no-ext-diff",
                 "--no-textconv",
                 "-U0",
                 revision,
                 "--",
-                path,
+                *dict.fromkeys((old, path)),
             )
             scope[path] = added_lines(patch)
     return scope
@@ -85,6 +126,11 @@ def changed_line(node, lines):
     if lines is None:
         return node.lineno
     touched = lines.intersection(range(node.lineno, node.end_lineno + 1))
+    touched.update(
+        anchor
+        for anchor in getattr(lines, "deletions", ())
+        if node.lineno <= anchor < node.end_lineno
+    )
     return min(touched) if touched else None
 
 
@@ -92,56 +138,21 @@ def finding(path, line, code, fix):
     return {"path": path, "line": line, "code": code, "fix": fix}
 
 
-def argument(call, name, position, default=None):
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return call.args[position] if len(call.args) > position else default
-
-
-def open_aliases(tree):
-    """Recognise the standard module and imported forms of the open builtin."""
-    functions, modules = {"open"}, {"io", "builtins"}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            modules.update(
-                item.asname or item.name
-                for item in node.names
-                if item.name in {"io", "builtins"}
-            )
-        elif isinstance(node, ast.ImportFrom) and node.module in {"io", "builtins"}:
-            functions.update(
-                item.asname or item.name for item in node.names if item.name == "open"
-            )
-    return functions, modules
-
-
-def needs_newline(call, aliases):
-    """Require a newline policy for text writers, including update modes."""
-    func = call.func
-    functions, modules = aliases
-    if isinstance(func, ast.Attribute) and func.attr == "write_text":
-        return argument(call, "newline", 3) is None
-    if not (
-        isinstance(func, ast.Name)
-        and func.id in functions
-        or isinstance(func, ast.Attribute)
-        and func.attr == "open"
-    ):
-        return False
-    method = isinstance(func, ast.Attribute) and not (
-        isinstance(func.value, ast.Name) and func.value.id in modules
-    )
-    mode = argument(call, "mode", 0 if method else 1, ast.Constant(value="r"))
-    if isinstance(mode, ast.Constant) and isinstance(mode.value, str):
-        if "b" in mode.value or not any(flag in mode.value for flag in "wax+"):
-            return False
-    return argument(call, "newline", 4 if method else 5) is None
-
-
 def ruff_findings(root, paths):
     """Use only the pinned encoding rule, independent of local lint ignores."""
     try:
+        version = subprocess.run(
+            ["ruff", "--version"],
+            capture_output=True,
+            encoding="utf-8",
+            check=False,
+        )
+        if version.returncode or version.stdout.strip() != f"ruff {RUFF_VERSION}":
+            raise RuntimeError(
+                f"Checker requires Ruff {RUFF_VERSION}; "
+                f"found {version.stdout.strip()}; "
+                f"{version.stderr[-2000:].strip()}"
+            )
         result = subprocess.run(
             [
                 "ruff",
@@ -165,11 +176,13 @@ def ruff_findings(root, paths):
     except OSError as exc:
         raise RuntimeError("Ruff could not run; install the pinned version") from exc
     if result.returncode not in (0, 1):
-        raise RuntimeError("Ruff could not run; install the pinned version")
+        raise RuntimeError(f"Ruff could not run: {result.stderr[-2000:].strip()}")
     try:
         return json.loads(result.stdout)
     except (ValueError, TypeError) as exc:
-        raise RuntimeError("Ruff returned invalid diagnostic JSON") from exc
+        raise RuntimeError(
+            f"Ruff returned invalid diagnostic JSON: {result.stderr[-2000:].strip()}"
+        ) from exc
 
 
 def check_files(root, scope):
@@ -177,7 +190,9 @@ def check_files(root, scope):
     root = root.resolve()
     findings, calls_by_path, valid, source_by_path = [], {}, {}, {}
     for path, lines in scope.items():
-        if not path.endswith(".py") or lines == set():
+        if not path.endswith(".py") or (
+            lines == set() and not getattr(lines, "deletions", ())
+        ):
             continue
         try:
             # Parsing bytes honours Python encoding cookies and UTF-8 BOMs.
@@ -193,17 +208,8 @@ def check_files(root, scope):
                 )
             )
             continue
-        aliases = open_aliases(tree)
         calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
         calls_by_path[path], valid[path] = calls, lines
-        for call in calls:
-            line = changed_line(call, lines)
-            if line is not None and needs_newline(call, aliases):
-                findings.append(
-                    finding(
-                        path, line, "TXT001", 'add newline="\\n" to the text writer'
-                    )
-                )
     if valid:
         for item in ruff_findings(root, list(valid)):
             path = Path(item["filename"]).resolve().relative_to(root).as_posix()
@@ -211,11 +217,17 @@ def check_files(root, scope):
             # AST columns count UTF-8 bytes; Ruff columns count Unicode characters.
             prefix = source_by_path[path][row - 1][: column - 1]
             byte_column = len(prefix.encode("utf-8"))
+            end = item["end_location"]
+            end_prefix = source_by_path[path][end["row"] - 1][: end["column"] - 1]
+            end_byte_column = len(end_prefix.encode("utf-8"))
             # Ruff locates the callable; extend to its arguments for multiline edits.
             calls = [
                 call
                 for call in calls_by_path[path]
-                if call.func.lineno == row and call.func.col_offset == byte_column
+                if call.func.lineno == row
+                and call.func.col_offset == byte_column
+                and call.func.end_lineno == end["row"]
+                and call.func.end_col_offset == end_byte_column
             ]
             call = max(calls, key=lambda node: node.end_lineno, default=None)
             line = (
@@ -226,7 +238,12 @@ def check_files(root, scope):
             if line is not None:
                 findings.append(
                     finding(
-                        path, line, "PLW1514", 'add encoding="utf-8" to the text call'
+                        path,
+                        line,
+                        "PLW1514" if item["code"] == "PLW1514" else "TXT000",
+                        'add encoding="utf-8" to the text call'
+                        if item["code"] == "PLW1514"
+                        else item["message"],
                     )
                 )
     return sorted(findings, key=lambda item: (item["path"], item["line"], item["code"]))

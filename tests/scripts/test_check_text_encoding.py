@@ -1,10 +1,12 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Exercise encoding and newline findings on the lines a pull request changes."""
+"""Exercise encoding findings on the lines a pull request changes."""
 
 import importlib.util
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -27,15 +29,10 @@ def check_source(tmp_path, source, lines=None, filename="example.py"):
     "expression, codes",
     [
         ("Path('data').read_text()", ["PLW1514"]),
-        ("Path('data').write_text('value')", ["PLW1514", "TXT001"]),
+        ("Path('data').write_text('value')", ["PLW1514"]),
         ("open('data')", ["PLW1514"]),
         ("open('data', 'rt')", ["PLW1514"]),
-        ("open('data', mode='w')", ["PLW1514", "TXT001"]),
-        ("open('data', 'a', encoding='utf-8')", ["TXT001"]),
-        ("open('data', 'x', encoding='utf-8')", ["TXT001"]),
-        ("open('data', 'r+', encoding='utf-8')", ["TXT001"]),
-        ("Path('data').write_text('value', encoding='utf-8')", ["TXT001"]),
-        ("Path('data').open('w', encoding='utf-8')", ["TXT001"]),
+        ("open('data', mode='w')", ["PLW1514"]),
     ],
 )
 def test_text_calls_report_fix(tmp_path, expression, codes):
@@ -44,9 +41,7 @@ def test_text_calls_report_fix(tmp_path, expression, codes):
     )
     assert [item["code"] for item in findings] == codes
     assert all(item["path"] == "example.py" and item["line"] == 2 for item in findings)
-    assert all(
-        "encoding=" in item["fix"] or "newline=" in item["fix"] for item in findings
-    )
+    assert all("encoding=" in item["fix"] for item in findings)
 
 
 @pytest.mark.parametrize(
@@ -57,7 +52,13 @@ def test_text_calls_report_fix(tmp_path, expression, codes):
         "open('data', 'ab')",
         "Path('data').open('wb')",
         "open('data', encoding='utf-8')",
+        "open('data', 'w', encoding='utf-8')",
+        "open('data', 'a', encoding='utf-8')",
+        "open('data', 'x', encoding='utf-8')",
+        "open('data', 'r+', encoding='utf-8')",
         "Path('data').read_text(encoding='utf-8')",
+        "Path('data').write_text('value', encoding='utf-8')",
+        "Path('data').open('w', encoding='utf-8')",
         "Path('data').write_text('value', encoding='utf-8', newline='\\n')",
         "open('data', 'w', encoding='utf-8', newline='\\n')",
         "open('data', 'w', -1, 'utf-8', None, '\\n')",
@@ -78,7 +79,7 @@ def test_unchanged_calls_do_not_block(tmp_path):
 def test_changed_multiline_argument_is_checked(tmp_path):
     source = "from pathlib import Path\nPath('data').write_text(\n    'changed',\n)\n"
     findings = check_source(tmp_path, source, {3})
-    assert {item["code"] for item in findings} == {"PLW1514", "TXT001"}
+    assert {item["code"] for item in findings} == {"PLW1514"}
     assert all(item["line"] == 3 for item in findings)
 
 
@@ -87,7 +88,10 @@ def test_non_python_file_is_ignored(tmp_path):
 
 
 def test_hunks_include_only_new_side_lines():
-    patch = "@@ -1,2 +1,3 @@\n@@ -9 +10 @@\n@@ -20,2 +21,0 @@\n"
+    patch = (
+        "@@ -1,2 +1,3 @@\n-old\n-other\n+one\n+two\n+three\n"
+        "@@ -9 +10 @@\n-old\n+new\n@@ -20,2 +21,0 @@\n-old\n-other\n"
+    )
     assert checker.added_lines(patch) == {1, 2, 3, 10}
 
 
@@ -95,9 +99,21 @@ def test_deleted_lines_do_not_trigger(tmp_path):
     assert not check_source(tmp_path, "open('old')\n", set())
 
 
-def test_newline_unknown_mode_is_checked_conservatively(tmp_path):
-    findings = check_source(tmp_path, "open('data', mode, encoding='utf-8')\n")
-    assert [item["code"] for item in findings] == ["TXT001"]
+@pytest.mark.parametrize(
+    "source",
+    [
+        "from PIL import Image\nImage.open(path)\n",
+        "import webbrowser\nwebbrowser.open(url)\n",
+        "import tarfile\ntarfile.open(path)\n",
+        "import gzip\ngzip.open(path)\n",
+        "import zipfile\nzipfile.ZipFile('archive').open(member)\n",
+        "import codecs\ncodecs.open(path, 'w', 'utf-8')\n",
+        "import os\nos.open(path, flags)\n",
+        "open('data', mode, encoding='utf-8')\n",
+    ],
+)
+def test_unrelated_open_apis_and_encoded_dynamic_mode_pass(tmp_path, source):
+    assert not check_source(tmp_path, source)
 
 
 def test_syntax_error_fails_closed(tmp_path):
@@ -105,24 +121,59 @@ def test_syntax_error_fails_closed(tmp_path):
     assert [item["code"] for item in findings] == ["TXT000"]
 
 
-def test_git_scoping_handles_names_and_rename_additions(tmp_path, monkeypatch):
-    calls = []
+@pytest.fixture
+def git_repo(tmp_path, monkeypatch):
+    for key in tuple(os.environ):
+        if key.startswith("GIT_"):
+            monkeypatch.delenv(key)
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    return tmp_path
 
-    def git(root, *args):
-        calls.append(args)
-        if "--name-only" in args:
-            return "spaced name.py\0notes.md\0new.py\0"
-        if args[-1] == "spaced name.py":
-            return "@@ -3 +3 @@\n-old\n+new\n"
-        return "@@ -0,0 +1,2 @@\n+one\n+two\n"
 
-    monkeypatch.setattr(checker, "git", git)
-    assert checker.diff_scope(tmp_path, "origin/main") == {
-        "spaced name.py": {3},
-        "new.py": {1, 2},
-    }
-    assert all("origin/main...HEAD" in call for call in calls)
-    assert all("--no-renames" in call for call in calls)
+def snapshot(root, parent=None):
+    """Create synthetic Git objects without reading or changing user identity."""
+    checker.git(root, "add", ".")
+    tree = checker.git(root, "write-tree").strip()
+    ancestry = f"parent {parent}\n" if parent else ""
+    commit = subprocess.run(
+        ["git", "hash-object", "-t", "commit", "-w", "--stdin"],
+        cwd=root,
+        input=(
+            f"tree {tree}\n{ancestry}"
+            "author Encoding test <> 1 +0000\n"
+            "committer Encoding test <> 1 +0000\n\nTest input\n"
+        ),
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    ).stdout.strip()
+    checker.git(root, "update-ref", "HEAD", commit)
+    return commit
+
+
+def test_rename_plus_comment_preserves_unchanged_calls(git_repo):
+    old = git_repo / "spaced name.py"
+    old.write_text("open('old')\n" * 8, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    new = old.rename(git_repo / "renamed.py")
+    with new.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write("# Changed comment\n")
+    snapshot(git_repo, base)
+    assert not checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+
+
+def test_renamed_file_checks_changed_calls(git_repo):
+    old = git_repo / "before.py"
+    old.write_text("# Context\n" * 8, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    new = old.rename(git_repo / "after.py")
+    with new.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write("open('new')\n")
+    snapshot(git_repo, base)
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [(item["path"], item["line"], item["code"]) for item in findings] == [
+        ("after.py", 9, "PLW1514")
+    ]
 
 
 def test_synthetic_bad_and_good_diff(tmp_path, monkeypatch, capsys):
@@ -131,14 +182,15 @@ def test_synthetic_bad_and_good_diff(tmp_path, monkeypatch, capsys):
         checker,
         "git",
         lambda root, *args: (
-            "example.py\0" if "--name-only" in args else "@@ -0,0 +1 @@\n"
+            "A\0example.py\0"
+            if "--name-status" in args
+            else "@@ -0,0 +1 @@\n+open('data')\n"
         ),
     )
     path.write_text("open('data', 'w')\n", encoding="utf-8", newline="\n")
     assert checker.main(["--root", str(tmp_path)]) == 1
     output = capsys.readouterr().out
     assert "example.py:1: PLW1514" in output
-    assert "example.py:1: TXT001" in output
     path.write_text(
         "open('data', 'w', encoding='utf-8', newline='\\n')\n",
         encoding="utf-8",
@@ -167,23 +219,6 @@ def test_ruff_failure_fails_closed(tmp_path, monkeypatch):
         check_source(tmp_path, "open('data')\n")
 
 
-@pytest.mark.parametrize(
-    "prefix, call",
-    [
-        ("import io", "io.open"),
-        ("import io as streams", "streams.open"),
-        ("import builtins", "builtins.open"),
-        ("from io import open as text_open", "text_open"),
-    ],
-)
-def test_standard_open_aliases(tmp_path, prefix, call):
-    assert not check_source(tmp_path, f"{prefix}\n{call}('data', 'wb')\n")
-    findings = check_source(
-        tmp_path, f"{prefix}\n{call}('data', 'w', encoding='utf-8')\n"
-    )
-    assert [item["code"] for item in findings] == ["TXT001"]
-
-
 def test_workflow_is_pull_request_only_and_pins_ruff():
     import tomllib
     import yaml
@@ -207,6 +242,7 @@ def test_workflow_is_pull_request_only_and_pins_ruff():
     version = next(
         item["version"] for item in lock["package"] if item["name"] == "ruff"
     )
+    assert checker.RUFF_VERSION == version
     assert f"--with ruff=={version}" in check["run"]
     assert f"--with ruff=={version}" in steps["Test the checker"]["run"]
     assert (
@@ -222,3 +258,131 @@ def test_unicode_prefix_and_multiline_changed_argument(tmp_path):
 
 def test_unchanged_writer_is_ignored(tmp_path):
     assert not check_source(tmp_path, "open('old', 'w')\nvalue = 1\n", {2})
+
+
+def test_editing_chain_suffix_does_not_change_read_call(git_repo):
+    path = git_repo / "example.py"
+    source = (
+        "from pathlib import Path\nPath('data').read_text().replace(\n"
+        "    'old',\n    'value',\n)\n"
+    )
+    path.write_text(source, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    path.write_text(source.replace("'old'", "'new'"), encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    assert not checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+
+
+def test_deleted_encoding_inside_call_is_checked(git_repo):
+    path = git_repo / "example.py"
+    path.write_text(
+        "open(\n    'data',\n    encoding='utf-8',\n)\n", encoding="utf-8", newline="\n"
+    )
+    base = snapshot(git_repo)
+    path.write_text("open(\n    'data',\n)\n", encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert len(findings) == 1 and findings[0]["code"] == "PLW1514"
+
+
+def test_deleting_line_after_call_does_not_change_call(git_repo):
+    path = git_repo / "example.py"
+    path.write_text("open('old')\n# Remove comment\n", encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    path.write_text("open('old')\n", encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    assert not checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+
+
+@pytest.mark.parametrize(
+    "appended, codes", [("# Comment\n", []), ("open('new')\n", ["PLW1514"])]
+)
+def test_append_without_final_newline_checks_only_added_call(git_repo, appended, codes):
+    path = git_repo / "example.py"
+    path.write_text("open('old')", encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    path.write_text("open('old')\n" + appended, encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [item["code"] for item in findings] == codes
+    assert all(item["line"] == 2 for item in findings)
+
+
+@pytest.mark.parametrize("config", ["color.ui=always", "diff.interHunkContext=5"])
+def test_local_git_display_settings_do_not_change_scope(git_repo, monkeypatch, config):
+    path = git_repo / "example.py"
+    path.write_text(
+        "value = 1\nopen('old')\nother = 1\n", encoding="utf-8", newline="\n"
+    )
+    base = snapshot(git_repo)
+    path.write_text(
+        "value = 2\nopen('old')\nother = 2\nopen('new')\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    snapshot(git_repo, base)
+    real_git = checker.git
+    monkeypatch.setattr(
+        checker, "git", lambda root, *args: real_git(root, "-c", config, *args)
+    )
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [(item["line"], item["code"]) for item in findings] == [(4, "PLW1514")]
+
+
+def test_ruff_semantic_syntax_error_retains_message(tmp_path):
+    findings = check_source(tmp_path, "def function(value, value): pass\n", {1})
+    assert len(findings) == 1
+    assert findings[0]["code"] == "TXT000"
+    assert "Duplicate parameter" in findings[0]["fix"]
+
+
+def test_git_error_includes_stderr_tail(git_repo):
+    with pytest.raises(RuntimeError, match="single revision"):
+        checker.git(git_repo, "rev-parse", "--verify", "refs/heads/absent")
+
+
+def test_ruff_error_includes_stderr_tail(tmp_path, monkeypatch):
+    real_run = subprocess.run
+
+    def run(args, **kwargs):
+        if args[:2] == ["ruff", "check"]:
+            return real_run(["ruff", "check", "--not-a-real-option"], **kwargs)
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(checker.subprocess, "run", run)
+    with pytest.raises(RuntimeError, match="unexpected argument"):
+        check_source(tmp_path, "open('data')\n")
+
+
+def test_ruff_version_mismatch_fails_closed(tmp_path, monkeypatch):
+    monkeypatch.setattr(checker, "RUFF_VERSION", "0.0.0", raising=False)
+    with pytest.raises(RuntimeError, match="requires Ruff 0.0.0"):
+        check_source(tmp_path, "open('data')\n")
+
+
+def test_unannotated_parameter_read_is_a_known_limit(tmp_path):
+    assert not check_source(tmp_path, "def read(path):\n    return path.read_text()\n")
+
+
+def test_git_scope_clears_inherited_repository_bindings(git_repo, monkeypatch):
+    path = git_repo / "example.py"
+    path.write_text("value = 1\n", encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    path.write_text("open('new')\n", encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    metadata = {
+        name: (git_repo / ".git" / name).read_bytes() for name in ("HEAD", "index")
+    }
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        monkeypatch.setenv(name, str(git_repo / "absent"))
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [item["code"] for item in findings] == ["PLW1514"]
+    assert path.read_text(encoding="utf-8") == "open('new')\n"
+    assert {
+        name: (git_repo / ".git" / name).read_bytes() for name in metadata
+    } == metadata
+
+
+def test_hunk_function_context_does_not_shift_line_numbers():
+    patch = "@@ -3 +3 @@ def function():\n-    old = 1\n+    new = 2\n"
+    assert checker.added_lines(patch) == {3}
