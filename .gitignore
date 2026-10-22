@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Reproducible vessel seakeeping module documentation
+!/scripts/reports/
+/scripts/reports/*
+!/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/
+!/docs/reports/modules/
+/docs/reports/modules/*
+!/docs/reports/modules/vesselseakeeping/
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json
