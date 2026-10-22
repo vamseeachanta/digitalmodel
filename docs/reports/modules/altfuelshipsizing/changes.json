@@ -1,0 +1,18 @@
+{
+  "revision": "0",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "summary",
+      "text": "Sea-passage and port-dwell inventories are compared to expose the additional boil-off allowance."
+    },
+    {
+      "section": "basis",
+      "text": "Supplied powering, insulation and reserve inputs are distinguished from fuel properties and acceptance criteria."
+    },
+    {
+      "section": "results",
+      "text": "The sea-leg boil-off absorption boundary is shown with the action required above it."
+    }
+  ]
+}
