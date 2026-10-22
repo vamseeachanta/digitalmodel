@@ -47,7 +47,7 @@ def test_compact_examples_match_committed_pages_and_manifests(tmp_path, checkout
         assert hashlib.sha256((tmp_path / filename).read_bytes()).hexdigest() == digest
     tank = (tmp_path / "one-foot-worked-example.html").read_text(encoding="utf-8")
     assert "18.846" in tank and "5.616" in tank
-    assert "3 significant figures" in tank
+    assert "three decimal places" in tank
     assert "assumed, based on previous experience" in tank
     assert "NOT_EVALUATED" in tank
     assert "Plotly.newPlot" in tank
@@ -91,10 +91,10 @@ def test_examples_retain_revision_rows_and_machine_readable_evidence_gaps():
     specs, result = load_example().example_specs()
     tank = specs["one-foot-worked-example.html"].document
     vessel = specs["pressure-vessel-example.html"].document
-    assert tank.revision == "02"
-    assert vessel.revision == "01"
-    assert [row.rev for row in tank.revision_history] == ["00", "01", "02"]
-    assert [row.rev for row in vessel.revision_history] == ["00", "01"]
+    assert tank.revision == "03"
+    assert vessel.revision == "02"
+    assert [row.rev for row in tank.revision_history] == ["00", "01", "02", "03"]
+    assert [row.rev for row in vessel.revision_history] == ["00", "01", "02"]
     for document in (tank, vessel):
         assert document.revision_history[0].date == "2026-10-19"
         assert document.revision_history[-1].date == "2026-10-21"

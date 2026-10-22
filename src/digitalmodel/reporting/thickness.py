@@ -159,8 +159,8 @@ def nominal_limit_hover(figure: dict, limits: dict[str, list[float]]) -> dict:
         ]
         trace["hovertemplate"] = (
             "%{fullData.name}<br>Coordinate: %{x}<br>Required: %{y:.3f} mm"
-            "<br>Nominal limit: %{customdata[0]:.3f} mm"
-            "<br>Margin: %{customdata[1]:.1f} mm<extra></extra>"
+            "<br>Nominal wall: %{customdata[0]:.3f} mm"
+            "<br>Margin: %{customdata[1]:.3f} mm<extra></extra>"
         )
     return figure
 

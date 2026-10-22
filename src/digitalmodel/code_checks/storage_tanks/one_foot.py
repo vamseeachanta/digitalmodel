@@ -41,9 +41,10 @@ class OneFootBasis:
     ``coefficient`` has units MPa*mm/m²; ``head_offset_m`` is the design-point
     offset. ``minimum_nominal_mm`` is supplied for the actual tank diameter,
     not a universal floor. Missing floor/diameter evidence is never inferred.
-    The two applicability citations must identify the same code and edition
-    as the method citation. Resolution checks source metadata, not the numeric
-    contents; the caller remains responsible for edition-specific value selection.
+    All supplied method and applicability citations must identify the same code,
+    publisher and edition, even without a method citation. Resolution checks
+    source metadata, not the numeric contents; the caller remains responsible
+    for edition-specific value selection.
     """
 
     coefficient: float
@@ -151,18 +152,24 @@ def _qualification(inputs: TankDesign, wiki_root: Path | None) -> tuple:
             if citation not in citations:
                 citations.append(citation)
     basis = inputs.basis
+    reference = next(
+        (citation for citation in (
+            basis.citation, basis.diameter_limit_citation, basis.minimum_nominal_citation,
+        ) if citation is not None),
+        None,
+    )
     for field, label, citation in (
         ("diameter_limit_m", "API 650 5.6.3.1 diameter limit", basis.diameter_limit_citation),
         ("minimum_nominal_mm", "API 650 5.6.1.1 nominal floor", basis.minimum_nominal_citation),
     ):
         if citation is not None:
             validate_citation(citation, repo_root=wiki_root)
-            if basis.citation is not None and any(
-                getattr(citation, key) != getattr(basis.citation, key)
+            if any(
+                getattr(citation, key) != getattr(reference, key)
                 for key in ("code_id", "publisher", "revision")
             ):
                 raise ValueError("Method and applicability sources must identify the same edition")
-            if citation not in citations:
+            if getattr(basis, field) is not None and citation not in citations:
                 citations.append(citation)
         if getattr(basis, field) is None:
             gaps.append(f"NOT_EVALUATED: {label} is missing")

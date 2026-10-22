@@ -291,19 +291,58 @@ def test_tank_chart_hover_pairs_each_requirement_with_its_selected_plate():
     trace = figure["data"][0]
     assert trace["customdata"][0] == pytest.approx([20, 1.154])
     assert trace["customdata"][12] == pytest.approx([6, 0.384])
-    assert "Nominal limit" in trace["hovertemplate"]
-    assert "Margin" in trace["hovertemplate"]
+    assert "Nominal wall: %{customdata[0]:.3f} mm" in trace["hovertemplate"]
+    assert "Margin: %{customdata[1]:.3f} mm" in trace["hovertemplate"]
 
 
-def test_vessel_hover_exposes_negative_margin_at_design_pressure():
-    """UG-27 synthetic case requires 12 mm; a 10 mm shell is short by 2 mm."""
+@pytest.mark.parametrize("wall,margin", [(10, -2), (11.96, -0.04)])
+def test_vessel_hover_exposes_negative_margin_at_design_pressure(wall, margin):
+    """UG-27 requires 12 mm; even a 0.040 mm shortfall remains visible."""
     spec = vessel_spec(geometry=VesselGeometry(
-        inner_diameter_mm=200, wall_thickness_mm=10, corrosion_allowance_mm=2,
+        inner_diameter_mm=200, wall_thickness_mm=wall, corrosion_allowance_mm=2,
     ))
     figure = blocks(spec, FigureBlock)[0].plotly
     shell = figure["data"][0]
-    assert shell["customdata"][-1] == pytest.approx([10, -2])
-    assert "Nominal limit" in shell["hovertemplate"]
+    assert shell["customdata"][-1] == pytest.approx([wall, margin])
+    assert "Nominal wall: %{customdata[0]:.3f} mm" in shell["hovertemplate"]
+    assert "Margin: %{customdata[1]:.3f} mm" in shell["hovertemplate"]
+
+
+@pytest.mark.parametrize(
+    "field,citation_field,label,locator",
+    [
+        ("diameter_limit_m", "diameter_limit_citation", "Diameter limit", "API 650 5.6.3.1"),
+        ("minimum_nominal_mm", "minimum_nominal_citation", "Nominal floor", "API 650 5.6.1.1"),
+    ],
+)
+def test_missing_limit_values_remain_unqualified_in_report(
+    tmp_path, field, citation_field, label, locator,
+):
+    from digitalmodel.citations.schema import Citation
+
+    citation = Citation(
+        code_id="SYNTHETIC-TEST", publisher="synthetic", revision="test",
+        section="Synthetic metadata only", source_sibling="generic",
+        wiki_path="wikis/engineering/wiki/concepts/test.md",
+    )
+    path = tmp_path / citation.wiki_path
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "---\ncode_id: SYNTHETIC-TEST\npublisher: synthetic\nrevision: test\n---\n",
+        encoding="utf-8",
+    )
+    inputs = shell_result().inputs
+    basis = replace(inputs.basis, **{field: None, citation_field: citation})
+    result = design_shell(replace(inputs, basis=basis), wiki_root=tmp_path)
+    spec = tank_report(
+        result, document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    evidence = next(b for b in blocks(spec, TableBlock) if b.title == "Source qualification")
+    assert [label, locator, "Unresolved", "NOT_EVALUATED"] in evidence.rows
+    assert result.citation_sidecar() == {"citations": []}
+    assert result.status == "NOT_EVALUATED"
+    assert any(f"{locator} " in gap for gap in result.not_evaluated)
 
 
 def test_tank_basis_lists_the_evidence_for_each_rule():

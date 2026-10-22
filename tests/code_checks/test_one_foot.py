@@ -268,19 +268,22 @@ def test_lower_test_fill_does_not_reduce_hydrotest_sizing(tank, test_level):
     assert row.selected_mm == 18
 
 
-def _synthetic_citation(tmp_path, revision="test"):
+def _synthetic_citation(
+    tmp_path, revision="test", *, code_id="SYNTHETIC-TEST", publisher="synthetic",
+):
     """Metadata fixture only; it does not establish an API edition or values."""
     from digitalmodel.citations.schema import Citation
 
     citation = Citation(
-        code_id="SYNTHETIC-TEST", publisher="synthetic", revision=revision,
+        code_id=code_id, publisher=publisher, revision=revision,
         section="Synthetic arithmetic only", source_sibling="generic",
-        wiki_path=f"wikis/engineering/wiki/concepts/basis-{revision}.md",
+        wiki_path=f"wikis/engineering/wiki/concepts/basis-{code_id}-{publisher}-{revision}.md",
     )
     path = tmp_path / citation.wiki_path
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        f"---\ncode_id: SYNTHETIC-TEST\npublisher: synthetic\nrevision: {revision}\n---\n"
+        f"---\ncode_id: {code_id}\npublisher: {publisher}\nrevision: {revision}\n---\n",
+        encoding="utf-8",
     )
     return citation
 
@@ -321,4 +324,75 @@ def test_mixed_method_and_limit_editions_are_rejected(tank, tmp_path):
         minimum_nominal_citation=citation,
     )
     with pytest.raises(ValueError, match="same edition"):
+        design_shell(replace(tank, basis=basis), wiki_root=tmp_path)
+
+
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+def test_mixed_applicability_sources_without_method_are_rejected(tank, tmp_path, field):
+    citation = _synthetic_citation(tmp_path)
+    other = _synthetic_citation(tmp_path, **{field: "other"})
+    basis = replace(
+        tank.basis, diameter_limit_citation=citation, minimum_nominal_citation=other,
+    )
+    with pytest.raises(ValueError, match="same edition"):
+        design_shell(replace(tank, basis=basis), wiki_root=tmp_path)
+
+
+def test_matching_applicability_sources_do_not_replace_method_evidence(tank, tmp_path):
+    citation = _synthetic_citation(tmp_path)
+    basis = replace(
+        tank.basis, diameter_limit_citation=citation, minimum_nominal_citation=citation,
+    )
+    result = design_shell(
+        replace(tank, basis=basis, material=replace(tank.material, citation=citation)),
+        wiki_root=tmp_path,
+    )
+    assert result.status == "NOT_EVALUATED"
+    assert result.not_evaluated == (
+        "NOT_EVALUATED: qualified method edition and coefficients source is missing",
+    )
+    assert result.citations == (citation,)
+
+
+@pytest.mark.parametrize(
+    "field,citation_field", [
+        ("diameter_limit_m", "diameter_limit_citation"),
+        ("minimum_nominal_mm", "minimum_nominal_citation"),
+    ],
+)
+def test_missing_limit_value_excludes_only_its_orphan_citation(
+    tank, tmp_path, field, citation_field,
+):
+    citation = _synthetic_citation(tmp_path)
+    orphan = replace(citation, section="Synthetic metadata for an absent value")
+    basis = replace(
+        tank.basis, citation=citation, diameter_limit_citation=citation,
+        minimum_nominal_citation=citation, **{field: None},
+    )
+    basis = replace(basis, **{citation_field: orphan})
+    result = design_shell(
+        replace(tank, basis=basis, material=replace(tank.material, citation=citation)),
+        wiki_root=tmp_path,
+    )
+    assert result.status == "NOT_EVALUATED"
+    assert len(result.not_evaluated) == 1
+    assert result.citations == (citation,)
+    assert len(result.citation_sidecar()["citations"]) == 1
+
+
+@pytest.mark.parametrize(
+    "field,citation_field", [
+        ("diameter_limit_m", "diameter_limit_citation"),
+        ("minimum_nominal_mm", "minimum_nominal_citation"),
+    ],
+)
+def test_orphan_citations_still_resolve_fail_closed(tank, tmp_path, field, citation_field):
+    from digitalmodel.citations.schema import CitationResolutionError
+
+    citation = replace(
+        _synthetic_citation(tmp_path),
+        wiki_path="wikis/engineering/wiki/concepts/missing.md",
+    )
+    basis = replace(tank.basis, **{field: None, citation_field: citation})
+    with pytest.raises(CitationResolutionError):
         design_shell(replace(tank, basis=basis), wiki_root=tmp_path)

@@ -10,6 +10,7 @@ checks metadata; it does not authenticate a numeric value or approve a design.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 00 | 2026-10-21 | Document the existing examples and separate applicability evidence so unresolved rules remain visible. |
+| 01 | 2026-10-21 | Align thickness precision and source evidence so small margins and missing applicability values remain visible. |
 
 ## Worked examples
 
@@ -22,7 +23,7 @@ checks metadata; it does not authenticate a numeric value or approve a design.
 
 Both pages use the house reporting engine. Compact pages load Plotly from its
 public CDN; the default generator embeds it for offline use. Chart hover data
-pairs each requirement with its nominal limit and margin, including negative
+pairs each requirement with its nominal wall and margin, including negative
 margins for insufficient vessel walls. Equal heights on either side of a course
 boundary keep their respective selected plates.
 
@@ -46,8 +47,8 @@ With the illustrative inputs recorded in the example, independent bottom-course
 arithmetic gives `4.9 * 30 * (18-0.3) / 150 + 1.5 = 18.846 mm`.
 Course 7 begins at `6 * 2.25 = 13.5 m` and gives
 `4.9 * 30 * (4.5-0.3) / 150 + 1.5 = 5.616 mm`.
-The hand and program design values agree at three significant figures:
-18.8 mm and 5.62 mm. These are arithmetic examples with assumed allowables,
+The hand and program design values agree to three decimal places:
+18.846 mm and 5.616 mm. These are arithmetic examples with assumed allowables,
 not a qualification of A36 or another plate grade. All unsourced scenario inputs
 are **assumed, based on previous experience**.
 
@@ -55,7 +56,7 @@ The vessel adapter uses the existing ASMEThicknessCalc equations: UG-27(c)(1),
 UG-32(d)/(f) and UG-99. Their edition is unresolved in the inherited module.
 The test factor and test allowable are caller inputs. MAWP is the smaller of
 shell and head capacities. Hydrotest pressure is reported without a test-stress
-acceptance assessment. Existing regression tests prove that MAWP, reinforcement
+acceptance assessment. Existing regression tests show that MAWP, reinforcement
 and hydrotest each have one method definition and retain their hand values.
 
 ## Evidence and material inputs
@@ -64,7 +65,10 @@ Provide a Citation for each of the method, material, diameter limit (5.6.3.1)
 and nominal floor (5.6.1.1). The last two use the optional OneFootBasis fields
 `diameter_limit_citation` and `minimum_nominal_citation`; omitting either leaves
 that check NOT_EVALUATED even if a numeric value is supplied. Method and
-applicability citations must identify the same code, publisher and edition.
+applicability citations must identify the same code, publisher and edition,
+including when the method citation is absent. Applicability citations without
+their numeric values are validated but omitted from the evidence sidecar; the
+affected report rows remain NOT_EVALUATED.
 Existing callers may continue to supply uncited illustrative inputs.
 
 | Requested plate grade | Design allowable | Test allowable | Required evidence |

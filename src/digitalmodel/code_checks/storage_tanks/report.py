@@ -215,8 +215,16 @@ def _basis(result: ShellResult, unit_weight: float, pressure_source: str) -> Sec
                     for label, locator, citation in (
                         ("Method coefficients", "API 650 5.6.3.2", inputs.basis.citation),
                         ("Material allowables", "Applicable material table", inputs.material.citation),
-                        ("Diameter limit", "API 650 5.6.3.1", inputs.basis.diameter_limit_citation),
-                        ("Nominal floor", "API 650 5.6.1.1", inputs.basis.minimum_nominal_citation),
+                        (
+                            "Diameter limit", "API 650 5.6.3.1",
+                            inputs.basis.diameter_limit_citation
+                            if inputs.basis.diameter_limit_m is not None else None,
+                        ),
+                        (
+                            "Nominal floor", "API 650 5.6.1.1",
+                            inputs.basis.minimum_nominal_citation
+                            if inputs.basis.minimum_nominal_mm is not None else None,
+                        ),
                     )
                 ],
             ),

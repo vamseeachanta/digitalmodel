@@ -164,8 +164,8 @@
   "qualified_engineering_input": false,
   "schema": "shell-thickness-examples/v1",
   "sha256": {
-    "one-foot-worked-example.html": "39759de34206a7046df7e27bf674d36acdfb6f2d8234ee039018acd9d265cda5",
-    "pressure-vessel-example.html": "a6e05ac62d0686c09da9c26aab10cab280c0dd627c12fb4a4405918ec3fa2a17"
+    "one-foot-worked-example.html": "47f1ca7e8538ea7fa8abdf017f2df9f019cff4e9797796663365efe6bf91ebe5",
+    "pressure-vessel-example.html": "ddb4d2dd713e42b20f64c7dd12ececa98dd0f094f04d3471848f9da64f09e955"
   },
   "shell_mass_kg": 165404.8532115026,
   "source": "Public issue 2958; standard edition unverified",
