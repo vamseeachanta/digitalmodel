@@ -1,0 +1,8 @@
+{
+  "revision": "00",
+  "date": "2026-10-22",
+  "changes": [
+    "Established the passing-ship load calculation basis and reproduced the public example.",
+    "Separated numerical reproduction from the missing mooring capacity and field evidence."
+  ]
+}

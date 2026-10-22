@@ -267,6 +267,13 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/passingshipforces/
+docs/reports/modules/passingshipforces/*
+!docs/reports/modules/passingshipforces/generate_report.py
+!docs/reports/modules/passingshipforces/report.html
+!docs/reports/modules/passingshipforces/changes.json
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
