@@ -59,7 +59,12 @@ from typing import Any, Mapping, Optional, Sequence
 
 import pandas as pd
 
-from .inspection_planning import CrackInspectionPlan, InspectionPlan, plan_inspection
+from .inspection_planning import (
+    CrackInspectionPlan,
+    InspectionPlan,
+    plan_inspection,
+    validate_crack_plan,
+)
 
 # 7-phase RBI programme cycle (workflow framing; see module docstring).
 RBI_PHASES: tuple[str, ...] = (
@@ -295,6 +300,8 @@ def recommend_interval(
     base = inspection_plan.next_inspection_interval_years
     interval = min(base, cap)
     if inspection_plan.screening_status == "fail" and base <= 0.0:
+        if isinstance(inspection_plan, CrackInspectionPlan):
+            return 0.0, "crack-growth life exhausted (0 yr interval) — inspect/repair now"
         return 0.0, "FFS/half-life screening failed — inspect/repair now"
     if cap < base:
         return interval, f"risk-band cap governs ({band}: {cap:g} yr)"
@@ -316,10 +323,18 @@ def screen_crack_plan(
     ``params`` is required: existing practice bands need independent policy
     qualification. Arrest is unbounded only under the supplied growth model.
     """
+    from digitalmodel.fatigue.threshold_growth import validate_scalar
+
+    if not isinstance(component_id, str) or not component_id.strip():
+        raise ValueError("component_id must be non-empty text")
+    _validate_crack_policy(plan, params)
+    if not isinstance(consequence_class, str):
+        consequence_class = validate_scalar(consequence_class, "consequence category", integer=True)
     life = plan.remaining_life_years
     pof, subscores = pof_category(
         remaining_life_yr=float("inf") if life is None else life, params=params,
     )
+    subscores["corrosion_trend_bump"] = None  # No corrosion measurement applies to this route.
     cof, cls = cof_category(consequence_class)
     score, band = risk_band(pof, cof, params)
     interval, governing = recommend_interval(band, plan, params)
@@ -331,10 +346,56 @@ def screen_crack_plan(
         code_max_interval_yr=plan.code_max_interval_years, governing=governing,
         pof_subscores=subscores,
         inputs={"consequence_class": consequence_class,
-                "remaining_life_yr": life, "growth_status": plan.growth_status},
+                "remaining_life_yr": life, "growth_status": plan.growth_status,
+                "cycles_per_year": plan.cycles_per_year,
+                "life_divisor": plan.life_divisor,
+                "plan_max_interval_yr": plan.code_max_interval_years,
+                "reference_interval_yr": params.reference_interval_yr,
+                "life_ratio": None if life is None else life / params.reference_interval_yr},
         inspection_plan=plan,
-        basis=params.basis_notes() + [plan.policy_basis] + plan.notes,
+        basis=_crack_basis(plan, params) + plan.notes,
     )
+
+
+def _validate_crack_policy(plan: CrackInspectionPlan, params: RBIParameters) -> None:
+    from digitalmodel.fatigue.threshold_growth import validate_scalar
+
+    validate_crack_plan(plan)
+    positive = dict(reference_interval_yr=params.reference_interval_yr)
+    if (not isinstance(params.band_interval_cap_yr, Mapping)
+            or set(RISK_BANDS) - params.band_interval_cap_yr.keys()):
+        raise ValueError("every risk band requires a finite positive interval cap")
+    positive.update({f"band cap {band}": params.band_interval_cap_yr[band]
+                     for band in RISK_BANDS})
+    for name, value in positive.items():
+        if validate_scalar(value, name) <= 0:
+            raise ValueError(f"{name} must be positive")
+    edges = tuple(validate_scalar(v, "life_ratio_edges") for v in params.life_ratio_edges)
+    if len(edges) != 4 or min(edges) <= 0 or any(a <= b for a, b in zip(edges, edges[1:])):
+        raise ValueError("life_ratio_edges must be four positive descending values")
+    risk = tuple(validate_scalar(v, "risk_band_edges", integer=True)
+                 for v in params.risk_band_edges)
+    if len(risk) != 3 or min(risk) <= 0 or any(a >= b for a, b in zip(risk, risk[1:])):
+        raise ValueError("risk_band_edges must be three positive ascending integers")
+    interval = validate_scalar(plan.next_inspection_interval_years, "plan interval")
+    if interval < 0 or interval > plan.code_max_interval_years:
+        raise ValueError("crack plan interval must lie between zero and its policy cap")
+
+
+def _crack_basis(plan: CrackInspectionPlan, params: RBIParameters) -> list[str]:
+    caps = ", ".join(f"{band}={params.band_interval_cap_yr[band]:g} yr"
+                     for band in RISK_BANDS)
+    return [
+        "qualitative API RP 580-style screening; practice parameters, not API RP 581 table values",
+        f"PoF remaining-life ratio band edges: {params.life_ratio_edges}; "
+        f"reference interval {params.reference_interval_yr:.3g} yr; "
+        "categories 1 to 5 use the first descending edge met, or 5 below all edges",
+        f"risk = PoF x CoF banded LOW/MEDIUM/MEDIUM-HIGH/HIGH at {params.risk_band_edges}",
+        f"interval = min(crack plan interval, band cap): {caps}",
+        f"plan maximum interval: {plan.code_max_interval_years:.3g} yr; "
+        f"life divisor: {plan.life_divisor:.3g}; cycles per year: {plan.cycles_per_year:g}",
+        f"inspection policy basis: {plan.policy_basis}",
+    ]
 
 
 def screen_component(

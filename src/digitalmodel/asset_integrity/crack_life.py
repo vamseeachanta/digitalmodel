@@ -8,8 +8,7 @@ No licensed-standard material tables or acceptance factors are reproduced.
 
 from __future__ import annotations
 
-import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from digitalmodel.fatigue.threshold_growth import (
@@ -17,16 +16,22 @@ from digitalmodel.fatigue.threshold_growth import (
     GrowthPoint,
     GrowthResult,
     integrate_growth,
+    validate_scalar,
 )
 
 from .assessment.crack_fad import critical_flaw_depth_mm
-from .inspection_planning import CrackInspectionPlan, plan_crack_inspection
+from .inspection_planning import (
+    CrackInspectionPlan,
+    plan_crack_inspection,
+    validate_crack_policy_inputs,
+)
 
 
 @dataclass(frozen=True)
 class CrackLifeAssessment:
     limiting_depth_mm: float
     critical_depth_basis: str
+    governing_limit: str
     growth: GrowthResult
     inspection: CrackInspectionPlan
 
@@ -53,20 +58,43 @@ def assess_crack_life(
     The conversion of mm to metres is the SI prefix definition, not a
     material constant. A zero critical depth means no remaining margin.
     """
-    values = (initial_depth_mm, wall_thickness_mm)
-    if not all(math.isfinite(v) and v > 0 for v in values):
+    if not isinstance(law, GrowthLaw):
+        raise ValueError("law must be a GrowthLaw")
+    if not callable(delta_k):
+        delta_k = validate_scalar(delta_k, "DeltaK")
+        if delta_k < 0:
+            raise ValueError("DeltaK must be non-negative")
+    initial_depth_mm = validate_scalar(initial_depth_mm, "initial_depth_mm")
+    wall_thickness_mm = validate_scalar(wall_thickness_mm, "wall_thickness_mm")
+    critical_depth_mm = validate_scalar(critical_depth_mm, "critical_depth_mm")
+    steps = validate_scalar(steps, "steps", integer=True)
+    if steps < 1:
+        raise ValueError("steps must be a positive integer")
+    if min(initial_depth_mm, wall_thickness_mm) <= 0:
         raise ValueError("initial depth and wall thickness must be finite positive")
-    if not math.isfinite(critical_depth_mm) or critical_depth_mm < 0:
+    if initial_depth_mm > wall_thickness_mm:
+        raise ValueError("initial depth cannot exceed wall thickness")
+    if critical_depth_mm < 0:
         raise ValueError("critical depth must be finite non-negative")
-    if not critical_depth_basis.strip():
+    if not isinstance(critical_depth_basis, str) or not critical_depth_basis.strip():
         raise ValueError("critical_depth_basis is required")
+    cycles_per_year, code_max_interval_years, life_divisor = validate_crack_policy_inputs(
+        cycles_per_year=cycles_per_year, code_max_interval_years=code_max_interval_years,
+        life_divisor=life_divisor, policy_basis=policy_basis,
+    )
     limit = min(critical_depth_mm, wall_thickness_mm)
+    governing = (
+        "WALL_PENETRATION" if wall_thickness_mm < critical_depth_mm else
+        "ASSESSMENT_LIMIT" if critical_depth_mm < wall_thickness_mm else
+        "COINCIDENT_LIMITS"
+    )
     if limit == 0:
         growth = GrowthResult(
             "LIMIT_REACHED",
             0.0,
             (GrowthPoint(initial_depth_mm / 1000, 0.0),),
             law.basis,
+            0.0,
         )
     else:
         growth = integrate_growth(
@@ -83,20 +111,44 @@ def assess_crack_life(
         life_divisor=life_divisor,
         policy_basis=policy_basis,
     )
-    return CrackLifeAssessment(limit, critical_depth_basis, growth, plan)
+    plan.notes.append(
+        f"Governing depth: {governing}; assessment limit {critical_depth_mm:.3g} mm, "
+        f"wall {wall_thickness_mm:.3g} mm; first-event depth {limit:.3g} mm."
+    )
+    return CrackLifeAssessment(limit, critical_depth_basis, governing, growth, plan)
 
 
 def plan_crack_from_fad(*, fad_inputs: dict, **growth_inputs) -> CrackLifeAssessment:
     """Use the existing critical_flaw_depth_mm envelope without reimplementing it.
 
-    Supply a compatible DeltaK(depth) solution and fixed surface half-length
-    in fad_inputs; the FAD routine does not model aspect-ratio evolution.
+    Supply a compatible DeltaK(depth) solution and fixed total surface length
+    ``length_mm = 2c`` in fad_inputs; the FAD routine converts this to the
+    half-length ``c = length_mm / 2`` and does not model aspect-ratio evolution.
     Its depth/geometry validity cap is retained as an assessment limit.
     Through-wall stability cannot be inferred from this surface-flaw limit.
+    Membrane and bending stresses are non-negative tensile components; either
+    may be zero but at least one must be positive. Compression and an unloaded
+    FAD are outside this adapter's supported loading domain.
     """
-    for name, value in fad_inputs.items():
-        if value is not None and not math.isfinite(value):
-            raise ValueError(f"FAD input {name} must be finite")
+    if {"critical_depth_mm", "wall_thickness_mm", "critical_depth_basis"} & growth_inputs.keys():
+        raise ValueError("FAD inputs and explicit depth limits are mutually exclusive")
+    required = {"length_mm", "t_mm", "sigma_m_mpa", "sigma_y_mpa", "sigma_u_mpa"}
+    nullable = {"k_mat", "cvn_joules"}
+    allowed = required | nullable | {"sigma_b_mpa", "e_mpa", "tol_mm", "max_depth_fraction"}
+    if not isinstance(fad_inputs, Mapping):
+        raise ValueError("fad_inputs must be a mapping")
+    if required - fad_inputs.keys() or fad_inputs.keys() - allowed:
+        raise ValueError("FAD inputs require geometry, stress and strengths; unknown keys are invalid")
+    if any(value is None and name not in nullable for name, value in fad_inputs.items()):
+        raise ValueError("only k_mat and cvn_joules may be null FAD inputs")
+    fad_inputs = {
+        name: None if value is None else validate_scalar(value, f"FAD input {name}")
+        for name, value in fad_inputs.items()
+    }
+    membrane = fad_inputs["sigma_m_mpa"]
+    bending = fad_inputs.get("sigma_b_mpa", 0.0)
+    if membrane < 0 or bending < 0 or membrane + bending <= 0:
+        raise ValueError("FAD adapter requires tensile stress components and a positive applied load")
     positive = (
         "length_mm",
         "t_mm",
@@ -156,9 +208,19 @@ def screen_leak_before_break(
     """
     if not isinstance(through_wall, bool):
         raise ValueError("through_wall must be boolean")
-    supplied = (detectable_length_mm, critical_length_mm, length_margin)
+    if basis is not None and not isinstance(basis, str):
+        raise ValueError("LBB basis must be text when supplied")
+    supplied = tuple(
+        None if value is None else validate_scalar(value, name)
+        for name, value in (
+            ("detectable_length_mm", detectable_length_mm),
+            ("critical_length_mm", critical_length_mm),
+            ("length_margin", length_margin),
+        )
+    )
+    detectable_length_mm, critical_length_mm, length_margin = supplied
     for value in supplied:
-        if value is not None and (not math.isfinite(value) or value <= 0):
+        if value is not None and value <= 0:
             raise ValueError("LBB lengths and margin must be finite positive")
     if length_margin is not None and length_margin < 1:
         raise ValueError("length_margin must be >= 1")

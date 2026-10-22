@@ -5,6 +5,7 @@
 import json
 import math
 import runpy
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -71,6 +72,7 @@ def test_assessment_limit_and_wall_use_first_event():
         critical_depth_basis="Synthetic depth limit",
     )
     assert result.limiting_depth_mm == 3
+    assert result.governing_limit == "WALL_PENETRATION"
     assert result.growth.life_cycles == pytest.approx(200_000)
     assert result.inspection.next_inspection_interval_years == pytest.approx(1)
 
@@ -97,14 +99,25 @@ def test_real_fad_limit_feeds_growth_without_extrapolation():
         fad_inputs=dict(
             length_mm=60,
             t_mm=20,
-            sigma_m_mpa=100,
+            sigma_m_mpa=250,
             sigma_y_mpa=350,
             sigma_u_mpa=500,
             k_mat=100,
         ),
         **options(),
     )
-    assert 1 < result.limiting_depth_mm < 20
+    from digitalmodel.asset_integrity.assessment.crack_fad import assess_crack_like_flaw
+
+    # The FAD consumes c = length_mm / 2: the total surface length is 2c=60 mm.
+    inputs = dict(c_mm=30, t_mm=20, sigma_m_mpa=250,
+                  sigma_y_mpa=350, sigma_u_mpa=500, k_mat=100)
+    at_limit = assess_crack_like_flaw(a_mm=result.limiting_depth_mm, **inputs)
+    beyond = assess_crack_like_flaw(a_mm=result.limiting_depth_mm + 0.01, **inputs)
+    assert at_limit.acceptable
+    assert at_limit.kr <= at_limit.f_lr
+    assert not beyond.acceptable
+    assert result.limiting_depth_mm == pytest.approx(9.777, abs=0.01)
+    assert result.governing_limit == "ASSESSMENT_LIMIT"
     expected = (result.limiting_depth_mm - 1) / 1000 / 1e-8
     assert result.growth.life_cycles == pytest.approx(expected)
     assert "validity" in result.critical_depth_basis
@@ -125,6 +138,7 @@ def test_rbi_uses_crack_life_and_never_extends_interval():
         params=RBIParameters(),
     )
     assert result.pof_subscores["life_ratio"] == 5  # 4/5 < final edge 1
+    assert result.pof_subscores["corrosion_trend_bump"] is None
     assert result.recommended_interval_yr <= plan.next_inspection_interval_years
     assert "corrosion_rate_mm_yr" not in result.inputs
 
@@ -223,6 +237,8 @@ def test_rbi_exhausted_life_remains_zero():
     )
     assert result.recommended_interval_yr == 0
     assert result.pof_category == 5
+    assert "crack" in result.governing
+    assert "half-life" not in result.governing
 
 
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), -1])
@@ -297,7 +313,10 @@ def test_existing_inspection_router_accepts_crack_growth(tmp_path):
     result = router(cfg)["inspection_planning"]
     expected_years = math.log(5) / (1e-7 * math.pi) / 100_000
     assert result["result"]["remaining_life_years"] == pytest.approx(expected_years)
-    saved = json.loads((tmp_path / "inspection_planning_summary.json").read_text())
+    summary = tmp_path / "inspection_planning_summary.json"
+    saved = json.loads(summary.read_text(encoding="utf-8"))
+    assert b"\r" not in summary.read_bytes()
+    assert result["summary_json"] == summary.as_posix()
     assert saved["result"] == result["result"]
     assert saved["crack_assessment"]["growth"]["status"] == "LIMIT_REACHED"
 
@@ -337,3 +356,279 @@ def test_ordinary_thickness_router_remains_compatible(tmp_path):
 def test_router_rejects_ambiguous_damage_inputs():
     with pytest.raises(ValueError, match="both"):
         router({"inspection_planning": {"crack_growth": {}, "thickness": {}}})
+
+
+def test_crack_rbi_basis_uses_only_applied_policy():
+    inputs = dict(cycles_per_year=100_000, code_max_interval_years=3,
+                  life_divisor=4, policy_basis="Synthetic inspection policy")
+    plan = plan_crack_inspection(growth(), **inputs)
+    result = screen_crack_plan(plan, "C", component_id="synthetic-component",
+                               params=RBIParameters())
+    basis = "\n".join(result.basis)
+    assert "plan maximum interval: 3" in basis
+    assert "life divisor: 4" in basis
+    assert "100000" in basis
+    assert "remaining-life ratio band edges" in basis
+    assert "LOW=10" in basis and "HIGH=2" in basis
+    assert "PoF x CoF" in basis
+    assert "Synthetic inspection policy" in basis
+    assert "rsf" not in basis and "corrosion" not in basis
+    assert "API 510/570/653" not in basis
+    assert "code maximum interval parameter: 10" not in basis
+    # Constant rate gives 4 yr; divisor 4 gives 1 yr, below both caps.
+    assert result.recommended_interval_yr == pytest.approx(1)
+    assert result.inputs["life_divisor"] == 4
+    assert result.inputs["cycles_per_year"] == 100_000
+
+
+@pytest.mark.parametrize("name", ["cycles_per_year", "code_max_interval_years",
+                                 "life_divisor"])
+@pytest.mark.parametrize("value", [True, False])
+def test_boolean_inspection_inputs_rejected(name, value):
+    inputs = dict(cycles_per_year=100_000, code_max_interval_years=3,
+                  life_divisor=2, policy_basis="Synthetic policy")
+    with pytest.raises(ValueError):
+        plan_crack_inspection(growth(), **(inputs | {name: value}))
+
+
+@pytest.mark.parametrize("name", ["initial_depth_mm", "critical_depth_mm",
+                                 "wall_thickness_mm"])
+@pytest.mark.parametrize("value", [True, False])
+def test_boolean_assessment_depths_rejected(name, value):
+    inputs = options() | dict(critical_depth_mm=5, wall_thickness_mm=10,
+                              critical_depth_basis="Synthetic endpoint")
+    with pytest.raises(ValueError):
+        assess_crack_life(**(inputs | {name: value}))
+
+
+@pytest.mark.parametrize("name", ["detectable_length_mm", "critical_length_mm",
+                                 "length_margin"])
+@pytest.mark.parametrize("value", [True, False])
+def test_boolean_lbb_inputs_rejected(name, value):
+    inputs = dict(through_wall=True, detectable_length_mm=10,
+                  critical_length_mm=30, length_margin=2, basis="Synthetic margin")
+    with pytest.raises(ValueError):
+        screen_leak_before_break(**(inputs | {name: value}))
+
+
+@pytest.mark.parametrize("name", ["length_mm", "sigma_m_mpa", "e_mpa"])
+def test_boolean_fad_inputs_rejected(name):
+    inputs = dict(length_mm=60, t_mm=20, sigma_m_mpa=100, sigma_y_mpa=350,
+                  sigma_u_mpa=500, k_mat=100)
+    with pytest.raises(ValueError):
+        plan_crack_from_fad(fad_inputs=inputs | {name: True}, **options())
+
+
+@pytest.mark.parametrize("name", ["stress_range_mpa", "geometry_factor"])
+def test_boolean_router_inputs_rejected(name, tmp_path):
+    inputs = options()
+    inputs.pop("delta_k")
+    inputs.update(law=dict(coefficient=1e-11, exponent=2, threshold=0,
+                           stress_ratio=0, walker_exponent=1, basis="Synthetic law"),
+                  stress_range_mpa=100, geometry_factor=1, critical_depth_mm=5,
+                  wall_thickness_mm=10, critical_depth_basis="Synthetic endpoint")
+    with pytest.raises(ValueError):
+        router({"inspection_planning": {"crack_growth": inputs | {name: True},
+                                        "outputs": {"directory": tmp_path.as_posix()}}})
+
+
+@pytest.mark.parametrize("life", [True, float("nan"), float("inf"), -1])
+def test_invalid_growth_life_never_passes_inspection(life):
+    with pytest.raises(ValueError):
+        plan_crack_inspection(replace(growth(), life_cycles=life),
+                              cycles_per_year=100_000, code_max_interval_years=3,
+                              life_divisor=2, policy_basis="Synthetic policy")
+
+
+def test_crack_rbi_rejects_unexplained_null_life():
+    plan = plan_crack_inspection(growth(), cycles_per_year=100_000,
+                                 code_max_interval_years=3, life_divisor=2,
+                                 policy_basis="Synthetic policy")
+    with pytest.raises(ValueError):
+        screen_crack_plan(replace(plan, remaining_life_years=None), "C",
+                           component_id="synthetic-component", params=RBIParameters())
+
+
+@pytest.mark.parametrize("changes", [
+    {"reference_interval_yr": float("nan")},
+    {"life_ratio_edges": (8, 4, 2, float("nan"))},
+    {"band_interval_cap_yr": {"LOW": 10, "MEDIUM": 6,
+                               "MEDIUM-HIGH": 4, "HIGH": float("nan")}},
+])
+def test_crack_rbi_rejects_invalid_policy(changes):
+    plan = plan_crack_inspection(growth(), cycles_per_year=100_000,
+                                 code_max_interval_years=3, life_divisor=2,
+                                 policy_basis="Synthetic policy")
+    with pytest.raises(ValueError):
+        screen_crack_plan(plan, "C", component_id="synthetic-component",
+                           params=replace(RBIParameters(), **changes))
+
+
+@pytest.mark.parametrize("delta_k", [True, "invalid", -1, float("nan")])
+def test_zero_depth_limit_still_validates_delta_k(delta_k):
+    with pytest.raises(ValueError):
+        assess_crack_life(**(options() | {"delta_k": delta_k}), critical_depth_mm=0,
+                          wall_thickness_mm=10, critical_depth_basis="Synthetic limit")
+
+
+def test_zero_depth_limit_requires_growth_law():
+    with pytest.raises(ValueError):
+        assess_crack_life(**(options() | {"law": None}), critical_depth_mm=0,
+                          wall_thickness_mm=10, critical_depth_basis="Synthetic limit")
+
+
+@pytest.mark.parametrize("basis", [True, None, 1, []])
+def test_basis_fields_reject_nontext(basis):
+    with pytest.raises(ValueError):
+        assess_crack_life(**options(), critical_depth_mm=5, wall_thickness_mm=10,
+                          critical_depth_basis=basis)
+    with pytest.raises(ValueError):
+        plan_crack_inspection(growth(), cycles_per_year=100_000,
+                              code_max_interval_years=3, life_divisor=2,
+                              policy_basis=basis)
+    if basis is not None:
+        with pytest.raises(ValueError):
+            screen_leak_before_break(through_wall=True, detectable_length_mm=10,
+                                     critical_length_mm=30, length_margin=2, basis=basis)
+
+
+@pytest.mark.parametrize("name", ["length_mm", "t_mm", "sigma_m_mpa",
+                                 "sigma_y_mpa", "sigma_u_mpa"])
+@pytest.mark.parametrize("missing", [False, True])
+def test_required_fad_inputs_raise_value_error(name, missing):
+    inputs = dict(length_mm=60, t_mm=20, sigma_m_mpa=100, sigma_y_mpa=350,
+                  sigma_u_mpa=500, k_mat=100)
+    if missing:
+        inputs.pop(name)
+    else:
+        inputs[name] = None
+    with pytest.raises(ValueError):
+        plan_crack_from_fad(fad_inputs=inputs, **options())
+
+
+@pytest.mark.parametrize("name", ["sigma_b_mpa", "e_mpa", "tol_mm",
+                                 "max_depth_fraction"])
+def test_supplied_fad_controls_cannot_be_null(name):
+    inputs = dict(length_mm=60, t_mm=20, sigma_m_mpa=100, sigma_y_mpa=350,
+                  sigma_u_mpa=500, k_mat=100)
+    with pytest.raises(ValueError):
+        plan_crack_from_fad(fad_inputs=inputs | {name: None}, **options())
+
+
+def test_missing_crack_rbi_band_cap_raises_value_error():
+    plan = plan_crack_inspection(growth(), cycles_per_year=100_000,
+                                 code_max_interval_years=3, life_divisor=2,
+                                 policy_basis="Synthetic policy")
+    params = replace(RBIParameters(), band_interval_cap_yr={"LOW": 10})
+    with pytest.raises(ValueError):
+        screen_crack_plan(plan, "C", component_id="synthetic-component", params=params)
+
+
+@pytest.mark.parametrize("value", [True, 1.5, float("nan")])
+def test_crack_consequence_requires_integer_category(value):
+    plan = plan_crack_inspection(growth(), cycles_per_year=100_000,
+                                 code_max_interval_years=3, life_divisor=2,
+                                 policy_basis="Synthetic policy")
+    with pytest.raises(ValueError):
+        screen_crack_plan(plan, value, component_id="synthetic-component",
+                           params=RBIParameters())
+
+
+def test_initial_depth_beyond_wall_is_rejected():
+    with pytest.raises(ValueError):
+        assess_crack_life(**(options() | {"initial_depth_mm": 11}),
+                          critical_depth_mm=5, wall_thickness_mm=10,
+                          critical_depth_basis="Synthetic endpoint")
+
+
+@pytest.mark.parametrize("stresses", [
+    {"sigma_m_mpa": -100}, {"sigma_b_mpa": -1},
+    {"sigma_m_mpa": 0, "sigma_b_mpa": 0},
+])
+def test_fad_adapter_rejects_unsupported_stress_signs(stresses):
+    inputs = dict(length_mm=60, t_mm=20, sigma_m_mpa=100,
+                  sigma_y_mpa=350, sigma_u_mpa=500, k_mat=100)
+    with pytest.raises(ValueError):
+        plan_crack_from_fad(fad_inputs=inputs | stresses, **options())
+
+
+@pytest.mark.parametrize("stresses", [
+    {"sigma_m_mpa": 100, "sigma_b_mpa": 0},
+    {"sigma_m_mpa": 0, "sigma_b_mpa": 100},
+])
+def test_fad_adapter_allows_zero_one_component_with_tensile_loading(stresses):
+    result = plan_crack_from_fad(
+        fad_inputs=dict(length_mm=60, t_mm=20, sigma_y_mpa=350,
+                        sigma_u_mpa=500, k_mat=100) | stresses, **options())
+    assert result.limiting_depth_mm > 0
+
+
+@pytest.mark.parametrize("changes", [
+    {"cycles_per_year": 0}, {"life_divisor": 1},
+    {"code_max_interval_years": -1}, {"policy_basis": None},
+])
+def test_invalid_policy_is_rejected_before_integration(monkeypatch, changes):
+    def unexpected_integration(*args, **kwargs):
+        pytest.fail("Invalid policy reached integration")
+
+    monkeypatch.setattr("digitalmodel.asset_integrity.crack_life.integrate_growth",
+                        unexpected_integration)
+    with pytest.raises(ValueError):
+        assess_crack_life(**(options() | changes), critical_depth_mm=5,
+                          wall_thickness_mm=10, critical_depth_basis="Synthetic endpoint")
+
+
+@pytest.mark.parametrize("changes", [
+    {"life_divisor": 1}, {"policy_basis": None},
+    {"remaining_life_years": 0, "remaining_life_cycles": 0,
+     "screening_status": "pass", "next_inspection_interval_years": 1},
+    {"next_inspection_interval_years": 3}, {"half_life_interval_years": 3},
+    {"remaining_life_years": 5},
+])
+def test_crack_rbi_rejects_inconsistent_mutable_plan(changes):
+    plan = plan_crack_inspection(growth(), cycles_per_year=100_000,
+                                 code_max_interval_years=3, life_divisor=2,
+                                 policy_basis="Synthetic policy")
+    with pytest.raises(ValueError):
+        screen_crack_plan(replace(plan, **changes), "C", component_id="synthetic-component",
+                           params=RBIParameters())
+
+
+@pytest.mark.parametrize("inputs", [None, {}, {"law": None},
+                                   {"law": {"unknown": 1}}])
+def test_malformed_router_inputs_raise_value_error(inputs, tmp_path):
+    with pytest.raises(ValueError):
+        router({"inspection_planning": {"crack_growth": inputs,
+                                        "outputs": {"directory": tmp_path.as_posix()}}})
+
+
+def test_fad_adapter_rejects_mixed_endpoint_inputs():
+    with pytest.raises(ValueError):
+        plan_crack_from_fad(
+            fad_inputs=dict(length_mm=60, t_mm=20, sigma_m_mpa=100,
+                            sigma_y_mpa=350, sigma_u_mpa=500, k_mat=100),
+            **options(), critical_depth_mm=5)
+
+
+@pytest.mark.parametrize("case", ["law_not_mapping", "unknown_law_key",
+                                 "missing_depth", "mixed_endpoints", "unknown_input"])
+def test_router_checks_complete_contract(case, tmp_path):
+    inputs = options()
+    inputs.pop("delta_k")
+    inputs.update(law=dict(coefficient=1e-11, exponent=2, threshold=0, stress_ratio=0,
+                           walker_exponent=1, basis="Synthetic law"),
+                  stress_range_mpa=100, geometry_factor=1, critical_depth_mm=5,
+                  wall_thickness_mm=10, critical_depth_basis="Synthetic endpoint")
+    if case == "law_not_mapping":
+        inputs["law"] = None
+    elif case == "unknown_law_key":
+        inputs["law"]["unknown"] = 1
+    elif case == "missing_depth":
+        inputs.pop("initial_depth_mm")
+    elif case == "mixed_endpoints":
+        inputs["fad_inputs"] = {}
+    else:
+        inputs["unknown"] = 1
+    with pytest.raises(ValueError):
+        router({"inspection_planning": {"crack_growth": inputs,
+                                        "outputs": {"directory": tmp_path.as_posix()}}})
