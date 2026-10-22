@@ -2,7 +2,9 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Rebuild the sizing report and check displayed evidence against the public API."""
 
+import ast
 import importlib.util
+import os
 import json
 import re
 import subprocess
@@ -75,9 +77,9 @@ class EvidenceParser(HTMLParser):
 
 
 @pytest.fixture
-def oracle():
-    """Calculate the documented example directly, independently of the builder."""
-    settings = yaml.safe_load(EXAMPLE.read_text())["alt_fuel_ship_sizing"]
+def module_results():
+    """Call the same public API to check report/export consistency only."""
+    settings = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))["alt_fuel_ship_sizing"]
     fuel = FuelProperties(lhv_mj_per_kg=settings["fuel"]["lhv_mj_per_kg"])
     kwargs = dict(
         shaft_power_kw=settings["powering"]["shaft_power_kw"],
@@ -99,17 +101,60 @@ def oracle():
     return settings, fuel, single, profile
 
 
-def test_rebuild_is_byte_identical(tmp_path):
-    builder = load_builder()
-    builder.build(tmp_path)
+REBUILD = (
+    "PYTHONPATH=src python docs/reports/modules/altfuelshipsizing/generate.py "
+    "--output-dir docs/reports/modules/altfuelshipsizing"
+)
+
+
+def test_rebuild_preserves_evidence_and_lf(tmp_path):
+    load_builder().build(tmp_path)
     for name in ("index.html", "changes.json"):
-        assert (tmp_path / name).read_bytes() == (REPORT / name).read_bytes()
+        assert b"\r" not in (tmp_path / name).read_bytes(), REBUILD
+    rebuilt = (tmp_path / "index.html").read_text(encoding="utf-8")
+    retained = (REPORT / "index.html").read_text(encoding="utf-8")
+    for html in (rebuilt, retained):
+        assert html.endswith("\n"), REBUILD
+    parsers = [EvidenceParser(), EvidenceParser()]
+    for parser, html in zip(parsers, (rebuilt, retained)):
+        parser.feed(html)
+    assert [k for k, _ in parsers[0].numbers] == [k for k, _ in parsers[1].numbers], REBUILD
+    for (_, actual), (_, expected) in zip(parsers[0].numbers, parsers[1].numbers):
+        assert numeric(actual) == pytest.approx(numeric(expected)), REBUILD
+    pattern = r'(<script id="chart-data" type="application/json">)(.*?)(</script>)'
+    actual, expected = [json.loads(re.search(pattern, html, re.S).group(2))
+                        for html in (rebuilt, retained)]
+    assert actual["limit"] == pytest.approx(expected["limit"]), REBUILD
+    assert actual["boundary"] == pytest.approx(expected["boundary"]), REBUILD
+    assert len(actual["points"]) == len(expected["points"]), REBUILD
+    for point, reference in zip(actual["points"], expected["points"]):
+        assert point == pytest.approx(reference), REBUILD
+    def structure(html):
+        html = re.sub(pattern, r"\1CHART\3", html, flags=re.S)
+        return re.sub(r'(<span data-number="[^"]+">)[^<]*(</span>)', r"\1NUMBER\2", html)
+    assert structure(rebuilt) == structure(retained), REBUILD
+    assert json.loads((tmp_path / "changes.json").read_text(encoding="utf-8")) == json.loads(
+        (REPORT / "changes.json").read_text(encoding="utf-8")), REBUILD
 
 
-def test_every_displayed_example_number_matches_module(oracle):
-    settings, fuel, single, profile = oracle
+def numeric(text):
+    """Read engineering display notation without depending on the formatter."""
+    return float(text.replace(",", "").replace("−", "-"))
+
+
+def test_every_displayed_example_number_matches_module(module_results):
+    settings, fuel, single, profile = module_results
     expected = flatten({"input": settings, "fuel": asdict(fuel),
                         "single": asdict(single), "profile": asdict(profile),
+                        "reference": {
+                            "density_kg_per_m3": 70.78,
+                            "heat_of_vaporization_kj_per_kg": 445.5,
+                            "storage_temperature_k": 20.268,
+                            "density_change_percent": 0.0988980,
+                            "latent_heat_change_percent": 0.1122334,
+                            "gross_tank_volume_m3": 1905.847896,
+                        },
+                        "chart": {"limit": 7920.0, "boundary": {"x": 38.991374}},
                         "comparison": {
                             "inventory_change_percent": 100 * (profile.required_fuel_mass_kg - single.required_fuel_mass_kg) / single.required_fuel_mass_kg,
                             "volume_change_percent": 100 * (profile.gross_tank_volume_m3 - single.gross_tank_volume_m3) / single.gross_tank_volume_m3,
@@ -119,7 +164,8 @@ def test_every_displayed_example_number_matches_module(oracle):
     assert parser.numbers
     for key, text in parser.numbers:
         assert key in expected, key
-        assert text == load_builder().engineering_number(expected[key]), key
+        tolerance = 0.0 if key.startswith(("input.", "fuel.")) else 0.050001
+        assert numeric(text) == pytest.approx(expected[key], rel=0, abs=tolerance), key
     # These are the complete numerical result records, not selected headline values.
     keys = {key for key, _ in parser.numbers}
     assert set(flatten({"single": asdict(single), "profile": asdict(profile)})) <= keys
@@ -136,19 +182,19 @@ def test_worked_example_contains_no_unbound_numbers():
     assert not re.search(r"\d", text)
 
 
-def test_router_exports_equal_the_report(tmp_path, oracle):
-    _, _, single, profile = oracle
-    cfg = yaml.safe_load(EXAMPLE.read_text())
-    cfg["_config_dir_path"] = str(tmp_path)
-    cfg["_config_file_path"] = str(tmp_path / "example.yml")
+def test_router_exports_equal_the_report(tmp_path, module_results):
+    _, _, single, profile = module_results
+    cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    cfg["_config_dir_path"] = tmp_path.as_posix()
+    cfg["_config_file_path"] = (tmp_path / "example.yml").as_posix()
     summary = router(cfg)["alt_fuel_ship_sizing"]["summary"]
     for key in ("required_fuel_mass_kg", "gross_tank_volume_m3", "bog_lost_kg"):
         assert summary[key] == getattr(profile, key)
     assert profile.required_fuel_mass_kg > single.required_fuel_mass_kg
 
 
-def test_chart_values_and_warning_boundary(oracle):
-    _, fuel, single, _ = oracle
+def test_chart_values_and_warning_boundary(module_results):
+    _, fuel, single, _ = module_results
     builder = load_builder()
     model = builder.calculate()
     html = builder.render()
@@ -156,7 +202,7 @@ def test_chart_values_and_warning_boundary(oracle):
     assert json.loads(encoded.group(1)) == model["chart"]
     expected_draw = single.fuel_mass_flow_kg_per_h * builder.HOURS_PER_DAY
     assert model["chart"]["limit"] == expected_draw
-    settings = oracle[0]
+    settings = module_results[0]
     for point in model["chart"]["points"]:
         tank = TankParameters(**{**settings["tank"],
                                  "insulation_heat_flux_w_per_m2": point["x"]})
@@ -184,12 +230,12 @@ def test_single_file_style_comments_and_changes():
     assert "type=\"file\"" in html
     assert "<style>" in html
     assert "--brand:" in html
-    assert "--brand:" in (ROOT / "docs/api/_assets/brand.css").read_text()
-    changes = json.loads((REPORT / "changes.json").read_text())
+    assert "--brand:" in (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes == load_builder().CHANGES
 
 
-def test_built_client_text_and_publication_hygiene():
+def test_built_public_text_and_publication_hygiene():
     html = load_builder().render()
     text = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", "", html, flags=re.S)
     text = re.sub(r"<[^>]+>", " ", text)
@@ -206,7 +252,7 @@ def test_reference_targets_and_house_style():
     html = load_builder().render()
     ids = set(re.findall(r'\bid="([^"]+)"', html))
     assert all(target in ids for target in re.findall(r'href="#([^"]+)"', html))
-    source = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text()
+    source = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
     exemplar = re.search(r"<style>.*?</style>", source, re.S).group()
     assert exemplar in html
 
@@ -214,12 +260,117 @@ def test_reference_targets_and_house_style():
 def test_only_report_deliverables_are_reincluded():
     for name in ("index.html", "generate.py", "changes.json"):
         result = subprocess.run(
-            ["git", "check-ignore", "-q", str(REPORT / name)],
-            cwd=ROOT, check=False,
+            ["git", "check-ignore", "--no-index", "-q", (REPORT / name).relative_to(ROOT).as_posix()],
+            cwd=ROOT, check=False, env=git_environment(),
         )
         assert result.returncode == 1
     result = subprocess.run(
-        ["git", "check-ignore", "-q", str(REPORT / "intermediate.csv")],
-        cwd=ROOT, check=False,
+        ["git", "check-ignore", "--no-index", "-q", (REPORT / "intermediate.csv").relative_to(ROOT).as_posix()],
+        cwd=ROOT, check=False, env=git_environment(),
     )
     assert result.returncode == 0
+
+
+def git_environment():
+    """Keep caller repository bindings out of ignore checks and fixtures."""
+    return {key: value for key, value in os.environ.items()
+            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+
+
+def test_headlines_match_hand_worked_240_hour_case():
+    model = load_builder().calculate()
+    # Pe = 4750/0.95 + 500 = 5500 kW; Pf = 5500/0.50 = 11000 kW.
+    # Flow = 11000*3.6/120 = 330 kg/h; Mv = 330*(4000/12)*1.10 = 121000 kg.
+    # Vg = M/(70.85*0.92); D = (4*Vg/(5*pi))**(1/3); A = 5.5*pi*D**2.
+    # Solve M = 121000 + 1.5*A(M)*240*3600/446000 by fixed-point substitution:
+    # M = 124098.624655 kg; Vg = 1903.878750 m3; loss = 3098.624655 kg.
+    # Increase = 100*(M/121000-1) = 2.560847%; sea q* = 7920*446000/(86400*A).
+    assert model["single"]["fuel_mass_flow_kg_per_h"] == pytest.approx(330.0)
+    assert model["single"]["required_fuel_mass_kg"] == pytest.approx(121000.0)
+    assert model["single"]["gross_tank_volume_m3"] == pytest.approx(1856.340708, rel=0, abs=0.00001)
+    assert model["profile"]["required_fuel_mass_kg"] == pytest.approx(124098.624655, rel=0, abs=0.00001)
+    assert model["profile"]["gross_tank_volume_m3"] == pytest.approx(1903.878750, rel=0, abs=0.00001)
+    assert model["profile"]["bog_lost_kg"] == pytest.approx(3098.624655, rel=0, abs=0.00001)
+    assert model["comparison"]["volume_change_percent"] == pytest.approx(2.560847, rel=0, abs=0.00001)
+    assert model["chart"]["boundary"]["x"] == pytest.approx(38.991374, rel=0, abs=0.00001)
+
+
+def test_text_io_declares_utf8_and_lf():
+    for path in (REPORT / "generate.py", Path(__file__)):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            if node.func.attr not in {"read_text", "write_text"}:
+                continue
+            keywords = {item.arg: ast.literal_eval(item.value) for item in node.keywords}
+            assert keywords.get("encoding") == "utf-8", node.lineno
+            if node.func.attr == "write_text":
+                assert keywords.get("newline") == "\n", node.lineno
+
+
+@pytest.mark.parametrize("data", [{"unrecognised": 1.0}, {"unexpected": [1.0]}])
+def test_ledger_rejects_unknown_numeric_fields(data):
+    builder = load_builder()
+    with pytest.raises(ValueError, match="Unknown numeric field"):
+        builder.ledger("input", data, builder.flatten(data, "input"), "Example")
+
+
+def test_leg_labels_and_prose_follow_each_leg(monkeypatch):
+    builder = load_builder()
+    model = builder.calculate()
+    # Deliberately differ from route service speed and add a fourth leg.
+    model["input"]["route"]["legs"][0]["speed_kn"] = 10.0
+    model["input"]["route"]["legs"][2]["speed_kn"] = 14.0
+    model["input"]["route"]["legs"].append({"type": "port", "dwell_h": 48.0})
+    monkeypatch.setattr(builder, "calculate", lambda: model)
+    html = builder.render()
+    worked = html.split('id="worked-example"', 1)[1].split("</section>", 1)[0]
+    parser = EvidenceParser()
+    parser.feed(worked)
+    numbers = dict(parser.numbers)
+    assert numeric(numbers["input.route.legs.0.speed_kn"]) == 10.0
+    assert numeric(numbers["input.route.legs.2.speed_kn"]) == 14.0
+    assert numeric(numbers["input.route.legs.3.dwell_h"]) == 48.0
+    assert "Leg 4 (port)" in html
+
+
+def test_input_and_property_precision_is_preserved():
+    builder = load_builder()
+    values = {"input.thickness_m": 0.0254, "fuel.density_kg_per_m3": 70.85,
+              "fuel.storage_temperature_k": 20.28}
+    for key, value in values.items():
+        parser = EvidenceParser()
+        parser.feed(builder.number(key, values))
+        assert numeric(parser.numbers[0][1]) == value
+
+
+def test_open_reference_property_comparison_matches_hand_values():
+    reference = load_builder().calculate()["reference"]
+    # NBS 168 (1981), 1.2.15 Fixed Points and 1.2.25 Latent Heat of Vaporization.
+    # 100*(70.85/70.78-1) = 0.0988980%; 100*(446.0/445.5-1) = 0.1122334%.
+    # The same mass/area substitution above, with rho=70.78 and hv=445500 J/kg,
+    # gives M=124104.240944 kg and Vg=M/(70.78*0.92)=1905.847896 m3.
+    assert reference["density_change_percent"] == pytest.approx(0.0988980, rel=0, abs=0.0000001)
+    assert reference["latent_heat_change_percent"] == pytest.approx(0.1122334, rel=0, abs=0.0000001)
+    assert reference["gross_tank_volume_m3"] == pytest.approx(1905.847896, rel=0, abs=0.00001)
+
+
+def test_shared_ignore_rules_preserve_sibling_deliverables(tmp_path):
+    env = git_environment()
+    subprocess.run(["git", "init", "-q", tmp_path.as_posix()], check=True, env=env)
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    # Another report may add its exceptions before or after this report's rules.
+    sibling = ("!docs/reports/modules/another_report/\n"
+               "!docs/reports/modules/another_report/index.html\n")
+    anchor = "!docs/reports/modules/altfuelshipsizing/"
+    for combined in (rules.replace(anchor, sibling + anchor), rules + sibling):
+        (tmp_path / ".gitignore").write_text(combined, encoding="utf-8", newline="\n")
+        for module in ("altfuelshipsizing", "another_report"):
+            for filename, ignored in (("index.html", False), ("intermediate.csv", True)):
+                result = subprocess.run(
+                    ["git", "check-ignore", "--no-index", "-q",
+                     f"docs/reports/modules/{module}/{filename}"],
+                    cwd=tmp_path, check=False, env=env,
+                )
+                assert result.returncode == int(not ignored), (module, filename)

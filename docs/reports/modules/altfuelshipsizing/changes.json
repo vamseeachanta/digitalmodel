@@ -1,18 +1,18 @@
 {
-  "revision": "0",
+  "revision": "1",
   "date": "2026-10-22",
   "changes": [
     {
       "section": "summary",
-      "text": "Sea-passage and port-dwell inventories are compared to expose the additional boil-off allowance."
+      "text": "Both tank vapor rates are stated beside sea consumption and its heat-flux boundary."
     },
     {
-      "section": "basis",
-      "text": "Supplied powering, insulation and reserve inputs are distinguished from fuel properties and acceptance criteria."
+      "section": "references",
+      "text": "Configured property precision and the open-reference differences are reported explicitly."
     },
     {
-      "section": "results",
-      "text": "The sea-leg boil-off absorption boundary is shown with the action required above it."
+      "section": "appendix",
+      "text": "Hand-worked headline checks are distinguished from API consistency checks; input labels and reconstruction are portable."
     }
   ]
 }

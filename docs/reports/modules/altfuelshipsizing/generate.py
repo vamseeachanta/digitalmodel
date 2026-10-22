@@ -34,12 +34,12 @@ ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = "examples/workflows/alt-fuel-report-pack/sizing_input.yml"
 STYLE_EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
 CHANGES = {
-    "revision": "0",
+    "revision": "1",
     "date": "2026-10-22",
     "changes": [
-        {"section": "summary", "text": "Sea-passage and port-dwell inventories are compared to expose the additional boil-off allowance."},
-        {"section": "basis", "text": "Supplied powering, insulation and reserve inputs are distinguished from fuel properties and acceptance criteria."},
-        {"section": "results", "text": "The sea-leg boil-off absorption boundary is shown with the action required above it."},
+        {"section": "summary", "text": "Both tank vapor rates are stated beside sea consumption and its heat-flux boundary."},
+        {"section": "references", "text": "Configured property precision and the open-reference differences are reported explicitly."},
+        {"section": "appendix", "text": "Hand-worked headline checks are distinguished from API consistency checks; input labels and reconstruction are portable."},
     ],
 }
 
@@ -81,9 +81,14 @@ def calculate():
         eta_fuel_cell_lhv=settings["efficiency"]["fuel_cell_lhv"],
         tank=tank, fuel=fuel, fuel_margin_fraction=settings["fuel"]["margin_fraction"],
     )
-    legs = [SeaLeg(**{k: v for k, v in item.items() if k != "type"})
-            if item["type"] == "sea" else PortLeg(dwell_h=item["dwell_h"])
-            for item in settings["route"]["legs"]]
+    legs = []
+    for item in settings["route"]["legs"]:
+        if item["type"] == "sea":
+            legs.append(SeaLeg(**{k: v for k, v in item.items() if k != "type"}))
+        elif item["type"] == "port":
+            legs.append(PortLeg(dwell_h=item["dwell_h"]))
+        else:
+            raise ValueError("Unknown voyage leg type")
     profile = size_fuel_chain_voyage(legs=legs, **common)
     single = size_fuel_chain(
         distance_nm=sum(item.distance_nm for item in legs if isinstance(item, SeaLeg)),
@@ -105,6 +110,14 @@ def calculate():
     boundary = boil_off(single.tank, TankParameters(**{
         **settings["tank"], "insulation_heat_flux_w_per_m2": q_boundary,
     }), fuel)
+    # NBS Monograph 168 (1981), 1.2.15 Fixed Points (para/equilibrium)
+    # and 1.2.25 Latent Heat of Vaporization (para, boiling point).
+    reference_fuel = type(fuel)(**{**asdict(fuel), "density_kg_per_m3": 70.78,
+                                 "heat_of_vaporization_kj_per_kg": 445.5,
+                                 "storage_temperature_k": 20.268})
+    reference_profile = size_fuel_chain_voyage(
+        legs=legs, **{**common, "fuel": reference_fuel},
+    )
     counts = {}
     for path in (
         "tests/naval_architecture/test_alt_fuel_ship_sizing.py",
@@ -123,6 +136,14 @@ def calculate():
         },
         "chart": {"points": points, "limit": draw,
                   "boundary": {"x": q_boundary, "y": boundary.bog_kg_per_day}},
+        "reference": {
+            "density_kg_per_m3": reference_fuel.density_kg_per_m3,
+            "heat_of_vaporization_kj_per_kg": reference_fuel.heat_of_vaporization_kj_per_kg,
+            "storage_temperature_k": reference_fuel.storage_temperature_k,
+            "density_change_percent": 100 * (fuel.density_kg_per_m3 / reference_fuel.density_kg_per_m3 - 1),
+            "latent_heat_change_percent": 100 * (fuel.heat_of_vaporization_kj_per_kg / reference_fuel.heat_of_vaporization_kj_per_kg - 1),
+            "gross_tank_volume_m3": reference_profile.gross_tank_volume_m3,
+        },
     }
 
 
@@ -185,7 +206,19 @@ def house_style():
 
 def number(key, values):
     """Bind each displayed example number to a numeric API/input record."""
-    return f'<span data-number="{key}">{engineering_number(values[key])}</span>'
+    value = values[key]
+    if not math.isfinite(value):
+        raise ValueError("Nonfinite evidence cannot be issued")
+    if key.startswith(("input.", "fuel.")) or key in {
+        "reference.density_kg_per_m3", "reference.storage_temperature_k",
+        "reference.heat_of_vaporization_kj_per_kg",
+    }:
+        text = f"{value:,}"
+    elif key.endswith("change_percent"):
+        text = f"{value:.1f}"
+    else:
+        text = engineering_number(value)
+    return f'<span data-number="{key}">{text}</span>'
 
 
 def ledger(prefix, data, values, source):
@@ -193,14 +226,39 @@ def ledger(prefix, data, values, source):
     rows = []
     for key in flatten(data, prefix):
         field = key.split(".")[-1]
-        label, unit = LABELS.get(field, ("Trade-study service speed", "knots"))
+        if re.fullmatch(r"input\.trade_study\.speeds_kn\.\d+", key):
+            label, unit = "Trade-study service speed", "knots"
+        elif field in LABELS:
+            label, unit = LABELS[field]
+        else:
+            raise ValueError(f"Unknown numeric field: {key}")
         if ".legs." in key:
             leg = int(key.split(".legs.")[1].split(".")[0])
-            label = ("Outbound sea leg", "Port leg", "Return sea leg")[leg] + ": " + label.lower()
+            record = data["route"]["legs"][leg] if prefix == "input" else data["legs"][leg]
+            kind = record.get("type", record.get("leg_type"))
+            if kind not in {"sea", "port"}:
+                raise ValueError("Unknown voyage leg type")
+            label = f"Leg {leg + 1} ({kind}): " + label.lower()
         rows.append(f"<tr><td>{escape(label)}</td><td>{escape(unit)}</td>"
                     f"<td>{number(key, values)}</td><td>{source}</td></tr>")
     return ('<table><thead><tr><th>Quantity</th><th>Unit</th><th>Value</th><th>Source</th></tr></thead>'
             f'<tbody>{"".join(rows)}</tbody></table>')
+
+
+def route_description(settings, values):
+    """Bind the narrative to each ordered leg, including its own speed."""
+    rows = []
+    for index, leg in enumerate(settings["route"]["legs"]):
+        prefix = f"input.route.legs.{index}"
+        if leg["type"] == "sea":
+            text = (f'Sea passage of {number(prefix + ".distance_nm", values)} nautical miles '
+                    f'at {number(prefix + ".speed_kn", values)} knots.')
+        elif leg["type"] == "port":
+            text = f'Port dwell of {number(prefix + ".dwell_h", values)} h.'
+        else:
+            raise ValueError("Unknown voyage leg type")
+        rows.append(f"<li>{text}</li>")
+    return '<ul>' + ''.join(rows) + '</ul>'
 
 
 def tank_schematic(values):
@@ -242,7 +300,7 @@ def render():
 <header><div class="kicker">Marine engineering · concept design</div>
 <h1>Alternative fuel ship sizing analysis</h1>
 <p class="sub">Liquid-hydrogen inventory, cylindrical tank volume and voyage boil-off</p>
-<p>Draft for client review</p></header>
+<p>Draft for maintainer review</p></header>
 <nav aria-label="Report sections"><a href="#summary">Summary</a> · <a href="#basis">Design data</a> ·
 <a href="#results">Results</a> · <a href="#validation">Validation</a> · <a href="#references">References</a> · <a href="#appendix">Appendix</a></nav>
 
@@ -254,13 +312,16 @@ key results are summarized below.</p>
 <ul><li>The sea-only inventory requires {n('single.gross_tank_volume_m3')} m³ gross tank volume;
 the example with {n('profile.port_dwell_h')} h in port requires {n('profile.gross_tank_volume_m3')} m³ under the constant heat-leak model.</li></ul></li>
 <li>The consumed-vapor assumption can be screened against the sea fuel draw.
-<ul><li>At the example heat flux, generation is {n('single.boil_off.bog_kg_per_day')} kg/day.
-The sea consumption boundary is drawn in Figure B; above that boundary, venting or reliquefaction is required and the reported inventory is optimistic.</li></ul></li>
+<ul><li>At {n('input.tank.insulation_heat_flux_w_per_m2')} W/m², generation is
+{n('single.boil_off.bog_kg_per_day')} kg/day for the sea-only tank and {n('profile.boil_off.bog_kg_per_day')} kg/day for the port-dwell tank,
+both below the sea draw of {n('chart.limit')} kg/day. The sea-only heat-flux boundary is {n('chart.boundary.x')} W/m².
+Above the relevant tank's absorption boundary, venting or reliquefaction is required and the reported inventory is optimistic.</li></ul></li>
 <li>A detailed design cannot be released from these calculations.
 <ul><li>Tank pressure, structural adequacy, route powering accuracy and physical validation remain NOT_EVALUATED.</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>{CHANGES['revision']}</td><td>{CHANGES['date']}</td><td>Initial issue: fuel-chain scope, port-dwell inventory and the vapor-absorption criterion are documented for concept screening.</td></tr></tbody></table>
+<tbody><tr><td>0</td><td>2026-10-22</td><td>Initial issue: fuel-chain scope, port-dwell inventory and the vapor-absorption criterion are documented for concept screening.</td></tr>
+<tr><td>{CHANGES['revision']}</td><td>{CHANGES['date']}</td><td>Property precision, thermal comparators and hand-worked evidence are clarified; portable reconstruction and leg labels correct the evidence presentation.</td></tr></tbody></table>
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -300,14 +361,16 @@ it provides no measure of physical accuracy.</p>
 </section>
 
 <section id="method"><h2>5. Methodology and theory</h2>
-<p>Energy conservation and cylindrical geometry are applied with the units defined below.
-The equations reproduce the <a href="#source-api">documented library method</a> rather than a resistance or pressure-vessel calculation.</p>
+<p>Energy conservation, power and density follow <a href="#source-physics">the cited textbook definitions</a>;
+cylinder geometry follows <a href="#source-geometry">the cited volume and surface-area formulae</a>.
+The equations express the <a href="#source-api">documented library method</a> using the stated example assumptions.</p>
 <h3>Energy and inventory balance</h3>
 <div class="eq">t = s / v; Pₑ = Pₛ / ηₑ + Pₕ; P𝒇 = Pₑ / η𝒇; ṁ = cₕ P𝒇 / H</div>
 <p>The route distance s is in nautical miles, speed v in knots and sea duration t in hours. Shaft demand Pₛ,
 hotel demand Pₕ, electrical demand Pₑ and fuel power P𝒇 are in kW. The dimensionless efficiencies ηₑ and η𝒇 represent
 the drivetrain and the lower-heating-value plant efficiency. H is lower heating value in MJ/kg and ṁ is fuel flow in kg/h.
-The unit conversion cₕ is the seconds-per-hour to kilojoules-per-megajoule ratio; it is defined in <a href="#source-api">the unit implementation</a>.</p>
+The unit conversion cₕ is the seconds-per-hour to kilojoules-per-megajoule ratio;
+dimensional cancellation follows <a href="#source-physics">the textbook unit-conversion method</a>.</p>
 <div class="eq">Mᵥ = (1 + r) Σ(ṁᵢ tᵢ); M = Mᵥ + Mₗ; Vₙ = M / ρ; V𝓰 = Vₙ / (1 − u)</div>
 <p>The subscript ᵢ identifies each sea burn period. Reserve fraction r is applied to sea burn only.
 Voyage fuel including reserve Mᵥ, lost vapor Mₗ and required inventory M are in kg. Liquid density ρ is in kg/m³,
@@ -320,6 +383,7 @@ Uniform heat flux q is in W/m², heat ingress Q is in W, latent heat hᵥ is exp
 and vapor generation ṁᵥ is in kg/s. The reported vapor rate is converted to kg/day; its percentage rate is referenced to the full-load liquid mass.
 The alternative heat-flux input is q = U(Tₐ − Tₛ), with thermal transmittance U in W/(m² K) and ambient and storage temperatures Tₐ and Tₛ in K.</p>
 <p>The heat balance uses constant saturation properties, uniform heat flux and the entire cylinder area throughout the voyage.
+The phase-change balance follows <a href="#source-thermal">the textbook latent-heat relation</a>.
 The public monograph defines latent heat as the saturated vapor–liquid enthalpy difference; the repository property approximations are retained,
 with their external qualification limits stated in <a href="#source-properties">the property source register</a>.</p>
 <p>Inventory is iterated when lost vapor increases tank size and hence surface area. In consumed mode, sea vapor is credited without adding inventory;
@@ -329,10 +393,9 @@ because no depletion-dependent liquid level or pressure state is solved.</p>
 
 <section id="results"><h2>6. Detailed results and worked example</h2><div id="worked-example">
 <p>The documented example is calculated by calling the public fuel-chain and voyage functions.
-The sea-only comparison retains the same aggregate distance and speed while omitting port dwell.</p>
-<p>The route contains an outbound passage of {n('input.route.legs.0.distance_nm')} nautical miles,
-a port dwell of {n('input.route.legs.1.dwell_h')} h and a return passage of {n('input.route.legs.2.distance_nm')} nautical miles.
-Both sea legs use {n('input.route.service_speed_kn')} knots. At sea, electrical demand is {n('single.electrical_power_kw')} kW,
+The sea-only comparison uses the aggregate distance at the service speed of {n('input.route.service_speed_kn')} knots, omitting port dwell.</p>
+<p>The ordered voyage legs are:</p>{route_description(model['input'], values)}
+<p>For the sea-only comparison, electrical demand is {n('single.electrical_power_kw')} kW,
 fuel power is {n('single.fuel_lhv_power_kw')} kW and fuel flow is {n('single.fuel_mass_flow_kg_per_h')} kg/h.</p>
 <table><thead><tr><th>Quantity</th><th>Unit</th><th>Sea only</th><th>With port dwell</th><th>Source</th></tr></thead><tbody>
 <tr><td>Fuel inventory</td><td>kg</td><td>{n('single.required_fuel_mass_kg')}</td><td>{n('profile.required_fuel_mass_kg')}</td><td><a href="#source-api">Calculation</a></td></tr>
@@ -405,10 +468,28 @@ distance, speed, property values and the supplied heat-flux magnitude are positi
 <dt id="source-properties">Configured fuel properties</dt><dd>Repository edition accompanying this report:
 <code>src/digitalmodel/alt_fuel_ship_sizing/constants.py</code> and the documented example's lower-heating-value override.
 The hydrogen density, latent heat and storage temperature in the appendix are retained from the module, not re-fitted to an external table.
-The monograph's normal-boiling entries differ in detail; exact external qualification of these configured approximations remains NOT_EVALUATED.</dd>
+Table B retains the configured source precision. Against the monograph's para/equilibrium normal-boiling entries,
+the configured density is higher by {n('reference.density_change_percent')} % relative to {n('reference.density_kg_per_m3')} kg/m³,
+and latent heat is higher by {n('reference.latent_heat_change_percent')} % relative to {n('reference.heat_of_vaporization_kj_per_kg')} kJ/kg.
+The monograph temperature is {n('reference.storage_temperature_k')} K on its NBS-55 scale; the configured temperature is {n('fuel.storage_temperature_k')} K.
+Substitution of those monograph properties gives {n('reference.gross_tank_volume_m3')} m³, compared with {n('profile.gross_tank_volume_m3')} m³ using the configured properties.
+This sensitivity is calculable; suitability of either property set for an actual storage condition remains NOT_EVALUATED.
+The module constant attribution requires a separate source reconciliation; this report retains the configured calculation basis.</dd>
 <dt id="source-monograph">Open thermodynamic reference</dt><dd><a href="https://nvlpubs.nist.gov/nistpubs/Legacy/MONO/nbsmonograph168.pdf">Selected Properties of Hydrogen (Engineering Design Data),
-National Bureau of Standards Monograph 168, 1981</a>, section 1.2.25, Heat of Vaporization, and section 1.2.32, Saturation Properties.
+National Bureau of Standards Monograph 168, 1981</a>, section 1.2.15, Fixed Points; section 1.2.25, Latent Heat of Vaporization; and section 1.2.32, Saturation Properties.
 The open government copy was accessible on the report issue date. The latent-heat definition uses saturated vapor and liquid at the same temperature and pressure.</dd>
+<dt id="source-physics">Power, density and dimensional basis</dt><dd>OpenStax, University Physics Volume 1, first edition, 2016:
+<a href="https://openstax.org/books/university-physics-volume-1/pages/1-3-unit-conversion">section 1.3, Unit Conversion</a>;
+<a href="https://openstax.org/books/university-physics-volume-1/pages/7-4-power">section 7.4, Power</a>; and
+<a href="https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure">section 14.1, Fluids, Density, and Pressure</a>.
+The efficiency ratios, reserve multiplier and ullage fraction are the stated example assumptions, not textbook-prescribed coefficients.</dd>
+<dt id="source-thermal">Energy and phase-change basis</dt><dd>OpenStax, University Physics Volume 2, first edition, 2016:
+<a href="https://openstax.org/books/university-physics-volume-2/pages/1-5-phase-changes">section 1.5, Phase Changes</a>; and
+<a href="https://openstax.org/books/university-physics-volume-2/pages/3-3-first-law-of-thermodynamics">section 3.3, First Law of Thermodynamics</a>.
+Heat ingress is the specified uniform heat flux times the exposed area. The optional transmittance form defines the effective heat flux; it is not a calibrated tank correlation.</dd>
+<dt id="source-geometry">Cylinder volume and area</dt><dd>OpenStax, Prealgebra, second edition, 2020,
+<a href="https://openstax.org/books/prealgebra-2e/pages/9-6-solve-geometry-applications-volume-and-surface-area">section 9.6, Solve Geometry Applications: Volume and Surface Area</a>.
+The radius is half the diameter; the specified length-to-diameter ratio closes the geometry.</dd>
 <dt id="source-tests">Existing test evidence</dt><dd>Repository edition accompanying this report:
 <code>tests/naval_architecture/test_alt_fuel_ship_sizing.py</code>,
 <code>tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py</code> and
@@ -432,7 +513,8 @@ The document body uses <code>hs-doc</code>.</dd>
 <section id="appendix"><h2>10. Appendix: data register and quality evidence</h2>
 <p>The complete input and numerical output records are retained below to permit an independent review of the example.
 Values are calculated afresh; display rounding does not change the inputs used by the module.
-Nonzero magnitudes below unity are printed in scientific notation to retain significant digits.</p>
+Inputs and configured properties retain source precision. Calculated nonzero magnitudes below unity use scientific notation;
+comparison percentages use one decimal place.</p>
 <h3>Data register</h3>
 <p>ASSUMED - to be confirmed: route, powering, efficiencies, reserve, ullage, slenderness, insulation flux and fuel price are copied from the synthetic example.
 The lower heating value is its deliberate round-number override. The price and speed-sweep inputs are recorded for completeness but are not used in the reported inventory comparison.
@@ -446,8 +528,10 @@ port loads and measured validation data are missing; the affected design decisio
 <p>The consumed mode is used in both cases. The example sea legs do not set the excess-generation flag; the port leg is treated as lost vapor.
 Sea-only loss is a true zero. A port-leg zero burn is the model definition, not a missing datum.</p>
 <h3>Quality pre-flight evidence</h3>
-<p>The reconstruction check compares both delivered files byte for byte with a fresh build. Each displayed example number carries a source key;
-the independent test calls the public API and compares every key and displayed value, including all numeric result fields and leg records.
+<p>The reconstruction check compares document structure and change data with a fresh build, checks UTF-8 and LF output,
+and compares numerical evidence with a tolerance. Each displayed example number carries a source key.
+API consistency checks compare every key and displayed value, including all numeric result fields and leg records; these reuse the calculation API.
+Separate hand-worked literals check sea fuel flow, sea-only inventory and volume, port-dwell inventory, volume and loss, the percentage increase and the heat-flux boundary.
 The export check also compares the configuration workflow with the voyage calculation in a temporary output directory.</p>
 <p>The chart check compares every plotted generation value with the module heat-leak function and checks that the absorption boundary is crossed.
 Document checks cover section count, reference targets, inlined house styles, public wording, precision and local comment controls.
@@ -609,9 +693,9 @@ def build(output_dir):
     """Write only the two requested deliverables to the explicit destination."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "index.html").write_text(render(), encoding="utf-8")
+    (output_dir / "index.html").write_text(render(), encoding="utf-8", newline="\n")
     (output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8",
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n",
     )
 
 
