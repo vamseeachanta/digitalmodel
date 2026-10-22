@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cathodic protection analysis: published jacket at 84.1 m — Draft for maintainer review</title>
+<style>
+  /* ============================ TOKENS ============================ */
+  :root{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+    --maxw:1080px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+      --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+      --sea:#081419; --sea-ink:#eaf2f2;
+      --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+      --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+      --good:#37c08a; --pend:#e0a13a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+    --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+    --sea:#081419; --sea-ink:#eaf2f2;
+    --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+    --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+    --good:#37c08a; --pend:#e0a13a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  /* ============================ BASE ============================ */
+  *{box-sizing:border-box}
+  .doc{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"kern" 1;overflow-x:hidden}
+  .doc :where(p,li){color:var(--ink-2)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,5vw,40px)}
+  h1,h2,h3{color:var(--ink);text-wrap:balance;line-height:1.15;letter-spacing:-.02em;margin:0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-muted);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+  var{font-style:italic;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  a{color:var(--cfd);text-underline-offset:2px}
+
+  /* ============================ MASTHEAD ============================ */
+  .masthead{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--hairline)}
+  .masthead .wrap{display:flex;align-items:center;gap:16px;height:56px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:-.01em;font-size:14px;color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--cfd)}
+  .mh-legend{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;color:var(--ink-muted);letter-spacing:.02em}
+  .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  /* ============================ HERO ============================ */
+  .hero{position:relative;background:
+      radial-gradient(120% 80% at 82% -10%, var(--cfd-soft), transparent 60%),
+      radial-gradient(90% 70% at 10% 0%, var(--ro-soft), transparent 55%);
+    border-bottom:1px solid var(--hairline)}
+  .hero .wrap{padding-top:clamp(40px,7vw,76px);padding-bottom:clamp(30px,5vw,48px)}
+  .kicker{display:inline-flex;gap:9px;align-items:center;padding:5px 12px;border:1px solid var(--hairline);
+    border-radius:999px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:22px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--cfd);box-shadow:0 0 0 4px var(--cfd-soft)}
+  .kicker span{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
+  h1{font-size:clamp(30px,5.4vw,52px);font-weight:800}
+  .lede{font-size:clamp(17px,2.2vw,21px);max-width:60ch;margin-top:18px;color:var(--ink-2)}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:38px;
+    background:var(--hairline);border:1px solid var(--hairline);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi{background:var(--surface);padding:18px 20px}
+  .kpi .v{font-family:var(--mono);font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.05}
+  .kpi .v .u{font-size:.5em;color:var(--ink-muted);font-weight:500;margin-left:2px}
+  .kpi .k{font-size:12.5px;color:var(--ink-muted);margin-top:8px;line-height:1.35}
+  .kpi.teal .v{color:var(--cfd)} .kpi.amber .v{color:var(--proj)}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+  /* ============================ SECTIONS ============================ */
+  section{padding:clamp(40px,6vw,68px) 0;border-bottom:1px solid var(--hairline)}
+  .sec-head{display:flex;gap:16px;align-items:baseline;margin-bottom:26px}
+  .sec-no{font-family:var(--mono);font-size:13px;color:var(--cfd);font-weight:700;letter-spacing:.05em;flex:none}
+  h2{font-size:clamp(22px,3.4vw,32px);font-weight:750}
+  .sec-head p{margin:8px 0 0;max-width:64ch}
+  .prose{max-width:68ch}
+  .prose p{margin:0 0 16px}
+  .prose p:last-child{margin-bottom:0}
+
+  /* device layout */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,48px);align-items:center}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .steps{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:14px}
+  .steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+  .steps .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cfd);background:var(--cfd-soft);
+    width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .steps b{color:var(--ink)}
+
+  /* formula */
+  .formula{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--hairline);border-radius:10px;
+    padding:14px 16px;font-size:15px;color:var(--ink);overflow-x:auto;letter-spacing:.01em}
+  .formula .lbl{color:var(--ink-muted);font-size:12px}
+  .def{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-family:var(--mono);font-size:12.5px;color:var(--ink-muted)}
+  .def b{color:var(--ink-2);font-weight:600}
+
+  /* figure / card */
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;box-shadow:var(--shadow);
+    padding:clamp(16px,2.4vw,26px)}
+  .fig-cap{font-size:13.5px;color:var(--ink-muted);margin-top:14px;padding-top:14px;border-top:1px solid var(--hairline);
+    display:flex;gap:10px}
+  .fig-cap .tag{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:6px;flex:none;height:fit-content}
+  .tag.cfd{background:var(--cfd-soft);color:var(--cfd)} .tag.proj{background:var(--proj-soft);color:var(--proj)}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px;justify-content:flex-end}
+  .chart-legend .lg{font-size:12px;color:var(--ink-2)}
+  .chart-title{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+  svg .grid{stroke:var(--hairline);stroke-width:1}
+  svg .axis{stroke:var(--ink-muted);stroke-width:1}
+  svg text{fill:var(--ink-muted);font-family:var(--mono);font-size:11px}
+  svg .axtitle{fill:var(--ink-2);font-size:12.5px;font-weight:600}
+
+  /* stat callouts row */
+  .callrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+  @media(max-width:760px){.callrow{grid-template-columns:1fr}}
+  .call{background:var(--surface);border:1px solid var(--hairline);border-radius:13px;padding:18px 18px;box-shadow:var(--shadow)}
+  .call .v{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--cfd);letter-spacing:-.02em}
+  .call .k{font-size:13px;color:var(--ink-2);margin-top:6px} .call .s{font-size:12px;color:var(--ink-muted);margin-top:4px}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--hairline);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:440px}
+  th,td{padding:11px 15px;text-align:right;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.hl{color:var(--ink);font-weight:600}
+  tbody tr:hover{background:var(--surface-2)}
+
+  /* status list */
+  .status{display:grid;gap:12px;margin-top:8px}
+  .st{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--surface);
+    border:1px solid var(--hairline);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .st .icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;font-family:var(--mono);font-weight:700;font-size:15px}
+  .st.ok .icon{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .icon{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .icon{background:var(--surface-2);color:var(--ink-muted);border:1px dashed var(--hairline)}
+  .st .lab{color:var(--ink);font-weight:600;font-size:15px}
+  .st .sub{color:var(--ink-muted);font-size:13px;margin-top:2px}
+  .st .pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:999px;flex:none}
+  .st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .pill{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .pill{background:var(--surface-2);color:var(--ink-muted)}
+
+  .note{background:var(--proj-soft);border:1px solid color-mix(in srgb,var(--proj) 35%,transparent);border-radius:12px;
+    padding:16px 18px;margin-top:22px;font-size:14.5px;color:var(--ink-2);display:flex;gap:12px}
+  .note .b{font-family:var(--mono);color:var(--proj);font-weight:700;font-size:12px;letter-spacing:.05em;flex:none;padding-top:1px}
+
+  /* footer */
+  footer{background:var(--sea);color:var(--sea-ink);border-bottom:none}
+  footer .wrap{padding:44px clamp(18px,5vw,40px)}
+  footer h3{color:var(--sea-ink);font-size:16px;margin-bottom:14px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  .foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr;gap:24px}}
+  footer p,footer li{color:color-mix(in srgb,var(--sea-ink) 72%,transparent);font-size:13.5px;line-height:1.6}
+  footer ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+  footer .k{font-family:var(--mono);color:color-mix(in srgb,var(--sea-ink) 55%,transparent);font-size:11px}
+  .foot-bar{border-top:1px solid rgba(255,255,255,.1);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:color-mix(in srgb,var(--sea-ink) 55%,transparent)}
+
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;z-index:60;background:var(--ink);color:var(--paper);font-family:var(--mono);
+    font-size:12px;padding:8px 11px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(4px);
+    transition:opacity .1s;max-width:240px;line-height:1.5}
+  #tip.on{opacity:1;transform:none}
+  #tip .t{color:#fff;font-weight:700}
+  .hit{cursor:crosshair}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--cfd);outline-offset:2px;border-radius:4px}
+
+  /* ============================ STANDARD-REPORT SHELL ============================ */
+  html{scroll-behavior:smooth}
+  .shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;align-items:start}
+  .toc{position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto;
+    padding:26px 20px 40px 0;border-right:1px solid var(--hairline)}
+  .toc .tt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px 4px}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:l1}
+  .toc>ol>li{counter-increment:l1;margin:2px 0}
+  .toc a{display:block;text-decoration:none;color:var(--ink-2);font-size:13.5px;padding:5px 10px;border-radius:7px;border-left:2px solid transparent;line-height:1.3}
+  .toc>ol>li>a::before{content:counter(l1) ".  ";color:var(--ink-muted);font-family:var(--mono);font-size:12px}
+  .toc a:hover{background:var(--surface-2);color:var(--ink)}
+  .toc a.active{color:var(--cfd);border-left-color:var(--cfd);background:var(--cfd-soft);font-weight:600}
+  .toc .sub{list-style:none;margin:0 0 6px;padding:0;counter-reset:l2}
+  .toc .sub li{counter-increment:l2}
+  .toc .sub a{font-size:12.5px;color:var(--ink-muted);padding:3px 10px 3px 22px}
+  .toc .sub a::before{content:counter(l1) "." counter(l2) "  ";font-family:var(--mono);font-size:11px;opacity:.8}
+  .main{min-width:0;padding:8px 0 0 clamp(20px,3vw,44px)}
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr}
+    .toc{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--hairline);padding:18px 0 22px}
+    .toc ol{columns:2;column-gap:20px} .toc .sub{columns:1}
+    .main{padding-left:0}
+  }
+
+  /* numbered L1 / L2 sections */
+  .main>section{counter-increment:sec;border-bottom:1px solid var(--hairline);padding:38px 0 40px;scroll-margin-top:72px}
+  .main{counter-reset:sec}
+  .main>section:last-child{border-bottom:none}
+  .l1head{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+  .l1head .secnum{font-family:var(--mono);font-weight:700;color:var(--cfd);font-size:15px;flex:none}
+  .l1head .secnum::after{content:counter(sec)}
+  .main>section>h2{font-size:clamp(21px,3vw,30px);font-weight:750}
+  .l1sub{color:var(--ink-muted);font-size:15px;max-width:66ch;margin:2px 0 0}
+  .l2{counter-increment:sub;padding-top:26px;scroll-margin-top:72px}
+  section{counter-reset:sub}
+  .l2head{display:flex;gap:11px;align-items:baseline;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--hairline)}
+  .l2head .n{font-family:var(--mono);font-size:12.5px;color:var(--cfd);font-weight:700;flex:none}
+  .l2head .n::after{content:counter(sec) "." counter(sub)}
+  .l2head h3{font-size:clamp(16px,2vw,20px);font-weight:700}
+
+  /* objective callout */
+  .objective{background:var(--cfd-soft);border:1px solid color-mix(in srgb,var(--cfd) 30%,transparent);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+  .objective .oh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--cfd);font-weight:700}
+  .objective p{color:var(--ink);margin:0;font-size:16px}
+  .objective .scope{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
+
+  /* data / definition tables */
+  .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
+  .kv{border:1px solid var(--hairline);border-radius:12px;overflow-x:auto;background:var(--surface);box-shadow:var(--shadow)}
+  .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+    padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
+  .kv td{border-bottom:1px solid var(--hairline)}
+  .kv tr:last-child td{border-bottom:none}
+  /* Label sized to its own content, value takes the remaining measure, so a
+     row reads as one line across the page instead of a stub with dead space
+     beside it -- and a long value wraps rather than being clipped. */
+  .kv td:first-child{color:var(--ink-2);width:1%;white-space:nowrap;padding-right:30px}
+  .kv td:last-child{width:99%;white-space:normal;overflow-wrap:break-word}
+  .kv td:last-child{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
+  .kv td .un{color:var(--ink-muted);font-weight:400;font-size:11px}
+
+  /* equation cards */
+  .eq{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;background:var(--surface);
+    border:1px solid var(--hairline);border-left:3px solid var(--cfd);border-radius:11px;padding:16px 20px;margin:14px 0;box-shadow:var(--shadow)}
+  .eq .m{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;color:var(--ink);
+    overflow-x:auto;line-height:2;letter-spacing:.01em}
+  .eq .m var{font-size:1em}
+  .eq .eno{font-family:var(--mono);font-size:13px;color:var(--ink-muted);flex:none}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;font-size:.86em}
+  .frac>.n{border-bottom:1.6px solid currentColor;padding:0 .4em 1px}
+  .frac>.d{padding:1px .4em 0}
+  .rad{white-space:nowrap}
+  .rad>.rc{border-top:1.6px solid currentColor;padding:0 .18em;margin-left:-.08em}
+  .op{color:var(--ink-muted);margin:0 .12em}
+  .defs{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 22px}
+  .defs .d{display:flex;gap:9px;font-size:13.5px;color:var(--ink-2);align-items:baseline}
+  .defs .d var{color:var(--ink);font-weight:600;min-width:2.4em;font-family:"Iowan Old Style",Palatino,Georgia,serif}
+  .defs .d .u{color:var(--ink-muted);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap}
+
+  /* flowchart */
+  .flow{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
+  .flow svg{display:block;min-width:560px;margin:0 auto}
+  .flow .fb{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:1.5}
+  .flow .fb.cfd{fill:var(--cfd-soft);stroke:var(--cfd)}
+  .flow .fb.ro{fill:var(--ro-soft);stroke:var(--ro)}
+  .flow .fb.proj{fill:var(--proj-soft);stroke:var(--proj);stroke-dasharray:5 3}
+  .flow .fl{fill:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600}
+  .flow .fs{fill:var(--ink-muted);font-family:var(--mono);font-size:10.5px}
+  .flow .fa{stroke:var(--ink-muted);stroke-width:1.6;fill:none}
+  .flow .fd{fill:var(--ink-muted)}
+
+  .refs{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:10px}
+  .refs li{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:14px;color:var(--ink-2);align-items:baseline}
+  .refs .rn{font-family:var(--mono);font-size:12px;color:var(--cfd);font-weight:700}
+  .backtop{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-muted);text-decoration:none}
+  .backtop:hover{color:var(--cfd)}
+</style>
+<style>
+@media print {
+  @page { size: Letter; margin: 14mm 12mm; }
+  html, body { background: #fff !important; }
+  .doc, .wrap, .shell, .main { max-width: 100% !important; width: 100% !important;
+                               margin: 0 !important; padding-left: 0 !important;
+                               padding-right: 0 !important; }
+  .shell { display: block !important; }
+  .toc { display: none !important; }          /* anchors are dead on paper */
+  .backtop { display: none !important; }
+  .datagrid { display: block !important; }
+  .datagrid > .kv { width: 100% !important; margin: 0 0 10px 0 !important;
+                    break-inside: avoid; page-break-inside: avoid; }
+  /* auto, not fixed: `fixed` split every row 50/50, spending half the page
+     measure on a short label while the value wrapped beside it. */
+  .kv table { width: 100% !important; table-layout: auto !important; }
+  .kv td:first-child { white-space: nowrap !important; width: 1% !important; }
+  .kv td:last-child { white-space: normal !important; word-break: break-word !important;
+                      width: 99% !important; text-align: right; }
+  .kpis { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+  section { break-inside: auto; }
+  .l1head, .l2head { break-after: avoid; page-break-after: avoid; }
+  .eq, .defs, .st, .flow, .fig-cap { break-inside: avoid; page-break-inside: avoid; }
+  .hero { padding-bottom: 12px !important; }
+}
+</style>
+<style>
+/* ABOUTME: Engine-specific additions to the house calc-report CSS (#2212). */
+/* ABOUTME: Title block, standard chips, status rows, input echo, Plotly print. */
+
+/* masthead: document number + standard chips */
+.masthead .docno{font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap}
+.masthead .docno b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip.std{background:var(--cfd-soft);border-color:color-mix(in srgb,var(--cfd) 35%,transparent);color:var(--ink)}
+.chip.std .ed{color:var(--cfd);font-weight:700;margin-left:6px}
+.chip.std .prov{color:var(--ink-muted);margin-left:6px}
+.masthead .mh-legend{margin-left:auto}
+
+/* title block */
+.titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.titleblock{grid-template-columns:1fr}}
+.titleblock .kv table{min-width:0}
+.titleblock .kv td:first-child{width:38%;white-space:normal}
+.revhist{margin-top:18px}
+.revhist table{min-width:0;font-size:13px}
+.revhist th,.revhist td{text-align:left;white-space:normal}
+
+/* tables */
+.tbl{margin-top:22px}
+.tbl .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px}
+.tbl thead tr.units th{font-family:var(--mono);font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--ink-muted);
+  background:var(--surface);border-top:none;padding-top:0}
+.tbl .src{font-size:12.5px;color:var(--ink-muted);margin:8px 0 0;font-family:var(--mono)}
+
+/* figures */
+figure{margin:22px 0 0}
+figure .chart-title{margin-bottom:8px}
+figure figcaption.fig-cap{display:block}
+figure img,figure svg{max-width:100%;height:auto;display:block}
+.plotly-graph-div{width:100%}
+.js-plotly-plot{break-inside:avoid;page-break-inside:avoid;height:420px}
+
+/* status: PASS / FAIL */
+.status{margin-top:18px}
+.st.ok .icon,.st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+.st.fail .icon,.st.fail .pill{background:rgba(220,38,38,.12);color:#b91c1c}
+.st .sub b{color:var(--ink-2);font-weight:600}
+
+/* prose blocks */
+.prose h3{font-size:18px;margin:18px 0 8px}
+.prose h4{font-size:15px;margin:14px 0 6px}
+.prose ul,.prose ol{margin:0 0 16px;padding-left:22px}
+.prose li{margin:4px 0}
+.prose pre{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--hairline);
+  border-radius:10px;padding:12px 14px;overflow-x:auto}
+.prose code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.prose pre code{background:none;padding:0}
+
+/* references / data sources / input echo */
+.refs-table th,.refs-table td{text-align:left;white-space:normal}
+.refs-table td.path{font-family:var(--mono);font-size:12px}
+.sources th,.sources td{text-align:left;white-space:normal}
+.input-echo{margin-top:8px}
+.input-echo summary{cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--ink-2);padding:10px 0}
+.input-echo table{min-width:0;font-size:13px}
+.input-echo td:first-child{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.input-echo td:last-child{text-align:left;white-space:normal;font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+
+/* appendix section labels */
+.secnum.applabel::after{content:none}
+.secnum.applabel{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+
+/* footer PDF status */
+.foot-bar .pdf{font-family:var(--mono)}
+
+@media print{
+  .masthead{position:static}
+  .titleblock{display:block}
+  .titleblock .kv{margin-bottom:10px;break-inside:avoid}
+  .input-echo{display:block}
+  .input-echo[open] summary,.input-echo summary{list-style:none}
+  details.input-echo:not([open])>*:not(summary){display:block}
+  figure,.tbl{break-inside:avoid;page-break-inside:avoid}
+  .st{break-inside:avoid}
+  .chips{gap:6px}
+  a{color:inherit;text-decoration:none}
+}
+
+@media print {
+.doc .toc{display:none}
+.doc .shell{display:block}
+.doc .main{padding:0}
+.doc .tbl table{min-width:0;width:100%;table-layout:fixed}
+.doc .tbl-wrap{overflow:visible}
+.doc .tbl th,.doc .tbl td{font-size:9px;padding:4px 2px;white-space:normal;overflow-wrap:normal}
+.doc .tbl{break-inside:auto;page-break-inside:auto}
+}
+</style>
+</head>
+<body class="doc">
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for maintainer review</span></div></header>
+<div class="hero"><div class="wrap"><h1>Cathodic protection analysis: published jacket at 84.1 m</h1><p>Draft for maintainer review</p>
+<p>DNV-RP-B401 — May 2021</p>
+</div></div>
+<div class="wrap shell">
+<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>
+<li><a href="#analysis-1">Executive Summary</a></li>
+<li><a href="#revision-history">Revision history</a></li>
+<li><a href="#analysis-2">Introduction</a></li>
+<li><a href="#analysis-3">Design Data</a></li>
+<li><a href="#analysis-4">Analysis Methodology</a></li>
+<li><a href="#analysis-5">Detailed Results</a></li>
+<li><a href="#analysis-6">Key Findings</a></li>
+<li><a href="#analysis-7">Limitations</a></li>
+<li><a href="#analysis-8">Recommendations</a></li>
+<li><a href="#analysis-9">References</a></li>
+<li><a href="#analysis-10">Acronyms and Symbols</a></li>
+<li><a href="#calculation-data">Appendix A — Calculation data</a></li>
+<li><a href="#quality-evidence">Appendix B — Quality evidence</a></li>
+</ol></nav>
+<main class="main">
+<section id="analysis-1">
+<div class="l1head"><span class="secnum"></span><h2>Executive Summary</h2></div>
+
+    <div class="prose">
+<p>The jacket is a fixed steel structure in 84.1 m water depth. Analysis is performed to determine aggregate anode requirements and compare published monitoring readings. The key results are summarized below.</p>
+<p>This report is a worked example of the published 84.1 m jacket, calculated by the workflow. The paper’s printed values are compared with the workflow results in Appendix A. Hand calculations check the three phase-current sums. Tool checks compare the saved currents and anode counts with a fresh calculation and check the report rebuild. The checkpoint table compares six printed quantities; it does not establish local protection. Temperature and resistivity sensitivity is not part of this report; it is a separate reviewed issue.</p>
+<ul><li>Aggregate sizing is conditional on the stated inputs.</li><li>The installed count is 569; the independent cylinder estimate requires 575 anodes.</li><li>Local protection requires separate attention.</li><li>The two lowest monitored levels fail the stated potential criterion at day 518. Arrange a retrofit assessment and repeat surveys after intervention.</li></ul>
+    </div>
+</section>
+<section id="revision-history">
+<div class="l1head"><span class="secnum"></span><h2>Revision history</h2></div>
+
+    <div class="tbl" id="table-1">
+      <div class="cap">Table 1. Revision history</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00</td><td>2026-10-22</td><td>Public worked example with explicit assumptions and reproducible results.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+</section>
+<section id="analysis-2">
+<div class="l1head"><span class="secnum"></span><h2>Introduction</h2></div>
+
+    <div class="prose">
+<p>The published arrangement is analysed with the repository calculation workflow. Printed demand, unit output and count values are compared with calculated values. Differences in assumed anode geometry are retained.</p>
+    </div>
+</section>
+<section id="analysis-3">
+<div class="l1head"><span class="secnum"></span><h2>Design Data</h2></div>
+
+    <div class="prose">
+<p>The four published area groups and effective phase densities are used without a separate coating deterioration law. Nine connected wells add 18 A at every phase. The resistivity conversion is 22 ohm.cm × 0.01 = 0.22 ohm.m. Design life is 25 years and temperature is 10 °C; these are assumed, based on previous experience. Capacity, utilisation, net alloy interpretation and the two electrode potentials are also assumed. Equivalent-cylinder radius is calculated from nominal mass, length and an assumed alloy density of 2750 kg/m³. The −0.800 V protection criterion is a stated assumption. The paper gives a 0.25 V driving voltage, but not the separate electrode potentials. No standard citation is used to qualify the assumed −0.800 V criterion. The depth diagram shows the available monitoring data; a realistic member elevation cannot be established from the published information.</p>
+    </div>
+    <figure class="card" id="fig-cp-jacket-elevation-figure">
+      <div class="chart-title">Figure 1. Depth-true potential diagram</div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 740" data-type="depth_true" data-scale="5.9453032104637344" role="img" aria-label="Depth-true potential diagram"><g data-zone="upper-bare-seawater"><rect x="30" y="50" width="75" height="178.35909631391203" fill="none" stroke="black" /><text x="35" y="64" font-size="10" fill="black">0–30 m</text></g><g data-zone="lower-bare-seawater"><rect x="105" y="228.35909631391203" width="75" height="321.640903686088" fill="none" stroke="black" /><text x="110" y="242.35909631391203" font-size="10" fill="black">30–84.1 m</text></g><line data-level="waterline" x1="30" x2="560" y1="50" y2="50" stroke="black" /><text x="560" y="50" font-size="10" fill="black">waterline: 0 m</text><line data-level="mudline" x1="30" x2="560" y1="550" y2="550" stroke="black" /><text x="560" y="550" font-size="10" fill="black">mudline: −84.1 m</text><line data-criterion="-0.8" x1="350" x2="350" y1="50" y2="550" stroke="black" stroke-dasharray="5 3" /><circle data-potential="-0.73599999999999999" data-elevation-m="-14" data-survey-days="52" cx="368.60465116279073" cy="133.23424494649228" r="4" fill="black" /><text x="348.60465116279073" y="149.23424494649228" font-size="10" fill="black">−0.736</text><circle data-potential="-0.78900000000000003" data-elevation-m="-40" data-survey-days="52" cx="353.19767441860466" cy="287.81212841854938" r="4" fill="black" /><text x="333.19767441860466" y="303.81212841854938" font-size="10" fill="black">−0.789</text><circle data-potential="-0.63700000000000001" data-elevation-m="-70.5" data-survey-days="52" cx="397.38372093023258" cy="469.14387633769326" r="4" fill="black" /><text x="377.38372093023258" y="485.14387633769326" font-size="10" fill="black">−0.637</text><circle data-potential="-0.628" data-elevation-m="-84.099999999999994" data-survey-days="52" cx="400" cy="550" r="4" fill="black" /><text x="380" y="566" font-size="10" fill="black">−0.628</text><rect data-potential="-0.92500000000000004" data-elevation-m="-14" data-survey-days="518" cx="313.66279069767444" cy="133.23424494649228" x="309.66279069767444" y="129.23424494649228" width="8" height="8" fill="black" /><text x="293.66279069767444" y="123.23424494649228" font-size="10" fill="black">approximately −0.925</text><rect data-potential="-0.94999999999999996" data-elevation-m="-40" data-survey-days="518" cx="306.39534883720933" cy="287.81212841854938" x="302.39534883720933" y="283.81212841854938" width="8" height="8" fill="black" /><text x="286.39534883720933" y="277.81212841854938" font-size="10" fill="black">approximately −0.950</text><rect data-potential="-0.69999999999999996" data-elevation-m="-70.5" data-survey-days="518" cx="379.06976744186051" cy="469.14387633769326" x="375.06976744186051" y="465.14387633769326" width="8" height="8" fill="black" /><text x="359.06976744186051" y="459.14387633769326" font-size="10" fill="black">approximately −0.700</text><rect data-potential="-0.65000000000000002" data-elevation-m="-84.099999999999994" data-survey-days="518" cx="393.60465116279067" cy="550" x="389.60465116279067" y="546" width="8" height="8" fill="black" /><text x="373.60465116279067" y="540" font-size="10" fill="black">approximately −0.650</text><text x="270" y="585" font-size="10" fill="black">Potential (V vs Ag/AgCl)</text><text x="235" y="25" font-size="10" fill="black">Criterion −0.800 V</text><text x="220" y="42" font-size="10" fill="black">more negative: protected</text><text x="180" y="25" font-size="10" fill="black">Depth (m)</text><line x1="280" x2="430" y1="560" y2="560" stroke="black" /><line data-potential-tick="-1" x1="291.8604651162791" x2="291.8604651162791" y1="555" y2="565" stroke="black" /><text x="279.8604651162791" y="576" font-size="10" fill="black">−1.0</text><line data-potential-tick="-0.9" x1="320.93023255813955" x2="320.93023255813955" y1="555" y2="565" stroke="black" /><text x="308.93023255813955" y="576" font-size="10" fill="black">−0.9</text><line data-potential-tick="-0.8" x1="350" x2="350" y1="555" y2="565" stroke="black" /><text x="338" y="576" font-size="10" fill="black">−0.8</text><line data-potential-tick="-0.7" x1="379.06976744186051" x2="379.06976744186051" y1="555" y2="565" stroke="black" /><text x="367.06976744186051" y="576" font-size="10" fill="black">−0.7</text><line data-potential-tick="-0.6" x1="408.13953488372096" x2="408.13953488372096" y1="555" y2="565" stroke="black" /><text x="396.13953488372096" y="576" font-size="10" fill="black">−0.6</text><line data-depth-tick="-84.1" x1="190" x2="200" y1="550" y2="550" stroke="black" /><text x="200" y="546" font-size="10" fill="black">−84.1</text><line data-depth-tick="-70.5" x1="190" x2="200" y1="469.14387633769326" y2="469.14387633769326" stroke="black" /><text x="200" y="465.14387633769326" font-size="10" fill="black">−70.5</text><line data-depth-tick="-40" x1="190" x2="200" y1="287.81212841854938" y2="287.81212841854938" stroke="black" /><text x="200" y="283.81212841854938" font-size="10" fill="black">−40</text><line data-depth-tick="-14" x1="190" x2="200" y1="133.23424494649228" y2="133.23424494649228" stroke="black" /><text x="200" y="129.23424494649228" font-size="10" fill="black">−14</text><line data-depth-tick="0" x1="190" x2="200" y1="50" y2="50" stroke="black" /><text x="200" y="46" font-size="10" fill="black">0</text><circle cx="250" cy="615" r="4" fill="black" /><text x="260" y="619" font-size="10" fill="black">Day 52</text><rect x="396" y="611" width="8" height="8" fill="black" /><text x="410" y="619" font-size="10" fill="black">Day 518</text><text x="30" y="655" font-size="10" fill="black">Coated area 652.9 m²; location is not published.</text><text x="560" y="148.23424494649228" font-size="10" fill="black">−14 m; days 52, 518</text><text x="560" y="302.81212841854938" font-size="10" fill="black">−40 m; days 52, 518</text><text x="560" y="484.14387633769326" font-size="10" fill="black">−70.5 m; days 52, 518</text><text x="560" y="565" font-size="10" fill="black">−84.1 m; days 52, 518</text><text x="30" y="695" font-size="10" fill="black">PUBLISHED SOURCE; Published paper (2023) [1]; [1]; see Section 9.2</text><text x="30" y="675" font-size="10" fill="black">Criterion: more negative than −0.800 V versus Ag/AgCl/seawater</text></svg>
+      <figcaption class="fig-cap">Depth-true monitoring diagram from the published elevations and potentials [1]. Member dimensions and anode distribution are not established. Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</figcaption>
+    </figure>
+</section>
+<section id="analysis-4">
+<div class="l1head"><span class="secnum"></span><h2>Analysis Methodology</h2></div>
+
+    <div class="prose">
+<p>Current demand is calculated as area multiplied by effective density, plus connected allowances. Lifetime net mass equals mean current multiplied by service hours, divided by capacity and utilisation. Initial and final current outputs equal driving voltage divided by anode resistance. Required count is the largest of the mass, initial-output and final-output counts. DNV-RP-B401, May 2021 [2], supplies the method headings Anode mass, Anode resistance and Anode current output. No standard table is reproduced. Aggregate capacity passes only when provided capacity is at least the corresponding demand. Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation. Missing or invalid inputs stop report generation with a reason.</p>
+    </div>
+</section>
+<section id="analysis-5">
+<div class="l1head"><span class="secnum"></span><h2>Detailed Results</h2></div>
+
+    <div class="prose">
+<p>The calculated phase currents and anode counts are presented in Appendix A. Printed outputs give passing aggregate checks for the installed arrangement. The independent equivalent-cylinder estimate fails initial current output at 569 anodes and requires 575. These are different output bases, not interchangeable verdicts.</p>
+    </div>
+    <figure class="card" id="installed-current-figure">
+      <div class="chart-title">Figure 2. Installed current demand and independent output limit</div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 300" role="img" aria-label="Installed independent estimate: phase current"><text x="20" y="25">Current (A); bars: demand; dashed line: available output limit</text><rect x="125" y="50.0" width="70" height="180.0" fill="#336d89"><title>Published jacket; initial; demand 2688.3 A; independent output limit 2661.4 A</title></rect><text x="115" y="255">Initial</text><text x="120" y="42.0">2688.3 A</text><rect x="405" y="103.3" width="70" height="126.7" fill="#336d89"><title>Published jacket; final; demand 1892.1 A; independent output limit 1937.8 A</title></rect><text x="395" y="255">Final</text><text x="400" y="95.3">1892.1 A</text><polyline points="160,51.8 440,100.2" fill="none" stroke="#b44031" stroke-width="3" stroke-dasharray="6 4"><title>Provided initial and final current must meet or exceed phase demand; independent cylinder estimate.</title></polyline><text x="20" y="285">Hover over a bar for its demand, limit and units.</text></svg>
+      <figcaption class="fig-cap">The initial demand exceeds the installed independent-estimate output limit. The comparison uses the unchanged workflow resistance model [2]. The adjacent table gives the separate printed-output basis [1].</figcaption>
+    </figure>
+</section>
+<section id="analysis-6">
+<div class="l1head"><span class="secnum"></span><h2>Key Findings</h2></div>
+
+    <div class="prose">
+<p>The printed demand totals are reproduced within 0.1 %. Aggregate capacity does not establish protection at each member. At day 518, the two lowest monitored levels remain more positive than the stated −0.800 V criterion. The measured-potential table prints the criterion and assumption beside each status.</p>
+    </div>
+</section>
+<section id="analysis-7">
+<div class="l1head"><span class="secnum"></span><h2>Limitations</h2></div>
+
+    <div class="prose">
+<p>Member dimensions, buried geometry, sediment resistivity, per-level anode allocation and present condition are not established. Local protection, intervention timing and a per-level retrofit split are not evaluated. Temperature and resistivity sensitivity is not part of this report; it is a separate reviewed issue. The report does not establish a qualified installation design.</p>
+    </div>
+</section>
+<section id="analysis-8">
+<div class="l1head"><span class="secnum"></span><h2>Recommendations</h2></div>
+
+    <div class="prose">
+<p>Retrofit assessment is recommended for the two lowest monitored levels because the day-518 readings fail the stated potential criterion. Assess clamped anodes at these levels, as proposed in [1]. Establish allocation, electrical continuity and remaining anode condition before selecting quantities and an intervention date. Repeat potential surveys at the same positions after intervention. A reading at or more positive than −0.800 V triggers investigation under the stated assumption. For aggregate design using the cylinder estimate, increase the count by six, to 575; recheck geometry, attachments and distribution before use.</p>
+    </div>
+</section>
+<section id="analysis-9">
+<div class="l1head"><span class="secnum"></span><h2>References</h2></div>
+
+    <div class="prose">
+<p>The public paper and standard edition are identified below.</p>
+<h4>9.1 Publications</h4>
+<p>[1] Study on Implementation and Optimization of Cathodic Protection for Offshore Oil Platform Jacket. Engineering Advances 3(3), 2023, 241–245. https://doi.org/10.26855/ea.2023.06.017.</p>
+<p>[2] DNV-RP-B401, Cathodic protection design, May 2021. https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/.</p>
+<h4>9.2 Source locators</h4>
+<p>[1], p. 242, Tables 1–2 and Section 2: areas, effective densities, connected allowance, anode size, installed count, resistivity, driving voltage and printed checkpoints. Pages 243–244, Section 3: monitoring. Page 244, Section 5: proposed remedy. [2], Anode mass; Anode resistance; Anode current output: calculation methods. The potential criterion is a stated assumption, not attributed to either publication.</p>
+    </div>
+</section>
+<section id="analysis-10">
+<div class="l1head"><span class="secnum"></span><h2>Acronyms and Symbols</h2></div>
+
+    <div class="prose">
+<p>Symbols and units are defined here. Cathodic protection limits steel corrosion by supplying current. A is ampere; kg is kilogram; m is metre; yr is year; Ah/kg is ampere-hour per kilogram; ohm.cm and ohm.m are resistivity units. Ag/AgCl is the silver/silver-chloride reference electrode in seawater. Lower-case i denotes current density; upper-case I denotes current demand. The coating multipliers f_ci, f_cm and f_cf apply to initial, mean and final phases, respectively; all are unity for the effective-density inputs. PASS means that the adjacent criterion is met on the stated basis. FAIL means that it is not met. NOT_EVALUATED means required evidence is missing, invalid or not applicable.</p>
+    </div>
+</section>
+<section id="calculation-data">
+<div class="l1head"><span class="secnum applabel">Appendix A</span><h2>Calculation data</h2></div>
+
+    <div class="tbl" id="table-2">
+      <div class="cap">Table 2. Design data</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Value</th><th>Unit</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Design life</td><td>25</td><td>yr</td><td>assumed, based on previous experience</td></tr>
+            <tr><td>Seawater temperature</td><td>10</td><td>degC</td><td>assumed, based on previous experience</td></tr>
+            <tr><td>Seawater resistivity</td><td>0.22</td><td>ohm.m</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Total surface area</td><td>30931.5</td><td>m2</td><td>calculated from declared inputs</td></tr>
+            <tr><td>Anode material</td><td>aluminium</td><td>-</td><td>assumed, based on previous experience</td></tr>
+            <tr><td>Anode type</td><td>stand-off</td><td>-</td><td>assumed, based on previous experience</td></tr>
+            <tr><td>Anode net mass</td><td>323.4</td><td>kg</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Anode length</td><td>2.02</td><td>m</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Anode equivalent radius (fresh)</td><td>0.136</td><td>m</td><td>calculated from declared inputs</td></tr>
+            <tr><td>Utilisation factor</td><td>0.9</td><td>-</td><td>assumed, based on previous experience</td></tr>
+            <tr><td>Utilisation factor source</td><td>assumed, based on previous experience</td><td>-</td><td></td></tr>
+            <tr><td>Electrochemical capacity</td><td>2000</td><td>Ah/kg</td><td>assumed, based on previous experience</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-3">
+      <div class="cap">Table 3. Published zone areas and effective-density treatment</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Zone</th><th>Area</th></tr>
+            <tr class="units"><th>-</th><th>m2</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Coated steel in seawater</td><td>652.9</td></tr>
+            <tr><td>Bare steel in seawater, 0–30 m</td><td>3726.8</td></tr>
+            <tr><td>Bare steel in seawater, 30 m to mudline</td><td>15737</td></tr>
+            <tr><td>Buried steel</td><td>10814.8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-4">
+      <div class="cap">Table 4. Current density, coating breakdown and demand by zone</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Zone</th><th>Area</th><th>i initial</th><th>i mean</th><th>i final</th><th>f_ci</th><th>f_cm</th><th>f_cf</th><th>I initial</th><th>I mean</th><th>I final</th></tr>
+            <tr class="units"><th>-</th><th>m2</th><th>A/m2</th><th>A/m2</th><th>A/m2</th><th>-</th><th>-</th><th>-</th><th>A</th><th>A</th><th>A</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Coated steel in seawater</td><td>652.9</td><td>0.01</td><td>0.02</td><td>0.04</td><td>1</td><td>1</td><td>1</td><td>6.529</td><td>13.058</td><td>26.116</td></tr>
+            <tr><td>Bare steel in seawater, 0–30 m</td><td>3726.8</td><td>0.15</td><td>0.07</td><td>0.1</td><td>1</td><td>1</td><td>1</td><td>559.02</td><td>260.876</td><td>372.68</td></tr>
+            <tr><td>Bare steel in seawater, 30 m to mudline</td><td>15737</td><td>0.12</td><td>0.06</td><td>0.08</td><td>1</td><td>1</td><td>1</td><td>1888.44</td><td>944.22</td><td>1258.96</td></tr>
+            <tr><td>Buried steel</td><td>10814.8</td><td>0.02</td><td>0.02</td><td>0.02</td><td>1</td><td>1</td><td>1</td><td>216.296</td><td>216.296</td><td>216.296</td></tr>
+            <tr><td>Connected allowances</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>18</td><td>18</td><td>18</td></tr>
+            <tr><td>Total</td><td>30931.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td>2688.28</td><td>1452.45</td><td>1892.05</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-5">
+      <div class="cap">Table 5. Independent estimate: anode mass and count</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Value</th><th>Unit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Total net anode mass required</td><td>176715</td><td>kg</td></tr>
+            <tr><td>Individual anode net mass</td><td>323</td><td>kg</td></tr>
+            <tr><td>Design life</td><td>219000</td><td>h</td></tr>
+            <tr><td>Anodes by mass (N_mass)</td><td>547</td><td>-</td></tr>
+            <tr><td>Anodes by initial current output (N_initial)</td><td>575</td><td>-</td></tr>
+            <tr><td>Anodes by final current output (N_final)</td><td>556</td><td>-</td></tr>
+            <tr><td>Recommended anode count</td><td>575</td><td>-</td></tr>
+            <tr><td>Installed count</td><td>569</td><td>-</td></tr>
+            <tr><td>Count source</td><td>input</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-6">
+      <div class="cap">Table 6. Installed arrangement: published outputs and independent estimate</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Computed demand</th><th>Difference from printed demand</th><th>Capacity using published outputs</th><th>Published margin</th><th>Published result</th><th>Independent estimate capacity</th><th>Independent margin</th><th>Difference from published capacity</th><th>Independent result</th><th>Unit</th><th>Source or note</th><th>Criterion and basis</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial current</td><td>2688.285</td><td>less than 0.1%</td><td>2850.690</td><td>+6.0%</td><td>PASS</td><td>2661.408</td><td>−1.0%</td><td>−6.6%</td><td>FAIL</td><td>A</td><td>[1]; see Section 9.2</td><td>Provided capacity ≥ computed demand; printed unit outputs [1], independent cylinder estimate [2], or lifetime mass on the stated assumptions.</td></tr>
+            <tr><td>Final current</td><td>1892.052</td><td>less than 0.1%</td><td>2065.470</td><td>+9.2%</td><td>PASS</td><td>1937.870</td><td>+2.4%</td><td>−6.2%</td><td>PASS</td><td>A</td><td>[1]; see Section 9.2</td><td>Provided capacity ≥ computed demand; printed unit outputs [1], independent cylinder estimate [2], or lifetime mass on the stated assumptions.</td></tr>
+            <tr><td>Mass</td><td>176715</td><td>not published</td><td>184015</td><td>+4.1%</td><td>PASS</td><td>184015</td><td>+4.1%</td><td>+0.0%</td><td>PASS</td><td>kg</td><td>[1]; see Section 9.2</td><td>Provided capacity ≥ computed demand; printed unit outputs [1], independent cylinder estimate [2], or lifetime mass on the stated assumptions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-7">
+      <div class="cap">Table 7. Published checkpoints and calculated differences</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Checkpoint</th><th>Published</th><th>Calculated</th><th>Difference</th><th>Unit</th><th>Locator</th></tr>
+            <tr class="units"><th>-</th><th>-</th><th>-</th><th>%</th><th>-</th><th>-</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial demand</td><td>2688.3</td><td>2688.3</td><td>less than 0.1</td><td>A</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Mean demand</td><td>1452.5</td><td>1452.5</td><td>less than 0.1</td><td>A</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Final demand</td><td>1892.1</td><td>1892.1</td><td>less than 0.1</td><td>A</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Initial individual output</td><td>5.01</td><td>4.68</td><td>−6.6</td><td>A</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Independent-estimate count</td><td>569.0</td><td>575.0</td><td>+1.1</td><td>-</td><td>[1]; see Section 9.2</td></tr>
+            <tr><td>Final individual output</td><td>3.63</td><td>3.41</td><td>−6.2</td><td>A</td><td>[1]; see Section 9.2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+    <div class="tbl" id="table-8">
+      <div class="cap">Table 8. Measured potentials at the stated time of measurement</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Elevation</th><th>Elapsed time</th><th>Potential versus Ag/AgCl</th><th>Criterion check</th><th>Criterion and basis</th></tr>
+            <tr class="units"><th>m</th><th>days</th><th>V</th><th>-</th><th>-</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>−14</td><td>52</td><td>−0.736</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−40</td><td>52</td><td>−0.789</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−70.5</td><td>52</td><td>−0.637</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−84.1</td><td>52</td><td>−0.628</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−14</td><td>518</td><td>approximately −0.925</td><td>PASS</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−40</td><td>518</td><td>approximately −0.950</td><td>PASS</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−70.5</td><td>518</td><td>approximately −0.700</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+            <tr><td>−84.1</td><td>518</td><td>approximately −0.650</td><td>FAIL</td><td>Potential must be more negative than −0.800 V versus Ag/AgCl/seawater; stated assumption, not a value printed in the paper or established by a standard citation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Published quantities [1]; assumed inputs and method [2] as stated in Design Data.</p>
+    </div>
+</section>
+<section id="quality-evidence">
+<div class="l1head"><span class="secnum applabel">Appendix B</span><h2>Quality evidence</h2></div>
+
+    <div class="prose">
+<p>The three independent hand-calculation anchors check phase-current sums. The saved-report tests are consistency checks against the workflow. They do not independently validate every reported value. The build validates the citation-only edition record and creates release metadata and checksums. Browser interaction and a PDF derivative have not been checked. Input precision is retained in the fixture and results JSON.</p>
+    </div>
+</section>
+</main></div>
+<footer><div class="wrap">Draft for maintainer review</div></footer>
+
+<section class="wrap" aria-label="Report comments">
+<h2>Report comments</h2>
+<p>Enter a section and comment. Save the comments JSON beside this HTML.
+Load the saved file to continue. Engineering changes are listed in changes.json.</p>
+<label>Section <input id="comment-section"></label>
+<label>Comment <textarea id="comment-text"></textarea></label>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-save" type="button">Save comments</button>
+<label>Load comments <input id="comment-load" type="file" accept=".json"></label>
+<p id="comment-message" role="status"></p>
+<pre id="comment-list"></pre>
+</section>
+<script>
+(() => {
+  'use strict';
+  const title = document.title;
+  let comments = [];
+  const element = id => document.getElementById(id);
+  const show = () => { element('comment-list').textContent = JSON.stringify(comments, null, 2); };
+  element('comment-add').onclick = () => {
+    const section = element('comment-section').value.trim();
+    const text = element('comment-text').value.trim();
+    if (!section || !text) return;
+    comments.push({section, text});
+    element('comment-text').value = '';
+    show();
+  };
+  element('comment-load').onchange = async event => {
+    try {
+      const saved = JSON.parse(await event.target.files[0].text());
+      if (saved.title !== title || !Array.isArray(saved.comments)) throw Error('Report title differs.');
+      if (!saved.comments.every(c => typeof c.section === 'string' && typeof c.text === 'string'))
+        throw Error('Invalid comment data.');
+      comments = saved.comments;
+      show();
+    } catch (error) { element('comment-message').textContent = error.message; }
+  };
+  element('comment-save').onclick = async () => {
+    const text = JSON.stringify({title, comments}, null, 2) + '\n';
+    try {
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json'});
+        const file = await handle.createWritable();
+        await file.write(text);
+        await file.close();
+      } else {
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+        link.href = url;
+        link.download = 'report.comments.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      element('comment-message').textContent = 'Reload the saved JSON to check the copy.';
+    } catch (error) { element('comment-message').textContent = error.message; }
+  };
+})();
+</script>
+</body>
+</html>
