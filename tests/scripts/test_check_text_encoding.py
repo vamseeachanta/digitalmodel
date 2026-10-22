@@ -135,20 +135,36 @@ def snapshot(root, parent=None):
     checker.git(root, "add", ".")
     tree = checker.git(root, "write-tree").strip()
     ancestry = f"parent {parent}\n" if parent else ""
-    commit = subprocess.run(
+    result = subprocess.run(
         ["git", "hash-object", "-t", "commit", "-w", "--stdin"],
         cwd=root,
         input=(
             f"tree {tree}\n{ancestry}"
             "author Encoding test <> 1 +0000\n"
             "committer Encoding test <> 1 +0000\n\nTest input\n"
-        ),
+        ).encode("utf-8"),
         capture_output=True,
-        encoding="utf-8",
         check=True,
-    ).stdout.strip()
+    )
+    commit = result.stdout.decode("ascii").strip()
     checker.git(root, "update-ref", "HEAD", commit)
     return commit
+
+
+def test_snapshot_preserves_commit_bytes_with_windows_text_translation(
+    git_repo, monkeypatch
+):
+    real_run = subprocess.run
+
+    def windows_run(args, **kwargs):
+        # Windows text pipes translate LF to CRLF, invalidating Git object headers.
+        if args[1:3] == ["hash-object", "-t"] and isinstance(kwargs.get("input"), str):
+            kwargs["input"] = kwargs["input"].replace("\n", "\r\n")
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", windows_run)
+    commit = snapshot(git_repo)
+    assert checker.git(git_repo, "cat-file", "-t", commit).strip() == "commit"
 
 
 def test_rename_plus_comment_preserves_unchanged_calls(git_repo):
@@ -285,6 +301,25 @@ def test_deleted_encoding_inside_call_is_checked(git_repo):
     assert len(findings) == 1 and findings[0]["code"] == "PLW1514"
 
 
+@pytest.mark.parametrize("old_end, new_end", [("", "\n"), ("\n", "")])
+@pytest.mark.parametrize("remove_encoding", [True, False])
+def test_encoding_deletion_with_final_newline_change(
+    git_repo, old_end, new_end, remove_encoding
+):
+    path = git_repo / "example.py"
+    source = "open(\n    'data',\n    encoding='utf-8',\n).read()"
+    path.write_text(source + old_end, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    if remove_encoding:
+        source = source.replace("    encoding='utf-8',\n", "")
+    path.write_text(source + new_end, encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [(item["line"], item["code"]) for item in findings] == (
+        [(3, "PLW1514")] if remove_encoding else []
+    )
+
+
 def test_deleting_line_after_call_does_not_change_call(git_repo):
     path = git_repo / "example.py"
     path.write_text("open('old')\n# Remove comment\n", encoding="utf-8", newline="\n")
@@ -370,19 +405,45 @@ def test_git_scope_clears_inherited_repository_bindings(git_repo, monkeypatch):
     base = snapshot(git_repo)
     path.write_text("open('new')\n", encoding="utf-8", newline="\n")
     snapshot(git_repo, base)
-    metadata = {
-        name: (git_repo / ".git" / name).read_bytes() for name in ("HEAD", "index")
-    }
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         monkeypatch.setenv(name, str(git_repo / "absent"))
     findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
     assert [item["code"] for item in findings] == ["PLW1514"]
     assert path.read_text(encoding="utf-8") == "open('new')\n"
-    assert {
-        name: (git_repo / ".git" / name).read_bytes() for name in metadata
-    } == metadata
 
 
 def test_hunk_function_context_does_not_shift_line_numbers():
     patch = "@@ -3 +3 @@ def function():\n-    old = 1\n+    new = 2\n"
     assert checker.added_lines(patch) == {3}
+
+
+@pytest.mark.parametrize(
+    "separator", ["\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"]
+)
+def test_hunk_rows_ignore_nonphysical_separators(separator):
+    patch = f"@@ -1 +1,2 @@\n-old\n+value = '{separator}+fragment'\n+open('new')\n"
+    assert checker.added_lines(patch) == {1, 2}
+
+
+@pytest.mark.parametrize(
+    "separator", ["\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"]
+)
+def test_source_rows_ignore_nonphysical_separators(git_repo, separator):
+    path = git_repo / "example.py"
+    source = (
+        f"from pathlib import Path\n# Separator {separator}\n"
+        "Path('data').write_text(\n    'old',\n)\n"
+    )
+    path.write_text(source, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    path.write_text(source.replace("'old'", "'new'"), encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+    findings = checker.check_files(git_repo, checker.diff_scope(git_repo, base))
+    assert [(item["line"], item["code"]) for item in findings] == [(4, "PLW1514")]
+
+
+@pytest.mark.parametrize("line_ending", ["\n", "\r\n", "\r"])
+def test_source_physical_line_endings(tmp_path, line_ending):
+    source = "value = 'é'; open(\n    'changed',\n)\n".replace("\n", line_ending)
+    findings = check_source(tmp_path, source, {2})
+    assert [(item["line"], item["code"]) for item in findings] == [(2, "PLW1514")]

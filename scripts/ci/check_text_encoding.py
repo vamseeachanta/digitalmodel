@@ -24,6 +24,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RUFF_VERSION = "0.15.1"
+# Bound noisy tool output while retaining its final diagnostic context.
+STDERR_TAIL_CHARS = 2000
 HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.MULTILINE)
 
 
@@ -52,7 +54,7 @@ def git(root, *args):
     )
     if result.returncode:
         raise RuntimeError(
-            f"Git scope discovery failed: {result.stderr[-2000:].strip()}"
+            f"Git scope discovery failed: {result.stderr[-STDERR_TAIL_CHARS:].strip()}"
         )
     return result.stdout
 
@@ -67,18 +69,23 @@ def added_lines(patch):
             lines.deletions.add(start)
             continue
         end = hunks[index + 1].start() if index + 1 < len(hunks) else len(patch)
-        body = patch[match.end() : end].splitlines()[1:]
+        body = patch[match.end() : end].split("\n")[1:]
         removed = Counter(line[1:] for line in body if line.startswith("-"))
+        excluded = set()
         row = start
         for line in body:
             if line.startswith("+"):
                 if removed[line[1:]]:
                     removed[line[1:]] -= 1
+                    excluded.add(row)
                 else:
                     lines.add(row)
                 row += 1
             elif line.startswith(" "):
                 row += 1
+        # Unmatched removals can change a call despite a re-emitted final line.
+        if +removed:
+            lines.update(excluded)
     return lines
 
 
@@ -151,7 +158,7 @@ def ruff_findings(root, paths):
             raise RuntimeError(
                 f"Checker requires Ruff {RUFF_VERSION}; "
                 f"found {version.stdout.strip()}; "
-                f"{version.stderr[-2000:].strip()}"
+                f"{version.stderr[-STDERR_TAIL_CHARS:].strip()}"
             )
         result = subprocess.run(
             [
@@ -176,12 +183,15 @@ def ruff_findings(root, paths):
     except OSError as exc:
         raise RuntimeError("Ruff could not run; install the pinned version") from exc
     if result.returncode not in (0, 1):
-        raise RuntimeError(f"Ruff could not run: {result.stderr[-2000:].strip()}")
+        raise RuntimeError(
+            f"Ruff could not run: {result.stderr[-STDERR_TAIL_CHARS:].strip()}"
+        )
     try:
         return json.loads(result.stdout)
     except (ValueError, TypeError) as exc:
         raise RuntimeError(
-            f"Ruff returned invalid diagnostic JSON: {result.stderr[-2000:].strip()}"
+            "Ruff returned invalid diagnostic JSON: "
+            f"{result.stderr[-STDERR_TAIL_CHARS:].strip()}"
         ) from exc
 
 
@@ -199,7 +209,7 @@ def check_files(root, scope):
             raw = (root / path).read_bytes()
             tree = ast.parse(raw, filename=path)
             codec, _ = tokenize.detect_encoding(io.BytesIO(raw).readline)
-            source_by_path[path] = raw.decode(codec).splitlines()
+            source_by_path[path] = re.split(r"\r\n|\r|\n", raw.decode(codec))
         except (OSError, SyntaxError, UnicodeError, ValueError):
             line = min(lines) if lines else 1
             findings.append(
