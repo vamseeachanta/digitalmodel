@@ -29,6 +29,12 @@ REBUILD = (
 )
 
 
+def read_utf8(path):
+    """Read text using the same UTF-8 and LF convention as the builder."""
+    with path.open(encoding="utf-8", newline="\n") as stream:
+        return stream.read()
+
+
 class Page(HTMLParser):
     """Collect numeric displays, links, headings and chart bindings."""
 
@@ -91,10 +97,7 @@ def builder():
 @pytest.fixture(scope="module")
 def example(tmp_path_factory):
     scratch = tmp_path_factory.mktemp("rope-report")
-    cfg = yaml.safe_load(
-        (ROOT / "examples/workflows/synthetic-rope-mooring-fatigue/input.yml")
-        .read_text(encoding="utf-8")
-    )
+    cfg = yaml.safe_load(read_utf8(ROOT / "examples/workflows/synthetic-rope-mooring-fatigue/input.yml"))
     original = copy.deepcopy(cfg["synthetic_rope_mooring_fatigue"])
     cfg["synthetic_rope_mooring_fatigue"]["output_dir"] = str(scratch / "direct")
     summary = router(cfg)["synthetic_rope_mooring_fatigue"]
@@ -139,14 +142,14 @@ def test_rebuild_and_every_worked_example_number(builder, example):
     assert {key for key, _ in page.numbers} == set(expected)
     for key, displayed in page.numbers:
         # Match displayed precision; no exact comparison of library float tails.
-        assert displayed == builder.display(expected[key]), key
+        assert displayed == builder.display(expected[key], key), key
         if key.endswith(("normalised_range", "min_tension_ratio")):
             # Ratios retain four significant figures so that visible range /
             # visible breaking load agrees at the stated display precision.
             assert float(displayed) == pytest.approx(expected[key], rel=5e-4), key
-    saved = (REPORT_DIR / "report.html").read_text(encoding="utf-8")
+    saved = read_utf8(REPORT_DIR / "report.html")
     assert html == saved, f"Report differs; rebuild with: {REBUILD}"
-    assert changes == json.loads((REPORT_DIR / "changes.json").read_text(encoding="utf-8"))
+    assert changes == json.loads(read_utf8(REPORT_DIR / "changes.json"))
 
 
 def test_hand_anchors_are_reported(builder, example):
@@ -166,9 +169,168 @@ def test_hand_anchors_are_reported(builder, example):
     numbers = dict(Page(html).numbers)
     assert numbers["line.0.bin.0.normalised_range"] == builder.display(0.05)
     assert numbers["line.0.min_tension_ratio"] == builder.display(0.0833333333333333)
-    assert numbers["line.0.compression_margin"] == builder.display(1.66666666666667)
+    assert numbers["line.0.compression_margin"] == builder.display(1.66666666666667, "compression_margin")
     assert numbers["line.1.creep_life_years"] == builder.display(3.162277660168379)
     assert numbers["line.1.creep_required_years"] == builder.display(75.0)
+
+
+def test_all_calculated_fields_against_hand_literals(builder, example):
+    """Anchor the published numbers independently of router and display helpers.
+
+    For each bin, N = 0.259 * (range / 18000)**(-13.46), d = n/N.
+    Sum the three d values, then L = 25/D and fatigue margin = 1/(60*D).
+    Creep lives are 100*10**0.6 and 100*10**(-1.5); divide by 25*3.
+    Minimum margins are 1500/900 and 1200/900. The least margin governs.
+    The literals below retain guard digits beyond the page's four figures.
+    """
+    html, _ = builder.build(example[0] / "hand-literals")
+    numbers = dict(Page(html).numbers)
+    anchors = {}
+    bin_literals = (
+        ((0.05, 8.41711974631e16, 7.12832914445e-12),
+         (0.10, 7.46964159310e12, 3.34688079587e-8),
+         (0.15, 3.18501452464e10, 1.88382186441e-6)),
+        ((0.06, 7.23409043907e15, 6.22054705827e-11),
+         (0.09, 3.08457679446e13, 5.83548447629e-9),
+         (0.12, 6.41978069227e11, 7.78842804711e-8)),
+    )
+    line_literals = (
+        (1.91729780070e-6, 1.30391846227e7, 8692.78974845,
+         398.107170553, 5.30809560738, 0.0833333333333,
+         1.66666666667, 1.66666666667),
+        (8.37819704180e-8, 2.98393555025e8, 198929.036683,
+         3.16227766017, 0.0421637021356, 0.0666666666667,
+         1.33333333333, 0.0421637021356),
+    )
+    for i in range(2):
+        prefix = f"line.{i}."
+        for j, literals in enumerate(bin_literals[i]):
+            anchors.update(zip(
+                (prefix + f"bin.{j}." + field for field in
+                 ("normalised_range", "allowable_cycles", "damage")), literals,
+            ))
+        anchors.update(zip(
+            (prefix + field for field in (
+                "total_damage", "fatigue_life_years", "fatigue_margin",
+                "creep_life_years", "creep_margin", "min_tension_ratio",
+                "compression_margin", "line_margin",
+            )), line_literals[i],
+        ))
+        anchors.update({prefix + "fatigue_required_years": 1500.0,
+                        prefix + "creep_required_years": 75.0,
+                        prefix + "min_required_kN": 900.0})
+    assert len(anchors) == 40
+    calculated = expected_numbers(example[1], example[2], example[3])
+    for key, literal in anchors.items():
+        assert calculated[key] == pytest.approx(literal, rel=1e-10), key
+        parsed = float(numbers[key].replace(",", "").replace("−", "-"))
+        if key.endswith("_margin") or literal < 1 or literal >= 1e6:
+            assert parsed == pytest.approx(literal, rel=5e-4), key
+        else:
+            # Lives and loads in this range are printed to one decimal place.
+            assert parsed == pytest.approx(literal, abs=0.05), key
+
+
+@pytest.mark.parametrize("value, expected", [
+    (0.99996, "0.9999"), (1.0, "1.000"), (1.00004, "1.000"),
+    (0.0421637021356, "0.04216"), (8692.78974845, "8693"), (0.0, "0.000"),
+])
+def test_margin_display_preserves_failure_boundary(builder, value, expected):
+    assert builder.display(value, "line.0.line_margin") == expected
+
+
+def test_cycle_counts_are_integers(builder, example):
+    html, _ = builder.build(example[0] / "counts")
+    numbers = dict(Page(html).numbers)
+    assert numbers["line.0.bin.0.n_cycles"] == "600,000"
+    assert numbers["line.1.bin.2.n_cycles"] == "50,000"
+
+
+def test_parameter_values_lines_and_basis(builder, example):
+    html, _ = builder.build(example[0] / "parameters")
+    for key, value, line in (
+        ("design_life_years", "25.0", 4), ("dff", "60.0", 5),
+        ("creep_safety_factor", "3.0", 6), ("tn_curve.intercept", "0.259", 8),
+        ("tn_curve.slope", "13.46", 9), ("tn_curve.mean_load_knockdown", "0.0", 10),
+        ("creep.reference_life_years", "100.0", 12), ("creep.load_ratio_ref", "0.3", 13),
+        ("creep.decades_per_load_ratio", "6.0", 14), ("min_tension.min_ratio_allow", "0.05", 16),
+    ):
+        assert f'data-parameter="{key}">{value}</span>' in html
+        assert f'input.yml#L{line}' in html
+    assert "unsourced demonstration value" in html
+    assert "no numerical standard value is reproduced" not in html.lower()
+    assert "2018-07" in html and "edition conflict" in html.lower()
+    assert "L / (T × gF)" in html
+    assert "Those engine-based tests were not run" not in html
+    assert "tests-workflows" in html and "tests-contracts" in html
+
+
+@pytest.mark.parametrize("mechanism, label", [
+    ("fatigue", "Tension-range fatigue"), ("creep", "Creep rupture"),
+    ("compression", "Minimum tension"),
+])
+@pytest.mark.parametrize("passes", [False, True])
+def test_verdicts_follow_changed_inputs(builder, example, monkeypatch, mechanism, label, passes):
+    original_calculate = builder.calculate
+
+    def changed(scratch):
+        inputs, summary, bins, values = original_calculate(scratch)
+        # Keep the other two margins above the selected mechanism's margin.
+        for i, line in enumerate(summary["lines"]):
+            for name in ("fatigue", "creep", "compression"):
+                margin = (1.25 if passes else 0.5) if name == mechanism else 2.0
+                line[name + "_margin"] = values[f"line.{i}.{name}_margin"] = margin
+            line.update(governing_mechanism=mechanism, passes=passes,
+                        line_margin=1.25 if passes else 0.5)
+            values[f"line.{i}.line_margin"] = line["line_margin"]
+        summary.update(governing_line=summary["lines"][0]["line_id"],
+                       governing_mechanism=mechanism, screening_status="pass" if passes else "fail")
+        return inputs, summary, bins, values
+
+    monkeypatch.setattr(builder, "calculate", changed)
+    html, _ = builder.build(example[0] / f"verdict-{mechanism}-{passes}")
+    visible = " ".join(Page(html).visible)
+    assert f"Governing mechanism: {label}." in visible
+    assert f"Overall screening result: {'pass' if passes else 'fail'}." in visible
+    if passes:
+        assert "The supplied criteria are met." in visible
+        assert "does not meet" not in visible and "not accepted" not in visible
+        assert "creep shortfall" not in visible
+    else:
+        assert f"The supplied {label.lower()} criterion is not met." in visible
+
+
+@pytest.mark.parametrize("margin", [0.0, -0.1])
+def test_nonpositive_chart_margins_use_linear_scale(builder, example, margin):
+    values = builder.calculate(example[0] / "chart-domain")[3]
+    values["line.0.compression_margin"] = margin
+    chart = builder.chart("compression", values)
+    assert "linear vertical scale" in chart
+    assert not re.search(r"(?:nan|inf)", chart, re.I)
+
+
+def test_zero_minimum_tension_rebuild(builder, example, monkeypatch):
+    cfg = yaml.safe_load(read_utf8(builder.EXAMPLE))
+    cfg["synthetic_rope_mooring_fatigue"]["lines"][0]["min_tension_kN"] = 0
+    source = example[0] / "zero.yml"
+    source.write_text(yaml.safe_dump(cfg), encoding="utf-8", newline="\n")
+    monkeypatch.setattr(builder, "EXAMPLE", source)
+    html, _ = builder.build(example[0] / "zero-output")
+    assert dict(Page(html).numbers)["line.0.compression_margin"] == "0.000"
+    assert "The supplied minimum tension criterion is not met." in html
+
+
+def test_ci_runs_report_and_workflow_regressions():
+    workflow = yaml.safe_load(read_utf8(ROOT / ".github/workflows/quality-gates-by-domain.yml"))
+    steps = workflow["jobs"]["domain-tests"]["steps"]
+    step = next(step for step in steps if step["name"] == "Run synthetic rope report regressions")
+    assert step["if"] == "matrix.domain == 'contracts'"
+    for path in ("tests/docs/test_synthetic_rope_mooring_fatigue_report.py",
+                 "tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]",
+                 "tests/workflows/test_durable_workflows.py::test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3",
+                 "tests/parametric/test_atlas.py::test_synthetic_rope_fatigue_atlas_is_log_log_exact",
+                 "tests/parametric/test_atlas.py::test_fatigue_bins_handler_shared_by_both_ropes"):
+        assert path in step["run"]
 
 
 def test_structure_sources_and_offline_assets(builder, example):
@@ -210,24 +372,24 @@ def test_utf8_lf_and_no_implicit_file_encoding():
     import ast
 
     for path in (REPORT_DIR / "build_report.py", Path(__file__)):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        tree = ast.parse(read_utf8(path))
         for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
             if isinstance(call.func, ast.Attribute) and call.func.attr in {"read_text", "write_text", "open"}:
                 keywords = {kw.arg: kw.value for kw in call.keywords}
                 assert "encoding" in keywords, (path.name, call.lineno)
-                if call.func.attr == "write_text":
+                if call.func.attr in {"write_text", "open"}:
                     assert "newline" in keywords, (path.name, call.lineno)
     for path in REPORT_DIR.iterdir():
         if path.is_file():
             assert b"\r\n" not in path.read_bytes(), path.name
-            assert all(line == line.rstrip() for line in path.read_text(encoding="utf-8").splitlines()), path.name
+            assert all(line == line.rstrip() for line in read_utf8(path).splitlines()), path.name
 
 
 def test_report_files_are_not_ignored():
     paths = [REPORT_DIR / name for name in ("build_report.py", "report.html", "changes.json")]
     result = subprocess.run(
         ["git", "check-ignore", *(str(path.relative_to(ROOT)) for path in paths)],
-        cwd=ROOT, capture_output=True, text=True, check=False,
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=False,
     )
     assert result.returncode == 1 and not result.stdout, "Report files must be stageable without forcing."
 
@@ -275,7 +437,7 @@ vm.runInNewContext(payload.script, context);
   await point.emit('focus');
   assert.match(get('chart-readout').textContent, /Case: Second polyester line; component: Synthetic rope span;/);
   assert.match(get('chart-readout').textContent, /limit .*kN; margin:/);
-  assert.equal(get('changes-panel').children.length, 1);
+  assert.equal(get('changes-panel').children.length, 2);
   await get('comment-folder').emit('click');
   assert.equal(get('comment-list').children[0].textContent, 'Results: Existing note');
   get('comment-section').value = 'Results';
@@ -302,5 +464,5 @@ vm.runInNewContext(payload.script, context);
     result = subprocess.run(["node", "-"], input=harness.replace(
         "const payload = JSON.parse(fs.readFileSync(0, 'utf8'));",
         "const payload = " + payload + ";",
-    ), text=True, capture_output=True, check=False)
+    ), text=True, encoding="utf-8", capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
