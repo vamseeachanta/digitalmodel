@@ -1,12 +1,12 @@
 {
   "report": "Riser fatigue module analysis",
-  "revision": "Initial",
-  "date": "2026-10-21",
+  "revision": "1",
+  "date": "2026-10-22",
   "changes": [
     {
-      "section": "Supplied-response fatigue screening",
-      "change": "Wave and vortex-induced vibration damage, the governing location, and the fatigue-factor criterion are presented for the public synthetic example.",
-      "reason": "The calculation boundary and the evidence needed for design use are made explicit."
+      "section": "Report reproducibility and interpretation",
+      "change": "Portable UTF-8/LF output, normalized source digests, stable location labels, explicit criteria and exact input precision are presented.",
+      "reason": "Rebuilds and screening conclusions require consistent numeric and input evidence."
     }
   ]
 }

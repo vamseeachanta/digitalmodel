@@ -32,14 +32,14 @@ ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = ROOT / "examples/workflows/riser-fatigue/input.yml"
 CHANGES = {
     "report": "Riser fatigue module analysis",
-    "revision": "Initial",
-    "date": "2026-10-21",
+    "revision": "1",
+    "date": "2026-10-22",
     "changes": [
         {
-            "section": "Supplied-response fatigue screening",
-            "change": "Wave and vortex-induced vibration damage, the governing location, "
-                      "and the fatigue-factor criterion are presented for the public synthetic example.",
-            "reason": "The calculation boundary and the evidence needed for design use are made explicit.",
+            "section": "Report reproducibility and interpretation",
+            "change": "Portable UTF-8/LF output, normalized source digests, stable location labels, "
+                      "explicit criteria and exact input precision are presented.",
+            "reason": "Rebuilds and screening conclusions require consistent numeric and input evidence.",
         }
     ],
 }
@@ -63,9 +63,14 @@ def build_payload(scratch_dir: Path) -> dict:
     cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
     inputs = copy.deepcopy(cfg["riser_fatigue"])
     inputs.pop("output_dir")
-    cfg["riser_fatigue"]["output_dir"] = str(scratch_dir.resolve())
+    cfg["riser_fatigue"]["output_dir"] = scratch_dir.resolve().as_posix()
     result = router(cfg)["riser_fatigue"]
-    with Path(result["results_csv"]).open(encoding="utf-8") as stream:
+    csv_path = Path(result["results_csv"])
+    if not csv_path.is_absolute():
+        csv_path = ROOT / csv_path
+    if not csv_path.resolve().is_relative_to(scratch_dir.resolve()):
+        raise ValueError("Calculation CSV is outside the requested scratch directory")
+    with csv_path.open(encoding="utf-8") as stream:
         bins = []
         for row in csv.DictReader(stream):
             for key in row.keys() - {"segment_id", "contribution"}:
@@ -109,7 +114,8 @@ def build_payload(scratch_dir: Path) -> dict:
             for seg in result["segments"]
         ],
         "source_digests": {
-            path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in SOURCE_PATHS
+            path: hashlib.sha256((ROOT / path).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+            for path in SOURCE_PATHS
         },
     }
     return payload
@@ -129,7 +135,7 @@ def format_number(value: float, spec: str) -> str:
     """Use engineering precision without printing small nonzero values as zero."""
     rendered = format(value, spec)
     if value != 0 and float(rendered.replace(",", "")) == 0:
-        rendered = format(value, ".1e")
+        rendered = format(value, ".3g")
     return rendered.replace("-", "−")
 
 
@@ -138,11 +144,102 @@ def safe_json(value) -> str:
     return json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True).replace("<", "\\u003c")
 
 
+def screening_number(value, positive=False):
+    """Require a finite, nonnegative value before evaluating a criterion."""
+    if isinstance(value, bool) or value is None:
+        raise ValueError("Invalid screening basis: numeric value required")
+    value = float(value)
+    if not math.isfinite(value) or value < 0 or (positive and value == 0):
+        raise ValueError("Invalid screening basis: finite valid value required")
+    return value
+
+
+def validate_input_basis(record: dict) -> tuple[float, float, float]:
+    """Check the positive geometry, finite exposures and fatigue-factor limit."""
+    number = screening_number
+    inputs = record["inputs"]
+    life = number(inputs["design_life_years"], positive=True)
+    dff = number(inputs["dff"], positive=True)
+    limit = number(record["allowable_damage"], positive=True)
+    if not math.isclose(limit, 1 / dff, rel_tol=1e-10):
+        raise ValueError("Invalid screening basis: fatigue-factor limit mismatch")
+    for segment in inputs["segments"]:
+        diameter = number(segment["outer_diameter_mm"], positive=True)
+        wall = number(segment["wall_thickness_mm"], positive=True)
+        wave = segment["wave"]
+        if wall * 2 >= diameter or not wave["cycles"]:
+            raise ValueError("Invalid screening basis: geometry or histogram")
+        number(wave["scf"], positive=True)
+        number(wave["histogram_period_years"], positive=True)
+        if len(wave["cycles"]) != len(wave["stress_ranges_MPa"]):
+            raise ValueError("Invalid screening basis: histogram lengths")
+        for value in wave["cycles"] + wave["stress_ranges_MPa"]:
+            number(value)
+        for case in segment["viv_cases"]:
+            number(case["stress_range_MPa"], positive=True)
+            number(case["frequency_hz"], positive=True)
+            if "exposure_fraction" in case:
+                if number(case["exposure_fraction"]) > 1:
+                    raise ValueError("Invalid screening basis: exposure fraction")
+            elif number(case["exposure_hours_per_year"]) > record["seconds_per_year"] / 3600:
+                raise ValueError("Invalid screening basis: annual exposure")
+    return life, dff, limit
+
+
+def validate_result_basis(record: dict, life: float, dff: float, limit: float) -> None:
+    """Check result consistency before printing a passing screening narrative."""
+    number = screening_number
+    result = record["result"]
+    for segment in result["segments"]:
+        wave = number(segment["wave_damage"])
+        viv = number(segment["viv_damage"])
+        if not math.isclose(wave + viv, number(segment["total_damage"])):
+            raise ValueError("Invalid screening basis: damage sum mismatch")
+        damage = number(segment["total_damage"], positive=True)
+        if (damage > limit or segment["passes_dff"] is not True
+                or not math.isclose(number(segment["required_life_years"]), life * dff)
+                or not math.isclose(number(segment["fatigue_life_years"]), life / damage)
+                or not math.isclose(number(segment["dff_margin"]), 1 / (damage * dff))):
+            raise ValueError("Invalid screening basis: inconsistent pass criterion")
+    governing = max(result["segments"], key=lambda row: row["total_damage"])
+    if result["governing_segment"] != governing["segment_id"]:
+        raise ValueError("Invalid screening basis: governing identity mismatch")
+    for key in ("damage", "wave_damage", "viv_damage", "fatigue_life_years", "dff_margin"):
+        source = "total_damage" if key == "damage" else key
+        if not math.isclose(number(result["governing_" + key]), number(governing[source])):
+            raise ValueError("Invalid screening basis: governing result mismatch")
+    by_id = {segment["segment_id"]: segment for segment in result["segments"]}
+    for row in record["chart"]:
+        if (not math.isclose(number(row["limit"]), limit)
+                or not math.isclose(number(row["demand"]), by_id[row["component"]]["total_damage"])):
+            raise ValueError("Invalid screening basis: chart criterion mismatch")
+
+
+def validate_basis(record: dict) -> None:
+    """Reject missing, non-finite or inconsistent screening evidence."""
+    try:
+        if not record["bins"] or not record["chart"] or not record["result"]["segments"]:
+            raise ValueError("Invalid screening basis: required evidence missing")
+        life, dff, limit = validate_input_basis(record)
+        for row in record["bins"]:
+            for key, value in row.items():
+                if key in {"segment_id", "contribution"}:
+                    continue
+                if key == "frequency_hz" and row["contribution"] == "wave" and value is None:
+                    continue
+                screening_number(value)
+        validate_result_basis(record, life, dff, limit)
+    except (KeyError, TypeError, OverflowError) as exc:
+        raise ValueError("Invalid screening basis: required evidence missing") from exc
+
+
 def render(record: dict) -> str:
     """Write the complete engineering narrative and all figures in one template."""
     if record["result"]["screening_status"] != "pass":
         raise ValueError("The example verdict changed; an engineering narrative update is required")
-    def metric(key, spec=".1f"):
+    validate_basis(record)
+
+    def metric(key, spec=".3g"):
         value = lookup(record, key)
         return (f'<span data-metric="{key}" data-value="{value}" data-format="{spec}">'
                 f'{format_number(value, spec)}</span>')
@@ -151,14 +248,17 @@ def render(record: dict) -> str:
         return f'<a href="#ref{number}">[{number}]</a>'
 
     def table(headers, rows, caption):
-        return ('<div style="overflow-x:auto"><table><caption>' + caption + '</caption><thead><tr>'
+        return ('<div style="overflow-x:auto"><table><thead><tr>'
                 + ''.join(f'<th scope="col">{cell}</th>' for cell in headers)
                 + '</tr></thead><tbody>'
                 + ''.join('<tr>' + ''.join(f'<td>{cell}</td>' for cell in row) + '</tr>' for row in rows)
-                + '</tbody></table></div>')
+                + '</tbody><caption>' + caption + '</caption></table></div>')
 
-    labels = {record["inputs"]["segments"][0]["id"]: "Touchdown zone",
-              record["inputs"]["segments"][1]["id"]: "Hang-off"}
+    labels = {"TDZ-sandwave": "Touchdown zone", "hangoff": "Hang-off"}
+    identities = {segment["id"] for segment in record["inputs"]["segments"]}
+    if identities != labels.keys() or any(segment["segment_id"] not in labels
+                                         for segment in record["result"]["segments"]):
+        raise ValueError("Unsupported segment identity in the public example")
     governing = labels[record["result"]["governing_segment"]]
     governing_index = next(index for index, segment in enumerate(record["result"]["segments"])
                            if segment["segment_id"] == record["result"]["governing_segment"])
@@ -169,14 +269,14 @@ def render(record: dict) -> str:
     for index, segment in enumerate(record["inputs"]["segments"]):
         prefix = f"inputs.segments.{index}"
         input_rows.append([
-            labels[segment["id"]], metric(prefix + ".outer_diameter_mm"),
-            metric(prefix + ".wall_thickness_mm"), metric(prefix + ".wave.scf", ".2f"),
+            labels[segment["id"]], metric(prefix + ".outer_diameter_mm", ".1f"),
+            metric(prefix + ".wall_thickness_mm", ".3f"), metric(prefix + ".wave.scf", ".2f"),
             metric(prefix + ".wave.histogram_period_years"), cite(1),
         ])
         for bin_index, _ in enumerate(segment["wave"]["cycles"]):
             wave_rows.append([
                 labels[segment["id"]], metric(prefix + f".wave.stress_ranges_MPa.{bin_index}"),
-                metric(prefix + f".wave.cycles.{bin_index}", ".1e"), cite(1),
+                metric(prefix + f".wave.cycles.{bin_index}", ",.0f"), cite(1),
             ])
         for case_index, case in enumerate(segment["viv_cases"]):
             base = prefix + f".viv_cases.{case_index}"
@@ -187,13 +287,14 @@ def render(record: dict) -> str:
                 "Not supplied" if hours else metric(base + ".exposure_fraction", ".3f"),
                 metric(base + ".exposure_hours_per_year") if hours else "Not supplied", cite(1),
             ])
-        summary = record["result"]["segments"][index]
+        result_index, summary = next((i, item) for i, item in enumerate(record["result"]["segments"])
+                                     if item["segment_id"] == segment["id"])
         result_rows.append([
             labels[segment["id"]],
-            *[metric(f"result.segments.{index}.{key}", ".1e" if "damage" in key else ".1f")
+            *[metric(f"result.segments.{result_index}.{key}", ".3g")
               for key in summary_fields],
-            "The screening criterion is met." if summary["passes_dff"]
-            else "The screening criterion is exceeded.", cite(2),
+            f'D ≤ {metric("allowable_damage", ".3g")}; M ≥ 1.000. '
+            'The screening criterion is met.', cite(2),
         ])
     for index, row in enumerate(record["bins"]):
         fields = ["bin_index", "stress_range_MPa", "stress_corrected_MPa", "frequency_hz",
@@ -203,7 +304,8 @@ def render(record: dict) -> str:
             *["Not applicable" if row[field] is None else metric(
                 f"bins.{index}.{field}", ".0f" if field == "bin_index"
                 else ".2f" if field == "frequency_hz"
-                else ".1e" if field in {"cycles", "allowable_cycles", "damage"} else ".1f")
+                else ",.0f" if field in {"cycles", "allowable_cycles"}
+                else ".3g" if field == "damage" else ".1f")
               for field in fields], cite(2),
         ])
     section_table = table(
@@ -238,7 +340,7 @@ def render(record: dict) -> str:
     for index, row in enumerate(record["chart"]):
         label = labels[row["component"]]
         text = (f'Case: public synthetic example; component: {label}; demand: '
-                f'{format_number(row["demand"], ".1e")}; limit: {format_number(row["limit"], ".1e")}; '
+                f'{format_number(row["demand"], ".3g")}; limit: {format_number(row["limit"], ".3g")}; '
                 'units: dimensionless design-life damage.')
         bars.append(
             f'<g class="damage-point" tabindex="0" role="img" aria-label="{text}" '
@@ -271,10 +373,11 @@ def render(record: dict) -> str:
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Riser fatigue module analysis</title>
 <style>{canonical}</style>
-<style>{report_style}</style>
+<style>{report_style}
+caption {{caption-side: bottom;}}</style>
 </head><body class="hs-doc"><main class="wrap">
 <header><div class="kicker">Engineering module analysis</div>
-<h1>Riser fatigue module analysis</h1><p class="sub">Draft for client review</p></header>
+<h1>Riser fatigue module analysis</h1><p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report sections"><a href="#s1">Summary</a> · <a href="#s3">Design data</a> ·
 <a href="#s4">Method</a> · <a href="#s5">Results</a> · <a href="#s8">Recommendations</a> ·
 <a href="#appendix">Appendices</a> · <a href="#comments">Comments</a></nav>
@@ -285,8 +388,8 @@ Analysis is performed to determine combined wave and vortex-induced vibration fa
 and the key results are summarized below. {cite(1)}{cite(2)}</p>
 <ul><li>The public synthetic example is assessed against its explicit design fatigue factor.
 <ul><li>The governing location is the {governing.lower()}, with design-life damage
-{metric("result.governing_damage", ".1e")} against allowable damage
-{metric("allowable_damage", ".1e")}; the screening criterion is met. {cite(1)}{cite(2)}</li>
+{metric("result.governing_damage", ".3g")} against allowable damage
+{metric("allowable_damage", ".3g")}; the screening criterion is met. {cite(1)}{cite(2)}</li>
 <li>The governing unfactored fatigue life is {metric("result.governing_fatigue_life_years")} years
 against a required life of {metric(required_life_key)} years;
 this is a screening estimate from supplied stresses. {cite(2)}</li></ul></li>
@@ -298,8 +401,10 @@ neither is established by the synthetic example or the existing regression check
 {chart}
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>Initial</td><td>{CHANGES["date"]}</td><td>Supplied-response fatigue screening is documented
-to distinguish damage arithmetic from riser response and design qualification.</td></tr></tbody></table>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>Supplied-response fatigue screening is documented
+to distinguish damage arithmetic from riser response and design qualification.</td></tr>
+<tr><td>1</td><td>{CHANGES["date"]}</td><td>Report rebuilding, location identities and display precision
+are corrected so the supplied-response screening evidence remains reproducible.</td></tr></tbody></table>
 </section>
 
 <section id="s2"><h2>2. Introduction</h2>
@@ -345,7 +450,7 @@ or wave-dominated operating envelope. Tables A, C and D in the appendix hold all
 {cite(1)}{cite(2)}</p>
 <h3>3.3 Criteria and rationale</h3>
 <p>The design life is {metric("inputs.design_life_years")} years and the explicit example design fatigue factor
-is {metric("inputs.dff")}, giving allowable design-life damage {metric("allowable_damage", ".1e")}.
+is {metric("inputs.dff")}, giving allowable design-life damage {metric("allowable_damage", ".3g")}.
 These are example choices, marked ASSUMED - to be confirmed for any design application.
 The factor reduces permissible accumulated damage to reserve fatigue life; it is not a calculated
 material property or a demonstrated site-specific requirement. {cite(1)}{cite(2)}</p>
@@ -361,6 +466,10 @@ cases are inferred from them. {cite(1)}</p>
 <section id="s4"><h2>4. Analysis Methodology</h2>
 <p>Fatigue damage is calculated from supplied stresses through the shared stress–life and linear
 damage engine. Geometry and loading are not solved by the fatigue module. {cite(2)}{cite(4)}</p>
+<p>The equation basis is the cumulative-damage criterion and stress–life method in
+DNV-RP-C203, October 2011, clauses 2.2 and 2.4.3. Period and cycle-exposure scaling follow
+unit conversion; life, usage and margin are algebraic rearrangements of that criterion.
+No new standard coefficient or fatigue-factor selection is established. {cite(8)}</p>
 <h3>4.1 Calculation boundary and theory</h3>
 <figure><svg viewBox="0 0 820 165" style="width:100%;height:auto" role="img" aria-label="Calculation boundary from supplied responses to fatigue damage">
 <rect x="10" y="25" width="235" height="105" fill="var(--bg)" stroke="currentColor"/>
@@ -381,8 +490,8 @@ buoyancy and stops belong to the upstream structural model and are not inputs to
 t is wall thickness, t<sub>r</sub> is reference thickness and k is the class-specific thickness exponent.
 S<sub>c</sub> is the evaluated stress range. The correction is neutral below reference thickness.
 The reference thickness used by the touchdown interface is
-{metric("touchdown.0.thickness_ref_mm")} mm. The exponent is selected from the repository tables
-for the detail category unless explicitly supplied to the touchdown interface. {cite(2)}{cite(4)}</p>
+{metric("touchdown.0.thickness_ref_mm", ".3f")} mm. The exponent is selected from the repository tables
+for the detail category unless explicitly supplied to the touchdown interface. {cite(2)}{cite(4)}{cite(8)}</p>
 <div class="eq">N(S<sub>c</sub>) = N<sub>k</sub> (S<sub>c</sub> / S<sub>k</sub>)<sup>−m</sup>;
 D<sub>p</sub> = Σ n<sub>j</sub> / N<sub>j</sub></div>
 <p>N is allowable cycles, N<sub>k</sub> is knee cycles, S<sub>k</sub> is knee stress and m is the active
@@ -390,7 +499,7 @@ branch slope. The shared curve implementation anchors both branches at the knee;
 is continuous there rather than independently anchored to a rounded tabular intercept.
 n<sub>j</sub> is applied cycles in bin j, N<sub>j</sub> is its capacity and D<sub>p</sub> is damage
 over the histogram period. Standard coefficients are consumed from the implementation and are not
-reproduced here as independently checked standard values. {cite(4)}</p>
+reproduced here as independently checked standard values. {cite(4)}{cite(8)}</p>
 <div class="eq">D<sub>a</sub> = D<sub>p</sub> / H;
 D<sub>w</sub> = T D<sub>a</sub>;
 n<sub>v</sub> = f e Y T;
@@ -399,8 +508,8 @@ D = D<sub>w</sub> + D<sub>v</sub></div>
 D<sub>w</sub> and D<sub>v</sub> are wave and vibration damage over the same design life,
 f is vibration frequency in hertz, e is the annual exposure fraction, Y is seconds per year,
 and n<sub>v</sub> is vibration cycles. The implementation uses
-{metric("seconds_per_year", ".1e")} seconds per year as a calendar conversion, not an environmental exposure.
-Exposure given in hours is converted to a year fraction by the same convention. {cite(2)}</p>
+{metric("seconds_per_year", ".3g")} seconds per year as a calendar conversion, not an environmental exposure.
+Exposure given in hours is converted to a year fraction by the same convention. {cite(1)}{cite(2)}{cite(8)}</p>
 <div class="eq">L = T / D;
 D<sub>allow</sub> = 1 / F;
 U = D F;
@@ -408,7 +517,7 @@ M = L / (T F)</div>
 <p>L is unfactored life, F is the design fatigue factor, D<sub>allow</sub> is allowable damage,
 U is fatigue usage and M is the fatigue-factor life margin. The criterion is U ≤ 1,
 equivalently M ≥ 1, for positive damage. The inverse and unity thresholds are definitions of
-the implemented screening check, not independently selected environmental limits. {cite(2)}</p>
+the implemented screening check, not independently selected environmental limits. {cite(2)}{cite(8)}</p>
 <h3>4.2 Structural benchmark and dynamic basis</h3>
 <p>A static hand calculation followed by still-water, current, then wave-and-current response is
 required upstream for a physical riser analysis. That sequence is not performed here.
@@ -431,16 +540,16 @@ NOT_EVALUATED. Geometry, weight, buoyancy, pressure, tension and motion inputs a
 No allowable offset is established. {cite(1)}{cite(2)}</p>
 <h3>5.2 Dynamics, drift-off, recoil and weak point</h3>
 <p>Dynamic stroke, tension and angles are NOT_EVALUATED. Stop strikes and travel limits are not assessed.
-Drift-off in the 1-year current and in the 10-year current is NOT_EVALUATED; current histories,
-a watch circle and a drift model are required. Time available is not established. Without a watch circle,
-do not connect. Recoil is not evaluated: data needed: closure curves. Weak point analysis is not performed.
-These statements describe absent assessments, not fatigue failures. {cite(1)}{cite(2)}</p>
+Drift-off is NOT_EVALUATED; current histories,
+a drift model and structural load histories would be needed for a separate response assessment.
+Drilling-riser operability is not applicable to this supplied-stress fatigue screen.
+Recoil and weak-point response are outside its calculation boundary; no operating instruction is issued. {cite(1)}{cite(2)}</p>
 <h3>5.3 Vortex-induced vibration and fatigue</h3>
 <p>The {governing.lower()} governs with wave damage
-{metric("result.governing_wave_damage", ".1e")} and vibration damage
-{metric("result.governing_viv_damage", ".1e")}, giving total design-life damage
-{metric("result.governing_damage", ".1e")} against allowable damage
-{metric("allowable_damage", ".1e")}. The screening criterion is met. {cite(2)}</p>
+{metric("result.governing_wave_damage", ".3g")} and vibration damage
+{metric("result.governing_viv_damage", ".3g")}, giving total design-life damage
+{metric("result.governing_damage", ".3g")} against allowable damage
+{metric("allowable_damage", ".3g")}. The screening criterion is met. {cite(2)}</p>
 <p>The governing unfactored life is {metric("result.governing_fatigue_life_years")} years
 and its fatigue-factor margin is {metric("result.governing_dff_margin")} against the unity minimum.
 These are screening estimates from supplied stresses, not predictions of actual service life.
@@ -461,8 +570,8 @@ in the appendix. {cite(3)}{cite(4)}</p>
 <p>The governing supplied response is identified and its combined damage is below the explicit example
 limit. The conclusion is confined to the provided stress and exposure basis. {cite(1)}{cite(2)}</p>
 <p>The governing location is the {governing.lower()}, with design-life damage
-{metric("result.governing_damage", ".1e")} against allowable damage
-{metric("allowable_damage", ".1e")}; the screening criterion is met. The governing unfactored fatigue life is
+{metric("result.governing_damage", ".3g")} against allowable damage
+{metric("allowable_damage", ".3g")}; the screening criterion is met. The governing unfactored fatigue life is
 {metric("result.governing_fatigue_life_years")} years against a required life of
 {metric(required_life_key)} years; this is a screening estimate from supplied stresses.
 Whether a production riser stands and how far a host remains connected are NOT_EVALUATED. {cite(2)}</p>
@@ -478,7 +587,8 @@ The fatigue factor in this example is explicit; its selection is not a standard-
 for an actual riser. {cite(2)}{cite(4)}{cite(5)}</p>
 <p>The direct histogram interface checks matching array shapes and positive histogram period and fatigue
 factor, but a complete contract for finite, nonnegative, nonempty inputs and valid geometry is not enforced
-locally. All external input data require qualification before interpretation of the screening status.
+by that interface. The report generator rejects missing, non-finite and inconsistent screening evidence;
+that check does not qualify external response data. All external inputs still require engineering qualification.
 The material designation is informational. {cite(2)}</p>
 <h3>7.1 Not covered</h3>
 <p>Stress extraction, cycle counting from histories, vortex-induced response prediction, spectral response,
@@ -544,6 +654,10 @@ The generator calls the public router and touchdown interface and reads their nu
 <li id="ref7">Report layout and stylesheet:
 <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and
 <code>docs/api/_assets/brand.css</code>. Their existing styles are inlined in this report.</li>
+<li id="ref8">DNV-RP-C203, <em>Fatigue Design of Offshore Steel Structures</em>, October 2011:
+clause 2.2, <em>Fatigue damage accumulation</em>; clause 2.4.3,
+<em>S-N curves and joint classification</em>. These locate the equation basis, not an
+independently qualified coefficient set or a site-specific design fatigue factor.</li>
 </ol></section>
 
 <section id="s10"><h2>10. Acronyms and Symbols</h2>
@@ -569,7 +683,7 @@ NOT_EVALUATED means that the required assessment has not been performed, rather 
 The main text presents only the governing supplied-response conclusion. {cite(1)}{cite(2)}{cite(6)}</p>
 <h3>A. Input and data register</h3>
 {section_table}{wave_table}{viv_table}
-<table><caption>Table F. Data availability and required confirmation.</caption>
+<table>
 <thead><tr><th>Data</th><th>Status</th><th>Required disposition</th><th>Source</th></tr></thead><tbody>
 <tr><td>Histograms, vibration ranges, frequency and exposure</td><td>ASSUMED - to be confirmed</td>
 <td>Replace synthetic example values with qualified response data for design use.</td><td>{cite(1)}</td></tr>
@@ -581,7 +695,7 @@ The main text presents only the governing supplied-response conclusion. {cite(1)
 <td>Establish the dynamic stress basis; no structural values are inferred.</td><td>{cite(1)}{cite(2)}</td></tr>
 <tr><td>Standard edition, clause applicability and independent benchmark</td><td>Not established</td>
 <td>Qualify before interpreting the screening status as a design result.</td><td>{cite(3)}{cite(4)}{cite(5)}</td></tr>
-</tbody></table>
+</tbody><caption>Table F. Data availability and required confirmation.</caption></table>
 <h3>B. Complete fatigue results and output contract</h3>
 {results_table}{bins_table}
 <p>The combined interface returns governing and per-location damage, unfactored life, required life,
@@ -723,9 +837,9 @@ def main() -> None:
     args = parser.parse_args()
     record = build_payload(args.scratch_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "report.html").write_text(render(record), encoding="utf-8")
+    (args.output_dir / "report.html").write_text(render(record), encoding="utf-8", newline="\n")
     (args.output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
 
 

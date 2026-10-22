@@ -269,12 +269,8 @@ reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/reports/modules/
-docs/reports/modules/*
-!docs/reports/modules/riserfatigue/
-docs/reports/modules/riserfatigue/*
-!docs/reports/modules/riserfatigue/generate_report.py
-!docs/reports/modules/riserfatigue/report.html
-!docs/reports/modules/riserfatigue/changes.json
+docs/reports/modules/*/*
+!docs/reports/modules/.gitignore
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
