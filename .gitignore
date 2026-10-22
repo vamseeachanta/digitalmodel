@@ -582,9 +582,9 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
 
-# Retain the mooring fatigue module report and its change panel.
+# Retain selected module reports and their change panels.
 !docs/reports/modules/
-docs/reports/modules/*
+docs/reports/modules/*/
 !docs/reports/modules/mooringfatigue/
 docs/reports/modules/mooringfatigue/*
 !docs/reports/modules/mooringfatigue/report.html

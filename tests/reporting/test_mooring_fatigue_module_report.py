@@ -126,10 +126,12 @@ def test_equations_against_independent_bin_calculation(tmp_path):
     inputs, result, bins = fresh_facts(tmp_path)
     for line in result["lines"]:
         own_bins = [row for row in bins if row["line_id"] == line["line_id"]]
-        damage = sum(float(row["cycles"]) / float(row["allowable_cycles"]) for row in own_bins)
-        assert line["total_damage"] == pytest.approx(damage)
-        assert line["fatigue_life_years"] == pytest.approx(inputs["design_life_years"] / damage)
-        assert line["dff_margin"] == pytest.approx(1 / (damage * inputs["dff"]))
+        # Reviewed continuous-knee hand calculation, 2011 Table 2-2 D, CP.
+        damage = sum(float(row["cycles"]) / (1e6 * (83.432 / float(row["stress_range_MPa"]))**5)
+                     for row in own_bins)
+        assert line["total_damage"] == pytest.approx(damage, rel=3e-5)
+        assert line["fatigue_life_years"] == pytest.approx(inputs["design_life_years"] / damage, rel=3e-5)
+        assert line["dff_margin"] == pytest.approx(1 / (damage * inputs["dff"]), rel=3e-5)
         source = next(item for item in inputs["lines"] if item["id"] == line["line_id"])
         for row in own_bins:
             assert float(row["stress_range_MPa"]) == pytest.approx(
@@ -173,13 +175,107 @@ def test_failed_screening_has_documented_action(tmp_path):
     for line in cfg["mooring_fatigue"]["lines"]:
         for row in line["tension_range_bins"]:
             row["n_cycles"] *= 1000
-    result = router(cfg)["mooring_fatigue"]
+    result = router(copy.deepcopy(cfg))["mooring_fatigue"]
     assert result["screening_status"] == "fail"
     assert result["governing_dff_margin"] < 1
-    assert "Suspend acceptance" in REPORT.read_text()
+    original = BUILDER.EXAMPLE
+    changed = tmp_path / "failing.yml"
+    changed.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    try:
+        BUILDER.EXAMPLE = changed
+        page, _ = BUILDER.build(tmp_path / "rendered")
+    finally:
+        BUILDER.EXAMPLE = original
+    assert "The screening criterion is not met." in page
+    assert "Current demonstration status: FAIL" in page
+    assert "Suspend acceptance" in page
 
 
-def test_comment_roundtrip_and_chart_interaction():
+@pytest.mark.parametrize("change", ["crlf", "unrelated", "calculation"])
+def test_basis_is_portable_and_limited_to_calculation_sources(tmp_path, monkeypatch, change):
+    """Emulate a checkout without rewriting the actual calculation sources."""
+    checkout = tmp_path / "checkout"
+    for directory in ("src/digitalmodel/fatigue", "src/digitalmodel/mooring_fatigue"):
+        shutil.copytree(ROOT / directory, checkout / directory)
+    for path in (BUILDER.EXAMPLE, Path(BUILDER.__file__)):
+        target = checkout / path.relative_to(ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(path.read_bytes())
+    monkeypatch.setattr(BUILDER, "ROOT", checkout)
+    monkeypatch.setattr(BUILDER, "EXAMPLE", checkout / BUILDER.EXAMPLE.relative_to(ROOT))
+    monkeypatch.setattr(BUILDER, "__file__", str(checkout / Path(BUILDER.__file__).relative_to(ROOT)))
+    lf_page, _ = BUILDER.build(tmp_path / "lf")
+    if change == "crlf":
+        for path in checkout.rglob("*"):
+            if path.is_file():
+                path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    else:
+        name = "fatigue/spectral_fatigue.py" if change == "unrelated" else "mooring_fatigue/workflow.py"
+        path = checkout / "src/digitalmodel" / name
+        path.write_text(path.read_text() + "\n# Source change.\n", encoding="utf-8")
+    changed_page, _ = BUILDER.build(tmp_path / "changed")
+    assert (changed_page == lf_page) == (change != "calculation")
+
+
+def test_independent_headline_oracle(tmp_path):
+    """Derived checkpoints for DNV-RP-C203 (2011), Table 2-2 D, CP.
+
+    The reviewed hand calculation uses the software's continuous knee anchor;
+    these expectations do not call the curve helper or read generated HTML.
+    """
+    _, result, bins = fresh_facts(tmp_path)
+    expected_damage = [2.28233e-3, 1.70378e-2]
+    for line, expected in zip(result["lines"], expected_damage, strict=True):
+        assert line["total_damage"] == pytest.approx(expected, rel=3e-6)
+    assert float(bins[-1]["allowable_cycles"]) == pytest.approx(2.54197e6, rel=3e-6)
+    assert result["governing_fatigue_life_years"] == pytest.approx(1467.32, abs=0.01)
+    assert result["governing_dff_margin"] == pytest.approx(19.564, abs=0.001)
+    knee = 83.432
+    for row in bins:
+        stress = float(row["stress_range_MPa"])
+        assert stress < knee
+        assert float(row["allowable_cycles"]) == pytest.approx(1e6 * (knee / stress)**5, rel=3e-5)
+
+
+def test_component_basis_and_curve_parameters_are_explicit(tmp_path):
+    page, _ = BUILDER.build(tmp_path)
+    assert "DNV-OS-E301" in page and "API RP 2SK" in page
+    assert "54-fold" in page
+    assert page.count("Component status: NOT_EVALUATED") == 2
+    assert "Knee cycles" in page and "Knee stress range" in page
+    assert "Continuous knee anchoring" in page and "0.2 %" in page
+
+
+@pytest.mark.parametrize("check", ["governing", "scale", "draft"])
+def test_governing_required_life_and_chart_scale(tmp_path, monkeypatch, check):
+    inputs, result, bins, facts = BUILDER.observations(tmp_path / "facts")
+    result["lines"] = [copy.deepcopy(result["lines"][0]) for _ in range(4)]
+    for i, line in enumerate(result["lines"]):
+        line["line_id"] = f"line-{i}"
+        facts[f"line.{i}.area"] = 8000.0
+        for key in ("total_damage", "fatigue_life_years", "required_life_years", "dff_margin"):
+            facts[f"line.{i}.{key}"] = line[key]
+    result["governing_line"] = "line-0"
+    result["lines"][0]["required_life_years"] = 123.0
+    facts["line.0.required_life_years"] = 123.0
+    monkeypatch.setattr(BUILDER, "observations", lambda _: (inputs, result, bins, facts))
+    page, _ = BUILDER.build(tmp_path / "report")
+    summary = page.split('id="section-2"')[0]
+    if check == "governing":
+        assert 'data-value="line.0.required_life_years"' in summary
+        assert 'data-value="line.1.required_life_years"' not in summary
+    elif check == "scale":
+        coordinates = [float(value) for value in re.findall(r'<circle cx="([\d.]+)"', page)]
+        assert len(coordinates) == 4
+        assert len(set(coordinates)) == 4
+        assert all(90 < value < 740 for value in coordinates)
+    else:
+        assert "Draft for review" in page
+        assert "Draft for client review" not in page
+
+
+@pytest.mark.parametrize("size_case", ["roundtrip", "add", "load", "merge"])
+def test_comment_roundtrip_and_chart_interaction(size_case):
     """Exercise the embedded controls without a browser or external packages."""
     node = shutil.which("node")
     if node is None:
@@ -224,7 +320,8 @@ async function check() {
   assert.equal(roundtrip.comments[0].text, 'Confirm the exposure basis.');
   assert.equal(roundtrip.comments[0].section, 'section-1');
   const load = async payload => {
-    nodes['load-comments'].files = [{size: 100, text: async () => JSON.stringify(payload)}];
+    const text = JSON.stringify(payload, null, 2) + '\n';
+    nodes['load-comments'].files = [{size: new Blob([text]).size, text: async () => text}];
     await nodes['load-comments'].onchange();
   };
   await load(roundtrip);
@@ -240,11 +337,44 @@ async function check() {
   await nodes['save-comments'].onclick();
   assert.equal(clicked, true);
   assert.match(nodes['comment-status'].textContent, /Move report.comments.json beside/);
+  if (SIZE_CASE !== 'roundtrip') {
+    const sized = (bytes, includeOriginal) => {
+      const payload = {...roundtrip, comments: includeOriginal ? [...roundtrip.comments] : []};
+      payload.comments.push({id: 'large-comment', section: 'section-1', quote: '',
+        text: '😀', date: '2026-10-22T00:00:00.000Z'});
+      const remaining = bytes - new Blob([JSON.stringify(payload, null, 2) + '\n']).size;
+      payload.comments.at(-1).quote = 'x'.repeat(remaining);
+      return payload;
+    };
+    if (SIZE_CASE === 'add') {
+      await load(sized(1000000, true));
+      assert.equal(JSON.parse(nodes['comment-preview'].textContent).length, 2);
+      nodes['comment-text'].value = '😀'.repeat(100);
+      nodes['add-comment'].onclick();
+      assert.match(nodes['comment-status'].textContent, /size limit/);
+      assert.equal(JSON.parse(nodes['comment-preview'].textContent).length, 2);
+      assert.equal(nodes['comment-text'].value, '😀'.repeat(100));
+      // The accepted boundary payload remains saveable and reloadable.
+      let boundary = '';
+      window.showSaveFilePicker = async () => ({
+        createWritable: async () => ({write: async data => {boundary = data;}, close: async () => {}}),
+        getFile: async () => ({text: async () => boundary})});
+      await nodes['save-comments'].onclick();
+      assert.equal(new Blob([boundary]).size, 1000000);
+      await load(JSON.parse(boundary));
+      assert.match(nodes['comment-status'].textContent, /Matching comments loaded/);
+    } else {
+      await load(sized(SIZE_CASE === 'load' ? 1000001 : 1000000, false));
+      assert.match(nodes['comment-status'].textContent, /size limit/);
+      assert.equal(JSON.parse(nodes['comment-preview'].textContent).length, 1);
+    }
+  }
 }
 check().catch(error => {console.error(error.message); process.exitCode = 1;});
 """
     completed = subprocess.run(
-        [node], input="const UI_SOURCE = " + json.dumps(BUILDER.UI) + ";\n" + harness,
+        [node], input="const UI_SOURCE = " + json.dumps(BUILDER.UI)
+        + ";\nconst SIZE_CASE = " + json.dumps(size_case) + ";\n" + harness,
         text=True, capture_output=True, check=False, timeout=30,
     )
     assert completed.returncode == 0, completed.stderr
