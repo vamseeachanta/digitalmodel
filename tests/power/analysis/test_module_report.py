@@ -4,6 +4,7 @@
 
 import importlib.util
 import json
+import math
 import re
 import sys
 from html.parser import HTMLParser
@@ -13,7 +14,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 REPORT = ROOT / "docs/reports/modules/power"
-REBUILD = "PYTHONPATH=src uv run --no-project --with numpy python docs/reports/modules/power/build_report.py"
+REBUILD = "PYTHONPATH=src uv run --frozen python docs/reports/modules/power/build_report.py"
 spec = importlib.util.spec_from_file_location("power_report", REPORT / "build_report.py")
 builder = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = builder
@@ -76,6 +77,119 @@ def test_public_case_mapping_and_headline():
     assert record["public.converged"] is True
 
 
+def test_public_independent_anchors():
+    """Pin the independent pi-model Newton/Gauss-Seidel calculation."""
+    # Independently calculated from the public case tables, with no import of
+    # the module under test; rounded reference values supplied with the review.
+    record = builder.calculate()
+    for i, (voltage, angle) in enumerate([
+        (1.000000, 0.000000), (0.982421, -0.976122),
+        (0.969005, -1.872177), (1.020000, 1.523055),
+    ]):
+        assert record[f"public.bus.{i}.v_pu"] == pytest.approx(voltage, rel=0, abs=5e-7)
+        assert record[f"public.bus.{i}.angle_deg"] == pytest.approx(angle, rel=0, abs=5e-7)
+    assert record["public.qg4_mvar"] == pytest.approx(181.4296, rel=0, abs=5e-5)
+    assert record["public.qg1_mvar"] == pytest.approx(114.5008, rel=0, abs=5e-5)
+    pg1 = record["public.bus.0.p_net_pu"] * record["base_mva"] + record["input.buses.0.p_mw"]
+    assert pg1 == pytest.approx(186.8091, rel=0, abs=5e-5)
+    assert record["public.total_loss_mw"] == pytest.approx(4.8091, rel=0, abs=5e-5)
+    maximum = max(record[f"public.branch.{i}.{end}_mva"]
+                  for i in range(4) for end in ["sending", "receiving"])
+    assert maximum == pytest.approx(152.9, rel=0, abs=0.05)
+
+
+def calculation_data(html):
+    return json.loads(re.search(
+        r'<script id="calculation-data" type="application/json">(.*?)</script>', html, re.S,
+    ).group(1))
+
+
+def test_embedded_negative_zero(tmp_path, monkeypatch):
+    record = builder.calculate()
+    record["hand.branch.1.p_loss_pu"] = -2.22e-16
+    monkeypatch.setattr(builder, "calculate", lambda: record)
+    destination = tmp_path / "report.html"
+    builder.build(destination)
+    value = calculation_data(destination.read_text(encoding="utf-8"))["hand.branch.1.p_loss_pu"]
+    assert value == 0.0
+    assert math.copysign(1.0, value) == 1.0
+
+
+@pytest.mark.parametrize("failed_group", [None, "voltage", "rating"])
+def test_bound_voltage_and_rating_checks(tmp_path, monkeypatch, failed_group):
+    case = builder.read_case()
+    if failed_group == "voltage":
+        case["buses"][1]["v_min"] = 1.03
+    elif failed_group == "rating":
+        # Isolate the receiving-end check: sending power remains below rating.
+        original = builder.calculate()
+        i = next(i for i in range(4)
+                 if original[f"public.branch.{i}.receiving_mva"] > original[f"public.branch.{i}.sending_mva"])
+        case["branches"][i]["rating_mva"] = (
+            original[f"public.branch.{i}.receiving_mva"] + original[f"public.branch.{i}.sending_mva"]
+        ) / 2
+    monkeypatch.setattr(builder, "read_case", lambda: case)
+    record = builder.calculate()
+    assert record["public.voltage_bounds_satisfied"] is (failed_group != "voltage")
+    assert record["public.branch_ratings_satisfied"] is (failed_group != "rating")
+    destination = tmp_path / "report.html"
+    builder.build(destination)
+    html = destination.read_text(encoding="utf-8")
+    assert ("The plotted bounds are violated." if failed_group == "voltage"
+            else "The plotted bounds are satisfied.") in html
+    assert ("These circuit values exceed at least one supplied rating." if failed_group == "rating"
+            else "These circuit values are below the supplied ratings.") in html
+
+
+def test_reference_voltage_binding(tmp_path, monkeypatch):
+    case = builder.read_case()
+    case["buses"][0]["v_initial"] = 0.95
+    monkeypatch.setattr(builder, "read_case", lambda: case)
+    assert builder.public_network(case).buses[0].voltage_pu == case["generators"][1]["v_set"]
+    destination = tmp_path / "report.html"
+    builder.build(destination)
+    html = destination.read_text(encoding="utf-8")
+    appendix = html.split("10.1 Input and data register</h3>")[1].split("</table>")[0]
+    assert 'data-value="input.generators.1.v_set"' in appendix
+    assert 'data-value="input.buses.0.v_initial"' not in appendix
+
+
+@pytest.mark.parametrize("failed_case", ["public", "hand"])
+def test_nonconverged_result_rejected(monkeypatch, failed_case):
+    solve = builder.solve_power_flow
+    def nonconverged(network, **kwargs):
+        result = solve(network, **kwargs)
+        if len(network.buses) == (4 if failed_case == "public" else 3):
+            result.converged = False
+        return result
+    monkeypatch.setattr(builder, "solve_power_flow", nonconverged)
+    with pytest.raises(ValueError, match="has not converged"):
+        builder.calculate()
+
+
+def test_insufficient_display_precision_rejected():
+    with pytest.raises(ValueError, match="needs more displayed digits"):
+        builder.format_number(0.0001, 1)
+    assert builder.format_number(-0.0, 1) == "0.0"
+    assert builder.format_number(-2.22e-16, 6).startswith("−2.2e")
+
+
+def test_report_review_wording(tmp_path):
+    destination = tmp_path / "report.html"
+    builder.build(destination)
+    html = destination.read_text(encoding="utf-8")
+    assert "voltage magnitude" in html and "voltage demand" not in html
+    assert "(4.5.8)–(4.5.10)" in html and "(4.5.11)" not in html
+    assert "Section 3.6, Network Equations" in html
+    assert "Grainger" in html and "Stevenson" in html and "McGraw-Hill" in html
+    assert "conditional on the supplied case limits" in html
+    assert "textbook basis for these limits is not established" in html
+    assert "Newton updates" in html and "mismatch evaluations" in html
+    record = builder.calculate()
+    assert record["public.newton_updates"] == 4
+    assert record["public.iterations"] == record["public.newton_updates"] + 1 == 5
+
+
 def test_displayed_number_consistency():
     """Consistency check: every numerical binding equals a fresh module call."""
     record = builder.calculate()
@@ -91,11 +205,22 @@ def test_rebuild(tmp_path):
     builder.build(destination)
     committed = (REPORT / "report.html").read_text(encoding="utf-8")
     rebuilt = destination.read_text(encoding="utf-8")
-    # Output numbers are rounded to displayed precision before embedding.
-    assert committed == rebuilt, f"Report is stale. Rebuild with: {REBUILD}"
+    # Compare embedded numbers numerically; retain exact narrative/layout checks.
+    expected, actual = calculation_data(committed), calculation_data(rebuilt)
+    assert expected.keys() == actual.keys()
+    assert actual["tol"] == expected["tol"] == builder.TOL
+    for key in expected:
+        if isinstance(expected[key], float):
+            assert actual[key] == pytest.approx(expected[key], rel=0, abs=1e-6), key
+        else:
+            assert actual[key] == expected[key], key
+    pattern = r'(<script id="calculation-data" type="application/json">).*?(</script>)'
+    assert re.sub(pattern, r"\1\2", committed, flags=re.S) == re.sub(
+        pattern, r"\1\2", rebuilt, flags=re.S,
+    ), f"Report is stale. Rebuild with: {REBUILD}"
     assert b"\r" not in destination.read_bytes()
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == "1"
+    assert changes["revision"] == "2"
 
 
 def test_report_contract():
@@ -162,7 +287,7 @@ function start() {
   ui.get('limits').events.click(); assert.equal(ui.limit.style.display, 'none');
   ui.get('limits').events.click(); assert.equal(ui.limit.style.display, '');
   assert.equal(ui.get('change-list').children.length, 3);
-  ui.get('prior-revision').value = '1'; ui.get('prior-revision').events.change();
+  ui.get('prior-revision').value = '2'; ui.get('prior-revision').events.change();
   assert.equal(ui.get('change-list').children[0].textContent, 'No later engineering changes.');
   ui.get('comment-section').value = 's5'; ui.get('comment-text').value = '<example> Review reactive limit.';
   ui.get('add-comment').events.click();
