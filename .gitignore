@@ -581,3 +581,13 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Reproducible generic drilling riser benchmark deliverables.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/drilling-riser-benchmark/
+docs/reports/modules/drilling-riser-benchmark/*
+!docs/reports/modules/drilling-riser-benchmark/cases.json
+!docs/reports/modules/drilling-riser-benchmark/changes.json
+!docs/reports/modules/drilling-riser-benchmark/index.html
+!docs/reports/modules/drilling-riser-benchmark/README.md

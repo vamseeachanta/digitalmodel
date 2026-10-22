@@ -1,0 +1,10 @@
+{
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    "Proposed offset and uniform-current inputs retain explicit public-source requirements.",
+    "Column slopes, top-force screen and chord extension are recalculated from the generic template.",
+    "Stored-summary agreement requires matched identity, quantity definitions and sourced criteria.",
+    "Absent native results and assembly acceptance remain NOT_EVALUATED."
+  ]
+}

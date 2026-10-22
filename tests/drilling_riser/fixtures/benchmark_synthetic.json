@@ -1,0 +1,20 @@
+{
+  "case_id": "synthetic",
+  "case_digest": "synthetic",
+  "origin": "synthetic",
+  "solver_version": "synthetic arithmetic only",
+  "metrics": {
+    "top_tension_kn": {
+      "value": 110,
+      "unit": "kN",
+      "definition": "constant-tension column top force",
+      "source": "Independent hand calculation: 100 kN reference increased by 10 percent"
+    },
+    "stroke_m": {
+      "value": 1,
+      "unit": "m",
+      "definition": "mechanical tensioner stroke relative to initial position",
+      "source": "Synthetic input only; no comparable mechanical stroke screen"
+    }
+  }
+}
