@@ -70,6 +70,23 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_codechecks_module_report.py",
+        ("docs/reports/modules/codechecks/index.html",
+         "docs/reports/modules/codechecks/changes.json"),
+        arguments=("--output", "docs/reports/modules/codechecks"),
+        inputs=(
+            "examples/workflows/api-rp-2rd-riser/input.yml",
+            "src/digitalmodel/orcaflex/code_check_engine.py",
+            "src/digitalmodel/code_checks/workflow.py",
+            "src/digitalmodel/reporting/assets/calc_report_format.html",
+            "tests/code_checks/test_code_check_workflow.py",
+            "tests/code_checks/test_dnv_os_f101.py",
+            "tests/code_checks/test_one_foot.py",
+            "tests/code_checks/test_shell_report_example.py",
+            "tests/orcaflex/test_code_check_engine.py",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

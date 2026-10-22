@@ -1,11 +1,12 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Rebuild the delivered analysis and compare its numbers with live module calls."""
+"""Compare generated numeric evidence with live calls and independent arithmetic."""
 
 import copy
 import importlib.util
 import json
+import math
 from pathlib import Path
 import re
 
@@ -18,7 +19,6 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reporting/build_codechecks_module_report.py"
-REPORT = ROOT / "docs/reports/modules/codechecks"
 
 
 def builder():
@@ -44,11 +44,9 @@ def lookup(data, key):
     return data
 
 
-def test_rebuild_and_every_quoted_number_matches_module(tmp_path):
+def test_every_quoted_number_matches_module(tmp_path):
     outputs = builder().generate(tmp_path / "rebuilt")
     assert {p.name for p in outputs} == {"index.html", "changes.json"}
-    for path in outputs:
-        assert path.read_text(encoding="utf-8") == (REPORT / path.name).read_text(encoding="utf-8")
     soup = BeautifulSoup(outputs[0].read_text(encoding="utf-8"), "html.parser")
     evidence = json.loads(soup.find("script", id="calculation-data").string)
     expected = direct_result(tmp_path)
@@ -120,16 +118,38 @@ def test_report_contract_sources_and_comments(tmp_path):
     assert not re.search(r"\b(certified|compliant)\b", text, re.I)
 
 
+def test_report_fingerprints_only_calculation_sources(tmp_path):
+    output = builder().generate(tmp_path)[0]
+    soup = BeautifulSoup(output.read_text(encoding="utf-8"), "html.parser")
+    evidence = json.loads(soup.find("script", id="calculation-data").string)
+    assert {source["path"] for source in evidence["sources"]} == {
+        "examples/workflows/api-rp-2rd-riser/input.yml",
+        "src/digitalmodel/orcaflex/code_check_engine.py",
+        "src/digitalmodel/code_checks/workflow.py",
+    }
+
+
 def test_report_formula_and_pressure_limit_are_real_module_behaviour(tmp_path):
     data = direct_result(tmp_path)
     inp = data["inputs"]
-    pipe = APIRP2RDInput(**{key: value for key, value in inp.items() if key in APIRP2RDInput.model_fields})
-    axial = pipe.yield_tension / 1000
-    moment = pipe.smys * pipe.temperature_derating * (pipe.outer_diameter**3 - pipe.inner_diameter**3) / 6000
-    for row in data["result"]["results"]:
-        equation = ((row["tension_kN"] / axial)**2 + (row["bending_moment_kNm"] / moment)**2)**0.5 / pipe.design_factor
+    # Raw example: d = D - 2t, A = pi(D^2 - d^2)/4, Z = (D^3 - d^3)/6.
+    # Ty = SMYS*eta*A/1000, Mp = SMYS*eta*Z/1000, then
+    # U = hypot(T/Ty, M/Mp)/f at each input station; no checker properties.
+    diameter = inp["outer_diameter"]
+    bore = diameter - 2 * inp["wall_thickness"]
+    area = math.pi * (diameter**2 - bore**2) / 4
+    modulus = (diameter**3 - bore**3) / 6
+    strength = inp["smys"] * inp["temperature_derating"]
+    axial = strength * area / 1000
+    moment = strength * modulus / 1000
+    expected_utilisations = [0.2973, 0.4335, 0.5325]
+    assert [row["utilisation"] for row in data["result"]["results"]] == expected_utilisations
+    assert data["result"]["governing_utilisation"] == 0.5325
+    for row, tension, bending in zip(data["result"]["results"], inp["effective_tension_kN"], inp["bending_moment_kNm"]):
+        equation = math.hypot(tension / axial, bending / moment) / inp["design_factor"]
         assert row["utilisation"] == round(equation, 4)
         assert row["pass"] == (row["utilisation"] <= 1)
+    pipe = APIRP2RDInput(**{key: value for key, value in inp.items() if key in APIRP2RDInput.model_fields})
     args = (pipe, np.array(inp["arc_lengths"]), np.array(inp["effective_tension_kN"]), np.array(inp["bending_moment_kNm"]))
     no_pressure = check_api_rp_2rd(*args)
     pressure = check_api_rp_2rd(*args, np.array(inp["pressure_diff_MPa"]))

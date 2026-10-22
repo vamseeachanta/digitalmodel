@@ -40,6 +40,8 @@ TEST_FILES = (
 )
 SOURCE_PATHS = (
     EXAMPLE, CHECKER, "src/digitalmodel/code_checks/workflow.py",
+)
+REFERENCE_PATHS = (
     "src/digitalmodel/code_checks/dnv_os_f101.py",
     "src/digitalmodel/code_checks/storage_tanks/one_foot.py",
     "src/digitalmodel/code_checks/storage_tanks/report.py",
@@ -49,14 +51,18 @@ SOURCE_PATHS = (
 )
 CHANGES: dict[str, Any] = {
     "report": "Code checks module analysis",
-    "revision": "00",
+    "revision": "01",
     "date": "2026-10-22",
     "changes": [{
-        "section": "Complete analysis",
-        "description": "Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits.",
-        "reason": "Distinguish calculated load screening from an independently established design assessment.",
+        "section": "Calculation evidence and references",
+        "description": "Limit fingerprints to the calculation inputs, add an independent arithmetic comparison and clarify the review status and shell-method citation.",
+        "reason": "Keep calculation evidence independent of contextual edits and identify the existing equation locator.",
     }],
 }
+REVISION_HISTORY = [
+    ["00", "2026-10-22", "Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits."],
+    [CHANGES["revision"], CHANGES["date"], CHANGES["changes"][0]["description"]],
+]
 
 
 def escape(value: object) -> str:
@@ -264,7 +270,7 @@ def render(data: dict[str, Any]) -> str:
 <li>Pressure interaction and project design acceptance are NOT_EVALUATED.<ul><li>Release for design use is conditional on an applicable equation source, checked factors, pressure interaction and independent benchmark evidence.</li></ul></li></ul>
 <p>The calculation and its restrictions are set out in <a href="#worked-example">the worked example</a> and <a href="#limits">the limits of use</a>.</p>
 <div id="revision-history"><h3>Revision history</h3>'''
-    summary += table(["Revision", "Date", "What changed and why"], [[CHANGES["revision"], CHANGES["date"], CHANGES["changes"][0]["description"]]], "Revision record. Initial issue of the module analysis.") + "</div>"
+    summary += table(["Revision", "Date", "What changed and why"], REVISION_HISTORY, "Revision record. Each issue retains the preceding history.") + "</div>"
     introduction = '''<p>The module is used to compare caller-supplied section loads with implemented resistance expressions. No global structural response, sea-state limit or installation operating envelope is calculated.</p>
 <p>The principal workflow is the offline riser router. A configuration mapping is read, pipe properties and station loads are passed to the load checker, and station results with a governing summary and comma-separated output are returned. The documented <a href="#source-example">public example</a> and <a href="#source-workflow">workflow registry</a> provide the calculation basis.</p>
 <p>The calculation is an engineering-calculations report. Marine installation controls require a coupled analysis and are outside this scalar load screen.</p>'''
@@ -312,22 +318,23 @@ def render(data: dict[str, Any]) -> str:
     appendix += '''<p>Missing design data are the qualified equation clause, material and factor applicability, effective-wall basis, pressure interaction and independent benchmark. Each remains NOT_EVALUATED; the analysis makes no replacement engineering assumption for these items.</p>
 <h3 id="references">9.2 References and locators</h3>
 <p>The standard cited by the riser implementation is API STD 2RD, Dynamic Risers for Floating Production Systems, second edition (2013). Its historical repository selector uses RP naming. The implementation does not record a specific equation clause; that locator is NOT_EVALUATED. No licensed table or standard coefficient is reproduced as an established criterion.</p>
-<p>Other module references are DNV-OS-F101, Submarine Pipeline Systems (2013), Section 5, Local buckling; DNV-OS-F201, Dynamic Risers (2010), Section 5, Combined loading; API RP 2SK, Design and Analysis of Stationkeeping Systems (2005), Section 6.2, Table 1; and API 650, Welded Tanks for Oil Storage, Shell design and one-foot method (edition not established). They are interface context only.</p>'''
+<p>Other module references are DNV-OS-F101, Submarine Pipeline Systems (2013), Section 5, Local buckling; DNV-OS-F201, Dynamic Risers (2010), Section 5, Combined loading; API RP 2SK, Design and Analysis of Stationkeeping Systems (2005), Section 6.2, Table 1; and API 650, Welded Tanks for Oil Storage, clause 5.6.3.2, Shell design and one-foot method (edition not established). The shell-method locator is recorded in the implementation; an independently qualified source is not established. These references are interface context only.</p>'''
     source_ids = {EXAMPLE: "source-example", CHECKER: "source-checker", "src/digitalmodel/code_checks/workflow.py": "source-router", "docs/registry/workflows.yaml": "source-workflow"}
     source_rows: list[list[str]] = []
-    for source in data["sources"]:
-        path = source["path"]
-        source_rows.append([f'<span id="{source_ids.get(path, "ref-"+str(len(source_rows)))}">{escape(path)}</span>', source["sha256"]])
-    source_rows.append(['<span id="source-report-test">tests/code_checks/test_module_report.py</span>', "Report rebuild and independent equation comparison"])
-    appendix += table(["Repository source", "Source fingerprint or purpose"], source_rows, "Source register. Fingerprints identify UTF-8 source text with line endings normalized to line feed.")
+    fingerprints = {source["path"]: source["sha256"] for source in data["sources"]}
+    for path in (*SOURCE_PATHS, *REFERENCE_PATHS):
+        source_rows.append([f'<span id="{source_ids.get(path, "ref-"+str(len(source_rows)))}">{escape(path)}</span>', fingerprints.get(path, "Context reference; outside the calculation fingerprint")])
+    source_rows.append(['<span id="source-report-test">tests/code_checks/test_module_report.py</span>', "Displayed numeric evidence and independent equation comparison"])
+    source_rows.append(["scripts/check_generated_html.py", "Registered freshness check for both delivered outputs"])
+    appendix += table(["Repository source", "Source fingerprint or purpose"], source_rows, "Source register. Calculation fingerprints identify UTF-8 source text with line endings normalized to line feed; contextual references are listed without a digest.")
     appendix += '''<h3 id="qa">9.3 Quality evidence</h3><p>The source inventory below counts named test functions; parameterized cases are not expanded. The report rebuild checks numeric evidence, local section links, source fingerprints, embedded house style, comments controls and change history. Execution results are recorded with the delivered change description, not inferred from this inventory.</p>'''
     groups = ("Offline router", "Pipeline resistance", "Tank-shell sizing", "Published shell reports", "Riser and mooring arithmetic")
-    inventory_rows = [[group, str(item["definitions"]), f'<a href="#ref-{SOURCE_PATHS.index(item["path"])}">Source register</a>'] for group, item in zip(groups, data["test_inventory"])]
+    inventory_rows = [[group, str(item["definitions"]), f'<a href="#ref-{len(SOURCE_PATHS) + REFERENCE_PATHS.index(item["path"])}">Source register</a>'] for group, item in zip(groups, data["test_inventory"])]
     appendix += table(["Evidence group", "Test definitions", "Source"], inventory_rows, "Regression evidence inventory. No field-validation or independent benchmark claim is attached to these counts.")
     appendix += '''<p>Preflight disposition: the public example and callable interface are present; source units and the implemented equation are inspected; numeric values are generated and linked to calculation evidence; pressure interaction and independent design qualification remain NOT_EVALUATED. No licensed solver is required.</p>'''
     comments = '''<p>Engineering changes are listed by revision so that the calculation basis can be compared with an earlier issue. Comments are attached to a named section and retained in a separate file beside the HTML.</p>
 <div id="change-panel">'''
-    comments += table(["Revision", "Engineering change", "Reason"], [[CHANGES["revision"], CHANGES["changes"][0]["description"], CHANGES["changes"][0]["reason"]]], "Changes since the preceding issue. This initial issue establishes the calculation basis.") + "</div>"
+    comments += table(["Revision", "Engineering change", "Reason"], [[CHANGES["revision"], CHANGES["changes"][0]["description"], CHANGES["changes"][0]["reason"]]], "Changes since the preceding issue. The calculation equation and example inputs are unchanged.") + "</div>"
     sections = [("summary", "Executive Summary", summary), ("introduction", "Introduction", introduction),
                 ("basis", "Analysis basis", basis), ("theory", "Theory and equations", theory),
                 ("inputs-outputs", "Inputs and outputs", io), ("worked-example", "Worked example", example),
@@ -351,11 +358,11 @@ def render(data: dict[str, Any]) -> str:
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Code checks module analysis</title>''' + css + '''</head><body class="hs-doc doc">
-<header class="masthead"><div class="wrap"><span class="brand">Engineering calculations</span><span>Draft for client review</span></div></header>
+<header class="masthead"><div class="wrap"><span class="brand">Engineering calculations</span><span>Draft for review</span></div></header>
 <div class="hero"><div class="wrap"><h1>Code checks module analysis</h1><p class="lede">Offline riser tension and bending screening, calculation basis and limits of use.</p></div></div>
 <div class="wrap"><nav aria-label="Contents"><ul>''' + nav + '</ul></nav><main class="main">'
             + "".join(section(*entry) for entry in sections)
-            + '</main><footer><p>Draft for client review. Design qualification is NOT_EVALUATED.</p></footer></div>\n'
+            + '</main><footer><p>Draft for review. Design qualification is NOT_EVALUATED.</p></footer></div>\n'
             + f'<script type="application/json" id="calculation-data">{evidence}</script>\n'
             + f'<script id="interaction">{INTERACTION}</script>\n</body></html>\n')
 
