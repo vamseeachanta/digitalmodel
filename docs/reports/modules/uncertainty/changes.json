@@ -1,0 +1,8 @@
+{
+  "revision": "Initial",
+  "changes": [
+    "Distribution assumptions and numerical verification limits are stated.",
+    "The linear example is evaluated and compared with analytical moments.",
+    "Physical validation and application acceptance remain not evaluated."
+  ]
+}
