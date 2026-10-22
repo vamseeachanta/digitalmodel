@@ -1,0 +1,10 @@
+{
+  "report": "fatigue-module",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-21",
+      "description": "The load-block calculation basis, public counting comparison and assumed exposure example are introduced to define the scope of fatigue-life decisions."
+    }
+  ]
+}

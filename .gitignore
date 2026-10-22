@@ -462,6 +462,15 @@ docs/reports/abstracted-hulls/*
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
 
+# Retain the fatigue module report and its reproducible public example.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/fatigue/
+docs/reports/modules/fatigue/*
+!docs/reports/modules/fatigue/report.html
+!docs/reports/modules/fatigue/changes.json
+!docs/reports/modules/fatigue/public-example.json
+
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
 # directory named lib at ANY depth -- it silently swallowed the files that fix

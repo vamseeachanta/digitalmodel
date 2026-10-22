@@ -1,0 +1,70 @@
+{
+  "source": {
+    "title": "rainflow 3.2.0 documentation",
+    "url": "https://pypi.org/project/rainflow/3.2.0/",
+    "open_record": "https://pypi.org/pypi/rainflow/3.2.0/json",
+    "section": "Usage: sample time series and count_cycles output"
+  },
+  "waveform": {
+    "span": 4.0,
+    "intervals": 200,
+    "offset": 0.2,
+    "sine_amplitude": 0.5,
+    "cosine_amplitude": 0.2,
+    "cosine_frequency": 10.0,
+    "secondary_sine_amplitude": 0.2,
+    "secondary_sine_frequency": 4.0
+  },
+  "published_range_counts": [
+    [
+      0.04258965150708488,
+      0.5
+    ],
+    [
+      0.10973439445727551,
+      1.0
+    ],
+    [
+      0.11294628078612906,
+      0.5
+    ],
+    [
+      0.2057106991158965,
+      1.0
+    ],
+    [
+      0.21467990941625242,
+      1.0
+    ],
+    [
+      0.4388985979776988,
+      1.0
+    ],
+    [
+      0.48305748051348263,
+      0.5
+    ],
+    [
+      0.5286423866535466,
+      0.5
+    ],
+    [
+      0.7809330293159786,
+      0.5
+    ],
+    [
+      1.4343610172143002,
+      0.5
+    ]
+  ],
+  "assumptions": {
+    "status": "ASSUMED - to be confirmed",
+    "stress_scale_mpa": 100.0,
+    "block_years": 1.0,
+    "design_years": 25.0,
+    "design_fatigue_factor": 1.0,
+    "sn_curve_name": "D",
+    "environment": "air",
+    "rationale": "Numerical demonstration only; no asset, weld classification or measured exposure is represented."
+  }
+}
