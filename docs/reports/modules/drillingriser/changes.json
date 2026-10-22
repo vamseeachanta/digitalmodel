@@ -1,0 +1,18 @@
+{
+  "revision": "A",
+  "date": "2026-10-21",
+  "changes": [
+    {
+      "section": "summary",
+      "description": "The public stack-up calculation is documented with its input basis and a calculated tension profile; an operating window is not established."
+    },
+    {
+      "section": "method",
+      "description": "The weight-factor tension screen, pressure-only wall estimate and slip-ring calculation are distinguished so that their results are not treated as interchangeable acceptance criteria."
+    },
+    {
+      "section": "limits",
+      "description": "Equipment capacity, actual wall, buoyancy distribution and dynamic data are identified as missing inputs to an operating assessment."
+    }
+  ]
+}

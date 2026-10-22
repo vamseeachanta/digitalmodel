@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drilling riser stack-up analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style>
+</head><body class="hs-doc"><div class="wrap">
+
+<header><p class="kicker">Drilling riser module analysis</p>
+<h1>Drilling riser stack-up analysis</h1><p>Draft for client review</p>
+<p class="sub">Public example calculation · Revision A · 2026-10-21</p></header>
+<main>
+<section id="summary"><h2 id="summary-heading">1. Executive Summary</h2>
+<p>The drilling riser is a tensioned conduit between a floating host and a seabed wellhead.
+Analysis is performed to determine the capabilities and limits of the drilling riser module;
+the key results are summarized below.</p>
+<ul><li>The public stack-up example is reproduced as an axial screening calculation.
+<ul><li>The applied top-force estimate is <span data-metric="summary.top_tension_required_kn" data-unit="kip" data-value="2304.292503518261">2,304.3</span> kip
+and the lowest effective force is <span data-metric="minimum_effective_kn" data-unit="kip" data-value="460.8585007036523">460.9</span> kip against the zero-effective-tension reference.</li>
+<li>The pressure-only wall estimate is <span data-metric="summary.wall_thickness_required_mm" data-unit="in" data-value="0.9843749999999999">0.984</span> in;
+actual wall thickness and allowances are not supplied, so a wall acceptance result is not established.</li></ul></li>
+<li>No operating window is established. The allowable drilling and connected offsets are not established.
+<ul><li>A watch circle and equipment acceptance criteria are absent; do not connect on the basis of this calculation.</li>
+<li>Dynamic response, recoil and fatigue are not evaluated.</li></ul></li></ul>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-21</td><td>The public calculation and its limits are documented to distinguish arithmetic evidence from operating acceptance.</td></tr></tbody></table>
+
+<figure><svg id="tension-chart" viewBox="0 0 760 390" role="img" aria-labelledby="chart-title chart-description">
+<title id="chart-title">Still-water effective tension</title>
+<desc id="chart-description">Hand equilibrium is a line and module values are markers. The zero-effective-tension
+reference is drawn. Focus a marker or move the pointer over it to read the demand and reference.</desc>
+</svg><p id="chart-readout" role="status">Focus a marker to read the tension and its zero reference.</p>
+<figcaption>Effective tension against depth fraction. The zero reference denotes loss of tensile effective force,
+not a complete acceptance criterion. Buoyancy-zone boundaries are unavailable. Wall tension is not evaluated.</figcaption></figure>
+
+<details><summary>Engineering changes</summary><div id="change-list"></div></details>
+</section>
+<section id="intro"><h2 id="intro-heading">2. Introduction</h2>
+<p>The drilling riser calculation package is used for component assembly, axial sizing, static response and operating assessments.
+Riser analysis is performed here for the registered public stack-up example; no site water depth is identified.</p>
+<p>The main workflow accepts aggregate weight, pressure and geometry, calculates force and pressure-only thickness,
+and writes an effective-tension profile. The documented router is called directly, without a licensed solver.
+The example is public repository documentation, not an independently measured field benchmark.</p>
+</section>
+<section id="data"><h2 id="data-heading">3. Design Data</h2>
+<p>The published example inputs are retained without substitutions. Missing physical and equipment data are identified in the appendix.</p>
+<h3>3.1 Field, host and stack-up</h3>
+<p>No site, water depth, host geometry, response amplitude operators, offset criterion or component schedule is supplied.
+The equal mud and seawater column heads are input pressure heads; neither is relabelled as water depth.
+The stack-up is therefore drawn schematically, with its gaps identified.</p>
+
+<figure><svg viewBox="0 0 760 390" role="img" aria-labelledby="stack-title stack-description">
+<title id="stack-title">Drilling riser stack-up and calculation idealisation</title>
+<desc id="stack-description">A host supports a tensioned riser above a seabed wellhead. The physical stack
+is shown at left and the uniform-weight axial idealisation at right. Component dimensions and supports are missing.</desc>
+<g fill="none" stroke="currentColor" stroke-width="2">
+<path d="M40 65 L250 65 L225 100 L70 100 Z M90 65 L90 35 L180 35 L180 65"/>
+<path d="M15 112 Q40 104 65 112 T115 112 T165 112 T215 112 T265 112"/>
+<path d="M145 100 L145 150 M135 150 L155 150 L155 185 L135 185 Z M142 185 L142 320 M148 185 L148 320"/>
+<rect x="126" y="320" width="38" height="30"/>
+<path d="M20 355 L270 355 M145 350 L145 375"/>
+<path d="M460 110 L460 335 M450 110 L460 85 L470 110 M450 160 L460 180 L470 160 M450 220 L460 240 L470 220 M450 280 L460 300 L470 280"/>
+<path d="M450 335 L470 335 M450 335 L460 350 L470 335"/>
+</g>
+<g fill="currentColor" font-size="13">
+<text x="275" y="57">Host motion: not supplied</text>
+<text x="175" y="168">Telescopic joint</text><text x="175" y="187">travel not supplied</text>
+<text x="25" y="235">Riser</text><text x="25" y="253">joints and foam</text><text x="25" y="271">zones unknown</text>
+<text x="175" y="330">Blowout</text><text x="175" y="347">preventer</text>
+<text x="27" y="377">Seabed and wellhead</text>
+<text x="490" y="93">Applied top force T</text><text x="490" y="126">Surface: depth fraction d = 0</text>
+<text x="490" y="185">Uniform effective weight W</text><text x="490" y="226">Axial force balance only</text>
+<text x="490" y="267">No lateral or rotational restraint</text><text x="490" y="286">is represented by this calculation</text>
+<text x="490" y="342">Lower end: depth fraction d = 1</text>
+<text x="490" y="369">Effective force T − W</text>
+</g></svg><figcaption>System schematic and axial model, not to scale. The physical components are indicative;
+no discrete component geometry is inferred from the aggregate-weight example.</figcaption></figure>
+
+<table><thead><tr><th>Component or support</th><th>Data held</th><th>Gap and effect</th></tr></thead><tbody>
+<tr><td>Host and tensioner</td><td>Calculated top-force screen</td><td>Capacity, failures, efficiency and support geometry absent; no equipment acceptance.</td></tr>
+<tr><td>Telescopic joint</td><td>Indicative location only</td><td>Configuration, travel and stops absent; no stroke assessment.</td></tr>
+<tr><td>Main riser and buoyancy</td><td>Aggregate weight and uplift</td><td>Joint lengths, foam boundaries, adjacent diameters and stiffness absent; no component tension distribution.</td></tr>
+<tr><td>Lower flex joint and wellhead</td><td>Indicative location only</td><td>Rotational stiffness, conductor support and allowable reactions absent.</td></tr>
+</tbody><caption>Physical stack-up gaps read with the schematic.</caption></table>
+<h3>3.2 Contents and pressure</h3>
+<p>Input values are shown in engineering display units. The native-unit register is retained in the appendix.
+Weight density is shown directly; a mass-density convention for pounds per gallon is not inferred.</p>
+<table><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Submerged weight</td><td><span data-metric="inputs.submerged_weight_kn" data-unit="kip" data-value="1843.4340028146091">1,843.4</span></td><td>kip</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Weight multiplier</td><td><span data-metric="inputs.dynamic_factor" data-unit="—" data-value="1.25">1.25</span></td><td>—</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Outside diameter</td><td><span data-metric="inputs.od_mm" data-unit="in" data-value="21.0">21.000</span></td><td>in</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Design internal pressure</td><td><span data-metric="inputs.design_pressure_mpa" data-unit="psi" data-value="5003.7999872366845">5,003.8</span></td><td>psi</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Specified minimum yield strength</td><td><span data-metric="inputs.smys_mpa" data-unit="psi" data-value="80060.79979578695">80,060.8</span></td><td>psi</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Wall multiplier</td><td><span data-metric="inputs.barlow_safety_factor" data-unit="—" data-value="1.5">1.50</span></td><td>—</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Buoyancy uplift</td><td><span data-metric="inputs.buoyancy_uplift_kn" data-unit="kip" data-value="562.0225618337223">562.0</span></td><td>kip</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Internal area</td><td><span data-metric="inputs.internal_area_m2" data-unit="ft²" data-value="1.9375038750077498">1.938</span></td><td>ft²</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Mud weight density</td><td><span data-metric="inputs.mud_density_kn_m3" data-unit="kip/ft³" data-value="0.08275647465637942">0.083</span></td><td>kip/ft³</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Mud column head</td><td><span data-metric="inputs.mud_column_m" data-unit="ft" data-value="5905.511811023622">5,905.5</span></td><td>ft</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Seawater weight density</td><td><span data-metric="inputs.seawater_density_kn_m3" data-unit="kip/ft³" data-value="0.06397712079204718">0.064</span></td><td>kip/ft³</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Seawater column head</td><td><span data-metric="inputs.seawater_column_m" data-unit="ft" data-value="5905.511811023622">5,905.5</span></td><td>ft</td><td><a href="#ref-example">Example input</a></td></tr></tbody><caption>Public example inputs; engineering display units.</caption></table>
+<h3>3.3 Metocean, criteria and load cases</h3>
+<p>The illustrated profile is still-water axial equilibrium. Current-dominated and wave-dominated environmental sets are absent.
+No return-period, sea-state, heading or offset matrix is supplied.</p>
+<p>The zero-effective-tension line is a force-sign reference from the implemented axial equilibrium, not a drilling acceptance limit.
+The weight and wall multipliers are example assumptions, not verified standard acceptance criteria.
+The default slip-ring weight and buoyancy factors are inherited implementation constants; their recorded source and qualification boundary are given in References.</p>
+</section>
+<section id="method"><h2 id="method-heading">4. Analysis Methodology</h2>
+<p>The axial calculation is evaluated first by hand equilibrium and then by the module.
+The boundary-condition idealisation is shown beside the physical stack-up; no finite-element mesh, centralisers, lateral supports or stops are represented.</p>
+<h3>4.1 Equations and symbols</h3>
+<p>The applied top force is T = W F, and the effective force at depth fraction d is E(d) = T − W d.
+W is the example submerged string weight, F is the example weight multiplier, T is the calculated top force,
+d is the fraction measured downward from the surface, and E is effective tension. The profile endpoints are surface and lower end.
+These equations are implemented screening algebra, sourced to the calculation functions in References.</p>
+<p>The pressure-only wall estimate is t = P D S / (2 Y).
+t denotes required wall thickness, P is design internal pressure, D is outside diameter,
+S is the example wall multiplier, and Y is specified minimum yield strength.
+The coefficient follows the implemented Barlow thin-wall hoop-equilibrium relation; external pressure, bending,
+corrosion, wear and manufacturing allowances are not included.</p>
+<p>The slip-ring expression is R = W f − B b + A(γm Hm − γw Hw).
+R is minimum slip-ring force, B is buoyancy uplift, f and b are weight and buoyancy factors,
+A is the internal area, γm and γw are mud and seawater weight densities, and Hm and Hw are their vertical heads.
+The implementation expects flooded-steel apparent weight with fluid head counted once.
+The example does not document that weight convention, so its slip-ring result remains illustrative.</p>
+<h3>4.2 Calculation sequence and outputs</h3>
+<p>The public input is read, the documented router is called, and its profile CSV is read back.
+The returned scalars are top force, pressure-only wall thickness, optional slip-ring force and profile point count.
+The CSV contains depth fraction and effective force. The module uses kilonewtons, millimetres and megapascals internally;
+engineering displays use the component adapter's conversion convention.</p>
+<p>The build-up beyond still water is not performed. Static current response needs distributed drag and section stiffness;
+wave-current dynamics need response amplitude operators, sea-state spectra, headings, initial conditions and travel limits.
+Regular heave alone is not substituted for host-motion response.</p>
+</section>
+<section id="results"><h2 id="results-heading">5. Detailed Results</h2>
+<p>The scalar results and axial profile are calculated from the public example.
+The effective-force chart precedes environmental and dynamic assessments because it is the available static arithmetic check.</p>
+<h3>5.1 Statics against hand equilibrium</h3>
+<p>The module returns <span data-metric="summary.top_tension_required_kn" data-unit="kip" data-value="2304.292503518261">2,304.3</span> kip top force and
+<span data-metric="minimum_effective_kn" data-unit="kip" data-value="460.8585007036523">460.9</span> kip lowest effective force against the zero-effective-tension reference.
+The maximum absolute relative difference from hand equilibrium is <span data-metric="tension_difference_pct" data-unit="%" data-value="0.0">0.0</span> %,
+using hand equilibrium as the reference at the supplied profile stations.
+This checks arithmetic consistency of the assumed linear profile; it is not independent qualification of the physical model.</p>
+<p>The wall estimate is <span data-metric="summary.wall_thickness_required_mm" data-unit="in" data-value="0.9843749999999999">0.984</span> in.
+The illustrative slip-ring force is <span data-metric="summary.min_slip_ring_tension_kn" data-unit="kip" data-value="1610.936509435235">1,610.9</span> kip.
+The router reports these separately and does not reconcile them into a governing tensioner setting.
+The flat weight multiplier omits surviving tensioner count, efficiency and angular allowances;
+its result is not the package's separate minimum-tensioner-capacity calculation.</p>
+<p>Wall tension is not evaluated. Effective tension and true wall force are different quantities;
+a wall-force curve is not fabricated from the aggregate weight profile. Foam-zone locations are also absent.</p>
+<h3>5.2 Current and operating envelopes</h3>
+<p>Static current response is not evaluated. Current-dominated environments and wave-dominated environments
+have no supplied case sets or acceptance criteria, so no offset envelope is established for drilling or staying connected.
+The static tension chart is not an operating-envelope chart.</p>
+<h3>5.3 Dynamics, drift-off, recoil and weak point</h3>
+<p>Dynamic stroke, tension, angles and stop strikes are not evaluated. Host-motion response data and equipment travel limits are absent.</p>
+<p>Drift-off under the annual current is not evaluated; drift-off under the decadal current is not evaluated.
+No disconnect time or watch circle is established; do not connect on this basis.</p>
+<p>Recoil is not evaluated: data needed: closure curves. Weak point analysis is not performed.
+Vortex-induced vibration and fatigue are not evaluated.</p>
+</section>
+<section id="findings"><h2 id="findings-heading">6. Key Findings</h2>
+<p>Public calculation entry points and test evidence are present. Their existence supports reproducible arithmetic,
+while operating acceptance remains outside the supplied example data.</p>
+<p>The effective-force profile stays above the zero-effective-tension reference in this example.
+That force-sign observation does not establish tensioner capacity, structural strength, travel margin or safe connection.</p>
+<p>The separate pressure-only wall and slip-ring estimates are returned without a combined design decision.
+The mass, buoyancy and fluid-head conventions require reconciliation before the slip-ring value is used as a setting.</p>
+</section>
+<section id="limits"><h2 id="limits-heading">7. Limitations</h2>
+<p>The example is an aggregate axial screen. Its output is limited by the supplied weight convention,
+unverified acceptance factors and absent component and environmental data.</p>
+<p>The scalar helpers perform arithmetic without comprehensive finite-value, positivity or geometry validation.
+The router checks depth-grid ordering and range and rejects incomplete optional slip-ring fields,
+but scalar plausibility remains a caller responsibility. No standard compliance or equipment certification is asserted.</p>
+<h3>7.1 Not covered</h3>
+<p>Component-registry assembly, schedule reconciliation, taper stress-joint sizing, static beam and conductor response,
+operating envelopes, telemetry monitoring, drift-off screening, response correction, damping, tool passage,
+stack-up drawing reconciliation, global-model preparation and result aggregation are separate capabilities.
+They are identified from the module source but are not exercised by the worked stack-up example.</p>
+<p>The paper-based drive-off fixture is explicitly recorded as incomplete and incompatible with the scalar drift-off screen.
+Its reproduction test is skipped; it is not a successful published benchmark. The repository holds closed-form static-beam tests,
+but those tests do not qualify the operating envelope or coupled dynamic response.</p>
+</section>
+<section id="recommendations"><h2 id="recommendations-heading">8. Recommendations</h2>
+<p>A complete operating assessment is recommended before a connection decision is made.
+The required work follows the missing inputs and model boundaries documented above.</p>
+<p>Reconcile flooded-steel weight, buoyancy and fluid-head accounting against the actual component schedule,
+then apply the separate surviving-tensioner calculation with documented capacity, efficiency and angular allowances.
+The source for this separation is the assembly and slip-ring function documentation in References.</p>
+<p>Establish the actual wall, corrosion and wear allowances, pressure differential and combined-load criteria before comparing thickness.
+Populate component stiffness, buoyancy zones, support locations, host response amplitude operators,
+metocean sets, joint travel, disconnect duration and closure curves before calculating operating limits.
+Retain the zero-force screen as a diagnostic and require a complete watch-circle assessment before connection.</p>
+<p>Extend automated input checks to reject non-finite values and physically inconsistent geometry.
+Retain the independent equilibrium comparison and add publicly sourced component and dynamic benchmarks with complete inputs,
+compatible model assumptions and declared tolerances before extending the stated validation scope.</p>
+</section>
+<section id="references"><h2 id="references-heading">9. References</h2>
+<p>Repository records are used as the primary calculation evidence. External publication titles below identify
+implementation provenance only; publication clauses have not been independently checked for this analysis.</p>
+<h3>9.1 Basis and source status</h3>
+<p id="ref-example">The registered public stack-up example supplies every case input and the explicit weight and wall multipliers.
+These are example assumptions, not measured design data. The workflow registry identifies the example as an offline calculation.</p>
+<p id="ref-code">The stack-up calculation functions and router define all equations and output conventions used here.
+The component adapter defines the display conversions. The default weight factor <span data-metric="defaults.weight_factor" data-unit="—" data-value="1.05">1.05</span>
+and buoyancy factor <span data-metric="defaults.buoyancy_factor" data-unit="—" data-value="0.96">0.96</span> are read from the implementation, without substituting a value from a publication.</p>
+<p>The implementation cites American Bureau of Shipping, Guidance Notes on Drilling Riser Analysis, 2017,
+Section 3, Subsection 3, item iii), equation (3.2), and American Petroleum Institute Recommended Practice 16Q,
+Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, 2017.
+The latter clause text is recorded as pending a held-edition check. No licensed table or clause values are reproduced as independent acceptance criteria.</p>
+<h3>9.2 Repository locators and evidence inventory</h3>
+<ul><li><code>examples/workflows/riser-stackup/input.yml</code>: complete public case inputs.</li>
+<li><code>docs/registry/workflows.yaml</code>: registered stack-up workflow and expected CSV output.</li>
+<li><code>src/digitalmodel/drilling_riser/stackup.py</code>: top_tension_required, effective_tension,
+wall_thickness_required, minimum_slip_ring_tension and inherited defaults.</li>
+<li><code>src/digitalmodel/drilling_riser/workflow.py</code>: router, depth-grid validation and optional slip-ring input contract.</li>
+<li><code>src/digitalmodel/drilling_riser/assembly.py</code>: separate tensioner capacity and survival calculation.</li>
+<li><code>src/digitalmodel/drilling_riser/adapter.py</code>: force, length and pressure conversion constants.</li>
+<li><code>src/digitalmodel/drilling_riser/docs/agent-pack.md</code>: package-wide workflow map and evidence boundaries.</li>
+<li><code>tests/drilling_riser/fixtures/drive_off_worked_example_2017.json</code>: incomplete published-case transcription and explicit modelling gaps.</li>
+<li><code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and <code>docs/api/_assets/brand.css</code>:
+existing report layout and canonical stylesheet, inlined here. The required document body class is applied to that existing layout.</li>
+<li><code>docs/reports/modules/drillingriser/build_report.py</code>: report calculation and deterministic rendering.</li></ul>
+<table><thead><tr><th>Evidence held</th><th>Test definitions</th><th>Source</th></tr></thead><tbody><tr><td>Scalar arithmetic and trend assertions</td><td>15</td><td><code>tests/drilling_riser/test_stackup_doc_verified.py</code></td></tr><tr><td>Pinned-beam closed forms, shear and trends</td><td>8</td><td><code>tests/drilling_riser/test_riser_response.py</code></td></tr><tr><td>Input-gap evidence; reproduction is explicitly skipped</td><td>9</td><td><code>tests/drilling_riser/test_drive_off_worked_example.py</code></td></tr><tr><td>Report rebuild, public-module reconciliation and numerical bindings</td><td>6</td><td><code>tests/drilling_riser/test_module_report.py</code></td></tr></tbody><caption>Definition counts are calculated from source; parameterised test cases and execution results are separate quantities.</caption></table>
+</section>
+<section id="acronyms"><h2 id="acronyms-heading">10. Acronyms</h2>
+<p>Abbreviations used in the calculation records are defined here. Symbols used in the equations are defined in Methodology.</p>
+<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody>
+<tr><td>CSV</td><td>Comma-separated values.</td></tr><tr><td>HTML</td><td>Hypertext Markup Language.</td></tr>
+<tr><td>kip</td><td>Thousand pounds-force.</td></tr><tr><td>psi</td><td>Pounds-force per square inch.</td></tr>
+<tr><td>kN</td><td>Kilonewton.</td></tr><tr><td>MPa</td><td>Megapascal.</td></tr>
+<tr><td>NOT_EVALUATED</td><td>The result is not evaluated because the required data or analysis is absent.</td></tr>
+</tbody></table>
+</section>
+<aside id="appendix"><h3>Appendix: native inputs and calculated profile</h3>
+<p>The native input register preserves the module units. Each value is read from the public example;
+no engineering case value is typed into the report text.</p>
+<table><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Submerged weight</td><td><span data-metric="inputs.submerged_weight_kn" data-unit="kN" data-value="8200.0">8,200.0</span></td><td>kN</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Weight multiplier</td><td><span data-metric="inputs.dynamic_factor" data-unit="—" data-value="1.25">1.25</span></td><td>—</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Outside diameter</td><td><span data-metric="inputs.od_mm" data-unit="mm" data-value="533.4">533.4</span></td><td>mm</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Design internal pressure</td><td><span data-metric="inputs.design_pressure_mpa" data-unit="MPa" data-value="34.5">34.5</span></td><td>MPa</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Specified minimum yield strength</td><td><span data-metric="inputs.smys_mpa" data-unit="MPa" data-value="552.0">552.0</span></td><td>MPa</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Wall multiplier</td><td><span data-metric="inputs.barlow_safety_factor" data-unit="—" data-value="1.5">1.50</span></td><td>—</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Buoyancy uplift</td><td><span data-metric="inputs.buoyancy_uplift_kn" data-unit="kN" data-value="2500.0">2,500.0</span></td><td>kN</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Internal area</td><td><span data-metric="inputs.internal_area_m2" data-unit="m²" data-value="0.18">0.180</span></td><td>m²</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Mud weight density</td><td><span data-metric="inputs.mud_density_kn_m3" data-unit="kN/m³" data-value="13.0">13.00</span></td><td>kN/m³</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Mud column head</td><td><span data-metric="inputs.mud_column_m" data-unit="m" data-value="1800.0">1,800.0</span></td><td>m</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Seawater weight density</td><td><span data-metric="inputs.seawater_density_kn_m3" data-unit="kN/m³" data-value="10.05">10.05</span></td><td>kN/m³</td><td><a href="#ref-example">Example input</a></td></tr><tr><td>Seawater column head</td><td><span data-metric="inputs.seawater_column_m" data-unit="m" data-value="1800.0">1,800.0</span></td><td>m</td><td><a href="#ref-example">Example input</a></td></tr></tbody><caption>Public example inputs; native module units.</caption></table>
+<table><thead><tr><th>Depth fraction (%)</th><th>Effective force (kip)</th><th>Source</th></tr></thead>
+<tbody><tr><td><span data-metric="profile.0.depth_factor" data-unit="%" data-value="0.0">0.0</span></td><td><span data-metric="profile.0.effective_tension_kn" data-unit="kip" data-value="2304.292503518261">2,304.3</span></td><td><a href="#ref-code">Axial force balance</a></td></tr><tr><td><span data-metric="profile.1.depth_factor" data-unit="%" data-value="25.0">25.0</span></td><td><span data-metric="profile.1.effective_tension_kn" data-unit="kip" data-value="1843.4340028146091">1,843.4</span></td><td><a href="#ref-code">Axial force balance</a></td></tr><tr><td><span data-metric="profile.2.depth_factor" data-unit="%" data-value="50.0">50.0</span></td><td><span data-metric="profile.2.effective_tension_kn" data-unit="kip" data-value="1382.5755021109567">1,382.6</span></td><td><a href="#ref-code">Axial force balance</a></td></tr><tr><td><span data-metric="profile.3.depth_factor" data-unit="%" data-value="75.0">75.0</span></td><td><span data-metric="profile.3.effective_tension_kn" data-unit="kip" data-value="921.7170014073046">921.7</span></td><td><a href="#ref-code">Axial force balance</a></td></tr><tr><td><span data-metric="profile.4.depth_factor" data-unit="%" data-value="100.0">100.0</span></td><td><span data-metric="profile.4.effective_tension_kn" data-unit="kip" data-value="460.8585007036523">460.9</span></td><td><a href="#ref-code">Axial force balance</a></td></tr></tbody><caption>Calculated profile from the router CSV.</caption></table>
+<h3>Appendix: data and assumption register</h3>
+<table><thead><tr><th>Item</th><th>Status and basis</th><th>Consequence</th></tr></thead><tbody>
+<tr><td>Case scalars and multipliers</td><td>ASSUMED - to be confirmed; retained from the public example.</td><td>Illustrative sizing only.</td></tr>
+<tr><td>Uniform weight distribution</td><td>ASSUMED - to be confirmed; linear profile implemented in the module.</td><td>No local component or foam-zone force resolution.</td></tr>
+<tr><td>Weight convention</td><td>NOT_EVALUATED; flooded-steel and fluid-head reconciliation is absent.</td><td>Slip-ring value is not a tensioner setting.</td></tr>
+<tr><td>Wall thickness and allowances</td><td>NOT_EVALUATED; actual wall, corrosion, wear and tolerances are absent.</td><td>No wall acceptance result.</td></tr>
+<tr><td>Adjacent components and added mass</td><td>NOT_EVALUATED; diameters, stiffness ratios, auxiliary lines and hydrodynamic coefficients are absent.</td><td>No stiffness transition or dynamic model.</td></tr>
+<tr><td>Host and environment</td><td>NOT_EVALUATED; host-motion data and current- and wave-dominated sets are absent.</td><td>No operating envelope.</td></tr>
+<tr><td>Watch circle and disconnect</td><td>NOT_EVALUATED; equipment criteria, disconnect time and closure curves are absent.</td><td>Do not connect on this basis.</td></tr>
+</tbody><caption>Data held and not held; no missing equipment value is guessed.</caption></table>
+<h3>Appendix: quality assurance pre-flight</h3>
+<p>The router is called with the full example, and temporary CSV output is read back for the report.
+Top force, wall estimate, slip-ring force and every profile station are reconciled to direct module calls in the rebuild tests.
+Independent decimal arithmetic checks equilibrium and the pressure relation. A changed-input test checks propagation
+through the summary, chart and displayed values. Byte-for-byte rebuilding checks the delivered HTML against its generator.</p>
+<p>The stylesheet, chart data and interaction code are embedded; no external script, image or stylesheet is needed.
+Test-definition counts identify evidence held, not a whole-package pass rate. No licensed solver or physical validation is used.</p>
+</aside>
+</main>
+<aside id="comments"><h3>Review comments</h3>
+<p>Select report text or a section, enter a comment, then save the comments beside the report.
+Comments stay in memory until saved. Folder saving requires a supporting browser and selection of the report folder;
+otherwise download the comments and choose that location. Load the saved file to continue reviewing.</p>
+<label for="comment-section">Section</label><select id="comment-section">
+<option value="summary">Executive Summary</option><option value="intro">Introduction</option>
+<option value="data">Design Data</option><option value="method">Analysis Methodology</option>
+<option value="results">Detailed Results</option><option value="findings">Key Findings</option>
+<option value="limits">Limitations</option><option value="recommendations">Recommendations</option>
+<option value="references">References</option><option value="acronyms">Acronyms</option></select>
+<p id="comment-context">Executive Summary</p><label for="comment-text">Comment</label>
+<textarea id="comment-text" rows="4" maxlength="5000" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load saved comments</label><input id="load-comments" type="file" accept="application/json">
+<p id="comment-status" role="status">No comments saved.</p><div id="comment-list"></div></aside>
+
+<script type="application/json" id="engineering-data">{"depth_pct": [0.0, 25.0, 50.0, 75.0, 100.0], "module_kip": [2304.292503518261, 1843.4340028146091, 1382.5755021109567, 921.7170014073046, 460.8585007036523], "hand_kip": [2304.292503518261, 1843.4340028146091, 1382.5755021109567, 921.7170014073046, 460.8585007036523], "limit_kip": 0.0, "case": "Public stack-up example", "component": "Uniform equivalent string"}</script>
+<script type="application/json" id="change-data">{"revision": "A", "date": "2026-10-21", "changes": [{"section": "summary", "description": "The public stack-up calculation is documented with its input basis and a calculated tension profile; an operating window is not established."}, {"section": "method", "description": "The weight-factor tension screen, pressure-only wall estimate and slip-ring calculation are distinguished so that their results are not treated as interchangeable acceptance criteria."}, {"section": "limits", "description": "Equipment capacity, actual wall, buoyancy distribution and dynamic data are identified as missing inputs to an operating assessment."}]}</script>
+
+<script>
+'use strict';
+const data = JSON.parse(document.getElementById('engineering-data').textContent);
+const svg = document.getElementById('tension-chart');
+const ns = 'http://www.w3.org/2000/svg';
+function node(tag, attrs, text) {
+  const element = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+  if (text !== undefined) element.textContent = text;
+  svg.appendChild(element); return element;
+}
+const low = Math.min(data.limit_kip, ...data.module_kip), high = Math.max(...data.module_kip);
+const span = high - low || 1;
+const x = value => 95 + (value - low) / span * 585;
+const y = depth => 55 + depth / 100 * 260;
+node('path', {d:'M95 45 V325 H700', fill:'none', stroke:'currentColor'});
+node('line', {x1:x(data.limit_kip), x2:x(data.limit_kip), y1:45, y2:325,
+             stroke:'var(--nogo)', 'stroke-dasharray':'5 4'});
+node('text', {x:100, y:25, fill:'currentColor'}, 'Hand equilibrium — line; module — markers; zero reference — dashed');
+node('text', {x:260, y:377, fill:'currentColor'}, 'Effective tension (kip)');
+node('text', {x:15, y:205, fill:'currentColor', transform:'rotate(-90 15 205)'}, 'Depth fraction (%)');
+node('text', {x:x(data.limit_kip) + 5, y:340, fill:'currentColor'}, '0.0 kip');
+node('text', {x:x(high) - 40, y:340, fill:'currentColor'}, high.toFixed(1));
+node('polyline', {points:data.hand_kip.map((t,i)=>`${x(t)},${y(data.depth_pct[i])}`).join(' '),
+                  fill:'none', stroke:'var(--brand)', 'stroke-width':2});
+data.module_kip.forEach((t, i) => {
+  const depth = data.depth_pct[i];
+  node('text', {x:45, y:y(depth)+4, fill:'currentColor'}, depth.toFixed(1));
+  const label = `${data.case}; ${data.component}; depth fraction ${depth.toFixed(1)}%; demand ${t.toFixed(1)} kip; zero reference ${data.limit_kip.toFixed(1)} kip; equipment limit not established`;
+  const dot = node('circle', {cx:x(t), cy:y(depth), r:6, fill:'var(--brand)', tabindex:0,
+                            role:'img', 'aria-label':label});
+  const title = document.createElementNS(ns,'title'); title.textContent = label; dot.appendChild(title);
+  ['focus','mouseenter'].forEach(event => dot.addEventListener(event, () => {
+    document.getElementById('chart-readout').textContent = label;
+  }));
+});
+const changes = JSON.parse(document.getElementById('change-data').textContent);
+const changeList = document.getElementById('change-list');
+changes.changes.forEach(change => {
+  const p = document.createElement('p'), a = document.createElement('a');
+  a.href = '#' + change.section; a.textContent = change.description;
+  p.appendChild(a); changeList.appendChild(p);
+});
+let comments = [], selectedSection = 'summary', selectedText = '', directory;
+const status = document.getElementById('comment-status');
+const commentList = document.getElementById('comment-list');
+function showComments() {
+  commentList.replaceChildren();
+  comments.forEach(comment => {
+    const p = document.createElement('p'), context = document.createElement('span');
+    context.textContent = comment.section + (comment.quote ? ': ' + comment.quote : '') + ' — ';
+    const text = document.createElement('span'); text.textContent = comment.text;
+    p.append(context,text); commentList.appendChild(p);
+  });
+}
+function parseComments(text) {
+  const parsed = JSON.parse(text);
+  if (parsed.revision !== changes.revision || !Array.isArray(parsed.comments) || parsed.comments.length > 1000 ||
+      !parsed.comments.every(c => c && typeof c.text === 'string' && c.text.length <= 5000 &&
+         typeof c.section === 'string' && document.getElementById(c.section)?.tagName === 'SECTION' &&
+         typeof c.quote === 'string' && c.quote.length <= 1000)) throw new Error('Invalid comments');
+  return parsed.comments;
+}
+document.querySelectorAll('main > section').forEach(section => {
+  section.addEventListener('mouseup', () => {
+    const selection = window.getSelection().toString().trim();
+    if (selection) { selectedSection = section.id; selectedText = selection.slice(0,1000);
+      document.getElementById('comment-context').textContent = selectedText; }
+  });
+});
+document.getElementById('comment-section').addEventListener('change', event => {
+  selectedSection = event.target.value; selectedText = '';
+  document.getElementById('comment-context').textContent = selectedSection;
+});
+document.getElementById('add-comment').addEventListener('click', () => {
+  const input = document.getElementById('comment-text'), text = input.value.trim();
+  if (!text) { status.textContent = 'Enter a comment before adding it.'; return; }
+  comments.push({section:selectedSection, quote:selectedText, text}); input.value = '';
+  showComments(); status.textContent = 'Comment added in memory. Save the comments before closing.';
+});
+document.getElementById('save-comments').addEventListener('click', async () => {
+  try {
+    if (!window.showDirectoryPicker) {
+      status.textContent = 'Folder saving is unavailable. Use Download comments and save the file beside this report.';
+      return;
+    }
+    directory = directory || await window.showDirectoryPicker({mode:'readwrite'});
+    const file = await directory.getFileHandle('report.comments.json', {create:true});
+    const contents = await (await file.getFile()).text();
+    const held = contents.trim() ? parseComments(contents) : [];
+    const merged = new Map();
+    [...held,...comments].forEach(c => merged.set(JSON.stringify([c.section,c.quote,c.text]),c));
+    const combined = [...merged.values()];
+    const writable = await file.createWritable();
+    await writable.write(JSON.stringify({revision:changes.revision, comments:combined}, null, 2) + '\n');
+    await writable.close(); comments=combined; showComments();
+    status.textContent = 'Comments saved in the selected folder; existing comments are retained.';
+  } catch { status.textContent = 'Comments were not saved. Check the folder and existing comment file, or use Download comments.'; }
+});
+document.getElementById('download-comments').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify({revision:changes.revision, comments},null,2)+'\n'],{type:'application/json'}));
+  const a = document.createElement('a'); a.href=url; a.download='report.comments.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  status.textContent = 'Save report.comments.json beside this report; the download location is selected by the browser.';
+});
+document.getElementById('load-comments').addEventListener('change', async event => {
+  try {
+    const file = event.target.files[0]; if (!file) return;
+    comments = parseComments(await file.text()); showComments(); status.textContent = 'Saved comments loaded.';
+  } catch { status.textContent = 'Comments were not loaded: the file or revision is invalid.'; }
+});
+</script>
+
+</div></body></html>

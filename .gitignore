@@ -267,6 +267,13 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/drillingriser/
+docs/reports/modules/drillingriser/*
+!docs/reports/modules/drillingriser/build_report.py
+!docs/reports/modules/drillingriser/changes.json
+!docs/reports/modules/drillingriser/index.html
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
