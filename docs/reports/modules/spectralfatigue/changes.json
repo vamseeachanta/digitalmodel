@@ -1,0 +1,14 @@
+{
+  "report": "Spectral fatigue module analysis",
+  "revisions": [
+    {
+      "revision": "0",
+      "date": "2026-10-21",
+      "changes": [
+        "First issue: public example results are reproduced from the spectral fatigue workflow.",
+        "Frequency convention and estimator qualification gaps are identified before design use.",
+        "Input, evidence and recommendation registers are provided for engineering review."
+      ]
+    }
+  ]
+}
