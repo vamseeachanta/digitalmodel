@@ -23,7 +23,9 @@ ESCALATE     Margin cannot be evaluated by screening (non-finite) — hand off
              flag was raised by a strength method (the defect lies outside
              the method's calibrated range, #1094): no numeric verdict is
              issued, the margin is echoed for reference only and a Level 3 /
-             engineering review is required.
+             engineering review is required. Part 9 readiness also escalates
+             when required inputs or qualified screening evidence are missing;
+             no crack acceptance or reduced rating is established.
 
 Per-class action map (report wording)
 -------------------------------------
@@ -56,13 +58,12 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Union
+from typing import Any, Callable, Mapping, Optional, Union
 
 from digitalmodel.asset_integrity.applicability import Applicability
 from digitalmodel.units import Q_, ureg
 
-if TYPE_CHECKING:
-    from .part9_level1 import Part9Level1Result
+from .part9_level1 import Part9Level1Result
 
 Number = Union[int, float]
 QuantityLike = Union[Number, "ureg.Quantity"]
@@ -347,14 +348,18 @@ def decide_part9_level1(result: Part9Level1Result) -> dict:
     acceptance criterion is available in the current readiness-only screen.
     """
     payload = result.to_dict()
+    input_action = (
+        "Complete the missing inputs: " + ", ".join(payload["missing_inputs"]) + ". "
+        if payload["missing_inputs"] else ""
+    )
     return {
         "verdict": Verdict.ESCALATE.value,
         "assessment_status": payload["status"],
         "governing_criterion": (
             "Part 9 Level 1 NOT_EVALUATED: qualified reference-flaw curves "
             "and their applicability and validation evidence are unavailable. "
-            "No Level 1 acceptance or reduced rating is established; complete "
-            "the missing data and obtain a qualified Part 9 Level 2 assessment."
+            "No Level 1 acceptance or reduced rating is established. "
+            f"{input_action}Obtain a qualified Part 9 Level 2 assessment."
         ),
         "missing_inputs": payload["missing_inputs"],
         "missing_evidence": payload["missing_evidence"],

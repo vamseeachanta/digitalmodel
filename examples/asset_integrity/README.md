@@ -10,6 +10,7 @@ Working examples for the `digitalmodel.asset_integrity` fitness-for-service modu
 | `example_pipe_capacity.py` | Pipe capacity calculation setup for ASME B31.4 (oil) and B31.8 (gas) using the modified Barlow equation. Includes manual verification math. |
 | `example_api579_gml.py` | API 579 Part 4 General Metal Loss assessment for a 16" gas pipeline. Uses simulated wall-thickness grids. Demonstrates Level 1 screening and Level 2 assessment length calculation. |
 | `example_api579_lml.py` | API 579 Part 5 Local Metal Loss assessment. Shows how to define a Local Thin Area (LTA) by grid indices, Folias factor interpolation, and MAWP reduction workflow. |
+| `example_part9_level1.py` | Part 9 Level 1 crack readiness with synthetic inputs. Prints NOT_EVALUATED and ESCALATE because qualified curve evidence is unavailable. |
 
 ## Running the Examples
 
@@ -20,6 +21,7 @@ python examples/asset_integrity/basic_usage.py
 python examples/asset_integrity/example_pipe_capacity.py
 python examples/asset_integrity/example_api579_gml.py
 python examples/asset_integrity/example_api579_lml.py
+PYTHONPATH=src python examples/asset_integrity/example_part9_level1.py
 ```
 
 These scripts demonstrate the config format and methodology. They do **not** call `engine()` directly because that requires the full environment (Excel data files, matplotlib, output directories).

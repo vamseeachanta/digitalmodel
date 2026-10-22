@@ -31,6 +31,12 @@ def worked_example() -> dict:
         yield_strength_mpa=300.0,
         ultimate_strength_mpa=450.0,
         fracture_toughness_mpa_sqrt_m=80.0,
+        flaw_orientation="axial",
+        flaw_position="surface",
+        material_location="base",
+        pwht=False,
+        cyclic_service=False,
+        toughness_basis="synthetic demonstration input",
     )
     return {"input_basis": "synthetic demonstration", **FFSRouter.route_crack_like_flaw(case)}
 

@@ -1,4 +1,4 @@
-"""FFS assessment router — API 579-1 Part 4 (GML) / Part 5 (LML) / Part 6 (pitting).
+"""FFS router for API 579 Parts 4/5/6 and explicit Part 9 crack readiness.
 
 Classification logic follows the applicability criteria of API 579-1/ASME FFS-1
 2021 Edition:
@@ -34,16 +34,17 @@ The router computes the fraction of grid cells that have degraded below
 (nominal_wt - DEGRADED_THRESHOLD_FRACTION * nominal_wt) to separate uniform
 from localised loss patterns.  Engineers may override via ``force_type``
 ('GML', 'LML' or 'PITTING').
+
+Explicit crack cases use ``route_crack_like_flaw`` rather than grid
+classification. The Part 9 readiness route remains NOT_EVALUATED and
+escalates without claiming a completed assessment level.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pandas as pd
 
-if TYPE_CHECKING:
-    from .part9_level1 import Part9Level1Case
+from .part9_level1 import Part9Level1Case
 
 # Fraction of nominal WT below which a cell is considered "degraded"
 _DEGRADED_FRACTION_OF_NOMINAL = 0.10  # >10 % loss counts as degraded cell
@@ -61,7 +62,7 @@ _VALID_FORCE_TYPES = {"GML", "LML", "PITTING"}
 
 
 class FFSRouter:
-    """Classify a wall-thickness grid as GML, LML or PITTING per API 579."""
+    """Classify metal-loss grids or route explicit cracks to Part 9 readiness."""
 
     @staticmethod
     def route_crack_like_flaw(case: Part9Level1Case) -> dict:
@@ -77,7 +78,8 @@ class FFSRouter:
         result = screen_part9_level1(case)
         return {
             "assessment_type": "CRACK_LIKE",
-            "level_reached": 1,
+            "level_reached": None,
+            "level_attempted": 1,
             "level1": result.to_dict(),
             "decision": decide_part9_level1(result),
         }
