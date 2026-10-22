@@ -1,0 +1,19 @@
+{
+  "document": "navalarchitecture-module-report",
+  "revision": "00",
+  "date": "2026-10-21",
+  "changes": [
+    {
+      "section": "summary",
+      "description": "Initial account of the available calculation workflow and its limits of use."
+    },
+    {
+      "section": "example",
+      "description": "Public rectangular-tank calculation and breadth sensitivity establish the initial-stability result."
+    },
+    {
+      "section": "validation",
+      "description": "Existing regression and benchmark records are distinguished from operational qualification."
+    }
+  ]
+}

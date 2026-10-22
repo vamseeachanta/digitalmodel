@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Naval architecture calculations, a public tank example and evidence for preliminary engineering use.">
+<meta name="report-revision" content="$revision">
+<meta name="report-content-digest" content="CONTENT_DIGEST">
+<title>Naval architecture module analysis</title>
+<style>$house_style</style>
+<style>
+/* Interactive components consume the existing report palette and typography. */
+svg{max-width:100%;height:auto}svg text{fill:var(--ink);font-size:14px}
+.axis{stroke:var(--mut);fill:none}.boundary{stroke:var(--red);stroke-dasharray:8 5;fill:none;stroke-width:2}
+.curve{stroke:var(--brand);stroke-width:3;fill:none}.sample{fill:var(--brand);cursor:crosshair}
+.sample:focus,.sample:hover{stroke:var(--ink);stroke-width:3;fill:var(--panel)}
+fieldset{border:1px solid var(--line);margin:1em 0;padding:1em}label{display:block;margin:.5em 0}
+textarea{width:100%;min-height:6em}button,select,textarea,input{font:inherit;max-width:100%}
+code{overflow-wrap:anywhere}
+button{cursor:pointer;margin:.3em;padding:.3em .7em}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.schematic{fill:var(--panel-2);stroke:var(--ink);stroke-width:2}.liquid{fill:var(--grid);stroke:var(--brand)}
+.dimension{stroke:var(--mut);stroke-width:1;fill:none}.review-tools{border-top:1px solid var(--line)}
+caption{caption-side:bottom;text-align:left}th,td{vertical-align:top;overflow-wrap:anywhere}
+@media print{.review-tools,.chart-control{display:none}.wrap{box-shadow:none;padding:0}a{color:inherit}section{break-inside:auto}figure{break-inside:avoid}}
+</style>
+</head>
+<body class="hs-doc">
+<div class="wrap">
+<header>
+<p class="kicker">Engineering calculation module</p>
+<h1>Naval architecture module analysis</h1>
+<p class="sub">Draft for client review</p>
+<p>Revision $revision · $date</p>
+<nav aria-label="Contents"><a href="#summary">Summary</a> · <a href="#basis">Design basis</a> ·
+<a href="#example">Worked example</a> · <a href="#validation">Validation</a> ·
+<a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendix</a></nav>
+</header>
+<main>
+<section id="summary">
+<h2>1 Executive Summary</h2>
+<p>The naval architecture module is a collection of callable calculations for floating-body geometry,
+hydrostatics, stability, resistance, motions, manoeuvring and longitudinal strength.
+Analysis is performed to determine the supported preliminary calculation workflow and its limits of use;
+key results are summarized below. The implementation and evidence records are identified in
+<a href="#records">Section 9.2</a>.</p>
+<ul>
+<li>The public rectangular-tank calculation gives an effective initial metacentric height of
+$effective_gm_ft ft, above the neutral boundary of $neutral_gm_ft ft, with the source loading condition held fixed.
+<ul><li>The free-surface correction is $correction_ft ft, reducing the uncorrected height by $reduction_pct %.
+The calculation supports a preliminary estimate of the static liquid-surface penalty; an operational
+stability margin is not established. <a href="#ref-public">Reference A, sections 3.3 and 4.8.3</a>.</li></ul></li>
+<li>Use is limited to the supplied loading condition and an unrestricted rectangular slack surface at initial heel.
+<ul><li>A complete righting-arm curve, downflooding information and applicable criteria are required before
+an operational loading decision is made. <a href="#limits">Section 8</a> defines the restriction.</li></ul></li>
+</ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>$revision</td><td>$date</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr></tbody>
+<caption>Revision record. The initial issue is the current engineering account.</caption></table>
+</section>
+<section id="introduction">
+<h2>2 Introduction</h2>
+<p>The module is assessed as a preliminary engineering calculation library. A documented scalar stability
+function is exercised directly, while the broader package is described from its existing interfaces and
+test records. No licensed analysis program is required for the worked example.</p>
+<p>The principal workflow is the assessment of initial transverse stability after allowing for liquid motion
+inside a tank. Hydrostatic properties and the loading condition are supplied by the engineer; hull geometry
+and the mass distribution are not reconstructed by this function. This distinction controls the intended
+use of the result.</p>
+<h3>2.1 Not covered</h3>
+<p>Mesh ingestion, mesh hydrostatics and trim, box-hull loading analysis, supplied-table intact and damage
+screening, tank gauging, resistance transfer and prediction, propeller performance, rudder loads,
+turning-circle estimates, seakeeping, hull-girder strength, scantlings, submarine buoyancy,
+hull-form sizing, numerical integration and inertia estimates are available as separate sub-areas.
+Their callable interfaces and example records are identified in Section 9.2. A common
+engineering qualification across these sub-areas is not established by this report.</p>
+</section>
+<section id="controls">
+<h2>3 Summary</h2>
+<p>The input controls are established before the stability function is called. The result is interpreted as
+an initial-heel static correction within the stated tank model.</p>
+<ul>
+<li>Confirm displacement, gravity height and transverse metacentre for the same loading condition.
+Liquid mass is already included in that condition.</li>
+<li>Retain the native units at the calculation boundary: feet, long tons and mass density in slugs per cubic foot.
+A long ton is denoted LT in the source; it is not a metric tonne.</li>
+<li>Use the free-surface length and breadth of the connected slack surface, rather than the gross tank
+dimensions where baffles, divisions, pocketing or irregular geometry alter that surface.</li>
+<li>Record the liquid correction and corrected metacentric height separately. A positive corrected value
+does not replace the applicable intact-stability, damage-stability or operating criteria.</li>
+<li>Confirm caller input validation. The scalar function performs arithmetic without rejecting nonphysical
+dimensions, inconsistent density units or a nonpositive displacement.</li>
+</ul>
+<p>The free-surface model, sign criterion and data requirements are taken from
+<a href="#ref-public">Reference A, sections 3.3 and 4.8.3–4.8.4</a>.
+The physical arrangement and sensitivity are shown below.</p>
+</section>
+<section id="basis">
+<h2>4 Design Data and Criteria</h2>
+<p>The design data are taken from an openly available educational problem, with the original units retained
+to avoid an implicit conversion at the module boundary. The source values and formula locations are
+recorded in <a href="#ref-public">Reference A</a>.</p>
+<h3>4.1 Loading condition and tank</h3>
+$input_table
+<p>The source also supplies tank depth and location. These are geometry descriptors, not inputs to the
+initial rectangular-surface correction. The same correction is obtained for the source's centred and
+off-centre tank positions when displacement, gravity height and free-surface shape are held fixed.
+The equilibrium list of an off-centre loading condition is a separate calculation.</p>
+<figure>
+<svg viewBox="0 0 860 385" role="img" aria-labelledby="tank-title tank-desc">
+<title id="tank-title">Rectangular slack fuel tank inside a floating hull</title>
+<desc id="tank-desc">Conceptual transverse hull section and tank perspective. A horizontal free surface,
+buoyancy, weight and the keel datum are labelled. Hull lines and liquid depth are illustrative; no hull dimensions are supplied.</desc>
+<path d="M35 70Q60 270 205 295Q355 270 375 70Z" class="schematic"/>
+<path d="M20 150H390" class="liquid"/>
+<path d="M110 105H300V225H110Z" class="schematic"/>
+<path d="M111 170H299V224H111Z" class="liquid"/>
+<path d="M110 170H300" stroke="var(--brand)" stroke-width="3"/>
+<path d="M205 235V85M205 85l-6 12m6-12l6 12M230 110V260m0 0l-6-12m6 12l6-12" class="dimension"/>
+<text x="40" y="43">Conceptual transverse section</text>
+<text x="70" y="145">External waterline</text>
+<text x="135" y="164">Free surface</text>
+<text x="210" y="82">Buoyancy</text><text x="237" y="255">Weight</text>
+<text x="105" y="320">Keel datum; upright static condition</text>
+<path d="M490 125L730 125L810 75L570 75ZM490 125V215L730 215V125M730 215L810 165V75M490 215L570 165" class="schematic"/>
+<path d="M490 185L730 185L810 135L570 135ZM490 185V215H730V185M730 185L810 135V165L730 215" class="liquid"/>
+<path d="M490 238H730M490 231V245M730 231V245M740 227L820 177M735 222l10 10M815 172l10 10" class="dimension"/>
+<text x="490" y="43">Tank perspective; dimensions in Table A</text>
+<text x="485" y="276">Breadth $svg_tank_breadth_ft ft; depth $svg_tank_depth_ft ft</text>
+<text x="600" y="310">Length $svg_tank_length_ft ft</text>
+<text x="485" y="370">Slack liquid; initial heel; no internal division</text>
+</svg>
+<figcaption>Figure A. The modelled free surface is shown inside a conceptual hull and in perspective.
+The dimensioned tank perspective follows the public problem; hull lines, immersion and liquid depth are illustrative.
+The model is not a hull drawing. <a href="#ref-public">Reference A, problem 26 and Figure 4.12</a>.</figcaption>
+</figure>
+<h3>4.2 Criteria and rationale</h3>
+<p>The neutral initial-stability boundary is a metacentric height of $neutral_gm_ft ft.
+It separates restoring and overturning behaviour at an infinitesimal heel and is drawn as a diagnostic
+line in Figure B. The operational minimum metacentric height, required curve areas and downflooding
+angle are not supplied; their assessment is recorded as NOT_EVALUATED.
+The neutral boundary is not an operating limit. <a href="#ref-public">Reference A, sections 3.3 and 4.4</a>.</p>
+</section>
+<section id="method">
+<h2>5 Theory and Calculation Method</h2>
+<p>The free-surface penalty is represented as a virtual rise of the centre of gravity. The liquid moves
+transversely as the hull heels, reducing the initial restoring moment without changing the displacement.</p>
+<h3>5.1 Equations and symbols</h3>
+<div class="eq">i = L B³ / 12; C = ρ g i / (Δ c); GM<sub>effective</sub> = KM − KG − C.</div>
+<p>Here i is the transverse second moment of the liquid surface in ft⁴; L and B are its length and breadth
+in ft; ρ is fuel mass density in slug/ft³; g is gravitational acceleration in ft/s²; Δ is displacement in
+long tons; c converts long tons to pounds-force; C is the free-surface correction in ft; K is the keel
+datum, G the gravity centre and M the transverse metacentre. KM and KG are their heights above K in ft.
+The rectangular coefficient and correction are sourced to <a href="#ref-public">Reference A,
+sections 4.8.3 and 4.8.3.1, printed pages 4-29–4-30</a>.</p>
+<p>The module uses gravitational acceleration $g_ft_s2 ft/s² and a conversion of
+$lb_per_long_ton lb per long ton. These constants are checked against the
+<a href="#ref-public">same edition's Equations and Conversion Factors, Miscellaneous Conversions</a>.
+The liquid-surface coefficient is geometric, rather than a fitted material coefficient.</p>
+<h3>5.2 Calculation sequence</h3>
+<p>The source inputs are read, their finite positive values and unit conventions are checked, and the
+documented free-surface function is called. Its ordered outputs are the correction and effective
+metacentric height. An uncorrected comparison is obtained with the correction suppressed. Every
+point in Figure B is obtained from another call to the same function, with only surface breadth changed.
+The callable example and reproduction command are given in Section 9.2.</p>
+</section>
+<section id="example">
+<h2>6 Worked Example and Results</h2>
+<p>The calculation is performed for the public rectangular fuel-tank problem using the inputs in Table A.
+The source loading condition is held fixed; the slack-surface assumption is identified in Table B.</p>
+<p>The uncorrected metacentric height is $solid_gm_ft ft. The free-surface correction is $correction_ft ft,
+reducing that height by $reduction_pct %. The effective initial metacentric height is $effective_gm_ft ft,
+above the neutral boundary of $neutral_gm_ft ft. An operational stability margin is not established.
+<a href="#ref-public">Reference A, problem 26 and sections 3.3 and 4.8.3</a>.</p>
+<p>The centred and off-centre positions give the same correction within this initial-surface model.
+No equilibrium heel is returned by the function. The breadth sensitivity holds liquid mass, gravity
+height, metacentre, surface length and density fixed; it is not a sequence of redesigned tanks or
+loading conditions.</p>
+<figure>
+$chart
+<figcaption>Figure B. Effective metacentric height against free-surface breadth at the public loading
+condition. The solid curve is the module result; the dashed line is the neutral initial-stability
+boundary. Positive height alone does not establish an operating envelope.
+<a href="#ref-public">Reference A, sections 3.3 and 4.8.3</a>.</figcaption>
+</figure>
+<p class="chart-control"><label for="sample-index">Inspect a calculated breadth</label>
+<input id="sample-index" type="range" min="0" max="30" value="30" step="1"></p>
+<p id="chart-readout" aria-live="polite">Hover over a curve point, focus it with the keyboard, or move the control to inspect the condition, component, demand and diagnostic boundary.</p>
+</section>
+<section id="validation">
+<h2>7 Validation Evidence</h2>
+<p>The existing evidence is assessed by comparator type. Arithmetic regression is distinguished from
+physical validation and from acceptance of an operational loading condition.</p>
+<h3>7.1 Existing regression and benchmark records</h3>
+<p>The repository holds textbook-labelled tests and input vectors for buoyancy, gravity shifts,
+inclining, righting-arm corrections, free surface, resistance and submarine buoyancy. The selected
+stability test checks both the free-surface penalty and the corrected metacentric height against its
+stored expectations. Those expectations are repository transcriptions; the textbook labels are not
+treated as independent proof of each numerical value. The present public example is taken directly
+from the cited problem and is also checked against the governing equation.</p>
+<p>Mesh benchmark tests compare analytic parabolic-hull volume and wetted area with generated geometry.
+Loading-analysis tests exercise box-hull equilibrium and strength calculations. The resistance
+reproduction record explicitly identifies approximate reference values as unverified; that record does
+not qualify the resistance method. These evidence locations are listed in Section 9.2.</p>
+<h3>7.2 Interpretation of evidence</h3>
+<p>The report rebuild compares every embedded input, returned example result and sensitivity point with
+fresh calls to the module. An independent rectangular-surface identity is also evaluated, and the
+displayed rounding is checked. The accompanying quality checks inspect section structure, source
+records and offline interactions. The retained check record is described in Section 10.</p>
+<p>No measured roll response, inclining survey or approved stability booklet is supplied for this example.
+Agreement with arithmetic and stored regression expectations therefore does not establish performance
+of an actual hull, dynamic liquid motion, regulatory compliance or operational acceptance.</p>
+</section>
+<section id="limits">
+<h2>8 Key Findings and Limits of Use</h2>
+<p>The static initial-surface penalty is calculated for the public tank model. The correction
+increases with the cube of the connected free-surface breadth, as defined by the cited rectangular
+second-moment relation.</p>
+<p>The effective initial metacentric height remains above the neutral boundary for the illustrated breadth
+range. This finding applies only to the fixed public loading condition. The boundary supplies no margin
+against large-angle heel, flooding, wind heeling, waves or cargo movement.</p>
+<p>The simple surface formula requires revision where a roof or bottom clips the liquid surface, the tank
+is not rectangular, the liquid is restricted by internal divisions, or the surface shape varies materially
+with heel. Dynamic sloshing is not represented. The source distinguishes static and dynamic effects in
+<a href="#ref-public">Reference A, sections 4.8.1–4.8.3</a>.</p>
+<p>Units are explicit but not enforced by a dimensional type system in the scalar function. The simple
+buoyancy helpers also choose fresh-water arithmetic for any water selector other than the exact
+salt-water selector. Input qualification is therefore required at the calling boundary. Signed trim and
+longitudinal origins differ between some package interfaces; those conventions require reconciliation
+before results are exchanged between them.</p>
+</section>
+<section id="recommendations">
+<h2>9 Recommendations and References</h2>
+<p>The preliminary result is used to identify the liquid-surface penalty and the further evidence required
+for an operating decision. The following recommendations follow from the model boundaries.</p>
+<h3>9.1 Recommendations</h3>
+<p>Confirm the loading survey, liquid density, connected slack-surface dimensions and tank divisions for
+each intended condition. Obtain the applicable minimum stability margin, downflooding information and
+complete righting-arm curve before an operating limit is assigned. These items complete the basis
+identified in <a href="#ref-public">Reference A, sections 3.3, 4.4 and 4.8</a>.</p>
+<p>Use a supplied-table stability calculation with qualified hydrostatic and cross-curve data when a full
+loading condition is assessed. Reconcile coordinate and trim conventions at that interface. Validate
+each engineering criterion against the applicable edition before a design conclusion is issued.</p>
+<p>Where the liquid-surface penalty governs a future condition, assess longitudinal compartment divisions
+or a controlled filling arrangement against the complete loading and stability calculation. The rationale
+is the breadth dependence and mitigation discussion in <a href="#ref-public">Reference A, section 4.8.4</a>.
+A target filling percentage or retrofit requirement is not assigned without the missing tank geometry
+and operational criteria.</p>
+<h3 id="records">9.2 References and reproduction records</h3>
+<p id="ref-public">Reference A. United States Naval Academy, Principles of Ship Performance, Summer 2020:
+Equations and Conversion Factors; section 3.3; sections 4.4 and 4.8; problem 26, printed page 4-49,
+PDF page 188. <a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes%2C_Summer_2020.pdf">Public course notes</a>.
+The source inputs, access date, document digest and formula locations are retained in the source record.</p>
+<p>Reference B. <code>src/digitalmodel/naval_architecture/stability.py</code>:
+<code>free_surface_correction</code>, <code>gz_from_cross_curves</code> and
+<code>gz_with_tcg_correction</code>. Hydrostatic helpers are documented in
+<code>hydrostatics.py</code>; the broader interface map is in <code>docs/agent-pack.md</code>
+within the same package.</p>
+<p>Reference C. <code>tests/naval_architecture/test_en400_worked_examples.py</code>,
+<code>test_gz_curves.py</code>, <code>test_mesh_benchmark.py</code>,
+<code>test_loading_computer.py</code> and <code>test_holtrop_reproduction.py</code>.
+The textbook-labelled vectors are under <code>tests/fixtures/test_vectors/naval_architecture/</code>.</p>
+<p>Reference D. Additional package interfaces: <code>mesh_hydrostatics.compute_hydrostatics</code>,
+<code>trim_hydrostatics.hydrostatics_at</code>, <code>loading_computer.run_loading_computer</code>,
+<code>vessel_stability_screening</code>, <code>damage_stability_screening</code>,
+<code>tank_gauging</code>, <code>friction_scaling.transfer_model_to_ship</code>,
+<code>seakeeping</code>, <code>hull_girder_smith.smith_ultimate</code>,
+<code>turning_circle.simulate_nomoto_turning_circle</code> and
+<code>workflow.NavalArchitectureWorkflow</code>.</p>
+<p>Reference E. This report's source record is <code>example.json</code>; the source-bound software
+check record is <code>checks.json</code>; its rebuild checks are in
+<code>tests/naval_architecture/test_module_report.py</code>. Reproduction command:</p>
+<pre><code>PYTHONPATH=src python scripts/reporting/build_navalarchitecture_module_report.py --check</code></pre>
+<p>The same values are obtained with the following public call, using the input mapping from the source record:</p>
+<pre><code>import json
+from pathlib import Path
+from digitalmodel.naval_architecture.stability import free_surface_correction
+
+source = json.loads(Path("docs/reports/modules/navalarchitecture/example.json").read_text())
+correction_ft, effective_gm_ft = free_surface_correction(**source["inputs"])</code></pre>
+<p>Presentation exemplar: <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and its canonical
+brand stylesheet. The stylesheet and interactive components are embedded in this document.</p>
+</section>
+<section id="appendix">
+<h2>10 Appendices</h2>
+<p>The missing-data register and quality pre-flight record are retained with the calculation basis.
+The document remains a draft for client review while operational evidence is absent.</p>
+<h3>10.1 Data register</h3>
+$register
+<p>The assumptions define the demonstration; none is inferred from a previous vessel, field or client
+record. The tank is not accepted for an operational condition by this report.</p>
+<h3>10.2 Quality pre-flight and review notes</h3>
+<p>The public problem inputs and conversion constants are checked against the cited edition.
+Numerical text and chart points are generated from module calls. The retained document is rebuilt
+and compared byte for byte, and an independent arithmetic identity is checked. Local chart controls,
+comment export and change records are included for review. Test outcomes and exclusions are carried
+in Table C; they do not replace engineering acceptance.</p>
+$check_table
+<p>The skipped cases concern optional geometry readers, missing external fleet data and fixture
+dependency versions. The expected failure concerns missing
+hydrostatic-table data in an existing textbook-labelled example. No physical validation is inferred
+from the software outcome counts.</p>
+<p>The chart's restoring-side curve is shown in blue and its neutral boundary is dashed red.
+An operational criterion is not supplied. A result requiring further evidence is described as
+NOT_EVALUATED; it does not denote a true zero.</p>
+<details id="changes-panel"><summary>Engineering changes in this revision</summary><ul id="changes-list"></ul></details>
+<div class="review-tools" aria-label="Report comments">
+<p>Comments are retained as a separate JSON file beside the HTML. The save dialog selects the report
+folder; browsers without a save dialog download the file for placement beside the HTML. A download
+request alone does not confirm a saved copy. Reload the file to check it. Unsaved comments remain
+only in this open document.</p>
+<fieldset><legend>Comment on a section</legend>
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" maxlength="10000"></textarea>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-save" type="button">Save comments beside report</button>
+<label for="comment-load">Reload saved comments</label><input id="comment-load" type="file" accept=".json">
+<p id="comment-message" role="status">No comments have been saved.</p>
+<ol id="comment-list"></ol></fieldset>
+</div>
+</section>
+</main>
+<footer>Naval architecture module analysis · Revision $revision · Draft for client review</footer>
+</div>
+<script id="example-data" type="application/json">$example_data</script>
+<script id="changes-data" type="application/json">$changes_data</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('example-data').textContent);
+  const control = document.getElementById('sample-index');
+  control.max = data.sweep.length - 1;
+  control.value = control.max;
+  const inspect = index => {
+    const p = data.sweep[Number(index)];
+    document.getElementById('chart-readout').textContent =
+      'Public tank sensitivity; rectangular free surface; breadth ' + p.breadth_ft.toFixed(3) +
+      ' ft; effective metacentric height ' + p.effective_gm_ft.toFixed(3) +
+      ' ft; neutral boundary ' + data.derived.neutral_gm_ft.toFixed(3) +
+      ' ft; correction ' + p.correction_ft.toFixed(3) +
+      ' ft. Operational criterion is not supplied.';
+    control.value = index;
+  };
+  control.addEventListener('input', () => inspect(control.value));
+  document.querySelectorAll('.sample').forEach(point => {
+    point.addEventListener('mouseenter', () => inspect(point.dataset.index));
+    point.addEventListener('focus', () => inspect(point.dataset.index));
+  });
+  inspect(control.value);
+  const changes = JSON.parse(document.getElementById('changes-data').textContent);
+  changes.changes.forEach(change => {
+    const item = document.createElement('li');
+    item.textContent = change.description;
+    document.getElementById('changes-list').appendChild(item);
+  });
+  const sections = new Map([...document.querySelectorAll('main > section')].map(section =>
+    [section.id, section.querySelector('h2').textContent]));
+  const select = document.getElementById('comment-section');
+  sections.forEach((title, id) => {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = title;
+    select.appendChild(option);
+  });
+  const digest = document.querySelector('meta[name="report-content-digest"]').content;
+  const state = {document: changes.document, revision: changes.revision, content_digest: digest, comments: []};
+  const message = text => { document.getElementById('comment-message').textContent = text; };
+  const show = () => {
+    const list = document.getElementById('comment-list');
+    list.replaceChildren();
+    state.comments.forEach(comment => {
+      const item = document.createElement('li');
+      item.textContent = sections.get(comment.section) + ': ' + comment.text;
+      list.appendChild(item);
+    });
+  };
+  const validate = incoming => {
+    if (incoming.document !== state.document || incoming.revision !== state.revision ||
+        incoming.content_digest !== state.content_digest || !Array.isArray(incoming.comments) ||
+        incoming.comments.some(c => !c || !sections.has(c.section) ||
+          typeof c.text !== 'string' || !c.text.trim() || c.text.length > 10000))
+      throw new Error('The comments do not match this document or contain invalid entries.');
+  };
+  document.getElementById('comment-add').onclick = () => {
+    const input = document.getElementById('comment-text');
+    const text = input.value.trim();
+    if (!text) return message('Enter a comment before adding it.');
+    state.comments.push({section: select.value, text});
+    input.value = '';
+    show();
+    message('Comment added to this open document. Save comments to retain them.');
+  };
+  document.getElementById('comment-save').onclick = async () => {
+    try {
+      validate(state);
+      const text = JSON.stringify(state, null, 2) + '\n';
+      if (typeof window.showSaveFilePicker === 'function') {
+        const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+          types: [{description: 'Report comments', accept: {'application/json': ['.json']}}]});
+        const file = await handle.createWritable();
+        await file.write(text);
+        await file.close();
+        if (await (await handle.getFile()).text() !== text) throw new Error('Saved comments differ on read-back.');
+        message('Comments saved and read back. Keep the JSON beside this HTML.');
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'report.comments.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message('Comment download requested. Place it beside this HTML, then reload it to check the saved copy.');
+      }
+    } catch (error) { message(error.message); }
+  };
+  document.getElementById('comment-load').onchange = async event => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.size > 1000000) throw new Error('The comments file exceeds the supported size.');
+      const incoming = JSON.parse(await file.text());
+      validate(incoming);
+      incoming.comments.forEach(comment => {
+        if (!state.comments.some(c => c.section === comment.section && c.text === comment.text))
+          state.comments.push({section: comment.section, text: comment.text});
+      });
+      show();
+      message('Saved comments reloaded and checked against this document.');
+    } catch (error) { message(error.message); }
+    event.target.value = '';
+  };
+})();
+</script>
+</body>
+</html>
