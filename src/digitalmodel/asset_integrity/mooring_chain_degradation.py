@@ -131,13 +131,21 @@ def router(cfg: dict) -> dict:
     component_id = block.get("component_id")
     if not isinstance(component_id, str) or not component_id.strip():
         raise ValueError("component_id must be a nonempty string")
-    result = _result(_inspection(block.get("inspection")))
+    inspection = _inspection(block.get("inspection"))
+    result = _result(inspection)
     sections = {
         "Revision history": {
-            "Revision": "Initial issue",
-            "Date": "2026-10-20",
+            "Method revision": "Dimensional intake, 2026-10-20",
             "Change and reason": "Dimensional intake and explicit "
             "evidence gaps to prevent unsupported FFS acceptance.",
+        },
+        "Inputs and criteria": {
+            "Nominal diameter (mm)": inspection.nominal_diameter_mm,
+            "Maximum diameter loss (%)": f"{inspection.max_diameter_loss_fraction * 100:.1f}",
+            "Minimum area ratio (%)": f"{inspection.min_area_ratio * 100:.1f}",
+            "Operator limit reference": inspection.operator_limit_reference,
+            "Comparison basis": "Supplied operator limits; geometric intervals "
+            "do not establish capacity or clearance when applicability is flagged.",
         },
         "Disposition": {
             "Next action": result["next_action"],
@@ -145,10 +153,17 @@ def router(cfg: dict) -> dict:
             "Remaining fatigue life (years)": None,
         },
     }
-    for sample in result["dimensions"]["samples"]:
+    for reading, sample in zip(inspection.readings, result["dimensions"]["samples"]):
         sections[f"Location: {sample['location_id']}"] = {
+            "Region": reading.region,
+            "Diameter a (mm)": reading.diameter_a_mm,
+            "Diameter b (mm)": reading.diameter_b_mm,
+            "Uncertainty (mm)": reading.uncertainty_mm,
             "Status": sample["status"],
             "Mean diameter interval (mm)": _interval(sample["mean_diameter_range_mm"]),
+            "Diameter loss interval (%)": _interval(
+                sample["diameter_loss_range_fraction"], scale=100
+            ),
             "Area ratio interval (%)": _interval(sample["area_ratio_range"], scale=100),
         }
     sections["Mechanism evidence"] = {

@@ -11,6 +11,7 @@ strength, fatigue and defect methods are available.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-20 | Dimensional intake, evidence gaps and reporting are connected to prevent unsupported acceptance. |
+| Update | 2026-10-22 | Retain dimensional exceedances alongside evidence gaps, enable default configuration lookup and expose report inputs and criteria. |
 
 ## Method and scope
 
@@ -18,8 +19,9 @@ The dimensional calculation follows [IACS Recommendation 38, revision 2,
 July 2020](https://iacs.s3.af-south-1.amazonaws.com/wp-content/uploads/2022/05/20093306/rec38rev2.pdf),
 sections 1, 5.1, 5.2 and 5.4. Only the existing mobile-unit studded-chain
 subset is supported. Permanent installations and studless chains are outside
-this dimensional method. API RP 2MIM and DNV-OS-E301 are governing-practice
-references for future qualification; this workflow does not claim compliance.
+this dimensional method. API RP 2MIM (edition not reviewed) and DNV-OS-E301
+(edition not reviewed) are governing-practice references for future
+qualification; this workflow does not claim compliance.
 No licensed criteria, MBL relationship, pit coefficient or fatigue curve is
 embedded. Every operator limit and measurement uncertainty is required.
 
@@ -42,6 +44,15 @@ missing studs, geometry anomalies, pitting and unknown inspection observations
 raise applicability flags. These are escalation policies, not replacement or
 repair qualifications. Dimensional exceedance also triggers withdrawal; an
 uncertainty interval crossing a limit requires remeasurement.
+
+Applicability flags retain geometric intervals for bend and fairlead-shoulder
+readings. An interval wholly beyond a supplied limit still triggers withdrawal;
+flags withhold local clearance even when the arithmetic meets the limits.
+Unsupported measurement regions and intervals above the nominal reference
+remain unevaluated. Reports include the nominal diameter, individual readings,
+uncertainty, operator criteria and reference, and diameter-loss intervals.
+The revision entry in a generated report identifies the method revision,
+rather than claiming an issue date for the individual assessment.
 
 ## Three slices and remaining evidence
 
