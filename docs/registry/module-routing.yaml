@@ -88,6 +88,10 @@ modules:
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
   - module: corrosion
+    submodules:
+      corrosion:
+        agent_pack: src/digitalmodel/corrosion/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/corrosion/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -253,6 +257,10 @@ modules:
     key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
   - module: foam_system
+    submodules:
+      foam_system:
+        agent_pack: src/digitalmodel/foam_system/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/foam_system/
     maturity: development
     owner_wiki: docs/domains/fire_safety/foam-system-sizing.md
@@ -620,6 +628,10 @@ modules:
         agent_pack: src/digitalmodel/installation/pipelay/docs/agent-pack.md
         qa_family: IN
   - module: lifting_lug
+    submodules:
+      lifting_lug:
+        agent_pack: src/digitalmodel/lifting_lug/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/lifting_lug/
     maturity: development
     owner_wiki: docs/domains/README.md
