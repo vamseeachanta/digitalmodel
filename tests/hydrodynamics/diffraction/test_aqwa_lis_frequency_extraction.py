@@ -90,7 +90,7 @@ def test_a_long_frequency_grid_is_not_truncated():
         vals = "  ".join(f"{1.0e6 * (j + 1):.4E}" for j in range(12))
         rows.append(f"  {period:7.2f} {freq:7.3f}  {vals}")
     text = ("ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY\n"
-            "  PERIOD   FREQ\n" + "\n".join(rows) + "\n")
+            "  PERIOD   FREQ\n" + "\n".join(rows) + "\nS T A B I L I T Y\n")
     parser = AQWALISParser.__new__(AQWALISParser)
     parser.content = text
     freqs, periods = parser.extract_frequencies_and_periods()
@@ -104,7 +104,7 @@ def test_a_very_long_period_is_kept():
     text = ("ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY\n"
             "  PERIOD   FREQ\n"
             f"   150.00   0.042  {vals}\n"
-            f"    62.83   0.100  {vals}\n")
+            f"    62.83   0.100  {vals}\nS T A B I L I T Y\n")
     parser = AQWALISParser.__new__(AQWALISParser)
     parser.content = text
     freqs, periods = parser.extract_frequencies_and_periods()

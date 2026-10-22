@@ -27,6 +27,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.grid_completeness import validate_result_grid
+
 from digitalmodel.hydrodynamics.diffraction.benchmark_matrix_alignment import (
     align_matrix_sets,
 )
@@ -287,6 +289,8 @@ class MultiSolverComparator:
                 f"Vessel name mismatch across solvers: {vessel_names}"
             )
         self._validate_matrix_units()
+        for result in self._results.values():
+            validate_result_grid(result)
 
     def _validate_matrix_units(self) -> None:
         """Reject coefficient sets whose solvers disagree on units.

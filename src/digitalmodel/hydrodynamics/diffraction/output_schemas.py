@@ -392,6 +392,8 @@ class DiffractionResults:
     phase_convention: str = "unknown"  # "orcina_lag" or "iso_lead"
     unit_system: str = "SI"            # "SI" (kg,m,s) or "orcaflex" (te,m,s)
 
+    declared_frequency_count: Optional[int] = None
+
     def to_dict(self) -> Dict:
         """Convert complete results to dictionary"""
         res = {
@@ -408,6 +410,8 @@ class DiffractionResults:
             'added_mass': self.added_mass.to_dict(),
             'damping': self.damping.to_dict()
         }
+        if self.declared_frequency_count is not None:
+            res['declared_frequency_count'] = self.declared_frequency_count
         if self.hydrostatics:
             res['hydrostatics'] = self.hydrostatics.to_dict()
         return res
@@ -436,6 +440,7 @@ class DiffractionResults:
             notes=d.get('notes'),
             phase_convention=d.get('phase_convention', 'unknown'),
             unit_system=d.get('unit_system', 'SI'),
+            declared_frequency_count=d.get('declared_frequency_count'),
         )
 
 

@@ -1,0 +1,8 @@
+{
+  "document": "aqwa-listing-grid-completeness",
+  "revision": 0,
+  "date": "2026-10-22",
+  "changes": [
+    "Add generated completeness example and damaged-table refusal."
+  ]
+}

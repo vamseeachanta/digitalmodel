@@ -17,7 +17,12 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     RAOComponent, HydrodynamicMatrix,
     FrequencyData, HeadingData, DOF
 )
-from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import parse_aqwa_lis_file
+from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import (
+    AQWALISParser, parse_aqwa_lis_file,
+)
+from digitalmodel.hydrodynamics.diffraction.grid_completeness import (
+    validate_parsed_grid, validate_result_grid,
+)
 
 
 class AQWAConverter:
@@ -108,8 +113,10 @@ class AQWAConverter:
             notes="Converted from AQWA analysis results",
             phase_convention="orcina_lag",
             unit_system="SI",
+            declared_frequency_count=AQWALISParser(self.lis_file).declared_frequency_count,
         )
 
+        validate_result_grid(results)
         return results
 
     def _extract_rao_data(self) -> Dict:
@@ -131,6 +138,7 @@ class AQWAConverter:
         # Parse the .LIS file
         parsed_data = parse_aqwa_lis_file(self.lis_file)
 
+        validate_parsed_grid(parsed_data)
         frequencies = np.array(parsed_data['frequencies'])
         headings = np.array(parsed_data['headings'])
         raos = parsed_data['raos']
@@ -191,17 +199,11 @@ class AQWAConverter:
         # Parse the .LIS file
         parsed_data = parse_aqwa_lis_file(self.lis_file)
 
+        validate_parsed_grid(parsed_data)
         frequencies = np.array(parsed_data['frequencies'])
         added_mass_matrices = parsed_data['added_mass']
 
-        # Convert dictionary to sorted list of matrices
-        matrices = []
-        for freq in frequencies:
-            if freq in added_mass_matrices:
-                matrices.append(added_mass_matrices[freq])
-            else:
-                logger.warning(f"Added mass matrix missing for frequency {freq:.3f} rad/s")
-                matrices.append(np.zeros((6, 6)))
+        matrices = [added_mass_matrices[freq] for freq in frequencies]
 
         added_mass_data = {
             'frequencies': frequencies,
@@ -224,17 +226,11 @@ class AQWAConverter:
         # Parse the .LIS file
         parsed_data = parse_aqwa_lis_file(self.lis_file)
 
+        validate_parsed_grid(parsed_data)
         frequencies = np.array(parsed_data['frequencies'])
         damping_matrices = parsed_data['damping']
 
-        # Convert dictionary to sorted list of matrices
-        matrices = []
-        for freq in frequencies:
-            if freq in damping_matrices:
-                matrices.append(damping_matrices[freq])
-            else:
-                logger.warning(f"Damping matrix missing for frequency {freq:.3f} rad/s")
-                matrices.append(np.zeros((6, 6)))
+        matrices = [damping_matrices[freq] for freq in frequencies]
 
         damping_data = {
             'frequencies': frequencies,

@@ -23,6 +23,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 
+from digitalmodel.hydrodynamics.diffraction.grid_completeness import validate_result_grid
+
 from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
     AbscissaGapError,
     AbscissaOrderError,
@@ -127,6 +129,8 @@ class DiffractionComparator:
         self.aqwa = aqwa_results
         self.orcawave = orcawave_results
         self.tolerance = tolerance
+        for result in (self.aqwa, self.orcawave):
+            validate_result_grid(result)
 
         # Verify same vessel
         if self.aqwa.vessel_name != self.orcawave.vessel_name:
