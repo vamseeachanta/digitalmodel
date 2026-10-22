@@ -1,0 +1,237 @@
+{
+  "arrangements": {
+    "rechecked": {
+      "anode_count": 424,
+      "checks": [
+        {
+          "margin_percent": 0.20226770529361282,
+          "passes": true,
+          "provided": 9157.742585214248,
+          "quantity": "Mean-current lifetime mass",
+          "required": 9139.256820163213,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 1277.6112545923665,
+          "passes": true,
+          "provided": 656.4285407382255,
+          "quantity": "Initial current output",
+          "required": 47.649766111446425,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 271.60297693716234,
+          "passes": true,
+          "provided": 489.7203836336474,
+          "quantity": "Final current output",
+          "required": 131.7859150833602,
+          "unit": "A"
+        }
+      ]
+    },
+    "stated": {
+      "anode_count": 252,
+      "checks": [
+        {
+          "margin_percent": -40.44582202421228,
+          "passes": false,
+          "provided": 5442.809272344317,
+          "quantity": "Mean-current lifetime mass",
+          "required": 9139.256820163213,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 718.7689532011236,
+          "passes": true,
+          "provided": 390.1414911934736,
+          "quantity": "Initial current output",
+          "required": 47.649766111446425,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 120.85837308529457,
+          "passes": true,
+          "provided": 291.0602280086772,
+          "quantity": "Final current output",
+          "required": 131.7859150833602,
+          "unit": "A"
+        }
+      ]
+    }
+  },
+  "sensitivity": [
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -18.368003434986914,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 6667.494979140407,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 154.88471164880778,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 114.19289376983653,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 99,
+      "count_by_initial_current": 31,
+      "count_by_mass": 309,
+      "evaluated_years": 20.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 309
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -40.44582202421228,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 9139.256820163213,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 120.85837308529457,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 131.7859150833602,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 115,
+      "count_by_initial_current": 31,
+      "count_by_mass": 424,
+      "evaluated_years": 25.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 424
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -54.388492607951065,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 11932.973899681105,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 94.84690079420648,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 149.37893639688392,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 130,
+      "count_by_initial_current": 31,
+      "count_by_mass": 553,
+      "evaluated_years": 30.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 553
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -79.32644169892372,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 26327.39460270349,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 32.449999923529774,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 219.7510216509787,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 191,
+      "count_by_initial_current": 31,
+      "count_by_mass": 1219,
+      "evaluated_years": 50.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 1219
+    }
+  ],
+  "zone_demand_A": {
+    "buried": {
+      "I_final_A": 36.7566,
+      "I_initial_A": 36.7566,
+      "I_mean_A": 36.7566
+    },
+    "water-lower": {
+      "I_final_A": 39.5945,
+      "I_initial_A": 5.5629,
+      "I_mean_A": 15.7069
+    },
+    "water-upper": {
+      "I_final_A": 55.4348,
+      "I_initial_A": 5.3303,
+      "I_mean_A": 22.6536
+    }
+  }
+}

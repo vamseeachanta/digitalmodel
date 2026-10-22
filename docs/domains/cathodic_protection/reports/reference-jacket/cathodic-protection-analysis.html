@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cathodic protection analysis: jacket at 60 m water depth — Revision 0 — Issued for information</title>
+<title>Cathodic protection analysis: jacket at 60 m water depth — Revision 01 — Issued for information</title>
 <script type="text/javascript">/**
 * plotly.js v2.26.0
 * Copyright 2012-2023, Plotly, Inc.
@@ -411,6 +411,14 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
   a{color:inherit;text-decoration:none}
 }
 
+body.doc{min-width:0;width:100%}
+.wrap,main,section{min-width:0;max-width:100%;box-sizing:border-box}
+.tbl-wrap{max-width:100%;overflow-x:auto}
+#cp-review-ui{padding:24px;overflow-wrap:anywhere}
+#cp-review-ui label{display:block;margin:10px 0}
+#cp-review-ui pre{white-space:pre-wrap}
+#cp-review-ui input,#cp-review-ui select,#cp-review-ui textarea{max-width:100%}
+@media print { #cp-review-ui{display:none} }
 @media print {
 .doc .toc{display:none}
 .doc .shell{display:block}
@@ -423,8 +431,9 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 </style>
 </head>
 <body class="doc">
-<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Revision 0 — Issued for information</span></div></header>
-<div class="hero"><div class="wrap"><h1>Cathodic protection analysis: jacket at 60 m water depth</h1><p>Revision 0 — Issued for information</p>
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Revision 01 — Issued for information</span></div></header>
+<div class="hero"><div class="wrap"><h1>Cathodic protection analysis: jacket at 60 m water depth</h1>
+<p class="example-basis">Worked example on published geometry. No installation is represented.</p><p>Revision 01 — Issued for information</p>
 <p>DNV-RP-B401 — May 2021</p>
 </div></div>
 <div class="wrap shell">
@@ -448,7 +457,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <div class="l1head"><span class="secnum applabel">1</span><h2>Executive Summary</h2></div>
 
     <div class="prose">
-<p>The reference jacket at 60.0 m water depth is analysed with 252 anodes. Aggregate lifetime mass and initial and final current output are compared with the required quantities below, using DNV-RP-B401, Cathodic protection design, May 2021 <a href="#reference-3">[3]</a>. Issued for information on a declared assumed basis. With buried piles bare, 5442.8 kg is provided against 9139.3 kg required: the lifetime mass criterion fails, with a 40.4 % shortfall relative to required mass. The re-sized solution is 424 anodes and passes the aggregate mass and initial/final current criteria on this basis. Environmental, water-column coating, lifetime and anode inputs are assumed. Spatial protection, splash exposure and installed piles remain unresolved. The way forward is to use the re-sized count for this reference basis, qualify product and installation inputs and assess spatial protection.</p>
+<p>The reference jacket at 60.0 m water depth is analysed with 252 anodes. Aggregate lifetime mass and initial and final current output are compared with the required quantities below, using DNV-RP-B401, Cathodic protection design, May 2021 <a href="#reference-3">[3]</a>. Issued for information on a declared assumed basis. This is a worked example on published geometry with synthetic CP inputs. With buried piles bare, 5442.8 kg is provided against 9139.3 kg required: the lifetime mass criterion fails, with a 40.4 % shortfall relative to required mass. The re-sized solution is 424 anodes and passes the aggregate mass and initial/final current criteria on this basis. Environmental, water-column coating, lifetime and anode inputs are assumed. Spatial protection, splash exposure and installed piles remain unresolved. The way forward is to use the re-sized count for this reference basis, qualify product and installation inputs and assess spatial protection.</p>
     </div>
 </section>
 <section id="revision-history">
@@ -461,6 +470,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
             <tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
           </thead>
           <tbody>
+            <tr><td>1</td><td>2026-10-22</td><td>Published-geometry worked example label added; calculated results retained.</td></tr>
             <tr><td>0</td><td>2026-10-14</td><td>Issued for information.</td></tr>
           </tbody>
         </table>
@@ -879,6 +889,201 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     </div>
 </section>
 </main></div>
-<footer><div class="wrap">Revision 0 — Issued for information</div></footer>
-</body>
+<footer><div class="wrap">Revision 01 — Issued for information</div></footer>
+<!--CP_REVIEW_START--><section id="cp-review-ui" aria-label="Report comments">
+<h2>Review comments</h2><p>Select this HTML and load its matching JSON sidecar.
+Re-select the HTML before each Save or Copy. Files remain on your computer.</p>
+<label>Current HTML <input id="cp-html" type="file" accept=".html"></label>
+<label>Load comments <input id="cp-load" type="file" accept=".json"></label>
+<label>Reviewer <input id="cp-reviewer" maxlength="120"></label>
+<label>Section <select id="cp-section"></select></label>
+<button id="cp-quote" type="button">Capture selected report text</button>
+<label>Quoted text <textarea id="cp-quoted" maxlength="10000" readonly></textarea></label>
+<label>Decision <select id="cp-decision"><option>pending</option><option>accept</option>
+<option>revise</option><option>reject</option></select></label>
+<label>Comment <textarea id="cp-comment" maxlength="10000"></textarea></label>
+<label>Disposition <select id="cp-disposition"><option>requiring a decision</option>
+<option>incorporated</option><option>deferred</option></select></label>
+<label>Disposition reason <input id="cp-reason" maxlength="2000"></label>
+<button id="cp-add" type="button">Record comment and decision</button>
+<button id="cp-save" type="button">Save JSON</button>
+<button id="cp-copy" type="button">Copy JSON</button>
+<p>Save As is used where supported; otherwise Save uses your browser's Downloads
+destination. Re-load the saved JSON to verify the durable copy.</p>
+<p id="cp-message" role="status">Not bound to a report file.</p>
+<pre id="cp-preview"></pre></section><script id="cp-review-config" type="application/json">{"report_id": "REFERENCE-JACKET", "revision": "01", "content_sha256": "658bcb98e1d99df83e6c92d628dfce20a40a8820a108c9dc0eb47b3dd8d1e548", "sections": [{"id": "analysis-1", "title": "Executive Summary"}, {"id": "revision-history", "title": "Revision history"}, {"id": "analysis-2", "title": "Introduction"}, {"id": "analysis-3", "title": "Design Data"}, {"id": "analysis-4", "title": "Analysis Methodology"}, {"id": "analysis-5", "title": "Detailed Results"}, {"id": "analysis-6", "title": "Key Findings"}, {"id": "analysis-7", "title": "Limitations"}, {"id": "analysis-8", "title": "Recommendations"}, {"id": "analysis-9", "title": "References"}, {"id": "analysis-10", "title": "Acronyms and Symbols"}, {"id": "structural-evidence", "title": "Structural evidence"}, {"id": "reproduction", "title": "Reproduction"}]}</script><script>/* Offline portfolio review: bind full HTML to a separately supplied receipt. */
+(() => {
+  'use strict';
+  const config = JSON.parse(document.getElementById('cp-review-config').textContent);
+  const el = id => document.getElementById(`cp-${id}`);
+  const allowed = new Set(['pending', 'accept', 'revise', 'reject']);
+  const ids = new Set(config.sections.map(section => section.id));
+  let state = null;
+  let selectedHash = null;
+  let verifiedForSave = false;
+  const message = text => { el('message').textContent = text; };
+  const show = () => { el('preview').textContent = JSON.stringify(state, null, 2); };
+  const unique = values => [...new Map(values.map(v => [JSON.stringify(v), v])).values()];
+  const sha256 = async data => [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))]
+    .map(v => v.toString(16).padStart(2, '0')).join('');
+
+  for (const section of config.sections) {
+    const option = document.createElement('option');
+    option.value = section.id;
+    option.textContent = section.title;
+    el('section').appendChild(option);
+  }
+
+  function validate(incoming) {
+    if (!incoming || incoming.schema_version !== 1 ||
+        incoming.report_id !== config.report_id || incoming.revision !== config.revision ||
+        incoming.report_sha256 !== selectedHash || !selectedHash)
+      throw new Error('Report identity, revision or full HTML digest mismatch.');
+    if (incoming.standard_revision !== 'c955b86159acc4f9e9f5964690c24dd1411e5b48')
+      throw new Error('Unknown reporting standard revision.');
+    if (!Array.isArray(incoming.results) || incoming.results.length !== ids.size ||
+        new Set(incoming.results.map(row => row && row.id)).size !== ids.size ||
+        incoming.results.some(row => !row || !ids.has(row.id) || !allowed.has(row.decision)))
+      throw new Error('Missing, duplicate or invalid review decision.');
+    for (const field of ['comments', 'prior_rounds', 'decision_conflicts'])
+      if (!Array.isArray(incoming[field])) throw new Error(`Invalid ${field}.`);
+    if (incoming.comments.some(c => !c || !ids.has(c.section) ||
+        typeof c.text !== 'string' || typeof c.reviewer !== 'string' ||
+        typeof c.id !== 'string' || typeof c.quote !== 'string' ||
+        !['incorporated', 'deferred', 'requiring a decision'].includes(c.disposition) ||
+        (c.disposition === 'deferred' && !c.reason)))
+      throw new Error('Invalid review comment.');
+  }
+
+  el('html').onchange = async () => {
+    verifiedForSave = false;
+    selectedHash = null;
+    try {
+      const file = el('html').files[0];
+      if (!file) return;
+      const data = await file.arrayBuffer();
+      const text = new TextDecoder('utf-8', {fatal: true}).decode(data);
+      const start = '<!-' + '-CP_REVIEW_START-->';
+      const end = '<!-' + '-CP_REVIEW_END-->';
+      const core = text.replace(new RegExp(start + '[\\s\\S]*?' + end), '');
+      if (await sha256(new TextEncoder().encode(core)) !== config.content_sha256)
+        throw new Error('Selected HTML content differs from this open report.');
+      selectedHash = await sha256(data);
+      if (state) validate(state);
+      verifiedForSave = true;
+      message(state ? 'HTML matches loaded review. Save or Copy enabled once.' :
+        'HTML selected. Load its matching comments JSON to bind this review.');
+    } catch (error) { message(error.message); }
+    el('html').value = '';
+  };
+
+  function merge(incoming) {
+    if (!state) { state = incoming; return; }
+    const prior = JSON.parse(JSON.stringify({...state, prior_rounds: []}));
+    const other = JSON.parse(JSON.stringify({...incoming, prior_rounds: []}));
+    const queue = [...state.prior_rounds, ...incoming.prior_rounds, prior, other];
+    const flattened = [];
+    for (let i = 0; i < queue.length; i++) {
+      const round = queue[i];
+      if (!round || typeof round !== 'object') continue;
+      if (Array.isArray(round.prior_rounds)) queue.push(...round.prior_rounds);
+      flattened.push(JSON.parse(JSON.stringify({...round, prior_rounds: []})));
+    }
+    for (const row of state.results) {
+      const next = incoming.results.find(r => r.id === row.id);
+      if (row.decision === 'pending') row.decision = next.decision;
+      else if (next.decision !== 'pending' && row.decision !== next.decision)
+        state.decision_conflicts.push({section: row.id, retained: row.decision,
+          incoming: next.decision, resolution: 'pending'});
+    }
+    state.comments = unique([...state.comments, ...incoming.comments]);
+    state.decision_conflicts = unique([...state.decision_conflicts, ...incoming.decision_conflicts]);
+    state.prior_rounds = unique(flattened);
+  }
+
+  el('load').onchange = async () => {
+    try {
+      const file = el('load').files[0];
+      if (!file) return;
+      if (file.size > 5000000) throw new Error('Review JSON exceeds the 5 MB limit.');
+      const incoming = JSON.parse(await file.text());
+      validate(incoming);
+      merge(incoming);
+      show();
+      message('Matching review loaded; any conflicting decisions remain recorded.');
+    } catch (error) { message(error.message); }
+    el('load').value = '';
+  };
+
+  el('add').onclick = () => {
+    if (!state) return message('Bind HTML and load matching JSON first.');
+    const reviewer = el('reviewer').value.trim();
+    const text = el('comment').value.trim();
+    if (!reviewer || !text) return message('Enter reviewer and comment text.');
+    const section = el('section').value;
+    const disposition = el('disposition').value;
+    const reason = el('reason').value.trim();
+    if (disposition === 'deferred' && !reason) return message('A deferred comment requires a reason.');
+    state.comments.push({id: crypto.randomUUID(), section, reviewer, text,
+      quote: el('quoted').value, disposition, reason, recorded_at: new Date().toISOString()});
+    const row = state.results.find(result => result.id === section);
+    const decision = el('decision').value;
+    if (row.decision !== 'pending' && row.decision !== decision)
+      state.decision_conflicts.push({section, retained: row.decision,
+        incoming: decision, resolution: 'pending'});
+    else row.decision = decision;
+    el('comment').value = '';
+    show();
+    message('Comment recorded locally. Save JSON to retain it after closing.');
+  };
+
+  el('quote').onclick = () => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return message('Select report text first.');
+    const node = selection.anchorNode;
+    const section = (node.nodeType === 1 ? node : node.parentElement).closest('section');
+    if (!section || !ids.has(section.id)) return message('Select text inside a calculation or review section.');
+    el('section').value = section.id;
+    el('quoted').value = selection.toString().slice(0, 10000);
+    message('Quoted text and revision-specific section captured.');
+  };
+
+  function exportJson() {
+    if (!state || !verifiedForSave) throw new Error('Re-select the current HTML before Save or Copy.');
+    validate(state);
+    verifiedForSave = false;
+    return JSON.stringify(state, null, 2) + '\n';
+  }
+
+  el('save').onclick = async () => {
+    try {
+      const data = exportJson();
+      if (typeof window.showSaveFilePicker === 'function') {
+        const handle = await window.showSaveFilePicker({suggestedName: `${config.report_id}.comments.json`,
+          types: [{description: 'Review JSON', accept: {'application/json': ['.json']}}]});
+        const writable = await handle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        if (await (await handle.getFile()).text() !== data) throw new Error('Saved JSON read-back differs.');
+        return message('JSON saved and read back successfully.');
+      }
+      const url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${config.report_id}.comments.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      message('JSON download requested in browser Downloads. Re-load it to verify the saved copy.');
+    } catch (error) { message(error.message); }
+  };
+
+  el('copy').onclick = async () => {
+    try {
+      const data = exportJson();
+      await navigator.clipboard.writeText(data);
+      message('JSON copied. Re-select HTML before another export.');
+    } catch (error) { message(`${error.message} Use Save JSON if clipboard access is unavailable.`); }
+  };
+})();
+</script><!--CP_REVIEW_END--></body>
 </html>

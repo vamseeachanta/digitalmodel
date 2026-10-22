@@ -49,6 +49,36 @@
       "source_project": null,
       "source_sibling": "generic",
       "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Recommendation basis; repository rule register",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "dnv-rp-b401 2021 [4.7.1] Eq. (4.2) (anode mass)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Recommendation basis; repository rule register",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Recommendation basis; repository rule register",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "dnv-rp-b401 2021 [7.4.1], [7.5.3] (retrofit evidence)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
     }
   ]
 }

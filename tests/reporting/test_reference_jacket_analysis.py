@@ -162,13 +162,16 @@ def test_structural_mass_comparison_uses_the_printed_total_basis(builder):
     assert informative.rows[0][1] == "1,021,365"
 
 
-def test_single_issued_revision_matches_masthead_and_footer(builder, tmp_path):
+def test_public_revision_preserves_history_and_matches_masthead_and_footer(builder, tmp_path):
     history = builder.revision_history().blocks[0]
-    assert history.rows == [["0", "2026-10-14", "Issued for information."]]
+    assert history.rows == [
+        ["1", "2026-10-22", "Published-geometry worked example label added; calculated results retained."],
+        ["0", "2026-10-14", "Issued for information."],
+    ]
     page = builder.build(tmp_path)[0].read_text()
     for tag in ("header", "footer"):
         content = re.search(fr"<{tag}.*?</{tag}>", page, re.S).group()
-        assert "Revision 0" in content
+        assert "Revision 01" in content
     assert "to align the basis with" not in page
 
 

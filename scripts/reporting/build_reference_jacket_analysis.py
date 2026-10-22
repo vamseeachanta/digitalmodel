@@ -216,16 +216,17 @@ def sensitivity_table(evidence: dict[str, Any]) -> TableBlock:
 
 
 def revision_history() -> Section:
-    """Record the single issued revision of the sample analysis."""
+    """Retain the issued history and record the public example data basis."""
     return Section(key="revision-history", title="Revision history", blocks=[
         TableBlock(title="Revision history", columns=["Revision", "Date", "What changed and why"],
-            rows=[["0", "2026-10-14", "Issued for information."]]),
+            rows=[["1", "2026-10-22", "Published-geometry worked example label added; calculated results retained."],
+                  ["0", "2026-10-14", "Issued for information."]]),
     ])
 
 
 def build_document() -> tuple[ReportSpec, dict[str, Any]]:
     """Build an issued reference analysis on the declared assumed basis."""
-    cfg = run_cathodic_protection(yaml.safe_load(FIXTURE.read_text()))
+    cfg = run_cathodic_protection(yaml.safe_load(FIXTURE.read_text(encoding="utf-8")))
     arrangements = reference_arrangements(cfg)
     evidence: dict[str, Any] = {
         "status": "Issued for information",
@@ -242,6 +243,9 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
         for z in cfg["inputs"]["structure"]["zones"]
     }
     spec = anode_design_report(cfg)
+    spec.document.project = "Worked example on published geometry"
+    spec.document.revision = "01"
+    spec.document.number = spec.document.number[:-2] + "01"
     blocks = section_blocks(cfg, evidence, spec)
     spec.sections = [Section(key=f"analysis-{i}", title=title, blocks=content)
                      for i, (title, content) in enumerate(zip(SECTION_TITLES, blocks), 1)]
@@ -291,6 +295,7 @@ def summary_text(cfg: dict[str, Any], evidence: dict[str, Any]) -> str:
         "Aggregate lifetime mass and initial and final current output are compared with "
         "the required quantities below, using DNV-RP-B401, Cathodic protection design, "
         "May 2021 [3]. Issued for information on a declared assumed basis. "
+        "This is a worked example on published geometry with synthetic CP inputs. "
         f"With buried piles bare, {mass['provided']:.1f} kg is provided against "
         f"{mass['required']:.1f} kg required: the lifetime mass criterion fails, "
         f"with a {-mass['margin_percent']:.1f} % shortfall relative to required mass. "
@@ -422,14 +427,14 @@ def build(destination: Path) -> list[Path]:
     """Write deterministic HTML and its numerical/citation evidence sidecar."""
     spec, evidence = build_document()
     spec.sections.insert(1, revision_history())
-    revision = spec.sections[1].blocks[0].rows[-1][0]
+    revision = spec.sections[1].blocks[0].rows[0][0]
     page = presentation(render_html(spec), revision)
     destination.mkdir(parents=True, exist_ok=True)
     report = destination / "cathodic-protection-analysis.html"
     report.write_text(page, encoding="utf-8", newline="\n")
     evidence["report_sha256"] = digest(report)
     sidecar = destination / "cathodic-protection-analysis.citations.json"
-    sidecar.write_text(json.dumps(evidence, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    sidecar.write_text(json.dumps(evidence, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return [report, sidecar]
 
 
