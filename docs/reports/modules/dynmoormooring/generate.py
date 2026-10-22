@@ -8,7 +8,6 @@ Dependencies: source checkout, numpy and PyYAML (package imports).
 import argparse
 import ast
 import csv
-import hashlib
 import html
 import json
 import math
@@ -60,11 +59,11 @@ def value_span(key, value):
 
 
 def compute(work_dir):
-    cfg = json.loads((HERE / "example.json").read_text())
+    cfg = json.loads((HERE / "example.json").read_text(encoding="utf-8"))
     inputs = json.loads(json.dumps(cfg["dynmoor_mooring"]))
     cfg["dynmoor_mooring"]["output_dir"] = str(Path(work_dir).resolve())
     result = router(cfg)["dynmoor_mooring"]
-    with Path(result["line_tables_csv"]).open() as stream:
+    with Path(result["line_tables_csv"]).open(encoding="utf-8") as stream:
         table = [{key: float(value) if key != "model" else value
                   for key, value in row.items()} for row in csv.DictReader(stream)]
     return {"inputs": inputs, "lines": result["lines"],
@@ -157,9 +156,10 @@ def build(work_dir):
     exemplar = (ROOT / STYLE).read_text(encoding="utf-8")
     style = re.search(r"<style>.*?</style>", exemplar, re.S).group()
     brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
-    changes = {"revision": "Initial", "changes": [
+    changes = {"revision": "1", "changes": [
         "Static spread-mooring calculations and legacy comparison evidence are documented.",
-        "Operating limits and dynamic response remain not evaluated."
+        "Operating limits and dynamic response remain not evaluated.",
+        "Equation sources, independent static checks and portable report output are documented."
     ]}
     replacements = {
         "STYLE": f"<style>{brand}</style>{style}",
@@ -198,12 +198,8 @@ def build(work_dir):
 def source_table():
     rows = []
     for path in SOURCES:
-        # Normalize checkout line endings so source identities are portable.
-        content = (ROOT / path).read_text(encoding="utf-8").encode("utf-8")
-        digest = hashlib.sha256(content).hexdigest()
-        rows.append(f'<tr><td><a href="../../../../{path}">{path}</a></td>'
-                    f'<td><code>{digest}</code></td></tr>')
-    return '<table><tr><th>Repository source</th><th>Normalized content digest</th></tr>' + ''.join(rows) + '</table>'
+        rows.append(f'<tr><td><a href="../../../../{path}">{path}</a></td></tr>')
+    return '<table><tr><th>Repository source</th></tr>' + ''.join(rows) + '</table>'
 
 
 def main():
@@ -212,7 +208,7 @@ def main():
     args = parser.parse_args()
     document, changes = build(args.work_dir)
     (HERE / "report.html").write_text(document, encoding="utf-8", newline="\n")
-    (HERE / "changes.json").write_text(json.dumps(changes, indent=2) + "\n", encoding="utf-8")
+    (HERE / "changes.json").write_text(json.dumps(changes, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

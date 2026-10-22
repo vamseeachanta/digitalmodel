@@ -6,7 +6,7 @@
 <style>svg{width:100%;height:auto}svg text{font:13px sans-serif;fill:var(--ink)}circle:focus,circle:hover{stroke:var(--nogo);stroke-width:3}td{overflow-wrap:anywhere}code{word-break:break-all}textarea{width:100%;min-height:6em}details{margin:1em 0}button,select,input{font:inherit;margin:.3em;padding:.4em}pre{white-space:pre-wrap}table{display:block;overflow-x:auto}h1,h2,h3,th{font-weight:500}</style>
 </head><body class="hs-doc"><main class="wrap">
 <header><p class="kicker">Mooring analysis</p><h1>Static spread-mooring module assessment</h1>
-<p>Draft for client review</p></header>
+<p>Draft for maintainer review</p></header>
 <section id="summary"><h2>1. Executive Summary</h2>
 <p>The mooring module is a static line-response and passing-body force calculator. Analysis is performed to determine the available static calculation capability and the key results are summarized below.</p>
 <ul><li>The synthetic spread example establishes a reproducible prescribed-offset calculation.
@@ -15,9 +15,13 @@
 <li>An operating envelope is not established.
 <ul><li>The plotted breaking-strength reference is not an allowable tension. A governing design criterion and environmental demand are required before a connected operating limit is determined.</li>
 <li>Dynamic response and failure transients are not evaluated because the time integration method is absent.</li></ul></li></ul>
-<p>Revision history: Initial issue — the static calculation basis, reproducible example and missing acceptance evidence are presented together.</p>
 <details id="change-panel"><summary>Engineering changes</summary><ul id="changes"></ul></details>
 </section>
+<section id="revision-history"><h3>Revision history</h3>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Initial</td><td>2026-10-21</td><td>Initial issue — the static calculation basis, reproducible example and missing acceptance evidence are presented together.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Published equation sources, an independent catenary check and portable text output are added to qualify the numerical evidence and reproduction method.</td></tr></table>
+<p>Revision history table. Issued changes and their purpose.</p></section>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>A spread of chain lines connects fixed seabed anchors to moving hull fairleads. Static analysis is performed at prescribed surge, sway and yaw positions using load–distance tables and interpolated line forces.</p>
 <p>The example is synthetic public repository data, not a measured installation. The routed interface accepts a configuration dictionary, writes comma-separated result files and returns the enriched dictionary. The same underlying static functions are available for direct calculations. The public source records are identified in Section 9.2.</p>
@@ -45,17 +49,20 @@
 <text x="370" y="205">Horizontal span U</text></svg>
 <figcaption>Figure 2. Single-line boundary conditions. Seabed contact and friction act on the grounded chain. The fairlead carries horizontal and vertical force; the anchor remains fixed.</figcaption></figure>
 <h3>4.2 Equations and calculation sequence</h3>
-<p>The following equations describe the grounded, flat-bottom branch used for the low-load portion of this example. The implementation changes branch after the entire line lifts from the bottom. Equation sources are the legacy static implementation and its documentation, identified in Section 9.2; these are implementation sources, not a design standard.</p>
+<p>The following equations describe the grounded, flat-bottom branch used for the low-load portion of this example. The implementation changes branch after the entire line lifts from the bottom. The catenary relations follow the force-balance derivation in <a href="https://cmoe-tudelft.github.io/FloatingSubmergedStructures/main/contents/mooring_systems/catenary/single_segment_line/index.html">Floating and Submerged Structures, Section 28.1.1, derivation Steps 1–4</a>. With zero vertical tension at touchdown, integration gives the suspended span and length; vector resolution gives T = √(H² + (ws)²) = H + wd. Repository locators in Section 9.2 identify the implemented approximation.</p>
 <div class="eq">c = H / w; &nbsp; s = √[d(2c + d)]; &nbsp; z = L − s<br>
 U = c asinh(s/c) + z + ΔU; &nbsp; T = H + wd</div>
 <p>H is horizontal fairlead force, w is submerged line weight per length, d is vertical rise, s is suspended length, z is grounded length, L is total unstretched length, U is horizontal span, ΔU is the implemented elastic extension and T is total fairlead tension. Forces use pounds and lengths use feet in these equations.</p>
 <div class="eq">H<sub>a</sub> = max(H − μwz, 0)<br>
 ΔU = Hs/(EA) + (2H − μwz)z/(2EA), when H &gt; μwz</div>
-<p>H<sub>a</sub> is horizontal anchor pull, μ is bottom friction as a fraction, and EA is axial stiffness: area multiplied by apparent modulus in consistent units. When friction exhausts the grounded-chain force, the implementation integrates extension over the loaded part of the grounded length. The chain submerged-weight multiplier is {{WEIGHT_FACTOR}}, read from the legacy material definition; it is not a measured buoyancy correction.</p>
+<p>H<sub>a</sub> is horizontal anchor pull, μ is bottom friction as a fraction, and EA is axial stiffness: area multiplied by apparent modulus in consistent units. The extension is obtained by integrating horizontal strain H/(EA) over suspended length and max(H − μwℓ, 0)/(EA) along grounded length ℓ. This applies linear elasticity from <a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">University Physics Volume 1, Section 12.3, Tensile Stress and Strain</a> to the frictional tension gradient described in <a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linetheory,Analyticcatenary.htm">Line theory: Analytic catenary, Laid down line and Seabed friction</a>. When friction exhausts tension, only the loaded grounded length extends. The legacy approximation adds horizontal extension to the inextensible profile; vertical elastic displacement is omitted, so these are not fully coupled elastic-catenary equations.</p>
+<div class="eq">w/w<sub>air</sub> = 1 − ρ<sub>sw</sub>/ρ<sub>steel</sub> ≈ {{WEIGHT_FACTOR}}</div>
+<p>The weight ratio follows buoyancy in <a href="https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy">University Physics Volume 1, Section 14.4</a>. Representative seawater and steel densities are 1025 kg/m³ and 7800 kg/m³, from <a href="https://openstax.org/books/college-physics-2e/pages/11-2-density">College Physics 2e, Section 11.2, Table 11.1</a>; their ratio gives {{WEIGHT_FACTOR}} to two decimal places. These are illustrative tabulated values, not measurements at a qualified site condition. This explains the legacy rounded multiplier; neither density is measured for this synthetic example, and the historical density pair is not established. The calculation retains the implementation multiplier rather than substituting the unrounded ratio.</p>
 <div class="eq">H<sub>j</sub> = B[j/(N − 1)]²; &nbsp; P = pB/100<br>
 F<sub>i</sub> = H<sub>i</sub>(a<sub>i</sub> − r<sub>i</sub>)/|a<sub>i</sub> − r<sub>i</sub>|;<br>
 M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
 <p>B is minimum segment breaking strength, j is the zero-based table index, N is the table length, P is prescribed pretension and p is its percentage of B. The table contains {{TABLE_ROWS}} rows, as defined by the implementation. Quadratic interpolation, with a linear low-load branch, supplies force at intermediate spans. The position vectors a and r denote the fixed anchor and displaced fairlead; the subscript identifies a line. The summed forces are rotated into hull axes. M is yaw moment about the displaced hull origin; positive surge is forward and positive sway is starboard.</p>
+<p>The sampling grid and pretension percentage are implementation definitions, not published design criteria. Force direction follows the unit-vector construction in <a href="https://openstax.org/books/university-physics-volume-1/pages/2-2-coordinate-systems-and-components-of-a-vector">University Physics Volume 1, Section 2.2</a>; the yaw sum is the planar cross product from <a href="https://openstax.org/books/university-physics-volume-1/pages/10-6-torque">Section 10.6, Torque</a>, taken about the displaced hull origin.</p>
 <p>The routed example is evaluated in still water at its initial and displaced positions. Current loading and wave-driven response are not added because the required dynamic calculation chain is not implemented.</p>
 </section>
 <section id="results-section"><h2>5. Detailed Results</h2>
@@ -65,6 +72,7 @@ M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
 <figure>{{CHART}}<figcaption>Figure 3. Total fairlead tension versus horizontal span for the synthetic chain. Hover over a point for component, demand, reference strength and units. The red dashed line is the input breaking strength; no allowable-tension line is established.</figcaption></figure>
 {{LINE_TABLE}}<p>Table 1. Initial line settings returned by the static workflow. Source: returned static calculation, Section 9.2.</p>
 <p>The existing tests compare the single-chain table and pretension geometry with frozen printed legacy results. Separate comparisons cover a segmented line with buoyancy and parallel and perpendicular passing-body force histories. Arithmetic-transliteration comparisons test agreement with the same method; they do not provide independent physical validation. Symmetry, force direction, interpolation, broken-line zeroing and separation guards are also exercised.</p>
+<p>The report tests separately integrate the grounded catenary and horizontal strain from the recorded fixture constants, place anchors from the independent pretension span, and bisect the span equation for each displaced line without calling the implementation. The pretension span is compared within 0.002 ft; displaced surge, sway and individual horizontal tensions are compared within 0.05 kip, and yaw within 1 kip-ft. These are absolute interpolation tolerances for this fixture and the stated horizontal-stretch approximation, not design acceptance limits or measured validation.</p>
 <h3>5.2 Prescribed displacement</h3>
 {{OFFSET_TABLE}}<p>Table 2. Restoring forces at the supplied offsets, with surge, sway and yaw varied together in the displaced case. Source: returned static calculation, Section 9.2.</p>
 <p>The displaced example returns {{SURGE}} kip of surge restoring force. This is a prescribed-position result; an equilibrium offset is not established. Initial force cancellation is subject to floating-point residuals, which are retained in the data appendix rather than reported as exact zeros.</p>
@@ -90,12 +98,12 @@ M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
 <li>Use an independently qualified dynamic method for transient or environmental response until the missing integration chain has benchmark evidence. No dynamic operating limit is supplied by this static example.</li></ul>
 </section>
 <section id="references"><h2>9. References</h2>
-<p>The calculation basis is the public repository implementation, documentation and synthetic regression evidence. No licensed standard coefficient is reproduced or used as an acceptance limit.</p>
+<p>The calculation basis is the public repository implementation, documentation and synthetic regression evidence. Public textbook sections and analytic-catenary documentation are linked beside the equations in Section 4.2. No licensed standard coefficient is reproduced or used as an acceptance limit.</p>
 <h3>9.1 Source scope</h3>
 <p>The repository documentation identifies the historical algorithm as legacy edition 6.10, March 2007. Frozen comparison values are retained in the physics tests; the original binary is not executed for this report. The public example is the static workflow fixture, reproduced in the adjacent input record. A published experimental validation dataset is not established by these records.</p>
 <h3>9.2 Source locators and data appendix</h3>
-<p>The following paths identify the input record, callable interface, equation implementation, test evidence and stylesheet exemplar. Digests identify normalized text content and exclude checkout line-ending differences.</p>
-{{SOURCES}}<p>Table 3. Sources and content identities.</p>
+<p>The following paths identify the input record, callable interface, equation implementation, test evidence and stylesheet exemplar. These are repository locators, not frozen source identities; unrelated source content hashes are omitted. A checkout revision identifies the source set used for reproduction.</p>
+{{SOURCES}}<p>Table 3. Repository source locators.</p>
 <p>The public call is <code>digitalmodel.dynmoor_mooring.workflow.router(config)</code>. Input values originate in <code>_base_config</code>; historical comparisons originate in <code>CASE_A_CATENARY</code> and <code>CASE_A_PRETENSION</code>. The grounded-chain equations correspond to <code>_catinb</code> and <code>_stretc</code>; interpolation and force resolution correspond to <code>solve_pretension</code>, <code>interp_table</code> and <code>restoring_force</code>.</p>
 <p>Rebuild with the source package on the Python import path:</p>
 <pre>python docs/reports/modules/dynmoormooring/generate.py --work-dir disposable-results</pre>
@@ -110,7 +118,7 @@ M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
 <tr><td>Governing allowable tension and offset</td><td>NOT_EVALUATED</td><td>Required before an operating envelope is issued.</td></tr>
 <tr><td>Dynamics and fatigue</td><td>NOT_EVALUATED</td><td>Missing calculation method and qualified inputs.</td></tr></table>
 <p>Table B. Data readiness and intended-use restrictions.</p>
-<p>The physics test suite checks frozen legacy values, arithmetic transliterations and invariants. The report test compares the embedded returned values with a separate workflow call and checks reproducible rendering. Successful static checks do not resolve the skipped dynamic-response placeholders. Report rebuild execution status is supplied separately with the delivery checks; it is not inferred from the presence of a test.</p>
+<p>The physics test suite checks frozen legacy values, arithmetic transliterations and invariants. Report consistency tests compare embedded values with a separate workflow call and check reproducible rendering. An independent grounded-catenary and bisection calculation checks the headline geometry and displaced forces within the tolerances in Section 5.1. Successful static checks do not resolve the skipped dynamic-response placeholders. Report rebuild execution status is supplied separately with the delivery checks; it is not inferred from the presence of a test.</p>
 </details>
 <details><summary>Appendix C — static tension comparison</summary>
 {{BENCHMARK_TABLE}}

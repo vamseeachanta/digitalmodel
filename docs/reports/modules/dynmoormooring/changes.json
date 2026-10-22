@@ -1,7 +1,8 @@
 {
-  "revision": "Initial",
+  "revision": "1",
   "changes": [
     "Static spread-mooring calculations and legacy comparison evidence are documented.",
-    "Operating limits and dynamic response remain not evaluated."
+    "Operating limits and dynamic response remain not evaluated.",
+    "Equation sources, independent static checks and portable report output are documented."
   ]
 }
