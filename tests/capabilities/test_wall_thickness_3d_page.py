@@ -328,3 +328,196 @@ def test_worked_example_links_stay_inside_the_docs_site():
     Links().feed(text)
     assert "ApiStd2rdStrategy" in text
     assert "test_wall_thickness_3d.py" in text
+
+
+@pytest.mark.parametrize(
+    "axis,values",
+    [
+        ("wall_thickness_mm", [0, 1]),
+        ("wall_thickness_mm", [8, 8]),
+        ("effective_tension_n", [0, float("nan")]),
+        ("effective_tension_n", [0, float("inf")]),
+        ("effective_tension_n", [0, True]),
+        ("effective_tension_n", [0]),
+        ("bending_moment_nm", [1, 0]),
+        ("bending_moment_nm", [-1, 0]),
+        ("bending_moment_nm", ["0", "1"]),
+    ],
+)
+def test_renderer_rejects_invalid_axes_before_sampling(axis, values):
+    """Invalid synthetic transport inputs; no engineering limits are asserted."""
+    study = _study()
+    study["meta"]["grid"][axis]["values"] = values
+    with pytest.raises(ValueError, match=axis):
+        _load_module().build_page(study)
+
+
+def test_compact_contract_preserves_fractional_nonuniform_load_coordinates():
+    """Index remapping only: sub-unit synthetic axes must not round to zero."""
+    study = _study()
+    for axis, column in (("effective_tension_n", "t"), ("bending_moment_nm", "b")):
+        old = study["meta"]["grid"][axis]["values"]
+        new = [index**2 / 100 for index in range(len(old))]
+        mapping = dict(zip(old, new))
+        study["meta"]["grid"][axis]["values"] = new
+        for row in study["rows"]:
+            row[axis] = mapping[row[axis]]
+        payload = _load_module()._payload(study)
+        assert payload["m"][column] == [0, 0.09, 0.36]
+
+
+def test_renderer_checks_the_full_source_grid_not_only_displayed_rows():
+    """A missing unsampled row must not be hidden by display decimation."""
+    study = _study()
+    del study["rows"][1]
+    with pytest.raises(ValueError, match="source grid"):
+        _load_module().build_page(study)
+
+
+def test_renderer_rejects_duplicate_unsampled_rows():
+    study = _study()
+    study["rows"][1] = study["rows"][2]
+    with pytest.raises(ValueError, match="duplicate"):
+        _load_module().build_page(study)
+
+
+def test_renderer_rejects_rows_outside_declared_axes():
+    study = _study()
+    study["rows"][1]["effective_tension_n"] = -1
+    with pytest.raises(ValueError, match="outside"):
+        _load_module().build_page(study)
+
+
+@pytest.mark.parametrize("plotly_mode", ["absent", "success", "reject", "context-loss"])
+@pytest.mark.parametrize("nonuniform", [False, True])
+def test_mobile_point_readout_and_view_choice_execute(tmp_path, plotly_mode, nonuniform):
+    """Independent synthetic grid: u = 0.5 + 0.1*(wall_i+tension_i+moment_i).
+
+    At wall index zero and the last load indices (6, 6), u = 1.7 and
+    collapse governs by the synthetic parity rule in _study. No engineering
+    acceptance equation is evaluated. Canvas and Plotly are instrumented
+    directly; no browser or external script is started.
+
+    For nonuniform axes the sampled tensions are (0.1, 1.0, 3.7) MN and
+    moments (0.1, 1.0, 3.7) kN m. Along the bottom edge, u changes from
+    0.8 to 1.1: u=1 occurs at T=1+(1-0.8)/(1.1-0.8)*(3.7-1)=2.8 MN.
+    This independently checks interpolation in physical coordinates.
+    """
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node is unavailable")
+    study = _study()
+    if nonuniform:
+        for axis, scale in (("effective_tension_n", 100_000), ("bending_moment_nm", 100)):
+            old = study["meta"]["grid"][axis]["values"]
+            new = [(index**2 + 1) * scale for index in range(len(old))]
+            mapping = dict(zip(old, new))
+            study["meta"]["grid"][axis]["values"] = new
+            for row in study["rows"]:
+                row[axis] = mapping[row[axis]]
+    page = _load_module().build_page(study)
+    raw, _ = _embedded_payload(page)
+    script = page.rsplit("<script>", 1)[1].split("</script>", 1)[0]
+    harness = r"""
+const assert = require('node:assert/strict');
+const elements=new Map(), plots=[], events={}, contextEvents={}, labels=[];
+const context=new Proxy({}, {get:(_,name)=>(...args)=>{
+ args.filter(v=>typeof v==='number').forEach(v=>assert(Number.isFinite(v)));
+ if(name==='fillText')labels.push(args[0]);
+}, set:()=>true});
+function element(id){if(!elements.has(id))elements.set(id,{
+ value:'0',style:{},textContent:'',innerHTML:'',dataset:{},max:0,
+ parentElement:{getBoundingClientRect:()=>({width:375,height:390})},
+ setAttribute(){},addEventListener(event,fn){this[event]=fn;},
+ add(option){this.value=option.value;},getContext:()=>context,
+ querySelectorAll:()=>[{dataset:{},addEventListener:(name,fn)=>contextEvents[name]=fn}]
+});return elements.get(id);}
+global.document={getElementById:element,documentElement:{},createElement:()=>({getContext:()=>true})};
+global.window={WebGLRenderingContext:true,addEventListener:(name,fn)=>events[name]=fn};
+global.devicePixelRatio=1;global.getComputedStyle=()=>({getPropertyValue:()=> '#222'});
+global.Option=function(text,value){this.text=text;this.value=value;};
+element('study-data').textContent=RAW;element('view').value='auto';
+const mode=MODE;
+const nonuniform=NONUNIFORM;
+if(mode!=='absent')global.Plotly={newPlot:async (target,traces,layout)=>{
+ plots.push({traces,layout});if(mode==='reject')throw Error('library failure');
+},react:async()=>{throw Error('unexpected react');}};
+window.Plotly=global.Plotly;
+""".replace("RAW", json.dumps(raw)).replace("MODE", json.dumps(plotly_mode)).replace("NONUNIFORM", json.dumps(nonuniform))
+    trailer = r"""
+setImmediate(()=>{
+ element('wall').value='0';element('wall').input();
+ element('tension').value=element('tension').max;element('tension').input();
+ element('moment').value=element('moment').max;element('moment').input();
+ assert.equal(element('point-utilisation').textContent,'170.0%');
+ assert.equal(element('point-governing').textContent,'Collapse');
+ assert.match(element('point-caption').textContent,/DNV-ST-F101/);
+ assert.equal(element('tension').max,2);assert.equal(element('moment').max,2);
+ assert(labels.includes(nonuniform?'3.7':'0.1'));
+ assert.equal(element('point-tension').textContent,nonuniform?'3700.0':'0.6');
+ assert.equal(element('point-moment').textContent,nonuniform?'3.7':'0.1');
+ element('view').value='2d';element('view').change();
+ setImmediate(()=>{
+  if(mode==='absent'||mode==='reject'){
+   assert.equal(element('fallback').style.display,'block');
+  }else{
+   assert(plots.some(p=>p.traces.some(t=>t.type==='mesh3d')));
+   assert(plots.at(-1).traces.some(t=>t.type==='heatmap'));
+   if(nonuniform){
+    const heatmap=plots.at(-1).traces.find(t=>t.type==='heatmap');
+    assert.deepEqual(heatmap.x,[0.1,1,3.7]);assert.deepEqual(heatmap.y,[0.1,1,3.7]);
+    const mesh=plots.filter(p=>p.traces.some(t=>t.type==='mesh3d')).at(-1);
+    const line=mesh.traces.find(t=>t.type==='scatter3d');
+    assert(line.x.some((x,i)=>Math.abs(x-2.8)<1e-12&&line.y[i]===0.1));
+   }
+   if(mode==='context-loss'){
+    element('view').value='auto';element('view').change();
+    setImmediate(()=>{
+     contextEvents.webglcontextlost({preventDefault(){}});
+     setImmediate(()=>assert(plots.at(-1).traces.some(t=>t.type==='heatmap')));
+    });
+   }
+  }
+ });
+});
+"""
+    target = tmp_path / "readout.cjs"
+    target.write_text(harness + script + trailer, encoding="utf-8")
+    result = subprocess.run([node, str(target)], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
+
+
+def test_shipped_snapshot_corners_match_the_independent_worked_example():
+    """Use the hand calculation in test_wall_thickness_3d.py's corner test.
+
+    At D=0.3239 m, t=0.018 m, SMYS=448 MPa and the assumed pressure case,
+    API STD 2RD (2013), Method 1 as inherited in api_std_2rd.py gives:
+    u(0,0)=0.3969873846 (collapse), u(Tmax,0)=0.7727464725,
+    u(0,Mmax)=0.7727467879, u(Tmax,Mmax)=1.5454932604 (combined).
+    The full derivation and unqualified factors are in the referenced test
+    docstring and docs/examples/wall-thickness-load-example.html.
+    Comparison tolerance is half the compact contract's output quantum plus
+    half the full study's six-decimal quantum, not a design acceptance limit.
+    """
+    raw = (REPO_ROOT / "docs/api/structural/wall-thickness-3d-explorer.json").read_bytes()
+    payload = json.loads(raw)
+    meta = payload["m"]
+    assert meta["z"] == len(raw) < 400_000
+    assert meta["p"] == 22_869
+    wall_index = meta["w"].index(18)
+    values, checks = payload["s"]["API-STD-2RD"][wall_index]
+    width = len(meta["b"])
+    corners = [0, (len(meta["t"]) - 1) * width, width - 1, len(values) - 1]
+    expected = [0.3969873846, 0.7727464725, 0.7727467879, 1.5454932604]
+    for index, utilisation, check in zip(corners, expected, ["collapse"] + ["combined"] * 3):
+        assert values[index] / meta["q"] == pytest.approx(
+            utilisation, abs=0.5 / meta["q"] + 0.5e-6
+        )
+        assert payload["g"][checks[index]] == check
+
+
+def test_shipped_page_matches_the_generator_template():
+    """The fetched page depends on the template and sidecar name, not grid size."""
+    page = REPO_ROOT / "docs/api/structural/wall-thickness-3d-explorer.html"
+    expected = _load_module().build_page(_study(), data_url=page.with_suffix(".json").name)
+    assert page.read_text(encoding="utf-8") == expected
