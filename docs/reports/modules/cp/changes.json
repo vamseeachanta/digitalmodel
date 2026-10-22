@@ -1,19 +1,19 @@
 {
   "document": "cathodic-protection-module-analysis",
-  "revision": 0,
+  "revision": 1,
   "date": "2026-10-22",
   "changes": [
     {
       "section": "basis",
-      "description": "Public phase-density inputs are distinguished from assumed life and alloy properties."
+      "description": "Fresh resistance uses the published section perimeter; net alloy mass remains an assumption."
     },
     {
       "section": "results",
-      "description": "Aggregate current and mass requirements are evaluated separately from spatial protection."
+      "description": "The installed arrangement passes aggregate checks; mass governs the required count."
     },
     {
       "section": "recommendations",
-      "description": "The aggregate anode increase is recalculated; field retrofit sizing remains unevaluated."
+      "description": "The aggregate increase is withdrawn; field retrofit sizing remains unevaluated."
     }
   ]
 }
