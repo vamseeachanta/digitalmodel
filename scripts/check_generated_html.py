@@ -70,6 +70,21 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reports/build_riser_database_report.py",
+        ("docs/reports/modules/riserdatabase/riser-database-analysis.html",
+         "docs/reports/modules/riserdatabase/changes.json"),
+        inputs=(
+            "pyproject.toml",
+            "examples/riser_input/riser_drilling.yml",
+            "docs/riser_database.md",
+            "tests/riser_database",
+            "scripts/reports/templates/riser_database_report.html",
+            "scripts/reports/assets/riser_database_review.js",
+            "src/digitalmodel/reporting/assets/calc_report_format.html",
+            "src/digitalmodel/reporting/assets/standard_report.css",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -222,7 +237,9 @@ def discover_candidate_generators(repo: Path) -> set[str]:
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
             # Avoid write API names: producers use helpers and exporters too.
-            if all(marker in text for marker in ("docs", "api", "html")):
+            if all(marker in text for marker in ("docs", "html")) and (
+                "api" in text or "docs/reports/modules" in text
+            ):
                 found.add(path.relative_to(repo).as_posix())
     return found
 
@@ -358,6 +375,8 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
             if source.is_file():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
+            elif source.is_dir():
+                shutil.copytree(source, target, dirs_exist_ok=True)
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:

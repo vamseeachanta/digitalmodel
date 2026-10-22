@@ -32,21 +32,21 @@ EXTRA_STYLE = Path("src/digitalmodel/reporting/assets/standard_report.css")
 EXAMPLE_ID = "riser_drilling"
 CHANGES = {
     "document": "Riser reference database analysis",
-    "revision": "0",
+    "revision": "1",
     "date": "2026-10-22",
     "changes": [
         {"section": "worked-example", "description":
-         "First issue: demonstrate retrieval of public drilling-riser geometry against its source."},
+         "Explain why shared-source geometry agrees and distinguish an independent benchmark."},
         {"section": "limitations", "description":
-         "Separate reference-data checks from unestablished physical operating limits."},
-        {"section": "recommendations", "description":
-         "Identify the data and calculation basis needed before a connection decision."},
+         "Clarify the missing connection basis and the unverified criteria locator."},
+        {"section": "source-records", "description":
+         "Make source fingerprints and report regeneration independent of checkout text settings."},
     ],
 }
 
 
 def source_digests(root: Path, example_path: str) -> dict:
-    """Fingerprint only public evidence, resolving paths against the intended root."""
+    """Fingerprint public UTF-8 evidence after normalizing CRLF to LF."""
     paths = [
         Path(example_path), Path("scripts/riser_database/sources.yml"),
         Path("docs/riser_database.md"), Path("scripts/riser_database/build_tables.py"),
@@ -60,7 +60,9 @@ def source_digests(root: Path, example_path: str) -> dict:
     ):
         paths += [p.relative_to(root) for p in sorted((root / folder).glob(pattern)) if p.is_file()]
     return {
-        p.as_posix(): hashlib.sha256((root / p).read_bytes()).hexdigest()
+        p.as_posix(): hashlib.sha256(
+            (root / p).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest()
         for p in sorted(set(paths))
     }
 
@@ -84,7 +86,7 @@ def collect_evidence(root: Path) -> dict:
     row = db.config(EXAMPLE_ID)
     if row.water_depth_m is None or row.od_mm is None or row.wt_mm is None:
         raise ValueError("Public example geometry must be complete")
-    conv = yaml.safe_load((root / "scripts/riser_database/sources.yml").read_text())
+    conv = yaml.safe_load((root / "scripts/riser_database/sources.yml").read_text(encoding="utf-8"))
     conv = conv["unit_conversions"]
     expected = public_source_values(root, row, conv)
     counts = {
@@ -94,7 +96,7 @@ def collect_evidence(root: Path) -> dict:
         "riser_stackup": len(db.stackups),
         "rig_riser_interface": len(db.rigs),
     }
-    manifest = yaml.safe_load((root / "data/riser_database/manifest.yaml").read_text())
+    manifest = yaml.safe_load((root / "data/riser_database/manifest.yaml").read_text(encoding="utf-8"))
     unknown_rejected = False
     try:
         db.config("not-a-catalogue-key")
@@ -185,11 +187,11 @@ def build_report(root: Path = ROOT, output_dir: Path | None = None) -> Path:
     root = root.resolve()
     output_dir = output_dir or root / REPORT_DIR
     model = collect_evidence(root)
-    style_match = re.search(r"<style>.*?</style>", (root / STYLE).read_text(), re.S)
+    style_match = re.search(r"<style>.*?</style>", (root / STYLE).read_text(encoding="utf-8"), re.S)
     if style_match is None:
         raise ValueError("The repository report stylesheet is missing")
     style = style_match.group()
-    style += "<style>" + (root / EXTRA_STYLE).read_text() + "</style>"
+    style += "<style>" + (root / EXTRA_STYLE).read_text(encoding="utf-8") + "</style>"
     inventory_names = {
         "config_catalog": "Configuration catalogue",
         "standards_crosswalk": "Standards crosswalk",
@@ -222,8 +224,10 @@ def build_report(root: Path = ROOT, output_dir: Path | None = None) -> Path:
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / REPORT_NAME
-    path.write_text(page, encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    path.write_text(page, encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(
+        json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n",
+    )
     return path
 
 

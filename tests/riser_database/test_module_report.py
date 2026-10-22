@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 BUILDER = ROOT / "scripts/reports/build_riser_database_report.py"
 REPORT_DIR = ROOT / "docs/reports/modules/riserdatabase"
 REPORT_NAME = "riser-database-analysis.html"
+REBUILD_COMMAND = "PYTHONPATH=src python scripts/reports/build_riser_database_report.py"
 
 
 def builder_module():
@@ -56,15 +57,120 @@ def test_report_rebuild_is_byte_for_byte_current(rebuilt):
     output, _, _, _ = rebuilt
     assert {p.name for p in output.iterdir()} == {REPORT_NAME, "changes.json"}
     for name in (REPORT_NAME, "changes.json"):
-        assert (output / name).read_bytes() == (REPORT_DIR / name).read_bytes()
+        generated = (output / name).read_bytes()
+        assert b"\r\n" not in generated
+        assert generated == (REPORT_DIR / name).read_text(encoding="utf-8").encode("utf-8"), (
+            f"Report evidence changed; rebuild with: {REBUILD_COMMAND}"
+        )
+
+
+@pytest.mark.parametrize("default", ["encoding", "newline"])
+def test_windows_text_defaults_preserve_report_bytes(tmp_path, monkeypatch, default):
+    builder = builder_module()
+    checkout = tmp_path / "checkout"
+    for relative in builder.collect_evidence(ROOT)["source_digests"]:
+        target = checkout / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / relative).read_bytes())
+    style = checkout / builder.EXTRA_STYLE
+    style.write_text(style.read_text(encoding="utf-8") + "\n/* Unit symbol: μm */\n", encoding="utf-8")
+    expected = builder.build_report(root=checkout, output_dir=tmp_path / "expected")
+    original_open = Path.open
+
+    def windows_open(path, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
+        if "b" not in mode:
+            if default == "encoding" and encoding in (None, "locale"):
+                encoding = "cp1252"
+            if default == "newline" and "w" in mode and newline is None:
+                newline = "\r\n"
+        return original_open(path, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, "open", windows_open)
+    actual = builder.build_report(root=checkout, output_dir=tmp_path / "actual")
+    for name in (REPORT_NAME, "changes.json"):
+        assert (actual.parent / name).read_bytes() == (expected.parent / name).read_bytes()
+
+
+def test_crlf_source_checkout_preserves_report_bytes(tmp_path):
+    builder = builder_module()
+    expected = builder.build_report(output_dir=tmp_path / "expected")
+    checkout = tmp_path / "checkout"
+    for relative in builder.collect_evidence(ROOT)["source_digests"]:
+        target = checkout / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        content = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
+        # Database bytes stay LF under the repository's existing attributes.
+        target.write_bytes(content if relative.startswith("data/riser_database/")
+                           else content.replace(b"\n", b"\r\n"))
+    actual = builder.build_report(root=checkout, output_dir=tmp_path / "actual")
+    for name in (REPORT_NAME, "changes.json"):
+        assert (actual.parent / name).read_bytes() == (expected.parent / name).read_bytes()
+
+
+def test_registered_report_regenerates_and_detects_drift(tmp_path, monkeypatch):
+    from scripts import check_generated_html as checker
+
+    builder = builder_module()
+    entry = next((item for item in checker.GENERATORS
+                  if item.script == BUILDER.relative_to(ROOT).as_posix()), None)
+    assert entry is not None, "The report must participate in the documentation drift check"
+    assert entry.script in checker.discover_candidate_generators(ROOT)
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    shadow = tmp_path / "shadow"
+    checker.prepare_shadow(ROOT, shadow)
+    assert all((shadow / relative).is_file()
+               for relative in builder.collect_evidence(ROOT)["source_digests"])
+    checker.clear_generated_html(shadow, entry)
+    assert checker.run_generator(shadow, entry) is None
+    assert checker.compare_outputs(ROOT, shadow) == [], REBUILD_COMMAND
+    for name in (REPORT_NAME, "changes.json"):
+        page = shadow / REPORT_DIR.relative_to(ROOT) / name
+        original = page.read_bytes()
+        page.write_bytes(original + b"\n")
+        assert [path for path, _ in checker.compare_outputs(ROOT, shadow)] == [
+            page.relative_to(shadow).as_posix()
+        ]
+        page.write_bytes(original)
+
+
+def test_ignore_rules_preserve_later_module_exceptions(tmp_path):
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    subprocess.run(["git", "init", "-q", str(tmp_path)], env=env, check=True)
+    marker = "!docs/reports/pipeline-ffs-assessment.manifest.json"
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert marker in rules
+    rules = rules.replace(marker, marker + (
+        "\n!docs/reports/modules/\n!docs/reports/modules/example/"
+        "\n!docs/reports/modules/example/example.html"
+    ))
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8")
+    public_paths = [
+        "docs/reports/modules/example/example.html",
+        "docs/reports/modules/riserdatabase/" + REPORT_NAME,
+        "docs/reports/modules/riserdatabase/changes.json",
+        "scripts/reports/build_riser_database_report.py",
+        "scripts/reports/templates/riser_database_report.html",
+        "scripts/reports/assets/riser_database_review.js",
+    ]
+    for relative in public_paths:
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", "--", relative],
+            cwd=tmp_path, env=env, capture_output=True, check=False,
+        )
+        assert result.returncode == 1, f"Required source is ignored: {relative}"
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", "--", "scripts/reports/unrelated.html"],
+        cwd=tmp_path, env=env, capture_output=True, check=False,
+    )
+    assert result.returncode == 0
 
 
 def test_example_is_the_complete_module_return(rebuilt):
     model = rebuilt[3]
     row = RiserDatabase.load().config("riser_drilling")
     assert model["example"] == asdict(row)
-    source = yaml.safe_load((ROOT / row.source_path).read_text())
-    conv = yaml.safe_load((ROOT / "scripts/riser_database/sources.yml").read_text())
+    source = yaml.safe_load((ROOT / row.source_path).read_text(encoding="utf-8"))
+    conv = yaml.safe_load((ROOT / "scripts/riser_database/sources.yml").read_text(encoding="utf-8"))
     conv = conv["unit_conversions"]
     expected = {
         "water_depth_m": source["geometry"]["water_depth"],
@@ -74,9 +180,10 @@ def test_example_is_the_complete_module_return(rebuilt):
     assert model["source_values"] == expected
     assert all(getattr(row, key) == value for key, value in expected.items())
     numbers = model["numbers"]
-    assert numbers["depth_ft"] == row.water_depth_m / conv["ft_to_m"]
-    assert numbers["od_in"] == row.od_mm / conv["in_to_mm"]
-    assert numbers["wall_in"] == row.wt_mm / conv["in_to_mm"]
+    # Independent hand values: NIST SP 811 (2008), Appendix B.8, foot and inch.
+    assert numbers["depth_ft"] == pytest.approx(8202.1, abs=0.05)
+    assert numbers["od_in"] == pytest.approx(21.000, abs=0.0005)
+    assert numbers["wall_in"] == pytest.approx(0.874, abs=0.0005)
     for key, value in expected.items():
         assert numbers[f"difference_{key}"] == 100 * (getattr(row, key) - value) / value
 
@@ -103,7 +210,8 @@ def test_inventory_and_digests_are_read_from_current_sources(rebuilt):
         "rig_riser_interface": len(db.rigs),
     }
     for relative, digest in model["source_digests"].items():
-        assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest
+        content = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
+        assert hashlib.sha256(content).hexdigest() == digest
     assert all(model["qa"].values())
 
 
@@ -139,7 +247,7 @@ def test_layout_sources_and_cross_references(rebuilt):
 def test_built_public_text_and_embedded_data_are_disclosure_limited(rebuilt):
     text, soup, model = rebuilt[1:]
     visible = soup.get_text(" ", strip=True)
-    prohibited = r"\b(?:owner|Codex|Claude|lane|agent|session|TODO)\b"
+    prohibited = r"\b(?:owner|assistant|automation|agent|session|TODO)\b"
     assert not re.search(prohibited, visible, re.I)
     assert not re.search(r"\b(?:could|should|would)\b", visible, re.I)
     assert not re.search(r"/(?:home|mnt)/|[\w.+-]+@[\w-]+\.[\w.-]+", text)

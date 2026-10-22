@@ -1,19 +1,19 @@
 {
   "document": "Riser reference database analysis",
-  "revision": "0",
+  "revision": "1",
   "date": "2026-10-22",
   "changes": [
     {
       "section": "worked-example",
-      "description": "First issue: demonstrate retrieval of public drilling-riser geometry against its source."
+      "description": "Explain why shared-source geometry agrees and distinguish an independent benchmark."
     },
     {
       "section": "limitations",
-      "description": "Separate reference-data checks from unestablished physical operating limits."
+      "description": "Clarify the missing connection basis and the unverified criteria locator."
     },
     {
-      "section": "recommendations",
-      "description": "Identify the data and calculation basis needed before a connection decision."
+      "section": "source-records",
+      "description": "Make source fingerprints and report regeneration independent of checkout text settings."
     }
   ]
 }

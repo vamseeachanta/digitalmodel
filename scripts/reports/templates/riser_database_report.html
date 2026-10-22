@@ -33,8 +33,8 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <header class="hero"><div class="wrap">
 <p class="eyebrow">Engineering reference data</p>
 <h1>Riser reference database analysis</h1>
-<p>Draft for client review</p>
-<p>Issue date: 22 October 2026 · Revision 0</p>
+<p>Draft for review</p>
+<p>Issue date: 22 October 2026 · Revision 1</p>
 <p class="caption">Prepared by: Analysis team. Checked by: Not signed. Approved by: Not signed.</p>
 <details id="changes-panel"><summary>Changes in this issue</summary><div id="change-list"></div></details>
 </div></header>
@@ -60,9 +60,10 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <li>Public configuration geometry can be retrieved and compared with its documented source.
   <ul><li>The public drilling-riser example returns a water depth of $depth ft, an outer diameter of $od in and a wall thickness of $wall in. The largest difference from its source is $difference % before display rounding.</li></ul></li>
 <li>A drilling or connected operating envelope is not established by these records.
-  <ul><li>Tension, joint travel, host motions and environmental loading are not calculated by the database. Do not connect on the basis of catalogue geometry.</li></ul></li>
+  <ul><li>Tension, joint travel, host motions and environmental loading are not calculated by the database. Catalogue geometry does not establish a basis for connection.</li></ul></li>
 </ul>
 <p>The source-agreement target is illustrated in <a href="#agreement-figure">Figure 1</a>. This target checks reference-data consistency; it is not a physical operating limit.</p>
+<p>The catalogue geometry is seeded from the same public example used for this comparison, so the three differences are zero by construction. This transcription check can detect later disagreement; it is not an independent physical benchmark.</p>
 <figure id="agreement-figure">$chart
 <figcaption>Figure 1. Geometry difference relative to the public example. Select or hover over a marker for its quantity, demand and target.</figcaption></figure>
 <p id="chart-readout" class="chart-readout" aria-live="polite">Select or hover over a geometry marker to display its source comparison.</p>
@@ -71,6 +72,7 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <div class="revhist" id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
 <tr><td>0</td><td>22 October 2026</td><td>First issue: establish the database scope, demonstrate public geometry retrieval and identify the missing operating basis.</td></tr>
+<tr><td>1</td><td>22 October 2026</td><td>Clarify the shared-source comparison and connection basis, remove an unverified clause number, and make report text and fingerprints independent of checkout text settings.</td></tr>
 </tbody></table><p class="caption">Table 1. Document revision history.</p></div>
 <section class="numbered" id="introduction">
 <h2>2 Introduction</h2>
@@ -165,7 +167,7 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <li>Still-water tension and buoyancy: not evaluated; data needed: joint tally, component weights, contents and buoyancy.</li>
 <li>Statics with current and operating envelopes: not evaluated; data needed: environmental profiles, component criteria and host offsets.</li>
 <li>Dynamics, stroke and angles: not evaluated; data needed: host motion operators, component stiffness, travel limits and wave basis.</li>
-<li>Drift-off: not evaluated; data needed: watch circle, current basis and loss-of-position response. Do not connect on this basis.</li>
+<li>Drift-off: not evaluated; data needed: watch circle, current basis and loss-of-position response. This basis does not support connection.</li>
 <li>Recoil: not evaluated; data needed: closure curves.</li>
 <li>Weak point analysis: not performed.</li>
 <li>Vortex-induced vibration and fatigue: not evaluated; data needed: stress histories, hydrodynamic basis, detail geometry and qualified fatigue criteria.</li>
@@ -196,7 +198,7 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <ul><li>Use the demonstrated interface for controlled reference-data retrieval.
 <ul><li>Retain the source record and units, check the manifest, and reject unknown keys or missing required quantities before a calculation, following the documented loader contract.</li></ul></li>
 <li>Establish a physical basis before a connection decision.
-<ul><li>Obtain the host-specific motion operators, watch circle, component tally, weights, buoyancy, contents, stiffness and joint travel limits listed in <a href="#data-register">Appendix A</a>. Do not connect on the basis of this catalogue example.</li></ul></li>
+<ul><li>Obtain the host-specific motion operators, watch circle, component tally, weights, buoyancy, contents, stiffness and joint travel limits listed in <a href="#data-register">Appendix A</a>. This catalogue example does not establish a basis for connection.</li></ul></li>
 <li>Qualify criteria at their intended point of use.
 <ul><li>Resolve each required citation, establish edition and clause applicability, and reject a missing criterion. The direct getter contract and its resolution checks are identified in <a href="#source-records">Section 9.2</a>.</li></ul></li>
 <li>Establish an independent physical benchmark before reporting envelopes.
@@ -207,10 +209,11 @@ font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--h
 <p>The public units basis and repository evidence are identified in this section. Standards identifiers are retained to explain the citation interfaces; their numeric criteria are not adopted for a physical calculation.</p>
 <div id="standards-basis"><h3>9.1 Public units and criteria descriptions</h3>
 <p id="unit-source">National Institute of Standards and Technology, Special Publication 811, Guide for the Use of the International System of Units, 2008 edition, Appendix B.3, Use of conversion factors, and Appendix B.8, Factors for Units Listed Alphabetically, entries foot and inch. <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">Public conversion definitions</a> support the display units; no physical design allowance is derived from this reference.</p>
-<p>The getter documentation identifies DNV-OS-F201, Dynamic Risers, 2010 edition, Section 5, design fatigue factors; DNV-RP-C203, Fatigue Design of Offshore Steel Structures, 2021 edition, Section 2, stress concentration factors; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, first edition, 1993, Section 3.3, tension factors; and API STD 2RD, Dynamic Risers for Floating Production Systems, second edition, 2013, Section 5, dynamic riser design criteria. These are implementation citation descriptions, not independent clause-content verification. The implemented edition labels are checked against repository records; they are not assertions about the latest available editions.</p>
+<p>The getter documentation identifies DNV-OS-F201, Dynamic Risers, 2010 edition, Section 5, design fatigue factors; DNV-RP-C203, Fatigue Design of Offshore Steel Structures, 2021 edition, stress concentration factors (clause locator unverified and omitted); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, first edition, 1993, Section 3.3, tension factors; and API STD 2RD, Dynamic Risers for Floating Production Systems, second edition, 2013, Section 5, dynamic riser design criteria. These are implementation citation descriptions, not independent clause-content verification. The implemented edition labels are checked against repository records; they are not assertions about the latest available editions.</p>
 </div>
 <div id="source-records"><h3>9.2 Source records and reproducibility</h3>
 <p>The exact lookup and the evidence locators are recorded below. Repository links require the repository beside this standalone document; the document's figures, styles, data and comment controls are embedded.</p>
+<p>Evidence fingerprints are SHA-256 digests of source bytes after CRLF line endings are normalized to LF. Changes to any fingerprinted source, including tests and the generator, require rebuilding this report.</p>
 <pre><code>from digitalmodel.riser_database import RiserDatabase
 
 database = RiserDatabase.load()
