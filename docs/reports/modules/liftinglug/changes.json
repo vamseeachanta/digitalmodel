@@ -2,6 +2,15 @@
   "document": "Lifting lug screening analysis",
   "revisions": [
     {
+      "revision": "B",
+      "date": "2026-10-22",
+      "changes": [
+        "Report output uses explicit LF line endings for reproducible rebuilds.",
+        "Independent hand calculations check reported stresses, limits, percentages and the load restriction.",
+        "Input precision, schematic qualifications and section headings are corrected; invalid report inputs are rejected."
+      ]
+    },
+    {
       "revision": "A",
       "date": "2026-10-21",
       "changes": [

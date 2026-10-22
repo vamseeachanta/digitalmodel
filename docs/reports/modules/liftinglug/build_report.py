@@ -18,6 +18,7 @@ import copy
 import json
 import math
 import re
+from decimal import Decimal
 from pathlib import Path
 
 import yaml
@@ -26,11 +27,18 @@ from digitalmodel.lifting_lug import workflow
 
 ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = ROOT / "examples/workflows/lifting-lug-design/input.yml"
-REVISION = "2026-10-21"
+REVISION = "2026-10-22"
 CHANGES = {
     "document": "Lifting lug screening analysis",
     "revisions": [{
-        "revision": "A", "date": REVISION,
+        "revision": "B", "date": REVISION,
+        "changes": [
+            "Report output uses explicit LF line endings for reproducible rebuilds.",
+            "Independent hand calculations check reported stresses, limits, percentages and the load restriction.",
+            "Input precision, schematic qualifications and section headings are corrected; invalid report inputs are rejected.",
+        ],
+    }, {
+        "revision": "A", "date": "2026-10-21",
         "changes": [
             "The published example is evaluated for bearing, net tension and shear tear-out.",
             "A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.",
@@ -58,7 +66,23 @@ def house_style() -> str:
 def evaluate(cfg: dict, directory: Path) -> dict:
     """Call the public router, with summary output confined to the work area."""
     cfg = copy.deepcopy(cfg)
-    cfg["lifting_lug"]["outputs"]["directory"] = str(directory.resolve())
+    settings = cfg["lifting_lug"]
+    required = {
+        "lug": ("plate_thickness_mm", "cheek_plate_thickness_mm", "pin_diameter_mm",
+                "hole_diameter_mm", "outer_radius_mm", "yield_strength_mpa"),
+        "load": ("static_load_kN", "dynamic_amplification_factor", "skew_load_factor"),
+    }
+    for section, keys in required.items():
+        for key in keys:
+            value = settings.get(section, {}).get(key)
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value < 0
+                    or (value == 0 and key != "cheek_plate_thickness_mm")):
+                raise ValueError(f"Invalid report input: {section}.{key}")
+    legs = settings.get("load", {}).get("num_slings")
+    if type(legs) is not int or legs not in (1, 2, 3, 4):
+        raise ValueError("Invalid report input: load.num_slings")
+    cfg["lifting_lug"]["outputs"]["directory"] = directory.resolve().as_posix()
     return workflow.router(cfg)["lifting_lug"]
 
 
@@ -133,7 +157,7 @@ The base reaction is illustrative; weld and parent plate resistance are outside 
 <path d="M230 160 L327 105" stroke="var(--ink)" marker-end="url(#arrow)"/>
 <text x="333" y="104">Outer radius R</text>
 <path d="M190 58 L190 160 M270 58 L270 160" stroke="var(--nogo)" stroke-dasharray="5 3"/>
-<text x="45" y="66">Tear-out planes</text><path d="M160 68 L188 85" stroke="var(--nogo)"/>
+<text x="20" y="66">Conceptual tear-out paths</text><path d="M160 68 L188 85" stroke="var(--nogo)"/>
 <text x="50" y="218">Pin diameter d</text><path d="M177 210 L210 183" stroke="var(--ink)"/>
 <text x="273" y="239">Hole diameter D</text><path d="M295 222 L259 188" stroke="var(--ink)"/>
 <path d="M90 307 L370 307 L370 328 L90 328 Z" fill="url(#hatch)" stroke="var(--ink)"/>
@@ -151,14 +175,26 @@ a pin of diameter {number('lug.pin_diameter_mm')} mm and a main plate
 {number('lug.cheek_plate_thickness_mm')} mm; total thickness is {number('total_thickness_mm')} mm.
 Dimensions come from the <a href="#source-example">example input</a>.
 The lower plate length, pin length and restraint depiction are illustrative; no fabrication drawing is available.
+The dashed tear-out paths are conceptual; their drawn lengths do not represent the calculated
+loaded ligament of {number('ligament_mm')} mm used in the nominal resisting area.
 The sling direction is an assumed axial in-plane load. Contact offset, welds and base flexibility are not modelled.</figcaption></figure>'''
 
 
 def render(result: dict, values: dict, chart: dict) -> str:
     """Write one coherent engineering narrative with calculated numerical fields."""
     def n(key):
-        places = 2 if key in {"bearing_factor", "tension_factor", "shear_factor"} else 1
-        return f'<span data-number="{key}">{values[key]:.{places}f}</span>'
+        value = values[key]
+        if "thickness_mm" in key:
+            places = max(3, -Decimal(str(value)).as_tuple().exponent)
+            displayed = f"{value:.{places}f}"
+        elif key == "load.num_slings":
+            displayed = f"{value:d}"
+        elif key.startswith(("lug.", "load.")) or key.startswith("skew_load_factor"):
+            displayed = str(value)
+        else:
+            places = 2 if key in {"bearing_factor", "tension_factor", "shear_factor"} else 1
+            displayed = f"{value:.{places}f}"
+        return f'<span data-number="{key}">{displayed}</span>'
 
     def row(label, key, unit, source="source-example"):
         return (f'<tr><td>{label}</td><td>{n(key)}</td><td>{unit}</td>'
@@ -184,7 +220,7 @@ def render(result: dict, values: dict, chart: dict) -> str:
     body = f'''
 <header><div class="kicker">Lifting attachments · strength screening</div>
 <h1>Lifting lug screening analysis</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report navigation"><a href="#summary">Executive summary</a> ·
 <a href="#basis">Design data</a> · <a href="#example">Worked example</a> ·
 <a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendices</a></nav>
@@ -204,7 +240,8 @@ This rounded-down value passes only the implemented screens.</li>
 <li>Material certification, load basis, connection resistance and code applicability are required before design release.</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>A</td><td>{REVISION}</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr></tbody></table>
+<tbody><tr><td>B</td><td>{REVISION}</td><td>Line endings, independent arithmetic checks, input precision and schematic qualifications are corrected to make the report reproducible and its limits explicit.</td></tr>
+<tr><td>A</td><td>2026-10-21</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr></tbody></table>
 </section>
 
 <section aria-labelledby="introduction"><h2 id="introduction">2 Introduction</h2>
@@ -220,7 +257,7 @@ padeye studies are outside this workflow. Vessel heading, a sea-state envelope a
 NOT_EVALUATED because the module has no hydrodynamic response or weather inputs. No installability statement is made.</p>
 </section>
 
-<section aria-labelledby="controls"><h2 id="controls">3 Summary</h2>
+<section aria-labelledby="controls"><h2 id="controls">3 Load Sensitivity</h2>
 <p>The most-loaded leg tension is supplied after the sling-angle and centre-of-gravity effects are resolved.
 Separate dynamic amplification and skew allowances are then applied, as described in the
 <a href="#source-guide">example guide</a>.</p>
@@ -314,9 +351,11 @@ Physical validation of this circular-lug screen is not established by those chec
 and nominal stresses with hand-calculated expressions. They also exercise missing and invalid skew factors,
 unsupported sling counts, and below-minimum factors with otherwise passing strength results.
 Those tests demonstrate agreement with the coded formulas and the intended input guards.</p>
-<p>The <a href="#source-rebuild">report rebuild tests</a> compare every displayed example field with a fresh
-public-interface result, compare all plotted cases, and check the rounded-down restriction.
-The committed page is rebuilt byte for byte with its change data. No field-load measurements or destructive-test
+<p>The <a href="#source-rebuild">report rebuild tests</a> compare every displayed example field with independent
+hand-calculated literals, compare all plotted cases with hand arithmetic and public-interface results,
+and check the rounded-down restriction and the next load increment.
+The report and change data use explicit LF line endings. Byte comparisons are checked under native text defaults
+and emulated Windows text defaults; a native Windows rerun remains required. No field-load measurements or destructive-test
 results are supplied with the workflow example. The wider repository contains finite-element padeye material,
 but no matched comparison to this example is established here; no numerical agreement with it is claimed.</p>
 </section>
@@ -578,8 +617,10 @@ def build(output_dir: Path, work_dir: Path) -> None:
     if evaluate(limited, work_dir / "restriction")["screening_status"] != "pass":
         raise ValueError("Calculated restriction does not pass the module screen")
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "lifting-lug-analysis.html").write_text(render(result, values, chart), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (output_dir / "lifting-lug-analysis.html").write_text(
+        render(result, values, chart), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
