@@ -9,6 +9,15 @@
         "The distinction between acceleration preprocessing and oscillator response spectra is established.",
         "The building-floor measurement condition and missing design acceptance basis are stated."
       ]
+    },
+    {
+      "revision": "01",
+      "date": "2026-10-22",
+      "changes": [
+        "Text digests, source locators and output line endings are made portable for rebuilds.",
+        "Installed dependency versions are retained as metadata without lockfile gating.",
+        "The initial-window mean and unfiltered end velocity are stated as baseline evidence."
+      ]
     }
   ]
 }

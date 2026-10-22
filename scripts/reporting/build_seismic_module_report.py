@@ -14,8 +14,7 @@ import hashlib
 import importlib.metadata
 import json
 import re
-import tomllib
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import numpy as np
 import yaml
@@ -35,7 +34,8 @@ TEMPLATES = Path(__file__).with_name("templates")
 EXAMPLE = Path("examples/workflows/response-spectrum")
 OUTPUT = Path("docs/reports/modules/seismic")
 # Source: the committed example's data/README.md, pinned fixture statistics.
-EXPECTED_RECORD_DIGEST = "9836d860a6943ae728bed3b52e6dbbf0d4f54fd123f52b54e5980fd6e6c9d0aa"
+# The unchanged record is pinned after CRLF-to-LF normalisation.
+EXPECTED_RECORD_DIGEST = "de18e82358f66e7ed1d585a0086a815b2ea32c49d2cdf5c4e8ab8104b8f620f3"
 EXEMPLAR = Path("docs/api/cfd/turbulent-flat-plate-verification.html")
 BRAND = Path("docs/api/_assets/brand.css")
 EXISTING_TESTS = (
@@ -60,30 +60,25 @@ SECTIONS = (
 
 
 def digest(path: Path) -> str:
-    """Hash the exact source bytes, including their original line endings."""
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """Hash text sources after normalising CRLF line endings to LF."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
-def source_record(path: str | Path) -> dict:
-    """Retain portable evidence locators and exact content digests."""
-    return {"path": str(path), "sha256": digest(ROOT / path)}
+def source_record(path: str | PurePath) -> dict:
+    """Retain portable evidence locators and LF-normalised content digests."""
+    locator = path.as_posix() if isinstance(path, PurePath) else Path(path).as_posix()
+    return {"path": locator, "sha256": digest(ROOT / locator)}
 
 
 def reproduction_versions() -> dict[str, str]:
-    """Require the numerical and template releases recorded in the project lock."""
+    """Record the installed numerical and template releases without gating."""
     names = ("numpy", "scipy", "pandas", "jinja2")
-    packages = tomllib.loads((ROOT / "uv.lock").read_text())["package"]
-    locked = {package["name"]: package["version"] for package in packages
-              if package["name"] in names}
-    installed = {name: importlib.metadata.version(name) for name in names}
-    if installed != locked:
-        raise ValueError("Dependency versions differ from the repository lock; use a locked environment")
-    return installed
+    return {name: importlib.metadata.version(name) for name in names}
 
 
 def numeric_evidence() -> dict:
     """Call the documented module with the unchanged example settings."""
-    config = yaml.safe_load((ROOT / EXAMPLE / "input.yml").read_text())
+    config = yaml.safe_load((ROOT / EXAMPLE / "input.yml").read_text(encoding="utf-8"))
     settings = config["response_spectrum"]
     record_path = EXAMPLE / settings["record"]["file"]
     if digest(ROOT / record_path) != EXPECTED_RECORD_DIGEST:
@@ -109,6 +104,9 @@ def numeric_evidence() -> dict:
         peak_displacement_m=float(result.timeseries.displacement_m.abs().max()),
         end_velocity_m_s=float(result.timeseries.velocity_m_s.iloc[-1]),
         end_displacement_m=float(result.timeseries.displacement_m.iloc[-1]),
+        unfiltered_end_velocity_m_s=float(np.trapz(
+            result.timeseries.corrected_acceleration_m_s2, result.timeseries.time_s
+        )),
     )
     frequency_filter = FrequencyFilter(order=metrics["filter_order"])
     frequency_filter.design_filter(
@@ -122,10 +120,11 @@ def numeric_evidence() -> dict:
         "processing_chain": result.processing_chain,
         "timeseries": {name: values.tolist() for name, values in result.timeseries.items()},
         # SciPy 1.15.3 filtfilt, Notes: forward/backward application squares gain.
-        "filter_response": {"frequency_hz": frequency.tolist(), "gain": (np.abs(response) ** 2).tolist()},
+        "filter_response": {"frequency_hz": frequency.tolist(),
+                            "gain": np.round(np.abs(response) ** 2, 12).tolist()},
         "sources": [source_record(path) for path in (
             record_path, EXAMPLE / "input.yml", EXAMPLE / "data/README.md", *SOURCE_FILES,
-            *EXISTING_TESTS, "uv.lock",
+            *EXISTING_TESTS,
         )],
         "versions": reproduction_versions(),
     }
@@ -135,7 +134,7 @@ def test_inventory() -> list[dict]:
     """Count existing checks without importing the general engine or its adapters."""
     rows = []
     for path in EXISTING_TESTS:
-        tree = ast.parse((ROOT / path).read_text())
+        tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
         names = [node.name for node in ast.walk(tree)
                  if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
         rows.append({"path": path, "count": len(names), "tests": names})
@@ -167,6 +166,10 @@ def build(output_dir: Path = ROOT / OUTPUT) -> None:
             "First issue records the public accelerogram calculation and its numerical basis.",
             "The distinction between acceleration preprocessing and oscillator response spectra is established.",
             "The building-floor measurement condition and missing design acceptance basis are stated.",
+        ]}, {"revision": "01", "date": "2026-10-22", "changes": [
+            "Text digests, source locators and output line endings are made portable for rebuilds.",
+            "Installed dependency versions are retained as metadata without lockfile gating.",
+            "The initial-window mean and unfiltered end velocity are stated as baseline evidence.",
         ]}],
     }
     environment = Environment(
@@ -180,19 +183,19 @@ def build(output_dir: Path = ROOT / OUTPUT) -> None:
         return Markup(f'<span data-metric="{name}" data-digits="{digits}">{shown}</span>')
 
     html = environment.get_template("seismic_module_report.html").render(
-        metric=metric, evidence=evidence, inventory=inventory,
+        metric=metric, evidence=evidence, inventory=inventory, revisions=changes["revisions"],
         existing_count=sum(row["count"] for row in inventory),
         g0=f"{G0_M_S2:.5f}", sections=SECTIONS,
         styles=Markup(styles()), evidence_json=Markup(inline_json(evidence)),
         changes_json=Markup(inline_json(changes)),
-        interactions=Markup((TEMPLATES / "seismic_module_interactions.js").read_text()),
-        example_config=(ROOT / EXAMPLE / "input.yml").read_text(),
-        exemplar=str(EXEMPLAR), brand=str(BRAND),
+        interactions=Markup((TEMPLATES / "seismic_module_interactions.js").read_text(encoding="utf-8")),
+        example_config=(ROOT / EXAMPLE / "input.yml").read_text(encoding="utf-8"),
+        exemplar=EXEMPLAR.as_posix(), brand=BRAND.as_posix(),
     )
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "seismic-analysis.html").write_text(html, encoding="utf-8")
+    (output_dir / "seismic-analysis.html").write_text(html, encoding="utf-8", newline="\n")
     (output_dir / "changes.json").write_text(
-        json.dumps(changes, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(changes, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
 
 

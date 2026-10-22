@@ -26,8 +26,8 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <header>
 <div class="kicker">Seismic engineering</div>
 <h1>Seismic acceleration-record preprocessing analysis</h1>
-<p class="sub">Revision 00 · 2026-10-21</p>
-<p>Draft for client review</p>
+<p class="sub">Revision {{ revisions[-1].revision }} · {{ revisions[-1].date }}</p>
+<p>Draft for review</p>
 </header>
 <nav aria-label="Contents"><p>
 {% for name in sections %}<a href="#section-{{ loop.index }}">{{ loop.index }}. {{ name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
@@ -46,8 +46,9 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <div id="revision-history">
 <h3>Revision history</h3>
 <table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
-<tbody><tr><td>00</td><td>2026-10-21</td><td>The public acceleration example, calculation basis and limits of use are issued to define the available preprocessing capability.</td></tr></tbody>
-<caption>Revision history. First issue of the acceleration-record preprocessing analysis.</caption></table>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>The public acceleration example, calculation basis and limits of use are issued to define the available preprocessing capability.</td></tr>
+<tr><td>01</td><td>2026-10-22</td><td>Portable rebuilds and informational dependency versions are introduced to avoid unrelated lockfile drift; computed baseline evidence and review wording are clarified.</td></tr></tbody>
+<caption>Revision history. Issued revisions of the acceleration-record preprocessing analysis.</caption></table>
 </div>
 
 <section id="section-2">
@@ -87,7 +88,7 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <p>The source page describes attachment to a building floor rather than a free-field installation and warns of a possible high-frequency effect from foundation interaction. Different public digitizations and sign conventions are identified there. Numerical equivalence to another version of this earthquake record is not assumed. <a href="#ref-context">Measurement source</a>.</p>
 <h3>3.2 Processing criteria</h3>
 <p>A uniformly increasing time coordinate and declared units are required. The sampling boundary is the Nyquist frequency fₙ = 1/(2Δt), where Δt is the sample interval. Band-pass critical frequencies are required to be positive, ordered and below fₙ. The present implementation reduces the requested upper edge when necessary; the effective edge is reported separately from the requested one. This numerical boundary is not an anti-aliasing qualification or an engineering demand limit. <a href="#ref-filter">Filter definition</a>; <a href="#ref-implementation">implementation record</a>.</p>
-<p>Zero initial velocity and displacement are the calculation conditions. The selected initial samples are assumed to represent the acceleration offset: ASSUMED - to be confirmed. Independent evidence that these samples precede significant motion is absent. A project motion limit, acceptance spectrum and component capacity are NOT_EVALUATED because no such inputs are supplied. The <a href="#data-register">data register</a> states the action required for each gap.</p>
+<p>Zero initial velocity and displacement are the calculation conditions. The first {{ metric('baseline_samples', 0) }} samples have a mean of {{ metric('baseline_offset_m_s2', 4) }} m/s². Integration after this mean is subtracted, with filtering disabled and zero initial velocity, ends at {{ metric('unfiltered_end_velocity_m_s') }} m/s. These computed values provide evidence of baseline sensitivity; qualification of the initial window as a pre-event offset remains ASSUMED - to be confirmed. A project motion limit, acceptance spectrum and component capacity are NOT_EVALUATED because no such inputs are supplied. The <a href="#data-register">data register</a> states the action required for each gap.</p>
 <h3>3.3 Input and output contract</h3>
 <p>A time-and-acceleration text file, or an acceleration-only text file with a supplied interval, is accepted by the reader. Supported acceleration units are standard gravity, centimetres per second squared and metres per second squared. An explicit unit argument takes precedence over a comment header; the reader assumes metres per second squared when neither is supplied. Units are therefore required to be declared before engineering use. <a href="#ref-implementation">Reader contract</a>.</p>
 <p>The returned record contains the original time coordinate, converted acceleration and source fingerprint. The calculation returns the original, corrected and filtered acceleration, integrated velocity and displacement, the original-record summary, and the applied processing settings. The configured route writes these histories and a source-declared report. Output field names and units are defined in <a href="#section-9-2">Section 9.2</a>.</p>
@@ -111,7 +112,7 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <p>The documented public example is calculated by calling the reader and kinematic function with the committed configuration. Values below are obtained from the returned summaries, processing records and complete histories; displayed rounding is applied after calculation.</p>
 <h3>5.1 Input and processing conditions</h3>
 <p>The input contains {{ metric('npts', 0) }} samples at an interval of {{ metric('dt_s', 2) }} s, spanning {{ metric('duration_s', 2) }} s. The original peak ground acceleration is {{ metric('pga_g', 4) }} g, or {{ metric('pga_m_s2') }} m/s². These values describe the original digitization. <a href="#ref-record">Record source</a>; <a href="#ref-implementation">returned summary</a>.</p>
-<p>The first {{ metric('baseline_samples', 0) }} samples give a mean offset of {{ metric('baseline_offset_m_s2', 4) }} m/s². The filter design argument is {{ metric('filter_order', 0) }}. Its lower edge is {{ metric('low_hz', 2) }} Hz; the requested upper edge is {{ metric('requested_high_hz', 2) }} Hz. The returned effective upper edge is {{ metric('high_hz', 2) }} Hz, below the Nyquist boundary of {{ metric('nyquist_hz', 2) }} Hz. The initial-window assumption remains unconfirmed. <a href="#ref-example">Example settings</a>; <a href="#ref-implementation">returned processing record</a>.</p>
+<p>The first {{ metric('baseline_samples', 0) }} samples give a mean offset of {{ metric('baseline_offset_m_s2', 4) }} m/s². The filter design argument is {{ metric('filter_order', 0) }}. Its lower edge is {{ metric('low_hz', 2) }} Hz; the requested upper edge is {{ metric('requested_high_hz', 2) }} Hz. The returned effective upper edge is {{ metric('high_hz', 2) }} Hz, below the Nyquist boundary of {{ metric('nyquist_hz', 2) }} Hz. Without filtering, the baseline-corrected integration ends at {{ metric('unfiltered_end_velocity_m_s') }} m/s. This residual demonstrates sensitivity to baseline treatment; physical qualification of the initial window remains unconfirmed. <a href="#ref-example">Example settings</a>; <a href="#ref-implementation">returned processing record</a>.</p>
 <h3>5.2 Returned motion</h3>
 <p>The filtered peak acceleration is {{ metric('filtered_peak_m_s2') }} m/s². The maximum absolute integrated velocity is {{ metric('peak_velocity_m_s', 4) }} m/s and the maximum absolute integrated displacement is {{ metric('peak_displacement_m', 4) }} m. The final signed velocity is {{ metric('end_velocity_m_s', 4) }} m/s and the final signed displacement is {{ metric('end_displacement_m', 4) }} m. The integrated histories are dependent on the stated settings and zero initial motion; no physical end-motion tolerance or structural capacity limit is supplied. <a href="#ref-implementation">Returned histories</a>.</p>
 <figure><div class="chart" data-chart="acceleration" data-column="filtered_acceleration_m_s2" data-unit="m/s²" data-label="Filtered acceleration"></div>
@@ -179,7 +180,7 @@ from digitalmodel.seismic import read_ascii_accelerogram
 from digitalmodel.seismic.response_spectrum.calculations import compute_kinematics
 
 example = Path("examples/workflows/response-spectrum")
-settings = yaml.safe_load((example / "input.yml").read_text())["response_spectrum"]
+settings = yaml.safe_load((example / "input.yml").read_text(encoding="utf-8"))["response_spectrum"]
 record = read_ascii_accelerogram(
     example / settings["record"]["file"], units=settings["record"]["units"]
 )
@@ -189,16 +190,16 @@ result = compute_kinematics(
 print(result.summary)
 print(result.processing_chain)
 print(result.timeseries)</pre></details>
-<p id="ref-rebuild">Reproduction uses <code>PYTHONPATH=src uv run --locked python scripts/reporting/build_seismic_module_report.py</code>. A disposable destination is accepted with <code>--output-dir</code>. Report checks are in <code>tests/seismic/test_module_report.py</code>. The Python environment requires the project dependencies, with the package source available. The numerical and template-library versions are checked against the repository lock before the report is written; their current values are listed in the appendix.</p>
+<p id="ref-rebuild">Reproduction uses <code>PYTHONPATH=src uv run python scripts/reporting/build_seismic_module_report.py</code>. A disposable destination is accepted with <code>--output-dir</code>. Report checks are in <code>tests/seismic/test_module_report.py</code>. The Python environment requires the project dependencies, with the package source available. The installed numerical and template-library versions are recorded in the appendix as informational metadata; a difference from the repository lock does not block generation. Rebuild checks disregard only these recorded version values when comparing issued content.</p>
 <details id="ref-checks"><summary>Existing numerical-check inventory</summary>
 <table><thead><tr><th scope="col">Evidence locator</th><th scope="col">Check count</th><th scope="col">Scope</th></tr></thead><tbody>
 {% for row in inventory %}<tr><td><code>{{ row.path }}</code></td><td>{{ row.count }}</td><td>{{ row.tests|join('; ') }}</td></tr>{% endfor %}
 </tbody><caption>Table 9.1. Pre-existing seismic checks counted from test definitions; a definition count is not an execution result.</caption></table></details>
 <details><summary>Source digests and retained-data basis</summary>
-<p>The engineering repository retains the public example and owns this derived analysis. No new measured data are introduced. The fixture documentation supplies the existing redistribution basis; no wider rights or field qualification are inferred. Raw bytes are unchanged. A changed record digest prevents report generation. Full returned arrays are embedded in this file; the report does not depend on a network data download.</p>
+<p>The engineering repository retains the public example and maintains this derived analysis. No new measured data are introduced. The fixture documentation supplies the existing redistribution basis; no wider rights or field qualification are inferred. Raw bytes are unchanged. Text-source digests normalise CRLF line endings to LF without rewriting the inputs. A changed record digest after this normalisation prevents report generation. Full returned arrays are embedded in this file; the report does not depend on a network data download.</p>
 <table><thead><tr><th scope="col">Evidence locator</th><th scope="col">SHA-256 digest</th></tr></thead><tbody>
 {% for source in evidence.sources %}<tr><td><code>{{ source.path }}</code></td><td><code>{{ source.sha256 }}</code></td></tr>{% endfor %}
-</tbody><caption>Table 9.2. Exact source-byte digests for the record, configuration, implementation and existing checks.</caption></table>
+</tbody><caption>Table 9.2. LF-normalised source digests for the record, configuration, implementation and existing checks.</caption></table>
 <p>Layout exemplar: <code>{{ exemplar }}</code>. Canonical brand stylesheet: <code>{{ brand }}</code>. Both stylesheets are inlined into this document. The required <code>hs-doc</code> body class is applied; the inspected exemplar does not itself use that class.</p>
 </details>
 <table><thead><tr><th scope="col">Returned history field</th><th scope="col">Unit</th><th scope="col">Meaning</th><th scope="col">Source</th></tr></thead><tbody>
@@ -216,7 +217,7 @@ print(result.timeseries)</pre></details>
 <p>The supporting register distinguishes supplied data, calculation conditions and missing decision criteria. Review notes can be exported as a separate file beside this document; the report and change panel remain usable without a network connection.</p>
 <h3 id="data-register">10.1 Data register and symbols</h3>
 <table><thead><tr><th scope="col">Item</th><th scope="col">Basis and status</th><th scope="col">Use condition or required action</th><th scope="col">Source</th></tr></thead><tbody>
-<tr><td>Acceleration record and time coordinate</td><td>Supplied public digitization; exact digest retained.</td><td>Use this digitization for reproduction. Confirm site relevance before design use.</td><td><a href="#section-9-2">Section 9.2</a></td></tr>
+<tr><td>Acceleration record and time coordinate</td><td>Supplied public digitization; LF-normalised digest retained.</td><td>Use this digitization for reproduction. Confirm site relevance before design use.</td><td><a href="#section-9-2">Section 9.2</a></td></tr>
 <tr><td>Initial-window mean</td><td>ASSUMED - to be confirmed: initial samples represent an acceleration offset.</td><td>Review the pre-event interval and compare corrected motion with independent evidence.</td><td><a href="#section-3">Section 3</a></td></tr>
 <tr><td>Initial velocity and displacement</td><td>ASSUMED - to be confirmed: zero initial motion.</td><td>Establish compatible initial conditions before physical interpretation.</td><td><a href="#section-4">Section 4</a></td></tr>
 <tr><td>Example filter band</td><td>Supplied configuration; engineering suitability remains NOT_EVALUATED.</td><td>Assess filter-band sensitivity against the intended motion range.</td><td><a href="#section-5">Section 5</a></td></tr>
@@ -227,7 +228,7 @@ print(result.timeseries)</pre></details>
 <h3>10.2 Quality preflight evidence</h3>
 <p>The record digest, input units and sample interval are read before calculation. Every worked-example scalar is bound to a returned module quantity or a stated derivation from returned data. Complete histories are retained without display rounding. Rebuild checks compare the generated file with the issued file, compare all returned samples and displayed values, reject a changed record digest, and exercise direct routing without general-engine dispatch.</p>
 <p>The inventory in Table 9.1 distinguishes existing checks from report reproduction. The public data are not a measured-displacement validation set. The missing acceptance criterion and the initial-motion assumptions are retained in Table 10.1. No result is labelled a structural acceptance.</p>
-<table><thead><tr><th scope="col">Numerical dependency</th><th scope="col">Version</th><th scope="col">Source</th></tr></thead><tbody>
+<table id="dependency-versions"><thead><tr><th scope="col">Numerical dependency</th><th scope="col">Version</th><th scope="col">Source</th></tr></thead><tbody>
 {% for name, version in evidence.versions.items() %}<tr><td>{{ name }}</td><td>{{ version }}</td><td>Installed package metadata at calculation time.</td></tr>{% endfor %}
 </tbody><caption>Table 10.2. Dependency versions used for the current calculation.</caption></table>
 <h3>10.3 Engineering changes and comments</h3>
