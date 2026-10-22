@@ -9,7 +9,7 @@ default:
 crack_assessment:
   component_id: SYNTHETIC-PLATE
   geometry: plate_surface
-  a_mm: 5.0
+  a_mm: 4.0
   c_mm: 5.0
   t_mm: 20.0
   # Half-width, not total plate width.

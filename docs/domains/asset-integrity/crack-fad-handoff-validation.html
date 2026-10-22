@@ -15,7 +15,10 @@ code-qualified service acceptance.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-20</td><td>Add the plate workflow and
-record independent arithmetic and the remaining qualification gaps.</td></tr></tbody></table>
+record independent arithmetic and the remaining qualification gaps.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Reduce the example depth so the search
+extends above the assessed flaw; state the wide-plate and continuous-yield
+limits and identify the stress-intensity reference.</td></tr></tbody></table>
 <p>Table 1. Issue history.</p>
 <h2>Inputs and data basis</h2>
 <p>The committed <a href="../../../examples/workflows/crack-fad-level2-handoff/input.yml">input example</a>
@@ -23,7 +26,7 @@ is synthetic. It is neither measured inspection data nor a reproduction of a
 licensed worked example. The engineering inputs are explicit; numerical search
 settings are chosen by the caller. No material grade is inferred.</p>
 <table><thead><tr><th>Quantity</th><th>Value</th><th>Units</th></tr></thead><tbody>
-<tr><td>Depth a; half-length c</td><td>5.0; 5.0</td><td>mm</td></tr>
+<tr><td>Depth a; half-length c</td><td>4.0; 5.0</td><td>mm</td></tr>
 <tr><td>Plate thickness; half-width</td><td>20.0; 50.0</td><td>mm</td></tr>
 <tr><td>Membrane; bending stress</td><td>100.0; 0.0</td><td>MPa</td></tr>
 <tr><td>Yield; tensile strength</td><td>400.0; 600.0</td><td>MPa</td></tr>
@@ -36,7 +39,9 @@ settings are chosen by the caller. No material grade is inferred.</p>
 is reused without introducing new standard coefficients. Its documented sources
 are BS 7910:2013, <em>Guide to methods for assessing the acceptability of flaws
 in metallic structures</em>, Clause 7.3.2 (Option 1) and Annex P (reference stress),
-and the surface-plate stress-intensity solution documented there (1981).
+and Newman and Raju (1981), <em>An empirical stress-intensity factor equation
+for the surface crack</em>, Engineering Fracture Mechanics 15(1-2):185-192,
+doi:10.1016/0013-7944(81)90116-8.
 The existing method checks the surface and deepest points
 of a semi-elliptical flaw in a plate under membrane plus bending stress.</p>
 <p>Kr is applied stress intensity divided by the supplied toughness; Lr is
@@ -52,10 +57,10 @@ source qualification. No licensed standard or its example values are copied.
 <p>The complete arithmetic is written out in the test docstrings in
 <a href="../../../tests/asset_integrity/test_crack_fad_workflow.py">test_crack_fad_workflow.py</a>.
 Expected values are calculated without calling the implementation under test.
-At the demonstration geometry, the Annex P expression gives alpha = 0.05,
-reference stress = 105.3 MPa and Lr = 5/19. The independently evaluated plate
-expression gives governing surface-point stress intensity = 9.4 MPa sqrt(m),
-Kr = 0.094 and curve height = 0.983. The point is inside the curve and below
+At the demonstration geometry, the Annex P expression gives alpha = 0.04,
+reference stress = 104.2 MPa and Lr = 0.260. The independently evaluated plate
+expression gives governing surface-point stress intensity = 8.5 MPa sqrt(m),
+Kr = 0.085 and curve height = 0.983. The point is inside the curve and below
 Lr_max = 1.250. These rounded values are display values; tests retain precision.</p>
 <p>A separate collapse-governed synthetic case uses half-length and thickness
 20.0 mm, membrane and yield stress 400.0 MPa, tensile strength 600.0 MPa, and
@@ -77,6 +82,10 @@ not established by the presence of this record.</li>
 nonnegative bending are supported. Half-length and half-width conventions are
 explicit. Unsupported keys, missing toughness, nonfinite inputs, invalid geometry
 and unsupported curve selection are rejected.</li>
+<li>The Annex P wide-plate expression requires plate half-width at least c + t;
+the narrow-plate reference-stress branch is not evaluated. Only the continuous-yield
+Option 1 form is implemented; the Clause 7.3.2 yield-discontinuity (Luders plateau)
+form is <strong>NOT_EVALUATED</strong>.</li>
 <li>Residual/secondary stress, weld mismatch, hydrogen, intermediate crack-front
 maxima, fatigue growth, service-temperature toughness and remaining life are
 not evaluated. The handoff asks the specialist to establish the missing basis.</li>

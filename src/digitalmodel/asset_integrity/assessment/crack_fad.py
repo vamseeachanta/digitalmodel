@@ -31,9 +31,10 @@ Pieces, each anchored to its published source:
   = BS 7910 Level 2A generic curve = original R6 Option 1 curve:
   ``f(Lr) = (1 - 0.14 Lr^2)(0.3 + 0.7 exp(-0.65 Lr^6))`` with the same
   Lr_max cutoff (open-literature citation on the #2157 plan, PR #2194).
-- **Stress intensity** — Newman-Raju (1981) semi-elliptical surface flaw in a
-  finite plate under membrane + bending stress (deepest point and surface
-  point), the standard engineering K-solution for this geometry.
+- **Stress intensity** — Newman and Raju (1981), "An empirical stress-intensity
+  factor equation for the surface crack", Engineering Fracture Mechanics
+  15(1-2):185-192, doi:10.1016/0013-7944(81)90116-8: semi-elliptical surface flaw
+  in a finite plate under membrane + bending stress (deepest and surface points).
 - **Reference stress** — BS 7910 Annex P flat-plate surface-flaw solution
   (normal bending restraint).
 - **Toughness fallback** — BS 7910 Annex J lower-bound Charpy correlation
@@ -126,7 +127,8 @@ def newman_raju_k(
 ) -> float:
     """K (MPa*sqrt(m)) for a semi-elliptical surface flaw in a plate.
 
-    Newman & Raju (1981) empirical solution, tension (membrane) + bending.
+    Newman and Raju (1981), Engineering Fracture Mechanics 15(1-2):185-192,
+    doi:10.1016/0013-7944(81)90116-8; tension (membrane) + bending.
     ``phi_deg`` = 90 is the deepest point; 0 is the surface point.
     Validity (Newman & Raju 1981): 0 < a/c <= 1.0 (a <= c form), a/t < 1.0,
     c/width < 0.5.

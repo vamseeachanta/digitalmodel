@@ -44,6 +44,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .screening_report import finite_number
+
 # RSF at/below which the Level-2 closed-form re-rating is no longer applicable;
 # the component is in repair/replace territory and needs a Level-3 / engineering
 # assessment regardless of further screening. Mirrors the severe-loss floor used
@@ -76,6 +78,22 @@ class Level3Handoff:
     notes: str = ""
 
 
+def _strength_inputs(level2_result, has_crack_like_flaw, rsf_floor):
+    """Reject absent/invalid metal-loss evidence; exempt only crack-only calls."""
+    floor = finite_number({"rsf_floor": rsf_floor}, "rsf_floor")
+    if floor > 1:
+        raise ValueError("rsf_floor must be in (0, 1]")
+    if has_crack_like_flaw and not any(
+        key in level2_result for key in ("rsf", "rsf_a", "assessment_type")
+    ):
+        return None, None, floor
+    rsf = finite_number(level2_result, "rsf", positive=False)
+    rsf_a = finite_number(level2_result, "rsf_a")
+    if rsf > 1 or rsf_a > 1:
+        raise ValueError("rsf must be in [0, 1] and rsf_a in (0, 1]")
+    return rsf, rsf_a, floor
+
+
 def should_escalate_to_level3(
     level1_result: dict,
     level2_result: dict,
@@ -105,7 +123,9 @@ def should_escalate_to_level3(
         level1_result: dict from the Level 1 screener (uses ``verdict`` if
             present, informational only here).
         level2_result: dict from the Level 2 engine; needs ``rsf`` and
-            ``rsf_a`` for metal loss. Crack-only results may omit both;
+            ``rsf_a`` for metal loss. Missing, non-finite or out-of-range
+            metal-loss evidence raises ValueError. Crack-only results may omit
+            both only when no metal-loss ``assessment_type`` is supplied;
             absence is not interpreted as measured zero strength.
         has_crack_like_flaw: Flaw is crack-like / planar rather than volumetric
             metal loss.
@@ -118,15 +138,16 @@ def should_escalate_to_level3(
         ``reasons`` is a list of human-readable trigger strings (empty when not
         triggered).
     """
-    rsf = float(level2_result.get("rsf", 0.0))
-    rsf_a = float(level2_result.get("rsf_a", 0.0))
+    rsf, rsf_a, floor = _strength_inputs(
+        level2_result, has_crack_like_flaw, rsf_floor
+    )
 
     reasons: list = []
 
-    if "rsf" in level2_result and rsf < float(rsf_floor):
+    if rsf is not None and rsf < floor:
         reasons.append(
             f"RSF={rsf:.3f} is below the Level-2 re-rating floor of "
-            f"{float(rsf_floor):.2f} — the closed-form re-rating no longer "
+            f"{floor:.3f} — the closed-form re-rating no longer "
             "applies; severe metal loss requires a Level 3 / detailed "
             "assessment."
         )
@@ -155,9 +176,9 @@ def should_escalate_to_level3(
     # Level 2 itself fails with no viable re-rate. Only meaningful when an RSFa
     # is supplied (rsf_a > 0); guard against a still-passing case that already
     # tripped the floor above.
-    if "rsf" in level2_result and rsf_a > 0.0 and rsf < rsf_a:
+    if rsf is not None and rsf < rsf_a:
         reasons.append(
-            f"Level 2 fails: RSF={rsf:.3f} is below RSFa={rsf_a:.2f} with no "
+            f"Level 2 fails: RSF={rsf:.3f} is below RSFa={rsf_a:.3f} with no "
             "viable re-rate — a Level 3 assessment is required to qualify "
             "continued service."
         )
@@ -201,8 +222,9 @@ def escalate_to_level3(
     Returns:
         A fully-populated :class:`Level3Handoff`.
     """
-    rsf = float(level2_result.get("rsf", 0.0))
-    rsf_a = float(level2_result.get("rsf_a", 0.0))
+    rsf, rsf_a, floor = _strength_inputs(
+        level2_result, has_crack_like_flaw, rsf_floor
+    )
 
     triggered, triggers = should_escalate_to_level3(
         level1_result,
@@ -213,8 +235,8 @@ def escalate_to_level3(
         rsf_floor=rsf_floor,
     )
 
-    severe_metal_loss = "rsf" in level2_result and (
-        (rsf < float(rsf_floor)) or (rsf_a > 0.0 and rsf < rsf_a)
+    severe_metal_loss = rsf is not None and (
+        (rsf < floor) or (rsf < rsf_a)
     )
 
     # --- Recommended analyses, selected from the active triggers -------------

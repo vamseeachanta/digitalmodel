@@ -3,7 +3,9 @@
 """Offline plate FAD screening and Level 3 handoff, not service qualification.
 
 Calculation authority remains in :mod:`crack_fad`: BS 7910:2013 Clause 7.3.2
-Option 1, Annex P reference stress and the cited 1981 surface-plate K solution.
+Option 1, Annex P reference stress and Newman and Raju (1981), "An empirical
+stress-intensity factor equation for the surface crack", Engineering Fracture
+Mechanics 15(1-2):185-192, doi:10.1016/0013-7944(81)90116-8.
 No standard coefficients or safety factors are introduced by this adapter.
 The plate half-width, elastic modulus, measured toughness and numerical search
 settings are explicit inputs. There is no inferred Charpy toughness or RSF.
@@ -31,8 +33,12 @@ LIMITATIONS = [
     "Only independent arithmetic and workflow regression checks are established.",
     "BS 7910:2013 Option 1 is used; API 579 Part 9 safety factors and "
     "edition-specific service qualification: NOT_EVALUATED.",
+    "Only the continuous-yield Option 1 form is implemented; BS 7910:2013 "
+    "Clause 7.3.2 yield-discontinuity (Luders plateau) form: NOT_EVALUATED.",
     "Flat-plate semi-elliptical surface flaws under tensile membrane and "
-    "nonnegative bending only. Width denotes plate half-width; c is half-length.",
+    "nonnegative bending only. Width denotes plate half-width; c is half-length. "
+    "BS 7910:2013 Annex P wide-plate reference stress requires width >= c + t; "
+    "the narrow-plate branch is NOT_EVALUATED.",
     "Residual and secondary stress, weld mismatch, hydrogen, temperature-dependent "
     "toughness, fatigue growth and remaining life: NOT_EVALUATED.",
     "Only the surface and deepest crack-front points are checked; an intermediate "
@@ -62,11 +68,16 @@ def _inputs(block):
         key: finite_number(block, key, positive=key != "sigma_b_mpa")
         for key in GEOMETRY + LOADS + MATERIAL + SEARCH
     }
-    # Domain from the existing 1981 plate solution in crack_fad.newman_raju_k.
+    # Newman and Raju (1981), Engineering Fracture Mechanics 15(1-2):185-192.
     if not values["a_mm"] < values["t_mm"] or values["a_mm"] > values["c_mm"]:
         raise ValueError("require 0 < a < t and a <= c")
     if values["c_mm"] / values["width_mm"] >= 0.5:
         raise ValueError("plate solution requires c/width < 0.5")
+    if values["width_mm"] < values["c_mm"] + values["t_mm"]:
+        raise ValueError(
+            "BS 7910:2013 Annex P wide-plate reference stress requires "
+            "plate half-width >= c + t; the narrow-plate branch is NOT_EVALUATED"
+        )
     if values["sigma_u_mpa"] <= values["sigma_y_mpa"]:
         raise ValueError("require sigma_u_mpa > sigma_y_mpa for Option 1")
     if values["max_depth_fraction"] >= 1:
@@ -119,10 +130,18 @@ def _handoff(values, point, depth, block):
         **{flag: block.get(flag, False) for flag in FLAGS},
     )
     handoff.data_package["critical_depth"] = depth.copy()
-    handoff.recommended_analysis[0] = (
+    computed_review = (
         "Review the computed BS 7910:2013 Option 1 point, qualify the stress "
         "and toughness basis, and select any further fracture or numerical analysis."
     )
+    handoff.recommended_analysis = [
+        computed_review if analysis.startswith("BS7910 FAD fracture assessment") else analysis
+        for analysis in handoff.recommended_analysis
+    ]
+    handoff.open_questions = [
+        question for question in handoff.open_questions
+        if not question.startswith("Provide CVN / fracture toughness")
+    ]
     handoff.notes = (
         "Level 3 specialist review is required by the crack screening policy. "
         "The BS 7910:2013 Option 1 point has been computed; service qualification, "
@@ -169,10 +188,12 @@ def router(cfg):
     store_report(result, block, "crack-fad-report.html", cfg.get("_config_dir_path"))
     if "report_path" in result:
         path = Path(result["report_path"]).with_name("level3-handoff.json")
+        result["report_path"] = Path(result["report_path"]).as_posix()
         path.write_text(
             json.dumps(result["handoff"], indent=2, allow_nan=False) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
-        result["handoff_path"] = str(path)
+        result["handoff_path"] = path.as_posix()
     cfg[cfg["basename"]] = result
     return cfg

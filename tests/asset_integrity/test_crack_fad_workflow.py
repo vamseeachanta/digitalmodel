@@ -12,8 +12,12 @@ import pytest
 import yaml
 
 from digitalmodel.asset_integrity.assessment.crack_fad import critical_flaw_depth_mm
+from digitalmodel.asset_integrity.assessment import crack_fad_workflow
 from digitalmodel.asset_integrity.assessment.crack_fad_workflow import router
-from digitalmodel.asset_integrity.assessment.level3_escalation import escalate_to_level3
+from digitalmodel.asset_integrity.assessment.level3_escalation import (
+    escalate_to_level3,
+    should_escalate_to_level3,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -89,6 +93,91 @@ def test_collapse_controlled_critical_depth_is_eight_mm():
     assert result["critical_depth"]["status"] == "BRACKETED_BOUNDARY"
 
 
+@pytest.mark.parametrize("half_width", [10.1, 24.999])
+def test_narrow_plate_reference_stress_domain_rejected(half_width):
+    """BS 7910:2013 Annex P wide-plate form requires half-width >= c+t."""
+    cfg = case()
+    cfg["crack_assessment"].update(width_mm=half_width, sigma_m_mpa=300.0)
+    with pytest.raises(ValueError, match="BS 7910:2013 Annex P"):
+        router(cfg)
+
+
+@pytest.mark.parametrize("half_width", [25.0, 25.001])
+def test_wide_plate_reference_stress_domain_includes_boundary(half_width):
+    """BS 7910:2013 Annex P: alpha=(5/20)/(1+20/5)=0.05.
+
+    At Pm=300 MPa, sigma_ref=300/0.95=315.7894736842 MPa;
+    Lr=(300/0.95)/400=0.7894736842; Cl 7.3.2 cutoff=1000/800=1.25.
+    """
+    cfg = case()
+    cfg["crack_assessment"].update(width_mm=half_width, sigma_m_mpa=300.0)
+    point = router(cfg)["crack_fad_level2_handoff"]["assessment"]
+    assert point["sigma_ref_mpa"] == pytest.approx(315.7894736842)
+    assert point["lr"] == pytest.approx(0.7894736842)
+    assert point["lr_max"] == pytest.approx(1.25)
+
+
+@pytest.mark.parametrize("entry_point", ["screen", "handoff"])
+@pytest.mark.parametrize(
+    "assessment",
+    [
+        {},
+        {"rsf_a": 0.9},
+        {"rsf": 0.95},
+        *({"rsf": value, "rsf_a": 0.9}
+          for value in [None, True, "invalid", float("nan"), float("inf"), -0.1, 1.1]),
+        *({"rsf": 0.95, "rsf_a": value}
+          for value in [None, True, float("nan"), float("inf"), 0.0, 1.1]),
+    ],
+)
+def test_invalid_metal_loss_result_fails_closed(entry_point, assessment):
+    with pytest.raises(ValueError, match="rsf"):
+        if entry_point == "screen":
+            should_escalate_to_level3({}, assessment)
+        else:
+            escalate_to_level3({}, {}, {}, {}, assessment)
+
+
+@pytest.mark.parametrize("floor", [None, True, float("nan"), float("inf"), 0.0, 1.1])
+def test_invalid_metal_loss_floor_fails_closed(floor):
+    with pytest.raises(ValueError, match="rsf_floor"):
+        escalate_to_level3({}, {}, {}, {}, {"rsf": 0.95, "rsf_a": 0.9}, rsf_floor=floor)
+
+
+def test_zero_metal_loss_rsf_still_escalates():
+    handoff = escalate_to_level3({}, {}, {}, {}, {"rsf": 0.0, "rsf_a": 0.9})
+    assert handoff.triggered
+    assert any("RSF=0.000" in reason for reason in handoff.triggers)
+    assert any("severe metal loss" in analysis for analysis in handoff.recommended_analysis)
+
+
+@pytest.mark.parametrize("entry_point", ["screen", "handoff"])
+@pytest.mark.parametrize(
+    "assessment",
+    [
+        *({"rsf_a": value} for value in [None, True, float("nan"), float("inf"), 0.9]),
+        {"assessment_type": "GML"},
+        {"assessment_type": "LML"},
+    ],
+)
+def test_crack_flag_cannot_exempt_partial_metal_loss_evidence(entry_point, assessment):
+    with pytest.raises(ValueError, match="rsf"):
+        if entry_point == "screen":
+            should_escalate_to_level3({}, assessment, has_crack_like_flaw=True)
+        else:
+            escalate_to_level3({}, {}, {}, {}, assessment, has_crack_like_flaw=True)
+
+
+def test_complete_mixed_flaw_result_retains_both_triggers():
+    handoff = escalate_to_level3(
+        {}, {}, {}, {}, {"rsf": 0.4, "rsf_a": 0.9}, has_crack_like_flaw=True
+    )
+    assert handoff.triggered
+    assert any("crack-like" in reason for reason in handoff.triggers)
+    assert any("severe metal loss" in reason for reason in handoff.triggers)
+    assert any("severe metal loss" in analysis for analysis in handoff.recommended_analysis)
+
+
 def test_critical_depth_preserves_finite_width():
     """Regression: finite-width amplification must enter the depth search."""
     args = dict(
@@ -122,8 +211,8 @@ def test_report_and_handoff_round_trip(tmp_path):
         component_id="<script>bad</script>", output_dir=str(tmp_path)
     )
     result = router(cfg)["crack_fad_level2_handoff"]
-    text = Path(result["report_path"]).read_text()
-    package = json.loads(Path(result["handoff_path"]).read_text())
+    text = Path(result["report_path"]).read_text(encoding="utf-8")
+    package = json.loads(Path(result["handoff_path"]).read_text(encoding="utf-8"))
     assert text == result["report_html"]
     assert package == result["handoff"]
     assert package["data_package"]["level2_result"]["curve"] == "BS 7910:2013 Option 1"
@@ -137,6 +226,66 @@ def test_report_and_handoff_round_trip(tmp_path):
     assert "rsf" not in package["data_package"]["level2_result"]
     assert "fatigue" in text.lower()
     json.dumps(result, allow_nan=False)
+
+
+def test_round_trip_with_non_utf8_default(tmp_path, monkeypatch):
+    read_text = Path.read_text
+
+    def read_with_legacy_default(path, *args, **kwargs):
+        kwargs.setdefault("encoding", "cp1252")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_with_legacy_default)
+    test_report_and_handoff_round_trip(tmp_path)
+
+
+def test_yield_discontinuity_is_explicitly_not_evaluated():
+    result = router(case())["crack_fad_level2_handoff"]
+    assert any(
+        "yield-discontinuity" in limitation and "NOT_EVALUATED" in limitation
+        and "7.3.2" in limitation
+        for limitation in result["limitations"]
+    )
+
+
+def test_handoff_keeps_unrelated_analysis_and_resolves_supplied_toughness(monkeypatch):
+    def reordered_handoff(*args, **kwargs):
+        handoff = escalate_to_level3(*args, **kwargs)
+        handoff.recommended_analysis.insert(0, "Retain independent load review.")
+        return handoff
+
+    monkeypatch.setattr(crack_fad_workflow, "escalate_to_level3", reordered_handoff)
+    cfg = case()
+    cfg["crack_assessment"].update(interacting_defects=True, complex_geometry=True)
+    handoff = router(cfg)["crack_fad_level2_handoff"]["handoff"]
+    analyses = handoff["recommended_analysis"]
+    assert "Retain independent load review." in analyses
+    assert not any(analysis.startswith("BS7910 FAD fracture assessment") for analysis in analyses)
+    assert any("Review the computed" in analysis for analysis in analyses)
+    assert any("interacting-defect" in analysis for analysis in analyses)
+    assert any("complex geometry" in analysis for analysis in analyses)
+    assert not any(question.startswith("Provide CVN") for question in handoff["open_questions"])
+    assert any("service temperature" in question for question in handoff["open_questions"])
+
+
+def test_example_depth_search_extends_beyond_assessed_depth():
+    """BS 7910:2013 Annex P: alpha=(4/20)/(1+20/5)=0.04;
+    Lr=100/(1-0.04)/400. Clause 7.3.2 gives f(Lr)=0.9833577741.
+    Newman and Raju (1981), EFM 15(1-2):185-192: a/c=0.8, a/t=0.2;
+    Q=1+1.464*0.8**1.65; M1=1.058; M2=0.35;
+    M3=0.5-1/1.45+14*0.2**24; fw=sqrt(sec(pi*5/100*sqrt(0.2)));
+    K=100*(M1+M2*0.2**2+M3*0.2**4)*fw*sqrt(pi*0.004/Q);
+    the surface multiplier (1.1+0.35*0.2**2)*sqrt(0.8) governs.
+    """
+    path = ROOT / "examples/workflows/crack-fad-level2-handoff/input.yml"
+    cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
+    cfg["crack_assessment"].pop("output_dir")
+    result = router(cfg)["crack_fad_level2_handoff"]
+    point = result["assessment"]
+    assert point["lr"] == pytest.approx(0.2604166667)
+    assert point["kr"] == pytest.approx(0.0847780713)
+    assert point["f_lr"] == pytest.approx(0.9833577741)
+    assert result["critical_depth"]["depth_mm"] > cfg["crack_assessment"]["a_mm"]
 
 
 @pytest.mark.parametrize(
@@ -221,9 +370,9 @@ def test_registered_example_runs_through_engine(tmp_path, monkeypatch):
     from assetutilities.common.update_deep import AttributeDict
     from digitalmodel.engine import engine
 
-    registry = yaml.safe_load((ROOT / "docs/registry/workflows.yaml").read_text())
+    registry = yaml.safe_load((ROOT / "docs/registry/workflows.yaml").read_text(encoding="utf-8"))
     (row,) = [r for r in registry["workflows"] if r["id"] == "crack-fad-level2-handoff"]
-    cfg = yaml.safe_load((ROOT / row["input"]).read_text())
+    cfg = yaml.safe_load((ROOT / row["input"]).read_text(encoding="utf-8"))
     cfg["crack_assessment"]["output_dir"] = str(tmp_path)
     # Supply the engine's configured-input contract and isolate its YAML echo.
     (tmp_path / "results").mkdir()

@@ -17,7 +17,7 @@ normal configuration echo. Set `crack_assessment.output_dir` to direct report
 and handoff outputs elsewhere; relative output directories resolve beside the
 input file. No external data or solver is needed.
 
-The synthetic inputs are a 5.0 mm deep, 10.0 mm total-length surface flaw in a
+The synthetic inputs are a 4.0 mm deep, 10.0 mm total-length surface flaw in a
 20.0 mm plate, with a 50.0 mm **half-width**. The membrane stress is 100.0 MPa;
 bending stress is zero. Yield, tensile strength, elastic modulus and toughness
 are explicit numerical inputs, with no material grade implied. Their values
@@ -25,9 +25,10 @@ are chosen for the hand calculation in
 [`test_crack_fad_workflow.py`](../../../tests/asset_integrity/test_crack_fad_workflow.py).
 The depth cap and tolerance are numerical search settings, not standard limits.
 
-The point gives Lr = 0.263 and Kr = 0.094, against f(Lr) = 0.983 and
+The point gives Lr = 0.260 and Kr = 0.085, against f(Lr) = 0.983 and
 Lr_max = 1.250. The point is inside the stated envelope. The fixed-length depth
-search reaches its geometry cap near 5.0 mm; this is **not a failure boundary**.
+search extends above the assessed 4.0 mm depth to its geometry cap near 5.0 mm;
+this is **not a failure boundary**.
 The disposition remains `ESCALATE` and the handoff includes the input basis,
 computed point, search result, triggers, recommended analyses and open questions.
 
