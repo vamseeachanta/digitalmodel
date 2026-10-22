@@ -83,12 +83,12 @@ class ReportParser(HTMLParser):
 def rebuilt(tmp_path):
     module = generator()
     module.build(tmp_path / "report", tmp_path / "calculations")
-    text = (tmp_path / "report/report.html").read_text()
+    text = (tmp_path / "report/report.html").read_text(encoding="utf-8")
     return module, text, ReportParser(text)
 
 
 def independent_result(tmp_path):
-    settings = yaml.safe_load(EXAMPLE.read_text())["hull_girder_screening"]
+    settings = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))["hull_girder_screening"]
     settings.pop("wave_loads")
     settings.pop("section_modulus")
     settings["allowables"] = {
@@ -102,14 +102,14 @@ def independent_result(tmp_path):
 
 def test_report_rebuild_is_exact(rebuilt, tmp_path):
     module, text, parsed = rebuilt
-    assert text == (REPORT / "report.html").read_text()
+    assert text == (REPORT / "report.html").read_text(encoding="utf-8")
     assert (tmp_path / "report/changes.json").read_bytes() == (REPORT / "changes.json").read_bytes()
     assert 'class="hs-doc"' in text
-    style = (ROOT / "docs/api/_assets/brand.css").read_text()
+    style = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     assert style in text
     assert parsed.resources == []
     module.build(tmp_path / "again", tmp_path / "second-calculation")
-    assert text == (tmp_path / "again/report.html").read_text()
+    assert text == (tmp_path / "again/report.html").read_text(encoding="utf-8")
 
 
 def test_all_worked_numbers_and_plot_samples_equal_router(rebuilt, tmp_path):
@@ -125,7 +125,10 @@ def test_all_worked_numbers_and_plot_samples_equal_router(rebuilt, tmp_path):
         value = payload
         for part in attrs["data-number"].split("."):
             value = value[int(part)] if isinstance(value, list) else value[part]
-        assert displayed == module.format_number(value * float(attrs.get("data-scale", "1")))
+        scaled = value * float(attrs.get("data-scale", "1"))
+        expected = (f"{scaled:,.0f}" if attrs.get("data-format") == "integer"
+                    else module.format_number(scaled))
+        assert displayed == expected
     block = inputs["weights"]["lightship"][0]
     assert payload["comparison"]["moment"]["reference"] == block["weight_t"] * inputs["length_m"] / 16
     assert payload["comparison"]["shear"]["reference"] == block["weight_t"] / 4
@@ -134,10 +137,12 @@ def test_all_worked_numbers_and_plot_samples_equal_router(rebuilt, tmp_path):
         assert abs(row["difference_percent"]) <= row["tolerance_percent"]
     assert payload["comparison"]["moment"]["calculated"] == abs(result["max_sagging_t_m"])
     assert payload["comparison"]["shear"]["calculated"] == abs(result["max_shear_t"])
-    basis = json.loads((ROOT / "examples/workflows/hull-girder-report-pack/allowable-basis.json").read_text())
+    basis = json.loads((ROOT / "examples/workflows/hull-girder-report-pack/allowable-basis.json").read_text(encoding="utf-8"))
     assert payload["comparison"]["moment"]["tolerance_percent"] == 100 * basis["validation"]["bending_relative_tolerance"]
     assert payload["comparison"]["shear"]["tolerance_percent"] == 100 * basis["validation"]["shear_relative_tolerance"]
     assert result["closure_ok"]
+    assert result["max_shear_utilization"] == pytest.approx(0.4975)
+    assert result["max_bending_utilization"] == pytest.approx(0.499975)
     assert payload["strength_disposition"] == "NOT_EVALUATED"
 
 
@@ -159,21 +164,68 @@ def test_links_structure_and_public_text(rebuilt):
     assert "pointermove" in text and 'id="chart-limit"' in text
     assert "limit" in text and "Demand" in text and "t·m" in text
     assert not re.search(r"<b[ >]|<strong[ >]", text, re.I)
-    assert not re.search(r"\b(could|should|would|" + "own" + "er" + r")\b", " ".join(parsed.visible), re.I)
+    assert not re.search(r"\b(could|would|" + "own" + "er" + r")\b", " ".join(parsed.visible), re.I)
     assert not re.search(r"/(?:home|mnt)/|[\w.+-]+@[\w.-]+\.[a-z]{2,}", text, re.I)
 
 
-def test_missing_limit_is_not_an_acceptance_claim(tmp_path):
+def test_exceeded_limit_changes_summary(tmp_path, monkeypatch):
     module = generator()
-    settings, _ = independent_result(tmp_path / "reference")
-    settings.pop("allowables")
-    settings["output_dir"] = str(tmp_path / "no-limits")
-    result = router({"hull_girder_screening": settings})["hull_girder_screening"]
-    assert result["screening_status"] == "pass"
-    assert all(row["status"] == "no-allowable" for row in result["utilization"])
-    text = module.render(module.calculate(tmp_path / "calculation"))
-    assert "Illustrative checks satisfy the supplied example limits" in text
+    config = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    config["hull_girder_screening"]["allowables"]["bending_moment"]["hogging_t_m"][1] = 50000
+    example = tmp_path / "exceeded.yml"
+    example.write_text(yaml.safe_dump(config), encoding="utf-8", newline="\n")
+    monkeypatch.setattr(module, "EXAMPLE", str(example))
+    data = module.calculate(tmp_path / "calculation")
+    assert data["result"]["screening_status"] == "fail"
+    assert data["result"]["max_bending_utilization"] == pytest.approx(1.2499375)
+    text = module.render(data)
+    assert "Illustrative checks exceed the supplied example limits." in text
+    assert "Illustrative checks satisfy" not in text
     assert "strength acceptance is NOT_EVALUATED" in text
+
+
+def test_build_with_windows_locale_and_newline_defaults(tmp_path, monkeypatch):
+    module = generator()
+    original_open = Path.open
+
+    def windows_open(path, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
+        if "b" not in mode:
+            encoding = encoding or "cp1252"
+            if newline is None and "w" in mode:
+                newline = "\r\n"
+        return original_open(path, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, "open", windows_open)
+    module.build(tmp_path / "report", tmp_path / "calculation")
+    for name in ("report.html", "changes.json"):
+        raw = (tmp_path / "report" / name).read_bytes()
+        assert b"\r\n" not in raw
+        assert raw.decode("utf-8").endswith("\n")
+
+
+def test_peak_closure_requirements_and_revision_text(rebuilt):
+    module, text, parsed = rebuilt
+    visible = " ".join(parsed.visible)
+    assert "by construction" in visible
+    payload = json.loads(parsed.payload)
+    stations = payload["result"]["stations"]
+    assert min(stations, key=lambda row: row["shear_force_t"])["x_m"] == 25
+    assert max(stations, key=lambda row: row["shear_force_t"])["x_m"] == 75
+    assert "negative shear peak" in visible and "positive shear peak" in visible
+    assert "Draft for client review" not in visible
+    assert "Both sign-specific allowable curves shall be supplied" in visible
+    assert "Station refinement and additional reporting frames are required" in visible
+    counts = [display for attrs, display in parsed.numbers
+              if attrs["data-number"] == "inputs.n_stations"
+              or attrs["data-number"].endswith(".definitions")]
+    assert counts and all("." not in value for value in counts)
+    history = text.split('id="revision-history"')[1].split('</section>')[0]
+    panel = text.split('id="changes-panel"')[1].split('</details>')[0]
+    for revision in module.CHANGES["history"]:
+        for change in revision["changes"]:
+            assert change in history
+    for change in module.CHANGES["history"][0]["changes"]:
+        assert change in panel
 
 
 def test_small_nonzero_values_are_preserved():
@@ -254,6 +306,7 @@ global.window = {showSaveFilePicker: async () => ({createWritable: async () => (
 """
     check = tmp_path / "interaction.cjs"
     check.write_text("const DATA = " + json.dumps(payload) + ";\nconst IDS = "
-                     + json.dumps(parsed.ids) + ";\n" + fixture + script + checks)
+                     + json.dumps(parsed.ids) + ";\n" + fixture + script + checks,
+                     encoding="utf-8", newline="\n")
     result = subprocess.run([node, str(check)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr

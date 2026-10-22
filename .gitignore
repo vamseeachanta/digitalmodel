@@ -582,9 +582,11 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
 
-# Reproducible hull-girder module report deliverables.
+# Shared module-report boundary; keep module exceptions below this header.
 !docs/reports/modules/
 docs/reports/modules/*
+
+# Hull-girder module report deliverables.
 !docs/reports/modules/hullgirderscreening/
 docs/reports/modules/hullgirderscreening/*
 !docs/reports/modules/hullgirderscreening/build_report.py

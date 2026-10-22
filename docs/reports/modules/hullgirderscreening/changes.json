@@ -1,7 +1,16 @@
 {
   "report": "Hull-girder screening module analysis",
-  "revision": "0",
+  "revision": "1",
   "history": [
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "changes": [
+        "Derive the illustrative disposition from screening results to expose exceedances.",
+        "Report both shear peaks and identify box closure as satisfied by construction.",
+        "Separate required qualification from performed checks and make report builds portable."
+      ]
+    },
     {
       "revision": "0",
       "date": "2026-10-22",

@@ -42,8 +42,15 @@ TESTS = (
 )
 CHANGES = {
     "report": "Hull-girder screening module analysis",
-    "revision": "0",
+    "revision": "1",
     "history": [{
+        "revision": "1", "date": "2026-10-22",
+        "changes": [
+            "Derive the illustrative disposition from screening results to expose exceedances.",
+            "Report both shear peaks and identify box closure as satisfied by construction.",
+            "Separate required qualification from performed checks and make report builds portable.",
+        ],
+    }, {
         "revision": "0", "date": "2026-10-22",
         "changes": [
             "Initial issue: document the still-water workflow and its analytical evidence.",
@@ -63,7 +70,7 @@ def format_number(value: float) -> str:
 
 def calculate(calculation_dir: Path) -> dict:
     """Call the documented router with the still-water subset of the example."""
-    inputs = yaml.safe_load((ROOT / EXAMPLE).read_text())["hull_girder_screening"]
+    inputs = yaml.safe_load((ROOT / EXAMPLE).read_text(encoding="utf-8"))["hull_girder_screening"]
     # The main workflow is still-water demand and supplied-curve screening.
     # Optional rule-wave and section-modulus sub-areas are documented as exclusions.
     inputs.pop("wave_loads")
@@ -88,7 +95,7 @@ def calculate(calculation_dir: Path) -> dict:
             or block.get("lcg_m", length / 2) != length / 2
             or inputs["buoyancy"] != {"method": "box"}):
         raise ValueError("analytical comparator requires the documented central-block fixture")
-    basis = json.loads((ROOT / BASIS).read_text())
+    basis = json.loads((ROOT / BASIS).read_text(encoding="utf-8"))
     comparison = {}
     for key, actual, reference, tolerance in (
         ("shear", abs(result["max_shear_t"]), block["weight_t"] / 4,
@@ -105,11 +112,16 @@ def calculate(calculation_dir: Path) -> dict:
         raise ValueError("example fails the raw closure gate")
     inventory = []
     for path in TESTS:
-        tree = ast.parse((ROOT / path).read_text())
+        tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
         inventory.append({"path": path, "definitions": sum(
             isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
             and node.name.startswith("test_") for node in ast.walk(tree))})
+    shear_peaks = {
+        "negative": min(published["stations"], key=lambda row: row["shear_force_t"]),
+        "positive": max(published["stations"], key=lambda row: row["shear_force_t"]),
+    }
     return {"inputs": inputs, "result": published, "comparison": comparison,
+            "shear_peaks": shear_peaks,
             "closure_tolerance": DEFAULT_CLOSURE_TOLERANCE, "inventory": inventory,
             "strength_disposition": "NOT_EVALUATED"}
 
@@ -125,8 +137,8 @@ def table(headers: list[str], rows: list[list[str]], caption: str, key: str) -> 
 
 def house_style() -> str:
     """Inline the existing canonical tokens and report layout without restyling."""
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text()
-    exemplar = (ROOT / EXEMPLAR).read_text()
+    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    exemplar = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
     layout = re.search(r"<style>(.*?)</style>", exemplar, re.S).group(1)
     return "<style>\n" + brand + "\n" + layout + "\n" + """
 svg{max-width:100%;height:auto} .chart-controls{display:flex;gap:12px;flex-wrap:wrap}
@@ -164,12 +176,14 @@ are not represented to scale. No seabed or rigid support is included. Geometry i
 
 def render(data: dict) -> str:
     """Write the complete report with the calculation and module evidence in context."""
-    def number(path, scale=1, tag="span"):
+    def number(path, scale=1, tag="span", integer=False):
         value = data
         for part in path.split("."):
             value = value[int(part)] if isinstance(value, list) else value[part]
-        return (f'<{tag} data-number="{path}" data-scale="{scale}">'
-                f'{format_number(value * scale)}</{tag}>')
+        text = f"{value * scale:,.0f}" if integer else format_number(value * scale)
+        display = ' data-format="integer"' if integer else ""
+        return (f'<{tag} data-number="{path}" data-scale="{scale}"{display}>'
+                f'{text}</{tag}>')
 
     r = data["result"]
     input_rows = [
@@ -177,7 +191,7 @@ def render(data: dict) -> str:
         ["Central cargo weight", number("inputs.weights.lightship.0.weight_t"), "t", "9.2(a)"],
         ["Cargo start", number("inputs.weights.lightship.0.x_start_m"), "m", "9.2(a)"],
         ["Cargo end", number("inputs.weights.lightship.0.x_end_m"), "m", "9.2(a)"],
-        ["Integration stations", number("inputs.n_stations"), "count", "9.2(a)"],
+        ["Integration stations", number("inputs.n_stations", integer=True), "count", "9.2(a)"],
         ["Raw end-closure tolerance", number("closure_tolerance", 100), "%", "9.2(b)"],
         ["Illustrative utilisation limit", number("inputs.utilization_limit", 100), "%", "9.2(a)"],
     ]
@@ -201,13 +215,23 @@ def render(data: dict) -> str:
         p = f"comparison.{key}."
         compare_rows.append([label, number(p + "calculated"), number(p + "reference"), unit,
                              number(p + "difference_percent"), number(p + "tolerance_percent"), "9.2(c), 9.2(d)"])
-    inventory_rows = [[label, number(f"inventory.{i}.definitions"), "9.2(c)" if i == 0 else "9.2(e)"]
+    inventory_rows = [[label, number(f"inventory.{i}.definitions", integer=True), "9.2(c)" if i == 0 else "9.2(e)"]
                       for i, label in enumerate(("Core screening", "Routed workflow", "Supporting strength", "Report-pack example"))]
-    revision = CHANGES["history"][0]
+    revision_rows = [[escape(row["revision"]), escape(row["date"]),
+                      "<ul>" + "".join(f"<li>{escape(change)}</li>" for change in row["changes"]) + "</ul>"]
+                     for row in CHANGES["history"]]
+    latest_changes = "<ul>" + "".join(
+        f"<li>{escape(change)}</li>" for change in CHANGES["history"][0]["changes"]) + "</ul>"
+    if r["screening_status"] == "fail" or any(row["status"] == "fail" for row in r["utilization"]):
+        disposition = "Illustrative checks exceed the supplied example limits."
+    elif r["utilization"] and all(row["status"] == "pass" for row in r["utilization"]):
+        disposition = "Illustrative checks satisfy the supplied example limits."
+    else:
+        disposition = "Illustrative checks lack supplied allowable evidence."
     # The prose is authored as one report; source locators are confined to 9.2.
     body = f"""
 <header><div class="kicker">Module analysis · Longitudinal strength</div>
-<h1>Hull-girder screening module analysis</h1><p class="sub">Draft for client review</p></header>
+<h1>Hull-girder screening module analysis</h1><p class="sub">Draft</p></header>
 <nav aria-label="Contents"><p>Contents:
 <a href="#section-1">Executive summary</a> · <a href="#section-2">Introduction</a> ·
 <a href="#section-3">Summary</a> · <a href="#section-4">Design data</a> ·
@@ -223,7 +247,7 @@ key results are summarized below.</p>
 {number('result.max_sagging_t_m')} t·m at {number('result.x_max_sagging_m')} m.</li>
 <li>The numerical comparison is limited by the analytical-fixture tolerances in Table 7.1;
 it does not establish strength acceptance.</li></ul></li>
-<li>Illustrative checks satisfy the supplied example limits.
+<li>{disposition}
 <ul><li>The maximum bending utilisation is {number('result.max_bending_utilization', 100)} % against the
 {number('result.utilization_limit', 100)} % illustrative limit; strength acceptance is NOT_EVALUATED.</li>
 <li>Approved loading-manual limits and an independent loading-instrument comparison are required before
@@ -232,8 +256,7 @@ an operational strength decision is made.</li></ul></li></ul>
 by <a href="#source-example">References 9.2(a)</a>, <a href="#source-core">9.2(b)</a> and
 <a href="#source-basis">9.2(d)</a>.</p>
 <div id="revision-history"><h3>Revision history</h3>
-{table(['Revision', 'Date', 'What changed and why'], [[escape(revision['revision']), escape(revision['date']),
-'Initial issue: explain the loading calculation and separate numerical agreement from strength acceptance.']], 'Report issue record, newest first.', 'revision-table')}</div></section>
+{table(['Revision', 'Date', 'What changed and why'], revision_rows, 'Report issue record, newest first.', 'revision-table')}</div></section>
 <section id="section-2"><h2>2. Introduction</h2>
 <p>The main still-water workflow is documented for engineers reviewing loading conditions. A documented
 public synthetic box-barge example is recalculated through the module entry point; it is not a measured
@@ -245,12 +268,12 @@ station, frame and summary tables. Source functions and their test records are l
 <section id="section-3"><h2>3. Summary</h2>
 <p>The loading calculation is used as a screening aid. Controls are applied to the input basis and the
 reported coverage before any loading condition is referred for an operational decision.</p>
-<p>Weight units, positions, total weight and longitudinal centre of gravity are checked against the loading
-record. The buoyancy method is selected for the actual hull; the box method is restricted here to the
-prismatic example. Raw end residuals are reviewed before corrected load curves are interpreted.</p>
-<p>Both sign-specific allowable curves are supplied from the approved loading manual. Missing negative
+<p>Weight units, positions, total weight and longitudinal centre of gravity shall be checked against the loading
+record. The buoyancy method shall be selected for the actual hull; the box method is restricted here to the
+prismatic example. Raw end residuals shall be reviewed before corrected load curves are interpreted.</p>
+<p>Both sign-specific allowable curves shall be supplied from the approved loading manual. Missing negative
 curves inherit positive magnitudes; this symmetry is an example assumption, not evidence of an approved
-limit. All reporting frames and expected demand peaks are included. A returned pass status alone does
+limit. All reporting frames and expected demand peaks shall be included. A returned pass status alone does
 not establish that every strength check was evaluated: omitted curves produce no-allowable frame
 results, while the overall status can still be pass. These behaviours are recorded in
 <a href="#source-router">Reference 9.2(f)</a>.</p></section>
@@ -321,11 +344,15 @@ dictionary carry these results; numerical output paths are kept out of this repo
 total allowable curves and section-modulus inputs are excluded from this worked example.</p>
 <h3>6.1 Worked example</h3>
 <p>The calculated displacement is {number('result.displacement_t')} t and its longitudinal centre of gravity
-is {number('result.lcg_m')} m. The largest shear has signed value {number('result.max_shear_t')} t.
+is {number('result.lcg_m')} m. The negative shear peak is {number('shear_peaks.negative.shear_force_t')} t
+at {number('shear_peaks.negative.x_m')} m; the positive shear peak is
+{number('shear_peaks.positive.shear_force_t')} t at {number('shear_peaks.positive.x_m')} m.
+Their magnitudes tie in this symmetric example.
 The maximum sagging moment is {number('result.max_sagging_t_m')} t·m at
 {number('result.x_max_sagging_m')} m. Raw end shear and moment residuals are respectively
 {number('result.closure_shear_fraction', 100)} % and {number('result.closure_moment_fraction', 100)} %,
-against the {number('closure_tolerance', 100)} % closure gate. The raw closure gate is satisfied.</p>
+against the {number('closure_tolerance', 100)} % closure gate. The box buoyancy fits the discrete weight force and moment, so raw closure
+holds by construction for this example; it is not independent validation of the buoyancy basis.</p>
 <p>The maximum frame shear utilisation is {number('result.max_shear_utilization', 100)} % and the maximum
 frame bending utilisation is {number('result.max_bending_utilization', 100)} %. Both use the
 {number('result.utilization_limit', 100)} % illustrative threshold. These comparisons demonstrate
@@ -382,9 +409,9 @@ any corrected result is used. When an illustrative allowable is exceeded, the lo
 referred for engineering assessment and load redistribution is evaluated using approved limits;
 this report does not assign an operating allowance. These actions follow the closure and screening
 basis in <a href="#source-core">References 9.2(b)</a> and <a href="#source-guide">9.2(h)</a>.</p>
-<p>Station refinement and additional reporting frames are used to resolve load discontinuities and
-utilisation peaks. Finite numeric values, units, monotonic direct-buoyancy positions, curve coverage
-and boolean settings are checked before calling the router: the implementation does not comprehensively
+<p>Station refinement and additional reporting frames are required to resolve load discontinuities and
+utilisation peaks; no refinement study is performed here. Finite numeric values, units, monotonic direct-buoyancy positions, curve coverage
+and boolean settings shall be checked before calling the router: the implementation does not comprehensively
 validate all such inputs. A missing allowable is treated as missing evidence rather than acceptance.</p>
 <h3>8.2 Limits of use and not covered</h3>
 <p>The box buoyancy idealisation does not replace hydrostatics for a shaped hull. Load discontinuities
@@ -466,8 +493,7 @@ sign mapping, missing data and intended use. Every example number is generated f
 router output or analytical comparator. No finite-element calculation, mesh or licensed solver is used.</p>
 <h3>10.4 Engineering changes and comments</h3>
 <details id="changes-panel"><summary>Engineering changes since the previous issue</summary>
-<p>Initial issue. The still-water calculation, analytical comparison and missing operational evidence
-are documented together. No earlier engineering result is superseded.</p></details>
+{latest_changes}</details>
 <p>Comments are attached to a section and optional selected quotation. Save the comment file beside this
 HTML as report.comments.json. Where direct file saving is unavailable, the downloaded file is placed
 beside the report manually. Import that file to continue; a browser download alone does not confirm its location.</p>
@@ -481,7 +507,7 @@ beside the report manually. Import that file to continue; a browser download alo
 <p id="comment-message" aria-live="polite">Comments are retained in this page until saved.</p>
 <div id="comment-list"></div>
 </section>
-<footer>Hull-girder screening module analysis · Revision {escape(CHANGES['revision'])} · Synthetic example · Draft for client review</footer>
+<footer>Hull-girder screening module analysis · Revision {escape(CHANGES['revision'])} · Synthetic example · Draft</footer>
 """
     payload = json.dumps(data, ensure_ascii=False, allow_nan=False, separators=(",", ":")).replace("</", "<\\/")
     changes = json.dumps(CHANGES, ensure_ascii=False).replace("</", "<\\/")
@@ -634,9 +660,9 @@ def build(output_dir: Path, calculation_dir: Path) -> dict:
         raise ValueError("calculation tables require a separate directory")
     data = calculate(calculation_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(data), encoding="utf-8")
+    (output_dir / "report.html").write_text(render(data), encoding="utf-8", newline="\n")
     (output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     return data
 
 
