@@ -26,32 +26,43 @@ def main() -> None:
         "--results", type=Path, help="JSON list of normalised ResultRecord objects"
     )
     args = parser.parse_args()
-    inputs = ChainInput.model_validate(yaml.safe_load(args.input.read_text()))
+    inputs = ChainInput.model_validate(
+        yaml.safe_load(args.input.read_text(encoding="utf-8"))
+    )
     bundle = prepare_chain(inputs, args.out)
     records = []
     if args.results:
         records = [
             ResultRecord.model_validate(row)
-            for row in json.loads(args.results.read_text())
+            for row in json.loads(args.results.read_text(encoding="utf-8"))
         ]
     document = DocumentMeta(
-        number="R0000-RPT-001-00",
-        revision="00",
+        number="R0000-RPT-001-01",
+        revision="01",
         title="Floating wind sizing analysis",
         project="Generic",
         client="Generic",
-        date="2026-10-20",
+        date="2026-10-22",
         revision_history=[
             RevisionRow(
                 rev="00",
                 date="2026-10-20",
                 description="Initial offline mapping example; identify data needed for coupled analysis.",
-            )
+            ),
+            RevisionRow(
+                rev="01",
+                date="2026-10-22",
+                description="Require explicit mass basis and spectral waves; publish UTF-8 outputs after validation and record the hull equilibrium gap.",
+            ),
         ],
     )
     spec = build_chain_report(bundle, document=document, records=records)
-    (args.out / "analysis.html").write_text(render_html(spec))
-    (args.out / "analysis.json").write_text(spec.model_dump_json(indent=2) + "\n")
+    (args.out / "analysis.html").write_text(
+        render_html(spec), encoding="utf-8", newline="\n"
+    )
+    (args.out / "analysis.json").write_text(
+        spec.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print("Offline inputs and analysis report written; solver checks NOT_EVALUATED.")
 
 

@@ -19,6 +19,8 @@ import hashlib
 import json
 import math
 import re
+import stat
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -52,6 +54,10 @@ SOURCES = (
     "https://openstax.org/books/university-physics-volume-1/pages/10-5-calculating-moments-of-inertia",
     "BIPM, SI Brochure, 9th ed. (2019), Table 8: tonne to kilogram; "
     "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf",
+    "BIPM, 3rd CGPM (1901), Declaration 2, conventional value of standard gravity; "
+    "https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-2",
+    "NOAA, World Ocean Atlas 2013 FAQ, question 8: assumed seawater density; "
+    "https://www.nodc.noaa.gov/OC5/wod-woa-faqs.html",
 )
 NOT_EVALUATED = {
     "diffraction_schema": "Diffraction package initialization imports solver components; validation deferred.",
@@ -84,6 +90,8 @@ class ChainInput(BaseModel):
     criteria: ScreeningCriteria
     load_cases: list[LoadCase] = Field(min_length=1)
     water_depth_m: float = Field(gt=0)
+    water_density_kg_m3: float = Field(gt=0)
+    ballast_vcg_m: float = Field(ge=0, description="Ballast CG above keel (m)")
     frequencies_rad_s: list[float] = Field(min_length=1)
     headings_deg: list[float] = Field(min_length=1)
     hull_radii_m: tuple[float, float, float]
@@ -123,6 +131,13 @@ class ChainInput(BaseModel):
             )
         if self.water_depth_m <= floater.draft:
             raise ValueError("water depth must exceed hull draft")
+        # The inherited screen cannot vary density or ballast position. Require
+        # an explicit compatible basis rather than silently screen another hull.
+        if self.water_density_kg_m3 != RHO_SEAWATER:
+            raise ValueError("unsupported screening water density")
+        # This is an inherited screening assumption, not a design coefficient.
+        if not math.isclose(self.ballast_vcg_m, 0.05 * floater.draft, abs_tol=1e-12):
+            raise ValueError("unsupported screening ballast VCG")
         if any(r <= 0 for r in self.hull_radii_m):
             raise ValueError("hull radii must be positive")
         if any(f <= 0 or not math.isfinite(f) for f in self.frequencies_rad_s):
@@ -206,6 +221,37 @@ def _connected_to(generic: Any, turbine: Any, floater_name: str) -> bool:
     return False
 
 
+def _is_link(path: Path) -> bool:
+    """Junctions are links even when Windows reports is_symlink() as False."""
+    if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+        return True
+    try:
+        attributes = path.lstat()
+    except FileNotFoundError:
+        return False  # A new output directory has no link metadata yet.
+    return bool(
+        getattr(attributes, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+    )
+
+
+def _generated_files(root: Path) -> list[Path]:
+    """Check containment and reject links before descending into directories."""
+    files = []
+    pending = [root]
+    resolved_root = root.resolve()
+    while pending:
+        for path in pending.pop().iterdir():
+            if _is_link(path) or not path.resolve().is_relative_to(resolved_root):
+                raise ValueError(
+                    "generated output must remain inside its directory without links"
+                )
+            if path.is_dir():
+                pending.append(path)
+            elif path.is_file():
+                files.append(path)
+    return sorted(files)
+
+
 def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
     """Screen one sized floater and generate validated coupling inputs per sea state.
 
@@ -215,8 +261,11 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
     No mesh file, controller file or result is silently created or substituted.
     """
     out = Path(out_dir)
+    if _is_link(out):
+        raise ValueError("output directory must not be a link or junction")
     if out.exists() and any(out.iterdir()):
         raise ValueError("output directory must be empty; preserve existing data")
+    out = out.resolve()
     shared_input = inputs.model_dump(mode="json")
     digest = _digest(shared_input)
     template = ProjectInputSpec.model_validate(copy.deepcopy(inputs.template))
@@ -233,6 +282,12 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         )
     if template.environment.raw_properties.get("WaterSurfaceZ", 0) != 0:
         raise ValueError("water surface must use the zero SWL datum")
+    if template.environment.water.density != inputs.water_density_kg_m3 / KG_PER_TONNE:
+        raise ValueError(
+            "template water density mismatch with explicit screening density"
+        )
+    if any(lc.steady_load_kN != 0 for lc in inputs.load_cases):
+        raise ValueError("nonzero steady load has no native applied-force mapping")
     vessels = [v for v in generic.vessels if v.name == inputs.floater_name]
     turbines = [t for t in generic.turbines if t.name == inputs.turbine_name]
     if len(vessels) != 1 or len(turbines) != 1:
@@ -268,12 +323,12 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
     p = variant.properties
     if not p.feasible:
         raise ValueError("infeasible mass balance at the requested draft")
-    # OpenStax (2016), §9.6: M*z = sum(m_i*z_i). Remove RNA+tower first moment.
+    # OpenStax (2016), §9.6: M*z = sum(m_i*z_i), using explicit ballast VCG.
     mass_t = p.total_mass_t - inputs.topside.total_mass_t
     hull_z = (
-        p.total_mass_t * (p.KG_m - p.draft_m)
-        - inputs.topside.total_mass_t * inputs.topside.cg_above_waterline_m()
-    ) / mass_t
+        p.steel_mass_t * inputs.params["steel_vcg_frac"] * p.draft_m
+        + p.ballast_mass_t * inputs.ballast_vcg_m
+    ) / mass_t - p.draft_m
     cog = [0.0, 0.0, hull_z]  # Centreline/SWL datum, defined by ChainInput.
     # OpenStax (2016), §10.5: I_axis = m*k_axis² about the hull-only CG.
     inertias = [mass_t * r**2 for r in inputs.hull_radii_m]
@@ -292,13 +347,14 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         mesh_file=inputs.mesh_file,
         grid=FrequencyGrid(tuple(inputs.frequencies_rad_s), tuple(inputs.headings_deg)),
         water_depth=inputs.water_depth_m,
-        water_density=RHO_SEAWATER,
+        water_density=inputs.water_density_kg_m3,
     )
     diffraction["vessel"]["inertia"] = {
         "mass": mass_t * KG_PER_TONNE,
         "centre_of_gravity": cog,
         "radii_of_gyration": list(inputs.hull_radii_m),
     }
+    # BIPM, 3rd CGPM (1901), Declaration 2: conventional standard gravity.
     diffraction["environment"]["gravity"] = G_STANDARD
     diffraction["metadata"] = {
         "description": "Hull-only diffraction input; coupled dynamics pending"
@@ -308,7 +364,6 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         spec = template.model_copy(deep=True)
         spec.metadata.name = f"{inputs.case_id}-{lc.name}"
         spec.environment.water.depth = inputs.water_depth_m
-        spec.environment.water.density = RHO_SEAWATER / KG_PER_TONNE
         if len(spec.environment.waves.trains) != 1:
             raise ValueError(
                 "single wave train required for a shared screening sea state"
@@ -320,17 +375,8 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
             "pierson_moskowitz",
             "Pierson-Moskowitz",
         }
-        if not spectral and train.type not in {
-            "airy",
-            "Airy",
-            "dean_stream",
-            "Dean stream",
-            "stokes_5th",
-            "Stokes' 5th",
-            "cnoidal",
-            "Cnoidal",
-        }:
-            raise ValueError("unsupported wave type for shared peak-period mapping")
+        if not spectral:
+            raise ValueError("spectral wave type required for shared Hs and Tp inputs")
         train.height = lc.hs_m
         train.period = lc.tp_s
         # The repository builder selects Tp only from a Tp-only raw train.
@@ -353,31 +399,22 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
             raw["WaveTrains"] = [raw_train]
         coupled[lc.name] = spec.model_dump(mode="json", exclude_none=True)
 
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "shared-input.json").write_text(
-        json.dumps(shared_input, indent=2, sort_keys=True) + "\n"
+    equilibrium = {
+        "status": "NOT_EVALUATED",
+        "displacement_t": p.displacement_t,
+        "body_mass_t": mass_t,
+        "missing_topside_mass_t": inputs.topside.total_mass_t,
+        "criterion": "Body mass must balance displaced mass at the specified draft before static or RAO evaluation.",
+        "basis": "OpenStax (2016), section 9.6; separate topside weight is absent from the diffraction body.",
+    }
+    not_evaluated = dict(NOT_EVALUATED)
+    not_evaluated["hull_only_equilibrium"] = (
+        f"Body mass {mass_t:.3f} t against displaced mass {p.displacement_t:.3f} t; "
+        f"separate topside mass {inputs.topside.total_mass_t:.3f} t is absent. "
+        + equilibrium["criterion"]
+        + " "
+        + equilibrium["basis"]
     )
-    (out / "diffraction.yml").write_text(yaml.safe_dump(diffraction, sort_keys=False))
-    findings = []
-    for name, spec in coupled.items():
-        spec_path = out / f"{name}.yml"
-        spec_path.write_text(yaml.safe_dump(spec, sort_keys=False))
-        # Mandatory repository generation and post-validation; no error bypass.
-        generator = ModularModelGenerator(spec_path)
-        generator.generate(out / name)
-        from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
-            PostGenerationValidator,
-        )
-
-        for f in PostGenerationValidator().validate_directory(out / name / "includes"):
-            findings.append(
-                {
-                    "case": name,
-                    "level": f.level,
-                    "category": f.category,
-                    "message": f.message,
-                }
-            )
     manifest = {
         "input_digest": digest,
         "case_id": inputs.case_id,
@@ -385,18 +422,63 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         "screening_passed": variant.passed,
         "solver_ready": False,
         "status": "PREPARED_OFFLINE",
-        "validation_findings": findings,
-        "not_evaluated": dict(NOT_EVALUATED),
+        "validation_findings": [],
+        "hull_only_equilibrium": equilibrium,
+        "not_evaluated": not_evaluated,
         "sources": list(SOURCES),
-        "files": {
-            str(f.relative_to(out)): hashlib.sha256(f.read_bytes()).hexdigest()
-            for f in sorted(out.rglob("*"))
-            if f.is_file() and f.name != "manifest.json"
-        },
     }
-    (out / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".chain-", dir=out.parent) as temporary:
+        stage = Path(temporary)
+        (stage / "shared-input.json").write_text(
+            json.dumps(shared_input, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        (stage / "diffraction.yml").write_text(
+            yaml.safe_dump(diffraction, sort_keys=False), encoding="utf-8", newline="\n"
+        )
+        for name, spec in coupled.items():
+            spec_path = stage / f"{name}.yml"
+            spec_path.write_text(
+                yaml.safe_dump(spec, sort_keys=False), encoding="utf-8", newline="\n"
+            )
+            # Mandatory repository generation and post-validation; no error bypass.
+            ModularModelGenerator(spec_path).generate(stage / name)
+            _generated_files(stage)
+            from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
+                PostGenerationValidator,
+            )
+
+            for finding in PostGenerationValidator().validate_directory(
+                stage / name / "includes"
+            ):
+                if finding.level == "error":
+                    raise ValueError("post-generation validation failed")
+                manifest["validation_findings"].append(
+                    {
+                        "case": name,
+                        "level": finding.level,
+                        "category": finding.category,
+                        "message": finding.message,
+                    }
+                )
+        manifest["files"] = {
+            file.relative_to(stage).as_posix(): hashlib.sha256(
+                file.read_bytes()
+            ).hexdigest()
+            for file in _generated_files(stage)
+        }
+        (stage / "manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        # Removing an empty destination also supports Windows directory rename.
+        # If another writer populated it meanwhile, rmdir fails and preserves it.
+        if out.exists():
+            out.rmdir()
+        stage.rename(out)
     return ChainBundle(digest, variant, diffraction, coupled, manifest)
 
 
@@ -485,7 +567,9 @@ def build_chain_report(
             "Summary",
             "Offline mapping prepared. Solver response and controller compatibility remain NOT_EVALUATED. Screening verdict: "
             + ("PASS" if bundle.variant.passed else "FAIL")
-            + ".",
+            + f"; governing check {bundle.variant.governing_check}, "
+            + f"margin {bundle.variant.governing_margin:.3g} against zero. "
+            + "The check values, limits and basis are listed below.",
         ),
         Section(
             key="revision-history",
@@ -511,7 +595,7 @@ def build_chain_report(
         text(
             "method",
             "Methodology and assumptions",
-            "Hull mass = total mass - RNA mass - tower mass. Hull CG = (total mass × total CG - topside mass × topside CG) / hull mass. All CGs use the same SWL datum. Hull principal inertia = hull mass × supplied radius squared. Aligned axes and centreline CGs are assumed. The template must carry RNA and tower separately. No stale diffraction data is retained in the target draught.",
+            "Hull mass = total mass - RNA mass - tower mass. Hull CG above SWL = (steel mass × steel VCG above keel + ballast mass × explicit ballast VCG above keel) / hull mass - draft. Hull principal inertia = hull mass × supplied radius squared. Mass first moments follow OpenStax (2016), section 9.6; inertia follows section 10.5. Aligned axes and centreline CGs are assumed. The template must carry RNA and tower separately. No stale diffraction data is retained in the target draught.",
         ),
         Section(
             key="results",
@@ -537,6 +621,27 @@ def build_chain_report(
                     source="shared screening input and first-moment balance",
                 ),
                 TextBlock(markdown="Cases: " + ", ".join(bundle.coupled_specs)),
+                TableBlock(
+                    title="Screening criteria and basis",
+                    columns=["Check", "Value", "Limit", "Margin", "Unit", "Basis"],
+                    rows=[
+                        [
+                            check.name,
+                            f"{check.value:.3g}",
+                            f"{check.limit:.3g}",
+                            f"{check.margin:.3g}",
+                            {
+                                "stability": "m",
+                                "modal": "s",
+                                "motion": "1",
+                                "mooring": "m",
+                            }[check.name],
+                            check.basis,
+                        ]
+                        for check in bundle.variant.checks
+                    ],
+                    source="Explicit shared-input screening criteria; margin >= 0 passes each check.",
+                ),
             ],
         ),
     ]
@@ -630,5 +735,6 @@ def build_chain_report(
         input_echo={
             "case": bundle.variant.case_id,
             "input_digest": bundle.input_digest,
+            "screening_input": "shared-input.json",
         },
     )

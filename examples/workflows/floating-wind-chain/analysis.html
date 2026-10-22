@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>R0000-RPT-001-00 Rev 00 - Floating wind sizing analysis</title>
-<meta name="description" content="Floating wind sizing analysis (R0000-RPT-001-00 Rev 00) - Generic / Generic">
+<title>R0000-RPT-001-01 Rev 01 - Floating wind sizing analysis</title>
+<meta name="description" content="Floating wind sizing analysis (R0000-RPT-001-01 Rev 01) - Generic / Generic">
 <style>
   /* ============================ TOKENS ============================ */
   :root{
@@ -410,7 +410,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <header class="masthead" id="report-header">
   <div class="wrap">
     <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>R0000-RPT-001-00</b> &middot; Rev 00</span>
+    <span class="docno num"><b>R0000-RPT-001-01</b> &middot; Rev 01</span>
     <div class="mh-legend chips" id="header-standards">
     </div>
   </div>
@@ -424,11 +424,11 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="kv">
         <div class="cap">Document</div>
         <table>
-          <tr><td>Document number</td><td>R0000-RPT-001-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
+          <tr><td>Document number</td><td>R0000-RPT-001-01</td></tr>
+          <tr><td>Revision</td><td>01</td></tr>
           <tr><td>Project</td><td>Generic</td></tr>
           <tr><td>Client</td><td>Generic</td></tr>
-          <tr><td>Date</td><td>2026-10-20</td></tr>
+          <tr><td>Date</td><td>2026-10-22</td></tr>
         </table>
       </div>
       <div class="kv">
@@ -447,6 +447,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
           <tr><td>00</td><td>2026-10-20</td><td>Initial offline mapping example; identify data needed for coupled analysis.</td><td></td><td></td><td></td></tr>
+          <tr><td>01</td><td>2026-10-22</td><td>Require explicit mass basis and spectral waves; publish UTF-8 outputs after validation and record the hull equilibrium gap.</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
     </div>
@@ -477,7 +478,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Summary</h2></div>
 
     <div class="prose">
-<p>Offline mapping prepared. Solver response and controller compatibility remain NOT_EVALUATED. Screening verdict: PASS.</p>
+<p>Offline mapping prepared. Solver response and controller compatibility remain NOT_EVALUATED. Screening verdict: PASS; governing check motion, margin 0.735 against zero. The check values, limits and basis are listed below.</p>
     </div>
     </section>
     <section id="revision-history">
@@ -492,6 +493,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </thead>
           <tbody>
             <tr><td>00</td><td>2026-10-20</td><td>Initial offline mapping example; identify data needed for coupled analysis.</td></tr>
+            <tr><td>01</td><td>2026-10-22</td><td>Require explicit mass basis and spectral waves; publish UTF-8 outputs after validation and record the hull equilibrium gap.</td></tr>
           </tbody>
         </table>
       </div>
@@ -511,6 +513,8 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <p>OpenStax, University Physics vol. 1 (2016), section 9.6: mass first moments; https://openstax.org/books/university-physics-volume-1/pages/9-6-center-of-mass</p>
 <p>OpenStax, University Physics vol. 1 (2016), section 10.5: moments of inertia; https://openstax.org/books/university-physics-volume-1/pages/10-5-calculating-moments-of-inertia</p>
 <p>BIPM, SI Brochure, 9th ed. (2019), Table 8: tonne to kilogram; https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf</p>
+<p>BIPM, 3rd CGPM (1901), Declaration 2, conventional value of standard gravity; https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-2</p>
+<p>NOAA, World Ocean Atlas 2013 FAQ, question 8: assumed seawater density; https://www.nodc.noaa.gov/OC5/wod-woa-faqs.html</p>
     </div>
     </section>
     <section id="basis">
@@ -524,7 +528,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Methodology and assumptions</h2></div>
 
     <div class="prose">
-<p>Hull mass = total mass - RNA mass - tower mass. Hull CG = (total mass × total CG - topside mass × topside CG) / hull mass. All CGs use the same SWL datum. Hull principal inertia = hull mass × supplied radius squared. Aligned axes and centreline CGs are assumed. The template must carry RNA and tower separately. No stale diffraction data is retained in the target draught.</p>
+<p>Hull mass = total mass - RNA mass - tower mass. Hull CG above SWL = (steel mass × steel VCG above keel + ballast mass × explicit ballast VCG above keel) / hull mass - draft. Hull principal inertia = hull mass × supplied radius squared. Mass first moments follow OpenStax (2016), section 9.6; inertia follows section 10.5. Aligned axes and centreline CGs are assumed. The template must carry RNA and tower separately. No stale diffraction data is retained in the target draught.</p>
     </div>
     </section>
     <section id="results">
@@ -550,6 +554,22 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <div class="prose">
 <p>Cases: operating</p>
     </div>
+    <div class="tbl" id="table-3">
+      <div class="cap">Table 3. Screening criteria and basis</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Value</th><th>Limit</th><th>Margin</th><th>Unit</th><th>Basis</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>stability</td><td>4.17</td><td>0</td><td>4.17</td><td>m</td><td>intact GM vs minimum (DNV-OS-C301)</td></tr>
+            <tr><td>modal</td><td>3.67</td><td>16</td><td>1.33</td><td>s</td><td>natural periods vs wave band 5-16s</td></tr>
+            <tr><td>motion</td><td>1.26</td><td>2</td><td>0.735</td><td>1</td><td>max(heave,pitch) DAF at Tp=8s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">Source: Explicit shared-input screening criteria; margin &gt;= 0 passes each check.</p>
+    </div>
     </section>
     <section id="comparison">
       <div class="l1head"><span class="secnum"></span><h2>Screening and stored evidence</h2></div>
@@ -561,8 +581,8 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <section id="limits">
       <div class="l1head"><span class="secnum"></span><h2>Conclusions and limitations</h2></div>
 
-    <div class="tbl" id="table-3">
-      <div class="cap">Table 3. Evidence gaps</div>
+    <div class="tbl" id="table-4">
+      <div class="cap">Table 4. Evidence gaps</div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -578,6 +598,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
             <tr><td>native_load</td><td>NOT_EVALUATED</td><td>Repository schema/reference checks do not prove native solver loadability.</td></tr>
             <tr><td>solver_comparison</td><td>NOT_EVALUATED</td><td>No diffraction or coupled time-domain solve is performed by this workflow.</td></tr>
             <tr><td>screening_basis</td><td>NOT_EVALUATED</td><td>Inherited screening coefficients and acceptance limits require a documented design basis.</td></tr>
+            <tr><td>hull_only_equilibrium</td><td>NOT_EVALUATED</td><td>Body mass 380.000 t against displaced mass 410.000 t; separate topside mass 30.000 t is absent. Body mass must balance displaced mass at the specified draft before static or RAO evaluation. OpenStax (2016), section 9.6; separate topside weight is absent from the diffraction body.</td></tr>
           </tbody>
         </table>
       </div>
@@ -601,7 +622,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         <table class="sources">
           <thead><tr><th>Kind</th><th>Identifier</th><th>Digest</th><th>Retrieved</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td>input</td><td>shared-input</td><td>sha256:870c425c0d8e11ace7c6f6b52390db9627a44593b0b4d21d4b4b54afafb07e50</td><td></td><td>Canonical sizing and template input</td></tr>
+            <tr><td>input</td><td>shared-input</td><td>sha256:c5aff8d4af7467f1e9947cc79480223eb5337749ccf0f06dec60839739c3475b</td><td></td><td>Canonical sizing and template input</td></tr>
           </tbody>
         </table>
       </div>
@@ -610,13 +631,14 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Input echo</h2></div>
       <p class="l1sub">Every input as received by the calculation, so the result can be reproduced.</p>
       <details class="input-echo" open>
-        <summary>2 input values</summary>
+        <summary>3 input values</summary>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Key</th><th>Value</th></tr></thead>
             <tbody>
               <tr><td>case</td><td>generic-barge</td></tr>
-              <tr><td>input_digest</td><td>870c425c0d8e11ace7c6f6b52390db9627a44593b0b4d21d4b4b54afafb07e50</td></tr>
+              <tr><td>input_digest</td><td>c5aff8d4af7467f1e9947cc79480223eb5337749ccf0f06dec60839739c3475b</td></tr>
+              <tr><td>screening_input</td><td>shared-input.json</td></tr>
             </tbody>
           </table>
         </div>
@@ -631,7 +653,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div>
         <h3>Document</h3>
         <ul>
-          <li><span class="k">Number</span> R0000-RPT-001-00 &middot; Rev 00</li>
+          <li><span class="k">Number</span> R0000-RPT-001-01 &middot; Rev 01</li>
           <li><span class="k">Project</span> Generic</li>
           <li><span class="k">Client</span> Generic</li>
         </ul>
@@ -653,7 +675,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       </div>
     </div>
     <div class="foot-bar">
-      <span>R0000-RPT-001-00 Rev 00 &middot; Floating wind sizing analysis</span>
+      <span>R0000-RPT-001-01 Rev 01 &middot; Floating wind sizing analysis</span>
       <span class="pdf" id="pdf-status">PDF: derivative of this HTML; render status in the manifest</span>
     </div>
   </div>
