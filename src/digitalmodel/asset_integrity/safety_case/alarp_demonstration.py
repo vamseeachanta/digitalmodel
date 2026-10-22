@@ -151,9 +151,10 @@ def classify_risk(
     Parameters
     ----------
     risk:
-        Individual risk per annum (IRPA). May be supplied directly, or computed
-        upstream as ``likelihood * consequence`` (see
-        :func:`risk_from_likelihood_consequence`).
+        Individual annual fatality probability in [0, 1]. A rate returned by
+        :func:`risk_from_likelihood_consequence` requires an independently
+        established individual-probability basis before classification;
+        population expected fatalities are not an individual probability.
     thresholds:
         Threshold lines. Defaults to the R2P2 worker values (1e-3 / 1e-6 /yr).
 
@@ -219,16 +220,20 @@ def risk_from_likelihood_consequence(likelihood: float, consequence: float) -> f
         Event frequency or probability per annum (>= 0).
     consequence:
         Consequence measure, e.g. probability of fatality given the event, or
-        fatalities per event. For an IRPA the product yields fatalities/yr.
+        expected fatalities per event.
 
     Returns
     -------
     float
-        ``likelihood * consequence``.
+        ``likelihood * consequence`` in the units of the supplied measures.
+        Event frequency and expected fatalities may exceed one. The product
+        alone does not establish an individual annual fatality probability
+        suitable for :func:`classify_risk`; probability inputs require their
+        own probability bounds at the call site.
     """
-    finite_number(likelihood, "likelihood", maximum=1)
+    finite_number(likelihood, "likelihood")
     finite_number(consequence, "consequence")
-    finite_number(likelihood * consequence, "risk", maximum=1)
+    finite_number(likelihood * consequence, "risk")
     if likelihood < 0 or consequence < 0:
         raise ValueError("likelihood and consequence must be non-negative.")
     return likelihood * consequence

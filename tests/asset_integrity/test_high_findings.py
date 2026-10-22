@@ -66,6 +66,31 @@ def test_A63_unknown_risk_is_not_tolerable(call):
         call()
 
 
+@pytest.mark.parametrize("likelihood,consequence,expected", [
+    (2.0, .1, .2), (.5, 3.0, 1.5), (.5, .25, .125),
+])
+def test_A63_frequency_and_expected_fatalities_are_not_probabilities(
+        likelihood, consequence, expected):
+    # Hand products: 2 * .1 = .2; .5 * 3 = 1.5; .5 * .25 = .125.
+    assert risk_from_likelihood_consequence(likelihood, consequence) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("likelihood,consequence", [
+    (None, .1), ("2", .1), (True, .1), (np.nan, .1), (np.inf, .1),
+    (-1., .1), (.5, None), (.5, "3"), (.5, True), (.5, np.nan),
+    (.5, np.inf), (.5, -1.), (1e308, 2.),
+])
+def test_A63_invalid_frequency_or_consequence_remains_rejected(likelihood, consequence):
+    with pytest.raises(ValueError):
+        risk_from_likelihood_consequence(likelihood, consequence)
+
+
+def test_A63_expected_fatalities_cannot_be_classified_as_a_probability():
+    risk = risk_from_likelihood_consequence(.5, 3.)
+    with pytest.raises(ValueError, match="risk"):
+        classify_risk(risk)
+
+
 @pytest.mark.parametrize("values", [(np.inf, 100, 3), (100, np.nan, 3), (1, 2, np.inf)])
 def test_A64_undefined_economics_cannot_exclude_measure(values):
     with pytest.raises(ValueError, match="finite"):
@@ -208,6 +233,40 @@ def test_A81_dispatch_passes_evaluated_wall(monkeypatch, code, helper):
     assert cfg["Outer_Pipe"]["Geometry"]["Design_WT"] == .5
 
 
+@pytest.mark.parametrize("wall,allowance,expected_minimum,expected_capacity", [
+    (1., .5, 1.071428571, 164.089401115),
+    (.6, .1, .671428571, 94.824464092),
+])
+def test_A81_rp1111_internal_pressure_design_uses_each_evaluated_wall(
+        wall, allowance, expected_minimum, expected_capacity):
+    code = "API RP 1111-2009 Pipelines"
+    cfg = {
+        "Outer_Pipe": {
+            "Geometry": {"Nominal_OD": 12., "Design_WT": wall, "Corrosion_Allowance": allowance},
+            "Material": {"SMYS": 1000., "SMUS": 1000.},
+        },
+        "DesignFactors": {code: {
+            "D_over_T_Trasition_Ratio": 20., "internal_pressure": {"Fd": 1.},
+        }},
+        "Design": [{
+            "Code": [{"Outer_Pipe": code}],
+            "Load Condition": {"Outer_Pipe": "internal_pressure"},
+            "InternalPressure": {"Outer_Pipe": 100.},
+            "ExternalPressure": {"Outer_Pipe": 10.},
+        }],
+    }
+    PipeCapacity(cfg).evaluate_load_conditions("Outer_Pipe")
+    rows = cfg["Result"]["Outer_Pipe"]["internal_pressure"][code]["design_conditions"]
+    # Synthetic factors exercise the existing branches, not equation qualification.
+    # D/t = 12/1 = 12 or 12/.6 = 20; corroded D/t = 12/.5 = 24.
+    assert [row["thickness"] for row in rows] == [wall, .5]
+    assert rows[0]["minimum_thickness"] == pytest.approx(.570975492)
+    assert rows[1]["minimum_thickness"] == pytest.approx(expected_minimum)
+    assert rows[0]["capacity"] == pytest.approx(expected_capacity)
+    assert rows[1]["capacity"] == pytest.approx(78.260869565)
+    assert cfg["Outer_Pipe"]["Geometry"]["Design_WT"] == wall
+
+
 def collapse_component():
     cfg = {"Outer_Pipe": {"Geometry": {"Nominal_OD": 12, "Nominal_ID": 11, "Design_WT": .5}},
            "Design": [{"ExternalPressure": {"Outer_Pipe": 100}, "InternalPressure": {"Outer_Pipe": 0}}]}
@@ -287,6 +346,62 @@ def test_A62_raw_capacity_is_retained_and_governs():
     rows = [dict(joint_id="joint", verdict="ACCEPT", acceptable_depth_ft=value)
             for value in (5000.04, 5000.01)]
     assert _governing_placements(rows)[0]["acceptable_depth_ft"] == 5000.01
+
+
+def _explorer_builder():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "scripts/ffs/build_riser_joint_explorer.py"
+    spec = importlib.util.spec_from_file_location("riser_explorer_builder", path)
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    return builder
+
+
+def test_A62_committed_explorer_preserves_raw_placement_depths():
+    import json
+
+    builder = _explorer_builder()
+    html = builder._OUT.read_text(encoding="utf-8")
+    marker = "const DATA = "
+    start = html.index(marker) + len(marker)
+    data, end = json.JSONDecoder().raw_decode(html[start:])
+    expected = builder.build_tables()
+    rebuild = "Regenerate with: PYTHONPATH=src uv run python scripts/ffs/build_riser_joint_explorer.py"
+    assert data["placements"].keys() == expected["placements"].keys(), rebuild
+    for key, placement in expected["placements"].items():
+        stored = data["placements"][key]
+        assert stored["acceptable_depth_ft"] == pytest.approx(
+            placement["acceptable_depth_ft"], rel=1e-12, abs=1e-8), rebuild
+        assert stored["verdict"] == placement["verdict"], rebuild
+        assert stored["zones"] == placement["zones"], rebuild
+    # The generator may refresh only embedded numbers; page markup stays fixed.
+    template = builder._TEMPLATE
+    prefix, suffix = template.split("__DATA__")
+    before_geom, after_geom = prefix.split("__GEOM__")
+    assert html.startswith(before_geom), rebuild
+    assert html[:start].endswith(after_geom), rebuild
+    assert html[start + end:] == suffix, rebuild
+
+
+def test_A62_explorer_writes_utf8_lf_and_posix_diagnostics(monkeypatch, capsys):
+    from pathlib import PureWindowsPath
+
+    builder = _explorer_builder()
+    written = {}
+
+    class Output:
+        def write_text(self, text, **kwargs):
+            written.update(kwargs)
+
+        def relative_to(self, root):
+            return PureWindowsPath("docs/api/ffs/riser-joint-acceptance-explorer.html")
+
+    monkeypatch.setattr(builder, "_OUT", Output())
+    builder.main()
+    assert written == {"encoding": "utf-8", "newline": "\n"}
+    assert "docs/api/ffs/riser-joint-acceptance-explorer.html" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("values", [[], [[]]])

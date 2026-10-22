@@ -281,8 +281,8 @@ def main() -> None:
             f"{tables['geometry']['grade']}, the real inspected fleet")
     html = _TEMPLATE.replace("__DATA__", json.dumps(tables, separators=(",", ":")))
     html = html.replace("__GEOM__", geom)
-    _OUT.write_text(html, encoding="utf-8")
-    print(f"wrote {_OUT.relative_to(_REPO)} "
+    _OUT.write_text(html, encoding="utf-8", newline="\n")
+    print(f"wrote {_OUT.relative_to(_REPO).as_posix()} "
           f"({len(tables['envelopes'])} envelopes, {len(tables['placements'])} placements)")
 
 

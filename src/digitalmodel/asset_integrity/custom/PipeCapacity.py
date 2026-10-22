@@ -204,7 +204,7 @@ class PipeCapacity():
             pressure = self.evaluate_burst_pressure_API_RP_1111(
                 pipe_flag, specification_code, load_condition_index, thickness)
             minimum_thickness = self.evaluate_burst_minimum_thickness_API_RP_1111(
-                pipe_flag, specification_code, load_condition_index)
+                pipe_flag, specification_code, load_condition_index, thickness)
 
         if 'API RP 16Q-2017' in specification_code:
             api_rp_16q = API_RP_16Q(self._configuration_at_wall(pipe_flag, thickness))
@@ -254,7 +254,8 @@ class PipeCapacity():
 
     def evaluate_burst_minimum_thickness_API_RP_1111(self, pipe_flag,
                                                      specification_code,
-                                                     load_condition_index):
+                                                     load_condition_index,
+                                                     thickness):
         d_over_t = self.cfg[pipe_flag]['Geometry']['Nominal_OD'] / thickness
         load_condition = self.cfg['Design'][load_condition_index][
             'Load Condition'][pipe_flag]
@@ -661,6 +662,9 @@ class API_TR_5C3():
         if 2 * self.t >= self.D_o:
             raise ValueError('collapse wall must be less than the outside radius')
         ratio = self.D_o / self.t
+        # Legacy numerical window relative to the supplied D/t, not a standard
+        # applicability limit: sample between D/t / 2 and 30 * D/t. The starting
+        # wall sets the search coverage; unbracketed demands are rejected.
         ratios = [ratio / 2 + (ratio * 30 - ratio / 2) / 100 * step
                   for step in range(1, 100)]
         pressures = [self.get_collapse_pressure(self.D_o / value) for value in ratios]
@@ -759,6 +763,9 @@ class VonMises_Pipe():
         finite_number(self.t, 'wall', positive=True)
         allowable = self.loads['allowable_stress_to_yield_ratio'] * self.section_properties['SMYS']
         finite_number(allowable, 'allowable stress', positive=True)
+        # Legacy numerical window relative to the supplied wall, not a code
+        # wall limit. Interior samples of [t/8, 2t] bound search cost; a root
+        # outside the sampled responses is rejected rather than extrapolated.
         walls = [self.t / 8 + (self.t * 2 - self.t / 8) / 30 * step
                  for step in range(1, 30)]
         stresses = [self._stress_at(wall=wall, pressure=demand) for wall in walls]
@@ -771,6 +778,10 @@ class VonMises_Pipe():
         finite_number(self.P_i, 'internal pressure demand')
         allowable = self.loads['allowable_stress_to_yield_ratio'] * self.section_properties['SMYS']
         finite_number(allowable, 'allowable stress', positive=True)
+        # Legacy pressure samples assume psi: P_i/2 through 1.9*P_i when the
+        # demand exceeds 200 psi, otherwise 0 through 24500 psi. These are
+        # numerical limits, not rated pressures; a capacity outside coverage is
+        # rejected even when an engineering solution may exist elsewhere.
         if self.P_i > 200:
             steps, lower, upper = 30, self.P_i / 2, self.P_i * 2
         else:
