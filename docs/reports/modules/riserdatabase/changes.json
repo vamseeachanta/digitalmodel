@@ -1,0 +1,19 @@
+{
+  "document": "Riser reference database analysis",
+  "revision": "0",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "worked-example",
+      "description": "First issue: demonstrate retrieval of public drilling-riser geometry against its source."
+    },
+    {
+      "section": "limitations",
+      "description": "Separate reference-data checks from unestablished physical operating limits."
+    },
+    {
+      "section": "recommendations",
+      "description": "Identify the data and calculation basis needed before a connection decision."
+    }
+  ]
+}

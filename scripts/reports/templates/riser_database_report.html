@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser reference database analysis</title>
+$style
+<style>
+.hs-doc{font-size:17px;line-height:1.6;margin:0}
+.hs-doc h1{font-size:2em}.hs-doc h2{font-size:1.5em}.hs-doc h3{font-size:1.2em;margin:24px 0 10px}
+.hs-doc .prose{max-width:73ch}.hs-doc table{font-size:15px;min-width:0;width:100%}
+.hs-doc th,.hs-doc td{white-space:normal;text-align:left;vertical-align:top}
+.hs-doc td{overflow-wrap:anywhere}.hs-doc .wrap{padding:0 24px}
+.hs-doc section p{margin:12px 0}.hs-doc section ul{padding-left:24px}
+.hs-doc .appendix{border-top:1px solid var(--hairline);padding:32px 0}
+.hs-doc details{margin:16px 0;padding:12px;border:1px solid var(--hairline);border-radius:8px}
+.hs-doc summary,.hs-doc button{cursor:pointer}.hs-doc button,.hs-doc input,.hs-doc textarea{
+font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:8px}
+.hs-doc label{display:block;margin-top:12px}.hs-doc textarea{width:100%;min-height:70px}
+.hs-doc button{margin:8px 8px 8px 0}.hs-doc blockquote{margin:8px 0;padding:10px;border-left:3px solid var(--cfd)}
+.hs-doc [data-measure]{cursor:crosshair}.hs-doc .chart-readout{min-height:4em;padding:10px;background:var(--surface-2)}
+.hs-doc svg text{font-family:var(--sans);font-size:14px;fill:var(--ink)}
+.hs-doc figcaption{font-size:15px;color:var(--ink-2);margin:10px 0}
+.hs-doc .review-panel{padding:24px 0;border-top:1px solid var(--hairline)}
+.hs-doc .caption{font-size:15px;color:var(--ink-2)}
+.hs-doc #stackup-figure td,.hs-doc #stackup-figure th{overflow-wrap:normal;padding:8px}
+.hs-doc #stackup-figure th:first-child{width:33%}
+@media(max-width:640px){.hs-doc{font-size:16px}.hs-doc .wrap{padding:0 14px}}
+@media print{.review-panel,#changes-panel,button{display:none}.shell{display:block}.toc{position:static}}
+</style>
+</head>
+<body class="doc hs-doc">
+<header class="hero"><div class="wrap">
+<p class="eyebrow">Engineering reference data</p>
+<h1>Riser reference database analysis</h1>
+<p>Draft for client review</p>
+<p>Issue date: 22 October 2026 · Revision 0</p>
+<p class="caption">Prepared by: Analysis team. Checked by: Not signed. Approved by: Not signed.</p>
+<details id="changes-panel"><summary>Changes in this issue</summary><div id="change-list"></div></details>
+</div></header>
+<div class="wrap shell">
+<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>
+<li><a href="#summary">Executive summary</a></li>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#design-data">Design data</a></li>
+<li><a href="#methodology">Analysis methodology</a></li>
+<li><a href="#results">Detailed results</a></li>
+<li><a href="#findings">Key findings</a></li>
+<li><a href="#limitations">Limitations</a></li>
+<li><a href="#recommendations">Recommendations</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#acronyms">Acronyms and symbols</a></li>
+</ol><a href="#data-register">Appendix A · Data register</a><a href="#quality-evidence">Appendix B · Quality evidence</a>
+<a href="#inventory">Appendix C · Reference inventory</a><a href="#comments">Review comments</a></nav>
+<main class="main prose">
+<section class="numbered" id="summary">
+<h2>1 Executive summary</h2>
+<p>The riser reference database is a catalogue of configuration geometry, stack-up references, rig-interface references and design-criteria citations. Analysis is performed to determine its use as an engineering input source, and the key results are summarized below.</p>
+<ul>
+<li>Public configuration geometry can be retrieved and compared with its documented source.
+  <ul><li>The public drilling-riser example returns a water depth of $depth ft, an outer diameter of $od in and a wall thickness of $wall in. The largest difference from its source is $difference % before display rounding.</li></ul></li>
+<li>A drilling or connected operating envelope is not established by these records.
+  <ul><li>Tension, joint travel, host motions and environmental loading are not calculated by the database. Do not connect on the basis of catalogue geometry.</li></ul></li>
+</ul>
+<p>The source-agreement target is illustrated in <a href="#agreement-figure">Figure 1</a>. This target checks reference-data consistency; it is not a physical operating limit.</p>
+<figure id="agreement-figure">$chart
+<figcaption>Figure 1. Geometry difference relative to the public example. Select or hover over a marker for its quantity, demand and target.</figcaption></figure>
+<p id="chart-readout" class="chart-readout" aria-live="polite">Select or hover over a geometry marker to display its source comparison.</p>
+<p class="caption">Legend: ✓ Pass means the stated data-comparison target is met. △ Not evaluated means evidence needed for a physical result is absent. ✕ Fail means a stated target is exceeded.</p>
+</section>
+<div class="revhist" id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>0</td><td>22 October 2026</td><td>First issue: establish the database scope, demonstrate public geometry retrieval and identify the missing operating basis.</td></tr>
+</tbody></table><p class="caption">Table 1. Document revision history.</p></div>
+<section class="numbered" id="introduction">
+<h2>2 Introduction</h2>
+<p>The database interface and its engineering boundary are described in this section. Riser analysis is addressed through the suitability of reference inputs, rather than through a response calculation.</p>
+<p>The main workflow is the retrieval of a public drilling-riser configuration from the configuration catalogue. Its water depth is an illustrative input, not a maximum supported depth or a demonstrated equipment rating. The public software example is treated as assumed geometry for design use.</p>
+<p>Reference handles for historical stack-ups and rig interfaces are included in the inventory. Their underlying private records, hardware capability values and fatigue-curve parameters are not reproduced. Public source and implementation records are listed in <a href="#source-records">Section 9.2</a>.</p>
+</section>
+<section class="numbered" id="design-data">
+<h2>3 Design data</h2>
+<p>The available input data and missing physical basis are identified in this section. Data status is retained separately from the existence of a catalogue record.</p>
+<p>The lookup inputs are a database directory and an exact configuration key. The returned record contains the configuration identifier, riser type, source locator, water depth, outer diameter, nominal wall thickness, material-grade label, analysis-kind label and notes. Labels describe the source configuration; they do not establish material certification or completion of the named analysis.</p>
+<h3>3.1 Field, site and host</h3>
+<p>The public example is used without attribution to a field, site or host. A site-specific water-depth datum, host offset limit and host motion response amplitude operators are not supplied by the catalogue lookup.</p>
+<h3>3.2 Riser and host interface</h3>
+<p>The overall geometry is represented by the schematic in <a href="#stackup-figure">Figure 2</a>. The generic arrangement identifies missing interfaces and is not a joint-by-joint assembly definition.</p>
+<figure id="stackup-figure">
+<div class="split">
+<svg viewBox="0 0 320 470" role="img" aria-labelledby="stackup-title stackup-description">
+<title id="stackup-title">Generic drilling-riser arrangement and data gaps</title>
+<desc id="stackup-description">Host above the waterline, tensioner and telescopic joint, riser to a seabed wellhead. Supports, travel, buoyancy and loads are unspecified. Drawing is not to scale.</desc>
+<path d="M45 90 L230 90 L210 125 L65 125 Z" fill="var(--surface-2)" stroke="var(--ink)"/>
+<path d="M80 88 L80 55 L195 55 L195 88" fill="none" stroke="var(--ink)"/>
+<line x1="20" y1="135" x2="310" y2="135" stroke="var(--ro)" stroke-width="2"/>
+<text x="25" y="155">Waterline</text><text x="95" y="42">Generic host</text>
+<path d="M125 90 L125 175 M155 90 L155 175" stroke="var(--ink)" stroke-width="3"/>
+<rect x="125" y="175" width="30" height="55" fill="var(--surface-2)" stroke="var(--ink)"/>
+<path d="M134 230 L134 375 M146 230 L146 375" stroke="var(--ink)" stroke-width="3"/>
+<rect x="115" y="375" width="50" height="38" fill="var(--surface-2)" stroke="var(--ink)"/>
+<line x1="20" y1="423" x2="310" y2="423" stroke="var(--ink)" stroke-width="3"/>
+<path d="M140 413 L140 452" stroke="var(--ink)" stroke-width="4"/>
+<text x="25" y="445">Seabed</text>
+<path d="M158 110 L180 110 M158 200 L180 200 M150 290 L180 290 M168 392 L180 392" stroke="var(--ink-muted)"/>
+<text x="185" y="105">Tensioner</text>
+<text x="185" y="195">Telescopic joint</text>
+<text x="185" y="280">Riser</text>
+<text x="185" y="305">$schematic_od in outer</text>
+<text x="185" y="330">$schematic_wall in wall</text>
+<text x="185" y="355">$schematic_depth ft depth</text>
+<text x="185" y="387">Lower assembly</text>
+</svg>
+<div>
+<table><thead><tr><th>Component</th><th>Data status</th></tr></thead><tbody>
+<tr><td>Riser string</td><td>Depth and nominal pipe geometry are available. Joint tally, submerged weight, buoyancy and stiffness are required.</td></tr>
+<tr><td>Host interface</td><td>Host data are not selected. Tensioner force, travel, supports, centralisation and stops are required.</td></tr>
+<tr><td>Lower assembly</td><td>Only the interface is shown. Wellhead capacity and flex-joint rating are required.</td></tr>
+</tbody></table><p class="caption">Table 2. Schematic call-outs and information required for a physical model.</p>
+</div></div>
+<figcaption>Figure 2. Generic stack-up and interface gaps. The height and component sizes are schematic; exact riser geometry is returned only at configuration level.</figcaption></figure>
+<h3>3.3 Contents, pressure and metocean</h3>
+<p>Contents and motion-related fields are present in the source example, but they are not returned as configuration-table fields. Pressure, mud-weight cases, site current profiles, wave spectra and host motion operators are not established by this database example.</p>
+<h3>3.4 Criteria and load-case basis</h3>
+<p>The reference-data target benchmark is exact agreement with the public source in the catalogue's native units. It is used because catalogue generation is a unit conversion and transcription task; no engineering response is approximated in that comparison.</p>
+<p>Unknown keys are required to raise a lookup error, and missing numeric cells are required to remain missing. These requirements follow the documented loader contract in <a href="#source-records">Section 9.2</a>; they prevent an unsupported match or missing measurement from becoming an input.</p>
+<p>The comparison contains the public configuration retrieval only. A physical load-case matrix is not evaluated: site, host, operating-mode and component criteria are required before still-water, current-dominated or wave-dominated cases are defined.</p>
+</section>
+<section class="numbered" id="methodology">
+<h2>4 Analysis methodology</h2>
+<p>The reference-data calculation and the relationship to downstream riser methods are described in this section. The database is called directly; no structural or hydrodynamic response calculation is substituted for it.</p>
+<h3>4.1 Reference-data workflow</h3>
+<p>The public interface loads the known tables after checking their file fingerprints, column layouts and record keys. A configuration is requested by its exact key, and a typed record is returned. A missing or malformed table prevents that load from completing.</p>
+<p>Source example → catalogue generation → manifest-bound tables → database lookup → engineering input selection. The public example is read independently and compared with the returned record before report quantities are formatted.</p>
+<p>Length conversion is expressed as length in feet equals length in metres divided by metres per foot. Diameter and wall thickness in inches equal the returned millimetres divided by millimetres per inch. Exact conversion definitions are taken from the seed specification and checked against <a href="#unit-source">the public units reference</a>.</p>
+<p class="formula">Percentage difference = 100 × (returned value − source value) ÷ source value.</p>
+<p>The source value is the reference for each comparison. The percentage scale is a mathematical definition, and zero difference is the data-agreement target. No physical acceptance coefficient is assumed.</p>
+<h3>4.2 Meaning of the criteria references</h3>
+<p>The getter interfaces identify fatigue, stress and joint-angle criteria with citation metadata. Their conceptual relations are described below from the interface documentation; the relations are not evaluated in this example.</p>
+<p class="formula">D<sub>allow</sub> = 1 / F<sub>D</sub>; Δσ<sub>local</sub> = K<sub>σ</sub> Δσ<sub>nominal</sub>; σ<sub>allow</sub> = f<sub>y</sub> S<sub>y</sub>.</p>
+<p>Allowable fatigue damage D<sub>allow</sub> is related to design fatigue factor F<sub>D</sub>. Local stress range Δσ<sub>local</sub> is nominal stress range Δσ<sub>nominal</sub> multiplied by stress concentration factor K<sub>σ</sub>. Allowable equivalent stress σ<sub>allow</sub> is specified minimum yield strength S<sub>y</sub> multiplied by design factor f<sub>y</sub>. The getter citation editions and clause titles are identified in <a href="#standards-basis">Section 9.1</a>.</p>
+<p>A direct getter validates its citation record and fails if the required record cannot be resolved. Citation resolution establishes the metadata contract used by the software; it does not independently establish the correctness or applicability of a licensed criterion. Numeric criteria and licensed table values are not published here.</p>
+<h3>4.3 Physical analysis sequence</h3>
+<p>A physical riser assessment is bounded by the missing data in <a href="#data-register">Appendix A</a>. The first calculation is a still-water weight, buoyancy and tension balance against an independent hand calculation; current and then waves with current follow only after that basis is established.</p>
+<p>Dynamic analysis requires the actual host motion operators, wave directions and irregular-sea realisations. A geometry record or prescribed regular heave alone does not establish dynamic response. Centralisation, lateral supports, travel stops and buoyancy zones remain undefined in the schematic.</p>
+</section>
+<section class="numbered" id="results">
+<h2>5 Detailed results</h2>
+<p>The returned configuration and its source comparison are presented in this section. The result is a reference-data demonstration; an operating assessment is not established.</p>
+<div id="worked-example"><h3>5.1 Public drilling-riser example</h3>
+<p>The documented public example is retrieved through the database interface. The geometry below is assumed example data for design use, with its source identified in <a href="#source-records">the source records</a>.</p>
+<table><thead><tr><th>Returned quantity</th><th>Value</th><th>Units</th><th>Source</th></tr></thead><tbody>
+<tr><td>Water depth</td><td>$depth</td><td>ft</td><td>Public drilling-riser example</td></tr>
+<tr><td>Outer diameter</td><td>$od</td><td>in</td><td>Public drilling-riser example</td></tr>
+<tr><td>Nominal wall thickness</td><td>$wall</td><td>in</td><td>Public drilling-riser example</td></tr>
+</tbody></table><p class="caption">Table 3. Retrieved example geometry, converted for display. Wall thickness is taken from the actual source field rather than its approximate nominal-size comment.</p>
+<p>The largest difference from the source is $difference % before display rounding. The comparison meets the exact source-agreement target. Neither the listed water depth nor the nominal wall is an equipment operating limit.</p>
+</div>
+<h3>5.2 Validation evidence held</h3>
+<p>Automated repository checks are provided for typed lookup, exact-key rejection, missing files, changed fingerprints, column changes, duplicate keys and file-size bounds. Additional checks cover catalogue source coverage, record joins, reference-consumer compatibility, citation metadata, override behaviour and edition consistency.</p>
+<p>The report comparison adds direct source-to-record agreement and retention of missing depth. The checks and their scope are identified in <a href="#source-records">Section 9.2</a> and the evaluated comparison criteria are shown in <a href="#quality-evidence">Appendix B</a>. These records establish software and data-contract evidence; they do not provide a measured or solver-derived physical benchmark for this configuration.</p>
+<h3>5.3 Physical response status</h3>
+<p>The physical response quantities are not returned by the database. Their evaluation status is retained below to prevent catalogue coverage from being interpreted as an operating envelope.</p>
+<ul>
+<li>Still-water tension and buoyancy: not evaluated; data needed: joint tally, component weights, contents and buoyancy.</li>
+<li>Statics with current and operating envelopes: not evaluated; data needed: environmental profiles, component criteria and host offsets.</li>
+<li>Dynamics, stroke and angles: not evaluated; data needed: host motion operators, component stiffness, travel limits and wave basis.</li>
+<li>Drift-off: not evaluated; data needed: watch circle, current basis and loss-of-position response. Do not connect on this basis.</li>
+<li>Recoil: not evaluated; data needed: closure curves.</li>
+<li>Weak point analysis: not performed.</li>
+<li>Vortex-induced vibration and fatigue: not evaluated; data needed: stress histories, hydrodynamic basis, detail geometry and qualified fatigue criteria.</li>
+</ul>
+</section>
+<section class="numbered" id="findings">
+<h2>6 Key findings</h2>
+<p>The engineering use of the demonstrated records is summarised in this section. Conclusions are limited to the public lookup and its stated comparison criterion.</p>
+<ul><li>Configuration geometry is retrievable through a documented public interface.
+<ul><li>The worked comparison meets exact agreement with the public source in native catalogue units.</li></ul></li>
+<li>Reference availability and physical suitability remain separate findings.
+<ul><li>Stack-up and rig records contain reference handles; they are not a qualified component tally or proof of tensioner capability.</li></ul></li>
+<li>Physical connection and drilling limits are not established.
+<ul><li>No allowable offset, sea-state boundary, effective-tension profile or travel margin is calculated by the demonstrated interface.</li></ul></li></ul>
+</section>
+<section class="numbered" id="limitations">
+<h2>7 Limitations</h2>
+<p>The data and calculation boundaries are stated in this section. Acceptance for a physical design is conditioned on the evidence identified in the data register.</p>
+<p>A matching file fingerprint establishes consistency with the supplied manifest, not trusted authorship, freshness or physical plausibility. Numeric conversion does not apply universal finiteness, sign, range or unit checks; those checks remain necessary at the engineering input boundary.</p>
+<p>The database does not supply a selected host, complete joint stack-up, code-qualified material strength, site loading or calculated response. The public configuration is a software example, not a measured installation or an independently benchmarked physical case.</p>
+<p>The default database location is relative to a source checkout. Availability through a packaged installation is not established; a caller can supply an explicit database directory. The helper that aggregates citations can return an empty mapping with a warning when resolution fails; an empty citation mapping is not authority to accept a criterion.</p>
+<h3>7.1 Not covered</h3>
+<p>The other catalogue families and private reference resolution are outside the worked workflow. These include flexible, steel catenary, steel lazy-wave, top-tensioned and lift-screen configurations, detailed stack-up-to-rig selection, licensed fatigue parameters and mode-specific integrity criteria.</p>
+</section>
+<section class="numbered" id="recommendations">
+<h2>8 Recommendations</h2>
+<p>The next engineering actions are identified in this section. Their priority follows the difference between reference retrieval and physical operating qualification.</p>
+<ul><li>Use the demonstrated interface for controlled reference-data retrieval.
+<ul><li>Retain the source record and units, check the manifest, and reject unknown keys or missing required quantities before a calculation, following the documented loader contract.</li></ul></li>
+<li>Establish a physical basis before a connection decision.
+<ul><li>Obtain the host-specific motion operators, watch circle, component tally, weights, buoyancy, contents, stiffness and joint travel limits listed in <a href="#data-register">Appendix A</a>. Do not connect on the basis of this catalogue example.</li></ul></li>
+<li>Qualify criteria at their intended point of use.
+<ul><li>Resolve each required citation, establish edition and clause applicability, and reject a missing criterion. The direct getter contract and its resolution checks are identified in <a href="#source-records">Section 9.2</a>.</li></ul></li>
+<li>Establish an independent physical benchmark before reporting envelopes.
+<ul><li>Compare still-water weight, buoyancy and tension with hand calculations, then introduce current and host-driven dynamics as set out in <a href="#methodology">Section 4</a>. Retain demand, limit and governing case for each physical result.</li></ul></li></ul>
+</section>
+<section class="numbered" id="references">
+<h2>9 References</h2>
+<p>The public units basis and repository evidence are identified in this section. Standards identifiers are retained to explain the citation interfaces; their numeric criteria are not adopted for a physical calculation.</p>
+<div id="standards-basis"><h3>9.1 Public units and criteria descriptions</h3>
+<p id="unit-source">National Institute of Standards and Technology, Special Publication 811, Guide for the Use of the International System of Units, 2008 edition, Appendix B.3, Use of conversion factors, and Appendix B.8, Factors for Units Listed Alphabetically, entries foot and inch. <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">Public conversion definitions</a> support the display units; no physical design allowance is derived from this reference.</p>
+<p>The getter documentation identifies DNV-OS-F201, Dynamic Risers, 2010 edition, Section 5, design fatigue factors; DNV-RP-C203, Fatigue Design of Offshore Steel Structures, 2021 edition, Section 2, stress concentration factors; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, first edition, 1993, Section 3.3, tension factors; and API STD 2RD, Dynamic Risers for Floating Production Systems, second edition, 2013, Section 5, dynamic riser design criteria. These are implementation citation descriptions, not independent clause-content verification. The implemented edition labels are checked against repository records; they are not assertions about the latest available editions.</p>
+</div>
+<div id="source-records"><h3>9.2 Source records and reproducibility</h3>
+<p>The exact lookup and the evidence locators are recorded below. Repository links require the repository beside this standalone document; the document's figures, styles, data and comment controls are embedded.</p>
+<pre><code>from digitalmodel.riser_database import RiserDatabase
+
+database = RiserDatabase.load()
+configuration = database.config("riser_drilling")
+# Returned geometry: water_depth_m, od_mm, wt_mm.
+# An explicit directory is accepted as RiserDatabase.load(root=...).</code></pre>
+<table><thead><tr><th>Evidence record</th><th>Repository locator</th></tr></thead><tbody>$records</tbody></table>
+<p class="caption">Table 4. Public source and implementation records. Complete source fingerprints are embedded in the document data for reproduction.</p>
+</div>
+</section>
+<section class="numbered" id="acronyms">
+<h2>10 Acronyms and symbols</h2>
+<p>The abbreviations, units and equation symbols used in this document are defined in this section. Catalogue identifiers occur only with the reproducible lookup in the source records.</p>
+<table><thead><tr><th>Term or symbol</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>API; DNV</td><td>American Petroleum Institute; standards publisher DNV</td></tr>
+<tr><td>ft; in; m; mm</td><td>Foot; inch; metre; millimetre</td></tr>
+<tr><td>D<sub>allow</sub>; F<sub>D</sub></td><td>Allowable cumulative fatigue damage; design fatigue factor, both dimensionless</td></tr>
+<tr><td>Δσ<sub>local</sub>; Δσ<sub>nominal</sub>; K<sub>σ</sub></td><td>Local stress range; nominal stress range; dimensionless stress concentration factor. Stress ranges use the same pressure units.</td></tr>
+<tr><td>σ<sub>allow</sub>; f<sub>y</sub>; S<sub>y</sub></td><td>Allowable equivalent stress; dimensionless design factor; specified minimum yield strength. Stress and strength use the same pressure units.</td></tr>
+</tbody></table><p class="caption">Table 5. Terms and units.</p>
+</section>
+<div class="appendix" id="data-register"><h2>Appendix A · Data register</h2>
+<p>The held data and missing inputs are registered below. No substitute physical value is introduced for an absent measurement or criterion.</p>
+<table><thead><tr><th>Data group</th><th>Status and basis</th><th>Effect on use</th></tr></thead><tbody>
+<tr><td>Configuration geometry</td><td>Public software example. ASSUMED - to be confirmed for design.</td><td>Lookup demonstration only; no installed configuration is established.</td></tr>
+<tr><td>Display conversions</td><td>Exact units definitions; public units reference in Section 9.1.</td><td>Display conversion only; no design tolerance is added.</td></tr>
+<tr><td>Joint tally, component dimensions and stiffness</td><td>Not supplied at configuration level.</td><td>Weight, bending stiffness and component transitions are not evaluated.</td></tr>
+<tr><td>Buoyancy, added mass and contents</td><td>Not returned as configuration-table inputs.</td><td>Effective tension and hydrodynamic response are not evaluated.</td></tr>
+<tr><td>Host, offset, motion operators and watch circle</td><td>No selected physical host is supplied.</td><td>Allowable offsets and drift-off time are not established.</td></tr>
+<tr><td>Tensioner, telescopic joint and stops</td><td>Capability and initial position are not supplied for a selected assembly.</td><td>Stroke margins and stop strikes are not evaluated.</td></tr>
+<tr><td>Site current and waves</td><td>No site-specific environment is supplied.</td><td>Current-dominated and wave-dominated envelopes are not evaluated.</td></tr>
+<tr><td>Physical criteria and closure curves</td><td>No criteria are qualified for this example; closure curves are not supplied.</td><td>Strength, joint angles, recoil and fatigue acceptance are not evaluated.</td></tr>
+</tbody></table><p class="caption">Table A1. Data availability and intended-use boundary.</p></div>
+<div class="appendix" id="quality-evidence"><h2>Appendix B · Quality evidence</h2>
+<p>Reference-data checks are evaluated against the documented lookup contract. They are recalculated when the document is rebuilt.</p>
+<table><thead><tr><th>Criterion</th><th>Result</th><th>Source</th></tr></thead><tbody>$qa</tbody></table>
+<p class="caption">Table B1. Evaluated reference-data checks. Pass means the stated data criterion is met.</p>
+<p>Physical pre-flight checks for hand-calculated statics, weight against buoyancy, component transitions, added mass and mesh convergence are not evaluated because no physical model is assembled. No physical validation claim follows from the reference-data checks.</p></div>
+<div class="appendix" id="inventory"><h2>Appendix C · Reference inventory</h2>
+<p>The loaded record counts are enumerated below. Record counts describe database coverage and do not count qualified riser designs.</p>
+<table><thead><tr><th>Reference table</th><th>Loaded records (count)</th><th>Source</th></tr></thead><tbody>$inventory</tbody></table>
+<p class="caption">Table C1. Current public reference inventory returned by the module.</p></div>
+<div id="comments" class="review-panel"><h2>Review comments</h2>
+<p>Select document text, then add a comment or replacement. Exported comments are saved as a separate file beside the document. Text in the issued document is not changed by a comment.</p>
+<blockquote id="selected-text">No text selected.</blockquote>
+<label for="comment-note">Comment</label><textarea id="comment-note"></textarea>
+<label for="comment-replacement">Proposed replacement (optional)</label><textarea id="comment-replacement"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="choose-folder" type="button">Choose report folder</button>
+<button id="save-comments" type="button">Save beside report</button>
+<button id="export-comments" type="button">Export comments</button>
+<label for="import-comments">Import saved comments</label><input id="import-comments" type="file" accept="application/json,.json">
+<p id="comment-status" role="status">Choose the report folder to save beside it, or export and place the comments file there. Browser storage alone is not a saved review file.</p>
+<ol id="comment-list"></ol>
+</div>
+</main></div>
+<script id="report-data" type="application/json">$model_json</script>
+<script id="report-changes" type="application/json">$changes_json</script>
+<script>$script</script>
+</body></html>
