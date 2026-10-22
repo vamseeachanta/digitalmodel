@@ -30,7 +30,9 @@ def test_pressure_values_survive_csv_retrieval(tmp_path):
         ]
 
 
-@pytest.mark.parametrize("depth", [-1, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "depth", [-1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None]
+)
 def test_invalid_depth_does_not_overwrite_file(tmp_path, depth):
     """Nonnegative finite depth is the downward-depth domain of Eq. 14.9."""
     path = tmp_path / "pressure.csv"
@@ -40,14 +42,19 @@ def test_invalid_depth_does_not_overwrite_file(tmp_path, depth):
     assert path.read_text() == "existing data\n"
 
 
-@pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "value", [0, -1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None]
+)
 @pytest.mark.parametrize("parameter", ["density_kg_m3", "gravity_m_s2"])
 def test_invalid_material_or_gravity(tmp_path, parameter, value):
     """Positive finite rho and g define this constant-density model's domain."""
     inputs = {"density_kg_m3": 1000, "gravity_m_s2": 10}
     inputs[parameter] = value
+    path = tmp_path / "pressure.csv"
+    path.write_text("existing data\n")
     with pytest.raises(ValueError, match=parameter):
-        write_hydrostatic_csv(tmp_path / "pressure.csv", [2], **inputs)
+        write_hydrostatic_csv(path, [2], **inputs)
+    assert path.read_text() == "existing data\n"
 
 
 @pytest.mark.parametrize(

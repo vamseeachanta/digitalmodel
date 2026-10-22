@@ -12,11 +12,12 @@ def test_worked_example(tmp_path):
 
     20000*3+50000*2=160000 N; dv/dx-du/dy=5-3=2 s^-1. Sources are
     OpenStax University Physics Vol. 1 (2016), §14.1, Eqs. 14.3 and 14.9;
-    Precalculus 2e (2021), §5.1; Calculus Vol. 3 (2016), §6.5, Eq. 6.17.
+    Precalculus 2e (2021), §5.1, with θ = 2π; Calculus Vol. 3 (2016),
+    §6.5, Eq. 6.17.
     All inputs are synthetic arithmetic choices, with SI units.
     """
     script = (
-        Path(__file__).resolve().parents[2]
+        Path(__file__).resolve().parents[3]
         / "examples/data/engineering_value_checks.py"
     )
     example = runpy.run_path(str(script))

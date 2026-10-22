@@ -10,8 +10,9 @@ from digitalmodel.data_models.pipe_section import PipeSection
 
 
 def test_pipe_area_after_serialization():
-    """OpenStax Precalculus 2e (2021), §5.1, Area of a Sector: A=pi*r².
+    """OpenStax Precalculus 2e (2021), §5.1, Area of a Sector: A=θ*r²/2.
 
+    With θ = 2π radians (a full circle), A=pi*r².
     Synthetic diameters Do=4 m, Di=2 m give radii 2 m and 1 m. Subtracting
     circle areas gives (4-1)*pi = 3*pi m². JSON retains both input diameters;
     the reconstructed model must retain the independently derived area.

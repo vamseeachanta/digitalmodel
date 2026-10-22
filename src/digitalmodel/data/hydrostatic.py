@@ -8,16 +8,16 @@ equation 14.9: p - p_surface = rho*g*h. No fluid properties are assumed.
 
 import csv
 import math
+from numbers import Real
 from pathlib import Path
 from typing import Iterable
 
 
 def _nonnegative(value: float, name: str) -> float:
     """Require finite nonnegative values for the gauge-pressure domain."""
-    try:
-        number = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{name} must be finite and nonnegative") from exc
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(f"{name} must be a finite nonnegative real number")
+    number = float(value)
     if not math.isfinite(number) or number < 0:
         raise ValueError(f"{name} must be finite and nonnegative")
     return number
@@ -66,7 +66,11 @@ def read_pressure_csv(path: Path) -> list[dict[str, float]]:
         for row in reader:
             if set(row) != {"depth_m", "pressure_pa"}:
                 raise ValueError("pressure CSV row has extra columns")
+            try:
+                numbers = {name: float(value) for name, value in row.items()}
+            except (TypeError, ValueError) as exc:
+                raise ValueError("pressure CSV values must be numeric") from exc
             rows.append(
-                {name: _nonnegative(value, name) for name, value in row.items()}
+                {name: _nonnegative(value, name) for name, value in numbers.items()}
             )
         return rows

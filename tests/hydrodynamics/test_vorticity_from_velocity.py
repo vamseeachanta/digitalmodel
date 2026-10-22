@@ -8,7 +8,9 @@ import pytest
 import digitalmodel.hydrodynamics.well_datasets.shear_flow_loader as flow
 
 
-@pytest.mark.parametrize("dx,dy", [(0.5, 2), (2, 0.5)])
+@pytest.mark.parametrize(
+    "dx,dy", [(0.5, 2), (2, 0.5), (np.float32(0.5), np.int64(2))]
+)
 def test_loaded_linear_field_has_hand_derived_vorticity(monkeypatch, dx, dy):
     """OpenStax Calculus Vol. 3 (2016), §6.5, Definition of Curl.
 
@@ -38,7 +40,24 @@ def test_irrotational_field_has_zero_curl():
     )
 
 
-@pytest.mark.parametrize("spacing", [0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "spacing",
+    [
+        0,
+        -1,
+        float("nan"),
+        float("inf"),
+        True,
+        False,
+        "2",
+        2 + 0j,
+        None,
+        np.bool_(True),
+        np.bool_(False),
+        np.array(1.0),
+        [1],
+    ],
+)
 @pytest.mark.parametrize("axis", ["dx_m", "dy_m"])
 def test_invalid_grid_spacing(spacing, axis):
     """Uniform coordinate increments must be positive finite lengths."""

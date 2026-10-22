@@ -27,7 +27,8 @@ class PipeSection:
     @property
     def area_m2(self) -> float:
         """Return material area as the difference of concentric circle areas."""
-        # OpenStax Precalculus 2e (2021), §5.1, Area of a Sector: A=pi*r².
+        # OpenStax Precalculus 2e (2021), §5.1, Area of a Sector: A=θ*r²/2.
+        # With θ = 2π radians (a full circle), A=pi*r².
         # Diameter is twice radius, hence pi*(Do-Di)*(Do+Di)/4.
         # Factoring the difference of squares avoids thin-wall cancellation.
         return (

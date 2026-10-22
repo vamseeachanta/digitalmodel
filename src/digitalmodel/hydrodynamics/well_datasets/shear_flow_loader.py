@@ -25,6 +25,8 @@ hydrodynamics surrogate trained on the same dataset.  Benchmark metrics
 from __future__ import annotations
 
 import logging
+import math
+from numbers import Real
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -194,7 +196,12 @@ def vorticity_from_velocity(
     fields require an independent grid-convergence assessment.
     """
     for name, spacing in (("dx_m", dx_m), ("dy_m", dy_m)):
-        if not np.isscalar(spacing) or not np.isfinite(spacing) or spacing <= 0:
+        if (
+            isinstance(spacing, bool)
+            or not isinstance(spacing, Real)
+            or not math.isfinite(spacing)
+            or spacing <= 0
+        ):
             raise ValueError(f"{name} must be positive and finite")
     values = np.asarray(velocity, dtype=float)
     if values.ndim != 3 or values.shape[0] != 2 or min(values.shape[1:]) < 2:

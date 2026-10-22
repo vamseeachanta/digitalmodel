@@ -10,15 +10,17 @@ and data-interface behavior; they do not qualify a measured dataset or a design.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-21 | Added synthetic value checks and a worked example to cover missing engineering assertions. |
+| 1 | 2026-10-21 | Rejected boolean and non-real calculation inputs, moved the example test to the dependency-bearing suite, and made the full-circle citation explicit. |
 
 ## Slice 1: pressure CSV retrieval
 
 `digitalmodel.data.hydrostatic.write_hydrostatic_csv` writes `depth_m` and
 `pressure_pa`. `read_pressure_csv` retrieves the persisted numbers without
 recomputing them. The interface requires explicit density and gravity, rejects
-nonfinite or negative values, and validates all rows before opening the output
-file. Pressure is gauge pressure relative to the fluid surface. Depth increases
-downward; density and gravity are constant throughout the profile.
+boolean, non-real, nonfinite or negative calculation inputs, and validates all
+rows before opening the output file. Numeric CSV cells are parsed explicitly on
+retrieval. Pressure is gauge pressure relative to the fluid surface. Depth
+increases downward; density and gravity are constant throughout the profile.
 
 The basis is `p = rho*g*h`, obtained by subtracting surface pressure in
 [OpenStax, University Physics Volume 1 (2016), section 14.1, equation 14.9](https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure).
@@ -33,7 +35,8 @@ The CSV schema states SI units; it does not retain fluid-property provenance.
 `digitalmodel.data_models.pipe_section.PipeSection` requires both diameters in
 metres and supports JSON round trips. Material area is the difference of circle
 areas, `A = pi*(Do - Di)*(Do + Di)/4`. The factor of four follows from diameter
-being twice radius, using the circle-area equation in
+being twice radius. The sector-area equation `A = θ*r²/2`, with θ = 2π radians
+for a full circle, gives `A = pi*r²`, using
 [OpenStax, Precalculus 2e (2021), section 5.1, Area of a Sector](https://openstax.org/books/precalculus-2e/pages/5-1-angles).
 For chosen diameters `4.0 m` and `2.0 m`, the radii are `2.0 m` and `1.0 m`:
 `A = (4 - 1)*pi = 3*pi m²`, displayed as `9.4 m²`.
@@ -51,8 +54,9 @@ interpolant or add force vectors with differing normals.
 
 `vorticity_from_velocity` accepts one snapshot with shape `(2, H, W)`:
 components `(u, v)`, rows increasing along `y`, columns increasing along `x`.
-Grid spacings are required positive inputs in metres; velocities are in metres
-per second. The output has shape `(1, H, W)` in inverse seconds.
+Grid spacings are required positive finite real inputs in metres; boolean and
+non-real spacings are rejected. Velocities are in metres per second. The output
+has shape `(1, H, W)` in inverse seconds.
 
 The z component is `omega_z = dv/dx - du/dy`, the Cartesian curl in
 [OpenStax, Calculus Volume 3 (2016), section 6.5, equation 6.17](https://openstax.org/books/calculus-volume-3/pages/6-5-divergence-and-curl).
