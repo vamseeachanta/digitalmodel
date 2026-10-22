@@ -70,6 +70,18 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_riser_configuration_report.py",
+        ("docs/reports/modules/riserconfigurationscreen/report.html",),
+        inputs=(
+            "pyproject.toml",
+            "examples/workflows/riser-configuration-screen/scr.yml",
+            "docs/reports/modules/riserconfigurationscreen/report.template.html",
+            "docs/reports/modules/riserconfigurationscreen/changes.json",
+            "docs/api/cfd/turbulent-flat-plate-verification.html",
+            "docs/api/_assets/brand.css",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

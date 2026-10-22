@@ -12,6 +12,9 @@ on:
       - 'docs/api/**'
       - 'docs/standards/**'
       - 'docs/domains/**'
+      - 'docs/reports/modules/**'
+      - 'tests/riser_configuration_screen/**'
+      - 'tests/capabilities/test_generated_html_freshness.py'
       - 'assets/logo/**'
       - 'atlases/**'
       - 'data/**'
@@ -26,6 +29,9 @@ on:
       - 'docs/api/**'
       - 'docs/standards/**'
       - 'docs/domains/**'
+      - 'docs/reports/modules/**'
+      - 'tests/riser_configuration_screen/**'
+      - 'tests/capabilities/test_generated_html_freshness.py'
       - 'assets/logo/**'
       - 'atlases/**'
       - 'data/**'
@@ -72,6 +78,14 @@ jobs:
         env:
           UV_NO_SOURCES: "true"
         run: uv run --group docs python scripts/check_generated_html.py --check
+
+      - name: Riser screening report tests
+        env:
+          UV_NO_SOURCES: "true"
+          PYTHONPATH: src:.
+        run: >-
+          uv run --group docs --with pytest python -m pytest tests/riser_configuration_screen/
+          -q -rA -p no:cacheprovider --basetemp="$RUNNER_TEMP/riser-report-tests"
 
       - name: Build docs
         env:

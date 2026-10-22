@@ -1,9 +1,38 @@
 {
-  "revision": "A",
+  "revision": "B",
   "changes": [
     {
+      "revision": "B",
+      "date": "2026-10-22",
+      "section": "Numerical assurance and report basis",
+      "description": "Exclude insignificant numerical diagnostics, check analytical agreement before rounding, add independent hand values and source citations, state the grid-bound screening limit, and inherit the canonical brand stylesheet."
+    },
+    {
       "section": "Static configuration screening",
-      "description": "Initial assessment of the public synthetic steel catenary example, with explicit static screening criteria and unassessed operating limits."
+      "description": "Initial assessment of the public synthetic steel catenary example, with explicit static screening criteria and unassessed operating limits.",
+      "revision": "A",
+      "date": "2026-10-21",
+      "history_description": "Initial assessment of static screening capability and its limits."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Stresses in Beams",
+      "version": "2000-11-21",
+      "url": "https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/96d839b02e4a6c63cf8031800e89cccd_MIT3_11F99_bstress.pdf",
+      "sha256": "0153d50224ff0a58b2b7c5005ac76aa9277909a15712d96af39476d324682d32",
+      "basis": "Equation (7), elastic bending stress from curvature; complete riser application NOT_EVALUATED.",
+      "retrieved_at": "2026-10-22T22:10:09Z",
+      "http_status": 200
+    },
+    {
+      "title": "Yield and Plastic Flow",
+      "version": "2001-10-15",
+      "url": "https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/913c0305981479e7474e1a229f53d2d9_MIT3_11F99_yield.pdf",
+      "sha256": "0992feac299b91c5ebc867930cd2fca84758fff72599149037167bb070804512",
+      "basis": "Von Mises principal-stress expression and equation (2); zero third principal stress gives the reported plane-stress identity.",
+      "retrieved_at": "2026-10-22T22:09:35Z",
+      "http_status": 200
     }
   ]
 }
