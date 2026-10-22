@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: docs/domains/orcaflex/pipeline/installation/s-lay/bigfoot1/WD_30m_2000KN.yml
+# File: docs/domains/orcaflex/pipeline/installation/s-lay/subproja/WD_18m_2000KN.yml
 # Created: 9:59 PM on 1/17/2026
 # User: (removed)
 # Machine: (removed)
@@ -52,7 +52,7 @@ Environment:
   # Seabed
   SeabedType: Flat
   SeabedOrigin: [0, 0]
-  SeabedOriginDepth: 30
+  SeabedOriginDepth: 18
   NominalDepth: ~
   SeabedSlopeDirection: 0
   SeabedSlope: 0
@@ -1813,7 +1813,7 @@ LineTypes:
     DNVSTF101FyCRA: 0
     DNVSTF101FuCRA: 0
 Vessels:
-  - Name: Bigfoot1
+  - Name: SubprojA
     VesselType: Vessel Type1
     Draught: Draught1
     Length: ~
@@ -1884,7 +1884,7 @@ Lines:
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
       - [Free, -30, 0, 9.25, 180, 90, 0, ~]
-      - [Anchored, -524, 0, 0.6604, 180, 90, 0, ~]
+      - [Anchored, -526, 0, 0.6604, 180, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - []
@@ -1934,7 +1934,7 @@ Winches:
   - Name: Tensioner
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Bigfoot1, -20, 0, 9.25]
+      - [SubprojA, -20, 0, 9.25]
       - [Pipeline, 0, 0, 0, End A]
     Stiffness: 5000
     Damping: 0.01
@@ -1949,7 +1949,7 @@ Winches:
     ShadedDrawingDiameter: 1
 Groups:
   Structure:
-    Bigfoot1: Model
+    SubprojA: Model
     Pipeline: Model
     Tensioner: Model
   State:
