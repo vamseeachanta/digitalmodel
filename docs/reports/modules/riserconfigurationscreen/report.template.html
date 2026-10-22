@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser configuration screening — static module assessment</title>
+{{STYLE}}
+</head><body class="hs-doc"><div class="wrap">
+<header><p class="kicker">Riser engineering • Module assessment</p>
+<h1>Riser configuration screening</h1>
+<p>Draft for maintainer review</p></header>
+<h2 id="s1">1. Executive summary</h2>
+<p>The steel catenary riser is a suspended pipe with a mobile touchdown and a grounded tail. Analysis is performed to determine the static configuration ranking under prescribed horizontal excursions, and the key results are summarized below.</p>
+<ul><li>The public synthetic example provides a provisional configuration shortlist.
+<ul><li>The first-ranked initial hangoff angle is [[result.ranked_candidates.0.configuration.hangoff_angle_deg:1]] degrees from vertical, with an excursion curvature range of [[result.ranked_candidates.0.curvature_range_per_m:8]] per metre. The ranking applies only to the supplied static criteria.</li>
+<li>The static utilisation chart below compares each configuration with the assumed limit of [[settings.constraints.max_static_utilisation:2]]. A point below this limit alone does not establish suitability for service.</li></ul></li>
+<li>Drilling offset and connected operating limits are not established.
+<ul><li>The calculation provides no current-dominated or wave-dominated operating envelope. No watch circle is supplied: do not connect on the basis of this assessment.</li>
+<li>Fatigue damage and life are not computed. The curvature range is a ranking proxy.</li></ul></li></ul>
+<figure><svg id="summary-chart" viewBox="0 0 800 310" role="img" aria-label="Maximum static utilisation against initial hangoff angle"></svg>
+<figcaption>Figure A. Maximum sampled static utilisation against initial hangoff angle; the dashed line is the supplied synthetic limit. Focus or hover over a point for the demand and limit.</figcaption></figure>
+<table><thead><tr><th>Revision</th><th>Cause</th></tr></thead><tbody><tr><td>A</td><td>Initial assessment of static screening capability and its limits.</td></tr></tbody></table>
+<p>Table A. Revision history, newest first.</p>
+<details><summary>Engineering changes</summary><p>{{CHANGES}}</p></details>
+
+<h2 id="s2">2. Introduction</h2>
+<p>Riser analysis is performed for the public synthetic steel catenary example at a water depth of [[settings.water_depth_m:1]] m. A static configuration is screened before any detailed environmental or operational assessment is attempted.</p>
+<p>The module ranks an explicit grid of initial hangoff angles and retains configurations that violate a criterion. The return value contains shapes, forces, constraint margins and a provisional shortlist. This report uses the module's International System of Units throughout to preserve the published input contract; it is not a field operating report in customary units.</p>
+
+<h2 id="s3">3. Design data</h2>
+<p>The data basis is the public synthetic example. All dimensional inputs, material properties and acceptance thresholds in that example are ASSUMED - to be confirmed; none represents a measured installation.</p>
+<h3>3.1 Site, host and contents</h3>
+<p>The seabed is horizontal and frictionless. The host is represented only by a prescribed hangoff position; host class, motion response, wave headings and environmental records are not supplied. The example uses zero internal and external pressure. Fluid density, mud weight and pressure variation with depth are not supplied, so the pressure basis is unsuitable for a submerged service assessment.</p>
+<h3>3.2 Riser stack-up and geometry</h3>
+<p>A uniform bare pipe is represented. The drawing shows the computed initial shape of the first-ranked configuration; it is not a manufacturing drawing. Connectors, flex joints, centralisers, stops and tensioner details are absent.</p>
+<figure><svg id="shape-chart" viewBox="0 0 800 360" role="img" aria-label="Suspended pipe, mobile touchdown, grounded tail and fixed seabed end"></svg>
+<figcaption>Figure B. Suspended steel catenary and grounded tail. The hangoff position is prescribed, rotation is free, and touchdown moves on a frictionless seabed. Component details are given in the adjacent data register below.</figcaption></figure>
+{{INPUTS}}<p>Table B. Input and criterion register. Every value is an assumption from the public example, located in section 9.2. No dimensional conversion is applied.</p>
+<h3>3.3 Excursions and criteria</h3>
+<p>The near, initial, far and cross excursions are static positions. The radial offsets are [[settings.offsets_m.0:1]], [[settings.offsets_m.1:1]] and [[settings.offsets_m.2:1]] m. The cross excursion is [[settings.offsets_m.3.x_m:1]] m along the initial span and [[settings.offsets_m.3.y_m:1]] m transverse to it. The original pipe length is preserved at each position.</p>
+<p>Top tension is limited to [[settings.constraints.max_top_tension_n:0]] N and bend radius is limited from below by [[settings.constraints.min_bend_radius_m:1]] m. These thresholds are illustrative input criteria, not limits taken from a design standard. The static utilisation threshold divides an elastic stress estimate by the supplied yield strength. It is used to reject highly stressed candidates before detailed assessment; it does not include a design-code resistance factor.</p>
+<p>Hog clearance is not applicable to the bare steel catenary. The lazy-wave route additionally checks net buoyancy and hog elevation above the sag bend. Numerical closure is checked internally; the tolerance is an algorithm setting, not an engineering acceptance band.</p>
+
+<h2 id="s4">4. Analysis methodology</h2>
+<p>The inextensible catenary is solved in a vertical plane with a mobile touchdown and a frictionless grounded tail. The static reference equations are taken from the public mooring-system formulation identified in section 9.1, in its infinite axial-stiffness limit.</p>
+<h3>4.1 Equilibrium and fixed length</h3>
+<p>Let h denote water depth, w submerged weight per unit length, H horizontal tension, a the catenary parameter H/w, s suspended arc length, x horizontal distance from touchdown, L total installed length and g grounded length. Let α denote the top tangent angle from vertical. The equations are:</p>
+<div class="eq">a = h sin α / (1 − sin α); s = √(h² + 2ah); x = a asinh(s/a); g = L − s; T = w(a + h).</div>
+<p>Here T is top tension and asinh is the inverse hyperbolic sine. The suspended profile is z = a[cosh(x/a) − 1], with elevation z measured from the seabed. These expressions follow from the suspended-segment equations with zero vertical force at touchdown and infinite axial stiffness. The public source and the recorded equation check are identified in section 9.1.</p>
+<p>At an excursion, a is varied until x + g equals the new horizontal endpoint separation while L remains fixed. A transverse excursion changes that separation by the planar distance formula; the returned shape remains in the radial plane. Three-dimensional bending is not represented.</p>
+<h3>4.2 Ranking and stress screen</h3>
+<p>Touchdown curvature is w/H. The objective is the largest excursion curvature range at touchdown or, for a lazy-wave configuration, at the sag bend. Feasible configurations are ranked first, in ascending objective order. Ties are resolved by ascending grid coordinates. Violated and unavailable configurations remain visible in the returned table.</p>
+<p>The stress screen samples the calculated shape, adds pressure thrust to effective tension, and combines axial, elastic curvature-bending and thin-wall hoop stresses using a plane-stress von Mises expression. An independently checked public derivation of this complete implementation is NOT_EVALUATED in this assessment. Its output is reported as a software screening indicator; it is not used to claim design-code compliance.</p>
+<p>The underlying catenary is not a beam model. Bending stiffness is absent from equilibrium even though curvature is used to estimate a bending stress. The lazy-wave route preserves buoyancy at fixed material arc coordinates; that route is not the worked example.</p>
+<h3>4.3 Static benchmark and loading order</h3>
+<p>A separate analytical check uses an assumed depth of 100 m, a top angle of 30 degrees from vertical, submerged weight of 10 N/m and grounded length of 50 m. Since sin α equals one half, a equals the depth; H equals weight times depth, top tension equals twice H, and touchdown curvature equals the inverse of the depth. The calculated values are [[anchor.horizontal_tension_n:1]] N, [[anchor.top_tension_n:1]] N and [[anchor.touchdown_curvature_per_m:4]] per metre respectively. Literal hand values are asserted in the report tests.</p>
+<p>The existing module test also compares a bare catenary with a separately evaluated closed-form expression. This establishes an ideal-catenary numerical check, not a field validation. Still water is the only load basis evaluated here. Current loading, waves plus current, and host-motion dynamics are not subsequent stages of this module.</p>
+<figure><svg id="anchor-chart" viewBox="0 0 800 310" role="img" aria-label="Hand-calculated effective tension with elevation and module endpoint values"></svg>
+<figcaption>Figure C. Analytical-check effective tension with elevation above seabed: the hand calculation is a line and the module endpoint results are markers. Wall tension equals effective tension for this zero-pressure check. No foam zone is present. No design tension limit is supplied for this numerical check.</figcaption></figure>
+<p>The top-tension difference from the hand reference is [[differences_percent.top_tension_n:6]] percent. The reference calculation and the module values agree at the displayed precision; the numerical test tolerance is not a design allowance.</p>
+
+<h2 id="s5">5. Detailed results</h2>
+<p>The worked example is computed by calling the public screening function on the shipped steel catenary input. The grid contains [[result.grid_size:0]] configurations; the ranking and excursion results are reproduced below.</p>
+<h3>5.1 Statics and configuration ranking</h3>
+{{CANDIDATES}}<p>Table C. Static configuration ranking. Curvature range is a screening proxy; no fatigue life follows from these values.</p>
+<p>The first-ranked configuration is examined at each supplied position in Table D. The tension, curvature and utilisation are returned directly by the module. A smaller objective does not establish a longer service life.</p>
+{{EXCURSIONS}}<p>Table D. First-ranked configuration at the prescribed positions.</p>
+<label for="quantity">Static result to inspect</label>
+<select id="quantity"><option value="top_tension_n">Top tension (N)</option><option value="radius">Touchdown bend radius (m)</option><option value="static_von_mises_utilisation">Static utilisation (dimensionless)</option></select>
+<figure><svg id="excursion-chart" viewBox="0 0 800 310" role="img" aria-label="Selected static demand against radial excursion"></svg>
+<figcaption>Figure D. First-ranked configuration under radial excursions; the cross excursion is retained in Table D. Each chart carries its supplied limit. Hover or focus shows the case, component, demand, limit and unit.</figcaption></figure>
+<h3>5.2 Not covered</h3>
+<p>Statics with current and operating envelopes are not evaluated. Dynamics, tensioner travel, drift-off time, recoil, vortex-induced vibration and fatigue life are not evaluated. No annual current records or watch circle are supplied; do not connect on this basis. Recoil is not evaluated: data needed: closure curves. Weak point analysis is not performed.</p>
+<p>The lazy-wave configuration route, buoyancy sensitivity and its larger example grid are not reproduced in this report. Their existing tests are identified in section 9.2. No claim is made that this assessment qualifies those sub-areas for service.</p>
+
+<h2 id="s6">6. Key findings</h2>
+<p>The static screening result is a provisional choice of initial geometry under synthetic inputs. The first-ranked angle of [[result.ranked_candidates.0.configuration.hangoff_angle_deg:1]] degrees is a grid choice, not a continuously optimised solution.</p>
+<p>The criterion margins are evaluated over the supplied positions only. An unexamined position between or beyond those positions is not demonstrated to meet the criteria. A connected operating envelope and the ability to stand under environmental loading remain unestablished.</p>
+
+<h2 id="s7">7. Limitations</h2>
+<p>The calculation is limited by its assumed inputs and ideal cable mechanics. Elastic extension, seabed friction, contact stiffness, local ovalisation, pressure-dependent stability, hydrodynamic loading and host rotations are excluded from the static geometry.</p>
+<p>The stress estimate samples the shape and does not prove that every local maximum has been captured. Positive criterion margins are conditional on the supplied thresholds and material values. The synthetic zero-pressure case cannot represent an operating submerged pipe without additional pressure and contents data.</p>
+<p>No measured response, physical test, independent beam-model result or field qualification for this example is held in the module assessment. The repository's adjacent closed-form benchmark is supporting mathematical context, not a native result for this example. Evidence from that separate benchmark is not substituted for missing validation.</p>
+
+<h2 id="s8">8. Recommendations</h2>
+<p>The provisional shortlist is suitable for selecting candidates for further assessment. Acceptance for service remains conditional on qualified input data and a separate environmental, structural and operational assessment.</p>
+<p>Replace the assumed pipe, pressure, weight and acceptance data with the design basis before interpreting feasibility. Establish pressure variation, actual material resistance, component bending limits and installation geometry. The rationale is the input-dependent screening contract described in sections 3 and 4.</p>
+<p>Assess still-water equilibrium against the analytical equations first, then introduce current, waves and host-motion response in a qualified model. Establish a watch circle and time available before connection decisions. This sequence addresses the load and operating information absent from the present calculation.</p>
+<p>For any criterion violation, exclude the candidate from the provisional shortlist and reassess geometry or the governing input against the same explicit limit. An unavailable result requires resolution of the missing data or failed shape closure. Reducing the curvature proxy alone does not resolve a stress or operational limit.</p>
+
+<h2 id="s9">9. References</h2>
+<p>The mathematical basis and the repository evidence are identified separately. Public synthetic examples are inputs for software assessment, not measured design data.</p>
+<h3>9.1 Equation basis</h3>
+<p><cite>Dynamics Modeling and Loads Analysis of an Offshore Floating Wind Turbine</cite>, NREL/TP-500-41958, November 2007 issue, section 2.5, printed pages 39–41, equations (2-36), (2-37a), (2-38), (2-43a,b) and (2-44). The repository equation-check record identifies the zero-touchdown-vertical-force and infinite-stiffness reductions used here. The external publication was not fetched for this assessment.</p>
+<p>The assumptions in the public example provide all dimensional inputs and screening thresholds. No standard-derived resistance or fatigue coefficient is introduced. The stress-formulation source qualification remains NOT_EVALUATED.</p>
+<h3>9.2 Evidence locators and reproduction</h3>
+<ul><li>Input: <code>examples/workflows/riser-configuration-screen/scr.yml</code>.</li>
+<li>Public call: <code>digitalmodel.riser_configuration_screen.workflow.screen(settings)</code>. The settings mapping is the example's <code>riser_configuration_screen</code> value.</li>
+<li>Static adapters: <code>src/digitalmodel/riser_configuration_screen/static.py</code>. Ranking and file output: <code>src/digitalmodel/riser_configuration_screen/workflow.py</code>.</li>
+<li>Existing checks: <code>tests/riser_configuration_screen/test_static.py</code> covers catenary agreement, shape closure and fixed buoyancy; <code>test_workflow.py</code> covers ranking, violations, margins, input rejection and export; <code>test_regressions.py</code> covers published-example selection and command dispatch.</li>
+<li>Recorded public equation check: <code>docs/benchmarks/catenary_closed_form/benchmark.json</code>, sources entry marked checked equations. Publication: <a href="https://www.osti.gov/servlets/purl/921803">public technical report</a>.</li>
+<li>Layout exemplar: <code>docs/api/cfd/turbulent-flat-plate-verification.html</code>; canonical style: <code>docs/api/_assets/brand.css</code>. Both styles are inlined here.</li>
+<li>Rebuild with the source package on the Python import path: <code>python scripts/reports/build_riser_configuration_report.py</code>. Report checks: <code>tests/riser_configuration_screen/test_module_report.py</code>.</li></ul>
+<p>The dictionary result carries the full ranking, constraints with signed margins, shapes, shortlist, input digest and provisional basis. The file-output entry point writes a structured result and a comma-separated table to an explicitly selected folder. That export is distinct from this report.</p>
+
+<h2 id="s10">10. Acronyms and symbols</h2>
+<p>Abbreviations and mathematical symbols are defined here for reading the calculation. A stress utilisation is dimensionless; curvature is inverse length.</p>
+<p>SCR means steel catenary riser. SLWR means steel lazy-wave riser. SI means International System of Units. NREL denotes the National Renewable Energy Laboratory. NOT_EVALUATED means that the evidence needed for a result is absent. It does not mean a zero result.</p>
+<p>H is horizontal tension; T is total top tension; w is submerged weight per unit length; h is water depth; a is catenary parameter; s is suspended arc length; x is distance from touchdown; z is elevation above seabed; L is installed length; g is grounded length; α is top tangent angle from vertical. N denotes newton, m metre and Pa pascal.</p>
+
+<details><summary>Appendix A. Data register and component detail</summary>
+<p>Table B contains the data held. Every entry is ASSUMED - to be confirmed. The excursion list and initial-angle grid are likewise synthetic assumptions. The source is the public example identified in section 9.2.</p>
+<p>Data not held are the site environment, host motion response, pressure profile, contents density, component certificates, connector geometry, local stiffness transitions, support positions, added mass, damping, closure curves and watch circle. No best estimate is inserted for these absent quantities because the static module has no qualified mechanism for using them.</p>
+<p>The pipe is uniform in the example; adjacent-component diameters, stiffness ratios and local clearances are not defined. Added mass is absent from the static equilibrium. No foam zone or telescopic joint is represented.</p>
+</details>
+<details><summary>Appendix B. Numerical assurance and interpretation</summary>
+<p>The report checks compare displayed values and chart data with a fresh module call. The analytical anchor checks horizontal tension, top tension and touchdown curvature against literal hand calculations. The existing ideal-catenary check compares tension, suspended length, span and angle.</p>
+<p>Shape and fixed-buoyancy tests address numerical invariants. Export tests address preservation of the screening basis. These checks do not establish environmental performance or design acceptance. Test execution results accompany the technical delivery rather than being inferred from the existence of test files.</p>
+<p>Displayed inputs retain the supplied significant digits. Result tables use engineering display precision; chart data are rounded to avoid insignificant library-dependent digits. Sub-nanometre numerical residues are not engineering results and are omitted from the visual interpretation.</p>
+<p>Legend: The supplied screening criteria are met. The supplied screening criteria are not met. The result is unavailable. The criterion is not applicable. These statements describe only the supplied static checks.</p>
+</details>
+<details id="comments"><summary>Review comments</summary>
+<p>Select a section and enter a comment. Save the comments file beside this report. Browsers without a file picker download the file; select the report folder as the destination. Comments are not transmitted.</p>
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="5" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button> <button id="save-comments" type="button">Save comments</button>
+<label>Load saved comments <input id="load-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status">Comments remain unsaved until saved to a file.</p><ul id="comment-list"></ul>
+</details>
+<footer>Static screening assessment • Draft for maintainer review</footer>
+</div>
+<script id="report-data" type="application/json">{{DATA}}</script>
+<script>
+const data = JSON.parse(document.getElementById('report-data').textContent);
+const candidates = data.result.ranked_candidates;
+const ns = 'http://www.w3.org/2000/svg';
+function element(tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+function plot(id, points, limit, unit, label, component) {
+  const svg = document.getElementById(id); svg.replaceChildren();
+  const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
+  const maxY = Math.max(limit, ...points.map(p => p.y)) * 1.12;
+  const x = v => 85 + (v-minX)/(maxX-minX || 1)*660, y = v => 250-v/maxY*200;
+  svg.append(element('path', {d:'M85 40 V250 H750', fill:'none', stroke:'var(--ink)'}));
+  svg.append(element('line', {x1:85,x2:750,y1:y(limit),y2:y(limit),stroke:'var(--nogo)','stroke-dasharray':'6 4'}));
+  svg.append(element('text', {x:90,y:y(limit)-8,fill:'var(--ink)'}, `Limit ${limit.toLocaleString('en-US')} ${unit}`));
+  points.forEach(p => {
+    const circle = element('circle', {cx:x(p.x),cy:y(p.y),r:6,fill:'var(--brand)',tabindex:0});
+    const detail = `${p.label}; ${component}; demand ${p.y.toPrecision(5)} ${unit}; limit ${limit} ${unit}`;
+    circle.setAttribute('aria-label', detail); circle.append(element('title',{},detail)); svg.append(circle);
+    svg.append(element('text',{x:x(p.x),y:274,'text-anchor':'middle',fill:'var(--ink)'},p.x));
+  });
+  svg.append(element('text',{x:420,y:300,'text-anchor':'middle',fill:'var(--ink)'},label));
+  svg.append(element('text',{x:85,y:22,fill:'var(--ink)'},`${component} (${unit}); baseline zero`));
+  svg.append(element('text',{x:70,y:253,fill:'var(--ink)'},'0'));
+}
+plot('summary-chart', candidates.map(c => ({x:c.configuration.hangoff_angle_deg,
+  y:Math.max(...c.offset_results.map(r=>r.static_von_mises_utilisation)),
+  label:`Initial angle ${c.configuration.hangoff_angle_deg} degrees; all supplied positions`})),
+  data.settings.constraints.max_static_utilisation,'dimensionless','Initial hangoff angle (degrees)','Maximum sampled pipe utilisation');
+const anchorSvg=document.getElementById('anchor-chart'), reference=data.reference;
+const ax=v=>85+v/reference.depth_m*660, ay=v=>250-v/reference.top_tension_n*200;
+anchorSvg.append(element('path',{d:'M85 40 V250 H750',fill:'none',stroke:'var(--ink)'}));
+anchorSvg.append(element('line',{x1:ax(0),x2:ax(reference.depth_m),y1:ay(reference.horizontal_tension_n),y2:ay(reference.top_tension_n),stroke:'var(--brand)','stroke-width':2}));
+[[0,data.anchor.horizontal_tension_n,reference.horizontal_tension_n,'Touchdown'],[reference.depth_m,data.anchor.top_tension_n,reference.top_tension_n,'Hangoff']].forEach(([z,t,r,label])=>{
+  const marker=element('circle',{cx:ax(z),cy:ay(t),r:6,fill:'var(--panel)',stroke:'var(--brand)',tabindex:0});
+  const detail=`Analytical check; ${label}; demand ${t.toPrecision(5)} N; hand reference ${r} N; design limit not supplied`;
+  marker.append(element('title',{},detail));marker.setAttribute('aria-label',detail);anchorSvg.append(marker);
+  anchorSvg.append(element('text',{x:ax(z),y:275,'text-anchor':'middle',fill:'var(--ink)'},z));
+  anchorSvg.append(element('text',{x:ax(z)+(z? -8:8),y:ay(t)+16,'text-anchor':z?'end':'start',fill:'var(--ink)'},`${t.toFixed(1)} N`));
+});
+anchorSvg.append(element('text',{x:85,y:22,fill:'var(--ink)'},'Effective and wall tension (N)'));
+anchorSvg.append(element('text',{x:420,y:300,'text-anchor':'middle',fill:'var(--ink)'},'Elevation above seabed (m)'));
+anchorSvg.append(element('text',{x:70,y:253,fill:'var(--ink)'},'0'));
+function excursionPlot() {
+  const choice=document.getElementById('quantity').value;
+  const radius=choice==='radius', tension=choice==='top_tension_n';
+  const limit=radius?data.settings.constraints.min_bend_radius_m:tension?data.settings.constraints.max_top_tension_n:data.settings.constraints.max_static_utilisation;
+  const points=candidates[0].offset_results.filter(r=>typeof r.offset_m==='number').map(r=>({x:r.offset_m,
+    y:radius?1/r.touchdown_curvature_per_m:r[choice],label:`Radial excursion ${r.offset_m} m`}));
+  plot('excursion-chart',points,limit,radius?'m':tension?'N':'dimensionless','Radial excursion (m)',radius?'Touchdown bend radius (minimum limit)':tension?'Hangoff tension':'Maximum sampled pipe utilisation');
+}
+document.getElementById('quantity').addEventListener('change',excursionPlot); excursionPlot();
+const shape=candidates[0].offset_results.find(r=>r.offset_m===0), svg=document.getElementById('shape-chart');
+const total=shape.horizontal_span_m+shape.grounded_length_m;
+const sx=v=>90+v/total*610, sy=v=>300-v/data.settings.water_depth_m*235;
+svg.append(element('line',{x1:70,x2:760,y1:300,y2:300,stroke:'var(--ink)'}));
+svg.append(element('rect',{x:70,y:40,width:60,height:20,fill:'var(--panel-2)',stroke:'var(--ink)'}));
+svg.append(element('path',{d:shape.shape.map((p,i)=>`${i?'L':'M'}${sx(p[1])},${sy(p[2])}`).join(' '),fill:'none',stroke:'var(--brand)','stroke-width':5}));
+svg.append(element('line',{x1:sx(shape.horizontal_span_m),x2:sx(total),y1:297,y2:297,stroke:'var(--brand)','stroke-width':5}));
+[[140,55,'Prescribed hangoff; free rotation'],[110,180,'Uniform bare pipe'],[sx(shape.horizontal_span_m)-100,280,'Mobile touchdown'],[520,330,'Grounded tail; frictionless seabed'],[650,280,'Fixed end']].forEach(([x,y,t])=>svg.append(element('text',{x,y,fill:'var(--ink)'},t)));
+let comments=[];
+document.querySelectorAll('h2').forEach(h=>{const option=document.createElement('option');option.value=h.id;option.textContent=h.textContent;document.getElementById('comment-section').append(option);});
+function renderComments(){const list=document.getElementById('comment-list');list.replaceChildren();comments.forEach(c=>{const li=document.createElement('li');li.textContent=`${c.section}: ${c.text}`;list.append(li);});}
+document.getElementById('add-comment').onclick=()=>{const input=document.getElementById('comment-text');if(!input.value.trim())return;comments.push({section:document.getElementById('comment-section').selectedOptions[0].textContent,text:input.value.trim()});input.value='';renderComments();document.getElementById('comment-status').textContent='Comments changed; save the file to preserve them.';};
+document.getElementById('save-comments').onclick=async()=>{try{const text=JSON.stringify({revision:'A',comments},null,2);if(window.showSaveFilePicker){const handle=await window.showSaveFilePicker({suggestedName:'report.comments.json',types:[{description:'Comments',accept:{'application/json':['.json']}}]});const stream=await handle.createWritable();await stream.write(text);await stream.close();document.getElementById('comment-status').textContent='Comments saved to the selected file.';}else{const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='report.comments.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.getElementById('comment-status').textContent='Download requested; check that the file is saved beside the report.';}}catch(error){document.getElementById('comment-status').textContent='Comments were not saved. Keep this page open and try again.';}};
+document.getElementById('load-comments').onchange=async event=>{try{const loaded=JSON.parse(await event.target.files[0].text());if(loaded.revision!=='A'||!Array.isArray(loaded.comments)||!loaded.comments.every(c=>typeof c.section==='string'&&typeof c.text==='string'))throw new Error();comments=loaded.comments;renderComments();document.getElementById('comment-status').textContent='Saved comments loaded.';}catch(error){document.getElementById('comment-status').textContent='The selected file is not a compatible comments file.';}};
+</script></body></html>
