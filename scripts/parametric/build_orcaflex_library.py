@@ -60,7 +60,7 @@ def main() -> None:
             "licensed": False,
             "run_date": "STUB",
             "note": "synthetic placeholder max line tension — replace with a "
-                    "licensed OrcaFlex run per case (operator, dev-secondary).",
+                    "licensed OrcaFlex run per case (operator, licensed-solver workstation).",
         },
         coverage_note=(
             "STUB OrcaFlex max-line-tension library, 3 canonical load cases. "

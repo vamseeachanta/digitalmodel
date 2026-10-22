@@ -1,4 +1,4 @@
-atlas_id: e70b23544de6
+atlas_id: 611dc8860aeb
 basename: diffraction_library
 physics: linear
 response: heave_rao_m_per_m
@@ -41,7 +41,7 @@ provenance:
     licensed: false
     run_date: STUB
     note: "synthetic placeholder heave RAO \u2014 replace with a licensed diffraction\
-      \ run per case (operator, dev-secondary)."
+      \ run per case (operator, licensed-solver workstation)."
   coverage:
     key_axis: case
     covered_cases:

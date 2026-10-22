@@ -76,7 +76,7 @@ def main() -> None:
             "run_date": "STUB",
             "note": "synthetic placeholder drift-off dynamic amplification — "
                     "replace with a licensed OrcaFlex time-domain run per "
-                    "operating mode (operator step, dev-secondary).",
+                    "operating mode (operator step, licensed-solver workstation).",
         },
         coverage_note=(
             "STUB drilling-riser drift-off dynamic-amplification library, 3 "
