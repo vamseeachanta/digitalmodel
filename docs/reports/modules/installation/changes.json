@@ -1,0 +1,9 @@
+{
+  "revision": "0",
+  "date": "2026-10-21",
+  "changes": [
+    "Foundation splash-zone limits are calculated for every size in the public example.",
+    "Force contributions and the submerged-weight reserve are displayed together.",
+    "Vessel installability remains unevaluated until the vessel and site basis is supplied."
+  ]
+}
