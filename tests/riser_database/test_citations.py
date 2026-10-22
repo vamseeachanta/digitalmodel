@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Suite 5 (#1245): the 4 citation defenses for the riser getters, adapted from
 tests/orcaflex/test_mooring_design_citations.py:
 
@@ -96,8 +98,9 @@ def _no_wiki_anywhere(tmp_path, monkeypatch):
 
 
 def test_get_riser_dff_emits_f201_citation():
-    cv = getters.get_riser_dff(repo_root=_fixture_repo_root())
-    assert cv.value == 10.0
+    """Synthetic class input 8 tests metadata, not a standard table value."""
+    cv = getters.get_riser_dff(safety_class="high", class_dff=8.0, repo_root=_fixture_repo_root())
+    assert cv.value == 8.0
     assert cv.citation.code_id == "dnv-os-f201"
     assert cv.citation.publisher == "DNV"
     assert cv.citation.revision == "2010"
@@ -157,7 +160,7 @@ def test_fail_closed_on_missing_wiki_page(tmp_path, monkeypatch):
     (tmp_path / "knowledge" / "wikis").mkdir(parents=True)
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
     with pytest.raises(CitationResolutionError) as exc:
-        getters.get_riser_dff()
+        getters.get_riser_dff(safety_class="high", class_dff=8.0)
     assert exc.value.code_id == "dnv-os-f201"
     assert exc.value.reason == "page_missing"
 
@@ -166,10 +169,10 @@ def test_fail_closed_on_missing_wiki_page(tmp_path, monkeypatch):
 
 
 def test_user_override_wins_for_dff():
-    cv = getters.get_riser_dff(override=3.0, repo_root=_fixture_repo_root())
+    cv = getters.get_riser_dff(safety_class="high", class_dff=8.0, override=3.0, repo_root=_fixture_repo_root())
     assert cv.value == 3.0
     assert "user override" in cv.citation.note
-    assert "10.0" in cv.citation.note  # standard value still cited
+    assert "class value 8.0" in cv.citation.note  # synthetic input retained
 
 
 def test_user_override_wins_for_scf():
@@ -255,26 +258,26 @@ def test_von_mises_getter_matches_code_check_engine_default():
 
 def test_pip_no_wiki_direct_getter_fails_closed(_no_wiki_anywhere):
     with pytest.raises(CitationResolutionError):
-        getters.get_riser_dff()
+        getters.get_riser_dff(safety_class="high", class_dff=8.0)
 
 
 def test_pip_no_wiki_helper_warns_once_and_degrades(_no_wiki_anywhere):
     t0 = time.perf_counter()
     with pytest.warns(RuntimeWarning, match="standalone mode"):
-        assert getters.riser_citations() == {}
+        assert getters.riser_citations(safety_class="high", class_dff=8.0) == {}
     elapsed = time.perf_counter() - t0
     # defense (d): degraded resolution is bounded (no unbounded parent walk)
     assert elapsed < 0.5
     # one-shot: the second call is silent
     with warnings.catch_warnings():
         warnings.simplefilter("error", RuntimeWarning)
-        assert getters.riser_citations() == {}
+        assert getters.riser_citations(safety_class="high", class_dff=8.0) == {}
 
 
 def test_helper_returns_cited_values_in_context():
-    cited = getters.riser_citations(repo_root=_fixture_repo_root())
+    cited = getters.riser_citations(safety_class="high", class_dff=8.0, repo_root=_fixture_repo_root())
     assert set(cited) == {"dff", "scf", "f_wt", "f_bt", "von_mises_df"}
-    assert cited["dff"].value == 10.0
+    assert cited["dff"].value == 8.0
     assert cited["scf"].value == 1.0
     assert cited["f_wt"].value == 1.05
     assert cited["f_bt"].value == 0.96

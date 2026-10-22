@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Durable workflow for combined wave + VIV riser fatigue screening.
 
 Offline-analytical and licence-free: invoked through the digitalmodel engine
@@ -46,20 +48,40 @@ SECONDS_PER_YEAR = 365.25 * 24.0 * 3600.0
 
 
 def resolve_dff(settings: dict, repo_root: Optional[Path] = None) -> float:
-    """Resolve the design fatigue factor (DFF) for a riser-fatigue run (#1246).
+    """Use explicit DFF or require a class and its supplied factor.
 
-    Precedence (fail-closed):
-
-    * an explicit ``dff`` in ``settings`` wins — validated exactly as before
-      (positive float); every existing config is behaviourally unchanged;
-    * when ``dff`` is absent, the cited standard default resolves via
-      :func:`digitalmodel.riser_database.getters.get_riser_dff` (DNV-OS-F201) —
-      10.0 where the llm-wiki resolves, and raises ``CitationResolutionError``
-      standalone. A pass/fail-driving input never silently defaults.
+    DNV-OS-F201 (2010), design fatigue factors: available citation metadata
+    does not confirm the class table. An absent ``dff`` therefore requires
+    ``safety_class`` and ``class_dff``; standards adequacy is NOT_EVALUATED.
+    An explicit ``dff`` remains a caller criterion and bypasses wiki lookup.
     """
     if settings.get("dff") is not None:
         return _positive_float(settings, "dff")
-    return get_riser_dff(repo_root=repo_root).value
+    return get_riser_dff(
+        safety_class=settings.get("safety_class"),
+        class_dff=settings.get("class_dff"), repo_root=repo_root,
+    ).value
+
+
+def fatigue_damage_verdict(design_life_damage: float, dff: float) -> dict:
+    """Compare supplied damage with a supplied factor, without qualifying either.
+
+    This exposes the existing touchdown.py step-5 usage-factor definition:
+    allowable = reciprocal DFF; usage = damage / allowable; pass at usage <= 1.
+    DNV-OS-F201 (2010) class table adequacy remains NOT_EVALUATED by this
+    arithmetic; both damage and factor require a separately qualified basis.
+    """
+    if not math.isfinite(design_life_damage) or design_life_damage < 0:
+        raise ValueError("design_life_damage must be finite and nonnegative")
+    if not math.isfinite(dff) or dff <= 0:
+        raise ValueError("dff must be finite and positive")
+    allowable = 1.0 / dff
+    usage = design_life_damage * dff
+    return {
+        "allowable_damage": allowable,
+        "usage_factor": usage,
+        "passes_dff": usage <= 1.0,
+    }
 
 
 def router(cfg: dict) -> dict:
@@ -95,7 +117,7 @@ def router(cfg: dict) -> dict:
         "governing_dff_margin": governing["dff_margin"],
         # Top-level pass/fail (governing segment is worst-case): drives the
         # deckhand report template's mitigation-on-fail section.
-        "screening_status": "pass" if governing["dff_margin"] >= 1.0 else "fail",
+        "screening_status": "pass" if governing["passes_dff"] else "fail",
         "segments": summaries,
         "results_csv": _display_path(csv_path),
         "summary_csv": _display_path(summary_path),
@@ -126,6 +148,7 @@ def _evaluate_segment(
         )
 
     total_damage = wave_damage + viv_damage
+    verdict = fatigue_damage_verdict(total_damage, dff)
     fatigue_life = _fatigue_life_years(design_life_years, total_damage)
     required_life = design_life_years * dff
     dff_margin = _safe_divide(fatigue_life, required_life)
@@ -139,7 +162,7 @@ def _evaluate_segment(
         "fatigue_life_years": fatigue_life,
         "required_life_years": required_life,
         "dff_margin": dff_margin,
-        "passes_dff": dff_margin >= 1.0,
+        **verdict,
     }
     return wave_rows + viv_rows, summary
 

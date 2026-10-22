@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser fatigue factor analysis</title>
+<style>body{font:16px/1.6 system-ui;max-width:58rem;margin:2rem auto;padding:0 1rem}
+table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:.4rem;text-align:left}
+code{overflow-wrap:anywhere}svg{max-width:100%;height:auto}</style>
+<main><h1>Riser fatigue factor analysis</h1>
+<p>Draft. Synthetic interface example; physical acceptance is not evaluated.</p>
+<h2>Summary</h2>
+<p>Explicit safety-class inputs remove the unqualified fatigue-factor default.
+Arithmetic verdict: PASS. Standards verdict: NOT_EVALUATED.
+The supplied damage is below the supplied allowable; no standard class factor is qualified.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>1</td><td>2026-10-22</td><td>First issue: demonstrate explicit
+class-factor inputs and distinguish software arithmetic from standards adequacy.</td></tr></table>
+<h2>Inputs</h2>
+<p>All values are synthetic software assumptions. The class factor is an explicit
+input because the available F201 fixture supplies metadata without a standards table.</p>
+<table><tr><th>Quantity</th><th>Input</th><th>Basis</th></tr>
+<tr><td>Safety class</td><td>normal</td><td>Caller selection</td></tr>
+<tr><td>Class DFF, F</td><td>4.0</td><td>Synthetic caller factor</td></tr>
+<tr><td>Design-life damage, D</td><td>0.200</td><td>Synthetic dimensionless demand</td></tr>
+</table>
+<h2>Method and hand result</h2>
+<p>The existing touchdown step-5 contract defines allowable damage A = 1/F,
+usage U = D/A = D F, and a pass when U ≤ 1. These are definitions for a supplied
+criterion, not independently sourced standard requirements. For this example,
+A = 1/4 = 0.250; U = 0.200 × 4 = 0.8, so the arithmetic passes.
+Damage derivation from stress cycles is outside this example.</p>
+<h2>Program result</h2>
+<p>The builder calls get_riser_dff, resolve_dff and fatigue_damage_verdict.
+It returns A = 0.250, U = 0.8,
+and PASS. The regression test independently writes out the arithmetic.
+The difference from the hand result is 0.0 % for
+allowable damage and 0.0 % for usage.</p>
+<p>Citation note: safety class normal; user-supplied class value 4.0; NOT_EVALUATED: standard class value and table locator unconfirmed.</p>
+<figure><svg viewBox="0 0 500 100" role="img" aria-label="Damage and allowable damage">
+<text x="0" y="18">Dimensionless design-life damage</text>
+<rect x="0" y="30" width="320.0" height="20" fill="#286b91"/>
+<line x1="400" x2="400" y1="25" y2="60" stroke="black" stroke-width="2"/>
+<text x="0" y="85">Damage 0.200; allowable 0.250</text>
+</svg><figcaption>Figure 1. Generated demand bar against the supplied allowable marker.</figcaption></figure>
+<h2>Limits of use and way forward</h2>
+<p>This is a conditional arithmetic pass for synthetic inputs. Engineering acceptance
+requires a qualified safety class, class factor, damage history and component model.
+A missing class or class factor is refused; a supplied override records both values.
+Explicit workflow dff inputs retain their previous precedence.</p>
+<h2>NOT_EVALUATED</h2>
+<ul><li>DNV-OS-F201 (2010) class-table values, exact locator and applicability.</li>
+<li>Stress histories, S–N basis, SCF, thickness effects, wave and VIV response.</li>
+<li>Private-context sources, component integrity and engineering acceptance.</li></ul>
+<h2>Sources and reproducibility</h2>
+<p>DNV-OS-F201, Dynamic Risers, 2010, design fatigue factors: metadata from the
+committed citation fixture only; table locator unconfirmed. The attempted public
+standards page returned HTTP 404 on 2026-10-22, so no numeric table value was used.</p>
+<p>Equation source: the repository's touchdown.py step 5 and workflow.py damage
+verdict definition. Source hashes below normalize CRLF to LF for text identity.</p>
+<ul><li><code>src/digitalmodel/riser_database/getters.py</code>: <code>48203c80a4e775939d591738f4b86c58dcbbfba30103342a367a4f4b3bba83a4</code></li>
+<li><code>src/digitalmodel/riser_fatigue/workflow.py</code>: <code>92ea748f9108b72f4add56178a4710ba026b24b61b586b00f8949b5ce4095673</code></li>
+<li><code>src/digitalmodel/riser_fatigue/touchdown.py</code>: <code>5d1f0579ef4659cf3e30ccda65c713602a8d4d27876972d7d14720977ebee0c5</code></li>
+<li><code>tests/citations/fixtures/knowledge/wikis/engineering-standards/wiki/standards/dnv-os-f201.md</code>: <code>912488e0d7ea01422b316731bcbf095627d6e164b74f77504f3f959e02ab8129</code></li>
+<li><code>scripts/reports/build_riser_dff_example.py</code>: <code>5348dd569cbd0c70316dbd764f16fabb62a57c6a29e26f3e41b873a7824017d1</code></li></ul>
+<p>Rebuild with PYTHONPATH=src python scripts/reports/build_riser_dff_example.py.
+The accompanying changes.json records this issue. The report is separate from the
+reference-database inventory report.</p>
+</main></html>

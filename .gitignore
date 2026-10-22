@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the separate reproducible riser fatigue-factor example.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/riser_database_dff/
+docs/reports/modules/riser_database_dff/*
+!docs/reports/modules/riser_database_dff/fatigue-factor-analysis.html
+!docs/reports/modules/riser_database_dff/changes.json
+!scripts/reports/
+scripts/reports/*
+!scripts/reports/build_riser_dff_example.py

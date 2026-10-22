@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Suite 2 (#1245): schema allowlists + content-shape tripwires.
 
 The public tables carry clause IDENTIFIERS and references only. A new
@@ -73,7 +75,23 @@ def _read(table_file: str) -> tuple[list[str], list[dict]]:
     }[table_file]
     rows = [asdict(row) for row in getattr(RiserDatabase.load(), accessor)]
     assert rows, f"{table_file}: schema checks require nonempty loaded rows"
-    return list(rows[0]), rows
+    # Independent CSV decoding cross-checks the package's complete row output.
+    with (DEFAULT_DB_ROOT / table_file).open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        header = list(reader.fieldnames)
+        independent = list(reader)
+    assert header == list(rows[0])
+    assert len(independent) == len(rows)
+    for raw, loaded in zip(independent, rows):
+        for column, value in loaded.items():
+            expected = raw[column]
+            if value is None:
+                assert expected == ""
+            elif isinstance(value, float):
+                assert value == float(expected)
+            else:
+                assert value == expected
+    return header, rows
 
 
 def test_loaded_public_table_counts():
