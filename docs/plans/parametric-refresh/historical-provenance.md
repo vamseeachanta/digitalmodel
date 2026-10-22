@@ -1,9 +1,9 @@
 # Historical atlas source evidence
 
-The historical evidence index inventories every committed computed atlas with a
-recorded code revision and content fingerprint. It preserves the existing
-manifests, grids, surrogate specifications, validation evidence and default
-pointers. Of the 34 inventoried bases, 30 reconstruct from retained history;
+The historical evidence index inventories 34 computed atlas snapshots with a
+recorded code revision and content fingerprint at publication. It preserves retained source
+and artifact digests; intentional citation edits are recorded separately below.
+Of the 34 inventoried bases, 30 reconstruct from retained history;
 four remain `NOT_EVALUATED`. These are fingerprint reconstruction results, not
 qualification of the engineering methods or proof of a historical execution.
 
@@ -14,6 +14,7 @@ qualification of the engineering methods or proof of a historical execution.
 | Initial | 2026-10-21 | Record historical source evidence and expose reconstruction gaps without changing numerical artifacts. |
 | 1 | 2026-10-21 | Check committed artifact bytes, report checkout drift, allow symlinked archive parents, and read indexes as UTF-8 for portable verification. |
 | 2 | 2026-10-21 | Distinguish configured checkout conversion from content edits, fail the audit on content drift, and reject archive directory junctions. |
+| 3 | 2026-10-22 | Record intentional RP-0360 citation corrections and a separate current FOWT atlas without replacing retained evidence. |
 
 ## Inventory and interpretation
 
@@ -114,6 +115,53 @@ which are missing, redirected or unreadable. The comparison uses read-only
 does not produce drift. `VERIFIED` describes committed evidence; checkout drift
 does not change that status, but it makes the command return nonzero. Check the
 drift list before using checkout artifacts as engineering inputs.
+
+## Intentional citation edits and current FOWT atlas
+
+The RP-0360 edition was corrected from 2024-03 to 2016-03 (amended 2021-10).
+The publisher's public [DNV-RP-0360 product page](https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/),
+checked on 2026-10-22, identifies that edition and amendment. The earlier date
+did not match the publisher's catalogue. This is a citation correction only;
+no licensed document content was retrieved or reproduced, and the citation does
+not establish dynamic-service applicability.
+
+The following historical manifests were intentionally edited to correct that
+edition; their retained publication bytes carry the older `2021-09` label.
+Only their edition metadata changed; their numerical artifacts and
+the retained source and artifact digests in the historical index remain intact:
+
+- `atlases/fowt_mooring/0af02c3aaf14/manifest.yaml`
+- `atlases/fowt_mooring/15372d97a52f/manifest.yaml`
+- `atlases/fowt_mooring/7ac02c8bc7f0/manifest.yaml`
+- `atlases/fowt_mooring/b4046a89d219/manifest.yaml`
+
+The verifier has no intentional-edit exemption. Its unchanged audit must reject
+these four edited manifests with `Artifact digest mismatch`; recording the
+reason here does not turn that result into successful artifact authentication.
+The regression test
+`test_rp0360_edition_correction_remains_visible_as_artifact_drift` names all four,
+authenticates their retained publication bytes, limits each edit to the edition
+replacement, and requires both checkout drift and artifact rejection. Historical
+fingerprint reconstruction is tested separately from current artifact identity.
+Other corruption, missing evidence and the four existing reconstruction gaps
+continue to fail their original checks.
+
+The repository's `digitalmodel.parametric.refresh.main(["--apply"])` entry point
+rebuilds the current FOWT atlas from the corrected citation basis. It runs against
+a scratch copy of the atlas root so temporary staging remains outside the source
+tree. Citation resolution uses a scratch-only metadata page containing the
+public identifier, publisher and corrected edition. The resulting atlas files
+and default pointer are copied back after validation; older atlas directories
+are retained. The new current atlas is separate from the frozen historical
+inventory. Its freshness and manifest coverage are checked in the tests rather
+than adding it retroactively to the retained publication index.
+
+The refreshed current atlas is `fowt_mooring/3a3048a70e17`, selected by
+`atlases/fowt_mooring/default.txt`. Its 18 grid points, axes and seven holdout
+validation results match the previous active `15372d97a52f` atlas exactly.
+The new identity records the corrected citation, current source fingerprint,
+input-template digest and build revision; it does not change the response
+surface or acceptance criteria.
 
 ## Source archives and Git history requirements
 

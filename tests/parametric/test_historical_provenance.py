@@ -15,6 +15,14 @@ from digitalmodel.parametric import historical_provenance as history
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX = ROOT / "atlases" / "historical-provenance.json"
+# RP-0360 edition metadata was intentionally corrected; retained digests stay
+# unchanged so the audit continues to reject these edited historical artifacts.
+INTENTIONALLY_EDITED_MANIFESTS = (
+    "atlases/fowt_mooring/0af02c3aaf14/manifest.yaml",
+    "atlases/fowt_mooring/15372d97a52f/manifest.yaml",
+    "atlases/fowt_mooring/7ac02c8bc7f0/manifest.yaml",
+    "atlases/fowt_mooring/b4046a89d219/manifest.yaml",
+)
 
 
 def test_independent_raw_fingerprint_vector():
@@ -51,17 +59,90 @@ def test_inventory_covers_every_computed_manifest(inventory):
         provenance = yaml.safe_load(path.read_text(encoding="utf-8"))["provenance"]
         if provenance.get("code_version") and provenance.get("content_fingerprint"):
             expected.add(path.relative_to(ROOT).as_posix())
-    assert {row["manifest"] for row in inventory["atlases"]} == expected
+    indexed = {row["manifest"] for row in inventory["atlases"]}
+    # A refreshed current atlas is separate from the frozen historical index.
+    from digitalmodel.parametric.refresh import refresh_status
+
+    current = refresh_status("fowt-mooring")
+    assert current["stale"] is False
+    active = f"atlases/fowt_mooring/{current['atlas_id']}/manifest.yaml"
+    assert active not in indexed
+    assert indexed | {active} == expected
 
 
 def test_all_retained_bases_reconstruct(inventory):
     for row in inventory["atlases"]:
+        if row["manifest"] in INTENTIONALLY_EDITED_MANIFESTS:
+            # These source identities still reconstruct (or retain their known
+            # gap); the separate edit test requires artifact rejection today.
+            read = history.git_reader(ROOT, row["source_revision"])
+            if row["status"] == "NOT_EVALUATED":
+                with pytest.raises(history.FingerprintMismatch, match=row["reason"]):
+                    history.verify_sources(row, read)
+            else:
+                assert history.verify_sources(row, read) == row["content_fingerprint"]
+            continue
         result = history.verify_git(row, ROOT, retained_ref="origin/main")
         assert result["status"] == row["status"], row["manifest"]
         if result["status"] == "VERIFIED":
             assert result["fingerprint"] == row["content_fingerprint"]
         else:
             assert result["reason"] == row["reason"]
+
+
+def test_current_fowt_refresh_preserves_numerical_artifacts():
+    """A citation-only refresh preserves grid values and parsed JSON evidence."""
+    import pandas as pd
+
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas_root = ROOT / "atlases"
+    previous = Atlas.load(atlas_root, "fowt_mooring", "15372d97a52f")
+    current = Atlas.load(atlas_root, "fowt_mooring")
+    assert current.atlas_id != previous.atlas_id
+    pd.testing.assert_frame_equal(current.grid, previous.grid)
+    assert current.axes == previous.axes
+    assert current.validation == previous.validation
+    assert current.surrogate_spec() == {
+        **previous.surrogate_spec(), "atlas_id": current.atlas_id,
+    }
+    for atlas in (previous, current):
+        directory = atlas_root / "fowt_mooring" / atlas.atlas_id
+        assert json.loads((directory / "surrogate.json").read_text()) == atlas.surrogate_spec()
+        assert json.loads((directory / "validation.json").read_text()) == atlas.validation
+
+
+@pytest.mark.parametrize("manifest", INTENTIONALLY_EDITED_MANIFESTS)
+def test_rp0360_edition_correction_remains_visible_as_artifact_drift(inventory, manifest):
+    """Correct citation metadata without rewriting retained publication evidence."""
+    import yaml
+
+    row = next(r for r in inventory["atlases"] if r["manifest"] == manifest)
+    revision = row["source_revision"]
+    history.verify_artifacts(row, ROOT, revision=revision)
+    retained = history.git_reader(ROOT, revision)(manifest)
+    edited = (ROOT / manifest).read_bytes()
+    assert yaml.safe_load(retained)["provenance"]["standards"] == [
+        {"id": "DNV-RP-0360", "edition": "2021-09"},
+    ]
+    assert edited == retained.replace(
+        b"edition: 2021-09", b"edition: 2016-03 amended 2021-10",
+    )
+    assert history.sha256(retained) == row["artifacts"][manifest]
+    assert history.sha256(edited) != row["artifacts"][manifest]
+    assert yaml.safe_load(edited)["provenance"]["standards"] == [
+        {"id": "DNV-RP-0360", "edition": "2016-03 amended 2021-10"},
+    ]
+    assert history._working_tree_drift(row, ROOT, revision) == [manifest]
+    with pytest.raises(history.EvidenceError, match=f"Artifact digest mismatch: {manifest}"):
+        history.verify_artifacts(row, ROOT)
+    with pytest.raises(history.EvidenceError, match=f"Artifact digest mismatch: {manifest}"):
+        history.verify_git(row, ROOT)
+    notes = (ROOT / "docs/plans/parametric-refresh/historical-provenance.md").read_text(
+        encoding="utf-8",
+    )
+    assert manifest in notes
+    assert "2016-03 (amended 2021-10)" in notes
 
 
 def test_historical_viv_standards_are_not_current_defaults(inventory):
@@ -232,7 +313,9 @@ def artifact_checkout(inventory, tmp_path, monkeypatch, request):
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
-    row = copy.deepcopy(next(r for r in inventory["atlases"] if r["status"] == request.param))
+    row = copy.deepcopy(next(r for r in inventory["atlases"]
+                             if r["status"] == request.param
+                             and r["manifest"] not in INTENTIONALLY_EDITED_MANIFESTS))
     git_dir = subprocess.check_output(
         ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
     ).strip()
@@ -332,7 +415,9 @@ def test_unsupported_algorithm_is_rejected(retained_record):
 
 
 def test_declared_gap_does_not_hide_source_corruption(inventory):
-    row = next(r for r in inventory["atlases"] if r["status"] == "NOT_EVALUATED")
+    row = next(r for r in inventory["atlases"]
+               if r["status"] == "NOT_EVALUATED"
+               and r["manifest"] not in INTENTIONALLY_EDITED_MANIFESTS)
     row = copy.deepcopy(row)
     name = next(iter(row["sources"]))
     row["sources"][name] = "0" * 64
