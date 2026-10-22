@@ -1,0 +1,14 @@
+{
+  "report": "Hull-girder screening module analysis",
+  "revision": "0",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-22",
+      "changes": [
+        "Initial issue: document the still-water workflow and its analytical evidence.",
+        "Distinguish illustrative allowable comparisons from strength acceptance."
+      ]
+    }
+  ]
+}

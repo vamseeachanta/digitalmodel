@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hull-girder screening module analysis</title>
+<style>
+/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+
+
+svg{max-width:100%;height:auto} .chart-controls{display:flex;gap:12px;flex-wrap:wrap}
+textarea{display:block;width:100%;min-height:5em} button,select,input{font:inherit}
+.comment-card{border-left:3px solid var(--accent);padding:8px 16px;margin:12px 0}
+.chart-readout{min-height:5em} caption{text-align:left;color:var(--mut)}
+@media print{button,textarea,input,.chart-controls{display:none}.wrap{box-shadow:none}}
+</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><div class="kicker">Module analysis · Longitudinal strength</div>
+<h1>Hull-girder screening module analysis</h1><p class="sub">Draft for client review</p></header>
+<nav aria-label="Contents"><p>Contents:
+<a href="#section-1">Executive summary</a> · <a href="#section-2">Introduction</a> ·
+<a href="#section-3">Summary</a> · <a href="#section-4">Design data</a> ·
+<a href="#section-5">Methodology</a> · <a href="#section-6">Detailed results</a> ·
+<a href="#section-7">Validation</a> · <a href="#section-8">Findings and recommendations</a> ·
+<a href="#section-9">References</a> · <a href="#section-10">Appendices</a></p></nav>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The hull-girder screening module is a longitudinal loading-condition calculator. Analysis is performed
+to determine still-water shear force, bending moment and comparisons with supplied allowable curves;
+key results are summarized below.</p>
+<ul><li>Loading conditions are ranked using calculated demand and raw equilibrium closure.
+<ul><li>The synthetic central-cargo example gives a maximum sagging moment of
+<span data-number="result.max_sagging_t_m" data-scale="1">−62,496.9</span> t·m at <span data-number="result.x_max_sagging_m" data-scale="1">50.0</span> m.</li>
+<li>The numerical comparison is limited by the analytical-fixture tolerances in Table 7.1;
+it does not establish strength acceptance.</li></ul></li>
+<li>Illustrative checks satisfy the supplied example limits.
+<ul><li>The maximum bending utilisation is <span data-number="result.max_bending_utilization" data-scale="100">50.0</span> % against the
+<span data-number="result.utilization_limit" data-scale="100">100.0</span> % illustrative limit; strength acceptance is NOT_EVALUATED.</li>
+<li>Approved loading-manual limits and an independent loading-instrument comparison are required before
+an operational strength decision is made.</li></ul></li></ul>
+<p>The demand and illustrative boundary are shown in Figure 6.1. The scope and disposition are supported
+by <a href="#source-example">References 9.2(a)</a>, <a href="#source-core">9.2(b)</a> and
+<a href="#source-basis">9.2(d)</a>.</p>
+<div id="revision-history"><h3>Revision history</h3>
+<table id="revision-table"><caption>Report issue record, newest first.</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>Initial issue: explain the loading calculation and separate numerical agreement from strength acceptance.</td></tr></tbody></table></div></section>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The main still-water workflow is documented for engineers reviewing loading conditions. A documented
+public synthetic box-barge example is recalculated through the module entry point; it is not a measured
+asset or a transcription of a textbook numerical example.</p>
+<p>The implementation builds distributed and concentrated weights, obtains buoyancy, integrates the net
+load and compares demands with position-dependent allowable magnitudes. The result is exported as
+station, frame and summary tables. Source functions and their test records are listed in
+<a href="#source-core">Section 9.2</a>.</p></section>
+<section id="section-3"><h2>3. Summary</h2>
+<p>The loading calculation is used as a screening aid. Controls are applied to the input basis and the
+reported coverage before any loading condition is referred for an operational decision.</p>
+<p>Weight units, positions, total weight and longitudinal centre of gravity are checked against the loading
+record. The buoyancy method is selected for the actual hull; the box method is restricted here to the
+prismatic example. Raw end residuals are reviewed before corrected load curves are interpreted.</p>
+<p>Both sign-specific allowable curves are supplied from the approved loading manual. Missing negative
+curves inherit positive magnitudes; this symmetry is an example assumption, not evidence of an approved
+limit. All reporting frames and expected demand peaks are included. A returned pass status alone does
+not establish that every strength check was evaluated: omitted curves produce no-allowable frame
+results, while the overall status can still be pass. These behaviours are recorded in
+<a href="#source-router">Reference 9.2(f)</a>.</p></section>
+<section id="section-4"><h2>4. Design Data</h2>
+<p>The calculation basis is the central-cargo box-barge example in <a href="#source-example">Reference 9.2(a)</a>.
+Still-water geometry, weights, frames and allowable curves are copied without changing their values.</p>
+<h3>4.1 Physical model and inputs</h3>
+<figure id="figure-geometry"><svg viewBox="0 0 780 340" role="img" aria-labelledby="geometry-title">
+<title id="geometry-title">Elevation of the synthetic box barge and free-floating beam idealisation</title>
+<defs><pattern id="cargo-hatch" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 8 8 0" stroke="currentColor"/></pattern></defs>
+<g fill="none" stroke="currentColor"><path d="M80 125V225H700V125H80" stroke-width="2"/>
+<rect x="235.0" y="128" width="310.0" height="75" fill="url(#cargo-hatch)"/>
+<path d="M45 190H735" stroke-dasharray="8 4"/><path d="M100 270v-42m-5 8 5-8 5 8"/><path d="M140 270v-42m-5 8 5-8 5 8"/><path d="M180 270v-42m-5 8 5-8 5 8"/><path d="M220 270v-42m-5 8 5-8 5 8"/><path d="M260 270v-42m-5 8 5-8 5 8"/><path d="M300 270v-42m-5 8 5-8 5 8"/><path d="M340 270v-42m-5 8 5-8 5 8"/><path d="M380 270v-42m-5 8 5-8 5 8"/><path d="M420 270v-42m-5 8 5-8 5 8"/><path d="M460 270v-42m-5 8 5-8 5 8"/><path d="M500 270v-42m-5 8 5-8 5 8"/><path d="M540 270v-42m-5 8 5-8 5 8"/><path d="M580 270v-42m-5 8 5-8 5 8"/><path d="M620 270v-42m-5 8 5-8 5 8"/><path d="M660 270v-42m-5 8 5-8 5 8"/>
+<path d="M80 78H700M80 68V88M700 68V88M80 288H700"/>
+</g><g fill="currentColor" font-size="15"><text x="255" y="65">Length <tspan data-number="inputs.length_m" data-scale="1">100.0</tspan> m</text>
+<text x="260" y="112">Central cargo <tspan data-number="inputs.weights.lightship.0.weight_t" data-scale="1">10,000.0</tspan> t</text>
+<text x="85" y="310">Aft end, x increases forward →</text>
+<text x="230" y="260">Upward distributed buoyancy</text>
+<text x="80" y="38">Free ends: no applied end force or end couple</text></g></svg>
+<figcaption>Figure 4.1. Cargo extends from <tspan data-number="inputs.weights.lightship.0.x_start_m" data-scale="1">25.0</tspan> m to
+<tspan data-number="inputs.weights.lightship.0.x_end_m" data-scale="1">75.0</tspan> m. The dashed line indicates the waterline; depth and draft
+are not represented to scale. No seabed or rigid support is included. Geometry is taken from
+<a href="#source-example">Reference 9.2(a)</a>.</figcaption></figure>
+<table id="table-inputs"><caption>Table 4.1. Calculation inputs and numerical gate.</caption><thead><tr><th scope="col">Input</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Hull length</td><td><span data-number="inputs.length_m" data-scale="1">100.0</span></td><td>m</td><td>9.2(a)</td></tr><tr><td>Central cargo weight</td><td><span data-number="inputs.weights.lightship.0.weight_t" data-scale="1">10,000.0</span></td><td>t</td><td>9.2(a)</td></tr><tr><td>Cargo start</td><td><span data-number="inputs.weights.lightship.0.x_start_m" data-scale="1">25.0</span></td><td>m</td><td>9.2(a)</td></tr><tr><td>Cargo end</td><td><span data-number="inputs.weights.lightship.0.x_end_m" data-scale="1">75.0</span></td><td>m</td><td>9.2(a)</td></tr><tr><td>Integration stations</td><td><span data-number="inputs.n_stations" data-scale="1">401.0</span></td><td>count</td><td>9.2(a)</td></tr><tr><td>Raw end-closure tolerance</td><td><span data-number="closure_tolerance" data-scale="100">0.5</span></td><td>%</td><td>9.2(b)</td></tr><tr><td>Illustrative utilisation limit</td><td><span data-number="inputs.utilization_limit" data-scale="100">100.0</span></td><td>%</td><td>9.2(a)</td></tr></tbody></table>
+<p>Distributed lightship and tank blocks require weight, longitudinal extent and an optional centre of
+gravity; an omitted centre is placed at the extent midpoint. Concentrated weights require weight and
+position, with an optional spreading extent. The current calculation contains only the central cargo
+block. A hydrostatics-table alternative requires immersed sectional area against draft and position;
+a direct alternative requires buoyancy per length against position. Table 10.2 records the example curves.</p>
+<h3>4.2 Criteria and qualification</h3>
+<p>Raw end shear divided by displacement and raw end moment divided by displacement times length are
+compared with the closure tolerance in Table 4.1. This is a configurable numerical-balance gate from
+<a href="#source-core">Reference 9.2(b)</a>, not a class strength criterion. Corrected closure alone does
+not qualify the original buoyancy. Frame utilisation is compared with the illustrative utilisation limit
+in Table 4.1; these synthetic allowable curves do not establish a permissible operational loading envelope.</p>
+<p>ASSUMED - to be confirmed: the synthetic hull, cargo and symmetric example limits are suitable only
+for demonstrating the calculation. No loading-manual approval is represented by the example values.
+The qualification gaps and required evidence are listed in Table 10.1.</p></section>
+<section id="section-5"><h2>5. Methodology</h2>
+<p>The longitudinal hull is treated as a free-floating beam. Net load is integrated along the hull using
+cumulative trapezoidal quadrature, with the sign convention defined below.</p>
+<h3>5.1 Equilibrium, integration and signs</h3>
+<div class="eq">q(x) = w(x) − b(x); V(x) = ∫₀ˣ q(s) ds; M(x) = ∫₀ˣ V(s) ds</div>
+<p>The coordinate x is measured forward from the aft end in metres; s is the integration coordinate.
+Weight density w and buoyancy density b are in tonnes per metre. The net density q is weight minus
+buoyancy; shear V is in mass-equivalent tonnes and moment M is in mass-equivalent tonne-metres.
+Positive M is hogging; negative M is sagging. The general beam equilibrium relations are given in
+<a href="#source-theory">Reference 9.2(g)</a>, equations (3.68) and (3.72). That reference uses the opposite
+load sign: its q is b − w when mapped to this convention. The implemented convention is stated in
+<a href="#source-core">Reference 9.2(b)</a>.</p>
+<p>For the box method, a linear buoyancy distribution is fitted to the discrete weight and longitudinal
+moment. Optional linear closure correction is applied after the raw residuals are recorded. Distributed
+weights are represented by cell-averaged linear densities constrained by total weight and centre of
+gravity; a centre outside the middle third of a block is rejected. Concentrated weights are spread
+rather than treated as exact force jumps. These implementation choices are documented in
+<a href="#source-core">Reference 9.2(b)</a>.</p>
+<h3>5.2 Allowable interpolation and analytical comparator</h3>
+<div class="eq">u<sub>V</sub>(x) = |V(x)| / V<sub>allow</sub>(x);
+u<sub>M</sub>(x) = |M(x)| / M<sub>allow</sub>(x)</div>
+<p>Utilisations u are dimensionless. Allowable magnitudes are linearly interpolated at the reporting
+frames, and the allowable matching the demand sign is used. Outside the supplied allowable knot range,
+the end allowable is held constant. The module does not search a continuous utilisation envelope
+between reporting frames; the chart markers identify the positions actually screened.</p>
+<div class="eq">|V|<sub>reference</sub> = W/4; M<sub>reference</sub>(L/2) = −WL/16</div>
+<p>For the documented central block over the middle half of a hull of length L and cargo weight W,
+these continuous solutions follow by integrating the piecewise constant net density. Their derivation
+and numerical comparison criteria are held in <a href="#source-tests">Reference 9.2(c)</a> and
+<a href="#source-basis">9.2(d)</a>. A spread block edge changes the sampled shear extreme; the continuous
+reference is therefore a comparator rather than an expected identical discrete value.</p>
+<h3>5.3 Entry point and outputs</h3>
+<p>The public dictionary entry point is imported and called as follows. Configuration is deep-copied
+before the call because the router replaces the settings block with results.</p>
+<pre><code>from copy import deepcopy
+from digitalmodel.hull_girder_screening import router
+result = router(deepcopy(config))["hull_girder_screening"]</code></pre>
+<p>The configuration contains a hull-girder settings mapping and an explicit output directory.
+Station tables contain position, weight density, buoyancy density, shear and moment. Frame tables
+contain demand, allowable, utilisation and status. Summary tables contain extremes and positions,
+raw residuals and maxima of the evaluated utilisations. Comma-separated-value files and the returned
+dictionary carry these results; numerical output paths are kept out of this report.</p></section>
+<section id="section-6"><h2>6. Detailed Results</h2>
+<p>The public example is computed through the router with its still-water inputs. Optional wave loads,
+total allowable curves and section-modulus inputs are excluded from this worked example.</p>
+<h3>6.1 Worked example</h3>
+<p>The calculated displacement is <span data-number="result.displacement_t" data-scale="1">10,000.0</span> t and its longitudinal centre of gravity
+is <span data-number="result.lcg_m" data-scale="1">50.0</span> m. The largest shear has signed value <span data-number="result.max_shear_t" data-scale="1">−2,487.5</span> t.
+The maximum sagging moment is <span data-number="result.max_sagging_t_m" data-scale="1">−62,496.9</span> t·m at
+<span data-number="result.x_max_sagging_m" data-scale="1">50.0</span> m. Raw end shear and moment residuals are respectively
+<span data-number="result.closure_shear_fraction" data-scale="100">0.0</span> % and <span data-number="result.closure_moment_fraction" data-scale="100">0.0</span> %,
+against the <span data-number="closure_tolerance" data-scale="100">0.5</span> % closure gate. The raw closure gate is satisfied.</p>
+<p>The maximum frame shear utilisation is <span data-number="result.max_shear_utilization" data-scale="100">49.8</span> % and the maximum
+frame bending utilisation is <span data-number="result.max_bending_utilization" data-scale="100">50.0</span> %. Both use the
+<span data-number="result.utilization_limit" data-scale="100">100.0</span> % illustrative threshold. These comparisons demonstrate
+arithmetic with supplied curves; operational strength acceptance remains NOT_EVALUATED.</p>
+<div class="chart-controls"><label>Quantity <select id="chart-quantity"><option value="bending">Bending moment</option>
+<option value="shear">Shear force</option></select></label><label>Position along hull
+<input id="chart-position" type="range" min="0" max="400" value="200"></label></div>
+<figure id="figure-demand"><svg id="demand-chart" viewBox="0 0 780 360" role="img" aria-labelledby="chart-title">
+<title id="chart-title">Demand against illustrative positive and negative allowable magnitudes</title>
+<g fill="none" stroke="currentColor"><path d="M70 25V295H750"/>
+<path id="chart-limit" stroke-dasharray="7 4"/><path id="chart-negative-limit" stroke-dasharray="7 4"/>
+<path id="chart-demand" stroke="var(--brand)" stroke-width="2"/>
+<path id="chart-cursor" stroke="var(--accent)"/></g>
+<g id="chart-markers" fill="var(--brand)"></g><g id="chart-labels" fill="currentColor" font-size="13"></g>
+<text x="270" y="345" fill="currentColor">Position along hull (m)</text></svg>
+<figcaption>Figure 6.1. One demand quantity is shown against longitudinal position. Solid line: calculated
+demand; dashed lines: illustrative boundaries; dots: screened frames. Hover or use the position control
+to read demand and the sign-specific limit. Curves are from Table 10.2; evaluated frames are in Table 10.3.</figcaption></figure>
+<p id="chart-readout" class="chart-readout" aria-live="polite"></p>
+<p>The legend is interpreted as follows. The numerical gate is satisfied when raw closure is inside its
+tolerance. An illustrative check is satisfied when evaluated utilisation is inside its supplied limit.
+Strength acceptance is not evaluated when qualified limits or independent reference evidence are absent.</p>
+<noscript><p>The interactive chart requires JavaScript. Tables 7.1 and 10.3 retain the numerical results.</p></noscript>
+</section>
+<section id="section-7"><h2>7. Validation</h2>
+<p>Analytical comparison and existing regression evidence are distinguished from operational validation.
+The results below compare the current discrete calculation with the continuous central-block solution.</p>
+<table id="table-comparison"><caption>Table 7.1. Signed differences relative to the continuous analytical reference.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">Calculated</th><th scope="col">Reference</th><th scope="col">Unit</th><th scope="col">Difference (%)</th><th scope="col">Absolute difference limit (%)</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Shear magnitude</td><td><span data-number="comparison.shear.calculated" data-scale="1">2,487.5</span></td><td><span data-number="comparison.shear.reference" data-scale="1">2,500.0</span></td><td>t</td><td><span data-number="comparison.shear.difference_percent" data-scale="1">−0.5</span></td><td><span data-number="comparison.shear.tolerance_percent" data-scale="1">1.0</span></td><td>9.2(c), 9.2(d)</td></tr><tr><td>Sagging magnitude</td><td><span data-number="comparison.moment.calculated" data-scale="1">62,496.9</span></td><td><span data-number="comparison.moment.reference" data-scale="1">62,500.0</span></td><td>t·m</td><td><span data-number="comparison.moment.difference_percent" data-scale="1">−5.0e−03</span></td><td><span data-number="comparison.moment.tolerance_percent" data-scale="1">0.1</span></td><td>9.2(c), 9.2(d)</td></tr></tbody></table>
+<p>Both comparisons satisfy the unrounded existing fixture criteria. Nonzero differences are preserved
+when they are too small for ordinary fixed-point display. The criteria test numerical integration,
+not structural adequacy.</p>
+<table id="table-inventory"><caption>Table 7.2. Existing test-function inventory, not executed-case counts.</caption><thead><tr><th scope="col">Evidence area</th><th scope="col">Test definitions</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Core screening</td><td><span data-number="inventory.0.definitions" data-scale="1">23.0</span></td><td>9.2(c)</td></tr><tr><td>Routed workflow</td><td><span data-number="inventory.1.definitions" data-scale="1">18.0</span></td><td>9.2(e)</td></tr><tr><td>Supporting strength</td><td><span data-number="inventory.2.definitions" data-scale="1">16.0</span></td><td>9.2(e)</td></tr><tr><td>Report-pack example</td><td><span data-number="inventory.3.definitions" data-scale="1">2.0</span></td><td>9.2(e)</td></tr></tbody></table>
+<p>The core tests include sagging and mirrored hogging signs, symmetry, weight integrals, invalid extents,
+a box-hull waterline recovery, deliberately unbalanced direct buoyancy, allowable exceedance and section
+properties. Optional wave tests exercise closed-form formula reproduction and combinations. The workflow
+tests exercise parsing, tables and statuses; the report-pack tests compare regenerated example data
+with committed data. Parametrisation can produce more cases than the definition counts in Table 7.2.</p>
+<p>No approved loading-instrument comparison or field-data validation is held in the cited example
+basis. Reproducing the same formula or committed table does not provide an independent check of the
+rule edition or an operational asset. Missing independent evidence is recorded in
+<a href="#source-basis">Reference 9.2(d)</a>.</p></section>
+<section id="section-8"><h2>8. Key Findings, Limitations and Recommendations</h2>
+<p>The implemented still-water workflow is supported by a synthetic analytical comparison and automated
+regression records. Engineering acceptance remains dependent on a qualified loading basis.</p>
+<h3>8.1 Findings and recommendations</h3>
+<p>The central-block result has the documented sagging sign and satisfies the numerical comparison
+criteria in Table 7.1. Approved loading-manual curves, their sign conventions and frame coverage are
+required for an asset-specific screen. A comparison with an approved loading instrument is required
+before the result is used to set an operational limit, consistent with
+<a href="#source-guide">Reference 9.2(h)</a>.</p>
+<p>When a raw closure gate fails, the weight and buoyancy force and moment balance is reconciled before
+any corrected result is used. When an illustrative allowable is exceeded, the loading condition is
+referred for engineering assessment and load redistribution is evaluated using approved limits;
+this report does not assign an operating allowance. These actions follow the closure and screening
+basis in <a href="#source-core">References 9.2(b)</a> and <a href="#source-guide">9.2(h)</a>.</p>
+<p>Station refinement and additional reporting frames are used to resolve load discontinuities and
+utilisation peaks. Finite numeric values, units, monotonic direct-buoyancy positions, curve coverage
+and boolean settings are checked before calling the router: the implementation does not comprehensively
+validate all such inputs. A missing allowable is treated as missing evidence rather than acceptance.</p>
+<h3>8.2 Limits of use and not covered</h3>
+<p>The box buoyancy idealisation does not replace hydrostatics for a shaped hull. Load discontinuities
+are spread by cell averaging; local stresses and exact concentrated-load jumps are not represented.
+The closure correction is a numerical device, not evidence that supplied hydrostatics are physically
+valid. Results are sampled at stations and frame gates; no continuous maximum-utilisation search is made.</p>
+<p>The optional hydrostatics-table waterline solve and direct-buoyancy import are described but not
+worked here. Rule wave envelopes, total still-water-plus-wave screening, scantling-derived section
+properties and section-modulus yield screening are not covered by the worked example. The supporting
+strength module also contains an ultimate-strength estimate, which is outside this router workflow.
+Fatigue, buckling, torsion, horizontal bending, slamming, whipping and installation sea-state envelopes
+are not evaluated. Orientation limits, crane rigging and forecast support are not applicable to this
+still-water module analysis; no sea-state operating limit is inferred.</p>
+<p>The implementation names IACS UR S11, Longitudinal Strength Standard, Rev.7 (2010), wave bending
+moment and wave shear force clauses. Edition equivalence and the permissible-stress clause basis are
+not established here. No licensed numerical rule coefficient or limit is reproduced.</p></section>
+<section id="section-9"><h2>9. References</h2>
+<p>The calculation basis is separated from the general beam-theory reference. Repository records are
+used for the example values and for statements about implemented behaviour.</p>
+<h3>9.1 Source qualification</h3>
+<p>The repository example is synthetic and publicly documented. The beam notes are an open educational
+source, Fall 2013 edition; only the equilibrium relations are used. The unavailable textbook editions
+named by existing tests are not used as numerical authorities. The source register below identifies
+the exact repository records and symbols used by this report.</p>
+<h3>9.2 Source register and reproduction</h3>
+<ul><li id="source-example">(a) <a href="../../../../examples/workflows/hull-girder-report-pack/screening_input.yml">Public synthetic example, still-water fields</a>:
+length, cargo, station count, frames and placeholder curves. Wave, total and section-modulus fields
+are excluded from this calculation.</li>
+<li id="source-core">(b) <a href="../../../../src/digitalmodel/naval_architecture/hull_girder_screening.py">Core calculation</a>:
+DistributedWeight, build_weight_curve, buoyancy_box, still_water_sf_bm, utilization_at_frames and
+DEFAULT_CLOSURE_TOLERANCE. This is the source for the numerical closure setting and the sign convention.</li>
+<li id="source-tests">(c) <a href="../../../../tests/naval_architecture/test_hull_girder_screening.py">Analytical regression fixture</a>:
+test_sagging_barge_matches_hand_calc and its module-level derivation. The continuous shear and moment
+expressions in Section 5.2 are stated there.</li>
+<li id="source-basis">(d) <a href="../../../../examples/workflows/hull-girder-report-pack/allowable-basis.json">Allowable evidence and validation basis</a>:
+validation.shear_relative_tolerance and validation.bending_relative_tolerance; qualification of missing
+approved curves and independent evidence. Synthetic limits remain unqualified.</li>
+<li id="source-dependent-tests">(e) <a href="../../../../tests/naval_architecture/test_hull_girder_screening_workflow.py">Workflow tests</a>;
+<a href="../../../../tests/naval_architecture/test_hull_girder_strength.py">supporting strength tests</a>;
+<a href="../../../../tests/report_pack/test_hull_girder_report_pack_demo.py">report-pack example tests</a>.
+Table 7.2 is counted from test definitions in these files and Reference (c).</li>
+<li id="source-router">(f) <a href="../../../../src/digitalmodel/hull_girder_screening/workflow.py">Routed entry point</a>:
+router, _screening_status and _frames. Overall pass can coexist with absent strength checks.</li>
+<li id="source-theory">(g) <a href="https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture3/">MIT OpenCourseWare, Structural Mechanics, Fall 2013, Lecture 3</a>,
+Section 3.6, equations (3.68), (3.72) and (3.73). Load sign is mapped explicitly in Section 5.1.
+The institutional page and open notes were read on 2026-10-22.</li>
+<li id="source-guide">(h) <a href="../../../domains/ship-design/hull-girder-strength-screening.md">Module usage guide</a>:
+screening scope, analytical example and missing loading-instrument reference fixture.</li>
+<li id="source-style">(i) <a href="../../../api/cfd/turbulent-flat-plate-verification.html">Existing report layout</a>
+and <a href="../../../api/_assets/brand.css">canonical stylesheet</a>. Their styles are inlined in this report;
+the requested hs-doc body class is applied.</li></ul>
+<p>Reproduction entry: <code>docs/reports/modules/hullgirderscreening/build_report.py</code>, with explicit
+<code>--output-dir</code> and <code>--calculation-dir</code> arguments. The latter retains calculation tables
+outside the report directory. Rebuild assertions are in
+<code>tests/naval_architecture/test_hull_girder_module_report.py</code>. Numerical display is generated
+from returned values; raw values are retained in the embedded calculation data.</p></section>
+<section id="section-10"><h2>10. Appendices</h2>
+<p>The input qualification register and detailed frame values are retained for engineering review.
+Comments are saved separately so the issued calculation remains unchanged.</p>
+<h3>10.1 Data register</h3>
+<table id="table-register"><caption>Table 10.1. Data qualification and evidence gaps.</caption><thead><tr><th scope="col">Data</th><th scope="col">Basis</th><th scope="col">Required evidence</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Hull and central cargo</td><td>Synthetic public example; ASSUMED - to be confirmed for asset use</td><td>Actual loading condition and hull hydrostatics</td><td>9.2(a)</td></tr><tr><td>Allowable curves and sign symmetry</td><td>Illustrative placeholders; ASSUMED - to be confirmed</td><td>Approved loading manual, edition, condition and both signs</td><td>9.2(a), 9.2(d)</td></tr><tr><td>Closure and numerical comparison limits</td><td>Numerical settings, not strength criteria</td><td>Resolution assessment for each new loading pattern</td><td>Table 4.1; Table 7.1</td></tr><tr><td>Operational strength acceptance</td><td>NOT_EVALUATED</td><td>Qualified inputs and independent loading-instrument comparison</td><td>9.2(d), 9.2(h)</td></tr></tbody></table>
+<h3>10.2 Detailed numerical basis</h3>
+<table id="table-curves"><caption>Table 10.2. Illustrative allowable knots; negative magnitudes inherit positive values.</caption><thead><tr><th scope="col">Quantity</th><th scope="col">Position (m)</th><th scope="col">Allowable magnitude</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Shear force</td><td><span data-number="inputs.allowables.shear_force.x_m.0" data-scale="1">0.0</span></td><td><span data-number="inputs.allowables.shear_force.positive_t.0" data-scale="1">1,000.0</span></td><td>t</td><td>9.2(a)</td></tr><tr><td>Shear force</td><td><span data-number="inputs.allowables.shear_force.x_m.1" data-scale="1">25.0</span></td><td><span data-number="inputs.allowables.shear_force.positive_t.1" data-scale="1">5,000.0</span></td><td>t</td><td>9.2(a)</td></tr><tr><td>Shear force</td><td><span data-number="inputs.allowables.shear_force.x_m.2" data-scale="1">75.0</span></td><td><span data-number="inputs.allowables.shear_force.positive_t.2" data-scale="1">5,000.0</span></td><td>t</td><td>9.2(a)</td></tr><tr><td>Shear force</td><td><span data-number="inputs.allowables.shear_force.x_m.3" data-scale="1">100.0</span></td><td><span data-number="inputs.allowables.shear_force.positive_t.3" data-scale="1">1,000.0</span></td><td>t</td><td>9.2(a)</td></tr><tr><td>Bending moment</td><td><span data-number="inputs.allowables.bending_moment.x_m.0" data-scale="1">0.0</span></td><td><span data-number="inputs.allowables.bending_moment.hogging_t_m.0" data-scale="1">20,000.0</span></td><td>t·m</td><td>9.2(a)</td></tr><tr><td>Bending moment</td><td><span data-number="inputs.allowables.bending_moment.x_m.1" data-scale="1">50.0</span></td><td><span data-number="inputs.allowables.bending_moment.hogging_t_m.1" data-scale="1">125,000.0</span></td><td>t·m</td><td>9.2(a)</td></tr><tr><td>Bending moment</td><td><span data-number="inputs.allowables.bending_moment.x_m.2" data-scale="1">100.0</span></td><td><span data-number="inputs.allowables.bending_moment.hogging_t_m.2" data-scale="1">20,000.0</span></td><td>t·m</td><td>9.2(a)</td></tr></tbody></table>
+<table id="table-frames"><caption>Table 10.3. Router-returned still-water frame results. Limits are illustrative.</caption><thead><tr><th scope="col">Position (m)</th><th scope="col">Shear (t)</th><th scope="col">Shear limit (t)</th><th scope="col">Moment (t·m)</th><th scope="col">Moment limit (t·m)</th><th scope="col">Shear (%)</th><th scope="col">Bending (%)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-number="result.utilization.0.x_m" data-scale="1">0.0</span></td><td><span data-number="result.utilization.0.shear_force_t" data-scale="1">0.0</span></td><td><span data-number="result.utilization.0.shear_allowable_t" data-scale="1">1,000.0</span></td><td><span data-number="result.utilization.0.bending_moment_t_m" data-scale="1">0.0</span></td><td><span data-number="result.utilization.0.bending_allowable_t_m" data-scale="1">20,000.0</span></td><td><span data-number="result.utilization.0.shear_utilization" data-scale="100">0.0</span></td><td><span data-number="result.utilization.0.bending_utilization" data-scale="100">0.0</span></td><td>Table 10.2</td></tr><tr><td><span data-number="result.utilization.1.x_m" data-scale="1">25.0</span></td><td><span data-number="result.utilization.1.shear_force_t" data-scale="1">−2,487.5</span></td><td><span data-number="result.utilization.1.shear_allowable_t" data-scale="1">5,000.0</span></td><td><span data-number="result.utilization.1.bending_moment_t_m" data-scale="1">−31,248.4</span></td><td><span data-number="result.utilization.1.bending_allowable_t_m" data-scale="1">72,500.0</span></td><td><span data-number="result.utilization.1.shear_utilization" data-scale="100">49.8</span></td><td><span data-number="result.utilization.1.bending_utilization" data-scale="100">43.1</span></td><td>Table 10.2</td></tr><tr><td><span data-number="result.utilization.2.x_m" data-scale="1">50.0</span></td><td><span data-number="result.utilization.2.shear_force_t" data-scale="1">0.0</span></td><td><span data-number="result.utilization.2.shear_allowable_t" data-scale="1">5,000.0</span></td><td><span data-number="result.utilization.2.bending_moment_t_m" data-scale="1">−62,496.9</span></td><td><span data-number="result.utilization.2.bending_allowable_t_m" data-scale="1">125,000.0</span></td><td><span data-number="result.utilization.2.shear_utilization" data-scale="100">0.0</span></td><td><span data-number="result.utilization.2.bending_utilization" data-scale="100">50.0</span></td><td>Table 10.2</td></tr><tr><td><span data-number="result.utilization.3.x_m" data-scale="1">75.0</span></td><td><span data-number="result.utilization.3.shear_force_t" data-scale="1">2,487.5</span></td><td><span data-number="result.utilization.3.shear_allowable_t" data-scale="1">5,000.0</span></td><td><span data-number="result.utilization.3.bending_moment_t_m" data-scale="1">−31,248.4</span></td><td><span data-number="result.utilization.3.bending_allowable_t_m" data-scale="1">72,500.0</span></td><td><span data-number="result.utilization.3.shear_utilization" data-scale="100">49.8</span></td><td><span data-number="result.utilization.3.bending_utilization" data-scale="100">43.1</span></td><td>Table 10.2</td></tr><tr><td><span data-number="result.utilization.4.x_m" data-scale="1">100.0</span></td><td><span data-number="result.utilization.4.shear_force_t" data-scale="1">0.0</span></td><td><span data-number="result.utilization.4.shear_allowable_t" data-scale="1">1,000.0</span></td><td><span data-number="result.utilization.4.bending_moment_t_m" data-scale="1">0.0</span></td><td><span data-number="result.utilization.4.bending_allowable_t_m" data-scale="1">20,000.0</span></td><td><span data-number="result.utilization.4.shear_utilization" data-scale="100">0.0</span></td><td><span data-number="result.utilization.4.bending_utilization" data-scale="100">0.0</span></td><td>Table 10.2</td></tr></tbody></table>
+<h3>10.3 Quality evidence</h3>
+<p>The rebuild test recalculates the public example independently, compares every published station and
+frame field with the router, checks numerical text and verifies reproducible HTML and change records.
+The test-definition inventory is derived from the cited files. These assertions establish reproducibility
+of this report; they do not establish independent validation of an operational hull.</p>
+<p>The quality pre-flight basis is stated in Tables 4.1, 7.1 and 10.1: input provenance, numerical criteria,
+sign mapping, missing data and intended use. Every example number is generated from the configuration,
+router output or analytical comparator. No finite-element calculation, mesh or licensed solver is used.</p>
+<h3>10.4 Engineering changes and comments</h3>
+<details id="changes-panel"><summary>Engineering changes since the previous issue</summary>
+<p>Initial issue. The still-water calculation, analytical comparison and missing operational evidence
+are documented together. No earlier engineering result is superseded.</p></details>
+<p>Comments are attached to a section and optional selected quotation. Save the comment file beside this
+HTML as report.comments.json. Where direct file saving is unavailable, the downloaded file is placed
+beside the report manually. Import that file to continue; a browser download alone does not confirm its location.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Quotation <textarea id="comment-quote"></textarea></label>
+<button id="comment-selection" type="button">Use selected report text</button>
+<label>Comment <textarea id="comment-text"></textarea></label>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-save" type="button">Save comments</button>
+<label>Import comments <input id="comment-import" type="file" accept=".json,application/json"></label>
+<p id="comment-message" aria-live="polite">Comments are retained in this page until saved.</p>
+<div id="comment-list"></div>
+</section>
+<footer>Hull-girder screening module analysis · Revision 0 · Synthetic example · Draft for client review</footer>
+</main>
+<script type="application/json" id="calculation-data">{"inputs":{"length_m":100.0,"n_stations":401,"weights":{"lightship":[{"name":"cargo block","weight_t":10000.0,"x_start_m":25.0,"x_end_m":75.0}]},"buoyancy":{"method":"box"},"allowables":{"shear_force":{"x_m":[0.0,25.0,75.0,100.0],"positive_t":[1000.0,5000.0,5000.0,1000.0]},"bending_moment":{"x_m":[0.0,50.0,100.0],"hogging_t_m":[20000.0,125000.0,20000.0]}},"frames":[{"name":"AP","x_m":0.0},{"name":"Fr 25","x_m":25.0},{"name":"Midship","x_m":50.0},{"name":"Fr 75","x_m":75.0},{"name":"FP","x_m":100.0}],"utilization_limit":1.0,"output_dir":"data"},"result":{"length_m":100.0,"n_stations":401,"displacement_t":10000.0,"lcg_m":50.0,"max_shear_t":-2487.5,"max_sagging_t_m":-62496.875,"x_max_sagging_m":50.0,"max_shear_utilization":0.4975,"max_bending_utilization":0.499975,"closure_shear_fraction":0.0,"closure_moment_fraction":0.0,"closure_ok":true,"screening_status":"pass","utilization_limit":1.0,"stations":[{"x_m":0.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":0.0,"bending_moment_t_m":0.0},{"x_m":0.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-25.0,"bending_moment_t_m":-3.125},{"x_m":0.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-50.0,"bending_moment_t_m":-12.5},{"x_m":0.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-75.0,"bending_moment_t_m":-28.125},{"x_m":1.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-100.0,"bending_moment_t_m":-50.0},{"x_m":1.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-125.0,"bending_moment_t_m":-78.125},{"x_m":1.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-150.0,"bending_moment_t_m":-112.5},{"x_m":1.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-175.0,"bending_moment_t_m":-153.125},{"x_m":2.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-200.0,"bending_moment_t_m":-200.0},{"x_m":2.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-225.0,"bending_moment_t_m":-253.125},{"x_m":2.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-250.0,"bending_moment_t_m":-312.5},{"x_m":2.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-275.0,"bending_moment_t_m":-378.125},{"x_m":3.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-300.0,"bending_moment_t_m":-450.0},{"x_m":3.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-325.0,"bending_moment_t_m":-528.125},{"x_m":3.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-350.0,"bending_moment_t_m":-612.5},{"x_m":3.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-375.0,"bending_moment_t_m":-703.125},{"x_m":4.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-400.0,"bending_moment_t_m":-800.0},{"x_m":4.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-425.0,"bending_moment_t_m":-903.125},{"x_m":4.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-450.0,"bending_moment_t_m":-1012.5},{"x_m":4.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-475.0,"bending_moment_t_m":-1128.125},{"x_m":5.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-500.0,"bending_moment_t_m":-1250.0},{"x_m":5.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-525.0,"bending_moment_t_m":-1378.125},{"x_m":5.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-550.0,"bending_moment_t_m":-1512.5},{"x_m":5.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-575.0,"bending_moment_t_m":-1653.125},{"x_m":6.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-600.0,"bending_moment_t_m":-1800.0},{"x_m":6.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-625.0,"bending_moment_t_m":-1953.125},{"x_m":6.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-650.0,"bending_moment_t_m":-2112.5},{"x_m":6.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-675.0,"bending_moment_t_m":-2278.125},{"x_m":7.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-700.0,"bending_moment_t_m":-2450.0},{"x_m":7.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-725.0,"bending_moment_t_m":-2628.125},{"x_m":7.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-750.0,"bending_moment_t_m":-2812.5},{"x_m":7.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-775.0,"bending_moment_t_m":-3003.125},{"x_m":8.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-800.0,"bending_moment_t_m":-3200.0},{"x_m":8.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-825.0,"bending_moment_t_m":-3403.125},{"x_m":8.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-850.0,"bending_moment_t_m":-3612.5},{"x_m":8.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-875.0,"bending_moment_t_m":-3828.125},{"x_m":9.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-900.0,"bending_moment_t_m":-4050.0},{"x_m":9.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-925.0,"bending_moment_t_m":-4278.125},{"x_m":9.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-950.0,"bending_moment_t_m":-4512.5},{"x_m":9.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-975.0,"bending_moment_t_m":-4753.125},{"x_m":10.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1000.0,"bending_moment_t_m":-5000.0},{"x_m":10.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1025.0,"bending_moment_t_m":-5253.125},{"x_m":10.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1050.0,"bending_moment_t_m":-5512.5},{"x_m":10.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1075.0,"bending_moment_t_m":-5778.125},{"x_m":11.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1100.0,"bending_moment_t_m":-6050.0},{"x_m":11.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1125.0,"bending_moment_t_m":-6328.125},{"x_m":11.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1150.0,"bending_moment_t_m":-6612.5},{"x_m":11.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1175.0,"bending_moment_t_m":-6903.125},{"x_m":12.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1200.0,"bending_moment_t_m":-7200.0},{"x_m":12.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1225.0,"bending_moment_t_m":-7503.125},{"x_m":12.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1250.0,"bending_moment_t_m":-7812.5},{"x_m":12.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1275.0,"bending_moment_t_m":-8128.125},{"x_m":13.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1300.0,"bending_moment_t_m":-8450.0},{"x_m":13.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1325.0,"bending_moment_t_m":-8778.125},{"x_m":13.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1350.0,"bending_moment_t_m":-9112.5},{"x_m":13.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1375.0,"bending_moment_t_m":-9453.125},{"x_m":14.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1400.0,"bending_moment_t_m":-9800.0},{"x_m":14.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1425.0,"bending_moment_t_m":-10153.125},{"x_m":14.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1450.0,"bending_moment_t_m":-10512.5},{"x_m":14.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1475.0,"bending_moment_t_m":-10878.125},{"x_m":15.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1500.0,"bending_moment_t_m":-11250.0},{"x_m":15.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1525.0,"bending_moment_t_m":-11628.125},{"x_m":15.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1550.0,"bending_moment_t_m":-12012.5},{"x_m":15.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1575.0,"bending_moment_t_m":-12403.125},{"x_m":16.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1600.0,"bending_moment_t_m":-12800.0},{"x_m":16.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1625.0,"bending_moment_t_m":-13203.125},{"x_m":16.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1650.0,"bending_moment_t_m":-13612.5},{"x_m":16.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1675.0,"bending_moment_t_m":-14028.125},{"x_m":17.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1700.0,"bending_moment_t_m":-14450.0},{"x_m":17.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1725.0,"bending_moment_t_m":-14878.125},{"x_m":17.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1750.0,"bending_moment_t_m":-15312.5},{"x_m":17.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1775.0,"bending_moment_t_m":-15753.125},{"x_m":18.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1800.0,"bending_moment_t_m":-16200.0},{"x_m":18.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1825.0,"bending_moment_t_m":-16653.125},{"x_m":18.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1850.0,"bending_moment_t_m":-17112.5},{"x_m":18.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1875.0,"bending_moment_t_m":-17578.125},{"x_m":19.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1900.0,"bending_moment_t_m":-18050.0},{"x_m":19.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1925.0,"bending_moment_t_m":-18528.125},{"x_m":19.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1950.0,"bending_moment_t_m":-19012.5},{"x_m":19.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1975.0,"bending_moment_t_m":-19503.125},{"x_m":20.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2000.0,"bending_moment_t_m":-20000.0},{"x_m":20.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2025.0,"bending_moment_t_m":-20503.125},{"x_m":20.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2050.0,"bending_moment_t_m":-21012.5},{"x_m":20.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2075.0,"bending_moment_t_m":-21528.125},{"x_m":21.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2100.0,"bending_moment_t_m":-22050.0},{"x_m":21.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2125.0,"bending_moment_t_m":-22578.125},{"x_m":21.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2150.0,"bending_moment_t_m":-23112.5},{"x_m":21.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2175.0,"bending_moment_t_m":-23653.125},{"x_m":22.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2200.0,"bending_moment_t_m":-24200.0},{"x_m":22.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2225.0,"bending_moment_t_m":-24753.125},{"x_m":22.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2250.0,"bending_moment_t_m":-25312.5},{"x_m":22.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2275.0,"bending_moment_t_m":-25878.125},{"x_m":23.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2300.0,"bending_moment_t_m":-26450.0},{"x_m":23.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2325.0,"bending_moment_t_m":-27028.125},{"x_m":23.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2350.0,"bending_moment_t_m":-27612.5},{"x_m":23.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2375.0,"bending_moment_t_m":-28203.125},{"x_m":24.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2400.0,"bending_moment_t_m":-28800.0},{"x_m":24.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2425.0,"bending_moment_t_m":-29403.125},{"x_m":24.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2450.0,"bending_moment_t_m":-30012.5},{"x_m":24.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2475.0,"bending_moment_t_m":-30628.125},{"x_m":25.0,"weight_per_m_t":100.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2487.5,"bending_moment_t_m":-31248.4375},{"x_m":25.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2475.0,"bending_moment_t_m":-31868.75},{"x_m":25.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2450.0,"bending_moment_t_m":-32484.375},{"x_m":25.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2425.0,"bending_moment_t_m":-33093.75},{"x_m":26.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2400.0,"bending_moment_t_m":-33696.875},{"x_m":26.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2375.0,"bending_moment_t_m":-34293.75},{"x_m":26.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2350.0,"bending_moment_t_m":-34884.375},{"x_m":26.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2325.0,"bending_moment_t_m":-35468.75},{"x_m":27.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2300.0,"bending_moment_t_m":-36046.875},{"x_m":27.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2275.0,"bending_moment_t_m":-36618.75},{"x_m":27.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2250.0,"bending_moment_t_m":-37184.375},{"x_m":27.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2225.0,"bending_moment_t_m":-37743.75},{"x_m":28.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2200.0,"bending_moment_t_m":-38296.875},{"x_m":28.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2175.0,"bending_moment_t_m":-38843.75},{"x_m":28.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2150.0,"bending_moment_t_m":-39384.375},{"x_m":28.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2125.0,"bending_moment_t_m":-39918.75},{"x_m":29.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2100.0,"bending_moment_t_m":-40446.875},{"x_m":29.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2075.0,"bending_moment_t_m":-40968.75},{"x_m":29.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2050.0,"bending_moment_t_m":-41484.375},{"x_m":29.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2025.0,"bending_moment_t_m":-41993.75},{"x_m":30.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-2000.0,"bending_moment_t_m":-42496.875},{"x_m":30.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1975.0,"bending_moment_t_m":-42993.75},{"x_m":30.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1950.0,"bending_moment_t_m":-43484.375},{"x_m":30.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1925.0,"bending_moment_t_m":-43968.75},{"x_m":31.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1900.0,"bending_moment_t_m":-44446.875},{"x_m":31.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1875.0,"bending_moment_t_m":-44918.75},{"x_m":31.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1850.0,"bending_moment_t_m":-45384.375},{"x_m":31.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1825.0,"bending_moment_t_m":-45843.75},{"x_m":32.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1800.0,"bending_moment_t_m":-46296.875},{"x_m":32.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1775.0,"bending_moment_t_m":-46743.75},{"x_m":32.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1750.0,"bending_moment_t_m":-47184.375},{"x_m":32.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1725.0,"bending_moment_t_m":-47618.75},{"x_m":33.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1700.0,"bending_moment_t_m":-48046.875},{"x_m":33.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1675.0,"bending_moment_t_m":-48468.75},{"x_m":33.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1650.0,"bending_moment_t_m":-48884.375},{"x_m":33.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1625.0,"bending_moment_t_m":-49293.75},{"x_m":34.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1600.0,"bending_moment_t_m":-49696.875},{"x_m":34.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1575.0,"bending_moment_t_m":-50093.75},{"x_m":34.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1550.0,"bending_moment_t_m":-50484.375},{"x_m":34.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1525.0,"bending_moment_t_m":-50868.75},{"x_m":35.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1500.0,"bending_moment_t_m":-51246.875},{"x_m":35.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1475.0,"bending_moment_t_m":-51618.75},{"x_m":35.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1450.0,"bending_moment_t_m":-51984.375},{"x_m":35.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1425.0,"bending_moment_t_m":-52343.75},{"x_m":36.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1400.0,"bending_moment_t_m":-52696.875},{"x_m":36.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1375.0,"bending_moment_t_m":-53043.75},{"x_m":36.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1350.0,"bending_moment_t_m":-53384.375},{"x_m":36.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1325.0,"bending_moment_t_m":-53718.75},{"x_m":37.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1300.0,"bending_moment_t_m":-54046.875},{"x_m":37.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1275.0,"bending_moment_t_m":-54368.75},{"x_m":37.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1250.0,"bending_moment_t_m":-54684.375},{"x_m":37.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1225.0,"bending_moment_t_m":-54993.75},{"x_m":38.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1200.0,"bending_moment_t_m":-55296.875},{"x_m":38.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1175.0,"bending_moment_t_m":-55593.75},{"x_m":38.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1150.0,"bending_moment_t_m":-55884.375},{"x_m":38.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1125.0,"bending_moment_t_m":-56168.75},{"x_m":39.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1100.0,"bending_moment_t_m":-56446.875},{"x_m":39.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1075.0,"bending_moment_t_m":-56718.75},{"x_m":39.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1050.0,"bending_moment_t_m":-56984.375},{"x_m":39.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1025.0,"bending_moment_t_m":-57243.75},{"x_m":40.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-1000.0,"bending_moment_t_m":-57496.875},{"x_m":40.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-975.0,"bending_moment_t_m":-57743.75},{"x_m":40.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-950.0,"bending_moment_t_m":-57984.375},{"x_m":40.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-925.0,"bending_moment_t_m":-58218.75},{"x_m":41.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-900.0,"bending_moment_t_m":-58446.875},{"x_m":41.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-875.0,"bending_moment_t_m":-58668.75},{"x_m":41.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-850.0,"bending_moment_t_m":-58884.375},{"x_m":41.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-825.0,"bending_moment_t_m":-59093.75},{"x_m":42.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-800.0,"bending_moment_t_m":-59296.875},{"x_m":42.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-775.0,"bending_moment_t_m":-59493.75},{"x_m":42.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-750.0,"bending_moment_t_m":-59684.375},{"x_m":42.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-725.0,"bending_moment_t_m":-59868.75},{"x_m":43.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-700.0,"bending_moment_t_m":-60046.875},{"x_m":43.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-675.0,"bending_moment_t_m":-60218.75},{"x_m":43.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-650.0,"bending_moment_t_m":-60384.375},{"x_m":43.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-625.0,"bending_moment_t_m":-60543.75},{"x_m":44.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-600.0,"bending_moment_t_m":-60696.875},{"x_m":44.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-575.0,"bending_moment_t_m":-60843.75},{"x_m":44.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-550.0,"bending_moment_t_m":-60984.375},{"x_m":44.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-525.0,"bending_moment_t_m":-61118.75},{"x_m":45.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-500.0,"bending_moment_t_m":-61246.875},{"x_m":45.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-475.0,"bending_moment_t_m":-61368.75},{"x_m":45.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-450.0,"bending_moment_t_m":-61484.375},{"x_m":45.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-425.0,"bending_moment_t_m":-61593.75},{"x_m":46.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-400.0,"bending_moment_t_m":-61696.875},{"x_m":46.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-375.0,"bending_moment_t_m":-61793.75},{"x_m":46.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-350.0,"bending_moment_t_m":-61884.375},{"x_m":46.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-325.0,"bending_moment_t_m":-61968.75},{"x_m":47.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-300.0,"bending_moment_t_m":-62046.875},{"x_m":47.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-275.0,"bending_moment_t_m":-62118.75},{"x_m":47.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-250.0,"bending_moment_t_m":-62184.375},{"x_m":47.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-225.0,"bending_moment_t_m":-62243.75},{"x_m":48.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-200.0,"bending_moment_t_m":-62296.875},{"x_m":48.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-175.0,"bending_moment_t_m":-62343.75},{"x_m":48.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-150.0,"bending_moment_t_m":-62384.375},{"x_m":48.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-125.0,"bending_moment_t_m":-62418.75},{"x_m":49.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-100.0,"bending_moment_t_m":-62446.875},{"x_m":49.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-75.0,"bending_moment_t_m":-62468.75},{"x_m":49.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-50.0,"bending_moment_t_m":-62484.375},{"x_m":49.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":-25.0,"bending_moment_t_m":-62493.75},{"x_m":50.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":0.0,"bending_moment_t_m":-62496.875},{"x_m":50.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":25.0,"bending_moment_t_m":-62493.75},{"x_m":50.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":50.0,"bending_moment_t_m":-62484.375},{"x_m":50.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":75.0,"bending_moment_t_m":-62468.75},{"x_m":51.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":100.0,"bending_moment_t_m":-62446.875},{"x_m":51.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":125.0,"bending_moment_t_m":-62418.75},{"x_m":51.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":150.0,"bending_moment_t_m":-62384.375},{"x_m":51.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":175.0,"bending_moment_t_m":-62343.75},{"x_m":52.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":200.0,"bending_moment_t_m":-62296.875},{"x_m":52.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":225.0,"bending_moment_t_m":-62243.75},{"x_m":52.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":250.0,"bending_moment_t_m":-62184.375},{"x_m":52.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":275.0,"bending_moment_t_m":-62118.75},{"x_m":53.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":300.0,"bending_moment_t_m":-62046.875},{"x_m":53.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":325.0,"bending_moment_t_m":-61968.75},{"x_m":53.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":350.0,"bending_moment_t_m":-61884.375},{"x_m":53.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":375.0,"bending_moment_t_m":-61793.75},{"x_m":54.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":400.0,"bending_moment_t_m":-61696.875},{"x_m":54.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":425.0,"bending_moment_t_m":-61593.75},{"x_m":54.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":450.0,"bending_moment_t_m":-61484.375},{"x_m":54.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":475.0,"bending_moment_t_m":-61368.75},{"x_m":55.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":500.0,"bending_moment_t_m":-61246.875},{"x_m":55.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":525.0,"bending_moment_t_m":-61118.75},{"x_m":55.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":550.0,"bending_moment_t_m":-60984.375},{"x_m":55.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":575.0,"bending_moment_t_m":-60843.75},{"x_m":56.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":600.0,"bending_moment_t_m":-60696.875},{"x_m":56.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":625.0,"bending_moment_t_m":-60543.75},{"x_m":56.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":650.0,"bending_moment_t_m":-60384.375},{"x_m":56.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":675.0,"bending_moment_t_m":-60218.75},{"x_m":57.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":700.0,"bending_moment_t_m":-60046.875},{"x_m":57.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":725.0,"bending_moment_t_m":-59868.75},{"x_m":57.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":750.0,"bending_moment_t_m":-59684.375},{"x_m":57.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":775.0,"bending_moment_t_m":-59493.75},{"x_m":58.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":800.0,"bending_moment_t_m":-59296.875},{"x_m":58.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":825.0,"bending_moment_t_m":-59093.75},{"x_m":58.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":850.0,"bending_moment_t_m":-58884.375},{"x_m":58.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":875.0,"bending_moment_t_m":-58668.75},{"x_m":59.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":900.0,"bending_moment_t_m":-58446.875},{"x_m":59.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":925.0,"bending_moment_t_m":-58218.75},{"x_m":59.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":950.0,"bending_moment_t_m":-57984.375},{"x_m":59.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":975.0,"bending_moment_t_m":-57743.75},{"x_m":60.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1000.0,"bending_moment_t_m":-57496.875},{"x_m":60.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1025.0,"bending_moment_t_m":-57243.75},{"x_m":60.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1050.0,"bending_moment_t_m":-56984.375},{"x_m":60.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1075.0,"bending_moment_t_m":-56718.75},{"x_m":61.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1100.0,"bending_moment_t_m":-56446.875},{"x_m":61.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1125.0,"bending_moment_t_m":-56168.75},{"x_m":61.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1150.0,"bending_moment_t_m":-55884.375},{"x_m":61.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1175.0,"bending_moment_t_m":-55593.75},{"x_m":62.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1200.0,"bending_moment_t_m":-55296.875},{"x_m":62.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1225.0,"bending_moment_t_m":-54993.75},{"x_m":62.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1250.0,"bending_moment_t_m":-54684.375},{"x_m":62.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1275.0,"bending_moment_t_m":-54368.75},{"x_m":63.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1300.0,"bending_moment_t_m":-54046.875},{"x_m":63.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1325.0,"bending_moment_t_m":-53718.75},{"x_m":63.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1350.0,"bending_moment_t_m":-53384.375},{"x_m":63.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1375.0,"bending_moment_t_m":-53043.75},{"x_m":64.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1400.0,"bending_moment_t_m":-52696.875},{"x_m":64.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1425.0,"bending_moment_t_m":-52343.75},{"x_m":64.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1450.0,"bending_moment_t_m":-51984.375},{"x_m":64.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1475.0,"bending_moment_t_m":-51618.75},{"x_m":65.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1500.0,"bending_moment_t_m":-51246.875},{"x_m":65.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1525.0,"bending_moment_t_m":-50868.75},{"x_m":65.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1550.0,"bending_moment_t_m":-50484.375},{"x_m":65.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1575.0,"bending_moment_t_m":-50093.75},{"x_m":66.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1600.0,"bending_moment_t_m":-49696.875},{"x_m":66.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1625.0,"bending_moment_t_m":-49293.75},{"x_m":66.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1650.0,"bending_moment_t_m":-48884.375},{"x_m":66.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1675.0,"bending_moment_t_m":-48468.75},{"x_m":67.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1700.0,"bending_moment_t_m":-48046.875},{"x_m":67.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1725.0,"bending_moment_t_m":-47618.75},{"x_m":67.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1750.0,"bending_moment_t_m":-47184.375},{"x_m":67.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1775.0,"bending_moment_t_m":-46743.75},{"x_m":68.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1800.0,"bending_moment_t_m":-46296.875},{"x_m":68.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1825.0,"bending_moment_t_m":-45843.75},{"x_m":68.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1850.0,"bending_moment_t_m":-45384.375},{"x_m":68.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1875.0,"bending_moment_t_m":-44918.75},{"x_m":69.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1900.0,"bending_moment_t_m":-44446.875},{"x_m":69.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1925.0,"bending_moment_t_m":-43968.75},{"x_m":69.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1950.0,"bending_moment_t_m":-43484.375},{"x_m":69.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":1975.0,"bending_moment_t_m":-42993.75},{"x_m":70.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2000.0,"bending_moment_t_m":-42496.875},{"x_m":70.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2025.0,"bending_moment_t_m":-41993.75},{"x_m":70.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2050.0,"bending_moment_t_m":-41484.375},{"x_m":70.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2075.0,"bending_moment_t_m":-40968.75},{"x_m":71.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2100.0,"bending_moment_t_m":-40446.875},{"x_m":71.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2125.0,"bending_moment_t_m":-39918.75},{"x_m":71.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2150.0,"bending_moment_t_m":-39384.375},{"x_m":71.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2175.0,"bending_moment_t_m":-38843.75},{"x_m":72.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2200.0,"bending_moment_t_m":-38296.875},{"x_m":72.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2225.0,"bending_moment_t_m":-37743.75},{"x_m":72.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2250.0,"bending_moment_t_m":-37184.375},{"x_m":72.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2275.0,"bending_moment_t_m":-36618.75},{"x_m":73.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2300.0,"bending_moment_t_m":-36046.875},{"x_m":73.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2325.0,"bending_moment_t_m":-35468.75},{"x_m":73.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2350.0,"bending_moment_t_m":-34884.375},{"x_m":73.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2375.0,"bending_moment_t_m":-34293.75},{"x_m":74.0,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2400.0,"bending_moment_t_m":-33696.875},{"x_m":74.25,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2425.0,"bending_moment_t_m":-33093.75},{"x_m":74.5,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2450.0,"bending_moment_t_m":-32484.375},{"x_m":74.75,"weight_per_m_t":200.0,"buoyancy_per_m_t":100.0,"shear_force_t":2475.0,"bending_moment_t_m":-31868.75},{"x_m":75.0,"weight_per_m_t":100.0,"buoyancy_per_m_t":100.0,"shear_force_t":2487.5,"bending_moment_t_m":-31248.4375},{"x_m":75.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2475.0,"bending_moment_t_m":-30628.125},{"x_m":75.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2450.0,"bending_moment_t_m":-30012.5},{"x_m":75.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2425.0,"bending_moment_t_m":-29403.125},{"x_m":76.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2400.0,"bending_moment_t_m":-28800.0},{"x_m":76.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2375.0,"bending_moment_t_m":-28203.125},{"x_m":76.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2350.0,"bending_moment_t_m":-27612.5},{"x_m":76.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2325.0,"bending_moment_t_m":-27028.125},{"x_m":77.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2300.0,"bending_moment_t_m":-26450.0},{"x_m":77.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2275.0,"bending_moment_t_m":-25878.125},{"x_m":77.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2250.0,"bending_moment_t_m":-25312.5},{"x_m":77.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2225.0,"bending_moment_t_m":-24753.125},{"x_m":78.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2200.0,"bending_moment_t_m":-24200.0},{"x_m":78.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2175.0,"bending_moment_t_m":-23653.125},{"x_m":78.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2150.0,"bending_moment_t_m":-23112.5},{"x_m":78.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2125.0,"bending_moment_t_m":-22578.125},{"x_m":79.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2100.0,"bending_moment_t_m":-22050.0},{"x_m":79.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2075.0,"bending_moment_t_m":-21528.125},{"x_m":79.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2050.0,"bending_moment_t_m":-21012.5},{"x_m":79.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2025.0,"bending_moment_t_m":-20503.125},{"x_m":80.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":2000.0,"bending_moment_t_m":-20000.0},{"x_m":80.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1975.0,"bending_moment_t_m":-19503.125},{"x_m":80.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1950.0,"bending_moment_t_m":-19012.5},{"x_m":80.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1925.0,"bending_moment_t_m":-18528.125},{"x_m":81.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1900.0,"bending_moment_t_m":-18050.0},{"x_m":81.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1875.0,"bending_moment_t_m":-17578.125},{"x_m":81.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1850.0,"bending_moment_t_m":-17112.5},{"x_m":81.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1825.0,"bending_moment_t_m":-16653.125},{"x_m":82.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1800.0,"bending_moment_t_m":-16200.0},{"x_m":82.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1775.0,"bending_moment_t_m":-15753.125},{"x_m":82.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1750.0,"bending_moment_t_m":-15312.5},{"x_m":82.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1725.0,"bending_moment_t_m":-14878.125},{"x_m":83.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1700.0,"bending_moment_t_m":-14450.0},{"x_m":83.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1675.0,"bending_moment_t_m":-14028.125},{"x_m":83.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1650.0,"bending_moment_t_m":-13612.5},{"x_m":83.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1625.0,"bending_moment_t_m":-13203.125},{"x_m":84.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1600.0,"bending_moment_t_m":-12800.0},{"x_m":84.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1575.0,"bending_moment_t_m":-12403.125},{"x_m":84.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1550.0,"bending_moment_t_m":-12012.5},{"x_m":84.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1525.0,"bending_moment_t_m":-11628.125},{"x_m":85.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1500.0,"bending_moment_t_m":-11250.0},{"x_m":85.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1475.0,"bending_moment_t_m":-10878.125},{"x_m":85.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1450.0,"bending_moment_t_m":-10512.5},{"x_m":85.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1425.0,"bending_moment_t_m":-10153.125},{"x_m":86.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1400.0,"bending_moment_t_m":-9800.0},{"x_m":86.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1375.0,"bending_moment_t_m":-9453.125},{"x_m":86.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1350.0,"bending_moment_t_m":-9112.5},{"x_m":86.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1325.0,"bending_moment_t_m":-8778.125},{"x_m":87.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1300.0,"bending_moment_t_m":-8450.0},{"x_m":87.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1275.0,"bending_moment_t_m":-8128.125},{"x_m":87.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1250.0,"bending_moment_t_m":-7812.5},{"x_m":87.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1225.0,"bending_moment_t_m":-7503.125},{"x_m":88.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1200.0,"bending_moment_t_m":-7200.0},{"x_m":88.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1175.0,"bending_moment_t_m":-6903.125},{"x_m":88.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1150.0,"bending_moment_t_m":-6612.5},{"x_m":88.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1125.0,"bending_moment_t_m":-6328.125},{"x_m":89.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1100.0,"bending_moment_t_m":-6050.0},{"x_m":89.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1075.0,"bending_moment_t_m":-5778.125},{"x_m":89.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1050.0,"bending_moment_t_m":-5512.5},{"x_m":89.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1025.0,"bending_moment_t_m":-5253.125},{"x_m":90.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":1000.0,"bending_moment_t_m":-5000.0},{"x_m":90.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":975.0,"bending_moment_t_m":-4753.125},{"x_m":90.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":950.0,"bending_moment_t_m":-4512.5},{"x_m":90.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":925.0,"bending_moment_t_m":-4278.125},{"x_m":91.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":900.0,"bending_moment_t_m":-4050.0},{"x_m":91.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":875.0,"bending_moment_t_m":-3828.125},{"x_m":91.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":850.0,"bending_moment_t_m":-3612.5},{"x_m":91.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":825.0,"bending_moment_t_m":-3403.125},{"x_m":92.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":800.0,"bending_moment_t_m":-3200.0},{"x_m":92.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":775.0,"bending_moment_t_m":-3003.125},{"x_m":92.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":750.0,"bending_moment_t_m":-2812.5},{"x_m":92.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":725.0,"bending_moment_t_m":-2628.125},{"x_m":93.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":700.0,"bending_moment_t_m":-2450.0},{"x_m":93.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":675.0,"bending_moment_t_m":-2278.125},{"x_m":93.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":650.0,"bending_moment_t_m":-2112.5},{"x_m":93.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":625.0,"bending_moment_t_m":-1953.125},{"x_m":94.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":600.0,"bending_moment_t_m":-1800.0},{"x_m":94.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":575.0,"bending_moment_t_m":-1653.125},{"x_m":94.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":550.0,"bending_moment_t_m":-1512.5},{"x_m":94.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":525.0,"bending_moment_t_m":-1378.125},{"x_m":95.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":500.0,"bending_moment_t_m":-1250.0},{"x_m":95.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":475.0,"bending_moment_t_m":-1128.125},{"x_m":95.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":450.0,"bending_moment_t_m":-1012.5},{"x_m":95.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":425.0,"bending_moment_t_m":-903.125},{"x_m":96.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":400.0,"bending_moment_t_m":-800.0},{"x_m":96.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":375.0,"bending_moment_t_m":-703.125},{"x_m":96.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":350.0,"bending_moment_t_m":-612.5},{"x_m":96.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":325.0,"bending_moment_t_m":-528.125},{"x_m":97.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":300.0,"bending_moment_t_m":-450.0},{"x_m":97.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":275.0,"bending_moment_t_m":-378.125},{"x_m":97.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":250.0,"bending_moment_t_m":-312.5},{"x_m":97.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":225.0,"bending_moment_t_m":-253.125},{"x_m":98.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":200.0,"bending_moment_t_m":-200.0},{"x_m":98.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":175.0,"bending_moment_t_m":-153.125},{"x_m":98.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":150.0,"bending_moment_t_m":-112.5},{"x_m":98.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":125.0,"bending_moment_t_m":-78.125},{"x_m":99.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":100.0,"bending_moment_t_m":-50.0},{"x_m":99.25,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":75.0,"bending_moment_t_m":-28.125},{"x_m":99.5,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":50.0,"bending_moment_t_m":-12.5},{"x_m":99.75,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":25.0,"bending_moment_t_m":-3.125},{"x_m":100.0,"weight_per_m_t":0.0,"buoyancy_per_m_t":100.0,"shear_force_t":0.0,"bending_moment_t_m":0.0}],"utilization":[{"frame":"AP","x_m":0.0,"shear_force_t":0.0,"shear_allowable_t":1000.0,"shear_utilization":0.0,"bending_moment_t_m":0.0,"bending_allowable_t_m":20000.0,"bending_utilization":0.0,"status":"pass"},{"frame":"Fr 25","x_m":25.0,"shear_force_t":-2487.5,"shear_allowable_t":5000.0,"shear_utilization":0.4975,"bending_moment_t_m":-31248.4375,"bending_allowable_t_m":72500.0,"bending_utilization":0.43101293103448274,"status":"pass"},{"frame":"Midship","x_m":50.0,"shear_force_t":0.0,"shear_allowable_t":5000.0,"shear_utilization":0.0,"bending_moment_t_m":-62496.875,"bending_allowable_t_m":125000.0,"bending_utilization":0.499975,"status":"pass"},{"frame":"Fr 75","x_m":75.0,"shear_force_t":2487.5,"shear_allowable_t":5000.0,"shear_utilization":0.4975,"bending_moment_t_m":-31248.4375,"bending_allowable_t_m":72500.0,"bending_utilization":0.43101293103448274,"status":"pass"},{"frame":"FP","x_m":100.0,"shear_force_t":0.0,"shear_allowable_t":1000.0,"shear_utilization":0.0,"bending_moment_t_m":0.0,"bending_allowable_t_m":20000.0,"bending_utilization":0.0,"status":"pass"}]},"comparison":{"shear":{"calculated":2487.5,"reference":2500.0,"difference_percent":-0.5,"tolerance_percent":1.0},"moment":{"calculated":62496.875,"reference":62500.0,"difference_percent":-0.005,"tolerance_percent":0.1}},"closure_tolerance":0.005,"inventory":[{"path":"tests/naval_architecture/test_hull_girder_screening.py","definitions":23},{"path":"tests/naval_architecture/test_hull_girder_screening_workflow.py","definitions":18},{"path":"tests/naval_architecture/test_hull_girder_strength.py","definitions":16},{"path":"tests/report_pack/test_hull_girder_report_pack_demo.py","definitions":2}],"strength_disposition":"NOT_EVALUATED"}</script>
+<script type="application/json" id="engineering-changes">{"report": "Hull-girder screening module analysis", "revision": "0", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["Initial issue: document the still-water workflow and its analytical evidence.", "Distinguish illustrative allowable comparisons from strength acceptance."]}]}</script>
+<script>
+
+(() => {
+  'use strict';
+  const el = id => document.getElementById(id);
+  const data = JSON.parse(el('calculation-data').textContent);
+  const stations = data.result.stations, frames = data.result.utilization;
+  const num = value => {
+    const text = value !== 0 && Math.abs(value) < 0.05 ? value.toExponential(1) :
+      value.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+    return text.replaceAll('-', '−');
+  };
+  const lerp = (xs, ys, x) => {
+    if (x <= xs[0]) return ys[0];
+    for (let i = 1; i < xs.length; i++) {
+      if (x <= xs[i]) return ys[i-1] + (ys[i]-ys[i-1]) * (x-xs[i-1]) / (xs[i]-xs[i-1]);
+    }
+    return ys[ys.length-1];
+  };
+  const svgNode = (name, attrs, text) => {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  let chartState;
+  function chart() {
+    const bending = el('chart-quantity').value === 'bending';
+    const key = bending ? 'bending_moment_t_m' : 'shear_force_t';
+    const quantity = bending ? 'Bending moment' : 'Shear force';
+    const units = bending ? 't·m' : 't';
+    const curve = data.inputs.allowables[bending ? 'bending_moment' : 'shear_force'];
+    const positive = curve[bending ? 'hogging_t_m' : 'positive_t'];
+    const negative = curve[bending ? 'sagging_t_m' : 'negative_t'] || positive;
+    const limit = (x, sign) => lerp(curve.x_m, sign < 0 ? negative : positive, x);
+    const scale = Math.max(...positive, ...negative, ...stations.map(s => Math.abs(s[key]))) * 1.08;
+    const x = value => 70 + 680 * value / data.inputs.length_m;
+    const y = value => 160 - 130 * value / scale;
+    const path = values => values.map(([px, py], i) => `${i ? 'L' : 'M'}${x(px)},${y(py)}`).join('');
+    el('chart-demand').setAttribute('d', path(stations.map(s => [s.x_m, s[key]])));
+    el('chart-limit').setAttribute('d', path(stations.map(s => [s.x_m, limit(s.x_m, 1)])));
+    el('chart-negative-limit').setAttribute('d', path(stations.map(s => [s.x_m, -limit(s.x_m, -1)])));
+    el('chart-markers').replaceChildren(...frames.map(f => svgNode('circle', {cx:x(f.x_m), cy:y(f[key]), r:4})));
+    el('chart-labels').replaceChildren(
+      svgNode('text', {x:72,y:18}, `${quantity} (${units})`),
+      ...[-1, 0, 1].map(k => svgNode('text', {x:5,y:y(k*scale)+4}, num(k*scale))),
+      ...[0, 0.25, 0.5, 0.75, 1].map(k => svgNode('text', {x:x(k*data.inputs.length_m)-10,y:320}, num(k*data.inputs.length_m))));
+    chartState = {key, quantity, units, limit, x};
+    readout();
+  }
+  function readout() {
+    const s = stations[Number(el('chart-position').value)], c = chartState;
+    const value = s[c.key], limit = c.limit(s.x_m, value);
+    el('chart-cursor').setAttribute('d', `M${c.x(s.x_m)} 25V295`);
+    el('chart-readout').textContent = `Case: central cargo. Component: longitudinal hull girder. ${c.quantity}. ` +
+      `Position: ${num(s.x_m)} m. Demand: ${num(value)} ${c.units}. Illustrative limit magnitude: ${num(limit)} ${c.units}. ` +
+      `Strength acceptance is not evaluated. Values between dots are display samples rather than additional frame gates.`;
+  }
+  el('chart-quantity').addEventListener('change', chart);
+  el('chart-position').addEventListener('input', readout);
+  el('demand-chart').addEventListener('pointermove', event => {
+    const svg = el('demand-chart'), point = svg.createSVGPoint();
+    point.x = event.clientX; point.y = event.clientY;
+    const local = point.matrixTransform(svg.getScreenCTM().inverse());
+    const fraction = Math.max(0, Math.min(1, (local.x - 70) / 680));
+    el('chart-position').value = Math.round(fraction * (stations.length - 1));
+    readout();
+  });
+  chart();
+  const revision = JSON.parse(el('engineering-changes').textContent).revision;
+  const binding = 'bd3246189fee928b231e4b9a617802a7bc9878cb106068c81f374e9a6b917ef7';
+  const sections = [...document.querySelectorAll('section[id]')];
+  const sectionIds = new Set(sections.map(s => s.id));
+  sections.forEach(s => {
+    const option = document.createElement('option'); option.value = s.id;
+    option.textContent = s.querySelector('h2').textContent; el('comment-section').append(option);
+  });
+  let comments = [];
+  const message = text => { el('comment-message').textContent = text; };
+  function showComments() {
+    el('comment-list').replaceChildren(...comments.map(item => {
+      const div = document.createElement('div'); div.className = 'comment-card';
+      for (const text of [item.section, item.quote, item.text]) {
+        const p = document.createElement('p'); p.textContent = text; div.append(p);
+      }
+      return div;
+    }));
+  }
+  el('comment-selection').onclick = () => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return message('Select report text first.');
+    const node = selection.anchorNode;
+    const section = (node.nodeType === 1 ? node : node.parentElement).closest('section');
+    if (!section || !sectionIds.has(section.id)) return message('Select text inside a numbered section.');
+    el('comment-section').value = section.id;
+    el('comment-quote').value = selection.toString();
+  };
+  el('comment-add').onclick = () => {
+    const text = el('comment-text').value.trim();
+    if (!text) return message('Enter a comment before adding it.');
+    comments.push({section:el('comment-section').value, quote:el('comment-quote').value, text});
+    el('comment-text').value = ''; showComments(); message('Comment added. Save comments to retain it.');
+  };
+  el('comment-save').onclick = async () => {
+    const text = JSON.stringify({report:'hull-girder-screening', revision, binding, comments}, null, 2) + '\n';
+    try {
+      if (typeof window.showSaveFilePicker === 'function') {
+        const handle = await window.showSaveFilePicker({suggestedName:'report.comments.json',
+          types:[{description:'Comment file',accept:{'application/json':['.json']}}]});
+        const writable = await handle.createWritable(); await writable.write(text); await writable.close();
+        if (await (await handle.getFile()).text() !== text) throw new Error('Saved comments differ on read-back.');
+        message('Comment file saved and read back.');
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type:'application/json'}));
+        const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
+        link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message('Download requested. Place the file beside the report and import it to check retention.');
+      }
+    } catch (error) { message(error.message); }
+  };
+  el('comment-import').onchange = async event => {
+    try {
+      const file = event.target.files[0]; if (!file) return;
+      const saved = JSON.parse(await file.text());
+      if (saved.report !== 'hull-girder-screening' || saved.revision !== revision || saved.binding !== binding ||
+          !Array.isArray(saved.comments) || !saved.comments.every(c => c && sectionIds.has(c.section) &&
+          typeof c.quote === 'string' && typeof c.text === 'string')) throw new Error('Comment file does not match this report.');
+      comments = saved.comments; showComments(); message('Comments imported from the selected file.');
+    } catch (error) { message(error.message); }
+  };
+})();
+
+</script></body></html>
