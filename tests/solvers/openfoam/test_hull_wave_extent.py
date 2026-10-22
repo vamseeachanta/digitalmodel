@@ -1,7 +1,8 @@
 """Wave extent tests using synthetic inputs and independent geometry.
 
-Basis: Ship wakes: Kelvin or Mach angle? (2013), arXiv:1304.2653,
-pp. 1–2: lambda = 2*pi*U**2/g and sin(alpha) = 1/3. Hence
+Basis: Rabaud & Moisy, Ship wakes: Kelvin or Mach angle?, Phys. Rev. Lett.
+110, 214503 (2013), arXiv:1304.2653, pp. 1–2: lambda = 2*pi*U**2/g and
+sin(alpha) = 1/3. Hence
 tan(alpha) = 1/sqrt(8). All wake counts and dimensions below are synthetic
 caller inputs, not acceptance recommendations. pytest.approx is used only
 for floating point arithmetic, not as an engineering acceptance tolerance.
@@ -10,6 +11,7 @@ for floating point arithmetic, not as an engineering acceptance tolerance.
 import json
 import math
 import runpy
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -180,12 +182,18 @@ def test_translated_hull_uses_actual_stern_and_bow(manifest_dict):
     assert moved.half_width_aft_m == pytest.approx(base.half_width_aft_m)
 
 
-def test_outside_point_is_inside_domain_beyond_wave_prism(hull, stl_file, tmp_path):
+@pytest.mark.parametrize("speed, cells_per_wave", [(1.0, 20.0), (2.0, 80.0)])
+def test_outside_point_is_inside_domain_beyond_wave_prism(
+    hull, stl_file, tmp_path, speed, cells_per_wave
+):
     """The surface selector needs an exterior seed strictly inside the mesh."""
     import re
 
-    cfg = config(hull, stl_file)
-    domain = derive_hull_case(cfg).domain
+    cfg = config(hull, stl_file).replace(
+        velocity=speed, free_surface_cells_per_wavelength=cells_per_wave
+    )
+    derivation = derive_hull_case(cfg)
+    domain, divisions = derivation.domain, derivation.divisions
     case = build_hull_case(cfg, tmp_path)
     text = (case / "system" / "topoSetDict.1").read_text()
     point = tuple(
@@ -194,6 +202,20 @@ def test_outside_point_is_inside_domain_beyond_wave_prism(hull, stl_file, tmp_pa
     assert hull.bbox_max_m[0] < point[0] < domain.x_inlet
     assert domain.y_side < point[1] < domain.y_centreplane
     assert domain.z_levels[0] < point[2] < domain.z_levels[-1]
+    assert all(not math.isclose(point[2], z, abs_tol=1e-10) for z in domain.z_levels)
+    # Uniform in-plane spacing and the near-waterline block's uniform z spacing.
+    spacings = (
+        (point[0] - domain.x_outlet, domain.length / divisions["nx"]),
+        (point[1] - domain.y_side, domain.width / divisions["ny"]),
+        (
+            point[2] - domain.z_levels[2],
+            (domain.z_levels[3] - domain.z_levels[2]) / divisions["nzb"],
+        ),
+    )
+    for level in range(len(derivation.boxes) + 1):
+        for offset, spacing in spacings:
+            index = offset / spacing * 2**level
+            assert abs(index - round(index)) > 1e-6
 
 
 def test_emitted_wake_changes_at_two_speeds(hull, stl_file, tmp_path):
@@ -241,3 +263,35 @@ def test_worked_example_matches_hand_calculation():
         assert row["aft_half_width_m"] == pytest.approx(
             0.45 + (6.20 + reach) / math.sqrt(8)
         )
+
+
+@pytest.mark.parametrize(
+    "ratio, status", [(0.49, "NOT_EVALUATED"), (0.5, "PASS"), (0.51, "PASS")]
+)
+def test_depth_threshold_is_recorded(hull, ratio, status):
+    """Newman, Marine Hydrodynamics, sections 6.2–6.3: h >= lambda/2."""
+    domain = build_hull_domain(hull)
+    wavelength = 2 * math.pi * 8**2 / GRAVITY
+    domain = replace(
+        domain,
+        z_levels=(domain.waterline - ratio * wavelength, *domain.z_levels[1:]),
+    )
+    assert all(a < b for a, b in zip(domain.z_levels, domain.z_levels[1:]))
+    wave = derive_wave_extent(hull, domain, refinement_boxes(hull, domain), 8.0, 0.1)
+    provenance = wave.to_provenance()
+    assert provenance["water_depth_m"] == pytest.approx(ratio * wavelength)
+    assert provenance["depth_wavelength_ratio"] == pytest.approx(ratio)
+    assert provenance["status"] == status
+    if status == "NOT_EVALUATED":
+        assert "finite-depth" in provenance["reason"]
+
+
+def test_finite_depth_case_keeps_geometry_without_claiming_pass(hull, stl_file, tmp_path):
+    cfg = config(hull, stl_file).replace(velocity=8.0, free_surface_wake_wavelengths=0.1)
+    case = build_hull_case(cfg, tmp_path)
+    provenance = json.loads((case / "case_provenance.json").read_text())
+    wave = provenance["mesh"]["free_surface"]["extent"]
+    assert wave["status"] == "NOT_EVALUATED"
+    assert wave["depth_wavelength_ratio"] < 0.5
+    assert "finite-depth" in wave["reason"]
+    assert len(list((case / "constant" / "triSurface").glob("waveExtent*.stl"))) == 6

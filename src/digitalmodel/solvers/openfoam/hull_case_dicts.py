@@ -129,7 +129,9 @@ def _geometry_tokens(derivation: "HullCaseDerivation") -> Dict[str, str]:
         tokens[f"B{i}LO"] = _vec(lo)
         tokens[f"B{i}HI"] = _vec(hi)
     tokens.update(
-        wave_selection_tokens(derivation.wave_extent, domain, len(derivation.boxes))
+        wave_selection_tokens(
+            derivation.wave_extent, domain, len(derivation.boxes), derivation.divisions
+        )
     )
     return tokens
 

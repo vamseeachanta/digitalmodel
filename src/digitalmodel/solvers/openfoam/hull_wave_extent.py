@@ -1,9 +1,13 @@
 """Wavelength-scaled refinement coverage for calm-water deep-water cases.
 
-Source: Ship wakes: Kelvin or Mach angle? (2013), arXiv:1304.2653,
-pp. 1–2. The transverse wavelength is 2*pi*U**2/g and the Kelvin envelope
-has sin(alpha)=1/3, hence tan(alpha)=1/sqrt(8). Wake length is a required
-caller criterion, not an inferred universal acceptance limit.
+Source: Rabaud & Moisy, "Ship wakes: Kelvin or Mach angle?",
+Phys. Rev. Lett. 110, 214503 (2013), arXiv:1304.2653, pp. 1–2. The transverse
+wavelength is 2*pi*U**2/g and the Kelvin envelope has sin(alpha)=1/3, hence
+tan(alpha)=1/sqrt(8). Wake length is a required
+caller criterion, not an inferred universal acceptance limit. Kelvin geometry
+is a bounding choice; the paper finds narrower wakes at high Froude number.
+Newman, Marine Hydrodynamics (2018), sections 6.2–6.3 and 6.10, gives the
+half-wavelength depth screen and the classical Kelvin construction.
 """
 
 from __future__ import annotations
@@ -11,7 +15,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 from .hull_domain import Box, HullDomain
 from .hull_free_surface import deep_water_wavelength
@@ -36,6 +40,7 @@ class WaveExtent:
     x_bow_m: float
     half_width_bow_m: float
     half_width_aft_m: float
+    water_depth_m: float
 
     @property
     def enabled(self) -> bool:
@@ -50,12 +55,21 @@ class WaveExtent:
         return math.degrees(math.atan(_KELVIN_SLOPE))
 
     def to_provenance(self) -> dict[str, Any]:
+        deep_water = self.water_depth_m >= self.wavelength_m / 2
+        if not self.enabled:
+            reason = "wake wavelengths is a required input to evaluate extent"
+        elif not deep_water:
+            reason = "finite-depth wave extent not evaluated: h < wavelength/2"
+        else:
+            reason = "requested deep-water wave envelope fits the domain"
         return {
-            "status": "PASS" if self.enabled else "NOT_EVALUATED",
-            "reason": (
-                "requested deep-water wave envelope fits the domain"
-                if self.enabled
-                else "wake wavelengths is a required input to evaluate extent"
+            "status": "PASS" if self.enabled and deep_water else "NOT_EVALUATED",
+            "reason": reason,
+            "water_depth_m": self.water_depth_m,
+            "depth_wavelength_ratio": self.water_depth_m / self.wavelength_m,
+            "depth_basis": (
+                "h >= wavelength/2; Newman, Marine Hydrodynamics (2018), "
+                "sections 6.2–6.3"
             ),
             "required_wake_wavelengths": self.required_wake_wavelengths,
             "achieved_wake_wavelengths": self.achieved_wake_wavelengths,
@@ -66,7 +80,11 @@ class WaveExtent:
             "x_bow_m": self.x_bow_m,
             "half_width_bow_m": self.half_width_bow_m,
             "half_width_aft_m": self.half_width_aft_m,
-            "source": "Ship wakes: Kelvin or Mach angle? (2013), arXiv:1304.2653, pp. 1–2",
+            "source": (
+                "Rabaud & Moisy, Ship wakes: Kelvin or Mach angle?, "
+                "Phys. Rev. Lett. 110, 214503 (2013), arXiv:1304.2653, pp. 1–2; "
+                "Newman, Marine Hydrodynamics (2018), section 6.10"
+            ),
             "coverage_basis": (
                 "hull boxes union a bow-origin Kelvin trapezoid at every stage; "
                 "wake length is measured aft of the actual stern; each stage "
@@ -75,17 +93,18 @@ class WaveExtent:
                 else "largest complete Kelvin envelope inside the finest hull box"
             ),
             "cell_budget_basis": (
-                "conservative enclosing boxes for hull and wave union; "
-                "estimated_cells is an upper bound within the existing uniform-z estimate"
+                "enclosing boxes for hull and wave union; uniform-z cell estimate; "
+                "cut-cell growth beyond prism bounds is not included"
             ),
             "limits": (
-                "geometric pre-mesh coverage only; finite depth, wave amplitude, "
+                "geometric pre-mesh coverage with a depth screen only; "
+                "finite-depth wave propagation, wave amplitude, "
                 "mesh quality, reflection and force convergence are not evaluated"
             ),
         }
 
     def budget_boxes(self, boxes: Sequence[Box]) -> list[Box]:
-        """Conservative nested bounds; never omit the extra wave-region cost."""
+        """Nested enclosing estimates of the hull and wave-region cell cost."""
         if not self.enabled:
             return list(boxes)
         return [
@@ -152,22 +171,38 @@ def derive_wave_extent(
         if bow >= domain.x_inlet:
             raise WaveExtentError("wave bow lies outside domain: increase upstream_lpp")
     return WaveExtent(
-        wavelength, wake_wavelengths, achieved, aft, bow, half_beam, width
+        wavelength,
+        wake_wavelengths,
+        achieved,
+        aft,
+        bow,
+        half_beam,
+        width,
+        domain.waterline - domain.z_levels[0],
     )
 
 
 def wave_selection_tokens(
-    wave: WaveExtent, domain: HullDomain, stages: int
+    wave: WaveExtent, domain: HullDomain, stages: int, divisions: Mapping[str, int]
 ) -> dict[str, str]:
     """Add the wave surface to c0 after the existing hull box selection.
 
-    Syntax and negative distance/curvature sentinels: OpenFOAM 10 (2022),
-    surfaceToCell.C dictionary constructor and surfaceToCell.H description.
+    Key set and negative distance/curvature sentinels: OpenFOAM v2312,
+    surfaceToCell.C dictionary constructor (lines 431–461) and checkSettings.
+    https://api.openfoam.com/2312/surfaceToCell_8C_source.html#l00431
     includeCut also selects boundary-intersecting cells, protecting the envelope.
     """
-    # surfaceToCell requires the outside point to lie strictly inside a mesh
-    # cell, beyond the prism's bow, not on the inlet boundary.
-    outside = ((domain.x_inlet + wave.x_bow_m) / 2, domain.y_side / 2, domain.waterline)
+    # Use the emitted divisions, including speed-driven in-plane refinement.
+    # A third of a cell avoids both background and dyadic refinement faces.
+    # Keep x within the last finest possible cell and ahead of the prism bow.
+    dx = domain.length / divisions["nx"] / 2**stages
+    dy = domain.width / divisions["ny"]
+    dz = (domain.z_levels[3] - domain.z_levels[2]) / divisions["nzb"]
+    outside = (
+        domain.x_inlet - min(dx, domain.x_inlet - wave.x_bow_m) / 3,
+        domain.y_side + dy / 3,
+        domain.z_levels[2] + dz / 3,
+    )
     point = " ".join(f"{v:.17g}" for v in outside)
     return {
         f"WAVE{i}": (
