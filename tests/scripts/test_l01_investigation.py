@@ -27,6 +27,12 @@ def config():
         "threads": [6],
         "budget_minutes": 60,
         "resource_citation": "synthetic allocation only",
+        "allocation_policy": {
+            "stage1_max_licensed_minutes": 60,
+            "later_stage_multiplier": 1.25,
+            "citation": "Synthetic resource policy, revision 1, section 2",
+            "contingency_rationale": "Synthetic contingency for timing variability",
+        },
         "max_relative_gap": 0.1,
         "sampling_citation": "synthetic sampling only",
         "basis": {key: "synthetic declared basis" for key in (
@@ -171,7 +177,7 @@ def test_zero_scale_and_missing_basis_are_refused(mod):
 
 def test_duplicate_json_keys_refused(mod, tmp_path):
     path = tmp_path / "duplicate.json"
-    path.write_text('{"a": 1, "a": 2}', encoding="utf-8")
+    path.write_text('{"a": 1, "a": 2}', encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         mod.read_json(path)
 
@@ -216,8 +222,56 @@ def test_later_stage_budgets_depend_on_measured_stage1_time(mod):
             )
 
 
-def test_prepare_refuses_stage1_allocation_above_sixty_minutes(mod):
+def test_prepare_refuses_stage1_allocation_above_cited_policy_maximum(mod):
     c = config()
     c["budget_minutes"] = 61
+    with pytest.raises(ValueError, match="cap"):
+        mod.build_request(c)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("stage1_max_licensed_minutes", None),
+    ("stage1_max_licensed_minutes", True),
+    ("stage1_max_licensed_minutes", 0),
+    ("stage1_max_licensed_minutes", float("nan")),
+    ("stage1_max_licensed_minutes", float("inf")),
+    ("later_stage_multiplier", None),
+    ("later_stage_multiplier", True),
+    ("later_stage_multiplier", 0.9),
+    ("later_stage_multiplier", float("nan")),
+    ("later_stage_multiplier", float("inf")),
+    ("citation", None), ("citation", ""), ("citation", "NOT_EVALUATED"),
+    ("citation", "TBD"), ("citation", "n/a"),
+    ("contingency_rationale", None), ("contingency_rationale", ""),
+    ("contingency_rationale", "NOT_EVALUATED"),
+])
+def test_invalid_allocation_policy_refuses_preparation(mod, field, value):
+    c = config()
+    c["allocation_policy"][field] = value
+    with pytest.raises(ValueError, match="allocation policy"):
+        mod.build_request(c)
+
+
+def test_missing_allocation_policy_refuses_preparation(mod):
+    c = config()
+    del c["allocation_policy"]
+    with pytest.raises(ValueError, match="allocation policy"):
+        mod.build_request(c)
+
+
+@pytest.mark.parametrize("multiplier", [1.5, 1.0000001])
+def test_prepare_uses_supplied_resource_policy_without_default_constants(mod, multiplier):
+    c = config()
+    c["allocation_policy"].update(stage1_max_licensed_minutes=45,
+                                  later_stage_multiplier=multiplier)
+    c["budget_minutes"] = 40
+    request = mod.build_request(c)
+    assert request["allocation_policy"] == c["allocation_policy"]
+    for run in request["scaling_runs"]:
+        if run["cases"] == 16:
+            assert run["budget_minutes"] == 40
+        else:
+            assert f"x {multiplier}," in run["allocation"]
+    c["budget_minutes"] = 46
     with pytest.raises(ValueError, match="cap"):
         mod.build_request(c)

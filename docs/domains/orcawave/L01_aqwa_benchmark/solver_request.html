@@ -14,6 +14,9 @@ it is not execution authorization or a qualified benchmark.</p>
 <tr><td>1</td><td>2026-10-20</td><td>Internal-use rights, cited physical reconciliation,
 conditional native preparation and a capped timing ladder are recorded so that
 unresolved inputs cannot be issued.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>AQWA coefficient output is selected before
+the options list closes, and cited allocation-policy inputs are required so that
+an omitted output or unsupported timing limit cannot pass preparation.</td></tr>
 </table>
 <p>Table: Revision history.</p>
 
@@ -66,7 +69,8 @@ not solver-native input. No command starts a solver.</p>
 <tr><th>Configuration field</th><th>Required meaning</th></tr>
 <tr><td>frequencies_rad_s</td><td>Strictly increasing positive finite common grid</td></tr>
 <tr><td>headings_deg</td><td>Unique canonical headings in [0, 360), in the pinned convention</td></tr>
-<tr><td>threads; budget_minutes; resource_citation</td><td>Unique positive integer counts, positive shared stage-1 cap no greater than 60 licensed minutes, allocation evidence</td></tr>
+<tr><td>threads; budget_minutes; resource_citation</td><td>Unique positive integer counts, positive shared stage-1 cap no greater than the cited policy maximum, allocation evidence</td></tr>
+<tr><td>allocation_policy</td><td>Positive finite stage1_max_licensed_minutes, finite later_stage_multiplier at least one, citation and contingency_rationale; no missing or unevaluated evidence</td></tr>
 <tr><td>max_relative_gap; sampling_citation</td><td>Positive gap criterion and physical derivation including resonance coverage</td></tr>
 <tr><td>basis</td><td>Nonempty cited declarations for every field below, including units and native mapping evidence</td></tr>
 <tr><td>criteria</td><td>Predeclared band, limits, scales and phase eligibility described below</td></tr>
@@ -147,7 +151,7 @@ the source decks are not changed by this request.</p>
 <h2>Conditional offline native preparation</h2>
 <pre>python scripts/benchmark/l01_investigation.py issue docs/domains/orcawave/L01_aqwa_benchmark/native_request.json "$PRIVATE_RUN_DIR/stage1" --source-root .</pre>
 <p>The command checks the complete rights record, the positive licensed-minute
-cap no greater than 60, all reconciliation rows, source digests and file:line
+cap no greater than the cited policy maximum, all reconciliation rows, source digests and file:line
 citations before creating any output directory. DISAGREES, NOT_EVALUATED,
 missing evidence or unequal normalized values refuse issuance. With all rows
 AGREES and the other controls satisfied, it writes stage1.yml, stage1.dat and a
@@ -158,13 +162,29 @@ values. The reconciliation values and citations are supplied evidence, rather
 than independently authenticated physical equivalence. The solver manager shall
 review them against the pinned decks. Native preparation selects the declared
 periods/headings, converts period to AQWA HRTZ and updates the mesh reference.
+It selects <code>OPTIONS AHD1</code> before the options list closes, preserving
+the immediate REST/RESTART card order. Missing or malformed Deck 0 options
+refuse issuance. Native readback must confirm the expected AH1 output;
+an offline option selection does not establish solver completion.
 Other model fields are preserved. AQWA card precision is retained in the issued
 deck; the manifest records the native-to-request mapping. Native import/readback,
 mesh QA and the complete scientific basis remain required before execution.</p>
 
 <h2>Licensed-minute ladder</h2>
+<p>Allocation basis: NOT_EVALUATED. The 60-minute maximum and 1.25 multiplier
+below are proposals; an approved resource-policy citation and contingency
+rationale have not been supplied. The execution summary supports the case counts
+only. Neither numeric value is an engineering limit or an approved allocation.</p>
+<p>Both preparation commands require <code>allocation_policy</code> with
+<code>stage1_max_licensed_minutes</code>, <code>later_stage_multiplier</code>,
+<code>citation</code> and <code>contingency_rationale</code>. The maximum must be
+positive and finite; the multiplier must be finite and at least one. Blank,
+missing or unevaluated evidence refuses preparation. The stage-1 cap must not
+exceed that policy maximum; later allocations use its multiplier. The issued
+manifest retains all four inputs. These checks validate supplied declarations;
+the solver manager must establish the cited policy's authority before scheduling.</p>
 <table border="1">
-<tr><th>Stage</th><th>Cases</th><th>Allocation and stop rule</th></tr>
+<tr><th>Stage</th><th>Cases</th><th>Proposed allocation and stop rule</th></tr>
 <tr><td>1</td><td>16 paired grid points, each in AQWA and OrcaWave</td>
 <td>60 licensed minutes total across both solvers, all thread/panel variants,
 loading, calculation, saving and failed attempts. Stop at 60 minutes;
@@ -245,8 +265,8 @@ against the native outputs and the engineering criteria. Report attempted,
 native-complete and qualified runs separately. Complete this issue only after
 the timeout investigation and full-grid matched comparison are evidenced.</li>
 </ol>
-<p>Measured licensed minutes: NOT_EVALUATED. Stage 1 has the shared hard cap
-specified above. The solver manager will set the later allocations from measured
+<p>Measured licensed minutes: NOT_EVALUATED. Stage 1 requires a shared cap
+within the cited policy maximum. The solver manager will set later allocations from measured
 stage-1 time; historical small-model timings are not a matched-model estimate.</p>
 
 <h2>Normalized export and QA</h2>

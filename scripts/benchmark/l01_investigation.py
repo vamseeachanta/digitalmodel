@@ -59,6 +59,29 @@ def matrix(values, *, positive=False):
     return [vector(row, DOFS, positive=positive) for row in values]
 
 
+def allocation_policy(request, cap):
+    """Require a cited resource policy; declarations do not authenticate approval."""
+    policy = request.get("allocation_policy")
+    if not isinstance(policy, dict):
+        raise ValueError("cited allocation policy required")
+    try:
+        maximum = number(policy.get("stage1_max_licensed_minutes"), positive=True)
+        multiplier = number(policy.get("later_stage_multiplier"), positive=True)
+        if multiplier < 1:
+            raise ValueError("contingency multiplier cannot reduce measured time")
+        for key in ("citation", "contingency_rationale"):
+            value = text(policy.get(key)).strip().casefold()
+            if value in {"not_evaluated", "not evaluated", "tbd", "n/a",
+                         "unknown", "pending", "unverified"}:
+                raise ValueError("evaluated citation and contingency rationale required")
+    except ValueError as error:
+        raise ValueError(f"allocation policy: {error}") from error
+    if cap > maximum:
+        raise ValueError(f"stage-1 cap {cap} minutes exceeds allocation policy "
+                         f"maximum {maximum} minutes")
+    return policy
+
+
 def validate_config(config):
     frequencies = config["frequencies_rad_s"]
     headings = config["headings_deg"]
@@ -83,8 +106,7 @@ def validate_config(config):
             or len(set(threads)) != len(threads)):
         raise ValueError("unique positive integer thread counts required")
     number(config["budget_minutes"], positive=True)
-    if config["budget_minutes"] > 60:
-        raise ValueError("stage-1 licensed-minute cap cannot exceed 60")
+    allocation_policy(config, config["budget_minutes"])
     text(config["resource_citation"])
     basis = config["basis"]
     if not isinstance(basis, dict) or set(basis) != BASIS_FIELDS:
@@ -106,8 +128,10 @@ def subset(values, count):
     return [values[i * (len(values) - 1) // (count - 1)] for i in range(count)]
 
 
-def later_allocation(cases):
-    return (f"allocation = measured stage-1 minutes per case x {cases} x 1.25, "
+def later_allocation(cases, policy):
+    # Resource cap and contingency come from the caller's cited allocation policy.
+    return (f"allocation = measured stage-1 minutes per case x {cases} "
+            f"x {policy['later_stage_multiplier']}, "
             "set by the solver manager from the measured time")
 
 
@@ -125,7 +149,8 @@ def build_request(config):
                     "headings_deg": subset(config["headings_deg"], nh),
                     **({"budget_minutes": config["budget_minutes"],
                         "budget_scope": "shared_stage1_all_solvers_and_variants"}
-                       if nf * nh == 16 else {"allocation": later_allocation(nf * nh)}),
+                       if nf * nh == 16 else {
+                           "allocation": later_allocation(nf * nh, config["allocation_policy"])}),
                     "scientific_comparison": False,
                 })
     return {
@@ -136,6 +161,7 @@ def build_request(config):
         "sampling_citation": config["sampling_citation"],
         "max_relative_gap": config["max_relative_gap"],
         "resource_citation": config["resource_citation"],
+        "allocation_policy": config["allocation_policy"],
         "estimated_licensed_minutes": "NOT_EVALUATED",
         "native_inputs": "NOT_EVALUATED", "engineering_qualification": "NOT_EVALUATED",
     }
@@ -233,7 +259,33 @@ def native_stage1(request, contents):
                           lambda m: m[1] + cards, contents["AQWA"])
     if count != 1:
         raise ValueError("one AQWA frequency and direction deck required")
+    aqwa = select_ah1_output(aqwa)
     return {"stage1.yml": ow.encode("utf-8"), "stage1.dat": aqwa.encode("utf-8")}
+
+
+def select_ah1_output(aqwa):
+    """Select AH1 before Deck 0 closes, preserving REST/RESTART adjacency.
+
+    Card-order precedent: AqwaBackend.build_deck0 in aqwa_backend.py.
+    Native interpretation remains subject to the required solver readback.
+    """
+    lines = aqwa.splitlines(keepends=True)
+    options = [(i, line.split()[1:]) for i, line in enumerate(lines)
+               if line.startswith("OPTIONS ")]
+    ends = [i for i, tokens in options if "END" in tokens]
+    if (sum(tokens.count("END") for _, tokens in options) != 1
+            or any(i > ends[0] for i, _ in options)):
+        raise ValueError("AQWA Deck 0 requires one final OPTIONS END card")
+    for i, tokens in options:
+        if "END" in tokens and tokens[-1] != "END":
+            raise ValueError("AQWA Deck 0 option follows END")
+        if "REST" in tokens and (i + 1 >= len(lines)
+                                   or not lines[i + 1].startswith("RESTART ")):
+            raise ValueError("AQWA Deck 0 requires RESTART immediately after REST")
+    if not any("AHD1" in tokens for _, tokens in options):
+        insertion = next(i for i, tokens in options if "REST" in tokens or "END" in tokens)
+        lines.insert(insertion, "OPTIONS AHD1\n")
+    return "".join(lines)
 
 
 def stage1_manifest(stage):
@@ -249,7 +301,7 @@ def stage1_manifest(stage):
         raise ValueError("declared stage-1 cases differ from the native grid")
     return {"cap_licensed_minutes": stage["cap_licensed_minutes"], "cases": cases,
             "budget_scope": "shared_stage1_all_solvers_and_variants",
-            "stop_rule": (f"stop at {stage['cap_licensed_minutes']:g} minutes; "
+            "stop_rule": (f"stop at {stage['cap_licensed_minutes']} minutes; "
                           "the solver manager stops both solvers when cumulative "
                           "licensed time reaches the cap, including failed attempts")}
 
@@ -259,17 +311,19 @@ def issue_native_inputs(request, root, output):
     if request.get("source_rights") != SOURCE_RIGHTS:
         raise ValueError("complete internal-use source rights record required")
     cap = request.get("stage1", {}).get("cap_licensed_minutes")
-    if type(cap) not in (int, float) or not math.isfinite(cap) or not 0 < cap <= 60:
-        raise ValueError("stage-1 licensed-minute cap must be present and at most 60")
+    if type(cap) not in (int, float) or not math.isfinite(cap) or cap <= 0:
+        raise ValueError("positive finite stage-1 licensed-minute cap required")
     validate_reconciliation(request)
+    policy = allocation_policy(request, cap)
     contents = native_sources(request, root)
     payloads = native_stage1(request, contents)
     manifest = {
         "native_inputs": "ISSUED", "source_rights": request["source_rights"],
         "request_sha256": digest(request), "sources": request["sources"],
         "reconciliation": request["reconciliation"],
+        "allocation_policy": policy,
         "stage1": stage1_manifest(request["stage1"]),
-        "later_stages": [{"cases": n, "allocation": later_allocation(n)}
+        "later_stages": [{"cases": n, "allocation": later_allocation(n, policy)}
                          for n in (90, 180)],
         "files": [{"file": path, "sha256": hashlib.sha256(raw).hexdigest()}
                   for path, raw in payloads.items()],
