@@ -1,0 +1,14 @@
+{
+  "report": "weather-window-module",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-22",
+      "changes": [
+        "The fixed-interval weather-window screen is documented using the existing public illustrative record.",
+        "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.",
+        "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."
+      ]
+    }
+  ]
+}
