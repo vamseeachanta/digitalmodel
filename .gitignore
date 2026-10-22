@@ -267,6 +267,13 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+# Retain the seismic module analysis and its engineering change record.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/seismic/
+docs/reports/modules/seismic/*
+!docs/reports/modules/seismic/seismic-analysis.html
+!docs/reports/modules/seismic/changes.json
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**

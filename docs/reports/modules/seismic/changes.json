@@ -1,0 +1,14 @@
+{
+  "document": "Seismic acceleration-record preprocessing analysis",
+  "revisions": [
+    {
+      "revision": "00",
+      "date": "2026-10-21",
+      "changes": [
+        "First issue records the public accelerogram calculation and its numerical basis.",
+        "The distinction between acceleration preprocessing and oscillator response spectra is established.",
+        "The building-floor measurement condition and missing design acceptance basis are stated."
+      ]
+    }
+  ]
+}
