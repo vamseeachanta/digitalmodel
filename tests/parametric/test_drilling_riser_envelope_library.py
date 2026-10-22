@@ -57,13 +57,25 @@ def test_query_covered_point_carries_stub_solver_block():
 
 
 def test_query_unknown_mode_escalates():
-    result = query._handle_value(_atlas(), {**_COVERED, "mode": "survival"})
+    atlas = _atlas()
+    point = {**_COVERED, "mode": "survival"}
+    prediction = atlas.predict(point)
+    assert prediction.in_range is False
+    assert "survival" in prediction.reason
+    assert "not in atlas" in prediction.reason
+    result = query._handle_value(atlas, point)
     assert result["in_range"] is False
     assert result["action"] == "escalate"
 
 
 def test_query_out_of_grid_escalates_never_extrapolates():
-    result = query._handle_value(_atlas(), {**_COVERED, "offset_pct": 99.0})
+    atlas = _atlas()
+    point = {**_COVERED, "offset_pct": 99.0}
+    prediction = atlas.predict(point)
+    assert prediction.in_range is False
+    assert "offset_pct=99" in prediction.reason
+    assert "outside" in prediction.reason
+    result = query._handle_value(atlas, point)
     assert result["in_range"] is False
     assert result["action"] == "escalate"
     assert result["value"] is None

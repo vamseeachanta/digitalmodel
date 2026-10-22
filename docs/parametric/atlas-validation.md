@@ -12,6 +12,7 @@ This is a metadata contract, not independent verification of the measurement.
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-10-20 | Distinguish unavailable validation from measured zero and reject incomplete or nonfinite sweep grids. |
+| 2 | 2026-10-22 | Gate dynamic amplification on validation, restore coverage assertions, and regenerate manifest summaries and the static operability cache. |
 
 `Atlas.max_rel_error` and `local_error` return NaN when validation is unavailable.
 `save` writes a null manifest error and `status: unavailable`; loading preserves
@@ -70,7 +71,30 @@ interpolation; it adds no standards-derived coefficients or acceptance limits.
 The specification remains a draft; this change implements the missing-evidence
 behavior described in [issue 2118](https://github.com/vamseeachanta/digitalmodel/issues/2118).
 
-Committed atlas payloads remain unchanged. The two operability publishing
-scripts still default direct validation dictionary reads to zero and require a
-follow-up. Holdout evaluation for bridge-built atlases is also outside this
+The four library manifest summaries are regenerated through `Atlas.save` to
+report null error and unavailable status, consistent with their validation
+artifacts. Library grid data and solver provenance are unchanged. The static
+operability atlas is rebuilt with
+`python scripts/parametric/build_drilling_riser_operability_atlas.py` because
+its source fingerprint includes the dynamic envelope caller. The build remains
+static and does not start a licensed solver.
+
+## Direct prediction callers
+
+| Caller | Validation policy |
+|---|---|
+| `drilling_riser/envelope.py`, dynamic amplification | Requires available validation and geometric coverage; otherwise von Mises becomes NaN and the point is counted in `escalated_points`. |
+| `mooring_resilience/screening.py`, `intact_tension_kN` | Uses geometric prediction from the computed tension atlas; does not produce a confidence band or independently qualify validation. |
+| `mooring_resilience/screening.py`, `foundation_capacity_kN` | Uses geometric prediction from the computed capacity atlas; does not produce a confidence band or independently qualify validation. |
+
+The query and operability screen still check validation before range and
+coverage. Their unavailable-validation diagnostic can mask a geometric reason,
+and query escalation still reports `in_range: false` for an interior point.
+Separating those result-contract semantics remains follow-up work.
+
+The two operability publishing scripts still default direct validation dictionary
+reads to zero; the atlas explorer also requires unavailable-state handling.
+Dedicated parametric CI enrollment remains pending. The maintainers must create
+and link the requested follow-ups; no issue is created by this change.
+Holdout evaluation for bridge-built atlases is also outside this
 change; see [issue 816](https://github.com/vamseeachanta/digitalmodel/issues/816).

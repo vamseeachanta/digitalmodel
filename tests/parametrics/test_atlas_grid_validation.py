@@ -39,9 +39,16 @@ def test_complete_cartesian_grid_is_not_holdout_evidence():
     assert atlas.validation["reason"] == "no holdout evaluation"
 
 
-@pytest.mark.parametrize("bad", ["duplicate", "foreign", "axis_nan", "axis_inf",
-                                  "response_nan", "response_inf", "response_neg_inf"])
-def test_rejects_invalid_cartesian_membership_or_nonfinite_values(bad):
+@pytest.mark.parametrize(("bad", "message"), [
+    ("duplicate", "full-factorial: duplicate or undeclared node"),
+    ("foreign", "full-factorial: duplicate or undeclared node"),
+    ("axis_nan", "full-factorial: duplicate or undeclared node"),
+    ("axis_inf", "full-factorial: duplicate or undeclared node"),
+    ("response_nan", "response must contain only finite values"),
+    ("response_inf", "response must contain only finite values"),
+    ("response_neg_inf", "response must contain only finite values"),
+])
+def test_rejects_invalid_cartesian_membership_or_nonfinite_values(bad, message):
     import math
 
     study, summary = _cartesian_summary()
@@ -57,7 +64,7 @@ def test_rejects_invalid_cartesian_membership_or_nonfinite_values(bad):
             "response_nan": math.nan, "response_inf": math.inf,
             "response_neg_inf": -math.inf,
         }[bad]
-    with pytest.raises(ValueError, match="finite|full-factorial|duplicate"):
+    with pytest.raises(ValueError, match=message):
         _build(study, summary)
 
 
@@ -65,5 +72,5 @@ def test_rejects_invalid_cartesian_membership_or_nonfinite_values(bad):
 def test_rejects_invalid_declared_axis(values):
     study, summary = _cartesian_summary()
     study.parameters[0].values = values
-    with pytest.raises(ValueError, match="finite|unique|empty|full-factorial"):
+    with pytest.raises(ValueError, match="axis 'x' must have finite unique nonempty values"):
         _build(study, summary)

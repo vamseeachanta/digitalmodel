@@ -113,3 +113,18 @@ def test_rao_without_validation_escalates_before_period_conversion():
     from digitalmodel.parametric.query import _handle_rao
 
     assert _handle_rao(_atlas({}), {"period_s": 0.0})["reason"] == "validation unavailable"
+
+
+@pytest.mark.parametrize("basename", [
+    "diffraction_library", "orcaflex_library", "drilling_riser_envelope",
+    "drilling_riser_drift_off",
+])
+def test_committed_library_manifest_matches_validation_artifact(basename):
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, basename)
+    assert not atlas.validation_available
+    manifest_path = DEFAULT_ATLAS_ROOT / basename / atlas.atlas_id / "manifest.yaml"
+    summary = yaml.safe_load(manifest_path.read_text())["validation"]
+    assert summary["max_rel_error"] is None
+    assert summary["status"] == "unavailable"
