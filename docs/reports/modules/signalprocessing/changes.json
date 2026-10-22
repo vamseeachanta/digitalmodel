@@ -1,0 +1,14 @@
+{
+  "document": "Signal processing module analysis",
+  "revisions": [
+    {
+      "revision": "00",
+      "date": "2026-10-21",
+      "changes": [
+        "The documented spectral-density calculation is demonstrated on a published synthetic voltage signal, with the sampling boundary and the numerical comparison limits shown.",
+        "The meaning of spectral density, amplitude density and placeholder phase is distinguished from the separately scaled Fourier outputs.",
+        "Existing analytical and regression evidence is separated from field qualification, and the information required before analysing measured signals is identified."
+      ]
+    }
+  ]
+}
