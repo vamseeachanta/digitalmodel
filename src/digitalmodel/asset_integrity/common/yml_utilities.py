@@ -27,24 +27,26 @@ def ymlInput(defaultYml, updateYml=None):
     if not is_file_valid_func(defaultYml):
         raise Exception("Not valid file. Please check the file path.")
 
-    with open(defaultYml, 'r') as ymlfile:
+    with Path(defaultYml).open('r', encoding='utf-8') as ymlfile:
         try:
             cfg = yaml.safe_load(ymlfile)
         except yaml.composer.ComposerError:
             cfg = yml_read_stream(defaultYml)
+    if not isinstance(cfg, Mapping) or not cfg:
+        raise ValueError("base configuration must be a nonempty mapping")
 
     if updateYml != None:
         #  Update values file
         try:
-            with open(updateYml, 'r') as ymlfile:
+            with Path(updateYml).open('r', encoding='utf-8') as ymlfile:
                 cfgUpdateValues = yaml.safe_load(ymlfile)
     #  Convert to logs
     # print(cfgUpdateValues)
+            if not isinstance(cfgUpdateValues, Mapping) or not cfgUpdateValues:
+                raise ValueError("overlay must be a nonempty mapping")
             cfg = update_deep(cfg, cfgUpdateValues)
-        except:
-            logger.warning(
-                "Update Input file could not be loaded successfully. Running program default values"
-            )
+        except (OSError, yaml.YAMLError, ValueError) as exc:
+            raise ValueError("requested configuration overlay could not be loaded") from exc
 
     return cfg
 

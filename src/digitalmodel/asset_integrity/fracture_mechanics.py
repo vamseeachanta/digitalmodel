@@ -1,16 +1,20 @@
 """Fracture mechanics assessment entry point for asset integrity."""
 
 import warnings
+from .common.validation import not_evaluated
 
 
 def fracture_mechanics(cfg):
     """Run configured flaw checks, warning when they are NOT_EVALUATED.
 
-    With ``flaw_limits`` disabled, return the original configuration without
+    With ``flaw_limits`` disabled, clear stale outcomes without
     importing or initializing calculation components. No assessment is made.
     Enabled analysis retains its existing component sequence and return value.
     """
     if not cfg['default']['Analysis']['fracture_mechanics']['flaw_limits']:
+        cfg['Result'] = {'assessment_status': {
+            'flaw_limits': not_evaluated('flaw_limits is disabled', cfg.get('input_revision'))
+        }}
         # Explicit disabled-check signal required by issue 2598.
         # https://github.com/vamseeachanta/digitalmodel/issues/2598
         warnings.warn(

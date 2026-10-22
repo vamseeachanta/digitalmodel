@@ -52,7 +52,17 @@ def test_report_reads_four_grids_and_records_exact_bytes(tmp_path):
     assert len(result["scans"]) == 4
     assert len(result["placements"]) == 4  # one placement assessment per scan
     report = Path(result["report_html"]).read_text()
-    assert report == (EXAMPLE.parent / "report.html").read_text()
+    # A61 changes only coverage-dependent placement tables in the historical snapshot.
+    def without_placements(text):
+        return re.sub(r"(<h2>[^<]*placement[^<]*</h2>\n)<table>.*?</table>",
+                      r"\1", text, flags=re.DOTALL | re.IGNORECASE)
+    assert without_placements(report) == without_placements(
+        (EXAMPLE.parent / "report.html").read_text())
+    for scan, placement in zip(result["scans"], result["placements"]):
+        if scan["unmeasured_cells"]:
+            assert placement["verdict"] == "NOT_EVALUATED"
+            assert "Complete grid coverage required" in report
+            assert not placement["eligible_zones"]
     assert "Provenance" in report and "anonymized" in report
     assert "API 579-1/ASME FFS-1 2021 Edition criteria are applied" not in report
     assert len(result["provenance"]["sources"]) == 6  # grids, register, README
@@ -213,7 +223,10 @@ def test_placement_uses_worst_joint_life_and_governing_measured_scan(tmp_path):
     result = RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
     scan_placements = [p for p in result["placements"] if p["joint_id"] == "RJ-101"]
     assert all(p["min_life_years"] == 0.1 for p in scan_placements)
-    assert all(p["verdict"] == "REPAIR" for p in scan_placements)
+    for placement in scan_placements:
+        scan = next(s for s in result["scans"] if s["scan"] == placement["scan"])
+        assert placement["verdict"] == (
+            "NOT_EVALUATED" if scan["unmeasured_cells"] else "REPAIR")
     governing = next(p for p in result["joint_governing"] if p["joint_id"] == "RJ-101")
     assert governing["acceptable_depth_ft"] == min(
         p["acceptable_depth_ft"] for p in scan_placements
