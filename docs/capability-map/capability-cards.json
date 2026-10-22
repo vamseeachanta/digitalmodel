@@ -370,6 +370,16 @@
     "link": "docs/api/structural/wall-thickness-explorer.html"
   },
   {
+    "id": "wall-thickness-load-explorer",
+    "title": "Wall-thickness tension and bending explorer",
+    "summary": "Wall thickness, effective tension and bending moment swept across nine design codes. A fetched, bounded snapshot shows utilisation and governing check as a 3D surface with a 2D fallback. Inputs are assumed, based on previous experience; design qualification is not evaluated.",
+    "key_figure": {
+      "value": "9",
+      "label": "design codes"
+    },
+    "link": "docs/api/structural/wall-thickness-3d-explorer.html"
+  },
+  {
     "id": "sloshing-explorer",
     "title": "Tank sloshing natural-period & resonance explorer",
     "summary": "Fundamental sloshing natural period across tank shapes — rectangular, upright cylinder, horizontal cylinder (road tanker) and elliptical/obround fuel tanks — as a normalized master curve that collapses every size onto one dimensionless family, a shape-selector lookup for real periods, and a resonance screen showing partial-fill coupling with vessel roll. Backed by a worldwide relationship survey.",

@@ -277,7 +277,8 @@ def test_original_json_export_command_includes_new_tables(tmp_path, monkeypatch)
         builder,
         "_load",
         lambda source: (
-            {"rows": [{"t": 3}]} if source.endswith("3d.json") else load(source)
+            {"meta": {"grid": {"row_count": 1}}, "rows": [{"t": 3}]}
+            if source.endswith("3d.json") else load(source)
         ),
     )
     monkeypatch.setattr(
