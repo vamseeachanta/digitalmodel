@@ -2,8 +2,7 @@
   "meta": {
     "generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
     "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
-    "box": "gpu-claw",
-    "hostname": "gpu-claw",
+    "box": "8-core workstation",
     "cores": 8,
     "epic": "#1429",
     "issue": "#1433",

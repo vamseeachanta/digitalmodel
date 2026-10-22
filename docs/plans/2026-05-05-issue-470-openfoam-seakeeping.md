@@ -22,7 +22,7 @@ No OpenFOAM scaffold exists in `src/digitalmodel/`. There is a `solvers/openfoam
    - Tutorial inventory: `interDyMFoam` motion of floating bodies in waves (`$FOAM_TUTORIALS/multiphase/interFoam/RAS/floatingObject` etc.)
    - Mesh-motion strategy comparison table (morphing | overset/chimera | sliding-mesh) with mooring-vs-seakeeping guidance
    - Wave-library decision: `olaFlow` for new work; document `waves2Foam` only as legacy
-   - Benchmark catalog: Wigley hull (most-cited), DTMB 5415 (US Navy frigate), KCS (KRISO container ship) with experimental-data citation links
+   - Benchmark catalog: Wigley hull (most-cited), DTMB 5415 (United States Navy frigate), KCS (KRISO container ship) with experimental-data citation links
    - Tool-chain map: snappyHexMesh / cfMesh, ParaView post, PyFoam scripting
 
 3. **Phase 2 spike: Wigley hull setup.** New directory `src/digitalmodel/hydrodynamics/openfoam_seakeeping/`:
@@ -64,5 +64,5 @@ No OpenFOAM scaffold exists in `src/digitalmodel/`. There is a `solvers/openfoam
 
 ## Open Questions
 
-- Where does OpenFOAM live in target environments? `dev-secondary` (NVIDIA T400) is mentioned in #464 — confirm OpenFOAM 11/12 install path before the runner module assumes a binary location. Default: read `OPENFOAM_BIN` env var, fail with actionable message if absent.
+- Where does OpenFOAM live in target environments? A workstation with an NVIDIA T400 is mentioned in #464 — confirm OpenFOAM 11/12 install path before the runner module assumes a binary location. Default: read `OPENFOAM_BIN` env var, fail with actionable message if absent.
 - Capytaine BEM vs CFD validation (Phase 4) is contingent on hull mesh parity — the OC4 semi-sub or Wigley hull mesh must be re-usable across solvers. Coordinate with #465's hull-benchmark pick.
