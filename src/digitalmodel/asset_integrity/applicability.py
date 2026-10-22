@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Shared applicability/validity layer for the FFS strength methods —
 # ABOUTME: one Applicability(ok, flags, notes) record raised instead of silent extrapolation.
 """Applicability flags for the FFS remaining-strength methods (issue #1094).
@@ -113,32 +116,44 @@ def check_upper_limit(
 
 
 def merge(*items: Optional[Applicability]) -> Applicability:
-    """Combine several records; ``None`` entries are skipped.
+    """Combine required evidence; absent records remain explicitly unknown.
 
     The result is ok only when every input is ok; flags and notes keep their
     input order.
     """
     flags: list[str] = []
     notes: list[str] = []
+    ok = bool(items)
     for item in items:
-        if item is None:
+        if not isinstance(item, Applicability):
+            ok = False
+            flags.append("APPLICABILITY_MISSING")
+            notes.append("Required applicability evidence is missing")
             continue
+        ok = ok and item.ok is True and not item.flags
         flags.extend(item.flags)
         notes.extend(item.notes)
-    return Applicability(ok=not flags, flags=flags, notes=notes)
+        if item.ok is not True and not item.flags:
+            flags.append("APPLICABILITY_INVALID")
+        if item.ok is not True and not item.notes:
+            notes.append("An input explicitly records invalid applicability")
+    if not items:
+        flags.append("APPLICABILITY_MISSING")
+        notes.append("No applicability evidence supplied")
+    return Applicability(ok=ok, flags=flags, notes=notes)
 
 
 def from_details(details: Mapping, *, flag: str) -> Applicability:
     """Rebuild a record from the legacy ``within_applicability`` /
-    ``applicability_note`` detail keys (missing keys mean "within range")."""
-    if details.get("within_applicability", True):
+    ``applicability_note`` detail keys; missing evidence is unknown."""
+    if details.get("within_applicability") is True:
         return Applicability()
-    note = details.get("applicability_note") or f"{flag} raised"
+    note = details.get("applicability_note") or f"{flag}: applicability is invalid or unestablished"
     return flagged(flag, str(note))
 
 
 def collect(results: Iterable) -> Applicability:
-    """Merge the ``applicability`` attribute of every object that has one."""
+    """Merge required applicability evidence; missing attributes stay unknown."""
     return merge(*(getattr(r, "applicability", None) for r in results))
 
 

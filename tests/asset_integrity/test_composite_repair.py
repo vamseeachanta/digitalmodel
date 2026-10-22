@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for composite repair candidate screening and FFS repair joins.
 # ABOUTME: Covers ISO 24817 / ASME PCC-2 class filtering without design sizing.
 """Composite repair recommendation tests for issue #1296."""
@@ -189,6 +192,7 @@ def test_repair_recommendation_report_section_and_summary_are_rendered():
     decision = {
         **decision,
         "verdict": "REPAIR",
+        "action": "REPAIR",  # A23: keep the visible action consistent.
         "governing_criterion": "Level 1 FAIL; repair recommended.",
     }
 
