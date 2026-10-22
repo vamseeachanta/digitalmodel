@@ -14,6 +14,7 @@ be free of hard-coded core brand tokens.
 """
 
 from pathlib import Path
+import re
 
 import pytest
 
@@ -38,11 +39,44 @@ def test_every_registered_page_is_byte_identical_to_its_generator(
     assert drifted == []
 
 
+def canonical_brand_styles(root: Path) -> str:
+    canonical = (root / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    canonical = re.sub(r"/\*.*?\*/", "", canonical, flags=re.S)
+    return "\n".join(line.rstrip() for line in canonical.splitlines())
+
+
+def core_brand_overrides(html: str, canonical: str, allow_inline: bool = False) -> bool:
+    """Check all definitions; allow one exact stylesheet only for offline output."""
+    inline = f"<style>{canonical}"
+    if allow_inline and canonical and html.count(inline) == html.count(canonical) == 1:
+        html = html.replace(inline, "<style>", 1)
+    return bool(brand_guard.CORE_RE.search(html))
+
+
+def test_canonical_inline_brand_styles_reject_drift() -> None:
+    canonical = canonical_brand_styles(checker.REPO)
+    assert not core_brand_overrides(f"<style>{canonical}</style>", canonical, True)
+    assert core_brand_overrides(f"<style>{canonical}</style>", canonical)
+    assert core_brand_overrides(f"<p>{canonical}</p>", canonical, True)
+    assert core_brand_overrides(f"<style>{canonical}{canonical}</style>", canonical, True)
+    assert core_brand_overrides(
+        f"<style>{canonical.replace('#0b3d91', '#ffffff')}</style>", canonical, True,
+    )
+    assert core_brand_overrides(
+        f"<style>{canonical}\n:root{{--brand:#ffffff;}}</style>", canonical, True,
+    )
+
+
 def test_regenerated_pages_inherit_core_brand_tokens(regenerated: Path) -> None:
+    canonical = canonical_brand_styles(regenerated)
     offenders = sorted(
         path.relative_to(regenerated).as_posix()
         for path in checker.all_registered_outputs(regenerated)
-        if brand_guard.CORE_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
+        if core_brand_overrides(
+            path.read_text(encoding="utf-8"), canonical,
+            path.relative_to(regenerated).as_posix()
+            == "docs/reports/modules/subsea/subsea-module-report.html",
+        )
     )
 
     assert offenders == []
@@ -96,8 +130,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 28  # includes the published pipeline assessment and manifest
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9

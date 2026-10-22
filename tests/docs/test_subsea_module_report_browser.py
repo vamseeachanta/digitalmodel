@@ -47,8 +47,11 @@ class SubseaReportBrowserTests(unittest.TestCase):
         self.assertNotEqual(before, self.page.locator("#length-readout").inner_text())
         self.assertIn("limit 1500.0 m", self.page.locator("#length-readout").inner_text())
         self.assertIn("NOT_EVALUATED", self.page.locator("#tension-readout").inner_text())
-        self.page.select_option("#changes-since", "00")
+        revisions = json.loads((REPORT.parent / "changes.json").read_text())["revisions"]
+        self.page.select_option("#changes-since", revisions[-1]["revision"])
         self.assertIn("No engineering changes", self.page.locator("#change-list").inner_text())
+        self.page.select_option("#changes-since", "00")
+        self.assertIn("independent coated-example worksheet", self.page.locator("#change-list").inner_text())
         artifacts = os.environ.get("SUBSEA_TEST_ARTIFACTS")
         if artifacts:
             self.page.screenshot(path=str(Path(artifacts) / "subsea-desktop.png"), full_page=True)

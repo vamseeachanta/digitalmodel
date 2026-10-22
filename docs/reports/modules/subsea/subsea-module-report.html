@@ -140,7 +140,8 @@ geometry and tension of the documented catenary riser example; key results are s
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>00</td><td>2026-10-21</td>
-<td>First issue: static riser geometry, tension and available-length screening are presented so that the calculation boundary is explicit. The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance. Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment.</td></tr></tbody>
+<td>First issue: static riser geometry, tension and available-length screening are presented so that the calculation boundary is explicit. The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance. Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment.</td></tr><tr><td>01</td><td>2026-10-22</td>
+<td>An independent coated-example worksheet was added to check component weights, submerged weight, static forces and the available-length boundary against fixed illustrative inputs. The report was registered for isolated regeneration so changes to its inputs and inventory are detected.</td></tr></tbody>
 <caption>Revision history. The first issue establishes the calculation boundary.</caption></table></div>
 </section>
 
@@ -294,7 +295,8 @@ extend to the complete subsea module, dynamic response or field performance.</p>
 <p>The existing unit worksheet independently specifies annular weights, suspended length,
 offset, top tension and angle for an uncoated riser. Those expected values are tested with
 explicit numerical tolerances. The documented coated example is also rebuilt from the public API;
-agreement with that API establishes report consistency, not independent physical validation.</p>
+agreement with that API establishes report consistency. The separate coated worksheet below
+checks arithmetic against fixed inputs; physical validation is not established.</p>
 <h3>7.1 Published geometry comparison</h3>
 <p>The upper vertex-to-support branch of the open <a href="#source-curve">Catenary Curve example,
 2019, page 11</a> is evaluated with its published parameter and rise. The module returns
@@ -307,6 +309,57 @@ from unrounded differences and rounded upward. Reference input and tolerance det
 <p>The example weight is used only to scale horizontal force while preserving H/w. No published
 cable weight, cable capacity or subsea performance is inferred. Field measurements and native
 dynamic-response comparisons are not supplied; physical validation remains NOT_EVALUATED.</p>
+<div id="coated-worksheet">
+<h3>7.2 Independent coated-example worksheet</h3>
+<p>Worksheet inputs are fixed at revision 01 from the public Python example and model
+properties identified in Table 9.2. The steel outside diameter, bore and coated diameter
+are <span data-worksheet-input="outer_diameter">0.508</span>,
+<span data-worksheet-input="bore_diameter">0.458</span> and
+<span data-worksheet-input="coated_diameter">0.608</span> m respectively, from wall and radial coating thicknesses of
+<span data-worksheet-input="wall_thickness">0.025</span> and
+<span data-worksheet-input="coating_thickness">0.050</span> m. Steel, coating, contents and water densities are
+<span data-worksheet-input="density_steel">7850</span>,
+<span data-worksheet-input="coating_density">700</span>,
+<span data-worksheet-input="density_contents">850</span> and
+<span data-worksheet-input="density_water">1025</span> kg/m³; gravity is
+<span data-worksheet-input="gravity">9.81</span> m/s². Depth z is
+<span data-worksheet-input="water_depth">1000.0</span> m, suspended offset x is
+<span data-worksheet-input="horizontal_offset">500.0</span> m
+and available length L is <span data-worksheet-input="length">1500.0</span> m.
+These illustrative inputs remain ASSUMED - to be confirmed.</p>
+<p>The annular mass and displaced-water balance in section 5.1 gives the component
+weights below. With u = x/a, the vertex-shifted equation z = a[cosh(x/a) − 1] gives
+(cosh(u) − 1)/u = z/x. Bisection over 0.1 ≤ u ≤ 10.0 for 100 steps determines a;
+the positive root is unique. Suspended length is a sinh(u), horizontal force is wa,
+and top force is √[(wa)² + (ws)²], using the equilibrium and geometry equations in
+<a href="#source-curve">Catenary Curve, 2019, equations (1), (3), (4), (9), (10) and (34)</a>.
+Setting s = L gives a = (L² − z²)/(2z) and limiting offset a acosh(1 + z/a).</p>
+<table><thead><tr><th>Component</th><th>Expected weight (N/m)</th></tr></thead><tbody>
+<tr><td>Steel</td><td data-worksheet="steel_weight">2921.3</td></tr>
+<tr><td>Coating</td><td data-worksheet="coating_weight">601.9</td></tr>
+<tr><td>Contents</td><td data-worksheet="contents_weight">1373.8</td></tr>
+<tr><td>Buoyancy, upward</td><td data-worksheet="buoyancy">2919.4</td></tr>
+<tr><td>Net submerged weight, downward</td><td data-worksheet="effective_weight">1977.6</td></tr>
+</tbody><caption>Table 7.1. Independent annular-weight arithmetic for the fixed coated example.</caption></table>
+<table><thead><tr><th>Quantity</th><th>Expected length (m)</th></tr></thead><tbody>
+<tr><td>Catenary parameter</td><td data-worksheet="catenary_parameter">202.7</td></tr>
+<tr><td>Suspended length</td><td data-worksheet="arc_length">1185.5</td></tr>
+<tr><td>Grounded length</td><td data-worksheet="grounded_length">314.5</td></tr>
+<tr><td>Available-length limiting offset</td><td data-worksheet="offset_limit_m">1005.9</td></tr>
+</tbody><caption>Table 7.2. Independent geometry and available-length boundary at fixed depth.</caption></table>
+<table><thead><tr><th>Quantity</th><th>Expected tension (kN)</th></tr></thead><tbody>
+<tr><td>Horizontal tension</td><td data-worksheet="horizontal_tension_kN">400.9</td></tr>
+<tr><td>Top tension</td><td data-worksheet="top_tension_kN">2378.5</td></tr>
+</tbody><caption>Table 7.3. Independent static equilibrium forces; no capacity is assigned.</caption></table>
+<p>Reproduction tests define these expected values without production model properties,
+analyzers or formatters. Numerical bounds are obtained by independently solving at the
+target offset plus and minus one part per million, matching the model's offset-residual
+criterion. These bounds are propagated to geometry and forces, with an absolute rounding
+allowance of one hundred-millionth in their stated units. Displayed worksheet values are
+checked at one decimal place. These criteria concern arithmetic agreement under the stated
+assumptions, without establishing material strength, fatigue acceptance or physical validation.
+The retained execution record in Table 9.2 covers the selected analytical tests only.</p>
+</div>
 </section>
 
 <section id="recommendations">
@@ -391,7 +444,7 @@ from the main workflow; no complete subsea-module test run is claimed.</p>
 
 <aside id="changes-panel"><h2>Engineering changes</h2>
 <label>Changes since revision <select id="changes-since"><option value="none">Before first issue</option>
-<option value="00">00</option></select></label>
+<option value="00">00</option><option value="01">01</option></select></label>
 <ul id="change-list"></ul></aside>
 <aside id="comments-panel"><h2>Review comments</h2>
 <p>Choose the folder containing this report to read and save comments beside it. A browser with
@@ -410,7 +463,7 @@ place that file beside the report. Comments are local review notes and are not s
 <footer><p>Static analytical calculation. Application acceptance requires the missing design and environmental basis.</p></footer>
 </div>
 <script id="chart-data" type="application/json">{"arc_m": [0.0, 14.818870876499824, 29.63774175299965, 44.456612629499475, 59.2754835059993, 74.09435438249912, 88.91322525899895, 103.73209613549876, 118.5509670119986, 133.3698378884984, 148.18870876499824, 163.00757964149807, 177.8264505179979, 192.64532139449773, 207.46419227099753, 222.28306314749736, 237.1019340239972, 251.92080490049702, 266.7396757769968, 281.55854665349665, 296.3774175299965, 311.1962884064963, 326.01515928299614, 340.83403015949597, 355.6529010359958, 370.4717719124956, 385.29064278899546, 400.10951366549523, 414.92838454199506, 429.7472554184949, 444.5661262949947, 459.38499717149455, 474.2038680479944, 489.0227389244942, 503.84160980099404, 518.6604806774939, 533.4793515539936, 548.2982224304935, 563.1170933069933, 577.9359641834932, 592.754835059993, 607.5737059364928, 622.3925768129926, 637.2114476894924, 652.0303185659923, 666.849189442492, 681.6680603189919, 696.4869311954917, 711.3058020719916, 726.1246729484914, 740.9435438249913, 755.762414701491, 770.5812855779909, 785.4001564544907, 800.2190273309905, 815.0378982074903, 829.8567690839901, 844.67563996049, 859.4945108369898, 874.3133817134897, 889.1322525899894, 903.9511234664893, 918.7699943429891, 933.588865219489, 948.4077360959888, 963.2266069724885, 978.0454778489884, 992.8643487254882, 1007.6832196019881, 1022.5020904784878, 1037.3209613549877, 1052.1398322314876, 1066.9587031079873, 1081.7775739844872, 1096.596444860987, 1111.4153157374867, 1126.2341866139866, 1141.0530574904865, 1155.8719283669864, 1170.690799243486, 1185.509670119986], "length_limit_m": 1500.0, "offset_limit_m": 1005.8986952713127, "offset_m": [250.0, 262.5983115878552, 275.19662317571044, 287.7949347635656, 300.3932463514208, 312.99155793927605, 325.58986952713127, 338.1881811149865, 350.7864927028417, 363.38480429069693, 375.9831158785521, 388.5814274664074, 401.17973905426254, 413.77805064211776, 426.376362229973, 438.97467381782815, 451.5729854056834, 464.1712969935386, 476.7696085813938, 489.36792016924903, 501.96623175710425, 514.5645433449595, 527.1628549328148, 539.7611665206698, 552.3594781085251, 564.9577896963804, 577.5561012842355, 590.1544128720907, 602.752724459946, 615.3510360478011, 627.9493476356563, 640.5476592235116, 653.1459708113669, 665.744282399222, 678.3425939870772, 690.9409055749325, 703.5392171627876, 716.1375287506428, 728.7358403384981, 741.3341519263533, 753.9324635142085, 766.5307751020637, 779.129086689919, 791.7273982777741, 804.3257098656294, 816.9240214534846, 829.5223330413397, 842.120644629195, 854.7189562170502, 867.3172678049054, 879.9155793927606, 892.5138909806159, 905.112202568471, 917.7105141563262, 930.3088257441815, 942.9071373320367, 955.5054489198919, 968.1037605077471, 980.7020720956023, 993.3003836834575, 1005.8986952713127], "required_length_m": [1071.7697247558065, 1076.6570006862771, 1081.6420533407415, 1086.723262906388, 1091.8988775602304, 1097.1676971204326, 1102.5282501960976, 1107.9790708410578, 1113.5191010822566, 1119.147016097589, 1124.8614967706533, 1130.6614941495163, 1136.5462234502124, 1142.51385369447, 1148.5638711130985, 1154.6949807055073, 1160.9064110845634, 1167.1968799300976, 1173.5653702188388, 1180.0106187116355, 1186.5323792422846, 1193.1293971448774, 1199.8009278159188, 1206.5452412020788, 1213.3621061148317, 1220.2507951011326, 1227.210098653023, 1234.2388222821655, 1241.3367471029978, 1248.502215449545, 1255.7350203911521, 1263.0340051128035, 1270.3989672822381, 1277.8278331811532, 1285.3204222290535, 1292.876548591342, 1300.4946464536915, 1308.1740887831866, 1315.9142545460106, 1323.7136282530307, 1331.572064766219, 1339.4894145278192, 1347.4637543681602, 1355.494078473729, 1363.5820204570284, 1371.7239540037015, 1379.9206511863488, 1388.1711419211592, 1396.4744727577245, 1404.8297067525177, 1413.2367668510778, 1421.6955721481736, 1430.2043710067032, 1438.7622764454727, 1447.3684174022035, 1456.023576021578, 1464.726883358967, 1473.4758681543458, 1482.2721342871655, 1491.1140455383545, 1499.999602635649], "shape_x_m": [0.0, 14.805704289421854, 29.53315883628492, 44.10775909825355, 58.46173339545775, 72.53652373164533, 86.28418655486014, 99.66782473754084, 112.66120432178354, 125.24778528304283, 137.41940756995984, 149.1748413933489, 160.51835739578328, 171.45841647027382, 182.00653151206922, 192.1763184308142, 201.9827310908877, 211.44146215873533, 220.5684862599384, 229.37972082492166, 237.890781570305, 246.1168123756979, 254.07237252832772, 261.77136743922694, 269.2270117449802, 276.4518161066215, 283.4575909943964, 290.2554623385745, 296.85589518475575, 303.2687224733053, 309.50317681929033, 315.56792374760533, 321.4710952763911, 327.2203230717632, 332.8227706432979, 338.28516423238153, 343.6138221797374, 348.81468265603905, 353.8933297095751, 358.85501763437964, 363.7046936963454, 368.44701927759064, 373.08638951375485, 377.62695150723187, 382.07262120329824, 386.42709901694104, 390.69388429687046, 394.87628871042256, 398.97744862933286, 403.0003365920605, 406.9477719137547, 410.82243051025046, 414.6268539978216, 418.3634581258764, 422.0345405954321, 425.6422883120782, 429.18878411825966, 432.6760130460888, 436.1058681285265, 439.4801558036601, 442.80060094392616, 446.0688515394863, 449.28648306253007, 452.455002537054, 455.57585233662456, 458.6504137307664, 461.6800101989093, 464.66591052926987, 467.60933171861535, 470.51144168755786, 473.37336182483546, 476.19616937295314, 478.98089966656033, 481.7285482340394, 484.44007277194345, 487.1163950011714, 489.7584024130682, 492.3669499130071, 494.9428613684262, 497.48693106776443, 499.99992509624656], "shape_z_m": [0.0, 0.5409185855192533, 2.1551054629601323, 4.817518708913252, 8.488520789290707, 13.116654055457932, 18.641891936967546, 24.998942367009043, 32.1202633825535, 39.93857603111191, 48.388785024031385, 57.409316052456575, 66.94294070942088, 76.93718858039519, 87.34445032619847, 98.12186536235662, 109.2310709998709, 120.63787193069851, 132.31187262123714, 144.22610173857748, 156.35664738176604, 168.68231431360155, 181.18430908117696, 193.8459553491096, 206.65243948391088, 219.5905850465679, 232.64865408751433, 245.81617278470725, 259.08377887328083, 272.44308838192137, 285.8865793478923, 299.4074903843876, 312.9997321919428, 326.65781032244155, 340.3767577097091, 354.1520756695256, 367.9796822418928, 381.85586689925896, 395.7772507768962, 409.74075169713467, 423.7435533592963, 437.7830781536718, 451.85696313238583, 465.9630387340626, 480.0993099142171, 494.2639393805325, 508.4552326727182, 522.6716248614389, 536.9116686706994, 551.1740238537552, 565.4574476747216, 579.7607863670914, 594.0829674567777, 608.4229928514668, 622.7799326103197, 637.1529193186503, 651.5411430014115, 665.9438465172905, 680.3603213821542, 694.7899039766268, 709.2319720978423, 723.6859418200298, 738.1512646325898, 752.6274248278703, 767.1139371139211, 781.6103444302365, 796.1162159468793, 810.6311452294881, 825.1547485545274, 839.6866633607829, 854.2265468245593, 868.7740745473199, 883.3289393456619, 897.8908501345215, 912.4595308954182, 927.0347197223487, 941.6161679386577, 956.2036392788523, 970.796909129908, 985.3957638271179, 999.9999999999998], "tension_kN": [400.8863406269527, 401.95604524966484, 405.14821355547787, 410.41332337608446, 417.6729886944724, 426.8254483841213, 437.75199567175304, 450.32351089395917, 464.4064250590036, 479.8676892970281, 496.57857308729825, 514.4173088947614, 533.270723511616, 553.035052995413, 573.6161465227765, 594.929244267419, 616.8984813083334, 639.4562340140388, 662.5423930747894, 686.1036207790218, 710.0926296574705, 734.46750463489, 759.1910803337365, 784.2303781255688, 809.5561030062105, 835.1421976389378, 860.9654494012811, 887.0051455720359, 913.2427716126473, 939.6617476290043, 966.2471984097039, 992.9857528358461, 1019.8653688886124, 1046.875180909645, 1074.0053661755423, 1101.2470282212266, 1128.5920946831359, 1156.0332277315458, 1183.563745423341, 1211.1775525349708, 1238.8690796333722, 1266.6332293136943, 1294.4653286799926, 1322.3610872717506, 1350.3165597479046, 1378.3281127334185, 1406.392395313656, 1434.5063127305714, 1462.667002893892, 1490.8718153712293, 1519.1182925647925, 1547.4041528200057, 1575.7272752437818, 1604.0856860382328, 1632.477546179814, 1660.9011402948547, 1689.3548666006182, 1717.8372277968017, 1746.3468228061029, 1774.8823392744387, 1803.4425467517947, 1832.0262904838073, 1860.6324857521113, 1889.2601127084822, 1917.9082116538877, 1946.5758787189686, 1975.2622619071624, 2003.9665574658763, 2032.6880065547778, 2061.4258921835144, 2090.1795363940687, 2118.948297665475, 2147.7315685209046, 2176.528773319131, 2205.3393662141566, 2234.162829268403, 2262.9986707062603, 2291.846423296066, 2320.7056428497344, 2349.57590683025, 2378.4568130581533]}</script>
-<script id="changes-data" type="application/json">{"document": "Subsea module analysis", "revisions": [{"changes": ["First issue: static riser geometry, tension and available-length screening are presented so that the calculation boundary is explicit.", "The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance.", "Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment."], "date": "2026-10-21", "revision": "00"}]}</script>
+<script id="changes-data" type="application/json">{"document": "Subsea module analysis", "revisions": [{"changes": ["First issue: static riser geometry, tension and available-length screening are presented so that the calculation boundary is explicit.", "The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance.", "Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment."], "date": "2026-10-21", "revision": "00"}, {"changes": ["An independent coated-example worksheet was added to check component weights, submerged weight, static forces and the available-length boundary against fixed illustrative inputs.", "The report was registered for isolated regeneration so changes to its inputs and inventory are detected."], "date": "2026-10-22", "revision": "01"}]}</script>
 <script>
 "use strict";
 const data = JSON.parse(document.getElementById("chart-data").textContent);

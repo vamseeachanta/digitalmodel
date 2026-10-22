@@ -70,6 +70,19 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/generate_subsea_module_report.py",
+        ("docs/reports/modules/subsea/subsea-module-report.html",),
+        inputs=(
+            "scripts/templates/subsea_module_report.html",
+            "docs/reports/modules/subsea/validation.json",
+            "docs/reports/modules/subsea/changes.json",
+            "docs/api/cfd/turbulent-flat-plate-verification.html",
+            "docs/api/_assets/brand.css",
+            "src/digitalmodel/subsea/catenary_riser",
+            "tests/subsea",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -312,6 +325,10 @@ def validate_registry(repo: Path) -> list[str]:
     explained = set(DISCOVERY_FALSE_POSITIVES) | set(EXCLUDED_GENERATORS)
     build_output = set(BUILD_OUTPUT_GENERATORS)
     errors = []
+    for entry in GENERATORS:
+        for relative in entry.inputs:
+            if not (repo / relative).exists():
+                errors.append(f"missing generator input: {relative} ({entry.script})")
     if conflicts := sorted(build_output & (registered | explained)):
         errors.append(f"generator has conflicting classifications: {', '.join(conflicts)}")
     explained |= build_output
@@ -358,6 +375,11 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
             if source.is_file():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
+            elif source.is_dir():
+                shutil.copytree(
+                    source, target, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+                )
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:

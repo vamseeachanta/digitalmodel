@@ -9,6 +9,14 @@
         "The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance.",
         "Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment."
       ]
+    },
+    {
+      "revision": "01",
+      "date": "2026-10-22",
+      "changes": [
+        "An independent coated-example worksheet was added to check component weights, submerged weight, static forces and the available-length boundary against fixed illustrative inputs.",
+        "The report was registered for isolated regeneration so changes to its inputs and inventory are detected."
+      ]
     }
   ]
 }

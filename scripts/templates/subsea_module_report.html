@@ -201,7 +201,8 @@ extend to the complete subsea module, dynamic response or field performance.</p>
 <p>The existing unit worksheet independently specifies annular weights, suspended length,
 offset, top tension and angle for an uncoated riser. Those expected values are tested with
 explicit numerical tolerances. The documented coated example is also rebuilt from the public API;
-agreement with that API establishes report consistency, not independent physical validation.</p>
+agreement with that API establishes report consistency. The separate coated worksheet below
+checks arithmetic against fixed inputs; physical validation is not established.</p>
 <h3>7.1 Published geometry comparison</h3>
 <p>The upper vertex-to-support branch of the open <a href="#source-curve">Catenary Curve example,
 2019, page 11</a> is evaluated with its published parameter and rise. The module returns
@@ -214,6 +215,57 @@ from unrounded differences and rounded upward. Reference input and tolerance det
 <p>The example weight is used only to scale horizontal force while preserving H/w. No published
 cable weight, cable capacity or subsea performance is inferred. Field measurements and native
 dynamic-response comparisons are not supplied; physical validation remains NOT_EVALUATED.</p>
+<div id="coated-worksheet">
+<h3>7.2 Independent coated-example worksheet</h3>
+<p>Worksheet inputs are fixed at revision 01 from the public Python example and model
+properties identified in Table 9.2. The steel outside diameter, bore and coated diameter
+are <span data-worksheet-input="outer_diameter">0.508</span>,
+<span data-worksheet-input="bore_diameter">0.458</span> and
+<span data-worksheet-input="coated_diameter">0.608</span> m respectively, from wall and radial coating thicknesses of
+<span data-worksheet-input="wall_thickness">0.025</span> and
+<span data-worksheet-input="coating_thickness">0.050</span> m. Steel, coating, contents and water densities are
+<span data-worksheet-input="density_steel">7850</span>,
+<span data-worksheet-input="coating_density">700</span>,
+<span data-worksheet-input="density_contents">850</span> and
+<span data-worksheet-input="density_water">1025</span> kg/m³; gravity is
+<span data-worksheet-input="gravity">9.81</span> m/s². Depth z is
+<span data-worksheet-input="water_depth">1000.0</span> m, suspended offset x is
+<span data-worksheet-input="horizontal_offset">500.0</span> m
+and available length L is <span data-worksheet-input="length">1500.0</span> m.
+These illustrative inputs remain ASSUMED - to be confirmed.</p>
+<p>The annular mass and displaced-water balance in section 5.1 gives the component
+weights below. With u = x/a, the vertex-shifted equation z = a[cosh(x/a) − 1] gives
+(cosh(u) − 1)/u = z/x. Bisection over 0.1 ≤ u ≤ 10.0 for 100 steps determines a;
+the positive root is unique. Suspended length is a sinh(u), horizontal force is wa,
+and top force is √[(wa)² + (ws)²], using the equilibrium and geometry equations in
+<a href="#source-curve">Catenary Curve, 2019, equations (1), (3), (4), (9), (10) and (34)</a>.
+Setting s = L gives a = (L² − z²)/(2z) and limiting offset a acosh(1 + z/a).</p>
+<table><thead><tr><th>Component</th><th>Expected weight (N/m)</th></tr></thead><tbody>
+<tr><td>Steel</td><td data-worksheet="steel_weight">2921.3</td></tr>
+<tr><td>Coating</td><td data-worksheet="coating_weight">601.9</td></tr>
+<tr><td>Contents</td><td data-worksheet="contents_weight">1373.8</td></tr>
+<tr><td>Buoyancy, upward</td><td data-worksheet="buoyancy">2919.4</td></tr>
+<tr><td>Net submerged weight, downward</td><td data-worksheet="effective_weight">1977.6</td></tr>
+</tbody><caption>Table 7.1. Independent annular-weight arithmetic for the fixed coated example.</caption></table>
+<table><thead><tr><th>Quantity</th><th>Expected length (m)</th></tr></thead><tbody>
+<tr><td>Catenary parameter</td><td data-worksheet="catenary_parameter">202.7</td></tr>
+<tr><td>Suspended length</td><td data-worksheet="arc_length">1185.5</td></tr>
+<tr><td>Grounded length</td><td data-worksheet="grounded_length">314.5</td></tr>
+<tr><td>Available-length limiting offset</td><td data-worksheet="offset_limit_m">1005.9</td></tr>
+</tbody><caption>Table 7.2. Independent geometry and available-length boundary at fixed depth.</caption></table>
+<table><thead><tr><th>Quantity</th><th>Expected tension (kN)</th></tr></thead><tbody>
+<tr><td>Horizontal tension</td><td data-worksheet="horizontal_tension_kN">400.9</td></tr>
+<tr><td>Top tension</td><td data-worksheet="top_tension_kN">2378.5</td></tr>
+</tbody><caption>Table 7.3. Independent static equilibrium forces; no capacity is assigned.</caption></table>
+<p>Reproduction tests define these expected values without production model properties,
+analyzers or formatters. Numerical bounds are obtained by independently solving at the
+target offset plus and minus one part per million, matching the model's offset-residual
+criterion. These bounds are propagated to geometry and forces, with an absolute rounding
+allowance of one hundred-millionth in their stated units. Displayed worksheet values are
+checked at one decimal place. These criteria concern arithmetic agreement under the stated
+assumptions, without establishing material strength, fatigue acceptance or physical validation.
+The retained execution record in Table 9.2 covers the selected analytical tests only.</p>
+</div>
 </section>
 
 <section id="recommendations">
