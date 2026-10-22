@@ -31,7 +31,12 @@ def test_pressure_values_survive_csv_retrieval(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "depth", [-1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None]
+    "depth",
+    [
+        -1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None,
+        pytest.param(10**400, id="positive-overflow"),
+        pytest.param(-(10**400), id="negative-overflow"),
+    ],
 )
 def test_invalid_depth_does_not_overwrite_file(tmp_path, depth):
     """Nonnegative finite depth is the downward-depth domain of Eq. 14.9."""
@@ -43,7 +48,12 @@ def test_invalid_depth_does_not_overwrite_file(tmp_path, depth):
 
 
 @pytest.mark.parametrize(
-    "value", [0, -1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None]
+    "value",
+    [
+        0, -1, float("nan"), float("inf"), True, False, "2", 2 + 0j, None,
+        pytest.param(10**400, id="positive-overflow"),
+        pytest.param(-(10**400), id="negative-overflow"),
+    ],
 )
 @pytest.mark.parametrize("parameter", ["density_kg_m3", "gravity_m_s2"])
 def test_invalid_material_or_gravity(tmp_path, parameter, value):

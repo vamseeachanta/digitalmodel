@@ -56,6 +56,8 @@ def test_irrotational_field_has_zero_curl():
         np.bool_(False),
         np.array(1.0),
         [1],
+        pytest.param(10**400, id="positive-overflow"),
+        pytest.param(-(10**400), id="negative-overflow"),
     ],
 )
 @pytest.mark.parametrize("axis", ["dx_m", "dy_m"])

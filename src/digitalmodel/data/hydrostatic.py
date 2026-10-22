@@ -17,7 +17,10 @@ def _nonnegative(value: float, name: str) -> float:
     """Require finite nonnegative values for the gauge-pressure domain."""
     if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError(f"{name} must be a finite nonnegative real number")
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError(f"{name} must be finite and nonnegative") from exc
     if not math.isfinite(number) or number < 0:
         raise ValueError(f"{name} must be finite and nonnegative")
     return number
