@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Well calculation test coverage and evidence limits</title>
+<style>
+body { max-width: 72rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 sans-serif; color: #182638; }
+table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+th, td { padding: .6rem; border: 1px solid #bac7d4; text-align: left; vertical-align: top; }
+code { overflow-wrap: anywhere; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+.note { border-left: .3rem solid #a45a00; padding-left: 1rem; }
+a { color: #124c85; }
+</style>
+</head>
+<body>
+<h1>Well calculation test coverage and evidence limits</h1>
+<h2>Summary</h2>
+<p>The added tests compare specified casing geometry and axial yield, pipe-displacement geometry,
+two-column hydrostatics, interpolation and drilling-window bookkeeping with independent hand values.
+All six workflow adapters receive direct execution, output readback and missing-input checks.
+Unopened standard equations and nonzero friction normalization remain <strong>NOT_EVALUATED</strong>.
+Passing invariants do not establish the absolute engineering ratings.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-22</td><td>Hand-calculation cases and evidence gaps are recorded to distinguish numeric validation from regression invariants.</td></tr>
+<caption>Table 1. Initial issue of the calculation coverage record.</caption>
+</table>
+<h2>Coverage</h2>
+<table>
+<tr><th>Slice</th><th>Covered public behavior</th><th>Independent basis and limit</th></tr>
+<tr><td>1: casing</td><td><code>pipe_body_yield_strength</code>, <code>Casing.id_in</code>, <code>d_over_t</code>, <code>metal_area_in2</code> and <code>body_yield_lbf</code> at two sizes and two specified strengths; <code>internal_yield_pressure</code> and <code>burst_psi</code> limiting/scaling checks.</td><td>Annular geometry and stress = force/area [1]. The strength inputs are specified values, rather than qualified grade minima. Absolute burst and its wall factor remain NOT_EVALUATED.</td></tr>
+<tr><td>2: collapse</td><td><code>collapse_pressure</code>, <code>collapse_psi</code> and <code>collapse_regime</code>: geometric similarity and continuity at each implemented regime interface.</td><td>The public classifier brackets all three interfaces without importing private constants. Absolute pressure, independently sourced regime boundaries and the private coefficient equations remain NOT_EVALUATED.</td></tr>
+<tr><td>3: tripping</td><td><code>displacement_factor</code>, <code>effective_velocity</code>, zero-rheology <code>evaluate</code>, Newtonian pressure scaling, inverse-margin scaling and nonpositive-diameter refusals.</td><td>Independent circular-area balance, specified clinging input and exact zero-pressure limit. Nonzero pressure normalization and a hand-derived nonzero inverse speed remain NOT_EVALUATED [3].</td></tr>
+<tr><td>4: window</td><td><code>DrillingWindow.from_gradients</code>, <code>pore_at</code>, <code>fracture_at</code>, <code>pressure_point</code>, hydrostatics, mud-weight bounds, all <code>RiserMargin</code> fields, static/dynamic window widths and closed/infeasible windows.</td><td>Published field-unit hydrostatic conversion [2], hand linear interpolation and supplied interval margins. Zero distribution spread avoids dependence on an unqualified quantile coefficient.</td></tr>
+<tr><td>5: adapters</td><td><code>run_well_bore_design</code>, <code>run_well_hydraulics</code>, <code>run_swab_surge</code>, <code>run_rop_analysis</code>, <code>run_tubular_design</code>, <code>run_casing_design</code>.</td><td>Numeric JSON/CSV readback for geometry and limiting cases; cost additivity for the unqualified bore-design lookup. Missing required inputs are refused before output is written. No standard design-factor acceptance is established.</td></tr>
+<caption>Table 2. Added coverage is bounded by the evidence available for each method.</caption>
+</table>
+<h2>Worked example: specified casing section</h2>
+<p>Inputs: outside diameter 9.625 in, wall 0.472 in, specified axial yield stress 80,000 psi.
+The inner diameter is 9.625 &minus; 2 &times; 0.472 = 8.681 in.
+The diameter-to-wall ratio is 20.4, displayed to one decimal place.</p>
+<p>Method: the metal area is mean circumference times wall,
+A = &pi; &times; (9.625 &minus; 0.472) &times; 0.472 = 13.6 in<sup>2</sup> displayed.
+Equation 12.34 of [1] gives F = stress &times; A.
+Using the unrounded area, the answer is <strong>1,085,788.7 lbf</strong>.
+The tests retain the unrounded reference and compare at relative tolerance 1e-12,
+which covers reference rounding and binary arithmetic. It is not an engineering allowance.</p>
+<p>The second section uses outside diameter 7.000 in and wall 0.362 in, giving inner diameter
+6.276 in and axial yield force 603,928.7 lbf at the same specified strength.
+At the second specified strength, 110,000 psi, the two force answers are 1,492,959.5 lbf
+and 830,402.0 lbf, respectively. Both sizes are tested at both strengths.
+The wall factor and an absolute burst answer are omitted because the standard clause evidence is absent.</p>
+<h2>Worked example: open and closed pipe motion</h2>
+<p>Inputs: hole diameter 10 in, pipe OD 6 in, pipe ID 4 in, speed magnitude 160 ft/min,
+and specified clinging input 0.25. Hole area is 25&pi;, pipe envelope area 9&pi;,
+bore area 4&pi; and annular area 16&pi;, all in in<sup>2</sup>.</p>
+<p>Closed displacement is 9/16; open steel displacement is 5/(16+4) = 1/4.
+The module's specified clinging input adds to those ratios, giving effective velocities
+<strong>130.0 ft/min closed</strong> and <strong>80.0 ft/min open</strong>.
+This checks the area balance under the documented open-pipe split assumption; it does not establish
+an empirical clinging calibration. With specified zero viscosity and zero yield stress, pressure is
+exactly zero and both equivalent mud weights remain at the supplied 12 ppg.</p>
+<h2>Worked example: hydrostatics and interval margins</h2>
+<p>Inputs: upper column 1,000 ft at 8 ppg; lower column 1,000 ft at 16 ppg.
+The conversion in [2] is 0.052 psi/(ppg ft).
+The column pressures are 416.0 psi and 832.0 psi, giving <strong>1,248.0 psi</strong> total,
+compared with <strong>1,664.0 psi</strong> for a single 16 ppg column over 2,000 ft.
+The equivalent two-column weight is 12 ppg. For a supplied pore bound 10 ppg,
+the after-loss riser margin is +2 ppg under the implemented static criterion.</p>
+<p>For supplied pore and fracture bounds 10 and 14 ppg, kick margin 0.5 ppg,
+loss margin 1 ppg and ECD increment 0.75 ppg, the static interval is [10.5, 13] ppg,
+width 2.5 ppg. The dynamic interval is [10.5, 12.3] ppg displayed, width 1.8 ppg displayed;
+the tests retain the unrounded interval and width.
+An ECD increment 2.5 ppg closes that interval; 3 ppg gives width &minus;0.5 ppg.
+The implementation requires positive width, so both closed and inverted intervals are infeasible.</p>
+<h2>Evidence and NOT_EVALUATED items</h2>
+<ul>
+<li>API TR 5C3 / ISO 10400 edition, applicable clause, wall factor, collapse coefficients,
+absolute collapse pressure and independent regime-boundary values: NOT_EVALUATED.
+The public API reference request returned a general page without the requested clause text [4].
+No licensed standard is copied.</li>
+<li>The nonzero swab/surge pressure and independent nonzero trip-speed benchmark: NOT_EVALUATED.
+The cited journal endpoint returned HTTP 403 [3]. Scaling and inverse round trips cannot qualify
+its dimensional coefficient or the engineering applicability of the screening model.</li>
+<li>Negative trip speeds are interpreted as magnitudes by the documented API; zero speed is permitted.
+A requirement to reject nonpositive speed is not established. Nonpositive diameters are refused.</li>
+<li>Nonzero ROP predictions, bore-design lookup values, cost calibration, catalog strengths/dimensions,
+standard rounding rules, design factors, envelope limits and damaged-section applicability remain
+NOT_EVALUATED by these added tests. Casing-adapter output checks exercise the current catalog and
+nearest-thousand display contract; these do not qualify the catalog source.</li>
+<li>The complete well test command encounters an unchanged missing-dependency collection error in
+<code>tests/well/test_swab_surge.py</code>: <code>ModuleNotFoundError: No module named 'assetutilities'</code>.
+That engine smoke test is not established by the direct adapter tests.</li>
+</ul>
+<h2>Sources and retrieval evidence</h2>
+<ol>
+<li><a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">OpenStax, University Physics Volume 1 (2016), section 12.3, equation 12.34</a>:
+stress is force per cross-sectional area. HTTP 200; retrieved 2026-10-22T19:15:56Z.
+Response SHA-256: <code>cadecb79bbce5b6feaaac53b80226cbbb9014036318c6bb4dd1a7adeff6449e0</code>.</li>
+<li><a href="https://glossary.slb.com/en/terms/h/hydrostatic_pressure">SLB Energy Glossary, hydrostatic pressure, drilling definition</a>:
+undated web edition; the field-unit conversion is given explicitly. HTTP 200;
+retrieved 2026-10-22T19:15:55Z. Response SHA-256:
+<code>f408b257a2b192a815aa4182792cc5383ab946d368eea73e08835679169ca399</code>.</li>
+<li><a href="https://doi.org/10.2118/1546-G-PA">Wellbore Pressure Surges Produced by Pipe Movement, JPT (1961), DOI 10.2118/1546-G-PA</a>:
+full text was not inspected because access returned HTTP 403, 2026-10-22T19:15:55Z.
+Public DOI metadata confirmed the title, journal and year (HTTP 200, 2026-10-22T19:33:07Z);
+that metadata does not expose the governing equation. No formula or coefficient is
+attributed to the inaccessible full text.</li>
+<li><a href="https://www.api.org/products-and-services/standards/important-standards-announcements/5c3">API public reference request</a>:
+HTTP 200, 2026-10-22T19:15:56Z, but no applicable standard clause text was supplied.
+Response SHA-256: <code>2f7242786baada14b95dadf4281f59b0387a769a5d1370ef11bb3313ca218bfa</code>.</li>
+</ol>
+<p class="note">The tests establish the listed arithmetic cases and invariants only.
+Acceptance of absolute standard capacities or operating limits requires the missing source text,
+applicability review and an independent nonzero benchmark. Retrieved responses and calculation
+scratch records are retained separately; this guide is the repository deliverable.</p>
+</body>
+</html>
