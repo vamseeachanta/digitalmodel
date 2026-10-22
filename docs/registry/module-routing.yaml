@@ -67,6 +67,13 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/benchmarks/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
+  - module: cad_io
+    entry_point: src/digitalmodel/cad_io/
+    maturity: development
+    key_tests: [tests/specialized/cad_io/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#cad_io
+    report_navigation:
+      - src/digitalmodel/cad_io/REPRODUCE.md
   - module: cathodic_protection
     entry_point: src/digitalmodel/cathodic_protection/
     submodules:
