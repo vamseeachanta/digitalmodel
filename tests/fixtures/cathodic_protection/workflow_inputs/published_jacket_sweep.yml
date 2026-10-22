@@ -1,0 +1,12 @@
+base_input: published_jacket_84m.yml
+mode: published
+parameters:
+  - path: environment.seawater_temperature_C
+    values: [5, 10, 15, 20, 25]
+  - path: design_data.design_life
+    values: [20, 25, 30]
+  - path: environment.seawater_resistivity_ohm_m
+    values: [0.15, 0.22, 0.30, 0.40]
+standard_table_zones:
+  upper-bare-seawater: 15
+  lower-bare-seawater: 57
