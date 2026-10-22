@@ -1357,9 +1357,9 @@ workflows:
     status: experimental
     latest: false
     input: examples/workflows/api579-tank-settlement-level3/input.json
-    invocation: "uv run python -m digitalmodel.asset_integrity.tank_settlement_level3 {input} --output-dir results"
+    invocation: "uv run --no-sources python -m digitalmodel.asset_integrity.tank_settlement_level3 {input} --output-dir {output_dir}"
     outputs:
-      - results/handoff.json
-      - results/report.html
+      - "{output_dir}/handoff.json"
+      - "{output_dir}/report.html"
     test: tests/asset_integrity/test_tank_settlement_level3.py::test_cli_and_registry
     runtime: standalone

@@ -84,8 +84,8 @@ def _sequence(value, name, *, nonempty=False):
         raise ValueError(f"{name} must be {'a nonempty' if nonempty else 'a'} list")
 
 
-def _plate(block, required, optional=()):
-    _fields(block, (*required, "material_ref"), optional)
+def _plate(block, required, additional_required=()):
+    _fields(block, (*required, "material_ref", *additional_required))
     for key in required:
         _positive(block[key], key)
     _text(block["material_ref"], "material_ref")
@@ -110,12 +110,12 @@ def _geometry(g):
     _sequence(g["wind_girders"], "wind_girders")
     for girder in g["wind_girders"]:
         _plate(girder, ("area_m2",), ("elevation_m",))
-        elevation = _number(girder.get("elevation_m"), "elevation_m", minimum=0)
+        elevation = _number(girder["elevation_m"], "elevation_m", minimum=0)
         if elevation > height:
             raise ValueError("Girder elevation exceeds shell height")
     if "roof" in g:
         _plate(g["roof"], ("thickness_m",), ("type",))
-        if g["roof"].get("type") != "flat":
+        if g["roof"]["type"] != "flat":
             raise ValueError("Only explicit flat roof preparation is supported")
     return radius, height
 
@@ -236,16 +236,22 @@ def _checks():
                    "reference_2007": f"API 579-1/ASME FFS-1 (2007), {clause}",
                    "reference_current": "API 579-1/ASME FFS-1 (2016/2021), Annex 2D",
                    "crosswalk_status": "subclause_not_verified",
-                   "required_evidence": evidence}
+                   "required_evidence": list(evidence)}
             for name, (clause, role, evidence) in REQUIREMENTS.items()}
 
 
 def _decision():
+    from digitalmodel.asset_integrity.applicability import flagged
     from digitalmodel.asset_integrity.assessment.ffs_decision import decide
 
     # Non-finite margin selects ESCALATE before any pressure-specific bands.
     # No numerical acceptance limit or remaining life is inferred.
-    decision = decide(float("nan"), float("nan"), float("nan"), "tank").to_dict()
+    applicability = flagged(
+        "TANK_LEVEL3_NOT_EVALUATED",
+        "Level 3 checks not evaluated: mesh, material criteria and converged solver evidence "
+        "are missing; engineering acceptance is not established.")
+    decision = decide(float("nan"), float("nan"), float("nan"), "tank",
+                      applicability=applicability).to_dict()
     for key in ("margin", "margin_allowable", "remaining_life_yr", "rsf", "rsf_a"):
         decision[key] = None
     decision["governing_criterion"] = (
@@ -290,25 +296,53 @@ def prepare_assessment(settings):
     return result
 
 
+def _table_rows(block, prefix=""):
+    """Flatten nested inventory and evidence into individually escaped table rows."""
+    rows = {}
+    for key, value in block.items():
+        label = f"{prefix}.{key}" if prefix else str(key)
+        if isinstance(value, dict):
+            rows.update(_table_rows(value, label))
+        elif isinstance(value, list):
+            if not value:
+                rows[label] = "None supplied"
+            for index, item in enumerate(value, 1):
+                rows.update(_table_rows({f"{label}[{index}]": item}))
+        else:
+            rows[label] = value
+    return rows
+
+
 def _report(result):
     from digitalmodel.asset_integrity.assessment.ffs_report import FFSReport
 
+    inventory = _table_rows(result["model_recipe"])
+    for key, value in inventory.items():
+        if key == "bottom_inner_radius_m" or key.endswith((
+                ".z_bottom_m", ".z_top_m", ".pressure_bottom_pa", ".pressure_top_pa")):
+            inventory[key] = format(value, ".3g")
     sections = {
-        "Revision history": {"1, 2026-10-20": "Initial preparation and explicit missing evidence"},
+        "Revision history": {
+            "1, 2026-10-20": "Initial preparation and explicit missing evidence",
+            "2, 2026-10-22": "Input load basis, harmonics and evidence tabulated for traceability"},
         "Input basis": {"basis": result["input"]["basis"],
                         "input_sha256": result["input_sha256"]},
-        "Component inventory (SI)": result["model_recipe"],
-        "Preparation (SI)": {"self_weight_n": result["loads"]["self_weight_n"],
-                              "bottom_pressure_pa": result["loads"]["bottom_pressure_pa"]},
+        "Component inventory (SI)": inventory,
+        "Load basis (SI)": result["input"]["loads"],
+        "Settlement basis (SI)": result["input"]["settlement"],
+        "Applicability": result["decision"]["applicability"],
+        "Preparation (SI)": {key: format(result["loads"][key], ".3g")
+                             for key in ("self_weight_n", "bottom_pressure_pa")},
         "Settlement samples (degrees, metres)": {
-            str(sample["angle_deg"]): sample["uz_m"]
+            str(sample["angle_deg"]): format(sample["uz_m"], ".3g")
             for sample in result["loads"]["bottom_edge_samples"]},
         **result["checks"],
         "Handoff requirements": {"required": result["handoff_required"]},
         "Sources": SOURCES,
     }
     return FFSReport.generate_screening_html(
-        "TANK", "Tank settlement Level 3 preparation", result["decision"], sections, [
+        "TANK", "Tank settlement Level 3 preparation", result["decision"],
+        {heading: _table_rows(metrics) for heading, metrics in sections.items()}, [
             "No solver is discovered or executed, even when available; this is a preparation package.",
             "Mesh sizes are intent only; sampled displacements are not FE boundary conditions.",
             "Full harmonics retain mean and planar tilt; survey reduction is not performed.",
@@ -317,7 +351,19 @@ def _report(result):
             "Wind, support contact, load sequence and junction compatibility remain NOT_EVALUATED.",
             "Material references are unverified identifiers, not a material-library qualification.",
             "2007 clause pointers are issue requirements; current subclause equivalence is unverified.",
+            "Prepared loads and sampled displacements are displayed to three significant figures; "
+            "input values retain their supplied precision in the tables and JSON handoff.",
         ])
+
+
+def _unique_object(pairs):
+    """Reject conflicting or repeated names at every JSON object depth."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON key")
+        result[key] = value
+    return result
 
 
 def main(argv=None):
@@ -326,11 +372,13 @@ def main(argv=None):
     parser.add_argument("input", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args(argv)
-    result = prepare_assessment(json.loads(args.input.read_text(encoding="utf-8")))
+    result = prepare_assessment(json.loads(
+        args.input.read_text(encoding="utf-8"), object_pairs_hook=_unique_object))
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "handoff.json").write_text(
-        json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    (args.output_dir / "report.html").write_text(result["report_html"], encoding="utf-8")
+        json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
+    (args.output_dir / "report.html").write_text(
+        result["report_html"], encoding="utf-8", newline="\n")
     print(result["status"])
     return 0
 

@@ -7,12 +7,15 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5
 code{overflow-wrap:anywhere}.warning{border-left:4px solid #a40;padding:1rem;background:#fff4e5}</style></head>
 <body>
 <h1>Tank settlement Level 3 preparation</h1>
+<p>Draft for maintainer review.</p>
 <p class="warning">The result is a preparation handoff with an ESCALATE verdict.
 No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acceptance is established.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Initial geometry/load preparation and explicit missing evidence;
-unavailable code factors and solver results are kept out of acceptance decisions.</td></tr></table>
+unavailable code factors and solver results are kept out of acceptance decisions.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>Strict JSON loading, explicit applicability gaps and tabulated input evidence;
+output placeholders align the command, registry and readback tests.</td></tr></table>
 <p>Table 1. Document revisions.</p>
 <h2>Scope and executable plan</h2>
 <p>Scope is tracked by issue 2174.
@@ -33,7 +36,9 @@ they do not supply constitutive properties or qualification. All steel component
 the annular ring occupies radii R − w to R, so plate weight is counted once.
 No overhang, stepped plate elevation, sloped roof, overlapping plates, foundation contact or weld topology is modelled.
 The top angle and wind girders supply section area for weight inventory only; their stiffness is not calculated.
-A flat roof is optional. Mesh target and junction sizes describe intent, not generated elements.</p>
+A flat roof is optional; when present, its type is required and is <code>flat</code>.
+Every supplied girder requires an elevation, including an explicit zero at the bottom.
+Mesh target and junction sizes describe intent, not generated elements.</p>
 <p>Full bottom-edge displacement is u<sub>z</sub>(θ) = m + Σ[a<sub>n</sub>cos(nθ) + b<sub>n</sub>sin(nθ)].
 This is finite Fourier synthesis from
 <a href="https://dlmf.nist.gov/1.8#E1">NIST DLMF (2010), equation 1.8.1</a>,
@@ -54,10 +59,13 @@ Wind pressure and its reference, when supplied, are retained as unevaluated inte
 <p>The committed <a href="../../../examples/workflows/api579-tank-settlement-level3/input.json">input</a>
 is synthetic and does not represent an operating tank. All numerical geometry, loads, mesh sizes and coefficients
 are selected for arithmetic demonstration. They are not standard limits or measured data.</p>
-<pre><code>python -m digitalmodel.asset_integrity.tank_settlement_level3 \
+<pre><code>uv run --no-sources python -m digitalmodel.asset_integrity.tank_settlement_level3 \
   examples/workflows/api579-tank-settlement-level3/input.json \
-  --output-dir results</code></pre>
-<p>The explicit output directory should be a retained calculation location outside the source checkout.
+  --output-dir "{output_dir}"</code></pre>
+<p>Replace <code>{output_dir}</code> with a retained calculation location outside the source checkout
+before running the command. Quote the substituted input and output paths when they contain spaces.
+The registry uses the same placeholder in its invocation and both output entries;
+output paths are resolved from that supplied directory, independently of the working directory.
 The command writes <code>handoff.json</code> and <code>report.html</code>.
 Exit zero means the handoff was written; the engineering result remains ESCALATE.
 The workflow registry identifier is <code>api579-tank-settlement-level3</code>.
@@ -91,11 +99,17 @@ strain extraction, mesh convergence and service criterion.</td></tr></table>
 Exact current subclauses are <strong>not verified</strong>; no guessed crosswalk or licensed numerical factor is supplied.
 Licensed clause text was not accessed. No acceptance constants are emitted, so no standards-derived numeric sidecar is implied.
 The public sources above were opened successfully on 2026-10-20. They support only the stated arithmetic.</p>
-<h2>Verification and review limits</h2>
+<h2>Checks and review limits</h2>
 <p>The tests exercise independent harmonic, pressure and weight anchors; invalid scalars and structures;
 optional roof, girder and wind intent; JSON serialization; missing-check escalation;
 and CLI output readback plus registry linkage. The input digest binds the handoff to its supplied configuration,
 not to source authenticity, material qualification or solver results.</p>
+<p>Repeated JSON keys are rejected at every object depth before any output is written, even when
+their values agree or their spelling uses Unicode escapes. Reports and handoffs use UTF-8 with LF newlines.
+The report tables include load densities, gravity, fill height, harmonic coefficients, individual course fields
+and each missing-evidence item. Prepared loads and sampled displacements are displayed to three significant
+figures; input values retain their supplied precision. Applicability remains flagged as unevaluated,
+and returned evidence lists are independent between handoffs.</p>
 <p>Local adversarial inspection identifies three required boundaries: sampled harmonics cannot be described as a solved mesh;
 reported collapse cannot govern acceptance for displacement-controlled settlement; and missing code evidence cannot be filled from memory.
 All three boundaries are retained in the handoff and tests. Separate-provider review remains required before merge.</p>
