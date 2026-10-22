@@ -29,7 +29,7 @@ caption{caption-side:bottom;text-align:left}th,td{vertical-align:top;overflow-wr
 <header>
 <p class="kicker">Engineering calculation module</p>
 <h1>Naval architecture module analysis</h1>
-<p class="sub">Draft for client review</p>
+<p class="sub">Draft for review</p>
 <p>Revision $revision · $date</p>
 <nav aria-label="Contents"><a href="#summary">Summary</a> · <a href="#basis">Design basis</a> ·
 <a href="#example">Worked example</a> · <a href="#validation">Validation</a> ·
@@ -56,7 +56,8 @@ an operational loading decision is made. <a href="#limits">Section 8</a> defines
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>00</td><td>2026-10-21</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr>
-<tr><td>$revision</td><td>$date</td><td>The source digest includes test fixtures, packaged data and calculation dependencies; independent hand calculations check both stability outputs throughout the sensitivity; isolated regeneration checks both generated outputs to detect stale evidence.</td></tr></tbody>
+<tr><td>01</td><td>2026-10-22</td><td>The source digest includes test fixtures, packaged data and calculation dependencies; independent hand calculations check both stability outputs throughout the sensitivity; isolated regeneration checks both generated outputs to detect stale evidence.</td></tr>
+<tr><td>$revision</td><td>$date</td><td>The digest is limited to explicit report inputs and normalized across checkouts; suite counts retain their command and environment as historical evidence. Input controls and draft status are clarified.</td></tr></tbody>
 <caption>Revision record. The first issue is preserved and the evidence corrections are recorded.</caption></table>
 </section>
 <section id="introduction">
@@ -77,7 +78,7 @@ Their callable interfaces and example records are identified in Section 9.2. A c
 engineering qualification across these sub-areas is not established by this report.</p>
 </section>
 <section id="controls">
-<h2>3 Summary</h2>
+<h2>3 Input Controls</h2>
 <p>The input controls are established before the stability function is called. The result is interpreted as
 an initial-heel static correction within the stated tank model.</p>
 <ul>
@@ -296,11 +297,14 @@ record. The tank is not accepted for an operational condition by this report.</p
 Numerical text and chart points are generated from module calls. The retained document is rebuilt
 and compared byte for byte, and an independent arithmetic identity is checked. Local chart controls,
 comment export and change records are included for review. Test outcomes and exclusions are carried
-in Table C; they do not replace engineering acceptance. The source digest includes the suite's
-repository-owned fixtures, packaged data and calculation dependencies. Changes to these inputs
-invalidate the retained check record.</p>
+in Table C; they do not replace engineering acceptance. The source digest covers only the explicit
+report input manifest in <code>checks.json</code>, using POSIX-relative names and LF-normalized bytes.
+Changes to these inputs invalidate the report record; unrelated repository changes do not.
+Suite counts are a dated receipt for the recorded command, Python version, installed packages and
+CAD extra. They are not a statement that the current full suite has passed.</p>
 $check_table
-<p>The skipped cases require external reference geometry or tabular data, or the pinned
+<p>Browser interactions are skipped when Chromium is unavailable. Other skipped cases require
+external reference geometry or tabular data, or the pinned
 fixture-generation environment. The expected failure concerns missing
 hydrostatic-table data in an existing textbook-labelled example. No physical validation is inferred
 from the software outcome counts.</p>
@@ -324,7 +328,7 @@ only in this open document.</p>
 </div>
 </section>
 </main>
-<footer>Naval architecture module analysis · Revision $revision · Draft for client review</footer>
+<footer>Naval architecture module analysis · Revision $revision · Draft for review</footer>
 </div>
 <script id="example-data" type="application/json">$example_data</script>
 <script id="changes-data" type="application/json">$changes_data</script>

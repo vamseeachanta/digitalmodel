@@ -13,6 +13,8 @@ import argparse
 import hashlib
 import html
 import json
+from importlib import metadata
+import platform
 import math
 import re
 import xml.etree.ElementTree as ET
@@ -24,34 +26,34 @@ from digitalmodel.naval_architecture.stability import G, LT_TO_LB, free_surface_
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/navalarchitecture"
 STYLE_EXEMPLAR = ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html"
-REVISION = "01"
+REVISION = "02"
 DATE = "2026-10-22"
 
 
+# Suite counts are a historical receipt, not a freshness gate for unrelated code.
+# Only these text inputs determine the calculation and presentation in this report.
+REPORT_INPUTS = (
+    "scripts/reporting/build_navalarchitecture_module_report.py",
+    "src/digitalmodel/naval_architecture/stability.py",
+    "tests/naval_architecture/test_module_report.py",
+    "docs/reports/modules/navalarchitecture/example.json",
+    "docs/reports/modules/navalarchitecture/report.template.html",
+    "docs/api/cfd/turbulent-flat-plate-verification.html",
+    "docs/api/_assets/brand.css",
+)
+
+
 def evidence_digest() -> str:
-    """Bind the test receipt to the calculation, test and presentation sources."""
-    paths = {path for directory in (
-        "src", "scripts", "tests/naval_architecture",
-        "tests/fixtures/test_vectors/naval_architecture", "tests/citations/fixtures",
-        "data", "docs/domains/marine-engineering",
-    ) for path in (ROOT / directory).rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts
-        and path.suffix in {".py", ".yml", ".yaml", ".json", ".csv", ".dat", ".md"}}
-    paths.update(path for path in (ROOT / "docs/api/cfd/cases").glob("*/geometry/**/*")
-                 if path.is_file())
-    paths.update([Path(__file__).resolve(), REPORT / "example.json", REPORT / "report.template.html",
-                  STYLE_EXEMPLAR, ROOT / "docs/api/_assets/brand.css",
-                  ROOT / "tests/conftest.py", ROOT / "conftest.py",
-                  ROOT / "pytest.ini", ROOT / "pyproject.toml"])
+    """Hash explicit POSIX-relative input names and LF-normalized text bytes."""
     digest = hashlib.sha256()
-    for path in sorted(paths):
-        digest.update(path.relative_to(ROOT).as_posix().encode() + b"\0")
-        digest.update(path.read_bytes())
+    for relative in sorted(REPORT_INPUTS):
+        digest.update(relative.encode("utf-8") + b"\0")
+        digest.update((ROOT / relative).read_bytes().replace(b"\r\n", b"\n"))
         digest.update(b"\0")
     return digest.hexdigest()
 
 
-def record_checks(junit_path: Path) -> None:
+def record_checks(junit_path: Path, *, command: str) -> None:
     """Retain aggregate outcomes without local directories or personal metadata."""
     cases = list(ET.parse(junit_path).iter("testcase"))
     if not cases or any(not (case.get("classname", "").startswith("tests.naval_architecture.") or
@@ -62,8 +64,15 @@ def record_checks(junit_path: Path) -> None:
     failed = sum(case.find("failure") is not None or case.find("error") is not None for case in cases)
     skipped = [item for case in cases if (item := case.find("skipped")) is not None]
     expected = sum(item.get("type") == "pytest.xfail" for item in skipped)
-    record = {"date": DATE, "scope": "Naval architecture tests and report sources",
-              "command": "python -m pytest tests/naval_architecture -q -o addopts='' --tb=short",
+    packages = {distribution.metadata["Name"].lower(): distribution.version
+                for distribution in metadata.distributions()}
+    extras = ["cad"] if {"rhino3dm", "cadquery-ocp"} <= packages.keys() else []
+    record = {"date": DATE, "scope": "Historical naval architecture suite outcomes; report input manifest",
+              "command": command,
+              "environment": {"python": platform.python_version(),
+                              "implementation": platform.python_implementation(),
+                              "extras": extras, "packages": dict(sorted(packages.items()))},
+              "source_files": sorted(REPORT_INPUTS),
               "source_digest": evidence_digest(), "tests": len(cases),
               "passed": len(cases) - failed - len(skipped), "failed": failed,
               "skipped": len(skipped) - expected, "expected_failures": expected,
@@ -210,13 +219,13 @@ def report_files() -> dict[str, str]:
         [[label, str(checks[key]), "Retained check record"] for label, key in
          [("Passed", "passed"), ("Failed", "failed"), ("Skipped", "skipped"),
           ("Expected failure", "expected_failures"), ("Total", "tests")]],
-        "Table C. Recorded software checks for the stated source set; these counts do not denote engineering acceptance.")
+        "Table C. Historical software checks in the recorded environment; these counts do not denote current suite results or engineering acceptance.")
     replacements["example_data"] = json.dumps(data, sort_keys=True).replace("<", "\\u003c")
     changes = {"document": "navalarchitecture-module-report", "revision": REVISION,
                "date": DATE, "changes": [
-                   {"section": "summary", "description": "Revision history preserves the first issue and records the evidence corrections."},
-                   {"section": "example", "description": "Independent hand calculations check the correction and corrected metacentric height at every sensitivity point."},
-                   {"section": "validation", "description": "The source digest includes calculation dependencies, packaged data and test fixtures; isolated regeneration checks both generated outputs."}]}
+                   {"section": "summary", "description": "Revision history preserves earlier issues and records the report input manifest and receipt provenance."},
+                   {"section": "example", "description": "Independent hand calculations check both stability outputs and the percentage reduction."},
+                   {"section": "validation", "description": "An explicit report input manifest uses POSIX ordering and normalized line endings; suite counts retain their command and environment as historical evidence."}]}
     replacements["changes_data"] = json.dumps(changes, sort_keys=True)
     replacements["revision"] = REVISION
     replacements["date"] = DATE
@@ -250,9 +259,12 @@ if __name__ == "__main__":
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--record-checks", type=Path,
                         help="Retain aggregate outcomes from an actual module-wide JUnit receipt before building")
+    parser.add_argument("--test-command", help="Exact test command with portable output-directory variables")
     args = parser.parse_args()
     if args.record_checks:
         if args.check:
             parser.error("--record-checks writes evidence and cannot be combined with --check")
-        record_checks(args.record_checks)
+        if not args.test_command:
+            parser.error("--record-checks requires --test-command for receipt provenance")
+        record_checks(args.record_checks, command=args.test_command)
     build_report(args.output_dir, check=args.check)

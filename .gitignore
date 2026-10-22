@@ -586,6 +586,7 @@ docs/reports/abstracted-hulls/*
 !docs/reports/modules/
 docs/reports/modules/*
 !docs/reports/modules/navalarchitecture/
+docs/reports/modules/navalarchitecture/*
 !docs/reports/modules/navalarchitecture/report.html
 !docs/reports/modules/navalarchitecture/report.template.html
 !docs/reports/modules/navalarchitecture/example.json

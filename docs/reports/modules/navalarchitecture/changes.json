@@ -1,19 +1,19 @@
 {
   "document": "navalarchitecture-module-report",
-  "revision": "01",
+  "revision": "02",
   "date": "2026-10-22",
   "changes": [
     {
       "section": "summary",
-      "description": "Revision history preserves the first issue and records the evidence corrections."
+      "description": "Revision history preserves earlier issues and records the report input manifest and receipt provenance."
     },
     {
       "section": "example",
-      "description": "Independent hand calculations check the correction and corrected metacentric height at every sensitivity point."
+      "description": "Independent hand calculations check both stability outputs and the percentage reduction."
     },
     {
       "section": "validation",
-      "description": "The source digest includes calculation dependencies, packaged data and test fixtures; isolated regeneration checks both generated outputs."
+      "description": "An explicit report input manifest uses POSIX ordering and normalized line endings; suite counts retain their command and environment as historical evidence."
     }
   ]
 }

@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,12 @@ def test_rebuild_matches_module_and_committed_report(tmp_path):
     inputs, constants = source["inputs"], source["constants"]
     solid_gm = inputs["km_ft"] - inputs["kg_ft"]
     assert data["results"]["solid_gm_ft"] == pytest.approx(solid_gm, rel=1e-12)
+    expected_correction = (inputs["rho_fluid"] * constants["g_ft_s2"]["value"]
+                           * inputs["tank_length_ft"] * inputs["tank_breadth_ft"] ** 3
+                           / constants["rectangular_inertia_denominator"]["value"]
+                           / (inputs["displacement_lt"] * constants["lb_per_long_ton"]["value"]))
+    assert data["derived"]["reduction_pct"] == pytest.approx(
+        100 * expected_correction / solid_gm, rel=1e-12)
     conditions = [(inputs["tank_breadth_ft"], data["results"])]
     sensitivity = source["sensitivity"]
     count = sensitivity["sample_count"]
@@ -86,37 +93,21 @@ def test_report_registered_for_shadow_rebuild():
 
 
 @pytest.mark.parametrize("relative", [
-    "tests/naval_architecture/fixtures/alt_fuel_ship_sizing_bulker40k.yml",
-    "src/digitalmodel/naval_architecture/data/turning_circle_typical_ship.yml",
-    "src/digitalmodel/alt_fuel_ship_sizing/workflow.py",
+    "src/digitalmodel/naval_architecture/stability.py",
+    "docs/reports/modules/navalarchitecture/report.template.html",
+    "scripts/reporting/build_navalarchitecture_module_report.py",
 ])
-def test_changed_suite_input_rejects_stale_evidence(tmp_path, monkeypatch, relative):
-    module = builder()
+def test_changed_report_input_rejects_stale_evidence(digest_tree, relative):
+    module = digest_tree
     original_outputs = {name: (REPORT / name).read_bytes()
                         for name in ("report.html", "changes.json", "checks.json")}
-    # Only disposable copies are modified; the original input is read back below.
-    for directory in ("src/digitalmodel/naval_architecture", "tests/naval_architecture",
-                      "tests/fixtures/test_vectors/naval_architecture",
-                      "docs/reports/modules/navalarchitecture"):
-        shutil.copytree(ROOT / directory, tmp_path / directory,
-                        ignore=shutil.ignore_patterns("__pycache__"))
-    for path in (Path(module.__file__).relative_to(ROOT),
-                 module.STYLE_EXEMPLAR.relative_to(ROOT),
-                 Path("docs/api/_assets/brand.css"), Path("tests/conftest.py"),
-                 Path("conftest.py"), Path("pytest.ini"), Path("pyproject.toml"), Path(relative)):
-        (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / path, tmp_path / path)
-    original = (ROOT / relative).read_bytes()
-    monkeypatch.setattr(module, "ROOT", tmp_path)
-    monkeypatch.setattr(module, "REPORT", tmp_path / REPORT.relative_to(ROOT))
-    monkeypatch.setattr(module, "STYLE_EXEMPLAR", tmp_path / module.STYLE_EXEMPLAR.relative_to(ROOT))
-    monkeypatch.setattr(module, "__file__", str(tmp_path / Path(module.__file__).relative_to(ROOT)))
-    checks = json.loads((module.REPORT / "checks.json").read_text())
+    checks = json.loads((REPORT / "checks.json").read_text(encoding="utf-8"))
     checks["source_digest"] = module.evidence_digest()
-    (module.REPORT / "checks.json").write_text(json.dumps(checks))
+    (module.REPORT / "checks.json").write_text(json.dumps(checks), encoding="utf-8")
     module.build_report(output_dir=module.REPORT)
+    original = (ROOT / relative).read_bytes()
     digest = module.evidence_digest()
-    (tmp_path / relative).write_bytes(original + b"\n# Changed dependency\n")
+    (module.ROOT / relative).write_bytes(original + b"\n# Changed report input\n")
     with pytest.raises(ValueError, match="retained check record"):
         module.build_report(output_dir=module.REPORT, check=True)
     assert module.evidence_digest() != digest
@@ -129,6 +120,8 @@ def test_report_structure_sources_and_offline_delivery():
     html = module.report_files()["report.html"]
     soup = BeautifulSoup(html, "html.parser")
     assert "hs-doc" in soup.body["class"]
+    assert soup.select_one("#controls h2").get_text() == "3 Input Controls"
+    assert soup.select_one(".sub").get_text() == "Draft for review"
     assert len(soup.select("main > section > h2")) == 10
     assert not soup.select("h4, h5, h6, b, strong")
     assert not soup.select("script[src], link[rel=stylesheet], iframe, img[src]")
@@ -160,7 +153,7 @@ def test_check_detects_stale_output_without_writing(tmp_path):
     module = builder()
     module.build_report(tmp_path)
     target = tmp_path / "report.html"
-    stale = target.read_text().replace("Draft for client review", "Superseded text")
+    stale = target.read_text().replace("Draft for review", "Superseded text")
     target.write_text(stale)
     with pytest.raises(ValueError, match="requires rebuilding"):
         module.build_report(tmp_path, check=True)
@@ -174,7 +167,7 @@ def test_offline_chart_comments_and_mobile_layout(tmp_path):
     expected = module.worked_example()
     with playwright.sync_playwright() as runtime:
         browser = runtime.chromium.launch(
-            executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE"), headless=True)
+            executable_path=chromium_executable(runtime), headless=True)
         page = browser.new_page(viewport={"width": 1365, "height": 900}, accept_downloads=True)
         errors, requests = [], []
         page.on("pageerror", lambda error: errors.append(str(error)))
@@ -232,3 +225,102 @@ def check_comment_roundtrip(page):
     page.click("#comment-save")
     page.wait_for_function("document.querySelector('#comment-message').textContent.includes('read back')")
     assert json.loads(page.evaluate("window.savedComments")) == downloaded
+
+
+@pytest.fixture
+def digest_tree(tmp_path, monkeypatch):
+    module = builder()
+    relatives = (
+        "scripts/reporting/build_navalarchitecture_module_report.py",
+        "src/digitalmodel/naval_architecture/stability.py",
+        "tests/naval_architecture/test_module_report.py",
+        "docs/reports/modules/navalarchitecture/example.json",
+        "docs/reports/modules/navalarchitecture/report.template.html",
+        "docs/api/cfd/turbulent-flat-plate-verification.html",
+        "docs/api/_assets/brand.css",
+    )
+    for relative in relatives:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative, target)
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "REPORT", tmp_path / REPORT.relative_to(ROOT))
+    monkeypatch.setattr(module, "STYLE_EXEMPLAR", tmp_path / module.STYLE_EXEMPLAR.relative_to(ROOT))
+    monkeypatch.setattr(module, "__file__", str(tmp_path / Path(module.__file__).relative_to(ROOT)))
+    return module
+
+
+@pytest.mark.parametrize("relative", ["src/unrelated.py", "scripts/unrelated.py", "data/unrelated.json"])
+def test_unrelated_changes_do_not_invalidate_report(digest_tree, relative):
+    module = digest_tree
+    before = module.evidence_digest()
+    target = module.ROOT / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("unrelated\n", encoding="utf-8")
+    assert module.evidence_digest() == before
+
+
+def test_digest_normalizes_checkout_line_endings(digest_tree):
+    module = digest_tree
+    before = module.evidence_digest()
+    for path in module.ROOT.rglob("*"):
+        if path.is_file():
+            path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    assert module.evidence_digest() == before
+
+
+def test_digest_uses_explicit_manifest_and_posix_order(digest_tree, monkeypatch):
+    module = digest_tree
+    names = ("src/a.py", "src/B.py")
+    expected = hashlib.sha256()
+    for name in sorted(names):
+        path = module.ROOT / name
+        path.write_bytes(b"example\n")
+        expected.update(name.encode() + b"\0example\n\0")
+    monkeypatch.setattr(module, "REPORT_INPUTS", names, raising=False)
+    assert module.evidence_digest() == expected.hexdigest()
+
+
+def test_check_receipt_records_command_and_environment(tmp_path):
+    module = builder()
+    module.REPORT = tmp_path
+    receipt = tmp_path / "naval-architecture.xml"
+    receipt.write_text(
+        '<testsuite><testcase classname="tests.naval_architecture.test_example" name="test_pass"/>'
+        '<testcase classname="tests.naval_architecture.test_example" name="test_fail"><failure/></testcase>'
+        '<testcase classname="tests.naval_architecture.test_example" name="test_skip"><skipped/></testcase>'
+        '<testcase classname="tests.naval_architecture.test_example" name="test_xfail">'
+        '<skipped type="pytest.xfail"/></testcase></testsuite>', encoding="utf-8")
+    command = "PYTHONPATH=src python -m pytest tests/naval_architecture --junitxml=naval-architecture.xml"
+    module.record_checks(receipt, command=command)
+    record = json.loads((tmp_path / "checks.json").read_text())
+    assert record["command"] == command
+    assert record["source_files"] == sorted(module.REPORT_INPUTS)
+    assert record["environment"]["python"]
+    assert record["environment"]["packages"]["pytest"]
+    expected_extras = (["cad"] if {"rhino3dm", "cadquery-ocp"}
+                       <= record["environment"]["packages"].keys() else [])
+    assert record["environment"]["extras"] == expected_extras
+    assert [record[key] for key in ("tests", "passed", "failed", "skipped", "expected_failures")] == [4, 1, 1, 1, 1]
+
+
+def test_browser_availability_skips_missing_binary(tmp_path, monkeypatch):
+    monkeypatch.delenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE", raising=False)
+    runtime = SimpleNamespace(chromium=SimpleNamespace(executable_path=str(tmp_path / "missing")))
+    with pytest.raises(pytest.skip.Exception, match="Chromium executable unavailable"):
+        chromium_executable(runtime)
+
+
+def test_browser_availability_respects_explicit_binary(tmp_path, monkeypatch):
+    executable = tmp_path / "chromium"
+    executable.write_text("browser fixture", encoding="utf-8")
+    monkeypatch.setenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE", str(executable))
+    assert chromium_executable(SimpleNamespace()) == str(executable)
+
+
+def chromium_executable(runtime):
+    """Skip absent browser installations; launch errors remain test failures."""
+    executable = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE") or runtime.chromium.executable_path
+    if not Path(executable).is_file():
+        pytest.skip("Chromium executable unavailable; install Chromium or set PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    return executable
