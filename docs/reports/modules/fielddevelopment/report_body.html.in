@@ -1,0 +1,233 @@
+<header><div class="kicker">Field development</div>
+<h1>Concept and economic screening</h1>
+<p class="sub">Draft for client review</p></header>
+
+<h2 id="summary">1. Executive Summary</h2>
+<p>The field development module is a screening tool for offshore host concepts, costs,
+layouts and production economics. Analysis is performed to determine how a documented
+illustrative field is ranked and evaluated. The key results are summarized below.</p>
+<ul><li>Concept shortlisting is supported under the stated heuristic assumptions.
+<ul><li>The {{selected}} is ranked first for the documented example. The water depth of
+{{water_depth_m}} m lies within its implemented screening band of {{depth_low}} to
+{{depth_high}} m. This is a model applicability check, not a structural capacity check.</li></ul></li>
+<li>The calculated economic value is unsuitable for investment acceptance.
+<ul><li>Pre-tax net present value is {{npv}} million USD, above the zero-value comparison
+line. Scheduled production is {{production_mmbbl}} million barrels against the supplied
+reservoir size of {{reservoir_size_mmbbl}} million barrels. The production discrepancy
+prevents acceptance of that economic value.</li></ul></li></ul>
+<p class="sub">Revision history: Initial — concept-screening calculations and their
+production-volume limitation are presented for client review.</p>
+
+<h2 id="introduction">2. Introduction</h2>
+<p>Offshore development choices are screened using water depth, reservoir size, access to
+existing infrastructure and fluid type. The selected host is passed into cost estimation
+and annual cash-flow evaluation. The calculation described here is the documented public
+workflow example, with its identifying label replaced by a neutral description.</p>
+<p>The example is an illustration supplied with the software. It is not a measured field
+dataset or a published independent benchmark. Its numerical inputs are read directly from
+the documented example, and its results are obtained by calling the module. The source
+editions and precise calculation locators are recorded in §9.2.</p>
+
+<h2 id="controls">3. Summary of decision controls</h2>
+<p>The screening output is used to organize further engineering evaluation. Acceptance is
+conditioned on a reconciled production forecast, independently established cost inputs and
+a verified fiscal basis.</p>
+<p>A positive suitability score identifies a candidate for further consideration. It does
+not establish technical feasibility. A positive net present value only describes the
+discounted cash-flow balance under the supplied assumptions. The production-volume
+discrepancy in this example overrides that financial comparison.</p>
+<figure>{{chart}}<figcaption>Figure A. Pre-tax price sensitivity for the selected host.
+The dashed line is the mathematical zero-value comparison, not an approval boundary.
+Hover or keyboard focus identifies price, calculated value, component and limit.
+The complete values are retained in Table C.</figcaption></figure>
+<p>The curve holds concept, capacity, costs, discount rate and field life fixed. It does
+not represent a price forecast. All plotted cases retain the unresolved production basis.</p>
+
+<h2 id="basis">4. Design data and basis</h2>
+<p>The example is evaluated as an oil development with infrastructure distance unspecified.
+The local economic fallback is used without the optional external data package. The fiscal
+identifier is retained, but no tax adjustment is applied.</p>
+<h3>4.1 System representation</h3>
+<p>A floating spar host, production riser and seabed connection are shown schematically.
+The drawing identifies the physical system only; hull dimensions, mooring geometry,
+well count, pressure boundary conditions and metocean loads are not supplied.</p>
+<figure><svg viewBox="0 0 780 370" role="img" aria-label="Conceptual spar host and production riser, not to scale">
+<path d="M40 105 Q70 98 100 105 T160 105 T220 105 T280 105 T340 105 T400 105 T460 105 T520 105 T580 105 T640 105 T700 105" fill="none" stroke="var(--accent)"/>
+<path d="M40 310 Q240 298 400 310 T730 305" fill="none" stroke="var(--ink)"/>
+<path d="M330 75 H410 V200 Q370 225 330 200 Z" fill="var(--panel-2)" stroke="var(--ink)"/>
+<ellipse cx="370" cy="75" rx="40" ry="9" fill="var(--panel)" stroke="var(--ink)"/>
+<path d="M300 56 H440 V68 H300 Z M315 56 V36 H335 V56 M350 56 V28 H378 V56 M400 56 V40 H423 V56" fill="var(--panel-2)" stroke="var(--ink)"/>
+<path d="M340 200 Q290 300 175 309 M400 200 Q450 300 565 308" fill="none" stroke="var(--mut)"/>
+<path d="M375 68 V304 H480 M480 294 V315 M470 294 H490" fill="none" stroke="var(--accent)" stroke-width="3"/>
+<text x="465" y="45">Production topsides</text><path d="M450 48 L420 55" stroke="var(--ink)"/>
+<text x="465" y="145">Floating spar hull</text><path d="M455 140 L410 145" stroke="var(--ink)"/>
+<text x="80" y="235">Mooring line</text><path d="M190 230 L265 265" stroke="var(--ink)"/>
+<text x="460" y="250">Production riser</text><path d="M450 247 L377 240" stroke="var(--ink)"/>
+<text x="510" y="335">Seabed connection</text><text x="50" y="90">Sea surface</text>
+<text x="50" y="350">Conceptual arrangement; not to scale</text></svg>
+<figcaption>Figure B. Physical interpretation of the selected host. The arrangement is
+illustrative; structural, riser and mooring adequacy are not evaluated.</figcaption></figure>
+<h3>4.2 Inputs and criteria</h3>
+<p>Water depth is {{water_depth_m}} m; reservoir size is {{reservoir_size_mmbbl}} million
+barrels; production capacity is {{production_capacity_bopd}} barrels per day; price is
+{{oil_price_usd_per_bbl}} USD per barrel; annual discount rate is {{discount_rate}} as a
+fraction; and field life is {{field_life_years}} years. These are illustrative assumptions,
+not verified field measurements. Table A supplies the input register.</p>
+<p>The depth band is the host exclusion criterion implemented by the ranking model.
+The zero-value line follows the definition of net present value. Neither criterion is
+a code-of-practice acceptance limit. No standard-derived structural or installation
+criterion is claimed.</p>
+
+<h2 id="method">5. Theory and methodology</h2>
+<p>Host suitability is calculated using weighted depth, reservoir, distance and fluid
+scores. Cost estimates are then converted into an annual cash-flow sequence and discounted.
+The mathematical definitions below describe the implemented local calculation, whose
+source editions are recorded in §9.2.</p>
+<h3>5.1 Concept ranking and cost estimation</h3>
+<div class="eq">S = w<sub>d</sub>s<sub>d</sub> + w<sub>r</sub>s<sub>r</sub>
++ w<sub>l</sub>s<sub>l</sub> + w<sub>f</sub>s<sub>f</sub></div>
+<p>Here S is dimensionless suitability; s denotes a component score; w denotes its
+implemented weight; and subscripts d, r, l and f denote depth, reservoir size,
+infrastructure distance and fluid type. A host outside its hard depth band receives a
+zero score before the weighted sum. These are engineering heuristics, not calibrated
+probabilities. The source defines the coefficients; their independent empirical
+calibration is NOT_EVALUATED.</p>
+<div class="eq">C = C<sub>ref</sub>(Q/Q<sub>ref</sub>)<sup>a</sup>
+[1 + k max(0, d − d<sub>ref</sub>)]<br>
+O = O<sub>ref</sub>(Q/Q<sub>ref</sub>)<sup>b</sup>A(age)</div>
+<p>C is standalone-host capital expenditure; O is annual operating expenditure;
+Q is daily production capacity; d is water depth; ref denotes the implemented reference
+condition; a and b are capacity exponents; k is the depth coefficient; and A is the
+age multiplier. The economic fallback uses the base cost estimates and the reference
+operating age. Abandonment expenditure is a fixed fraction of capital expenditure when
+no external estimate or override is available. The historical cost basis is recorded in
+the source; escalation, location adjustment and quotation accuracy are not established.</p>
+<h3>5.2 Production and discounted cash flow</h3>
+<div class="eq">q<sub>t</sub> = Qf<sub>t</sub>; &nbsp;
+f<sub>t</sub> = exp(−Dτ) after the plateau<br>
+F<sub>t</sub> = R<sub>t</sub> − O<sub>t</sub> − C<sub>t</sub> − A<sub>t</sub>;<br>
+V = Σ<sub>t</sub> F<sub>t</sub>/(1 + r)<sup>t</sup></div>
+<p>q is daily production rate; f is the production multiplier; D is exponential decline
+rate; τ is elapsed time after the plateau in years; F is annual net cash flow; R is
+revenue; C is capital expenditure; O is operating expenditure; A is abandonment cost;
+r is annual discount rate; and V is net present value. The time index t includes the
+initial development period. Monetary cash flows are in million USD.</p>
+<p>Supplying reservoir size activates automatic exponential decline in this workflow.
+The derived decline rate is {{decline_rate}} per year. The implemented plateau remains
+at capacity even when its cumulative volume exceeds the recovery target. Operating
+expenditure falls with the production multiplier; fixed operating costs are not separated.
+Capital spending overlaps early production, and abandonment is charged in the final year.
+Carbon cost is omitted because no carbon-price input is supplied.</p>
+
+<h2 id="results">6. Worked example results</h2>
+<p>The documented example is evaluated through the public workflow. The {{selected}}
+is ranked first; the ordered scores are retained in Table B.</p>
+<p>Calculated capital expenditure is {{capital}} million USD. Reference annual operating
+expenditure is {{operating}} million USD/year, and abandonment expenditure is
+{{abandonment}} million USD. Pre-tax net present value is {{npv}} million USD, above
+the zero-value comparison line. These estimates inherit the unverified cost calibration
+and the production discrepancy.</p>
+<p>Scheduled production is {{production_mmbbl}} million barrels, exceeding the supplied
+reservoir size of {{reservoir_size_mmbbl}} million barrels by {{excess_percent}}% relative
+to that supplied size. Reservoir size is described as recoverable reserves by the ranking
+interface, while the economics calculation applies a further recovery-factor assumption.
+The inconsistent meaning and the uncapped plateau require reconciliation before this
+economic value is used for a development decision.</p>
+
+<h2 id="validation">7. Validation evidence</h2>
+<p>The repository evidence is separated into software regression, illustrative examples
+and independent engineering validation. Workflow tests check input rejection, populated
+outputs, finite economic values, selected-host consistency and comparison ordering.</p>
+<p>Cost tests check scaling, ordering and invalid-input handling. Concept tests exercise
+ranking and exclusion behaviour. Economics tests include mocked adapters and optional
+integration paths; their existence does not establish the accuracy of the external cost
+or fiscal models. Benchmark tests include explicitly synthetic records. The public
+reference catalogue supplies descriptive analogues, but no independent measured
+cash-flow comparison for this worked example is established.</p>
+<p>Report verification compares the displayed values and plotted samples with fresh module
+returns. Discounted cash-flow summation is also reconciled to the returned value.
+This is a reproducibility check, not independent validation of reserves, costs or tax.</p>
+
+<h2 id="limits">8. Key findings, limits and recommendations</h2>
+<p>The calculation supports comparative screening under explicit assumptions.
+Investment acceptance remains NOT_EVALUATED because production conservation, cost
+calibration and fiscal suitability are not established.</p>
+<p>Reconcile the reserve definition and constrain cumulative production to an independently
+approved recoverable-volume forecast before interpreting economic value. Add a regression
+criterion that cumulative production does not exceed that forecast. This action follows
+the discrepancy in §6 and the production construction identified in §9.2.</p>
+<p>Provide priced capital, operating and abandonment inputs with a stated currency date
+before financial use. Verify the selected fiscal calculation against the actual offshore
+regime; the local fallback does not apply tax, and the optional United States adapter
+selects an onshore implementation. Record the actual backend with each evaluation.
+These actions follow the adapter selection and cost fallback evidence in §9.2.</p>
+<p>Reject an all-zero concept ranking before further evaluation. The single-concept
+workflow can still select the first listed host when every host is excluded; the
+comparison workflow explicitly rejects that condition. For tiebacks, pass the actual
+distance into a separately verified cost basis: the local economic fallback substitutes
+a fixed distance rather than forwarding the screening distance.</p>
+<h3>8.1 Not covered</h3>
+<p>Generalized onshore and offshore layout routing, cable and flowline sizing, rig
+capability, empirical concept probabilities, architecture statistics, schedule analytics,
+multi-axis concept screening and visualization are available as separate sub-areas.
+They are not evaluated here. Installation orientation, sea-state limits, rigging,
+forecast support, structural capacity and operational envelopes require other analyses
+and supplied design data. No installation limit is inferred from this economic example.</p>
+
+<h2 id="references">9. Basis records and references</h2>
+<p>The evidence is identified by repository text edition. The cited records describe
+implemented behaviour; they are not substitutes for licensed design standards or
+independent cost calibration.</p>
+<h3>9.1 Evidence interpretation</h3>
+<p>ASSUMED - to be confirmed applies to the illustrative inputs and uncalibrated model
+heuristics. NOT_EVALUATED means the necessary acceptance evidence is absent. An actual
+zero denotes a numerical value; it is not used for missing data. Source text digests use
+UTF-8 with normalized line endings so the cited edition is reproducible.</p>
+<h3>9.2 Source locators and editions</h3>
+<p>The numerical input source is <code>workflow.py</code>, module Usage example.
+The public call is <code>evaluate_field_development(FieldDevelopmentSpec(...))</code>.
+The rank equation is implemented in <code>concept_selection._composite_score</code>;
+limits are in <code>_DEPTH_LIMITS</code>. Cost correlations are in
+<code>capex_estimator._capacity_scale</code>, <code>_depth_scale</code>,
+<code>_BASE_CAPEX</code> and <code>opex_estimator._capacity_opex_scale</code>,
+<code>_age_factor</code>, <code>_BASE_OPEX_MM_YR</code>.</p>
+<p>The production definitions are in <code>economics.EconomicsInput.__post_init__</code>,
+<code>_derive_decline_rate_from_eur</code> and <code>_production_factors</code>.
+Cash flow and discounting are in <code>_build_annual_cashflows</code> and
+<code>_numpy_financial_metrics</code>. Adapter selection is in
+<code>_resolve_capex_adapter</code>, <code>_resolve_fiscal_calculator</code> and
+<code>evaluate_economics</code>. The source edition for every quoted coefficient or
+limit is the corresponding text digest below.</p>
+<ol class="refs">{{references}}</ol>
+
+<h2 id="appendix">10. Appendices</h2>
+<p>The detailed numerical register is retained below. Each worked-example value is
+generated from the documented inputs or module returns rather than entered as report text.</p>
+<h3>10.1 Data and numerical register</h3>
+{{input_table}}
+<p>ASSUMED - to be confirmed: illustrative input values, oil fluid type, unspecified
+infrastructure distance, cost reference conditions, automatic recovery and decline
+assumptions, and abandonment fraction. Required confirmation: recoverable reserves,
+production schedule, cost quotations, currency date and applicable fiscal calculation.
+The price sensitivity is a display sampling convention from half to one-and-a-half of
+the documented price at ten equal intervals; it is not an engineering limit or forecast.</p>
+{{ranking_table}}
+{{sensitivity_table}}
+<h3>10.2 Quality evidence and reader comments</h3>
+<p>The numerical readback, source-edition binding, self-contained presentation and
+rebuild equality are checked automatically. Independent engineering validation remains
+NOT_EVALUATED. The schematic is conceptual and carries no inferred design dimensions.</p>
+<details><summary>Engineering changes</summary><ul id="change-list"></ul></details>
+<p>Comments are retained only when saved. Select the report folder and save the comment
+file beside this document. Browsers without folder-save support download the comment
+file; move that download beside the report. Load that file to resume commenting.</p>
+<label for="comment-section">Section</label>
+<select id="comment-section"></select>
+<label for="comment-text">Comment</label>
+<textarea id="comment-text" rows="4" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load comments <input id="load-comments" type="file" accept="application/json"></label>
+<p id="comment-status" aria-live="polite">No comments saved.</p>
+<ol id="comment-list"></ol>
+<footer>Field development — concept and economic screening. Draft for client review.</footer>
