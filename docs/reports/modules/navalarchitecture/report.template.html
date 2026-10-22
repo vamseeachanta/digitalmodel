@@ -7,7 +7,7 @@
 <meta name="report-revision" content="$revision">
 <meta name="report-content-digest" content="CONTENT_DIGEST">
 <title>Naval architecture module analysis</title>
-<style>$house_style</style>
+$house_style
 <style>
 /* Interactive components consume the existing report palette and typography. */
 svg{max-width:100%;height:auto}svg text{fill:var(--ink);font-size:14px}
@@ -55,8 +55,9 @@ an operational loading decision is made. <a href="#limits">Section 8</a> defines
 </ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>$revision</td><td>$date</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr></tbody>
-<caption>Revision record. The initial issue is the current engineering account.</caption></table>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr>
+<tr><td>$revision</td><td>$date</td><td>The source digest includes test fixtures, packaged data and calculation dependencies; independent hand calculations check both stability outputs throughout the sensitivity; isolated regeneration checks both generated outputs to detect stale evidence.</td></tr></tbody>
+<caption>Revision record. The first issue is preserved and the evidence corrections are recorded.</caption></table>
 </section>
 <section id="introduction">
 <h2>2 Introduction</h2>
@@ -204,7 +205,8 @@ reproduction record explicitly identifies approximate reference values as unveri
 not qualify the resistance method. These evidence locations are listed in Section 9.2.</p>
 <h3>7.2 Interpretation of evidence</h3>
 <p>The report rebuild compares every embedded input, returned example result and sensitivity point with
-fresh calls to the module. An independent rectangular-surface identity is also evaluated, and the
+independent hand calculations of the rectangular-surface correction and corrected metacentric height,
+using the cited source constants at the worked condition and every sensitivity point. The
 displayed rounding is checked. The accompanying quality checks inspect section structure, source
 records and offline interactions. The retained check record is described in Section 10.</p>
 <p>No measured roll response, inclining survey or approved stability booklet is supplied for this example.
@@ -294,10 +296,12 @@ record. The tank is not accepted for an operational condition by this report.</p
 Numerical text and chart points are generated from module calls. The retained document is rebuilt
 and compared byte for byte, and an independent arithmetic identity is checked. Local chart controls,
 comment export and change records are included for review. Test outcomes and exclusions are carried
-in Table C; they do not replace engineering acceptance.</p>
+in Table C; they do not replace engineering acceptance. The source digest includes the suite's
+repository-owned fixtures, packaged data and calculation dependencies. Changes to these inputs
+invalidate the retained check record.</p>
 $check_table
-<p>The skipped cases concern optional geometry readers, missing external fleet data and fixture
-dependency versions. The expected failure concerns missing
+<p>The skipped cases require external reference geometry or tabular data, or the pinned
+fixture-generation environment. The expected failure concerns missing
 hydrostatic-table data in an existing textbook-labelled example. No physical validation is inferred
 from the software outcome counts.</p>
 <p>The chart's restoring-side curve is shown in blue and its neutral boundary is dashed red.

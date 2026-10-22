@@ -39,13 +39,36 @@ def test_every_registered_page_is_byte_identical_to_its_generator(
 
 
 def test_regenerated_pages_inherit_core_brand_tokens(regenerated: Path) -> None:
+    canonical = (checker.REPO / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     offenders = sorted(
         path.relative_to(regenerated).as_posix()
         for path in checker.all_registered_outputs(regenerated)
-        if brand_guard.CORE_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
+        if has_core_brand_override(path.read_text(encoding="utf-8", errors="ignore"), canonical)
     )
 
     assert offenders == []
+
+
+def has_core_brand_override(source: str, canonical: str) -> bool:
+    """Recognize an exact canonical stylesheet and inspect every other byte."""
+    block = f'<style data-source="docs/api/_assets/brand.css">{canonical}</style>'
+    return brand_guard.CORE_RE.search(source.replace(block, "")) is not None
+
+
+def test_exact_inline_canonical_stylesheet_inherits_brand() -> None:
+    canonical = (checker.REPO / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    block = f'<style data-source="docs/api/_assets/brand.css">{canonical}</style>'
+    assert not has_core_brand_override(block, canonical)
+
+
+def test_altered_inline_stylesheet_and_extra_overrides_are_rejected() -> None:
+    canonical = (checker.REPO / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    block = f'<style data-source="docs/api/_assets/brand.css">{canonical}</style>'
+    altered = brand_guard.CORE_RE.sub("--brand:#abcdef", block, count=1)
+    assert altered != block
+    assert has_core_brand_override(altered, canonical)
+    assert has_core_brand_override(block + "<style>:root{--brand:#abcdef}</style>", canonical)
+    assert has_core_brand_override(block.replace("</style>", ":root{--brand:#abcdef}</style>"), canonical)
 
 
 def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
@@ -96,8 +119,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 29  # includes the module report and its change record
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9

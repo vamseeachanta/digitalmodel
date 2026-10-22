@@ -24,17 +24,25 @@ from digitalmodel.naval_architecture.stability import G, LT_TO_LB, free_surface_
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/navalarchitecture"
 STYLE_EXEMPLAR = ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html"
-REVISION = "00"
-DATE = "2026-10-21"
+REVISION = "01"
+DATE = "2026-10-22"
 
 
 def evidence_digest() -> str:
     """Bind the test receipt to the calculation, test and presentation sources."""
-    paths = set((ROOT / "src/digitalmodel/naval_architecture").rglob("*.py"))
-    paths.update((ROOT / "tests/naval_architecture").glob("test_*.py"))
-    paths.update((ROOT / "tests/fixtures/test_vectors/naval_architecture").glob("*.yaml"))
+    paths = {path for directory in (
+        "src", "scripts", "tests/naval_architecture",
+        "tests/fixtures/test_vectors/naval_architecture", "tests/citations/fixtures",
+        "data", "docs/domains/marine-engineering",
+    ) for path in (ROOT / directory).rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+        and path.suffix in {".py", ".yml", ".yaml", ".json", ".csv", ".dat", ".md"}}
+    paths.update(path for path in (ROOT / "docs/api/cfd/cases").glob("*/geometry/**/*")
+                 if path.is_file())
     paths.update([Path(__file__).resolve(), REPORT / "example.json", REPORT / "report.template.html",
-                  STYLE_EXEMPLAR, ROOT / "docs/api/_assets/brand.css"])
+                  STYLE_EXEMPLAR, ROOT / "docs/api/_assets/brand.css",
+                  ROOT / "tests/conftest.py", ROOT / "conftest.py",
+                  ROOT / "pytest.ini", ROOT / "pyproject.toml"])
     digest = hashlib.sha256()
     for path in sorted(paths):
         digest.update(path.relative_to(ROOT).as_posix().encode() + b"\0")
@@ -166,7 +174,8 @@ def inline_house_style() -> str:
     match = re.search(r"<style>(.*?)</style>", STYLE_EXEMPLAR.read_text(encoding="utf-8"), re.S)
     if match is None:
         raise ValueError("The house-style exemplar has no stylesheet")
-    return brand + "\n" + match.group(1)
+    return (f'<style data-source="docs/api/_assets/brand.css">{brand}</style>\n'
+            f'<style>{match.group(1)}</style>')
 
 
 def report_files() -> dict[str, str]:
@@ -205,9 +214,9 @@ def report_files() -> dict[str, str]:
     replacements["example_data"] = json.dumps(data, sort_keys=True).replace("<", "\\u003c")
     changes = {"document": "navalarchitecture-module-report", "revision": REVISION,
                "date": DATE, "changes": [
-                   {"section": "summary", "description": "Initial account of the available calculation workflow and its limits of use."},
-                   {"section": "example", "description": "Public rectangular-tank calculation and breadth sensitivity establish the initial-stability result."},
-                   {"section": "validation", "description": "Existing regression and benchmark records are distinguished from operational qualification."}]}
+                   {"section": "summary", "description": "Revision history preserves the first issue and records the evidence corrections."},
+                   {"section": "example", "description": "Independent hand calculations check the correction and corrected metacentric height at every sensitivity point."},
+                   {"section": "validation", "description": "The source digest includes calculation dependencies, packaged data and test fixtures; isolated regeneration checks both generated outputs."}]}
     replacements["changes_data"] = json.dumps(changes, sort_keys=True)
     replacements["revision"] = REVISION
     replacements["date"] = DATE

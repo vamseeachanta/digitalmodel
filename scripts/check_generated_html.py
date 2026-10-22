@@ -70,6 +70,26 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_navalarchitecture_module_report.py",
+        ("docs/reports/modules/navalarchitecture/report.html",
+         "docs/reports/modules/navalarchitecture/changes.json"),
+        inputs=(
+            "pyproject.toml",
+            "pytest.ini",
+            "conftest.py",
+            "tests/conftest.py",
+            "docs/reports/modules/navalarchitecture/example.json",
+            "docs/reports/modules/navalarchitecture/checks.json",
+            "docs/reports/modules/navalarchitecture/report.template.html",
+            *(path.relative_to(REPO).as_posix()
+              for directory in ("tests/naval_architecture",
+                                "tests/fixtures/test_vectors/naval_architecture",
+                                "tests/citations/fixtures", "docs/domains/marine-engineering")
+              for path in sorted((REPO / directory).rglob("*"))
+              if path.is_file() and "__pycache__" not in path.parts),
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

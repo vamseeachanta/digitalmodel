@@ -8,13 +8,11 @@ import hashlib
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
-
-from digitalmodel.naval_architecture.stability import free_surface_correction
-
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/navalarchitecture"
@@ -39,14 +37,25 @@ def test_rebuild_matches_module_and_committed_report(tmp_path):
     data = json.loads(soup.select_one("#example-data").string)
     source = json.loads((REPORT / "example.json").read_text(encoding="utf-8"))
     assert data["inputs"] == source["inputs"]
-    expected = free_surface_correction(**source["inputs"])
-    assert data["results"]["correction_ft"] == expected[0]
-    assert data["results"]["effective_gm_ft"] == expected[1]
-    for point in data["sweep"]:
-        inputs = dict(source["inputs"], tank_breadth_ft=point["breadth_ft"])
-        correction, gm = free_surface_correction(**inputs)
-        assert point["correction_ft"] == correction
-        assert point["effective_gm_ft"] == gm
+    inputs, constants = source["inputs"], source["constants"]
+    solid_gm = inputs["km_ft"] - inputs["kg_ft"]
+    assert data["results"]["solid_gm_ft"] == pytest.approx(solid_gm, rel=1e-12)
+    conditions = [(inputs["tank_breadth_ft"], data["results"])]
+    sensitivity = source["sensitivity"]
+    count = sensitivity["sample_count"]
+    assert len(data["sweep"]) == count
+    for index, point in enumerate(data["sweep"]):
+        fraction = sensitivity["breadth_fraction_min"] + index / (count - 1) * (
+            sensitivity["breadth_fraction_max"] - sensitivity["breadth_fraction_min"])
+        breadth = inputs["tank_breadth_ft"] * fraction
+        assert point["breadth_ft"] == pytest.approx(breadth, rel=1e-12)
+        conditions.append((breadth, point))
+    for breadth, result in conditions:
+        moment = inputs["tank_length_ft"] * breadth ** 3 / constants["rectangular_inertia_denominator"]["value"]
+        correction = (inputs["rho_fluid"] * constants["g_ft_s2"]["value"] * moment
+                      / (inputs["displacement_lt"] * constants["lb_per_long_ton"]["value"]))
+        assert result["correction_ft"] == pytest.approx(correction, rel=1e-12)
+        assert result["effective_gm_ft"] == pytest.approx(solid_gm - correction, rel=1e-12)
     for point, marker in zip(data["sweep"], soup.select(".sample"), strict=True):
         assert f'{point["effective_gm_ft"]:.3f} ft' in marker["aria-label"]
         assert f'{point["correction_ft"]:.3f} ft' in marker["aria-label"]
@@ -57,19 +66,62 @@ def test_rebuild_matches_module_and_committed_report(tmp_path):
         value = values[key]
         assert float(element["data-value"]) == value
         assert element.get_text() == module.format_number(value, key)
-    # An independent identity guards against a report that merely repeats a wrong result.
-    inputs = source["inputs"]
-    import math
-    from digitalmodel.naval_architecture.stability import G, LT_TO_LB
-    moment = inputs["tank_length_ft"] * inputs["tank_breadth_ft"] ** 3 / 12
-    correction = inputs["rho_fluid"] * G * moment / (inputs["displacement_lt"] * LT_TO_LB)
-    assert expected[0] == pytest.approx(correction, rel=1e-12)
-    assert math.isfinite(expected[1])
     # Engineering numbers in the worked narrative must come from generated spans.
     for paragraph in soup.select("#example > p"):
         for generated in paragraph.select("[data-number], a"):
             generated.decompose()
         assert not re.search(r"\d", paragraph.get_text())
+
+
+def test_report_registered_for_shadow_rebuild():
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/reporting/build_navalarchitecture_module_report.py"]
+    assert len(entries) == 1
+    assert set(entries[0].outputs) == {
+        "docs/reports/modules/navalarchitecture/report.html",
+        "docs/reports/modules/navalarchitecture/changes.json",
+    }
+
+
+@pytest.mark.parametrize("relative", [
+    "tests/naval_architecture/fixtures/alt_fuel_ship_sizing_bulker40k.yml",
+    "src/digitalmodel/naval_architecture/data/turning_circle_typical_ship.yml",
+    "src/digitalmodel/alt_fuel_ship_sizing/workflow.py",
+])
+def test_changed_suite_input_rejects_stale_evidence(tmp_path, monkeypatch, relative):
+    module = builder()
+    original_outputs = {name: (REPORT / name).read_bytes()
+                        for name in ("report.html", "changes.json", "checks.json")}
+    # Only disposable copies are modified; the original input is read back below.
+    for directory in ("src/digitalmodel/naval_architecture", "tests/naval_architecture",
+                      "tests/fixtures/test_vectors/naval_architecture",
+                      "docs/reports/modules/navalarchitecture"):
+        shutil.copytree(ROOT / directory, tmp_path / directory,
+                        ignore=shutil.ignore_patterns("__pycache__"))
+    for path in (Path(module.__file__).relative_to(ROOT),
+                 module.STYLE_EXEMPLAR.relative_to(ROOT),
+                 Path("docs/api/_assets/brand.css"), Path("tests/conftest.py"),
+                 Path("conftest.py"), Path("pytest.ini"), Path("pyproject.toml"), Path(relative)):
+        (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / path, tmp_path / path)
+    original = (ROOT / relative).read_bytes()
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "REPORT", tmp_path / REPORT.relative_to(ROOT))
+    monkeypatch.setattr(module, "STYLE_EXEMPLAR", tmp_path / module.STYLE_EXEMPLAR.relative_to(ROOT))
+    monkeypatch.setattr(module, "__file__", str(tmp_path / Path(module.__file__).relative_to(ROOT)))
+    checks = json.loads((module.REPORT / "checks.json").read_text())
+    checks["source_digest"] = module.evidence_digest()
+    (module.REPORT / "checks.json").write_text(json.dumps(checks))
+    module.build_report(output_dir=module.REPORT)
+    digest = module.evidence_digest()
+    (tmp_path / relative).write_bytes(original + b"\n# Changed dependency\n")
+    with pytest.raises(ValueError, match="retained check record"):
+        module.build_report(output_dir=module.REPORT, check=True)
+    assert module.evidence_digest() != digest
+    assert (ROOT / relative).read_bytes() == original
+    assert {name: (REPORT / name).read_bytes() for name in original_outputs} == original_outputs
 
 
 def test_report_structure_sources_and_offline_delivery():
@@ -94,6 +146,9 @@ def test_report_structure_sources_and_offline_delivery():
     assert all(value["source"] for value in source["constants"].values())
     style = re.search(r"<style>(.*?)</style>", module.STYLE_EXEMPLAR.read_text(), re.S).group(1)
     assert style in html
+    canonical = soup.select('style[data-source="docs/api/_assets/brand.css"]')
+    assert len(canonical) == 1
+    assert canonical[0].string == (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     digest = soup.select_one('meta[name="report-content-digest"]')["content"]
     canonical = html.replace(digest, "CONTENT_DIGEST")
     assert hashlib.sha256(canonical.encode()).hexdigest() == digest

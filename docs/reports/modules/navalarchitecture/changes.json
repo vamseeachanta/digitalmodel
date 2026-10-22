@@ -1,19 +1,19 @@
 {
   "document": "navalarchitecture-module-report",
-  "revision": "00",
-  "date": "2026-10-21",
+  "revision": "01",
+  "date": "2026-10-22",
   "changes": [
     {
       "section": "summary",
-      "description": "Initial account of the available calculation workflow and its limits of use."
+      "description": "Revision history preserves the first issue and records the evidence corrections."
     },
     {
       "section": "example",
-      "description": "Public rectangular-tank calculation and breadth sensitivity establish the initial-stability result."
+      "description": "Independent hand calculations check the correction and corrected metacentric height at every sensitivity point."
     },
     {
       "section": "validation",
-      "description": "Existing regression and benchmark records are distinguished from operational qualification."
+      "description": "The source digest includes calculation dependencies, packaged data and test fixtures; isolated regeneration checks both generated outputs."
     }
   ]
 }
