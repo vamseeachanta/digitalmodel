@@ -40,7 +40,7 @@ OD, WT, GRADE, P_DESIGN = 21.25, 0.875, "X80", 500.0
 def test_envelope_monotone_and_capped():
     env = level1_flaw_envelope(OD, WT, GRADE, P_DESIGN, region="base")
     lengths = env["max_acceptable_length_in"]
-    nonzero = [v for v in lengths if v > 0]
+    nonzero = [v for v in lengths if v is not None and v > 0]
     # deeper flaw -> shorter acceptable length
     assert nonzero == sorted(nonzero, reverse=True)
     # depths beyond the base-metal cap are excluded
@@ -82,6 +82,7 @@ def test_weld_campaign_end_envelope_is_stricter():
     end = level1_flaw_envelope(
         OD, WT, GRADE, 3000.0, region="weld",
         corrosion_rate_in_per_yr=0.25 / MM_PER_IN, campaign_years=3.0,
+        weld_sigma_b_mpa=0, weld_cvn_joules=27,  # explicit synthetic basis (A58)
     )
     assert all(e <= s for s, e in zip(start["max_acceptable_length_in"],
                                       end["max_acceptable_length_in"]))
@@ -127,10 +128,15 @@ def test_campaign_end_envelope_is_stricter():
         OD, WT, GRADE, P_DESIGN,
         corrosion_rate_in_per_yr=0.25 / 25.4, campaign_years=3.0,
     )
-    assert any(e < s for s, e in zip(start["max_acceptable_length_in"],
-                                     end["max_acceptable_length_in"]))
-    assert all(e <= s for s, e in zip(start["max_acceptable_length_in"],
-                                      end["max_acceptable_length_in"]))
+    pairs = [(s, e) for s, e in zip(start["max_acceptable_length_in"],
+                                   end["max_acceptable_length_in"]) if s is not None and e is not None]
+    assert any(e < s for s, e in pairs) or any(
+        s is not None and e is None
+        for s, e in zip(start["max_acceptable_length_in"], end["max_acceptable_length_in"]))
+    assert all(e <= s for s, e in pairs)
+    for length, validity in zip(end["max_acceptable_length_in"], end["applicability"]):
+        if not validity["ok"]:
+            assert length is None  # A48: unsupported cells withhold acceptance
 
 
 def test_envelope_boundary_matches_direct_method_check():

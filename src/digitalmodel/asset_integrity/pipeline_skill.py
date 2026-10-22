@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from digitalmodel.materials import legacy_smys_table_mpa
 from digitalmodel.units import Q_
 from .rsf_calculations import check_ffs_level1
+from .input_validation import finite_number
 
 SKILL_NAME = "pipeline_integrity"
 
@@ -43,8 +44,8 @@ class PipelineInput:
     outer_diameter_mm: float
     wall_thickness_mm: float
     design_pressure_mpa: float
-    material_grade: str = "X65"
-    corrosion_depth_mm: float = 0.0
+    material_grade: str | None = None
+    corrosion_depth_mm: float | None = None
     corrosion_length_mm: float = 0.0
 
     def __post_init__(self) -> None:
@@ -90,6 +91,7 @@ def pipeline_integrity(inp: PipelineInput) -> PipelineIntegrityResult:
     Returns:
         PipelineIntegrityResult with full assessment outputs.
     """
+    inp.__post_init__()  # revalidate mutable input before issuing a disposition
     smys_mpa = SMYS_TABLE[inp.material_grade]
 
     # ------------------------------------------------------------------
@@ -209,10 +211,12 @@ def _ffs_assessment(
 
 
 def _validate_positive(name: str, value: float) -> None:
+    finite_number(name, value, positive=True)
     if value <= 0.0:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
 def _validate_non_negative(name: str, value: float) -> None:
+    finite_number(name, value, minimum=0)
     if value < 0.0:
         raise ValueError(f"{name} must be non-negative, got {value}")

@@ -102,7 +102,7 @@ def _safe_pressure(method: str, D: float, t: float, d: float, L: float,
 
 def _build_corroded_grids() -> dict:
     """Precompute one safe-pressure / acceptance grid per (preset, method)."""
-    lengths = [round(0.5 * i, 3) for i in range(0, 41)]        # 0..20 in
+    lengths = [round(0.5 * i, 3) for i in range(1, 41)]        # positive measured lengths, 0.5..20 in
     depths_pct = [round(2.5 * j, 3) for j in range(0, 33)]     # 0..80 % of wall
 
     preset_meta: dict = {}

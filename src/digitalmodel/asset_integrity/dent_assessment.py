@@ -359,6 +359,20 @@ def assess_dent(
                        if strain_bad else " with no qualifying strain "
                        "estimate") + " — detailed assessment required")
 
+    # Independent criteria retain the most demanding action. A mechanism flag
+    # cannot clear a strain exceedance or a failed weld-depth screen.
+    if with_gouge_or_metal_loss:
+        notes.append("dent-gouge interaction requires a separate fracture assessment")
+    if strain is not None and strain.eps_max > strain_limit:
+        notes.append(f"estimated strain {strain.eps_max:.3f} exceeds {strain_limit:.0%} limit")
+        if verdict in {"ACCEPT", "MONITOR"}:
+            verdict = "NEEDS_ASSESSMENT"
+            governing = notes[-1] + " — detailed assessment required"
+    if on_weld and depth_ratio > weld_dent_depth_limit:
+        verdict = "REJECT"  # weld-depth exceedance requires repair/replace
+        governing = (f"dent on weld d/OD = {depth_ratio:.4f} exceeds "
+                     f"{weld_dent_depth_limit:.2%} weld-depth limit — repair/replace")
+
     if restrained and verdict == "ACCEPT":
         verdict = "MONITOR"
         governing += (

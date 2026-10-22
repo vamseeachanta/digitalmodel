@@ -40,6 +40,7 @@ from digitalmodel.asset_integrity.applicability import (
     Applicability,
     check_upper_limit,
 )
+from .input_validation import finite_number, pressure_basis
 from digitalmodel.codes import ASME_B31G
 from digitalmodel.materials import legacy_smys_psi_dict
 
@@ -124,6 +125,9 @@ def _failure_pressure(flow: float, t: float, D: float, ar: float, M: float) -> f
 def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, details,
               d_over_t=None):
     safe = pf / safety_factor
+    for name, value in (("failure pressure", pf), ("intact pressure", intact),
+                        ("safe pressure", safe)):
+        finite_number(name, value, minimum=0)
     applicability = Applicability()
     if d_over_t is not None:
         applicability = check_upper_limit(
@@ -146,7 +150,9 @@ def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, detai
         area_ratio=ar,
         rsf=(pf / intact) if intact > 0 else float("nan"),
         safe_pressure_psi=safe,
-        acceptable=(None if maop_psi is None else bool(safe >= maop_psi)),
+        # Acceptance requires both method applicability and safe pressure >= demand.
+        acceptable=(None if maop_psi is None or not applicability.ok
+                    else bool(safe >= maop_psi)),
         details=details,
         code_reference=ASME_B31G.label,
         applicability=applicability,
@@ -186,6 +192,7 @@ def b31g_original(
         safety_factor: applied to failure pressure for the safe pressure.
     """
     _validate(D, t, d, L)
+    pressure_basis(smys_psi, maop_psi, safety_factor=safety_factor)
     flow = 1.1 * smys_psi
     intact = 2.0 * flow * t / D
     z = L * L / (D * t)
@@ -212,6 +219,7 @@ def modified_b31g(
 ) -> CorrodedPipeResult:
     """Modified B31G (0.85 dL) remaining-strength failure pressure."""
     _validate(D, t, d, L)
+    pressure_basis(smys_psi, maop_psi, safety_factor=safety_factor)
     flow = smys_psi + _FLOW_ADDER_PSI
     intact = 2.0 * flow * t / D
     z = L * L / (D * t)
@@ -239,10 +247,13 @@ def rstreng_effective_area(
     The governing sub-segment (lowest predicted failure pressure) is returned.
     """
     _validate_geometry(D, t)
+    pressure_basis(smys_psi, maop_psi, safety_factor=safety_factor)
     x = np.asarray(positions_in, dtype=float)
     d = np.asarray(depths_in, dtype=float)
-    if x.shape != d.shape or x.size < 2:
+    if x.ndim != 1 or d.ndim != 1 or x.shape != d.shape or x.size < 2:
         raise ValueError("positions_in and depths_in must be equal-length (>=2).")
+    if not np.all(np.isfinite(x)) or not np.all(np.isfinite(d)):
+        raise ValueError("every profile coordinate and depth must be finite")
     if np.any(np.diff(x) <= 0):
         raise ValueError("positions_in must be strictly increasing.")
     if np.any(d < 0) or np.any(d > t):
@@ -253,6 +264,8 @@ def rstreng_effective_area(
     # Prefix trapezoidal integral of metal-loss depth for O(1) sub-segment area.
     seg = np.diff(x) * 0.5 * (d[:-1] + d[1:])           # area of each interval
     cum = np.concatenate(([0.0], np.cumsum(seg)))        # cum[k] = area up to x[k]
+    if not np.all(np.isfinite(cum)):
+        raise ValueError("derived profile areas must be finite")
 
     n = x.size
     worst_pf = math.inf
@@ -325,7 +338,7 @@ def b31g_original_allowable_length(D: float, t: float, d: float) -> float:
     inversion), this is the pressure-independent geometric B31G chart and
     reproduces the published ASME table for a given diameter.
     """
-    _validate(D, t, d, 0.0)
+    _validate(D, t, d, 1.0)  # chart has no measured-length input
     dt = d / t
     if dt > 0.80:
         return 0.0
@@ -340,13 +353,17 @@ def b31g_original_allowable_length(D: float, t: float, d: float) -> float:
 
 # ---------------------------------------------------------------------------
 def _validate_geometry(D: float, t: float) -> None:
+    finite_number("D", D, positive=True)
+    finite_number("t", t, positive=True)
     if D <= 0 or t <= 0 or t >= D:
         raise ValueError(f"Invalid geometry: D={D}, t={t}.")
 
 
 def _validate(D: float, t: float, d: float, L: float) -> None:
     _validate_geometry(D, t)
+    finite_number("defect depth d", d, minimum=0, maximum=t)
     if not (0.0 <= d <= t):
         raise ValueError(f"defect depth d={d} must be in [0, t={t}].")
-    if L < 0:
-        raise ValueError(f"defect length L={L} must be >= 0.")
+    finite_number("defect length L", L, minimum=0)
+    if d > 0 and L == 0:
+        raise ValueError("positive defect depth requires positive measured flaw length")

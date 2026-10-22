@@ -33,7 +33,8 @@ effective axial profile ``d_eff(x_a)`` and then calls the 1D engine *verbatim*
      (i.e. predicts a higher, less conservative burst pressure) when the
      deepest pits do not co-locate at the same axial station, because averaging
      dilutes an isolated deep pit. Prefer MAX for fitness-for-service verdicts;
-     AREA-WEIGHTED is offered for sensitivity / less-conservative screening.
+     AREA-WEIGHTED is offered for sensitivity only; pressure acceptance is
+     withheld until the representation is qualified.
 
 SIMPLIFICATION: this is a *simple projection* (collapse each axial station to a
 scalar, then run the validated 1D method). It is **not** a full 2D interacting-
@@ -49,7 +50,10 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import (
+    Applicability, B31G_RELATIVE_DEPTH_FLAG, check_upper_limit, merge, flagged,
+)
+from .input_validation import finite_number
 
 from digitalmodel.asset_integrity.corroded_pipe import (
     CorrodedPipeResult,
@@ -78,12 +82,12 @@ class RiverBottom2DResult:
     d_eff_in: list  # projected 1D effective-depth profile
     governing_segment: tuple  # (i, j) axial indices of worst segment
     result: CorrodedPipeResult  # full 1D RSTRENG result (verbatim)
-    within_applicability: bool  # max(d)/t <= 0.80 (B31G validity)
+    within_applicability: bool  # raw depths and projection representation qualified
     details: dict = field(default_factory=dict)
 
     @property
     def applicability(self) -> Applicability:
-        """Projected-profile validity; raw maximum depth is checked only in MAX mode."""
+        """Validity of both the raw measured grid and its projected profile."""
         return self.result.applicability
 
     # --- convenience pass-throughs to the embedded 1D result ---------------
@@ -127,7 +131,10 @@ def project_grid(
     Returns:
         1D numpy array ``d_eff`` of length = number of axial stations.
     """
+    finite_number("t", t, positive=True)
     grid = np.asarray(depth_grid, dtype=float)
+    if not np.all(np.isfinite(grid)):
+        raise ValueError("every grid depth must be finite")
     if grid.ndim != 2 or grid.shape[0] < 2 or grid.shape[1] < 1:
         raise ValueError(
             "depth_grid must be 2D with >=2 axial rows and >=1 circ column."
@@ -148,7 +155,7 @@ def project_grid(
                 raise ValueError(
                     "circ_weights length must equal the number of circ columns."
                 )
-            if np.any(weights <= 0.0):
+            if not np.all(np.isfinite(weights)) or np.any(weights <= 0.0):
                 raise ValueError("circ_weights (arc widths) must be > 0.")
         w = float(np.sum(weights))
         return (grid * weights).sum(axis=1) / w
@@ -196,11 +203,29 @@ def rstreng_2d_river_bottom(
             f"projection must be one of {_PROJECTIONS}, got {projection!r}."
         )
     x = np.asarray(axial_positions_in, dtype=float)
+    finite_number("t", t, positive=True)
     grid = np.asarray(depth_grid, dtype=float)
+    if not np.all(np.isfinite(grid)):
+        raise ValueError("every grid depth must be finite")
     if grid.ndim != 2 or x.shape != (grid.shape[0],):
         raise ValueError(
             "axial_positions_in length must equal the number of grid rows."
         )
+    finite_number("t", t, positive=True)
+    if not grid.size or not np.all(np.isfinite(grid)):
+        raise ValueError("every grid depth must be finite and the grid nonempty")
+    if np.any(grid < 0) or np.any(grid > t):
+        raise ValueError("all raw grid depths must be within [0, t]")
+    # Qualify the supplied measurements before averaging local defects.
+    raw_dt = float(np.max(grid)) / t
+    raw_applicability = check_upper_limit(
+        raw_dt, .80, flag=B31G_RELATIVE_DEPTH_FLAG,
+        quantity="raw maximum d/t", method="RSTRENG 2D")
+    if projection == PROJECTION_AREA_WEIGHTED:
+        raw_applicability = merge(raw_applicability, flagged(
+            "AREA_WEIGHTED_REPRESENTATION_UNQUALIFIED",
+            "Area-weighted projection is a sensitivity calculation; local defects "
+            "require a qualified representation before pressure acceptance"))
 
     d_eff = project_grid(grid, t, projection=projection, circ_weights=circ_weights)
 
@@ -214,6 +239,11 @@ def rstreng_2d_river_bottom(
         safety_factor=safety_factor,
     )
 
+    # Projection cannot qualify an unresolved deep local defect.
+    result.applicability = merge(result.applicability, raw_applicability)
+    result.details.update(result.applicability.legacy_details())
+    if not result.applicability.ok:
+        result.acceptable = None  # clearance requires raw and projected applicability
     i, j = result.details["critical_segment"]
     governing_segment = (int(i), int(j))
     within = bool(result.details.get("within_applicability", True))
@@ -240,6 +270,6 @@ def rstreng_2d_river_bottom(
             "n_circ": int(grid.shape[1]),
             "affected_width": affected_width,
             "critical_length_in": float(result.details["critical_length_in"]),
-            "max_d_over_t": float(result.details["d_over_t"]),
+            "max_d_over_t": raw_dt,
         },
     )

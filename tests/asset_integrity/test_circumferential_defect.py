@@ -88,7 +88,7 @@ def test_part5_lambda_validity_limit():
 def test_circumferential_netsection_golden():
     # d/t = 0.40 -> with t=0.5, d=0.20.
     res = api579_part5_circumferential_netsection(
-        Dm=39.5, t=0.5, d=0.20, c=31.0, sigma_flow_psi=50_000.0
+        Dm=39.5, t=0.5, d=0.20, c=31.0, sigma_flow_psi=50_000.0, s=16.0
     )
     assert res.rsf_netsection == pytest.approx(0.9001, abs=5e-4)
     assert res.details["d_over_t"] == pytest.approx(0.40, rel=1e-12)
@@ -117,7 +117,7 @@ def test_circumferential_full_circumference_depth_limit():
 
 def test_circumferential_zero_depth_is_full_strength():
     res = api579_part5_circumferential_netsection(
-        Dm=39.5, t=0.5, d=0.0, c=31.0, sigma_flow_psi=50_000.0
+        Dm=39.5, t=0.5, d=0.0, c=31.0, sigma_flow_psi=50_000.0, s=16.0
     )
     assert res.rsf_netsection == pytest.approx(1.0, rel=1e-12)
     assert res.allowable_axial_stress_psi == pytest.approx(50_000.0, rel=1e-12)

@@ -17,7 +17,7 @@ Coverage:
 - source field matches SKILL_NAME
 - Zero design pressure raises ValueError
 - Large OD pipe (914 mm) passes for normal operating conditions
-- PipelineInput default material_grade is X65
+- PipelineInput requires explicit material and corrosion evidence
 - FFS not run when corrosion_depth is zero
 - Utilisation ratio increases with pressure
 - FFS verdict "accept" when corrosion is very shallow
@@ -43,6 +43,7 @@ X65_NOMINAL = PipelineInput(
     wall_thickness_mm=14.3,
     design_pressure_mpa=10.0,
     material_grade="X65",
+    corrosion_depth_mm=0.0,
 )
 
 
@@ -167,6 +168,7 @@ def test_invalid_material_grade_raises():
             wall_thickness_mm=14.3,
             design_pressure_mpa=10.0,
             material_grade="X999",
+            corrosion_depth_mm=0.0,
         )
 
 
@@ -177,6 +179,7 @@ def test_invalid_grade_lowercase_raises():
             wall_thickness_mm=14.3,
             design_pressure_mpa=10.0,
             material_grade="x65",
+            corrosion_depth_mm=0.0,
         )
 
 
@@ -278,16 +281,17 @@ def test_large_od_pipe_passes():
 
 
 # ---------------------------------------------------------------------------
-# 13. Default material_grade is X65
+# 13. Missing material evidence is rejected (A56)
 # ---------------------------------------------------------------------------
 
-def test_default_material_grade_is_x65():
-    inp = PipelineInput(
-        outer_diameter_mm=323.9,
-        wall_thickness_mm=14.3,
-        design_pressure_mpa=10.0,
-    )
-    assert inp.material_grade == "X65"
+def test_missing_material_grade_is_rejected():
+    with pytest.raises(ValueError, match="material_grade"):
+        PipelineInput(
+            outer_diameter_mm=323.9,
+            wall_thickness_mm=14.3,
+            design_pressure_mpa=10.0,
+            corrosion_depth_mm=0.0,
+        )
 
 
 # ---------------------------------------------------------------------------

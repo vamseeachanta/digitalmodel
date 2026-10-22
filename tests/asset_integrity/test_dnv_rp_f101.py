@@ -112,7 +112,7 @@ def test_psf_format_more_conservative_than_intact():
 
 
 def test_psf_factor_overrides():
-    lenient = dnv_f101_psf(D, T, DEPTH, LEN, SMTS, gamma_m=0.90, std_rel_depth=0.0)
+    lenient = dnv_f101_psf(D, T, DEPTH, LEN, SMTS, gamma_m=0.90, std_rel_depth=0.0, safety_class="low")
     strict = dnv_f101_psf(D, T, DEPTH, LEN, SMTS, gamma_m=0.70, std_rel_depth=0.15)
     assert lenient.allowable_pressure_psi > strict.allowable_pressure_psi
 
@@ -174,8 +174,9 @@ def test_epsilon_d_fractile_self_consistency():
     assert epsilon_d_fractile(0.04) == pytest.approx(0.0, abs=5e-3)
     assert epsilon_d_fractile(0.08) == pytest.approx(1.0, abs=5e-3)
     assert epsilon_d_fractile(0.16) == pytest.approx(2.0, abs=5e-3)
-    # above the calibrated range it is clamped at the 0.16 value
-    assert epsilon_d_fractile(0.25) == pytest.approx(epsilon_d_fractile(0.16))
+    # A45: no extrapolation or clamping of unqualified uncertainty.
+    with pytest.raises(ValueError, match="std_rel_depth"):
+        epsilon_d_fractile(.25)
 
 
 def test_gamma_d_table_values_and_monotonicity():
@@ -197,10 +198,8 @@ def test_gamma_d_table_values_and_monotonicity():
     )
     # monotone in StD
     assert gamma_d_factor(0.04, "medium") < gamma_d_factor(0.12, "medium")
-    # clamped above 0.16
-    assert gamma_d_factor(0.30, "very high") == pytest.approx(
-        gamma_d_factor(0.16, "very high")
-    )
+    with pytest.raises(ValueError, match="std_rel_depth"):
+        gamma_d_factor(.30, "very high")
 
 
 def test_psf_default_uses_tables_golden():
@@ -245,7 +244,7 @@ def test_psf_relative_vs_absolute_sizing():
     assert rel.allowable_pressure_psi < ab.allowable_pressure_psi
 
 
-def test_psf_explicit_overrides_bypass_tables():
+def test_psf_explicit_overrides_retain_calibrated_penalties():
     res = dnv_f101_psf(
         D,
         T,
@@ -253,18 +252,18 @@ def test_psf_explicit_overrides_bypass_tables():
         LEN,
         SMTS,
         gamma_m=0.90,
-        gamma_d=1.0,
-        epsilon_d=1.0,
+        safety_class="low",
+        gamma_d=1.2,
+        epsilon_d=1.01,
         std_rel_depth=0.08,
     )
     assert res.details["gamma_m"] == pytest.approx(0.90)
-    assert res.details["gamma_d"] == pytest.approx(1.0)
+    assert res.details["gamma_d"] == pytest.approx(1.2)
 
 
 def test_psf_std_out_of_range_flag():
-    res = dnv_f101_psf(D, T, DEPTH, LEN, SMTS, std_rel_depth=0.25)
-    assert res.details["within_applicability"] is False
-    assert "StD" in res.details["applicability_note"]
+    with pytest.raises(ValueError, match="std_rel_depth"):
+        dnv_f101_psf(D, T, DEPTH, LEN, SMTS, std_rel_depth=.25)
 
 
 def test_psf_deep_defect_applicability_flag():

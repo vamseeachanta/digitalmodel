@@ -254,7 +254,8 @@ def test_report_flags_depth_applicability_at_each_campaign(method, limit, growth
     from digitalmodel.asset_integrity.riser_joint_ffs import level1_flaw_envelope
     from digitalmodel.asset_integrity.riser_joint_report import _envelope_sections
 
-    args = {"region": "weld"} if method == "bs7910_option1_fad" else {"method": method}
+    args = ({"region": "weld", "weld_sigma_b_mpa": 0, "weld_cvn_joules": 27}
+            if method == "bs7910_option1_fad" else {"method": method})
     basis = dict(
         od_in=21.25,
         wt_in=0.875,

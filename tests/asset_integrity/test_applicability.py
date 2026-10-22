@@ -163,20 +163,14 @@ def test_dnv_single_defect_no_flag_at_limit():
 
 
 def test_dnv_psf_flags_depth_and_sizing_std_independently():
-    both = dnv.dnv_f101_psf(
-        D=20.0, t=0.5, d=0.45, L=4.0, smts_psi=66_700.0, std_rel_depth=0.20
-    )
-    assert both.applicability.ok is False
-    assert both.applicability.flags == [
-        DNV_F101_RELATIVE_DEPTH_FLAG,
-        DNV_F101_SIZING_STD_FLAG,
-    ]
-    assert both.details["applicability_note"] == "; ".join(both.applicability.notes)
-
-    std_only = dnv.dnv_f101_psf(
-        D=20.0, t=0.5, d=0.20, L=4.0, smts_psi=66_700.0, std_rel_depth=0.20
-    )
-    assert std_only.applicability.flags == [DNV_F101_SIZING_STD_FLAG]
+    # A45: unqualified uncertainty is rejected before any capacity is returned.
+    for depth in (.45, .20):
+        with pytest.raises(ValueError, match="std_rel_depth"):
+            dnv.dnv_f101_psf(D=20.0, t=.5, d=depth, L=4.0,
+                             smts_psi=66_700.0, std_rel_depth=.20)
+    deep = dnv.dnv_f101_psf(D=20.0, t=.5, d=.45, L=4.0,
+                           smts_psi=66_700.0, std_rel_depth=.16)
+    assert deep.applicability.flags == [DNV_F101_RELATIVE_DEPTH_FLAG]
 
     clean = dnv.dnv_f101_psf(D=20.0, t=0.5, d=0.20, L=4.0, smts_psi=66_700.0)
     assert clean.applicability.ok is True and clean.applicability.flags == []

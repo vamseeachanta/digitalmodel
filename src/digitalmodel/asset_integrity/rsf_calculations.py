@@ -14,6 +14,8 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal
 
+from .input_validation import finite_number
+
 # API 579-1 Table 4-4: default RSF_allowable for Level 1/2
 RSF_ALLOWABLE = 0.90
 
@@ -37,6 +39,9 @@ def calculate_rsf(
     Returns:
         dict with rsf, ffs_acceptable, mawp_ratio, metal_loss_fraction.
     """
+    finite_number("t_nominal", t_nominal, positive=True)
+    finite_number("t_required", t_required, positive=True)
+    finite_number("t_measured", t_measured, minimum=0)
     if t_nominal <= 0:
         raise ValueError("t_nominal must be positive")
     if t_required <= 0:
@@ -48,7 +53,10 @@ def calculate_rsf(
     rsf = t_measured / t_nominal
     # Refined RSF for MAWP comparison
     rsf_refined = t_measured / t_required if t_required > 0 else 0.0
-    ffs_acceptable = rsf >= RSF_ALLOWABLE
+    finite_number("derived rsf", rsf, minimum=0)
+    finite_number("derived refined rsf", rsf_refined, minimum=0)
+    # Acceptance needs both nominal-wall RSF and measured >= required wall.
+    ffs_acceptable = rsf >= RSF_ALLOWABLE and t_measured >= t_required
     # MAWP scales linearly with remaining thickness
     mawp_ratio = t_measured / t_required if t_required > 0 else 0.0
     metal_loss_fraction = (t_nominal - t_measured) / t_nominal
@@ -94,9 +102,14 @@ def check_ffs_level1(
     """
     # API domain requirement, not a standard acceptance limit: issue 2598.
     # https://github.com/vamseeachanta/digitalmodel/issues/2598
-    if not math.isfinite(design_pressure_psi) or design_pressure_psi <= 0.0:
+    try:
+        finite_number("design_pressure_psi", design_pressure_psi, positive=True)
+    except ValueError:
         raise ValueError("design_pressure_psi must be positive and finite")
 
+    finite_number("smys_psi", smys_psi, positive=True)
+    finite_number("weld_efficiency", weld_efficiency, positive=True, maximum=1)
+    finite_number("outer_diameter_in", outer_diameter_in, positive=True)
     rsf_result = calculate_rsf(t_measured, t_required, t_nominal)
 
     if outer_diameter_in <= 0:
@@ -104,8 +117,10 @@ def check_ffs_level1(
 
     # Barlow MAWP with measured thickness
     mawp_psi = (2.0 * smys_psi * weld_efficiency * t_measured) / outer_diameter_in
+    finite_number("derived mawp_psi", mawp_psi, minimum=0)
 
-    acceptable = rsf_result["rsf"] >= RSF_ALLOWABLE and t_measured >= t_required
+    # All three criteria must pass: RSF, required wall and pressure capacity.
+    acceptable = (rsf_result["ffs_acceptable"] and mawp_psi >= design_pressure_psi)
     remaining_pressure_fraction = mawp_psi / design_pressure_psi
 
     return {
@@ -202,25 +217,49 @@ def process_ut_grid(
         dict with t_min, t_avg, t_max, metal_loss_pct, critical_points,
         grid_shape, below_required.
     """
+    finite_number("t_nominal", t_nominal, positive=True)
+    finite_number("t_required", t_required, positive=True)
     path = Path(csv_path)
     if not path.exists():
         raise FileNotFoundError(f"UT grid CSV not found: {path}")
 
     measurements: list[list[float]] = []
-    with open(path, newline="") as f:
+    missing_readings = invalid_readings = 0
+    row_widths = []
+    with path.open(encoding="utf-8", newline="") as f:
         reader = csv.reader(f)
         for row in reader:
+            row_widths.append(len(row))
             parsed = []
             for cell in row:
                 cell = cell.strip()
-                if cell:
-                    parsed.append(float(cell))
-            if parsed:
-                measurements.append(parsed)
+                if not cell:
+                    missing_readings += 1
+                    continue
+                try:
+                    value = float(cell)
+                except ValueError:
+                    invalid_readings += 1
+                    continue
+                if not math.isfinite(value) or value < 0:
+                    invalid_readings += 1
+                else:
+                    parsed.append(value)
+            measurements.append(parsed)
 
     if not measurements:
         raise ValueError("UT grid CSV contains no valid data")
 
+    rectangular = len(set(row_widths)) == 1 and row_widths[0] > 0
+    missing_readings += sum(max(row_widths) - width for width in row_widths)
+    if missing_readings or invalid_readings or not rectangular:
+        # A complete rectangular measurement grid is required for any clearance.
+        return dict(evaluation_status="NOT_EVALUATED",
+                    reason="UT grid requires complete finite nonnegative readings in every cell",
+                    missing_readings=missing_readings, invalid_readings=invalid_readings,
+                    grid_shape=(len(row_widths), max(row_widths)),
+                    t_min=None, t_avg=None, t_max=None, metal_loss_pct=None,
+                    critical_points=None, total_points=sum(row_widths), below_required=None)
     flat = [v for row in measurements for v in row]
     t_min = min(flat)
     t_max = max(flat)

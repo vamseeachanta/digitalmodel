@@ -90,7 +90,7 @@ def test_index_round_trip():
     lookup = build_lookup(recs)
     assert lookup["meta"]["n_records"] == 3
     hit = query_index(lookup, "pipe_corroded_strength", method="modified_b31g",
-                      grade="X52", D_in=20.0, t_in=0.5, d_in=0.20, L_in=6.0)
+                      grade="X52", D_in=20.0, t_in=0.5, d_in=0.20, L_in=6.0, maop_psi=900.0)
     assert hit is not None
     # matches the record's metric
     rec = next(r for r in recs if r["inputs"]["d_in"] == 0.20)
@@ -129,4 +129,9 @@ def test_record_from_assessment():
     rec = record_from_assessment(res)
     assert rec["key"] == "component|L-9"
     assert rec["metric_name"] == "rsf"
-    assert isinstance(rec["acceptable"], bool)
+    if res.sufficiency_status == "SUFFICIENT" and res.applicability.ok:
+        assert isinstance(rec["acceptable"], bool)
+    else:
+        assert rec["acceptable"] is None  # A50: unqualified acceptance is unknown
+        assert rec["verdict"] == "UNKNOWN"
+    assert rec["applicability"] == res.applicability.to_dict()

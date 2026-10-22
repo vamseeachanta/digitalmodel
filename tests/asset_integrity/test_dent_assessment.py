@@ -158,11 +158,12 @@ def test_dent_gouge_always_needs_assessment():
         assert "fracture-controlled" in r.governing_criterion
 
 
-def test_dent_gouge_overrides_weld_and_strain_paths():
+def test_dent_gouge_preserves_weld_depth_rejection():
     r = assess_dent(OD, WT, 0.10 * OD, 12.0, 12.0,
                     on_weld=True, with_gouge_or_metal_loss=True)
-    assert r.verdict == "NEEDS_ASSESSMENT"
-    assert "dent-gouge" in r.governing_criterion
+    assert r.verdict == "REJECT"  # A30: failed weld depth still requires repair
+    assert "weld-depth" in r.governing_criterion
+    assert any("gouge" in note for note in r.validity_notes)
 
 
 # --- Weld and restraint modifiers --------------------------------------------
