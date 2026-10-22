@@ -113,8 +113,14 @@ def test_public_page_and_rebuild(builder, tmp_path):
             'Report sources changed: rebuild with scripts/reporting/'
             'build_published_jacket_analysis.py and commit the report.'
         )
-    builder.verify_pack(tmp_path)
-    builder.verify_pack(OUTPUT)
+    try:
+        builder.verify_pack(tmp_path)
+        builder.verify_pack(OUTPUT)
+    except ValueError as error:
+        raise AssertionError(
+            'Report checksums changed: rebuild with scripts/reporting/'
+            'build_published_jacket_analysis.py and commit the report.'
+        ) from error
     page = (tmp_path / 'cathodic-protection-analysis.html').read_text(encoding='utf-8')
     assert 'Draft for maintainer review' in page
     assert 'worked example' in page
