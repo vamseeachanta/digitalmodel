@@ -243,7 +243,11 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def extract_results(self) -> dict:
-        """Parse solver results and return summary."""
+        """Parse solver results and return summary.
+
+        Status parse errors are explicit and leave FRD/DAT results available.
+        An unreadable history supplies no convergence or collapse conclusion.
+        """
         parser = CalculiXResultParser(self.JOB_NAME, self.work_dir)
         frd = parser.parse_frd_file()
         max_vm = parser.get_max_von_mises() if frd["stresses"] else None
@@ -253,9 +257,17 @@ class FEMChain:
         # Find max stress near hole (exclude load/BC application nodes)
         hole_sxx = self._max_stress_near_hole(parser)
 
+        status = None
+        if (self.work_dir / f"{self.JOB_NAME}.sta").exists():
+            try:
+                status = {"parse_status": "OK", **parser.parse_sta_file()}
+            except ValueError as exc:
+                status = {"parse_status": "ERROR", "error": str(exc),
+                          "collapse_status": "NOT_EVALUATED"}
+
         return {
             "fields": frd,
-            "status": parser.parse_sta_file() if (self.work_dir / f"{self.JOB_NAME}.sta").exists() else None,
+            "status": status,
             "dat": parser.parse_dat_file() if (self.work_dir / f"{self.JOB_NAME}.dat").exists() else None,
             "max_von_mises": max_vm,
             "max_sxx": max_sxx,

@@ -95,6 +95,32 @@ def test_steps_keep_distinct_loads(tmp_path):
     assert "ESHELL_S4, P, 2.0" not in buckle
 
 
+@pytest.mark.parametrize("with_buckle", [False, True])
+def test_static_step_turns_nlgeom_off_explicitly(tmp_path, with_buckle):
+    """STEP section 7.124: NLGEOM persists until NLGEOM=NO is written."""
+    writer = shell_writer()
+    writer.add_shell_section("ESHELL_S4", "MAT", 1.0)
+    writer.add_step(nlgeom=True)
+    if with_buckle:
+        writer.add_step("buckle", modes=1)
+    writer.add_step(nlgeom=False)
+    text = writer.write(tmp_path / "steps.inp").read_text()
+    headers = [line for line in text.splitlines() if line.startswith("*STEP")]
+    expected = ["*STEP, NLGEOM"] + (["*STEP"] if with_buckle else [])
+    assert headers == expected + ["*STEP, NLGEOM=NO"]
+
+
+def test_nlgeom_can_be_enabled_again_after_linear_steps(tmp_path):
+    writer = shell_writer()
+    writer.add_shell_section("ESHELL_S4", "MAT", 1.0)
+    for nonlinear in (False, True, False, False, True):
+        writer.add_step(nlgeom=nonlinear)
+    text = writer.write(tmp_path / "steps.inp").read_text()
+    assert [line for line in text.splitlines() if line.startswith("*STEP")] == [
+        "*STEP", "*STEP, NLGEOM", "*STEP, NLGEOM=NO", "*STEP", "*STEP, NLGEOM",
+    ]
+
+
 def test_hydrostatic_centroid_pressure(tmp_path):
     """p=rho*g*max(z_surface-z,0): 2*5*(3-1)=20; dry point=0.
 
@@ -144,7 +170,8 @@ def frd_block(label, components, rows):
 def test_strain_principal_values_and_peeq(tmp_path):
     """Tensor [[.02,.01,0],[.01,.02,0],[0,0,-.01]] has eigenvalues
     .03,.01,-.01 from (.02-lambda)^2-.01^2=0 and the third diagonal.
-    Shears are tensor components, not engineering gamma. PE is scalar.
+    CalculiX 2.22 section 6, equations (2)-(3), defines tensor shear as
+    half the engineering gamma; section 7.51 identifies TOSTRAIN. PE is scalar.
     """
     text = frd_block("TOSTRAIN", ["EXX", "EYY", "EZZ", "EXY", "EYZ", "EZX"],
                      [(1, [.02, .02, -.01, .01, 0, 0])])
@@ -169,6 +196,13 @@ def test_latest_complete_frame_does_not_mix_nodes(tmp_path):
 def test_truncated_strain_block_rejected(tmp_path):
     (tmp_path / "shell.frd").write_text(" -4  TOSTRAIN\n -1         1 1.0\n")
     with pytest.raises(ValueError):
+        CalculiXResultParser("shell", tmp_path).parse_frd_file()
+
+
+@pytest.mark.parametrize("header", [" -4", " -4   "])
+def test_frd_header_without_label_raises_value_error(tmp_path, header):
+    (tmp_path / "shell.frd").write_text(header + "\n")
+    with pytest.raises(ValueError, match="FRD field header"):
         CalculiXResultParser("shell", tmp_path).parse_frd_file()
 
 
@@ -265,6 +299,36 @@ def test_buckling_only_result_has_no_stress_claim(tmp_path):
     result = FEMChain(tmp_path).extract_results()
     assert result["max_sxx"] is None
     assert result["hole_sxx"] is None
+
+
+@pytest.mark.parametrize("record", [
+    " 1 1 1\n",
+    " 1 1 invalid 3 0.1 0.1 0.1\n",
+    " 1 1 1 3 NaN 0.1 0.1\n",
+])
+def test_sta_parse_error_preserves_result_fields(tmp_path, record):
+    """An unreadable status history must not discard FRD or DAT results."""
+    (tmp_path / "fem_analysis.frd").write_text(
+        frd_block("DISP", ["D1", "D2", "D3"], [(1, [.1, 0, 0])]))
+    (tmp_path / "fem_analysis.dat").write_text(" MODE NO BUCKLING FACTOR\n 1 2.0\n")
+    # A preceding valid increment must not become a partial success claim.
+    (tmp_path / "fem_analysis.sta").write_text(" 1 1 1 3 0.1 0.1 0.1\n" + record)
+    result = FEMChain(tmp_path).extract_results()
+    assert result["status"]["parse_status"] == "ERROR"
+    assert result["status"]["error"]
+    assert result["status"]["collapse_status"] == "NOT_EVALUATED"
+    assert "last_converged" not in result["status"]
+    assert result["fields"]["displacements"][1]["dx"] == .1
+    assert result["max_displacement"] == .1
+    assert result["dat"]["buckling_factors"] == [{"mode": 1, "factor": 2.0}]
+
+
+def test_sta_parse_success_is_explicit(tmp_path):
+    (tmp_path / "fem_analysis.frd").write_text("")
+    (tmp_path / "fem_analysis.sta").write_text(" 1 1 1 3 0.1 0.1 0.1\n")
+    result = FEMChain(tmp_path).extract_results()
+    assert result["status"]["parse_status"] == "OK"
+    assert result["status"]["last_converged"]["step_time"] == .1
 
 
 def test_set_mesh_invalidates_old_deck(tmp_path):

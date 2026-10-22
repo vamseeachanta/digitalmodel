@@ -152,7 +152,10 @@ class CalculiXResultParser:
             if not line.startswith(" -4"):
                 i += 1
                 continue
-            label = line.split()[1]
+            header = line.split()
+            if len(header) < 2:
+                raise ValueError("Missing label in FRD field header")
+            label = header[1]
             specs = {"DISP": (3, self._displacements),
                      "STRESS": (6, self._stresses), "TOSTRAIN": (6, self._strains),
                      "PE": (1, self._plastic_strain), "PEEQ": (1, self._plastic_strain)}

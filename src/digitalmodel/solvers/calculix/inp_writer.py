@@ -147,7 +147,9 @@ class INPWriter:
     def add_pressure(self, element_set: str, magnitude: float, face: str = "P"):
         """DLOAD pressure; shell P or solid P1..P6, per 2.22 section 7.43.
 
-        The caller selects the face and sign using element connectivity/normals.
+        Shell P acts along the positive element normal for positive magnitude;
+        negative magnitude reverses it. Connectivity defines that normal.
+        Solid pressures act on the selected numbered face.
         """
         if not re.fullmatch(r"P[1-6]?", face):
             raise ValueError("Pressure face must be P or P1 through P6")
@@ -164,6 +166,11 @@ class INPWriter:
         inputs. Pressure is zero above the free surface; mesh refinement is
         required at the wet/dry boundary. Not an exact facewise linear load.
         DLOAD representation: CalculiX 2.22 (2024), section 7.43.
+        For shell P the non-negative pressure acts along the positive element
+        normal, representing fluid on the negative-normal side. Orient shell
+        connectivity accordingly. For the opposite direction, reverse the
+        connectivity or use add_pressure with a negative magnitude; this helper
+        does not choose the wetted side from elevation alone.
         """
         density, gravity, surface_elevation = map(_finite, (density, gravity, surface_elevation))
         if density <= 0 or gravity <= 0 or not re.fullmatch(r"P[1-6]?", face):
@@ -215,7 +222,11 @@ class INPWriter:
 
         Pending BCs/loads before the first step move into that step. CalculiX
         itself retains static loads/BCs between steps (2.22 sections 7.5, 7.122,
-        7.124); no OP=NEW reset is implied. NLGEOM is a *STEP parameter.
+        7.124); no OP=NEW reset is implied. Section 7.124 (*STEP), NLGEOM
+        clause: geometric nonlinearity persists in later static steps until
+        NLGEOM=NO. A static nlgeom=False writes that reset after an enabled
+        step, including across an intervening buckling step. Buckling does not
+        reset the static setting; its reference state follows PERTURBATION.
         """
         kind = step_type.lower()
         if kind in {"riks", "arc_length"}:
@@ -394,10 +405,15 @@ class INPWriter:
     def _write_steps(self, lines: list[str]):
         if not self._steps and (self._boundary_conditions or self._loads):
             self.add_step()
+        nlgeom_active = False
         for step in self._steps:
             options = []
             if step["nlgeom"]:
                 options.append("NLGEOM")
+                nlgeom_active = True
+            elif step["type"] == "static" and nlgeom_active:
+                options.append("NLGEOM=NO")
+                nlgeom_active = False
             if step["perturbation"]:
                 options.append("PERTURBATION")
             if step["max_increments"] is not None:
