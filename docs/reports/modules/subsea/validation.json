@@ -1,0 +1,20 @@
+{
+  "basis": "Selected analytical calculation tests; no native solver or field measurements",
+  "date": "2026-10-21",
+  "command": "PYTHONPATH=src python -m pytest tests/subsea/catenary_riser/test_catenary_riser_unit.py tests/subsea/catenary_riser/test_lazy_wave_quarantine.py -q -p no:cacheprovider",
+  "collected": 27,
+  "passed": 27,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "source_sha256": {
+    "src/digitalmodel/subsea/catenary_riser/__init__.py": "34ca653e5145489b5c681c881619412192299ad32c8c38761c4a99e25d9c3424",
+    "src/digitalmodel/subsea/catenary_riser/models.py": "fa1b8c1821e1f2b1b76eb45c99b1483b66fde2805d4dd6c57a3c42a8586c417e",
+    "src/digitalmodel/subsea/catenary_riser/simple_catenary.py": "98d54f81c6c7247801b4b9e893ada69afe22897fe77a9e93180f976c77be6157",
+    "src/digitalmodel/subsea/catenary_riser/effective_weight.py": "1991018e21d831a64e2e7cabb6a86890059ce314bde428e7584c584e34272646",
+    "src/digitalmodel/subsea/catenary_riser/lazy_wave.py": "1dd916c37e62f73cfab02ca9378a53da025d48541fa9e406d28c322ae9277390",
+    "src/digitalmodel/subsea/catenary_riser/README.md": "d0ec7e5b473041776f7b4dc3e517f76669c6750a839b697db493ca0aaeebd8b7",
+    "tests/subsea/catenary_riser/test_catenary_riser_unit.py": "df4ef7927b84a731972e84358066cd960dc0d24515c9a6cb4db2dfe54c8f5640",
+    "tests/subsea/catenary_riser/test_lazy_wave_quarantine.py": "6dce9bef6253cb7383e3a4915cab302e95dda9c3e9fe0e5fb83534e69d3d1fa8"
+  }
+}
