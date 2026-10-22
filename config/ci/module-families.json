@@ -1,11 +1,12 @@
 {
-  "schema_version": 1,
-  "description": "Static CI family contract only; no workflow or gate selection change.",
+  "schema_version": 2,
+  "description": "Generated advisory CI family inventory; no CI selection change.",
+  "coverage_mode": "report-only",
   "provenance": {
-    "plan": "I-0265 plan (ci265), section 5, slice 2",
-    "source_revision": "48f597b9d669ede3c2a3b9f3861420c933a69a27",
-    "input_map_sha256": "c66c45d4232732abd004532634881287668e22ef0483bc838e0e93890de3db5a",
-    "input_report_sha256": "66a9fe0236931be818636223a1783d7fdfe9f2803892a1c971318ccc56563a38"
+    "generator": "scripts/ci/generate_module_families.py",
+    "rules": "config/ci/module-family-rules.json",
+    "input_sha256": "e15612543dd080ef328dc6576234bed76e267b26f3b35825282c865e082b1a26",
+    "dependency_measurement": "absolute AST imports; longest inventoried module"
   },
   "families": [
     "ENGINE",
@@ -22,12 +23,13 @@
     "workflows"
   ],
   "engine": {
-    "status": "proposed; product manager confirms",
-    "boundary_rule": "Exact module; package boundary includes descendants, except the digitalmodel root facade is exact only. Boundary requires product-manager confirmation.",
+    "status": "proposed; maintainer confirmation required",
+    "boundary_rule": "Exact root facade; longest dotted prefix for other modules.",
     "boundaries": [
       "digitalmodel",
       "digitalmodel.__main__",
       "digitalmodel._compat",
+      "digitalmodel._output_paths",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.schema",
@@ -2687,12 +2689,14 @@
   },
   "family_to_engine_deps": {
     "data": [
+      "digitalmodel",
       "digitalmodel.units"
     ],
     "energy-production": [
       "digitalmodel.reporting"
     ],
     "hydrodynamics": [
+      "digitalmodel",
       "digitalmodel.common.assumption_ledger",
       "digitalmodel.engine",
       "digitalmodel.reporting",
@@ -2708,6 +2712,7 @@
       "digitalmodel.reporting.figures",
       "digitalmodel.reporting.provenance",
       "digitalmodel.reporting.spec",
+      "digitalmodel.reporting.thickness",
       "digitalmodel.units"
     ],
     "marine-operations": [
@@ -2721,30 +2726,18 @@
     ],
     "platform": [
       "digitalmodel",
-      "digitalmodel._compat",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
-      "digitalmodel.citations.resolver",
       "digitalmodel.citations.schema",
-      "digitalmodel.common.assumption_ledger",
-      "digitalmodel.engine",
       "digitalmodel.infrastructure.utils.private_paths",
-      "digitalmodel.reporting._backbone",
-      "digitalmodel.reporting._base",
-      "digitalmodel.reporting._renderer",
-      "digitalmodel.reporting.adapters",
-      "digitalmodel.reporting.brief",
-      "digitalmodel.reporting.calc_report",
       "digitalmodel.reporting.engine",
-      "digitalmodel.reporting.figures",
       "digitalmodel.reporting.pdf",
       "digitalmodel.reporting.provenance",
-      "digitalmodel.reporting.skeleton",
       "digitalmodel.reporting.spec",
-      "digitalmodel.run_contract",
       "digitalmodel.units"
     ],
     "solvers": [
+      "digitalmodel",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.resolver",
@@ -2759,9 +2752,12 @@
       "digitalmodel.infrastructure.utils.private_paths",
       "digitalmodel.reporting",
       "digitalmodel.reporting.pdf",
+      "digitalmodel.reporting.spec",
+      "digitalmodel.reporting.thickness",
       "digitalmodel.units"
     ],
     "subsea": [
+      "digitalmodel",
       "digitalmodel.citations",
       "digitalmodel.citations.registry",
       "digitalmodel.citations.resolver",
@@ -2769,11 +2765,12 @@
       "digitalmodel.units"
     ],
     "workflows": [
+      "digitalmodel",
       "digitalmodel.citations.schema",
       "digitalmodel.engine"
     ]
   },
-  "test_home_rule": "Each test_*.py or *_test.py file in the repository has one exact home. All node IDs in a file inherit that home, including parameterized and integration tests. Excluded files remain inventoried. Git metadata, virtual environments, bytecode caches, node_modules and linked directories are not traversed. New or moved files require explicit assignments; no fallback or CI selection is implied.",
+  "test_home_rule": "Each tracked regular test_*.py or *_test.py file has one home. Node IDs inherit the file home, including excluded files. Git symlinks, submodules and untracked environments or checkouts are not traversed. New paths inherit the longest prefix or the platform default; snapshot freshness is report-only and does not select CI jobs.",
   "test_file_to_family": {
     "docs/domains/dom_poc_1/test_pipeline_lateral_buckling.py": "subsea",
     "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/test_postproc.py": "solvers",

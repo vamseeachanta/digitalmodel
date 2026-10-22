@@ -1,236 +1,256 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Static family-contract checks; no application or solver imports/collection."""
+"""Check family generation without making inventory freshness a required gate."""
 
+import ast
 import copy
+import importlib.util
 import json
-import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts/ci/generate_module_families.py"
 CONTRACT = ROOT / "config/ci/module-families.json"
-TEST_TREES = ("tests", "examples", "docs", "scripts", "src")
-FAMILIES = {
-    "ENGINE",
-    "data",
-    "energy-production",
-    "hydrodynamics",
-    "integrity",
-    "marine-operations",
-    "naval-architecture",
-    "platform",
-    "solvers",
-    "structural",
-    "subsea",
-    "workflows",
-}
-ENGINE_BOUNDARIES = {
-    "digitalmodel",
-    "digitalmodel.__main__",
-    "digitalmodel._compat",
-    "digitalmodel.citations",
-    "digitalmodel.citations.registry",
-    "digitalmodel.citations.schema",
-    "digitalmodel.common.assumption_ledger",
-    "digitalmodel.engine",
-    "digitalmodel.infrastructure.utils.private_paths",
-    "digitalmodel.reporting",
-    "digitalmodel.run_contract",
-    "digitalmodel.units",
-}
-
-
-def _unique_object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"Duplicate assignment: {key}")
-        result[key] = value
-    return result
 
 
 @pytest.fixture(scope="module")
-def contract():
-    return json.loads(
-        CONTRACT.read_text(encoding="utf-8"), object_pairs_hook=_unique_object
+def generator():
+    spec = importlib.util.spec_from_file_location("family_generator", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture(scope="module")
+def rules(generator):
+    return generator.load_rules(ROOT)
+
+
+@pytest.fixture(scope="module")
+def live(generator, rules):
+    sources, tests = generator.read_inventory(ROOT)
+    return generator.build_contract(sources, tests, rules)
+
+
+def test_snapshot_schema_and_internal_consistency(generator):
+    contract = json.loads(CONTRACT.read_text(), object_pairs_hook=generator.unique_object)
+    assert contract["schema_version"] == 2
+    assert contract["coverage_mode"] == "report-only"
+    assert set(contract["families"]) == {
+        "ENGINE", "data", "energy-production", "hydrodynamics", "integrity",
+        "marine-operations", "naval-architecture", "platform", "solvers",
+        "structural", "subsea", "workflows",
+    }
+    assert len(contract["families"]) == 12
+    assert set(contract["module_to_family"].values()) <= set(contract["families"])
+    assert set(contract["test_file_to_family"].values()) <= set(contract["families"])
+    assert contract["engine"]["status"] == "proposed; maintainer confirmation required"
+    assert contract["engine"]["modules"] == sorted(
+        module for module, family in contract["module_to_family"].items()
+        if family == "ENGINE"
     )
+    for dependencies in contract["family_to_engine_deps"].values():
+        assert dependencies == sorted(set(dependencies))
+        assert set(dependencies) <= set(contract["engine"]["modules"])
 
 
-def _source_modules(root):
-    modules = set()
-    for path in (root / "src/digitalmodel").rglob("*.py"):
-        parts = path.relative_to(root / "src").with_suffix("").parts
-        if parts[-1] == "__init__":
-            parts = parts[:-1]
-        modules.add(".".join(parts))
-        modules.update(".".join(parts[:i]) for i in range(1, len(parts)))
-    return modules
+def test_tracked_inventory_is_exhaustively_assigned(generator, live):
+    sources, tests = generator.read_inventory(ROOT)
+    assert set(live["module_to_family"]) == generator.source_modules(sources)
+    assert set(live["test_file_to_family"]) == set(tests)
 
 
-def _test_files(root):
-    files = set()
-    for directory, subdirs, names in os.walk(root):
-        subdirs[:] = [
-            name
-            for name in subdirs
-            if name not in {".git", ".venv", "__pycache__", "node_modules"}
+@pytest.mark.parametrize("tree", ["tests", "examples", "docs", "scripts", "src", "new-tree"])
+def test_new_tests_receive_deterministic_homes(generator, rules, tree):
+    paths = [f"{tree}/new/test_new.py", f"{tree}/new/other_test.py"]
+    result = generator.build_contract({}, paths, rules)
+    assert set(result["test_file_to_family"]) == set(paths)
+    assert set(result["test_file_to_family"].values()) <= set(rules["families"])
+
+
+def test_new_modules_and_namespaces_inherit_prefix_rules(generator, rules):
+    result = generator.build_contract({
+        "src/digitalmodel/hydrodynamics/new/quality.py": "",
+        "src/digitalmodel/new_package/core.py": "",
+        "src/digitalmodel/_output_paths.py": "",
+    }, [], rules)
+    modules = result["module_to_family"]
+    assert modules["digitalmodel"] == "ENGINE"
+    assert modules["digitalmodel.hydrodynamics.new"] == "hydrodynamics"
+    assert modules["digitalmodel.hydrodynamics.new.quality"] == "hydrodynamics"
+    assert modules["digitalmodel.new_package.core"] == "platform"
+    assert modules["digitalmodel._output_paths"] == "ENGINE"
+
+
+def test_prefixes_match_components_and_root_facade_is_exact(generator, rules):
+    assert generator.module_family("digitalmodel.reporting.spec", rules) == "ENGINE"
+    assert generator.module_family("digitalmodel.reporting_extra", rules) == "platform"
+    assert generator.module_family("digitalmodel.materials", rules) == "integrity"
+    assert generator.module_family("digitalmodel.solvers.new", rules) == "solvers"
+    assert set(rules["engine_exact_modules"]) == {"digitalmodel"}
+    assert {module for module, family in rules["module_prefix_to_family"].items()
+            if family == "ENGINE"} == {
+        "digitalmodel.__main__", "digitalmodel._compat", "digitalmodel._output_paths",
+        "digitalmodel.citations", "digitalmodel.citations.registry",
+        "digitalmodel.citations.schema", "digitalmodel.common.assumption_ledger",
+        "digitalmodel.engine", "digitalmodel.infrastructure.utils.private_paths",
+        "digitalmodel.reporting", "digitalmodel.run_contract", "digitalmodel.units",
+    }
+
+
+@pytest.mark.parametrize("directory", ["venv", ".tox", ".nox", ".claude/worktrees/copy"])
+def test_untracked_environments_and_checkouts_are_not_inventoried(
+    generator, tmp_path, monkeypatch, directory,
+):
+    tracked = "tests/test_tracked.py"
+    (tmp_path / "tests").mkdir()
+    (tmp_path / tracked).write_text("")
+    excluded = tmp_path / directory
+    excluded.mkdir(parents=True)
+    (excluded / "pyvenv.cfg").write_text("include-system-site-packages = false\n")
+    (excluded / "test_noise.py").write_text("")
+    calls = []
+
+    def git_read(root, *args):
+        calls.append(args)
+        return f"100644 {'0' * 40} 0\t{tracked}\0".encode()
+
+    monkeypatch.setattr(generator, "git_read", git_read)
+    assert generator.read_inventory(tmp_path) == ({}, [tracked])
+    assert calls == [("ls-files", "--stage", "-z")]
+
+
+def test_symlink_and_submodule_entries_are_excluded(generator, tmp_path, monkeypatch):
+    records = "".join(
+        f"{mode} {'0' * 40} 0\t{path}\0" for mode, path in [
+            ("120000", "tests/test_link.py"), ("160000", "checkout"),
         ]
-        for name in names:
-            if name.endswith(".py") and (
-                name.startswith("test_") or name.endswith("_test.py")
-            ):
-                files.add((Path(directory) / name).relative_to(root).as_posix())
-    return files
+    )
+    monkeypatch.setattr(generator, "git_read", lambda *args: records.encode())
+    assert generator.read_inventory(tmp_path) == ({}, [])
 
 
-def _assert_exhaustive(assignments, expected):
-    actual = set(assignments)
-    assert expected - actual == set(), f"Unassigned: {sorted(expected - actual)}"
-    assert actual - expected == set(), f"Stale: {sorted(actual - expected)}"
-    assert set(assignments.values()) <= FAMILIES, "Unknown family"
-
-
-def test_schema_and_families(contract):
-    assert contract["schema_version"] == 1
-    assert set(contract["families"]) == FAMILIES
-    assert len(contract["families"]) == len(FAMILIES)
-    assert contract["engine"]["status"] == "proposed; product manager confirms"
-
-
-def test_every_source_module_and_namespace_has_one_family(contract):
-    _assert_exhaustive(contract["module_to_family"], _source_modules(ROOT))
-
-
-def test_application_subpackages_inherit_their_top_level_family(contract):
-    modules = contract["module_to_family"]
-    for module, family in modules.items():
-        if family != "ENGINE" and module.count(".") > 1:
-            assert family == modules[".".join(module.split(".")[:2])], module
-
-
-def test_every_test_file_has_one_home_including_excluded_files(contract):
-    # File homes also give each function/class/parameterized node ID one home.
-    # This does not claim collection parity or introduce CI test selection.
-    _assert_exhaustive(contract["test_file_to_family"], _test_files(ROOT))
-
-
-def test_engine_modules_and_package_boundaries_are_explicit(contract):
-    engine = contract["engine"]
-    assert set(engine["boundaries"]) == ENGINE_BOUNDARIES
-    assert len(engine["boundaries"]) == len(ENGINE_BOUNDARIES)
-    expected = {
-        module
-        for module in contract["module_to_family"]
-        if module in ENGINE_BOUNDARIES
-        or any(
-            module.startswith(boundary + ".")
-            for boundary in ENGINE_BOUNDARIES - {"digitalmodel"}
-        )
+def test_engine_dependency_measurement_is_exact(generator, rules):
+    sources = {
+        "src/digitalmodel/__init__.py": "",
+        "src/digitalmodel/reporting/spec.py": "",
+        "src/digitalmodel/reporting/thickness.py": "",
+        "src/digitalmodel/solvers/new.py": "import digitalmodel\n",
+        "src/digitalmodel/code_checks/new.py": "from digitalmodel.reporting.thickness import Result\n",
+        "src/digitalmodel/ansys/new.py": (
+            "from digitalmodel.reporting import spec, thickness\n"
+            "import digitalmodel.reporting.spec as report\n"
+        ),
     }
-    assert set(engine["modules"]) == expected
-    assert len(engine["modules"]) == len(expected)
-    actual = {m for m, f in contract["module_to_family"].items() if f == "ENGINE"}
-    assert actual == expected
-    assert contract["module_to_family"]["digitalmodel.materials"] == "integrity"
-    assert contract["module_to_family"]["digitalmodel.orcaflex"] == "solvers"
-    assert (
-        contract["module_to_family"]["digitalmodel.marine_ops"] == "marine-operations"
-    )
+    result = generator.build_contract(sources, [], rules)
+    expected = {family: [] for family in rules["families"] if family != "ENGINE"}
+    expected.update({
+        "solvers": ["digitalmodel"],
+        "integrity": ["digitalmodel.reporting.thickness"],
+        "structural": ["digitalmodel.reporting.spec", "digitalmodel.reporting.thickness"],
+    })
+    assert result["family_to_engine_deps"] == expected
 
 
-def test_family_engine_dependencies_reference_only_engine_modules(contract):
-    dependencies = contract["family_to_engine_deps"]
-    assert set(dependencies) == FAMILIES - {"ENGINE"}
-    for family, modules in dependencies.items():
-        assert modules == sorted(set(modules)), family
-        assert set(modules) <= set(contract["engine"]["modules"]), family
+def test_measured_dependencies_equal_declared_for_every_family(generator, live):
+    # Independent absolute-import scan: both missing and surplus edges fail.
+    sources, _ = generator.read_inventory(ROOT)
+    homes = live["module_to_family"]
+    expected = {family: set() for family in live["families"] if family != "ENGINE"}
+    for path, source in sources.items():
+        family = homes[generator.module_for_path(path)]
+        if family == "ENGINE":
+            continue
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.Import):
+                imports = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0:
+                imports = [f"{node.module}.{alias.name}" for alias in node.names]
+            else:
+                continue
+            for name in imports:
+                while name and name not in homes:
+                    name = name.rpartition(".")[0]
+                if homes.get(name) == "ENGINE":
+                    expected[family].add(name)
+    assert live["family_to_engine_deps"] == {
+        family: sorted(edges) for family, edges in expected.items()
+    }
 
 
-def _module_for_source_path(source_path):
-    path = Path(source_path)
-    if path.name == "agent-pack.md":
-        path = path.parent.parent
-    parts = path.relative_to("src").with_suffix("").parts
-    if parts[-1] == "__init__":
-        parts = parts[:-1]
-    return ".".join(parts)
-
-
-def test_registry_families_agree_with_contract(contract):
-    registry = yaml.safe_load(
-        (ROOT / "docs/registry/module-routing.yaml").read_text(encoding="utf-8")
-    )
+def _assert_registry_families(generator, rules, registry):
     for entry in registry["modules"]:
-        module = _module_for_source_path(entry["entry_point"])
-        assert entry["ci_family"] == contract["module_to_family"][module], module
-        for submodule in entry.get("submodules", {}).values():
-            module = _module_for_source_path(submodule["agent_pack"])
-            assert submodule["ci_family"] == contract["module_to_family"][module], (
-                module
-            )
+        records = [(entry["entry_point"], entry.get("ci_family"))]
+        records.extend((sub["agent_pack"], sub.get("ci_family"))
+                       for sub in entry.get("submodules", {}).values())
+        for path, declared in records:
+            # New registry records inherit rules without needing an annotation.
+            if declared is None:
+                continue
+            if path.endswith("agent-pack.md"):
+                path = str(Path(path).parent.parent / "__init__.py")
+            assert generator.module_family(generator.module_for_path(path), rules) == declared
 
 
-@pytest.mark.parametrize(
-    "missing",
-    [
-        "digitalmodel",
-        "digitalmodel.example",
-        "digitalmodel.example.child",
-    ],
-)
-def test_missing_module_or_namespace_is_rejected(tmp_path, missing):
-    source = tmp_path / "src/digitalmodel/example/child.py"
-    source.parent.mkdir(parents=True)
-    source.write_text("", encoding="utf-8")
-    modules = _source_modules(tmp_path)
-    assert modules == {
-        "digitalmodel",
-        "digitalmodel.example",
-        "digitalmodel.example.child",
-    }
-    assignments = dict.fromkeys(modules - {missing}, "platform")
-    with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive(assignments, modules)
+def test_registry_families_agree_with_live_rules(generator, rules):
+    registry = yaml.safe_load((ROOT / "docs/registry/module-routing.yaml").read_text())
+    _assert_registry_families(generator, rules, registry)
 
 
-@pytest.mark.parametrize("tree", (*TEST_TREES, "new-test-tree"))
-def test_new_test_file_requires_an_explicit_home(tmp_path, tree):
-    test = tmp_path / tree / "nested/test_new.py"
-    test.parent.mkdir(parents=True)
-    test.write_text("", encoding="utf-8")
-    other = test.with_name("other_test.py")
-    other.write_text("", encoding="utf-8")
-    files = _test_files(tmp_path)
-    assert files == {f"{tree}/nested/test_new.py", f"{tree}/nested/other_test.py"}
-    with pytest.raises(AssertionError, match="Unassigned"):
-        _assert_exhaustive({f"{tree}/nested/test_new.py": "platform"}, files)
+def test_new_registry_record_does_not_introduce_a_family_gate(generator, rules):
+    _assert_registry_families(generator, rules, {
+        "modules": [{"entry_point": "src/digitalmodel/new_module"}],
+    })
 
 
-def test_duplicate_homes_are_rejected():
-    with pytest.raises(ValueError, match="Duplicate assignment"):
-        json.loads(
-            '{"test.py":"platform","test.py":"ENGINE"}',
-            object_pairs_hook=_unique_object,
-        )
-
-
-@pytest.mark.parametrize(
-    "assignments, expected, error",
-    [
-        ({"test.py": "unknown"}, {"test.py"}, "Unknown family"),
-        ({"deleted.py": "platform"}, set(), "Stale"),
-    ],
-)
-def test_unknown_and_stale_assignments_are_rejected(assignments, expected, error):
-    with pytest.raises(AssertionError, match=error):
-        _assert_exhaustive(assignments, expected)
-
-
-def test_domain_module_cannot_silently_become_engine(contract):
-    altered = copy.deepcopy(contract)
-    altered["module_to_family"]["digitalmodel.materials"] = "ENGINE"
+@pytest.mark.parametrize("record", [
+    {"entry_point": "src/digitalmodel/solvers", "ci_family": "platform"},
+    {"entry_point": "src/digitalmodel/solvers", "submodules": {
+        "new": {"agent_pack": "src/digitalmodel/solvers/new/docs/agent-pack.md",
+                "ci_family": "platform"},
+    }},
+])
+def test_wrong_registry_annotations_still_fail(generator, rules, record):
     with pytest.raises(AssertionError):
-        test_engine_modules_and_package_boundaries_are_explicit(altered)
+        _assert_registry_families(generator, rules, {"modules": [record]})
+
+
+def test_duplicate_rules_are_rejected(generator):
+    with pytest.raises(ValueError, match="Duplicate assignment"):
+        json.loads('{"test.py":"platform","test.py":"ENGINE"}',
+                   object_pairs_hook=generator.unique_object)
+
+
+def test_unknown_families_are_rejected(generator, rules):
+    altered = copy.deepcopy(rules)
+    altered["module_prefix_to_family"]["digitalmodel.new"] = "unknown"
+    with pytest.raises(ValueError, match="Unknown family"):
+        generator.validate_rules(altered)
+
+
+def test_rendering_is_deterministic(generator, rules):
+    sources = {"src/digitalmodel/units.py": "", "src/digitalmodel/engine.py": ""}
+    first = generator.build_contract(sources, ["tests/test_b.py", "tests/test_a.py"], rules)
+    second = generator.build_contract(dict(reversed(list(sources.items()))),
+                                      ["tests/test_a.py", "tests/test_b.py"], rules)
+    assert generator.render(first) == generator.render(second)
+
+
+def test_stale_snapshot_is_report_only_but_check_detects_it(tmp_path):
+    output = tmp_path / "families.json"
+    output.write_text("{}\n")
+    command = [sys.executable, str(SCRIPT), "--output", str(output)]
+    report = subprocess.run([*command, "--report"], capture_output=True, text=True)
+    assert report.returncode == 0, report.stderr
+    assert "out of date" in report.stdout
+    check = subprocess.run([*command, "--check"], capture_output=True, text=True)
+    assert check.returncode == 1, check.stderr
+    write = subprocess.run([*command, "--write"], capture_output=True, text=True)
+    assert write.returncode == 0, write.stderr
+    check = subprocess.run([*command, "--check"], capture_output=True, text=True)
+    assert check.returncode == 0, check.stderr
