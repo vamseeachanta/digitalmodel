@@ -37,7 +37,7 @@ def test_rebuild_and_every_worked_value(tmp_path):
     builder.build(tmp_path)
     for name in ('index.html', 'changes.json'):
         assert (tmp_path / name).read_bytes() == (REPORT / name).read_text(encoding='utf-8').encode('utf-8')
-    page = (tmp_path / 'index.html').read_text()
+    page = (tmp_path / 'index.html').read_text(encoding='utf-8')
     payload = json.loads(re.search(
         r'<script id="example-data" type="application/json">(.*?)</script>', page, re.S)[1])
     omega, rao, scatter = public_example()
@@ -103,10 +103,10 @@ def test_build_emits_lf_with_windows_text_translation(tmp_path, monkeypatch):
 
 
 def test_structure_sources_and_offline_review():
-    page = (REPORT / 'index.html').read_text()
+    page = (REPORT / 'index.html').read_text(encoding='utf-8')
     assert '<body class="hs-doc">' in page
     assert len(re.findall(r'<h2>', page)) == 10
-    assert 'Draft for client review' in page
+    assert 'Draft for review' in page
     assert 'Revision history' in page
     assert 'ASSUMED - to be confirmed' in page
     assert '<script src=' not in page and '<link rel="stylesheet"' not in page
@@ -143,7 +143,7 @@ def test_analytical_reference_and_record_links():
     expected /= sum(r['probability'] for r in weights)
     assert data['result']['operability_pct'] == pytest.approx(expected)
     parser = Links()
-    parser.feed((REPORT / 'index.html').read_text())
+    parser.feed((REPORT / 'index.html').read_text(encoding='utf-8'))
     for target in parser.targets:
         if not target.startswith('#'):
             assert (REPORT / unquote(target)).is_file(), target
@@ -156,7 +156,7 @@ def test_review_javascript_syntax():
     node = shutil.which('node')
     if node is None:
         pytest.skip('JavaScript syntax check requires Node')
-    page = (REPORT / 'index.html').read_text()
+    page = (REPORT / 'index.html').read_text(encoding='utf-8')
     scripts = re.findall(r'<script>(.*?)</script>', page, re.S)
     assert len(scripts) == 1
     subprocess.run([node, '--check'], input=scripts[0], text=True, check=True,
@@ -171,7 +171,7 @@ def test_offline_comments_and_change_panel():
     node = shutil.which('node')
     if node is None:
         pytest.skip('Review control check requires Node')
-    page = (REPORT / 'index.html').read_text()
+    page = (REPORT / 'index.html').read_text(encoding='utf-8')
     script = re.search(r'<script>(.*?)</script>', page, re.S)[1]
     changes = re.search(r'<script id="changes-data"[^>]*>(.*?)</script>', page, re.S)[1]
     # Data must precede the script because the page executes inline scripts in order.
@@ -211,3 +211,57 @@ assert.match(elements['comment-list'].children[0].textContent, /<img/);
 '''
     harness = harness.replace('CHANGES', json.dumps(changes)).replace('SCRIPT', script)
     subprocess.run([node], input=harness, text=True, check=True, capture_output=True)
+
+
+def test_unity_example_limits_and_spectrum_basis():
+    builder = load_builder()
+    page = builder.render(builder.calculate(), [])
+    assert 'm₀ = Hₛ²/16 and aₛ = Hₛ/2' in page
+    assert 'independent of peak period and peakedness' in page
+    assert 'fully enforced by' in page
+    assert 'JONSWAP' in page
+    assert 'DNV-RP-C205 (2014), 3.5.5' in page
+    assert 'replaces the approximate analytical normalizer' in page
+    assert 'increases in-band ordinates' in page
+
+
+def test_spectrum_metadata_follows_operability_defaults(monkeypatch):
+    builder = load_builder()
+
+    def alternate(rao_freqs, rao_amplitudes, scatter_diagram, criteria,
+                  spectrum_type='bretschneider', gamma=4.2):
+        return operability_analysis(rao_freqs, rao_amplitudes, scatter_diagram,
+                                    criteria, spectrum_type=spectrum_type, gamma=gamma)
+
+    monkeypatch.setattr(builder, 'operability_analysis', alternate)
+    inputs = builder.calculate()['inputs']
+    assert inputs['spectrum_type'] == 'bretschneider'
+    assert inputs['gamma'] == 4.2
+
+
+@pytest.mark.parametrize('hs, expected', [
+    (1.0, '0.0625'), (2.0, '0.2500'), (3.0, '0.5625'), (5.0, '1.5625'),
+])
+def test_variance_display_against_height_identity(hs, expected):
+    builder = load_builder()
+    for variance in (hs ** 2 / 16, np.nextafter(hs ** 2 / 16, np.inf)):
+        assert builder.number(variance, '0-m0') == expected
+
+
+def test_report_checks_belong_to_hosted_domain():
+    table = (ROOT / 'tests/DOMAINS.md').read_text(encoding='utf-8')
+    row = next(line for line in table.splitlines()
+               if line.startswith('| hydrodynamics-other '))
+    assert '`tests/hydrodynamics/test_module_report.py`' in row.split('|')[2]
+
+
+def test_report_ignore_exception_is_narrow():
+    import subprocess
+
+    folder = 'docs/reports/modules/hydrodynamics/'
+    for name, ignored in [('comments.json', True), ('scratch.txt', True),
+                          ('index.html', False), ('generate.py', False),
+                          ('changes.json', False)]:
+        result = subprocess.run(['git', 'check-ignore', '--no-index', '-q', folder + name],
+                                cwd=ROOT, check=False)
+        assert result.returncode == (0 if ignored else 1), name

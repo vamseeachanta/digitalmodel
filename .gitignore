@@ -273,6 +273,7 @@ docs/reports/*
 !docs/reports/modules/
 docs/reports/modules/*
 !docs/reports/modules/hydrodynamics/
+docs/reports/modules/hydrodynamics/*
 !docs/reports/modules/hydrodynamics/index.html
 !docs/reports/modules/hydrodynamics/changes.json
 !docs/reports/modules/hydrodynamics/generate.py

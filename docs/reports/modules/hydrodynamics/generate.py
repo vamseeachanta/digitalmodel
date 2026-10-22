@@ -15,7 +15,6 @@ from pathlib import Path
 import numpy as np
 
 from digitalmodel.hydrodynamics.seakeeping import operability_analysis
-from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
 ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
@@ -23,7 +22,8 @@ EXAMPLE = 'tests/hydrodynamics/test_seakeeping.py'
 STYLE = 'docs/api/cfd/turbulent-flat-plate-verification.html'
 SOURCES = [EXAMPLE, 'src/digitalmodel/hydrodynamics/seakeeping.py',
            'src/digitalmodel/hydrodynamics/wave_spectra.py',
-           'docs/api/_assets/brand.css', STYLE]
+           'docs/api/_assets/brand.css', STYLE,
+           'src/digitalmodel/orcawave/docs/engineering-citations.md']
 
 
 def example_inputs():
@@ -47,10 +47,11 @@ def example_inputs():
 def calculate():
     """Call the public module and retain its inputs and native return values."""
     omega, rao, scatter, criterion = example_inputs()
-    defaults = inspect.signature(WaveSpectra.jonswap).parameters
+    defaults = inspect.signature(operability_analysis).parameters
     return {
         'inputs': {'omega': omega.tolist(), 'rao': rao.tolist(), 'scatter': scatter,
-                   'criterion': criterion, 'gamma': defaults['gamma'].default},
+                   'criterion': criterion, 'gamma': defaults['gamma'].default,
+                   'spectrum_type': defaults['spectrum_type'].default},
         'result': operability_analysis(omega, rao, scatter, {'heave': criterion}),
         'source_digest_format': 'sha256-utf8-lf',
         'sources': {name: hashlib.sha256(
@@ -62,7 +63,7 @@ def calculate():
 def number(value, key=""):
     """Use consistent engineering precision without rounding small values to zero."""
     if key.endswith('-m0'):
-        return f'{value:.3f}'
+        return f'{value:.4f}'
     if key == 'points':
         return str(int(value))
     if value != 0 and abs(value) < 0.05:
@@ -198,7 +199,7 @@ def render(data, changes):
 <style>{brand}</style>{style}
 </head><body class="hs-doc"><div class="wrap">
 <header><h1>Hydrodynamics module analysis</h1><p>Spectral motion and operability</p>
-<p>Draft for client review</p></header>
+<p>Draft for review</p></header>
 <main>
 <section id="summary"><h2>1. Executive Summary</h2>
 <p>The hydrodynamics module is a collection of wave, motion and hydrodynamic loading calculations.
@@ -214,7 +215,8 @@ Measured response data and an approved motion criterion are not established.</li
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-21</td><td>The spectral workflow is documented to distinguish implemented calculations from operational evidence.</td></tr>
-<tr><td>1</td><td>2026-10-22</td><td>Source hashes use canonical text and generated files use LF so checkout line endings do not change the report.</td></tr></tbody>
+<tr><td>1</td><td>2026-10-22</td><td>Source hashes use canonical text and generated files use LF so checkout line endings do not change the report.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>The unity-response identity and spectrum normalization are qualified; variance display, decoding and automated coverage are corrected.</td></tr></tbody>
 <caption>Revision history.</caption></table></div>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>The purpose, scope and status of the analysis are presented in this section.
@@ -235,8 +237,9 @@ sensitivity, appendage sensitivity and computational fluid dynamics are not eval
 are supplied; no physical hull or mesh is inferred.</p>
 <p id="basis-example">The angular-frequency grid extends from {value('minimum')} to
 {value('maximum')} rad/s with {value('points')} equally spaced samples. The heave response
-amplitude ratio is {value('rao')} m/m throughout the band. The spectrum peakedness input is
-{value('gamma')}, taken from the function default. The example criterion is
+amplitude ratio is {value('rao')} m/m throughout the band. The spectrum type is
+{escape(data['inputs']['spectrum_type'].upper())} and its peakedness input is
+{value('gamma')}; both are taken from the operability_analysis defaults used by this call. The example criterion is
 {value('criterion')} m, taken from the existing example assertion setup; it is not a sourced operating limit.</p>
 <figure><svg viewBox="0 0 760 210" role="img" aria-label="Conceptual heave response model">
 <path d="M20 95Q50 70 80 95T140 95T200 95T260 95T320 95T380 95T440 95T500 95T560 95T620 95T680 95" fill="none" stroke="#137e8a"/>
@@ -263,7 +266,17 @@ The significant single amplitude is aₛ = 2√m₀. This is not the crest-to-tr
 P(A &gt; a) = exp(−a²/(2m₀)), where A is peak amplitude and a is the threshold.
 This probability applies to a peak, not to exceedance during an exposure duration.</p>
 <p>The wave-spectrum generator normalizes the discrete spectral area to Hₛ²/16,
-where Hₛ is significant wave height. Operability is calculated as
+where Hₛ is significant wave height. For JONSWAP this discrete band normalization
+replaces the approximate analytical normalizer Aγ: any overall spectral scale factor
+cancels on rescaling. Relative to the unrenormalized analytical spectrum, truncation and
+rescaling can change the ordinates; for the present grid and default peakedness it
+increases in-band ordinates. This is an implementation convention, not an unmodified
+published spectral normalization.</p>
+<p>With unity response, m₀ = Hₛ²/16 and aₛ = Hₛ/2, independent of peak period and peakedness
+when the discrete spectrum has positive area. Changing the band also leaves these
+identities unchanged after normalization. This example checks amplitude conversion and
+weighted threshold logic; it cannot validate spectral shape or frequency-dependent response.</p>
+<p>Operability is calculated as
 100 Σ pᵢ χ(aₛ,ᵢ ≤ aₗᵢₘ)/Σ pᵢ, where pᵢ is sea-state occurrence weight,
 χ is an indicator, the subscript identifies a sea state and aₗᵢₘ is the supplied criterion.</p>
 <h3>Basis and criteria</h3><p>The worked example is compared with its supplied amplitude criterion because
@@ -283,11 +296,12 @@ Hover over or focus a marker to read the case, component, demand, limit and unit
 <p>The native sea-state results are listed in <a href="#worked-table">Table A in Appendix C</a>.</p>
 <p>The returned weighted operability is {value('operability')} % against the example criterion
 of {value('criterion')} m. The highest-wave-height case exceeds that criterion.
-This result describes only the supplied response function, frequency band and sea-state weights.</p>
+This result follows from the unity-response identity and supplied sea-state weights;
+it provides no evidence of sensitivity to the frequency band or spectral shape.</p>
 <h3>Existing validation evidence</h3><p>The existing seakeeping tests check identity response, zero response,
 response-amplitude scaling, mismatched array lengths, integration of a flat spectrum,
 wave-height recovery, known significant amplitude, Rayleigh probability and operability extremes.
-These are analytical and software consistency checks. Wave-height recovery is partly enforced by
+These are analytical and software consistency checks. Wave-height recovery is fully enforced by
 discrete normalization and therefore is not independent evidence for spectral shape accuracy.</p>
 <p>Physical response accuracy, directional spreading, measured response amplitude operators,
 full-scale operability and time-domain extremes are NOT_EVALUATED in this report.</p>
@@ -339,8 +353,11 @@ No numerical value from a licensed publication is reproduced.</p>
 form the source edition represented by this report. SHA-256 source digests are embedded in the report's
 numeric attachment with the format sha256-utf8-lf: UTF-8 text with CRLF and CR line endings
 normalized to LF before hashing. These bind source text independently of checkout line endings.
-The implementation cites offshore hydromechanics literature, but editions and
-clauses are not available in the assessed example; those citations are not adopted as verified sources.</p>
+The repository citation record (W2) identifies DNV-RP-C205 (2014), 3.5.5, JONSWAP spectrum,
+as the spectrum reference; the 3.5.2 locator in the spectrum implementation is not adopted.
+The edition itself was not consulted and its constants are not independently qualified here.
+The discrete rescaling described in Section 4 differs from the approximate analytical normalizer.
+Other literature citations in the implementation are not adopted as verified sources.</p>
 <h3 id="locators">9.2 Repository records</h3><ul>{source_rows}</ul>
 <p>The public entry point is called with the documented arrays and criterion as follows.</p>
 <pre><code>from digitalmodel.hydrodynamics.seakeeping import operability_analysis
@@ -391,7 +408,9 @@ def build(output=HERE):
     changes = [{'revision': 'Initial', 'date': '2026-10-21',
                 'description': 'The spectral motion workflow and its example criterion are documented; physical operating qualification remains unevaluated.'},
                {'revision': '1', 'date': '2026-10-22',
-                'description': 'Source hashes use canonical UTF-8 text with LF line endings and generated files use LF so checkout line endings do not change the report.'}]
+                'description': 'Source hashes use canonical UTF-8 text with LF line endings and generated files use LF so checkout line endings do not change the report.'},
+               {'revision': '2', 'date': '2026-10-22',
+                'description': 'The unity-response identity and spectrum normalization are qualified; variance display, decoding and automated coverage are corrected.'}]
     data = calculate()
     page = '\n'.join(line.rstrip() for line in render(data, changes).splitlines()) + '\n'
     (output / 'index.html').write_text(page, encoding='utf-8', newline='\n')
