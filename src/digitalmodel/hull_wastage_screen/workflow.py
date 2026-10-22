@@ -7,16 +7,19 @@ from pathlib import Path
 from .screen import assess
 
 
-def _details(value):
+def _details(value, field="", ratios=False):
     """Render finite result values with report precision, escaping all text."""
     if isinstance(value, dict):
         return "<ul>" + "".join(
-            f"<li>{escape(str(key))}: {_details(item)}</li>" for key, item in value.items()
+            f"<li>{escape(str(key))}: {_details(item, key, ratios or key == 'modulus_ratios')}</li>"
+            for key, item in value.items()
         ) + "</ul>"
     if isinstance(value, list):
         return "<ul>" + "".join(f"<li>{_details(item)}</li>" for item in value) + "</ul>"
     if isinstance(value, float):
-        return f"{value:.1e}" if 0 < abs(value) < .1 else f"{value:.1f}"
+        if not ratios and field.endswith(("_m2", "_m3", "_m4")):
+            return f"{value:#.4g}"
+        return f"{value:.3f}"
     return escape(str(value))
 
 
@@ -46,6 +49,7 @@ def _report(result):
         '<th>Renewal (mm)</th><th>Monitor boundary (mm)</th><th>Disposition</th></tr>'
         + rows + '</table><p>Table 1. Local representative-item thickness screen.</p>'
         '<h2>Strength and pitting checks</h2>' + _details(result["checks"])
+        + '<h2>CSR input deviations</h2>' + _details(result["csr_deviations"])
         + '<h2>Way forward</h2><p>Renewal findings require repair assessment. '
         'Monitor findings require survey follow-up. Every NOT_EVALUATED check '
         'requires the named evidence before overall acceptance can be established. '
@@ -64,6 +68,14 @@ def router(cfg):
     block = cfg["hull_wastage_screen"]
     result = assess(block)
     output = Path(block.get("output_dir", "results"))
+    if not output.is_absolute():
+        if cfg.get("_config_dir_path"):
+            config_dir = Path(cfg["_config_dir_path"])
+        elif cfg.get("_config_file_path"):
+            config_dir = Path(cfg["_config_file_path"]).parent
+        else:
+            config_dir = Path.cwd()
+        output = config_dir / output
     output.mkdir(parents=True, exist_ok=True)
     # Fail before overwriting any retained analysis or revision history.
     paths = [output / "hull-wastage.json", output / "hull-wastage.html"]

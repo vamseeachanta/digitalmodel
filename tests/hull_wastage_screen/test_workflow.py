@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 
 from digitalmodel.hull_wastage_screen.workflow import router
@@ -74,3 +75,50 @@ def test_previous_issue_is_preserved(tmp_path):
     with pytest.raises(FileExistsError):
         router(cfg)
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
+
+
+@pytest.mark.parametrize("metadata", ["directory", "file", "both", "none"])
+def test_relative_output_uses_config_location(tmp_path, monkeypatch, metadata):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    other_cwd = tmp_path / "other"
+    other_cwd.mkdir()
+    cfg = yaml.safe_load((ROOT / "examples/workflows/hull-wastage-screen/input.yml").read_text())
+    if metadata in {"directory", "both"}:
+        cfg["_config_dir_path"] = str(config_dir)
+    if metadata in {"file", "both"}:
+        parent = other_cwd if metadata == "both" else config_dir
+        cfg["_config_file_path"] = str(parent / "input.yml")
+    monkeypatch.chdir(other_cwd)
+    router(cfg)
+    expected = other_cwd if metadata == "none" else config_dir
+    assert (expected / "results/hull-wastage.json").exists()
+    assert (expected / "results/hull-wastage.html").exists()
+    if metadata != "none":
+        assert not (other_cwd / "results").exists()
+
+
+def test_near_boundary_report_retains_governing_precision(tmp_path):
+    from .test_screen import section_case, buckling_case
+    data = section_case()
+    data["global"]["modulus_fraction"] = .9
+    data["limits"]["reserve_mm"] = .6
+    for item in data["elements"]:
+        item["measured_mm"] = 10.75
+    data["buckling"] = buckling_case()["buckling"]
+    data["buckling"]["element_id"] = "deck"
+    data["buckling"]["source"] = "<b>synthetic</b>"
+    data["output_dir"] = str(tmp_path)
+    result = router({"hull_wastage_screen": data})["hull_wastage_screen"]["result"]
+    global_result = result["checks"]["global"]
+    assert global_result["modulus_ratios"]["sm_deck_m3"] < .9
+    assert global_result["status"] == "RENEW"
+    report = (tmp_path / "hull-wastage.html").read_text()
+    for text in ("sm_deck_m3: 0.896", "modulus_fraction: 0.900",
+                 "remaining_thickness_mm: 10.750", "na_area_m2: 0.01075",
+                 "sm_deck_m3: 0.02150", "&lt;b&gt;synthetic&lt;/b&gt;"):
+        assert text in report
+    assert "code_qualified: False" in report
+    assert "age_applicability" in report
+    assert "CSR input deviations" in report
+    assert "reserve_mm differs from CSR" in report

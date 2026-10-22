@@ -60,10 +60,10 @@ def test_percentage_family(measured, status):
 
 
 def section_case():
-    """Two lumped horizontal strips at z=0,2 m, breadth 1 m.
+    """Three horizontal strips at z=0,1,2 m, breadth 1 m.
 
-    Gross t=.012 m, measured t=.010 m: NA=1 m, A=.020 m2,
-    I=2*(.010 + .010**3/12) m4; Zdeck=Zbottom=I/1.
+    Gross t=.012 m, measured t=.010 m: NA=1 m, A=.030 m2,
+    I=2*.010 + 3*.010**3/12 m4; Zdeck=Zbottom=I/1.
     Chosen modulus factor .8: measured/gross > .8. NA strip at z=1
     has t=.010, gross .012 and corrosion .004: reference .010 for
     selected corrosion fraction .5. CSR 2025 Ch13 Sec2 [2.2.2].
@@ -160,10 +160,9 @@ def test_thinned_plate_elastic_hand_calculation():
     t=10, b=1000: sigma_e=4*pi^2*200000/(12*(1-.3^2))*(10/1000)^2.
     This is below half the selected yield stress, so no inelastic correction.
     Applied compression 10 MPa, gamma=1: U=10/sigma_e; retention=(10/12)^2.
-    Source: NACA TN 3781 (1957), Boundary Conditions, equation (20),
-    half-wave length equal to width gives k=4. Elastic plate rigidity gives
-    the stress expression above. Existing solver uses DNV-RP-C201 basis;
-    synthetic inputs and independent arithmetic, not standard qualification.
+    Source: NACA TN 3781 (1957), equation (1) gives the stress expression;
+    equation (20), half-wave length equal to width, gives k=4.
+    Synthetic inputs and independent arithmetic, not standard qualification.
     """
     import math
     result = assess(buckling_case())["checks"]["buckling"]
@@ -185,3 +184,151 @@ def test_buckling_failure_requires_strength_review():
     result = assess(data)
     assert result["checks"]["buckling"]["status"] == "RENEW"
     assert result["status"] == "RENEW"
+
+
+def test_csr_gross_offered_definition_rejects_nonconservative_input():
+    """CSR Pt1 Ch3 Sec2 [1.2.2]: gross offered = 12 - 1 = 11 mm."""
+    data = section_case()
+    for item, member in zip(data["elements"], data["global"]["members"]):
+        item["voluntary_mm"] = 1.
+        member["gross_offered_mm"] = 11.
+    assert assess(data)["checks"]["global"]["status"] == "ACCEPT"
+    data["global"]["members"][1]["gross_offered_mm"] = 10.5
+    with pytest.raises(ValueError, match="gross offered.*as-built.*voluntary"):
+        assess(data)
+
+
+def test_csr_gross_offered_tolerance_uses_defined_value():
+    """Roundoff within the absolute 0.000001 mm tolerance cannot change capacity."""
+    data = section_case()
+    expected = assess(data)["checks"]["global"]["gross"]
+    for member in data["global"]["members"]:
+        member["gross_offered_mm"] -= .0000005
+    assert assess(data)["checks"]["global"]["gross"] == expected
+
+
+def test_buckling_basis_describes_evaluated_model():
+    result = assess(buckling_case())["checks"]["buckling"]
+    assert "NACA TN 3781" in result["basis"]
+    assert "equations (1), (20)" in result["basis"]
+    assert "Johnson-Ostenfeld correction (uncited)" in result["basis"]
+    assert "API 579" not in result["basis"]
+    assert "DNV-RP-C201" not in result["basis"]
+    assert result["code_qualified"] is False
+
+
+def test_thinned_plate_inelastic_hand_calculation():
+    """NACA TN 3781 eqs (1)/(20): sigma_e > fy/2 at t=20, b=1000 mm.
+
+    Independently apply the inherited Johnson-Ostenfeld formula (uncited):
+    sigma_cr = fy * (1 - fy/(4*sigma_e)), U = 100/sigma_cr.
+    This checks arithmetic only; no code qualification is implied.
+    """
+    import math
+    data = buckling_case()
+    data["elements"][0].update(as_built_mm=24., measured_mm=20.)
+    data["buckling"]["sigma_x_mpa"] = 100.
+    result = assess(data)["checks"]["buckling"]
+    elastic = 4 * math.pi**2 * 200000 / (12 * (1 - .3**2)) * (.02)**2
+    nominal_elastic = elastic * (24 / 20)**2
+    assert elastic > 300 / 2
+    corrected = 300 * (1 - 300 / (4 * elastic))
+    nominal_corrected = 300 * (1 - 300 / (4 * nominal_elastic))
+    assert result["utilization"] == pytest.approx(100 / corrected)
+    assert result["capacity_retained_fraction"] == pytest.approx(corrected / nominal_corrected)
+    assert result["status"] == "ACCEPT"
+
+
+@pytest.mark.parametrize("field,value,label", [
+    ("reserve_mm", .6, "reserve_mm"),
+    ("modulus_fraction", .8, "modulus_fraction"),
+    ("na_corrosion_fraction", .6, "na_corrosion_fraction"),
+])
+def test_csr_deviations_are_explicit(field, value, label):
+    data = section_case()
+    data["global"]["modulus_fraction"] = .9
+    target = data["limits"] if field == "reserve_mm" else data["global"]
+    target[field] = value
+    deviations = assess(data)["csr_deviations"]
+    assert len(deviations) == 1
+    assert label in deviations[0]
+
+
+def test_standard_csr_values_have_no_deviations():
+    data = section_case()
+    data["global"]["modulus_fraction"] = .9
+    assert assess(data)["csr_deviations"] == []
+
+
+@pytest.mark.parametrize("age,status", [
+    (None, "NOT_ESTABLISHED"), (10., "NOT_APPLICABLE"), (10.1, "AGE_THRESHOLD_MET"),
+])
+def test_csr_global_age_applicability(age, status):
+    data = section_case()
+    if age is not None:
+        data["global"]["age_years"] = age
+    result = assess(data)["checks"]["global"]
+    assert result["age_applicability"]["status"] == status
+    assert "special surveys" in result["age_applicability"]["basis"]
+    assert result["age_applicability"]["age_years"] == age
+
+
+def test_swapped_deck_and_neutral_axis_zones_rejected():
+    data = section_case()
+    members = data["global"]["members"]
+    members[1]["zone"], members[2]["zone"] = members[2]["zone"], members[1]["zone"]
+    with pytest.raises(ValueError, match="deck zone.*0.9"):
+        assess(data)
+
+
+@pytest.mark.parametrize("z,zone,valid", [
+    (1.8, "deck", True), (1.793, "deck", False),
+    (1.8, "neutral_axis", False), (1.8, "bottom", False),
+])
+def test_deck_zone_line_boundary(z, zone, valid):
+    data = section_case()
+    data["global"]["members"][1].update(z_m=z, zone=zone)
+    if valid:
+        assess(data)
+    else:
+        with pytest.raises(ValueError, match="deck zone.*0.9"):
+            assess(data)
+
+
+def test_vertical_deck_member_crossing_line_is_allowed():
+    data = section_case()
+    data["global"]["members"][1].update(orientation="vertical", z_m=1.7, span_m=.6)
+    assess(data)
+
+
+def test_missing_limits_block_raises_value_error():
+    data = case()
+    del data["limits"]
+    with pytest.raises(ValueError, match="limits"):
+        assess(data)
+
+
+def test_missing_material_block_raises_value_error():
+    data = buckling_case()
+    del data["buckling"]["material"]
+    with pytest.raises(ValueError, match="material"):
+        assess(data)
+
+
+def test_incomplete_global_basis_remains_not_evaluated():
+    data = case()
+    data["global"] = {"complete_section": False}
+    assert assess(data)["checks"]["global"]["status"] == "NOT_EVALUATED"
+
+
+def test_negative_age_rejected():
+    data = section_case()
+    data["global"]["age_years"] = -1.
+    with pytest.raises(ValueError, match="age_years"):
+        assess(data)
+
+
+def test_horizontal_deck_member_crossing_line_is_allowed():
+    data = section_case()
+    data["global"]["members"][1]["z_m"] = 1.799
+    assess(data)

@@ -19,7 +19,9 @@ def plate_screen(block, items, local):
     tau = number(block, "tau_mpa")
     if sy != 0:
         return not_evaluated("Existing plate solver does not evaluate transverse compression")
-    material_data = block["material"]
+    material_data = block.get("material")
+    if not isinstance(material_data, dict):
+        raise ValueError("material must be a mapping")
     values = {key: number(material_data, key, positive=True) for key in (
         "yield_strength", "ultimate_strength", "youngs_modulus", "density")}
     nu = number(material_data, "poissons_ratio")
@@ -46,5 +48,7 @@ def plate_screen(block, items, local):
             "remaining_thickness_mm": result.remaining_thickness_mm,
             "capacity_retained_fraction": result.capacity_retained_frac,
             "source": block["source"],
-            "basis": result.code_reference,
+            "basis": "NACA TN 3781 equations (1), (20), elastic compression; "
+                     "Johnson-Ostenfeld correction (uncited); inherited shear interaction (uncited)",
+            "code_qualified": False,
             "limitation": "Uniform simply-supported plate only; stiffener wastage and transverse compression not evaluated"}

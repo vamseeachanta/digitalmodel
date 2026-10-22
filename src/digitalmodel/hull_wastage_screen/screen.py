@@ -52,6 +52,29 @@ def not_evaluated(reason):
     return {"status": "NOT_EVALUATED", "reason": reason}
 
 
+def csr_deviations(limits, block):
+    """Record departures from CSR constants without relabelling selected limits."""
+    deviations = []
+    selections = [(limits, "reserve_mm", .5, "Ch13 Sec2 Symbols")]
+    if block is not None:
+        selections += [(block, "modulus_fraction", .9, "Ch13 Sec2 [2.2.2 a]"),
+                       (block, "na_corrosion_fraction", .5, "Ch13 Sec2 [2.2.2 b]")]
+    for values, key, required, clause in selections:
+        if key in values and number(values, key, positive=True) != required:
+            deviations.append(f"{key} differs from CSR {clause}; selected-input screen only")
+    return deviations
+
+
+def age_applicability(block):
+    """Record the exclusive age threshold; survey applicability needs confirmation."""
+    age = number(block, "age_years") if "age_years" in block else None
+    status = ("NOT_ESTABLISHED" if age is None else
+              "AGE_THRESHOLD_MET" if age > 10 else "NOT_APPLICABLE")
+    return {"status": status, "age_years": age,
+            "basis": "CSR Ch13 Sec2 [2.2.1]: special surveys over 10 years of age; "
+                     "survey applicability requires confirmation"}
+
+
 def local_screen(item, family, limits):
     built = number(item, "as_built_mm", positive=True)
     measured = number(item, "measured_mm")
@@ -112,9 +135,11 @@ def global_screen(block, items, local, family):
             raise ValueError("unknown section zone")
         zones.add(zone)
         item = items[key]
-        offered = number(member, "gross_offered_mm", positive=True)
-        if offered > item["as_built_mm"]:
-            raise ValueError("gross offered thickness exceeds as-built thickness")
+        supplied_offered = number(member, "gross_offered_mm", positive=True)
+        # CSR Pt1 Ch3 Sec2 [1.2.2]; absolute input tolerance is 0.000001 mm.
+        offered = item["as_built_mm"] - number(item, "voluntary_mm")
+        if offered <= 0 or not math.isclose(supplied_offered, offered, rel_tol=0., abs_tol=1e-6):
+            raise ValueError("gross offered thickness must equal as-built minus voluntary addition")
         current = local[key]["lower_bound_mm"]
         g, m = _member(member, item, offered), _member(member, item, current)
         if member["z_m"] > depth:
@@ -124,6 +149,14 @@ def global_screen(block, items, local, family):
             or member["z_m"] + member["span_m"] / 2 > depth
         ):
             raise ValueError("vertical member extends beyond section depth")
+        # CSR Ch13 Sec2 [1.2.1]: above OR crossed by the 0.9D line.
+        top = member["z_m"]
+        if member["orientation"] == "vertical":
+            top += member["span_m"] / 2
+        else:
+            top += offered / 2000.  # Half the horizontal plate thickness, in m.
+        if (zone == "deck") != (top >= .9 * depth):
+            raise ValueError("deck zone must match geometry above or crossing the 0.9D line")
         gross.append(g)
         measured.append(m)
         if zone == "neutral_axis":
@@ -145,7 +178,8 @@ def global_screen(block, items, local, family):
     return {"status": "ACCEPT" if passes else "RENEW", "gross": g,
             "measured": m, "modulus_ratios": ratios,
             "modulus_fraction": modulus_fraction, "na_area_m2": na_current,
-            "na_required_m2": na_required, "source": block["source"]}
+            "na_required_m2": na_required, "source": block["source"],
+            "age_applicability": age_applicability(block)}
 
 
 def assess(data):
@@ -157,7 +191,9 @@ def assess(data):
     family = data.get("rule_family")
     if family not in {"csr", "percentage"}:
         raise ValueError("rule_family must be csr or percentage")
-    limits = data["limits"]
+    limits = data.get("limits")
+    if not isinstance(limits, dict):
+        raise ValueError("limits must be a mapping")
     source(limits)
     elements = data.get("elements")
     if not isinstance(elements, list) or not elements:
@@ -185,6 +221,7 @@ def assess(data):
     verdict = {"RENEW": Verdict.REPAIR, "NOT_EVALUATED": Verdict.ESCALATE,
                "MONITOR": Verdict.MONITOR, "ACCEPT": Verdict.ACCEPT}[status]
     return {"status": status, "rule_family": family, "elements": rows, "checks": checks,
+            "csr_deviations": csr_deviations(limits, data.get("global")) if family == "csr" else [],
             "decision": {"verdict": verdict.value, "action": action_for(verdict, "hull_plating")},
             "sources": [CSR_SOURCE if family == "csr" else Z7_SOURCE, limits["source"]],
             "limitations": ["Screening only; class survey acceptance is not established",
