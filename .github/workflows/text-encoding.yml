@@ -1,0 +1,38 @@
+name: Text Encoding
+
+"on":
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  text-encoding:
+    name: Text encoding on changed Python lines
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Check changed text calls
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: >-
+          uv run --no-project --with ruff==0.15.1 python
+          scripts/ci/check_text_encoding.py --base "$PR_BASE_SHA"
+      - name: Test the checker
+        run: >-
+          uv run --no-project --with pytest --with pyyaml --with ruff==0.15.1 python -m pytest
+          tests/scripts/test_check_text_encoding.py -q -rA -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/text-encoding-tests"
