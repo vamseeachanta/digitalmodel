@@ -503,9 +503,15 @@ modules:
       flexible_pipes:
         agent_pack: src/digitalmodel/subsea/flexible_pipes/docs/agent-pack.md
         qa_family: EC
+      capping_stack:
+        agent_pack: src/digitalmodel/subsea/capping_stack/docs/agent-pack.md
+        qa_family: EC
       catenary_riser:
         agent_pack: src/digitalmodel/subsea/catenary_riser/docs/agent-pack.md
         qa_family: MR
+      hipps:
+        agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+        qa_family: EC
       on_bottom_stability:
         agent_pack: src/digitalmodel/subsea/on_bottom_stability/docs/agent-pack.md
         qa_family: EC
