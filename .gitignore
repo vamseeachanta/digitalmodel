@@ -269,7 +269,7 @@ reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/reports/modules/
-docs/reports/modules/*
+docs/reports/modules/*/*
 !docs/reports/modules/weatherwindow/
 docs/reports/modules/weatherwindow/*
 !docs/reports/modules/weatherwindow/build_report.py

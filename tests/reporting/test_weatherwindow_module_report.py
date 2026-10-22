@@ -4,6 +4,7 @@
 
 import importlib.util
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -110,7 +111,8 @@ def test_report_numbers_are_module_consistency_checks():
     page.feed(module.render(record))
     assert len(page.bindings) > 90
     for key, text in page.bindings:
-        assert text == module.display(module.lookup(record, key)), key
+        is_input = key in module.INPUT_BINDINGS or key.startswith(("hs_m.", "sample_start_hours."))
+        assert text == module.display(module.lookup(record, key), input_value=is_input), key
     # A headline result is recomputed from the displayed inputs: 56*3 = 168 h.
     displayed_count = int(module.display(record["sample_count"]))
     displayed_interval = float(module.display(actual["time_step_hours"]))
@@ -121,28 +123,39 @@ def test_report_numbers_are_module_consistency_checks():
     assert f"{100 * sum(h <= limit for h in heights) / len(heights):.1f}" == module.display(actual["workability_pct"])
 
 
+def assert_metadata_matches(stored, expected):
+    """Compare every metadata field, allowing only numerical round-off."""
+    if isinstance(expected, dict):
+        assert stored.keys() == expected.keys(), REBUILD
+        for key in expected:
+            assert_metadata_matches(stored[key], expected[key])
+    elif isinstance(expected, list):
+        assert len(stored) == len(expected), REBUILD
+        for actual, value in zip(stored, expected):
+            assert_metadata_matches(actual, value)
+    elif isinstance(expected, float):
+        assert stored == pytest.approx(expected, rel=0, abs=1e-9), REBUILD
+    else:
+        assert type(stored) is type(expected) and stored == expected, REBUILD
+
+
 def test_rebuild_matches_committed_display(tmp_path):
-    """Compare the complete page after masking full-precision calculation metadata."""
+    """Compare all metadata numerically and the remaining page byte for byte."""
     module = builder()
     target = tmp_path / "report.html"
     module.build(target)
     saved = (DIRECTORY / "report.html").read_text(encoding="utf-8")
     fresh = target.read_text(encoding="utf-8")
-    # Visible values and embedded chart arrays are rounded to displayed precision.
-    # Only the audit JSON carries full-precision floats; compare those numerically below.
-    pattern = r'(<script id="calculation" type="application/json">).*?(</script>)'
-    assert re.sub(pattern, r"\1MASKED\2", saved, flags=re.S) == re.sub(
-        pattern, r"\1MASKED\2", fresh, flags=re.S
-    ), f"Report is stale; rebuild with: {REBUILD}"
-    stored = json.loads(re.search(pattern, saved, re.S).group(0).split(">", 1)[1].rsplit("<", 1)[0])
-    expected = module.calculate()
-    for key, value in expected["result"].items():
-        if isinstance(value, float):
-            assert stored["result"][key] == pytest.approx(value, abs=1e-9), REBUILD
-        else:
-            assert stored["result"][key] == value, REBUILD
-    assert stored["hs_m"] == expected["hs_m"], REBUILD
-    assert stored["windows_hours"] == pytest.approx(expected["windows_hours"], abs=1e-9), REBUILD
+    # Both audit and chart JSON retain raw numerical precision. Compare every
+    # field before excluding these two payloads from the remaining text check.
+    for identifier in ("calculation", "chart-data"):
+        pattern = rf'(<script id="{identifier}" type="application/json">)(.*?)(</script>)'
+        stored = json.loads(re.search(pattern, saved, re.S).group(2))
+        expected = json.loads(re.search(pattern, fresh, re.S).group(2))
+        assert_metadata_matches(stored, expected)
+        saved = re.sub(pattern, r"\1MASKED\3", saved, flags=re.S)
+        fresh = re.sub(pattern, r"\1MASKED\3", fresh, flags=re.S)
+    assert saved == fresh, f"Report is stale; rebuild with: {REBUILD}"
     assert b"\r" not in target.read_bytes()
 
 
@@ -171,6 +184,7 @@ def test_house_style_references_and_comment_controls():
     changes = json.loads((DIRECTORY / "changes.json").read_text(encoding="utf-8"))
     assert changes["history"][0]["revision"] == "0"
     assert changes["history"][0]["changes"]
+    assert changes["history"][-1]["revision"] == "1"
 
 
 def test_rounding_diagnostic_matches_documented_limitation():
@@ -240,6 +254,7 @@ const context={
 vm.createContext(context);vm.runInContext(SCRIPT,context);
 (async()=>{
   const heights=get("height-chart");
+  assert.deepEqual(heights.children.filter(e=>e.tag==="text" && e.attrs.x==="15").map(e=>Number(e.textContent)),[0,1,2,3,4]);
   assert.equal(heights.children.filter(e=>e.attrs["stroke-width"]==="5").length,56);
   assert.equal(heights.children.find(e=>e.attrs["data-limit"]).attrs["data-limit"],"2");
   const point=heights.children.find(e=>e.attrs.tabindex==="0");
@@ -269,6 +284,8 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   await get("open-folder").trigger("click");
   assert.match(get("comment-list").children[0].textContent,/Use unrounded quantities/);
   get("last-revision").value="0";await get("last-revision").trigger("change");
+  assert.match(get("change-list").textContent,/unrounded/);
+  get("last-revision").value="1";await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/No engineering changes/);
 })().catch(error=>{console.error(error);process.exitCode=1;});
 '''
@@ -286,23 +303,144 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
     ])
     target = tmp_path / "interaction.cjs"
     target.write_text(content, encoding="utf-8", newline="\n")
-    result = subprocess.run([node, str(target)], capture_output=True, text=True, encoding="utf-8", check=False)
+    result = subprocess.run([node, target.as_posix()], capture_output=True, text=True, encoding="utf-8", check=False)
     assert result.returncode == 0, result.stderr
 
 
-def test_only_report_deliverables_are_reincluded():
+@pytest.mark.parametrize("sibling_first", [True, False])
+def test_only_report_deliverables_are_reincluded(tmp_path, sibling_first):
     """Keep the requested report visible while local comments remain ignored."""
     for name in ("build_report.py", "changes.json", "report.html"):
         result = subprocess.run(
-            ["git", "check-ignore", "--no-index", "-q", str(DIRECTORY / name)],
+            ["git", "check-ignore", "--no-index", "-q", (DIRECTORY / name).relative_to(ROOT).as_posix()],
             cwd=ROOT, check=False,
         )
         assert result.returncode == 1, f"Report deliverable is ignored: {name}"
     result = subprocess.run(
-        ["git", "check-ignore", "--no-index", "-q", str(DIRECTORY / "report.comments.json")],
+        ["git", "check-ignore", "--no-index", "-q", (DIRECTORY / "report.comments.json").relative_to(ROOT).as_posix()],
         cwd=ROOT, check=False,
     )
     assert result.returncode == 0, "Local review annotations must stay untracked"
+    # Shared rules must leave module directories traversable. Sibling allow-lists
+    # can then be appended without re-declaring a parent ignore rule.
+    environment = {key: value for key, value in os.environ.items() if key not in {
+        "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+    }}
+    subprocess.run(["git", "init", "-q", tmp_path.as_posix()], env=environment, check=True)
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert rules.splitlines().count("!docs/reports/modules/") == 1
+    assert "docs/reports/modules/*" not in rules.splitlines()
+    sibling = "!docs/reports/modules/adjacent/\n!docs/reports/modules/adjacent/report.html\n"
+    if sibling_first:
+        anchor = "!docs/reports/modules/weatherwindow/\n"
+        rules = rules.replace(anchor, sibling + anchor)
+    else:
+        rules += "\n" + sibling
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
+    for relative, expected in {
+        "docs/reports/modules/unlisted": 1,
+        "docs/reports/modules/unlisted/report.html": 0,
+        "docs/reports/modules/adjacent/report.html": 1,
+        "docs/reports/modules/adjacent/report.comments.json": 0,
+        "docs/reports/modules/weatherwindow/report.html": 1,
+        "docs/reports/modules/weatherwindow/report.comments.json": 0,
+    }.items():
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "-q", relative],
+            cwd=tmp_path, env=environment, check=False,
+        )
+        assert result.returncode == expected, f"Incorrect ignore disposition: {relative}"
+
+
+@pytest.mark.parametrize(("height", "duration", "accepted"), [
+    (2.04, 47.96, False), (2.0, 48.0, True), (1.96, 48.04, True),
+])
+def test_chart_decisions_preserve_unrounded_boundaries(tmp_path, height, duration, accepted):
+    """Check both chart decisions below, at and above their inclusive limits."""
+    module = builder()
+    record = module.calculate()
+    heights = [height, 3, 1.5]
+    record.update(
+        hs_m=heights, sample_count=3, sample_start_hours=[0, duration, 2 * duration],
+        windows_hours=module.window_lengths_hours(heights, 2, duration),
+        result=module.assess_weather_window(heights, 2, 48, duration),
+    )
+    text = module.render(record)
+    metadata = dict(re.findall(
+        r'<script id="([^"]+)" type="application/json">(.*?)</script>', text, re.S
+    ))
+    chart = json.loads(metadata["chart-data"])
+    assert chart["heightAccepted"] == [accepted, False, True]
+    assert all(value is accepted for value in chart["windowAccepted"])
+    assert chart["heights"] == heights
+    assert chart["windows"] == pytest.approx(record["windows_hours"], rel=0, abs=1e-9)
+    script = re.findall(r"<script>(.*?)</script>", text, re.S)[0]
+    # A single accepted interval lasts D h: 47.96 < 48, 48 = 48, 48.04 > 48.
+    harness = r'''
+const assert=require("node:assert/strict"), vm=require("node:vm");
+class Element {
+  constructor() {this.attrs={};this.children=[];this.value="1";this.textContent="";}
+  setAttribute(key,value) {this.attrs[key]=String(value);}
+  appendChild(child) {this.children.push(child);return child;}
+  addEventListener() {}
+}
+const nodes={}, get=id=>nodes[id]??=new Element();
+for(const [id,payload] of Object.entries(METADATA)) get(id).textContent=payload;
+vm.runInNewContext(SCRIPT,{
+  document:{getElementById:get,querySelectorAll:()=>[],createElementNS:()=>new Element()},
+  window:{addEventListener:()=>{}},
+});
+const wave=get("height-chart").children.find(e=>e.attrs["stroke-width"]==="5");
+assert.equal(wave.attrs.stroke,ACCEPTED?"var(--go)":"var(--nogo)");
+const bars=get("window-chart").children.filter(e=>e.attrs.class==="pass"||e.attrs.class==="fail");
+assert.ok(bars.length>0);
+assert.ok(bars.every(e=>e.attrs.class===(ACCEPTED?"pass":"fail")));
+'''
+    target = tmp_path / "boundary.cjs"
+    target.write_text("\n".join([
+        f"const METADATA={json.dumps(metadata, ensure_ascii=False)};",
+        f"const SCRIPT={json.dumps(script, ensure_ascii=False)};",
+        f"const ACCEPTED={json.dumps(accepted)};", harness,
+    ]), encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [shutil.which("node"), target.as_posix()], capture_output=True,
+        text=True, encoding="utf-8", check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize(("field", "invalid"), [
+    ("hs_m", -0.1), ("hs_m", float("nan")), ("hs_m", None),
+    ("hs_limit_m", 0), ("hs_limit_m", float("inf")),
+    ("required_duration_hours", 0), ("time_step_hours", -1),
+])
+def test_chart_inputs_fail_closed(field, invalid):
+    """Invalid chart demand or criteria cannot receive a passing colour."""
+    module = builder()
+    record = module.calculate()
+    if field == "hs_m":
+        record[field][0] = invalid
+    else:
+        record["result"][field] = invalid
+    with pytest.raises(ValueError):
+        module.render(record)
+
+
+def test_report_preserves_input_precision():
+    """A sub-hour interval and small wave sample retain their supplied digits."""
+    module = builder()
+    record = module.calculate()
+    record["hs_m"][0] = 0.0254
+    record["sample_start_hours"][1] = 0.0254
+    record["result"]["time_step_hours"] = 0.0254
+    record["result"]["hs_limit_m"] = 0.0508
+    page = Page()
+    page.feed(module.render(record))
+    bindings = dict(page.bindings)
+    assert bindings["hs_m.0"] == "0.0254"
+    assert bindings["sample_start_hours.1"] == "0.0254"
+    assert bindings["result.time_step_hours"] == "0.0254"
+    assert bindings["result.hs_limit_m"] == "0.0508"
 
 
 def test_configured_example_router_outputs(tmp_path):
@@ -312,7 +450,7 @@ def test_configured_example_router_outputs(tmp_path):
     module = builder()
     settings = yaml.safe_load((ROOT / module.EXAMPLE).read_text(encoding="utf-8"))["weather_window"]
     settings["outputs"]["directory"] = "weather_window"
-    cfg = router({"weather_window": settings, "_config_dir_path": str(tmp_path)})
+    cfg = router({"weather_window": settings, "_config_dir_path": tmp_path.as_posix()})
     payload = cfg["weather_window"]
     path = Path(payload["summary_json"])
     assert path.parent == tmp_path / "weather_window"

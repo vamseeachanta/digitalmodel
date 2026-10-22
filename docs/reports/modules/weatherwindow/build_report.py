@@ -12,6 +12,7 @@ import argparse
 import ast
 import html
 import json
+import math
 import re
 from pathlib import Path
 
@@ -24,6 +25,11 @@ HERE = Path(__file__).resolve().parent
 EXAMPLE = "examples/workflows/weather-window/input.yml"
 EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
 BRAND = "docs/api/_assets/brand.css"
+INPUT_BINDINGS = {
+    "result.hs_limit_m", "result.required_duration_hours", "result.time_step_hours",
+    "result.required_workability_pct", "diagnostic.hs_m", "diagnostic.hs_limit_m",
+    "diagnostic.required_hours", "diagnostic.interval_hours",
+}
 
 
 def lookup(record: dict, locator: str):
@@ -34,7 +40,7 @@ def lookup(record: dict, locator: str):
     return value
 
 
-def display(value) -> str:
+def display(value, *, input_value: bool = False) -> str:
     """Keep counts integral, statistics to a decimal and sub-hour inputs exact."""
     if isinstance(value, bool):
         return "Yes" if value else "No"
@@ -43,6 +49,8 @@ def display(value) -> str:
     if isinstance(value, float):
         if value.is_integer():
             return str(int(value))
+        if input_value:
+            return str(value)
         return f"{value:.2f}" if abs(value) < 1 else f"{value:.1f}"
     return str(value)
 
@@ -91,10 +99,39 @@ def table(headers: list[str], rows: list[list[str]]) -> str:
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
+def chart_data(record: dict) -> dict:
+    """Preserve input precision and decide chart criteria before presentation."""
+    result = record["result"]
+    for key in ("hs_limit_m", "required_duration_hours", "time_step_hours"):
+        value = result[key]
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value <= 0):
+            raise ValueError(f"{key} must be finite and positive")
+    for key in ("hs_m", "sample_start_hours", "windows_hours"):
+        if any(isinstance(value, bool) or not isinstance(value, (int, float))
+               or not math.isfinite(value) or value < 0 for value in record[key]):
+            raise ValueError(f"{key} must contain finite nonnegative numbers")
+    if not record["hs_m"] or len(record["hs_m"]) != len(record["sample_start_hours"]):
+        raise ValueError("Wave samples require matching elapsed-time coordinates")
+    return {
+        "heights": record["hs_m"],
+        "times": record["sample_start_hours"],
+        "interval": result["time_step_hours"],
+        "heightLimit": result["hs_limit_m"],
+        "required": result["required_duration_hours"],
+        "windows": record["windows_hours"],
+        "heightAccepted": [height <= result["hs_limit_m"] for height in record["hs_m"]],
+        "windowAccepted": [duration >= result["required_duration_hours"]
+                           for duration in record["windows_hours"]],
+    }
+
+
 def render(record: dict) -> str:
     """Write the engineering narrative with all example values bound to results."""
     def value(key: str) -> str:
-        return f'<span data-value="{key}">{html.escape(display(lookup(record, key)))}</span>'
+        is_input = key in INPUT_BINDINGS or key.startswith(("hs_m.", "sample_start_hours."))
+        shown = display(lookup(record, key), input_value=is_input)
+        return f'<span data-value="{key}">{html.escape(shown)}</span>'
 
     def result(key: str) -> str:
         return value("result." + key)
@@ -132,14 +169,7 @@ def render(record: dict) -> str:
         for i in range(record["sample_count"])
     ])
     window_values = ", ".join(value(f"windows_hours.{i}") for i in range(len(record["windows_hours"])))
-    charts = {
-        "heights": [float(display(v)) for v in record["hs_m"]],
-        "times": [float(display(v)) for v in record["sample_start_hours"]],
-        "interval": float(display(record["result"]["time_step_hours"])),
-        "heightLimit": float(display(record["result"]["hs_limit_m"])),
-        "required": float(display(record["result"]["required_duration_hours"])),
-        "windows": [float(display(v)) for v in record["windows_hours"]],
-    }
+    charts = chart_data(record)
     source_table = table(["Item", "Repository locator"], [
         ["Public illustrative input", f"<code>{EXAMPLE}</code>"],
         ["Public screening functions and router", "<code>src/digitalmodel/weather_window/workflow.py</code>"],
@@ -178,7 +208,7 @@ Analysis is performed to determine whether a supplied wave-height record contain
 key results are summarized below.</p>
 <ul><li>The illustrative record fails the duration screen.
 <ul><li>The longest accepted spell is {result('longest_window_hours')} h against a required {result('required_duration_hours')} h.
-An installation start is not supported by this record under the supplied duration criterion.</li></ul></li>
+An operation start is not supported by this record under the supplied duration criterion.</li></ul></li>
 <li>Accepted exposure alone does not establish a usable weather window.
 <ul><li>Accepted exposure is {result('workability_pct')}% against an input threshold of {result('required_workability_pct')}%,
 but {result('num_viable_windows')} spells meet the required duration.</li></ul></li></ul>
@@ -215,7 +245,7 @@ Hover or focus a bar for the duration criterion. Period-dependent and heading-de
 Amber means an assessment is not available; no amber data series is computed here.
 A green wave-height interval does not establish that the complete operation fits.</p>
 <p>The record is rejected for a continuous operation requiring {result('required_duration_hours')} h.
-Use a separately qualified forecast and a demonstrated continuous window before an installation start is accepted.
+Use a separately qualified forecast and a demonstrated continuous window before an operation start is accepted.
 The response, heading tolerance and forecast-support trigger remain required engineering inputs. {cite('E')}</p>
 </section>
 
@@ -266,7 +296,8 @@ For an all-rejected record the implementation returns no runs and zero duration 
 <h3>Percentiles and the returned decision</h3>
 <p>For ordered durations y, the linear percentile convention uses rank r = 1 + p(M − 1), k = floor(r), f = r − k,
 and Q(p) = y(k) + f[y(k+1) − y(k)]. Here p is the requested fractional percentile and Q is in hours;
-at the last rank the largest duration is used. This is the handbook's R7 convention. {cite('S4')}</p>
+at the last rank the largest duration is used. This is the R7 alternative listed by the handbook;
+its default method is R6. The module uses R7 linear interpolation. {cite('S4')} {cite('E')}</p>
 <p>The reported lower and upper percentiles use p = 0.1 and p = 0.9 respectively.
 They describe the sampled spells; neither is a confidence bound nor a forecast exceedance probability. {cite('S4')} {cite('E')}</p>
 <p>Let D be required duration in hours and Wmin the optional input workability threshold in percent.
@@ -306,7 +337,8 @@ These executable records are identified in Section 9.2; their presence is not an
 <p>The report is accompanied by {value('report_test_count')} test definitions.
 Hand-worked literal anchors check record exposure, accepted exposure, longest spell, mean and percentiles.
 Consistency checks compare the result dictionary, every displayed numeric binding and the chart inputs with a fresh function call.
-The rebuild comparison masks only full-precision audit metadata, checks that metadata numerically and compares displayed content unchanged.</p>
+The rebuild comparison checks every audit metadata field, using numerical tolerance for floating-point values,
+then compares the remaining page unchanged. Chart decisions use unrounded inputs and durations.</p>
 <p>The report tests also check the configured router and its saved summary, local reference targets, the inlined exemplar stylesheet,
 comment controls and the rounding diagnostic.
 No field dataset, metocean timestamp quality check, forecast skill test or structural installation validation is supplied by these checks.</p>
@@ -351,7 +383,7 @@ Only the definition of a run is used; no randomness test is performed.</li>
 Arithmetic mean.</li>
 <li id="ref-S4">[S4] NIST/SEMATECH e-Handbook of Statistical Methods, online edition accessed 22 October 2026,
 <a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm">Section 7.2.6.2, Percentiles</a>.
-Alternative percentile methods, R7 interpolation.</li>
+R6 default method and the R7 alternative used here.</li>
 </ul>
 <h3>9.2 Repository locators</h3>
 <p id="ref-E">[E] The input example, calculation sources and tests below form the repository evidence for this report.
@@ -389,7 +421,8 @@ atlas interpolation, multi-parameter operating envelopes and any licensed simula
 <h3>Quality pre-flight evidence</h3>
 <p>Arithmetic anchors, module consistency, displayed-input recomputation, reference resolution,
 portable UTF-8 rebuilding and self-contained resources are checked by the accompanying report tests.
-The source metadata is embedded below the page as calculation data; visible statistics and chart arrays use displayed precision.
+The source metadata is embedded below the page as calculation data. Inputs and chart arrays retain their supplied precision;
+visible summary statistics use displayed precision. Chart criterion flags are computed from unrounded values before rendering.
 Source-page retrieval records are separate from engineering acceptance evidence.</p>
 <p>Comment storage is provided below. In compatible browsers, selecting the report folder enables adjacent saving;
 otherwise the comment file is downloaded and placed beside this HTML. Comments are local review annotations and do not change calculation results.</p>
@@ -397,7 +430,7 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 
 <aside class="review-controls" aria-label="Report review">
 <h3>Engineering changes</h3><label for="last-revision">Last revision read</label>
-<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option></select>
+<select id="last-revision"><option value="none">No earlier revision</option>{''.join(f'<option value="{html.escape(row["revision"])}">Revision {html.escape(row["revision"])}</option>' for row in revisions['history'])}</select>
 <p id="change-list"></p>
 <h3>Comments</h3><label for="comment-section">Report section</label><select id="comment-section"></select>
 <label for="comment-text">Comment text</label><textarea id="comment-text"></textarea>
@@ -433,7 +466,7 @@ function axes(svg, xmax, ymax, xlabel, ylabel, indexed=false) {
   element(svg, "text", {x:65,y:18}, ylabel);
   for (let i=0;i<=4;i++) {
     if (!indexed) element(svg,"text",{x:65+i*190,y:280},String(Math.round(xmax*i/4*10)/10));
-    element(svg,"text",{x:15,y:265-i*55},String(Math.round(ymax*i/4*10)/10));
+    element(svg,"text",{x:15,y:265-i*55},String(Number((ymax*i/4).toFixed(3))));
   }
 }
 function hover(node, message, readout) {
@@ -446,12 +479,12 @@ function hover(node, message, readout) {
 function waveChart() {
   const svg = document.getElementById("height-chart");
   const xmax = chart.times.at(-1)+chart.interval;
-  const ymax = Math.max(chart.heightLimit,...chart.heights)*1.2;
+  const ymax = Math.ceil(Math.max(chart.heightLimit,...chart.heights)*1.2*2)/2;
   axes(svg,xmax,ymax,"Elapsed time (h)","Significant wave height (m)");
   const y = v=>260-v/ymax*220, x = v=>65+v/xmax*760;
   chart.heights.forEach((height,i)=>{
     const start=chart.times[i], end=start+chart.interval;
-    const accepted = height<=chart.heightLimit;
+    const accepted = chart.heightAccepted[i];
     const line=element(svg,"path",{d:`M${x(start)} ${y(height)} H${x(end)}`,
       fill:"none",stroke:accepted?"var(--go)":"var(--nogo)","stroke-width":5});
     hover(line,`Public illustrative case; interval ${i+1}; wave-height criterion; time ${start}–${end} h; demand ${height} m; limit ${chart.heightLimit} m; ${accepted?"Criterion is met.":"Criterion is not met."}`,"height-readout");
@@ -465,7 +498,7 @@ function windowChart() {
   axes(svg,chart.windows.length,ymax,"Accepted spell index (count)","Continuous duration (h)",true);
   const y=v=>260-v/ymax*220, spacing=760/chart.windows.length;
   chart.windows.forEach((duration,i)=>{
-    const accepted=duration>=chart.required;
+    const accepted=chart.windowAccepted[i];
     element(svg,"text",{x:65+(i+.5)*spacing,y:280},String(i+1));
     const bar=element(svg,"rect",{x:65+i*spacing+spacing*.2,y:y(duration),width:spacing*.6,
       height:260-y(duration),class:accepted?"pass":"fail"});
@@ -476,11 +509,13 @@ function windowChart() {
 }
 waveChart(); windowChart();
 const changes=JSON.parse(document.getElementById("engineering-changes").textContent);
+const revision=changes.history.at(-1).revision;
 function showChanges() {
   const last=document.getElementById("last-revision").value;
-  document.getElementById("change-list").textContent = last==="0"
-    ? "No engineering changes since the selected revision."
-    : changes.history.flatMap(row=>row.changes).join(" ");
+  const first=changes.history.findIndex(row=>row.revision===last)+1;
+  const pending=changes.history.slice(first).flatMap(row=>row.changes);
+  document.getElementById("change-list").textContent = pending.length
+    ? pending.join(" ") : "No engineering changes since the selected revision.";
 }
 document.getElementById("last-revision").addEventListener("change",showChanges); showChanges();
 const sections = [...document.querySelectorAll("section[id]")];
@@ -492,7 +527,7 @@ for (const section of sections) {
 let comments=[], directory=null, savedText="[]";
 const status=document.getElementById("comment-status");
 function validComments(payload) {
-  if (payload.report!=="weather-window-module" || payload.revision!=="0" || !Array.isArray(payload.comments)) throw new Error("Comment file does not match this report revision.");
+  if (payload.report!=="weather-window-module" || payload.revision!==revision || !Array.isArray(payload.comments)) throw new Error("Comment file does not match this report revision.");
   if (!payload.comments.every(c=>typeof c.text==="string" && c.text.trim() && sections.some(s=>s.id===c.section))) throw new Error("Comment data is invalid.");
   return payload.comments.map(c=>({section:c.section,text:c.text}));
 }
@@ -532,7 +567,7 @@ document.getElementById("open-folder").addEventListener("click",async()=>{
 });
 document.getElementById("save-comments").addEventListener("click",async()=>{
   try {
-    const payload=JSON.stringify({report:"weather-window-module",revision:"0",comments},null,2)+"\n";
+    const payload=JSON.stringify({report:"weather-window-module",revision,comments},null,2)+"\n";
     if(directory) {
       const handle=await directory.getFileHandle("report.comments.json",{create:true});
       const writable=await handle.createWritable(); await writable.write(payload); await writable.close();
