@@ -1,0 +1,14 @@
+{
+  "document": "Lifting lug screening analysis",
+  "revisions": [
+    {
+      "revision": "A",
+      "date": "2026-10-21",
+      "changes": [
+        "The published example is evaluated for bearing, net tension and shear tear-out.",
+        "A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.",
+        "Unconfirmed material, loading and strength-factor bases are registered for engineering review."
+      ]
+    }
+  ]
+}
