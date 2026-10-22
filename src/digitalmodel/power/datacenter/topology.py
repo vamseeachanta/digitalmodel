@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 
 from digitalmodel.power.datacenter.models import (
@@ -18,6 +17,11 @@ class DataCenterPowerPath:
 
     Models the cascaded chain: utility → MV switchgear → transformer →
     UPS → STS → PDU → rack. Components are ordered from source to load.
+
+    Ratings use the local input-side apparent-power convention. Equal, nonzero
+    power factors are assumed throughout; no power-factor model is present.
+    The effective-capacity approximation applies all losses to the minimum
+    rating, without position-dependent load propagation or nameplate sizing.
 
     Attributes
     ----------
@@ -36,7 +40,11 @@ class DataCenterPowerPath:
 
     @property
     def cascaded_efficiency(self) -> float:
-        """Product of all component efficiencies in the chain."""
+        """Product of real-power efficiencies, assuming a common steady flow.
+
+        Cascading follows eta=P_out/P_in (ENERGY STAR UPS Test Method,
+        Dec-2017, section 5 A, equation 2); no load-dependent loss curve is used.
+        """
         if not self.components:
             return 1.0
         result = 1.0
@@ -46,14 +54,21 @@ class DataCenterPowerPath:
 
     @property
     def bottleneck_kva(self) -> float:
-        """Minimum rated kVA among all components (capacity bottleneck)."""
+        """Minimum local input-side rating; not a propagated load limit."""
         if not self.components:
             return 0.0
         return min(c.rated_kva for c in self.components)
 
     @property
     def effective_capacity_kva(self) -> float:
-        """Bottleneck capacity derated by cascaded efficiency."""
+        """Local approximation: minimum input rating times full-chain efficiency.
+
+        Every component loss is included regardless of bottleneck position.
+        Equal, nonzero power factors are assumed. This estimate is not a
+        position-dependent output nameplate capacity or a design-load check.
+        Basis: local convention in docs/agent-pack.md, section 3, and issue 2749
+        item 4; no standards sizing method is claimed.
+        """
         return self.bottleneck_kva * self.cascaded_efficiency
 
     @property
