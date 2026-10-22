@@ -268,6 +268,13 @@ reports/
 !docs/reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
+# Durable module analysis and engineering change register.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/cp/
+docs/reports/modules/cp/*
+!docs/reports/modules/cp/index.html
+!docs/reports/modules/cp/changes.json
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
