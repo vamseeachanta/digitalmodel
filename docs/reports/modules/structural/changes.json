@@ -1,0 +1,14 @@
+{
+  "document": "structural-module-report",
+  "revision": "1",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "changes": [
+        "First issue establishes the closed-cylinder membrane stress example and its diameter assumption.",
+        "Material strength, pressure acceptance and radial displacement remain not evaluated."
+      ]
+    }
+  ]
+}

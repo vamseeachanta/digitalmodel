@@ -1,0 +1,50 @@
+{
+  "dataset_id": "public-closed-cylinder-pressure-example",
+  "version": "1",
+  "intended_use": "Membrane stress calculation example; pressure acceptance is not evaluated.",
+  "source": {
+    "title": "Pressure Vessels",
+    "publisher": "MIT OpenCourseWare",
+    "edition": "2001-08-23",
+    "locator": "Problems, Problem 1, printed page 9; equations (2) and (3), printed page 3",
+    "url": "https://ocw.mit.edu/courses/3-91-mechanical-behavior-of-plastics-spring-2007/0be49aef0263a94601f18b28c64af705_06_pv.pdf",
+    "accessed_on": "2026-10-22",
+    "retention": "Public source is referenced; no source publication is copied."
+  },
+  "inputs": {
+    "diameter_in": 6,
+    "thickness_in": 0.075,
+    "length_in": 30,
+    "pressure_psi": 1500
+  },
+  "units": {
+    "diameter_in": "in",
+    "thickness_in": "in",
+    "length_in": "in",
+    "pressure_psi": "psi"
+  },
+  "conversions": {
+    "inch_to_m": 0.0254,
+    "psi_to_pa": 6894.757,
+    "pa_to_mpa": 0.000001,
+    "m_to_mm": 1000,
+    "source_title": "NIST Special Publication 811, Guide for the Use of the International System of Units, 2008 edition",
+    "locator": "Appendix B.8, inch and pound-force per square inch entries; section 4.3, SI prefixes",
+    "url": "https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8",
+    "precision": "Pressure conversion uses the published rounded factor, not an exact factor."
+  },
+  "assumptions": [
+    {
+      "quantity": "Diameter convention",
+      "status": "ASSUMED - to be confirmed",
+      "basis": "The unqualified source diameter is interpreted as the internal diameter because the calculation interface requires the inner radius.",
+      "consequence": "Confirm the diameter convention before applying the stresses to a physical component."
+    }
+  ],
+  "not_evaluated": [
+    "Material strength and temperature-dependent allowable stress",
+    "Radial displacement, because elastic constants are not supplied",
+    "Code pressure rating, corrosion allowance, weld efficiency and load combinations",
+    "Local end effects, supports, openings, fatigue and instability"
+  ]
+}
