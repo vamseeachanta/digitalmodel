@@ -1,0 +1,14 @@
+{
+  "revision": "A",
+  "status": "Draft for client review",
+  "changes": [
+    {
+      "section": "Detailed Results",
+      "description": "Initial analytical example of submerged weight and still-water catenary geometry; operating capacity is not established."
+    },
+    {
+      "section": "Limitations",
+      "description": "The minimum-offset input and total-length allowance are distinguished from verified design criteria."
+    }
+  ]
+}
