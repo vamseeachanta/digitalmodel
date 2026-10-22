@@ -1,8 +1,10 @@
 {
-  "revision": "00",
+  "revision": "01",
   "date": "2026-10-22",
   "changes": [
     "Phased motion reconstruction is described with a computed regular-wave example.",
-    "Synthetic calculation evidence is separated from operational qualification."
+    "Synthetic calculation evidence is separated from operational qualification.",
+    "Serialized precision, UTF-8 encoding and LF line endings support exact regeneration.",
+    "Independent statistics and a significant-amplitude reference clarify the numerical basis."
   ]
 }

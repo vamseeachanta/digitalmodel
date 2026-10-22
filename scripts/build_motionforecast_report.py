@@ -23,7 +23,7 @@ DEST = ROOT / 'docs/reports/modules/motionforecast'
 
 def example():
     """Read literal parameters from the published regular-wave test, then call API."""
-    tree = ast.parse((ROOT / EXAMPLE).read_text())
+    tree = ast.parse((ROOT / EXAMPLE).read_text(encoding='utf-8'))
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
               and n.name == 'test_regular_wave_amplitude_and_phase')
     values = {}
@@ -43,8 +43,11 @@ def example():
                         horizon=p['horizon'])
     rao = AnalyticRAO({'heave': lambda w, b: p['gain'] * np.exp(1j * p['response_phase'])})
     motion = reconstruct_motion(wave, rao, dt=p['dt'])
-    return dict(inputs=p, time=motion.t.tolist(), heave=motion.dof['heave'].tolist(),
-                peak=motion.max_abs('heave'), significant=motion.significant('heave'))
+    # Bound serialized precision so last-bit library differences do not cause drift.
+    return dict(inputs=p, time=[round(value, 12) for value in motion.t.tolist()],
+                heave=[round(value, 12) for value in motion.dof['heave'].tolist()],
+                peak=round(motion.max_abs('heave'), 12),
+                significant=round(motion.significant('heave'), 12))
 
 
 def section(number, title, body):
@@ -54,10 +57,12 @@ def section(number, title, body):
 def build(destination=DEST):
     data = example()
     p = data['inputs']
-    style = re.search(r'<style>.*?</style>', (ROOT / STYLE).read_text(), re.S).group()
-    changes = {'revision': '00', 'date': '2026-10-22', 'changes': [
+    style = re.search(r'<style>.*?</style>', (ROOT / STYLE).read_text(encoding='utf-8'), re.S).group()
+    changes = {'revision': '01', 'date': '2026-10-22', 'changes': [
         'Phased motion reconstruction is described with a computed regular-wave example.',
         'Synthetic calculation evidence is separated from operational qualification.',
+        'Serialized precision, UTF-8 encoding and LF line endings support exact regeneration.',
+        'Independent statistics and a significant-amplitude reference clarify the numerical basis.',
     ]}
     inputs = [('Angular frequency', 'omega', 'rad/s'), ('Wave amplitude', 'amplitude', 'm'),
               ('Incident phase', 'phase', 'rad'), ('Heave transfer amplitude', 'gain', 'm/m'),
@@ -76,7 +81,8 @@ def build(destination=DEST):
 <ul><li>Use the calculation for software assessment within that interval; obtain independently qualified wave phases, response data and operating criteria before an installation decision.</li></ul></li></ul>''')
     body += '''<div id="revision-history"><h3>Revision history</h3><table>
 <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>00</td><td>2026-10-22</td><td>Initial calculation description and example; operational evidence gaps are identified.</td></tr></tbody>
+<tbody><tr><td>00</td><td>2026-10-22</td><td>Initial calculation description and example; operational evidence gaps are identified.</td></tr>
+<tr><td>01</td><td>2026-10-22</td><td>Numerical serialization and text output are made reproducible across platforms; independent statistics and a significant-amplitude reference clarify the basis.</td></tr></tbody>
 <caption>Revision history.</caption></table></div>'''
     body += section(2, 'Introduction', '''
 <p>The main workflow is assessed from incident-wave components to heave displacement. The implementation also returns surge, sway, roll, pitch and yaw when response data are supplied. A response amplitude operator is the complex ratio of response to incident wave amplitude; its magnitude scales displacement and its argument adds phase.</p>
@@ -93,6 +99,7 @@ def build(destination=DEST):
 <p>For component i, θᵢ(t) = ωᵢt + φᵢ − kᵢ dᵢ·(x − xᵣ) + arg Hᵢ, and q(t) = Σ aᵢ |Hᵢ| cos θᵢ(t). Here t is absolute time in seconds, ω is angular frequency in radians per second, φ is incident phase in radians, a is wave amplitude in metres, d is the unit propagation vector, x is response position and xᵣ is wave-reference position in metres. H is the complex displacement response amplitude operator; q is the selected response. Translations are in metres and rotations in degrees.</p>
 <p>Deep-water dispersion is k = ω²/g; finite-depth dispersion is ω² = gk tanh(kh). The wave number k is in radians per metre, depth h is in metres and g is the gravitational acceleration defined by the module. Finite-depth wave number is solved by bisection. Invalid depth can select deep water rather than reject the input; pre-validation remains necessary.</p>
 <p>The derived rigid-body vertical displacement is z = heave − rₓ pitch + rᵧ roll, with angular terms converted to radians and horizontal offsets rₓ and rᵧ in metres. This small-angle extension is outside the computed example. The reported significant amplitude is twice the population standard deviation of the finite response record; it is not a maximum or an acceptance threshold.</p>
+<p>For a narrow-band random process, the significant height relation is Hs = 4√m₀ and significant amplitude is Hs/2 = 2√m₀ = 2σ, where m₀ is the integral of the variance spectrum and σ² = m₀; see section 9.3. The present deterministic example evaluates 2σ from its finite sampled record. It does not estimate the highest-third wave statistic from a random sea.</p>
 <p>The example is reconstructed through the public wave, analytical response and reconstruction interfaces. The signed history is checked separately against its closed-form cosine. The supplied interval is a software boundary, not a measured predictable zone. The bandwidth coherence proxy and aperture-based horizon functions require separate physical qualification.</p>''')
     body += section(6, 'Detailed results', f'''
 <p>The regular-wave heave history is calculated from the registered inputs. Its sampled peak absolute displacement is {peak} m and its finite-record significant amplitude is {significant} m; neither value is compared with an equipment limit because none is supplied.</p>
@@ -136,7 +143,9 @@ def build(destination=DEST):
     body += section(9, 'References', f'''
 <p>The numerical basis is the public repository example and implemented definitions. No external experimental dataset or licensed tabulation is reproduced.</p>
 <h3>9.1 Evidence scope</h3><p>Repository content digests identify the inspected edition of each source. The example is an analytical software reference, not a published physical benchmark. No external standard limit is adopted.</p>
-<h3>9.2 Source register</h3><ul>{refs}</ul>''')
+<h3>9.2 Source register</h3><ul>{refs}</ul>
+<h3>9.3 Significant-amplitude definition</h3>
+<p><a href="https://ocw.mit.edu/courses/2-019-design-of-ocean-systems-spring-2011/641e13d0b33fd958416245953423c5f3_MIT2_019S11_OWE.pdf#page=15">MIT OpenCourseWare, 2.019 Design of Ocean Systems, Spring 2011, lecture 9: Ocean Wave Environment, slide 15</a> gives the narrow-band relations for significant height and amplitude. The relation supplies the statistical definition, not an operational acceptance criterion.</p>''')
     body += section(10, 'Appendix: data register and quality evidence', '''
 <p>The example is retained as a computed numerical payload within this document. Unknown engineering inputs are distinguished from true zero responses defined by the analytical adapter.</p>
 <h3>10.1 Data register</h3>
@@ -147,7 +156,7 @@ def build(destination=DEST):
 <tr><td>Equipment caution and operating limits</td><td>NOT_EVALUATED.</td><td>Applicable design basis, edition, clause and operation-specific approval.</td></tr>
 </tbody><caption>Table 10.1. Data readiness and outstanding engineering evidence. No engineering assumption is substituted for missing acceptance data.</caption></table>
 <h3>10.2 Quality pre-flight</h3>
-<p>The rebuild test compares the embedded history and reported metrics with fresh public-interface calls, checks the signed closed-form solution and requires byte-identical regenerated documents. Numerical metrics are formatted from calculated values. Source digests bind the description to the cited content. The chart is self-contained and uses the same calculated arrays. Browser interaction and file-saving behaviour require browser confirmation; static checks alone do not establish those behaviours.</p>
+<p>The rebuild test compares the embedded history and reported metrics with fresh public-interface calls, checks the signed closed-form solution and independent finite-record statistics, and requires byte-identical regenerated documents. Serialized histories and metrics are rounded to twelve decimal places; text output uses UTF-8 and LF line endings. Numerical metrics are formatted from calculated values. Source digests bind the description to the cited content. The chart is self-contained and uses the same calculated arrays. Browser interaction and file-saving behaviour require browser confirmation; static checks alone do not establish those behaviours.</p>
 <details><summary>Engineering changes</summary><ul id="change-list"></ul></details>
 <details><summary>Document comments</summary><p>Comments are saved as a separate file beside this document after a directory is selected in a browser supporting directory access. Existing comments are read before another is appended. A download is available when directory access is unavailable; place that file beside this document.</p>
 <label for="comment">Comment and section</label><textarea id="comment" rows="4"></textarea>
@@ -196,7 +205,7 @@ status('Downloaded comments require placement beside the document.');});
     page = f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Motion forecast module analysis</title>{style}</head><body class="hs-doc">
-<header><h1>Motion forecast module analysis</h1><p>Draft for client review</p></header>
+<header><h1>Motion forecast module analysis</h1><p>Draft for maintainer review</p></header>
 <div class="layout"><nav aria-label="Contents"><ol>{nav}</ol></nav><main>{body}</main></div>
 <script id="example-data" type="application/json">{json.dumps(data, allow_nan=False)}</script>
 <script id="change-data" type="application/json">{json.dumps(changes)}</script>
@@ -204,8 +213,8 @@ status('Downloaded comments require placement beside the document.');});
 '''
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / 'index.html').write_text(page, encoding='utf-8')
-    (destination / 'changes.json').write_text(json.dumps(changes, indent=2) + '\n', encoding='utf-8')
+    (destination / 'index.html').write_text(page, encoding='utf-8', newline='\n')
+    (destination / 'changes.json').write_text(json.dumps(changes, indent=2) + '\n', encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':
