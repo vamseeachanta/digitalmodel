@@ -33,7 +33,7 @@
 <h1>Asset integrity module analysis</h1>
 <p>Pipeline corrosion pressure screening and the evidence required for use</p>
 <p>Revision {{ revision.revision }} | {{ revision.date }}</p>
-<p>Draft for client review</p>
+<p>Draft for review</p>
 </header>
 <div class="layout">
 <nav aria-label="Contents"><ol>
@@ -87,7 +87,7 @@
 <h3>3.1 Governing basis</h3>
 <p>The implemented original method carries the ASME B31G-2012 label. The historical example is attributed by its public documentation to ASME B31G-1991, Nonmandatory Appendix A. The numerical comparison therefore establishes reproduction of that public example, rather than edition-matched qualification of every requirement of the later standard. Equations and example values below are obtained from the open program documentation and the repository implementation; a licensed publication is not reproduced. <sup><a href="#source-theory">[B]</a><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
 <h3>3.2 Comparison criteria and rationale</h3>
-<p>The pressure comparison is met when the capped reference pressure is at least the stated operating-pressure demand and no implemented applicability flag is raised. The cap prevents the example calculation from exceeding the intact design-pressure basis. The relative-depth boundary is {{ n('limit.depth_fraction') }} of nominal wall in the implementation; equality remains inside the implemented check. This check alone does not establish complete material, flaw or loading applicability. <sup><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<p>The pressure comparison is met when the capped reference pressure is at least the stated operating-pressure demand and no implemented applicability flag is raised. The cap prevents the example calculation from exceeding the intact design-pressure basis. The relative-depth boundary is {{ n('limit.depth_fraction') }} of nominal wall in the implementation; the recomputed depth ratio controls the flag, and binary rounding can place the nominal boundary sample just above the limit. This check alone does not establish complete material, flaw or loading applicability. <sup><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
 <p>Agreement with the published shallow-example pressure is checked within {{ n('case0.tolerance_psi') }} psi. The calculation at the published rounded depth boundary is checked within {{ n('case1.tolerance_psi') }} psi of the operating-pressure demand. These are the existing numerical test tolerances, rather than measurement allowances or operating margins. <sup><a href="#source-tests">[E]</a></sup></p>
 <p>The factor entered for this example is the reciprocal of its published combined design factor, {{ n('input.design_factor') }}. A different design basis requires an explicit corresponding factor. The module's default factor is not adopted implicitly. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
 </section>
@@ -215,6 +215,7 @@
 
 <section id="section-9">
 <h2>9. Appendix: data and references</h2>
+<p>Source digests and report reproduction use UTF-8 bytes with CRLF line endings converted to LF. All other bytes remain significant.</p>
 <p>The numerical basis, source records and limits of the evidence are retained here. Public example inputs are distinguished from missing operating data so that a reproduction is not mistaken for a component assessment.</p>
 <h3 id="data-register">9.1 Data register</h3>
 <div class="table-wrap"><table>

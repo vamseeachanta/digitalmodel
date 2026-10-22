@@ -2,6 +2,15 @@
   "document": "Asset integrity module analysis",
   "revisions": [
     {
+      "revision": "01",
+      "date": "2026-10-22",
+      "changes": [
+        "Public review wording and the explanation of the nominal depth boundary are clarified to match the returned applicability flag.",
+        "Cited formula coefficients are checked against calculation behavior, and worked pressures are independently anchored to hand calculations.",
+        "Canonical line endings and registered regeneration inputs make report reproduction portable and subject to the documentation drift check."
+      ]
+    },
+    {
       "revision": "00",
       "date": "2026-10-21",
       "changes": [

@@ -67,9 +67,34 @@ class Generator:
     # deterministically from the repository.
     prerequisites: tuple[str, ...] = ()
     inputs: tuple[str, ...] = ()
+    # Opt in only for text whose builder and input digests explicitly use LF.
+    # Every byte other than a CR immediately before LF remains significant.
+    canonical_lf: bool = False
 
 
 GENERATORS = (
+    Generator(
+        "docs/reports/modules/assetintegrity/build_report.py",
+        ("docs/reports/modules/assetintegrity/report.html",),
+        inputs=(
+            "pyproject.toml",
+            "docs/reports/modules/assetintegrity/build_report.py",
+            "docs/reports/modules/assetintegrity/public-example.json",
+            "docs/reports/modules/assetintegrity/report.template.html",
+            "docs/reports/modules/assetintegrity/changes.json",
+            "docs/reports/pipeline-ffs-assessment.html",
+            "src/digitalmodel/asset_integrity/corroded_pipe.py",
+            "src/digitalmodel/asset_integrity/applicability.py",
+            "tests/asset_integrity/test_ffs_published_examples.py",
+            "docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md",
+            "examples/workflows/pipeline-ffs-assessment/input.yml",
+            "examples/workflows/pipeline-ffs-assessment/assumptions.yml",
+            "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+            "examples/workflows/ffs-metal-loss/input.yml",
+        ),
+        prerequisites=("scripts/reporting/build_pipeline_ffs_report.py",),
+        canonical_lf=True,
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -218,6 +243,8 @@ module.main()
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Defense-in-depth scan for likely unregistered builders."""
     found = set()
+    for path in (repo / "docs" / "reports" / "modules").rglob("build_report.py"):
+        found.add(path.relative_to(repo).as_posix())
     for root in (repo / "scripts", repo / "docs" / "api"):
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
@@ -428,7 +455,16 @@ def regenerate(shadow: Path) -> list[str]:
     for entry in GENERATORS:
         clear_generated_html(shadow, entry)
     with ThreadPoolExecutor(max_workers=4) as pool:
-        results = pool.map(lambda entry: run_generator(shadow, entry), GENERATORS)
+        # Finish independent producers before consumers rebuild shared inputs.
+        # Each consumer still runs every declared prerequisite and is checked.
+        results = list(pool.map(
+            lambda entry: run_generator(shadow, entry),
+            (entry for entry in GENERATORS if not entry.prerequisites),
+        ))
+        results.extend(pool.map(
+            lambda entry: run_generator(shadow, entry),
+            (entry for entry in GENERATORS if entry.prerequisites),
+        ))
         return [error for error in results if error]
 
 
@@ -459,6 +495,11 @@ def compare_outputs(repo: Path, shadow: Path) -> list[tuple[str, list[str]]]:
     """Find differences between committed and regenerated pages."""
     committed = {path.relative_to(repo) for path in all_registered_outputs(repo)}
     fresh = {path.relative_to(shadow) for path in all_registered_outputs(shadow)}
+    canonical_lf = {
+        path.relative_to(repo)
+        for entry in GENERATORS if entry.canonical_lf
+        for path in output_paths(repo, entry)
+    }
     drift = []
     for relative in sorted(committed | fresh):
         old, new = repo / relative, shadow / relative
@@ -466,8 +507,13 @@ def compare_outputs(repo: Path, shadow: Path) -> list[tuple[str, list[str]]]:
             drift.append((relative.as_posix(), ["generated file is not committed"]))
         elif not new.exists():
             drift.append((relative.as_posix(), ["committed file is no longer generated"]))
-        elif old.read_bytes() != new.read_bytes():
-            drift.append((relative.as_posix(), short_diff(old, new)))
+        else:
+            old_bytes, new_bytes = old.read_bytes(), new.read_bytes()
+            if relative in canonical_lf:
+                old_bytes = old_bytes.replace(b"\r\n", b"\n")
+                new_bytes = new_bytes.replace(b"\r\n", b"\n")
+            if old_bytes != new_bytes:
+                drift.append((relative.as_posix(), short_diff(old, new)))
     return drift
 
 

@@ -10,9 +10,7 @@ solver, result snapshot or machine configuration is used during rebuilding.
 from __future__ import annotations
 
 import argparse
-import ast
 import hashlib
-import inspect
 import json
 import math
 import re
@@ -99,18 +97,31 @@ def depth_sensitivity(inputs, cases):
     return sensitivity
 
 
-def formula_coefficients(inputs, cases):
-    """Read display coefficients from native results and the branch comparison."""
-    shallow = cases[0]["result"]
-    tree = ast.parse(inspect.getsource(corroded_pipe.folias_original))
-    branch_limit = next(n for n in ast.walk(tree) if isinstance(n, ast.Compare))
-    return {
-        "flow_multiplier": shallow["flow_stress_psi"] / inputs["smys_psi"],
-        "area_multiplier": shallow["area_ratio"] / cases[0]["depth_in"] * inputs["t"],
-        "bulging_coefficient": (shallow["folias_factor"] ** 2 - 1)
-        / shallow["details"]["z"],
-        "branch_limit": ast.literal_eval(branch_limit.comparators[0]),
+def formula_coefficients(fixture, cases):
+    """Display cited coefficients only after checking native calculation behavior."""
+    inputs = fixture["inputs"]
+    cited = {
+        key: item["value"] for key, item in fixture["formula_coefficients"].items()
     }
+    for case in cases:
+        result = case["result"]
+        actual = {
+            "flow_multiplier": result["flow_stress_psi"] / inputs["smys_psi"],
+            "area_multiplier": result["area_ratio"] / case["depth_in"] * inputs["t"],
+            "bulging_coefficient": (result["folias_factor"] ** 2 - 1)
+            / result["details"]["z"],
+        }
+        for key, value in actual.items():
+            if not math.isclose(value, cited[key], rel_tol=1e-12, abs_tol=1e-12):
+                raise ValueError(f"Module coefficient differs from cited {key}")
+    boundary = cited["branch_limit"]
+    factor = corroded_pipe.folias_original(boundary)
+    expected = math.sqrt(1 + cited["bulging_coefficient"] * boundary)
+    if factor is None or not math.isclose(factor, expected, rel_tol=1e-12):
+        raise ValueError("Module branch boundary differs from cited formula")
+    if corroded_pipe.folias_original(math.nextafter(boundary, math.inf)) is not None:
+        raise ValueError("Module branch boundary exceeds cited limit")
+    return cited
 
 
 def calculate():
@@ -126,7 +137,7 @@ def calculate():
             "depth_fraction": corroded_pipe._B31G_MAX_DT,
             "depth_in": inputs["t"] * corroded_pipe._B31G_MAX_DT,
         },
-        "formula": formula_coefficients(inputs, cases),
+        "formula": formula_coefficients(fixture, cases),
         "sources": fixture["sources"],
     }
 
@@ -215,12 +226,15 @@ def build(output=HERE / "report.html"):
     data = calculate()
     data["display_values"] = display_values(data)
     data["source_digests"] = {
-        path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        path: hashlib.sha256(
+            (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest()
         for path in (*DEPENDENCIES, STYLE_SOURCE)
     }
     data["source_digests"]["public-example.json"] = hashlib.sha256(
-        (HERE / "public-example.json").read_bytes()
+        (HERE / "public-example.json").read_bytes().replace(b"\r\n", b"\n")
     ).hexdigest()
+    data["source_digest_basis"] = "UTF-8 bytes with CRLF converted to LF"
     style_page = (ROOT / STYLE_SOURCE).read_text(encoding="utf-8")
     style = re.search(r"<style>(.*?)</style>", style_page, re.S).group(1)
     changes = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))

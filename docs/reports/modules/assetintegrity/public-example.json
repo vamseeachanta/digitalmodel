@@ -1,6 +1,6 @@
 {
   "dataset_id": "asset-integrity-public-corrosion-example",
-  "authoritative_owner": "digitalmodel",
+  "maintainer": "digitalmodel",
   "version": "1",
   "source_version": "pipenostics 0.2.0, documentation built 2024-05-29",
   "checked_on": "2026-10-21",
@@ -10,7 +10,17 @@
     "example": {
       "url": "https://rdrr.io/cran/pipenostics/man/b31crvl.html",
       "locator": "Examples, Standard example 1; ASME B31G-1991, Nonmandatory Appendix A, as reproduced in the public program documentation",
-      "fields": ["D", "t", "d", "L", "smys_psi", "maop_psi", "design_factor", "published_pressure_psi", "published_boundary_depth_in"]
+      "fields": [
+        "D",
+        "t",
+        "d",
+        "L",
+        "smys_psi",
+        "maop_psi",
+        "design_factor",
+        "published_pressure_psi",
+        "published_boundary_depth_in"
+      ]
     },
     "theory": {
       "url": "https://rdrr.io/cran/pipenostics/src/R/b31gpf.R",
@@ -19,6 +29,28 @@
     "reference_cap": {
       "url": "https://rdrr.io/cran/pipenostics/src/R/b31gsap.R",
       "locator": "b31gsap function, final comparison with intact design pressure; public implementation referring to ASME B31G-1991"
+    }
+  },
+  "formula_coefficients": {
+    "flow_multiplier": {
+      "value": 1.1,
+      "source": "theory",
+      "locator": "b31gpf: s_flow assignment"
+    },
+    "area_multiplier": {
+      "value": 0.6666666666666666,
+      "source": "theory",
+      "locator": "b31gpf: parabolic branch of sf assignment"
+    },
+    "bulging_coefficient": {
+      "value": 0.8,
+      "source": "theory",
+      "locator": "b31gpf: M2 assignment and square root in sf"
+    },
+    "branch_limit": {
+      "value": 20.0,
+      "source": "theory",
+      "locator": "b31gpf: sf assignment, long-flaw branch selected for z > 20"
     }
   },
   "inputs": {
