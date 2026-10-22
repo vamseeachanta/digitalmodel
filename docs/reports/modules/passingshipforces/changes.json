@@ -1,8 +1,9 @@
 {
-  "revision": "00",
+  "revision": "01",
   "date": "2026-10-22",
   "changes": [
-    "Established the passing-ship load calculation basis and reproduced the public example.",
-    "Separated numerical reproduction from the missing mooring capacity and field evidence."
+    "Reported both signed extrema and rounded chart data for portable rebuilds.",
+    "Added independent numerical readback and quantified legacy image truncation.",
+    "Clarified axes, source locators, bibliography and portable text encoding."
   ]
 }
