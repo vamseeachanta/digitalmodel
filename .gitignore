@@ -439,6 +439,14 @@ docs/api/structural/wall-thickness-3d.json
 
 # Maintainer board O04 reconciliation evidence (authored, not generated output).
 !docs/reports/o04-ecosystem-reconciliation.html
+
+# Retain only the reproducible cross-section module analysis deliverables.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/cross_sections/
+docs/reports/modules/cross_sections/*
+!docs/reports/modules/cross_sections/index.html
+!docs/reports/modules/cross_sections/changes.json
 # Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
 !docs/reports/dwg-conversion/
 docs/reports/dwg-conversion/*
