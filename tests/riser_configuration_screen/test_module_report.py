@@ -1,7 +1,12 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Report data, analytical anchors and portable rebuild contracts."""
 
+import base64
 import importlib.util
 import json
+import math
 import re
 from pathlib import Path
 
@@ -9,12 +14,12 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 FOLDER = ROOT / "docs/reports/modules/riserconfigurationscreen"
-REBUILD = "python scripts/reports/build_riser_configuration_report.py"
+REBUILD = "python scripts/reporting/build_riser_configuration_report.py"
 
 
 def builder():
     spec = importlib.util.spec_from_file_location(
-        "riser_report", ROOT / "scripts/reports/build_riser_configuration_report.py")
+        "riser_report", ROOT / "scripts/reporting/build_riser_configuration_report.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -61,7 +66,9 @@ def test_structure_and_public_wording():
     assert 'id="comments"' in text and "showSaveFilePicker" in text
     assert "Draft for maintainer review" in text
     assert "ASSUMED - to be confirmed" in text
-    assert "<script src=" not in text and '<link rel="stylesheet"' not in text
+    assert "<script src=" not in text
+    assert all(href.startswith("data:text/css;base64,") for href in re.findall(
+        r'<link rel="stylesheet" href="([^"]+)"', text))
     visible = re.sub(r"<(script|style)\b.*?</\1>", "", text, flags=re.S)
     visible = re.sub(r"<[^>]+>", " ", visible)
     assert not re.search(r"\b(owner|client|lane|seat|session|could|should|would)\b", visible, re.I)
@@ -72,5 +79,100 @@ def test_style_and_changes_are_embedded():
     text = (FOLDER / "report.html").read_text(encoding="utf-8")
     changes = json.loads((FOLDER / "changes.json").read_text(encoding="utf-8"))
     assert changes["changes"][0]["description"] in text
-    assert "--brand:" in text
+    encoded = re.search(r'href="data:text/css;base64,([^"]+)"', text)
+    assert encoded is not None
+    assert base64.b64decode(encoded[1]) == (ROOT / "docs/api/_assets/brand.css").read_bytes()
     assert "Limit" in text and "<title>" in text
+
+
+def test_report_generator_is_registered():
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script.endswith("build_riser_configuration_report.py")]
+    assert len(entries) == 1
+    assert entries[0].script == "scripts/reporting/build_riser_configuration_report.py"
+    assert entries[0].outputs == (
+        "docs/reports/modules/riserconfigurationscreen/report.html",)
+    assert set(entries[0].inputs) >= {
+        "examples/workflows/riser-configuration-screen/scr.yml",
+        "docs/reports/modules/riserconfigurationscreen/report.template.html",
+        "docs/reports/modules/riserconfigurationscreen/changes.json",
+    }
+
+
+@pytest.mark.parametrize("direction", [-math.inf, math.inf])
+@pytest.mark.parametrize("source", ["anchor", "screen", "closure"])
+def test_report_ignores_ulp_perturbations(monkeypatch, direction, source):
+    module = builder()
+    expected = module.render_report()
+    original = module.scr_offsets if source == "anchor" else module.screen
+
+    def perturbed(settings, *args):
+        settings = dict(settings)
+        if source != "closure":
+            settings["water_depth_m"] = math.nextafter(
+                settings["water_depth_m"], direction)
+        result = original(settings, *args)
+        if source == "closure":
+            # Platform residuals of a few tens of picometres are not results.
+            for index in (2, 6):
+                result["ranked_candidates"][index]["constraints"]["shape_closure"]["margin"] += (
+                    math.copysign(2e-11, direction))
+        return result
+
+    monkeypatch.setattr(module, "scr_offsets" if source == "anchor" else "screen", perturbed)
+    assert module.render_report() == expected
+
+
+def test_chart_payload_excludes_solver_diagnostics():
+    module = builder()
+    data = module.display_data(module.calculate())
+    assert set(data) == {"settings", "result", "anchor", "reference"}
+    assert set(data["result"]) == {"ranked_candidates"}
+    for candidate in data["result"]["ranked_candidates"]:
+        assert set(candidate) == {"configuration", "offset_results"}
+        for row in candidate["offset_results"]:
+            assert set(row) == {
+                "offset_m", "top_tension_n", "grounded_length_m",
+                "touchdown_curvature_per_m", "static_von_mises_utilisation",
+                "horizontal_span_m", "shape",
+            }
+    assert "shape_closure" not in json.dumps(data)
+
+
+def test_anchor_agreement_uses_explicit_tolerance(monkeypatch):
+    module = builder()
+    assert "agree within a relative tolerance of 1e-7" in module.render_report()
+    original = module.scr_offsets
+
+    def disagree(settings, offsets):
+        rows = original(settings, offsets)
+        rows[0]["top_tension_n"] *= 1.01
+        return rows
+
+    monkeypatch.setattr(module, "scr_offsets", disagree)
+    assert "do not agree within a relative tolerance of 1e-7" in module.render_report()
+
+
+def test_example_headline_values_have_independent_anchors():
+    # Independently solved fixed-length cable equations at the three radial
+    # separations; literal references deliberately do not call report helpers.
+    candidates = builder().calculate()["result"]["ranked_candidates"]
+    first = candidates[0]
+    assert first["configuration"]["hangoff_angle_deg"] == 20.0
+    assert first["curvature_range_per_m"] == pytest.approx(4.9461e-4, abs=5e-9)
+    assert all(candidate["feasible"] for candidate in candidates)
+    assert [c["configuration"]["hangoff_angle_deg"] for c in candidates] == [
+        20.0, 18.0, 16.0, 14.0, 12.0, 10.0, 8.0]
+    radial = [row for row in first["offset_results"]
+              if isinstance(row["offset_m"], (int, float))]
+    for row, offset, tension, grounded in zip(
+            radial, [-50.0, 0.0, 50.0],
+            [2143957.6, 2279705.0, 2444926.8], [597.26, 500.00, 387.28], strict=True):
+        assert row["offset_m"] == offset
+        assert row["top_tension_n"] == pytest.approx(tension, abs=0.05, rel=0)
+        assert row["grounded_length_m"] == pytest.approx(grounded, abs=0.005, rel=0)
+    # Far-excursion hangoff: T/A + E*(D/2)*kappa_top, divided by yield.
+    assert radial[2]["static_von_mises_utilisation"] == pytest.approx(
+        0.2625, abs=0.00005, rel=0)

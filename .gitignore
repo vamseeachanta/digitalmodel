@@ -583,9 +583,6 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/*
 
 # Keep the public static-screen report and its deterministic builder.
-!scripts/reports/
-scripts/reports/*
-!scripts/reports/build_riser_configuration_report.py
 !docs/reports/modules/
 docs/reports/modules/*
 !docs/reports/modules/riserconfigurationscreen/

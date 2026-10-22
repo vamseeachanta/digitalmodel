@@ -1,6 +1,10 @@
 {
-  "revision": "A",
+  "revision": "B",
   "changes": [
+    {
+      "section": "Presentation and numerical assurance",
+      "description": "Register the report build, omit solver residuals from chart data, verify headline results against independent hand values and clarify static screening limits."
+    },
     {
       "section": "Static configuration screening",
       "description": "Initial assessment of the public synthetic steel catenary example, with explicit static screening criteria and unassessed operating limits."

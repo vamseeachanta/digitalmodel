@@ -96,8 +96,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 28  # includes the screening report and pipeline manifests
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9

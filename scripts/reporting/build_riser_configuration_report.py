@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Build the static screen report using only the public synthetic example.
 
 Run from the repository root with src on PYTHONPATH. No licensed interface
@@ -5,8 +8,10 @@ is imported. Report precision is deliberate; raw library digits are not stored.
 """
 
 import argparse
+import base64
 import html
 import json
+import math
 import re
 from pathlib import Path
 
@@ -31,21 +36,57 @@ def calculate():
     # T_top=10*(100+100) N. These literals do not come from the solver.
     reference = {"depth_m": 100.0, "horizontal_tension_n": 1000.0,
                  "top_tension_n": 2000.0, "touchdown_curvature_per_m": 0.01}
-    differences = {key: 100 * (anchor[key] / reference[key] - 1)
-                   for key in reference if key != "depth_m"}
     return {"settings": settings, "result": result, "anchor": anchor,
-            "reference": reference, "differences_percent": differences}
+            "reference": reference}
 
 
-def display_data(value):
-    """Round significant digits to avoid platform-dependent final digits."""
-    if isinstance(value, dict):
-        return {key: display_data(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [display_data(item) for item in value]
-    if isinstance(value, float):
-        return float(f"{value:.8g}") if abs(value) >= 1e-9 else 0.0
-    return value
+def display_data(data):
+    """Embed plotted fields only, at fixed engineering decimal precision.
+
+    Closure diagnostics, digests and unplotted solver fields belong to the
+    structured workflow export. They carry platform-dependent residuals.
+    """
+    def fixed(value, digits):
+        # Normalise negative zero as well as sub-resolution residues.
+        return round(value, digits) or 0.0
+
+    def offset(value):
+        if isinstance(value, dict):
+            return {key: fixed(item, 6) for key, item in value.items()}
+        return fixed(value, 6)
+
+    candidates = []
+    for candidate in data["result"]["ranked_candidates"]:
+        rows = []
+        for row in candidate["offset_results"]:
+            rows.append({
+                "offset_m": offset(row["offset_m"]),
+                "top_tension_n": fixed(row["top_tension_n"], 1),
+                "grounded_length_m": fixed(row["grounded_length_m"], 6),
+                "touchdown_curvature_per_m": fixed(row["touchdown_curvature_per_m"], 12),
+                "static_von_mises_utilisation": fixed(row["static_von_mises_utilisation"], 8),
+                "horizontal_span_m": fixed(row["horizontal_span_m"], 6),
+                "shape": [[fixed(value, 6) for value in point] for point in row["shape"]],
+            })
+        candidates.append({
+            "configuration": {"hangoff_angle_deg": fixed(
+                candidate["configuration"]["hangoff_angle_deg"], 6)},
+            "offset_results": rows,
+        })
+    return {
+        "settings": {
+            "water_depth_m": fixed(data["settings"]["water_depth_m"], 6),
+            "constraints": {key: fixed(data["settings"]["constraints"][key], digits)
+                            for key, digits in (("max_top_tension_n", 1),
+                                                ("min_bend_radius_m", 6),
+                                                ("max_static_utilisation", 8))},
+        },
+        "result": {"ranked_candidates": candidates},
+        "anchor": {key: fixed(data["anchor"][key], 1)
+                   for key in ("horizontal_tension_n", "top_tension_n")},
+        "reference": {key: fixed(data["reference"][key], 1)
+                      for key in ("depth_m", "horizontal_tension_n", "top_tension_n")},
+    }
 
 
 def number(value, digits):
@@ -112,10 +153,11 @@ def excursion_table(data):
 
 def house_style():
     source = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
-    # Copy existing rules, omit source comments from the distributed document.
-    brand = re.sub(r"/\*.*?\*/", "", brand, flags=re.S)
-    return '<style>' + brand + '</style>' + re.search(r'<style>.*?</style>', source, re.S).group(0)
+    # Package the canonical stylesheet unchanged for offline use; page rules
+    # consume its tokens rather than defining local copies of brand colours.
+    brand = base64.b64encode((ROOT / "docs/api/_assets/brand.css").read_bytes()).decode("ascii")
+    return ('<link rel="stylesheet" href="data:text/css;base64,' + brand + '">' +
+            re.search(r'<style>.*?</style>', source, re.S).group(0))
 
 
 def render_report():
@@ -123,9 +165,12 @@ def render_report():
     data = calculate()
     template = (FOLDER / "report.template.html").read_text(encoding="utf-8")
     changes = json.loads((FOLDER / "changes.json").read_text(encoding="utf-8"))
+    agrees = all(math.isclose(data["anchor"][key], value, rel_tol=1e-7)
+                 for key, value in data["reference"].items() if key != "depth_m")
     substitutions = {"STYLE": house_style(), "INPUTS": input_table(data),
                      "CANDIDATES": candidate_table(data), "EXCURSIONS": excursion_table(data),
                      "DATA": json.dumps(display_data(data), ensure_ascii=True, allow_nan=False),
+                     "ANCHOR_AGREEMENT": "agree" if agrees else "do not agree",
                      "CHANGES": html.escape(changes["changes"][0]["description"])}
     for key, value in substitutions.items():
         template = template.replace("{{" + key + "}}", value)
