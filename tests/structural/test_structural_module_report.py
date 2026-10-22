@@ -77,9 +77,32 @@ def test_every_result_and_chart_point_calls_the_public_module(built):
         ratio = inputs["radius_m"] / inputs["thickness_m"]
         assert hoop == pytest.approx(pressure * ratio, rel=1e-12)
         assert axial == pytest.approx(pressure * ratio / 2, rel=1e-12)
+        assert row["principals_mpa"] == pytest.approx(
+            [pressure * ratio, pressure * ratio / 2, 0.0], rel=1e-12
+        ), "Principal stresses differ from membrane equilibrium"
         assert row["equivalent_mpa"] == pytest.approx(math.sqrt(3) * axial, rel=1e-12)
         assert row["max_shear_mpa"] == pytest.approx(hoop / 2, rel=1e-12)
     assert data["strength_limit_mpa"] is None
+
+
+@pytest.mark.parametrize("sample_index", range(21))
+def test_independent_oracle_rejects_corrupted_intermediate_principal(
+    builder, monkeypatch, sample_index
+):
+    reference = builder.calculate()["series"][sample_index]
+    original = StressState.principal_stresses
+
+    def corrupted_principals(self):
+        largest, intermediate, smallest = original(self)
+        if self.sigma_x == reference["axial_mpa"]:
+            intermediate = largest if largest else 1.0
+        return largest, intermediate, smallest
+
+    monkeypatch.setattr(StressState, "principal_stresses", corrupted_principals)
+    data = builder.calculate()
+    assert data["series"][sample_index]["principals_mpa"][1] != reference["principals_mpa"][1]
+    with pytest.raises(AssertionError, match="Principal stresses differ from membrane equilibrium"):
+        test_every_result_and_chart_point_calls_the_public_module((None, None, None, data))
 
 
 def test_all_displayed_example_numbers_match_embedded_calculation(built):
