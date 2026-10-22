@@ -1,10 +1,16 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Rebuild the diffraction report and check the numerical presentation."""
 
 import ast
+import copy
+from datetime import datetime, timezone
 import importlib.util
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -103,7 +109,7 @@ def test_example_is_the_module_output(generator, example):
 
 def test_public_regression_expectations_and_physics(generator, example):
     """Exercise the existing numerical regression expectations without adapters."""
-    tree = ast.parse((ROOT / "tests/hydrodynamics/diffraction/test_analytical_cylinder.py").read_text())
+    tree = ast.parse((ROOT / "tests/hydrodynamics/diffraction/test_analytical_cylinder.py").read_text(encoding="utf-8"))
     test = generator.function(tree, "test_regression_values_for_the_reference_geometry")
     bindings = {}
     for node in test.body:
@@ -143,15 +149,27 @@ def test_long_wave_curves_call_every_mode(generator, example):
 def test_report_rebuilds_from_fresh_module_returns(generator, example, tmp_path):
     output = tmp_path / "report.html"
     generator.build_report(example, output)
-    rebuilt = Document(output.read_text())
+    rebuilt = Document(output.read_text(encoding="utf-8"))
     assert json.loads(rebuilt.scripts["example-data"]) == example
     for key, fmt, displayed in rebuilt.numbers:
         assert displayed == generator.format_number(generator.lookup(example, key), fmt)
     assert json.loads(rebuilt.scripts["chart-data"]) == generator.chart_data(example)
+    assert normalized_report(output.read_text(encoding="utf-8")) == normalized_report(
+        (REPORT / "report.html").read_text(encoding="utf-8")
+    )
+
+
+def normalized_report(source):
+    """Mask raw round-off payloads while retaining narrative and plotted output."""
+    source = re.sub(r'data-evidence="[a-f0-9]+"', 'data-evidence="masked"', source)
+    return re.sub(
+        r'(<script type="application/json" id="(?:example|chart)-data">).*?(</script>)',
+        r'\1masked\2', source, flags=re.S,
+    )
 
 
 def test_all_worked_values_and_chart_points_are_generated(generator, example):
-    doc = Document((REPORT / "report.html").read_text())
+    doc = Document((REPORT / "report.html").read_text(encoding="utf-8"))
     recorded = json.loads(doc.scripts["example-data"])
     assert recorded["basis"] == example["basis"]
     assert len(doc.numbers) > 30
@@ -172,7 +190,7 @@ def test_all_worked_values_and_chart_points_are_generated(generator, example):
 
 
 def test_structure_citations_and_house_style(generator):
-    source = (REPORT / "report.html").read_text()
+    source = (REPORT / "report.html").read_text(encoding="utf-8")
     doc = Document(source)
     assert len([tag for tag, _ in doc.headings if tag == "h2"]) == 10
     assert not any(tag in {"h4", "h5", "h6"} for tag, _ in doc.headings)
@@ -183,26 +201,26 @@ def test_structure_citations_and_house_style(generator):
         elif not target.startswith("https:"):
             assert (REPORT / target.split("#")[0]).exists()
     assert '<body class="hs-doc">' in source
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text()
+    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     assert brand in source
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text()
+    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
     assert re.search(r"<style>(.*?)</style>", exemplar, re.S)[1] in source
     assert not re.search(r'<(?:script|link)[^>]+(?:src|href)="https?://', source)
     visible = " ".join(doc.visible)
-    assert "Draft for client review" in visible
+    assert "Draft for maintainer review" in visible
     assert visible.index("Revision history") < visible.index("2. Introduction")
     assert not re.search(r"\b(could|should|would)\b", visible, re.I)
     assert not re.search(r"<(?:b|strong)\b", source)
 
 
 def test_comments_changes_and_measurement_evidence(generator, example):
-    source = (REPORT / "report.html").read_text()
+    source = (REPORT / "report.html").read_text(encoding="utf-8")
     doc = Document(source)
-    assert json.loads(doc.scripts["changes-data"]) == json.loads((REPORT / "changes.json").read_text())
+    assert json.loads(doc.scripts["changes-data"]) == json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert "showDirectoryPicker" in doc.scripts["report-interactions"]
     assert "createWritable" in doc.scripts["report-interactions"]
     assert "textContent" in doc.scripts["report-interactions"]
-    record = json.loads((REPORT / "execution.json").read_text())
+    record = json.loads((REPORT / "execution.json").read_text(encoding="utf-8"))
     assert record["example_digest"] == generator.example_digest(record["example"])
     assert record["numerical_source_digest"] == generator.numerical_source_digest()
     assert record["example"]["basis"] == example["basis"]
@@ -211,7 +229,7 @@ def test_comments_changes_and_measurement_evidence(generator, example):
 
 
 def test_failed_screens_and_rendered_chart_values(generator, example):
-    source = (REPORT / "report.html").read_text()
+    source = (REPORT / "report.html").read_text(encoding="utf-8")
     for chart in generator.chart_data(example):
         assert generator.chart_svg(chart) in source
     failed = [
@@ -242,7 +260,7 @@ def test_interactive_charts_and_comment_round_trip():
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node is unavailable for the interaction check")
-    source = (REPORT / "report.html").read_text()
+    source = (REPORT / "report.html").read_text(encoding="utf-8")
     doc = Document(source)
     script = r"""
 const assert = require('node:assert/strict');
@@ -278,7 +296,7 @@ vm.createContext(context); vm.runInContext(input.script, context);
   point.handlers.focus(); assert.equal(output.textContent, point.dataset.tip);
   toggle.checked = false; toggle.handlers.change(); assert.equal(group.style.display, 'none');
   toggle.checked = true; toggle.handlers.change(); assert.equal(group.style.display, '');
-  get('change-since').handlers.change({target:{value:'1'}}); assert.equal(get('change-list').children.length, 0);
+  get('change-since').handlers.change({target:{value:Math.max(...input.changes.revisions.map(r => r.revision))}}); assert.equal(get('change-list').children.length, 0);
   get('change-since').handlers.change({target:{value:'0'}}); assert.ok(get('change-list').children.length > 0);
   get('comment-section').value = 'detail'; get('comment-text').value = '<script>comment</script>';
   get('add-comment').handlers.click();
@@ -302,3 +320,133 @@ vm.createContext(context); vm.runInContext(input.script, context);
         capture_output=True, text=True, timeout=30,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_source_register_does_not_claim_an_unretained_retrieval(generator, example, tmp_path):
+    output = tmp_path / "report.html"
+    generator.build_report(example, output)
+    visible = " ".join(Document(output.read_text(encoding="utf-8")).visible)
+    assert "retrieval time and successful response are retained" not in visible
+
+
+def test_generator_uses_utf8_and_lf_with_legacy_defaults(generator, example, tmp_path, monkeypatch):
+    """A legacy text locale must not change sources, cached records or HTML."""
+    read_text, write_text = Path.read_text, Path.write_text
+
+    def legacy_read(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or "cp1252", errors=errors)
+
+    def legacy_write(path, data, encoding=None, errors=None, newline=None):
+        return write_text(path, data, encoding=encoding or "cp1252", errors=errors,
+                          newline="\r\n" if newline is None else newline)
+
+    monkeypatch.setattr(Path, "read_text", legacy_read)
+    monkeypatch.setattr(Path, "write_text", legacy_write)
+    cache = tmp_path / "cache"
+    assert generator.compute_example(cache) == example
+    assert generator.compute_example(cache) == example
+    output = tmp_path / "report.html"
+    generator.build_report(example, output)
+    assert "ρ" in output.read_bytes().decode("utf-8")
+    for path in [output, *cache.glob("*.json")]:
+        assert b"\r\n" not in path.read_bytes()
+
+
+@pytest.mark.parametrize("without_sysconf", [False, True])
+def test_measurement_uses_portable_memory_and_current_utc_date(
+    generator, tmp_path, monkeypatch, without_sysconf,
+):
+    """Measurement uses a disposable report directory, never the retained run."""
+    import psutil
+
+    memory = psutil.virtual_memory().total
+
+    class FixedClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            assert tz is timezone.utc
+            return cls(2031, 4, 5, tzinfo=tz)
+
+    shutil.copyfile(REPORT / "changes.json", tmp_path / "changes.json")
+    monkeypatch.setattr(generator, "HERE", tmp_path)
+    monkeypatch.setattr(generator, "datetime", FixedClock, raising=False)
+    if without_sysconf:
+        monkeypatch.delattr(generator.os, "sysconf", raising=False)
+    output = tmp_path / "report.html"
+    monkeypatch.setattr(sys, "argv", ["generate_report.py", "--measure", "--cache-dir",
+                                     str(tmp_path / "cache"), "--output", str(output)])
+    generator.main()
+    record_bytes = (tmp_path / "execution.json").read_bytes()
+    record = json.loads(record_bytes.decode("utf-8"))
+    assert record["date"] == "2031-04-05"
+    assert record["memory_gib"] == round(memory / 1024 ** 3, 1)
+    assert record["example_digest"] == generator.example_digest(record["example"])
+    assert b"\r\n" not in record_bytes
+    assert output.is_file()
+
+
+@pytest.mark.parametrize("direction", [math.inf, -math.inf])
+def test_comment_identity_survives_numerical_roundoff(generator, example, tmp_path, direction):
+    changed = copy.deepcopy(example)
+
+    def perturb(value):
+        if isinstance(value, float):
+            return math.nextafter(value, direction) if value else value
+        if isinstance(value, dict):
+            return {key: perturb(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [perturb(item) for item in value]
+        return value
+
+    for key in changed.keys() - {"basis", "long_wave_basis"}:
+        changed[key] = perturb(changed[key])
+    original, rebuilt = tmp_path / "original.html", tmp_path / "rebuilt.html"
+    generator.build_report(example, original)
+    generator.build_report(changed, rebuilt)
+    identity = lambda path: re.search(r'data-evidence="([a-f0-9]+)"', path.read_text(encoding="utf-8"))[1]
+    assert generator.example_digest(example) != generator.example_digest(changed)
+    assert identity(original) == identity(rebuilt)
+
+
+def test_comment_identity_changes_when_displayed_results_change(generator, example, tmp_path):
+    changed = copy.deepcopy(example)
+    changed["coefficients"][0]["damping"] += 1
+    outputs = [tmp_path / "original.html", tmp_path / "changed.html"]
+    for data, output in zip((example, changed), outputs, strict=True):
+        generator.build_report(data, output)
+    identities = [re.search(r'data-evidence="([a-f0-9]+)"', p.read_text(encoding="utf-8"))[1]
+                  for p in outputs]
+    assert identities[0] != identities[1]
+
+
+def test_cached_evidence_still_rejects_full_precision_tampering(generator, tmp_path):
+    generator.compute_example(tmp_path)
+    path = next(tmp_path.glob("*.json"))
+    record = json.loads(path.read_text(encoding="utf-8"))
+    record["result"]["damping"] = math.nextafter(record["result"]["damping"], math.inf)
+    path.write_text(json.dumps(record), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="Cached numerical evidence digest mismatch"):
+        generator.compute_example(tmp_path)
+
+
+def test_refinement_uses_mode_extrema_independent_of_order(generator, example, tmp_path, monkeypatch):
+    basis = copy.deepcopy(example["basis"])
+    basis["mode_counts"].reverse()
+    monkeypatch.setattr(generator, "read_basis", lambda: basis)
+    result = generator.compute_example(tmp_path)
+    assert result["refinement"] == example["refinement"]
+
+
+def test_revision_history_renders_appended_entries(generator, example, tmp_path, monkeypatch):
+    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
+    changes["revisions"].append({"revision": 99, "date": "2031-04-05",
+                               "changes": ["Report portability is corrected."]})
+    (tmp_path / "changes.json").write_text(json.dumps(changes), encoding="utf-8", newline="\n")
+    shutil.copyfile(REPORT / "execution.json", tmp_path / "execution.json")
+    monkeypatch.setattr(generator, "HERE", tmp_path)
+    output = tmp_path / "report.html"
+    generator.build_report(example, output)
+    source = output.read_text(encoding="utf-8")
+    assert '<td>99</td><td>2031-04-05</td>' in source
+    assert '<option value="99">' in source
+    assert "Initial module analysis; calculated cylinder evidence is distinguished from unassessed design behaviour." in source

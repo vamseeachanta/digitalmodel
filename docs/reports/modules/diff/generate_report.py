@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Build the self-contained diffraction module report from public source tests.
@@ -14,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from datetime import datetime, timezone
 import hashlib
 import html
 import importlib.util
@@ -59,7 +63,7 @@ def function(tree, name):
 
 def read_basis():
     """Extract inputs and targets from the documented public cylinder tests."""
-    tree = ast.parse((TESTS / "test_analytical_cylinder.py").read_text())
+    tree = ast.parse((TESTS / "test_analytical_cylinder.py").read_text(encoding="utf-8"))
     assignments = {
         n.targets[0].id: n.value for n in tree.body
         if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)
@@ -89,7 +93,7 @@ def read_basis():
 
 def read_long_wave_basis():
     """Use the public small-body comparator test, separately from the cylinder."""
-    tree = ast.parse((TESTS / "test_long_wave_limits.py").read_text())
+    tree = ast.parse((TESTS / "test_long_wave_limits.py").read_text(encoding="utf-8"))
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "TestExpectedRao")
     values = ast.literal_eval(next(n for n in cls.body if isinstance(n, ast.Assign)).value)
     test = function(cls, "test_heave_is_unity_at_every_heading")
@@ -109,7 +113,7 @@ def compute_example(cache_dir: Path | None = None):
             key = hashlib.sha256(json.dumps([implementation, basis, omega, modes], sort_keys=True).encode()).hexdigest()
             cached = cache_dir / (key + ".json") if cache_dir else None
             if cached and cached.exists():
-                envelope = json.loads(cached.read_text())
+                envelope = json.loads(cached.read_text(encoding="utf-8"))
                 if envelope["input_digest"] != key or envelope["result_digest"] != example_digest(envelope["result"]):
                     raise ValueError("Cached numerical evidence digest mismatch")
                 row = envelope["result"]
@@ -121,11 +125,13 @@ def compute_example(cache_dir: Path | None = None):
                 row["added_mass_t"] = r.added_mass / 1000
                 if cached:
                     cached.parent.mkdir(parents=True, exist_ok=True)
-                    cached.write_text(json.dumps({"input_digest": key, "result_digest": example_digest(row), "result": row}, indent=2) + "\n")
+                    cached.write_text(json.dumps({"input_digest": key, "result_digest": example_digest(row), "result": row}, indent=2) + "\n", encoding="utf-8", newline="\n")
             coefficients.append(row)
     refinement = []
     for omega in basis["frequencies"]:
-        coarse, fine = [r for r in coefficients if r["omega"] == omega]
+        cases = [r for r in coefficients if r["omega"] == omega]
+        coarse = min(cases, key=lambda result: result["modes"])
+        fine = max(cases, key=lambda result: result["modes"])
         row = {"omega": omega}
         for key in ("added_mass", "damping"):
             row[key + "_difference_percent"] = 100 * abs(coarse[key] - fine[key]) / abs(fine[key])
@@ -360,14 +366,14 @@ def build_report(data, output):
     """Write the complete engineering narrative and computed evidence."""
     n = lambda path, fmt=".1f": number(data, path, fmt)
     s = cite
-    record = json.loads((HERE / "execution.json").read_text())
+    record = json.loads((HERE / "execution.json").read_text(encoding="utf-8"))
     if record["example_digest"] != example_digest(record["example"]):
         raise ValueError("Recorded numerical evidence digest mismatch")
     if record["example"]["basis"] != data["basis"] or record["numerical_source_digest"] != numerical_source_digest():
         raise ValueError("Recorded execution inputs or numerical source do not match")
-    changes = json.loads((HERE / "changes.json").read_text())
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text()
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text()
+    changes = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))
+    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
     style = re.search(r"<style>(.*?)</style>", exemplar, re.S)[1]
     charts = chart_data(data)
     plots = {c["id"]: chart_svg(c) for c in charts}
@@ -409,7 +415,7 @@ def build_report(data, output):
         "Synthetic unit-box reporting example",
     )
     for filename, topic in zip(REVIEWED_TESTS, evidence_topics, strict=True):
-        tree = ast.parse((TESTS / filename).read_text())
+        tree = ast.parse((TESTS / filename).read_text(encoding="utf-8"))
         count = sum(isinstance(node, ast.FunctionDef) and node.name.startswith("test_") for node in ast.walk(tree))
         inventory.append([topic, str(count), "Source inspected; not an execution count", s("E")])
     criteria_module = load_numerical("cross_solver_acceptance")
@@ -425,9 +431,19 @@ def build_report(data, output):
         for i, row in enumerate(rows):
             lw_rows.append([mode.capitalize(), n(f"long_wave.{mode}.{i}.heading"), n(f"long_wave.{mode}.{i}.display_value", ".3f"),
                             "degrees/m" if mode in {"roll", "pitch", "yaw"} else "m/m", s("L")])
+    revision_rows = [
+        [str(revision["revision"]), revision["date"],
+         "Initial module analysis; calculated cylinder evidence is distinguished from unassessed design behaviour."
+         if revision["revision"] == 1 else " ".join(revision["changes"])]
+        for revision in changes["revisions"]
+    ]
+    revision_options = "".join(
+        f'<option value="{revision["revision"]}">Revision {revision["revision"]}</option>'
+        for revision in changes["revisions"]
+    )
     body = f"""
 <header><div class="kicker">Hydrodynamics</div><h1>Diffraction module analysis</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report contents"><p>Contents: <a href="#summary">Summary</a> · <a href="#introduction">Introduction</a> · <a href="#results">Results</a> · <a href="#basis">Design data</a> · <a href="#method">Method</a> · <a href="#detail">Detailed results</a> · <a href="#findings">Findings</a> · <a href="#limits">Limits</a> · <a href="#recommendations">Recommendations</a> · <a href="#references">References and appendices</a></p></nav>
 
 <h2 id="summary">1. Executive Summary</h2>
@@ -441,7 +457,7 @@ def build_report(data, output):
 <li>Surge, sway, heave, roll, pitch and yaw long-wave comparators are shown, with no observed motion arrays. Long-wave agreement is NOT_EVALUATED for every mode. {s("L")}</li></ul></li></ul>
 
 <h3 id="revision">Revision history</h3>
-{table(["Revision", "Date", "What changed and why"], [[str(changes["revisions"][0]["revision"]), changes["revisions"][0]["date"], "Initial module analysis; calculated cylinder evidence is distinguished from unassessed design behaviour."]])}
+{table(["Revision", "Date", "What changed and why"], revision_rows)}
 
 <h2 id="introduction">2. Introduction</h2>
 <p>A common model description is converted into hydrodynamic inputs, and completed results are organized for engineering assessment and motion-data transfer. The main workflow is explained from preparation to interpretation; the executable example is restricted to the independent numerical cylinder reference. {s("W")} {s("M")}</p>
@@ -537,7 +553,7 @@ def build_report(data, output):
 <h3 id="source-register">9.2 Source register and reproduction locators</h3>
 <p>Repository locators and source editions are collected here. Source-test inputs are public repository examples, not values recovered from the cited historical paper. No numeric value from a licensed standard is used.</p>
 <ul class="refs">
-<li id="T">[T] Open potential-flow theory manual, stable web edition, retrieved 2026-10-22: <a href="https://capytaine.org/stable/theory_manual/theory.html#linear-boundary-value-problem">Linear boundary value problem</a>, <a href="https://capytaine.org/stable/theory_manual/theory.html#forces-on-body-surfaces">Forces on body surfaces</a> and <a href="https://capytaine.org/stable/theory_manual/theory.html#dynamic-coupling-and-impedance">Dynamic coupling and impedance</a>. The physical assumptions, negative-exponential convention, free-surface condition and motion balance are used. The saved source address, retrieval time and successful response are retained with the calculation evidence.</li>
+<li id="T">[T] Open potential-flow theory manual, stable web edition: <a href="https://capytaine.org/stable/theory_manual/theory.html#linear-boundary-value-problem">Linear boundary value problem</a>, <a href="https://capytaine.org/stable/theory_manual/theory.html#forces-on-body-surfaces">Forces on body surfaces</a> and <a href="https://capytaine.org/stable/theory_manual/theory.html#dynamic-coupling-and-impedance">Dynamic coupling and impedance</a>. The physical assumptions, negative-exponential convention, free-surface condition and motion balance are used.</li>
 <li id="M">[M] Numerical implementation, repository edition read for this analysis: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py">analytical_cylinder.py</a>, geometry, wavenumbers, matching and heave force integration. Its historical citation is “Added mass and damping of a vertical cylinder in finite-depth waters”, Applied Ocean Research, volume 3, issue 3, 1981. The full historical text is not used as a numerical source.</li>
 <li id="C">[C] Public cylinder example and target benchmarks: <a href="../../../../tests/hydrodynamics/diffraction/test_analytical_cylinder.py">test_analytical_cylinder.py</a>, geometry and density declarations, reference-geometry regression, mode-convergence and boundary-condition tests.</li>
 <li id="L">[L] Long-wave comparator definition and public example: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/long_wave_limits.py">long_wave_limits.py</a>, expected_rao; <a href="../../../../tests/hydrodynamics/diffraction/test_long_wave_limits.py">test_long_wave_limits.py</a>, TestExpectedRao. Heading is wave travel direction from +x.</li>
@@ -589,8 +605,8 @@ def build_report(data, output):
 <p>These source definitions are present in the repository and were inspected to identify evidence scope. Parameterised cases are not expanded, and these counts are not presented as passed tests. The report contract checks are recorded separately in the delivery validation record. {s("E")}</p>
 {table(["Evidence topic", "Test definitions", "Meaning", "Source"], inventory)}
 <h3 id="change-panel">10.7 Engineering changes</h3>
-<label>Show changes since <select id="change-since"><option value="0">Before initial issue</option><option value="1">Initial issue</option></select></label>
-<ul id="change-list">{"".join("<li>" + html.escape(change) + "</li>" for change in changes["revisions"][0]["changes"])}</ul>
+<label>Show changes since <select id="change-since"><option value="0">Before initial issue</option>{revision_options}</select></label>
+<ul id="change-list">{"".join("<li>" + html.escape(change) + "</li>" for revision in changes["revisions"] for change in revision["changes"])}</ul>
 <h3 id="comments">10.8 Section comments</h3>
 <p>Comments are stored in a separate file beside this report. They do not alter its numerical evidence.</p>
 <p><label>Section <select id="comment-section"></select></label></p>
@@ -601,15 +617,19 @@ def build_report(data, output):
 <footer>Diffraction module analysis. The numerical scope and limitations stated in this report apply to every displayed result.</footer>
 """
     payload = lambda value: json.dumps(value, sort_keys=True, ensure_ascii=False).replace("</", "<\\/")
+    displayed = re.findall(r'<span data-value-key="[^"]+" data-format="[^"]+">(.*?)</span>', body)
+    point_labels = [re.findall(r"<title>(.*?)</title>", plot) for plot in plots.values()]
+    # Comment identity uses displayed precision; raw calculation digests stay exact.
+    comment_digest = hashlib.sha256(payload([displayed, point_labels]).encode("utf-8")).hexdigest()
     output.write_text(
-        '<!DOCTYPE html>\n<html lang="en" data-theme="light" data-evidence="' + example_digest(data) + '">\n'
+        '<!DOCTYPE html>\n<html lang="en" data-theme="light" data-evidence="' + comment_digest + '">\n'
         '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         '<title>Diffraction module analysis</title>\n<style>\n' + brand + '\n' + style + '</style></head>\n'
         '<body class="hs-doc"><main class="wrap">' + body + '</main>\n'
         '<script type="application/json" id="example-data">' + payload(data) + '</script>\n'
         '<script type="application/json" id="chart-data">' + payload(charts) + '</script>\n'
         '<script type="application/json" id="changes-data">' + payload(changes) + '</script>\n'
-        '<script id="report-interactions">' + INTERACTIONS + '</script>\n</body></html>\n', encoding="utf-8",
+        '<script id="report-interactions">' + INTERACTIONS + '</script>\n</body></html>\n', encoding="utf-8", newline="\n",
     )
 
 
@@ -631,14 +651,15 @@ def main():
     elapsed = time.perf_counter() - start
     if args.measure:
         import platform
+        import psutil
         record = {"elapsed_seconds": round(elapsed, 1), "case_count": len(data["coefficients"]),
                   "numerical_threads": 1, "architecture": platform.machine(),
                   "logical_processors": os.cpu_count(),
-                  "memory_gib": round(os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") / 1024 ** 3, 1),
+                  "memory_gib": round(psutil.virtual_memory().total / 1024 ** 3, 1),
                   "example_digest": example_digest(data), "example": data,
-                  "numerical_source_digest": numerical_source_digest(), "date": "2026-10-22",
+                  "numerical_source_digest": numerical_source_digest(), "date": datetime.now(timezone.utc).date().isoformat(),
                   "scope": "Numerical imports, input extraction, coefficient calculations and comparator curves; rendering excluded"}
-        (HERE / "execution.json").write_text(json.dumps(record, indent=2) + "\n")
+        (HERE / "execution.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8", newline="\n")
     build_report(data, args.output)
     print("Report generated; numerical evidence digest verified.")
 
