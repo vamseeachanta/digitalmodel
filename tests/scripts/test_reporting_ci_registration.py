@@ -35,6 +35,7 @@ def test_reporting_gate_is_enabled_and_collects_the_folder():
 
 @pytest.mark.parametrize("changed_path", [
     "tests/reporting/test_calc_report.py",
+    "tests/reporting/test_mooring_fatigue_module_report.py",
     "tests/reporting/test_engine_golden.py",
     "tests/reporting/golden/standard_report_plain.html",
     "src/digitalmodel/reporting/calc_report.py",
@@ -65,3 +66,4 @@ def test_registration_guard_runs_in_the_independent_hosted_harness():
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
     assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])
+    assert "tests/reporting/test_mooring_fatigue_module_report.py" in shlex.split(step["run"])

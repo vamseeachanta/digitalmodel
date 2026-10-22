@@ -1,10 +1,10 @@
 {
   "report": "Mooring fatigue module analysis",
-  "revision": "A",
+  "revision": "B",
   "date": "2026-10-22",
   "changes": [
-    "The public metallic-line example is evaluated against the selected stress–life curve.",
-    "The governing damage is compared with the design fatigue factor limit.",
-    "The load-duration and component-curve gaps are identified before engineering acceptance."
+    "The generic curve demonstration is separated from unevaluated chain and wire fatigue.",
+    "The curve parameters and independent arithmetic checks are made explicit.",
+    "Calculation-basis text is normalized and comment files share one byte limit."
   ]
 }

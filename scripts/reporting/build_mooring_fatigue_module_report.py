@@ -35,12 +35,12 @@ SECTIONS = (
 )
 CHANGES = {
     "report": "Mooring fatigue module analysis",
-    "revision": "A",
+    "revision": "B",
     "date": "2026-10-22",
     "changes": [
-        "The public metallic-line example is evaluated against the selected stress–life curve.",
-        "The governing damage is compared with the design fatigue factor limit.",
-        "The load-duration and component-curve gaps are identified before engineering acceptance.",
+        "The generic curve demonstration is separated from unevaluated chain and wire fatigue.",
+        "The curve parameters and independent arithmetic checks are made explicit.",
+        "Calculation-basis text is normalized and comment files share one byte limit.",
     ],
 }
 
@@ -57,6 +57,15 @@ UI = r"""
   }
   const basis = el('comment-panel').dataset.basis;
   let comments = [];
+  const COMMENT_BYTE_LIMIT = 1000000;
+  const serialize = rows => JSON.stringify({report: changes.report, revision: changes.revision,
+    basis, comments: rows}, null, 2) + '\n';
+  const checkedData = rows => {
+    const data = serialize(rows);
+    if (new Blob([data]).size > COMMENT_BYTE_LIMIT)
+      throw new Error('The comment file exceeds the size limit.');
+    return data;
+  };
   const message = text => { el('comment-status').textContent = text; };
   const preview = () => { el('comment-preview').textContent = JSON.stringify(comments, null, 2); };
   el('capture-quote').onclick = () => {
@@ -66,17 +75,21 @@ UI = r"""
   el('add-comment').onclick = () => {
     const text = el('comment-text').value.trim();
     if (!text) return message('Enter a comment.');
-    comments.push({id: crypto.randomUUID(), section: el('comment-section').value,
-      quote: el('comment-quote').value, text, date: new Date().toISOString()});
-    el('comment-text').value = '';
-    preview();
-    message('Comment added. Save comments before closing this page.');
+    try {
+      const candidate = [...comments, {id: crypto.randomUUID(), section: el('comment-section').value,
+        quote: el('comment-quote').value, text, date: new Date().toISOString()}];
+      checkedData(candidate);
+      comments = candidate;
+      el('comment-text').value = '';
+      preview();
+      message('Comment added. Save comments before closing this page.');
+    } catch (error) { message(error.message); }
   };
   el('load-comments').onchange = async () => {
     try {
       const file = el('load-comments').files[0];
       if (!file) return;
-      if (file.size > 1000000) throw new Error('The comment file exceeds the size limit.');
+      if (file.size > COMMENT_BYTE_LIMIT) throw new Error('The comment file exceeds the size limit.');
       const incoming = JSON.parse(await file.text());
       const sections = new Set([...el('comment-section').options].map(option => option.value));
       if (incoming.report !== changes.report || incoming.revision !== changes.revision ||
@@ -85,22 +98,24 @@ UI = r"""
             typeof c.text !== 'string' || typeof c.quote !== 'string' ||
             typeof c.date !== 'string' || !sections.has(c.section)))
         throw new Error('Comments do not match this report and calculation basis.');
+      checkedData(incoming.comments);
       const merged = new Map(comments.map(c => [c.id, c]));
       for (const comment of incoming.comments) {
         if (merged.has(comment.id) && JSON.stringify(merged.get(comment.id)) !== JSON.stringify(comment))
           throw new Error('A comment identifier has conflicting text; retain both files for reconciliation.');
         merged.set(comment.id, comment);
       }
-      comments = [...merged.values()];
+      const candidate = [...merged.values()];
+      checkedData(candidate);
+      comments = candidate;
       preview();
       message('Matching comments loaded. Save comments to retain additions.');
     } catch (error) { message(error.message); }
     el('load-comments').value = '';
   };
   el('save-comments').onclick = async () => {
-    const data = JSON.stringify({report: changes.report, revision: changes.revision,
-      basis, comments}, null, 2) + '\n';
     try {
+      const data = checkedData(comments);
       if (typeof window.showSaveFilePicker === 'function') {
         const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
           types: [{description: 'Comments', accept: {'application/json': ['.json']}}]});
@@ -172,6 +187,8 @@ def build(work_dir: Path) -> tuple[str, dict]:
         """Link a claim to its reference record."""
         return f'<a href="#source-{number}">[Reference {number}]</a>'
 
+    governing = next(line for line in result["lines"] if line["line_id"] == result["governing_line"])
+    facts["governing_required_life"] = governing["required_life_years"]
     style_match = re.search(r"<style>.*?</style>", EXEMPLAR.read_text(encoding="utf-8"), re.S)
     if style_match is None:
         raise ValueError("The report exemplar has no stylesheet")
@@ -193,9 +210,9 @@ def build(work_dir: Path) -> tuple[str, dict]:
                           n(f"line.{i}.fatigue_life_years"),
                           n(f"line.{i}.required_life_years"), n(f"line.{i}.dff_margin"),
                           "The screening criterion is met." if line["passes_dff"]
-                          else "The screening criterion is not met.", source(2)))
+                          else "The screening criterion is not met.", "Component status: NOT_EVALUATED", source(2)))
         area_rows.append((label, html.escape(line["material"]), n(f"line.{i}.area"), source(1)))
-        x = 220 + i * 300
+        x = round(90 + (i + 1) * 650 / (len(result["lines"]) + 1), 1)
         detail = (f"Public example; component {line['line_id']}; demand {line['total_damage']:.4f}; "
                   f"limit {limit:.4f}; units: dimensionless damage.")
         markers.append(f'<g tabindex="0" role="img" aria-label="{html.escape(detail)}" '
@@ -226,15 +243,16 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
                          source(1) + " " + source(2)))
     change_items = ''.join(f'<li>{html.escape(item)}</li>' for item in CHANGES["changes"])
     revision = table(("Revision", "Date", "What changed and why"), [
-        ("A", CHANGES["date"], "The metallic-line workflow is documented to distinguish a reproducible screening calculation from a component assessment.")
+        ("A", CHANGES["date"], "The metallic-line workflow is documented to distinguish a reproducible screening calculation from a component assessment."),
+        ("B", CHANGES["date"], "The component-basis gap, implemented curve parameters and independent arithmetic checks are clarified; comment retention and text normalization are corrected."),
     ], "Revision history")
     sections = [f"""
 <p>The mooring fatigue module is a metallic-line fatigue screening tool. Analysis is performed to determine cumulative fatigue damage under the documented public loading example, and the key results are summarized below.</p>
 <ul><li>The example is retained as a calculation demonstration.
-<ul><li>{html.escape(result['governing_line'])} governs at damage {n('governing_damage', '.4f')} against the {n('damage_limit', '.4f')} screening limit. {source(1)} {source(2)}</li>
-<li>The governing fatigue life is {n('governing_life')} years against {n('line.1.required_life_years')} years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. {source(1)} {source(2)}</li></ul></li>
+<ul><li>{html.escape(result['governing_line'])} governs the generic curve demonstration at damage {n('governing_damage', '.4f')} against the {n('damage_limit', '.4f')} screening limit. {source(1)} {source(2)}</li>
+<li>The governing fatigue life is {n('governing_life')} years against {n('governing_required_life')} years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. {source(1)} {source(2)}</li></ul></li>
 <li>Engineering acceptance is deferred pending a component and exposure basis.
-<ul><li>The selected generic curve is used for both metallic material labels; chain and wire qualification is NOT_EVALUATED. {source(2)}</li>
+<ul><li>The selected curve describes welded steel details, not a mooring component basis. Component status: NOT_EVALUATED for chain and wire; the mooring governing component is NOT_EVALUATED. {source(2)} {source(7)}</li>
 <li>Confirm the exposure duration and component stress–life basis before adopting an operating or inspection limit. {source(1)} {source(2)}</li></ul></li></ul>
 {chart}
 <div id="revision-history"><h3>Revision history</h3>{revision}</div>
@@ -250,7 +268,7 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 <p>The supplied design life is {n('design_life')} years and the design fatigue factor is {n('dff')}. The selected curve is category D in seawater with cathodic protection. These are example settings, not prescribed design criteria. {source(1)}</p>
 <h3>Criteria and data status</h3>
 <p>The screening criterion is defined by the implemented margin: predicted life divided by required life is at least unity. Required life is design life multiplied by the supplied design fatigue factor. Thus the example damage limit is {n('damage_limit', '.4f')}. This criterion is used because it is the module decision rule; no regulatory acceptance is inferred. {source(2)}</p>
-<p>The curve record cites DNV-RP-C203, October 2011, Fatigue Design of Offshore Steel Structures, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The implementation also carries a later edition label whose numerical equivalence is not established by that record. No licensed coefficient is reproduced here. {source(3)}</p>
+<p>The curve record cites DNV-RP-C203, October 2011, Fatigue Design of Offshore Steel Structures, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The implementation also carries a later edition label whose numerical equivalence is not established by that record. The numerical basis below is read from the existing public implementation record; no licensed document is accessed. {source(3)}</p>
 <p>ASSUMED - to be confirmed: the supplied cycle bins represent the entire design-life exposure. ASSUMED - to be confirmed: the supplied areas and selected curve form a consistent nominal stress basis. No missing physical dimension or material coefficient is assigned. The data register is provided in Appendix B.</p>
 """, f"""
 <p>The supplied tension ranges are converted to nominal axial stress ranges before the existing stress–life helper is called. Damage is accumulated line by line and the line with greatest damage is selected as governing. {source(2)}</p>
@@ -273,6 +291,7 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 </svg><figcaption>Figure B. The local calculation boundary is shown within a physical mooring arrangement. The drawing is schematic and is not to scale; geometry, mesh and global boundary conditions are not supplied. No spatial mesh is used in the fatigue accumulation. {source(2)}</figcaption></figure>
 <h3>Stress–life and cumulative damage equations</h3>
 <p>Nominal stress range is calculated as Δσ = ΔT / A with force and area expressed in consistent units. A tension in kilonewtons is converted to newtons before division by area in square millimetres; the resulting stress is in megapascals. No additional stress concentration or thickness correction is applied in this route. {source(2)}</p>
+<p>The public implementation uses Nₖ = 1,000,000 cycles, Sₖ = 83.4 MPa, and slopes m = 3.0 above the knee stress and m = 5.0 below it. All demonstrated bins are below that knee. The continuously anchored lower segment has log₁₀(a₂) = 15.6067, versus the stored rounded intercept 15.606; its damage is approximately 0.2 % lower than a calculation using that rounded intercept. These values describe the existing software record associated with the October 2011 Table 2-2 D curve; they do not establish mooring component applicability. {source(2)} {source(3)}</p>
 <p>The helper represents the selected curve by N = Nₖ(Δσ / Sₖ)<sup>−m</sup>. Here N is allowable cycles, Nₖ is the knee cycle count, Sₖ is the knee stress range, and m is the applicable segment slope. The below-knee segment is anchored continuously at the knee. Both segments remain finite; an endurance cut-off is not applied. The stored curve source and the helper implementation are distinguished in the reference record. {source(3)} {source(4)}</p>
 <p>Miner damage is calculated as D = Σ(nᵢ / Nᵢ), where nᵢ is applied cycles and Nᵢ is allowable cycles for bin i. Fatigue life is calculated as L = T / D, required life as Lᵣ = T × F, and screening margin as M = L / Lᵣ. T is the supplied design life and F is the supplied design fatigue factor. The decision M ≥ unity is equivalent to D ≤ the reciprocal of F. These are the implemented equations, conditional on the assumed lifetime exposure. {source(2)}</p>
 <h3>Inputs, execution and outputs</h3>
@@ -282,15 +301,15 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 """, f"""
 <p>The documented example is calculated by calling the module with its original input data. The {n('bin_count', '.0f')} tension bins across {n('line_count', '.0f')} metallic lines are processed; no result value is inserted independently of the returned calculation. {source(1)} {source(2)}</p>
 <h3>Damage and life</h3>
-<p>{html.escape(result['governing_line'])} governs at damage {n('governing_damage', '.4f')} against the {n('damage_limit', '.4f')} screening limit. The governing fatigue life is {n('governing_life')} years against {n('line.1.required_life_years')} years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. {source(1)} {source(2)}</p>
-{table(('Component', 'Damage (dimensionless)', 'Predicted life (years)', 'Required life (years)', 'Margin (dimensionless)', 'Screening status', 'Source'), line_rows, 'Table B. Returned line summaries; this is a screening calculation, not a component qualification.')}
-<p>The governing margin is {n('governing_margin')} against unity. The apparent life reserve depends on the same generic curve being suitable for the nominal stress input. No inspection interval or operational service life is established. The full bin calculation is provided in Appendix A. {source(2)}</p>
+<p>{html.escape(result['governing_line'])} governs the generic curve demonstration at damage {n('governing_damage', '.4f')} against the {n('damage_limit', '.4f')} screening limit. The governing fatigue life is {n('governing_life')} years against {n('governing_required_life')} years required by the example design fatigue factor. These are extrapolations on assumed lifetime cycle counts. {source(1)} {source(2)}</p>
+{table(('Component label', 'Generic damage (dimensionless)', 'Generic life (years)', 'Required life (years)', 'Generic margin (dimensionless)', 'Demonstration status', 'Component status', 'Source'), line_rows, 'Table B. Returned line summaries; this is a screening calculation, not a component qualification.')}
+<p>The generic governing margin is {n('governing_margin')} against unity. The apparent life reserve depends on the same generic curve being suitable for the nominal stress input. No inspection interval or operational service life is established. The full bin calculation is provided in Appendix A. {source(2)}</p>
 <h3>Existing validation evidence</h3>
 <p>The existing registry test exercises the public mooring example through the engine. It checks the governing line, bin count, positive stresses and damages, monotonic allowable cycles, and the life and margin identities. The shared fatigue tests check damage accumulation, curve behaviour and cycle counting. These are software checks; physical chain and wire validation is NOT_EVALUATED. {source(5)}</p>
-<p>The report rebuild check compares every displayed worked-example observation, including repeated summary values, with a fresh module call and returned per-bin file. Independent arithmetic checks the stress conversion, damage sum, life and margin equations. The evidence establishes reproducibility and arithmetic consistency, not component curve selection or measured fatigue performance. {source(6)}</p>
+<p>The report rebuild check compares every displayed worked-example observation, including repeated summary values, with a fresh module call and returned per-bin file. Independent hand-worked literals check allowable cycles, both line damages, governing life and margin using the public curve record; separate identities check stress conversion and damage summation. The evidence establishes reproducibility and arithmetic consistency, not component curve selection or measured fatigue performance. {source(6)}</p>
 """, f"""
-<p>The workflow is available for metallic-line screening and its example results are reproducible through the direct module interface. The greatest total damage controls the reported line because the same design life and design fatigue factor apply to every line. {source(2)}</p>
-<p>The material labels control eligibility only: the same curve is passed to chain and wire. This is the governing qualification gap for physical use. The result is sensitive to effective area, exposure cycles, corrosion protection and curve applicability; none is established for a real installation by the example. {source(1)} {source(2)}</p>
+<p>The workflow is available for metallic-line screening and its example results are reproducible through the direct module interface. The greatest generic-curve damage controls the demonstration line because the same design life and design fatigue factor apply to every line. {source(2)}</p>
+<p>The material labels control eligibility only: the same welded-detail curve is passed to chain and wire. An approximate 54-fold chain damage under-prediction relative to a studless-chain basis is identified as a curve-choice warning on the same nominal stresses. That sensitivity is NOT_EVALUATED as an engineering result because its mooring basis has not been independently verified; the comparison is assumed, based on previous experience. The applicable mooring basis and its governing component are NOT_EVALUATED until DNV-OS-E301 or API RP 2SK component selection, edition and stress definition are verified. {source(7)} This is the governing qualification gap for physical use. The result is sensitive to effective area, exposure cycles, corrosion protection and curve applicability; none is established for a real installation by the example. {source(1)} {source(2)}</p>
 <p>The public example is suitable for checking input and output handling. It does not establish mooring resistance, a watch circle, an inspection date or a permissible environmental envelope.</p>
 """, f"""
 <p>The calculation is limited to the supplied stress basis and cycle exposure. Acceptance of a physical mooring is deferred until that basis is established. {source(1)} {source(2)}</p>
@@ -308,7 +327,8 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 """, f"""
 <p>The reference basis is separated into publications and software records. Publication identifiers establish the method source; implementation records establish what was actually calculated.</p>
 <h3>9.1 Publications</h3>
-<p id="source-3">Reference 3. DNV-RP-C203, Fatigue Design of Offshore Steel Structures, October 2011, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The stored-value record states that it was checked against this edition. The later implementation label does not establish numerical equivalence to that later edition. Licensed coefficients and limits are not reproduced.</p>
+<p id="source-3">Reference 3. DNV-RP-C203, Fatigue Design of Offshore Steel Structures, October 2011, section 2.4, S–N curves, and Table 2-2, seawater with cathodic protection. The stored-value record states that it was checked against this edition. The later implementation label does not establish numerical equivalence to that later edition. The implementation parameters are identified as software records; independent verification against a licensed edition remains outstanding.</p>
+<p id="source-7">Reference 7. DNV-OS-E301, Position mooring, fatigue limit state, and API RP 2SK, Design and Analysis of Stationkeeping Systems for Floating Structures, fatigue analysis. These are the required mooring basis references, not verification of this example. The applicable editions, clauses and component stress definitions are NOT_EVALUATED. The approximate chain sensitivity is NOT_EVALUATED as an engineering result; its assumed comparison basis has not been independently checked against an authorized standard and is not used for component acceptance. No component life, margin or governing ranking is issued from that comparison.</p>
 <p id="source-4">Reference 4. pyLife, WoehlerCurve API documentation, stable documentation accessed 22 October 2026. The calculation uses the installed pyLife helper with the range-based knee supplied by the module; closed-loop and residual-cycle handling are defined in the repository rainflow helper. <a href="https://pylife.readthedocs.io/en/stable/materiallaws/woehlercurve.html">Public stress–life API documentation</a>.</p>
 <h3>9.2 Software records and reproduction</h3>
 <p id="source-1">Reference 1. The public example input and documented command are held in <code>examples/workflows/mooring-fatigue/input.yml</code> and <code>examples/workflows/mooring-fatigue/README.md</code>. No measured or external benchmark provenance is supplied there.</p>
@@ -335,17 +355,27 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
     ('Physical validation', 'NOT_EVALUATED; no measured chain or wire benchmark is supplied by the example.', 'Supply an independent component benchmark.', source(1) + ' ' + source(5)),
 ], 'Table D. Data held and data required.')}
 <h3>Appendix C. Quality assurance pre-flight</h3>
-<p>The calculation is rebuilt through the module rather than a parallel fatigue formula. All displayed worked-example observations are checked against a separate module call. Per-bin stress conversion and damage summation are checked independently, followed by the life and margin identities. Material rejection and a damage-limit exceedance are exercised by the report tests. These checks are arithmetic and software evidence only. {source(6)}</p>
+<p>The calculation is rebuilt through the module rather than a parallel fatigue formula. All displayed worked-example observations are checked against a separate module call, with independent hand-worked literals for headline damage, life, margin and allowable cycles. Per-bin stress conversion and damage summation are checked independently, followed by the life and margin identities. Material rejection and a damage-limit exceedance are exercised by the report tests. These checks are arithmetic and software evidence only. {source(6)}</p>
 <p>The document checks cover the ten-section frame, revision location, unique anchors, working internal references, unchanged exemplar stylesheet, absence of remote script dependencies and visible wording. Browser interaction and component fatigue performance require separate assessment.</p>
 <p>The screening criterion is met when damage does not exceed its adopted limit. The screening criterion is not met when that limit is exceeded. NOT_EVALUATED is used when the engineering basis is absent. No engineering status is inferred from a successful rebuild.</p></div>
 """
-    # Bind saved comments to all executable calculation sources and to the prose.
-    basis_inputs = [EXAMPLE, Path(__file__), *sorted((ROOT / "src/digitalmodel/mooring_fatigue").glob("*.py")),
-                    *sorted((ROOT / "src/digitalmodel/fatigue").glob("*.py"))]
-    basis = hashlib.sha256(
-        b''.join(path.read_bytes() for path in basis_inputs)
-        + json.dumps(facts, sort_keys=True, allow_nan=False).encode("utf-8")
-    ).hexdigest()
+    # Bind comments to the demonstrated binned calculation and report prose.
+    # Text reads normalize CRLF to LF; named JSON fields avoid concatenation ambiguity.
+    calculation_paths = (
+        "src/digitalmodel/mooring_fatigue/workflow.py",
+        "src/digitalmodel/fatigue/sn_curves.py",
+        "src/digitalmodel/fatigue/c203_sn_tables.py",
+        "src/digitalmodel/fatigue/damage.py",
+    )
+    basis_inputs = [("example", EXAMPLE), ("report-builder", Path(__file__))]
+    basis_inputs += [(name, ROOT / name) for name in calculation_paths]
+    basis_record = {
+        "sources": {name: path.read_text(encoding="utf-8") for name, path in basis_inputs},
+        "facts": facts,
+    }
+    basis = hashlib.sha256(json.dumps(
+        basis_record, sort_keys=True, ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")).hexdigest()
     options = ''.join(f'<option value="section-{i}">{title}</option>' for i, title in enumerate(SECTIONS, 1))
     options += '<option value="appendices">Appendices</option>'
     comments = f"""<div id="comment-panel" data-basis="{basis}"><h3>Document comments</h3>
@@ -365,7 +395,7 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 <title>{TITLE}</title>
 {style}
 </head><body class="hs-doc">
-<header><h1>{TITLE}</h1><p>Draft for client review</p><p>Revision A | {CHANGES['date']}</p></header>
+<header><h1>{TITLE}</h1><p>Draft for review</p><p>Revision {CHANGES['revision']} | {CHANGES['date']}</p></header>
 <div class="layout"><nav aria-label="Contents"><ol>{nav}<li><a href="#appendices">Appendices</a></li>
 <li><a href="#comment-panel">Document comments</a></li></ol></nav><main>
 <details id="change-panel"><summary>Engineering changes since the previous revision</summary><ul>{change_items}</ul>
@@ -387,9 +417,9 @@ def main() -> None:
     args = parser.parse_args()
     page, changes = build(args.work_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "report.html").write_text(page, encoding="utf-8")
+    (args.output_dir / "report.html").write_text(page, encoding="utf-8", newline="\n")
     (args.output_dir / "changes.json").write_text(
-        json.dumps(changes, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(changes, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
 
 
