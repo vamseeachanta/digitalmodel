@@ -1,0 +1,8 @@
+{
+  "revision": "00",
+  "date": "2026-10-22",
+  "changes": [
+    "Phased motion reconstruction is described with a computed regular-wave example.",
+    "Synthetic calculation evidence is separated from operational qualification."
+  ]
+}

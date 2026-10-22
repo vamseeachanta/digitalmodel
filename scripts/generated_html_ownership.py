@@ -31,6 +31,10 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/build_motionforecast_report.py": (
+        "writes the motion report outside docs/api; "
+        "tests/motion_forecast/test_module_report.py checks exact reproduction"
+    ),
     "scripts/attestation_manifest.py": (
         "writes a caller-selected attestation summary, not committed docs/api pages"
     ),
