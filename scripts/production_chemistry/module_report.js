@@ -5,7 +5,7 @@
   const changes = JSON.parse(document.getElementById('report-changes').textContent);
   const el = id => document.getElementById(id);
   const format = value => (value !== 0 && Math.abs(value) < 0.05 ?
-    value.toExponential(1) : value.toFixed(1)).replace('-', '−');
+    value.toExponential(1) : value.toFixed(1)).replaceAll('-', '−');
   const namespace = 'http://www.w3.org/2000/svg';
   const node = (tag, attributes, text = '') => {
     const item = document.createElementNS(namespace, tag);

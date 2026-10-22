@@ -267,6 +267,8 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
@@ -583,9 +585,7 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/*
 
 # Retain the production chemistry module analysis and its change register.
-!docs/reports/modules/
-docs/reports/modules/*
 !docs/reports/modules/productionchemistry/
 docs/reports/modules/productionchemistry/*
-!docs/reports/modules/productionchemistry/report.html
+!docs/reports/modules/productionchemistry/index.html
 !docs/reports/modules/productionchemistry/changes.json

@@ -35,15 +35,20 @@ TESTS = "tests/production_chemistry/test_scale_si.py"
 HOUSE = "src/digitalmodel/reporting/assets/calc_report_format.html"
 ENGINE_CSS = "src/digitalmodel/reporting/assets/standard_report.css"
 SCRIPT = "scripts/production_chemistry/module_report.js"
-REVISION = "00"
-DATE = "2026-10-21"
+REVISION = "01"
+DATE = "2026-10-22"
 CHANGES = {
     "report": "productionchemistry", "revision": REVISION,
-    "revisions": [{"revision": REVISION, "date": DATE,
+    "revisions": [{"revision": "00", "date": "2026-10-21",
         "changes": [
             "Initial analysis of mineral-scale screening along a production string.",
             "Synthetic public-example results are separated from field design acceptance.",
             "Coefficient calibration and independent physical comparison remain required.",
+        ]}, {"revision": REVISION, "date": DATE,
+        "changes": [
+            "Numeric serialization and text records are normalized for reproducible builds.",
+            "Coefficient precision and unevaluated-result wording are corrected for independent readback.",
+            "The method reference and shared report output name are added for consistent discovery.",
         ]}],
 }
 TITLES = (
@@ -68,6 +73,17 @@ def read_example() -> ModuleType:
     return example
 
 
+def portable_numbers(value: Any) -> Any:
+    """Retain twelve significant figures before serializing or hashing results."""
+    if isinstance(value, float):
+        return float(f"{value:.12g}")
+    if isinstance(value, dict):
+        return {key: portable_numbers(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [portable_numbers(item) for item in value]
+    return value
+
+
 def build_data() -> dict[str, Any]:
     """Evaluate the fixed-composition workflow through the public API."""
     example = read_example()
@@ -84,7 +100,7 @@ def build_data() -> dict[str, Any]:
             "si": result.si, "log10_iap": result.log10_iap,
             "pk_cond": result.pk_cond, "details": dict(result.details),
         } for family, result in saturation_indices(brine, temperature, pressure).items()})
-    tree = ast.parse((ROOT / TESTS).read_text())
+    tree = ast.parse((ROOT / TESTS).read_text(encoding="utf-8"))
     tests = [n.name for n in tree.body if isinstance(n, ast.FunctionDef)
              and n.name.startswith("test_")]
     data = {
@@ -95,11 +111,11 @@ def build_data() -> dict[str, Any]:
         "ions": {ion: {"molecular_mass": mass, "charge": charge}
                  for ion, (mass, charge) in ION_PROPERTIES.items()},
         "evidence": {"test_count": len(tests), "tests": tests},
-        "sources": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        "sources": {path: hashlib.sha256((ROOT / path).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
                     for path in (EXAMPLE, IMPLEMENTATION, TESTS, HOUSE, ENGINE_CSS, SCRIPT)},
     }
     data["numbers"] = {}
-    return data
+    return {key: portable_numbers(value) for key, value in data.items()}
 
 
 def resolve(data: dict[str, Any], path: str) -> float:
@@ -114,7 +130,7 @@ def number(data: dict[str, Any], key: str, places: int = 1, tag: str = "span") -
     """Emit a numeric value with its machine-checkable origin and precision."""
     value = resolve(data, key)
     data["numbers"][key] = value
-    text = f"{value:.{places}f}" if places >= 0 else f"{value:.1e}"
+    text = f"{value:.{places}f}" if places >= 0 else f"{value:.5e}"
     text = text.replace("-", "−")
     return f'<{tag} data-number="{key}" data-places="{places}">{text}</{tag}>'
 
@@ -171,11 +187,14 @@ def render_body(data: dict[str, Any]) -> list[str]:
     end = f"states.{last}.calcite.si"
     rows = []
     for family in data["families"]:
+        index = data["states"][-1][family]["si"]
+        disposition = ("NOT_EVALUATED." if not math.isfinite(index) else
+                       "Supersaturation is indicated." if index > data["criterion"] else
+                       "Supersaturation is not indicated.")
         rows.append((family.capitalize(), n(f"states.0.{family}.si"),
                      n(f"states.{last}.{family}.si"),
                      n(f"profile.{last}.dsi_{family}", 2),
-                     "Supersaturation is indicated." if data["states"][-1][family]["si"] > data["criterion"]
-                     else "Supersaturation is not indicated.", "[2], public-example calculation"))
+                     disposition, "[2], public-example calculation"))
     result_table = table(
         ("Mineral", "Bottomhole index (dimensionless)", "Wellhead index (dimensionless)",
          "Change in index (dimensionless; two decimals)", "Wellhead disposition", "Source"), rows,
@@ -191,9 +210,10 @@ against the saturation boundary of {n('criterion')} [1, 2, 4].</li></ul></li>
 <ul><li>Quantitative design suitability is not established because the supplied coefficients
 are not calibrated against an independent physical dataset [2].</li></ul></li></ul>
 <div class="revhist"><h3>Revision history</h3>
-{table(('Revision', 'Date', 'What changed and why'), [(REVISION, DATE,
-'Initial mineral-scale screening analysis; coefficient and physical-comparison gaps are identified before design use.')],
-'Revision record. The initial issue establishes the screening basis and limits.')}</div>'''
+{table(('Revision', 'Date', 'What changed and why'), [
+('00', '2026-10-21', 'Initial mineral-scale screening analysis; coefficient and physical-comparison gaps are identified before design use.'),
+(REVISION, DATE, 'Portable rebuilds, coefficient readback and unevaluated-result reporting are corrected; the method reference and shared output name are added.')],
+'Revision record. Each issue retains its original entry and records the reason for the change.')}</div>'''
     introduction = '''<p>Mineral-scale tendency is assessed from water composition and local
 thermal and pressure conditions. The calculation is used to identify supersaturation
 along the specified path; deposited mass and treatment dosage are not calculated [2].</p>
@@ -248,7 +268,8 @@ The molecular masses and charges actually used are listed in Appendix 10.1.</p>
 in psia. Each a denotes the coefficient of its associated term, with reciprocal
 units required to make F dimensionless. Distinct coefficient sets are used for each
 mineral and carbonate route. Their values are read from the implementation in
-Appendix 10.1; no coefficient is represented as a value transcribed from a publication [2].</p>
+Appendix 10.1; no coefficient is represented as a value transcribed from a publication.
+The implementation cites the Oddo–Tomson method as its framework [2, 6].</p>
 <div class="eq"><div class="m">SI<sub>carbonate,gas</sub> =
 log<sub>10</sub>(c<sub>Ca</sub> c<sub>HCO₃</sub>² / f<sub>CO₂</sub>) + F<sub>gas</sub>;
 f<sub>CO₂</sub> = y<sub>CO₂</sub>P</div></div>
@@ -374,10 +395,17 @@ supports the sign criterion, not the coefficient values used here.</li>
 of Input and Examples for PHREEQC Version 3</a>, Techniques and Methods, book 6,
 chapter A43 (2013), “Introduction”, “Capabilities” and “Program Limitations”.
 Aqueous activities, speciation and database consistency are relevant to qualification.
-The referenced program has not been executed for this analysis.</li></ol>
+The referenced program has not been executed for this analysis.</li>
+<li id="ref-6">[6] Oddo, J. E., and Tomson, M. B.,
+<a href="https://doi.org/10.2118/21710-PA">Why Scale Forms in the Oil Field and Methods To Predict It</a>,
+SPE Production &amp; Facilities (1994), SPE-21710-PA.
+The method is cited by the implementation as its conditional-solubility framework.
+The supplied coefficient values are not transcribed from this paper [2].</li></ol>
 <h3>9.2 Reproduction records</h3>
 <p>The authoritative calculation and example records are listed below. Each content
-digest is retained inside this HTML's machine-readable data record. The report is
+digest is retained inside this HTML's machine-readable data record. Source digests
+cover UTF-8 text with LF-normalized line endings. Embedded numerical values retain
+twelve significant figures before serialization and document hashing. The report is
 reproducible without network access once its Python dependencies are installed.</p>
 {table(('Record', 'Repository locator', 'Used for'), [
 ('[1]', f'<code>{EXAMPLE}</code>', 'Synthetic composition and thermal-pressure path'),
@@ -417,7 +445,7 @@ have not been evaluated.</p>
 {table(('Ion', 'Molecular mass (g/mol)', 'Charge (dimensionless)', 'Source'), constants,
 'Table D. Molecular masses and ionic charges used by the implementation [2]. Their source here is code; an independent reference audit is not supplied.')}
 {table(('Correlation', *terms, 'Source'), coefficient_rows,
-'Table E. Implementation coefficient values [2], shown in scientific notation. '
+'Table E. Implementation coefficient values [2], shown to six significant figures in scientific notation. '
 'Column terms are defined in Section 4; their units cancel their temperature, pressure '
 'and ionic-strength factors. These values are not qualified publication values.')}
 <h3>10.2 Complete profile</h3>
@@ -434,8 +462,8 @@ NOT_EVALUATED.</p>
 <p>Quality pre-flight covers section and reference integrity, input units, the
 saturation boundary, source records, reproducibility and the distinction between
 synthetic inputs and measured data. The chart uses the same embedded profile as
-Table F. Table precision is selected for readable screening results; unrounded
-arrays are retained for numerical readback. The saturation criterion is not an
+Table F. Table precision is selected for readable screening results; arrays retain
+twelve significant figures for numerical readback. The saturation criterion is not an
 acceptance tolerance for the chemical model.</p>
 <h3>10.4 Data register and symbols</h3>
 {table(('Item', 'Status and consequence', 'Required evidence or disposition'), [
@@ -461,12 +489,12 @@ def build(output_dir: Path) -> None:
     data = build_data()
     bodies = render_body(data)
     body = "\n".join(section(i, b) for i, b in enumerate(bodies, 1))
-    house = (ROOT / HOUSE).read_text()
+    house = (ROOT / HOUSE).read_text(encoding="utf-8")
     match = re.search(r"<style>(.*?)</style>", house, re.S)
     if match is None:
         raise ValueError("The canonical report stylesheet is missing")
     style = match.group(1)
-    style += (ROOT / ENGINE_CSS).read_text()
+    style += (ROOT / ENGINE_CSS).read_text(encoding="utf-8")
     # Functional overflow and interaction rules retain the house tokens and layout.
     style += '''\n.tbl-wrap{max-width:100%;overflow-x:auto}.main{min-width:0}
     .hs-doc svg{max-width:100%}.hs-doc label{display:block;margin:12px 0}
@@ -474,11 +502,11 @@ def build(output_dir: Path) -> None:
     .hs-doc button,.hs-doc select,.hs-doc input{max-width:100%;font:inherit}
     .hs-doc svg .point:focus{outline:3px solid var(--proj)}
     @media print{.comment-controls,#change-panel{display:none}}'''
-    digest = hashlib.sha256((style + body + json.dumps(data, sort_keys=True)).encode()).hexdigest()
+    digest = hashlib.sha256((style + body + json.dumps(data, sort_keys=True)).encode("utf-8")).hexdigest()
     data["document_digest"] = digest
     toc = "".join(f'<li><a href="#section-{i}">{title}</a></li>'
                   for i, title in enumerate(TITLES, 1))
-    script = (ROOT / SCRIPT).read_text()
+    script = (ROOT / SCRIPT).read_text(encoding="utf-8")
     output = f'''<!DOCTYPE html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -488,7 +516,7 @@ def build(output_dir: Path) -> None:
 <span class="brand">digitalmodel</span><span class="docno">Revision {REVISION}</span>
 </div></header><div class="hero"><div class="wrap"><div class="kicker">Engineering analysis</div>
 <h1>Production chemistry module analysis</h1><p class="lede">Mineral-scale screening along a production string</p>
-<p>Draft for client review</p></div></div>
+<p>Draft for maintainer review</p></div></div>
 <div class="wrap shell"><nav class="toc" aria-label="Contents"><p class="tt">Contents</p>
 <ol>{toc}</ol><details id="change-panel"><summary>Changes</summary><div id="changes"></div></details></nav>
 <main class="main">{body}
@@ -508,8 +536,8 @@ Where direct file saving is unavailable, a download is offered; place that file 
 <script type="application/json" id="report-changes">{json.dumps(CHANGES, sort_keys=True)}</script>
 <script>{script}</script></body></html>\n'''
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(output, encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "index.html").write_text(output, encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

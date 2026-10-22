@@ -187,6 +187,12 @@ GENERATORS = (
         ("docs/api/production/scale-si-explorer.html",),
     ),
     Generator(
+        "scripts/production_chemistry/build_module_report.py",
+        ("docs/reports/modules/productionchemistry/index.html",
+         "docs/reports/modules/productionchemistry/changes.json"),
+        inputs=("pyproject.toml", "tests/production_chemistry/test_scale_si.py"),
+    ),
+    Generator(
         "scripts/studies/surface_crack_report.py",
         ("docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html",),
         ("--results", "docs/domains/asset-integrity/surface-crack-calculix-results.json",

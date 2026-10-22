@@ -1,6 +1,6 @@
 {
   "report": "productionchemistry",
-  "revision": "00",
+  "revision": "01",
   "revisions": [
     {
       "revision": "00",
@@ -9,6 +9,15 @@
         "Initial analysis of mineral-scale screening along a production string.",
         "Synthetic public-example results are separated from field design acceptance.",
         "Coefficient calibration and independent physical comparison remain required."
+      ]
+    },
+    {
+      "revision": "01",
+      "date": "2026-10-22",
+      "changes": [
+        "Numeric serialization and text records are normalized for reproducible builds.",
+        "Coefficient precision and unevaluated-result wording are corrected for independent readback.",
+        "The method reference and shared report output name are added for consistent discovery."
       ]
     }
   ]
