@@ -11,11 +11,18 @@ approval or a class-rule assessment.
 | --- | --- | --- |
 | 1 | 2026-10-21 | Record missing-data behavior and oscillator answers for #2597. |
 | 2 | 2026-10-21 | Align direct and aggregate validation, require curve coverage and identify the limited stability scope. |
+| 3 | 2026-10-22 | Add typed evidence, explicit selections and a reproducible computed supplement with unresolved qualification candidates. |
 
 ## Input contract
 
 `run_compliance_checks` returns every intended check. Each row carries `pass`
-and `status`; missing-data rows carry a `reason`. A missing field, `None`,
+and `status`, a list of `missing_inputs` (absent or invalid data), and a
+`clause_reference`. Missing-data rows also carry a `reason`. `CheckResult` is
+the typed evidence envelope; its `to_dict()` method preserves the dictionary
+interface and derives `pass` from `status`. `evaluate_compliance_checks` returns
+a typed `ComplianceResult`; `run_compliance_checks` serializes the same result
+with the existing report keys. The typed envelope rejects evaluated statuses with
+missing inputs and statuses outside PASS, FAIL and NOT_EVALUATED. A missing field, `None`,
 nonfinite scalar, nonpositive principal dimension, empty curve, mismatched
 curve lengths or nonincreasing angles prevents evaluation of the affected row.
 Curve inputs are lists or tuples of finite numbers. Zero trim and zero
@@ -49,6 +56,20 @@ rows pass. `failed` counts evaluated failures; `not_evaluated` counts missing
 or invalid rows. Their sum with `passed` equals `total`. Consumers that used
 `not row['pass']` to count failures can now distinguish unknown evidence.
 An empty input produces only unevaluated rows.
+
+`check_ids=None` selects the complete set. An explicit sequence selects the
+named checks in order, using identifiers `imo_intact`, `min_freeboard`,
+`beam_draft_ratio`, `length_beam_ratio`, `draft_depth_ratio`,
+`displacement_lwl_ratio`, `section_modulus`, `propeller_immersion` and `max_trim`.
+An empty selection returns NOT_EVALUATED with `missing_inputs=['check_ids']`.
+Unknown or duplicate identifiers raise `ValueError`. The aggregate lists the
+union of missing or invalid inputs; every selected row includes `check_id`.
+
+The intact-stability row records MSC.267(85), 2008, Part A 2.2 as its clause
+reference, matching the delegated implementation. Other legacy screens have
+`clause_reference=None` and `reference_status='UNVERIFIED'`. The reference
+status distinguishes recorded provenance from an unqualified label; it is
+not a statutory approval. No clause is inferred from a code label.
 
 The stability row and aggregate name identify the Part A 2.2 scope. The Part A
 2.3 severe wind and rolling criterion is not evaluated. A passing aggregate

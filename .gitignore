@@ -462,6 +462,15 @@ docs/reports/abstracted-hulls/*
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
 
+# Reproducible naval architecture evidence supplement.
+!docs/reports/modules/
+!docs/reports/modules/navalarchitecture/
+!docs/reports/modules/navalarchitecture/evidence/
+docs/reports/modules/navalarchitecture/evidence/*
+!docs/reports/modules/navalarchitecture/evidence/report.html
+!docs/reports/modules/navalarchitecture/evidence/results.json
+!docs/reports/modules/navalarchitecture/evidence/changes.json
+
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
 # directory named lib at ANY depth -- it silently swallowed the files that fix

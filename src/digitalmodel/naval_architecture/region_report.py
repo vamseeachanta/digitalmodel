@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 #!/usr/bin/env python3
 """
 ABOUTME: Measuring a placed set of hull regions (#2023) into the ``regions``
@@ -211,7 +214,12 @@ def _notes(
         )
     for name in sorted(sections):
         section = sections[name]
-        if not section.get("cut_is_clean", True):  # type: ignore[union-attr]
+        if section.get("cut_is_clean") is None:  # type: ignore[union-attr]
+            notes.append(
+                f"region {name!r} centreplane cut is NOT_EVALUATED: "
+                "cut_is_clean evidence is missing"
+            )
+        elif not section["cut_is_clean"]:  # type: ignore[index]
             notes.append(
                 f"region {name!r} is NOT cut cleanly by the centreplane: the "
                 "half the domain keeps is not a closed solid, so "
