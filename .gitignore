@@ -581,3 +581,13 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Published power module report and its calculation sources.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/power/
+docs/reports/modules/power/*
+!docs/reports/modules/power/build_report.py
+!docs/reports/modules/power/changes.json
+!docs/reports/modules/power/public_case.json
+!docs/reports/modules/power/report.html

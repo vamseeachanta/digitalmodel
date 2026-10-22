@@ -1,0 +1,106 @@
+{
+  "source": {
+    "title": "MATPOWER 8.1, case4gs, bus/gen/branch tables",
+    "url": "https://raw.githubusercontent.com/MATPOWER/matpower/8.1/data/case4gs.m",
+    "basis": "Power System Analysis, 1994 edition, pages 337–338, as transcribed in the open case file; the textbook itself is not consulted."
+  },
+  "base_mva": 100.0,
+  "buses": [
+    {
+      "id": 1,
+      "type": 3,
+      "p_mw": 50.0,
+      "q_mvar": 30.99,
+      "v_initial": 1.0,
+      "angle_deg": 0.0,
+      "v_max": 1.1,
+      "v_min": 0.9
+    },
+    {
+      "id": 2,
+      "type": 1,
+      "p_mw": 170.0,
+      "q_mvar": 105.35,
+      "v_initial": 1.0,
+      "angle_deg": 0.0,
+      "v_max": 1.1,
+      "v_min": 0.9
+    },
+    {
+      "id": 3,
+      "type": 1,
+      "p_mw": 200.0,
+      "q_mvar": 123.94,
+      "v_initial": 1.0,
+      "angle_deg": 0.0,
+      "v_max": 1.1,
+      "v_min": 0.9
+    },
+    {
+      "id": 4,
+      "type": 2,
+      "p_mw": 80.0,
+      "q_mvar": 49.58,
+      "v_initial": 1.0,
+      "angle_deg": 0.0,
+      "v_max": 1.1,
+      "v_min": 0.9
+    }
+  ],
+  "generators": [
+    {
+      "bus": 4,
+      "p_mw": 318.0,
+      "q_initial_mvar": 0.0,
+      "q_max_mvar": 100.0,
+      "q_min_mvar": -100.0,
+      "v_set": 1.02
+    },
+    {
+      "bus": 1,
+      "p_mw": 0.0,
+      "q_initial_mvar": 0.0,
+      "q_max_mvar": 100.0,
+      "q_min_mvar": -100.0,
+      "v_set": 1.0
+    }
+  ],
+  "branches": [
+    {
+      "from": 1,
+      "to": 2,
+      "r_pu": 0.01008,
+      "x_pu": 0.0504,
+      "b_pu": 0.1025,
+      "rating_mva": 250.0,
+      "tap_raw": 0.0
+    },
+    {
+      "from": 1,
+      "to": 3,
+      "r_pu": 0.00744,
+      "x_pu": 0.0372,
+      "b_pu": 0.0775,
+      "rating_mva": 250.0,
+      "tap_raw": 0.0
+    },
+    {
+      "from": 2,
+      "to": 4,
+      "r_pu": 0.00744,
+      "x_pu": 0.0372,
+      "b_pu": 0.0775,
+      "rating_mva": 250.0,
+      "tap_raw": 0.0
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "r_pu": 0.01272,
+      "x_pu": 0.0636,
+      "b_pu": 0.1275,
+      "rating_mva": 250.0,
+      "tap_raw": 0.0
+    }
+  ]
+}
