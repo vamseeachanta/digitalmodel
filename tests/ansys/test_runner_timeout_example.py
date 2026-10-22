@@ -14,3 +14,8 @@ def test_timeout_example(tmp_path):
         "fatal_log_retained": True,
         "partial_output_retained": True,
     }
+
+    import psutil
+
+    pid = int((tmp_path / "output/child.pid").read_text(encoding="ascii"))
+    assert not psutil.pid_exists(pid) or psutil.Process(pid).status() == psutil.STATUS_ZOMBIE

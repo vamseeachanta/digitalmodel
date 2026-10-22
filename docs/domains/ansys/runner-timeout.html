@@ -16,25 +16,35 @@ Explicit UTF-8 example reads and writers remain independent of a cp1252 default.
 <table>
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
   <tbody><tr><td>1</td><td>2026-10-20</td><td>Document bounded execution and
-  an offline example to regress fatal-process hangs and text decoding.</td></tr></tbody>
+  an offline example to regress fatal-process hangs and text decoding.</td></tr>
+  <tr><td>2</td><td>2026-10-22</td><td>Bound post-exit settlement, expose cleanup
+  retry handles, validate arguments and produce deterministic deck newlines.</td></tr></tbody>
 </table>
 <p>Table 1. Revision history.</p>
 <h2>Configuration and method</h2>
 <p><code>run_ansys</code> and <code>ANSYSRunConfig</code> retain the existing
 <code>timeout_seconds</code> setting. It must be finite and positive. The
 <code>-smp</code> flag is inserted unless <code>extra_args</code> contains an
-explicit <code>-smp</code> or <code>-dis</code>. Both flags together are rejected.
+explicit <code>-smp</code>, <code>-dis</code>, <code>-mpi</code> or
+<code>-machines</code>, matched without case sensitivity. Shared-memory and
+distributed flags together are rejected. Arguments must be a list of strings.
 Distributed execution is opt-in through <code>extra_args=["-dis"]</code> in
 Python or <code>ansys.extra_args: ["-dis"]</code> in workflow configuration.</p>
 <p>Binary file-backed capture avoids waiting for a descendant to close an inherited
 pipe. The existing supervisors use a Windows Job Object, assigned before process
 resume, or a POSIX process group whose leader remains unreaped until settlement.
 The execution budget covers launch, leader wait and descendant settlement.
-Failure cleanup uses the existing supervisor policy: a separate 5.0 s grace
-period with 0.01 s polling. These are execution settings from
-<code>cylinder_runner._settle</code> and <code>_poll_settlement</code>, not
-engineering acceptance limits. A failure to establish cleanup remains failed;
-ownership handles are retained for diagnosis rather than reporting completion.</p>
+After the leader exits, descendants receive at most the lesser of the remaining
+budget and 5.0 s. Descendants remaining after that grace cause a distinct failed
+settlement result that preserves the observed leader return code and terminates
+the owned tree. Failure cleanup has a separate 5.0 s grace period with 0.01 s
+polling. Both runners share these execution settings; they are not engineering
+acceptance limits. If cleanup remains uncertain, the result carries a
+<code>retained_supervisor_token</code>. Retry the exact owned handle with
+<code>digitalmodel.ansys.runner_process.settle_retained(token)</code>; a successful
+retry releases it, and a failed retry retains the same token. Tokens are local
+to the calling process. Cleanup errors preserve timeout context, and control
+exceptions propagate after cleanup.</p>
 <p>Completed streams are decoded as UTF-8 with replacement for invalid bytes.
 Timeout streams are retained as partial bytes and decoded by the runner using
 the same policy. Result completion still requires a fresh readable log, a
@@ -55,13 +65,15 @@ No engineering equation, material property or design limit is introduced.</p>
   "partial_output_retained": true
 }</pre>
 <p>The regression test independently specifies this result from the completion
-contract. The example refuses to overwrite its synthetic input. Its output
+contract and asserts that the recorded child process has terminated on either
+platform. The example refuses to overwrite its synthetic input. Its output
 directory must be retained for inspection or a fresh directory used for another run.</p>
 <h2>Encoding coverage</h2>
 <p>The padeye, mudmat and pressure-vessel committed-deck guards and their writers
 already select UTF-8. Regression tests invoke those existing guards while
-emulating a cp1252 default, and compare writer output to explicitly encoded
-UTF-8 bytes. No deck or engineering result is regenerated.</p>
+emulating a cp1252 default and Windows newline translation. The two deck writers
+explicitly use LF newlines; their bytes are compared to explicitly encoded UTF-8
+text. No deck or engineering result is regenerated.</p>
 <h2>Known limits and next checkpoint</h2>
 <p>The offline tests do not qualify native Windows MPI behavior. A licensed
 environment must separately run a deliberately fatal deck, record timeout and

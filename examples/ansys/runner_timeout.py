@@ -18,7 +18,8 @@ from pathlib import Path
 import subprocess
 import sys
 import time
-subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+Path('child.pid').write_text(str(child.pid), encoding='ascii')
 Path('model.out').write_text('*** FATAL *** synthetic failure', encoding='utf-8')
 print('partial output', flush=True)
 time.sleep(60)

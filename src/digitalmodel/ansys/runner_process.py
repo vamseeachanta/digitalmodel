@@ -9,21 +9,29 @@ process groups; POSIX descendants that create a new session remain uncontained.
 import subprocess
 import tempfile
 import time
+import uuid
 
 from digitalmodel.ansys.cylinder_process import supervisor_factory
 
 # Execution policy follows cylinder_runner._settle, not an engineering limit.
 _CLEANUP_SECONDS = 5.0
 _POLL_SECONDS = 0.01
-_UNSETTLED = []  # Retain ownership handles if settlement cannot be established.
+_UNSETTLED = {}  # Exact ownership handles remain available for settlement retry.
 
 
 class ProcessCleanupError(OSError):
     """Cleanup uncertainty, carrying streams without claiming a successful run."""
 
-    def __init__(self, message, stdout, stderr):
+    def __init__(self, message, stdout, stderr, *, return_code=None,
+                 retained_supervisor_token=None):
         super().__init__(message)
         self.stdout, self.stderr = stdout, stderr
+        self.return_code = return_code
+        self.retained_supervisor_token = retained_supervisor_token
+
+
+class ProcessSettlementError(ProcessCleanupError):
+    """The leader exited, but owned descendants exceeded their natural grace."""
 
 
 def _wait_empty(supervisor, deadline):
@@ -34,16 +42,25 @@ def _wait_empty(supervisor, deadline):
         time.sleep(min(_POLL_SECONDS, remaining))
 
 
-def _cleanup(supervisor):
+def _cleanup(supervisor, token=None):
     """Only the current invocation's owned tree is terminated; no name search."""
     try:
         supervisor.terminate()
         _wait_empty(supervisor, time.monotonic() + _CLEANUP_SECONDS)
         supervisor.close()
     except Exception as exc:
-        _UNSETTLED.append(supervisor)
-        return f"owned process cleanup could not be established: {exc}"
-    return None
+        token = token or uuid.uuid4().hex
+        _UNSETTLED[token] = supervisor
+        return f"owned process cleanup could not be established: {exc}", token
+    if token is not None:
+        del _UNSETTLED[token]
+    return None, None
+
+
+def settle_retained(token):
+    """Retry cleanup of an exact retained ownership handle, releasing it on success."""
+    error, retained = _cleanup(_UNSETTLED[token], token)
+    return {"error": error, "retained_supervisor_token": retained}
 
 
 def _read(stream):
@@ -55,25 +72,43 @@ def run_process(argv, *, cwd, timeout):
     """Return decoded streams, or raise with partial bytes after bounded cleanup.
 
     The supplied wall-clock budget covers launch, leader wait and descendant
-    settlement. Failure cleanup has a separate bounded grace period. No solver
+    settlement. After leader exit, natural settlement is capped at the shared
+    cleanup grace. Failure cleanup has a separate bounded grace period. No solver
     discovery, license query or executable-name termination occurs here.
     """
     deadline = time.monotonic() + timeout
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         supervisor = supervisor_factory()
+        return_code = None
         try:
             supervisor.start(argv, cwd, stdout, stderr)
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise subprocess.TimeoutExpired(argv, timeout)
             return_code = supervisor.wait(remaining)
-            _wait_empty(supervisor, deadline)
+            try:
+                _wait_empty(supervisor, min(deadline, time.monotonic() + _CLEANUP_SECONDS))
+            except subprocess.TimeoutExpired as exc:
+                raise ProcessSettlementError(
+                    f"owned descendants did not settle after leader exit (return code {return_code})",
+                    b"", b"", return_code=return_code,
+                ) from exc
             supervisor.close()
         except BaseException as exc:
-            cleanup_error = _cleanup(supervisor)
+            cleanup_error, token = _cleanup(supervisor)
+            if not isinstance(exc, Exception):
+                raise
             output, errors = _read(stdout), _read(stderr)
             if cleanup_error:
-                raise ProcessCleanupError(cleanup_error, output, errors) from exc
+                cause = (f"MAPDL timeout after {timeout} seconds"
+                         if isinstance(exc, subprocess.TimeoutExpired) else str(exc))
+                raise ProcessCleanupError(
+                    f"{cause}; {cleanup_error}", output, errors,
+                    return_code=return_code, retained_supervisor_token=token,
+                ) from exc
+            if isinstance(exc, ProcessSettlementError):
+                exc.stdout, exc.stderr = output, errors
+                raise
             if isinstance(exc, subprocess.TimeoutExpired):
                 raise subprocess.TimeoutExpired(argv, timeout, output, errors) from exc
             raise

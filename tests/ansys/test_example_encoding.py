@@ -14,6 +14,8 @@ def cp1252_default(monkeypatch):
     def open_text(path, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
         if "b" not in mode and encoding is None:
             encoding = "cp1252"
+        if "b" not in mode and newline is None:
+            newline = "\r\n"
         return original(path, mode, buffering, encoding, errors, newline)
 
     monkeypatch.setattr(Path, "open", open_text)

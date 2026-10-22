@@ -36,6 +36,7 @@ from digitalmodel.ansys.runner_process import (
 
 # APDL solver error markers (MAPDL may return rc=0 yet write errors to the log).
 _ERROR_MARKERS = ("*** ERROR ***", "SOLUTION NOT CONVERGED", "*** FATAL ***")
+_DISTRIBUTED_FLAGS = {"-dis", "-mpi", "-machines"}
 _RESULT_SUFFIXES = (".rst", ".rth", ".out", ".mntr", ".db", ".csv")
 
 
@@ -64,8 +65,13 @@ class ANSYSRunConfig:
             or self.timeout_seconds <= 0
         ):
             raise ValueError("timeout_seconds must be finite and positive")
-        if "-smp" in self.extra_args and "-dis" in self.extra_args:
-            raise ValueError("choose either -smp or -dis")
+        if not isinstance(self.extra_args, list) or not all(
+            isinstance(arg, str) for arg in self.extra_args
+        ):
+            raise ValueError("extra_args must be a list of str")
+        flags = {arg.lower() for arg in self.extra_args}
+        if "-smp" in flags and flags & _DISTRIBUTED_FLAGS:
+            raise ValueError("choose either -smp or distributed mode")
 
 
 @dataclass
@@ -80,6 +86,7 @@ class ANSYSRunResult:
     stderr: str = ""
     error_message: Optional[str] = None
     duration_seconds: float = 0.0
+    retained_supervisor_token: Optional[str] = None
 
 
 # Standard Windows MAPDL install locations (probed only on Windows).
@@ -176,8 +183,10 @@ class ANSYSRunner:
         out_file = self._result.output_dir / f"{self._result.input_file.stem}.out"
         previous_files = self._snapshot_result_files(self._result.output_dir)
         self._result.status = ANSYSRunStatus.RUNNING
-        # Issue 2196: single-node runs use SMP; -dis explicitly opts into MPI.
-        explicit_mode = any(arg in ("-smp", "-dis") for arg in self._config.extra_args)
+        # Single-node runs default to SMP; preserve explicit distributed options.
+        explicit_mode = any(
+            arg.lower() in {"-smp"} | _DISTRIBUTED_FLAGS for arg in self._config.extra_args
+        )
         mode = [] if explicit_mode else ["-smp"]
         argv = [str(exe), "-b", "-i", str(self._result.input_file),
                 "-o", str(out_file), *mode, *self._config.extra_args]
@@ -189,6 +198,8 @@ class ANSYSRunner:
             self._record_timeout(exc, previous_files, out_file)
             return
         except ProcessCleanupError as exc:
+            self._result.return_code = exc.return_code
+            self._result.retained_supervisor_token = exc.retained_supervisor_token
             self._record_timeout(
                 exc, previous_files, out_file, error_message=str(exc),
             )
@@ -314,6 +325,6 @@ def run_ansys(
         executable_path=Path(executable_path) if executable_path else None,
         timeout_seconds=timeout_seconds,
         dry_run=dry_run,
-        extra_args=list(extra_args or []),
+        extra_args=[] if extra_args is None else extra_args,
     )
     return ANSYSRunner(config).run(script_path)
