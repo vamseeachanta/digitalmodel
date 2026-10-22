@@ -1,6 +1,19 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+agent_packs:
+  passing_ship_forces:
+    agent_pack: src/digitalmodel/passing_ship_forces/docs/agent-pack.md
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    qa_family: EC
+  tug:
+    agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    qa_family: EC
+  vessel_seakeeping:
+    agent_pack: src/digitalmodel/vessel_seakeeping/docs/agent-pack.md
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    qa_family: EC
 searched:
   tracked_files: 17815
   text_files_searched: 15629
