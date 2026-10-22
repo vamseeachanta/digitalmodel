@@ -18,7 +18,9 @@ code-qualified service acceptance.</p>
 record independent arithmetic and the remaining qualification gaps.</td></tr>
 <tr><td>1</td><td>2026-10-22</td><td>Reduce the example depth so the search
 extends above the assessed flaw; state the wide-plate and continuous-yield
-limits and identify the stress-intensity reference.</td></tr></tbody></table>
+limits and identify the stress-intensity reference.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>Correct the governing crack-front point
+and record both point values so the explanation matches the hand calculation.</td></tr></tbody></table>
 <p>Table 1. Issue history.</p>
 <h2>Inputs and data basis</h2>
 <p>The committed <a href="../../../examples/workflows/crack-fad-level2-handoff/input.yml">input example</a>
@@ -59,7 +61,8 @@ source qualification. No licensed standard or its example values are copied.
 Expected values are calculated without calling the implementation under test.
 At the demonstration geometry, the Annex P expression gives alpha = 0.04,
 reference stress = 104.2 MPa and Lr = 0.260. The independently evaluated plate
-expression gives governing surface-point stress intensity = 8.5 MPa sqrt(m),
+expression gives governing deepest-point stress intensity = 8.48 MPa sqrt(m),
+with g = f_phi = 1; surface-point stress intensity = 8.45 MPa sqrt(m).
 Kr = 0.085 and curve height = 0.983. The point is inside the curve and below
 Lr_max = 1.250. These rounded values are display values; tests retain precision.</p>
 <p>A separate collapse-governed synthetic case uses half-length and thickness

@@ -5,13 +5,17 @@
 import copy
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
-from digitalmodel.asset_integrity.assessment.crack_fad import critical_flaw_depth_mm
+from digitalmodel.asset_integrity.assessment.crack_fad import (
+    critical_flaw_depth_mm,
+    newman_raju_k,
+)
 from digitalmodel.asset_integrity.assessment import crack_fad_workflow
 from digitalmodel.asset_integrity.assessment.crack_fad_workflow import router
 from digitalmodel.asset_integrity.assessment.level3_escalation import (
@@ -275,17 +279,40 @@ def test_example_depth_search_extends_beyond_assessed_depth():
     Q=1+1.464*0.8**1.65; M1=1.058; M2=0.35;
     M3=0.5-1/1.45+14*0.2**24; fw=sqrt(sec(pi*5/100*sqrt(0.2)));
     K=100*(M1+M2*0.2**2+M3*0.2**4)*fw*sqrt(pi*0.004/Q);
-    the surface multiplier (1.1+0.35*0.2**2)*sqrt(0.8) governs.
+    at the deepest point g=f_phi=1, giving K=8.47780713 MPa sqrt(m).
+    The surface multiplier (1.1+0.35*0.2**2)*sqrt(0.8)=0.99639189
+    gives K=8.44721828 MPa sqrt(m), so the deepest point governs.
     """
     path = ROOT / "examples/workflows/crack-fad-level2-handoff/input.yml"
     cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
     cfg["crack_assessment"].pop("output_dir")
     result = router(cfg)["crack_fad_level2_handoff"]
     point = result["assessment"]
+    k_inputs = {
+        key: cfg["crack_assessment"][key]
+        for key in ("a_mm", "c_mm", "t_mm", "sigma_m_mpa", "sigma_b_mpa", "width_mm")
+    }
+    assert newman_raju_k(**k_inputs, phi_deg=90.0) == pytest.approx(8.47780713)
+    assert newman_raju_k(**k_inputs, phi_deg=0.0) == pytest.approx(8.44721828)
+    assert point["k_applied"] == pytest.approx(8.47780713)
+    assert not any("surface point governs" in note for note in point["notes"])
     assert point["lr"] == pytest.approx(0.2604166667)
     assert point["kr"] == pytest.approx(0.0847780713)
     assert point["f_lr"] == pytest.approx(0.9833577741)
     assert result["critical_depth"]["depth_mm"] > cfg["crack_assessment"]["a_mm"]
+
+
+def test_validation_record_matches_example_crack_front_points():
+    path = ROOT / "docs/domains/asset-integrity/crack-fad-handoff-validation.html"
+    record = path.read_text(encoding="utf-8")
+    if "governing deepest-point" not in record or "governing surface-point" in record:
+        pytest.fail("Validation record must identify the deepest point as governing.")
+    values = dict(re.findall(
+        r"(deepest|surface)-point stress intensity = ([\d.]+) MPa sqrt\(m\)", record
+    ))
+    # The hand values above are rounded to two decimal places in the record.
+    assert float(values["deepest"]) == pytest.approx(8.47780713, abs=0.005)
+    assert float(values["surface"]) == pytest.approx(8.44721828, abs=0.005)
 
 
 @pytest.mark.parametrize(
