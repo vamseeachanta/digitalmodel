@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vortex-induced vibration screening module analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style></head>
+<body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Engineering calculation module analysis</p>
+<h1>Vortex-induced vibration screening module analysis</h1>
+<p>Draft for maintainer review</p></header>
+
+<h2 id="s1">1. Executive summary</h2>
+<p>The vortex-induced vibration screening module is a uniform-span current-screening calculation.
+Analysis is performed to determine modal lock-in flags and an indicative cross-flow fatigue life;
+the key results are summarized below. The documented public synthetic example is evaluated,
+and its results are not a field design basis. <a href="#ref4">[4]</a></p>
+<ul><li>The synthetic example fails the cross-flow life comparison.
+<ul><li>The calculated life is <span data-number="screening_life_years" data-format=".1f">10.8</span> years against the
+<span data-number="required_life_years" data-format=".0f">60</span> year required life. Detailed response and fatigue assessment
+is the next engineering action before any operating acceptance. <a href="#ref4">[4]</a></li></ul></li>
+<li>The scope of the decision is limited to screening.
+<ul><li><span data-number="cf_lock_in_count" data-format=".0f">1</span> cross-flow mode and <span data-number="il_lock_in_count" data-format=".0f">1</span>
+in-line mode are flagged. In-line fatigue is not evaluated, and a separate in-line fatigue assessment
+is required before acceptance. <a href="#ref4">[4]</a></li></ul></li></ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>21 October 2026</td><td>Initial module analysis; calculation evidence and missing qualification are distinguished.</td></tr></tbody></table>
+<figure><svg viewBox="0 0 760 290" role="img" aria-label="Cross-flow annual damage" style="width:100%">
+<path d="M70 25 V230 H735" fill="none" stroke="currentColor"/>
+<line x1="70" x2="735" y1="200.34" y2="200.34" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<text x="72" y="192.34" font-size="12">Limit: 0.01667 1/year</text>
+<text x="350" y="278">Mode number</text>
+<text x="72" y="18" font-size="13">Cross-flow annual damage (1/year)</text>
+<circle tabindex="0" cx="85.00" cy="64.78" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 1; demand: 0.09283 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 1; demand: 0.09283 1/year; limit: 0.01667 1/year</title></circle><text x="81.00" y="250" font-size="12">1</text>
+<circle tabindex="0" cx="155.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 2; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 2; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="151.00" y="250" font-size="12">2</text>
+<circle tabindex="0" cx="225.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 3; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 3; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="221.00" y="250" font-size="12">3</text>
+<circle tabindex="0" cx="295.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 4; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 4; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="291.00" y="250" font-size="12">4</text>
+<circle tabindex="0" cx="365.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 5; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 5; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="361.00" y="250" font-size="12">5</text>
+<circle tabindex="0" cx="435.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 6; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 6; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="431.00" y="250" font-size="12">6</text>
+<circle tabindex="0" cx="505.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 7; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 7; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="501.00" y="250" font-size="12">7</text>
+<circle tabindex="0" cx="575.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 8; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 8; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="571.00" y="250" font-size="12">8</text>
+<circle tabindex="0" cx="645.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 9; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 9; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="641.00" y="250" font-size="12">9</text>
+<circle tabindex="0" cx="715.00" cy="230.00" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 10; demand: 0 1/year; limit: 0.01667 1/year"><title>Case: synthetic uniform current; component: span, mode 10; demand: 0 1/year; limit: 0.01667 1/year</title></circle><text x="711.00" y="250" font-size="12">10</text>
+</svg>
+<p class="sub" aria-live="polite" data-chart-readout>Hover over or focus a marker to read its demand and limit.</p><figcaption>Governing screening comparison. The annual cross-flow damage of each
+mode is compared with the reciprocal of the required life. The sum of modal damage is used by the module;
+the first mode alone exceeds this limit. An operating envelope is not established. <a href="#ref4">[4]</a></figcaption></figure>
+
+<h2 id="s2">2. Introduction</h2>
+<p>A straight, uniform tubular span in steady current is considered. Riser vibration screening
+is performed with analytical beam modes, a reduced-velocity current envelope and supplied modal stress.
+Water depth is not supplied; span length is the structural length and is not interpreted as water depth. <a href="#ref4">[4]</a></p>
+<p>The documented workflow accepts a configuration mapping, calls the analytical modal and fatigue
+components, and writes per-mode and summary comma-separated tables. A configuration echo is available
+through the engine entry point. The worked calculation calls the same workflow directly. <a href="#ref4">[4]</a> <a href="#ref5">[5]</a></p>
+
+<h2 id="s3">3. Design data</h2>
+<p>The input basis is taken from the public synthetic example. All physical properties, environmental
+properties, stress calibration and acceptance inputs are marked ASSUMED - to be confirmed for any
+application to a real span. <a href="#ref4">[4]</a></p>
+<p>The model uses <span data-number="length_m" data-format=".1f">60.0</span> m span length, <span data-number="outer_diameter_m" data-format=".4f">0.2731</span> m
+outer diameter and <span data-number="inner_diameter_m" data-format=".4f">0.2287</span> m inner diameter. Pinned supports and
+<span data-number="effective_tension_N" data-format=".0f">0</span> N effective tension are specified. The complete data register
+is given in Appendix A. <a href="#ref4">[4]</a></p>
+<p>A spatial current profile is accepted as an alternative to a scalar current. Only the minimum and
+maximum profile speeds are used; depth-dependent modal work and shear are not resolved. The effective
+beam mass and the effective mass ratio are separate inputs and are not checked for mutual consistency. <a href="#ref4">[4]</a></p>
+<h3>Criteria and rationale</h3>
+<p>Required screening life is design duration multiplied by the design fatigue factor, giving
+<span data-number="design_life_years" data-format=".0f">20</span> × <span data-number="dff" data-format=".0f">3</span> =
+<span data-number="required_life_years" data-format=".0f">60</span> years. This is a supplied acceptance basis; it is not presented
+as a universal standard requirement. The equivalent annual damage limit is
+<span data-number="annual_damage_limit" data-format=".5f">0.01667</span> per year. <a href="#ref4">[4]</a></p>
+<p>Implemented inclusive reduced-velocity bands are 4 to 8 for cross-flow and
+1 to 3.5 for in-line motion. These are implementation criteria read from the calculation
+source. Their independent physical qualification is NOT_EVALUATED. The associated standard references
+do not establish that these particular coefficients are qualified for a proposed installation. <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+
+<h2 id="s4">4. Analysis methodology</h2>
+<p>Uniform beam modes are calculated before current lock-in and cross-flow fatigue are assessed.
+The first benchmark is the untensioned pinned-beam closed form. Added mass is included in the supplied
+mass per unit length; it is not calculated by this workflow. <a href="#ref1">[1]</a> <a href="#ref4">[4]</a></p>
+<figure><svg viewBox="0 0 820 310" role="img" aria-label="Pinned uniform tube and annular cross-section" style="width:100%">
+<rect x="65" y="115" width="440" height="35" fill="var(--panel-2)" stroke="var(--brand)"/>
+<path d="M75 150 l-18 30 h36 Z M495 150 l-18 30 h36 Z" fill="none" stroke="currentColor"/>
+<path d="M60 190 H510 M90 180 v15 M480 180 v15" fill="none" stroke="currentColor"/>
+<text x="200" y="215">Span length L; coordinate x →</text>
+<path d="M160 40 v60 l-5 -10 m5 10 l5 -10 M285 40 v60 l-5 -10 m5 10 l5 -10 M410 40 v60 l-5 -10 m5 10 l5 -10" fill="none" stroke="var(--accent)"/>
+<text x="185" y="30">Uniform current U ↓</text>
+<text x="75" y="245">Pins: displacement and bending moment are zero.</text>
+<text x="75" y="270">Cross-flow motion w is normal to the drawing.</text>
+<circle cx="665" cy="130" r="63" fill="var(--panel-2)" stroke="var(--brand)"/>
+<circle cx="665" cy="130" r="50" fill="var(--panel)" stroke="var(--brand)"/>
+<path d="M602 130 H728 M615 140 H715" stroke="currentColor"/>
+<text x="590" y="225">Outer diameter Dₒ</text><text x="590" y="248">Inner diameter Dᵢ</text>
+<text x="590" y="275">Bore and uniform tube wall</text></svg><figcaption>Model and boundary conditions. The horizontal view shows the span
+coordinate, pinned ends, uniform current normal to the tube and cross-flow displacement normal to the
+drawing. The section shows the bore and wall; drawing proportions are schematic. No mesh, host-motion
+model, buoyancy distribution or lateral support between the pins is defined. <a href="#ref4">[4]</a></figcaption></figure>
+<p>For the untensioned uniform beam, the governing equation is
+<span class="eq">m ∂²w/∂t² + EI ∂⁴w/∂x⁴ = 0</span>.
+Here m is effective mass per length, w is transverse displacement, t is time, x is distance along the span,
+E is Young’s modulus and I is second moment of area. The small-deflection beam equation and dispersion
+relation are given in the open beam text. <a href="#ref1">[1]</a></p>
+<p>With zero deflection and zero bending moment at each pin, the sinusoidal mode has wave number
+nπ/L. Substitution into the cited dispersion relation gives
+<span class="eq">fₙ = n²π/(2L²) √(EI/m)</span>, where fₙ is modal frequency in hertz,
+n is positive mode number and L is span length. For an annulus,
+<span class="eq">I = ∫ y² dA = π(Dₒ⁴ − Dᵢ⁴)/64</span>; Dₒ and Dᵢ are outer and inner
+diameter. Here y is distance from the section’s neutral axis and dA is an elemental cross-sectional area.
+The factor follows by integrating the circular section in polar coordinates. The worked
+example is confined to this zero-tension, pinned case. <a href="#ref1">[1]</a></p>
+<p>Reduced velocity is defined as current speed U divided by fₙDₒ. The dimensionless Reynolds number
+is U Dₒ/ν, with ν the kinematic viscosity. Reynolds number is the inertia-to-viscosity measure in the
+open fluid-mechanics teaching source. The module's reduced-velocity definition is a screening convention
+whose standard association remains NOT_EVALUATED here. <a href="#ref3">[3]</a> <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+<p>The cross-flow amplitude relation, stability factor, piecewise shedding-frequency coefficients,
+alternative support constants and tension corrections are implemented approximations. Independent source
+qualification of their numerical coefficients is NOT_EVALUATED. Their outputs are reported as module
+screening estimates; no unpublished coefficient or licensed table value is reproduced. <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+<p>Full stress range is twice the supplied stress amplitude at unit displacement ratio multiplied by
+the calculated displacement-to-diameter ratio. Annual cycles are frequency multiplied by exposure
+fraction and the duration of a year. Annual damage is the sum of cycle count divided by endurance
+at each stress range; screening life is its reciprocal. Linear cumulative damage and its limitations
+are described in the open fatigue text. The module’s stress-range convention and annualisation are
+implementation assumptions, not additional material qualification. <a href="#ref2">[2]</a> <a href="#ref4">[4]</a></p>
+<p>The workflow escalates when locked modes lack a stress calibration, the response exceeds its
+confidence criterion, excessive simultaneous modes are locked, checked frequencies do not cover shedding,
+or Reynolds number is outside its implemented window. Damage and life are then suppressed. The exact
+trigger constants remain source-qualification gaps and are not adopted as design limits. <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+
+<h2 id="s5">5. Detailed results</h2>
+<p>The synthetic example is computed by calling the module and reading the emitted modal table.
+No licensed solver is used. The calculation is a narrow-band cross-flow screening estimate. <a href="#ref4">[4]</a></p>
+<p>The annular second moment of area is <span data-number="inertia" data-format=".8g">0.00013877195</span> m⁴ and the first modal frequency
+is <span data-number="mode_1_f_n_Hz" data-format=".6f">0.174308</span> Hz. With <span data-number="speed_m_s" data-format=".2f">0.22</span> m/s current,
+the first-mode reduced velocity is <span data-number="mode_1_Vr_lo" data-format=".4f">4.6215</span> and Reynolds number is
+<span data-number="reynolds" data-format=".1f">50489.1</span>. The hand-calculation anchors and displayed-input frequency check
+are specified in Appendix C. <a href="#ref4">[4]</a> <a href="#ref5">[5]</a></p>
+<figure><svg viewBox="0 0 760 290" role="img" aria-label="Reduced velocity and implemented lock-in bands" style="width:100%">
+<path d="M70 25 V230 H735" fill="none" stroke="currentColor"/>
+<text x="72" y="18" font-size="13">Reduced velocity (dimensionless)</text>
+<text x="350" y="278">Mode number</text>
+<line x1="70" x2="735" y1="147.39" y2="147.39" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<text x="480" y="142.39" font-size="12">Cross-flow boundary: 4</text>
+<line x1="70" x2="735" y1="64.78" y2="64.78" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<text x="480" y="59.78" font-size="12">Cross-flow boundary: 8</text>
+<line x1="70" x2="735" y1="209.35" y2="209.35" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<text x="480" y="204.35" font-size="12">In-line boundary: 1</text>
+<line x1="70" x2="735" y1="157.72" y2="157.72" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<text x="480" y="152.72" font-size="12">In-line boundary: 3.5</text>
+<circle tabindex="0" cx="85.00" cy="134.56" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 1; demand: 4.6215 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 1; demand: 4.6215 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="81.00" y="250" font-size="12">1</text>
+<circle tabindex="0" cx="155.00" cy="206.14" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 2; demand: 1.1554 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 2; demand: 1.1554 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="151.00" y="250" font-size="12">2</text>
+<circle tabindex="0" cx="225.00" cy="219.40" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 3; demand: 0.5135 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 3; demand: 0.5135 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="221.00" y="250" font-size="12">3</text>
+<circle tabindex="0" cx="295.00" cy="224.03" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 4; demand: 0.2888 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 4; demand: 0.2888 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="291.00" y="250" font-size="12">4</text>
+<circle tabindex="0" cx="365.00" cy="226.18" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 5; demand: 0.1849 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 5; demand: 0.1849 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="361.00" y="250" font-size="12">5</text>
+<circle tabindex="0" cx="435.00" cy="227.35" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 6; demand: 0.1284 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 6; demand: 0.1284 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="431.00" y="250" font-size="12">6</text>
+<circle tabindex="0" cx="505.00" cy="228.05" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 7; demand: 0.0943 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 7; demand: 0.0943 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="501.00" y="250" font-size="12">7</text>
+<circle tabindex="0" cx="575.00" cy="228.51" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 8; demand: 0.0722 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 8; demand: 0.0722 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="571.00" y="250" font-size="12">8</text>
+<circle tabindex="0" cx="645.00" cy="228.82" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 9; demand: 0.0571 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 9; demand: 0.0571 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="641.00" y="250" font-size="12">9</text>
+<circle tabindex="0" cx="715.00" cy="229.05" r="6" fill="var(--brand)" data-tip="Case: synthetic uniform current; component: span, mode 10; demand: 0.0462 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated"><title>Case: synthetic uniform current; component: span, mode 10; demand: 0.0462 dimensionless; limits: cross-flow 4 to 8, in-line 1 to 3.5, dimensionless; physical qualification not evaluated</title></circle>
+<text x="711.00" y="250" font-size="12">10</text>
+</svg>
+<p class="sub" aria-live="polite" data-chart-readout>Hover over or focus a marker to read its demand and limits.</p><figcaption>Modal reduced velocity at the scalar current. The bands show
+implemented screening boundaries, with physical qualification NOT_EVALUATED. A boundary intersection
+flags possible lock-in rather than demonstrating a physical response. <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></figcaption></figure>
+<p>The first-mode displacement-to-diameter ratio is <span data-number="mode_1_A_over_D" data-format=".4f">0.5221</span>; its
+stress range is <span data-number="mode_1_stress_range_MPa" data-format=".3f">46.989</span> MPa. Annual cross-flow damage is
+<span data-number="screening_damage_rate_per_year" data-format=".5f">0.09283</span> per year, giving
+<span data-number="screening_life_years" data-format=".1f">10.8</span> years against the <span data-number="required_life_years" data-format=".0f">60</span>
+year required life. The result is a failed screening comparison, and detailed response and fatigue
+assessment is required before any operating acceptance. <a href="#ref4">[4]</a></p>
+<p>The workflow checks <span data-number="modes_checked" data-format=".0f">10</span> modes and flags
+<span data-number="lock_in_count" data-format=".0f">2</span> distinct locked modes. The in-line flag is unassessed for damage.
+Zero cross-flow damage in another case therefore does not demonstrate infinite total fatigue life. <a href="#ref4">[4]</a> <a href="#ref5">[5]</a></p>
+
+<h2 id="s6">6. Key findings</h2>
+<p>The supplied life requirement is not met by the public example under the module’s response assumptions.
+The result is suitable for identifying the need for further engineering assessment, with physical
+accuracy still dependent on input calibration and response-model qualification. <a href="#ref4">[4]</a></p>
+<p>Existing evidence includes analytical-component tests, input rejection and applicability tests,
+current-envelope tests, annualisation and fatigue-factor tests, output-location tests and deterministic
+example regression checks. The durable workflow test contains a pinned-beam first-frequency comparison.
+These records test implementation behaviour; measured-response benchmarking and corpus qualification
+remain absent from the documented validation basis. <a href="#ref4">[4]</a> <a href="#ref5">[5]</a></p>
+
+<h2 id="s7">7. Limitations</h2>
+<p>Detailed response prediction and a complete fatigue assessment are excluded from this screening scope.
+In-line fatigue, sheared-current modal energy, variable tension and geometry, nonlinear response,
+stress recovery, thickness effects and site-specific loading are not resolved by this workflow. <a href="#ref4">[4]</a></p>
+<p>The fatigue curve identifier F1 denotes the selected weld-detail curve in the implementation;
+seawater with cathodic protection is the selected environment. No claim of suitability for a particular
+weld or environment is made. The returned standards string omits a fatigue-standard edition,
+and exact edition and clause equivalence are NOT_EVALUATED. <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+<p>Higher modes for alternative end supports use simplified scaling, and effective mass and mass ratio
+are supplied separately. The first flagged cross-flow mode is selected as critical; this is not a ranking
+by the largest damage. A passing cross-flow screening result is not an in-line fatigue acceptance. <a href="#ref4">[4]</a></p>
+<h3>Not covered</h3>
+<p>The separate parametric screening adapter, legacy vibration workflows, hosted interfaces, full
+time-domain analysis, host motion, drift-off, recoil and weak-point assessment are not covered.
+An installation operating envelope is not evaluated because no installation basis is supplied. <a href="#ref4">[4]</a></p>
+
+<h2 id="s8">8. Recommendations</h2>
+<p>The failed synthetic comparison is addressed by a detailed response and fatigue assessment before
+operating acceptance. The open fatigue source identifies stress range, cycle history and the limitations
+of linear damage accumulation as essential to interpreting a fatigue estimate. <a href="#ref2">[2]</a> <a href="#ref4">[4]</a></p>
+<p>For application to a real span, geometry, effective mass, damping, stress calibration, exposure,
+weld category and acceptance basis are to be established from application data. In-line fatigue is to
+be included whenever its lock-in flag is set. A change in current, support condition or geometry is a
+trigger for reassessment; this report establishes no numerical operating restriction for an installation. <a href="#ref4">[4]</a></p>
+<p>The first qualification slice is the pinned, untensioned uniform span with supplied stress calibration.
+Measured or openly published response and fatigue benchmarks are needed before extending confidence to
+alternative boundaries, tension corrections or the implemented response coefficients. Source edition and
+clause mapping is to be completed before any standards-compliance claim. <a href="#ref1">[1]</a> <a href="#ref4">[4]</a> <a href="#ref6">[6]</a></p>
+
+<h2 id="s9">9. References</h2>
+<p>The theory basis is separated from the implementation and its evidence. Open sources support the
+beam and cumulative-damage derivations; they do not qualify all empirical VIV coefficients.</p>
+<h3>9.1 Engineering sources</h3>
+<ol class="refs"><li id="ref1"><a href="https://euphonics.org/3-2-1-bending-beams-and-free-free-modes/">Euphonics,
+online edition accessed 21 October 2026, chapter 3.2.1, Bending beams and free-free modes</a>,
+equations (7) and (12). The pinned-boundary substitution and circular-section integral are derived here.
+The source's free-free eigenvalues are not used.</li>
+<li id="ref2"><a href="https://eng.libretexts.org/Bookshelves/Mechanical_Engineering/Mechanics_of_Materials_(Roylance)/06%3A_Yield_and_Fracture/6.05%3A_Fatigue">Mechanics
+of Materials, open online edition accessed 21 October 2026, chapter 6.5, Fatigue</a>,
+S–N curves and cumulative-damage subsections. No empirical S–N constants are copied.</li>
+<li id="ref3"><a href="https://www.grc.nasa.gov/www/k-12/airplane/reynolds.html">Beginner’s Guide
+to Aeronautics, open online edition accessed 21 October 2026, Reynolds Number</a>, inertia/viscosity
+definition. This source is a teaching reference, not a VIV qualification standard.</li>
+<li id="ref4">Public synthetic example and current implementation: exact locators are listed in section 9.2.
+All worked-example inputs and outputs are sourced from these records.</li>
+<li id="ref5">Repository regression and calculation tests: exact locators and tested scope are listed in section 9.2.</li>
+<li id="ref6">Implementation-associated standards: DNV-RP-C205 (2019), Environmental conditions and
+environmental loads, section 9; DNV-RP-F105 (2017), Free spanning pipelines, section 4;
+DNV-RP-C203, Fatigue design of offshore steel structures, edition unspecified in workflow provenance.
+Licensed texts were not accessed. Exact clause titles, coefficients and edition equivalence are
+NOT_EVALUATED; these associations are not evidence of standards compliance.</li></ol>
+<h3>9.2 Evidence locators and calculation instructions</h3>
+<table><thead><tr><th>Record</th><th>Locator</th><th>Evidence and boundary</th></tr></thead><tbody>
+<tr><td>Public example</td><td><code>examples/workflows/riser-viv-screening/input.yml</code><br>
+<code>examples/workflows/riser-viv-screening/README.md</code></td><td>Synthetic assumptions, documented invocation and expected result; no measured benchmark.</td></tr>
+<tr><td>Public workflow</td><td><code>src/digitalmodel/viv_screening/workflow.py:router</code><br>
+<code>src/digitalmodel/viv_screening/inputs.py:parse_inputs</code></td><td>Required inputs, current envelope, lock-in flags, escalation, annual damage and output tables.</td></tr>
+<tr><td>Analytical dependency</td><td><code>src/digitalmodel/orcaflex/viv_screening.py:BeamProperties</code><br>
+<code>src/digitalmodel/fatigue/sn_curves.py:get_sn_curve</code><br>
+<code>src/digitalmodel/fatigue/damage.py:miner_damage</code></td><td>Beam modes, response estimate and fatigue accumulation; no solver execution.</td></tr>
+<tr><td>Existing regression evidence</td><td><code>tests/orcaflex/test_viv_screening.py</code><br>
+<code>tests/workflows/test_viv_screening_workflow.py</code><br>
+<code>tests/workflows/test_durable_workflows.py:test_workflow_registry[riser-viv-screening]</code></td>
+<td>Core relations, invalid inputs, escalation, output locations, deterministic example and pinned-mode comparison.
+Test outcomes for this analysis are recorded separately from test existence.</td></tr>
+<tr><td>Report checks</td><td><code>tests/reporting/test_vivscreening_module_report.py</code></td>
+<td>Hand-worked anchors, displayed-input headline, module consistency, rebuilt page and source-link checks.</td></tr>
+<tr><td>House-style exemplar</td><td><code>docs/api/cfd/turbulent-flat-plate-verification.html</code><br><code>docs/api/_assets/brand.css</code></td>
+<td>Existing prose layout and brand stylesheet are inlined; the required body class is added.</td></tr></tbody></table>
+<p>Rebuild from the repository root with calculation dependencies available:</p>
+<pre><code>PYTHONPATH=src python scripts/reporting/build_vivscreening_module_report.py --scratch &lt;temporary-directory&gt;</code></pre>
+<p>The temporary directory is outside the checkout. Each rebuild calls the module, reads its modal
+table, and writes this report and the engineering change register. Calculation outputs are not report deliverables.</p>
+
+<h2 id="s10">10. Acronyms and symbols</h2>
+<p>Symbols are defined at their equations and units are included with the inputs and results.
+Abbreviations used in the module’s evidence are expanded below.</p>
+<table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>VIV</td><td>Vortex-induced vibration.</td></tr>
+<tr><td>Cross-flow</td><td>Motion perpendicular to the current and span axes.</td></tr>
+<tr><td>In-line</td><td>Motion parallel to the current.</td></tr>
+<tr><td>S–N</td><td>Relationship between stress range and endurance cycles.</td></tr>
+<tr><td>Design fatigue factor</td><td>Multiplier applied to the design duration in the screening comparison.</td></tr>
+<tr><td>NOT_EVALUATED</td><td>Evidence or calculation needed for engineering acceptance is absent from this analysis.</td></tr></tbody></table>
+
+<details open><summary>Appendix A. Data register</summary>
+<p>The data below are ASSUMED - to be confirmed. Source [4] supplies every numeric input;
+no site measurement, material certificate or stress calibration is supplied. The beam boundary is
+pinned at both ends; the fatigue curve identifier is F1 with seawater cathodic protection.</p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source and status</th></tr></thead>
+<tbody><tr><td>Span length</td><td><span data-number="length_m" data-format=".8g">60</span></td><td>m</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Outer and hydrodynamic diameter</td><td><span data-number="outer_diameter_m" data-format=".8g">0.2731</span></td><td>m</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Inner diameter</td><td><span data-number="inner_diameter_m" data-format=".8g">0.2287</span></td><td>m</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Young’s modulus</td><td><span data-number="youngs_modulus_Pa" data-format=".8g">2.07e+11</span></td><td>Pa</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Mass per length including added mass</td><td><span data-number="mass_per_length_kg_m" data-format=".8g">180</span></td><td>kg/m</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Uniform effective tension</td><td><span data-number="effective_tension_N" data-format=".8g">0</span></td><td>N</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Kinematic viscosity</td><td><span data-number="kinematic_viscosity_m2_s" data-format=".8g">1.19e-06</span></td><td>m²/s</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Effective mass divided by displaced-fluid mass</td><td><span data-number="mass_ratio" data-format=".8g">1.8</span></td><td>dimensionless</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Structural damping ratio</td><td><span data-number="damping_ratio" data-format=".8g">0.01</span></td><td>dimensionless</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Fraction of each year exposed to this current</td><td><span data-number="exposure_fraction" data-format=".8g">0.05</span></td><td>dimensionless</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Uniform current speed</td><td><span data-number="speed_m_s" data-format=".8g">0.22</span></td><td>m/s</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Design duration</td><td><span data-number="design_life_years" data-format=".8g">20</span></td><td>years</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Design fatigue factor</td><td><span data-number="dff" data-format=".8g">3</span></td><td>dimensionless</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Modes requested</td><td><span data-number="n_modes" data-format=".8g">10</span></td><td>count</td><td><a href="#ref4">[4]</a>; assumed</td></tr>
+<tr><td>Stress amplitude at unit displacement-to-diameter ratio</td><td><span data-number="unit_modal_stress_MPa" data-format=".8g">45</span></td><td>MPa</td><td><a href="#ref4">[4]</a>; assumed</td></tr></tbody></table>
+<p>Field and water depth, host motions, mode-dependent stresses, detailed weld geometry,
+current-direction distribution, surface condition and independent empirical coefficient sources are not held.
+Physical qualification is NOT_EVALUATED until these records are supplied; substitute values are not inserted.</p></details>
+
+<details><summary>Appendix B. Per-mode results</summary>
+<p>Only cross-flow damage is included. The scalar current gives equal lower and upper reduced velocities.
+Zero stress, cycle and damage entries outside cross-flow lock-in are workflow placeholders;
+in-line response remains not evaluated. The source column refers to the module output described in reference [4].</p>
+<table><thead><tr><th>Mode</th><th>Frequency (Hz)</th><th>Reduced velocity (dimensionless)</th>
+<th>Displacement/diameter (dimensionless)</th><th>Stress range (MPa)</th><th>Cycles/year</th>
+<th>Damage/year</th><th>Cross-flow flagged</th><th>In-line flagged</th><th>Source</th></tr></thead>
+<tbody><tr><td><span data-number="mode_1_mode" data-format=".0f">1</span></td><td><span data-number="mode_1_f_n_Hz" data-format=".6f">0.174308</span></td><td><span data-number="mode_1_Vr_lo" data-format=".4f">4.6215</span></td><td><span data-number="mode_1_A_over_D" data-format=".4f">0.5221</span></td><td><span data-number="mode_1_stress_range_MPa" data-format=".3f">46.989</span></td><td><span data-number="mode_1_cycles_per_year" data-format=".0f">275037</span></td><td><span data-number="mode_1_damage_per_year" data-format=".6g">0.0928337</span></td><td>Yes</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_2_mode" data-format=".0f">2</span></td><td><span data-number="mode_2_f_n_Hz" data-format=".6f">0.697232</span></td><td><span data-number="mode_2_Vr_lo" data-format=".4f">1.1554</span></td><td><span data-number="mode_2_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_2_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_2_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_2_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>Yes</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_3_mode" data-format=".0f">3</span></td><td><span data-number="mode_3_f_n_Hz" data-format=".6f">1.568771</span></td><td><span data-number="mode_3_Vr_lo" data-format=".4f">0.5135</span></td><td><span data-number="mode_3_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_3_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_3_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_3_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_4_mode" data-format=".0f">4</span></td><td><span data-number="mode_4_f_n_Hz" data-format=".6f">2.788927</span></td><td><span data-number="mode_4_Vr_lo" data-format=".4f">0.2888</span></td><td><span data-number="mode_4_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_4_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_4_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_4_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_5_mode" data-format=".0f">5</span></td><td><span data-number="mode_5_f_n_Hz" data-format=".6f">4.357698</span></td><td><span data-number="mode_5_Vr_lo" data-format=".4f">0.1849</span></td><td><span data-number="mode_5_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_5_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_5_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_5_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_6_mode" data-format=".0f">6</span></td><td><span data-number="mode_6_f_n_Hz" data-format=".6f">6.275085</span></td><td><span data-number="mode_6_Vr_lo" data-format=".4f">0.1284</span></td><td><span data-number="mode_6_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_6_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_6_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_6_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_7_mode" data-format=".0f">7</span></td><td><span data-number="mode_7_f_n_Hz" data-format=".6f">8.541088</span></td><td><span data-number="mode_7_Vr_lo" data-format=".4f">0.0943</span></td><td><span data-number="mode_7_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_7_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_7_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_7_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_8_mode" data-format=".0f">8</span></td><td><span data-number="mode_8_f_n_Hz" data-format=".6f">11.155707</span></td><td><span data-number="mode_8_Vr_lo" data-format=".4f">0.0722</span></td><td><span data-number="mode_8_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_8_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_8_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_8_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_9_mode" data-format=".0f">9</span></td><td><span data-number="mode_9_f_n_Hz" data-format=".6f">14.118942</span></td><td><span data-number="mode_9_Vr_lo" data-format=".4f">0.0571</span></td><td><span data-number="mode_9_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_9_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_9_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_9_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr><tr><td><span data-number="mode_10_mode" data-format=".0f">10</span></td><td><span data-number="mode_10_f_n_Hz" data-format=".6f">17.430793</span></td><td><span data-number="mode_10_Vr_lo" data-format=".4f">0.0462</span></td><td><span data-number="mode_10_A_over_D" data-format=".4f">0.0000</span></td><td><span data-number="mode_10_stress_range_MPa" data-format=".3f">0.000</span></td><td><span data-number="mode_10_cycles_per_year" data-format=".0f">0</span></td><td><span data-number="mode_10_damage_per_year" data-format=".6g">0</span></td><td>No</td><td>No</td><td><a href="#ref4">[4]</a></td></tr></tbody></table></details>
+
+<details><summary>Appendix C. Calculation evidence and pre-flight</summary>
+<p>Hand-worked anchors cover Reynolds number, annular second moment, required life and full stress range.
+The first frequency is also recalculated from the displayed input precision. The report consistency checks
+compare every tagged worked-example value with a fresh module call and compare the rebuilt rounded page
+with the committed page. These checks establish arithmetic and rendering consistency, not empirical response accuracy.</p>
+<p>The beam benchmark uses the displayed diameters without reducing their precision. Annual damage is
+compared with the inverse required life. Full fatigue qualification, independent response measurements,
+alternative support benchmarks and installation operating limits are NOT_EVALUATED. References resolve
+within this report and the numeric inputs retain their significant digits.</p></details>
+
+<details><summary>Engineering changes</summary><p>Revision 0:
+initial engineering content; there is no earlier issued revision.</p><ul><li>Uniform-span current screening and the synthetic fatigue example are documented.</li><li>In-line fatigue and physical qualification of response coefficients are identified as not evaluated.</li><li>Calculation anchors, source coverage and the input data register are included.</li></ul></details>
+<details><summary>Comments</summary>
+<p>Comments are stored in a separate file beside the report. Select the report folder to save and
+reload comments. When folder access is unavailable, export the comments file and place it beside the report;
+use Import to reopen it. Unsaved comments are lost when this page is closed.</p>
+<label for="comment-section">Section</label><select id="comment-section">
+<option value="s1">Section 1</option><option value="s2">Section 2</option><option value="s3">Section 3</option><option value="s4">Section 4</option><option value="s5">Section 5</option><option value="s6">Section 6</option><option value="s7">Section 7</option><option value="s8">Section 8</option><option value="s9">Section 9</option><option value="s10">Section 10</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" style="width:100%"></textarea>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-folder" type="button">Select report folder</button>
+<button id="comment-save" type="button">Save beside report</button>
+<button id="comment-export" type="button">Export</button>
+<label>Import <input id="comment-import" type="file" accept=".json"></label>
+<p id="comment-status" role="status">No comments saved.</p><ol id="comments"></ol></details>
+<script id="calculation-data" type="application/json">{"bands": {"cf": [4.0, 8.0], "il": [1.0, 3.5]}, "escalation_required": false, "il_unassessed": true, "inputs": [["length_m", "Span length", "m"], ["outer_diameter_m", "Outer and hydrodynamic diameter", "m"], ["inner_diameter_m", "Inner diameter", "m"], ["youngs_modulus_Pa", "Young’s modulus", "Pa"], ["mass_per_length_kg_m", "Mass per length including added mass", "kg/m"], ["effective_tension_N", "Uniform effective tension", "N"], ["kinematic_viscosity_m2_s", "Kinematic viscosity", "m²/s"], ["mass_ratio", "Effective mass divided by displaced-fluid mass", "dimensionless"], ["damping_ratio", "Structural damping ratio", "dimensionless"], ["exposure_fraction", "Fraction of each year exposed to this current", "dimensionless"], ["speed_m_s", "Uniform current speed", "m/s"], ["design_life_years", "Design duration", "years"], ["dff", "Design fatigue factor", "dimensionless"], ["n_modes", "Modes requested", "count"], ["unit_modal_stress_MPa", "Stress amplitude at unit displacement-to-diameter ratio", "MPa"]], "status": "fail", "values": {"annual_damage_limit": 0.01666666667, "cf_lock_in_count": 1, "damping_ratio": 0.01, "design_life_years": 20.0, "dff": 3.0, "effective_tension_N": 0.0, "exposure_fraction": 0.05, "il_lock_in_count": 1, "inertia": 0.0001387719472, "inner_diameter_m": 0.2287, "kinematic_viscosity_m2_s": 1.19e-06, "length_m": 60.0, "lock_in_count": 2, "mass_per_length_kg_m": 180.0, "mass_ratio": 1.8, "mode_10_A_over_D": 0.0, "mode_10_Vr_lo": 0.04621509427, "mode_10_cycles_per_year": 0.0, "mode_10_damage_per_year": 0.0, "mode_10_f_n_Hz": 17.43079268, "mode_10_mode": 10, "mode_10_stress_range_MPa": 0.0, "mode_1_A_over_D": 0.5221, "mode_1_Vr_lo": 4.621509427, "mode_1_cycles_per_year": 275036.9915, "mode_1_damage_per_year": 0.09283365625, "mode_1_f_n_Hz": 0.1743079268, "mode_1_mode": 1, "mode_1_stress_range_MPa": 46.989, "mode_2_A_over_D": 0.0, "mode_2_Vr_lo": 1.155377357, "mode_2_cycles_per_year": 0.0, "mode_2_damage_per_year": 0.0, "mode_2_f_n_Hz": 0.6972317072, "mode_2_mode": 2, "mode_2_stress_range_MPa": 0.0, "mode_3_A_over_D": 0.0, "mode_3_Vr_lo": 0.5135010474, "mode_3_cycles_per_year": 0.0, "mode_3_damage_per_year": 0.0, "mode_3_f_n_Hz": 1.568771341, "mode_3_mode": 3, "mode_3_stress_range_MPa": 0.0, "mode_4_A_over_D": 0.0, "mode_4_Vr_lo": 0.2888443392, "mode_4_cycles_per_year": 0.0, "mode_4_damage_per_year": 0.0, "mode_4_f_n_Hz": 2.788926829, "mode_4_mode": 4, "mode_4_stress_range_MPa": 0.0, "mode_5_A_over_D": 0.0, "mode_5_Vr_lo": 0.1848603771, "mode_5_cycles_per_year": 0.0, "mode_5_damage_per_year": 0.0, "mode_5_f_n_Hz": 4.35769817, "mode_5_mode": 5, "mode_5_stress_range_MPa": 0.0, "mode_6_A_over_D": 0.0, "mode_6_Vr_lo": 0.1283752619, "mode_6_cycles_per_year": 0.0, "mode_6_damage_per_year": 0.0, "mode_6_f_n_Hz": 6.275085365, "mode_6_mode": 6, "mode_6_stress_range_MPa": 0.0, "mode_7_A_over_D": 0.0, "mode_7_Vr_lo": 0.09431651891, "mode_7_cycles_per_year": 0.0, "mode_7_damage_per_year": 0.0, "mode_7_f_n_Hz": 8.541088413, "mode_7_mode": 7, "mode_7_stress_range_MPa": 0.0, "mode_8_A_over_D": 0.0, "mode_8_Vr_lo": 0.07221108479, "mode_8_cycles_per_year": 0.0, "mode_8_damage_per_year": 0.0, "mode_8_f_n_Hz": 11.15570732, "mode_8_mode": 8, "mode_8_stress_range_MPa": 0.0, "mode_9_A_over_D": 0.0, "mode_9_Vr_lo": 0.05705567193, "mode_9_cycles_per_year": 0.0, "mode_9_damage_per_year": 0.0, "mode_9_f_n_Hz": 14.11894207, "mode_9_mode": 9, "mode_9_stress_range_MPa": 0.0, "modes_checked": 10, "n_modes": 10, "outer_diameter_m": 0.2731, "required_life_years": 60.0, "reynolds": 50489.07563, "screening_damage_rate_per_year": 0.09283365625, "screening_life_years": 10.77195535, "speed_m_s": 0.22, "unit_modal_stress_MPa": 45.0, "youngs_modulus_Pa": 207000000000.0}}</script>
+<script id="engineering-changes" type="application/json">{"revision": "0", "date": "2026-10-21", "changes": ["Uniform-span current screening and the synthetic fatigue example are documented.", "In-line fatigue and physical qualification of response coefficients are identified as not evaluated.", "Calculation anchors, source coverage and the input data register are included."]}</script>
+<script>
+"use strict";
+document.querySelectorAll("[data-tip]").forEach(marker => {
+  const show = () => { marker.closest("figure").querySelector("[data-chart-readout]").textContent = marker.dataset.tip; };
+  marker.addEventListener("pointerenter", show);
+  marker.addEventListener("focus", show);
+  marker.addEventListener("click", show);
+});
+let comments = [], directory;
+const status = document.getElementById("comment-status");
+function validate(value) {
+  if (!Array.isArray(value) || value.some(c => !c || !/^s(?:[1-9]|10)$/.test(c.section) || typeof c.text !== "string")) {
+    throw new Error("The comments file must contain section and text entries.");
+  }
+  return value;
+}
+function display() {
+  const list = document.getElementById("comments");
+  list.replaceChildren();
+  comments.forEach(comment => {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = "#" + comment.section;
+    link.textContent = document.getElementById(comment.section).textContent;
+    item.append(link, document.createTextNode(": " + comment.text));
+    list.append(item);
+  });
+}
+document.getElementById("comment-add").onclick = () => {
+  const input = document.getElementById("comment-text");
+  if (!input.value.trim()) return;
+  comments.push({section: document.getElementById("comment-section").value, text: input.value.trim()});
+  input.value = ""; display(); status.textContent = "Comment added; save or export to keep it.";
+};
+document.getElementById("comment-folder").onclick = async () => {
+  try {
+    if (!window.showDirectoryPicker) throw new Error("Folder access is unavailable. Use Export and Import.");
+    directory = await window.showDirectoryPicker({mode: "readwrite"});
+    try {
+      const handle = await directory.getFileHandle("report.comments.json");
+      const loaded = validate(JSON.parse(await (await handle.getFile()).text()));
+      comments = comments.concat(loaded); display();
+      status.textContent = "Saved comments loaded; unsaved comments are kept. Save to keep the combined list.";
+    } catch (error) {
+      if (error.name !== "NotFoundError") throw error;
+      status.textContent = "Folder selected. Save writes report.comments.json beside the report.";
+    }
+  } catch (error) { status.textContent = error.message; }
+};
+document.getElementById("comment-save").onclick = async () => {
+  try {
+    if (!directory) throw new Error("Select the report folder first, or use Export.");
+    const handle = await directory.getFileHandle("report.comments.json", {create: true});
+    const writer = await handle.createWritable();
+    await writer.write(JSON.stringify(comments, null, 2) + "\n"); await writer.close();
+    status.textContent = "Comments saved beside the report.";
+  } catch (error) { status.textContent = error.message; }
+};
+document.getElementById("comment-export").onclick = () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(comments, null, 2) + "\n"], {type: "application/json"}));
+  const link = document.createElement("a"); link.href = url; link.download = "report.comments.json";
+  link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  status.textContent = "Comments exported. Place the downloaded file beside the report.";
+};
+document.getElementById("comment-import").onchange = async event => {
+  try {
+    const file = event.target.files[0]; if (!file) return;
+    comments = comments.concat(validate(JSON.parse(await file.text()))); display();
+    status.textContent = "Comments imported; save or export to keep the combined list.";
+  } catch (error) { status.textContent = error.message; }
+};
+</script>
+<footer>Screening estimates from a public synthetic example. Application-specific acceptance remains not evaluated.</footer>
+</main></body></html>
