@@ -4,7 +4,7 @@
   "authoritative_repository": "digitalmodel",
   "source_id": "synthetic-demonstration-policy-v1",
   "source_version": 1,
-  "source": "campaign-screening-validation.html, revision 0",
+  "source": "campaign-screening-validation.html, revision 1",
   "measured": false,
   "units": {
     "wall": "in",
@@ -18,6 +18,6 @@
   "freshness": "Regenerate report and digests when input or campaign code changes",
   "sha256": {
     "input.yml": "fe7b00403ffd40889cebfeac0e92019d1cb774a43b72575d24ae42cd6b1f93f5",
-    "report.html": "4a359b7b4f0c7866c0bba5b86ed7362d93dc6e68813d0a56fbab609c250731df"
+    "report.html": "71c56d489528bb2b4aeb710720c7ef600217bc816fb71cae9208afb11677e8b5"
   }
 }

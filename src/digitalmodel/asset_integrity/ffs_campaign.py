@@ -84,6 +84,9 @@ def _validate_policies(rbi, repair):
 
 
 def _component_input(record):
+    for key in ("component", "grid", "consequence_class"):
+        if key not in record:
+            raise ValueError(f"component record requires {key}")
     data = record["component"]
     required = {"component_id", "design_code", "nominal_od_in", "nominal_wt_in",
                 "design_pressure_psi", "smys_psi", "corrosion_rate_in_per_yr",
@@ -164,16 +167,32 @@ def assess_campaign(block: dict) -> dict:
             interval, action = None, "TAKE_MORE"
         elif result.verdict not in {"ACCEPT", "MONITOR"} or result.sufficiency_status == "ESCALATE":
             interval, action = None, "ENGINEERING_REVIEW"
+        sufficiency = asdict(result.sufficiency)
+        if result.verdict in {"REPAIR", "REPLACE"}:
+            sufficiency["reasons"] = [
+                f"{reason} This sufficiency message is superseded by the zero-life verdict "
+                f"{result.verdict}; immediate engineering action governs continued use."
+                for reason in sufficiency["reasons"]
+            ]
         rows.append({"component_id": component.component_id,
-                     "assessment": result.to_dict(), "sufficiency": asdict(result.sufficiency),
+                     "assessment": result.to_dict(), "sufficiency": sufficiency,
                      "rbi": risk, "repair": _repair(result, record, repair),
                      "next_inspection_interval_yr": interval, "action": action})
         # Discard the coordinator's implicit repair defaults: only explicit policy is reported.
         rows[-1]["assessment"].pop("repair_recommendation", None)
-    ranking = sorted(({"component_id": row["component_id"],
-                       "risk_score": row["rbi"]["risk_score"],
-                       "risk_band": row["rbi"]["risk_band"]} for row in rows),
-                     key=lambda row: (-row["risk_score"], row["component_id"]))
+    # For equal risk, prioritize action severity, shorter life, then stable ID.
+    severity = {"ENGINEERING_ACTION_NOW": 0, "ENGINEERING_REVIEW": 1,
+                "TAKE_MORE": 2, "PLANNED_INSPECTION": 3}
+
+    def rank_key(row):
+        life = row["rbi"]["inspection_plan"]["remaining_life_years"]
+        return (-row["rbi"]["risk_score"], severity[row["action"]],
+                math.inf if life is None else life, row["component_id"])
+
+    ranking = [{"component_id": row["component_id"],
+                "risk_score": row["rbi"]["risk_score"],
+                "risk_band": row["rbi"]["risk_band"]}
+               for row in sorted(rows, key=rank_key)]
     payload = {"components": rows, "rank_register": ranking,
                "policy_basis": block["policy_basis"],
                "policy": {"rbi": asdict(rbi), "repair": asdict(repair)},
@@ -200,6 +219,8 @@ def _report(payload):
                 "<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th>"
                 "<th>Change and reason</th></tr><tr><td>0</td><td>2026-10-20</td>"
                 "<td>Campaign composition added to expose field and engineering actions.</td></tr>"
+                "<tr><td>1</td><td>2026-10-22</td><td>Inclusive risk boundaries and action "
+                "ranking corrected; named fields and verdict precedence clarify the report.</td></tr>"
                 "</table><p>Table 1. Revision history.</p>",
                 f"<p>Policy basis: {escape(payload['policy_basis'])}</p>"]
     for row in payload["components"]:
@@ -214,9 +235,9 @@ def _report(payload):
         for reason in row["sufficiency"]["reasons"]:
             sections.append(f"<p>{escape(reason)}</p>")
         for action in row["sufficiency"]["actions"]:
-            sections.append(f"<p>{escape(str(action))}</p>")
+            sections.append("<h3>Measurement action</h3>" + _named_fields(action))
         if row["repair"]:
-            sections.append(f"<p>Repair screening: {escape(str(row['repair']))}</p>")
+            sections.append("<h3>Repair screening</h3>" + _named_fields(row["repair"]))
     sections.append("<h2>RBI rank register</h2><ol>" + "".join(
         f"<li>{escape(row['component_id'])}: {row['risk_score']} ({escape(row['risk_band'])})</li>"
         for row in payload["rank_register"]) + "</ol>")
@@ -228,6 +249,21 @@ def _report(payload):
     sections.extend(f"<p>{escape(item)}</p>" for item in payload["limitations"])
     sections.append("</body></html>\n")
     return "\n".join(sections)
+
+
+def _named_fields(values):
+    labels = {"reinspection_interval_yr": "Reinspection interval (yr)"}
+    entries = []
+    for key, value in values.items():
+        label = labels.get(key, key.replace("_", " ").capitalize())
+        if isinstance(value, dict):
+            rendered = _named_fields(value)
+        elif isinstance(value, list):
+            rendered = escape(", ".join(_display(item) for item in value) or "None")
+        else:
+            rendered = escape(_display(value))
+        entries.append(f"<dt>{escape(label)}</dt><dd>{rendered}</dd>")
+    return "<dl>" + "".join(entries) + "</dl>"
 
 
 def _display(value):

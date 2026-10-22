@@ -8,7 +8,7 @@ from pathlib import Path
 def render_readiness(root: Path) -> str:
     """Retain all historical scores; expose qualification gaps without upgrades."""
     review = root / "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md"
-    lines = review.read_text().split("## Matrix\n", 1)[1].split("**Fixtures.", 1)[0]
+    lines = review.read_text(encoding="utf-8").split("## Matrix\n", 1)[1].split("**Fixtures.", 1)[0]
     rows, gaps = [], []
     campaign = {"Measurement sufficiency", "RBI screening", "Composite repair selector",
                 "Inspection planning"}

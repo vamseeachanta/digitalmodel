@@ -17,7 +17,7 @@ EXAMPLE = ROOT / "examples/workflows/ffs-campaign-demo/input.yml"
 
 @pytest.fixture
 def campaign():
-    return yaml.safe_load(EXAMPLE.read_text())["ffs_campaign"]
+    return yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))["ffs_campaign"]
 
 
 def test_campaign_hand_case(campaign):
@@ -38,7 +38,9 @@ def test_campaign_hand_case(campaign):
     assert row["rbi"]["risk_band"] == "LOW"
     assert row["next_inspection_interval_yr"] == pytest.approx(8)
     assert row["repair"] is None
-    assert result["rank_register"][0]["component_id"] == "local-loss"
+    assert [row["component_id"] for row in result["rank_register"]] == [
+        "repair-loss", "local-loss", "uniform-loss"
+    ]
     assert "Revision history" in result["ffs_report"]
     json.dumps(result, allow_nan=False)
 
@@ -114,7 +116,7 @@ def test_router_writes_only_requested_report(campaign, tmp_path):
     assert router(cfg)["ffs_campaign"]["result"]["components"]
     campaign["output_dir"] = str(tmp_path)
     router({"ffs_campaign": campaign})
-    assert (tmp_path / "ffs-campaign.html").read_text().startswith("<!doctype html>")
+    assert (tmp_path / "ffs-campaign.html").read_text(encoding="utf-8").startswith("<!doctype html>")
 
 
 def test_registered_workflow_offline():
@@ -135,14 +137,14 @@ def test_readiness_page_matches_source_matrix():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     page = ROOT / "docs/api/ffs/ffs-readiness.html"
-    assert page.read_text() == module.render_readiness(ROOT)
-    assert page.read_text().count("data-engine=") == 19
-    assert "NOT_EVALUATED" in page.read_text()
+    assert page.read_text(encoding="utf-8") == module.render_readiness(ROOT)
+    assert page.read_text(encoding="utf-8").count("data-engine=") == 19
+    assert "NOT_EVALUATED" in page.read_text(encoding="utf-8")
 
 
 def test_committed_example_report_is_reproducible(campaign):
     report = ROOT / "examples/workflows/ffs-campaign-demo/report.html"
-    assert report.read_text() == assess_campaign(campaign)["ffs_report"]
+    assert report.read_text(encoding="utf-8") == assess_campaign(campaign)["ffs_report"]
 
 
 def test_zero_corrosion_is_unbounded_life_not_zero_life(campaign):
@@ -182,7 +184,7 @@ def test_each_engine_has_run_or_validation_link():
                 self.engine = None
 
     parser = EvidenceParser()
-    parser.feed((ROOT / "docs/api/ffs/ffs-readiness.html").read_text())
+    parser.feed((ROOT / "docs/api/ffs/ffs-readiness.html").read_text(encoding="utf-8"))
     assert len(parser.links) == 19
     for engine, links in parser.links.items():
         assert any("input.yml" in link or "validation" in link for link in links), engine
@@ -192,7 +194,130 @@ def test_worked_example_manifest_integrity():
     import hashlib
 
     folder = EXAMPLE.parent
-    manifest = json.loads((folder / "manifest.json").read_text())
+    manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["readiness"] == "partial"
     for name, digest in manifest["sha256"].items():
         assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == digest
+
+
+def test_local_loss_hand_case(campaign):
+    """Demo policy v1: life=(.300-.200)/.010=10 yr; life/reference=10/5=2.
+
+    The inclusive edge gives life category 3, RSF/RSFa=1/.9 gives category 1.
+    PoF=max(1,3)=3, CoF E=5, score=15, MEDIUM-HIGH (15 inclusive).
+    RBI interval=min(5,8,4)=4 yr; TAKE_MORE withholds the campaign interval.
+    Repair-loss scores 20 and therefore ranks before local-loss at 15.
+    """
+    row = assess_campaign(campaign)["components"][2]
+    assert row["rbi"]["inspection_plan"]["remaining_life_years"] == pytest.approx(10)
+    assert row["rbi"]["pof_subscores"]["life_ratio"] == 3
+    assert row["rbi"]["pof_subscores"]["rsf_margin"] == 1
+    assert row["rbi"]["pof_subscores"]["corrosion_trend_bump"] == 0
+    assert row["rbi"]["pof_category"] == 3
+    assert row["rbi"]["risk_score"] == 15
+    assert row["rbi"]["risk_band"] == "MEDIUM-HIGH"
+    assert row["rbi"]["recommended_interval_yr"] == pytest.approx(4)
+    assert row["next_inspection_interval_yr"] is None
+
+
+@pytest.mark.parametrize("kind,edges", [
+    ("rsf", (1.1, 1.05, 1.0, .9)),
+    ("life", (8.0, 4.0, 2.0, 1.0)),
+])
+@pytest.mark.parametrize("index", range(4))
+@pytest.mark.parametrize("offset", [0.0, 1e-15, 5e-10, 2e-9])
+def test_proxy_band_edges_tolerate_roundoff(kind, edges, index, offset):
+    """Relative tolerance 1e-9 includes roundoff, not values beyond tolerance."""
+    from digitalmodel.asset_integrity.rbi_screening import pof_category
+
+    value = edges[index] * (1 - offset)
+    inputs = {"rsf": value, "rsf_a": 1} if kind == "rsf" else {
+        "remaining_life_yr": value * 5
+    }
+    category, _ = pof_category(**inputs)
+    assert category == index + (2 if offset > 1e-9 else 1)
+
+
+def test_equal_risk_ranks_action_then_life_then_id(campaign):
+    """Accepted .28/.29 in: life 8/9 yr, PoF 4, CoF E, score 20.
+
+    Repair also scores 20 (PoF 5, CoF D); immediate action goes first,
+    then the shorter accepted life, then identifier for otherwise equal rows.
+    """
+    accepted = campaign["components"][0]
+    accepted["consequence_class"] = "E"
+    records = []
+    for identifier, thickness in [("a-long", .29), ("z-short", .28), ("b-short", .28)]:
+        record = copy.deepcopy(accepted)
+        record["component"]["component_id"] = identifier
+        record["grid"] = [[thickness + .01] * 5 for _ in range(5)]
+        record["grid"][2][2] = thickness
+        records.append(record)
+    repair = campaign["components"][1]
+    repair["component"]["component_id"] = "z-repair"
+    campaign["components"] = records + [repair]
+    result = assess_campaign(campaign)
+    assert {row["rbi"]["risk_score"] for row in result["components"]} == {20}
+    assert [row["action"] for row in result["components"]] == [
+        "PLANNED_INSPECTION", "PLANNED_INSPECTION", "PLANNED_INSPECTION",
+        "ENGINEERING_ACTION_NOW"
+    ]
+    assert [row["component_id"] for row in result["rank_register"]] == [
+        "z-repair", "b-short", "z-short", "a-long"
+    ]
+
+
+def test_text_reads_are_independent_of_platform_encoding(campaign, monkeypatch):
+    """Emulate the default Windows encoding for any text read lacking UTF-8."""
+    read_text = Path.read_text
+
+    def platform_read_text(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or "cp1252", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", platform_read_text)
+    test_readiness_page_matches_source_matrix()
+    test_committed_example_report_is_reproducible(campaign)
+
+
+def test_report_renders_named_sufficiency_and_repair_fields(campaign):
+    report = assess_campaign(campaign)["ffs_report"]
+    assert "<dt>Candidate classes</dt><dd>C, D</dd>" in report
+    assert "<dt>Reinspection interval (yr)</dt><dd>3.0</dd>" in report
+    assert "<dt>Standards validation</dt><dd>NOT_EVALUATED</dd>" in report
+    assert "<dt>Location</dt>" in report
+    assert "<dt>Action</dt>" in report
+    assert "<dt>Rationale</dt>" in report
+    assert "&#x27;candidate_classes&#x27;:" not in report
+    assert "&#x27;action&#x27;:" not in report
+
+
+@pytest.mark.parametrize("verdict", ["REPAIR", "REPLACE"])
+def test_zero_life_verdict_supersedes_sufficiency_message(campaign, monkeypatch, verdict):
+    import digitalmodel.asset_integrity.ffs_campaign as module
+
+    assess_component = module.assess_component
+    inherited_reasons = []
+
+    def assessment(*args, **kwargs):
+        result = assess_component(*args, **kwargs)
+        if result.verdict == "REPAIR":
+            result.verdict = verdict
+            inherited_reasons.extend(result.sufficiency.reasons)
+        return result
+
+    monkeypatch.setattr(module, "assess_component", assessment)
+    row = assess_campaign(campaign)["components"][1]
+    assert row["sufficiency"]["status"] == "ESCALATE"
+    assert any("superseded by the zero-life verdict" in reason
+               for reason in row["sufficiency"]["reasons"])
+    assert all(reason.startswith(original) for reason, original
+               in zip(row["sufficiency"]["reasons"], inherited_reasons))
+    assert "superseded" not in " ".join(inherited_reasons)
+    assert row["next_inspection_interval_yr"] == 0
+
+
+@pytest.mark.parametrize("key", ["component", "grid", "consequence_class"])
+def test_missing_component_record_keys_raise_value_error(campaign, key):
+    del campaign["components"][0][key]
+    with pytest.raises(ValueError, match=key):
+        assess_campaign(campaign)

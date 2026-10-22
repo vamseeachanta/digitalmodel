@@ -6,7 +6,8 @@ repair selector and inspection interval composition. These checks establish soft
 composition for the declared synthetic policy only. Standards qualification is not established.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
-<tr><td>0</td><td>2026-10-20</td><td>Synthetic hand cases added to expose the campaign chain and qualification gaps.</td></tr></table>
+<tr><td>0</td><td>2026-10-20</td><td>Synthetic hand cases added to expose the campaign chain and qualification gaps.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Local-loss hand arithmetic and risk boundary tolerance added; ranking and verdict precedence clarified.</td></tr></table>
 <p>Table 1. Revision history.</p>
 <h2>Sources and scope</h2>
 <p>Source basis in the repository: <a href="../../../src/digitalmodel/asset_integrity/assessment/level1_screener.py">Level 1 screener</a>
@@ -47,6 +48,21 @@ pressure context selects internal classes C and D. These labels are not ISO or P
 Repair life 6 yr times supplied review fraction 0.5 gives a candidate repair review
 interval of 3 yr. The unrepaired component interval remains zero and requires engineering action now.</p>
 <h2>Local-loss and missing-data cases</h2>
+<p>The local-loss minimum is 0.300 in against required thickness 0.200 in at
+0.010 in/yr loss: remaining life = (0.300 - 0.200) / 0.010 = 10.0 yr.
+Life/reference = 10.0/5.0 = 2.0, category 3 at the inclusive edge;
+RSF/RSFa = 1.0/0.9 gives category 1. PoF = max(1,3) = 3; consequence E
+maps to 5, hence score 15 and MEDIUM-HIGH (edge 15 inclusive). The RBI cap is
+4.0 yr and min(5.0,8.0,4.0) = 4.0 yr; the campaign interval is withheld for
+TAKE_MORE. Repair-loss scores 20 and ranks before local-loss at 15, then
+uniform-loss at 4.</p>
+<p>Descending strength-margin and life-ratio bands include a relative edge tolerance
+of 1e-9 to absorb unit-conversion roundoff; values below that tolerance retain the
+worse category. This also protects the uniform case at life/reference = 4.0.
+Equal scores rank by action severity (immediate engineering action, engineering review,
+more measurements, planned inspection), then remaining life ascending (unbounded life last),
+then identifier. The zero-life REPAIR or REPLACE verdict supersedes inherited
+sufficiency messages about office re-rating; it cannot authorize continued use.</p>
 <p>A single interior thin cell does not resolve the local profile. Its sufficiency
 actions are retained, and its next interval is NOT_EVALUATED until the measurements
 and assessment are completed. Missing repair context produces NOT_EVALUATED with no
