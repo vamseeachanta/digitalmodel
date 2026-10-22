@@ -1,0 +1,19 @@
+{
+  "report": "ANSYS module analysis",
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "section-3",
+      "change": "The fixed open-cylinder basis and its use restrictions are stated."
+    },
+    {
+      "section": "section-5",
+      "change": "Analytical stresses, displacements and prepared mesh sizes are presented."
+    },
+    {
+      "section": "section-8",
+      "change": "Design inputs and native evidence needed for engineering acceptance are identified."
+    }
+  ]
+}
