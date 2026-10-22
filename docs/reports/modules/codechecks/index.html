@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code checks module analysis</title><style>
+  /* ============================ TOKENS ============================ */
+  :root{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+    --maxw:1080px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+      --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+      --sea:#081419; --sea-ink:#eaf2f2;
+      --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+      --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+      --good:#37c08a; --pend:#e0a13a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+    --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+    --sea:#081419; --sea-ink:#eaf2f2;
+    --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+    --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+    --good:#37c08a; --pend:#e0a13a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  /* ============================ BASE ============================ */
+  *{box-sizing:border-box}
+  .doc{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"kern" 1;overflow-x:hidden}
+  .doc :where(p,li){color:var(--ink-2)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,5vw,40px)}
+  h1,h2,h3{color:var(--ink);text-wrap:balance;line-height:1.15;letter-spacing:-.02em;margin:0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-muted);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+  var{font-style:italic;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  a{color:var(--cfd);text-underline-offset:2px}
+
+  /* ============================ MASTHEAD ============================ */
+  .masthead{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--hairline)}
+  .masthead .wrap{display:flex;align-items:center;gap:16px;height:56px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:-.01em;font-size:14px;color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--cfd)}
+  .mh-legend{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;color:var(--ink-muted);letter-spacing:.02em}
+  .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  /* ============================ HERO ============================ */
+  .hero{position:relative;background:
+      radial-gradient(120% 80% at 82% -10%, var(--cfd-soft), transparent 60%),
+      radial-gradient(90% 70% at 10% 0%, var(--ro-soft), transparent 55%);
+    border-bottom:1px solid var(--hairline)}
+  .hero .wrap{padding-top:clamp(40px,7vw,76px);padding-bottom:clamp(30px,5vw,48px)}
+  .kicker{display:inline-flex;gap:9px;align-items:center;padding:5px 12px;border:1px solid var(--hairline);
+    border-radius:999px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:22px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--cfd);box-shadow:0 0 0 4px var(--cfd-soft)}
+  .kicker span{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
+  h1{font-size:clamp(30px,5.4vw,52px);font-weight:800}
+  .lede{font-size:clamp(17px,2.2vw,21px);max-width:60ch;margin-top:18px;color:var(--ink-2)}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:38px;
+    background:var(--hairline);border:1px solid var(--hairline);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi{background:var(--surface);padding:18px 20px}
+  .kpi .v{font-family:var(--mono);font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.05}
+  .kpi .v .u{font-size:.5em;color:var(--ink-muted);font-weight:500;margin-left:2px}
+  .kpi .k{font-size:12.5px;color:var(--ink-muted);margin-top:8px;line-height:1.35}
+  .kpi.teal .v{color:var(--cfd)} .kpi.amber .v{color:var(--proj)}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+  /* ============================ SECTIONS ============================ */
+  section{padding:clamp(40px,6vw,68px) 0;border-bottom:1px solid var(--hairline)}
+  .sec-head{display:flex;gap:16px;align-items:baseline;margin-bottom:26px}
+  .sec-no{font-family:var(--mono);font-size:13px;color:var(--cfd);font-weight:700;letter-spacing:.05em;flex:none}
+  h2{font-size:clamp(22px,3.4vw,32px);font-weight:750}
+  .sec-head p{margin:8px 0 0;max-width:64ch}
+  .prose{max-width:68ch}
+  .prose p{margin:0 0 16px}
+  .prose p:last-child{margin-bottom:0}
+
+  /* device layout */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,48px);align-items:center}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .steps{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:14px}
+  .steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+  .steps .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cfd);background:var(--cfd-soft);
+    width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .steps b{color:var(--ink)}
+
+  /* formula */
+  .formula{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--hairline);border-radius:10px;
+    padding:14px 16px;font-size:15px;color:var(--ink);overflow-x:auto;letter-spacing:.01em}
+  .formula .lbl{color:var(--ink-muted);font-size:12px}
+  .def{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-family:var(--mono);font-size:12.5px;color:var(--ink-muted)}
+  .def b{color:var(--ink-2);font-weight:600}
+
+  /* figure / card */
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;box-shadow:var(--shadow);
+    padding:clamp(16px,2.4vw,26px)}
+  .fig-cap{font-size:13.5px;color:var(--ink-muted);margin-top:14px;padding-top:14px;border-top:1px solid var(--hairline);
+    display:flex;gap:10px}
+  .fig-cap .tag{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:6px;flex:none;height:fit-content}
+  .tag.cfd{background:var(--cfd-soft);color:var(--cfd)} .tag.proj{background:var(--proj-soft);color:var(--proj)}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px;justify-content:flex-end}
+  .chart-legend .lg{font-size:12px;color:var(--ink-2)}
+  .chart-title{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+  svg .grid{stroke:var(--hairline);stroke-width:1}
+  svg .axis{stroke:var(--ink-muted);stroke-width:1}
+  svg text{fill:var(--ink-muted);font-family:var(--mono);font-size:11px}
+  svg .axtitle{fill:var(--ink-2);font-size:12.5px;font-weight:600}
+
+  /* stat callouts row */
+  .callrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+  @media(max-width:760px){.callrow{grid-template-columns:1fr}}
+  .call{background:var(--surface);border:1px solid var(--hairline);border-radius:13px;padding:18px 18px;box-shadow:var(--shadow)}
+  .call .v{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--cfd);letter-spacing:-.02em}
+  .call .k{font-size:13px;color:var(--ink-2);margin-top:6px} .call .s{font-size:12px;color:var(--ink-muted);margin-top:4px}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--hairline);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:440px}
+  th,td{padding:11px 15px;text-align:right;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.hl{color:var(--ink);font-weight:600}
+  tbody tr:hover{background:var(--surface-2)}
+
+  /* status list */
+  .status{display:grid;gap:12px;margin-top:8px}
+  .st{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--surface);
+    border:1px solid var(--hairline);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .st .icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;font-family:var(--mono);font-weight:700;font-size:15px}
+  .st.ok .icon{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .icon{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .icon{background:var(--surface-2);color:var(--ink-muted);border:1px dashed var(--hairline)}
+  .st .lab{color:var(--ink);font-weight:600;font-size:15px}
+  .st .sub{color:var(--ink-muted);font-size:13px;margin-top:2px}
+  .st .pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:999px;flex:none}
+  .st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .pill{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .pill{background:var(--surface-2);color:var(--ink-muted)}
+
+  .note{background:var(--proj-soft);border:1px solid color-mix(in srgb,var(--proj) 35%,transparent);border-radius:12px;
+    padding:16px 18px;margin-top:22px;font-size:14.5px;color:var(--ink-2);display:flex;gap:12px}
+  .note .b{font-family:var(--mono);color:var(--proj);font-weight:700;font-size:12px;letter-spacing:.05em;flex:none;padding-top:1px}
+
+  /* footer */
+  footer{background:var(--sea);color:var(--sea-ink);border-bottom:none}
+  footer .wrap{padding:44px clamp(18px,5vw,40px)}
+  footer h3{color:var(--sea-ink);font-size:16px;margin-bottom:14px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  .foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr;gap:24px}}
+  footer p,footer li{color:color-mix(in srgb,var(--sea-ink) 72%,transparent);font-size:13.5px;line-height:1.6}
+  footer ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+  footer .k{font-family:var(--mono);color:color-mix(in srgb,var(--sea-ink) 55%,transparent);font-size:11px}
+  .foot-bar{border-top:1px solid rgba(255,255,255,.1);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:color-mix(in srgb,var(--sea-ink) 55%,transparent)}
+
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;z-index:60;background:var(--ink);color:var(--paper);font-family:var(--mono);
+    font-size:12px;padding:8px 11px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(4px);
+    transition:opacity .1s;max-width:240px;line-height:1.5}
+  #tip.on{opacity:1;transform:none}
+  #tip .t{color:#fff;font-weight:700}
+  .hit{cursor:crosshair}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--cfd);outline-offset:2px;border-radius:4px}
+
+  /* ============================ STANDARD-REPORT SHELL ============================ */
+  html{scroll-behavior:smooth}
+  .shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;align-items:start}
+  .toc{position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto;
+    padding:26px 20px 40px 0;border-right:1px solid var(--hairline)}
+  .toc .tt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px 4px}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:l1}
+  .toc>ol>li{counter-increment:l1;margin:2px 0}
+  .toc a{display:block;text-decoration:none;color:var(--ink-2);font-size:13.5px;padding:5px 10px;border-radius:7px;border-left:2px solid transparent;line-height:1.3}
+  .toc>ol>li>a::before{content:counter(l1) ".  ";color:var(--ink-muted);font-family:var(--mono);font-size:12px}
+  .toc a:hover{background:var(--surface-2);color:var(--ink)}
+  .toc a.active{color:var(--cfd);border-left-color:var(--cfd);background:var(--cfd-soft);font-weight:600}
+  .toc .sub{list-style:none;margin:0 0 6px;padding:0;counter-reset:l2}
+  .toc .sub li{counter-increment:l2}
+  .toc .sub a{font-size:12.5px;color:var(--ink-muted);padding:3px 10px 3px 22px}
+  .toc .sub a::before{content:counter(l1) "." counter(l2) "  ";font-family:var(--mono);font-size:11px;opacity:.8}
+  .main{min-width:0;padding:8px 0 0 clamp(20px,3vw,44px)}
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr}
+    .toc{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--hairline);padding:18px 0 22px}
+    .toc ol{columns:2;column-gap:20px} .toc .sub{columns:1}
+    .main{padding-left:0}
+  }
+
+  /* numbered L1 / L2 sections */
+  .main>section{counter-increment:sec;border-bottom:1px solid var(--hairline);padding:38px 0 40px;scroll-margin-top:72px}
+  .main{counter-reset:sec}
+  .main>section:last-child{border-bottom:none}
+  .l1head{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+  .l1head .secnum{font-family:var(--mono);font-weight:700;color:var(--cfd);font-size:15px;flex:none}
+  .l1head .secnum::after{content:counter(sec)}
+  .main>section>h2{font-size:clamp(21px,3vw,30px);font-weight:750}
+  .l1sub{color:var(--ink-muted);font-size:15px;max-width:66ch;margin:2px 0 0}
+  .l2{counter-increment:sub;padding-top:26px;scroll-margin-top:72px}
+  section{counter-reset:sub}
+  .l2head{display:flex;gap:11px;align-items:baseline;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--hairline)}
+  .l2head .n{font-family:var(--mono);font-size:12.5px;color:var(--cfd);font-weight:700;flex:none}
+  .l2head .n::after{content:counter(sec) "." counter(sub)}
+  .l2head h3{font-size:clamp(16px,2vw,20px);font-weight:700}
+
+  /* objective callout */
+  .objective{background:var(--cfd-soft);border:1px solid color-mix(in srgb,var(--cfd) 30%,transparent);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+  .objective .oh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--cfd);font-weight:700}
+  .objective p{color:var(--ink);margin:0;font-size:16px}
+  .objective .scope{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
+
+  /* data / definition tables */
+  .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
+  .kv{border:1px solid var(--hairline);border-radius:12px;overflow-x:auto;background:var(--surface);box-shadow:var(--shadow)}
+  .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+    padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
+  .kv td{border-bottom:1px solid var(--hairline)}
+  .kv tr:last-child td{border-bottom:none}
+  /* Label sized to its own content, value takes the remaining measure, so a
+     row reads as one line across the page instead of a stub with dead space
+     beside it -- and a long value wraps rather than being clipped. */
+  .kv td:first-child{color:var(--ink-2);width:1%;white-space:nowrap;padding-right:30px}
+  .kv td:last-child{width:99%;white-space:normal;overflow-wrap:break-word}
+  .kv td:last-child{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
+  .kv td .un{color:var(--ink-muted);font-weight:400;font-size:11px}
+
+  /* equation cards */
+  .eq{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;background:var(--surface);
+    border:1px solid var(--hairline);border-left:3px solid var(--cfd);border-radius:11px;padding:16px 20px;margin:14px 0;box-shadow:var(--shadow)}
+  .eq .m{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;color:var(--ink);
+    overflow-x:auto;line-height:2;letter-spacing:.01em}
+  .eq .m var{font-size:1em}
+  .eq .eno{font-family:var(--mono);font-size:13px;color:var(--ink-muted);flex:none}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;font-size:.86em}
+  .frac>.n{border-bottom:1.6px solid currentColor;padding:0 .4em 1px}
+  .frac>.d{padding:1px .4em 0}
+  .rad{white-space:nowrap}
+  .rad>.rc{border-top:1.6px solid currentColor;padding:0 .18em;margin-left:-.08em}
+  .op{color:var(--ink-muted);margin:0 .12em}
+  .defs{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 22px}
+  .defs .d{display:flex;gap:9px;font-size:13.5px;color:var(--ink-2);align-items:baseline}
+  .defs .d var{color:var(--ink);font-weight:600;min-width:2.4em;font-family:"Iowan Old Style",Palatino,Georgia,serif}
+  .defs .d .u{color:var(--ink-muted);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap}
+
+  /* flowchart */
+  .flow{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
+  .flow svg{display:block;min-width:560px;margin:0 auto}
+  .flow .fb{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:1.5}
+  .flow .fb.cfd{fill:var(--cfd-soft);stroke:var(--cfd)}
+  .flow .fb.ro{fill:var(--ro-soft);stroke:var(--ro)}
+  .flow .fb.proj{fill:var(--proj-soft);stroke:var(--proj);stroke-dasharray:5 3}
+  .flow .fl{fill:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600}
+  .flow .fs{fill:var(--ink-muted);font-family:var(--mono);font-size:10.5px}
+  .flow .fa{stroke:var(--ink-muted);stroke-width:1.6;fill:none}
+  .flow .fd{fill:var(--ink-muted)}
+
+  .refs{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:10px}
+  .refs li{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:14px;color:var(--ink-2);align-items:baseline}
+  .refs .rn{font-family:var(--mono);font-size:12px;color:var(--cfd);font-weight:700}
+  .backtop{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-muted);text-decoration:none}
+  .backtop:hover{color:var(--cfd)}
+</style></head><body class="hs-doc doc">
+<header class="masthead"><div class="wrap"><span class="brand">Engineering calculations</span><span>Draft for client review</span></div></header>
+<div class="hero"><div class="wrap"><h1>Code checks module analysis</h1><p class="lede">Offline riser tension and bending screening, calculation basis and limits of use.</p></div></div>
+<div class="wrap"><nav aria-label="Contents"><ul><li><a href="#summary">Executive Summary</a></li><li><a href="#introduction">Introduction</a></li><li><a href="#basis">Analysis basis</a></li><li><a href="#theory">Theory and equations</a></li><li><a href="#inputs-outputs">Inputs and outputs</a></li><li><a href="#worked-example">Worked example</a></li><li><a href="#validation">Validation evidence</a></li><li><a href="#limits">Limits of use and recommendations</a></li><li><a href="#appendices">Appendices</a></li><li><a href="#changes-comments">Engineering changes and comments</a></li></ul></nav><main class="main"><section id="summary"><div class="l1head"><span class="secnum"></span><h2>Executive Summary</h2></div><p>The code checks module is an offline calculator for supplied engineering loads. Analysis is performed to determine the tension and bending screening response of a published riser example; key results are summarized below.</p>
+<ul><li>The calculated maximum utilisation is <span class="num" data-field="result.governing_utilisation" data-value="0.5325" data-format=".1%" data-scale="1">53.2%</span> at <span class="num" data-field="result.results.2.arc_length" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span> m, below the implemented screen limit of 100.0%.<ul><li>The supplied load distribution can be ranked by section using this calculation. The example inputs are ASSUMED - to be confirmed.</li></ul></li>
+<li>Pressure interaction and project design acceptance are NOT_EVALUATED.<ul><li>Release for design use is conditional on an applicable equation source, checked factors, pressure interaction and independent benchmark evidence.</li></ul></li></ul>
+<p>The calculation and its restrictions are set out in <a href="#worked-example">the worked example</a> and <a href="#limits">the limits of use</a>.</p>
+<div id="revision-history"><h3>Revision history</h3><div class="tbl-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-22</td><td>Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits.</td></tr></tbody></table></div><p class="fig-cap">Revision record. Initial issue of the module analysis.</p></div></section><section id="introduction"><div class="l1head"><span class="secnum"></span><h2>Introduction</h2></div><p>The module is used to compare caller-supplied section loads with implemented resistance expressions. No global structural response, sea-state limit or installation operating envelope is calculated.</p>
+<p>The principal workflow is the offline riser router. A configuration mapping is read, pipe properties and station loads are passed to the load checker, and station results with a governing summary and comma-separated output are returned. The documented <a href="#source-example">public example</a> and <a href="#source-workflow">workflow registry</a> provide the calculation basis.</p>
+<p>The calculation is an engineering-calculations report. Marine installation controls require a coupled analysis and are outside this scalar load screen.</p></section><section id="basis"><div class="l1head"><span class="secnum"></span><h2>Analysis basis</h2></div><p>The analysis basis is the public repository example and the equation actually called by its router. The comparison threshold of 100.0% is taken from the <a href="#source-checker">implemented Boolean comparison</a>; it is not an independently established design acceptance criterion.</p>
+<p>Geometry, material strengths, load values, temperature multiplier and the design factor are demonstration inputs: ASSUMED - to be confirmed. The named riser standard and edition are recorded in <a href="#references">the references</a>. An equation-specific clause, applicability assessment and project factor selection are not established by the repository example; code qualification is NOT_EVALUATED.</p>
+<p>The rationale for the displayed limit is a dimensionless demand-to-resistance comparison. The returned pass flag follows the checker after its utilisation rounding. Results close to the threshold require an unrounded independent assessment before a design decision.</p><figure class="card">
+<svg viewBox="0 0 860 300" role="img" aria-labelledby="pipe-title pipe-desc">
+<title id="pipe-title">Annular riser pipe and supplied section loads</title>
+<desc id="pipe-desc">A cutaway cylindrical steel pipe has an annular wall. Opposed axial arrows represent tension, and a curved arrow represents bending. The coordinate s follows the pipe. No support or global deformation is solved.</desc>
+<defs><linearGradient id="steel" x2="0" y2="1"><stop stop-color="#cbd5df"/><stop offset=".5" stop-color="#f0f3f6"/><stop offset="1" stop-color="#8398aa"/></linearGradient>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/></marker></defs>
+<path d="M260 85 L620 85 A75 65 0 0 1 620 215 L260 215 Z" fill="url(#steel)" stroke="#526675"/>
+<ellipse cx="260" cy="150" rx="48" ry="65" fill="#8d9fae" stroke="#526675"/>
+<ellipse cx="260" cy="150" rx="35" ry="48" fill="#233d50"/>
+<path d="M260 102 L580 102 L580 150 L295 150 A35 48 0 0 0 260 102" fill="#334f64"/>
+<path d="M200 150 H110" stroke="#009b84" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M670 150 H765" stroke="#009b84" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M625 60 C690 20 735 65 710 105" fill="none" stroke="#d9820a" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M360 245 H570" stroke="#526675" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="115" y="130">Effective tension T</text><text x="700" y="130">T</text>
+<text x="655" y="32">Bending moment M</text><text x="380" y="270">Arc coordinate s</text>
+<text x="55" y="55">Outside diameter D</text><path d="M185 60 L240 90" stroke="#526675"/>
+<text x="45" y="235">Wall thickness t</text><path d="M175 227 L227 191" stroke="#526675"/>
+<text x="420" y="190">Steel wall</text><text x="345" y="128" style="fill:#fff">Fluid bore</text>
+</svg><figcaption>Figure A. Annular section and section loads; the axial view is schematic. Outside diameter is <span class="num" data-field="inputs.outer_diameter" data-value="0.2731" data-format=".4f" data-scale="1">0.2731</span> m and wall thickness is <span class="num" data-field="inputs.wall_thickness" data-value="0.0254" data-format=".3f" data-scale="1000">25.400</span> mm, from the <a href="#source-example">public example</a>. The drawing is not a global riser configuration.</figcaption></figure></section><section id="theory"><div class="l1head"><span class="secnum"></span><h2>Theory and equations</h2></div><p>The section response is calculated from an annular steel area and an annular plastic bending modulus. The implemented utilisation is an elliptical tension and bending interaction; pressure is not a term in this equation.</p>
+<div class="eq"><span>d = D − 2t; A = π(D² − d²)/4; Z = (D³ − d³)/6</span></div>
+<div class="eq"><span>Tᵧ = fᵧ η A; Mₚ = fᵧ η Z; U = √[(T/Tᵧ)² + (M/Mₚ)²] / f</span></div>
+<p>D and d are the outside and inside diameters, t is wall thickness, A is steel area, Z is plastic section modulus, fᵧ is specified minimum yield stress, η is the temperature multiplier, Tᵧ is yield tension, Mₚ is plastic bending resistance, T is effective tension, M is bending moment, f is the supplied design factor and U is utilisation. Geometry and stress use compatible length and force units; the checker converts resistance to the force and moment units of the supplied loads.</p>
+<p>The numerical divisors and powers in the section equations are geometric definitions, not tabulated design factors. The equation transcription and unit conversions are evidenced by the <a href="#source-checker">called checker</a> and checked by <a href="#source-report-test">the rebuild test</a>. The separate plastic-moment property on the input model is not used by this checker and is not substituted here.</p></section><section id="inputs-outputs"><div class="l1head"><span class="secnum"></span><h2>Inputs and outputs</h2></div><p>The input mapping is supplied with geometry, material properties, factors and equal-length arc-coordinate and load arrays. A single load value can be broadcast by the router; the example supplies explicit arrays.</p>
+<p>Outside diameter and wall thickness use metres, yield and ultimate strengths use pascals, effective tension uses kilonewtons, bending moment uses kilonewton metres, pressure difference uses megapascals and utilisation is dimensionless. The complete example input register is given in <a href="#data-register">the appendix</a>.</p>
+<p>The output contains station coordinates, tension, bending moment, an echoed pressure difference, utilisation and a Boolean screen result. The summary contains the governing station, maximum utilisation, count of stations and overall screen flag. The comma-separated output holds the station rows. A calculation-source citation sidecar is not returned by this workflow.</p>
+<p>The supplied ultimate strength is retained by the input model but is not used in this interaction equation. Pressure is echoed without affecting utilisation. Load signs are removed by squaring in the interaction; cyclic fatigue and load history are not assessed.</p></section><section id="worked-example"><div class="l1head"><span class="secnum"></span><h2>Worked example</h2></div><p>The public example is evaluated by calling the documented router with its published input mapping. The values below are returned by that call; scenario inputs remain ASSUMED - to be confirmed.</p>
+<p>The maximum utilisation is <span class="num" data-field="result.governing_utilisation" data-value="0.5325" data-format=".1%" data-scale="1">53.2%</span> at <span class="num" data-field="result.results.2.arc_length" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span> m. The comparison is with the implemented screen threshold described in <a href="#basis">the analysis basis</a>. Pressure interaction remains NOT_EVALUATED.</p><div class="tbl-wrap"><table id="station-results"><thead><tr><th>Arc coordinate [m]</th><th>Tension [kN]</th><th>Bending moment [kN m]</th><th>Pressure echo [MPa]</th><th>Utilisation [%]</th><th>Screen result</th></tr></thead><tbody><tr><td><span class="num" data-field="result.results.0.arc_length" data-value="0.0" data-format=".1f" data-scale="1">0.0</span></td><td><span class="num" data-field="result.results.0.tension_kN" data-value="900.0" data-format=".1f" data-scale="1">900.0</span></td><td><span class="num" data-field="result.results.0.bending_moment_kNm" data-value="120.0" data-format=".1f" data-scale="1">120.0</span></td><td><span class="num" data-field="result.results.0.pressure_diff_MPa" data-value="0.0" data-format=".1f" data-scale="1">0.0</span></td><td><span class="num" data-field="result.results.0.utilisation" data-value="0.2973" data-format=".1%" data-scale="1">29.7%</span></td><td>Screen passes.</td></tr><tr><td><span class="num" data-field="result.results.1.arc_length" data-value="750.0" data-format=".1f" data-scale="1">750.0</span></td><td><span class="num" data-field="result.results.1.tension_kN" data-value="1200.0" data-format=".1f" data-scale="1">1200.0</span></td><td><span class="num" data-field="result.results.1.bending_moment_kNm" data-value="180.0" data-format=".1f" data-scale="1">180.0</span></td><td><span class="num" data-field="result.results.1.pressure_diff_MPa" data-value="5.0" data-format=".1f" data-scale="1">5.0</span></td><td><span class="num" data-field="result.results.1.utilisation" data-value="0.4335" data-format=".1%" data-scale="1">43.4%</span></td><td>Screen passes.</td></tr><tr><td><span class="num" data-field="result.results.2.arc_length" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span></td><td><span class="num" data-field="result.results.2.tension_kN" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span></td><td><span class="num" data-field="result.results.2.bending_moment_kNm" data-value="220.0" data-format=".1f" data-scale="1">220.0</span></td><td><span class="num" data-field="result.results.2.pressure_diff_MPa" data-value="10.0" data-format=".1f" data-scale="1">10.0</span></td><td><span class="num" data-field="result.results.2.utilisation" data-value="0.5325" data-format=".1%" data-scale="1">53.2%</span></td><td>Screen passes.</td></tr></tbody></table></div><p class="fig-cap">Station results. Source: <a href="#source-example">public example</a> evaluated by the <a href="#source-router">offline router</a>.</p><figure class="card"><svg viewBox="0 0 860 370" role="group" aria-labelledby="chart-title">
+<title id="chart-title">Returned utilisation against arc coordinate</title>
+<path d="M90 45 V300 H760" class="axis" fill="none"/>
+<path id="utilisation-limit" d="M90 86.957 H760" stroke="#d9820a" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="750" y="76.957" text-anchor="end">Screen limit: 100.0%</text>
+<text x="80" y="300.000" text-anchor="end">0.0%</text>
+<text x="80" y="86.957" text-anchor="end">100.0%</text>
+<polyline points="90.000,236.662 415.000,207.646 740.000,186.554" fill="none" stroke="#009b84" stroke-width="3"/>
+<circle class="chart-point" cx="90.000" cy="236.662" r="7" fill="#009b84" tabindex="0" data-row="0" aria-label="Public example; riser section; position 0.0 m; tension 900.0 kN; bending 120.0 kN m; pressure echo 0.0 MPa; demand 29.7%; screen limit 100.0%; Screen passes."><title>Public example; riser section; position 0.0 m; tension 900.0 kN; bending 120.0 kN m; pressure echo 0.0 MPa; demand 29.7%; screen limit 100.0%; Screen passes.</title></circle><circle class="chart-point" cx="415.000" cy="207.646" r="7" fill="#009b84" tabindex="0" data-row="1" aria-label="Public example; riser section; position 750.0 m; tension 1200.0 kN; bending 180.0 kN m; pressure echo 5.0 MPa; demand 43.4%; screen limit 100.0%; Screen passes."><title>Public example; riser section; position 750.0 m; tension 1200.0 kN; bending 180.0 kN m; pressure echo 5.0 MPa; demand 43.4%; screen limit 100.0%; Screen passes.</title></circle><circle class="chart-point" cx="740.000" cy="186.554" r="7" fill="#009b84" tabindex="0" data-row="2" aria-label="Public example; riser section; position 1500.0 m; tension 1500.0 kN; bending 220.0 kN m; pressure echo 10.0 MPa; demand 53.2%; screen limit 100.0%; Screen passes."><title>Public example; riser section; position 1500.0 m; tension 1500.0 kN; bending 220.0 kN m; pressure echo 10.0 MPa; demand 53.2%; screen limit 100.0%; Screen passes.</title></circle><text x="90.000" y="322" text-anchor="middle">0.0</text><text x="415.000" y="322" text-anchor="middle">750.0</text><text x="740.000" y="322" text-anchor="middle">1500.0</text>
+<text x="430" y="350" text-anchor="middle" class="axtitle">Arc coordinate [m]</text>
+<text x="22" y="165" transform="rotate(-90 22 165)" text-anchor="middle" class="axtitle">Utilisation [%]</text>
+</svg><p id="chart-detail" role="status">Select or hover a plotted section for demands and the comparison limit.</p>
+<figcaption>Figure B. Calculated tension and bending screening; the dashed line is the implemented comparison threshold. Pressure values are echoed and are not included in utilisation. Keyboard focus and pointer hover expose the same values.</figcaption></figure></section><section id="validation"><div class="l1head"><span class="secnum"></span><h2>Validation evidence</h2></div><p>The repository evidence is assessed as regression and arithmetic evidence. The inspected inventory contains 53 test function definitions across the calculation, router and example suites; this is a source inventory, not a count of independently validated engineering cases.</p>
+<p>The existing tests check low and high loads, increased utilisation with increased demand, factor sensitivity, governing-summary output, unknown selector rejection, pipeline collapse and propagation arithmetic, and tank-shell sizing. Published examples exist for riser loads, mooring loads and tank-shell sizing. The inventory and source locators are given in <a href="#qa">the appendix</a>.</p>
+<p>This report adds direct recalculation of every displayed example value, a separate evaluation of the implemented annular interaction equation, and a pressure-variation check demonstrating that pressure does not enter the result. The rebuild also checks source fingerprints and exact delivered bytes.</p>
+<p>No independent published riser benchmark, measurement record or edition-specific compliance assessment is established by these tests. The worked example is a repository demonstration rather than an external benchmark.</p></section><section id="limits"><div class="l1head"><span class="secnum"></span><h2>Limits of use and recommendations</h2></div><p>The results are limited to the implemented tension and bending screen for the supplied section loads. Use as a complete pressure-containing riser assessment is not established.</p>
+<h3>Limits of use</h3><p>Pressure interaction, collapse, local buckling, fatigue, corrosion loss, installation dynamics and global stability are not evaluated in the selected workflow. A separate standalone pipeline function does not extend this router's coverage. The router checks array presence and length, but a complete finite-value, geometry and load-basis preflight is not provided. The caller must establish positive inner diameter, finite inputs, consistent units and factored load combinations.</p>
+<p>Utilisation is rounded before its Boolean comparison; a marginal screen result does not establish an unrounded margin. The example design factor and temperature multiplier do not establish project-specific applicability.</p>
+<h3>Not covered</h3><p>Other available sub-areas are dynamic-riser screening using a separate offshore standard, mooring breaking-load screening, standalone pipeline containment and buckling resistance, and bottom-up atmospheric tank-shell sizing. These are identified as available interfaces; their equations and engineering qualification are not assessed in this analysis.</p>
+<h3>Recommendations</h3><p>The next engineering step is to establish the applicable standard edition, equation clause, pressure interaction, material allowables, effective wall and load combinations before adopting a design limit. The named standards and the implemented exclusions are recorded in <a href="#references">the references</a>. Design release is conditional on an independent calculation or published benchmark with the same geometry, units and factors.</p>
+<p>A first improvement slice is recommended: input validation for finite values and coupled geometry, followed by an explicitly sourced combined-loading assessment with pressure and an unrounded comparison. The <a href="#source-router">router</a> and <a href="#source-checker">checker</a> define that boundary. Until those checks are established, the current result is suitable only for reproducing and ranking this demonstration's tension and bending loads.</p></section><section id="appendices"><div class="l1head"><span class="secnum"></span><h2>Appendices</h2></div><p>The calculation basis, evidence locators and quality checks are retained below. Missing qualifications remain explicit and do not become accepted design inputs.</p>
+<h3 id="data-register">9.1 Data register</h3><div class="tbl-wrap"><table><thead><tr><th>Quantity</th><th>Value</th><th>Units</th><th>Qualification</th><th>Source</th></tr></thead><tbody><tr><td>Outside diameter</td><td><span class="num" data-field="inputs.outer_diameter" data-value="0.2731" data-format=".4f" data-scale="1">0.2731</span></td><td>m</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Wall thickness</td><td><span class="num" data-field="inputs.wall_thickness" data-value="0.0254" data-format=".3f" data-scale="1000">25.400</span></td><td>mm</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Specified minimum yield stress</td><td><span class="num" data-field="inputs.smys" data-value="448000000.0" data-format=".1f" data-scale="1">448000000.0</span></td><td>Pa</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Specified minimum ultimate stress</td><td><span class="num" data-field="inputs.smts" data-value="531000000.0" data-format=".1f" data-scale="1">531000000.0</span></td><td>Pa</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Design factor</td><td><span class="num" data-field="inputs.design_factor" data-value="0.67" data-format=".2f" data-scale="1">0.67</span></td><td>dimensionless</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Temperature multiplier</td><td><span class="num" data-field="inputs.temperature_derating" data-value="1.0" data-format=".1f" data-scale="1">1.0</span></td><td>dimensionless</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Arc coordinates</td><td><span class="num" data-field="inputs.arc_lengths.0" data-value="0.0" data-format=".1f" data-scale="1">0.0</span>, <span class="num" data-field="inputs.arc_lengths.1" data-value="750.0" data-format=".1f" data-scale="1">750.0</span>, <span class="num" data-field="inputs.arc_lengths.2" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span></td><td>m</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Effective tensions</td><td><span class="num" data-field="inputs.effective_tension_kN.0" data-value="900.0" data-format=".1f" data-scale="1">900.0</span>, <span class="num" data-field="inputs.effective_tension_kN.1" data-value="1200.0" data-format=".1f" data-scale="1">1200.0</span>, <span class="num" data-field="inputs.effective_tension_kN.2" data-value="1500.0" data-format=".1f" data-scale="1">1500.0</span></td><td>kN</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Bending moments</td><td><span class="num" data-field="inputs.bending_moment_kNm.0" data-value="120.0" data-format=".1f" data-scale="1">120.0</span>, <span class="num" data-field="inputs.bending_moment_kNm.1" data-value="180.0" data-format=".1f" data-scale="1">180.0</span>, <span class="num" data-field="inputs.bending_moment_kNm.2" data-value="220.0" data-format=".1f" data-scale="1">220.0</span></td><td>kN m</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr><tr><td>Pressure differences</td><td><span class="num" data-field="inputs.pressure_diff_MPa.0" data-value="0.0" data-format=".1f" data-scale="1">0.0</span>, <span class="num" data-field="inputs.pressure_diff_MPa.1" data-value="5.0" data-format=".1f" data-scale="1">5.0</span>, <span class="num" data-field="inputs.pressure_diff_MPa.2" data-value="10.0" data-format=".1f" data-scale="1">10.0</span></td><td>MPa</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Public example</a></td></tr></tbody></table></div><p class="fig-cap">Input register. Values are read from the public example without substitution. Wall thickness is displayed in millimetres using the exact SI definition: one metre equals one thousand millimetres.</p><p>Missing design data are the qualified equation clause, material and factor applicability, effective-wall basis, pressure interaction and independent benchmark. Each remains NOT_EVALUATED; the analysis makes no replacement engineering assumption for these items.</p>
+<h3 id="references">9.2 References and locators</h3>
+<p>The standard cited by the riser implementation is API STD 2RD, Dynamic Risers for Floating Production Systems, second edition (2013). Its historical repository selector uses RP naming. The implementation does not record a specific equation clause; that locator is NOT_EVALUATED. No licensed table or standard coefficient is reproduced as an established criterion.</p>
+<p>Other module references are DNV-OS-F101, Submarine Pipeline Systems (2013), Section 5, Local buckling; DNV-OS-F201, Dynamic Risers (2010), Section 5, Combined loading; API RP 2SK, Design and Analysis of Stationkeeping Systems (2005), Section 6.2, Table 1; and API 650, Welded Tanks for Oil Storage, Shell design and one-foot method (edition not established). They are interface context only.</p><div class="tbl-wrap"><table><thead><tr><th>Repository source</th><th>Source fingerprint or purpose</th></tr></thead><tbody><tr><td><span id="source-example">examples/workflows/api-rp-2rd-riser/input.yml</span></td><td>8bcbf9e1f6a8bb06c79791b3184a19936c43bafd739397a262edff5469b8da38</td></tr><tr><td><span id="source-checker">src/digitalmodel/orcaflex/code_check_engine.py</span></td><td>5058d270fff3fbf3636933c4be067266e6e8a162123898d93a5d4792baba3c18</td></tr><tr><td><span id="source-router">src/digitalmodel/code_checks/workflow.py</span></td><td>b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3</td></tr><tr><td><span id="ref-3">src/digitalmodel/code_checks/dnv_os_f101.py</span></td><td>1999bb185bec49e0765defe9f7dc253b0b50cfe932441e7ab81c20fda03abb85</td></tr><tr><td><span id="ref-4">src/digitalmodel/code_checks/storage_tanks/one_foot.py</span></td><td>ece878bb91ca6e10bdb261c7b5c0a343cee0e81bee6b776442ddd929ca2b9028</td></tr><tr><td><span id="ref-5">src/digitalmodel/code_checks/storage_tanks/report.py</span></td><td>c27cbd72f120b72b528823e1aa4fb6af9d34561d2fa38c8d0a56f347b29bccac</td></tr><tr><td><span id="source-workflow">docs/registry/workflows.yaml</span></td><td>7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896</td></tr><tr><td><span id="ref-7">src/digitalmodel/reporting/assets/calc_report_format.html</span></td><td>ff35d5b7c0126dda3b356b790cacb08310b884efe44fecb35a86847c8cf41beb</td></tr><tr><td><span id="ref-8">docs/domains/storage-tanks/one-foot-worked-example.html</span></td><td>d4f2faa72ef63ac48efd77dcb01757f017f85e9d4428ec07e9c4402275cdacbf</td></tr><tr><td><span id="ref-9">examples/code_checks/shell_thickness_reports.py</span></td><td>a04b6b162df04cbcdbac56edb04dd09f559ba55891cc3cba5a386d8826f81d05</td></tr><tr><td><span id="ref-10">tests/code_checks/test_code_check_workflow.py</span></td><td>3fca829e5cf9c5137afea9a8c5c4311c780ccd19fd92a0898f32464b8ac4fc3e</td></tr><tr><td><span id="ref-11">tests/code_checks/test_dnv_os_f101.py</span></td><td>1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e</td></tr><tr><td><span id="ref-12">tests/code_checks/test_one_foot.py</span></td><td>20292caa81acf11c008055cb1d9163a92f2dd682c7649751544389558bee7efe</td></tr><tr><td><span id="ref-13">tests/code_checks/test_shell_report_example.py</span></td><td>98a26cc987a78ca7d3c2e34e347b2e09271d822024eeb02bf43b381af85665eb</td></tr><tr><td><span id="ref-14">tests/orcaflex/test_code_check_engine.py</span></td><td>a97dad1d2cf7a102958df87499a79adb8a853fd1a805a8f60a0f5e38a5150c4d</td></tr><tr><td><span id="source-report-test">tests/code_checks/test_module_report.py</span></td><td>Report rebuild and independent equation comparison</td></tr></tbody></table></div><p class="fig-cap">Source register. Fingerprints identify UTF-8 source text with line endings normalized to line feed.</p><h3 id="qa">9.3 Quality evidence</h3><p>The source inventory below counts named test functions; parameterized cases are not expanded. The report rebuild checks numeric evidence, local section links, source fingerprints, embedded house style, comments controls and change history. Execution results are recorded with the delivered change description, not inferred from this inventory.</p><div class="tbl-wrap"><table><thead><tr><th>Evidence group</th><th>Test definitions</th><th>Source</th></tr></thead><tbody><tr><td>Offline router</td><td>2</td><td><a href="#ref-10">Source register</a></td></tr><tr><td>Pipeline resistance</td><td>17</td><td><a href="#ref-11">Source register</a></td></tr><tr><td>Tank-shell sizing</td><td>15</td><td><a href="#ref-12">Source register</a></td></tr><tr><td>Published shell reports</td><td>4</td><td><a href="#ref-13">Source register</a></td></tr><tr><td>Riser and mooring arithmetic</td><td>15</td><td><a href="#ref-14">Source register</a></td></tr></tbody></table></div><p class="fig-cap">Regression evidence inventory. No field-validation or independent benchmark claim is attached to these counts.</p><p>Preflight disposition: the public example and callable interface are present; source units and the implemented equation are inspected; numeric values are generated and linked to calculation evidence; pressure interaction and independent design qualification remain NOT_EVALUATED. No licensed solver is required.</p></section><section id="changes-comments"><div class="l1head"><span class="secnum"></span><h2>Engineering changes and comments</h2></div><p>Engineering changes are listed by revision so that the calculation basis can be compared with an earlier issue. Comments are attached to a named section and retained in a separate file beside the HTML.</p>
+<div id="change-panel"><div class="tbl-wrap"><table><thead><tr><th>Revision</th><th>Engineering change</th><th>Reason</th></tr></thead><tbody><tr><td>00</td><td>Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits.</td><td>Distinguish calculated load screening from an independently established design assessment.</td></tr></tbody></table></div><p class="fig-cap">Changes since the preceding issue. This initial issue establishes the calculation basis.</p></div><form id="comments-form"><label>Section <select id="comment-section"><option value="summary">Executive Summary</option><option value="introduction">Introduction</option><option value="basis">Analysis basis</option><option value="theory">Theory and equations</option><option value="inputs-outputs">Inputs and outputs</option><option value="worked-example">Worked example</option><option value="validation">Validation evidence</option><option value="limits">Limits of use and recommendations</option><option value="appendices">Appendices</option></select></label>
+<p><label>Comment <textarea id="comment-text" rows="4" required></textarea></label></p>
+<button type="submit">Add comment</button></form>
+<p><button id="save-comments" type="button">Save comments beside HTML</button></p>
+<p><label>Load saved comments <input id="load-comments" type="file" accept=".json,application/json"></label></p>
+<p id="comment-status" role="status">Comments remain in this page until saved. Select the folder containing this HTML when prompted. Browsers without folder access download a file to be moved beside the HTML.</p><pre id="comment-preview">[]</pre></section></main><footer><p>Draft for client review. Design qualification is NOT_EVALUATED.</p></footer></div>
+<script type="application/json" id="calculation-data">{"changes": {"changes": [{"description": "Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits.", "reason": "Distinguish calculated load screening from an independently established design assessment.", "section": "Complete analysis"}], "date": "2026-10-22", "report": "Code checks module analysis", "revision": "00"}, "chart": {"arc_length": [0.0, 750.0, 1500.0], "limit": 1.0, "utilisation": [0.2973, 0.4335, 0.5325]}, "inputs": {"arc_lengths": [0.0, 750.0, 1500.0], "bending_moment_kNm": [120.0, 180.0, 220.0], "design_factor": 0.67, "effective_tension_kN": [900.0, 1200.0, 1500.0], "outer_diameter": 0.2731, "pressure_diff_MPa": [0.0, 5.0, 10.0], "smts": 531000000.0, "smys": 448000000.0, "temperature_derating": 1.0, "wall_thickness": 0.0254}, "limit": 1.0, "result": {"code": "API_RP_2RD", "governing_result": {"arc_length": 1500.0, "bending_moment_kNm": 220.0, "pass": true, "pressure_diff_MPa": 10.0, "tension_kN": 1500.0, "utilisation": 0.5325}, "governing_utilisation": 0.5325, "pass": true, "points": 3, "results": [{"arc_length": 0.0, "bending_moment_kNm": 120.0, "pass": true, "pressure_diff_MPa": 0.0, "tension_kN": 900.0, "utilisation": 0.2973}, {"arc_length": 750.0, "bending_moment_kNm": 180.0, "pass": true, "pressure_diff_MPa": 5.0, "tension_kN": 1200.0, "utilisation": 0.4335}, {"arc_length": 1500.0, "bending_moment_kNm": 220.0, "pass": true, "pressure_diff_MPa": 10.0, "tension_kN": 1500.0, "utilisation": 0.5325}]}, "sources": [{"path": "examples/workflows/api-rp-2rd-riser/input.yml", "sha256": "8bcbf9e1f6a8bb06c79791b3184a19936c43bafd739397a262edff5469b8da38"}, {"path": "src/digitalmodel/orcaflex/code_check_engine.py", "sha256": "5058d270fff3fbf3636933c4be067266e6e8a162123898d93a5d4792baba3c18"}, {"path": "src/digitalmodel/code_checks/workflow.py", "sha256": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3"}, {"path": "src/digitalmodel/code_checks/dnv_os_f101.py", "sha256": "1999bb185bec49e0765defe9f7dc253b0b50cfe932441e7ab81c20fda03abb85"}, {"path": "src/digitalmodel/code_checks/storage_tanks/one_foot.py", "sha256": "ece878bb91ca6e10bdb261c7b5c0a343cee0e81bee6b776442ddd929ca2b9028"}, {"path": "src/digitalmodel/code_checks/storage_tanks/report.py", "sha256": "c27cbd72f120b72b528823e1aa4fb6af9d34561d2fa38c8d0a56f347b29bccac"}, {"path": "docs/registry/workflows.yaml", "sha256": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896"}, {"path": "src/digitalmodel/reporting/assets/calc_report_format.html", "sha256": "ff35d5b7c0126dda3b356b790cacb08310b884efe44fecb35a86847c8cf41beb"}, {"path": "docs/domains/storage-tanks/one-foot-worked-example.html", "sha256": "d4f2faa72ef63ac48efd77dcb01757f017f85e9d4428ec07e9c4402275cdacbf"}, {"path": "examples/code_checks/shell_thickness_reports.py", "sha256": "a04b6b162df04cbcdbac56edb04dd09f559ba55891cc3cba5a386d8826f81d05"}, {"path": "tests/code_checks/test_code_check_workflow.py", "sha256": "3fca829e5cf9c5137afea9a8c5c4311c780ccd19fd92a0898f32464b8ac4fc3e"}, {"path": "tests/code_checks/test_dnv_os_f101.py", "sha256": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"}, {"path": "tests/code_checks/test_one_foot.py", "sha256": "20292caa81acf11c008055cb1d9163a92f2dd682c7649751544389558bee7efe"}, {"path": "tests/code_checks/test_shell_report_example.py", "sha256": "98a26cc987a78ca7d3c2e34e347b2e09271d822024eeb02bf43b381af85665eb"}, {"path": "tests/orcaflex/test_code_check_engine.py", "sha256": "a97dad1d2cf7a102958df87499a79adb8a853fd1a805a8f60a0f5e38a5150c4d"}], "test_inventory": [{"definitions": 2, "path": "tests/code_checks/test_code_check_workflow.py"}, {"definitions": 17, "path": "tests/code_checks/test_dnv_os_f101.py"}, {"definitions": 15, "path": "tests/code_checks/test_one_foot.py"}, {"definitions": 4, "path": "tests/code_checks/test_shell_report_example.py"}, {"definitions": 15, "path": "tests/orcaflex/test_code_check_engine.py"}]}</script>
+<script id="interaction">
+(() => {
+  'use strict';
+  const evidence = JSON.parse(document.getElementById('calculation-data').textContent);
+  const byId = id => document.getElementById(id);
+  document.querySelectorAll('.chart-point').forEach(point => {
+    const show = () => { byId('chart-detail').textContent = point.getAttribute('aria-label'); };
+    point.addEventListener('pointerenter', show);
+    point.addEventListener('focus', show);
+    point.addEventListener('click', show);
+  });
+  const state = {report: evidence.changes.report, revision: evidence.changes.revision,
+    sources: evidence.sources, comments: []};
+  const message = text => { byId('comment-status').textContent = text; };
+  const show = () => { byId('comment-preview').textContent = JSON.stringify(state.comments, null, 2); };
+  byId('comments-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const text = byId('comment-text').value.trim();
+    if (!text) return message('Enter a comment.');
+    state.comments.push({section: byId('comment-section').value, text});
+    byId('comment-text').value = '';
+    show(); message('Comment retained in this page. Save beside the HTML to retain it after closing.');
+  });
+  byId('save-comments').addEventListener('click', async () => {
+    try {
+      const data = JSON.stringify(state, null, 2) + '\n';
+      if (typeof window.showDirectoryPicker === 'function') {
+        const directory = await window.showDirectoryPicker({mode: 'readwrite'});
+        const report = await directory.getFileHandle('index.html');
+        const selected = await (await report.getFile()).text();
+        if (selected !== '<!DOCTYPE html>\n' + document.documentElement.outerHTML + '\n') {
+          // DOM interaction changes markup; compare the immutable calculation record.
+          const parsed = new DOMParser().parseFromString(selected, 'text/html');
+          if (parsed.getElementById('calculation-data')?.textContent !== byId('calculation-data').textContent)
+            throw new Error('Choose the folder containing the matching analysis HTML.');
+        }
+        try {
+          const prior = await directory.getFileHandle('index.comments.json');
+          const previous = await (await prior.getFile()).text();
+          if (previous !== data && !window.confirm('Replace the existing saved comments? Load that file first to retain earlier comments.')) return;
+        } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+        const handle = await directory.getFileHandle('index.comments.json', {create: true});
+        const writable = await handle.createWritable();
+        await writable.write(data); await writable.close();
+        if (await (await handle.getFile()).text() !== data) throw new Error('Saved comment readback differs.');
+        message('Comments saved beside the analysis HTML and read back successfully.');
+      } else {
+        const url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+        const link = document.createElement('a'); link.href = url; link.download = 'index.comments.json'; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message('Download requested. Move index.comments.json beside the HTML; load it to check the saved copy.');
+      }
+    } catch (error) { message(error.message); }
+  });
+  byId('load-comments').addEventListener('change', async event => {
+    try {
+      const file = event.target.files[0]; if (!file) return;
+      const incoming = JSON.parse(await file.text());
+      if (incoming.report !== state.report || incoming.revision !== state.revision ||
+          JSON.stringify(incoming.sources) !== JSON.stringify(state.sources) || !Array.isArray(incoming.comments))
+        throw new Error('Comment file does not match this analysis and source basis.');
+      const sections = new Set([...byId('comment-section').options].map(option => option.value));
+      if (incoming.comments.some(row => !row || !sections.has(row.section) || typeof row.text !== 'string'))
+        throw new Error('Comment file contains an invalid section or comment.');
+      state.comments = [...new Map([...state.comments, ...incoming.comments].map(row => [JSON.stringify(row), row])).values()];
+      show(); message('Matching comments loaded; current comments retained.');
+    } catch (error) { message(error.message); }
+    event.target.value = '';
+  });
+})();
+</script>
+</body></html>

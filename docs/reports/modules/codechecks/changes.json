@@ -1,0 +1,12 @@
+{
+  "report": "Code checks module analysis",
+  "revision": "00",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "Complete analysis",
+      "description": "Initial issue: describe the offline riser calculation, reproduce the public example and identify the pressure and qualification limits.",
+      "reason": "Distinguish calculated load screening from an independently established design assessment."
+    }
+  ]
+}
