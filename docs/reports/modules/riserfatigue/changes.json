@@ -1,0 +1,12 @@
+{
+  "report": "Riser fatigue module analysis",
+  "revision": "Initial",
+  "date": "2026-10-21",
+  "changes": [
+    {
+      "section": "Supplied-response fatigue screening",
+      "change": "Wave and vortex-induced vibration damage, the governing location, and the fatigue-factor criterion are presented for the public synthetic example.",
+      "reason": "The calculation boundary and the evidence needed for design use are made explicit."
+    }
+  ]
+}
