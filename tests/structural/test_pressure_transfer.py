@@ -3,8 +3,9 @@
 """Independent hand calculations for pressure-transfer conservation checks.
 
 All dimensions, pressures and tolerances below are synthetic test inputs, not
-design criteria. Force basis: NASA, Aerodynamic Forces (2025), pressure-area
-summation. Moment basis: OpenStax, University Physics Volume 1 (2016), section
+design criteria. Force basis: University of Texas at Austin, Fluid Mechanics
+(2016), Aerodynamic Forces, equation 9.70 (outward unit normal). Moment basis:
+OpenStax, University Physics Volume 1 (2016), section
 10.6, equations 10.22 and 10.24. No solver or measured input is represented.
 """
 
@@ -43,6 +44,35 @@ def test_uniform_patch_hand_calculation():
     answer = resultant([SurfacePressure(2, (0, 0, 3), (4, 5, 0))])
     assert answer.force_n == (0, 0, -6)
     assert answer.moment_nm == (-30, 24, 0)
+
+
+@pytest.mark.parametrize("ambient_pressure", [0, 7])
+def test_closed_cube_buoyancy_sign(ambient_pressure):
+    """A submerged unit cube displaces unit weight, so buoyancy is +1 N.
+
+    Synthetic pressure p=ambient-z Pa has unit weight gradient 1 N/m³.
+    The cube spans x,y=-0.5..0.5 m and z=-2..-1 m. Face-average
+    pressures integrate this linear field exactly for force. Symmetry puts
+    the buoyancy line through the cube centre, giving zero moment there.
+    Uniform ambient pressure cancels on the closed surface.
+    """
+    faces = [
+        ((1, 0, 0), (0.5, 0, -1.5)),
+        ((-1, 0, 0), (-0.5, 0, -1.5)),
+        ((0, 1, 0), (0, 0.5, -1.5)),
+        ((0, -1, 0), (0, -0.5, -1.5)),
+        ((0, 0, 1), (0, 0, -1)),
+        ((0, 0, -1), (0, 0, -2)),
+    ]
+    answer = resultant(
+        [
+            SurfacePressure(ambient_pressure - centre[2], area, centre)
+            for area, centre in faces
+        ],
+        origin=(0, 0, -1.5),
+    )
+    assert answer.force_n == (0, 0, 1)
+    assert answer.moment_nm == (0, 0, 0)
 
 
 def test_all_components_and_shifted_origin():
@@ -92,12 +122,13 @@ def test_signed_pressure_is_permitted():
 
 
 @pytest.mark.parametrize("component", range(6))
-def test_every_component_is_checked_at_and_beyond_limit(component):
-    """Synthetic component limit=2; delta=2 passes and delta=3 fails."""
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_every_component_is_checked_at_and_beyond_limit(component, sign):
+    """Synthetic limit=2; both signs of delta=2 pass and delta=3 fail."""
     source = Resultant((0, 0, 0), (0, 0, 0), (0, 0, 0), "frame", "instant")
     for delta, expected in [(2, "PASS"), (3, "FAIL")]:
         values = [0] * 6
-        values[component] = -delta
+        values[component] = sign * delta
         mapped = replace(source, force_n=tuple(values[:3]), moment_nm=tuple(values[3:]))
         assert (
             compare_transfer(source, mapped, criteria((2, 2, 2), (2, 2, 2))).status

@@ -26,9 +26,10 @@
 
   <h2>Revision history</h2>
   <table>
+    <caption>Table 1. Review revision record.</caption>
     <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
     <tr><td>Initial review</td><td>2026-10-20</td><td>The inherited definition is reviewed against public release documentation; unsupported numerical rules are withdrawn and a synthetic transfer check is added.</td></tr>
-    <caption>Table 1. Review revision record.</caption>
+    <tr><td>Clarification</td><td>2026-10-22</td><td>The force-sign source is explicit, closed-surface buoyancy and both delta signs are tested, and captions precede table rows.</td></tr>
   </table>
 
   <h2>Scope and preservation</h2>
@@ -42,16 +43,17 @@
 
   <h2>Existing capabilities and responsibility</h2>
   <table>
+    <caption>Table 2. Interface inventory and responsibility boundaries; these are functional responsibilities, not verified individual assignments.</caption>
     <tr><th>Surface</th><th>Inspected capability</th><th>Responsibility and gap</th></tr>
     <tr><td><code>src/digitalmodel/hydrodynamics/aqwa/</code> and <code>hydrodynamics/diffraction/</code></td><td>AQWA input, output parsing and diffraction preparation.</td><td>Hydrodynamics maintains source geometry, units, components, RAOs and case provenance; these interfaces do not demonstrate pressure transfer to Mechanical.</td></tr>
     <tr><td><code>src/digitalmodel/ansys/</code></td><td>APDL generation, journal reading, native execution evidence and direct-load examples.</td><td>Structural automation maintains model and result provenance; a direct-load result is not evidence of hydrodynamic pressure mapping.</td></tr>
     <tr><td><code>docs/registry/workflows.yaml</code></td><td>Workflow discovery and readiness declarations.</td><td>No entry is activated by this review; engineering readiness needs native comparators and governing criteria.</td></tr>
     <tr><td><code>src/digitalmodel/structural/pressure_transfer.py</code></td><td>New offline pressure integration and six-component comparison.</td><td>Checks supplied loads only; input authenticity, mapping distribution, mass reconciliation and structural response remain external responsibilities.</td></tr>
-    <caption>Table 2. Interface inventory and responsibility boundaries; these are functional responsibilities, not verified individual assignments.</caption>
   </table>
 
   <h2>Engineering findings and dispositions</h2>
   <table>
+    <caption>Table 3. Independent claim review. SOURCE_CHECKED denotes documentary support for the cited release; it is not a native-run verdict.</caption>
     <tr><th>Assertion or check</th><th>Evidence and disposition</th><th>Required next evidence</th></tr>
     <tr><td>One pressure object implies one system per wave.</td><td><strong>CORRECTED.</strong> The <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_import.html">2024 R2 pressure-import documentation</a>, section 8.1.4.1.3, supports multiple wave cases and phase steps within one system.</td><td>Retain a step-to-case record and read back the mapped load for each selected instant.</td></tr>
     <tr><td>Generating the load automatically adds corrective point masses.</td><td><strong>CORRECTED.</strong> Sections 8.1.4.1.7 and 8.1.4.2 describe mass-property comparison and generated accelerations; they do not establish the claimed automatic mass addition.</td><td>Declare the added-mass distribution, acceleration settings and gravity basis; check signed force and moment equilibrium.</td></tr>
@@ -66,7 +68,6 @@
     <tr><td>Moonpool/time-domain and shell-to-solid restrictions.</td><td><strong>SOURCE_CHECKED restrictions.</strong> <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_td_pressure_import.html">Time-domain import</a> excludes moonpool mapping; <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_4.html">shell-to-solid guidance</a> documents projection, section-offset limitations and the two-block file read.</td><td>Qualify the selected release and command route; no native execution is demonstrated here.</td></tr>
     <tr><td>Headless route and repeated wave-case updates are established.</td><td><strong>NOT_EVALUATED.</strong> Workbench schematic control, Mechanical object control and a neutral-file interface are different boundaries. An interface proposal is not execution evidence.</td><td>Supply supported API/configuration details, invocation, exit semantics, retained output and a repeated-case changed-load comparator.</td></tr>
     <tr><td>EDW, dispersion and allowable values are qualified by the definition.</td><td><strong>NOT_EVALUATED.</strong> Governing method and criterion sources are absent; illustrative allowable values are removed.</td><td>Identify signed extremes, RAO conventions, phase origin, physical wave limits and applicable structural clauses before solving.</td></tr>
-    <caption>Table 3. Independent claim review. SOURCE_CHECKED denotes documentary support for the cited release; it is not a native-run verdict.</caption>
   </table>
 
   <h2>Worked example: constant pressure on planar patches</h2>
@@ -74,10 +75,10 @@
     They are not measured data, design allowables or source values from a standard.
     The input is <a href="../../../../examples/ansys/pressure-transfer/input.json">input.json</a>;
     the executable is <a href="../../../../examples/ansys/pressure-transfer/run_example.py">run_example.py</a>.</p>
-  <p><a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/">NASA, Aerodynamic Forces (updated 2025)</a>,
-    Variation in Pressure, supports pressure-area summation. With an outward
-    area vector S and positive compressive pressure p, the patch force is
-    F = −pS. <a href="https://openstax.org/books/university-physics-volume-1/pages/10-6-torque">OpenStax, University Physics Volume 1 (2016)</a>,
+  <p><a href="https://farside.ph.utexas.edu/teaching/336L/Fluidhtml/node128.html">University of Texas at Austin, Fluid Mechanics (2016), Aerodynamic Forces</a>,
+    equation 9.70, gives the negative surface integral of pressure times the
+    outward unit normal. For a uniform planar patch with outward area vector S
+    and positive compressive pressure p, this gives F = −pS. <a href="https://openstax.org/books/university-physics-volume-1/pages/10-6-torque">OpenStax, University Physics Volume 1 (2016)</a>,
     section 10.6, equations 10.22 and 10.24, gives M = Σ((r − O) × F).</p>
   <pre>Input: p = 2.0 Pa; S = (0.0, 0.0, 3.0) m²
        r = (4.0, 5.0, 0.0) m; O = (0.0, 0.0, 0.0) m
@@ -92,15 +93,17 @@ Split mapping: two 1.5 m² patches at x = 3.0 m and 5.0 m, both y = 5.0 m
 Shifted mapping: original patch moved to x = 5.0 m
        Fz = −6.0 N; My = 30.0 N·m; difference My = +6.0 N·m</pre>
   <table>
+    <caption>Table 4. Synthetic arithmetic dispositions; exact zero is a test criterion, not an engineering tolerance.</caption>
     <tr><th>Comparison</th><th>Force difference (N)</th><th>Moment difference (N·m)</th><th>Result and criterion</th></tr>
     <tr><td>Split mapping</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 0.0, 0.0)</td><td>PASS against synthetic exact zero component limits.</td></tr>
     <tr><td>Shifted mapping</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 6.0, 0.0)</td><td>FAIL: moment difference exceeds the synthetic zero limit.</td></tr>
     <tr><td>No supplied criteria</td><td>(0.0, 0.0, 0.0)</td><td>(0.0, 0.0, 0.0)</td><td>NOT_EVALUATED even when the loads match.</td></tr>
-    <caption>Table 4. Synthetic arithmetic dispositions; exact zero is a test criterion, not an engineering tolerance.</caption>
   </table>
   <pre>PYTHONPATH=src python examples/ansys/pressure-transfer/run_example.py</pre>
   <p>The API accepts uniform pressure on planar patches using signed pressure,
     outward oriented area vectors, centroids and an explicit moment origin.
+    Scalars are Python int or float values, excluding bool; vectors are tuples
+    or lists of three such scalars. Callers convert array-library types first.
     Comparisons require the same frame and instantaneous-case identifier.
     Absolute component limits avoid division by a zero reference. Numeric limits
     and their criterion source are required inputs. Missing loads or criteria
@@ -109,7 +112,11 @@ Shifted mapping: original patch moved to x = 5.0 m
   <h2>Verification and limitations</h2>
   <p><code>tests/structural/test_pressure_transfer.py</code> provides independent
     hand calculations for signed pressure, all force and moment components, a pure
-    couple, an origin shift, subdivision, wrong lever arms and threshold boundaries.
+    couple, an origin shift, subdivision, wrong lever arms and both signs at and
+    beyond threshold boundaries. A closed submerged unit cube with a synthetic
+    unit pressure gradient gives upward force 1.0 N and zero moment about its
+    centre; uniform ambient pressure cancels. This buoyancy oracle checks the
+    force sign independently of the single-patch convention.
     Negative tests cover missing criteria/evidence and invalid input. The example's
     output is checked against those hand calculations.</p>
   <p>The comparison can detect a changed resultant and still miss a changed local

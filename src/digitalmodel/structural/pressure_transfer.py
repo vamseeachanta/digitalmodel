@@ -7,6 +7,10 @@ All inputs use SI units in a common right-handed Cartesian frame. Positive
 pressure is compressive and acts opposite an outward oriented area vector.
 Caller-supplied frame and case identifiers are declarations, not authenticated
 evidence. The caller shall reconcile phase, pressure components and units first.
+
+Numeric inputs are Python int or float scalars (excluding bool); vectors must
+be three-component tuples or lists of those scalars. Array-library scalars and
+arrays must be converted to these input types by the caller.
 """
 
 from dataclasses import dataclass
@@ -15,8 +19,9 @@ from math import fsum, isfinite
 Vector3 = tuple[float, float, float]
 
 FORCE_SOURCE = (
-    "NASA, Aerodynamic Forces (updated 2025), Variation in Pressure: "
-    "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/"
+    "University of Texas at Austin, Fluid Mechanics (2016), "
+    "Aerodynamic Forces, equation 9.70 (outward unit normal): "
+    "https://farside.ph.utexas.edu/teaching/336L/Fluidhtml/node128.html"
 )
 MOMENT_SOURCE = (
     "OpenStax, University Physics Volume 1 (2016), section 10.6, "
@@ -124,7 +129,7 @@ def pressure_resultant(patches, *, origin_m, frame, case_id):
     origin = _vector(origin_m)
     forces, moments = [], []
     for patch in patches:
-        # FORCE_SOURCE: pressure-area summation; minus sign uses outward normals.
+        # FORCE_SOURCE, Eq. 9.70: F = -integral(p n dS), n outward.
         force = _vector([-patch.pressure_pa * area for area in patch.area_vector_m2])
         x, y, z = _vector([c - o for c, o in zip(patch.centroid_m, origin)])
         fx, fy, fz = force

@@ -16,6 +16,7 @@ pressure-transfer resultants only; it does not validate the solver chain.
 | --- | --- | --- |
 | Original | 2026-09-12 | The inherited workflow was preserved for independent review in commit `93cf3c927e08504db80fa23e9f1cbc08a6d6d3eb`. |
 | Review | 2026-10-20 | Unsupported limits are withdrawn, multiple-wave support is corrected and readiness is conditioned on retained evidence. |
+| Clarification | 2026-10-22 | The pressure-force citation states the outward-normal convention; equilibrium acceptance uses supplied criteria and unsupported mesh guidance is withdrawn. |
 
 Table R — Document revisions; the original remains available in Git history.
 
@@ -465,7 +466,7 @@ that Mechanical must always be closed is not established by this source.
 
 | Failure mode | Detection |
 | --- | --- |
-| Diffraction solved inside the AQWA editor only; nothing transferred | No pressure contour on the structural model after Generate; check the Solution cell update state |
+| Diffraction solved inside the AQWA editor only; downstream transfer not established | No pressure contour on the structural model after Generate; check the Solution cell update state |
 | Mapping method incompatible with the model content | Generate fails or reports an unmapped selection |
 | Dry or internal faces included in the wetted selection | Pressure contour extends above the waterline |
 | Second-order dependence assumed but not present in the mapped field | Not detectable from the result; shall be caught by review of the analysis basis |
@@ -600,7 +601,7 @@ error. Its applicability and the achieved residuals require independent review.
 | Point masses correct in total but wrongly located | Equilibrium check passes; local inertial load field wrong |
 | Inertia relief applied to a residual exceeding Table 9 | Fictitious body force distributed over the whole model; stress field contaminated with no visible symptom |
 | Restraint set over-stiff | Residual absorbed as restraint reaction; local stress concentration at the restraint reported as a structural result |
-| Displacement basis inconsistent between the two models | Percentage criterion evaluated against the wrong denominator |
+| Displacement basis inconsistent between the two models | A normalized residual uses the wrong denominator; missing Table 9 criterion inputs yield NOT_EVALUATED |
 
 Table 10 — Stage 4 failure modes.
 
@@ -609,12 +610,15 @@ Table 10 — Stage 4 failure modes.
 1. The mass, centre of gravity and inertia tensor of the corrected structural
    model are reported alongside the hydrodynamic values, and the differences are
    within the tolerance stated for the analysis.
-2. The residual unbalanced force in each of the three global directions satisfies
-   Table 9 for the applicable sea condition.
-3. The residual unbalanced moment about each of the three global axes is reported.
-   Where the governing standard states a moment criterion, it is applied; where it
-   does not, the moment residual shall be reported and its structural significance
-   assessed rather than omitted.
+2. The residual unbalanced force in each of the three global directions is
+   reported and compared against the analysis-specific limits supplied under
+   Table 9, including the governing document, edition and clause and any
+   normalization denominator. Missing inputs yield NOT_EVALUATED and prevent
+   acceptance of this stage.
+3. The residual unbalanced moment about each of the three global axes is reported
+   about the Table 9 reference origin and compared against its supplied governing
+   criterion. Missing limits, reference origin or governing criterion yield
+   NOT_EVALUATED and prevent acceptance of this stage.
 4. Where a restraint set is used, the reactions at every restraint are reported
    and are consistent with item 2.
 5. Where inertia relief is used, the relief accelerations are reported and are
@@ -663,10 +667,10 @@ Table 11 — Element selection for the global model.
 The mesh density of the global model shall be sufficient to resolve the global
 load path and to provide a well-converged displacement field at the intended
 submodel cut boundary. It is not required to resolve local stress concentrations,
-which is the function of Stage 6. A commonly applied basis for a stiffened-hull
-global model is one element between stiffeners; the governing requirement is the
-convergence of the cut-boundary displacement field, which shall be demonstrated
-rather than assumed.
+which is the function of Stage 6. The previously stated fixed element count
+between stiffeners is withdrawn because a supporting governing source is absent.
+Mesh adequacy requires demonstrated convergence of the cut-boundary displacement
+field against a stated analysis-specific criterion.
 
 ### 7.6 Boundary conditions
 
@@ -1231,9 +1235,10 @@ review; bibliographic titles alone do not establish access or support a claim.
 - Ansys, *Advanced Analysis Guide*, 2024 R2,
   [§7.2, Using Submodeling](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_2.html),
   [§7.4, Shell-to-Solid Submodels](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_4.html).
-- NASA, [*Aerodynamic Forces*](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/),
-  updated 2025, Variation in Pressure: pressure-area summation, applicable here
-  to declared planar patches, not as a hydrodynamic qualification source.
+- University of Texas at Austin, [*Fluid Mechanics*, Aerodynamic Forces](https://farside.ph.utexas.edu/teaching/336L/Fluidhtml/node128.html),
+  2016, equation 9.70: the pressure force is the negative surface integral of
+  pressure times the outward unit normal. This supports the sign convention for
+  declared planar patches, not hydrodynamic qualification.
 - OpenStax, [*University Physics Volume 1*, §10.6](https://openstax.org/books/university-physics-volume-1/pages/10-6-torque),
   2016, equations 10.22 and 10.24: moments and their summation about one origin.
 

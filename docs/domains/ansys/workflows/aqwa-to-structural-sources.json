@@ -82,16 +82,16 @@
       "raw_copy_committed": false
     },
     {
-      "reference": "nasa-forces",
-      "title": "NASA Aerodynamic Forces",
-      "version": "Updated 2025-09-03",
+      "reference": "university-pressure-force",
+      "title": "University of Texas at Austin Fluid Mechanics: Aerodynamic Forces",
+      "version": "2016-03-31",
       "sections": [
-        "Variation in Pressure"
+        "9.70, outward unit normal"
       ],
-      "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/",
-      "retrieved_at": "2026-10-20T11:16:58Z",
+      "url": "https://farside.ph.utexas.edu/teaching/336L/Fluidhtml/node128.html",
+      "retrieved_at": "2026-10-22T14:33:32Z",
       "http_status": 200,
-      "response_sha256": "2b23a84af2f01b5642b3e519ff87926d27d28ce1f773a749a138e7888a6b0d2b",
+      "response_sha256": "44224fe05f707377d2b1df202c40f6360f7d5dc84afad7289ff3a6e41760745f",
       "intended_use": "Documentary review and cited elementary equations only; no engineering qualification",
       "raw_copy_committed": false
     },
