@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reservoir volumetric analysis</title><style id="house-style">
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style><style>body.hs-doc{--report-accent:#137e8a}code{overflow-wrap:anywhere}pre{white-space:pre-wrap}
+button,select,textarea,input{font:inherit;max-width:100%;margin:6px 0}textarea{display:block;width:100%}
+details{margin:18px 0}summary{cursor:pointer}output{display:block}input[type=range]{width:100%}
+button{padding:6px 12px}svg text{font:15px sans-serif}th,td{overflow-wrap:anywhere}
+@media(max-width:600px){table{table-layout:fixed}nav ol{columns:1}main{overflow-wrap:anywhere}}</style></head>
+<body class="hs-doc">
+<header><h1>Reservoir volumetric analysis</h1><p>Draft for client review</p>
+<p>Revision 0 · 2026-10-21</p></header><div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li>
+<li><a href="#section-3">System and Workflow</a></li><li><a href="#section-4">Data and Basis</a></li>
+<li><a href="#section-5">Detailed Results</a></li><li><a href="#section-6">Recovery Sensitivity</a></li>
+<li><a href="#section-7">Validation Evidence</a></li><li><a href="#section-8">Limits and Recommendations</a></li>
+<li><a href="#section-9">References</a></li><li><a href="#section-10">Appendices</a></li>
+</ol><details><summary>Engineering changes</summary><ul id="change-list"></ul></details></nav>
+<main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The reservoir module is a static oil-volume calculator and well-log display package. Analysis is performed to determine oil initially in place and the change in recoverable volume for specified recovery fractions; key results are summarized below.</p>
+<ul><li>The public teaching example supports calculation review.
+<ul><li>Oil initially in place is <span data-value="oil_in_place" data-raw="42898636.8" data-format=",.1f">42,898,636.8</span> stock-tank barrels. This is the physical upper bound for recovery from the stated volume.</li>
+<li>Recoverable volume is <span data-value="primary" data-raw="9437700.095999999" data-format=",.1f">9,437,700.1</span> stock-tank barrels at the stated primary recovery fraction and <span data-value="raised" data-raw="12869591.04" data-format=",.1f">12,869,591.0</span> stock-tank barrels at the raised fraction.</li>
+<li>The increase is <span data-value="increment" data-raw="3431890.943999999" data-format=",.1f">3,431,890.9</span> stock-tank barrels; the recovery fractions are scenario inputs rather than demonstrated reservoir performance.</li></ul></li>
+<li>Field use remains conditional on evidence.
+<ul><li>Arithmetic regression evidence is available. Field accuracy, a commercial reserves classification and a production schedule are not established.</li>
+<li>Confirm mapped pay, fluid data and a recovery basis before applying a recovery scenario to a development decision.</li></ul></li></ul>
+<p>Source: the retained teaching example, current scalar calculation and open reserves reference; see <a href="#section-5">Detailed Results</a> and <a href="#section-9">References</a>.</p>
+</section>
+<div id="revision-history"><h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-21</td><td>Initial issue explains the scalar workflow and separates arithmetic evidence from reservoir qualification.</td></tr></tbody>
+<caption>Revision history. Initial engineering issue.</caption></table></div>
+
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The public scalar workflow is assessed for a reservoir engineer reviewing an early volumetric estimate. The retained teaching problem is used to demonstrate the callable interface with a documented numerical basis.</p>
+<p>The original teaching page is unavailable during source checking. Its published repository brief and matching regression fixture are used as the retained example record; independent confirmation of the original statement is not established. The open reserves reference supports the equations rather than the example inputs.</p>
+<p>The assessment covers a calculation, not an actual field. No measured reservoir inputs or licensed calculation programs are used.</p>
+</section>
+
+<section id="section-3"><h2>3. System and Workflow</h2>
+<p>The original oil volume is calculated from mapped area, net pay, porosity, initial oil saturation and the initial oil formation volume factor. Recovery scenarios are applied to that stock-tank volume.</p>
+<p>The public input record is named VolumetricInputs. The callable functions ooip_stb, recoverable_stb and incremental_recovery_stb return scalar stock-tank volumes. A stock-tank barrel is abbreviated STB in equations and chart units.</p>
+<figure><svg viewBox="0 0 900 380" role="img" aria-labelledby="rock-title rock-desc">
+<title id="rock-title">Conceptual sealed sandstone accumulation and modeled pay</title>
+<desc id="rock-desc">A curved seal overlies a porous oil-bearing interval and underlying water. Net pay thickness and map area are inputs. No flow or pressure boundary is solved, and no measured geometry is represented.</desc>
+<defs><pattern id="sand" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill="var(--muted)"/></pattern></defs>
+<path d="M40 180Q340 20 650 180L650 210Q340 65 40 210Z" fill="var(--line)" stroke="var(--muted)"/>
+<path d="M40 210Q340 65 650 210L650 265H40Z" fill="url(#sand)" stroke="var(--muted)"/>
+<path d="M130 210Q340 115 560 210Z" fill="var(--report-accent)" opacity=".45"/>
+<path d="M40 265H650V310H40Z" fill="var(--line)"/>
+<path d="M130 210H560" stroke="var(--ink)" stroke-dasharray="5 5"/>
+<path d="M340 65V210" stroke="var(--ink)" stroke-width="5"/>
+<path d="M350 151H470M350 210H470M455 151V210M450 157L455 151L460 157M450 204L455 210L460 204" fill="none" stroke="var(--ink)"/>
+<text x="55" y="50">Seal above porous sandstone</text><path d="M155 60L180 110" stroke="var(--ink)"/>
+<text x="358" y="80">Well intersection</text>
+<text x="478" y="177">Net pay h</text><text x="478" y="199"><tspan data-value="net_pay_ft" data-raw="40.0" data-format=",.3f">40.000</tspan> ft</text>
+<text x="165" y="245">Oil-bearing pores above water contact</text><text x="270" y="295">Underlying water</text>
+<ellipse cx="767" cy="155" rx="90" ry="54" fill="url(#sand)" stroke="var(--ink)"/>
+<text x="692" y="78">Map outline</text><text x="695" y="240">Area A</text>
+<text x="690" y="263"><tspan data-value="area_acres" data-raw="1200.0" data-format=",.1f">1,200.0</tspan> acres</text>
+<text x="55" y="350">Static volume; lateral shape and burial depth are not supplied.</text>
+</svg><figcaption>Figure 3.1. Conceptual control volume. Porosity and oil saturation describe the pore space; the formation volume factor converts reservoir oil volume to stock-tank volume. Shape is schematic and is not a geological interpretation of measured data.</figcaption></figure>
+<p>Mapped area and net pay describe the bulk rock volume. Porosity identifies the pore fraction, oil saturation identifies the oil-filled pore fraction, and the formation volume factor relates reservoir barrels to stock-tank barrels. No pressure distribution, transmissibility, flow boundary or computational mesh is solved.</p>
+<h3>3.1 Not covered</h3>
+<p>The stratigraphic display interface creates gamma-ray, resistivity, density-neutron and facies tracks aligned on formation tops. Its available checks use synthetic data and mocked plotting objects. Geological correlation accuracy, fixed facies colour identity and rendered appearance are not established by those checks.</p>
+<p>Material balance, pressure-transient analysis, production forecasting and the separately packaged reservoir framework are outside this calculation. Broader historical examples request package exports that are absent from the current public initializer; those examples are not treated as executable evidence.</p>
+</section>
+
+<section id="section-4"><h2>4. Data and Basis</h2>
+<p>The retained teaching brief supplies the input basis. Arithmetic is evaluated in field units; the oil formation volume factor is supplied at the same initial reservoir condition as the saturation estimate.</p>
+<p>The example area is <span data-value="area_acres" data-raw="1200.0" data-format=",.1f">1,200.0</span> acres and net pay is <span data-value="net_pay_ft" data-raw="40.0" data-format=",.3f">40.000</span> ft. Porosity is <span data-value="porosity" data-raw="0.18" data-format=".2f">0.18</span> and initial oil saturation is <span data-value="oil_saturation" data-raw="0.8" data-format=".2f">0.80</span>, both fractions. The initial oil formation volume factor is <span data-value="formation_volume_factor" data-raw="1.25" data-format=".2f">1.25</span> reservoir barrels per stock-tank barrel. Primary and raised recovery fractions are <span data-value="primary_factor" data-raw="0.22" data-format=".2f">0.22</span> and <span data-value="raised_factor" data-raw="0.3" data-format=".2f">0.30</span>. Source: retained teaching brief, Given table; input lineage is recorded in the appendix.</p>
+<h3>4.1 Theory and criteria</h3>
+<p>N = C A h φ S<sub>o</sub> / B<sub>oi</sub>; V(R) = N R; ΔV = N(R<sub>raised</sub> − R<sub>primary</sub>).</p>
+<p>N is original oil in place (STB), C is the acre-foot conversion coefficient (barrels per acre-foot), A is area (acres), h is net pay (ft), φ is porosity (fraction), S<sub>o</sub> is initial oil saturation (fraction), B<sub>oi</sub> is initial oil formation volume factor (reservoir barrels per STB), R is recovery fraction, V is recoverable volume (STB), and ΔV is incremental recoverable volume (STB).</p>
+<p>The implemented conversion coefficient is <span data-value="coefficient" data-raw="7758.0" data-format=",.1f">7,758.0</span> barrels per acre-foot. Its stated precision and the volumetric and recovery equations match the open reserves reference, Volumetric estimation subsection, revision identified in <a href="#section-9">References</a>. The increment equation is the difference of the two recovery-volume calculations.</p>
+<p>Finite nonnegative area and pay, fractions between zero and unity, and a positive formation volume factor define the caller input domain. For a physical recovery fraction, the recoverable volume is bounded by the original oil in place; this follows directly from its definition. It is not a recovery-performance acceptance criterion. The scalar module does not enforce these checks.</p>
+<p>Uniform effective properties are assumed by the scalar representation. A homogeneous depiction is marked ASSUMED - to be confirmed for field use. A commercial recovery target, uncertainty range and field validation criterion are NOT_EVALUATED because no field basis is supplied.</p>
+</section>
+
+<section id="section-5"><h2>5. Detailed Results</h2>
+<p>The documented teaching inputs are passed to the public volumetric functions. Each displayed example result is populated from the returned scalar rather than entered as report text.</p>
+<p>Original oil in place is <span data-value="oil_in_place" data-raw="42898636.8" data-format=",.1f">42,898,636.8</span> STB. The primary scenario returns <span data-value="primary" data-raw="9437700.095999999" data-format=",.1f">9,437,700.1</span> STB at recovery fraction <span data-value="primary_factor" data-raw="0.22" data-format=".2f">0.22</span>. The raised scenario returns <span data-value="raised" data-raw="12869591.04" data-format=",.1f">12,869,591.0</span> STB at recovery fraction <span data-value="raised_factor" data-raw="0.3" data-format=".2f">0.30</span>. Incremental recovery is <span data-value="increment" data-raw="3431890.943999999" data-format=",.1f">3,431,890.9</span> STB.</p>
+<p>Both scenarios lie below the oil-in-place bound of <span data-value="oil_in_place" data-raw="42898636.8" data-format=",.1f">42,898,636.8</span> STB. The difference is the additional volume implied by the selected fractions, with no time or cost assigned. Source: retained teaching inputs and the scalar volumetric functions; the matching regression cases are recorded in the appendix.</p>
+</section>
+
+<section id="section-6"><h2>6. Recovery Sensitivity</h2>
+<p>The recoverable volume is varied against recovery fraction while the teaching oil volume is held fixed. Every sampled volume is calculated through the public recovery function.</p>
+<figure><svg id="recovery-chart" viewBox="0 0 840 380"
+role="img" aria-labelledby="curve-title curve-description">
+<title id="curve-title">Recoverable oil against recovery fraction</title>
+<desc id="curve-description">Recovery demand increases with the selected fraction. The dashed line is oil in place, the physical upper bound, rather than an operating acceptance criterion.</desc>
+<path d="M70 60V300H770" fill="none" stroke="currentColor"/>
+<line id="physical-limit" x1="70" y1="60" x2="770" y2="60" stroke="var(--muted)" stroke-dasharray="7 5"/>
+<text x="75" y="47">Physical upper bound = <tspan data-value="oil_in_place" data-raw="42898636.8" data-format=",.1f">42,898,636.8</tspan> STB</text>
+<polyline points="70.00,300.00 77.00,297.60 84.00,295.20 91.00,292.80 98.00,290.40 105.00,288.00 112.00,285.60 119.00,283.20 126.00,280.80 133.00,278.40 140.00,276.00 147.00,273.60 154.00,271.20 161.00,268.80 168.00,266.40 175.00,264.00 182.00,261.60 189.00,259.20 196.00,256.80 203.00,254.40 210.00,252.00 217.00,249.60 224.00,247.20 231.00,244.80 238.00,242.40 245.00,240.00 252.00,237.60 259.00,235.20 266.00,232.80 273.00,230.40 280.00,228.00 287.00,225.60 294.00,223.20 301.00,220.80 308.00,218.40 315.00,216.00 322.00,213.60 329.00,211.20 336.00,208.80 343.00,206.40 350.00,204.00 357.00,201.60 364.00,199.20 371.00,196.80 378.00,194.40 385.00,192.00 392.00,189.60 399.00,187.20 406.00,184.80 413.00,182.40 420.00,180.00 427.00,177.60 434.00,175.20 441.00,172.80 448.00,170.40 455.00,168.00 462.00,165.60 469.00,163.20 476.00,160.80 483.00,158.40 490.00,156.00 497.00,153.60 504.00,151.20 511.00,148.80 518.00,146.40 525.00,144.00 532.00,141.60 539.00,139.20 546.00,136.80 553.00,134.40 560.00,132.00 567.00,129.60 574.00,127.20 581.00,124.80 588.00,122.40 595.00,120.00 602.00,117.60 609.00,115.20 616.00,112.80 623.00,110.40 630.00,108.00 637.00,105.60 644.00,103.20 651.00,100.80 658.00,98.40 665.00,96.00 672.00,93.60 679.00,91.20 686.00,88.80 693.00,86.40 700.00,84.00 707.00,81.60 714.00,79.20 721.00,76.80 728.00,74.40 735.00,72.00 742.00,69.60 749.00,67.20 756.00,64.80 763.00,62.40 770.00,60.00" fill="none" stroke="var(--report-accent)" stroke-width="3"/>
+<circle id="curve-marker" cx="70" cy="300" r="6" fill="var(--report-accent)"/>
+<text x="60" y="322">0</text><text x="750" y="322">100</text>
+<text x="330" y="354">Recovery fraction (%)</text>
+<text transform="translate(23 255) rotate(-90)">Recoverable oil (STB)</text>
+</svg><label for="recovery-selector">Select recovery fraction (%)</label>
+<input id="recovery-selector" type="range" min="0" max="100" value="22" step="1">
+<output id="chart-readout" for="recovery-selector" aria-live="polite"></output>
+<figcaption>Figure 6.1. The documented teaching volume is held fixed. Hover over the curve or use the selector. The dashed bound corresponds to complete recovery; it is not a proposed recovery target. Source: the public volumetric functions and the recovery definition in the open reserves reference.</figcaption></figure>
+<p>The straight line expresses multiplication by a selected fraction. No sweep efficiency, relative permeability, well spacing or depletion history is inferred from it. The chosen recovery scenarios require a separate reservoir-performance basis before field adoption.</p>
+</section>
+
+<section id="section-7"><h2>7. Validation Evidence</h2>
+<p>Current repository checks are used to assess arithmetic and interface behaviour. The recorded execution contains 23 passing cases and 30 skipped cases, with no failed cases or collection errors; the complete scoped outcome record is identified in the reference register.</p>
+<p>The volumetric checks cover a known-volume product, the direction of formation-volume-factor sensitivity, recovery multiplication and recovery increments. The teaching example checks oil in place and both primary and incremental recovery. Comparison is made to the repository's expected arithmetic values; it does not measure agreement against a field survey or an independent reservoir simulation.</p>
+<p>Plotting checks use mocked graphics. Historical framework cases are skipped because the required exports are absent from the package initializer. Skipped cases provide no evidence for production forecasting or material balance.</p>
+<p>No measured reservoir benchmark is present in the scoped evidence set. Field validation is NOT_EVALUATED. The documentation rebuild checks bind displayed values and chart samples to current module calls; they establish consistency of this report, not geological accuracy.</p>
+</section>
+
+<section id="section-8"><h2>8. Limits and Recommendations</h2>
+<p>The scalar model is limited to a supplied static oil-bearing volume. Recovery fractions are user inputs; field performance and commercial classification are not calculated.</p>
+<h3>8.1 Limits of use</h3>
+<p>Heterogeneity, connected pay, free gas, fluid-property variation, aquifer support and time-dependent recovery are not resolved. A single effective saturation is insufficient to establish connected movable oil. Invalid fractions, nonfinite values or a nonpositive divisor are not rejected by the module; the calculation can return an unphysical value or raise an arithmetic error.</p>
+<p>The public worked example demonstrates the arithmetic for its supplied inputs only. Uncertainty, production rates, operating constraints and commercial viability are NOT_EVALUATED. The input source is a retained teaching brief, with the original online statement unavailable.</p>
+<h3>8.2 Recommendations</h3>
+<p>Before field use, establish the mapped connected pay, representative porosity and saturation, and laboratory fluid-volume basis. Confirm the recovery fraction against reservoir-drive evidence and performance data. These actions follow the open reference's distinction between volumetric inventory and recovery efficiency.</p>
+<p>Add caller validation for finite values, physical fractions and a positive divisor before using the scalar result in an engineering decision. Reject an incremental-recovery claim when its raised fraction is below the starting fraction. These recommendations follow the implemented arithmetic and fraction definition.</p>
+<p>A proposed first extension is a validated input wrapper with boundary tests and a documented geological data register. Retain the current nominal arithmetic regression cases. Qualify recovery and stratigraphic interpretation separately against evidence suited to their intended use.</p>
+</section>
+
+<section id="section-9"><h2>9. References</h2>
+<p>The equation basis and retained input record are distinguished below. Repository locators identify implementation and executable evidence; they are not external field-validation records.</p>
+<h3>9.1 Published basis</h3>
+<p><a href="https://wiki.aapg.org/index.php?title=Reserves_estimation&oldid=27160">AAPG, Development Geology Reference Manual, Reserves estimation, Volumetric estimation, wiki revision 27160</a>, accessed 2026-10-21. The open edition states the conversion coefficient and oil-in-place and recovery equations. No licensed table or standard is reproduced.</p>
+<p><a href="https://app.collide.io/posts/pe-problem-of-the-day-5-21-2026">Public petroleum-engineering teaching problem, 21 May 2026</a>, Given inputs, worked solution and recovery scenarios, retained repository edition. Original page unavailable at checking; no independently checked edition identifier is available.</p>
+<h3>9.2 Repository evidence and reproduction</h3>
+<p>Retained input record: <code>docs/collide_pe/briefs/pe-2026-05-21.html</code>. Public calculation: <code>src/digitalmodel/reservoir/volumetrics.py</code>. Plotting interface: <code>src/digitalmodel/reservoir/stratigraphic.py</code>. Broader API status: <code>src/digitalmodel/reservoir/__init__.py</code> and <code>tests/test_reservoir_framework.py</code>.</p>
+<p>Scoped execution record: <code>docs/reports/modules/reservoir/validation.json</code>. Rebuild: <code>PYTHONPATH=src python scripts/reporting/generate_reservoir_report.py</code>. Report checks: <code>python -m pytest tests/reservoir/test_module_report.py</code>. The public calls are:</p>
+<pre><code>from digitalmodel.reservoir.volumetrics import (
+    VolumetricInputs, ooip_stb, recoverable_stb, incremental_recovery_stb,
+)
+# Inputs and recovery fractions are read from the cited Given table.
+original = ooip_stb(VolumetricInputs(**documented_inputs))
+primary = recoverable_stb(original, primary_factor)
+raised = recoverable_stb(original, raised_factor)
+increment = incremental_recovery_stb(original, primary_factor, raised_factor)</code></pre>
+<table><thead><tr><th>Record</th><th>SHA-256 digest</th></tr></thead><tbody><tr><td><code>docs/collide_pe/briefs/pe-2026-05-21.html</code></td><td><code>bae44da4ee069fc36f2a873bcd13dcb281ed89db5e9830469d4580a7f1b913b8</code></td></tr><tr><td><code>src/digitalmodel/reservoir/volumetrics.py</code></td><td><code>80ecf9dc374d64d8403bbd3305846a976b739781b76fd8a77a40291f03be9a04</code></td></tr><tr><td><code>docs/reports/modules/reservoir/validation.json</code></td><td><code>c2d5db1a9752227630df07d4684c04d84f6f8865ae6fc476150d9f854ef3a16a</code></td></tr><tr><td><code>docs/reports/pipeline-ffs-assessment.html</code></td><td><code>488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f</code></td></tr></tbody><caption>Table 9.1. Byte identities for the report basis.</caption></table>
+</section>
+
+<section id="section-10"><h2>10. Appendices</h2>
+<p>The numerical lineage, qualification gaps and scoped check outcomes are retained below. The reader can distinguish supplied teaching inputs from missing field evidence.</p>
+<h3>10.1 Data register</h3>
+<table><thead><tr><th>Item</th><th>Origin and intended use</th><th>Qualification</th><th>Source</th></tr></thead><tbody>
+<tr><td>Area, pay, porosity, saturation and fluid-volume factor</td><td>Retained public teaching brief; demonstration only</td><td>Documented example inputs; no measured field basis</td><td>Section 9.2, retained input record</td></tr>
+<tr><td>Recovery fractions</td><td>Retained teaching scenarios; recovery multiplication</td><td>Scenario inputs; performance not established</td><td>Section 9.2, retained input record</td></tr>
+<tr><td>Uniform effective properties and conceptual shape</td><td>Scalar idealisation and explanatory schematic</td><td>ASSUMED - to be confirmed for field use</td><td>Section 9.2, public calculation documentation</td></tr>
+<tr><td>Mapped connected volume, laboratory fluid data and production history</td><td>Required field inputs</td><td>NOT_EVALUATED; records are not supplied</td><td>Section 9.1, volumetric and recovery basis</td></tr>
+<tr><td>Commercial target and field-validation tolerance</td><td>Required decision criteria</td><td>NOT_EVALUATED; no numerical threshold is assigned</td><td>Section 9.1, distinction between inventory and recovery</td></tr>
+</tbody><caption>Table 10.1. Data register. No missing field value is replaced by a guessed number.</caption></table>
+<h3>10.2 Quality checks and limits of evidence</h3>
+<table><thead><tr><th>Evidence group</th><th>Passed (cases)</th><th>Skipped (cases)</th><th>Source</th></tr></thead><tbody><tr><td>Package and public interface</td><td>8</td><td>0</td><td>Section 9.2, scoped execution record</td></tr><tr><td>Stratigraphic display with mocked graphics</td><td>8</td><td>0</td><td>Section 9.2, scoped execution record</td></tr><tr><td>Volumetric arithmetic and teaching example</td><td>7</td><td>0</td><td>Section 9.2, scoped execution record</td></tr><tr><td>Historical framework with absent exports</td><td>0</td><td>30</td><td>Section 9.2, scoped execution record</td></tr></tbody><caption>Table 10.2. Existing module test outcomes. Skipped cases are not validation evidence.</caption></table>
+<p>Input and result units are stated in the basis. Source digests identify the retained bytes. The report rebuild and interface checks cover numerical agreement, internal references, offline interaction, and comment export and import. The record above covers the existing module checks; it does not count the report checks as reservoir validation.</p>
+<p>Comments are held in memory until saved. Use the save control and select a file beside this report. Where the browser offers download only, move the downloaded comments file beside the report. Load that file to continue a review; no automatic adjacent-file access is assumed.</p>
+</section>
+<details id="comments-panel"><summary>Comments on this report</summary>
+<label for="comment-section">Section</label><select id="comment-section"><option value="section-1">Section 1</option><option value="section-2">Section 2</option><option value="section-3">Section 3</option><option value="section-4">Section 4</option><option value="section-5">Section 5</option><option value="section-6">Section 6</option><option value="section-7">Section 7</option><option value="section-8">Section 8</option><option value="section-9">Section 9</option><option value="section-10">Section 10</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" maxlength="10000"></textarea>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-export" type="button">Save comments beside this report</button>
+<label for="comment-import">Load saved comments</label><input id="comment-import" type="file" accept=".json,application/json">
+<p id="comment-status" role="status">Comments remain in memory until saved.</p><ul id="comment-list"></ul></details>
+</main></div>
+<script id="calculation-data" type="application/json">{"inputs": {"area_acres": 1200.0, "net_pay_ft": 40.0, "porosity": 0.18, "oil_saturation": 0.8, "formation_volume_factor": 1.25}, "factors": {"primary_factor": 0.22, "raised_factor": 0.3}, "results": {"oil_in_place": 42898636.8, "primary": 9437700.095999999, "raised": 12869591.04, "increment": 3431890.943999999}, "values": {"area_acres": 1200.0, "net_pay_ft": 40.0, "porosity": 0.18, "oil_saturation": 0.8, "formation_volume_factor": 1.25, "primary_factor": 0.22, "raised_factor": 0.3, "coefficient": 7758.0, "oil_in_place": 42898636.8, "primary": 9437700.095999999, "raised": 12869591.04, "increment": 3431890.943999999}, "curve": [{"factor": 0.0, "volume": 0.0, "limit": 42898636.8}, {"factor": 0.01, "volume": 428986.36799999996, "limit": 42898636.8}, {"factor": 0.02, "volume": 857972.7359999999, "limit": 42898636.8}, {"factor": 0.03, "volume": 1286959.1039999998, "limit": 42898636.8}, {"factor": 0.04, "volume": 1715945.4719999998, "limit": 42898636.8}, {"factor": 0.05, "volume": 2144931.84, "limit": 42898636.8}, {"factor": 0.06, "volume": 2573918.2079999996, "limit": 42898636.8}, {"factor": 0.07, "volume": 3002904.576, "limit": 42898636.8}, {"factor": 0.08, "volume": 3431890.9439999997, "limit": 42898636.8}, {"factor": 0.09, "volume": 3860877.3119999995, "limit": 42898636.8}, {"factor": 0.1, "volume": 4289863.68, "limit": 42898636.8}, {"factor": 0.11, "volume": 4718850.0479999995, "limit": 42898636.8}, {"factor": 0.12, "volume": 5147836.415999999, "limit": 42898636.8}, {"factor": 0.13, "volume": 5576822.784, "limit": 42898636.8}, {"factor": 0.14, "volume": 6005809.152, "limit": 42898636.8}, {"factor": 0.15, "volume": 6434795.52, "limit": 42898636.8}, {"factor": 0.16, "volume": 6863781.887999999, "limit": 42898636.8}, {"factor": 0.17, "volume": 7292768.256, "limit": 42898636.8}, {"factor": 0.18, "volume": 7721754.623999999, "limit": 42898636.8}, {"factor": 0.19, "volume": 8150740.992, "limit": 42898636.8}, {"factor": 0.2, "volume": 8579727.36, "limit": 42898636.8}, {"factor": 0.21, "volume": 9008713.727999998, "limit": 42898636.8}, {"factor": 0.22, "volume": 9437700.095999999, "limit": 42898636.8}, {"factor": 0.23, "volume": 9866686.464, "limit": 42898636.8}, {"factor": 0.24, "volume": 10295672.831999999, "limit": 42898636.8}, {"factor": 0.25, "volume": 10724659.2, "limit": 42898636.8}, {"factor": 0.26, "volume": 11153645.568, "limit": 42898636.8}, {"factor": 0.27, "volume": 11582631.936, "limit": 42898636.8}, {"factor": 0.28, "volume": 12011618.304, "limit": 42898636.8}, {"factor": 0.29, "volume": 12440604.671999998, "limit": 42898636.8}, {"factor": 0.3, "volume": 12869591.04, "limit": 42898636.8}, {"factor": 0.31, "volume": 13298577.408, "limit": 42898636.8}, {"factor": 0.32, "volume": 13727563.775999999, "limit": 42898636.8}, {"factor": 0.33, "volume": 14156550.144, "limit": 42898636.8}, {"factor": 0.34, "volume": 14585536.512, "limit": 42898636.8}, {"factor": 0.35, "volume": 15014522.879999997, "limit": 42898636.8}, {"factor": 0.36, "volume": 15443509.247999998, "limit": 42898636.8}, {"factor": 0.37, "volume": 15872495.615999999, "limit": 42898636.8}, {"factor": 0.38, "volume": 16301481.984, "limit": 42898636.8}, {"factor": 0.39, "volume": 16730468.352, "limit": 42898636.8}, {"factor": 0.4, "volume": 17159454.72, "limit": 42898636.8}, {"factor": 0.41, "volume": 17588441.088, "limit": 42898636.8}, {"factor": 0.42, "volume": 18017427.455999997, "limit": 42898636.8}, {"factor": 0.43, "volume": 18446413.823999997, "limit": 42898636.8}, {"factor": 0.44, "volume": 18875400.191999998, "limit": 42898636.8}, {"factor": 0.45, "volume": 19304386.56, "limit": 42898636.8}, {"factor": 0.46, "volume": 19733372.928, "limit": 42898636.8}, {"factor": 0.47, "volume": 20162359.295999996, "limit": 42898636.8}, {"factor": 0.48, "volume": 20591345.663999997, "limit": 42898636.8}, {"factor": 0.49, "volume": 21020332.031999998, "limit": 42898636.8}, {"factor": 0.5, "volume": 21449318.4, "limit": 42898636.8}, {"factor": 0.51, "volume": 21878304.768, "limit": 42898636.8}, {"factor": 0.52, "volume": 22307291.136, "limit": 42898636.8}, {"factor": 0.53, "volume": 22736277.504, "limit": 42898636.8}, {"factor": 0.54, "volume": 23165263.872, "limit": 42898636.8}, {"factor": 0.55, "volume": 23594250.240000002, "limit": 42898636.8}, {"factor": 0.56, "volume": 24023236.608, "limit": 42898636.8}, {"factor": 0.57, "volume": 24452222.975999996, "limit": 42898636.8}, {"factor": 0.58, "volume": 24881209.343999997, "limit": 42898636.8}, {"factor": 0.59, "volume": 25310195.711999997, "limit": 42898636.8}, {"factor": 0.6, "volume": 25739182.08, "limit": 42898636.8}, {"factor": 0.61, "volume": 26168168.448, "limit": 42898636.8}, {"factor": 0.62, "volume": 26597154.816, "limit": 42898636.8}, {"factor": 0.63, "volume": 27026141.183999997, "limit": 42898636.8}, {"factor": 0.64, "volume": 27455127.551999997, "limit": 42898636.8}, {"factor": 0.65, "volume": 27884113.919999998, "limit": 42898636.8}, {"factor": 0.66, "volume": 28313100.288, "limit": 42898636.8}, {"factor": 0.67, "volume": 28742086.656, "limit": 42898636.8}, {"factor": 0.68, "volume": 29171073.024, "limit": 42898636.8}, {"factor": 0.69, "volume": 29600059.391999997, "limit": 42898636.8}, {"factor": 0.7, "volume": 30029045.759999994, "limit": 42898636.8}, {"factor": 0.71, "volume": 30458032.127999995, "limit": 42898636.8}, {"factor": 0.72, "volume": 30887018.495999996, "limit": 42898636.8}, {"factor": 0.73, "volume": 31316004.863999996, "limit": 42898636.8}, {"factor": 0.74, "volume": 31744991.231999997, "limit": 42898636.8}, {"factor": 0.75, "volume": 32173977.599999998, "limit": 42898636.8}, {"factor": 0.76, "volume": 32602963.968, "limit": 42898636.8}, {"factor": 0.77, "volume": 33031950.336, "limit": 42898636.8}, {"factor": 0.78, "volume": 33460936.704, "limit": 42898636.8}, {"factor": 0.79, "volume": 33889923.072, "limit": 42898636.8}, {"factor": 0.8, "volume": 34318909.44, "limit": 42898636.8}, {"factor": 0.81, "volume": 34747895.808, "limit": 42898636.8}, {"factor": 0.82, "volume": 35176882.176, "limit": 42898636.8}, {"factor": 0.83, "volume": 35605868.54399999, "limit": 42898636.8}, {"factor": 0.84, "volume": 36034854.91199999, "limit": 42898636.8}, {"factor": 0.85, "volume": 36463841.279999994, "limit": 42898636.8}, {"factor": 0.86, "volume": 36892827.647999994, "limit": 42898636.8}, {"factor": 0.87, "volume": 37321814.015999995, "limit": 42898636.8}, {"factor": 0.88, "volume": 37750800.383999996, "limit": 42898636.8}, {"factor": 0.89, "volume": 38179786.752, "limit": 42898636.8}, {"factor": 0.9, "volume": 38608773.12, "limit": 42898636.8}, {"factor": 0.91, "volume": 39037759.488, "limit": 42898636.8}, {"factor": 0.92, "volume": 39466745.856, "limit": 42898636.8}, {"factor": 0.93, "volume": 39895732.224, "limit": 42898636.8}, {"factor": 0.94, "volume": 40324718.59199999, "limit": 42898636.8}, {"factor": 0.95, "volume": 40753704.95999999, "limit": 42898636.8}, {"factor": 0.96, "volume": 41182691.327999994, "limit": 42898636.8}, {"factor": 0.97, "volume": 41611677.695999995, "limit": 42898636.8}, {"factor": 0.98, "volume": 42040664.063999996, "limit": 42898636.8}, {"factor": 0.99, "volume": 42469650.432, "limit": 42898636.8}, {"factor": 1.0, "volume": 42898636.8, "limit": 42898636.8}], "evidence": {"scope": "Existing reservoir module checks; report checks excluded", "date": "2026-10-21", "command": "python -m pytest tests/reservoir/test_reservoir.py tests/reservoir/test_stratigraphic.py tests/reservoir/test_volumetrics.py tests/test_reservoir_framework.py -q -p no:cacheprovider", "counts": {"passed": 23, "skipped": 30, "failed": 0, "errors": 0}, "cases": [{"file": "tests/reservoir/test_reservoir.py", "name": "test_import_reservoir_package", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_package_has_docstring", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_init_exists", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_stratigraphic_module_exists", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_script_uses_matplotlib", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_script_uses_pandas", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_script_references_well_data", "outcome": "passed"}, {"file": "tests/reservoir/test_reservoir.py", "name": "test_script_not_importable_due_to_globals", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_import_module", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_import_all_public_functions", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_create_cross_section_returns_figure", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_plot_gr_track_accepts_ax_and_df", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_plot_rt_track_accepts_ax_and_df", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_create_cross_section_empty_wells_list", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_create_cross_section_missing_columns", "outcome": "passed"}, {"file": "tests/reservoir/test_stratigraphic.py", "name": "test_plot_facies_track_accepts_ax_and_df", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_known_volumetric", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_higher_boi_lowers_ooip", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_recoverable_is_fraction_of_ooip", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_incremental_uplift", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_a_ooip", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_b_primary_recoverable_22pct", "outcome": "passed"}, {"file": "tests/reservoir/test_volumetrics.py", "name": "test_c_secondary_uplift_22_to_30pct", "outcome": "passed"}, {"file": "tests/test_reservoir_framework.py", "name": "test_bulk_density_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_formation_factor_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_rock_properties_creation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_rock_properties_validation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_api_to_specific_gravity", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_oil_density_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_helper_functions", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_ooip_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_pore_volume_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_saturation_validation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_permeability_correlations", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_porosity_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_water_saturation_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_facies_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_log_curve_creation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_net_pay_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_porosity_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_water_saturation_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_cumulative_production_calculation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_production_data_addition", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_tank_material_balance", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_decline_analysis", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_production_forecast", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_tvd_auto_assignment", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_well_data_creation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_integrated_analysis", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_model_creation", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_model_export", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_well_addition", "outcome": "skipped"}, {"file": "tests/test_reservoir_framework.py", "name": "test_complete_reservoir_analysis_workflow", "outcome": "skipped"}], "source_digests": {"src/digitalmodel/reservoir/__init__.py": "1479e966e408017977ec0287e40f857e14e85fa8640b285d1de35a70f138d662", "src/digitalmodel/reservoir/volumetrics.py": "80ecf9dc374d64d8403bbd3305846a976b739781b76fd8a77a40291f03be9a04", "src/digitalmodel/reservoir/stratigraphic.py": "e21bbbb5097b173249913f632a77e5691adf9e9adcefddb65a5a2f718f56d72a", "tests/reservoir/test_reservoir.py": "f1447aa57031ef5932856b8e4c774b345a1d70573b65f0925cd37d3746a14d86", "tests/reservoir/test_stratigraphic.py": "2db251d86c94e1464cb1b1261e2957e1c79b9b915acda9a5a4991e7ba6a0645c", "tests/reservoir/test_volumetrics.py": "9788ef8151ab0ae1706207c7c906d8135bf43929ca6eef65862d3744b67a8864", "tests/test_reservoir_framework.py": "842a030cb9b3fc23f1851e79e84fc0f4fe7344d0af52ae71317c86b42852b5bc", "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3", "tests/conftest.py": "02942e332c8dbd0c51f575c3073fb152aa92ece15efc6418c16f5f9fb8202a00", "conftest.py": "842669d8b60bfa0252086645f9e7440e1fc4409e9ec603e48e904c813565b038"}}, "source_digests": {"docs/collide_pe/briefs/pe-2026-05-21.html": "bae44da4ee069fc36f2a873bcd13dcb281ed89db5e9830469d4580a7f1b913b8", "src/digitalmodel/reservoir/volumetrics.py": "80ecf9dc374d64d8403bbd3305846a976b739781b76fd8a77a40291f03be9a04", "docs/reports/modules/reservoir/validation.json": "c2d5db1a9752227630df07d4684c04d84f6f8865ae6fc476150d9f854ef3a16a", "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f"}, "style_source": "docs/reports/pipeline-ffs-assessment.html"}</script>
+<script id="changes-data" type="application/json">{"report": "reservoir-volumetric-analysis", "revision": "0", "date": "2026-10-21", "previous_revision": null, "changes": [{"section": "section-5", "description": "Initial issue presents oil in place, recovery scenarios and the physical volume bound."}, {"section": "section-7", "description": "Arithmetic evidence and missing field qualification are distinguished."}]}</script>
+<script>
+(function () {
+  const data = JSON.parse(document.getElementById('calculation-data').textContent);
+  const selector = document.getElementById('recovery-selector');
+  const chart = document.getElementById('recovery-chart');
+  const marker = document.getElementById('curve-marker');
+  function show(index) {
+    const point = data.curve[index];
+    selector.value = index;
+    marker.setAttribute('cx', 70 + point.factor * 700);
+    marker.setAttribute('cy', 300 - point.volume / point.limit * 240);
+    const fmt = number => number.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+    const text = `Teaching example; oil volume; recovery fraction ${fmt(point.factor * 100)} %; demand ${fmt(point.volume)} STB; physical limit ${fmt(point.limit)} STB.`;
+    document.getElementById('chart-readout').textContent = text;
+    marker.replaceChildren();
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = text; marker.append(title);
+  }
+  selector.addEventListener('input', () => show(Number(selector.value)));
+  chart.addEventListener('pointermove', event => {
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(chart.getScreenCTM().inverse());
+    show(Math.max(0, Math.min(100, Math.round((point.x - 70) / 7))));
+  });
+  show(Math.round(data.factors.primary_factor * 100));
+
+  const change = JSON.parse(document.getElementById('changes-data').textContent);
+  const list = document.getElementById('change-list');
+  change.changes.forEach(item => {
+    const li = document.createElement('li'); li.textContent = item.description; list.append(li);
+  });
+  let comments = [];
+  const status = document.getElementById('comment-status');
+  const allowed = new Set(Array.from(document.querySelectorAll('main > section')).map(node => node.id));
+  function render() {
+    const list = document.getElementById('comment-list'); list.replaceChildren();
+    comments.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${document.getElementById(item.section).querySelector('h2').textContent}: ${item.text}`;
+      list.append(li);
+    });
+  }
+  document.getElementById('comment-add').addEventListener('click', () => {
+    const input = document.getElementById('comment-text');
+    const text = input.value.trim();
+    if (!text) { status.textContent = 'Enter a comment before adding it.'; return; }
+    comments.push({section: document.getElementById('comment-section').value, text});
+    input.value = ''; render(); status.textContent = 'Comment added in memory. Save comments before closing.';
+  });
+  document.getElementById('comment-export').addEventListener('click', async () => {
+    const bytes = JSON.stringify({report: 'reservoir-volumetric-analysis', revision: '0', comments}, null, 2);
+    const suggestedName = 'reservoir.comments.json';
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({suggestedName, types: [{description: 'Comments', accept: {'application/json': ['.json']}}]});
+        const writable = await handle.createWritable(); await writable.write(bytes); await writable.close();
+        status.textContent = 'Comments saved. Keep the comments file beside this report.'; return;
+      } catch (error) {
+        if (error.name === 'AbortError') { status.textContent = 'Save cancelled; comments remain in memory.'; return; }
+      }
+    }
+    const url = URL.createObjectURL(new Blob([bytes], {type: 'application/json'}));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = suggestedName; anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Comments downloaded. Move the comments file beside this report.';
+  });
+  document.getElementById('comment-import').addEventListener('change', async event => {
+    try {
+      const file = event.target.files[0]; if (!file) return;
+      if (file.size > 1000000) throw new Error('Comments file exceeds the interface size limit.');
+      const incoming = JSON.parse(await file.text());
+      if (incoming.report !== 'reservoir-volumetric-analysis' || incoming.revision !== '0' || !Array.isArray(incoming.comments)
+          || !incoming.comments.every(item => allowed.has(item.section) && typeof item.text === 'string' && item.text.length <= 10000)) {
+        throw new Error('Comments do not match this report and revision.');
+      }
+      comments = incoming.comments.map(({section, text}) => ({section, text})); render();
+      status.textContent = 'Saved comments loaded.';
+    } catch (error) { status.textContent = error.message; }
+  });
+})();
+</script></body></html>

@@ -268,6 +268,14 @@ reports/
 !docs/reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
+# Retain the standalone reservoir report and its reproducible evidence.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/reservoir/
+docs/reports/modules/reservoir/*
+!docs/reports/modules/reservoir/index.html
+!docs/reports/modules/reservoir/changes.json
+!docs/reports/modules/reservoir/validation.json
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
