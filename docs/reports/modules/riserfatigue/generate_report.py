@@ -32,15 +32,21 @@ ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = ROOT / "examples/workflows/riser-fatigue/input.yml"
 CHANGES = {
     "report": "Riser fatigue module analysis",
-    "revision": "Initial",
-    "date": "2026-10-21",
+    "revision": "A",
+    "date": "2026-10-22",
     "changes": [
         {
             "section": "Supplied-response fatigue screening",
             "change": "Wave and vortex-induced vibration damage, the governing location, "
                       "and the fatigue-factor criterion are presented for the public synthetic example.",
             "reason": "The calculation boundary and the evidence needed for design use are made explicit.",
-        }
+        },
+        {
+            "section": "Calculation traceability and report reproduction",
+            "change": "Independent arithmetic checks, identifier-based location labels, UTF-8 and LF "
+                      "reproduction, and engineering table presentation are added.",
+            "reason": "The screening evidence remains reproducible across platforms and input ordering.",
+        },
     ],
 }
 SOURCE_PATHS = [
@@ -58,6 +64,12 @@ SOURCE_PATHS = [
 ]
 
 
+def source_digest(path: Path) -> str:
+    """Hash UTF-8 source text with checkout line endings normalized to LF."""
+    with path.open(encoding="utf-8", newline=None) as stream:
+        return hashlib.sha256(stream.read().encode("utf-8")).hexdigest()
+
+
 def build_payload(scratch_dir: Path) -> dict:
     """Call the real router and touchdown API; retain their unrounded results."""
     cfg = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
@@ -65,7 +77,12 @@ def build_payload(scratch_dir: Path) -> dict:
     inputs.pop("output_dir")
     cfg["riser_fatigue"]["output_dir"] = str(scratch_dir.resolve())
     result = router(cfg)["riser_fatigue"]
-    with Path(result["results_csv"]).open(encoding="utf-8") as stream:
+    csv_path = Path(result["results_csv"])
+    if not csv_path.is_absolute():
+        # The workflow displays checkout-relative paths for in-checkout output.
+        # The actual output directory is the explicit scratch destination.
+        csv_path = scratch_dir.resolve() / csv_path.name
+    with csv_path.open(encoding="utf-8", newline="") as stream:
         bins = []
         for row in csv.DictReader(stream):
             for key in row.keys() - {"segment_id", "contribution"}:
@@ -109,7 +126,7 @@ def build_payload(scratch_dir: Path) -> dict:
             for seg in result["segments"]
         ],
         "source_digests": {
-            path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in SOURCE_PATHS
+            path: source_digest(ROOT / path) for path in SOURCE_PATHS
         },
     }
     return payload
@@ -157,8 +174,17 @@ def render(record: dict) -> str:
                 + ''.join('<tr>' + ''.join(f'<td>{cell}</td>' for cell in row) + '</tr>' for row in rows)
                 + '</tbody></table></div>')
 
-    labels = {record["inputs"]["segments"][0]["id"]: "Touchdown zone",
-              record["inputs"]["segments"][1]["id"]: "Hang-off"}
+    labels = {"TDZ-sandwave": "Touchdown zone", "hangoff": "Hang-off"}
+    segment_ids = (
+        [segment["id"] for segment in record["inputs"]["segments"]]
+        + [segment["segment_id"] for segment in record["result"]["segments"]]
+        + [row["segment_id"] for row in record["bins"]]
+        + [row["component"] for row in record["chart"]]
+        + [record["result"]["governing_segment"]]
+    )
+    for segment_id in segment_ids:
+        if segment_id not in labels:
+            raise ValueError(f"Unknown segment id {segment_id!r}; an engineering narrative update is required")
     governing = labels[record["result"]["governing_segment"]]
     governing_index = next(index for index, segment in enumerate(record["result"]["segments"])
                            if segment["segment_id"] == record["result"]["governing_segment"])
@@ -170,13 +196,13 @@ def render(record: dict) -> str:
         prefix = f"inputs.segments.{index}"
         input_rows.append([
             labels[segment["id"]], metric(prefix + ".outer_diameter_mm"),
-            metric(prefix + ".wall_thickness_mm"), metric(prefix + ".wave.scf", ".2f"),
+            metric(prefix + ".wall_thickness_mm", ".3f"), metric(prefix + ".wave.scf", ".2f"),
             metric(prefix + ".wave.histogram_period_years"), cite(1),
         ])
         for bin_index, _ in enumerate(segment["wave"]["cycles"]):
             wave_rows.append([
                 labels[segment["id"]], metric(prefix + f".wave.stress_ranges_MPa.{bin_index}"),
-                metric(prefix + f".wave.cycles.{bin_index}", ".1e"), cite(1),
+                metric(prefix + f".wave.cycles.{bin_index}", ",.0f"), cite(1),
             ])
         for case_index, case in enumerate(segment["viv_cases"]):
             base = prefix + f".viv_cases.{case_index}"
@@ -187,9 +213,9 @@ def render(record: dict) -> str:
                 "Not supplied" if hours else metric(base + ".exposure_fraction", ".3f"),
                 metric(base + ".exposure_hours_per_year") if hours else "Not supplied", cite(1),
             ])
-        summary = record["result"]["segments"][index]
+    for index, summary in enumerate(record["result"]["segments"]):
         result_rows.append([
-            labels[segment["id"]],
+            labels[summary["segment_id"]],
             *[metric(f"result.segments.{index}.{key}", ".1e" if "damage" in key else ".1f")
               for key in summary_fields],
             "The screening criterion is met." if summary["passes_dff"]
@@ -203,7 +229,8 @@ def render(record: dict) -> str:
             *["Not applicable" if row[field] is None else metric(
                 f"bins.{index}.{field}", ".0f" if field == "bin_index"
                 else ".2f" if field == "frequency_hz"
-                else ".1e" if field in {"cycles", "allowable_cycles", "damage"} else ".1f")
+                else ",.0f" if field in {"cycles", "allowable_cycles"}
+                else ".1e" if field == "damage" else ".1f")
               for field in fields], cite(2),
         ])
     section_table = table(
@@ -272,9 +299,10 @@ def render(record: dict) -> str:
 <title>Riser fatigue module analysis</title>
 <style>{canonical}</style>
 <style>{report_style}</style>
+<style>table caption {{ caption-side: bottom; }}</style>
 </head><body class="hs-doc"><main class="wrap">
 <header><div class="kicker">Engineering module analysis</div>
-<h1>Riser fatigue module analysis</h1><p class="sub">Draft for client review</p></header>
+<h1>Riser fatigue module analysis</h1><p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report sections"><a href="#s1">Summary</a> · <a href="#s3">Design data</a> ·
 <a href="#s4">Method</a> · <a href="#s5">Results</a> · <a href="#s8">Recommendations</a> ·
 <a href="#appendix">Appendices</a> · <a href="#comments">Comments</a></nav>
@@ -298,8 +326,11 @@ neither is established by the synthetic example or the existing regression check
 {chart}
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>Initial</td><td>{CHANGES["date"]}</td><td>Supplied-response fatigue screening is documented
-to distinguish damage arithmetic from riser response and design qualification.</td></tr></tbody></table>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>Supplied-response fatigue screening is documented
+to distinguish damage arithmetic from riser response and design qualification.</td></tr>
+<tr><td>{CHANGES["revision"]}</td><td>{CHANGES["date"]}</td><td>Portable report reproduction,
+identifier-based location labels and independent arithmetic checks are added to make the
+screening evidence reproducible; table presentation and scope wording are corrected.</td></tr></tbody></table>
 </section>
 
 <section id="s2"><h2>2. Introduction</h2>
@@ -381,7 +412,7 @@ buoyancy and stops belong to the upstream structural model and are not inputs to
 t is wall thickness, t<sub>r</sub> is reference thickness and k is the class-specific thickness exponent.
 S<sub>c</sub> is the evaluated stress range. The correction is neutral below reference thickness.
 The reference thickness used by the touchdown interface is
-{metric("touchdown.0.thickness_ref_mm")} mm. The exponent is selected from the repository tables
+{metric("touchdown.0.thickness_ref_mm", ".3f")} mm. The exponent is selected from the repository tables
 for the detail category unless explicitly supplied to the touchdown interface. {cite(2)}{cite(4)}</p>
 <div class="eq">N(S<sub>c</sub>) = N<sub>k</sub> (S<sub>c</sub> / S<sub>k</sub>)<sup>−m</sup>;
 D<sub>p</sub> = Σ n<sub>j</sub> / N<sub>j</sub></div>
@@ -430,11 +461,10 @@ Only supplied-response fatigue is evaluated; results are not established for the
 NOT_EVALUATED. Geometry, weight, buoyancy, pressure, tension and motion inputs are required.
 No allowable offset is established. {cite(1)}{cite(2)}</p>
 <h3>5.2 Dynamics, drift-off, recoil and weak point</h3>
-<p>Dynamic stroke, tension and angles are NOT_EVALUATED. Stop strikes and travel limits are not assessed.
-Drift-off in the 1-year current and in the 10-year current is NOT_EVALUATED; current histories,
-a watch circle and a drift model are required. Time available is not established. Without a watch circle,
-do not connect. Recoil is not evaluated: data needed: closure curves. Weak point analysis is not performed.
-These statements describe absent assessments, not fatigue failures. {cite(1)}{cite(2)}</p>
+<p>Not applicable to this supplied-stress fatigue screen: drilling-riser operability assessments,
+including drift-off, recoil, travel limits and weak-point analysis. These assessments are NOT_EVALUATED
+by the module. No operating instruction or connected operating limit follows from this calculation.
+{cite(1)}{cite(2)}</p>
 <h3>5.3 Vortex-induced vibration and fatigue</h3>
 <p>The {governing.lower()} governs with wave damage
 {metric("result.governing_wave_damage", ".1e")} and vibration damage
@@ -595,7 +625,10 @@ Numeric data behind the figures are embedded without rounding; displayed values 
 output destination redirected. The touchdown interface is called separately on the same wave inputs
 to obtain the allowable damage and period basis. The rebuild test compares all numeric output rows
 and per-location results against direct module calls, checks every displayed numeric field against the
-embedded record, and checks deterministic reproduction of this HTML and its change record. {cite(6)}</p>
+embedded record, and checks deterministic reproduction of this HTML and its change record.
+Separate decimal hand arithmetic supplies literal damage, life, margin and vibration-cycle expectations;
+these checks establish arithmetic consistency with the encoded basis, not physical validation.
+Source digests use UTF-8 text with line endings normalized to LF. {cite(6)}</p>
 <p>The chart plots total design-life damage by location with the allowable damage returned by the
 touchdown interface. Its ordinate starts at zero and its upper extent includes both demands and the limit.
 No operating boundary, stress limit or service-life probability is inferred from the chart. {cite(2)}{cite(6)}</p>
@@ -723,9 +756,9 @@ def main() -> None:
     args = parser.parse_args()
     record = build_payload(args.scratch_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "report.html").write_text(render(record), encoding="utf-8")
+    (args.output_dir / "report.html").write_text(render(record), encoding="utf-8", newline="\n")
     (args.output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(CHANGES, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
 
 
