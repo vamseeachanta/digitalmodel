@@ -267,8 +267,10 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+# Shared module parent rules; keep once above all module-specific exceptions.
 !docs/reports/modules/
 docs/reports/modules/*
+# Spectral fatigue report outputs.
 !docs/reports/modules/raospectralfatigue/
 docs/reports/modules/raospectralfatigue/*
 !docs/reports/modules/raospectralfatigue/index.html

@@ -16,6 +16,7 @@ import csv
 import hashlib
 import html
 import json
+import math
 import os
 import re
 from pathlib import Path
@@ -44,14 +45,14 @@ SOURCES = [
     "tests/fatigue/test_spectral_fatigue.py",
 ]
 CHANGES = {
-    "report": "rao-spectral-fatigue", "revision": "A", "date": "2026-10-22",
+    "report": "rao-spectral-fatigue", "revision": "B", "date": "2026-10-22",
     "changes": [
         {"section": "Purpose and basis", "description":
-         "Initial assessment of the linear wave-to-stress fatigue calculation and its input requirements."},
+         "The supplied illustrative S-N inputs and single-slope simplification are exposed for inspection."},
         {"section": "Detailed results", "description":
-         "Published illustrative inputs are evaluated with the module; life criteria and unresolved calculation limits are stated."},
-        {"section": "Recommendations", "description":
-         "Engineering use is conditioned on corrected fatigue estimation, qualified stress transfers and an independent benchmark."},
+         "Cyclic-frequency reference estimates quantify the estimator discrepancy while preserving the module outputs."},
+        {"section": "Reproduction", "description":
+         "Normalized text digests, explicit UTF-8/LF output and twelve-significant-figure data support portable rebuilding."},
     ],
 }
 LABELS = {"riser-splash-zone": "Splash-zone detail", "riser-keel-joint": "Keel-joint detail"}
@@ -61,6 +62,43 @@ def encode(value: Any) -> str:
     """Serialize finite report data without permitting a closing script tag."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True,
                       separators=(",", ":"), allow_nan=False).replace("<", "\\u003c")
+
+
+def portable_values(item: Any) -> Any:
+    """Suppress platform libm noise while retaining twelve significant figures."""
+    if isinstance(item, float):
+        return float(f"{item:.12g}")
+    if isinstance(item, list):
+        return [portable_values(value) for value in item]
+    if isinstance(item, dict):
+        return {key: portable_values(value) for key, value in item.items()}
+    return item
+
+
+def reference_damage(frequency: list[float], psd: list[float], sn: dict) -> tuple[float, float]:
+    """Evaluate cyclic-frequency Dirlik and closed-form narrow-band diagnostics [5]."""
+    m0, m1, m2, m4 = [math.fsum(
+        (frequency[i + 1] - frequency[i]) *
+        (frequency[i] ** n * psd[i] + frequency[i + 1] ** n * psd[i + 1]) / 2
+        for i in range(len(frequency) - 1)) for n in (0, 1, 2, 4)]
+    alpha = m2 / math.sqrt(m0 * m4)
+    xm = m1 / m0 * math.sqrt(m2 / m4)
+    d1 = 2 * (xm - alpha ** 2) / (1 + alpha ** 2)
+    r = (alpha - xm - d1 ** 2) / (1 - alpha - d1 + d1 ** 2)
+    d2 = (1 - alpha - d1 + d1 ** 2) / (1 - r)
+    d3 = 1 - d1 - d2
+    q = 1.25 * (alpha - d3 - d2 * r) / d1
+    if min(d1, d2, d3, q, r) < 0:
+        raise ValueError("Reference mixture parameters are outside their physical domain")
+    b, a = sn["slope"], 10 ** sn["log_intercept"]
+    annual = 365.25 * 24 * 3600
+    range_moment = (2 * math.sqrt(m0)) ** b * (
+        d1 * q ** b * math.gamma(1 + b) + 2 ** (b / 2) *
+        math.gamma(1 + b / 2) * (d2 * r ** b + d3))
+    dirlik = math.sqrt(m4 / m2) * range_moment / a * annual
+    narrow_band = (math.sqrt(m2 / m0) * (2 * math.sqrt(2 * m0)) ** b *
+                   math.gamma(1 + b / 2) / a * annual)
+    return dirlik, narrow_band
 
 
 def evaluate(scratch_dir: Path) -> dict[str, Any]:
@@ -89,12 +127,17 @@ def evaluate(scratch_dir: Path) -> dict[str, Any]:
             location["rao_frequency_Hz"] = source["rao_frequency_Hz"]
             location["rao_stress_MPa_per_m"] = source["rao_stress_MPa_per_m"]
             location["sea_states"] = []
+            reference_annual = reference_narrow_band = 0.0
             detail_rows = [row for row in rows if row["location_id"] == source["id"]]
             for index, (sea, row) in enumerate(zip(source["sea_states"], detail_rows, strict=True)):
                 frequency, psd = _stress_psd_from_rao(
                     source["rao_frequency_Hz"], source["rao_stress_MPa_per_m"],
                     sea["wave_spectrum"], source["id"],
                 )
+                dirlik, narrow_band = reference_damage(
+                    frequency, psd, original["rao_spectral_fatigue"]["sn_curve"])
+                reference_annual += sea["occurrence_fraction"] * dirlik
+                reference_narrow_band += sea["occurrence_fraction"] * narrow_band
                 state = dict(sea["wave_spectrum"])
                 state.update({"label": ("First sea state", "Second sea state")[index],
                               "occurrence_fraction": sea["occurrence_fraction"],
@@ -103,8 +146,12 @@ def evaluate(scratch_dir: Path) -> dict[str, Any]:
                             "damage_per_year_full", "damage_per_year_weighted"):
                     state[key] = float(row[key])
                 location["sea_states"].append(state)
+            location["reference_life_years"] = 1 / reference_annual
+            location["reference_life_ratio"] = location["reference_life_years"] / location["fatigue_life_years"]
+            location["reference_narrow_band_annual_damage"] = reference_narrow_band
             locations.append(location)
     return {"design_life_years": result["design_life_years"], "dff": result["dff"],
+            "sn_curve": original["rao_spectral_fatigue"]["sn_curve"],
             "locations": locations}
 
 
@@ -161,11 +208,11 @@ def render(data: dict[str, Any]) -> str:
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Response amplitude operator spectral fatigue module analysis</title>
-<style>{(ROOT / BRAND).read_text(encoding="utf-8")}</style><style>{style}</style>
+<style data-canonical-brand>{(ROOT / BRAND).read_text(encoding="utf-8")}</style><style>{style}</style>
 </head><body class="hs-doc"><main class="wrap">
 <header><p class="kicker">Fatigue analysis</p>
 <h1>Response amplitude operator spectral fatigue module analysis</h1>
-<p>Draft for client review</p>
+<p>Draft for maintainer review</p>
 <p class="sub">Illustrative public example; screening arithmetic with unresolved method limitations.</p></header>
 
 <section id="s1"><h2>1. Executive Summary</h2>
@@ -181,7 +228,8 @@ def render(data: dict[str, Any]) -> str:
 </section>
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
-<tbody><tr><td>A</td><td>2026-10-22</td><td>Initial module assessment, issued to distinguish reproducible screening arithmetic from qualified engineering results.</td></tr></tbody></table>
+<tbody><tr><td>A</td><td>2026-10-22</td><td>Initial module assessment, issued to distinguish reproducible screening arithmetic from qualified engineering results.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>The supplied fatigue-curve basis and estimator discrepancy are quantified, and rebuilding is made portable for review.</td></tr></tbody></table>
 <p>Table 1. Document revision history.</p></div>
 
 <section id="s2"><h2>2. Introduction</h2>
@@ -193,6 +241,10 @@ def render(data: dict[str, Any]) -> str:
 <p>The design basis is read from the public example without alteration of its engineering values. A real structure is not represented by qualified geometry, site data or calibrated stress transfer measurements. [1]</p>
 <h3>3.1 System and environmental basis</h3>
 <p>The configured design life is {v('design_life_years')} years and the design fatigue factor is {v('dff')}. These are example inputs, rather than prescribed project requirements. The stress-versus-cycle relation is supplied by the example; its material, weld class and environmental applicability remain unverified. [1]</p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Source and applicability</th></tr></thead><tbody>
+<tr><td>Slope b (dimensionless)</td><td>{v('sn_curve.slope')}</td><td>Public illustrative input [1]; single-slope model.</td></tr>
+<tr><td>log₁₀ A (stress range in MPa)</td><td>{data['example']['sn_curve']['log_intercept']}</td><td>Public illustrative input [1]; supplied precision is retained.</td></tr>
+</tbody></table><p>Table 2a. Supplied S-N inputs. The input identifies a D curve in air under DNV-RP-C203; only its first segment is represented. The high-cycle second segment and its transition are not applied. No coefficient is transcribed from a licensed publication or qualified as a standards requirement.</p>
 <p>The supplied spectra use the Joint North Sea Wave Project formulation, abbreviated JONSWAP. Significant wave height, peak period, peak enhancement and occurrence are recorded below. The example response amplitude operators are illustrated in Figure 2. [1]</p>
 <table><thead><tr><th>Detail and environment</th><th>Wave height (m)</th><th>Peak period (s)</th><th>Peak enhancement (dimensionless)</th><th>Occurrence (dimensionless)</th><th>Source</th></tr></thead><tbody>{inputs}</tbody></table>
 <p>Table 2. Published illustrative sea-state inputs. The occurrence is a time fraction at the named detail. [1]</p>
@@ -226,6 +278,7 @@ def render(data: dict[str, Any]) -> str:
 <div class="eq">N = A / Δσᵇ; d = ν E[(Δσ)ᵇ] / A; Dannual = Σ pᵢ dᵢ Tyear; L = 1 / Dannual; Lrequired = Ldesign F; M = L / Lrequired.</div>
 <p>The symbol N is cycles to failure, Δσ is stress range in megapascals, b is the supplied stress-versus-cycle slope and A is its intercept in a consistent stress unit. The symbol d is damage per second, ν is the estimator's cycle rate, E is the cycle-range expectation, pᵢ is sea-state occurrence, Tyear is the library's annual duration, Dannual is annual damage, L is life in years, F is the configured design fatigue factor and M is the dimensionless life margin. The annual conversion follows the library convention. [2, 4]</p>
 <p>The default estimator represents cycle ranges by an exponential and Rayleigh mixture. Its parameter implementation uses the bandwidth measure where the published method uses the irregularity factor. Agreement with another route sharing this estimator does not establish fatigue accuracy. [4, 5]</p>
+<p>A separate diagnostic uses α₂ in the mixture parameters and cyclic-frequency rates without the extra 2π division, on the same finite stress-spectrum grid and single-slope input. The resulting splash-zone life is approximately {v('locations.0.reference_life_years')} years instead of {v('locations.0.fatigue_life_years')} years, an increase by a factor of {v('locations.0.reference_life_ratio')}; it remains below {v('locations.0.required_life_years')} years. The keel-joint life is approximately {v('locations.1.reference_life_years')} years instead of {v('locations.1.fatigue_life_years')} years, an increase by a factor of {v('locations.1.reference_life_ratio')}, against {v('locations.1.required_life_years')} years. These diagnostic estimates quantify the combined direction and magnitude of the two implementation defects; the amplitude-versus-range and curve-basis limitations remain. Correction is tracked by #2583. [1, 4, 5]</p>
 </section>
 
 <section id="s5"><h2>5. Detailed Results</h2>
@@ -242,6 +295,7 @@ def render(data: dict[str, Any]) -> str:
 <p id="chart-readout" aria-live="polite">Select or focus a chart point for its values.</p>
 <p>The existing registry regression checks the transfer expression, governing detail, arithmetic status and reciprocal-life relation. The constant-transfer regression compares annual damage and life with the fixed-gain route. Both are internal consistency evidence. Neither provides an independent published numerical result for this example. [6]</p>
 <p>The library tests exercise spectral moments, positive damage, response scaling and bandwidth behaviour. Passing those assertions does not resolve the cycle-rate or estimator discrepancies described above. A published independently reproduced example with an accepted tolerance is NOT_EVALUATED. [4–6]</p>
+<p>A separate closed-form narrow-band anchor uses the Rayleigh range moment E[(Δσ)ᵇ] = (2√(2m₀))ᵇ Γ(1 + b/2) and the cyclic zero-upcrossing rate √(m₂/m₀). The keel-joint annual damage is {v('locations.1.reference_narrow_band_annual_damage')}. This independently evaluated range moment checks the diagnostic scale; it does not qualify the shared wave-to-stress input or replace a published benchmark. [1, 5, 6]</p>
 </section>
 
 <section id="s6"><h2>6. Key Findings</h2>
@@ -279,7 +333,7 @@ def render(data: dict[str, Any]) -> str:
 <li>[6] <code>tests/workflows/test_durable_workflows.py</code>: registry case <code>rao-spectral-fatigue</code> and <code>test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening</code>; <code>tests/fatigue/test_spectral_fatigue.py</code>: dependency regression assertions.</li>
 <li>[7] <a href="https://numpy.org/doc/1.26/reference/generated/numpy.interp.html">NumPy 1.26 interpolation reference</a>: endpoint fill conventions.</li></ul>
 <p>The documented public call is <code>from digitalmodel.rao_spectral_fatigue.workflow import router</code>, followed by <code>router(cfg)</code> for the parsed input mapping. The calculation returns the summary in <code>cfg["rao_spectral_fatigue"]</code>, a screening status and detailed and location-summary CSV destinations. Intermediate spectra are not part of the returned summary.</p>
-<p>Reproduction command: <code>PYTHONPATH=src python scripts/reporting/build_rao_spectral_fatigue_report.py --scratch-dir "$TMPDIR"</code>. The rebuild test is <code>tests/reporting/test_rao_spectral_fatigue_report.py</code>. Only the output destination is redirected during evaluation; engineering inputs are retained. Complete unrounded example arrays are embedded in this document for the interactive plots and numerical comparison.</p>
+<p>Reproduction command: <code>PYTHONPATH=src python scripts/reporting/build_rao_spectral_fatigue_report.py --scratch-dir "$TMPDIR"</code>. The rebuild test is <code>tests/reporting/test_rao_spectral_fatigue_report.py</code>. Only the output destination is redirected during evaluation; engineering inputs are retained. Embedded numerical data retain twelve significant figures to suppress platform arithmetic noise. Comparisons use a relative tolerance of 10⁻¹¹. Source digests identify UTF-8 text with line endings normalized to LF; both outputs are written as UTF-8 with LF line endings.</p>
 <details><summary>Source integrity record</summary><table><thead><tr><th>Repository source</th><th>SHA-256 digest</th></tr></thead><tbody>{source_rows}</tbody></table><p>Table 4. Source digests at document generation. Source identity is separate from engineering qualification.</p></details>
 </section>
 
@@ -321,17 +375,17 @@ def render(data: dict[str, Any]) -> str:
 
 def build(output_dir: Path, scratch_dir: Path) -> None:
     """Build and read back the report and its engineering change panel data."""
-    data: dict[str, Any] = {"example": evaluate(scratch_dir), "changes": CHANGES,
-            "sources": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+    data: dict[str, Any] = {"example": portable_values(evaluate(scratch_dir)), "changes": CHANGES,
+            "sources": {path: hashlib.sha256((ROOT / path).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
                         for path in SOURCES}}
     page = render(data)
     data["content_id"] = hashlib.sha256((page + encode(data)).encode()).hexdigest()
     page = page.replace("__REPORT_DATA__", encode(data))
     output_dir.mkdir(parents=True, exist_ok=True)
     output = output_dir / "index.html"
-    output.write_text(page, encoding="utf-8")
+    output.write_text(page, encoding="utf-8", newline="\n")
     changes = output_dir / "changes.json"
-    changes.write_text(json.dumps(CHANGES, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    changes.write_text(json.dumps(CHANGES, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     if output.read_text(encoding="utf-8") != page or json.loads(changes.read_text(encoding="utf-8")) != CHANGES:
         raise ValueError("Report output readback differs from generated content")
 

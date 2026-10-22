@@ -14,6 +14,7 @@ be free of hard-coded core brand tokens.
 """
 
 from pathlib import Path
+import re
 
 import pytest
 
@@ -38,14 +39,33 @@ def test_every_registered_page_is_byte_identical_to_its_generator(
     assert drifted == []
 
 
+def page_has_brand_drift(text: str, canonical: str) -> bool:
+    """Validate embedded canonical CSS before checking page-authored tokens."""
+    pattern = r'<style data-canonical-brand>(.*?)</style>'
+    for embedded in re.findall(pattern, text, re.S):
+        assert embedded == canonical, "Embedded brand CSS differs from its canonical source"
+    return bool(brand_guard.CORE_RE.search(re.sub(pattern, "", text, flags=re.S)))
+
+
 def test_regenerated_pages_inherit_core_brand_tokens(regenerated: Path) -> None:
+    canonical = (regenerated / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     offenders = sorted(
         path.relative_to(regenerated).as_posix()
         for path in checker.all_registered_outputs(regenerated)
-        if brand_guard.CORE_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
+        if page_has_brand_drift(path.read_text(encoding="utf-8"), canonical)
     )
 
     assert offenders == []
+
+
+def test_inline_brand_validation_rejects_tampering_and_page_overrides() -> None:
+    canonical = "--brand:#123456;"
+    embedded = f'<style data-canonical-brand>{canonical}</style>'
+    assert not page_has_brand_drift(embedded, canonical)
+    assert page_has_brand_drift(embedded + '<style>--brand:#654321;</style>', canonical)
+    assert page_has_brand_drift('<style>--brand:#123456;</style>', canonical)
+    with pytest.raises(AssertionError, match="differs from its canonical source"):
+        page_has_brand_drift(embedded.replace("123456", "654321"), canonical)
 
 
 def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
@@ -96,8 +116,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 29  # includes the spectral fatigue report and change data
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9

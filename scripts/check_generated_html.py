@@ -70,6 +70,16 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_rao_spectral_fatigue_report.py",
+        ("docs/reports/modules/raospectralfatigue/index.html",
+         "docs/reports/modules/raospectralfatigue/changes.json"),
+        inputs=(
+            "examples/workflows/rao-spectral-fatigue/input.yml",
+            "tests/workflows/test_durable_workflows.py",
+            "tests/fatigue/test_spectral_fatigue.py",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

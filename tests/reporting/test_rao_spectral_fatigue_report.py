@@ -8,6 +8,7 @@ import csv
 import hashlib
 import importlib.util
 import json
+import math
 import os
 import re
 import subprocess
@@ -100,7 +101,56 @@ def test_rebuild_is_deterministic_and_preserves_sources(rebuilt, tmp_path):
         assert (folder / name).read_bytes() == (ROOT / FOLDER / name).read_bytes()
     assert before == {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
                       for p in before}
-    assert payload(page)["sources"] == before
+    assert payload(page)["sources"] == {
+        p: hashlib.sha256((ROOT / p).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+        for p in before
+    }
+
+
+def test_rebuild_normalizes_checkout_line_endings(rebuilt, tmp_path, monkeypatch):
+    module = load_generator()
+    checkout = tmp_path / "checkout"
+    for relative in module.SOURCES:
+        target = checkout / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / relative).read_text(encoding="utf-8").replace("\n", "\r\n").encode("utf-8"))
+    monkeypatch.setattr(module, "ROOT", checkout)
+    output = tmp_path / "output"
+    module.build(output, tmp_path / "scratch")
+    for name in ("index.html", "changes.json"):
+        assert (output / name).read_bytes() == (rebuilt[0] / name).read_bytes()
+        assert b"\r" not in (output / name).read_bytes()
+
+
+def test_rebuild_tolerates_last_bit_numerical_variation(rebuilt, tmp_path, monkeypatch):
+    module = load_generator()
+    original = module.evaluate(tmp_path / "scratch")
+
+    def perturb(item):
+        if isinstance(item, float):
+            return math.nextafter(item, math.inf) if item else item
+        if isinstance(item, list):
+            return [perturb(value) for value in item]
+        if isinstance(item, dict):
+            return {key: perturb(value) for key, value in item.items()}
+        return item
+
+    monkeypatch.setattr(module, "evaluate", lambda scratch: perturb(original))
+    output = tmp_path / "perturbed"
+    module.build(output, tmp_path / "scratch")
+    assert (output / "index.html").read_bytes() == (rebuilt[0] / "index.html").read_bytes()
+
+
+def test_builder_is_registered_with_its_reproduction_inputs():
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == GENERATOR.relative_to(ROOT).as_posix()]
+    assert len(entries) == 1
+    assert set(entries[0].outputs) == {str(FOLDER / name) for name in ("index.html", "changes.json")}
+    # Regeneration needs evidence sources outside scripts/, docs/api/ and src/.
+    assert {EXAMPLE.relative_to(ROOT).as_posix(), "tests/workflows/test_durable_workflows.py",
+            "tests/fatigue/test_spectral_fatigue.py"} <= set(entries[0].inputs)
 
 
 def test_every_example_value_and_chart_equals_module(rebuilt, tmp_path):
@@ -121,7 +171,7 @@ def test_every_example_value_and_chart_equals_module(rebuilt, tmp_path):
     ):
         for field in ("annual_damage", "fatigue_life_years", "required_life_years",
                       "margin", "passes"):
-            assert actual[field] == expected[field]
+            assert actual[field] == pytest.approx(expected[field], rel=1e-11)
         for field in ("rao_frequency_Hz", "rao_stress_MPa_per_m"):
             assert actual[field] == source[field]
         location_rows = [r for r in rows if r["location_id"] == expected["location_id"]]
@@ -133,13 +183,13 @@ def test_every_example_value_and_chart_equals_module(rebuilt, tmp_path):
             assert state["occurrence_fraction"] == source_state["occurrence_fraction"]
             for field in ("rms_stress_MPa", "bandwidth_parameter", "peak_rate_Hz",
                           "damage_per_year_full", "damage_per_year_weighted"):
-                assert state[field] == float(row[field])
+                assert state[field] == pytest.approx(float(row[field]), rel=1e-11)
             frequency, psd = _stress_psd_from_rao(
                 source["rao_frequency_Hz"], source["rao_stress_MPa_per_m"],
                 source_state["wave_spectrum"], source["id"],
             )
-            np.testing.assert_array_equal(state["frequency_Hz"], frequency)
-            np.testing.assert_array_equal(state["stress_psd_MPa2_Hz"], psd)
+            np.testing.assert_allclose(state["frequency_Hz"], frequency, rtol=1e-11, atol=0)
+            np.testing.assert_allclose(state["stress_psd_MPa2_Hz"], psd, rtol=1e-11, atol=0)
     parser = ReportParser()
     parser.feed(page)
     assert len(parser.values) >= 40, "Example inputs and results must be visible"
@@ -156,7 +206,7 @@ def test_structure_offline_style_and_engineering_wording(rebuilt):
     assert len(re.findall(r'<section id="s\d+">', page)) == 10
     assert '<h4' not in page and '<b>' not in page and '<strong>' not in page
     assert page.index('id="revision-history"') < page.index('<section id="s2">')
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text()
+    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
     assert re.search(r'<style>(.*?)</style>', exemplar, re.S).group(1) in page
     parser = ReportParser()
     parser.feed(page)
@@ -167,8 +217,37 @@ def test_structure_offline_style_and_engineering_wording(rebuilt):
     assert 'screening arithmetic' in visible
     assert 'Not covered' in visible
     assert 'NOT_EVALUATED' in visible
-    changes = json.loads((rebuilt[0] / "changes.json").read_text())
+    assert "Draft for maintainer review" in visible
+    assert "#2583" in visible
+    assert "single-slope" in visible
+    changes = json.loads((rebuilt[0] / "changes.json").read_text(encoding="utf-8"))
     assert payload(page)["changes"] == changes
+
+
+def test_reference_narrow_band_anchor_and_supplied_sn_basis(rebuilt):
+    data = payload(rebuilt[1])["example"]
+    source = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))["rao_spectral_fatigue"]
+    assert data["sn_curve"] == source["sn_curve"]
+    # Independently evaluated public-grid Rayleigh range moment:
+    # E[range**b] = (2*sqrt(2*m0))**b * Gamma(1+b/2).
+    # These anchors use the supplied illustrative curve, not a qualified standard.
+    keel = data["locations"][1]
+    state = keel["sea_states"][0]
+    frequency = np.asarray(state["frequency_Hz"])
+    psd = np.asarray(state["stress_psd_MPa2_Hz"])
+    m0 = np.trapz(psd, frequency)
+    m2 = np.trapz(frequency ** 2 * psd, frequency)
+    slope = source["sn_curve"]["slope"]
+    closed_form = (math.sqrt(m2 / m0) * (2 * math.sqrt(2 * m0)) ** slope *
+                   math.gamma(1 + slope / 2) / 10 ** source["sn_curve"]["log_intercept"] *
+                   365.25 * 24 * 3600)
+    assert keel["reference_narrow_band_annual_damage"] == pytest.approx(closed_form, rel=1e-11)
+    assert keel["reference_narrow_band_annual_damage"] == pytest.approx(0.001791243679674115, rel=1e-11)
+    assert keel["reference_life_years"] == pytest.approx(567.6537610246007, rel=1e-11)
+    splash = data["locations"][0]
+    assert splash["reference_life_years"] == pytest.approx(66.18722006460763, rel=1e-11)
+    for location in data["locations"]:
+        assert location["reference_life_years"] > location["fatigue_life_years"]
 
 
 def test_comment_binding_covers_complete_html(rebuilt):
