@@ -21,6 +21,10 @@ def scalar(value, name, *, positive=False):
     """Require finite numeric engineering inputs; booleans are not numbers."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{name} must be a finite number")
+    try:
+        value = float(value)
+    except OverflowError as error:
+        raise ValueError(f"{name} exceeds numerical range") from error
     if not math.isfinite(value) or (value <= 0 if positive else value < 0):
         raise ValueError(
             f"{name} must be finite and {'positive' if positive else 'nonnegative'}"
@@ -105,6 +109,8 @@ def growth_life(table, law, *, multiplier=1.0):
     Threshold equality arrests. Linear segments make endpoint checks sufficient
     to find every threshold crossing; no sampling can miss a narrow crossing.
     This Paris model does not establish near-threshold material behaviour.
+    For arrest, cycles remains None (no life to the final depth), while
+    cycles_to_arrest records the evaluated integral, or None if it diverges.
     """
     pairs = table_pairs(table, "DeltaK table")
     if pairs[0][0] <= 0:
@@ -116,6 +122,7 @@ def growth_life(table, law, *, multiplier=1.0):
     result = {
         "status": "FINITE",
         "cycles": None,
+        "cycles_to_arrest": None,
         "arrest_a_m": None,
         "minimum_threshold_ratio": min(k for _, k in pairs) / threshold
         if threshold
@@ -124,13 +131,28 @@ def growth_life(table, law, *, multiplier=1.0):
     }
     total = 0.0
     for (a0, k0), (a1, k1) in zip(pairs, pairs[1:]):
-        if min(k0, k1) <= threshold:
-            arrest = (
-                a0 if k0 <= threshold else a0 + (a1 - a0) * (k0 - threshold) / (k0 - k1)
-            )
-            result.update(status="ARRESTED", arrest_a_m=arrest)
-            return result
         try:
+            if min(k0, k1) <= threshold:
+                arrest = (
+                    a0
+                    if k0 <= threshold
+                    else a0 + (a1 - a0) * (k0 - threshold) / (k0 - k1)
+                )
+                if k0 > threshold:
+                    if threshold > 0:
+                        total += _segment_cycles(arrest - a0, k0, threshold, c, m)
+                    elif m < 1:
+                        total += (arrest - a0) / (c * k0**m * (1 - m))
+                    else:
+                        total = None  # divergent integral to zero DeltaK
+                result.update(
+                    status="ARRESTED",
+                    arrest_a_m=arrest,
+                    cycles_to_arrest=scalar(total, "cycles to arrest")
+                    if total is not None
+                    else None,
+                )
+                return result
             total += _segment_cycles(a1 - a0, k0, k1, c, m)
         except (OverflowError, ZeroDivisionError, ValueError) as error:
             raise ValueError("growth integration exceeds numerical range") from error

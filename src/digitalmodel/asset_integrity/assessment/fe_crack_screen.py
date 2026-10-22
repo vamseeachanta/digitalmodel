@@ -25,7 +25,7 @@ from .fe_crack_growth import basis, growth_life, interpolate, scalar, table_pair
 
 SECONDARY_SOURCE = (
     "TWI (1999), Quantification of Residual Stress Effects in the SINTAP "
-    "Defect Assessment Procedure for Welded Components; multiplicative V method"
+    "Defect Assessment Procedure for Welded Components; equation 22, multiplicative V method"
 )
 LIMITATIONS = (
     "Code-edition conformity, partial safety factors, FE mesh/contour qualification, "
@@ -38,6 +38,11 @@ LIMITATIONS = (
     "NOT_EVALUATED. E-ratio scaling is a user-declared sensitivity only.",
     "An implied nominal opening stress is a diagnostic comparator, not a "
     "substitute for a qualified reference-stress solution.",
+    "The supplied V must bound every supplied state: V varies with Lr and the "
+    "secondary/primary stress ratio. This bound is not verified by the workflow. "
+    "reference_mpa is primary-only collapse reference stress.",
+    "Compressive secondary and residual K are not supported; these inputs must "
+    "be nonnegative. Signed-K assessment requires a qualified separate method.",
 )
 
 
@@ -80,7 +85,7 @@ def _validate(data):
             raise ValueError("at least two crack states are required")
         previous = 0.0
         for row in states:
-            if set(row) != {
+            if not isinstance(row, dict) or set(row) != {
                 "a_m",
                 "k_primary",
                 "k_secondary",
@@ -98,6 +103,9 @@ def _validate(data):
                     "crack depths must be positive and strictly increasing"
                 )
             previous = row["a_m"]
+        multipliers = data.get("delta_k_multipliers", [])
+        if not isinstance(multipliers, list):
+            raise ValueError("DeltaK multipliers must be a list")
         return envelope, states
     except (KeyError, TypeError) as error:
         raise ValueError("missing or malformed required assessment inputs") from error
@@ -238,12 +246,14 @@ def assess_fe_crack(data):
     }
 
 
-def _display_checks(value):
-    """Round comparisons for display; calculation values stay unchanged."""
+def _display_checks(value, key=None):
+    """Preserve supplied criteria; display computed comparisons to four figures."""
     if isinstance(value, float):
-        return f"{value:.1f}"
+        if key in {"tolerance_fraction", "lower_ratio", "upper_ratio"}:
+            return value
+        return f"{value:.4g}"
     if isinstance(value, dict):
-        return {key: _display_checks(item) for key, item in value.items()}
+        return {key: _display_checks(item, key) for key, item in value.items()}
     if isinstance(value, list):
         return [_display_checks(item) for item in value]
     return value
@@ -254,8 +264,14 @@ def report_html(result):
 
     def show(value):
         if isinstance(value, float):
-            return f"{value:.1f}"
-        return escape("NOT_EVALUATED" if value is None else str(value))
+            return f"{value:.4g}"
+        return escape("n/a" if value is None else str(value))
+
+    def cycles(growth):
+        if growth["status"] == "FINITE":
+            return growth["cycles"]
+        value = growth["cycles_to_arrest"]
+        return "unbounded" if value is None else value
 
     def table(headers, rows):
         head = "".join(f"<th>{escape(h)}</th>" for h in headers)
@@ -283,10 +299,12 @@ def report_html(result):
         "<pre>"
         + escape(json.dumps(result["inputs"], indent=2, allow_nan=False))
         + "</pre>",
-        "<h2>Method and results</h2><p>Lr = reference stress / yield stress; "
+        "<h2>Method and results</h2><p>Lr = primary-only reference stress / yield stress; "
         "Kr = (K primary + V × (K secondary + K residual)) / Kmat. "
         "N = integral da / (C × DeltaK(a)^m). The envelope and DeltaK are "
-        "interpolated linearly between supplied points. Comparisons use unrounded values.</p>",
+        "interpolated linearly between supplied points. Comparisons use unrounded values; "
+        "computed values display four significant figures and supplied criteria retain "
+        "their input precision.</p>",
         table(
             ["Depth (m)", "Lr", "Kr", "f(Lr)", "Inside supplied envelope"],
             [
@@ -301,18 +319,20 @@ def report_html(result):
             [
                 [
                     result["growth"]["status"],
-                    result["growth"]["cycles"],
-                    str(result["growth"]["arrest_a_m"]),
+                    cycles(result["growth"]),
+                    result["growth"]["arrest_a_m"],
                     result["growth"]["minimum_threshold_ratio"],
                 ]
             ],
         ),
-        "<p>Table 2. Growth prediction; not allowable service life.</p>",
+        "<p>Table 2. Cycles to the final depth for FINITE growth or to the arrest depth "
+        "for ARRESTED growth; unbounded denotes a divergent integral. "
+        "A missing arrest depth is n/a. This is not allowable service life.</p>",
         "<h3>DeltaK sensitivities</h3>",
         table(
             ["Multiplier", "Status", "Cycles"],
             [
-                (s["multiplier"], s["status"], s["cycles"])
+                (str(s["multiplier"]), s["status"], cycles(s))
                 for s in result["sensitivities"]
             ],
         ),

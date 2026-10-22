@@ -7,8 +7,10 @@ or published material properties are reproduced in these examples.
 """
 
 from copy import deepcopy
+from html import unescape
 import json
 import math
+import re
 import subprocess
 import sys
 
@@ -222,8 +224,9 @@ def test_report_has_limits_revision_inputs_and_escaped_basis():
     )
     assert "NOT_EVALUATED" in report
     assert "allowable service life" in report
-    assert "100000.0" in report
-    assert "0.001" in report  # crack-depth inputs retain engineering precision
+    tables = report_tables(report)
+    assert float(tables[1][0][0]) == 0.001
+    assert float(tables[2][0][1]) == 100000
 
 
 def test_cli_readback_and_refuses_overwrite(tmp_path):
@@ -366,6 +369,170 @@ def test_report_compares_unrounded_values_and_formats_diagnostics():
     report = report_html(assess_fe_crack(data))
     assert "0.333333" not in report
     assert "unrounded" in report
+
+
+def report_tables(report):
+    """Read table bodies without matching the input snapshot or method text."""
+    return [
+        [
+            [unescape(cell) for cell in re.findall(r"<td>(.*?)</td>", row)]
+            for row in re.findall(r"<tr>(.*?)</tr>", body)
+        ]
+        for body in re.findall(r"<tbody>(.*?)</tbody>", report, re.S)
+    ]
+
+
+def report_checks(report):
+    block = report.split("<h3>Consistency checks</h3>", 1)[1]
+    return json.loads(unescape(re.search(r"<pre>(.*?)</pre>", block, re.S)[1]))
+
+
+def test_report_preserves_supplied_criteria_and_multiplier_labels():
+    data = case()
+    data.update(
+        history=[[0.001, 0], [0.002, 108000]],
+        history_tolerance_fraction=0.05,
+        history_basis="Artificial hand calculation",
+        delta_k_multipliers=[1.1, 1.15, 1.25],
+        consistency=dict(
+            geometry_factor=1,
+            lower_ratio=0.95,
+            upper_ratio=1.05,
+            basis="Artificial diagnostic band",
+        ),
+    )
+    for state in data["states"]:
+        state["k_primary"] = (
+            1.08 * state["reference_mpa"] * math.sqrt(math.pi * state["a_m"])
+        )
+    report = report_html(assess_fe_crack(data))
+    checks = report_checks(report)
+    assert float(checks["history"]["tolerance_fraction"]) == 0.05
+    assert float(checks["history"]["cycle_ratios"][0]) == 1.08
+    assert checks["history"]["status"] == "FLAG"
+    diagnostic = checks["k_reference"]
+    assert float(diagnostic["lower_ratio"]) == 0.95
+    assert float(diagnostic["upper_ratio"]) == 1.05
+    assert list(map(float, diagnostic["ratios"])) == [1.08, 1.08]
+    assert diagnostic["status"] == "FLAG"
+    assert [row[0] for row in report_tables(report)[3]] == ["1.1", "1.15", "1.25"]
+
+
+def test_report_resolves_close_envelope_comparison():
+    data = case()
+    data["envelope"] = [[0, 0.176], [1.5, 0.176]]
+    data["states"][0].update(
+        k_primary=18.5, k_secondary=0, k_residual=0, reference_mpa=76.8
+    )
+    row = report_tables(report_html(assess_fe_crack(data)))[1][0]
+    assert list(map(float, row[1:4])) == [0.384, 0.185, 0.176]
+    assert row[4] == "False"
+
+
+def test_secondary_bounding_requirement_and_compressive_refusal_are_reported():
+    report = report_html(assess_fe_crack(case()))
+    assert "bound every supplied state" in report
+    assert "primary-only" in report
+    assert "Compressive secondary and residual K are not supported" in report
+    assert "equation 22" in report
+    for key in ("k_secondary", "k_residual"):
+        data = case()
+        data["states"][0][key] = -1
+        with pytest.raises(ValueError):
+            assess_fe_crack(data)
+
+
+def test_arrest_cycles_and_report_cells():
+    """5 -> 1 reaches 2 at 3/4 of the interval, not 1/4.
+
+    N=(1/2-1/5)/(C*4000)=750000; a preceding constant-5
+    interval adds .001/(C*25)=400000 cycles.
+    """
+    data = case()
+    data["states"][0]["delta_k"] = 5
+    data["states"][1]["delta_k"] = 1
+    data["delta_k_multipliers"] = [1.0]
+    result = assess_fe_crack(data)
+    assert result["growth"]["arrest_a_m"] == pytest.approx(0.00175)
+    assert result["growth"]["cycles"] is None  # no finite life to final depth
+    assert result["growth"]["cycles_to_arrest"] == pytest.approx(750000)
+    row = report_tables(report_html(result))[2][0]
+    assert row[0] == "ARRESTED"
+    assert float(row[1]) == 750000
+    assert float(row[2]) == 0.00175
+    assert float(report_tables(report_html(result))[3][0][2]) == 750000
+    row = report_tables(report_html(assess_fe_crack(case())))[2][0]
+    assert row[2] == "n/a"
+    law = data["growth"]
+    result = growth_life([[0.001, 5], [0.002, 5], [0.003, 1]], law)
+    assert result["cycles_to_arrest"] == pytest.approx(1150000)
+    assert growth_life([[0.001, 2], [0.002, 5]], law)["cycles_to_arrest"] == 0
+
+
+def test_zero_threshold_with_integrable_exponent_has_finite_arrest_cycles():
+    """For m=1/2, integral to K=0 is 2*da/(C*sqrt(5))."""
+    law = dict(case()["growth"], threshold=0, m=0.5)
+    result = growth_life([[0.001, 5], [0.002, 0]], law)
+    assert result["cycles_to_arrest"] == pytest.approx(0.002 / (1e-10 * math.sqrt(5)))
+
+
+def test_zero_threshold_arrest_has_unbounded_cycles():
+    law = dict(case()["growth"], threshold=0)
+    result = growth_life([[0.001, 5], [0.002, 0]], law)
+    assert result["cycles_to_arrest"] is None
+    data = dict(case(), growth=law)
+    data["states"][0]["delta_k"] = 5
+    data["states"][1]["delta_k"] = 0
+    assert report_tables(report_html(assess_fe_crack(data)))[2][0][1] == "unbounded"
+
+
+def test_diagnostic_pass_and_zero_reference_stress():
+    data = case()
+    data["consistency"] = dict(
+        geometry_factor=1,
+        lower_ratio=0.95,
+        upper_ratio=1.05,
+        basis="Artificial diagnostic band",
+    )
+    for state in data["states"]:
+        state["k_primary"] = state["reference_mpa"] * math.sqrt(math.pi * state["a_m"])
+    assert assess_fe_crack(data)["checks"]["k_reference"]["status"] == "PASS"
+    data["states"][0]["reference_mpa"] = 0
+    check = assess_fe_crack(data)["checks"]["k_reference"]
+    assert check["status"] == "FLAG"
+    assert check["ratios"][0] is None
+
+
+def test_envelope_equality_and_unrounded_disposition():
+    data = case()
+    data["states"][0].update(
+        reference_mpa=300, k_primary=0, k_secondary=0, k_residual=0
+    )
+    assert assess_fe_crack(data)["states"][0]["inside"] is True
+    data["states"][1].update(k_primary=62.5, k_secondary=0, k_residual=0)
+    assert assess_fe_crack(data)["states"][1]["inside"] is True
+    data["states"][1]["k_primary"] = math.nextafter(62.5, math.inf)
+    row = report_tables(report_html(assess_fe_crack(data)))[1][1]
+    assert row[2:4] == ["0.625", "0.625"]
+    assert row[4] == "False"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda d: d["states"].__setitem__(0, list(d["states"][0])),
+        lambda d: d.update(delta_k_multipliers=1.2),
+        lambda d: d.update(delta_k_multipliers="1.2"),
+        lambda d: d.update(yield_mpa=10**400),
+        lambda d: d["states"][0].update(k_primary=10**400),
+        lambda d: d["growth"].update(c=10**400),
+    ],
+)
+def test_malformed_shapes_and_oversized_integers_raise_value_error(mutation):
+    data = case()
+    mutation(data)
+    with pytest.raises(ValueError):
+        assess_fe_crack(data)
 
 
 def test_diagnostic_numerical_underflow_is_rejected():

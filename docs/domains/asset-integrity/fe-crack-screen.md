@@ -18,6 +18,7 @@ licensed-source constants.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | A | 2026-10-20 | Initial solver-free screening method and independent arithmetic example. |
+| B | 2026-10-22 | Preserve supplied report criteria, report arrest cycles and share threshold integration with the fatigue API. |
 
 Table 1. Document revisions.
 
@@ -40,11 +41,17 @@ Table 1. Document revisions.
   The multiplicative secondary-stress treatment is described in TWI (1999),
   [Quantification of Residual Stress Effects in the SINTAP Defect Assessment
   Procedure for Welded Components](https://www.twi-global.com/technical-knowledge/published-papers/quantification-of-residual-stress-effects-in-the-sintap-defect-assessment-procedure-for-welded-components-july-1999).
-  `V` and its applicability are supplied inputs. No API Phi or BS rho correction
+  Equation 22 defines this form. `V` varies with `Lr` and the secondary/primary
+  stress ratio; the supplied global value must bound every supplied state.
+  Establishing that bound is the caller's responsibility and is not checked.
+  Compressive secondary and residual K are not supported: both inputs must be
+  nonnegative. Signed-K cases require a qualified separate method.
+  No API Phi or BS rho correction
   is inferred or mixed into this expression. Residual K is part of secondary K.
 - **FAD coordinates:** `Lr = reference_stress/yield_stress`; `Kr <= f(Lr)` and
   `Lr <= lr_max` define inside the supplied envelope. The intended code context
-  is API 579-1/ASME FFS-1 (2016), Part 9, Assessment of Crack-Like Flaws.
+  uses `reference_mpa` as primary-only collapse reference stress.
+  API 579-1/ASME FFS-1 (2016), Part 9, Assessment of Crack-Like Flaws, provides context.
   Curve ordinates, cutoff and their basis are supplied inputs. Interpolation
   is linear and extrapolation is prohibited. A supplied envelope is not
   authenticated by a basis string; edition conformity is `NOT_EVALUATED`.
@@ -59,6 +66,10 @@ Table 1. Document revisions.
 - **Threshold:** equality or a crossing of the supplied threshold returns
   `ARRESTED`, with no finite life to the final depth. The crossing depth is
   calculated from the linear segment, including a crossing between samples.
+  `cycles_to_arrest` gives the integral to that depth, including earlier segments;
+  `cycles` remains `None` because the final depth is not reached. An integral
+  diverging at zero DeltaK has `cycles_to_arrest=None`, displayed as `unbounded`.
+  An absent arrest depth displays as `n/a`.
   This hard-cutoff model is an explicit approximation; material behaviour near
   threshold is not qualified by the Paris law. The reported minimum
   DeltaK/threshold ratio describes the full supplied table.
@@ -75,6 +86,18 @@ Table 1. Document revisions.
   opening stress and collapse reference stress are different quantities: this
   diagnostic flags discrepancies for investigation and cannot validate either.
 
+The existing `fatigue.crack_growth.paris_law_life` API delegates each sampled
+interval to the same threshold-aware `growth_life` API. Its optional `threshold`
+defaults to zero; callable DeltaK is approximated linearly over `da_step`.
+An arrested history ends at the actual arrest depth, with infinite life to the
+requested final depth. This replaces the earlier left-endpoint integration.
+The separate implementation proposed in #3106 is not present on this branch;
+cross-branch consolidation remains pending.
+
+Reports preserve supplied criteria and multiplier labels. Computed results use
+four significant figures; all dispositions use unrounded values, including
+equality at the supplied envelope and cutoff.
+
 No material constants, acceptance bands or code coefficients are supplied by the
 workflow. Therefore there are no new standards-derived constant Citation
 sidecars. Basis strings record supplied provenance; they do not resolve or
@@ -84,8 +107,7 @@ input merely because a calculation completes.
 ## Worked example: inputs, method and answer
 
 All numbers below are artificial arithmetic inputs, not material or FE data.
-The basis is **assumed, based on previous experience**, selected solely for
-hand calculation. No earlier engineering project is represented.
+The basis is **artificial, for hand calculation only**.
 
 ```python
 from digitalmodel.asset_integrity.assessment.fe_crack_screen import assess_fe_crack
