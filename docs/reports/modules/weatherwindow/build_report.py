@@ -26,6 +26,12 @@ EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
 BRAND = "docs/api/_assets/brand.css"
 
 
+def read_utf8(path: Path) -> str:
+    """Read UTF-8 with an explicit LF convention on every platform."""
+    with path.open(encoding="utf-8", newline="\n") as stream:
+        return stream.read()
+
+
 def lookup(record: dict, locator: str):
     """Resolve a dotted binding into the calculated record."""
     value = record
@@ -49,14 +55,14 @@ def display(value) -> str:
 
 def test_inventory(relative: str) -> int:
     """Count test definitions as inventory, without importing their dependencies."""
-    tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
+    tree = ast.parse(read_utf8(ROOT / relative))
     return sum(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                and node.name.startswith("test_") for node in ast.walk(tree))
 
 
 def calculate() -> dict:
     """Call the module using the existing public, explicitly illustrative example."""
-    settings = yaml.safe_load((ROOT / EXAMPLE).read_text(encoding="utf-8"))["weather_window"]
+    settings = yaml.safe_load(read_utf8(ROOT / EXAMPLE))["weather_window"]
     operation = settings["operation"]
     metocean = settings["metocean"]
     heights = metocean["hs_timeseries_m"]
@@ -102,13 +108,17 @@ def render(record: dict) -> str:
     def cite(key: str) -> str:
         return f'<a href="#ref-{key}">[{key}]</a>'
 
-    revisions = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))
+    revisions = json.loads(read_utf8(HERE / "changes.json"))
     history = table(["Revision", "Date", "Change and reason"], [
         [html.escape(row["revision"]), html.escape(row["date"]), html.escape(" ".join(row["changes"]))]
         for row in revisions["history"]
     ])
-    css = re.search(r"<style>.*?</style>", (ROOT / EXEMPLAR).read_text(encoding="utf-8"), re.S).group(0)
-    brand = (ROOT / BRAND).read_text(encoding="utf-8")
+    revision_options = "".join(
+        f'<option value="{html.escape(row["revision"])}">Revision {html.escape(row["revision"])}</option>'
+        for row in revisions["history"]
+    )
+    css = re.search(r"<style>.*?</style>", read_utf8(ROOT / EXEMPLAR), re.S).group(0)
+    brand = read_utf8(ROOT / BRAND)
     # Preserve the canonical CSS rules; its repository guidance is not client text.
     brand = re.sub(r"/\*.*?\*/", "", brand, flags=re.S)
     brand = "\n".join(line.rstrip() for line in brand.splitlines()) + "\n"
@@ -139,6 +149,8 @@ def render(record: dict) -> str:
         "heightLimit": float(display(record["result"]["hs_limit_m"])),
         "required": float(display(record["result"]["required_duration_hours"])),
         "windows": [float(display(v)) for v in record["windows_hours"]],
+        "heightAccepted": [v <= record["result"]["hs_limit_m"] for v in record["hs_m"]],
+        "windowAccepted": [v >= record["result"]["required_duration_hours"] for v in record["windows_hours"]],
     }
     source_table = table(["Item", "Repository locator"], [
         ["Public illustrative input", f"<code>{EXAMPLE}</code>"],
@@ -178,7 +190,7 @@ Analysis is performed to determine whether a supplied wave-height record contain
 key results are summarized below.</p>
 <ul><li>The illustrative record fails the duration screen.
 <ul><li>The longest accepted spell is {result('longest_window_hours')} h against a required {result('required_duration_hours')} h.
-An installation start is not supported by this record under the supplied duration criterion.</li></ul></li>
+An operation start is not supported by this record under the supplied duration criterion.</li></ul></li>
 <li>Accepted exposure alone does not establish a usable weather window.
 <ul><li>Accepted exposure is {result('workability_pct')}% against an input threshold of {result('required_workability_pct')}%,
 but {result('num_viable_windows')} spells meet the required duration.</li></ul></li></ul>
@@ -215,7 +227,7 @@ Hover or focus a bar for the duration criterion. Period-dependent and heading-de
 Amber means an assessment is not available; no amber data series is computed here.
 A green wave-height interval does not establish that the complete operation fits.</p>
 <p>The record is rejected for a continuous operation requiring {result('required_duration_hours')} h.
-Use a separately qualified forecast and a demonstrated continuous window before an installation start is accepted.
+Use a separately qualified forecast and a demonstrated continuous window before an operation start is accepted.
 The response, heading tolerance and forecast-support trigger remain required engineering inputs. {cite('E')}</p>
 </section>
 
@@ -266,7 +278,8 @@ For an all-rejected record the implementation returns no runs and zero duration 
 <h3>Percentiles and the returned decision</h3>
 <p>For ordered durations y, the linear percentile convention uses rank r = 1 + p(M − 1), k = floor(r), f = r − k,
 and Q(p) = y(k) + f[y(k+1) − y(k)]. Here p is the requested fractional percentile and Q is in hours;
-at the last rank the largest duration is used. This is the handbook's R7 convention. {cite('S4')}</p>
+at the last rank the largest duration is used. This is the R7 alternative listed in the handbook;
+the handbook's default method is R6. {cite('S4')}</p>
 <p>The reported lower and upper percentiles use p = 0.1 and p = 0.9 respectively.
 They describe the sampled spells; neither is a confidence bound nor a forecast exceedance probability. {cite('S4')} {cite('E')}</p>
 <p>Let D be required duration in hours and Wmin the optional input workability threshold in percent.
@@ -306,7 +319,7 @@ These executable records are identified in Section 9.2; their presence is not an
 <p>The report is accompanied by {value('report_test_count')} test definitions.
 Hand-worked literal anchors check record exposure, accepted exposure, longest spell, mean and percentiles.
 Consistency checks compare the result dictionary, every displayed numeric binding and the chart inputs with a fresh function call.
-The rebuild comparison masks only full-precision audit metadata, checks that metadata numerically and compares displayed content unchanged.</p>
+The rebuild comparison checks the complete artifact byte for byte, including all full-precision audit metadata.</p>
 <p>The report tests also check the configured router and its saved summary, local reference targets, the inlined exemplar stylesheet,
 comment controls and the rounding diagnostic.
 No field dataset, metocean timestamp quality check, forecast skill test or structural installation validation is supplied by these checks.</p>
@@ -390,6 +403,7 @@ atlas interpolation, multi-parameter operating envelopes and any licensed simula
 <p>Arithmetic anchors, module consistency, displayed-input recomputation, reference resolution,
 portable UTF-8 rebuilding and self-contained resources are checked by the accompanying report tests.
 The source metadata is embedded below the page as calculation data; visible statistics and chart arrays use displayed precision.
+Chart acceptance flags are computed from unrounded wave heights, durations and limits before display rounding.
 Source-page retrieval records are separate from engineering acceptance evidence.</p>
 <p>Comment storage is provided below. In compatible browsers, selecting the report folder enables adjacent saving;
 otherwise the comment file is downloaded and placed beside this HTML. Comments are local review annotations and do not change calculation results.</p>
@@ -397,7 +411,7 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 
 <aside class="review-controls" aria-label="Report review">
 <h3>Engineering changes</h3><label for="last-revision">Last revision read</label>
-<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option></select>
+<select id="last-revision"><option value="none">No earlier revision</option>{revision_options}</select>
 <p id="change-list"></p>
 <h3>Comments</h3><label for="comment-section">Report section</label><select id="comment-section"></select>
 <label for="comment-text">Comment text</label><textarea id="comment-text"></textarea>
@@ -446,12 +460,13 @@ function hover(node, message, readout) {
 function waveChart() {
   const svg = document.getElementById("height-chart");
   const xmax = chart.times.at(-1)+chart.interval;
-  const ymax = Math.max(chart.heightLimit,...chart.heights)*1.2;
+  // Multiples of 2 m give quarter-axis ticks on exact 0.5 m increments.
+  const ymax = Math.ceil(Math.max(chart.heightLimit,...chart.heights)*1.2/2)*2;
   axes(svg,xmax,ymax,"Elapsed time (h)","Significant wave height (m)");
   const y = v=>260-v/ymax*220, x = v=>65+v/xmax*760;
   chart.heights.forEach((height,i)=>{
     const start=chart.times[i], end=start+chart.interval;
-    const accepted = height<=chart.heightLimit;
+    const accepted = chart.heightAccepted[i];
     const line=element(svg,"path",{d:`M${x(start)} ${y(height)} H${x(end)}`,
       fill:"none",stroke:accepted?"var(--go)":"var(--nogo)","stroke-width":5});
     hover(line,`Public illustrative case; interval ${i+1}; wave-height criterion; time ${start}–${end} h; demand ${height} m; limit ${chart.heightLimit} m; ${accepted?"Criterion is met.":"Criterion is not met."}`,"height-readout");
@@ -465,7 +480,7 @@ function windowChart() {
   axes(svg,chart.windows.length,ymax,"Accepted spell index (count)","Continuous duration (h)",true);
   const y=v=>260-v/ymax*220, spacing=760/chart.windows.length;
   chart.windows.forEach((duration,i)=>{
-    const accepted=duration>=chart.required;
+    const accepted=chart.windowAccepted[i];
     element(svg,"text",{x:65+(i+.5)*spacing,y:280},String(i+1));
     const bar=element(svg,"rect",{x:65+i*spacing+spacing*.2,y:y(duration),width:spacing*.6,
       height:260-y(duration),class:accepted?"pass":"fail"});
@@ -478,9 +493,10 @@ waveChart(); windowChart();
 const changes=JSON.parse(document.getElementById("engineering-changes").textContent);
 function showChanges() {
   const last=document.getElementById("last-revision").value;
-  document.getElementById("change-list").textContent = last==="0"
-    ? "No engineering changes since the selected revision."
-    : changes.history.flatMap(row=>row.changes).join(" ");
+  const selected=changes.history.findIndex(row=>row.revision===last);
+  const later=changes.history.slice(selected+1).flatMap(row=>row.changes);
+  document.getElementById("change-list").textContent = later.length
+    ? later.join(" ") : "No engineering changes since the selected revision.";
 }
 document.getElementById("last-revision").addEventListener("change",showChanges); showChanges();
 const sections = [...document.querySelectorAll("section[id]")];

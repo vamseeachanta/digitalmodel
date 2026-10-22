@@ -18,6 +18,12 @@ DIRECTORY = ROOT / "docs/reports/modules/weatherwindow"
 REBUILD = "PYTHONPATH=src python docs/reports/modules/weatherwindow/build_report.py"
 
 
+def read_utf8(path):
+    """Read report evidence using explicit UTF-8 and LF handling."""
+    with path.open(encoding="utf-8", newline="\n") as stream:
+        return stream.read()
+
+
 def builder():
     """Load the report generator without importing other report builders."""
     spec = importlib.util.spec_from_file_location("weatherwindow_report", DIRECTORY / "build_report.py")
@@ -93,7 +99,7 @@ def test_report_numbers_are_module_consistency_checks():
 
     module = builder()
     record = module.calculate()
-    source = yaml.safe_load((ROOT / module.EXAMPLE).read_text(encoding="utf-8"))["weather_window"]
+    source = yaml.safe_load(read_utf8(ROOT / module.EXAMPLE))["weather_window"]
     arguments = {
         "hs_timeseries": source["metocean"]["hs_timeseries_m"],
         "hs_limit": source["operation"]["hs_limit_m"],
@@ -122,34 +128,21 @@ def test_report_numbers_are_module_consistency_checks():
 
 
 def test_rebuild_matches_committed_display(tmp_path):
-    """Compare the complete page after masking full-precision calculation metadata."""
+    """Compare the complete UTF-8 artifact, including all calculation metadata."""
     module = builder()
     target = tmp_path / "report.html"
     module.build(target)
-    saved = (DIRECTORY / "report.html").read_text(encoding="utf-8")
-    fresh = target.read_text(encoding="utf-8")
-    # Visible values and embedded chart arrays are rounded to displayed precision.
-    # Only the audit JSON carries full-precision floats; compare those numerically below.
-    pattern = r'(<script id="calculation" type="application/json">).*?(</script>)'
-    assert re.sub(pattern, r"\1MASKED\2", saved, flags=re.S) == re.sub(
-        pattern, r"\1MASKED\2", fresh, flags=re.S
-    ), f"Report is stale; rebuild with: {REBUILD}"
-    stored = json.loads(re.search(pattern, saved, re.S).group(0).split(">", 1)[1].rsplit("<", 1)[0])
-    expected = module.calculate()
-    for key, value in expected["result"].items():
-        if isinstance(value, float):
-            assert stored["result"][key] == pytest.approx(value, abs=1e-9), REBUILD
-        else:
-            assert stored["result"][key] == value, REBUILD
-    assert stored["hs_m"] == expected["hs_m"], REBUILD
-    assert stored["windows_hours"] == pytest.approx(expected["windows_hours"], abs=1e-9), REBUILD
+    assert (DIRECTORY / "report.html").read_bytes() == target.read_bytes(), (
+        f"Report is stale; rebuild with: {REBUILD}"
+    )
     assert b"\r" not in target.read_bytes()
+    target.read_bytes().decode("utf-8")
 
 
 def test_house_style_references_and_comment_controls():
     """Check the delivered artifact, including local references and offline resources."""
     module = builder()
-    text = (DIRECTORY / "report.html").read_text(encoding="utf-8")
+    text = read_utf8(DIRECTORY / "report.html")
     page = Page()
     page.feed(text)
     assert len(page.headings) == 10
@@ -157,7 +150,7 @@ def test_house_style_references_and_comment_controls():
     assert set(page.links) <= set(page.ids)
     assert page.resources == []
     assert '<body class="hs-doc">' in text
-    exemplar = (ROOT / module.EXEMPLAR).read_text(encoding="utf-8")
+    exemplar = read_utf8(ROOT / module.EXEMPLAR)
     assert re.search(r"<style>.*?</style>", exemplar, re.S).group(0) in text
     assert "Draft for maintainer review" in text
     assert "showDirectoryPicker" in text
@@ -168,9 +161,13 @@ def test_house_style_references_and_comment_controls():
     assert "tabindex=\"0\"" in text
     assert "NOT_EVALUATED" in text
     assert "ASSUMED - to be confirmed" in text
-    changes = json.loads((DIRECTORY / "changes.json").read_text(encoding="utf-8"))
+    assert "R7 alternative listed in the handbook" in text
+    assert "installation start" not in text
+    assert "operation start" in text
+    changes = json.loads(read_utf8(DIRECTORY / "changes.json"))
     assert changes["history"][0]["revision"] == "0"
     assert changes["history"][0]["changes"]
+    assert changes["history"][-1]["revision"] == "1"
 
 
 def test_rounding_diagnostic_matches_documented_limitation():
@@ -199,6 +196,28 @@ def test_chart_inputs_are_module_consistency_checks():
     assert chart["required"] == record["result"]["required_duration_hours"]
     assert chart["interval"] == record["result"]["time_step_hours"]
     assert chart["windows"] == record["windows_hours"]
+    assert chart["heightAccepted"] == [height <= 2.0 for height in record["hs_m"]]
+    assert chart["windowAccepted"] == [False, False, False, False]
+
+
+def boundary_chart(module):
+    """Create values whose displayed rounding erases either decision margin."""
+    record = module.calculate()
+    record.update(hs_m=[2.04, 1.96], sample_count=2, sample_start_hours=[0.0, 3.0],
+                  windows_hours=[47.96, 48.04])
+    text = module.render(record)
+    return json.loads(re.search(
+        r'<script id="chart-data" type="application/json">(.*?)</script>', text, re.S
+    ).group(1))
+
+
+def test_chart_decisions_use_unrounded_values():
+    """Displayed equalities must preserve the raw rejection and acceptance."""
+    chart = boundary_chart(builder())
+    assert chart["heights"] == [2.0, 2.0]
+    assert chart["windows"] == [48.0, 48.0]
+    assert chart["heightAccepted"] == [False, True]
+    assert chart["windowAccepted"] == [False, True]
 
 
 def test_chart_and_comment_interaction_without_browser(tmp_path):
@@ -242,6 +261,12 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   const heights=get("height-chart");
   assert.equal(heights.children.filter(e=>e.attrs["stroke-width"]==="5").length,56);
   assert.equal(heights.children.find(e=>e.attrs["data-limit"]).attrs["data-limit"],"2");
+  // Quarter-axis positions must correspond to the values printed at those positions.
+  const ticks=heights.children.filter(e=>e.tag==="text" && e.attrs.x==="15");
+  assert.deepEqual(ticks.map(e=>e.textContent),["0","1","2","3","4"]);
+  const tickHeight=Number(ticks.at(-1).textContent);
+  const limitLine=heights.children.find(e=>e.attrs["data-limit"]);
+  assert.equal(Number(limitLine.attrs.y1),260-2/tickHeight*220);
   const point=heights.children.find(e=>e.attrs.tabindex==="0");
   await point.trigger("focus");assert.match(get("height-readout").textContent,/demand 1.5 m; limit 2 m/);
   const windows=get("window-chart");
@@ -269,7 +294,22 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   await get("open-folder").trigger("click");
   assert.match(get("comment-list").children[0].textContent,/Use unrounded quantities/);
   get("last-revision").value="0";await get("last-revision").trigger("change");
+  assert.match(get("change-list").textContent,/unrounded quantities/);
+  assert.doesNotMatch(get("change-list").textContent,/documented using the existing/);
+  get("last-revision").value="1";await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/No engineering changes/);
+  // Re-render rounded-equal values using decisions generated from raw quantities.
+  Object.assign(vm.runInContext("chart",context),BOUNDARY_CHART);
+  heights.replaceChildren();windows.replaceChildren();
+  vm.runInContext("waveChart();windowChart();",context);
+  const steps=heights.children.filter(e=>e.attrs["stroke-width"]==="5");
+  assert.deepEqual(steps.map(e=>e.attrs.stroke),["var(--nogo)","var(--go)"]);
+  const bars=windows.children.filter(e=>e.tag==="rect");
+  assert.deepEqual(bars.map(e=>e.attrs.class),["fail","pass"]);
+  await steps[0].trigger("focus");
+  assert.match(get("height-readout").textContent,/Criterion is not met/);
+  await bars[0].trigger("focus");
+  assert.match(get("window-readout").textContent,/Criterion is not met/);
 })().catch(error=>{console.error(error);process.exitCode=1;});
 '''
     # Plain JSON is passed as JavaScript data, never through shell interpolation.
@@ -282,6 +322,7 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
         f"const SECTION_IDS={json.dumps(section_ids)};",
         f"const SCRIPT={json.dumps(script, ensure_ascii=False)};",
         f"const REPORT_HTML={json.dumps(text, ensure_ascii=False)};",
+        f"const BOUNDARY_CHART={json.dumps(boundary_chart(builder()))};",
         harness,
     ])
     target = tmp_path / "interaction.cjs"
@@ -310,13 +351,13 @@ def test_configured_example_router_outputs(tmp_path):
     from digitalmodel.weather_window.workflow import router
 
     module = builder()
-    settings = yaml.safe_load((ROOT / module.EXAMPLE).read_text(encoding="utf-8"))["weather_window"]
+    settings = yaml.safe_load(read_utf8(ROOT / module.EXAMPLE))["weather_window"]
     settings["outputs"]["directory"] = "weather_window"
     cfg = router({"weather_window": settings, "_config_dir_path": str(tmp_path)})
     payload = cfg["weather_window"]
     path = Path(payload["summary_json"])
     assert path.parent == tmp_path / "weather_window"
-    saved = json.loads(path.read_text(encoding="utf-8"))
+    saved = json.loads(read_utf8(path))
     assert saved["result"] == module.calculate()["result"]
     assert saved["screening_status"] == cfg["screening_status"] == "fail"
     assert "summary_json" not in saved

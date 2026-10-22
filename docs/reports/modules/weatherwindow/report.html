@@ -117,13 +117,13 @@ Analysis is performed to determine whether a supplied wave-height record contain
 key results are summarized below.</p>
 <ul><li>The illustrative record fails the duration screen.
 <ul><li>The longest accepted spell is <span data-value="result.longest_window_hours">36</span> h against a required <span data-value="result.required_duration_hours">48</span> h.
-An installation start is not supported by this record under the supplied duration criterion.</li></ul></li>
+An operation start is not supported by this record under the supplied duration criterion.</li></ul></li>
 <li>Accepted exposure alone does not establish a usable weather window.
 <ul><li>Accepted exposure is <span data-value="result.workability_pct">73.2</span>% against an input threshold of <span data-value="result.required_workability_pct">50</span>%,
 but <span data-value="result.num_viable_windows">0</span> spells meet the required duration.</li></ul></li></ul>
 <p>These are results for a synthetic public repository example, not a forecast or a location-specific installation envelope.
 Heading, wave period, structural response and a live-support trigger are NOT_EVALUATED.</p>
-<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>The fixed-interval weather-window screen is documented using the existing public illustrative record. The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated. Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance.</td></tr></tbody></table>
+<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>The fixed-interval weather-window screen is documented using the existing public illustrative record. The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated. Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance.</td></tr><tr><td>1</td><td>2026-10-22</td><td>R7 is identified as the handbook&#x27;s alternative percentile method, and the illustrative start decision is described for a generic operation. Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale. The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence.</td></tr></tbody></table>
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -154,7 +154,7 @@ Hover or focus a bar for the duration criterion. Period-dependent and heading-de
 Amber means an assessment is not available; no amber data series is computed here.
 A green wave-height interval does not establish that the complete operation fits.</p>
 <p>The record is rejected for a continuous operation requiring <span data-value="result.required_duration_hours">48</span> h.
-Use a separately qualified forecast and a demonstrated continuous window before an installation start is accepted.
+Use a separately qualified forecast and a demonstrated continuous window before an operation start is accepted.
 The response, heading tolerance and forecast-support trigger remain required engineering inputs. <a href="#ref-E">[E]</a></p>
 </section>
 
@@ -205,7 +205,8 @@ For an all-rejected record the implementation returns no runs and zero duration 
 <h3>Percentiles and the returned decision</h3>
 <p>For ordered durations y, the linear percentile convention uses rank r = 1 + p(M − 1), k = floor(r), f = r − k,
 and Q(p) = y(k) + f[y(k+1) − y(k)]. Here p is the requested fractional percentile and Q is in hours;
-at the last rank the largest duration is used. This is the handbook's R7 convention. <a href="#ref-S4">[S4]</a></p>
+at the last rank the largest duration is used. This is the R7 alternative listed in the handbook;
+the handbook's default method is R6. <a href="#ref-S4">[S4]</a></p>
 <p>The reported lower and upper percentiles use p = 0.1 and p = 0.9 respectively.
 They describe the sampled spells; neither is a confidence bound nor a forecast exceedance probability. <a href="#ref-S4">[S4]</a> <a href="#ref-E">[E]</a></p>
 <p>Let D be required duration in hours and Wmin the optional input workability threshold in percent.
@@ -242,10 +243,10 @@ seasonal summaries and waiting-on-weather arithmetic. Only persistence is used b
 <p>The existing direct calculation test checks separated accepted runs, workability, fit and rejection for a longer duration.
 The configured-example test checks the public illustrative input and its failed duration screen.
 These executable records are identified in Section 9.2; their presence is not an execution claim. <a href="#ref-E">[E]</a></p>
-<p>The report is accompanied by <span data-value="report_test_count">9</span> test definitions.
+<p>The report is accompanied by <span data-value="report_test_count">10</span> test definitions.
 Hand-worked literal anchors check record exposure, accepted exposure, longest spell, mean and percentiles.
 Consistency checks compare the result dictionary, every displayed numeric binding and the chart inputs with a fresh function call.
-The rebuild comparison masks only full-precision audit metadata, checks that metadata numerically and compares displayed content unchanged.</p>
+The rebuild comparison checks the complete artifact byte for byte, including all full-precision audit metadata.</p>
 <p>The report tests also check the configured router and its saved summary, local reference targets, the inlined exemplar stylesheet,
 comment controls and the rounding diagnostic.
 No field dataset, metocean timestamp quality check, forecast skill test or structural installation validation is supplied by these checks.</p>
@@ -321,6 +322,7 @@ atlas interpolation, multi-parameter operating envelopes and any licensed simula
 <p>Arithmetic anchors, module consistency, displayed-input recomputation, reference resolution,
 portable UTF-8 rebuilding and self-contained resources are checked by the accompanying report tests.
 The source metadata is embedded below the page as calculation data; visible statistics and chart arrays use displayed precision.
+Chart acceptance flags are computed from unrounded wave heights, durations and limits before display rounding.
 Source-page retrieval records are separate from engineering acceptance evidence.</p>
 <p>Comment storage is provided below. In compatible browsers, selecting the report folder enables adjacent saving;
 otherwise the comment file is downloaded and placed beside this HTML. Comments are local review annotations and do not change calculation results.</p>
@@ -328,7 +330,7 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 
 <aside class="review-controls" aria-label="Report review">
 <h3>Engineering changes</h3><label for="last-revision">Last revision read</label>
-<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option></select>
+<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option><option value="1">Revision 1</option></select>
 <p id="change-list"></p>
 <h3>Comments</h3><label for="comment-section">Report section</label><select id="comment-section"></select>
 <label for="comment-text">Comment text</label><textarea id="comment-text"></textarea>
@@ -340,9 +342,9 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 </aside>
 <footer>Weather-window module analysis · Illustrative fixed-interval screening · Draft for maintainer review</footer>
 </main>
-<script id="calculation" type="application/json">{"hs_m": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "sample_count": 56, "sample_start_hours": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "windows_hours": [36.0, 30.0, 24.0, 33.0], "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2.0, "required_duration_hours": 48.0, "time_step_hours": 3.0, "record_hours": 168.0, "workability_pct": 73.21428571428571, "required_workability_pct": 50.0, "longest_window_hours": 36.0, "mean_window_hours": 30.8, "p10_window_hours": 25.8, "p90_window_hours": 35.1, "num_windows": 4, "num_viable_windows": 0, "operation_fits_window": false, "screening_status": "fail"}, "diagnostic": {"hs_m": 1, "hs_limit_m": 2, "required_hours": 1, "interval_hours": 0.96, "raw_longest_hours": 0.96, "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2, "required_duration_hours": 1, "time_step_hours": 0.96, "record_hours": 0.96, "workability_pct": 104.16666666666667, "required_workability_pct": null, "longest_window_hours": 1.0, "mean_window_hours": 1.0, "p10_window_hours": 1.0, "p90_window_hours": 1.0, "num_windows": 1, "num_viable_windows": 0, "operation_fits_window": true, "screening_status": "pass"}}, "upstream_test_count": 17, "report_test_count": 9}</script>
-<script id="chart-data" type="application/json">{"heights": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "times": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "interval": 3.0, "heightLimit": 2.0, "required": 48.0, "windows": [36.0, 30.0, 24.0, 33.0]}</script>
-<script id="engineering-changes" type="application/json">{"report": "weather-window-module", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["The fixed-interval weather-window screen is documented using the existing public illustrative record.", "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.", "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."]}]}</script>
+<script id="calculation" type="application/json">{"hs_m": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "sample_count": 56, "sample_start_hours": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "windows_hours": [36.0, 30.0, 24.0, 33.0], "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2.0, "required_duration_hours": 48.0, "time_step_hours": 3.0, "record_hours": 168.0, "workability_pct": 73.21428571428571, "required_workability_pct": 50.0, "longest_window_hours": 36.0, "mean_window_hours": 30.8, "p10_window_hours": 25.8, "p90_window_hours": 35.1, "num_windows": 4, "num_viable_windows": 0, "operation_fits_window": false, "screening_status": "fail"}, "diagnostic": {"hs_m": 1, "hs_limit_m": 2, "required_hours": 1, "interval_hours": 0.96, "raw_longest_hours": 0.96, "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2, "required_duration_hours": 1, "time_step_hours": 0.96, "record_hours": 0.96, "workability_pct": 104.16666666666667, "required_workability_pct": null, "longest_window_hours": 1.0, "mean_window_hours": 1.0, "p10_window_hours": 1.0, "p90_window_hours": 1.0, "num_windows": 1, "num_viable_windows": 0, "operation_fits_window": true, "screening_status": "pass"}}, "upstream_test_count": 17, "report_test_count": 10}</script>
+<script id="chart-data" type="application/json">{"heights": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "times": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "interval": 3.0, "heightLimit": 2.0, "required": 48.0, "windows": [36.0, 30.0, 24.0, 33.0], "heightAccepted": [true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false], "windowAccepted": [false, false, false, false]}</script>
+<script id="engineering-changes" type="application/json">{"report": "weather-window-module", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["The fixed-interval weather-window screen is documented using the existing public illustrative record.", "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.", "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."]}, {"revision": "1", "date": "2026-10-22", "changes": ["R7 is identified as the handbook's alternative percentile method, and the illustrative start decision is described for a generic operation.", "Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale.", "The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence."]}]}</script>
 <script>
 "use strict";
 const chart = JSON.parse(document.getElementById("chart-data").textContent);
@@ -372,12 +374,13 @@ function hover(node, message, readout) {
 function waveChart() {
   const svg = document.getElementById("height-chart");
   const xmax = chart.times.at(-1)+chart.interval;
-  const ymax = Math.max(chart.heightLimit,...chart.heights)*1.2;
+  // Multiples of 2 m give quarter-axis ticks on exact 0.5 m increments.
+  const ymax = Math.ceil(Math.max(chart.heightLimit,...chart.heights)*1.2/2)*2;
   axes(svg,xmax,ymax,"Elapsed time (h)","Significant wave height (m)");
   const y = v=>260-v/ymax*220, x = v=>65+v/xmax*760;
   chart.heights.forEach((height,i)=>{
     const start=chart.times[i], end=start+chart.interval;
-    const accepted = height<=chart.heightLimit;
+    const accepted = chart.heightAccepted[i];
     const line=element(svg,"path",{d:`M${x(start)} ${y(height)} H${x(end)}`,
       fill:"none",stroke:accepted?"var(--go)":"var(--nogo)","stroke-width":5});
     hover(line,`Public illustrative case; interval ${i+1}; wave-height criterion; time ${start}–${end} h; demand ${height} m; limit ${chart.heightLimit} m; ${accepted?"Criterion is met.":"Criterion is not met."}`,"height-readout");
@@ -391,7 +394,7 @@ function windowChart() {
   axes(svg,chart.windows.length,ymax,"Accepted spell index (count)","Continuous duration (h)",true);
   const y=v=>260-v/ymax*220, spacing=760/chart.windows.length;
   chart.windows.forEach((duration,i)=>{
-    const accepted=duration>=chart.required;
+    const accepted=chart.windowAccepted[i];
     element(svg,"text",{x:65+(i+.5)*spacing,y:280},String(i+1));
     const bar=element(svg,"rect",{x:65+i*spacing+spacing*.2,y:y(duration),width:spacing*.6,
       height:260-y(duration),class:accepted?"pass":"fail"});
@@ -404,9 +407,10 @@ waveChart(); windowChart();
 const changes=JSON.parse(document.getElementById("engineering-changes").textContent);
 function showChanges() {
   const last=document.getElementById("last-revision").value;
-  document.getElementById("change-list").textContent = last==="0"
-    ? "No engineering changes since the selected revision."
-    : changes.history.flatMap(row=>row.changes).join(" ");
+  const selected=changes.history.findIndex(row=>row.revision===last);
+  const later=changes.history.slice(selected+1).flatMap(row=>row.changes);
+  document.getElementById("change-list").textContent = later.length
+    ? later.join(" ") : "No engineering changes since the selected revision.";
 }
 document.getElementById("last-revision").addEventListener("change",showChanges); showChanges();
 const sections = [...document.querySelectorAll("section[id]")];
