@@ -220,6 +220,7 @@ def lookup(package: dict, query: dict, resolver: dict[str, Path], *,
               "qualified": False, "dataset_id": package["dataset_id"],
               "revision": package["revision"], "case_id": case["case_id"],
               "row_hash": case["row_hash"], "mode": "diagnostic"}
+    answer.pop("acceptance_results", None)
     if diagnostic:
         return answer
     _check_authority(package, authority, ledger, resolver)
