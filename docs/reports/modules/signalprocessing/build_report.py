@@ -2,8 +2,9 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Rebuild the self-contained signal-processing analysis from public inputs.
 
-Use an environment with NumPy 1.26.4, Pandas 2.2.3 and SciPy 1.14.1.
-The report is deterministic; --check compares bytes without writing outputs.
+Use report-requirements.txt beside the report tests for a byte-exact rebuild.
+Numerical calculations also run with compatible installed library versions.
+The --check option compares bytes without writing outputs.
 """
 
 import argparse
@@ -21,7 +22,8 @@ from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer, Tim
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 STYLE_SOURCE = "docs/reports/pipeline-ffs-assessment.html"
-EXPECTED_VERSIONS = {"numpy": "1.26.4", "pandas": "2.2.3", "scipy": "1.14.1"}
+NUMERICAL_LIBRARIES = ("numpy", "pandas", "scipy")
+REBUILD = "PYTHONPATH=src python docs/reports/modules/signalprocessing/build_report.py"
 
 
 def digest(path):
@@ -46,9 +48,7 @@ def make_signal(basis):
 
 
 def calculate(basis):
-    versions = {name: importlib.metadata.version(name) for name in EXPECTED_VERSIONS}
-    if versions != EXPECTED_VERSIONS:
-        raise ValueError("Use the documented numerical library versions to rebuild this realization")
+    versions = {name: importlib.metadata.version(name) for name in NUMERICAL_LIBRARIES}
     data = basis["inputs"]
     fs, size = data["sampling_rate_hz"], data["segment_samples"]
     signal = make_signal(basis)
@@ -69,7 +69,6 @@ def calculate(basis):
         "peak_error_hz": abs(float(peak.frequency) - data["sine_frequency_hz"]),
         "peak_limit_hz": spacing / 2, "noise_density_estimate_v2_per_hz": noise,
         "noise_error_percent": abs(noise / data["noise_density_v2_per_hz"] - 1) * 100,
-        "noise_tolerance_percent": basis["criteria"]["noise_relative_tolerance_percent"],
         "integrated_density_v2": float(frame.power.sum() * spacing),
         "noise_band_start_hz": float(frame.frequency.iloc[size // 4]),
     }
@@ -77,7 +76,6 @@ def calculate(basis):
         "metrics": metrics, "versions": versions,
         "criteria_met": {
             "peak": metrics["peak_error_hz"] <= metrics["peak_limit_hz"],
-            "noise": metrics["noise_error_percent"] <= metrics["noise_tolerance_percent"],
         },
         "spectrum": {
             "frequency_hz": frame.frequency.tolist(),
@@ -94,10 +92,12 @@ def verify_evidence(evidence):
     for name, expected in evidence["sha256"].items():
         path = ROOT / name
         if path.resolve().is_relative_to(ROOT) is False or digest(path) != expected:
-            raise ValueError(f"Evidence digest mismatch: {name}")
+            raise ValueError(f"Evidence digest mismatch: {Path(name).as_posix()}; refresh the evidence before {REBUILD}")
 
 
 def format_metric(key, value):
+    if key in ("peak_hz", "peak_error_hz", "peak_limit_hz", "spacing_hz"):
+        return f"{value:,.3f}"
     if key == "noise_error_percent":
         # Upward rounding preserves a statement of the form 'within x percent'.
         return f"{math.ceil(value * 10) / 10:.1f}"
@@ -115,7 +115,7 @@ def render():
     evidence = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
     verify_evidence(evidence)
     changes = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))
-    house_style = re.search(r"<style>.*?</style>", (ROOT / STYLE_SOURCE).read_text(), re.S)[0]
+    house_style = re.search(r"<style>.*?</style>", (ROOT / STYLE_SOURCE).read_text(encoding="utf-8"), re.S)[0]
     tokens = {
         "house_style": house_style,
         "document_binding": hashlib.sha256(b"".join(
@@ -154,11 +154,11 @@ def build(output_dir=HERE, check=False):
         for name, content in outputs.items():
             target = output_dir / name
             if not target.exists() or target.read_bytes() != content.encode("utf-8"):
-                raise ValueError(f"Rebuild differs: {name}")
+                raise ValueError(f"Rebuild differs: {name}; install report-requirements.txt and run {REBUILD}")
         return
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, content in outputs.items():
-        (output_dir / name).write_bytes(content.encode("utf-8"))
+        (output_dir / name).write_text(content, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

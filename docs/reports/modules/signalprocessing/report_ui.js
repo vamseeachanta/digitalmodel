@@ -95,14 +95,16 @@
 
   const noiseChart = byId('noise-chart');
   const reference = metrics.noise_density_v2_per_hz;
-  const lower = reference * (1 - metrics.noise_tolerance_percent / 100);
-  const upper = reference * (1 + metrics.noise_tolerance_percent / 100);
-  const nx = value => 120 + (value - lower * 0.85) / (upper * 1.15 - lower * 0.85) * 680;
+  const estimate = metrics.noise_density_estimate_v2_per_hz;
+  // Axis padding is visual only; no acceptance band is assigned.
+  const lower = Math.min(reference, estimate) * 0.9;
+  const upper = Math.max(reference, estimate) * 1.1;
+  const nx = value => 120 + (value - lower) / (upper - lower) * 680;
   append(noiseChart, 'path', {d: 'M120 175 H800', stroke: 'currentColor'});
   for (const [value, label, style] of [
-    [lower, 'Noise comparison lower limit', 'limit-line'],
+    [lower, 'Axis lower extent', 'axis-line'],
     [reference, 'Input noise reference', 'reference-line'],
-    [upper, 'Noise comparison upper limit', 'limit-line'],
+    [upper, 'Axis upper extent', 'axis-line'],
   ]) {
     const line = append(noiseChart, 'line', {x1: nx(value), x2: nx(value), y1: 65, y2: 175, class: style});
     line.appendChild(make('title', {}, `${label}: ${density(value)} V²/Hz; public synthetic voltage`));
@@ -110,12 +112,13 @@
   }
   append(noiseChart, 'text', {x: 460, y: 244, 'text-anchor': 'middle'}, 'Mean noise density (V²/Hz)');
   append(noiseChart, 'text', {x: 460, y: 30, 'text-anchor': 'middle'},
-    'Dashed limits apply to the upper-band mean; the centre line is the input reference.');
+    'The dashed line is the input reference; no noise acceptance criterion is assigned.');
   const dot = append(noiseChart, 'circle', {cx: nx(metrics.noise_density_estimate_v2_per_hz), cy: 120,
     r: 8, fill: 'var(--ink)', tabindex: 0, role: 'img', 'aria-label': 'Inspect upper-band mean density'});
-  const noiseText = `Public synthetic voltage; upper-band mean demand: ` +
+  const noiseText = `Public synthetic voltage; upper-band mean: ` +
     `${density(metrics.noise_density_estimate_v2_per_hz)} V²/Hz; reference: ${density(reference)} V²/Hz; ` +
-    `limits: ${density(lower)} to ${density(upper)} V²/Hz. The numerical comparison is met.`;
+    `absolute relative difference: ${metrics.noise_error_percent.toFixed(1)} %. ` +
+    'No noise acceptance criterion or confidence interval is assigned.';
   dot.appendChild(make('title', {}, noiseText));
   const showNoise = () => { byId('noise-readout').textContent = noiseText; };
   dot.addEventListener('pointerenter', showNoise);
@@ -132,10 +135,10 @@
     byId('comment-section').appendChild(option);
   }
   const status = text => { byId('comment-status').textContent = text; };
-  const packet = () => ({document: 'Signal processing module analysis', revision: '00', binding, comments});
+  const packet = () => ({document: 'Signal processing module analysis', revision: '01', binding, comments});
 
   function mergeComments(incoming) {
-    if (incoming.binding !== binding || incoming.revision !== '00' ||
+    if (incoming.binding !== binding || incoming.revision !== '01' ||
         incoming.document !== 'Signal processing module analysis' || !Array.isArray(incoming.comments) ||
         incoming.comments.length > 1000 || incoming.comments.some(comment =>
           !comment || typeof comment.id !== 'string' || typeof comment.text !== 'string' ||

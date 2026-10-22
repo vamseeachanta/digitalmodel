@@ -1,7 +1,6 @@
 {
-  "basis_sha256": "b2b47080fd948ce57db1e0bf2da0831e9f28c19aeb6b02de6b2d7abe99dddbf1",
+  "basis_sha256": "a63e4d0272328ddfab315eee0669d4be7e3b33abbc0ed2361e09efcdd79e3ce3",
   "criteria_met": {
-    "noise": true,
     "peak": true
   },
   "metrics": {
@@ -12,7 +11,6 @@
     "noise_density_estimate_v2_per_hz": 0.0010031222530346557,
     "noise_density_v2_per_hz": 0.001,
     "noise_error_percent": 0.3122253034655742,
-    "noise_tolerance_percent": 10,
     "nyquist_hz": 5000.0,
     "overlap_samples": 512,
     "peak_density_v2_per_hz": 0.23180458245584917,

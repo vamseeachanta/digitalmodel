@@ -13,6 +13,7 @@
 .hs-doc .chart-line{fill:none;stroke:var(--ink);stroke-width:2}
 .hs-doc .reference-line{stroke:var(--report-accent);stroke-width:2;stroke-dasharray:7 4}
 .hs-doc .limit-line{stroke:#a54236;stroke-width:2;stroke-dasharray:5 4}
+.hs-doc .axis-line{stroke:var(--ink);stroke-width:1}
 .hs-doc label{display:block;margin:12px 0 5px;font:14px sans-serif}
 .hs-doc textarea,.hs-doc select,.hs-doc input[type=range]{width:100%}
 .hs-doc textarea,.hs-doc select{font:16px/1.5 sans-serif;padding:8px;border:1px solid var(--line)}
@@ -28,8 +29,8 @@
 <header>
 <h1>Signal processing module analysis</h1>
 <p>Frequency content of uniformly sampled signals</p>
-<p>Revision 00 | 2026-10-21</p>
-<p>Draft for client review</p>
+<p>Revision 01 | 2026-10-22</p>
+<p>Draft for maintainer review</p>
 </header>
 <div class="layout">
 <nav aria-label="Contents"><ol>
@@ -51,16 +52,17 @@
 <li>The dominant tone is resolved at @@peak_hz@@ Hz against the published @@sine_frequency_hz@@ Hz input.
 <ul><li>The frequency error is @@peak_error_hz@@ Hz, below the half-bin comparison limit of @@peak_limit_hz@@ Hz. This result supports dominant-tone identification for this synthetic example.</li></ul></li>
 <li>The estimated high-frequency noise density is @@noise_density_estimate_v2_per_hz@@ V²/Hz against the published @@noise_density_v2_per_hz@@ V²/Hz input.
-<ul><li>The estimate is within @@noise_error_percent@@ % of the input, below the analysis-defined @@noise_tolerance_percent@@ % comparison limit. This result supports numerical reproduction of the example, with no equipment acceptance implied.</li></ul></li>
+<ul><li>The estimate is within @@noise_error_percent@@ % of the input. This observed difference is reported without a noise acceptance criterion or confidence interval; no equipment acceptance is established.</li></ul></li>
 <li>Measured-signal use requires a documented acquisition basis.
 <ul><li>Frequency content above the @@nyquist_hz@@ Hz sampling boundary is unresolved at the example's sampling rate. Instrument bandwidth, calibration and anti-alias filtering remain required inputs for measured data.</li></ul></li>
 </ul>
 <p>Input values and the synthetic signal definition are taken from <a href="#ref-public">the published example</a>. Comparison criteria are defined in <a href="#section-3">Section 3</a>; calculated results are developed in <a href="#section-6">Section 6</a>.</p>
 </section>
 <div id="revision-history"><h3>Revision history</h3>
-<table><caption>Revision history. The initial issue establishes the numerical basis and its limits.</caption>
+<table><caption>Revision history. Each issue records its numerical basis or subsequent correction.</caption>
 <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>00</td><td>2026-10-21</td><td>The spectral-density workflow is documented on a reproducible public example to distinguish numerical evidence from measured-signal qualification.</td></tr></tbody></table></div>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>The spectral-density workflow is documented on a reproducible public example to distinguish numerical evidence from measured-signal qualification.</td></tr>
+<tr><td>01</td><td>2026-10-22</td><td>Numerical checks are separated from pinned byte checks so compatible library versions can run; the unsupported noise acceptance band is removed and the observed difference is retained.</td></tr></tbody></table></div>
 
 <section id="section-2"><h2>2. Introduction and scope</h2>
 <p>A signal is represented as ordered scalar values with a known sample interval. Frequency analysis is performed to identify repeating components and to distribute mean-square signal content across frequency.</p>
@@ -73,7 +75,7 @@
 <p>The calculation basis is defined by the published voltage-signal example and the module's documented spectral interface. Numerical comparison criteria are selected for this demonstration; operating limits are not assigned.</p>
 <h3>3.1 Signal and comparison basis</h3>
 <p>The sine amplitude, tone frequency, sampling rate, record length, white-noise density and segment length follow <a href="#ref-public">the SciPy reference manual, edition 1.14.1, Examples</a>. A fixed random seed is introduced as an analysis choice because the published realization is unseeded. Its displayed sample values are therefore not comparison targets.</p>
-<p>The dominant peak is compared with the input tone using half the returned frequency spacing. This grid-based criterion applies to this isolated dominant tone and is not a general bound on the resolution of neighbouring tones. The mean density in the upper half of the spectrum is compared with the input noise density using a relative difference limit defined in the <a href="#data-register">data register</a>. The band excludes the tone for this example. The limit is a numerical demonstration criterion, not a confidence interval.</p>
+<p>The dominant peak is compared with the input tone using half the returned frequency spacing. This grid-based criterion applies to this isolated dominant tone and is not a general bound on the resolution of neighbouring tones. The mean density in the upper half of the spectrum is compared with the input noise density as an observed relative difference. The band excludes the tone for this example. No noise acceptance criterion or confidence interval is assigned; the cited example supplies the averaging recipe without an acceptance band.</p>
 <h3>3.2 Sampling boundary and numerical agreement</h3>
 <p>The Nyquist boundary is the sample frequency divided by two, following the <a href="#ref-fourier">NumPy Fourier convention</a>. A measured acquisition requires suppression of frequencies at and above that boundary before sampling. A spectral plot of sampled values cannot establish that suppression.</p>
 <p>Each returned density bin is also compared with an independently assembled periodic-window Fourier calculation. Relative tolerance is 10<sup>−12</sup> with absolute tolerance 10<sup>−15</sup> V²/Hz, as specified by the <a href="#ref-report-tests">report test</a>. These tolerances check numerical agreement, not sensor accuracy. Every comparison is performed on unrounded values.</p>
@@ -130,11 +132,11 @@
 <figcaption>Figure 2. Returned spectral density against frequency. The vertical dashed line marks the Nyquist sampling boundary; it is not a density limit. The horizontal reference marks the input noise density and is not a limit on the tone. Hover or use the frequency cursor to inspect individual bins.</figcaption>
 </figure>
 <p>The peak density is @@peak_density_v2_per_hz@@ V²/Hz. Peak density depends on segment length, window and tone position between bins; it is not a direct measurement of sine amplitude.</p>
-<p>The upper-band mean is calculated from @@noise_band_start_hz@@ Hz through the sampling boundary. Its comparison limits are displayed below. The limits apply to the band mean, not to each noisy bin.</p>
+<p>The upper-band mean is calculated from @@noise_band_start_hz@@ Hz through the sampling boundary. The mean and input reference are displayed below as an observed comparison without a noise acceptance limit.</p>
 <figure id="noise-figure">
-<svg id="noise-chart" viewBox="0 0 900 260" role="img" aria-label="Estimated mean noise density and analysis-defined comparison limits"></svg>
+<svg id="noise-chart" viewBox="0 0 900 260" role="img" aria-label="Estimated mean noise density and input reference without an acceptance limit"></svg>
 <p id="noise-readout" class="panel" aria-live="polite"></p>
-<figcaption>Figure 3. Upper-band mean noise density compared with the input reference and the analysis-defined relative limits. Hover or focus the mean marker for the demand, comparator and units.</figcaption>
+<figcaption>Figure 3. Upper-band mean noise density compared with the input reference. Hover or focus the mean marker for the estimate, reference, observed relative difference and units. Axis extents are visual padding and carry no acceptance meaning.</figcaption>
 </figure>
 </section>
 
@@ -174,7 +176,7 @@
 <li><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/README.md">Documented public interfaces</a> and <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/__init__.py">package exports</a>.</li>
 <li id="ref-spectrum-code"><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/spectral.py">Spectral implementation</a>, compute_spectrum, _compute_welch, find_peaks, compute_psd and inverse_transform; <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/timeseries.py">statistical implementation</a>, calculate_statistics.</li>
 <li id="ref-existing-tests"><a href="../../../../tests/signal_processing/signal_analysis/core/test_spectral.py">Existing spectral tests</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_signal_integration.py">spectral integration and imports</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_pack_acceptance.py">export and closed-form damage checks</a>; <a href="../../../../tests/fatigue/test_rainflow_invariants.py">recorded counting verdict matrix</a>.</li>
-<li id="ref-report-tests"><a href="../../../../tests/signal_processing/signal_analysis/test_module_report.py">Report rebuild and numerical comparisons</a>; <a href="public-example.json">public input recipe and criteria</a>; <a href="build_report.py">report generator</a>; <a href="results.json">full-precision results and plotted arrays</a>.</li>
+<li id="ref-report-tests"><a href="../../../../tests/signal_processing/signal_analysis/test_module_report.py">Report rebuild and numerical comparisons</a>; <a href="../../../../tests/signal_processing/signal_analysis/report-requirements.txt">pinned report environment</a>; <a href="../../../../.github/workflows/signalprocessing-report.yml">byte-exact continuous-integration job</a>; <a href="public-example.json">public input recipe and criterion</a>; <a href="build_report.py">report generator</a>; <a href="results.json">full-precision results and plotted arrays</a>.</li>
 <li id="ref-evidence"><a href="validation.json">Selected test execution record</a>, with counts and source-content digests; <a href="changes.json">revision change record</a>.</li>
 <li>Numerical environment: NumPy 1.26.4, Pandas 2.2.3 and SciPy 1.14.1, recorded from the installed distributions. The broader evidence set uses PyLife 2.1.0 for import compatibility; the project declares a newer minimum. A complete installation with the declared dependency set is not established.</li>
 </ul>
@@ -186,7 +188,7 @@ from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer
 from digitalmodel.signal_processing.signal_analysis import TimeSeriesProcessor
 
 basis = json.loads(Path(
-    "docs/reports/modules/signalprocessing/public-example.json").read_text())
+    "docs/reports/modules/signalprocessing/public-example.json").read_text(encoding="utf-8"))
 data = basis["inputs"]
 fs = data["sampling_rate_hz"]
 time = np.arange(data["samples"]) / fs
@@ -201,9 +203,9 @@ spectrum = analyzer.compute_spectrum(
     noverlap=data["segment_samples"] // 2, window="hann")
 peak = analyzer.find_peaks(spectrum, n_peaks=1)
 statistics = TimeSeriesProcessor().calculate_statistics(x)</pre>
-<pre>PYTHONPATH=src python docs/reports/modules/signalprocessing/build_report.py --check
+<pre>PYTHONPATH=src uv run --no-project --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt python docs/reports/modules/signalprocessing/build_report.py --check
 PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_module_report.py</pre>
-<p>The input recipe, generated signal digest and full plotted arrays are retained. Rebuilding requires the numerical versions listed above and no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
+<p>The input recipe, generated signal digest and full plotted arrays are retained. Exact retained-byte comparison is performed in the pinned environment by the separate continuous-integration job. Normal report tests compare every retained metric and spectral bin using numerical tolerances and record the installed versions; a temporary rebuild is checked for exact repeatability and tamper detection within that environment. Once dependencies are installed, calculation requires no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
 </section>
 
 <section id="section-10"><h2>10. Appendices</h2>
@@ -218,7 +220,7 @@ PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_mod
 <tr><td>White-noise density (V²/Hz)</td><td>@@noise_density_v2_per_hz@@</td><td>Public example, reference 1, Examples; prescribed one-sided density.</td></tr>
 <tr><td>Segment length (samples), overlap (samples)</td><td>@@segment_samples@@; @@overlap_samples@@</td><td>Segment length from reference 1, Examples; half-segment overlap from Parameters and module implementation.</td></tr>
 <tr><td>Random seed (dimensionless)</td><td>@@random_seed@@</td><td>Analysis-defined PCG64 realization; public example leaves the seed unspecified.</td></tr>
-<tr><td>Noise-mean relative limit (%)</td><td>@@noise_tolerance_percent@@</td><td>Analysis-defined comparison criterion; no operating or confidence limit.</td></tr>
+<tr><td>Noise-mean acceptance criterion</td><td>NOT_EVALUATED</td><td>The observed relative difference is reported without an acceptance threshold; the source provides no comparison band.</td></tr>
 <tr><td>Acquisition idealization</td><td>ASSUMED - to be confirmed</td><td>Exact uniform timing and an ideal sampled synthetic source are adopted for demonstration. Measured-data use requires a separate acquisition basis.</td></tr>
 <tr><td>Calibration, acquisition filter response, sample-clock accuracy, field comparison</td><td>NOT_EVALUATED</td><td>No measurement evidence is supplied; equipment acceptance cannot be calculated.</td></tr>
 </tbody></table></div>
@@ -229,7 +231,7 @@ PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_mod
 <thead><tr><th>Evidence group</th><th>Passing checks</th><th>Qualification boundary</th></tr></thead>
 <tbody>@@validation_groups@@</tbody></table></div>
 <p>The pre-flight confirms that the public entry point is documented and callable, that plotted arrays are obtained from the returned density, that each quoted worked value is checked against the calculation and that the retained input is synthetic. A rebuild checks the selected source digests and compares the generated document bytes. Local links, heading structure, inlined styling and public wording are also checked by the report test. Browser controls are checked separately; print layout and assistive-technology behaviour require final document review by the maintainer.</p>
-<p>The interpretation legend is expressed as sentences: the numerical comparison is met when the stated difference is within its stated limit; the numerical comparison is not met when that limit is exceeded; an engineering result is not evaluated when its required measurement basis is absent. The numerical example does not confer a field acceptance status.</p>
+<p>The interpretation legend is expressed as sentences: the frequency comparison is met when the stated error is within its half-bin limit; that comparison is not met when the limit is exceeded. Noise density is reported only as an observed difference from the prescribed input. An engineering result is not evaluated when its required measurement basis is absent. The numerical example does not confer a field acceptance status.</p>
 <h3>10.3 Engineering changes</h3>
 <details id="change-panel"><summary>Changes since the preceding issue</summary><ul>@@change_panel@@</ul></details>
 <h3>10.4 Comments</h3>

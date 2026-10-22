@@ -1,0 +1,8 @@
+# Byte-exact report environment; normal numerical tests use compatible versions.
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.14.1
+pytest==8.3.5
+pytest-asyncio==0.25.3
+playwright==1.58.0
+pyyaml==6.0.2

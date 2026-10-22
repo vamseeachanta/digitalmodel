@@ -21,9 +21,8 @@
     "noise_band": "The last half of the one-sided density, starting at segment_samples // 4, follows the cited example."
   },
   "criteria": {
-    "noise_relative_tolerance_percent": 10,
     "peak_frequency": "Absolute error no larger than half the returned frequency spacing; this is a demonstration criterion for this isolated dominant tone.",
-    "reference": "These are analysis-defined numerical demonstration criteria, not equipment operating limits or statistical confidence intervals."
+    "reference": "The frequency criterion follows the returned grid spacing. Noise density is reported as an observed difference from the input reference, without an acceptance criterion or confidence interval."
   },
   "readiness": "Synthetic numerical example only; no measured engineering input or equipment acceptance is established.",
   "retention": "The generation recipe, seed, library versions, array digests, full plotted frequency and density arrays, and compact metrics are retained. Raw measured data are not used."

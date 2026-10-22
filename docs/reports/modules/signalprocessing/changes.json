@@ -9,6 +9,15 @@
         "The meaning of spectral density, amplitude density and placeholder phase is distinguished from the separately scaled Fourier outputs.",
         "Existing analytical and regression evidence is separated from field qualification, and the information required before analysing measured signals is identified."
       ]
+    },
+    {
+      "revision": "01",
+      "date": "2026-10-22",
+      "changes": [
+        "Numerical checks run with compatible library versions, while a separate continuous-integration job uses declared pins to check retained report bytes.",
+        "The unsupported noise acceptance band is removed; the estimated density and its observed difference from the input reference are reported without a noise verdict.",
+        "Hand-calculated grid quantities and browser checks cover the revised comparison, and text access specifies UTF-8 with LF output."
+      ]
     }
   ]
 }

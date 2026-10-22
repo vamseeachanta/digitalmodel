@@ -1,0 +1,44 @@
+name: Signal processing report
+
+"on":
+  pull_request:
+    paths:
+      - ".github/workflows/signalprocessing-report.yml"
+      - "docs/reports/modules/signalprocessing/**"
+      - "docs/reports/pipeline-ffs-assessment.html"
+      - "src/digitalmodel/signal_processing/**"
+      - "tests/signal_processing/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-report:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/report-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+      - name: Install report browser
+        run: >-
+          uv run --no-project
+          --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Check retained report bytes
+        run: >-
+          uv run --no-project
+          --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt
+          python docs/reports/modules/signalprocessing/build_report.py --check
+      - name: Run numerical, rebuild and browser checks
+        run: >-
+          uv run --no-project
+          --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt
+          python -m pytest tests/signal_processing/signal_analysis/test_module_report.py
+          -q -p no:cacheprovider
