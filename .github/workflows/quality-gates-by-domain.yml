@@ -283,6 +283,9 @@ jobs:
             tests/scripts/test_reporting_ci_registration.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
+            tests/docs/test_passing_ship_forces_report.py \
+            tests/hydrodynamics/test_wang_passing_ship.py \
+            tests/hydrodynamics/test_passing_ship_forces_workflow.py \
             tests/scripts/test_ci_baseline.py \
             tests/scripts/test_run_shard.py \
             tests/contracts/test_flaky_register_schema.py \

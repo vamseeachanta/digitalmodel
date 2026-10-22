@@ -12,6 +12,7 @@ import argparse
 import copy
 import html
 import json
+import math
 import re
 from pathlib import Path
 
@@ -28,23 +29,24 @@ HERE = Path(__file__).resolve().parent
 EXAMPLE = ROOT / "docs/domains/hydrodynamics/wang-passing-ship-forces.md"
 STYLE_SOURCE = ROOT / "docs/reports/pipeline-ffs-assessment.html"
 CHANGES = {
-    "revision": "00",
+    "revision": "01",
     "date": "2026-10-22",
     "changes": [
-        "Established the passing-ship load calculation basis and reproduced the public example.",
-        "Separated numerical reproduction from the missing mooring capacity and field evidence.",
+        "Reported signed extrema with stable locations and portable chart precision.",
+        "Quantified legacy image truncation and pinned report values to independent calculation evidence.",
+        "Specified text encoding, source locators and load directions.",
     ],
 }
 
 
 def house_style() -> str:
     """Reuse the engineering report layout without a new visual system."""
-    return re.search(r"<style>.*?</style>", STYLE_SOURCE.read_text(), re.S).group(0)
+    return re.search(r"<style>.*?</style>", STYLE_SOURCE.read_text(encoding="utf-8"), re.S).group(0)
 
 
 def example_config(work_dir: Path) -> dict:
     """Read the public documented example rather than transcribing its values."""
-    block = re.search(r"```yaml\n(.*?)```", EXAMPLE.read_text(), re.S).group(1)
+    block = re.search(r"```yaml\n(.*?)```", EXAMPLE.read_text(encoding="utf-8"), re.S).group(1)
     cfg = yaml.safe_load(block)
     cfg["passing_ship_forces"]["output_dir"] = str(work_dir.resolve())
     return cfg
@@ -58,7 +60,41 @@ def calculate(work_dir: Path) -> dict:
     deep_cfg = example_config(work_dir / "deep")
     del deep_cfg["passing_ship_forces"]["water_depth"]
     deep = router(deep_cfg)["passing_ship_forces"]
-    return {"settings": settings, "finite": finite, "deep": deep}
+    sensitivity = image_sensitivity(work_dir / "image-sensitivity", settings)
+    return {"settings": settings, "finite": finite, "deep": deep,
+            "image_sensitivity": sensitivity}
+
+
+def image_sensitivity(work_dir: Path, settings: dict) -> list[dict]:
+    """Compare finite image sums at fixed staggers, without claiming convergence."""
+    length = settings["moored_vessel"]["length"]
+    points = [0.4 * length, 0.0, -0.32 * length, -2 * length]
+    results = []
+    for count in (DEFAULT_N_IMAGES, 400):
+        cfg = example_config(work_dir / str(count))
+        cfg["passing_ship_forces"].update(
+            n_images=count, stagger={"values": points}
+        )
+        results.append(router(cfg)["passing_ship_forces"]["forces"])
+    fields = ("surge_force", "sway_force", "yaw_moment", "surge_force")
+    return [dict(component=field, stagger=point, legacy=old[field],
+                 reference=ref[field],
+                 difference_percent=100 * (old[field] / ref[field] - 1))
+            for field, point, old, ref in zip(fields, points, *results)]
+
+
+def extrema(rows: list[dict]) -> dict:
+    """Retain both signs; same-sign ties use the first sample within tolerance."""
+    values = {}
+    for component in ("surge_force", "sway_force", "yaw_moment"):
+        for kind, select in (("min", min), ("max", max)):
+            target = select(row[component] for row in rows)
+            row = next(row for row in rows if math.isclose(
+                row[component], target, rel_tol=1e-12, abs_tol=1e-9
+            ))
+            values[f"{kind}_{component}"] = row[component]
+            values[f"{kind}_{component}_stagger"] = row["stagger"]
+    return values
 
 
 def worked_numbers(settings: dict, result: dict) -> dict:
@@ -69,21 +105,22 @@ def worked_numbers(settings: dict, result: dict) -> dict:
             values[f"{hull}.{field}"] = settings[hull][field]
     for field in ("water_density", "passing_velocity", "separation_distance", "water_depth"):
         values[field] = settings[field]
-    for field in ("n_stagger", "peak_surge_force", "peak_surge_stagger",
-                  "peak_sway_force", "peak_sway_stagger", "peak_yaw_moment",
-                  "peak_yaw_stagger", "max_sway_attraction", "max_sway_repulsion"):
-        values[field] = result[field]
+    values["n_stagger"] = result["n_stagger"]
+    values.update(extrema(result["forces"]))
     values["first_stagger"] = result["forces"][0]["stagger"]
     values["last_stagger"] = result["forces"][-1]["stagger"]
     values["quadrature_nodes"] = DEFAULT_QUAD_NODES
     values["n_images"] = result["n_images"]
     for component in ("surge_force", "sway_force", "yaw_moment"):
-        values[f"summary-{component}"] = result[f"peak_{component}"]
+        for kind in ("min", "max"):
+            values[f"summary-{kind}-{component}"] = values[f"{kind}_{component}"]
     return values
 
 
 def number(value: float, key: str = "") -> str:
-    """Use engineering precision without displaying small residuals as zero."""
+    """Use engineering precision and snap stagger residuals below 1e-9 ft."""
+    if "stagger" in key and abs(value) < 1e-9:
+        value = 0
     if value == 0:
         return "0"
     if key in {"water_density", "passing_velocity", "separation_distance", "water_depth"} or "." in key:
@@ -97,7 +134,8 @@ def number(value: float, key: str = "") -> str:
 
 def chart_data(model: dict) -> dict:
     """Keep only engineering data, excluding calculation file locations."""
-    return {mode: model[mode]["forces"] for mode in ("finite", "deep")}
+    return {mode: [{key: round(value, 6) or 0.0 for key, value in row.items()}
+                   for row in model[mode]["forces"]] for mode in ("finite", "deep")}
 
 
 def render(model: dict) -> str:
@@ -115,23 +153,32 @@ def render(model: dict) -> str:
         ("Passing speed", "passing_velocity", "ft/s", "Public example"),
         ("Centreline separation", "separation_distance", "ft", "Public example"),
         ("Water depth", "water_depth", "ft", "Public example"),
-        ("First stagger", "first_stagger", "ft", "Returned history"),
-        ("Last stagger", "last_stagger", "ft", "Returned history"),
-        ("Stagger samples", "n_stagger", "count", "Returned summary"),
+        ("First stagger", "first_stagger", "ft", "Computed history"),
+        ("Last stagger", "last_stagger", "ft", "Computed history"),
+        ("Stagger samples", "n_stagger", "count", "Computed history"),
         ("Quadrature nodes", "quadrature_nodes", "count", "Calculator default"),
-        ("Images on each side", "n_images", "count", "Returned summary"),
-        ("Signed peak surge", "peak_surge_force", "lbf", "Returned summary"),
-        ("Peak surge stagger", "peak_surge_stagger", "ft", "Returned summary"),
-        ("Signed peak sway", "peak_sway_force", "lbf", "Returned summary"),
-        ("Peak sway stagger", "peak_sway_stagger", "ft", "Returned summary"),
-        ("Signed peak yaw moment", "peak_yaw_moment", "ft·lbf", "Returned summary"),
-        ("Peak yaw stagger", "peak_yaw_stagger", "ft", "Returned summary"),
-        ("Maximum signed sway", "max_sway_attraction", "lbf", "Returned summary"),
-        ("Minimum signed sway", "max_sway_repulsion", "lbf", "Returned summary"),
+        ("Images on each side", "n_images", "count", "Calculator default"),
     ]
+    for label, component, unit in (("surge", "surge_force", "lbf"),
+                                   ("sway", "sway_force", "lbf"),
+                                   ("yaw moment", "yaw_moment", "ft·lbf")):
+        for title, kind in (("Minimum", "min"), ("Maximum", "max")):
+            key = f"{kind}_{component}"
+            fields.extend([(f"{title} {label}", key, unit, "Computed history"),
+                           (f"{title} {label} stagger", f"{key}_stagger", "ft", "Computed history")])
+    sources = {"Public example": "source-example", "Computed history": "source-workflow",
+               "Calculator default": "source-calculator"}
     rows = "".join(f'<tr><td>{label}</td><td>{n(key)}</td><td>{unit}</td>'
-                   f'<td><a href="#source-example">{source}</a></td></tr>'
+                   f'<td><a href="#{sources[source]}">{source}</a></td></tr>'
                    for label, key, unit, source in fields)
+    sensitivity_rows = "".join(
+        f'<tr><td>{item["component"]}</td><td>{number(item["stagger"], "stagger")}</td>'
+        f'<td>{number(item["legacy"])}</td><td>{number(item["reference"])}</td>'
+        f'<td>{number(item["difference_percent"])}</td>'
+        f'<td>{"ft·lbf" if item["component"] == "yaw_moment" else "lbf"}</td>'
+        '<td><a href="#source-calculator">Image-sum calculation</a></td></tr>'
+        for item in model["image_sensitivity"]
+    )
     titles = ["Executive Summary", "Introduction", "Summary", "Design Data and Criteria",
               "Methodology", "Worked Example", "Validation Evidence",
               "Key Findings, Limits and Recommendations", "References", "Appendices"]
@@ -142,7 +189,7 @@ def render(model: dict) -> str:
 <section id="summary"><h2>1. Executive Summary</h2>
 <p>The passing-ship forces module is a hydrodynamic load calculator for a stationary moored hull beside a parallel moving hull. Analysis is performed to determine surge force, sway force and yaw moment over a longitudinal passage; key results are summarized below.</p>
 <ul><li>Load histories are available for the documented public example.
-<ul><li>The finite-depth signed sampled peaks are surge {n('summary-surge_force')} lbf, sway {n('summary-sway_force')} lbf and yaw {n('summary-yaw_moment')} ft·lbf. The <a href="#worked-example">worked example</a> supplies the inputs and the peak locations; these are load demands without an acceptance limit.</li>
+<ul><li>The finite-depth sampled ranges are surge {n('summary-min-surge_force')} to {n('summary-max-surge_force')} lbf, sway {n('summary-min-sway_force')} to {n('summary-max-sway_force')} lbf and yaw {n('summary-min-yaw_moment')} to {n('summary-max-yaw_moment')} ft·lbf. The <a href="#worked-example">worked example</a> supplies the inputs and both extreme locations; these are load demands without an acceptance limit.</li>
 <li>Positive sway denotes attraction; attraction and repulsion are both retained in the plotted history.</li>
 <li>Finite-depth images and the deep-water calculation are presented separately, using the same hulls and speed.</li></ul></li>
 <li>An operating decision remains NOT_EVALUATED.
@@ -151,7 +198,8 @@ def render(model: dict) -> str:
 </section>
 <div id="revision-history"><h3>Revision history</h3>
 <table><caption>Document revision history</caption><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>{CHANGES['revision']}</td><td>{CHANGES['date']}</td><td>First issue: public-example load calculation, evidence boundaries and engineering actions are established.</td></tr></tbody></table></div>
+<tbody><tr><td>00</td><td>2026-10-22</td><td>First issue: public-example load calculation, evidence boundaries and engineering actions are established.</td></tr>
+<tr><td>{CHANGES['revision']}</td><td>{CHANGES['date']}</td><td>Signed extrema, portable rebuilds and quantified image truncation replace ambiguous peak selection and incomplete numerical limits.</td></tr></tbody></table></div>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>The main workflow is assessed from configuration to the returned load history and comma-separated output files. The intended use is preliminary loading for a separate moored-system response assessment, rather than an installation sea-state envelope.</p>
 <p>A documented public repository example is reproduced. It is an anonymised numerical demonstration, not a published field trial. The bibliography names the original formulation, but original-paper equations and applicability limits have not been independently read; the equations below are attributed to the repository implementation record.</p>
@@ -187,16 +235,21 @@ def render(model: dict) -> str:
 <p>For hull index i, Sᵢ is immersed sectional area, Aᵢ is midship area, Lᵢ is length and xᵢ is a longitudinal coordinate relative to midship. Index 1 denotes the moored hull and index 2 denotes the passing hull. The prime denotes differentiation with respect to xᵢ.</p>
 <p>Sᵢ(xᵢ) = Aᵢ(1 − 4xᵢ²/Lᵢ²); S′ᵢ(xᵢ) = −8Aᵢxᵢ/Lᵢ²; −Lᵢ/2 ≤ xᵢ ≤ Lᵢ/2.</p>
 <p>Let R = x₂ − x₁ + ξ, with longitudinal stagger ξ and centreline separation η. The kernels are F(x₁) = ∫ S′₂(x₂)R/(η² + R²)³ᐟ² dx₂ and G(x₁) = ∫ S′₂(x₂)/(η² + R²)³ᐟ² dx₂, each integrated along the passing hull.</p>
-<p>X = ρU²/(2π) ∫ S′₁F dx₁; Y = ρU²η/π ∫ S′₁G dx₁; N = ρU²η/π ∫ (S′₁x₁ + S₁)G dx₁. The outer integrals span the moored hull. Here ρ is water mass density, U is passing speed, X is surge, Y is sway, N is yaw moment about midship and π is the circle constant. Positive sway denotes attraction. Surge and yaw signs follow the implementation axes; no nautical clockwise convention is assigned.</p>
+<p>X = ρU²/(2π) ∫ S′₁F dx₁; Y = ρU²η/π ∫ S′₁G dx₁; N = ρU²η/π ∫ (S′₁x₁ + S₁)G dx₁. The outer integrals span the moored hull. Here ρ is water mass density, U is passing speed, X is surge, Y is sway, N is yaw moment about midship and π is the circle constant. Positive sway denotes attraction. X > 0 acts toward +x. N is the first moment of the attraction-positive lateral load: N > 0 turns the +x end toward the passing hull. These senses follow the <a href="#source-calculator">implementation axes and moment kernel</a>; no nautical clockwise convention is assigned.</p>
 <h3>5.2 Finite depth and numerical integration</h3>
 <p>At uniform depth h, image separation is ηₙ = √(η² + 4n²h²). The finite-depth loads are Xₕ = ΣₙX(ξ,ηₙ), Yₕ = ηΣₙY(ξ,ηₙ)/ηₙ and Nₕ = ηΣₙN(ξ,ηₙ)/ηₙ. The sums span the chosen integer image indices. These equations and their coefficients are given in the calculator theory record.</p>
 <p>Inner kernels are integrated analytically. Fixed-order Gauss–Legendre quadrature is used for the outer integral. An adaptive Gauss–Lobatto reference path evaluates the same mathematical kernels; agreement between them tests numerical implementation, not independent physical theory.</p>
 <p>Consistent foot, square-foot, slug-per-cubic-foot and foot-per-second inputs yield pound-force and foot-pound-force. Consistent metre, square-metre, kilogram-per-cubic-metre and metre-per-second inputs yield newton and newton-metre. Unit conversion is not performed by the workflow.</p>
+<h3>5.3 Image-truncation sensitivity</h3>
+<p>The default N = {DEFAULT_N_IMAGES} reproduces the legacy tool using 21 terms. It does not establish image convergence for this shallow example. The same <a href="#source-calculator">image-sum calculator</a> is evaluated at fixed staggers with N = 400 (801 terms); percentage difference is 100 × (legacy − reference) / reference. The reference is a larger finite sum; infinite-sum convergence is NOT_EVALUATED.</p>
+<table><thead><tr><th>Component</th><th>Stagger (ft)</th><th>Legacy demand</th><th>Reference demand</th><th>Difference (%)</th><th>Demand unit</th><th>Source</th></tr></thead><tbody>{sensitivity_rows}</tbody></table>
+<p class="caption">Image-count sensitivity at the sampled surge and yaw extreme locations, abeam sway and the first stagger. Loads and differences are rounded to one decimal; the larger relative far-field difference applies to a smaller absolute demand. The comparison measures image truncation at fixed positions, separately from stagger sampling and quadrature error.</p>
+<p>For this case 2Nh = {number(2 * DEFAULT_N_IMAGES * model['settings']['water_depth'])} ft, or {number(2 * DEFAULT_N_IMAGES * model['settings']['water_depth'] / model['settings']['moored_vessel']['length'])} hull lengths, from the <a href="#source-example">public inputs</a> and <a href="#source-calculator">legacy image count</a>. The headline legacy curve is retained for reproduction; an engineering load assessment requires an image-count convergence criterion.</p>
 </section>
 <section id="worked-example"><h2>6. Worked Example</h2>
 <p>The public documented configuration is read directly and passed to the module entry point. All values below are rendered from the input configuration or returned history and summary; calculation file locations are excluded from this document.</p>
 <table><caption>Documented public-example inputs and returned sampled extrema</caption><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>
-<p>The peak for each component is the signed value at the first maximum absolute sampled load. Separate components need not reach their extrema at the same stagger; opposite-sign ties can be selected differently because of floating-point rounding. No continuous peak search is performed.</p>
+<p>Each component is reported as separate signed minimum and maximum with its stagger, calculated from the history. Same-sign ties use the first sample within the <a href="#source-generator">report selection tolerance</a>. Staggers close to zero are displayed as zero. No continuous peak search is performed.</p>
 <p>The deep-water comparison is computed with depth omitted and all other physical inputs retained. Each chart shows one load component against stagger. Limit: NOT_EVALUATED. The dashed line denotes zero load only; it is not an acceptance limit.</p>
 <div id="charts"></div>
 </section>
@@ -204,7 +257,7 @@ def render(model: dict) -> str:
 <p>Repository evidence is assessed as numerical reproduction, internal consistency and workflow behaviour. Field validation remains NOT_EVALUATED because no measured passage record is present in the assessed evidence.</p>
 <p>The stored worksheet case supplies an abeam sway value, a nondimensional deep-water value and finite-depth histories. The rounded workbook table supplies deep-water and finite-depth histories. The corresponding tests compare these stored values against the calculator. Their underlying original calculation documents are not supplied with this report; physical accuracy is not inferred from their agreement.</p>
 <p>The numerical tests also compare vectorised and adaptive integration, check the deep-water image limit, speed-squared scaling, stagger symmetry and attraction versus repulsion. Workflow tests compare the returned history with the library call, inspect sampled peaks, read the written files and exercise invalid configuration cases.</p>
-<p>The rebuild test calls the public workflow and separately calls the numerical library for every plotted coordinate and load. It compares every displayed worked-example number with the computed value at the stated display precision and compares a rebuilt document with the issued file. Exact test execution results belong to the accompanying check record; no field qualification follows from a successful rebuild.</p>
+<p>The <a href="#source-document-tests">report checks</a> pin six displayed extrema, their labels and units to independent raw-kernel hand-calculation literals. The abeam finite-depth and deep-water chart values are also checked against the stored rounded workbook row. A separate library call checks workflow plumbing for every plotted coordinate and load; that internal consistency check is not independent calculation evidence. Rebuilt narrative is compared exactly, while parsed chart values are compared within serialization precision. Exact execution results belong to the accompanying check record; no field qualification follows from a successful rebuild.</p>
 </section>
 <section id="recommendations"><h2>8. Key Findings, Limits and Recommendations</h2>
 <p>Load generation is available for idealised parallel passage, while an operating envelope is not established. The recommendations are tied to the calculation boundary and the evidence gaps.</p>
@@ -218,14 +271,15 @@ def render(model: dict) -> str:
 <p>The sources are separated into implementation evidence and bibliographic leads. Numeric example values and algorithm settings originate in the public repository records; no publication coefficient is supplied from memory.</p>
 <h3>9.1 Evidence and literature</h3>
 <p>The public workflow documentation supplies the worked example. The calculator record supplies the equations, default integration settings and sign conventions. Stored numerical oracles and workflow tests supply the reproduction evidence. These are repository records rather than a standards compliance basis.</p>
-<p>Dynamic Effects of Ship Passage on Moored Vessels, journal issue published in 1975, is cited by the repository as the original slender-body formulation. Prediction of Load on Mooring Ropes of a Container Ship due to the Forces Induced by a Passing Bulk Carrier, conference edition published in 2003, equations (2.4)–(2.9), is cited by the repository for the image formulation. Both are bibliographic leads only: original texts were not inspected. The attempted institutional catalogue connection timed out and contributed no values.</p>
+<p>S. Wang, “Dynamic Effects of Ship Passage on Moored Vessels”, Journal of the Waterways, Harbors and Coastal Engineering Division, ASCE, Vol. 101, WW3, p. 247 (1975), is cited by the <a href="#source-calculator">calculator record</a> as the original slender-body formulation. Varyani, Krishnankutty and Vantorre, “Prediction of Load on Mooring Ropes of a Container Ship due to the Forces Induced by a Passing Bulk Carrier”, MARSIM'03 (2003), equations (2.4)–(2.9), is cited there for the image formulation. Both are bibliographic leads only: original texts were not inspected and contribute no independently verified equations or limits.</p>
 <h3>9.2 Source locators</h3>
 <ul><li id="source-example">Public example: <a href="../../../domains/hydrodynamics/wang-passing-ship-forces.md">workflow documentation</a>, sections “Method, as the legacy code actually computes it”, “Validation lineage” and “Workflow usage”.</li>
-<li>Calculator theory and defaults: <a href="../../../../src/digitalmodel/hydrodynamics/wang_passing_ship.py">numerical implementation</a>, module docstring, DEFAULT_QUAD_NODES, DEFAULT_N_IMAGES and component functions.</li>
-<li>Public entry point and output schema: <a href="../../../../src/digitalmodel/passing_ship_forces/workflow.py">workflow implementation</a>. Import router from digitalmodel.passing_ship_forces and call router(cfg), where cfg contains basename: passing_ship_forces and the passing_ship_forces settings mapping shown in the documented example. The supplied dictionary is modified and returned. Set output_dir in that mapping before the call. The forces rows contain stagger, surge_force, sway_force and yaw_moment; results_csv and summary_csv identify the written files.</li>
+<li id="source-calculator">Calculator theory and defaults: <a href="../../../../src/digitalmodel/hydrodynamics/wang_passing_ship.py">numerical implementation</a>, module docstring, DEFAULT_QUAD_NODES, DEFAULT_N_IMAGES and component functions. Image sensitivity uses the same kernels at fixed staggers with the two stated image counts; it is a numerical comparison, without a physical accuracy criterion.</li>
+<li id="source-workflow">Public entry point and output schema: <a href="../../../../src/digitalmodel/passing_ship_forces/workflow.py">workflow implementation</a>, router and _stagger. The report selects signed extrema from the returned history. Import router from digitalmodel.passing_ship_forces and call router(cfg), where cfg contains basename: passing_ship_forces and the passing_ship_forces settings mapping shown in the documented example. The supplied dictionary is modified and returned. Set output_dir in that mapping before the call. The forces rows contain stagger, surge_force, sway_force and yaw_moment; results_csv and summary_csv identify the written files.</li>
 <li>Stored evidence: <a href="../../../../tests/hydrodynamics/test_wang_passing_ship.py">numerical tests</a>, stored worksheet and workbook cases, numerical consistency and input checks.</li>
 <li>Workflow evidence: <a href="../../../../tests/hydrodynamics/test_passing_ship_forces_workflow.py">workflow tests</a>, library comparison, peak summary, output files and configuration checks.</li>
-<li>Document checks: <a href="../../../../tests/docs/test_passing_ship_forces_report.py">rebuild and numerical-readback tests</a>.</li>
+<li id="source-document-tests">Document checks: <a href="../../../../tests/docs/test_passing_ship_forces_report.py">rebuild and numerical-readback tests</a>, hand-calculation literals and stored-workbook abeam comparisons.</li>
+<li id="source-generator">Report transformation: <a href="generate_report.py">report generator</a>, extrema, number, chart_data and image_sensitivity. Same-sign ties use relative tolerance 1e−12 or absolute tolerance 1e−9 in load units; stagger magnitudes below 1e−9 ft display as zero. Chart numbers are rounded to six decimal places. Rebuilt arrays are compared with absolute tolerance 1e−6 in their stated units plus a relative allowance of 1e−12 to accommodate binary representation and platform arithmetic at large moments. These are display and comparison controls, without a physical acceptance meaning.</li>
 <li>House layout exemplar: <a href="../../pipeline-ffs-assessment.html">engineering assessment report</a>; its stylesheet is inlined without a replacement palette.</li></ul>
 </section>
 <section id="appendices"><h2>10. Appendices</h2>
@@ -241,7 +295,7 @@ def render(model: dict) -> str:
 <tr><td>Original-paper applicability limits</td><td>Original texts not inspected</td><td>NOT_EVALUATED. Read an open original source before claiming a published validity envelope.</td></tr>
 </tbody></table>
 <h3>10.2 Quality pre-flight evidence</h3>
-<p>The displayed example values are generated from the public call. The rebuild test checks both depth modes, every plotted value, every displayed example number, the inlined stylesheet, section links, heading depth and deterministic regeneration. Numeric comparisons are made before display rounding. The schematic identifies geometry and omitted boundaries; it does not fabricate missing dimensions.</p>
+<p>The displayed example values are generated from the public call. The report tests check both depth modes, every plotted value, independently calculated headline values with labels and units, the inlined stylesheet, section links, heading depth, UTF-8 reads and LF writes, numerical tie stability and tolerant regeneration. Chart comparisons account for serialization rounding. The schematic identifies geometry and omitted boundaries; it does not fabricate missing dimensions.</p>
 <p>The charts are interactive without a network library. Hover or focus a chart to select a sample; arrow keys change the sample. The tooltip identifies the depth case, component, stagger, signed demand, units and missing acceptance limit. No limit is drawn because none is supplied. The zero reference is explicitly distinguished from an acceptance criterion.</p>
 <h3>10.3 Comments and engineering changes</h3>
 <p>Comments are retained in this browser when storage is available. Save beside report writes a comments file into a chosen report folder in browsers that support directory access. Otherwise export the comments file and place it beside this report. Import restores a previously saved comments file. Choose the same report folder when reopening on another device; browser storage is not a shared review record.</p>
@@ -257,7 +311,7 @@ def render(model: dict) -> str:
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>Passing-ship forces module analysis</title>{house_style()}</head>\n'
             f'<body class="hs-doc"><header><h1>Passing-ship forces module analysis</h1>'
-            f'<p>Draft for client review</p></header><div class="layout">'
+            f'<p>Draft for technical review</p></header><div class="layout">'
             f'<nav aria-label="Contents"><ol>{nav}</ol></nav><main>{body}</main></div>'
             f'<script id="chart-data" type="application/json">{data}</script>\n'
             f'<script>{INTERACTION}</script>\n</body></html>\n')
@@ -334,9 +388,9 @@ def build(output_dir: Path, work_dir: Path) -> None:
         raise ValueError("Calculation work directory must be outside the checkout")
     model = calculate(work_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(model), encoding="utf-8")
+    (output_dir / "report.html").write_text(render(model), encoding="utf-8", newline="\n")
     (output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8"
+        json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
 
 
