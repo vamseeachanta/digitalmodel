@@ -4,9 +4,11 @@ All numbers are synthetic inputs, not material properties or standard limits.
 No published damaged-casing golden benchmark is claimed.
 """
 
+import ast
 import copy
 import json
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -214,22 +216,21 @@ def test_report_preserves_limits_and_escapes_input(inspection):
 
 def test_workflow_cli_and_registry(inspection, tmp_path):
     root = Path(__file__).resolve().parents[3]
-    registry = yaml.safe_load((root / "docs/registry/workflows.yaml").read_text())
+    registry = yaml.safe_load((root / "docs/registry/workflows.yaml").read_text(encoding="utf-8"))
     (row,) = [
         r for r in registry["workflows"] if r["id"] == "casing-wear-remaining-capacity"
     ]
+    assert row["basename"] == "casing_wear_remaining_capacity"
     assert row["runtime"] == "standalone"
     assert row["status"] == "experimental"
     input_file = tmp_path / "input.json"
-    input_file.write_text(json.dumps(inspection))
+    input_file.write_text(json.dumps(inspection), encoding="utf-8")
     output_dir = tmp_path / "output"
-    command = [
-        sys.executable,
-        "-m",
-        row["basename"],
-        str(input_file),
-        "--output-directory",
-        str(output_dir),
+    invocation = shlex.split(row["invocation"])
+    assert invocation[:4] == ["uv", "run", "--no-sources", "python"]
+    command = [sys.executable] + [
+        token.format(input=str(input_file), output=str(output_dir))
+        for token in invocation[4:]
     ]
     env = {
         **os.environ,
@@ -238,13 +239,13 @@ def test_workflow_cli_and_registry(inspection, tmp_path):
     }
     completed = subprocess.run(command, env=env, capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr
-    saved = json.loads((output_dir / "assessment.json").read_text())
+    saved = json.loads((output_dir / "assessment.json").read_text(encoding="utf-8"))
     assert saved == assess_casing_wear(inspection)
-    assert (output_dir / "analysis.html").read_text() == render_report(saved)
+    assert (output_dir / "analysis.html").read_text(encoding="utf-8") == render_report(saved)
     # Existing results cannot be replaced by a rerun.
     repeated = subprocess.run(command, env=env, capture_output=True, text=True)
     assert repeated.returncode != 0
-    assert json.loads((output_dir / "assessment.json").read_text()) == saved
+    assert json.loads((output_dir / "assessment.json").read_text(encoding="utf-8")) == saved
 
 
 def test_documented_worked_example():
@@ -255,7 +256,7 @@ def test_documented_worked_example():
     establish equivalent wall or capacity, so each check stays unevaluated.
     """
     root = Path(__file__).resolve().parents[3]
-    guide = (root / "docs/domains/well/casing-wear-remaining-capacity.md").read_text()
+    guide = (root / "docs/domains/well/casing-wear-remaining-capacity.md").read_text(encoding="utf-8")
     example = json.loads(guide.split("```json\n")[1].split("```", 1)[0])
     result = assess_casing_wear(example)
     assert result["inspection_summary"]["lower_wall_bound_mm"] == pytest.approx(6.8)
@@ -271,7 +272,7 @@ def test_duplicate_case_name_rejected(inspection):
 
 
 def test_nominal_ratings_cannot_qualify_damaged_casing(inspection, monkeypatch):
-    from digitalmodel.well.tubulars import casing as catalog_entry
+    from digitalmodel.well.tubulars import casing as catalog_entry, casing_wear
     import importlib
 
     nominal = importlib.import_module(catalog_entry.__module__)
@@ -281,8 +282,82 @@ def test_nominal_ratings_cannot_qualify_damaged_casing(inspection, monkeypatch):
 
     monkeypatch.setattr(nominal, "collapse_pressure", forbidden)
     monkeypatch.setattr(nominal, "internal_yield_pressure", forbidden)
+    # Guard direct imports as well as module attribute lookups.
+    monkeypatch.setattr(casing_wear, "collapse_pressure", forbidden, raising=False)
+    monkeypatch.setattr(casing_wear, "internal_yield_pressure", forbidden, raising=False)
     result = assess_casing_wear(inspection)
     for case in result["load_cases"]:
         for check in case["checks"]:
             assert check["status"] == "NOT_EVALUATED"
             assert set(check["sources"]) <= result["sources"].keys()
+
+
+def test_text_file_operations_use_utf8():
+    """File reads and writes must not depend on the platform locale codec."""
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"read_text", "write_text"}
+        ):
+            assert any(
+                kw.arg == "encoding"
+                and isinstance(kw.value, ast.Constant)
+                and kw.value.value == "utf-8"
+                for kw in node.keywords
+            ), f"Explicit UTF-8 encoding required at line {node.lineno}"
+
+
+def test_report_preserves_supplied_numeric_precision(inspection):
+    inspection["od_mm"] = 200.125
+    inspection["nominal_wall_mm"] = 10.0004
+    inspection["measurement_uncertainty_mm"] = 0.0004
+    case = inspection["load_cases"][0]
+    case["burst_design_factor"] = 1.25
+    case["collapse_design_factor"] = 1.125
+    case["internal_pressure_mpa"] = 0.04
+    report = render_report(assess_casing_wear(inspection))
+    for value in (200.125, 10.0004, 0.0004, 1.25, 1.125, 0.04):
+        assert f"<td>{value}</td>" in report
+    assert "<td>Lower wall bound (mm)</td><td>7.000</td>" in report
+
+
+@pytest.mark.parametrize(
+    "workflow_id,basename",
+    [
+        ("casing-wear-remaining-capacity", "casing_wear_remaining_capacity"),
+        ("four-point-skew", "four_point_skew"),
+    ],
+)
+@pytest.mark.parametrize("entry", ["id", "cfg_basename", "cfg_id"])
+def test_standalone_workflow_rejected_before_engine(
+    monkeypatch, workflow_id, basename, entry
+):
+    from digitalmodel.workflow_api import runner
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Standalone workflows must not build engine cfg or run the engine")
+
+    monkeypatch.setattr(runner, "build_cfg", forbidden)
+    monkeypatch.setattr(runner, "_run_once", forbidden)
+    if entry == "id":
+        result = runner.run_workflow(workflow_id)
+    else:
+        value = basename if entry == "cfg_basename" else workflow_id
+        result = runner.run_workflow(cfg={"basename": value})
+    assert result.status == "error"
+    assert result.result == {}
+    assert result.determinism["result_hash"] is None
+    assert "standalone" in " ".join(result.warnings)
+    assert "invocation" in " ".join(result.warnings)
+
+
+def test_digest_is_representation_sensitive(inspection):
+    original = assess_casing_wear(inspection)
+    inspection["od_mm"] = 200
+    integer_form = assess_casing_wear(inspection)
+    assert integer_form["input_sha256"] != original["input_sha256"]
+    reordered = dict(reversed(list(inspection.items())))
+    assert assess_casing_wear(reordered)["input_sha256"] == integer_form["input_sha256"]
+    assert "representation-sensitive" in render_report(integer_form)

@@ -202,6 +202,10 @@ def assess_casing_wear(data: dict) -> dict:
     tension-positive. Measured ovality is retained as supplied, with its definition
     requiring qualification. Design factors are required inputs, never defaults.
     No operating-pressure or remaining-strength verdict is established.
+
+    The input SHA-256 hashes sorted, compact JSON and is representation-sensitive:
+    integer and float forms (for example 200 and 200.0) have different digests.
+    Numeric inputs are retained as supplied rather than normalised for hashing.
     """
     _validate(data)
     canonical = json.dumps(data, sort_keys=True, separators=(",", ":"), allow_nan=False)

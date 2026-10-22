@@ -166,17 +166,22 @@ def run_workflow(
     """Run a digitalmodel registry workflow in-process; return a typed ResultEnvelope.
 
     Fail-closed: an unknown id or a router exception is returned as a
-    ``status="error"`` envelope, never raised.
+    ``status="error"`` envelope, never raised. Standalone rows must use their
+    registered CLI invocation and are rejected before engine configuration.
     """
     wid = workflow_id or "(inline-cfg)"
     try:
+        row = resolve_registry_row(workflow_id) if cfg is None else lookup_row_for_cfg(cfg)
+        if row and row.get("runtime") == "standalone":
+            raise ValueError(
+                f"Workflow '{row['id']}' uses runtime 'standalone'; "
+                "use its registered CLI invocation instead of the in-process engine."
+            )
         if cfg is None:
-            row = resolve_registry_row(workflow_id)
             cfg = build_cfg(row, params)
             locator = ResultLocator.from_row(row)
         else:
             cfg = copy.deepcopy(cfg)
-            row = lookup_row_for_cfg(cfg)
             locator = (
                 ResultLocator.from_row(row)
                 if row

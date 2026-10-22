@@ -13,8 +13,6 @@ from digitalmodel.well.tubulars.casing_wear import assess_casing_wear
 def _display(value) -> str:
     if value is None:
         return "Not evaluated"
-    if isinstance(value, float):
-        return f"{value:.1f}"
     return escape(str(value))
 
 
@@ -35,11 +33,11 @@ def _inspection_section(result: dict) -> str:
     data, summary = result["inputs"], result["inspection_summary"]
     rows = [
         ["Outside diameter (mm)", data["od_mm"]],
-        ["Nominal wall (mm)", _wall(data["nominal_wall_mm"])],
+        ["Nominal wall (mm)", data["nominal_wall_mm"]],
         ["Minimum observed wall (mm)", _wall(summary["minimum_observed_wall_mm"])],
         [
             "Absolute measurement uncertainty (mm)",
-            _wall(data["measurement_uncertainty_mm"]),
+            data["measurement_uncertainty_mm"],
         ],
         ["Lower wall bound (mm)", _wall(summary["lower_wall_bound_mm"])],
         ["Equivalent wall (mm)", summary["equivalent_wall_mm"]],
@@ -124,6 +122,12 @@ def render_report(result: dict) -> str:
                 "2026-10-20",
                 "Initial evidence-gap report template; capacity evidence is incomplete. "
                 "This is the template revision date, not a report issue date.",
+            ],
+            [
+                "Input display",
+                "2026-10-22",
+                "Preserve supplied numeric precision and state representation-sensitive "
+                "input hashing; prevent rounded inputs from misstating the assessment basis.",
             ]
         ],
     )
@@ -143,7 +147,7 @@ def render_report(result: dict) -> str:
         _check_section(result),
         "<h2>Validation and way forward</h2>",
         f"<p>{escape(result['validation']['basis'])}</p><p>{escape(result['next_action'])}</p>",
-        f"<p>Canonical input SHA-256: <code>{escape(result['input_sha256'])}</code>.</p>",
+        f"<p>Input SHA-256 (representation-sensitive): <code>{escape(result['input_sha256'])}</code>.</p>",
         "<p>The JSON companion retains every supplied sample, load, factor and the measured ovality.</p>",
         _source_section(result),
         "</html>",
