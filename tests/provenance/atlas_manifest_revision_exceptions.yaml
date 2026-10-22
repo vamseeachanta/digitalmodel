@@ -1,0 +1,146 @@
+# Exact historical exceptions; none constitutes verified ancestry.
+atlases/code_check/4b48e8c976cd/manifest.yaml:
+  code_version: 415b13d0
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/diffraction_library/e70b23544de6/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/drilling_riser_drift_off/d53bddd904d1/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/drilling_riser_envelope/7ca25705d065/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/drilling_riser_operability/229487678a1a/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/drilling_riser_operability/bcc370f46b9c/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/fowt_mooring/0af02c3aaf14/manifest.yaml:
+  code_version: 79f28b96
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/fowt_mooring/15372d97a52f/manifest.yaml:
+  code_version: a9f09147
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/fowt_mooring/b4046a89d219/manifest.yaml:
+  code_version: 493e73176
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/free_span/2ca6361f3b7a/manifest.yaml:
+  code_version: 52eeecd1
+  inventory_reason: revision_unknown
+  reason: Recorded historical object is absent from available Git history. Authentic retained
+    source evidence is required; the revision is unchanged.
+  status: UNAVAILABLE
+atlases/free_span/914ec0881a84/manifest.yaml:
+  code_version: 571ecdcb
+  inventory_reason: revision_unknown
+  reason: Recorded historical object is absent from available Git history. Authentic retained
+    source evidence is required; the revision is unchanged.
+  status: UNAVAILABLE
+atlases/lifting_lug/060345160406/manifest.yaml:
+  code_version: 2441037b
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/lifting_lug/d807d703f351/manifest.yaml:
+  code_version: 92fe68d7
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/mooring_fatigue/74927e2a997f/manifest.yaml:
+  code_version: 8650964b
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/mooring_fatigue/f8b3c0dea8de/manifest.yaml:
+  code_version: 415b13d0
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/mudmat_bearing_capacity/857c35d04107/manifest.yaml:
+  code_version: 7207ec61
+  inventory_reason: revision_unknown
+  reason: Recorded historical object is absent from available Git history. Authentic retained
+    source evidence is required; the revision is unchanged.
+  status: UNAVAILABLE
+atlases/orcaflex_library/c198e029c428/manifest.yaml:
+  code_version: null
+  inventory_reason: revision_missing
+  reason: Existing manifest records no code revision. Retain this gap explicitly; no ancestry
+    claim is made.
+  status: UNAVAILABLE
+atlases/riser_fatigue/9f7d389eed07/manifest.yaml:
+  code_version: f8552087
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/riser_fatigue/f272ab682259/manifest.yaml:
+  code_version: 8650964b
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/riser_fatigue/f2ca1d87007d/manifest.yaml:
+  code_version: 3abf0236
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/spectral_fatigue/9006c0eaccb3/manifest.yaml:
+  code_version: 701ab147b
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE
+atlases/viv_analysis/909b1cf34ed0/manifest.yaml:
+  code_version: a8fe5369a
+  inventory_reason: not_ancestor_of_retained_ref
+  reason: Recorded historical object exists outside retained ancestry. The separate historical
+    evidence index may reconstruct a publication basis, but does not make this recorded revision
+    reachable.
+  status: UNREACHABLE

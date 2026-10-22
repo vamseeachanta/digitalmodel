@@ -1,0 +1,254 @@
+{
+  "counts": {
+    "REACHABLE": 18,
+    "UNAVAILABLE": 9,
+    "UNREACHABLE": 13
+  },
+  "history_state": "COMPLETE",
+  "inventory_revision": "3554b14fde67f44b1c52b81b6c72106282eaff29",
+  "manifests": [
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/anchor_capacity/c8f67ad7b69c/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/code_check/23c33b5a2782/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "415b13d0",
+      "manifest": "atlases/code_check/4b48e8c976cd/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/diffraction_library/e70b23544de6/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/drilling_riser_drift_off/d53bddd904d1/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/drilling_riser_envelope/7ca25705d065/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/drilling_riser_operability/229487678a1a/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/drilling_riser_operability/bcc370f46b9c/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": "385e674f",
+      "manifest": "atlases/esp_pump_hydraulics/c00e2cfda4f9/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "79f28b96",
+      "manifest": "atlases/fowt_mooring/0af02c3aaf14/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "a9f09147",
+      "manifest": "atlases/fowt_mooring/15372d97a52f/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "0fb9dfcc",
+      "manifest": "atlases/fowt_mooring/7ac02c8bc7f0/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "493e73176",
+      "manifest": "atlases/fowt_mooring/b4046a89d219/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/fpso_mooring_full/879f4f041243/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "52eeecd1",
+      "manifest": "atlases/free_span/2ca6361f3b7a/manifest.yaml",
+      "reason": "revision_unknown",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": "571ecdcb",
+      "manifest": "atlases/free_span/914ec0881a84/manifest.yaml",
+      "reason": "revision_unknown",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/free_span/eac25055a83d/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "0cefe0c8",
+      "manifest": "atlases/inspection_planning/ad2fc3ee7a73/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "2441037b",
+      "manifest": "atlases/lifting_lug/060345160406/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "92fe68d7",
+      "manifest": "atlases/lifting_lug/d807d703f351/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/mooring_fatigue/3ef6e08f35be/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "8650964b",
+      "manifest": "atlases/mooring_fatigue/74927e2a997f/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "415b13d0",
+      "manifest": "atlases/mooring_fatigue/f8b3c0dea8de/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "36e21ae6e",
+      "manifest": "atlases/mudmat_bearing_capacity/3e49b0580be0/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "0cefe0c8",
+      "manifest": "atlases/mudmat_bearing_capacity/4ab9337f5f3b/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "7207ec61",
+      "manifest": "atlases/mudmat_bearing_capacity/857c35d04107/manifest.yaml",
+      "reason": "revision_unknown",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": null,
+      "manifest": "atlases/orcaflex_library/c198e029c428/manifest.yaml",
+      "reason": "revision_missing",
+      "status": "UNAVAILABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/pile_capacity/ff5a09087842/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/rao_tabulation/6b27320669f6/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "21c33ba8",
+      "manifest": "atlases/riser_fatigue/51b7f03704cf/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "f8552087",
+      "manifest": "atlases/riser_fatigue/9f7d389eed07/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "8650964b",
+      "manifest": "atlases/riser_fatigue/f272ab682259/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "3abf0236",
+      "manifest": "atlases/riser_fatigue/f2ca1d87007d/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "0cefe0c8",
+      "manifest": "atlases/span_rectification/50a333f44a01/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "701ab147b",
+      "manifest": "atlases/spectral_fatigue/9006c0eaccb3/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/spectral_fatigue/c48149ab7f9e/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/synthetic_rope_mooring_fatigue/f2348d61dea8/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "a3a67b4b",
+      "manifest": "atlases/viv_analysis/862a28080fc9/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    },
+    {
+      "code_version": "a8fe5369a",
+      "manifest": "atlases/viv_analysis/909b1cf34ed0/manifest.yaml",
+      "reason": "not_ancestor_of_retained_ref",
+      "status": "UNREACHABLE"
+    },
+    {
+      "code_version": "0cefe0c8",
+      "manifest": "atlases/weather_window/d5afba812fb2/manifest.yaml",
+      "reason": "ancestor_of_retained_ref",
+      "status": "REACHABLE"
+    }
+  ],
+  "retained_ref": "origin/main",
+  "retained_revision": "3554b14fde67f44b1c52b81b6c72106282eaff29",
+  "search_pattern": "atlases/*/*/manifest.yaml"
+}
