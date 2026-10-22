@@ -3,5 +3,10 @@
     "revision": "Initial",
     "date": "2026-10-21",
     "description": "The spectral motion workflow and its example criterion are documented; physical operating qualification remains unevaluated."
+  },
+  {
+    "revision": "1",
+    "date": "2026-10-22",
+    "description": "Source hashes use canonical UTF-8 text with LF line endings and generated files use LF so checkout line endings do not change the report."
   }
 ]

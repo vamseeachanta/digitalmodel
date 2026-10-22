@@ -52,7 +52,9 @@ def calculate():
         'inputs': {'omega': omega.tolist(), 'rao': rao.tolist(), 'scatter': scatter,
                    'criterion': criterion, 'gamma': defaults['gamma'].default},
         'result': operability_analysis(omega, rao, scatter, {'heave': criterion}),
-        'sources': {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        'source_digest_format': 'sha256-utf8-lf',
+        'sources': {name: hashlib.sha256(
+                        (ROOT / name).read_text(encoding='utf-8').encode('utf-8')).hexdigest()
                     for name in SOURCES},
     }
 
@@ -165,7 +167,8 @@ the browser downloads a copy for placement beside the report.</p>
       if (!valid(rows)) throw new Error('Invalid comments'); comments = rows; draw();
     } catch (_) { status('The selected file is not a comments array.'); }
   };
-  byId('changes-text').textContent = JSON.parse(byId('changes-data').textContent)[0].description;
+  const changes = JSON.parse(byId('changes-data').textContent);
+  byId('changes-text').textContent = changes[changes.length - 1].description;
   draw();
 })();
 </script>
@@ -210,7 +213,8 @@ Measured response data and an approved motion criterion are not established.</li
 </section>
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-21</td><td>The spectral workflow is documented to distinguish implemented calculations from operational evidence.</td></tr></tbody>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>The spectral workflow is documented to distinguish implemented calculations from operational evidence.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Source hashes use canonical text and generated files use LF so checkout line endings do not change the report.</td></tr></tbody>
 <caption>Revision history.</caption></table></div>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>The purpose, scope and status of the analysis are presented in this section.
@@ -332,8 +336,10 @@ operation-duration probability. The implemented peak formula does not supply tha
 <p>The calculation basis is restricted to the public repository records below.
 No numerical value from a licensed publication is reproduced.</p>
 <h3>9.1 Source basis</h3><p>The seakeeping implementation, public analytical tests and spectrum implementation
-form the source edition represented by this report. File content digests are embedded in the report's
-numeric attachment. The implementation cites offshore hydromechanics literature, but editions and
+form the source edition represented by this report. SHA-256 source digests are embedded in the report's
+numeric attachment with the format sha256-utf8-lf: UTF-8 text with CRLF and CR line endings
+normalized to LF before hashing. These bind source text independently of checkout line endings.
+The implementation cites offshore hydromechanics literature, but editions and
 clauses are not available in the assessed example; those citations are not adopted as verified sources.</p>
 <h3 id="locators">9.2 Repository records</h3><ul>{source_rows}</ul>
 <p>The public entry point is called with the documented arrays and criterion as follows.</p>
@@ -383,11 +389,13 @@ def build(output=HERE):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     changes = [{'revision': 'Initial', 'date': '2026-10-21',
-                'description': 'The spectral motion workflow and its example criterion are documented; physical operating qualification remains unevaluated.'}]
+                'description': 'The spectral motion workflow and its example criterion are documented; physical operating qualification remains unevaluated.'},
+               {'revision': '1', 'date': '2026-10-22',
+                'description': 'Source hashes use canonical UTF-8 text with LF line endings and generated files use LF so checkout line endings do not change the report.'}]
     data = calculate()
     page = '\n'.join(line.rstrip() for line in render(data, changes).splitlines()) + '\n'
-    (output / 'index.html').write_text(page, encoding='utf-8')
-    (output / 'changes.json').write_text(json.dumps(changes, indent=2) + '\n', encoding='utf-8')
+    (output / 'index.html').write_text(page, encoding='utf-8', newline='\n')
+    (output / 'changes.json').write_text(json.dumps(changes, indent=2) + '\n', encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':
