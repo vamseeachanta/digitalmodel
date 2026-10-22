@@ -28,6 +28,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from digitalmodel.floating_wind import floaters
 from digitalmodel.floating_wind.floaters import (
     G_STANDARD,
     RHO_SEAWATER,
@@ -136,7 +137,11 @@ class ChainInput(BaseModel):
         if self.water_density_kg_m3 != RHO_SEAWATER:
             raise ValueError("unsupported screening water density")
         # This is an inherited screening assumption, not a design coefficient.
-        if not math.isclose(self.ballast_vcg_m, 0.05 * floater.draft, abs_tol=1e-12):
+        if not math.isclose(
+            self.ballast_vcg_m,
+            floaters.BALLAST_VCG_DRAFT_FRACTION * floater.draft,
+            abs_tol=1e-12,
+        ):
             raise ValueError("unsupported screening ballast VCG")
         if any(r <= 0 for r in self.hull_radii_m):
             raise ValueError("hull radii must be positive")
@@ -419,6 +424,7 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
         "input_digest": digest,
         "case_id": inputs.case_id,
         "basis": inputs.basis,
+        "screening_criteria": inputs.criteria.model_dump(mode="json"),
         "screening_passed": variant.passed,
         "solver_ready": False,
         "status": "PREPARED_OFFLINE",
@@ -429,7 +435,12 @@ def prepare_chain(inputs: ChainInput, out_dir: str | Path) -> ChainBundle:
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".chain-", dir=out.parent) as temporary:
-        stage = Path(temporary)
+        # Keep the staging parent private; publish a normally created child.
+        # An existing empty output directory keeps its original permissions.
+        stage = Path(temporary) / "output"
+        stage.mkdir()
+        if out.exists():
+            stage.chmod(stat.S_IMODE(out.stat().st_mode))
         (stage / "shared-input.json").write_text(
             json.dumps(shared_input, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -557,6 +568,7 @@ def build_chain_report(
 
     rows = compare_results(bundle, records or [])
     p = bundle.variant.properties
+    modal_low, modal_high = bundle.manifest["screening_criteria"]["modal_band_s"]
 
     def text(key: str, title: str, body: str) -> Any:
         return Section(key=key, title=title, blocks=[TextBlock(markdown=body)])
@@ -628,7 +640,9 @@ def build_chain_report(
                         [
                             check.name,
                             f"{check.value:.3g}",
-                            f"{check.limit:.3g}",
+                            f"{modal_low:.3g}\u2013{modal_high:.3g} (excluded)"
+                            if check.name == "modal"
+                            else f"{check.limit:.3g}",
                             f"{check.margin:.3g}",
                             {
                                 "stability": "m",
@@ -636,11 +650,11 @@ def build_chain_report(
                                 "motion": "1",
                                 "mooring": "m",
                             }[check.name],
-                            check.basis,
+                            bundle.manifest["basis"],
                         ]
                         for check in bundle.variant.checks
                     ],
-                    source="Explicit shared-input screening criteria; margin >= 0 passes each check.",
+                    source="Explicit shared-input screening criteria. Modal periods must lie outside the excluded band; the signed margin uses the nearer edge. Other checks pass when their margin is nonnegative.",
                 ),
             ],
         ),

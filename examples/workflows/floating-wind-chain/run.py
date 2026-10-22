@@ -37,8 +37,8 @@ def main() -> None:
             for row in json.loads(args.results.read_text(encoding="utf-8"))
         ]
     document = DocumentMeta(
-        number="R0000-RPT-001-01",
-        revision="01",
+        number="R0000-RPT-001-02",
+        revision="02",
         title="Floating wind sizing analysis",
         project="Generic",
         client="Generic",
@@ -53,6 +53,11 @@ def main() -> None:
                 rev="01",
                 date="2026-10-22",
                 description="Require explicit mass basis and spectral waves; publish UTF-8 outputs after validation and record the hull equilibrium gap.",
+            ),
+            RevisionRow(
+                rev="02",
+                date="2026-10-22",
+                description="Correct screening limits and basis; retain output directory permissions.",
             ),
         ],
     )

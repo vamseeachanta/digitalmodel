@@ -228,9 +228,85 @@ def test_report_standard_form_and_no_fabricated_results(inputs, tmp_path):
     assert "Unit" in criteria.columns
     units = {row[0]: row[criteria.columns.index("Unit")] for row in criteria.rows}
     assert units == {"stability": "m", "modal": "s", "motion": "1"}
+    assert {row[-1] for row in criteria.rows} == {inputs["basis"]}
     assert report == render_html(build_chain_report(bundle, document=doc))
     # A complete standard report spec can be serialised without non-finite floats.
     json.loads(spec.model_dump_json())
+
+
+@pytest.mark.parametrize("modal_band", [[5, 16], [3, 16], [1, 3]])
+@pytest.mark.parametrize("gm_min", [0, 100])
+def test_report_limits_match_margins_and_explicit_basis(
+    inputs, tmp_path, modal_band, gm_min
+):
+    """Band margins use the nearer edge; scalar margins use the stated limit."""
+    inputs["criteria"].update(
+        modal_band_s=modal_band,
+        gm_min_m=gm_min,
+        mooring_stiffness_kN_per_m=10,
+        max_offset_m=2,
+    )
+    bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    spec = build_chain_report(
+        bundle,
+        document=DocumentMeta(
+            number="R0000-RPT-001-00",
+            revision="00",
+            title="Floating wind sizing analysis",
+            project="Generic",
+            client="Generic",
+        ),
+    )
+    results = next(section for section in spec.sections if section.key == "results")
+    rows = {row[0]: row for row in results.blocks[-1].rows}
+    assert set(rows) == {"stability", "modal", "motion", "mooring"}
+    for name, row in rows.items():
+        _, value, limit, margin, _, basis = row
+        value, margin = float(value), float(margin)
+        if name == "modal":
+            low, high = modal_band
+            assert limit == f"{low}\u2013{high} (excluded)"
+            distance = min(abs(value - low), abs(value - high))
+            expected = -distance if low <= value <= high else distance
+        else:
+            expected = (
+                value - float(limit) if name == "stability" else float(limit) - value
+            )
+        # At this fixture's largest margin, rounding contributes 0.05 + 0.005.
+        assert margin == pytest.approx(expected, abs=0.055)
+        assert basis == inputs["basis"]
+    assert bundle.manifest["screening_criteria"] == inputs["criteria"]
+
+
+def test_ballast_assumption_is_shared_with_screening(inputs, tmp_path, monkeypatch):
+    """At ballast CG 0.2 m: total moment=100+56+120+160=436 t.m."""
+    from digitalmodel.floating_wind import floaters
+
+    monkeypatch.setattr(floaters, "BALLAST_VCG_DRAFT_FRACTION", 0.1, raising=False)
+    inputs["ballast_vcg_m"] = 0.2
+    bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
+    assert bundle.variant.properties.KG_m == pytest.approx(436 / 410)
+    # Hull first moment=100+56=156 t.m; mass=380 t; SWL is 2 m above keel.
+    assert bundle.diffraction["vessel"]["inertia"]["centre_of_gravity"][2] == (
+        pytest.approx(156 / 380 - 2)
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX directory modes")
+@pytest.mark.parametrize("existing", [False, True])
+def test_published_output_preserves_directory_permissions(inputs, tmp_path, existing):
+    """A new directory follows mkdir defaults; an empty one retains its mode."""
+    reference = tmp_path / "reference"
+    reference.mkdir()
+    output = tmp_path / "output"
+    expected_mode = stat.S_IMODE(reference.stat().st_mode)
+    if existing:
+        output.mkdir()
+        output.chmod(0o750)
+        expected_mode = 0o750
+    prepare_chain(ChainInput.model_validate(inputs), output)
+    assert stat.S_IMODE(output.stat().st_mode) == expected_mode
+    assert (output / "manifest.json").is_file()
 
 
 def test_offline_import_and_generation_never_probe_solver(tmp_path):
@@ -688,11 +764,19 @@ def test_invalid_ballast_position_rejected(inputs, value):
         ChainInput.model_validate(inputs)
 
 
-def test_output_link_and_junction_rejected(inputs, tmp_path, monkeypatch):
+def test_output_symlink_rejected(inputs, tmp_path):
     output = tmp_path / "output"
-    output.symlink_to(tmp_path, target_is_directory=True)
+    try:
+        output.symlink_to(tmp_path, target_is_directory=True)
+    except OSError as error:
+        if getattr(error, "winerror", None) == 1314:
+            pytest.skip("Directory symlink creation requires Windows privilege")
+        raise
     with pytest.raises(ValueError, match="link"):
         prepare_chain(ChainInput.model_validate(inputs), output)
+
+
+def test_output_junction_rejected(inputs, tmp_path, monkeypatch):
     # A junction is a link even though is_symlink() returns False on Windows.
     junction = tmp_path / "junction"
     monkeypatch.setattr(
@@ -743,7 +827,11 @@ def test_failure_in_later_case_does_not_publish_earlier_case(
         return original(generator, output)
 
     monkeypatch.setattr(ModularModelGenerator, "generate", fail_second)
+    parent = tmp_path / "generation"
+    parent.mkdir()
+    output = parent / "output"
+    output.mkdir()
     with pytest.raises(ValueError, match="injected generation failure"):
-        prepare_chain(ChainInput.model_validate(inputs), tmp_path)
-    assert not list(tmp_path.iterdir())
-    assert not list(tmp_path.parent.glob(".chain-*"))
+        prepare_chain(ChainInput.model_validate(inputs), output)
+    assert not list(output.iterdir())
+    assert not list(parent.glob(".chain-*"))
