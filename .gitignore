@@ -267,12 +267,13 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
-# Retain the NDE analysis and its rebuild source; transient reports stay ignored.
+# Shared module-report parent rules; keep this block once, before module exceptions.
 !docs/reports/modules/
 docs/reports/modules/*
+
+# Retain the NDE analysis; transient module outputs stay ignored.
 !docs/reports/modules/nde/
 docs/reports/modules/nde/*
-!docs/reports/modules/nde/build_report.py
 !docs/reports/modules/nde/nde-module-analysis.html
 !docs/reports/modules/nde/changes.json
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html

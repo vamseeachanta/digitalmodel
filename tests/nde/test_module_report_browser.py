@@ -1,8 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Exercise the standalone report offline in a browser, when available."""
 
 import importlib.util
@@ -23,7 +21,7 @@ def report_page(tmp_path):
         pytest.skip("An installed Chromium browser is required for this check")
     root = Path(__file__).resolve().parents[2]
     spec = importlib.util.spec_from_file_location(
-        "browser_nde_builder", root / "docs/reports/modules/nde/build_report.py")
+        "browser_nde_builder", root / "scripts/reporting/build_nde_report.py")
     builder = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(builder)
     builder.build_report(tmp_path)

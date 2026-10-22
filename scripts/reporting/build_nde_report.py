@@ -1,23 +1,21 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Build the standalone NDE analysis from its public synthetic pulse example.
 
 From the repository root::
 
-    PYTHONPATH=src uv run python docs/reports/modules/nde/build_report.py
+    PYTHONPATH=src uv run python scripts/reporting/build_nde_report.py
 
 Only the pulse timing function is called. No dataset, solver or network access
-is required. Inputs are read from the existing public example without executing
-test code. The report is illustrative, not a qualified inspection calculation.
+is required. Inputs are checked against the public example by regression tests;
+the build does not depend on test syntax. The report is illustrative, not a
+qualified inspection calculation.
 """
 
 from __future__ import annotations
 
 import argparse
-import ast
 import hashlib
 import json
 import math
@@ -29,8 +27,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 
-ROOT = Path(__file__).resolve().parents[4]
-REPORT_DIR = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
+REPORT_DIR = ROOT / "docs/reports/modules/nde"
 sys.path.insert(0, str(ROOT / "src"))
 
 from digitalmodel.nde.pulse_timing import pulse_peak_time  # noqa: E402
@@ -64,47 +62,17 @@ CHANGES = {
 }
 
 
-def fixture_inputs(path: Path) -> dict:
-    """Read the exact supported Gaussian fixture; reject a changed expression."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    try:
-        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
-                        and node.name == "test_synthetic_pulse_travel_time")
-        assignments = {node.targets[0].id: node.value for node in function.body
-                       if isinstance(node, ast.Assign)}
-        times = ast.literal_eval(assignments["times"])
-        polarities = ast.literal_eval(function.decorator_list[0].args[1])
-        expression = assignments["pressures"].elt
-        exponential = expression.right
-        power = exponential.args[0].operand
-        distance = ast.literal_eval(power.left.left)
-        speed = ast.literal_eval(power.left.right.left)
-        exponent = ast.literal_eval(power.right)
-        expected = ast.parse(
-            f"polarity * math.exp(-(({distance!r} - {speed!r} * t) ** {exponent!r}))",
-            mode="eval",
-        ).body
-        if ast.dump(expression) != ast.dump(expected):
-            raise ValueError("Unexpected pressure expression")
-        comprehension = assignments["pressures"].generators
-        if (len(comprehension) != 1 or comprehension[0].target.id != "t"
-                or comprehension[0].iter.id != "times" or comprehension[0].ifs):
-            raise ValueError("Unexpected sample comprehension")
-        if not all(math.isfinite(value) for value in [*times, distance, speed]):
-            raise ValueError("Nonfinite example input")
-        if distance <= 0 or speed <= 0 or set(polarities) != {-1.0, 1.0}:
-            raise ValueError("Unsupported example inputs")
-    except (AttributeError, IndexError, KeyError, StopIteration, TypeError,
-            ValueError) as error:
-        raise ValueError("The public example changed; its basis needs inspection") from error
-    return {"distance_m": distance, "speed_m_s": speed, "time_s": times,
-            "exponent_power": exponent, "polarities": polarities}
+def fixture_inputs() -> dict:
+    """Return the public Gaussian inputs checked independently by report tests."""
+    return {"distance_m": 6.0, "speed_m_s": 2.0,
+            "time_s": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0],
+            "exponent_power": 2, "polarities": [1.0, -1.0]}
 
 
-def compute_example(source: Path | None = None) -> dict:
+def compute_example() -> dict:
     """Call the module for both documented polarities; retain unrounded values."""
-    source = source or ROOT / LOCAL_SOURCES["B"]
-    inputs = fixture_inputs(source)
+    source = ROOT / LOCAL_SOURCES["B"]
+    inputs = fixture_inputs()
     reference = inputs["distance_m"] / inputs["speed_m_s"]
     cases = []
     for polarity in inputs.pop("polarities"):
@@ -117,9 +85,14 @@ def compute_example(source: Path | None = None) -> dict:
                       "peak_time_s": peak, "reference_peak_time_s": reference,
                       "difference_percent": 100 * (peak - reference) / reference})
     return {"inputs": inputs, "cases": cases,
-            "source_digest": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "source_digest": source_digest(source),
             "engineering_limit": {"state": "NOT_EVALUATED",
                                   "reason": "No inspection acceptance limit is supplied."}}
+
+
+def source_digest(path: Path) -> str:
+    """Hash UTF-8 source with LF line endings on every checkout platform."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def format_number(value: float) -> str:
@@ -131,6 +104,7 @@ def format_number(value: float) -> str:
 
 
 def example_metrics(data: dict) -> dict:
+    """Collect computed inputs and results for every visible metric."""
     inputs = data["inputs"]
     metrics = {"distance": inputs["distance_m"], "speed": inputs["speed_m_s"],
                "start": inputs["time_s"][0], "end": inputs["time_s"][-1],
@@ -142,6 +116,7 @@ def example_metrics(data: dict) -> dict:
 
 
 def metric(key: str, values: dict) -> str:
+    """Render one computed value with its machine-readable metric key."""
     return f'<span data-metric="{key}">{format_number(values[key])}</span>'
 
 
@@ -149,8 +124,10 @@ def house_style() -> str:
     """Inline the canonical brand stylesheet and the existing report layout."""
     brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     exemplar = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
-    layout = re.search(r"<style>.*?</style>", exemplar, re.S)[0]
-    return f"<style>{brand}</style>\n{layout}"
+    layout = re.search(r"<style>.*?</style>", exemplar, re.S)
+    if layout is None:
+        raise ValueError("The report exemplar is missing its layout stylesheet")
+    return f"<style>{brand}</style>\n{layout[0]}"
 
 
 def pulse_chart(data: dict) -> str:
@@ -202,10 +179,11 @@ it does not represent interpolation by the timing function. No inspection accept
 
 
 def source_records() -> str:
-    version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+    """List source locators and normalized digests for the package edition."""
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     records = []
     for label, path in LOCAL_SOURCES.items():
-        digest = hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        digest = source_digest(ROOT / path)
         records.append(f'<li id="ref-{label}">[{label}] Digitalmodel, package edition '
                        f'{escape(version)}: <a href="../../../../{path}">{path}</a>. '
                        f'Source digest: <code>{digest}</code>.</li>')
@@ -213,10 +191,11 @@ def source_records() -> str:
 
 
 def render_report() -> str:
+    """Render the standalone analysis using computed values and local sources."""
     data = compute_example()
     values = example_metrics(data)
     m = lambda key: metric(key, values)
-    context = {
+    context: dict[str, str | SimpleNamespace] = {
         "style": house_style(), "chart": pulse_chart(data), "records": source_records(),
         "contents": "".join(f'<li><a href="#s{i}">{i}. {title}</a></li>'
                             for i, title in enumerate(SECTIONS, 1)),
@@ -237,6 +216,7 @@ def render_report() -> str:
 
 
 def build_report(destination: Path | None = None) -> None:
+    """Write the analysis and change record to the requested directory."""
     destination = (destination or REPORT_DIR).resolve()
     document = render_report()
     changes = json.dumps(CHANGES, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
@@ -265,7 +245,7 @@ REPORT = '''<!doctype html>
 </style></head><body class="hs-doc"><div class="wrap">
 <header><p class="kicker">Acoustic inspection</p>
 <h1>Nondestructive evaluation module analysis</h1>
-<p>Draft for client review</p><p class="sub">22 October 2026 · Revision A</p>
+<p>Draft for review</p><p class="sub">22 October 2026 · Revision A</p>
 <p class="source">Prepared by: analysis team. Checked by: pending. Approved by: pending.</p>
 </header>
 <nav aria-label="Contents"><p>Contents</p><ol>{contents}</ol></nav>
@@ -466,7 +446,7 @@ are used as a kinematic basis; no textbook case data or figures are reproduced.
 report layout</a>, with <a href="../../../api/_assets/brand.css">canonical brand stylesheet</a>.
 Both stylesheets are inlined for standalone reading.</li></ul>
 <p>The calculation is rebuilt from the repository root with the following command.</p>
-<pre>PYTHONPATH=src uv run python docs/reports/modules/nde/build_report.py</pre>
+<pre>PYTHONPATH=src uv run python scripts/reporting/build_nde_report.py</pre>
 <p>The direct timing entry point is documented in source A.</p>
 <pre>from digitalmodel.nde.pulse_timing import pulse_peak_time
 peak_time_s = pulse_peak_time(time_s, pressure)</pre>

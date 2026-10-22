@@ -1,14 +1,13 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Rebuild the NDE report and compare its example with the published fixture."""
 
 import importlib.util
 import json
 import re
 import runpy
+import shutil
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -22,7 +21,7 @@ REPORT_DIR = ROOT / "docs/reports/modules/nde"
 
 
 def load_builder():
-    path = REPORT_DIR / "build_report.py"
+    path = ROOT / "scripts/reporting/build_nde_report.py"
     assert path.is_file(), "The NDE report generator has not been implemented"
     spec = importlib.util.spec_from_file_location("nde_report_builder", path)
     module = importlib.util.module_from_spec(spec)
@@ -78,8 +77,27 @@ def test_rebuild_matches_committed_report_and_changes(tmp_path, monkeypatch):
     for name in ("nde-module-analysis.html", "changes.json"):
         assert (tmp_path / name).read_bytes() == (REPORT_DIR / name).read_bytes()
     assert report_data(
-        (tmp_path / "nde-module-analysis.html").read_text(), "changes-data"
-    ) == json.loads((tmp_path / "changes.json").read_text())
+        (tmp_path / "nde-module-analysis.html").read_text(encoding="utf-8"), "changes-data"
+    ) == json.loads((tmp_path / "changes.json").read_text(encoding="utf-8"))
+
+
+def test_source_digests_ignore_checkout_line_endings(tmp_path, monkeypatch):
+    builder = load_builder()
+    sources = [*builder.LOCAL_SOURCES.values(), "pyproject.toml",
+               builder.EXEMPLAR, "docs/api/_assets/brand.css"]
+    for source in sources:
+        target = tmp_path / source
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / source, target)
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    expected_example = builder.compute_example()
+    expected_document = builder.render_report()
+    for source in sources:
+        target = tmp_path / source
+        target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n")
+                           .replace(b"\n", b"\r\n"))
+    assert builder.compute_example() == expected_example
+    assert builder.render_report() == expected_document
 
 
 def test_worked_values_match_public_example_and_direct_module_call():
@@ -99,13 +117,10 @@ def test_worked_values_match_public_example_and_direct_module_call():
         assert data["inputs"]["time_s"] == times
         assert case["pressure"] == pressures
         assert case["peak_time_s"] == pulse_peak_time(times, pressures)
-        assert case["reference_peak_time_s"] == (
-            data["inputs"]["distance_m"] / data["inputs"]["speed_m_s"]
-        )
-        expected_difference = 100 * (
-            case["peak_time_s"] - case["reference_peak_time_s"]
-        ) / case["reference_peak_time_s"]
-        assert case["difference_percent"] == expected_difference
+        # Fixture hand calculation: 6 m / (2 m/s) = 3 s for either polarity.
+        assert case["peak_time_s"] == 3.0
+        assert case["reference_peak_time_s"] == 3.0
+        assert case["difference_percent"] == 0.0
 
 
 def test_visible_example_numbers_and_plot_points_come_from_results():
@@ -153,10 +168,39 @@ def test_structure_sources_and_single_file_delivery():
     assert "showDirectoryPicker" in document
 
 
-def test_source_fixture_changes_fail_explicitly(tmp_path):
+def test_missing_layout_styles_fail_explicitly(tmp_path, monkeypatch):
     builder = load_builder()
-    source = (ROOT / "tests/nde/test_pulse_timing.py").read_text()
-    changed = tmp_path / "fixture.py"
-    changed.write_text(source.replace("math.exp(-((6.0 - 2.0 * t) ** 2))", "t"))
-    with pytest.raises(ValueError, match="public example"):
-        builder.compute_example(changed)
+    for source in (builder.EXEMPLAR, "docs/api/_assets/brand.css"):
+        target = tmp_path / source
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / source, target)
+    (tmp_path / builder.EXEMPLAR).write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    with pytest.raises(ValueError, match="layout stylesheet"):
+        builder.house_style()
+
+
+def test_fixture_refactor_does_not_change_calculation(tmp_path, monkeypatch):
+    builder = load_builder()
+    expected = builder.compute_example()
+    fixture_path = builder.LOCAL_SOURCES["B"]
+    source = (ROOT / fixture_path).read_text(encoding="utf-8")
+    changed = tmp_path / fixture_path
+    changed.parent.mkdir(parents=True)
+    changed.write_text(source.replace("test_synthetic_pulse_travel_time",
+                                     "test_isolated_pulse_travel_time"),
+                       encoding="utf-8")
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    actual = builder.compute_example()
+    assert actual["inputs"] == expected["inputs"]
+    assert actual["cases"] == expected["cases"]
+    assert actual["source_digest"] != expected["source_digest"]
+
+
+def test_builder_is_discovered_with_a_reasoned_ownership_entry():
+    from scripts import check_generated_html as checker
+
+    source = "scripts/reporting/build_nde_report.py"
+    assert source in checker.discover_candidate_generators(ROOT)
+    assert checker.DISCOVERY_FALSE_POSITIVES[source].strip()
+    assert checker.validate_registry(ROOT) == []

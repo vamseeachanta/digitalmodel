@@ -143,7 +143,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 </style></head><body class="hs-doc"><div class="wrap">
 <header><p class="kicker">Acoustic inspection</p>
 <h1>Nondestructive evaluation module analysis</h1>
-<p>Draft for client review</p><p class="sub">22 October 2026 · Revision A</p>
+<p>Draft for review</p><p class="sub">22 October 2026 · Revision A</p>
 <p class="source">Prepared by: analysis team. Checked by: pending. Approved by: pending.</p>
 </header>
 <nav aria-label="Contents"><p>Contents</p><ol><li><a href="#s1">1. Executive Summary</a></li><li><a href="#s2">2. Introduction</a></li><li><a href="#s3">3. Summary of Results</a></li><li><a href="#s4">4. Data and Basis</a></li><li><a href="#s5">5. Methodology</a></li><li><a href="#s6">6. Worked Example</a></li><li><a href="#s7">7. Validation</a></li><li><a href="#s8">8. Findings and Recommendations</a></li><li><a href="#s9">9. Appendices and References</a></li><li><a href="#s10">10. Not Covered</a></li></ol></nav>
@@ -362,7 +362,7 @@ are used as a kinematic basis; no textbook case data or figures are reproduced.
 report layout</a>, with <a href="../../../api/_assets/brand.css">canonical brand stylesheet</a>.
 Both stylesheets are inlined for standalone reading.</li></ul>
 <p>The calculation is rebuilt from the repository root with the following command.</p>
-<pre>PYTHONPATH=src uv run python docs/reports/modules/nde/build_report.py</pre>
+<pre>PYTHONPATH=src uv run python scripts/reporting/build_nde_report.py</pre>
 <p>The direct timing entry point is documented in source A.</p>
 <pre>from digitalmodel.nde.pulse_timing import pulse_peak_time
 peak_time_s = pulse_peak_time(time_s, pressure)</pre>
