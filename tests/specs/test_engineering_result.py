@@ -9,7 +9,7 @@ from digitalmodel.specs.engineering_result import EngineeringResult
 
 
 def test_pressure_round_trip_preserves_value_and_units():
-    """OpenStax UP1 (2016), 14.1, eq. 14.4: gauge p = rho*g*h.
+    """OpenStax UP1 (2016), 14.1, eq. 14.4 with p0 subtracted: gauge p = rho*g*h.
 
     Synthetic rho=1000 kg/m³, g=10 m/s², h=2.5 m give
     1000*10*2.5 = 25000 Pa by independent hand multiplication.
@@ -17,7 +17,7 @@ def test_pressure_round_trip_preserves_value_and_units():
     """
     result = EngineeringResult.model_validate_json(
         '{"quantity":"gauge pressure","value":25000.0,"units":"Pa",'
-        '"source":"OpenStax UP1 (2016), 14.1, eq. 14.4"}'
+        '"source":"OpenStax UP1 (2016), 14.1, eq. 14.4 with p0 subtracted"}'
     )
     restored = EngineeringResult.model_validate_json(result.model_dump_json())
     assert restored.value == 25000.0

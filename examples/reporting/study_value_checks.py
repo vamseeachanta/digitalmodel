@@ -36,13 +36,13 @@ def build_example() -> dict[str, Any]:
         units="m",
     )
 
-    # OpenStax UP1 (2016), 14.1, eq. 14.4: synthetic gauge p = rho*g*h.
+    # OpenStax UP1 (2016), 14.1, eq. 14.4 with p0 subtracted: gauge p = rho*g*h.
     density_kg_m3, gravity_m_s2, depth_m = 1000.0, 10.0, 2.5
     pressure = EngineeringResult(
         quantity="gauge pressure",
         value=density_kg_m3 * gravity_m_s2 * depth_m,
         units="Pa",
-        source="OpenStax UP1 (2016), 14.1, eq. 14.4",
+        source="OpenStax UP1 (2016), 14.1, eq. 14.4 with p0 subtracted",
     )
     admitted = EngineeringResult.model_validate_json(pressure.model_dump_json())
     with Flask(__name__).app_context():

@@ -10,6 +10,7 @@ or establish design suitability.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-21 | Added sourced hand calculations and boundary checks for study automation. |
+| 2 | 2026-10-22 | Corrected native cube round-off tolerance and added export path and output checks; clarified the gauge-pressure citation. |
 
 ## Scope
 
@@ -69,8 +70,10 @@ The pressure check uses gauge pressure, with no atmospheric-pressure assumption.
 The renderer preserves Pa and does not convert to kPa or round the number. The
 bar equation assumes a uniform cross-section and linear axial elasticity; no
 yield, buckling or allowable-stress check is evaluated. Exact comparisons in
-these examples are software checks of hand-selected fixtures, not physical
-acceptance tolerances. Floating-point conversion may round other input values.
+the offline examples are software checks of hand-selected fixtures. Native cube
+volumes use relative tolerance 1e-12 and zero absolute tolerance for
+floating-point round-off only. Neither comparison establishes a physical
+acceptance tolerance. Floating-point conversion may round other input values.
 
 ## Sources
 
