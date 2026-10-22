@@ -1,0 +1,65 @@
+{
+  "dataset_id": "asset-integrity-public-corrosion-example",
+  "authoritative_owner": "digitalmodel",
+  "version": "1",
+  "source_version": "pipenostics 0.2.0, documentation built 2024-05-29",
+  "checked_on": "2026-10-21",
+  "intended_use": "Public example reproduction and software screening illustration; no operating-asset qualification.",
+  "rights_basis": "Publicly documented numerical example facts; no external source code or licensed standard text is retained.",
+  "sources": {
+    "example": {
+      "url": "https://rdrr.io/cran/pipenostics/man/b31crvl.html",
+      "locator": "Examples, Standard example 1; ASME B31G-1991, Nonmandatory Appendix A, as reproduced in the public program documentation",
+      "fields": ["D", "t", "d", "L", "smys_psi", "maop_psi", "design_factor", "published_pressure_psi", "published_boundary_depth_in"]
+    },
+    "theory": {
+      "url": "https://rdrr.io/cran/pipenostics/src/R/b31gpf.R",
+      "locator": "b31gpf function, flow stress, geometry parameter, bulging factor and failure pressure; public implementation of ASME B31G-2012, Level 1"
+    },
+    "reference_cap": {
+      "url": "https://rdrr.io/cran/pipenostics/src/R/b31gsap.R",
+      "locator": "b31gsap function, final comparison with intact design pressure; public implementation referring to ASME B31G-1991"
+    }
+  },
+  "inputs": {
+    "D": 30.0,
+    "t": 0.438,
+    "L": 7.5,
+    "smys_psi": 52000.0,
+    "maop_psi": 910.0,
+    "design_factor": 0.72
+  },
+  "units": {
+    "D": "in",
+    "t": "in",
+    "L": "in",
+    "depth_in": "in",
+    "smys_psi": "psi",
+    "maop_psi": "psi",
+    "design_factor": "dimensionless"
+  },
+  "cases": [
+    {
+      "name": "Published shallow defect",
+      "depth_in": 0.1,
+      "published_pressure_psi": 1093.0,
+      "tolerance_psi": 1.0,
+      "criterion_source": "Existing published-example test, capped pressure assertion",
+      "source": "example"
+    },
+    {
+      "name": "Published rounded depth boundary",
+      "depth_in": 0.249,
+      "published_pressure_psi": 910.0,
+      "tolerance_psi": 3.0,
+      "criterion_source": "Existing published-example test, rounded depth boundary assertion",
+      "source": "example"
+    }
+  ],
+  "required_operating_data": [
+    "Adopted standard edition and original design factor",
+    "Inspection sizing accuracy and complete defect boundaries",
+    "Material record and applicability evidence",
+    "Pressure history, other loads and degradation rate"
+  ]
+}

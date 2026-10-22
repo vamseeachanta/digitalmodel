@@ -1,0 +1,14 @@
+{
+  "document": "Asset integrity module analysis",
+  "revisions": [
+    {
+      "revision": "00",
+      "date": "2026-10-21",
+      "changes": [
+        "The original corrosion-pressure calculation is demonstrated on a published pipe example, with the intact design-pressure cap distinguished from the module's uncapped factored pressure.",
+        "Pressure demand and the implemented relative-depth boundary are drawn with a calculated depth sensitivity so that pressure shortfalls and the limit of the calculation are visible.",
+        "Existing numerical comparisons are distinguished from field qualification, and the additional data required for an operating decision are identified."
+      ]
+    }
+  ]
+}
