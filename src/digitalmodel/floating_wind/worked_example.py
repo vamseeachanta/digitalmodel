@@ -14,6 +14,7 @@ import os
 import posixpath
 from pathlib import Path, PureWindowsPath
 import re
+import stat
 from html.parser import HTMLParser
 from urllib.parse import unquote
 
@@ -34,6 +35,40 @@ REFERENCE = re.compile(
     r"^\s*(?:-\s*)?(FileName|ControllerDLL|InputFile|includefile):\s*(.+?)\s*$",
     re.IGNORECASE,
 )
+# Required source keys in the Phase A report's two as-held model columns.
+INPUT_KEYS = {
+    "UnitsSystem",
+    "WholeSystemStaticsEnabled",
+    "DynamicsSolutionMethod",
+    "ImplicitConstantTimeStep",
+    "TargetLogSampleInterval",
+    "SeabedOriginDepth",
+    "WaveType",
+    "WaveHs",
+    "WaveTz",
+    "WaveGamma",
+    "WaveDirection",
+    "WaveNumberOfComponents",
+    "UserSpecifiedRandomWaveSeeds",
+    "RefCurrentSpeed",
+    "RefCurrentDirection",
+    "WindType",
+    "WindSpeed",
+    "WindDirection",
+    "StageDuration",
+}
+
+
+def _directory_link(path: Path) -> bool:
+    """Recognize reparse directories on Python versions without is_junction."""
+    return (
+        path.is_symlink()
+        or getattr(path, "is_junction", lambda: False)()
+        or bool(
+            getattr(path.lstat(), "st_file_attributes", 0)
+            & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        )
+    )
 
 
 def _holdings(root: Path) -> dict[str, list[str]]:
@@ -50,6 +85,7 @@ def _holdings(root: Path) -> dict[str, list[str]]:
                 ".pytest_cache",
                 ".ruff_cache",
             }
+            and not _directory_link(Path(directory) / d)
         )
         for filename in sorted(files):
             path = Path(directory) / filename
@@ -69,14 +105,14 @@ def external_references(root: Path, model: Path, holdings=None) -> list[dict]:
     holdings = _holdings(root) if holdings is None else holdings
     rows = []
     for line_number, line in enumerate(
-        model.read_text(encoding="utf-8-sig").splitlines(), 1
+        model.read_text(encoding="utf-8").lstrip("\ufeff").splitlines(), 1
     ):
         match = REFERENCE.match(line)
         if not match:
             continue
         key, value = match.groups()
-        value = value.strip().strip("\"'")
-        target = model.parent / value.replace("\\", "/")
+        value = PureWindowsPath(value.strip().strip("\"'")).as_posix()
+        target = model.parent / value
         local = target.resolve().is_relative_to(root) and target.is_file()
         paths = holdings.get(PureWindowsPath(value).name.casefold(), [])
         if key.casefold() == "includefile":
@@ -98,10 +134,12 @@ def external_references(root: Path, model: Path, holdings=None) -> list[dict]:
     return rows
 
 
-def cited_value(lines: list[str], line: int) -> str:
+def cited_value(lines: list[str], line: int, end: int | None = None) -> str:
     """Read a scalar or StageDuration sequence at a one-based text locator."""
     if not 1 <= line <= len(lines):
         raise ValueError(f"source line {line} is absent")
+    if end is not None and not line <= end <= len(lines):
+        raise ValueError(f"source line {line}: citation range is invalid")
     key, separator, value = lines[line - 1].strip().partition(":")
     if not separator:
         raise ValueError(f"source line {line} has no key")
@@ -112,7 +150,15 @@ def cited_value(lines: list[str], line: int) -> str:
             if not match:
                 break
             durations.append(match[1])
+        if not durations:
+            raise ValueError(f"source line {line}: stage durations are absent")
+        if end is not None and end != line + len(durations):
+            raise ValueError(
+                f"source line {line}: citation range differs from sequence"
+            )
         return "; ".join(durations)
+    if end is not None and end != line:
+        raise ValueError(f"source line {line}: citation range differs from scalar")
     return value.strip()
 
 
@@ -125,6 +171,7 @@ class _TableRows(HTMLParser):
         self.has_basis = False
         self.rows = []
         self.result_rows = []
+        self.unmarked_results = False
         self.is_result = False
         self.row = None
         self.cell = None
@@ -151,7 +198,11 @@ class _TableRows(HTMLParser):
             self.cell = None
         elif tag == "tr" and self.row is not None:
             self.rows.append(("as-held" in self.sections, self.row))
-            if self.is_result:
+            in_results = "results" in self.sections and any(
+                kind == "td" for kind, _ in self.row
+            )
+            self.unmarked_results |= in_results and not self.is_result
+            if self.is_result or in_results:
                 self.result_rows.append(self.row)
             self.row = None
         elif tag == "section" and self.sections:
@@ -163,8 +214,8 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
     parser = _TableRows()
     parser.feed(html)
     parser.close()
-    errors, checked = [], 0
-    pattern = r"(.+?) \((L02|K03) lines? (\d+)(?:-\d+)?: (\w+)\)"
+    errors, checked, observed = [], 0, Counter()
+    pattern = r"(.+?) \((L02|K03) lines? (\d+)(?:-(\d+))?: (\w+)\)"
     for in_basis, row in parser.rows:
         if parser.has_basis and not in_basis:
             continue
@@ -183,12 +234,13 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
             if kind != "td" or not match:
                 errors.append("input echo model-value cell requires a source citation")
                 continue
-            value, model, number, key = match.groups()
+            value, model, number, end, key = match.groups()
+            observed[model, key] += 1
             if parser.has_basis and model != {1: "L02", 2: "K03"}.get(column):
                 errors.append("input echo citation differs from model column")
             line = int(number)
             try:
-                actual = cited_value(sources[model], line)
+                actual = cited_value(sources[model], line, int(end) if end else None)
                 actual_key = sources[model][line - 1].strip().partition(":")[0]
                 if actual_key != key:
                     errors.append(f"{model} line {line}: source key differs from {key}")
@@ -198,6 +250,9 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
                 errors.append(str(error))
     if not checked:
         errors.append("input echo has no source-cited cells")
+    expected = Counter({(model, key): 1 for model in MODELS for key in INPUT_KEYS})
+    if parser.has_basis and observed != expected:
+        errors.append("input echo requires each expected model input exactly once")
     return errors
 
 
@@ -209,6 +264,8 @@ def audit_result_rows(html: str) -> list[str]:
     if not parser.result_rows:
         return ["report has no marked result rows"]
     errors = []
+    if parser.unmarked_results:
+        errors.append("report result row contains an unmarked or numeric result")
     for row in parser.result_rows:
         if len(row) < 2 or any(
             kind != "td"
@@ -282,12 +339,54 @@ def _case_families(worksheet: str) -> list[dict]:
     return rows
 
 
+def audit_modular_inventory(
+    inventory: str, model: str, includes: list[dict]
+) -> list[str]:
+    """Bind modular inventory rows to their master locators and include targets."""
+    master = DOMAIN / "library/model_library" / LIBRARIES[model] / "modular/master.yml"
+    expected = Counter(
+        (
+            f"master L{row['line']}",
+            f"{master.as_posix()}#L{row['line']}",
+            row["file"],
+            posixpath.normpath(posixpath.join(master.parent.as_posix(), row["file"])),
+        )
+        for row in includes
+    )
+    observed = Counter()
+    for line in inventory.splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if cells[0] != f"{model} modular":
+            continue
+        if len(cells) != 5:
+            return [f"{model}: malformed modular inventory row"]
+        links = [re.fullmatch(r"\[([^\]]+)\]\(([^)]+)\)", cell) for cell in cells[1:3]]
+        if not all(links):
+            return [f"{model}: modular inventory requires source and target links"]
+        source, target = links
+        observed[
+            source[1],
+            posixpath.normpath(
+                posixpath.join(DOCUMENTS.as_posix(), unquote(source[2]))
+            ),
+            target[1],
+            posixpath.normpath(
+                posixpath.join(DOCUMENTS.as_posix(), unquote(target[2]))
+            ),
+        ] += 1
+    if observed != expected:
+        return [f"{model}: modular inventory differs from include references"]
+    return []
+
+
 def audit_phase_a(root: Path) -> dict:
     """Audit existing Phase A documents and return portable evidence as data."""
     root = root.resolve()
     holdings = _holdings(root)
     models, sources, errors = [], {}, []
-    inventory = (root / DOCUMENTS / "external-files-inventory.md").read_text()
+    inventory = (root / DOCUMENTS / "external-files-inventory.md").read_text(
+        encoding="utf-8"
+    )
     for name, relative in MODELS.items():
         path = root / relative
         payload = path.read_bytes()
@@ -302,9 +401,7 @@ def audit_phase_a(root: Path) -> dict:
         )
         includes = external_references(root, master, holdings)
         errors.extend(audit_inventory(inventory, name, references))
-        for row in includes:
-            if row["file"] not in inventory:
-                errors.append(f"{name}: inventory omits {row['file']}")
+        errors.extend(audit_modular_inventory(inventory, name, includes))
         if any(row["status"] == "MISSING" for row in includes):
             errors.append(f"{name}: modular include is missing")
         models.append(
@@ -316,8 +413,8 @@ def audit_phase_a(root: Path) -> dict:
                 "modular_includes": includes,
             }
         )
-    worksheet = (root / DOCUMENTS / "load-case-table.md").read_text()
-    html = (root / DOCUMENTS / "report-skeleton.html").read_text()
+    worksheet = (root / DOCUMENTS / "load-case-table.md").read_text(encoding="utf-8")
+    html = (root / DOCUMENTS / "report-skeleton.html").read_text(encoding="utf-8")
     errors.extend(audit_input_echo(html, sources))
     errors.extend(audit_result_rows(html))
     cases = _case_families(worksheet)

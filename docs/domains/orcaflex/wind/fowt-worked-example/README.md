@@ -35,13 +35,15 @@ The audit uses the following method:
   metadata, virtual environments and Python/tool caches. Symlink targets outside
   the checkout are excluded. A holding elsewhere retains unverified compatibility.
 - Read each modular master's `includefile` directives and require its exact
-  relative target. A matching basename elsewhere cannot satisfy an include.
+  relative target and matching inventory row, source locator and link target.
+  A matching basename elsewhere cannot satisfy an include.
 - Check that inventory text names each detected dependency and its holdings.
-  Check report input cells against the cited raw-model line, key and value,
-  including the listed stage durations.
+  Require each expected report input once per model and check cells against
+  the cited raw-model line, key and value, including stage-duration range ends.
 - Require the worksheet's statics, free-decay and operating/parked families,
   marked required inputs and a source disposition. Require marked report result
-  rows with nonnumeric placeholders.
+  rows with nonnumeric placeholders; every data row in the results section
+  must carry the result class.
 
 The expected answer for the current sources is:
 
@@ -70,8 +72,11 @@ The dependency scan is limited to the named keys in these models and masters.
 It does not discover transitive dependencies inside controllers, prove library
 representation equivalence, validate arbitrary OrcaFlex syntax, establish rights
 to redistribute model files, or qualify a controller version. Inventory prose
-and technical case-reference suitability still require review. The report check
-covers its source-cited input cells and marked result rows, not arbitrary HTML.
+and technical case-reference suitability still require review. The worksheet's
+as-held values and their Markdown citations, including the NPD wind parameters,
+are not audited; they require manual comparison with the raw models before use.
+The report check covers its required source-cited input cells and every data
+row in the results section, not arbitrary HTML.
 
 A nonzero exit indicates missing audit inputs or inconsistent documentation.
 Missing runtime dependencies are reported as preparation gaps; they are not

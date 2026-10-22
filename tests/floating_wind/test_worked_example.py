@@ -13,6 +13,21 @@ from digitalmodel.floating_wind import worked_example as subject
 ROOT = Path(__file__).resolve().parents[2]
 
 
+@pytest.fixture(scope="module")
+def repository_holdings():
+    return subject._holdings(ROOT)
+
+
+@pytest.fixture(autouse=True)
+def reuse_repository_holdings(monkeypatch, repository_holdings):
+    scan = subject._holdings
+    monkeypatch.setattr(
+        subject,
+        "_holdings",
+        lambda root: repository_holdings if root == ROOT else scan(root),
+    )
+
+
 def test_external_references_keep_repeated_uses_and_ignore_provenance(tmp_path):
     model = tmp_path / "model.yml"
     model.write_text(
@@ -20,10 +35,13 @@ def test_external_references_keep_repeated_uses_and_ignore_provenance(tmp_path):
         "  FileName: control.py\n  ControllerDLL: missing.dll\n"
         '  InputFile: "controller.IN"\nincludefile: includes/data.yml\n',
         encoding="utf-8",
+        newline="\n",
     )
     held = tmp_path / "elsewhere" / "CONTROL.PY"
     held.parent.mkdir()
-    held.write_text("# synthetic controller, never executed\n")
+    held.write_text(
+        "# synthetic controller, never executed\n", encoding="utf-8", newline="\n"
+    )
     rows = subject.external_references(tmp_path, model)
     assert [(r["file"], r["line"]) for r in rows] == [
         ("control.py", 2),
@@ -39,8 +57,8 @@ def test_external_references_keep_repeated_uses_and_ignore_provenance(tmp_path):
 
 def test_include_requires_exact_relative_path_not_basename(tmp_path):
     model = tmp_path / "master.yml"
-    model.write_text("includefile: includes/data.yml\n")
-    (tmp_path / "data.yml").write_text("{}")
+    model.write_text("includefile: includes/data.yml\n", encoding="utf-8", newline="\n")
+    (tmp_path / "data.yml").write_text("{}", encoding="utf-8", newline="\n")
     assert subject.external_references(tmp_path, model)[0]["status"] == "MISSING"
 
 
@@ -118,6 +136,8 @@ def test_result_audit_checks_every_value_cell(cell):
         ('<tr class="result">', '<td class="value">12 s</td>'),
         ('<tr class="result" id="surge">', "<td>12 s</td>"),
         ('<tr class="result highlighted">', "<td>12 s</td>"),
+        ("<tr>", "<td>12 s</td>"),
+        ('<tr class="highlighted">', "<td>12 s</td>"),
     ],
 )
 def test_complete_audit_rejects_numeric_result_markup(
@@ -125,8 +145,8 @@ def test_complete_audit_rejects_numeric_result_markup(
 ):
     read_text = Path.read_text
 
-    def changed_text(path, *args, **kwargs):
-        text = read_text(path, *args, **kwargs)
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
         if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
             old = (
                 '<tr class="result"><td>Surge natural period</td>'
@@ -145,6 +165,18 @@ def test_complete_audit_rejects_numeric_result_markup(
     evidence = json.loads(capsys.readouterr().out)
     assert any("numeric result" in error for error in evidence["errors"])
     assert evidence["execution_ready"] is False
+
+
+def test_result_section_requires_class_even_on_placeholder_rows():
+    row = "<tr><td>Period</td><td>[RESULT: not calculated]</td></tr>"
+    marked = row.replace("<tr>", '<tr class="result">')
+    assert (
+        subject.audit_result_rows('<section id="results">' + marked + "</section>")
+        == []
+    )
+    assert subject.audit_result_rows(
+        '<section id="results">' + row + marked + "</section>"
+    )
 
 
 def test_repository_phase_a_evidence():
@@ -192,10 +224,13 @@ def test_external_symlink_is_not_a_holding(tmp_path):
     root = tmp_path / "repository"
     root.mkdir()
     external = tmp_path / "control.py"
-    external.write_text("# never executed")
-    (root / "control.py").symlink_to(external)
+    external.write_text("# never executed", encoding="utf-8", newline="\n")
+    try:
+        (root / "control.py").symlink_to(external)
+    except OSError:
+        pytest.skip("symlink creation is unavailable")
     model = root / "model.yml"
-    model.write_text("FileName: control.py\n")
+    model.write_text("FileName: control.py\n", encoding="utf-8", newline="\n")
     row = subject.external_references(root, model)[0]
     assert row["status"] == "MISSING"
     assert row["held_paths"] == []
@@ -299,10 +334,10 @@ def test_inventory_reconciles_holding_paths_in_both_directions():
 def test_complete_audit_rejects_stale_evidence(monkeypatch, mutation):
     read_text, read_bytes = Path.read_text, Path.read_bytes
 
-    def changed_text(path, *args, **kwargs):
+    def changed_text(path, *, encoding="utf-8", **kwargs):
         if path == ROOT / subject.MODELS["L02"]:
             return changed_bytes(path).decode("utf-8-sig")
-        text = read_text(path, *args, **kwargs)
+        text = read_text(path, encoding=encoding, **kwargs)
         if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
             old = "<td>7 (L02 line 104: WaveHs)</td>"
             replacements = {
@@ -337,3 +372,116 @@ def test_complete_audit_rejects_stale_evidence(monkeypatch, mutation):
     monkeypatch.setattr(Path, "read_text", changed_text)
     monkeypatch.setattr(Path, "read_bytes", changed_bytes)
     assert subject.audit_phase_a(ROOT)["errors"]
+
+
+@pytest.mark.parametrize("end", [38, 40, 36])
+def test_complete_audit_checks_stage_range_end(monkeypatch, end):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            text = text.replace("L02 lines 37-39:", f"L02 lines 37-{end}:")
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    assert subject.audit_phase_a(ROOT)["errors"]
+
+
+@pytest.mark.parametrize("copies", [0, 2])
+def test_complete_audit_requires_each_input_row_once(monkeypatch, copies):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            row = next(
+                row
+                for row in text.splitlines(keepends=True)
+                if row.startswith("<tr><td>Wave significant height")
+            )
+            text = text.replace(row, row * copies)
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    assert subject.audit_phase_a(ROOT)["errors"]
+
+
+@pytest.mark.parametrize("mutation", ["deletion", "target", "locator"])
+def test_complete_audit_requires_exact_include_inventory_row(monkeypatch, mutation):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "external-files-inventory.md":
+            row = next(
+                row
+                for row in text.splitlines(keepends=True)
+                if row.startswith("| L02 modular |")
+                and "includes/01_general.yml" in row
+            )
+            replacement = {
+                "deletion": "",
+                "target": row.replace(
+                    "modular/includes/01_general.yml)", "modular/stale.yml)"
+                ),
+                "locator": row.replace("master L6", "master L9").replace(
+                    "#L6)", "#L9)"
+                ),
+            }[mutation]
+            text = text.replace(row, replacement)
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    assert subject.audit_phase_a(ROOT)["errors"]
+
+
+def test_audit_explicitly_reads_utf8(monkeypatch):
+    read_text = Path.read_text
+
+    def checked_text(path, *, encoding=None, **kwargs):
+        assert encoding == "utf-8"
+        return read_text(path, encoding=encoding, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", checked_text)
+    assert subject.audit_phase_a(ROOT)["errors"] == []
+
+
+def test_reference_paths_are_portable(tmp_path):
+    model = tmp_path / "master.yml"
+    model.write_text(
+        "includefile: includes\\data.yml\n", encoding="utf-8", newline="\n"
+    )
+    target = tmp_path / "includes" / "data.yml"
+    target.parent.mkdir()
+    target.write_text("{}", encoding="utf-8", newline="\n")
+    row = subject.external_references(tmp_path, model)[0]
+    assert row["file"] == "includes/data.yml"
+    assert row["held_paths"] == ["includes/data.yml"]
+
+
+def test_holdings_do_not_walk_directory_junctions(tmp_path, monkeypatch):
+    linked = tmp_path / "linked"
+    linked.mkdir()
+    (linked / "control.py").write_text("# synthetic", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(Path, "is_junction", lambda path: path == linked, raising=False)
+    assert subject._holdings(tmp_path) == {}
+
+
+def test_holdings_do_not_walk_reparse_directories(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    linked = tmp_path / "linked"
+    linked.mkdir()
+    (linked / "control.py").write_text("# synthetic", encoding="utf-8", newline="\n")
+    lstat = Path.lstat
+
+    def reparse_stat(path):
+        info = lstat(path)
+        if path == linked:
+            return SimpleNamespace(st_mode=info.st_mode, st_file_attributes=0x400)
+        return info
+
+    monkeypatch.setattr(Path, "is_junction", lambda path: False, raising=False)
+    monkeypatch.setattr(Path, "lstat", reparse_stat)
+    assert subject._holdings(tmp_path) == {}
