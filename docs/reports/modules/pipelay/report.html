@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pipelay module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style></head><body class="hs-doc"><div class="wrap"><header><div class="kicker">Marine installation</div><h1>Pipelay module analysis</h1><p class="sub">Draft for client review</p></header><main>
+<section id="executive-summary"><h2>1. Executive Summary</h2>
+<p>Pipelay is an analytical pipeline installation screening module. Analysis is performed to determine
+static suspended geometry, bending strain and assumed lay-rate restrictions; key results are summarized below.</p>
+<ul><li>The public J-lay example meets the assumed sagbend strain limit.
+<ul><li>Strain utilisation is <span data-value="jlay.result.sagbend_strain_utilisation" data-scale="100">65.1</span> % against
+the assumed limit of <span data-value="jlay.result.allowable_sagbend_strain" data-scale="1000000.0">3000.0</span> µm/m.
+The example is suitable for reproducing the static screen, not for authorising installation.</li></ul></li>
+<li>The public reel-lay example meets its assumed core strain limit.
+<ul><li>Strain utilisation is <span data-value="reel.result.reeling_strain_utilisation" data-scale="100">85.3</span> % against
+the assumed limit of <span data-value="reel.result.allowable_reeling_strain" data-scale="1000000.0">20000.0</span> µm/m.
+The straightener response remains an input assumption.</li></ul></li></ul>
+<p>Vessel orientation, station-keeping tolerance and an installation sea-state envelope are NOT_EVALUATED.
+The assumed joining cutoff of <span data-value="jlay.result.operability.operating_limit_m" data-scale="1">2.5</span> m significant wave height
+does not establish a safe operating limit. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a>.</p>
+<h3 id="revision-history">Revision history</h3>
+<table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>1</td><td>2026-10-21</td><td>Initial analytical module analysis; example calculations and evidence limits are presented for engineering use.</td></tr></tbody></table>
+</section>
+
+<section id="introduction"><h2>2. Introduction</h2>
+<p>The supported workflow is defined as static J-lay and reel-lay screening. The intended use is preliminary
+input checking and transparent reproduction of analytical quantities before a separately qualified installation analysis.</p>
+<p>The public router accepts a configuration mapping, selects the lay method, rejects invalid design inputs,
+writes a strict JavaScript Object Notation (JSON) summary and returns the augmented mapping.
+The direct calculation functions return result mappings without writing files. <a href="#source-code">Implemented interface</a>.</p>
+<p>J-lay geometry is solved using depth and the angle from vertical. Supplied top tension is a consistency check,
+not an independent means of tuning curvature at a fixed depth and angle. Reel-lay screening uses the innermost
+wrap radius and a prescribed fraction of curvature removal. <a href="#source-basis">Analytical basis</a>.</p>
+</section>
+
+<section id="summary"><h2>3. Summary</h2>
+<p>The detailed screening controls are presented as strain utilisation and assumed wave-height cutoffs.
+A combined installation envelope is not established because period, heading and dynamic component demands are absent.</p>
+<figure><svg viewBox="0 0 780 255" role="img" aria-label="Strain utilisation by screening component"><text x="215" y="35">Strain demand / assumed strain limit (%)</text><path class="limit" d="M575 50 V190" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="20" y="95">J-lay sagbend</text><rect x="215" y="75" width="234.540" height="30" fill="var(--go)" tabindex="0" aria-label="J-lay sagbend; demand 1954.4 µm/m; assumed limit 3000.0 µm/m; utilisation 65.1 %"><title>J-lay sagbend; demand 1954.4 µm/m; assumed limit 3000.0 µm/m; utilisation 65.1 %</title></rect><text x="20" y="160">Reel core</text><rect x="215" y="140" width="307.224" height="30" fill="var(--go)" tabindex="0" aria-label="Reel core; demand 17069.0 µm/m; assumed limit 20000.0 µm/m; utilisation 85.3 %"><title>Reel core; demand 17069.0 µm/m; assumed limit 20000.0 µm/m; utilisation 85.3 %</title></rect><text x="200" y="220">0.0</text><text x="555" y="220">100.0</text></svg><figcaption>Figure B. Each green bar meets its own assumed strain criterion. The amber line marks equality to that criterion. Only the listed strain components are assessed. Hover or focus a bar for its demand and limit. <a href="#source-basis">Analytical basis</a>.</figcaption></figure>
+<figure><svg viewBox="0 0 780 365" role="img" aria-label="J-lay assumed lay-rate screen" data-limit="2.5">
+<path d="M75 65 V300 H705" fill="none" stroke="var(--ink)"/>
+<path class="limit" d="M517.857 65 V300" stroke="var(--caution)" stroke-dasharray="6 4"><title>Supplied wave-height cutoff: 2.5 m</title></path>
+<text x="85" y="40">J-lay: assumed rate (km/day)</text>
+<text x="300" y="355">Significant wave height (m)</text>
+<text x="45" y="305">0.0</text><text x="35" y="80">3.0</text>
+<text x="70" y="325">0.0</text><text x="680" y="325">3.5</text>
+<circle cx="75.000" cy="75.000" r="6" fill="var(--go)" tabindex="0" data-point="jlay:0.0" aria-label="J-lay; joining and laying; significant wave height 0.0 m; rate 3.0 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 0.0 m; rate 3.0 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="163.571" cy="93.750" r="6" fill="var(--go)" tabindex="0" data-point="jlay:0.5" aria-label="J-lay; joining and laying; significant wave height 0.5 m; rate 2.8 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 0.5 m; rate 2.8 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="252.143" cy="112.500" r="6" fill="var(--go)" tabindex="0" data-point="jlay:1.0" aria-label="J-lay; joining and laying; significant wave height 1.0 m; rate 2.5 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 1.0 m; rate 2.5 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="340.714" cy="131.250" r="6" fill="var(--go)" tabindex="0" data-point="jlay:1.5" aria-label="J-lay; joining and laying; significant wave height 1.5 m; rate 2.2 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 1.5 m; rate 2.2 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="429.286" cy="150.000" r="6" fill="var(--go)" tabindex="0" data-point="jlay:2.0" aria-label="J-lay; joining and laying; significant wave height 2.0 m; rate 2.0 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 2.0 m; rate 2.0 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="517.857" cy="168.750" r="6" fill="var(--go)" tabindex="0" data-point="jlay:2.5" aria-label="J-lay; joining and laying; significant wave height 2.5 m; rate 1.8 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 2.5 m; rate 1.8 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="606.429" cy="300.000" r="6" fill="var(--nogo)" tabindex="0" data-point="jlay:3.0" aria-label="J-lay; joining and laying; significant wave height 3.0 m; rate 0.0 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 3.0 m; rate 0.0 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle><circle cx="695.000" cy="300.000" r="6" fill="var(--nogo)" tabindex="0" data-point="jlay:3.5" aria-label="J-lay; joining and laying; significant wave height 3.5 m; rate 0.0 km/day; wave-height cutoff 2.5 m; supplied assumption"><title>J-lay; joining and laying; significant wave height 3.5 m; rate 0.0 km/day; wave-height cutoff 2.5 m; supplied assumption</title></circle></svg><figcaption>J-lay rate samples. Green: the supplied wave-height condition is met.
+Red: the supplied condition is exceeded. Amber: the supplied cutoff is shown.
+Hover or focus a point for the case, component, rate, cutoff and units.
+These colours describe assumed conditions, not installation acceptance. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a>.</figcaption></figure>
+<p>The J-lay rate is controlled by the lower of the supplied laying and joining wave-height limits.
+The cutoff is <span data-value="jlay.result.operability.operating_limit_m" data-scale="1">2.5</span> m; equality is permitted by the rate rule.
+Abandonment and recovery capacity is not assessed by that rule. <a href="#source-basis">Analytical basis</a>; <a href="#source-jlay">Public J-lay example</a>.</p>
+<p>A live forecast, wave-period envelope, orientation tolerance and forecast-support trigger are NOT_EVALUATED.
+Operating instructions require a qualified vessel response model and approved criteria before a forecast service
+or heading restriction is specified. <a href="#source-clearance">Evidence register</a>.</p>
+</section>
+
+<section id="design-data"><h2>4. Design Data</h2>
+<p>The design basis is taken from the repository’s public illustrative inputs. Pipe contents are excluded,
+and all material values and selected limits remain ASSUMED - to be confirmed for an installation.</p>
+<h3>4.1 Physical system and inputs</h3>
+<figure><svg viewBox="0 0 820 600" role="img" aria-labelledby="geometry-title geometry-desc">
+<title id="geometry-title">J-lay geometry and coated pipe section</title>
+<desc id="geometry-desc">A static pipe hangs from a fixed top point to horizontal touchdown on a flat seabed.
+The line coordinates use equal length scales. The annulus inset uses the example diameter ratios.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8" fill="var(--ink)"/></marker></defs>
+<path d="M40 90 H770" stroke="var(--brand)" fill="none"/>
+<text x="50" y="75">Still water surface; fixed top point</text>
+<path d="M40 520 H770 L770 550 H40 Z" fill="var(--soft)" stroke="var(--mut)"/>
+<text x="50" y="575">Flat seabed; horizontal tangent; no soil restraint</text>
+<path d="M95 520 H340" stroke="var(--ink)" stroke-width="4"/>
+<polyline points="340.000,520.000 341.081,519.975 342.163,519.901 343.244,519.778 344.325,519.605 345.406,519.382 346.488,519.108 347.569,518.784 348.650,518.407 349.731,517.978 350.813,517.496 351.894,516.959 352.975,516.366 354.056,515.717 355.138,515.010 356.219,514.243 357.300,513.415 358.381,512.524 359.463,511.568 360.544,510.546 361.625,509.454 362.706,508.292 363.788,507.056 364.869,505.744 365.950,504.353 367.031,502.881 368.113,501.323 369.194,499.678 370.275,497.942 371.356,496.110 372.438,494.180 373.519,492.147 374.600,490.007 375.681,487.755 376.763,485.387 377.844,482.899 378.925,480.284 380.006,477.538 381.088,474.654 382.169,471.627 383.250,468.451 384.331,465.118 385.413,461.622 386.494,457.956 387.575,454.113 388.656,450.083 389.738,445.859 390.819,441.432 391.900,436.793 392.981,431.932 394.063,426.840 395.144,421.505 396.225,415.916 397.306,410.063 398.388,403.932 399.469,397.511 400.550,390.787 401.631,383.746 402.713,376.374 403.794,368.654 404.875,360.571 405.957,352.108 407.038,343.248 408.119,333.972 409.200,324.261 410.282,314.096 411.363,303.454 412.444,292.313 413.525,280.652 414.607,268.444 415.688,255.666 416.769,242.291 417.850,228.291 418.932,213.636 420.013,198.297 421.094,182.242 422.175,165.437 423.257,147.848 424.338,129.438 425.419,110.168 426.500,90.000" fill="none" stroke="var(--brand)" stroke-width="4"/>
+<path d="M426.500 90 v-48" stroke="var(--ink)" marker-end="url(#arrow)"/>
+<text x="445" y="48">Top force T; angle θ from vertical</text>
+<path d="M265 90 V520" stroke="var(--ink)" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="60" y="300">Depth h (m): <tspan data-value="jlay.result.water_depth_m" data-scale="1">1500.0</tspan></text>
+<path d="M340 548 H426.500" stroke="var(--ink)" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="445" y="500">Touchdown offset x (m): <tspan data-value="jlay.result.sagbend.horizontal_offset_m" data-scale="1">301.7</tspan></text>
+<text x="445" y="525">Pipe weight w acts downward</text>
+<circle cx="630" cy="235" r="68" fill="var(--soft)" stroke="var(--mut)"/>
+<circle cx="630" cy="235" r="49.613" fill="var(--mut)"/>
+<circle cx="630" cy="235" r="43.301" fill="var(--panel)"/>
+<text x="535" y="340">Coating / steel / empty bore</text>
+<text x="505" y="365">Steel diameter (mm): <tspan data-value="jlay.inputs.pipe.outer_diameter" data-scale="1000">323.8</tspan></text>
+<text x="505" y="390">Wall thickness (mm): <tspan data-value="jlay.inputs.pipe.wall_thickness" data-scale="1000">20.6</tspan></text>
+<text x="505" y="415">Radial coating (mm): <tspan data-value="jlay.inputs.pipe.coating_thickness" data-scale="1000">60.0</tspan></text>
+</svg><figcaption>Figure A. The catenary shape is computed from the example geometry.
+The cross-section is enlarged independently. Pipe line thickness is symbolic.
+No support-vessel geometry, crane or rigging arrangement is represented. <a href="#source-basis">Analytical basis</a>; <a href="#source-jlay">Public J-lay example</a>.</figcaption></figure>
+<p>Lengths are supplied in metres, force in kilonewtons, density in kilograms per cubic metre and strain as a
+dimensionless fraction. Report strains are expressed in micrometres per metre. The complete pipe data register
+is retained in the appendix. Vessel, crane, rigging and response-amplitude data are not supplied. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a>.</p>
+<h3>4.2 Criteria and rationale</h3>
+<p>The strain screen compares computed bending strain with the explicitly supplied example limit. The reference
+overbend radius uses the supplied strain limit of <span data-value="jlay.inputs.config.allowable_overbend_strain" data-scale="1000000.0">2000.0</span> µm/m;
+it is a geometric reference, not a model of a fitted stinger. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a>.</p>
+<p>J-lay tension closure is checked using the returned relative tolerance of
+<span data-value="jlay.result.sagbend.tension_closure_relative_tolerance" data-scale="100">0.1</span> %. This input-consistency check prevents a
+depth, angle and force combination that violates the assumed static equilibrium. Finite positive submerged weight
+and a nonzero near-vertical angle are required. Input plausibility bounds detect unit mistakes; they are not design allowables.
+<a href="#source-basis">Analytical basis</a>.</p>
+<p>No standard-derived acceptance limit is applied. The implementation’s inherited standards references lack
+qualified editions and clauses for this use; standards compliance is NOT_EVALUATED. <a href="#source-clearance">Evidence register</a>.</p>
+</section>
+
+<section id="methodology"><h2>5. Methodology</h2>
+<p>The geometry is derived from static equilibrium of an inextensible flexible line with uniform submerged
+weight and a horizontal touchdown tangent. Bending strain is then estimated from the catenary curvature.</p>
+<p>Let D be steel outside diameter, t steel wall thickness, c radial coating thickness, and Dᵢ and D꜀ the bore
+and coated diameters. Areas Aₛ, A꜀ and A𝑑 denote steel, coating and displaced cross-section. Densities ρₛ, ρ꜀ and
+ρ𝑤 denote steel, coating and water; g is the gravitational acceleration convention retained by the implementation.</p>
+<div class="eq">Dᵢ = D − 2t; D꜀ = D + 2c; Aₛ = π(D² − Dᵢ²)/4;<br>
+A꜀ = π(D꜀² − D²)/4; A𝑑 = πD꜀²/4; w = g(ρₛAₛ + ρ꜀A꜀ − ρ𝑤A𝑑).</div>
+<p>The annular areas and empty-pipe buoyancy expression are defined by the analytical basis. Its gravity
+convention is retained without a new environmental assumption. <a href="#source-basis">Analytical basis</a>.</p>
+<p>Let h be water depth, θ top angle from vertical, T top resultant force, H horizontal force, a catenary parameter,
+x horizontal touchdown offset, z height above seabed and s suspended arc length. Consistent force units are used.</p>
+<div class="eq">H = T sin θ; T = H + wh; a = H/w = h sin θ/(1 − sin θ);<br>
+z = a[cosh(x/a) − 1]; x = a acosh(1 + h/a); s = √(h² + 2ah).</div>
+<p>Let κ be touchdown curvature, ε bending strain, E Young’s modulus and σ the elastic stress proxy.
+The minimum reference radius Rₘᵢₙ follows from an assumed maximum strain εₘₐₓ.</p>
+<div class="eq">κ = 1/a; ε = Dκ/2; σ = Eε; Rₘᵢₙ = D/(2εₘₐₓ).</div>
+<p>These equations and their numerical constants are geometric identities derived in the analytical basis,
+not values copied from a licensed standard. Axial extension, flexural stiffness in equilibrium, contents pressure,
+contact, hydrodynamic forcing and material plasticity are excluded. The elastic proxy is not a combined stress check.
+<a href="#source-basis">Analytical basis</a>.</p>
+<p>For reel-lay, let R be core radius, η the assumed fraction of curvature removed, κᵣ residual curvature,
+L the measurement span and δ its small-slope midspan offset.</p>
+<div class="eq">εᵣₑₑₗ = D/(2R); κᵣ = (1 − η)/R; εᵣ = Dκᵣ/2; δ ≈ κᵣL²/8.</div>
+<p>The straightener fraction is prescribed rather than predicted from cyclic material response. Perfect removal
+produces zero curvature and an unbounded residual radius encoded as null in JSON. <a href="#source-basis">Analytical basis</a>.</p>
+<p>For the assumed rate rule, Hₛ denotes significant wave height, v₀ calm-water rate, b degradation per unit
+wave height and Hₛ,ₗᵢₘ the supplied cutoff. The rate is zero above the cutoff; otherwise v = max(0, v₀ − bHₛ).
+J-lay uses the lower laying and joining cutoff; reel-lay uses the laying cutoff. <a href="#source-basis">Analytical basis</a>.</p>
+</section>
+
+<section id="detailed-results"><h2>6. Detailed Results</h2>
+<p>The example results are obtained by calling the public router on the documented input files.
+Only the output destination is redirected; engineering inputs are retained.</p>
+<section id="worked-example"><h3>J-lay worked example</h3>
+<p>The calculated radius and top tension follow from the supplied depth and angle. The detailed values are
+retained in the appendix using the module’s returned precision and engineering display units.</p>
+<p>At depth <span data-value="jlay.result.water_depth_m" data-scale="1">1500.0</span> m and top angle <span data-value="jlay.result.tower_angle_deg" data-scale="1">3.0</span> degrees from vertical,
+the top tension is <span data-value="jlay.result.top_tension_kN" data-scale="1">2624.9</span> kN and the touchdown radius is
+<span data-value="jlay.result.sagbend.sagbend_radius_m" data-scale="1">82.8</span> m. Touchdown offset is
+<span data-value="jlay.result.sagbend.horizontal_offset_m" data-scale="1">301.7</span> m and suspended length is
+<span data-value="jlay.result.sagbend.suspended_length_m" data-scale="1">1580.7</span> m. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a>.</p>
+<p>Bending strain is <span data-value="jlay.result.sagbend.sagbend_bending_strain" data-scale="1000000.0">1954.4</span> µm/m against the assumed limit of
+<span data-value="jlay.result.allowable_sagbend_strain" data-scale="1000000.0">3000.0</span> µm/m; utilisation is
+<span data-value="jlay.result.sagbend_strain_utilisation" data-scale="100">65.1</span> %. The elastic bending stress proxy is
+<span data-value="jlay.result.sagbend.sagbend_bending_stress_MPa" data-scale="1">404.6</span> MPa. <a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a>.</p>
+<p>The sagbend strain screen passes against the assumed limit. The supplied tension closes within the
+input-consistency tolerance. The elastic stress proxy is below the example’s specified minimum yield strength of
+<span data-value="jlay.inputs.pipe.smys" data-scale="1e-06">448.0</span> MPa; this observation does not assess axial stress, local buckling or installation acceptance.
+<a href="#source-basis">Analytical basis</a>; <a href="#source-jlay">Public J-lay example</a>.</p></section>
+<h3>Reel-lay example</h3>
+<p>The core strain is <span data-value="reel.result.reeling_bending_strain" data-scale="1000000.0">17069.0</span> µm/m against the assumed limit of
+<span data-value="reel.result.allowable_reeling_strain" data-scale="1000000.0">20000.0</span> µm/m. The residual span offset is
+<span data-value="reel.result.residual_out_of_straightness_m" data-scale="1000">112.5</span> mm over the supplied span of
+<span data-value="reel.result.residual_out_of_straightness_span_m" data-scale="1">12.0</span> m. The full component values are retained in the appendix.
+<a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a>.</p>
+<p>The core strain screen passes against the assumed plastic-strain limit. The residual offset is calculated
+using the supplied straightener fraction and span; no residual-offset acceptance criterion is supplied, so its
+engineering acceptance is NOT_EVALUATED. <a href="#source-basis">Analytical basis</a>; <a href="#source-reel">Public reel-lay example</a>.</p>
+<figure><svg viewBox="0 0 780 365" role="img" aria-label="Reel-lay assumed lay-rate screen" data-limit="4.0">
+<path d="M75 65 V300 H705" fill="none" stroke="var(--ink)"/>
+<path class="limit" d="M626.111 65 V300" stroke="var(--caution)" stroke-dasharray="6 4"><title>Supplied wave-height cutoff: 4.0 m</title></path>
+<text x="85" y="40">Reel-lay: assumed rate (km/day)</text>
+<text x="300" y="355">Significant wave height (m)</text>
+<text x="45" y="305">0.0</text><text x="35" y="80">6.0</text>
+<text x="70" y="325">0.0</text><text x="680" y="325">4.5</text>
+<circle cx="75.000" cy="75.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:0.0" aria-label="Reel-lay; laying; significant wave height 0.0 m; rate 6.0 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 0.0 m; rate 6.0 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="143.889" cy="90.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:0.5" aria-label="Reel-lay; laying; significant wave height 0.5 m; rate 5.6 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 0.5 m; rate 5.6 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="212.778" cy="105.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:1.0" aria-label="Reel-lay; laying; significant wave height 1.0 m; rate 5.2 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 1.0 m; rate 5.2 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="281.667" cy="120.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:1.5" aria-label="Reel-lay; laying; significant wave height 1.5 m; rate 4.8 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 1.5 m; rate 4.8 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="350.556" cy="135.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:2.0" aria-label="Reel-lay; laying; significant wave height 2.0 m; rate 4.4 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 2.0 m; rate 4.4 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="419.444" cy="150.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:2.5" aria-label="Reel-lay; laying; significant wave height 2.5 m; rate 4.0 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 2.5 m; rate 4.0 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="488.333" cy="165.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:3.0" aria-label="Reel-lay; laying; significant wave height 3.0 m; rate 3.6 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 3.0 m; rate 3.6 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="557.222" cy="180.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:3.5" aria-label="Reel-lay; laying; significant wave height 3.5 m; rate 3.2 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 3.5 m; rate 3.2 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="626.111" cy="195.000" r="6" fill="var(--go)" tabindex="0" data-point="reel:4.0" aria-label="Reel-lay; laying; significant wave height 4.0 m; rate 2.8 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 4.0 m; rate 2.8 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle><circle cx="695.000" cy="300.000" r="6" fill="var(--nogo)" tabindex="0" data-point="reel:4.5" aria-label="Reel-lay; laying; significant wave height 4.5 m; rate 0.0 km/day; wave-height cutoff 4.0 m; supplied assumption"><title>Reel-lay; laying; significant wave height 4.5 m; rate 0.0 km/day; wave-height cutoff 4.0 m; supplied assumption</title></circle></svg><figcaption>Reel-lay rate samples. Green: the supplied wave-height condition is met.
+Red: the supplied condition is exceeded. Amber: the supplied cutoff is shown.
+Hover or focus a point for the case, component, rate, cutoff and units.
+These colours describe assumed conditions, not installation acceptance. <a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a>.</figcaption></figure>
+</section>
+
+<section id="validation"><h2>7. Validation</h2>
+<p>Repository evidence is provided by independent arithmetic anchors and analytical regression assertions.
+These records check implementation behaviour; field validation and native installation qualification are NOT_EVALUATED.</p>
+<p>The documented anchors cover submerged weight, catenary parameter, top tension, strain, offset and suspended
+length. Reel checks cover core strain, residual curvature, radius, strain and span offset. The anchor comparison
+uses the analytical basis’s relative tolerance, equal to the tension-closure tolerance displayed in the design basis.
+<a href="#source-basis">Analytical basis</a>; <a href="#source-tests">Regression evidence</a>.</p>
+<p>Boundary tests reject unsupported methods, missing inputs, unknown keys, impossible annuli, non-finite values,
+non-positive submerged weight and inconsistent force closure before summary output. Regression assertions also
+cover perfect straightening, unrounded strain acceptance, the joining cutoff and strict summary readback.
+<a href="#source-tests">Regression evidence</a>.</p>
+<p>The report rebuild test compares all displayed numerical bindings with fresh router returns, checks that
+worked-example numerical text has a binding and compares the committed HTML with a deterministic rebuild.
+These checks establish reproducibility of the presentation, not independent physical qualification. <a href="#source-tests">Regression evidence</a>.</p>
+</section>
+
+<section id="recommendations"><h2>8. Key Findings, Limitations and Recommendations</h2>
+<p>The public examples meet the selected strain screens under the stated assumptions. Engineering release
+is restricted by missing operating conditions, acceptance criteria and independent installation evidence.</p>
+<p>Use the J-lay calculation to check static input consistency and preliminary curvature. Confirm pipe contents,
+coating tolerances, material certificates and the governing edition-qualified criteria before extending the screen
+to an installation assessment. Obtain a qualified response analysis for vessel motion, waves, current, axial load,
+touchdown contact, local buckling and fatigue. The evidence register identifies these installation-evidence gaps.
+<a href="#source-clearance">Evidence register</a>.</p>
+<p>For an exceeded J-lay strain criterion, increase the touchdown radius by selecting a consistent depth, angle
+and force combination, then reassess the full installation model. For an exceeded reel criterion, increase the
+core radius or revise the pipe selection against qualified material limits. These actions follow the inverse
+radius relation for strain; a passing screen alone does not release the installation. <a href="#source-basis">Analytical basis</a>.</p>
+<p>Obtain measured or qualified straightener response and an approved residual-offset criterion before judging
+reel-lay residual curvature. Retain the rate cutoffs as planning assumptions until joined-up vessel and joining
+constraints are demonstrated; no forecast-support sea state is assigned. <a href="#source-basis">Analytical basis</a>; <a href="#source-clearance">Evidence register</a>.</p>
+<h3>Not covered</h3>
+<p>Supporting S-lay stress estimates and departure-angle tables, native model generation, dynamic response,
+diffraction, fatigue, cyclic plasticity, ovalisation, abandonment and recovery, station keeping and forecast services
+are outside this analytical workflow report. The supporting S-lay depth-table regression retains an expected failure
+because its angle expression is independent of depth. Restrict that table to non-design inspection until a
+depth-dependent formulation and independent reference cases are provided. <a href="#source-tests">Regression evidence</a>; <a href="#source-clearance">Evidence register</a>.</p>
+</section>
+
+<section id="references"><h2>9. References</h2>
+<p>The source basis is limited to public repository records available with this report. No external published
+benchmark, licensed standard value or field dataset is substituted for the repository examples.</p>
+<h3>9.1 Engineering basis</h3>
+<p>The analytical screening basis, as identified by the knowledge pack dated 2026-10-18, supplies equilibrium,
+geometry, curvature and rate assumptions. The public examples supply all applied numerical inputs and strain
+criteria. The knowledge pack and evidence register distinguish analytical regression from installation qualification.</p>
+<h3>9.2 Source and reproducibility locators</h3>
+<ul class="refs">
+<li id="source-basis"><a href="../../../../src/digitalmodel/pipelay/docs/screening-basis.md">Analytical screening basis</a>:
+equations E1–E7, validation criteria V1–V4 and independently evaluated anchors;
+<a href="../../../../src/digitalmodel/pipelay/docs/agent-pack.md">knowledge pack</a>, revision 1, dated 2026-10-18, sections 1–8.</li>
+<li id="source-jlay"><a href="../../../../examples/workflows/jlay-pipelay/input.yml">Public J-lay input</a>:
+pipe, config and operability mappings; illustrative data, not a published field benchmark.</li>
+<li id="source-reel"><a href="../../../../examples/workflows/reel-lay-pipelay/input.yml">Public reel-lay input</a>:
+pipe, config and operability mappings; illustrative data, not qualified cyclic material data.</li>
+<li id="source-code"><a href="../../../../src/digitalmodel/pipelay/workflow.py">Workflow interface</a>:
+router, run_jlay, run_reel_lay and summary writer;
+<a href="../../../../src/digitalmodel/pipelay/validation.py">input validation</a>;
+<a href="../../../../src/digitalmodel/orcaflex/pipelay_analysis.py">analytical classes</a>:
+PipelayPipeProperties, JLayConfig, LayOperability and calculate_stinger_radius.</li>
+<li id="source-tests"><a href="../../../../tests/pipelay/test_pipelay_workflow.py">Workflow tests</a>;
+<a href="../../../../tests/pipelay/test_pack_gates.py">analytical gate tests</a>;
+<a href="../../../../tests/pipelay/test_audit_regressions.py">boundary and independent-anchor tests</a>;
+<a href="../../../../tests/pipelay/test_review_clearance_index.py">evidence-register tests</a>;
+<a href="../../../../tests/orcaflex/test_pipelay_analysis.py">supporting analytical tests</a>, including the
+strict expected failure in test_departure_angle_recomputed_with_depth;
+<a href="../../../../tests/pipelay/test_module_report.py">report rebuild tests</a>.</li>
+<li id="source-clearance"><a href="../../../registry/pipelay-review-clearance.json">Review and clearance register</a>:
+pack and installation evidence requirements; execution fields are not execution receipts.</li>
+<li><a href="build_report.py">Report generator</a>: with the repository source on the Python import path,
+execute <code>python docs/reports/modules/pipelay/build_report.py --output-dir docs/reports/modules/pipelay --scratch-dir "$TMPDIR/pipelay-report"</code>.
+Dependencies: NumPy, pandas, SciPy, Pydantic and PyYAML; pytest and pytest-asyncio are used for the rebuild tests.</li>
+<li>Presentation exemplar: <a href="../../../api/cfd/turbulent-flat-plate-verification.html">existing CFD prose report</a>;
+canonical stylesheet: <a href="../../../api/_assets/brand.css">brand tokens</a>. Their style declarations are inlined.</li>
+</ul>
+</section>
+
+<section id="appendices"><h2>10. Appendices</h2>
+<p>Input assumptions, interface coverage and presentation checks are retained for engineering review.
+Comments are saved separately so that the calculation and report remain unchanged.</p>
+<h3>10.1 Data register</h3>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">J-lay</th><th scope="col">Reel-lay</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Steel outside diameter</td><td><span data-value="jlay.inputs.pipe.outer_diameter" data-scale="1000">323.8</span></td><td><span data-value="reel.inputs.pipe.outer_diameter" data-scale="1000">273.1</span></td><td>mm</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Steel wall thickness</td><td><span data-value="jlay.inputs.pipe.wall_thickness" data-scale="1000">20.6</span></td><td><span data-value="reel.inputs.pipe.wall_thickness" data-scale="1000">19.1</span></td><td>mm</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Radial coating thickness</td><td><span data-value="jlay.inputs.pipe.coating_thickness" data-scale="1000">60.0</span></td><td><span data-value="reel.inputs.pipe.coating_thickness" data-scale="1000">0.0</span></td><td>mm</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Steel density</td><td><span data-value="jlay.inputs.pipe.steel_density" data-scale="1">7850.0</span></td><td><span data-value="reel.inputs.pipe.steel_density" data-scale="1">7850.0</span></td><td>kg/m³</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Coating density</td><td><span data-value="jlay.inputs.pipe.coating_density" data-scale="1">2400.0</span></td><td><span data-value="reel.inputs.pipe.coating_density" data-scale="1">0.0</span></td><td>kg/m³</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Seawater density</td><td><span data-value="jlay.inputs.pipe.seawater_density" data-scale="1">1025.0</span></td><td><span data-value="reel.inputs.pipe.seawater_density" data-scale="1">1025.0</span></td><td>kg/m³</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Young’s modulus</td><td><span data-value="jlay.inputs.pipe.youngs_modulus" data-scale="1e-09">207.0</span></td><td><span data-value="reel.inputs.pipe.youngs_modulus" data-scale="1e-09">207.0</span></td><td>GPa</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Specified minimum yield strength</td><td><span data-value="jlay.inputs.pipe.smys" data-scale="1e-06">448.0</span></td><td><span data-value="reel.inputs.pipe.smys" data-scale="1e-06">448.0</span></td><td>MPa</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr></tbody></table>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">J-lay</th><th scope="col">Reel-lay</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Laying wave-height cutoff</td><td><span data-value="jlay.inputs.operability.max_hs_lay" data-scale="1.0">3.0</span></td><td><span data-value="reel.inputs.operability.max_hs_lay" data-scale="1.0">4.0</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Joining wave-height cutoff</td><td><span data-value="jlay.inputs.operability.max_hs_welding" data-scale="1.0">2.5</span></td><td><span data-value="reel.inputs.operability.max_hs_welding" data-scale="1.0">3.0</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Abandonment and recovery cutoff</td><td><span data-value="jlay.inputs.operability.max_hs_aband_recovery" data-scale="1.0">4.0</span></td><td><span data-value="reel.inputs.operability.max_hs_aband_recovery" data-scale="1.0">4.5</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Calm-water lay rate</td><td><span data-value="jlay.inputs.operability.lay_rate_calm" data-scale="1.0">3.0</span></td><td><span data-value="reel.inputs.operability.lay_rate_calm" data-scale="1.0">6.0</span></td><td>km/day</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr><tr><td>Rate degradation per unit wave height</td><td><span data-value="jlay.inputs.operability.lay_rate_degradation" data-scale="1.0">0.5</span></td><td><span data-value="reel.inputs.operability.lay_rate_degradation" data-scale="1.0">0.8</span></td><td>km/day/m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-reel">Public reel-lay example</a></td></tr></tbody></table>
+<p>All values in the input tables and example configuration are ASSUMED - to be confirmed.
+The source is the public illustrative example, not a material certificate or an earlier installation.</p>
+<table><thead><tr><th scope="col">Item</th><th scope="col">Treatment</th><th scope="col">Evidence / action</th></tr></thead><tbody><tr><td>Depth, angle and force</td><td>ASSUMED - to be confirmed</td><td>J-lay example configuration; confirm survey and installation geometry.</td></tr><tr><td>Strain limits and curvature removal</td><td>ASSUMED - to be confirmed</td><td>Example configuration; confirm material qualification and governing criteria.</td></tr><tr><td>Calm rate, degradation and sea-state cutoffs</td><td>ASSUMED - to be confirmed</td><td>Example operability mapping; establish response-based operating limits.</td></tr><tr><td>Optional pipe property</td><td>Poisson’s ratio uses the module default; unused in these equations.</td><td>Applied defaults are retained in the embedded calculation record; no additional material inference is made.</td></tr><tr><td>Contents, pressure, vessel response and forecast</td><td>NOT_EVALUATED</td><td>Required inputs and qualified analysis are absent.</td></tr><tr><td>Residual-offset acceptance</td><td>NOT_EVALUATED</td><td>An approved criterion and straightener qualification are required.</td></tr><tr><td>Field and external benchmark evidence</td><td>NOT_EVALUATED</td><td>Repository arithmetic anchors are available; no measured installation comparison is supplied.</td></tr></tbody></table>
+<h3>10.2 Interface coverage</h3>
+<table><thead><tr><th scope="col">Block</th><th scope="col">Inputs / outputs</th><th scope="col">Treatment</th></tr></thead><tbody><tr><td>Method and case</td><td>Lay method; optional descriptive case metadata</td><td>The router selects J-lay or reel-lay and rejects unsupported methods.</td></tr><tr><td>Pipe</td><td>Diameter, wall, steel/coating/water densities, coating, elastic modulus, yield strength and optional Poisson’s ratio</td><td>Explicit geometry and density are required; optional defaults are reported.</td></tr><tr><td>J-lay configuration</td><td>Depth, angle, force and strain limits</td><td>Positive submerged weight and force closure are required.</td></tr><tr><td>Reel configuration</td><td>Core radius, strain limits, removal fraction and assessment span</td><td>Residual response is prescribed by the geometric assumption.</td></tr><tr><td>Operability</td><td>Laying, joining and recovery cutoffs, calm rate and degradation</td><td>Optional; recovery cutoff is reported without a recovery assessment.</td></tr><tr><td>Output destination</td><td>Directory and summary filename</td><td>A relative directory is resolved against configuration location or working directory.</td></tr><tr><td>Returned mapping</td><td>Geometry, strain, stress proxy, selected limits, utilisation, defaults and screening status</td><td>Engineering values are returned alongside a summary-file reference.</td></tr><tr><td>Summary file</td><td>Strict JSON of the calculated results</td><td>Non-finite serialization is rejected before directory creation; the destination is excluded from this report’s embedded record.</td></tr></tbody></table>
+<p>The detailed J-lay result quantities are retained below.</p>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Water depth</td><td><span data-value="jlay.result.water_depth_m" data-scale="1">1500.0</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Top angle from vertical</td><td><span data-value="jlay.result.tower_angle_deg" data-scale="1">3.0</span></td><td>degrees</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Supplied tension for consistency check</td><td><span data-value="jlay.result.supplied_top_tension_kN" data-scale="1">2624.9</span></td><td>kN</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Derived top tension</td><td><span data-value="jlay.result.top_tension_kN" data-scale="1">2624.9</span></td><td>kN</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Empty-pipe submerged weight</td><td><span data-value="jlay.result.pipe_submerged_weight_N_per_m" data-scale="1">1658.3</span></td><td>N/m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Horizontal tension</td><td><span data-value="jlay.result.sagbend.horizontal_tension_kN" data-scale="1">137.4</span></td><td>kN</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Touchdown radius</td><td><span data-value="jlay.result.sagbend.sagbend_radius_m" data-scale="1">82.8</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Touchdown bending strain</td><td><span data-value="jlay.result.sagbend.sagbend_bending_strain" data-scale="1000000.0">1954.4</span></td><td>µm/m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Assumed sagbend strain limit</td><td><span data-value="jlay.result.allowable_sagbend_strain" data-scale="1000000.0">3000.0</span></td><td>µm/m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Sagbend strain utilisation</td><td><span data-value="jlay.result.sagbend_strain_utilisation" data-scale="100">65.1</span></td><td>%</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Elastic bending stress proxy</td><td><span data-value="jlay.result.sagbend.sagbend_bending_stress_MPa" data-scale="1">404.6</span></td><td>MPa</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Touchdown horizontal offset</td><td><span data-value="jlay.result.sagbend.horizontal_offset_m" data-scale="1">301.7</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Suspended length</td><td><span data-value="jlay.result.sagbend.suspended_length_m" data-scale="1">1580.7</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Reference overbend radius</td><td><span data-value="jlay.result.min_stinger_radius_m" data-scale="1">80.9</span></td><td>m</td><td><a href="#source-jlay">Public J-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr></tbody></table>
+<p>The detailed reel-lay result quantities are retained below.</p>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Reel core radius</td><td><span data-value="reel.result.reel_core_radius_m" data-scale="1">8.0</span></td><td>m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Core bending strain</td><td><span data-value="reel.result.reeling_bending_strain" data-scale="1000000.0">17069.0</span></td><td>µm/m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Assumed reeling strain limit</td><td><span data-value="reel.result.allowable_reeling_strain" data-scale="1000000.0">20000.0</span></td><td>µm/m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Reeling strain utilisation</td><td><span data-value="reel.result.reeling_strain_utilisation" data-scale="100">85.3</span></td><td>%</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Assumed curvature removal</td><td><span data-value="reel.result.straightener_efficiency" data-scale="100">95.0</span></td><td>%</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Residual curvature</td><td><span data-value="reel.result.residual_curvature_1_per_m" data-scale="1000">6.2</span></td><td>1/km</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Residual radius</td><td><span data-value="reel.result.residual_radius_m" data-scale="1">160.0</span></td><td>m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Residual bending strain</td><td><span data-value="reel.result.residual_bending_strain" data-scale="1000000.0">853.0</span></td><td>µm/m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Assessment span</td><td><span data-value="reel.result.residual_out_of_straightness_span_m" data-scale="1">12.0</span></td><td>m</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr><tr><td>Small-slope residual span offset</td><td><span data-value="reel.result.residual_out_of_straightness_m" data-scale="1000">112.5</span></td><td>mm</td><td><a href="#source-reel">Public reel-lay example</a>; <a href="#source-basis">Analytical basis</a></td></tr></tbody></table>
+<h3>10.3 Quality pre-flight</h3>
+<p>The displayed quantities are bound to source inputs or module returns. The rebuilt artifact is checked for
+complete worked-example numerical bindings, local reference resolution, heading structure, self-contained resources
+and unchanged deterministic output. Interactive points expose case, component, demand, cutoff and units without
+colour-only interpretation. Browser appearance and file-permission prompts remain untested.</p>
+<p>Supporting regression execution counts and environment limitations are retained with the accompanying change;
+the static evidence register is not overwritten with execution claims. No licensed solver is imported by the report generator.</p>
+<h3>10.4 Engineering changes</h3>
+<details><summary>Changes at this revision</summary><ul id="change-list">
+<li>Static J-lay geometry and strain screening are documented against the public example.</li><li>Reel strain and straightener assumptions are distinguished from material qualification.</li><li>Supplied sea-state cutoffs are distinguished from a qualified installation envelope.</li><li>Input assumptions, evidence gaps and recommendations are recorded for engineering review.</li></ul></details>
+<h3>10.5 Comments</h3>
+<p>Select a report section and enter a comment. Save beside the HTML as <code>report.comments.json</code>.
+Folder access verifies the selected report before writing. Where folder access is unavailable, the save dialog
+or download is used; select the report’s folder. Comments are retained only after saving and loading the separate file.</p>
+<label for="comment-section">Section</label> <select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" style="display:block;width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label for="load-comments">Load saved comments</label><input id="load-comments" type="file" accept="application/json">
+<p id="comment-status" role="status" aria-live="polite">No comments have been saved.</p><ul id="comment-list"></ul>
+</section>
+</main><p id="point-status" role="status" aria-live="polite">Hover or focus a chart point to read its assumed rate and cutoff.</p></div><script id="calculation-record" type="application/json">{"jlay": {"inputs": {"config": {"allowable_overbend_strain": 0.002, "allowable_sagbend_strain": 0.003, "top_tension_kN": 2624.9, "tower_angle_deg": 3.0, "water_depth_m": 1500.0}, "operability": {"lay_rate_calm": 3.0, "lay_rate_degradation": 0.5, "max_hs_aband_recovery": 4.0, "max_hs_lay": 3.0, "max_hs_welding": 2.5}, "pipe": {"coating_density": 2400.0, "coating_thickness": 0.06, "outer_diameter": 0.3238, "seawater_density": 1025.0, "smys": "448.0e6", "steel_density": 7850.0, "wall_thickness": 0.0206, "youngs_modulus": "207.0e9"}}, "result": {"allowable_sagbend_strain": 0.003, "applied_defaults": {"pipe.poissons_ratio": 0.3}, "method": "J-Lay", "min_stinger_radius_m": 80.9, "operability": {"lay_rate_table": [{"hs_m": 0.0, "lay_rate_km_per_day": 3.0}, {"hs_m": 0.5, "lay_rate_km_per_day": 2.75}, {"hs_m": 1.0, "lay_rate_km_per_day": 2.5}, {"hs_m": 1.5, "lay_rate_km_per_day": 2.25}, {"hs_m": 2.0, "lay_rate_km_per_day": 2.0}, {"hs_m": 2.5, "lay_rate_km_per_day": 1.75}, {"hs_m": 3.0, "lay_rate_km_per_day": 0.0}, {"hs_m": 3.5, "lay_rate_km_per_day": 0.0}], "max_hs_abandonment_recovery_m": 4.0, "max_hs_lay_m": 3.0, "max_hs_welding_m": 2.5, "operating_limit_basis": "lay_and_welding", "operating_limit_m": 2.5}, "pipe_outer_diameter_m": 0.3238, "pipe_submerged_weight_N_per_m": 1658.331, "sagbend": {"catenary_parameter_m": 82.83941432787027, "derived_top_tension_kN": 2624.8721725899454, "horizontal_offset_m": 301.7, "horizontal_tension_kN": 137.3751951679883, "sagbend_bending_strain": 0.0019543836869634987, "sagbend_bending_stress_MPa": 404.6, "sagbend_radius_m": 82.83941432787027, "suspended_length_m": 1580.7, "tension_closure_relative_error": 1.0601434365063185e-05, "tension_closure_relative_tolerance": 0.001}, "sagbend_strain_utilisation": 0.6515, "screening_status": "pass", "supplied_top_tension_kN": 2624.9, "top_tension_kN": 2624.8721725899454, "tower_angle_deg": 3.0, "water_depth_m": 1500.0}}, "reel": {"inputs": {"config": {"allowable_overbend_strain": 0.002, "allowable_reeling_strain": 0.02, "reel_core_radius_m": 8.0, "residual_out_of_straightness_span_m": 12.0, "straightener_efficiency": 0.95}, "operability": {"lay_rate_calm": 6.0, "lay_rate_degradation": 0.8, "max_hs_aband_recovery": 4.5, "max_hs_lay": 4.0, "max_hs_welding": 3.0}, "pipe": {"coating_density": 0.0, "coating_thickness": 0.0, "outer_diameter": 0.2731, "seawater_density": 1025.0, "smys": "448.0e6", "steel_density": 7850.0, "wall_thickness": 0.0191, "youngs_modulus": "207.0e9"}}, "result": {"allowable_reeling_strain": 0.02, "applied_defaults": {"pipe.poissons_ratio": 0.3}, "method": "Reel-Lay", "min_stinger_radius_m": 68.3, "operability": {"lay_rate_table": [{"hs_m": 0.0, "lay_rate_km_per_day": 6.0}, {"hs_m": 0.5, "lay_rate_km_per_day": 5.6}, {"hs_m": 1.0, "lay_rate_km_per_day": 5.2}, {"hs_m": 1.5, "lay_rate_km_per_day": 4.8}, {"hs_m": 2.0, "lay_rate_km_per_day": 4.4}, {"hs_m": 2.5, "lay_rate_km_per_day": 4.0}, {"hs_m": 3.0, "lay_rate_km_per_day": 3.6}, {"hs_m": 3.5, "lay_rate_km_per_day": 3.2}, {"hs_m": 4.0, "lay_rate_km_per_day": 2.8}, {"hs_m": 4.5, "lay_rate_km_per_day": 0.0}], "max_hs_abandonment_recovery_m": 4.5, "max_hs_lay_m": 4.0, "max_hs_welding_m": 3.0, "operating_limit_basis": "lay_only", "operating_limit_m": 4.0}, "pipe_outer_diameter_m": 0.2731, "pipe_submerged_weight_N_per_m": 584.482, "reel_core_radius_m": 8.0, "reeling_bending_strain": 0.017069, "reeling_strain_utilisation": 0.8534, "residual_bending_strain": 0.000853, "residual_curvature_1_per_m": 0.00625, "residual_out_of_straightness_m": 0.1125, "residual_out_of_straightness_span_m": 12.0, "residual_radius_m": 160.0, "residual_radius_status": "finite", "screening_status": "pass", "straightener_efficiency": 0.95}}, "source_digests": {"examples/workflows/jlay-pipelay/input.yml": "bc7eb4b5e1dca8d02a4703ea9113b2ad7ab1996402fc7f020bc0820e625bdb96", "examples/workflows/reel-lay-pipelay/input.yml": "d47d7f539dad5fc6c827b8d993b83428feb0b8b365beb07bf80b23ba7c27f5ce", "src/digitalmodel/orcaflex/pipelay_analysis.py": "d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3", "src/digitalmodel/pipelay/docs/screening-basis.md": "4bd21f223f7fef080814f6ba228d2b5cc60b80e245d42213a9a7cb5f57b76189", "src/digitalmodel/pipelay/validation.py": "8bbd23674594345080b25d0eba7ffbca3055be796010466788638992f34dbfd9", "src/digitalmodel/pipelay/workflow.py": "99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119"}}</script><script id="engineering-changes" type="application/json">{"revision": "1", "date": "2026-10-21", "changes": ["Static J-lay geometry and strain screening are documented against the public example.", "Reel strain and straightener assumptions are distinguished from material qualification.", "Supplied sea-state cutoffs are distinguished from a qualified installation envelope.", "Input assumptions, evidence gaps and recommendations are recorded for engineering review."]}</script><script>
+(() => {
+  'use strict';
+  const config = JSON.parse(document.getElementById('review-config').textContent);
+  const sections = [...document.querySelectorAll('main > section')];
+  const sectionIds = new Set(sections.map(section => section.id));
+  const select = document.getElementById('comment-section');
+  const status = document.getElementById('comment-status');
+  let comments = [];
+  const message = text => { status.textContent = text; };
+  const digest = async text => [...new Uint8Array(await crypto.subtle.digest(
+    'SHA-256', new TextEncoder().encode(text)))].map(n => n.toString(16).padStart(2, '0')).join('');
+  const stripConfig = text => text.replace(/<script id="review-config" type="application\/json">[\s\S]*?<\/script>/, '');
+  for (const section of sections) {
+    const option = document.createElement('option');
+    option.value = section.id;
+    option.textContent = section.querySelector('h2').textContent;
+    select.appendChild(option);
+  }
+  function display() {
+    const list = document.getElementById('comment-list');
+    list.replaceChildren();
+    for (const comment of comments) {
+      const item = document.createElement('li');
+      item.textContent = `${comment.section}: ${comment.text}`;
+      list.appendChild(item);
+    }
+  }
+  function validate(incoming) {
+    if (!incoming || incoming.revision !== config.revision ||
+        incoming.report_digest !== config.report_digest || !Array.isArray(incoming.comments) ||
+        incoming.comments.some(c => !c || !sectionIds.has(c.section) ||
+          typeof c.text !== 'string' || !c.text.trim()))
+      throw new Error('Comments do not match this report and revision.');
+  }
+  function merge(incoming) {
+    validate(incoming);
+    comments = [...new Map([...comments, ...incoming.comments].map(c => [JSON.stringify(c), c])).values()];
+    display();
+  }
+  document.getElementById('add-comment').onclick = () => {
+    const input = document.getElementById('comment-text');
+    if (!input.value.trim()) return message('Enter a comment before adding.');
+    comments.push({section: select.value, text: input.value.trim()});
+    input.value = '';
+    display();
+    message('Comment added locally. Save the separate file to retain it.');
+  };
+  document.getElementById('load-comments').onchange = async event => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.size > 5000000) throw new Error('Comments file exceeds the supported size.');
+      const incoming = JSON.parse(await file.text());
+      merge(incoming);
+      message('Matching comments loaded. Save to retain any combined comments.');
+    } catch (error) { message(error.message); }
+    event.target.value = '';
+  };
+  document.getElementById('save-comments').onclick = async () => {
+    try {
+      let handle;
+      if (typeof window.showDirectoryPicker === 'function') {
+        const folder = await window.showDirectoryPicker({mode: 'readwrite'});
+        const report = await folder.getFileHandle('report.html');
+        const reportText = await (await report.getFile()).text();
+        if (await digest(stripConfig(reportText)) !== config.report_digest)
+          throw new Error('Selected folder contains a different report.');
+        handle = await folder.getFileHandle('report.comments.json', {create: true});
+      } else if (typeof window.showSaveFilePicker === 'function') {
+        handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+          types: [{description: 'Report comments', accept: {'application/json': ['.json']}}]});
+      } else {
+        const data = JSON.stringify({...config, comments}, null, 2) + '\n';
+        const url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+        const link = document.createElement('a');
+        link.href = url; link.download = 'report.comments.json'; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return message('Comments download requested. Retain the file beside the report.');
+      }
+      const previous = await handle.getFile();
+      if (previous.size > 5000000) throw new Error('Comments file exceeds the supported size.');
+      const previousText = await previous.text();
+      if (previousText.trim()) merge(JSON.parse(previousText));
+      const data = JSON.stringify({...config, comments}, null, 2) + '\n';
+      const writable = await handle.createWritable();
+      await writable.write(data); await writable.close();
+      if (await (await handle.getFile()).text() !== data) throw new Error('Saved comments differ on readback.');
+      message('Comments saved and read back.');
+    } catch (error) { message(error.message); }
+  };
+  const record = JSON.parse(document.getElementById('calculation-record').textContent);
+  const pointStatus = document.getElementById('point-status');
+  for (const point of document.querySelectorAll('[data-point]')) {
+    const show = () => {
+      const [name, height] = point.dataset.point.split(':');
+      const op = record[name].result.operability;
+      const row = op.lay_rate_table.find(r => r.hs_m === Number(height));
+      pointStatus.textContent = `${name === 'jlay' ? 'J-lay joining and laying' : 'Reel-lay laying'}; ` +
+        `significant wave height ${row.hs_m.toFixed(1)} m; rate ${row.lay_rate_km_per_day.toFixed(1)} km/day; ` +
+        `supplied wave-height cutoff ${op.operating_limit_m.toFixed(1)} m.`;
+    };
+    point.addEventListener('focus', show);
+    point.addEventListener('pointerenter', show);
+  }
+})();
+</script><script id="review-config" type="application/json">{"revision": "1", "report_digest": "695d1c1be060c420f79b45ed950015e42714c813593a530272a645a051de6885"}</script></body></html>
