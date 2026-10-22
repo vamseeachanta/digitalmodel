@@ -3,7 +3,7 @@
 
 """Tests for digitalmodel.orcaflex.mooring_design_fowt (#576).
 
-FOWT watch-circle envelope vs dynamic-cable curvature (DNV-RP-0360 MBR).
+FOWT watch-circle geometry with an RP-0360 MBR input citation.
 
 Hand-verified governing geometry (compliant case, see issue-576.md):
     suspended_length L_s = 250 m, hang-off elevation h = 80 m,
@@ -39,8 +39,8 @@ def citation_tree(tmp_path, monkeypatch):
     )
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
-        encoding="utf-8",
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016-03 amended 2021-10\n---\n",
+        encoding="utf-8", newline="\n",
     )
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
 

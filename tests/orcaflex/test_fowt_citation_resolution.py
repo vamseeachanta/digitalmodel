@@ -33,17 +33,20 @@ def test_emitted_citation_resolves(tmp_path: Path, layout: str) -> None:
     page = tmp_path / layout / WIKI_PATH
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
-        encoding="utf-8",
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016-03 amended 2021-10\n---\n",
+        encoding="utf-8", newline="\n",
     )
     result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
     assert len(result.citations) == 1
     citation = result.citations[0]
     assert citation.wiki_path == WIKI_PATH
-    assert citation.revision == "2016"
-    assert citation.section == "Dynamic cable minimum bend radius (MBR)"
+    assert citation.revision == "2016-03 amended 2021-10"
+    assert citation.section == "Minimum bend radius (MBR)"
     assert citation.source_sibling == "generic"
-    assert citation.note == "MBR limit is a cable-specific design input supplied by caller"
+    assert citation.note == (
+        "MBR limit is a cable-specific design input supplied by caller; "
+        "RP-0360 concerns static service in shallow water"
+    )
     validate_citation(citation, repo_root=tmp_path)
 
 
@@ -88,8 +91,8 @@ def test_removed_page_fails_after_success(tmp_path: Path, layout: str) -> None:
     page = tmp_path / layout / WIKI_PATH
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
-        encoding="utf-8",
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016-03 amended 2021-10\n---\n",
+        encoding="utf-8", newline="\n",
     )
     assert check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path).citations
     page.unlink()
@@ -105,7 +108,7 @@ def test_invalid_wiki_base_fails_at_call_site(tmp_path: Path) -> None:
     assert caught.value.reason.startswith("override_invalid:")
 
 
-@pytest.mark.parametrize("revision", ["2024-03", None])
+@pytest.mark.parametrize("revision", ["2016", "2024-03", None])
 def test_invalid_frontmatter_fails_at_calc_time(
     tmp_path: Path, revision: str | None
 ) -> None:

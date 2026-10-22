@@ -17,7 +17,9 @@ fowt_mooring:
     suspended_length: 320.0
     hang_off_elevation: 90.0
     nominal_horizontal_span: 260.0
-    # DNV-RP-0360 design-factored cable minimum bend radius (cable-specific input).
+    # Cable-specific minimum bend radius input; DNV-RP-0360 design-factor reference
+    # concerns static service in shallow water (2016-03 amended 2021-10).
+    # DNV-ST-0359 (2025-12): subsea power cable systems for offshore wind power plants.
     mbr_limit_m: 4.5
     mooring_type: hybrid   # catenary | taut | hybrid (lazy-wave host)
     floater_type: semi     # spar | semi | tlp

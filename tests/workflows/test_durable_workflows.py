@@ -75,8 +75,8 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
         page.parent.mkdir(parents=True)
         page.write_text(
-            "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
-            encoding="utf-8",
+            "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016-03 amended 2021-10\n---\n",
+            encoding="utf-8", newline="\n",
         )
         cfg = engine(inputfile=str(input_path))
         citations = cfg["fowt_mooring"]["result"]["citations"]
