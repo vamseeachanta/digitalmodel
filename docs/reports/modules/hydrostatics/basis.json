@@ -1,0 +1,31 @@
+{
+  "source": {
+    "title": "OpenStax, University Physics Volume 1",
+    "edition": "2016 publication, online edition accessed 2026-10-22",
+    "section": "14.1 Fluids, Density, and Pressure",
+    "example": "14.1 What Force Must a Dam Withstand? Pressure part only",
+    "equations": "14.4 and 14.5",
+    "density_table": "14.2",
+    "url": "https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure",
+    "accessed_utc": "2026-10-22T03:42:28Z",
+    "http_status": 200,
+    "retrieved_html_sha256": "7c3f616e19c34b8f37767cc96f4b4742a6607cdd179f3250451f2a9ed9039e94"
+  },
+  "inputs": {
+    "density_kg_m3": 1000.0,
+    "gravity_m_s2": 9.8,
+    "water_depth_m": 80.0,
+    "evaluation_depth_m": 40.0,
+    "surface_gauge_pa": 0.0
+  },
+  "reference": {
+    "average_gauge_pressure_pa": 392000.0
+  },
+  "basis_notes": {
+    "inputs": "Density, gravity, water depth and evaluation depth are stated in the cited example. The zero surface gauge datum follows the pressure-difference definition; no atmospheric pressure is assigned.",
+    "reference": "The published pressure result is an independent comparison value, not a replacement for the module calculation.",
+    "allowable_pressure": "NOT_EVALUATED: no structural allowable pressure is provided.",
+    "surface_absolute_pressure": "NOT_EVALUATED: no absolute surface-pressure input is provided.",
+    "sampling": "The pressure diagram uses evenly spaced depths across the stated water depth; sampling is a presentation choice, not an engineering limit."
+  }
+}

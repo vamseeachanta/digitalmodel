@@ -1,0 +1,15 @@
+{
+  "report": "Fluid-column hydrostatics analysis",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "changes": [
+        "Static water-column pressure is calculated from a published example.",
+        "Gauge and absolute pressure are distinguished; structural acceptance is not evaluated.",
+        "The existing calculation checks and limits of application are documented."
+      ],
+      "reason": "Establish a cited calculation basis and limits for engineering use."
+    }
+  ]
+}
