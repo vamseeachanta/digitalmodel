@@ -5,6 +5,7 @@
 import importlib.util
 import json
 import re
+from decimal import Decimal
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -44,6 +45,85 @@ def test_hand_inventory_anchor(data):
 def test_hand_injection_anchor(data):
     # Injection = 3000 L/min * (3/100) = 90 L/min.
     assert data["metrics"]["injection"] == pytest.approx(90.0, abs=1e-9)
+
+
+def test_hand_hydraulic_and_equipment_anchors(data):
+    # q_header = 3000/60000 = 0.05 m3/s; q_branch = 1500/60000 = 0.025 m3/s.
+    # hf_header = 10.67*120*0.05**1.852/(120**1.852*0.2**4.87) = 1.7831 m.
+    # hf_forward = 10.67*60*0.025**1.852/(120**1.852*0.15**4.87) = 1.0025 m.
+    # p/(rho*g) = 8*100000/(1000*9.80665) = 81.5773 m; static lift = 20 m.
+    # H = 1.7831 + 1.0025 + 20 + 81.5773 = 104.3629 m.
+    # Margin = 130 - 104.3629 = 25.6371 m (rounding tolerance 0.0001 m).
+    assert data["metrics"]["head"] == pytest.approx(104.3629, abs=1e-4)
+    assert data["metrics"]["head_margin"] == pytest.approx(25.6371, abs=1e-4)
+    # Utilization = 3000/4000*100 = 75%; flow margin = 3500-3000 = 500 L/min.
+    assert data["metrics"]["utilization"] == pytest.approx(75.0, abs=1e-9)
+    assert data["metrics"]["flow_margin"] == pytest.approx(500.0, abs=1e-9)
+
+
+def test_embedded_record_has_only_rounded_numbers(data):
+    text = re.search(r'<script id="calculation-data" type="application/json">(.*?)</script>',
+                     builder().render(data), re.S).group(1)
+    payload = json.loads(text, parse_float=Decimal)
+    assert "tables" not in payload
+
+    def check(value):
+        if isinstance(value, Decimal):
+            assert value.as_tuple().exponent >= -4, value
+        elif isinstance(value, dict):
+            for item in value.values():
+                check(item)
+        elif isinstance(value, list):
+            for item in value:
+                check(item)
+        elif isinstance(value, str):
+            assert not re.fullmatch(r"-?\d+\.\d{5,}", value), value
+
+    check(payload)
+
+
+def test_monitor_capacity_basis_and_recommendation(data):
+    text = builder().render(data)
+    basis = re.search(r'<section id="basis">(.*?)</section>', text, re.S).group(1)
+    advice = re.search(r'<section id="recommendations">(.*?)</section>', text, re.S).group(1)
+    # FSS 2.2.2.1: 50% * max(1800, 3000) = 1500 L/min per monitor.
+    # This exceeds the separate 1250 L/min floor; both monitors meet it at equality.
+    assert "2.2.2.1" in basis and "50 %" in basis and "1500 L/min" in basis
+    assert "2.2.2.1" in advice and "2.2.2.2" in advice
+    assert "1250 L/min" in advice and "1500 L/min" in advice
+    assert [item["flow_lpm"] for item in data["inputs"]["hydraulics"]["terminals"]] == [1500, 1500]
+
+
+@pytest.mark.parametrize("path", ["proportioner_result.ok", "hydraulics_result.pump_head_ok",
+                                  "hydraulics_result.pump_flow_ok"])
+@pytest.mark.parametrize("ok", [True, False])
+def test_dispositions_follow_returned_flags(data, path, ok):
+    section, field = path.split(".")
+    data["result"][section][field] = ok
+    expected = "passes" if ok else "fails"
+    assert f'<span data-check="result.{path}">{expected}</span>' in builder().render(data)
+
+
+def test_governing_labels_follow_returned_fields(data):
+    data["result"]["demand"]["governing_area"] = "cargo deck area basis"
+    data["result"]["hydraulics_result"]["governing_terminal"] = "MON_AFT"
+    document = Document()
+    document.feed(builder().render(data))
+    visible = " ".join(document.visible)
+    assert "cargo deck area basis" in visible and "Aft monitor" in visible
+    assert "largest tank sectional area basis" not in visible.split("Revision history")[0]
+    assert "Forward terminal governs" not in visible
+    assert "forward terminal governs" not in visible
+
+
+def test_ci_gate_runs_report_tests():
+    import shlex
+
+    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))
+    gate = gates["gates"]["tests-infrastructure-other"]
+    assert gate["enabled"] is True
+    assert "tests/reporting/" in shlex.split(gate["command"])
+    assert "tests/report_pack/" in shlex.split(gate["command"])
 
 
 def test_public_example_consistency(data, tmp_path):
@@ -129,7 +209,7 @@ def test_rebuild_displayed_digits_and_changes(tmp_path):
     committed = (REPORT / "report.html").read_text(encoding="utf-8")
     assert html == committed, f"Report differs at displayed precision; rebuild: {COMMAND}"
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == "0"
+    assert changes["revision"] == "1"
     assert changes["changes"]
     assert "\r" not in html
     assert '<body class="hs-doc">' in html
@@ -180,6 +260,8 @@ def test_source_access_records(data):
     checks = json.loads((REPORT / "checks.json").read_text(encoding="utf-8"))
     tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
     count = sum(isinstance(item, ast.FunctionDef) and item.name.startswith("test_") for item in tree.body)
+    # The three returned flags are exercised in both states: six cases replace one function.
+    count += 5
     assert checks["test_results"][0]["passed"] == count, f"Update checks.json and rebuild: {COMMAND}"
     existing = checks["test_results"][1]
     assert existing["passed"] + existing["unavailable"] == sum(item["functions"] for item in data["inventory"]), f"Refresh the evidence and rebuild: {COMMAND}"

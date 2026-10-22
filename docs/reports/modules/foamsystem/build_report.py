@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
-import csv
 import html
 import json
 import re
@@ -56,10 +55,6 @@ def calculate(scratch: Path) -> dict:
     del inputs["output_dir"]
     cfg["foam_system_sizing"]["output_dir"] = str(scratch / "example")
     out = router(cfg)["foam_system_sizing"]
-    tables = {}
-    for name, key in (("runs", "hydraulic_runs_csv"), ("terminals", "hydraulic_terminals_csv")):
-        with Path(out[key]).open(encoding="utf-8", newline="") as stream:
-            tables[name] = list(csv.DictReader(stream))
     # This is a sensitivity range, not an operating envelope. Every point is
     # obtained by calling the same workflow with scaled terminal flow inputs.
     curve = []
@@ -82,7 +77,7 @@ def calculate(scratch: Path) -> dict:
     # Exclude filesystem locations from the calculation record embedded in HTML.
     return {"inputs": inputs,
             "result": {key: out[key] for key in ("demand", "concentrate_result", "proportioner_result", "hydraulics_result")},
-            "metrics": metrics(out), "tables": tables, "curve": curve,
+            "metrics": metrics(out), "curve": curve,
             "inventory": inventory}
 
 
@@ -128,11 +123,19 @@ def render(data: dict) -> str:
     def ref(number: int) -> str:
         return f'<a href="#ref-{number}">[{number}]</a>'
 
+    def check(path: str) -> str:
+        outcome = "passes" if lookup(data, path) else "fails"
+        return f'<span data-check="{path}">{outcome}</span>'
+
     def table(headers, rows, caption, identifier):
         head = "".join(f"<th>{cell}</th>" for cell in headers)
         body = "".join("<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>" for row in rows)
         return f'<table id="{identifier}"><caption>{caption}</caption><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
 
+    governing_terminal = html.escape(NODE_LABELS[data["result"]["hydraulics_result"]["governing_terminal"]])
+    governing_area_index = next(i for i, area in enumerate(data["result"]["demand"]["per_area"])
+                               if area["name"] == data["result"]["demand"]["governing_area"])
+    governing_area_path = f"result.demand.per_area.{governing_area_index}"
     area_rows = []
     for i, area in enumerate(data["result"]["demand"]["per_area"]):
         p = f"result.demand.per_area.{i}"
@@ -162,7 +165,7 @@ def render(data: dict) -> str:
                    ["Concentrate inventory", v("metrics.concentrate"), "L", "Selected duration and concentration", "Table A.1; Table A.5"],
                    ["Concentrate injection", v("metrics.injection"), "L/min", "Selected concentration", "Table A.5"],
                    ["Proportioner utilization", v("metrics.utilization"), "%", "Assumed maximum solution flow", "Table A.5"],
-                   ["Required pump head", v("metrics.head"), "m", "Forward terminal governs", "Tables A.2–A.3"],
+                   ["Required pump head", v("metrics.head"), "m", governing_terminal + " governs", "Tables A.2–A.3"],
                    ["Pump head margin", v("metrics.head_margin"), "m", "Assumed pump rating", "Table A.5"],
                    ["Pump flow margin", v("metrics.flow_margin"), "L/min", "Assumed pump rating", "Table A.5"]]
     result_table = table(["Quantity", "Value", "Unit", "Basis", "Source"], result_rows,
@@ -197,7 +200,7 @@ def render(data: dict) -> str:
 Analysis is performed to determine solution demand, concentrate inventory, proportioner duty and pipe-network head demand;
 key results are summarized below. The public synthetic example is evaluated as a screening calculation {ref(5)}.</p>
 <ul><li>The calculation is used to identify the governing supply basis.
-<ul><li>The largest tank sectional area governs at {v('metrics.design_flow')} L/min, with
+<ul><li>The returned governing area is {v('result.demand.governing_area')} at {v('metrics.design_flow')} L/min, with
 {v('metrics.concentrate')} L of concentrate at the example duration and concentration {ref(1)} {ref(5)}.</li></ul></li>
 <li>The example is used to identify equipment data required for design review.
 <ul><li>The returned head margin is {v('metrics.head_margin')} m against the assumed
@@ -205,7 +208,8 @@ key results are summarized below. The public synthetic example is evaluated as a
 Pressure losses through the proportioner and discharge-device performance are absent {ref(5)} {ref(6)}.</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
-<tbody><tr><td>0</td><td>2026-10-22</td><td>The public synthetic sizing example and evidence limits are documented to support input review.</td></tr></tbody></table>
+<tbody><tr><td>0</td><td>2026-10-22</td><td>The public synthetic sizing example and evidence limits are documented to support input review.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Independent hydraulic anchors, rounded calculation records, returned screening outcomes and both monitor capacity criteria are documented to address review findings.</td></tr></tbody></table>
 </section>
 <nav aria-label="Contents"><p><a href="#introduction">Introduction</a> · <a href="#basis">Design data</a> ·
 <a href="#method">Methodology</a> · <a href="#results">Results</a> · <a href="#validation">Validation</a> ·
@@ -252,9 +256,12 @@ The mixing-device loss is omitted. Monitor throw and coverage geometry are NOT_E
 Code resolution, adopted in 2000, sets these supply bases and an additional monitor minimum in Chapter 14, paragraph 2.2.1.1;
 the inert-gas-fitted duration is addressed in paragraph 2.2.1.2 {ref(1)}. The repository library labels its basis as the 2015 consolidated
 edition and uses different clause numbering. That consolidated edition was not opened; equivalence to later amendments is NOT_EVALUATED {ref(5)} {ref(6)}.</p>
-<p>The example assumes inert-gas-fitted service. The monitor minimum of 1250 L/min is stated in the opened resolution,
-Chapter 14, paragraphs 2.2.1.1.3 and 2.2.2.2 {ref(1)}. This minimum is not enforced by the area-rate multiplication.
-Each example monitor is assigned {v('inputs.hydraulics.terminals.0.flow_lpm')} L/min; monitor coverage and the required fire-main
+<p>The example assumes inert-gas-fitted service. Each monitor must supply at least 50 % of the greater rate required by
+Chapter 14, paragraphs 2.2.1.1.1 and 2.2.1.1.2, under paragraph 2.2.2.1: 0.5 × max(1800, 3000) = 1500 L/min here {ref(1)} {ref(5)}.
+This governs over the separate 1250 L/min floor in paragraphs 2.2.1.1.3 and 2.2.2.2 {ref(1)}.
+Neither monitor check is enforced by the area-rate multiplication. The forward and aft example monitors are assigned
+{v('inputs.hydraulics.terminals.0.flow_lpm')} and {v('inputs.hydraulics.terminals.1.flow_lpm')} L/min respectively,
+meeting the governing per-monitor rate at equality. Monitor coverage and the required fire-main
 simultaneity are outside this calculation. A nonnegative pump margin and a proportioner point inside the assumed envelope are screening
 criteria selected from the example, with actual equipment suitability NOT_EVALUATED {ref(5)} {ref(6)}.</p>
 </section>
@@ -290,15 +297,17 @@ The implementation uses standard gravity 9.80665 m/s² and 100000 Pa per bar; th
 2008 edition, Appendix B.8 and Section 5.2, Table 8 {ref(3)}. Mixing-device loss, velocity-head changes and nozzle curves are omitted.</p>
 </section>
 <section id="results"><h2>5 Detailed Results</h2>
-<p>The public workflow is called on the documented example to obtain the values below. The largest tank sectional area governs
-solution supply, and the forward terminal governs pump head {ref(5)}.</p>
-<p>The displayed inputs give {v('result.demand.per_area.1.area_m2')} m² ×
-{v('result.demand.per_area.1.application_rate_lpm_per_m2')} L/min/m² = {v('metrics.design_flow')} L/min.
-At {v('result.demand.per_area.1.discharge_time_min')} min and
+<p>The public workflow is called on the documented example to obtain the values below. The returned governing area is
+{v('result.demand.governing_area')} for solution supply, and {governing_terminal} governs pump head {ref(5)}.</p>
+<p>The displayed inputs give {v(governing_area_path + '.area_m2')} m² ×
+{v(governing_area_path + '.application_rate_lpm_per_m2')} L/min/m² = {v('metrics.design_flow')} L/min.
+At {v(governing_area_path + '.discharge_time_min')} min and
 {v('inputs.concentrate.concentration_percent')} % concentration, the returned inventory is {v('metrics.concentrate')} L.
 The returned injection is {v('metrics.injection')} L/min. Input precision is preserved for this arithmetic.</p>
 {result_table}
-<p>The proportioner envelope check passes for the assumed ratings. Pump flow and head checks also pass for the assumed ratings.
+<p>The proportioner envelope check {check('result.proportioner_result.ok')} for the assumed ratings.
+The pump flow check {check('result.hydraulics_result.pump_flow_ok')} and the pump head check
+{check('result.hydraulics_result.pump_head_ok')} against the assumed ratings.
 These results do not establish installed performance: no pump curve, mixing-device loss or discharge-device test is supplied.</p>
 <figure id="head-chart"><svg id="chart" viewBox="0 0 820 340" role="img" aria-label="Required pump head against prescribed total flow with assumed pump-head limit" style="width:100%"></svg>
 <label for="case-slider">Select sensitivity case</label> <input id="case-slider" type="range" min="0" max="20" value="10" aria-label="Sensitivity case">
@@ -318,7 +327,8 @@ Darcy–Weisbach agreement with Hagen–Poiseuille, a turbulent cross-method com
 The criteria tests cover citation fields, explicit source-review flags, selection and collisions. The report-pack tests compare
 checked-in sizing tables with fresh calculation output and exercise rendering. The inventory in Table A.4 counts test functions,
 without implying execution or engineering acceptance.</p>
-<p>The accompanying report tests assert hand-worked supply, inventory and injection values, compare every tagged worked-example
+<p>The accompanying report tests assert hand-worked supply, inventory, injection, hydraulic head, head margin, utilization and flow margin,
+exercise both outcomes of each returned screening flag and changes in governing labels, and compare every tagged worked-example
 value with the workflow return, recalculate chart points and rebuild the committed page at displayed precision. These latter checks
 are consistency checks. The hand arithmetic does not validate the regulatory inputs. Execution results and checks not performed are
 listed in the appendix; no field-validation record is held with this report.</p>
@@ -326,7 +336,7 @@ listed in the appendix; no field-validation record is held with this report.</p>
 <section id="limits"><h2>7 Limits of Use and Not Covered</h2>
 <p>Use is limited to preliminary low-expansion sizing with cited, applicable criteria and a connected tree network. Installed-system
 acceptance is NOT_EVALUATED because equipment, coverage and governing-edition evidence are absent.</p>
-<p>Area-rate multiplication does not enforce the fixed monitor minimum. Optional pump and proportioner checks use input ratings,
+<p>Area-rate multiplication does not enforce either the supply-based per-monitor requirement or the fixed monitor floor. Optional pump and proportioner checks use input ratings,
 and hydraulic terminal flow is not reconciled automatically with the demand calculation. Concentrate hose allowances rely on the caller
 passing the same hoses and durations used in demand. Nonfinite input rejection is not established across all input fields {ref(6)}.</p>
 <p>Not covered: loop balancing; medium- or high-expansion foam; fuel compatibility and environmental approval; foam quality and
@@ -341,8 +351,9 @@ interpolation. This report supplies no accuracy claim for that transition region
 specific evidence gaps exposed by this calculation.</p>
 <ul><li>Obtain the applicable governing edition, fuel basis, coverage drawing and inert-gas status; review each supply basis and duration
 against the opened resolution and applicable amendments before issuing a design {ref(1)}.</li>
-<li>Enforce the monitor minimum as a separate input check before accepting any area-based result; review monitor coverage and fire-main
-simultaneity separately. The opened Chapter 14 monitor and installation requirements provide the basis {ref(1)}.</li>
+<li>Check each monitor against both Chapter 14, paragraph 2.2.2.1 (50 % of the greater supply basis, 1500 L/min here) and paragraph
+2.2.2.2 (1250 L/min floor) before accepting any area-based result. The greater requirement governs; review monitor coverage and fire-main
+simultaneity separately {ref(1)} {ref(5)}.</li>
 <li>Replace assumed equipment ratings with supplier pressure-flow curves and include mixing-device, suction and fitting losses.
 Reassess head margin whenever the selected flow, geometry or fluid properties change; the energy balance and empirical water-friction
 limitations provide the trigger {ref(2)} {ref(4)}.</li>
