@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrcaWave utilities: spectral response assessment</title>
+<style>
+
+:root{
+  
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  
+  --brand:#0b3d91; --accent:#0f8a7e;
+  
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Hydrodynamics · Module assessment</p>
+<h1>OrcaWave utilities: spectral response assessment</h1>
+<p>Draft for client review</p></header>
+<h2>1. Executive Summary</h2>
+<p>The OrcaWave utilities module is a collection of frequency-domain hydrodynamic calculation and reporting functions. Analysis is performed to determine the numerical response of a documented synthetic example; key results are summarized below.</p>
+<ul><li>The spectral calculation can be reproduced without a diffraction solution.
+<ul><li>The response variance is <span data-value="m0">0.3556</span> m², compared with <span data-value="reference_variance">0.36</span> m² for the full-frequency analytic reference. The difference is <span data-value="variance_difference_percent">−1.21</span>% on the supplied finite-frequency grid.</li></ul></li>
+<li>An operating decision is not established by this example.
+<ul><li>The response operator is synthetic. An operating limit is not supplied, and physical performance is not evaluated.</li></ul></li></ul>
+<p>Revision A — Initial assessment: the spectral calculation, its analytic comparator and its qualification limits are presented.</p>
+<details><summary>Engineering changes</summary><ul id="changes"></ul></details>
+<h2>2. Introduction</h2>
+<p>The purpose, scope and status of the assessment are presented in this section. The main workflow is the conversion of a wave spectrum and a response-amplitude operator into a response spectrum and short-term motion statistics.</p>
+<p>The response-amplitude operator relates motion amplitude to incident wave amplitude at each frequency. The example is reproduced from a public software test, not from a measured or solved hull. The commercial diffraction application and the Python utilities are distinct: no diffraction solution is required by the calculation presented here.</p>
+<h3>2.1 Inputs and outputs</h3>
+<p>The calculation accepts an increasing angular-frequency array, aligned nonnegative wave spectral densities and finite response amplitudes. Translational amplitudes are expressed in metres per metre. The outputs are the response spectrum, spectral moments, root-mean-square motion, significant single and double amplitudes, zero-crossing period and narrow-band maximum estimates. Rotational response requires a declared angular unit; it is not included in this example.</p>
+<h3>2.2 Not covered</h3>
+<p>The module also contains response-table interpolation and comparison, dimensional hydrodynamic coefficient exchange, panel geometry checks, drift forces, long-term statistics, motion-sickness estimates, synthetic hull response data and result-file reporting. Their interfaces are listed in the reference records. They are not qualified by this spectral example. Native result loading, diffraction, mesh convergence and body interaction are not evaluated.</p>
+<h2>3. Design Data</h2>
+<p>The example data are taken from the public significant-response test identified in Section 9.2. The response operator is constant across frequency and represents an idealised translational response, not a particular hull.</p>
+<p>The significant incident wave height is <span data-value="hs">3</span> m and the peak period is <span data-value="tp">10</span> s. The response-amplitude operator is <span data-value="rao">0.8</span> m/m. The angular-frequency grid contains <span data-value="points">200</span> points between <span data-value="omega_min">0.1</span> and <span data-value="omega_max">2</span> rad/s. The duration is <span data-value="duration">1.08e+04</span> s, taken from the documented statistics-function default.</p>
+<p>ASSUMED - to be confirmed: the constant operator is interpreted as vertical translation solely to explain the units. No geometry, displacement, water depth, heading, mooring restraint or damping has been supplied for a physical body.</p>
+<figure><svg viewBox="0 0 760 240" role="img" aria-label="Idealised vertical response schematic; no physical geometry or mesh supplied" style="width:100%">
+<path d="M20 125 Q45 95 70 125 T120 125 T170 125 T220 125 T270 125 M490 125 Q515 95 540 125 T590 125 T640 125 T690 125 T740 125" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<path d="M280 95 L470 95 L445 158 L305 158 Z" fill="var(--panel-2)" stroke="var(--ink)" stroke-width="2"/>
+<path d="M375 40 V200 M367 50 L375 40 L383 50 M367 190 L375 200 L383 190" fill="none" stroke="var(--ink)"/>
+<text x="25" y="65">Incident surface elevation η</text><text x="400" y="48">Vertical response z</text>
+<text x="20" y="225">Conceptual body only · boundary conditions, dimensions and panel mesh not supplied</text>
+</svg><figcaption>Figure A. Idealised wave-to-motion relation; geometry is not used in the calculation.</figcaption></figure>
+<h2>4. Analysis Methodology</h2>
+<p>The implemented spectral relations are evaluated on the supplied angular-frequency grid. The equations below describe the code identified in Section 9.2; they do not assert conformity with a design standard.</p>
+<h3>4.1 Spectrum and response</h3>
+<div class="eq">ωₚ = 2π/Tₚ<br>Sη(ω) = (5/16)Hₛ²ωₚ⁴ω⁻⁵ exp[−(5/4)(ωₚ/ω)⁴]<br>Sz(ω) = |R(ω)|² Sη(ω)<br>mₙ = ∫ ωⁿ Sz(ω) dω</div>
+<p>Here ω is angular frequency in rad/s, ωₚ is peak angular frequency, Tₚ is peak period in seconds, Hₛ is significant wave height in metres, R is the response-amplitude operator, and Sη and Sz are incident-wave and response spectral densities in m²·s/rad. The moment order is n. The coefficients are those of the implemented modified Pierson–Moskowitz expression, recorded in the spectrum function. The integral is evaluated by the trapezoidal rule over the supplied range.</p>
+<h3>4.2 Statistics and comparison basis</h3>
+<div class="eq">σ = √m₀; Aₛ = 2σ; Hₛ,z = 4σ<br>Tz = 2π√(m₀/m₂); ε = √[1 − m₂²/(m₀m₄)]<br>N = D/Tz; xmode ≈ σ√(2 ln N)<br>E[xmax] ≈ xmode + γE σ²/xmode</div>
+<p>The symbols σ, Aₛ and Hₛ,z denote root-mean-square motion, significant single amplitude and significant double amplitude, all in metres. Tz is zero-crossing period, ε is spectral bandwidth, D is duration, N is the cycle count and γE is the Euler–Mascheroni constant. The maximum expressions are narrow-band Rayleigh asymptotes, as derived in the equation record. They require more than one cycle and are not broadband certification criteria.</p>
+<p>For a constant operator, full-frequency integration gives the analytic variance (R Hₛ/4)². The relative variance difference is defined as 100(m₀/reference − 1)%. This comparator exposes grid truncation; no acceptance tolerance is assigned to that difference. The spectrum has a nonnegative-density mathematical bound. A physical motion limit is not supplied and is not evaluated.</p>
+<h2>5. Detailed Results</h2>
+<p>The module returns the values below for the public synthetic example. All example values and chart ordinates are calculated during report generation from the same inputs.</p>
+<p>The root-mean-square response is <span data-value="rms">0.5964</span> m. The significant single amplitude is <span data-value="significant_single_amplitude">1.193</span> m and the significant double amplitude is <span data-value="significant_double_amplitude">2.385</span> m. These quantities are different and are not interchangeable.</p>
+<p>The zero-crossing period is <span data-value="mean_zero_crossing_period">7.544</span> s, the spectral bandwidth is <span data-value="spectral_bandwidth">0.6042</span>, and the duration contains <span data-value="cycles">1432</span> cycles. The most probable maximum estimate is <span data-value="most_probable_maximum_3hr">2.273</span> m; the expected maximum asymptote is <span data-value="expected_maximum_3hr">2.364</span> m. Their physical applicability remains conditional on a suitable narrow-band response.</p>
+<p>The response spectral density is plotted against angular frequency. The dashed line is the nonnegative-density bound, not an operating limit. Hover over the curve or use the point selector to inspect the case, component, demand, bound and units.</p>
+<figure><svg id="spectrum" viewBox="0 0 760 350" style="width:100%" role="img" aria-label="Synthetic vertical response spectrum with zero-density bound"></svg>
+<label>Frequency point <input id="point" type="range" min="0" value="0"></label>
+<p id="readout" aria-live="polite"></p><figcaption>Figure B. Response spectral density and mathematical lower bound.</figcaption></figure>
+<h3>5.1 Existing validation evidence</h3>
+<p>The public spectrum tests check nonnegativity, approximate height recovery, peak placement and spectral-shape relationships. The response tests check spectrum preservation for a unit operator and zero response for a zero operator. Separate equation tests cover the distinction between significant amplitudes and the Rayleigh domain. These are numerical checks, not measured-body validation.</p>
+<p>The equation record includes independently integrated spectrum comparisons and analytical response limits. The reporting fixtures use simulated result objects. Neither those fixtures nor the synthetic response database establish agreement with a native diffraction result. A public hydrodynamics verification page provides an adjacent wave-excited-body example, but it does not exercise this constant-operator calculation and its results are not transferred here.</p>
+<h2>6. Key Findings</h2>
+<p>The calculation supports numerical inspection of a supplied spectrum and response operator. Physical motion acceptance remains dependent on evidence outside this example.</p>
+<ul><li>The finite-frequency result can be compared with an analytic reference.<ul><li>The variance difference includes truncation and quadrature effects; it is not a measured model error.</li></ul></li>
+<li>The statistical outputs have distinct meanings.<ul><li>Single and double significant amplitudes are reported separately. Maximum estimates retain the narrow-band qualification.</li></ul></li></ul>
+<h2>7. Limitations</h2>
+<p>The principal uncertainties are in the response operator and the applicability of the peak distribution. Neither is resolved by reproduction of the numerical example.</p>
+<p>The constant response operator contains no resonance, phase, heading dependence or viscous damping. Hull-specific motion cannot be calculated from it.</p>
+<p>The finite grid excludes spectral tails. The higher moments and derived bandwidth are particularly sensitive to the upper frequency bound; the reported maximum estimates are approximate.</p>
+<p>Measured response, native-output agreement, mesh convergence and operating-limit compliance are NOT_EVALUATED. No failing physical operating result is asserted because no physical acceptance criterion is supplied.</p>
+<h2>8. Recommendations</h2>
+<p>The recommended qualification sequence follows the input and statistical requirements in Section 4 and the implementation records in Section 9.2. Acceptance is conditional on documented physical inputs and a declared motion criterion.</p>
+<p>Replace the synthetic operator with a qualified response table carrying units, heading, reference point and phase convention before using the statistics for an engineering decision. Repeat integration over a wider and finer frequency grid and compare each governing response quantity against an agreed numerical tolerance.</p>
+<p>Establish a motion limit and the associated duration before assessing an operating envelope. Where the response is broadband, compare the Rayleigh maximum approximation with a suitable independent response history or peak-distribution model before accepting an extreme estimate.</p>
+<h2>9. References</h2>
+<p>The calculation basis and evidence are identified below. Implementation records support reproduction; they are not substituted for licensed standards or physical qualification.</p>
+<h3>9.1 Basis</h3>
+<p>The spectrum equation is taken directly from the public implementation. The spectral-response and Rayleigh equations follow its documented mathematical derivation. No vendor-licensed document is reproduced, and no uncited design coefficient or physical limit is introduced.</p>
+<h3>9.2 Source records and reproduction</h3>
+<ul class="refs">
+<li>Public example: <code>tests/orcawave/test_motion_statistics.py</code>, <code>TestShortTermStatistics.test_significant_response</code>; grid, height, period and response amplitude.</li>
+<li>Spectrum equation and quadrature: <code>src/digitalmodel/orcawave/wave_spectrum.py</code>, <code>pierson_moskowitz</code> and <code>compute_spectral_moments</code>.</li>
+<li>Statistics and duration: <code>src/digitalmodel/orcawave/motion_statistics.py</code>, <code>compute_response_spectrum</code> and <code>short_term_statistics</code>.</li>
+<li>Equation derivation: <code>src/digitalmodel/orcawave/docs/engineering-citations.md</code>, response-statistics derivation and spectrum comparisons. Current implementation is used where earlier inventory prose differs.</li>
+<li>Numerical checks: <code>tests/orcawave/test_wave_spectrum.py</code>, <code>test_motion_statistics.py</code>, <code>test_rayleigh_domain.py</code> and <code>test_audit_p1.py</code>.</li>
+<li>Module interfaces: <code>src/digitalmodel/orcawave/__init__.py</code>. Simulated reporting evidence: <code>tests/orcawave/conftest.py</code>.</li>
+<li>Adjacent public example and layout exemplar: <code>docs/api/cfd/wave-excited-body-rao-verification.html</code>; common stylesheet: <code>docs/api/_assets/brand.css</code>.</li>
+<li>Reproduction: with the repository source on the Python import path, execute <code>python docs/reports/modules/orcawave/build_report.py</code>. Numerical dependencies are NumPy and Pydantic. The reproducibility check is <code>tests/orcawave/test_module_report.py</code>.</li>
+</ul>
+<h2>10. Acronyms</h2>
+<p>The abbreviations used by the module are defined here. Angular frequency is distinguished from frequency in cycles per second throughout the calculation.</p>
+<p>RAO means response-amplitude operator. RMS means root mean square. The mathematical symbols are defined beside their equations in Section 4. NOT_EVALUATED means that evidence required for an assessment is absent; it does not mean zero demand or compliance.</p>
+<h2>Appendix A. Data register and numerical evidence</h2>
+<p>The retained input and output arrays are embedded in this document. Source digests of UTF-8 text with normalized line endings are included with them to identify the calculation records.</p>
+<table><thead><tr><th>Item</th><th>Readiness</th><th>Source</th></tr></thead><tbody>
+<tr><td>Wave height, peak period, grid and constant response amplitude</td><td>Public synthetic calculation inputs; no physical design status</td><td>Section 9.2 public example</td></tr>
+<tr><td>Vertical-translation interpretation</td><td>ASSUMED - to be confirmed</td><td>Section 3 explanatory assumption</td></tr>
+<tr><td>Geometry, mesh, heading and damping</td><td>Not supplied; physical response is NOT_EVALUATED</td><td>Section 7 limitations</td></tr>
+<tr><td>Motion limit and numerical tolerance</td><td>Required inputs for acceptance</td><td>Sections 4.2 and 8</td></tr>
+</tbody></table><p>Table A. Input readiness and intended use.</p>
+<table><thead><tr><th>Moment</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody>
+<tr><td>Second response moment</td><td><span data-value="m2">0.2467</span></td><td>m²·(rad/s)²</td><td>Section 4.1 integration</td></tr>
+<tr><td>Fourth response moment</td><td><span data-value="m4">0.2695</span></td><td>m²·(rad/s)⁴</td><td>Section 4.1 integration</td></tr>
+</tbody></table><p>Table B. Additional response moments; the zeroth moment is reported in Section 1.</p>
+<p>The numerical pre-flight checks compare every displayed example value and every spectrum ordinate with fresh function outputs, bind the inputs to the public example and compare rebuilt document text. A passing comparison establishes reproduction only. The delivery checks inspect section structure, embedded resources and visible wording. Browser interaction and native engineering qualification require separate evidence.</p>
+<h2>Appendix B. Comments</h2>
+<p>Comments remain local. Save the comments file beside this document using the file chooser. Where that facility is unavailable, the download fallback requires the destination to be selected manually. Import a saved file to resume annotation.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Comment <textarea id="comment" rows="4" style="width:100%"></textarea></label>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Import comments <input id="import-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status"></p><ul id="comments"></ul>
+</main>
+<script id="example-data" type="application/json">{"inputs": {"hs": 3.0, "tp": 10.0, "rao": 0.8, "omega_min": 0.1, "omega_max": 2.0, "points": 200, "duration": 10800.0}, "results": {"significant_single_amplitude": 1.192716238738281, "significant_double_amplitude": 2.385432477476562, "rms": 0.5963581193691405, "mean_zero_crossing_period": 7.54381808563706, "most_probable_maximum_3hr": 2.2734580983560146, "expected_maximum_3hr": 2.363753457058498, "spectral_bandwidth": 0.6041874638752024, "m0": 0.3556430065374981, "m2": 0.24671275073786827, "m4": 0.2695406397369673}, "derived": {"reference_variance": 0.3600000000000001, "variance_difference_percent": -1.2102759618061176, "cycles": 1431.635794686314}, "omega": [0.1, 0.10954773869346734, 0.11909547738693468, 0.12864321608040202, 0.13819095477386933, 0.1477386934673367, 0.157286432160804, 0.16683417085427135, 0.1763819095477387, 0.18592964824120603, 0.19547738693467337, 0.20502512562814068, 0.21457286432160805, 0.22412060301507536, 0.2336683417085427, 0.24321608040201004, 0.2527638190954774, 0.2623115577889447, 0.271859296482412, 0.2814070351758794, 0.29095477386934676, 0.300502512562814, 0.3100502512562814, 0.31959798994974875, 0.32914572864321606, 0.3386934673366834, 0.34824120603015074, 0.3577889447236181, 0.36733668341708536, 0.37688442211055273, 0.3864321608040201, 0.39597989949748746, 0.4055276381909547, 0.4150753768844221, 0.42462311557788945, 0.4341708542713567, 0.4437185929648241, 0.45326633165829144, 0.4628140703517588, 0.47236180904522607, 0.48190954773869343, 0.4914572864321608, 0.5010050251256281, 0.5105527638190954, 0.5201005025125628, 0.5296482412060302, 0.5391959798994974, 0.5487437185929648, 0.5582914572864321, 0.5678391959798994, 0.5773869346733668, 0.5869346733668341, 0.5964824120603015, 0.6060301507537688, 0.6155778894472361, 0.6251256281407035, 0.6346733668341707, 0.6442211055276381, 0.6537688442211055, 0.6633165829145727, 0.6728643216080401, 0.6824120603015075, 0.6919597989949748, 0.7015075376884421, 0.7110552763819095, 0.7206030150753768, 0.7301507537688441, 0.7396984924623115, 0.7492462311557788, 0.7587939698492462, 0.7683417085427134, 0.7778894472361808, 0.7874371859296482, 0.7969849246231154, 0.8065326633165828, 0.8160804020100502, 0.8256281407035175, 0.8351758793969848, 0.8447236180904522, 0.8542713567839195, 0.8638190954773869, 0.8733668341708541, 0.8829145728643215, 0.8924623115577889, 0.9020100502512561, 0.9115577889447235, 0.9211055276381909, 0.9306532663316582, 0.9402010050251255, 0.9497487437185929, 0.9592964824120602, 0.9688442211055275, 0.9783919597989948, 0.9879396984924622, 0.9974874371859296, 1.007035175879397, 1.0165829145728642, 1.0261306532663317, 1.035678391959799, 1.0452261306532662, 1.0547738693467337, 1.064321608040201, 1.0738693467336682, 1.0834170854271357, 1.092964824120603, 1.1025125628140704, 1.1120603015075377, 1.121608040201005, 1.1311557788944724, 1.1407035175879396, 1.1502512562814071, 1.1597989949748744, 1.1693467336683416, 1.178894472361809, 1.1884422110552764, 1.1979899497487436, 1.207537688442211, 1.2170854271356784, 1.2266331658291456, 1.236180904522613, 1.2457286432160803, 1.2552763819095476, 1.264824120603015, 1.2743718592964823, 1.2839195979899498, 1.293467336683417, 1.3030150753768843, 1.3125628140703518, 1.322110552763819, 1.3316582914572863, 1.3412060301507538, 1.350753768844221, 1.3603015075376883, 1.3698492462311558, 1.379396984924623, 1.3889447236180905, 1.3984924623115578, 1.408040201005025, 1.4175879396984925, 1.4271356783919598, 1.436683417085427, 1.4462311557788945, 1.4557788944723618, 1.465326633165829, 1.4748743718592965, 1.4844221105527637, 1.493969849246231, 1.5035175879396985, 1.5130653266331657, 1.5226130653266332, 1.5321608040201005, 1.5417085427135677, 1.5512562814070352, 1.5608040201005025, 1.5703517587939697, 1.5798994974874372, 1.5894472361809044, 1.5989949748743717, 1.6085427135678392, 1.6180904522613064, 1.627638190954774, 1.6371859296482412, 1.6467336683417084, 1.656281407035176, 1.6658291457286432, 1.6753768844221104, 1.684924623115578, 1.6944723618090451, 1.7040201005025124, 1.7135678391959799, 1.7231155778894471, 1.7326633165829144, 1.7422110552763819, 1.7517587939698491, 1.7613065326633166, 1.7708542713567839, 1.7804020100502511, 1.7899497487437186, 1.7994974874371858, 1.809045226130653, 1.8185929648241206, 1.8281407035175878, 1.837688442211055, 1.8472361809045226, 1.8567839195979898, 1.866331658291457, 1.8758793969849246, 1.8854271356783918, 1.8949748743718593, 1.9045226130653266, 1.9140703517587938, 1.9236180904522613, 1.9331658291457285, 1.9427135678391958, 1.9522613065326633, 1.9618090452261305, 1.9713567839195978, 1.9809045226130653, 1.9904522613065325, 2.0], "wave": [0.0, 0.0, 0.0, 1.4470959022880557e-305, 8.619680449563047e-229, 1.573503967240677e-174, 2.591624304376393e-135, 2.077446832484116e-106, 9.821813878645818e-85, 3.1431079485700296e-68, 1.7368574932628524e-55, 1.5824305824971964e-45, 1.177380300129097e-37, 2.2662199309101284e-31, 2.622336477903234e-26, 3.407992487860117e-22, 7.950454339515842e-19, 4.75248641378331e-16, 9.56321147035211e-14, 8.002208424495488e-12, 3.2842636598138436e-10, 7.529685355880106e-09, 1.0692525764988865e-07, 1.0214692174585156e-06, 7.016253962367116e-06, 3.657126437068657e-05, 0.00015115664017438792, 0.0005136056826374499, 0.0014779594666289924, 0.0036917183457717355, 0.008170358360314421, 0.016298836702542643, 0.029733082152940935, 0.050208409318451726, 0.07929443868039353, 0.11815288213305175, 0.16735085791089163, 0.22676336212771445, 0.29557385080486903, 0.3723603895601734, 0.45524145920134573, 0.5420511158551921, 0.630515896735481, 0.7184126695006569, 0.803694760360924, 0.8845811875739255, 0.9596096191593821, 1.027657462599847, 1.0879374566751818, 1.1399746806335873, 1.1835714868225593, 1.2187659128328783, 1.245787956220676, 1.26501691523, 1.276941940661442, 1.2821270681407022, 1.2811813219745245, 1.2747339893979053, 1.2634148310277116, 1.2478387884116886, 1.2285946418908769, 1.2062370342750444, 1.1812812855029773, 1.1542004628669134, 1.1254242273497006, 1.095339039774315, 1.0642893744538329, 1.032579648834567, 1.0004766329306747, 0.9682121510436817, 0.9359859300450099, 0.9039684835909945, 0.8723039505592729, 0.8411128294187709, 0.8104945689034116, 0.7805299899731482, 0.7512835252882555, 0.722805270899541, 0.6951328510975341, 0.6682931018207962, 0.6423035810778089, 0.6171739168035977, 0.5929070037086064, 0.5695000611910421, 0.5469455644404899, 0.5252320605906501, 0.504344881284278, 0.48426676237207644, 0.4649783807388585, 0.4464588174790835, 0.4286859558623932, 0.4116368217612304, 0.3952878734730408, 0.3796152471694804, 0.36459496355081306, 0.3502031006786256, 0.33641593740509407, 0.32321007131173496, 0.3105625146131737, 0.29845077106949663, 0.2868528965813645, 0.27574754581208755, 0.26511400688709486, 0.2549322259604947, 0.24518282320758328, 0.23584710159832245, 0.22690704962718594, 0.21834533901680983, 0.21014531827424773, 0.20229100285714466, 0.19476706260088295, 0.1875588069649605, 0.18065216857593344, 0.17403368547381645, 0.1676904824075881, 0.16161025147229507, 0.15578123233419097, 0.15019219225049074, 0.1448324060559, 0.1396916362584085, 0.13476011336129695, 0.13002851650637862, 0.12548795451471328, 0.12112994738497128, 0.11694640829594055, 0.11292962614804439, 0.10907224866888812, 0.1053672660995531, 0.10180799547138371, 0.09838806547719108, 0.0951014019359699, 0.09194221384624278, 0.08890498001990026, 0.08598443628578492, 0.0831755632501809, 0.08047357459974112, 0.07787390593114642, 0.07537220409087442, 0.07296431700782711, 0.07064628400116116, 0.068414326545462, 0.06626483947536027, 0.06419438261177972, 0.06219967279220745, 0.060277576287669526, 0.058425101589455616, 0.056639392549055756, 0.054917721855234414, 0.05325748483266121, 0.05165619354703463, 0.05011147120216968, 0.04862104681506005, 0.04718275015547251, 0.04579450693717453, 0.0444543342484349, 0.04316033620997004, 0.04191069984902871, 0.040703691178817114, 0.039537651472962274, 0.038410993725191654, 0.03732219928487152, 0.03626981465949642, 0.0352524484756525, 0.034268768590394474, 0.03331749934537341, 0.0323974189564347, 0.03150735703177158, 0.030646192212068275, 0.029812849926400403, 0.029006300257978932, 0.028225555914126604, 0.027469670295164596, 0.026737735657162236, 0.02602888136376351, 0.025342272222552472, 0.024677106901656084, 0.02403261642250617, 0.02340806272489573, 0.02280273730066599, 0.022215959892551956, 0.021647077254896143, 0.021095461973111625, 0.020560511338938717, 0.02004164627869435, 0.019538310331859113, 0.019049968677485707, 0.01857610720604399, 0.01811623163444192, 0.017669866662079287, 0.017236555165903108, 0.016815857432538335, 0.01640735042566814, 0.016010627086932162, 0.015625295668700644, 0.015250979097167505, 0.014887314364285248, 0.014533951947140581, 0.014190555253441883, 0.013856800091857352, 0.013532374166007164], "response": [0.0, 0.0, 0.0, 9.261413774643558e-306, 5.516595487720352e-229, 1.0070425390340334e-174, 1.658639554800892e-135, 1.3295659727898346e-106, 6.285960882333324e-85, 2.0115890870848195e-68, 1.1115887956882256e-55, 1.012755572798206e-45, 7.535233920826223e-38, 1.4503807557824825e-31, 1.67829534585807e-26, 2.1811151922304753e-22, 5.08829077729014e-19, 3.041591304821319e-16, 6.120455341025351e-14, 5.121413391677114e-12, 2.1019287422808602e-10, 4.818998627763269e-09, 6.843216489592876e-08, 6.537402991734501e-07, 4.490402535914955e-06, 2.340560919723941e-05, 9.674024971160828e-05, 0.000328707636887968, 0.0009458940586425553, 0.002362699741293911, 0.005229029350601231, 0.010431255489627294, 0.0190291725778822, 0.03213338196380911, 0.05074844075545187, 0.07561784456515314, 0.10710454906297066, 0.14512855176173728, 0.18916726451511623, 0.23831064931851104, 0.29135453388886134, 0.346912714147323, 0.40353017391070795, 0.45978410848042045, 0.5143646466309915, 0.5661319600473124, 0.6141501562620046, 0.6577007760639022, 0.6962799722721165, 0.729583795605496, 0.757485751566438, 0.7800101842130422, 0.7973042919812328, 0.8096108257472001, 0.817242842023323, 0.8205613236100495, 0.8199560460636959, 0.8158297532146596, 0.8085854918577355, 0.7986168245834808, 0.7863005708101614, 0.7719917019360285, 0.7560200227219056, 0.7386882962348247, 0.7202715055038085, 0.7010169854555618, 0.6811451996504532, 0.6608509752541231, 0.6403050450756319, 0.6196557766679565, 0.5990309952288064, 0.5785398294982366, 0.5582745283579348, 0.5383122108280135, 0.5187165240981836, 0.4995391935828149, 0.4808214561844836, 0.4625953733757064, 0.4448850247024219, 0.4277075851653096, 0.4110742918897978, 0.3949913067543026, 0.37946048237350816, 0.364480039162267, 0.3500451612419136, 0.3361485187780161, 0.32278072402193797, 0.309930727918129, 0.2975861636728695, 0.2857336431866135, 0.2743590117519317, 0.2634475659271875, 0.25298423902274614, 0.2429537581884675, 0.2333407766725204, 0.22412998443432042, 0.21530619993926026, 0.20685444563951041, 0.1987600093524312, 0.19100849348447788, 0.1835858538120733, 0.17647842931973606, 0.16967296440774074, 0.16315662461471664, 0.15691700685285334, 0.1509421450229264, 0.14522051176139902, 0.13974101697075833, 0.1344930036955186, 0.1294662418285726, 0.12465092006456512, 0.12003763645757475, 0.11561738788859742, 0.11138155870324255, 0.10732190874085641, 0.10343056094226886, 0.09969998869388225, 0.0961230030403141, 0.09269273987577602, 0.08940264720538145, 0.08624647255123007, 0.08321825056408233, 0.08031229088941652, 0.07752316632638163, 0.07484570130940196, 0.07227496073474843, 0.06980623914808841, 0.067435050303714, 0.06515711710168559, 0.0629683619054023, 0.06086489723902075, 0.05884301686159539, 0.05689918721273617, 0.05503003922290236, 0.05323236048011579, 0.05150308774383433, 0.04983929979593372, 0.04823821061815964, 0.046697162885009365, 0.04521362176074315, 0.043785168989095694, 0.04240949726423058, 0.041084404871539026, 0.039807790587012774, 0.0385776488241085, 0.037392065017251605, 0.03624921123139569, 0.035147341987350034, 0.034084790292903185, 0.03305996387010217, 0.0320713415693886, 0.031117469961638437, 0.030196960099502415, 0.029308484439791706, 0.028450773918998345, 0.027622615174380832, 0.02682284790337838, 0.026050362354442958, 0.02530409694269586, 0.024583035984122665, 0.02388620754231778, 0.023212681382077712, 0.022561567024417604, 0.021932011897852467, 0.02132319958103899, 0.020734348132118212, 0.020164708500333813, 0.0196135630157237, 0.019080223952896262, 0.01856403216510652, 0.01806435578504103, 0.017580588988905344, 0.017112150820583833, 0.01665848407280865, 0.016219054222433586, 0.015793348417059896, 0.015380874510403951, 0.01498116014393327, 0.014593751872426236, 0.014218214331233254, 0.013854129443133535, 0.013501095662791443, 0.013158727256920782, 0.012826653618364386, 0.012504518612389834, 0.012191979953590854, 0.011888708611868155, 0.01159438824604283, 0.011308714663730745, 0.01103139530617799, 0.010762148756824536, 0.010500704272427611, 0.010246801335636586, 0.010000189227968415, 0.009760626622187204, 0.009527881193142561, 0.009301729246169973, 0.009081955362202807, 0.008868352058788708, 0.008660719466244587], "sources": {"tests/orcawave/test_motion_statistics.py": "2a2b3dda0f3aca4eec3d0cef2bb2e4545e1f38cd5701de2ac3bbaad625dab964", "tests/orcawave/test_wave_spectrum.py": "9b53e183a686e23cb095776cfb65c4d066f355f7f39a1b501027d210993b9cbd", "src/digitalmodel/orcawave/motion_statistics.py": "50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d", "src/digitalmodel/orcawave/wave_spectrum.py": "4efca68e8bb58a4edb24ae7a3f01b175c4cca40a532b3df7f6cc7727af5f0836", "src/digitalmodel/orcawave/docs/engineering-citations.md": "5fc299ccfe918a95e4d17a18a88bb933009aa057f7d01a1601fc3fa69be8e188", "docs/api/cfd/wave-excited-body-rao-verification.html": "84a6d65f9a6e17db2c42264d3ae3c99e70081236b2b78aa96a79e24d9876b96e", "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a"}}</script>
+<script id="changes-data" type="application/json">{"revision": "A", "changes": ["The spectral response example is introduced with separate single and double amplitudes.", "Finite-frequency variance is compared with the full-frequency analytic reference.", "Physical response qualification and operating limits remain not evaluated."]}</script>
+<script>
+const data = JSON.parse(document.getElementById('example-data').textContent);
+const changes = JSON.parse(document.getElementById('changes-data').textContent);
+changes.changes.forEach(text => {const li = document.createElement('li'); li.textContent = text; document.getElementById('changes').append(li);});
+const svg = document.getElementById('spectrum'), ns = 'http://www.w3.org/2000/svg';
+const maximum = Math.max(...data.response), lower = data.omega[0], upper = data.omega.at(-1);
+function element(tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key,value]) => node.setAttribute(key,value));
+  if (text !== undefined) node.textContent = text;
+  svg.append(node); return node;
+}
+const x = value => 80 + 640 * (value-lower)/(upper-lower);
+const y = value => 285 - 240 * value/maximum;
+element('line', {x1:80,y1:285,x2:720,y2:285,stroke:'var(--nogo)','stroke-dasharray':'6 4'});
+element('text', {x:410,y:335,'text-anchor':'middle'}, 'Angular frequency (rad/s)');
+element('text', {x:80,y:20}, 'Response spectral density (m²·s/rad)');
+element('text', {x:80,y:310}, lower.toPrecision(3));
+element('text', {x:690,y:310}, upper.toPrecision(3));
+element('text', {x:25,y:285}, '0');
+element('text', {x:10,y:50}, maximum.toPrecision(3));
+element('polyline', {points:data.omega.map((w,i)=>`${x(w)},${y(data.response[i])}`).join(' '),fill:'none',stroke:'var(--brand)','stroke-width':2});
+const marker = element('circle',{r:5,fill:'var(--brand)'}), slider=document.getElementById('point');
+slider.max=data.omega.length-1;
+function showPoint(index) {
+  slider.value=index; marker.setAttribute('cx',x(data.omega[index])); marker.setAttribute('cy',y(data.response[index]));
+  document.getElementById('readout').textContent=`Case: public synthetic example; component: vertical translation; angular frequency: ${data.omega[index].toPrecision(6)} rad/s; demand density: ${data.response[index].toExponential(4)} m²·s/rad; lower bound: 0 m²·s/rad; operating limit: NOT_EVALUATED.`;
+}
+slider.addEventListener('input',()=>showPoint(Number(slider.value)));
+svg.addEventListener('pointermove',event=>{const rect=svg.getBoundingClientRect();const px=(event.clientX-rect.left)*760/rect.width;showPoint(Math.max(0,Math.min(data.omega.length-1,Math.round((px-80)/640*(data.omega.length-1)))));});
+showPoint(0);
+let comments=[];
+const sections=document.getElementById('comment-section'), status=document.getElementById('comment-status');
+document.querySelectorAll('h2').forEach(heading=>{const option=document.createElement('option');option.textContent=heading.textContent;sections.append(option);});
+function showComments(){const list=document.getElementById('comments');list.replaceChildren();comments.forEach(c=>{const li=document.createElement('li');li.textContent=`${c.section}: ${c.text}`;list.append(li);});}
+document.getElementById('add-comment').onclick=()=>{const input=document.getElementById('comment');if(input.value.trim()){comments.push({section:sections.value,text:input.value.trim()});input.value='';showComments();status.textContent='Comment added in memory. Save to retain it.';}};
+document.getElementById('save-comments').onclick=async()=>{
+  const text=JSON.stringify({revision:'A',comments},null,2);
+  try {if(window.showSaveFilePicker){const handle=await window.showSaveFilePicker({suggestedName:'comments.json',types:[{description:'Comments',accept:{'application/json':['.json']}}]});const stream=await handle.createWritable();await stream.write(text);await stream.close();status.textContent='Comments saved to the selected file.';}
+  else {const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='comments.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Download requested. Place comments.json beside the report.';}}
+  catch(error){status.textContent='Comments were not saved. '+error.message;}
+};
+document.getElementById('import-comments').onchange=async event=>{
+  try {const file=event.target.files[0];if(!file)return;const saved=JSON.parse(await file.text());if(saved.revision!=='A'||!Array.isArray(saved.comments)||!saved.comments.every(c=>typeof c.section==='string'&&typeof c.text==='string'))throw Error('Invalid comments format');comments=saved.comments;showComments();status.textContent='Saved comments imported.';}
+  catch(error){status.textContent='Import failed. '+error.message;}
+};
+</script></body></html>

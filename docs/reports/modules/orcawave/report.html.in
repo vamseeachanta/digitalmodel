@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrcaWave utilities: spectral response assessment</title>
+<style>{{style}}</style></head><body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Hydrodynamics · Module assessment</p>
+<h1>OrcaWave utilities: spectral response assessment</h1>
+<p>Draft for client review</p></header>
+<h2>1. Executive Summary</h2>
+<p>The OrcaWave utilities module is a collection of frequency-domain hydrodynamic calculation and reporting functions. Analysis is performed to determine the numerical response of a documented synthetic example; key results are summarized below.</p>
+<ul><li>The spectral calculation can be reproduced without a diffraction solution.
+<ul><li>The response variance is {{m0}} m², compared with {{reference_variance}} m² for the full-frequency analytic reference. The difference is {{variance_difference_percent}}% on the supplied finite-frequency grid.</li></ul></li>
+<li>An operating decision is not established by this example.
+<ul><li>The response operator is synthetic. An operating limit is not supplied, and physical performance is not evaluated.</li></ul></li></ul>
+<p>Revision A — Initial assessment: the spectral calculation, its analytic comparator and its qualification limits are presented.</p>
+<details><summary>Engineering changes</summary><ul id="changes"></ul></details>
+<h2>2. Introduction</h2>
+<p>The purpose, scope and status of the assessment are presented in this section. The main workflow is the conversion of a wave spectrum and a response-amplitude operator into a response spectrum and short-term motion statistics.</p>
+<p>The response-amplitude operator relates motion amplitude to incident wave amplitude at each frequency. The example is reproduced from a public software test, not from a measured or solved hull. The commercial diffraction application and the Python utilities are distinct: no diffraction solution is required by the calculation presented here.</p>
+<h3>2.1 Inputs and outputs</h3>
+<p>The calculation accepts an increasing angular-frequency array, aligned nonnegative wave spectral densities and finite response amplitudes. Translational amplitudes are expressed in metres per metre. The outputs are the response spectrum, spectral moments, root-mean-square motion, significant single and double amplitudes, zero-crossing period and narrow-band maximum estimates. Rotational response requires a declared angular unit; it is not included in this example.</p>
+<h3>2.2 Not covered</h3>
+<p>The module also contains response-table interpolation and comparison, dimensional hydrodynamic coefficient exchange, panel geometry checks, drift forces, long-term statistics, motion-sickness estimates, synthetic hull response data and result-file reporting. Their interfaces are listed in the reference records. They are not qualified by this spectral example. Native result loading, diffraction, mesh convergence and body interaction are not evaluated.</p>
+<h2>3. Design Data</h2>
+<p>The example data are taken from the public significant-response test identified in Section 9.2. The response operator is constant across frequency and represents an idealised translational response, not a particular hull.</p>
+<p>The significant incident wave height is {{hs}} m and the peak period is {{tp}} s. The response-amplitude operator is {{rao}} m/m. The angular-frequency grid contains {{points}} points between {{omega_min}} and {{omega_max}} rad/s. The duration is {{duration}} s, taken from the documented statistics-function default.</p>
+<p>ASSUMED - to be confirmed: the constant operator is interpreted as vertical translation solely to explain the units. No geometry, displacement, water depth, heading, mooring restraint or damping has been supplied for a physical body.</p>
+<figure><svg viewBox="0 0 760 240" role="img" aria-label="Idealised vertical response schematic; no physical geometry or mesh supplied" style="width:100%">
+<path d="M20 125 Q45 95 70 125 T120 125 T170 125 T220 125 T270 125 M490 125 Q515 95 540 125 T590 125 T640 125 T690 125 T740 125" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<path d="M280 95 L470 95 L445 158 L305 158 Z" fill="var(--panel-2)" stroke="var(--ink)" stroke-width="2"/>
+<path d="M375 40 V200 M367 50 L375 40 L383 50 M367 190 L375 200 L383 190" fill="none" stroke="var(--ink)"/>
+<text x="25" y="65">Incident surface elevation η</text><text x="400" y="48">Vertical response z</text>
+<text x="20" y="225">Conceptual body only · boundary conditions, dimensions and panel mesh not supplied</text>
+</svg><figcaption>Figure A. Idealised wave-to-motion relation; geometry is not used in the calculation.</figcaption></figure>
+<h2>4. Analysis Methodology</h2>
+<p>The implemented spectral relations are evaluated on the supplied angular-frequency grid. The equations below describe the code identified in Section 9.2; they do not assert conformity with a design standard.</p>
+<h3>4.1 Spectrum and response</h3>
+<div class="eq">ωₚ = 2π/Tₚ<br>Sη(ω) = (5/16)Hₛ²ωₚ⁴ω⁻⁵ exp[−(5/4)(ωₚ/ω)⁴]<br>Sz(ω) = |R(ω)|² Sη(ω)<br>mₙ = ∫ ωⁿ Sz(ω) dω</div>
+<p>Here ω is angular frequency in rad/s, ωₚ is peak angular frequency, Tₚ is peak period in seconds, Hₛ is significant wave height in metres, R is the response-amplitude operator, and Sη and Sz are incident-wave and response spectral densities in m²·s/rad. The moment order is n. The coefficients are those of the implemented modified Pierson–Moskowitz expression, recorded in the spectrum function. The integral is evaluated by the trapezoidal rule over the supplied range.</p>
+<h3>4.2 Statistics and comparison basis</h3>
+<div class="eq">σ = √m₀; Aₛ = 2σ; Hₛ,z = 4σ<br>Tz = 2π√(m₀/m₂); ε = √[1 − m₂²/(m₀m₄)]<br>N = D/Tz; xmode ≈ σ√(2 ln N)<br>E[xmax] ≈ xmode + γE σ²/xmode</div>
+<p>The symbols σ, Aₛ and Hₛ,z denote root-mean-square motion, significant single amplitude and significant double amplitude, all in metres. Tz is zero-crossing period, ε is spectral bandwidth, D is duration, N is the cycle count and γE is the Euler–Mascheroni constant. The maximum expressions are narrow-band Rayleigh asymptotes, as derived in the equation record. They require more than one cycle and are not broadband certification criteria.</p>
+<p>For a constant operator, full-frequency integration gives the analytic variance (R Hₛ/4)². The relative variance difference is defined as 100(m₀/reference − 1)%. This comparator exposes grid truncation; no acceptance tolerance is assigned to that difference. The spectrum has a nonnegative-density mathematical bound. A physical motion limit is not supplied and is not evaluated.</p>
+<h2>5. Detailed Results</h2>
+<p>The module returns the values below for the public synthetic example. All example values and chart ordinates are calculated during report generation from the same inputs.</p>
+<p>The root-mean-square response is {{rms}} m. The significant single amplitude is {{significant_single_amplitude}} m and the significant double amplitude is {{significant_double_amplitude}} m. These quantities are different and are not interchangeable.</p>
+<p>The zero-crossing period is {{mean_zero_crossing_period}} s, the spectral bandwidth is {{spectral_bandwidth}}, and the duration contains {{cycles}} cycles. The most probable maximum estimate is {{most_probable_maximum_3hr}} m; the expected maximum asymptote is {{expected_maximum_3hr}} m. Their physical applicability remains conditional on a suitable narrow-band response.</p>
+<p>The response spectral density is plotted against angular frequency. The dashed line is the nonnegative-density bound, not an operating limit. Hover over the curve or use the point selector to inspect the case, component, demand, bound and units.</p>
+<figure><svg id="spectrum" viewBox="0 0 760 350" style="width:100%" role="img" aria-label="Synthetic vertical response spectrum with zero-density bound"></svg>
+<label>Frequency point <input id="point" type="range" min="0" value="0"></label>
+<p id="readout" aria-live="polite"></p><figcaption>Figure B. Response spectral density and mathematical lower bound.</figcaption></figure>
+<h3>5.1 Existing validation evidence</h3>
+<p>The public spectrum tests check nonnegativity, approximate height recovery, peak placement and spectral-shape relationships. The response tests check spectrum preservation for a unit operator and zero response for a zero operator. Separate equation tests cover the distinction between significant amplitudes and the Rayleigh domain. These are numerical checks, not measured-body validation.</p>
+<p>The equation record includes independently integrated spectrum comparisons and analytical response limits. The reporting fixtures use simulated result objects. Neither those fixtures nor the synthetic response database establish agreement with a native diffraction result. A public hydrodynamics verification page provides an adjacent wave-excited-body example, but it does not exercise this constant-operator calculation and its results are not transferred here.</p>
+<h2>6. Key Findings</h2>
+<p>The calculation supports numerical inspection of a supplied spectrum and response operator. Physical motion acceptance remains dependent on evidence outside this example.</p>
+<ul><li>The finite-frequency result can be compared with an analytic reference.<ul><li>The variance difference includes truncation and quadrature effects; it is not a measured model error.</li></ul></li>
+<li>The statistical outputs have distinct meanings.<ul><li>Single and double significant amplitudes are reported separately. Maximum estimates retain the narrow-band qualification.</li></ul></li></ul>
+<h2>7. Limitations</h2>
+<p>The principal uncertainties are in the response operator and the applicability of the peak distribution. Neither is resolved by reproduction of the numerical example.</p>
+<p>The constant response operator contains no resonance, phase, heading dependence or viscous damping. Hull-specific motion cannot be calculated from it.</p>
+<p>The finite grid excludes spectral tails. The higher moments and derived bandwidth are particularly sensitive to the upper frequency bound; the reported maximum estimates are approximate.</p>
+<p>Measured response, native-output agreement, mesh convergence and operating-limit compliance are NOT_EVALUATED. No failing physical operating result is asserted because no physical acceptance criterion is supplied.</p>
+<h2>8. Recommendations</h2>
+<p>The recommended qualification sequence follows the input and statistical requirements in Section 4 and the implementation records in Section 9.2. Acceptance is conditional on documented physical inputs and a declared motion criterion.</p>
+<p>Replace the synthetic operator with a qualified response table carrying units, heading, reference point and phase convention before using the statistics for an engineering decision. Repeat integration over a wider and finer frequency grid and compare each governing response quantity against an agreed numerical tolerance.</p>
+<p>Establish a motion limit and the associated duration before assessing an operating envelope. Where the response is broadband, compare the Rayleigh maximum approximation with a suitable independent response history or peak-distribution model before accepting an extreme estimate.</p>
+<h2>9. References</h2>
+<p>The calculation basis and evidence are identified below. Implementation records support reproduction; they are not substituted for licensed standards or physical qualification.</p>
+<h3>9.1 Basis</h3>
+<p>The spectrum equation is taken directly from the public implementation. The spectral-response and Rayleigh equations follow its documented mathematical derivation. No vendor-licensed document is reproduced, and no uncited design coefficient or physical limit is introduced.</p>
+<h3>9.2 Source records and reproduction</h3>
+<ul class="refs">
+<li>Public example: <code>tests/orcawave/test_motion_statistics.py</code>, <code>TestShortTermStatistics.test_significant_response</code>; grid, height, period and response amplitude.</li>
+<li>Spectrum equation and quadrature: <code>src/digitalmodel/orcawave/wave_spectrum.py</code>, <code>pierson_moskowitz</code> and <code>compute_spectral_moments</code>.</li>
+<li>Statistics and duration: <code>src/digitalmodel/orcawave/motion_statistics.py</code>, <code>compute_response_spectrum</code> and <code>short_term_statistics</code>.</li>
+<li>Equation derivation: <code>src/digitalmodel/orcawave/docs/engineering-citations.md</code>, response-statistics derivation and spectrum comparisons. Current implementation is used where earlier inventory prose differs.</li>
+<li>Numerical checks: <code>tests/orcawave/test_wave_spectrum.py</code>, <code>test_motion_statistics.py</code>, <code>test_rayleigh_domain.py</code> and <code>test_audit_p1.py</code>.</li>
+<li>Module interfaces: <code>src/digitalmodel/orcawave/__init__.py</code>. Simulated reporting evidence: <code>tests/orcawave/conftest.py</code>.</li>
+<li>Adjacent public example and layout exemplar: <code>docs/api/cfd/wave-excited-body-rao-verification.html</code>; common stylesheet: <code>docs/api/_assets/brand.css</code>.</li>
+<li>Reproduction: with the repository source on the Python import path, execute <code>python docs/reports/modules/orcawave/build_report.py</code>. Numerical dependencies are NumPy and Pydantic. The reproducibility check is <code>tests/orcawave/test_module_report.py</code>.</li>
+</ul>
+<h2>10. Acronyms</h2>
+<p>The abbreviations used by the module are defined here. Angular frequency is distinguished from frequency in cycles per second throughout the calculation.</p>
+<p>RAO means response-amplitude operator. RMS means root mean square. The mathematical symbols are defined beside their equations in Section 4. NOT_EVALUATED means that evidence required for an assessment is absent; it does not mean zero demand or compliance.</p>
+<h2>Appendix A. Data register and numerical evidence</h2>
+<p>The retained input and output arrays are embedded in this document. Source digests of UTF-8 text with normalized line endings are included with them to identify the calculation records.</p>
+<table><thead><tr><th>Item</th><th>Readiness</th><th>Source</th></tr></thead><tbody>
+<tr><td>Wave height, peak period, grid and constant response amplitude</td><td>Public synthetic calculation inputs; no physical design status</td><td>Section 9.2 public example</td></tr>
+<tr><td>Vertical-translation interpretation</td><td>ASSUMED - to be confirmed</td><td>Section 3 explanatory assumption</td></tr>
+<tr><td>Geometry, mesh, heading and damping</td><td>Not supplied; physical response is NOT_EVALUATED</td><td>Section 7 limitations</td></tr>
+<tr><td>Motion limit and numerical tolerance</td><td>Required inputs for acceptance</td><td>Sections 4.2 and 8</td></tr>
+</tbody></table><p>Table A. Input readiness and intended use.</p>
+<table><thead><tr><th>Moment</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody>
+<tr><td>Second response moment</td><td>{{m2}}</td><td>m²·(rad/s)²</td><td>Section 4.1 integration</td></tr>
+<tr><td>Fourth response moment</td><td>{{m4}}</td><td>m²·(rad/s)⁴</td><td>Section 4.1 integration</td></tr>
+</tbody></table><p>Table B. Additional response moments; the zeroth moment is reported in Section 1.</p>
+<p>The numerical pre-flight checks compare every displayed example value and every spectrum ordinate with fresh function outputs, bind the inputs to the public example and compare rebuilt document text. A passing comparison establishes reproduction only. The delivery checks inspect section structure, embedded resources and visible wording. Browser interaction and native engineering qualification require separate evidence.</p>
+<h2>Appendix B. Comments</h2>
+<p>Comments remain local. Save the comments file beside this document using the file chooser. Where that facility is unavailable, the download fallback requires the destination to be selected manually. Import a saved file to resume annotation.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Comment <textarea id="comment" rows="4" style="width:100%"></textarea></label>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Import comments <input id="import-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status"></p><ul id="comments"></ul>
+</main>
+<script id="example-data" type="application/json">{{data}}</script>
+<script id="changes-data" type="application/json">{{changes}}</script>
+<script>
+const data = JSON.parse(document.getElementById('example-data').textContent);
+const changes = JSON.parse(document.getElementById('changes-data').textContent);
+changes.changes.forEach(text => {const li = document.createElement('li'); li.textContent = text; document.getElementById('changes').append(li);});
+const svg = document.getElementById('spectrum'), ns = 'http://www.w3.org/2000/svg';
+const maximum = Math.max(...data.response), lower = data.omega[0], upper = data.omega.at(-1);
+function element(tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key,value]) => node.setAttribute(key,value));
+  if (text !== undefined) node.textContent = text;
+  svg.append(node); return node;
+}
+const x = value => 80 + 640 * (value-lower)/(upper-lower);
+const y = value => 285 - 240 * value/maximum;
+element('line', {x1:80,y1:285,x2:720,y2:285,stroke:'var(--nogo)','stroke-dasharray':'6 4'});
+element('text', {x:410,y:335,'text-anchor':'middle'}, 'Angular frequency (rad/s)');
+element('text', {x:80,y:20}, 'Response spectral density (m²·s/rad)');
+element('text', {x:80,y:310}, lower.toPrecision(3));
+element('text', {x:690,y:310}, upper.toPrecision(3));
+element('text', {x:25,y:285}, '0');
+element('text', {x:10,y:50}, maximum.toPrecision(3));
+element('polyline', {points:data.omega.map((w,i)=>`${x(w)},${y(data.response[i])}`).join(' '),fill:'none',stroke:'var(--brand)','stroke-width':2});
+const marker = element('circle',{r:5,fill:'var(--brand)'}), slider=document.getElementById('point');
+slider.max=data.omega.length-1;
+function showPoint(index) {
+  slider.value=index; marker.setAttribute('cx',x(data.omega[index])); marker.setAttribute('cy',y(data.response[index]));
+  document.getElementById('readout').textContent=`Case: public synthetic example; component: vertical translation; angular frequency: ${data.omega[index].toPrecision(6)} rad/s; demand density: ${data.response[index].toExponential(4)} m²·s/rad; lower bound: 0 m²·s/rad; operating limit: NOT_EVALUATED.`;
+}
+slider.addEventListener('input',()=>showPoint(Number(slider.value)));
+svg.addEventListener('pointermove',event=>{const rect=svg.getBoundingClientRect();const px=(event.clientX-rect.left)*760/rect.width;showPoint(Math.max(0,Math.min(data.omega.length-1,Math.round((px-80)/640*(data.omega.length-1)))));});
+showPoint(0);
+let comments=[];
+const sections=document.getElementById('comment-section'), status=document.getElementById('comment-status');
+document.querySelectorAll('h2').forEach(heading=>{const option=document.createElement('option');option.textContent=heading.textContent;sections.append(option);});
+function showComments(){const list=document.getElementById('comments');list.replaceChildren();comments.forEach(c=>{const li=document.createElement('li');li.textContent=`${c.section}: ${c.text}`;list.append(li);});}
+document.getElementById('add-comment').onclick=()=>{const input=document.getElementById('comment');if(input.value.trim()){comments.push({section:sections.value,text:input.value.trim()});input.value='';showComments();status.textContent='Comment added in memory. Save to retain it.';}};
+document.getElementById('save-comments').onclick=async()=>{
+  const text=JSON.stringify({revision:'A',comments},null,2);
+  try {if(window.showSaveFilePicker){const handle=await window.showSaveFilePicker({suggestedName:'comments.json',types:[{description:'Comments',accept:{'application/json':['.json']}}]});const stream=await handle.createWritable();await stream.write(text);await stream.close();status.textContent='Comments saved to the selected file.';}
+  else {const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='comments.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Download requested. Place comments.json beside the report.';}}
+  catch(error){status.textContent='Comments were not saved. '+error.message;}
+};
+document.getElementById('import-comments').onchange=async event=>{
+  try {const file=event.target.files[0];if(!file)return;const saved=JSON.parse(await file.text());if(saved.revision!=='A'||!Array.isArray(saved.comments)||!saved.comments.every(c=>typeof c.section==='string'&&typeof c.text==='string'))throw Error('Invalid comments format');comments=saved.comments;showComments();status.textContent='Saved comments imported.';}
+  catch(error){status.textContent='Import failed. '+error.message;}
+};
+</script></body></html>

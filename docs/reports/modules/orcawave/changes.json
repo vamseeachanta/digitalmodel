@@ -1,0 +1,8 @@
+{
+  "revision": "A",
+  "changes": [
+    "The spectral response example is introduced with separate single and double amplitudes.",
+    "Finite-frequency variance is compared with the full-frequency analytic reference.",
+    "Physical response qualification and operating limits remain not evaluated."
+  ]
+}
