@@ -38,7 +38,10 @@ def basis():
         "model_sha256": "a" * 64,
         "hs": [quantity(v, "m") for v in [1, 2, 3]],
         "tp": [quantity(v, "s") for v in [6, 8, 10, 12]],
-        "headings": [quantity(v, "deg") for v in [0, 90, 180]],
+        "wave_direction_deg": [
+            {**quantity(v, "deg"), "convention": "orcaflex_global_propagation"}
+            for v in [0, 90, 180]
+        ],
         "criteria": [
             {
                 "name": "hook_tension",
@@ -59,7 +62,9 @@ def records(basis):
             "model_sha256": basis["model_sha256"],
             "solver_version": "not-run",
             "kind": "illustrative",
-            "sea_state": {key: case[key] for key in ("hs_m", "tp_s", "heading_deg")},
+            "sea_state": {
+                key: case[key] for key in ("hs_m", "tp_s", "wave_direction_deg")
+            },
             "metrics": [
                 {
                     "name": "hook_tension",
@@ -79,8 +84,22 @@ def test_source_table_and_cartesian_product(basis):
     assert len(cases) == len({c["case_id"] for c in cases}) == 36
     assert cases[0]["hs_m"] == 1
     assert cases[-1]["tp_s"] == 12
-    assert cases[-1]["heading_deg"] == 180
+    assert cases[-1]["wave_direction_deg"] == 180
     assert cases[0]["sources"]["hs"] == basis["hs"][0]["source"]
+
+
+@pytest.mark.parametrize(
+    "convention", [None, "", "coming_from", "vessel_relative", "clockwise_from_north"]
+)
+def test_wave_direction_requires_global_propagation_convention(basis, convention):
+    for direction in basis["wave_direction_deg"]:
+        direction["convention"] = "orcaflex_global_propagation"
+    if convention is None:
+        basis["wave_direction_deg"][-1].pop("convention")
+    else:
+        basis["wave_direction_deg"][-1]["convention"] = convention
+    with pytest.raises(ValueError, match="convention"):
+        build_cases(basis)
 
 
 def test_contiguous_envelope_and_governing_comparison(basis):
@@ -134,7 +153,7 @@ def test_invalid_physical_inputs(basis, bad):
 
 def test_duplicate_levels_and_records_rejected(basis):
     duplicate = copy.deepcopy(basis)
-    duplicate["headings"].append(duplicate["headings"][0])
+    duplicate["wave_direction_deg"].append(duplicate["wave_direction_deg"][0])
     with pytest.raises(ValueError):
         build_cases(duplicate)
     data = records(basis)
@@ -173,7 +192,7 @@ def test_weather_window_and_standard_report(basis):
     assert "Subsea structure lowering analysis" in html
     assert "NOT_EVALUATED" in html
     assert "Revision history" in html
-    assert "120.0" in html
+    assert ">120</td>" in html
     assert "OrcFxAPI" not in sys.modules
 
 
@@ -233,7 +252,9 @@ def test_negative_criterion_bounds(basis, bound, value, status):
     )
 
 
-@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -float("inf"), True, "-0.1"])
+@pytest.mark.parametrize(
+    "bad", [float("nan"), float("inf"), -float("inf"), True, "-0.1"]
+)
 def test_criterion_bounds_require_finite_numbers(basis, bad):
     basis["criteria"][0]["limit"]["value"] = bad
     with pytest.raises(ValueError):
@@ -244,7 +265,7 @@ def test_result_sea_state_must_match_case(basis):
     data = records(basis)
     for record, case in zip(data, build_cases(basis)):
         record["sea_state"] = {
-            key: case[key] for key in ("hs_m", "tp_s", "heading_deg")
+            key: case[key] for key in ("hs_m", "tp_s", "wave_direction_deg")
         }
     data[0]["sea_state"]["hs_m"] = 99
     assert assess_sweep(basis, data)["screened_hs_limit_m"] is None
@@ -255,7 +276,7 @@ def test_unbounded_or_unknown_cases_rejected(basis):
     data[0]["case_id"] = "unknown"
     with pytest.raises(ValueError):
         assess_sweep(basis, data)
-    basis["headings"][0]["value"] = 360
+    basis["wave_direction_deg"][0]["value"] = 360
     with pytest.raises(ValueError):
         build_cases(basis)
 
@@ -300,34 +321,104 @@ def test_report_revision_and_evidence(basis):
     assert "not-run" in html
 
 
-def test_prepare_case_models_and_preserve_input(basis, tmp_path):
+def test_report_preserves_small_limits_and_distinct_sea_states(basis):
+    """Distinct 1.2/1.25 m waves and 0.03/0.04 m bounds stay legible."""
+    data = records(basis)
+    basis["hs"][0]["value"] = 1.2
+    basis["hs"][1]["value"] = 1.25
+    cases = build_cases(basis)
+    for criterion in basis["criteria"]:
+        criterion.update(name="clearance", bound="minimum")
+        criterion["limit"].update(value=0.04, unit="m")
+    for record, case in zip(data, cases):
+        record["case_id"] = case["case_id"]
+        record["sea_state"] = {
+            key: case[key] for key in ("hs_m", "tp_s", "wave_direction_deg")
+        }
+        for metric in record["metrics"]:
+            metric.update(name="clearance", value=0.03, unit="m")
+    result = assess_sweep(basis, data)
+    assert result["screening_status"] == "FAIL"
+    html = build_report(basis, result, date="2026-10-22")
+    cases_html = html.split('id="cases"', 1)[1].split("</section>", 1)[0]
+    comparisons_html = html.split('id="comparisons"', 1)[1].split("</section>", 1)[0]
+    for value in ("1.2", "1.25"):
+        assert f">{value}</td>" in cases_html
+    for value in ("0.03", "0.04"):
+        assert f">{value}</td>" in comparisons_html
+
+
+def test_report_input_echo_preserves_numeric_values(basis, monkeypatch):
+    import digitalmodel.reporting as reporting
+
+    basis["hs"][0]["value"] = 1.25
+    basis["criteria"][0]["limit"]["value"] = 0.04
+    original = copy.deepcopy(basis)
+    captured = []
+    render_html = reporting.render_html
+
+    def capture(spec):
+        captured.append(spec.input_echo)
+        return render_html(spec)
+
+    monkeypatch.setattr(reporting, "render_html", capture)
+    build_report(basis, assess_sweep(basis, []), date="2026-10-22")
+    assert captured == [original]
+    assert basis == original
+
+
+def test_report_weather_precision_matches_quantity(basis):
+    weather = {
+        "hs_timeseries_m": [0.5, 2, 2],
+        "time_step_hours": 0.04,
+        "required_duration_hours": 0.04,
+        "source": "Arithmetic exercise",
+    }
+    result = assess_sweep(basis, records(basis), weather)
+    html = build_report(basis, result, date="2026-10-22")
+    weather_html = html.split('id="weather"', 1)[1].split("</section>", 1)[0]
+    assert "0.04" in weather_html
+    assert "33.3" in weather_html
+    assert "33.333333" not in weather_html
+
+
+@pytest.mark.parametrize("name", ["Sea", "Sea °"])
+def test_prepare_case_models_and_preserve_input(basis, tmp_path, monkeypatch, name):
     """Independent overlay: 3*4*3=36 files; axes replace only wave fields.
 
     Minimal YAML is a structural exercise, not a simulation-ready model.
     Its depth=50 m and old wave values=9 are invented test inputs.
     """
     import yaml
+    from pathlib import Path
+
     from digitalmodel.workflows.subsea_lowering import prepare_models
 
+    read_text = Path.read_text
+
+    def locale_read_text(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or "cp1252", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", locale_read_text)
     model = {
         "General": {"UnitsSystem": "SI"},
         "Environment": {
             "WaterDepth": 50,
             "WaveTrains": [
                 {
-                    "Name": "Sea",
+                    "Name": name,
                     "WaveType": "JONSWAP",
                     "WaveJONSWAPParameters": "Partially specified",
-                    "WaveGamma": 1,
                     "WaveHs": 9,
                     "WaveTp": 9,
+                    "WaveGamma": 1,
                     "WaveDirection": 9,
                 }
             ],
         },
     }
     source = tmp_path / "source.yml"
-    source.write_text(yaml.safe_dump(model))
+    source.write_text(yaml.safe_dump(model, sort_keys=False), encoding="utf-8")
     original = source.read_bytes()
     basis["model_sha256"] = hashlib.sha256(original).hexdigest()
     output = tmp_path / "models"
@@ -338,15 +429,86 @@ def test_prepare_case_models_and_preserve_input(basis, tmp_path):
     for case, item in zip(build_cases(basis), manifest["models"]):
         path = output / item["file"]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
-        generated = yaml.safe_load(path.read_text())
+        serialized = path.read_text(encoding="utf-8")
+        assert serialized.index("WaveGamma:") < serialized.index("WaveTp:")
+        generated = yaml.safe_load(serialized)
         expected = copy.deepcopy(model)
         expected["Environment"]["WaveTrains"][0].update(
-            WaveHs=case["hs_m"], WaveTp=case["tp_s"], WaveDirection=case["heading_deg"]
+            WaveHs=case["hs_m"],
+            WaveTp=case["tp_s"],
+            WaveDirection=case["wave_direction_deg"],
         )
         assert generated == expected
         assert item["yaml_valid"] is True
     with pytest.raises(FileExistsError):
         prepare_models(basis, source, output)
+
+
+def test_cli_prepares_model_grid_and_records_manifest(basis, tmp_path):
+    """The CLI --model path writes the grid plus report and assessment."""
+    import yaml
+
+    model = tmp_path / "source.yml"
+    model.write_text(
+        yaml.safe_dump(
+            {
+                "General": {"UnitsSystem": "SI"},
+                "Environment": {
+                    "WaveTrains": [
+                        {
+                            "Name": "Sea °",
+                            "WaveType": "JONSWAP",
+                            "WaveJONSWAPParameters": "Partially specified",
+                            "WaveTp": 9,
+                            "WaveGamma": 1,
+                        }
+                    ]
+                },
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+    original = model.read_bytes()
+    basis["model_sha256"] = hashlib.sha256(original).hexdigest()
+    source = tmp_path / "basis.json"
+    source.write_text(json.dumps(basis), encoding="utf-8")
+    out = tmp_path / "output"
+    args = [str(source), "--model", str(model), "--output", str(out)]
+    assert main([*args, "--date", "2026-10-22"]) == 0
+    assessment = json.loads((out / "assessment.json").read_text(encoding="utf-8"))
+    manifest_path = out / "models" / "manifest.json"
+    manifest_bytes = manifest_path.read_bytes()
+    manifest = json.loads(manifest_bytes)
+    assert len(manifest["models"]) == len(assessment["cases"]) == 36
+    assert manifest["source_sha256"] == basis["model_sha256"]
+    assert assessment["basis_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert (
+        assessment["engineering_status"]
+        == manifest["engineering_status"]
+        == "NOT_EVALUATED"
+    )
+    for case, item in zip(build_cases(basis), manifest["models"]):
+        generated = out / "models" / item["file"]
+        assert hashlib.sha256(generated.read_bytes()).hexdigest() == item["sha256"]
+        text = generated.read_text(encoding="utf-8")
+        assert text.index("WaveGamma:") < text.index("WaveTp:")
+        wave = yaml.safe_load(text)["Environment"]["WaveTrains"][0]
+        assert wave["Name"] == "Sea °"
+        assert (
+            wave["WaveDirection"]
+            == item["wave_direction_deg"]
+            == case["wave_direction_deg"]
+        )
+        assert item["convention"] == "orcaflex_global_propagation"
+    assert "Subsea structure lowering analysis" in (out / "report.html").read_text(
+        encoding="utf-8"
+    )
+    with pytest.raises(FileExistsError):
+        main(args)
+    assert model.read_bytes() == original
+    assert manifest_path.read_bytes() == manifest_bytes
 
 
 @pytest.mark.parametrize("units", ["US", "User", "si", None, "missing"])

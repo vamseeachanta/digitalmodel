@@ -21,6 +21,7 @@ from digitalmodel.weather_window.workflow import window_lengths_hours
 
 PHASES = ("splash", "submerged", "landing")
 PENDING = "NOT_EVALUATED"
+WAVE_CONVENTION = "orcaflex_global_propagation"
 
 
 def _number(value, *, positive=False, signed=False):
@@ -55,27 +56,34 @@ def build_cases(basis):
     if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
         raise ValueError("A model SHA-256 is required")
     axes = []
-    for key, unit in (("hs", "m"), ("tp", "s"), ("headings", "deg")):
+    for key, unit in (("hs", "m"), ("tp", "s"), ("wave_direction_deg", "deg")):
         axis = basis[key]
-        values = [_quantity(item, unit, positive=key != "headings") for item in axis]
+        values = [
+            _quantity(item, unit, positive=key != "wave_direction_deg") for item in axis
+        ]
         if not values or len(set(values)) != len(values):
             raise ValueError("Axes must be nonempty and unique")
-        # Heading convention is a single turn [0,360), degrees by definition.
-        if key == "headings" and any(v >= 360 for v in values):
-            raise ValueError("Headings must be in [0,360) degrees")
+        if key == "wave_direction_deg":
+            # Orcina web help, Environment: Wave data / Wave direction:
+            # propagation, positive anticlockwise from global +X, viewed above.
+            if any(item.get("convention") != WAVE_CONVENTION for item in axis):
+                raise ValueError("Wave direction convention must be " + WAVE_CONVENTION)
+            if any(v >= 360 for v in values):
+                raise ValueError("Wave directions must be in [0,360) degrees")
         axes.append(sorted(axis, key=lambda item: item["value"]))
     cases = []
-    for index, (hs, tp, heading) in enumerate(itertools.product(*axes)):
+    for index, (hs, tp, direction) in enumerate(itertools.product(*axes)):
         cases.append(
             {
                 "case_id": f"case-{index:04d}",
                 "hs_m": hs["value"],
                 "tp_s": tp["value"],
-                "heading_deg": heading["value"],
+                "wave_direction_deg": direction["value"],
+                "convention": direction["convention"],
                 "sources": {
                     "hs": hs["source"],
                     "tp": tp["source"],
-                    "heading": heading["source"],
+                    "wave_direction": direction["source"],
                 },
             }
         )
@@ -156,14 +164,17 @@ def prepare_models(basis, source, output):
             changed["Environment"]["WaveTrains"][0].update(
                 WaveHs=case["hs_m"],
                 WaveTp=case["tp_s"],
-                WaveDirection=case["heading_deg"],
+                WaveDirection=case["wave_direction_deg"],
             )
             target = generated / (case["case_id"] + ".yml")
             orcaflex_dump(changed, target)
             validation = validator.validate_file(target)
             if not validation.valid:
                 raise ValueError("Generated model failed YAML validation")
-            if yaml.load(target.read_text(), Loader=OrcaFlexLoader) != changed:
+            if (
+                yaml.load(target.read_text(encoding="utf-8"), Loader=OrcaFlexLoader)
+                != changed
+            ):
                 raise ValueError("Generated model semantic readback mismatch")
             manifest["models"].append(
                 {
@@ -178,7 +189,10 @@ def prepare_models(basis, source, output):
             json.dumps(manifest, indent=2), encoding="utf-8"
         )
         shutil.copytree(generated, output)
-        if json.loads((output / "manifest.json").read_text()) != manifest:
+        if (
+            json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+            != manifest
+        ):
             raise ValueError("Manifest readback mismatch")
     return manifest
 
@@ -246,7 +260,7 @@ def _weather(weather, limit):
 
 
 def assess_sweep(basis, records, weather=None):
-    """Require every period, heading and phase before deriving a grid envelope.
+    """Require every period, wave direction and phase for a grid envelope.
 
     The limit is the highest contiguous passing sampled Hs from the lowest Hs.
     No interpolation or extrapolation is performed. Imported extrema are never
@@ -273,7 +287,7 @@ def assess_sweep(basis, records, weather=None):
     for case in cases:
         record = by_id.get(case["case_id"], {})
         state_matches = record.get("sea_state") == {
-            key: case[key] for key in ("hs_m", "tp_s", "heading_deg")
+            key: case[key] for key in ("hs_m", "tp_s", "wave_direction_deg")
         }
         checks = _checks(record, criteria)
         statuses = [check["status"] for check in checks]
@@ -324,7 +338,7 @@ def assess_sweep(basis, records, weather=None):
             "Imported extrema are not native-output qualification.",
             "No approved public numerical benchmark is established.",
             "Model, rigging, buoy properties and lowering history require qualification.",
-            "Envelope is restricted to sampled periods and headings; no interpolation.",
+            "Envelope is restricted to sampled periods and wave directions; no interpolation.",
             "Project criteria are required; no standards-derived limits are supplied.",
         ],
         "weather_window": _weather(weather, limit),
@@ -348,9 +362,9 @@ def build_report(basis, result, *, date):
     rows = [
         [
             case["case_id"],
-            f"{case['hs_m']:.1f}",
-            f"{case['tp_s']:.1f}",
-            f"{case['heading_deg']:.1f}",
+            f"{case['hs_m']:g}",
+            f"{case['tp_s']:g}",
+            f"{case['wave_direction_deg']:g}",
             case["status"],
         ]
         for case in result["cases"]
@@ -360,9 +374,9 @@ def build_report(basis, result, *, date):
             case["case_id"],
             check["phase"],
             check["name"],
-            "Not evaluated" if check["value"] is None else f"{check['value']:.1f}",
+            "Not evaluated" if check["value"] is None else f"{check['value']:g}",
             check["bound"],
-            f"{check['limit']:.1f}",
+            f"{check['limit']:g}",
             check["unit"],
             check["status"],
             check["source"],
@@ -371,16 +385,13 @@ def build_report(basis, result, *, date):
         for check in case["checks"]
     ]
     limit = result["screened_hs_limit_m"]
-    limit_text = "not established" if limit is None else f"{limit:.1f} m"
-
-    def display(value):
-        if isinstance(value, float):
-            return f"{value:.1f}"
-        if isinstance(value, dict):
-            return {key: display(item) for key, item in value.items()}
-        if isinstance(value, list):
-            return [display(item) for item in value]
-        return value
+    limit_text = "not established" if limit is None else f"{limit:g} m"
+    weather_display = {
+        key: format(value, ".1f" if key == "workability_pct" else "g")
+        if isinstance(value, float)
+        else value
+        for key, value in result["weather_window"].items()
+    }
 
     spec = ReportSpec(
         document=DocumentMeta(
@@ -422,7 +433,13 @@ def build_report(basis, result, *, date):
                 blocks=[
                     TableBlock(
                         title="Sourced sea-state sweep",
-                        columns=["Case", "Hs (m)", "Tp (s)", "Heading (deg)", "Status"],
+                        columns=[
+                            "Case",
+                            "Hs (m)",
+                            "Tp (s)",
+                            "Wave direction (deg)",
+                            "Status",
+                        ],
                         rows=rows,
                     ),
                     TextBlock(
@@ -457,11 +474,7 @@ def build_report(basis, result, *, date):
             Section(
                 key="weather",
                 title="Weather-window screen",
-                blocks=[
-                    TextBlock(
-                        markdown=json.dumps(display(result["weather_window"]), indent=2)
-                    )
-                ],
+                blocks=[TextBlock(markdown=json.dumps(weather_display, indent=2))],
             ),
             Section(
                 key="limits",
@@ -469,7 +482,7 @@ def build_report(basis, result, *, date):
                 blocks=[TextBlock(markdown="\n\n".join(result["limitations"]))],
             ),
         ],
-        input_echo=display(basis),
+        input_echo=basis,
     )
     spec.sections.insert(1, revision_section(spec.document))
     spec.sections.append(
