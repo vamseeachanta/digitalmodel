@@ -318,7 +318,7 @@ def build_document(cfg: dict[str, Any] | None = None):
         TableBlock(title='Revision history', columns=['Revision', 'Date', 'Change and reason'], rows=[
             ['00', '2026-10-22', 'Public worked example with explicit assumptions and reproducible results.']])]))
     for record in spec.citations:
-        validate_citation(Citation(**record), repo_root=DESTINATION)
+        validate_citation(Citation(**record), repo_root=ROOT)
     return spec, numerical_record(cfg)
 
 

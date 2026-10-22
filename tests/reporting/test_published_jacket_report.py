@@ -12,8 +12,14 @@ from pathlib import Path
 import pytest
 import yaml
 
+from digitalmodel.citations import CitationResolutionError
+
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / 'docs/domains/cathodic_protection/reports/published-jacket-84m'
+ARTIFACTS = {
+    'cathodic-protection-analysis.html', 'cathodic-protection-analysis_citations.json',
+    'cathodic-protection-analysis_manifest.json', 'changes.json', 'checksums.json', 'results.json',
+}
 
 
 @pytest.fixture
@@ -40,13 +46,66 @@ def test_saved_numbers_match_fresh_workflow(builder):
     fresh = builder.numerical_record(builder.calculate())
     assert saved['current_A'] == pytest.approx(fresh['current_A'], rel=1e-12)
     assert saved['anode_counts'] == fresh['anode_counts']
-    assert saved['anode_counts'] == {
-        'installed': 569, 'mass': 547, 'initial': 575, 'final': 556, 'recommended': 575,
+
+
+def test_anode_counts_have_independent_hand_calculations(builder):
+    cfg = builder.calculate()
+    saved = json.loads((OUTPUT / 'results.json').read_text(encoding='utf-8'))
+    # Fixture verification_evidence.assumptions: 25 yr, 2000 Ah/kg, 0.90
+    # utilisation, 2750 kg/m³ and equivalent cylinders at the 2.020 m length.
+    # These inputs are assumed, based on previous experience. The paper gives
+    # 323.4 kg, 0.22 ohm.m, 0.25 V and 569 installed: p. 242, Section 2.
+    # Method: DNV-RP-B401, May 2021, Anode mass; Anode current output;
+    # Anode resistance, Table 8-7 (long slender stand-off anode).
+    # Hand mass: 1452.450 × 25 × 8760 / (2000 × 0.90) = 176714.8 kg.
+    required_mass = 1452.450 * 25 * 8760 / (2000 * 0.90)
+    assert required_mass == pytest.approx(176714.8, abs=0.05)
+    # r = sqrt(m / (π L ρ)); R = ρ_water (ln(4 L / r) − 1) / (2 π L).
+    # Fresh: r = 0.136130 m, R = 0.053449 ohm, I = 0.25 / R = 4.6773 A.
+    fresh_radius = math.sqrt(323.4 / (math.pi * 2.020 * 2750))
+    fresh_resistance = 0.22 * (math.log(4 * 2.020 / fresh_radius) - 1) / (2 * math.pi * 2.020)
+    fresh_output = 0.25 / fresh_resistance
+    assert fresh_output == pytest.approx(4.6773, abs=0.00005)
+    # Depleted: 10 % mass remains; r = 0.043048 m, R = 0.073405 ohm.
+    # I_final = 0.25 / R_final = 3.4057 A, with length held at 2.020 m.
+    depleted_radius = math.sqrt(323.4 * (1 - 0.90) / (math.pi * 2.020 * 2750))
+    depleted_resistance = 0.22 * (math.log(4 * 2.020 / depleted_radius) - 1) / (2 * math.pi * 2.020)
+    depleted_output = 0.25 / depleted_resistance
+    assert depleted_output == pytest.approx(3.4057, abs=0.00005)
+    # ceil(176714.8/323.4)=547; ceil(2688.285/4.6773)=575;
+    # ceil(1892.052/3.4057)=556; governing count=max(547,575,556)=575.
+    counts = {
+        'installed': 569,
+        'mass': math.ceil(required_mass / 323.4),
+        'initial': math.ceil(2688.285 / fresh_output),
+        'final': math.ceil(1892.052 / depleted_output),
     }
+    counts['recommended'] = max(counts[key] for key in ('mass', 'initial', 'final'))
+    assert saved['anode_counts'] == counts
+    assert builder.numerical_record(cfg)['anode_counts'] == counts
+
+
+def test_citations_resolve_from_repository_root(builder, tmp_path, monkeypatch):
+    page = tmp_path / 'knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md'
+    page.parent.mkdir(parents=True)
+    page.write_text('---\ncode_id: dnv-rp-b401\npublisher: DNV\nrevision: "2021-05"\n---\n',
+                    encoding='utf-8', newline='\n')
+    monkeypatch.setattr(builder, 'ROOT', tmp_path)
+    monkeypatch.setattr(builder, 'DESTINATION', tmp_path / 'reports')
+    spec, _ = builder.build_document()
+    assert spec.citations[0]['wiki_path'] == page.relative_to(tmp_path / 'knowledge').as_posix()
+
+
+def test_missing_canonical_citation_fails_closed(builder, tmp_path, monkeypatch):
+    monkeypatch.setattr(builder, 'ROOT', tmp_path)
+    with pytest.raises(CitationResolutionError, match='page_missing'):
+        builder.build_document()
 
 
 def test_public_page_and_rebuild(builder, tmp_path):
+    assert {p.relative_to(OUTPUT).as_posix() for p in OUTPUT.rglob('*') if p.is_file()} == ARTIFACTS
     builder.build(tmp_path)
+    assert {p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob('*') if p.is_file()} == ARTIFACTS
     for path in OUTPUT.iterdir():
         if not path.is_file() or path.name == 'checksums.json':
             continue
