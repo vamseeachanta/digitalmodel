@@ -108,7 +108,7 @@
       "basis": "Preparation record or implementation; first issue created with this change.",
       "record_count": 1,
       "retrieval_date": "2026-10-14",
-      "sha256": "80f821128459fcdab4c058c7c49fa86a4c4a1c8c9e475ed4cab0f2374351844e",
+      "sha256": "f4e2bcac3c5170a27d96938067b636be1dd306a981e7d1d68afb35b5678192c3",
       "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py"
     },
     "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": {
@@ -145,7 +145,7 @@
     "src/digitalmodel/hydrodynamics/passing_ship/calculator.py": "898abaad32fe52845cd8894b3f1bb659c066c256de7df9201a9c04031cb5edfb",
     "src/digitalmodel/hydrodynamics/passing_ship/configuration.py": "63190f191ce4e578bb61390aa78b090bb041978b8a8832f09a11ee48e343c1cd",
     "src/digitalmodel/hydrodynamics/passing_ship/formulations.py": "0f251cdd95df37a28b38255c56f8b133a3424f898403a88c0ce17ccfca1e8c71",
-    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": "80f821128459fcdab4c058c7c49fa86a4c4a1c8c9e475ed4cab0f2374351844e",
+    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": "f4e2bcac3c5170a27d96938067b636be1dd306a981e7d1d68afb35b5678192c3",
     "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": "57cfa67b83c9ce7f7f4f19a6aaff598a90d83fd3091d8b3a833c490404e42d03",
     "src/digitalmodel/hydrodynamics/passing_ship/preparation_report.py": "8408220bd61c77e808bb8c7b962ef21c10dbe4429cf1cbfea82400b24ecbc07c",
     "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969"

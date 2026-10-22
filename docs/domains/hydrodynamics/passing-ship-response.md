@@ -11,6 +11,7 @@ acceptance are **NOT_EVALUATED**.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-20 | Added sampled response, wind, case execution and a reproducible spring example to consume existing force histories. |
+| 2 | 2026-10-22 | Included the full pretension resultant, added a period and passage-duration comparison, corrected wind conventions and preserved small reported responses. |
 
 ## Inputs and method
 
@@ -20,7 +21,9 @@ response is requested. Neither line material nor length determines it. A
 separate line calculation or measurement must supply it. Existing `pretension`
 is in kN; the response boundary converts it to N as specified by
 [the units convention](../../UNITS.md). Fairleads and anchors share the midship
-coordinate origin. Initial pretensions must balance in surge, sway and yaw.
+coordinate origin. Reference pretensions are included in the total force and
+moment balance, including any initial resultant. Unstretched length does not
+bound the loaded horizontal reach; stretched geometry is not reconstructed.
 
 Let `q = [surge, sway, yaw]`, with translations in metres and yaw in radians.
 For the unit vector `n` from anchor to fairlead at location `(x,y)`, define
@@ -36,14 +39,27 @@ model assumptions. The user must qualify them for the intended displacement.
 A `FenderSpec` supplies contact coordinates, a normal pointing toward
 compression, stiffness and initial gap. The normal is normalized. Fender force
 is `R = kf*max(bf.q-gap,0)`. The contact set is iterated, solving
-`K*q + sum(bf*R) = [Fx,Fy,Mz]` at each sample. Unsupported restraint, contact
-iteration failure, negative line tension, unbalanced reference pretension and
+`K*q + B.T*T0 + sum(bf*R) = [Fx,Fy,Mz]` at each sample, where the rows of `B`
+are the line vectors `b`. Unsupported restraint, contact
+iteration failure, negative line tension and
 excess residuals raise an error. Slack lines are not silently clipped.
 
 `ResponseSettings` requires `max_translation_m`, `max_yaw_rad`,
 `force_tolerance_n` and `moment_tolerance_nm`. The translation bound applies to
 the horizontal displacement norm. These are user-defined model validity and
 numerical checks, not sourced design acceptance limits. No defaults are guessed.
+Numerical tolerances apply to the total equilibrium residual; no tolerance
+discards a reference pretension resultant. Response numeric inputs reject
+booleans, numeric strings and non-finite values.
+
+An uncoupled surge-period estimate `T=2*pi*sqrt(m/Kxx)` uses displacement mass
+in kg and bare-line surge stiffness in N/m, following OpenStax, *University
+Physics Volume 1* (2016), section 15.1, cited above. The passage duration
+`(L1+L2)/U` uses both hull lengths and the effective case speed. The report
+compares the period with that duration and gives their ratio. This estimate
+excludes added mass, coupled modes and fender contact stiffness. No dynamic
+acceptance criterion is supplied: applicability remains **NOT_EVALUATED**.
+Cases without a passing load have no passage duration or corresponding ratio.
 
 ## Wind and coordinate conventions
 
@@ -52,6 +68,9 @@ areas, surge/sway coefficients and centre of pressure coordinates. Wind speed
 and direction come from `EnvironmentSpec`. Direction is the meteorological
 **from** direction relative to the moored bow, increasing toward starboard.
 Transform global meteorological bearings into this body convention before use.
+Thus 0 degrees is from the bow, 90 from starboard, 180 from the stern and 270
+from port. The passing ship travels on the positive-y (starboard) side of the
+moored hull; the supplied separation is the positive centreline distance.
 
 For `vx=-V*cos(direction)` and `vy=-V*sin(direction)`, the explicit simplified
 model is `Fx=rho*Ax*Cx*vx*abs(vx)/2` and
@@ -96,8 +115,8 @@ unqualified; response results inherit that limitation when finite depth is used.
 
 The executable example is
 [passing_ship_response.py](../../../examples/domains/hydrodynamics/passing_ship_response.py).
-All numerical inputs are **assumed, based on previous experience**, for arithmetic
-illustration. They are not qualified line or wind properties.
+All numerical inputs are synthetic arithmetic values selected for simple hand
+calculations. They are not measured or qualified line or wind properties.
 
 Six opposed springs have stiffness 1000.0 N/m and pretension 10.0 kN each.
 One pair restrains surge at midship; two pairs restrain sway at longitudinal
@@ -130,6 +149,11 @@ The HTML embeds the plotting library and shows computed tension envelopes,
 motion histories and applied force histories. To add computed results to the
 existing force benchmark report, pass
 `generate_benchmark_report(response_results=results)`.
+Tension envelopes are displayed in N; yaw plots use mrad. Significant-figure
+axis and hover formats preserve small motions. SI histories and CSV inputs
+retain their original precision. `response_sections` accepts `revision_history`
+rows with `revision`, `date` and `change`; missing records are labelled explicitly,
+and no issue date or revision is inferred from the date of generation.
 
 ## Verification and remaining qualification
 

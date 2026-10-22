@@ -34,6 +34,9 @@ class AnalysisResult:
     motions: np.ndarray | None
     line_tensions_n: dict[str, np.ndarray] | None
     fender_loads_n: dict[str, np.ndarray] | None
+    surge_natural_period_s: float | None = None
+    passage_duration_s: float | None = None
+    applicability_basis: dict[str, float] | None = None
 
 
 def wind_force(spec: PassingShipSpec) -> np.ndarray:
@@ -201,6 +204,19 @@ def run_analysis_cases(
                 fender_loads_n=response.fender_loads_n
                 if outputs.fender_loads
                 else None,
+                surge_natural_period_s=response.surge_natural_period_s
+                if response is not None else None,
+                # Kinematic duration: distance swept by both hull lengths / U.
+                passage_duration_s=(
+                    spec.moored_vessel.hull.loa + spec.passing_ship.dimensions.loa
+                ) / track.speed_ms if case.include_passing_ship else None,
+                applicability_basis={
+                    "mass_kg": spec.moored_vessel.hull.displacement_tonnes * 1000,
+                    "surge_stiffness_n_m": response.surge_stiffness_n_m,
+                    "moored_length_m": spec.moored_vessel.hull.loa,
+                    "passing_length_m": spec.passing_ship.dimensions.loa,
+                    "speed_m_s": track.speed_ms,
+                } if response is not None else None,
             )
         )
     return results

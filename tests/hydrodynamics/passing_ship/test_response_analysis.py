@@ -17,6 +17,7 @@ from digitalmodel.hydrodynamics.passing_ship.analysis import (
 from digitalmodel.hydrodynamics.passing_ship.input_schemas import (
     AnalysisCase,
     EnvironmentSpec,
+    FenderSpec,
     OutputSpec,
     PassingShipDimensions,
     PassingShipScenario,
@@ -68,6 +69,71 @@ def test_wind_hand_calculation_and_body_direction(spec):
     np.testing.assert_allclose(wind_force(spec), [-200, 0, 200], atol=1e-10)
     spec.environment.wind_direction_deg = 90
     np.testing.assert_allclose(wind_force(spec), [0, -400, -800], atol=1e-10)
+
+
+def test_wind_schema_and_sample_use_body_relative_direction(spec):
+    """270 degrees is from port: Fy=0.5*1*8*10**2=400 N."""
+    from pathlib import Path
+
+    description = EnvironmentSpec.model_fields["wind_direction_deg"].description
+    assert "body-relative" in description and "bow" in description
+    sample = Path(__file__).resolve().parents[3] / (
+        "docs/domains/orcaflex/passing_ship/sample/spec.yml"
+    )
+    text = sample.read_text(encoding="utf-8")
+    assert "from west" not in text
+    assert "from port" in text
+    spec.environment.wind_direction_deg = 270
+    np.testing.assert_allclose(wind_force(spec), [0, 400, 800], atol=1e-10)
+
+
+def test_passage_timescale_respects_case_speed(spec):
+    """m=2000 kg, Kxx=2000 N/m: T=6.283185307179586 s.
+
+    L1+L2=10+8=18 m; U=1/2 m/s: durations 18/9 s.
+    OpenStax (2016), 15.1 supplies T; duration is distance/speed.
+    """
+    spec.moored_vessel.hull.displacement_tonnes = 2
+    spec.passing_ship.track.speed_knots = 1 / 0.514444
+    spec.analysis_cases = [AnalysisCase(name="base"), AnalysisCase(
+        name="faster", passing_speed_knots=2 / 0.514444,
+    )]
+    results = run_analysis_cases(spec, time_s=[0], start_stagger_m=0)
+    assert results[0].surge_natural_period_s == pytest.approx(6.283185307179586)
+    assert results[0].passage_duration_s == pytest.approx(18)
+    assert results[1].passage_duration_s == pytest.approx(9)
+    assert results[0].applicability_basis == pytest.approx({
+        "mass_kg": 2000, "surge_stiffness_n_m": 2000,
+        "moored_length_m": 10, "passing_length_m": 8, "speed_m_s": 1,
+    })
+    spec.analysis_cases = [AnalysisCase(name="wind", include_passing_ship=False)]
+    assert run_analysis_cases(spec, time_s=[0], start_stagger_m=0)[0].passage_duration_s is None
+
+
+@pytest.mark.parametrize("invalid", [True, False, "1", float("nan"), float("inf")])
+@pytest.mark.parametrize("group", ["stiffness", "fender", "settings", "wind"])
+def test_response_numeric_inputs_are_strict_and_finite(spec, invalid, group):
+    """Every new numeric input rejects booleans, strings and nonfinite values."""
+    from pydantic import ValidationError
+
+    if group == "stiffness":
+        model = type(spec.moored_vessel.mooring_lines[0])
+        data = spec.moored_vessel.mooring_lines[0].model_dump()
+        fields = ["horizontal_stiffness_n_m"]
+    elif group == "fender":
+        model = FenderSpec
+        data = dict(fender_id="contact", x=0, y=0, normal_x=0, normal_y=1,
+                    gap_m=0, stiffness_n_m=4000)
+        fields = [name for name in data if name != "fender_id"]
+    else:
+        instance = spec.response_settings if group == "settings" else spec.moored_vessel.wind_load
+        model, data = type(instance), instance.model_dump()
+        fields = list(data)
+    # Positive case: the integer and float engineering inputs remain valid.
+    assert model.model_validate(data).model_dump() == data
+    for field in fields:
+        with pytest.raises(ValidationError):
+            model.model_validate({**data, field: invalid})
 
 
 def test_every_case_and_wind_response(spec):

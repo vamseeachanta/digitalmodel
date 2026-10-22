@@ -132,7 +132,6 @@ def test_fender_contact_and_gap(vessel, settings):
         ("singular", "restrain"),
         ("slack", "slack"),
         ("bounds", "translation"),
-        ("pretension", "reference"),
         ("nonfinite", "finite"),
         ("time", "time"),
         ("duplicate", "unique"),
@@ -151,8 +150,6 @@ def test_refuses_invalid_or_unqualified_response(vessel, settings, defect, match
         settings.max_translation_m = 50
     elif defect == "bounds":
         settings.max_translation_m = 0.1
-    elif defect == "pretension":
-        vessel.mooring_lines[0].pretension = 11
     elif defect == "nonfinite":
         loads.surge[1] = np.nan
     elif defect == "time":
@@ -161,6 +158,64 @@ def test_refuses_invalid_or_unqualified_response(vessel, settings, defect, match
         vessel.mooring_lines[0].line_id = vessel.mooring_lines[1].line_id
     with pytest.raises(ValueError, match=match):
         solve_response(vessel, loads, settings)
+
+
+@pytest.mark.parametrize("tolerance", [1e-7, 60.0])
+def test_pretension_resultant_is_always_balanced(vessel, settings, tolerance):
+    """B.T*T0=(50,0,0) N; qx=(0-50)/2000=-0.025 m.
+
+    T(x+)=10050-25=10025 N; T(x-)=10000+25=10025 N.
+    The residual tolerance does not remove a physical load from equilibrium.
+    """
+    vessel.mooring_lines[0].pretension = 10.05
+    settings.force_tolerance_n = tolerance
+    result = solve_response(vessel, history([[0, 0, 0]]), settings)
+    np.testing.assert_allclose(result.motions, [[-0.025, 0, 0]], atol=1e-12)
+    assert result.line_tensions_n["x+"][0] == pytest.approx(10025)
+    assert result.line_tensions_n["x-"][0] == pytest.approx(10025)
+    np.testing.assert_allclose(result.residuals, 0, atol=1e-9)
+
+
+def test_pretension_moment_with_fender_is_balanced(vessel, settings):
+    """Bow+ bias 100 N gives initial Fy=100 N, Mz=200 Nm.
+
+    At q=(0,0.1,0.025), R=200 N: total Fy=100+400+200=700 N;
+    total Mz=200+400+400=1000 Nm, T(bow+)=10100+150=10250 N.
+    """
+    vessel.mooring_lines[2].pretension = 10.1
+    vessel.fenders = [FenderSpec(
+        fender_id="contact", x=2, y=0, normal_x=0, normal_y=1,
+        gap_m=0.1, stiffness_n_m=4000,
+    )]
+    result = solve_response(vessel, history([[0, 700, 1000]]), settings)
+    np.testing.assert_allclose(result.motions, [[0, 0.1, 0.025]], atol=1e-12)
+    assert result.fender_loads_n["contact"][0] == pytest.approx(200)
+    assert result.line_tensions_n["bow+"][0] == pytest.approx(10250)
+    np.testing.assert_allclose(result.residuals, 0, atol=1e-9)
+
+
+def test_pretensioned_span_can_exceed_unstretched_length(vessel, settings):
+    """The effective tangent input does not reconstruct stretched length."""
+    vessel.mooring_lines[0].length = 19
+    result = solve_response(vessel, history([[1000, 0, 0]]), settings)
+    assert result.motions[0, 0] == pytest.approx(0.5)
+
+
+def test_uncoupled_surge_period_uses_mass_and_stiffness(vessel, settings):
+    """OpenStax (2016), 15.1: m=2 t=2000 kg, Kxx=2000 N/m.
+
+    T=2*pi*sqrt(2000/2000)=6.283185307179586 s, excluding added mass.
+    """
+    vessel.hull.displacement_tonnes = 2
+    result = solve_response(vessel, history([[0, 0, 0]]), settings)
+    assert result.surge_natural_period_s == pytest.approx(6.283185307179586)
+
+
+@pytest.mark.parametrize("mass", [float("nan"), float("inf")])
+def test_period_estimate_refuses_nonfinite_mass(vessel, settings, mass):
+    vessel.hull.displacement_tonnes = mass
+    with pytest.raises(ValueError, match="finite"):
+        solve_response(vessel, history([[0, 0, 0]]), settings)
 
 
 def test_off_centre_fender_moment_and_normal(vessel, settings):

@@ -24,7 +24,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -74,8 +74,8 @@ class MooringLineSpec(BaseModel):
     )
     length: float = Field(..., gt=0, description="Unstretched line length (m)")
     pretension: float = Field(..., ge=0, description="Pretension (kN)")
-    horizontal_stiffness_n_m: Optional[float] = Field(
-        None, gt=0,
+    horizontal_stiffness_n_m: Optional[StrictFloat] = Field(
+        None, gt=0, allow_inf_nan=False,
         description="Effective horizontal tangent stiffness (N/m); required for response",
     )
     fairlead_x: float = Field(
@@ -110,6 +110,8 @@ class MooringLineSpec(BaseModel):
 class FenderSpec(BaseModel):
     """Unloaded linear compression spring; normal points toward compression."""
 
+    model_config = ConfigDict(strict=True, allow_inf_nan=False)
+
     fender_id: str
     x: float = Field(..., description="Contact x from midship (m)")
     y: float = Field(..., description="Contact y from centreline (m)")
@@ -127,6 +129,8 @@ class ResponseSettings(BaseModel):
     tangent stiffness and the small-displacement assumption.
     """
 
+    model_config = ConfigDict(strict=True, allow_inf_nan=False)
+
     max_translation_m: float = Field(..., gt=0)
     max_yaw_rad: float = Field(..., gt=0)
     force_tolerance_n: float = Field(..., gt=0)
@@ -141,6 +145,8 @@ class WindLoadSpec(BaseModel):
     drag. Coefficients must be qualified for that convention. Centre of
     pressure coordinates supply the yaw moment arm.
     """
+
+    model_config = ConfigDict(strict=True, allow_inf_nan=False)
 
     air_density_kg_m3: float = Field(..., gt=0)
     frontal_area_m2: float = Field(..., gt=0)
@@ -319,7 +325,10 @@ class EnvironmentSpec(BaseModel):
     )
     wind_direction_deg: Optional[float] = Field(
         None,
-        description="Wind direction (deg, meteorological convention)",
+        description=(
+            "Wind from direction (deg, body-relative): 0 from bow, "
+            "90 from starboard, 180 from stern, 270 from port; clockwise from bow"
+        ),
     )
     current_speed: Optional[float] = Field(
         None,
@@ -476,7 +485,7 @@ class PassingShipSpec(BaseModel):
         """
         import yaml
 
-        with open(path) as fh:
+        with open(path, encoding="utf-8") as fh:
             data = yaml.safe_load(fh)
         return cls.model_validate(data)
 
@@ -493,7 +502,7 @@ class PassingShipSpec(BaseModel):
 
         path = Path(path)
         data = self.model_dump(mode="json", exclude_none=True)
-        with open(path, "w") as fh:
+        with open(path, "w", encoding="utf-8", newline="\n") as fh:
             yaml.dump(data, fh, default_flow_style=False, sort_keys=False)
         return path
 

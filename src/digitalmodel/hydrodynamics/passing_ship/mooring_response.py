@@ -3,7 +3,7 @@
 
 """Planar quasi-static response to sampled forces, without a licensed solver.
 
-At every sample, solve equilibrium about an initially balanced reference.
+At every sample, solve total equilibrium including the reference pretensions.
 For q=[surge m, sway m, yaw rad] and an anchor-to-fairlead unit vector n,
 b=[nx, ny, x*ny-y*nx]; extension=b.q and T=T0+k*b.q. Thus K=sum(k*b*b.T).
 These are Hooke's law and force/moment balance (OpenStax, University Physics
@@ -15,7 +15,7 @@ Stiffness is an effective horizontal tangent input, not inferred from line type,
 length or pretension. No vertical/catenary reconstruction, geometric stiffness,
 inertia, damping, waves or dynamic amplification is included. Each timestamp
 is a static equilibrium, not a time integration. Slack lines, unsupported
-restraint, unbalanced reference loads, failed balance and user validity-bound
+restraint, failed balance and user validity-bound
 violations raise ValueError; no partial result is returned. No strength or
 operability acceptance criteria are evaluated.
 """
@@ -29,7 +29,7 @@ import numpy as np
 from .force_time_history import ForceTimeHistory
 from .input_schemas import MooredVesselSpec, ResponseSettings
 
-# docs/UNITS.md, "The rule", defines the exact legacy kN-to-N boundary.
+# docs/UNITS.md, "Rule 1", defines the exact legacy kN-to-N boundary.
 _KN_TO_N = 1000.0
 
 
@@ -42,6 +42,8 @@ class MooringResponse:
     line_tensions_n: dict[str, np.ndarray]
     fender_loads_n: dict[str, np.ndarray]
     residuals: np.ndarray  # surge N, sway N, yaw N m
+    surge_natural_period_s: float  # uncoupled dry-mass estimate, no added mass
+    surge_stiffness_n_m: float
 
 
 def _arm(nx: float, ny: float, x: float, y: float) -> list[float]:
@@ -55,6 +57,9 @@ def solve_response(
     settings: ResponseSettings,
 ) -> MooringResponse:
     """Return sampled equilibrium, tensions and unilateral fender reactions."""
+    mass_tonnes = vessel.hull.displacement_tonnes
+    if mass_tonnes is None or not np.isfinite(mass_tonnes) or mass_tonnes <= 0:
+        raise ValueError("surge period requires finite positive displacement")
     # Revalidation also covers models mutated after construction.
     vessel = MooredVesselSpec.model_validate(vessel.model_dump())
     settings = ResponseSettings.model_validate(settings.model_dump())
@@ -79,8 +84,8 @@ def solve_response(
             [line.fairlead_x - line.anchor_x, line.fairlead_y - line.anchor_y]
         )
         reach = np.linalg.norm(delta)
-        if not np.isfinite(reach) or reach <= 0 or reach > line.length:
-            raise ValueError("line length must span a positive horizontal reach")
+        if not np.isfinite(reach) or reach <= 0:
+            raise ValueError("line must have a positive finite horizontal reach")
         rows.append(_arm(*(delta / reach), line.fairlead_x, line.fairlead_y))
         stiffness.append(line.horizontal_stiffness_n_m)
         pretension.append(line.pretension * _KN_TO_N)
@@ -103,11 +108,16 @@ def solve_response(
         raise ValueError("response inputs must be finite")
     if not np.isfinite([settings.max_translation_m, settings.max_yaw_rad]).all():
         raise ValueError("response bounds must be finite")
-    if np.any(np.abs(b.T @ t0) > tol):
-        raise ValueError("pretensions must balance at the reference position")
     matrix = b.T @ (k[:, None] * b)
     if np.linalg.matrix_rank(b) < 3:
         raise ValueError("mooring lines must restrain surge, sway and yaw")
+    # OpenStax, University Physics Volume 1 (2016), 15.1: T=2*pi*sqrt(m/k).
+    # Bare-line Kxx and displacement mass omit coupling, added mass and contact.
+    # docs/UNITS.md, Rule 1: tonnes to kg is an exact factor of 1000.
+    surge_period = 2 * np.pi * np.sqrt(mass_tonnes * 1000 / matrix[0, 0])
+    if not np.isfinite(surge_period) or surge_period <= 0:
+        raise ValueError("surge period estimate must be finite and positive")
+    reference_load = b.T @ t0
     motions, tensions, reactions, residuals = [], [], [], []
     for load in loads:
         active = np.zeros(len(fk), dtype=bool)
@@ -119,7 +129,7 @@ def solve_response(
             visited.add(key)
             contact = fb[active]
             tangent = matrix + contact.T @ (fk[active, None] * contact)
-            rhs = load + contact.T @ (fk[active] * gaps[active])
+            rhs = load - reference_load + contact.T @ (fk[active] * gaps[active])
             try:
                 q = np.linalg.solve(tangent, rhs)
             except np.linalg.LinAlgError as exc:
@@ -136,7 +146,7 @@ def solve_response(
             raise ValueError("translation exceeds supplied model validity bound")
         if abs(q[2]) > settings.max_yaw_rad:
             raise ValueError("yaw exceeds supplied model validity bound")
-        residual = b.T @ (tension - t0) + fb.T @ reaction - load
+        residual = b.T @ tension + fb.T @ reaction - load
         if not np.isfinite(q).all() or np.any(np.abs(residual) > tol):
             raise ValueError("equilibrium residual exceeds supplied tolerance")
         motions.append(q)
@@ -154,4 +164,6 @@ def solve_response(
             for i, f in enumerate(vessel.fenders)
         },
         residuals=np.asarray(residuals),
+        surge_natural_period_s=float(surge_period),
+        surge_stiffness_n_m=float(matrix[0, 0]),
     )

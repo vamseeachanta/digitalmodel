@@ -3,8 +3,8 @@
 
 """Worked synthetic spring example; writes results only to an explicit directory.
 
-All numerical geometry, stiffness, wind data and validity bounds are assumed,
-based on previous experience, for arithmetic illustration only. They are not
+All numerical geometry, stiffness, wind data and validity bounds are synthetic
+arithmetic inputs selected for simple hand calculations. They are not
 material data or design recommendations. The expected wind-only solution uses
 OpenStax University Physics Volume 1 (2016), 12.1/15.1 and NASA Drag Equation
 (2021, updated 2025); see docs/domains/hydrodynamics/passing-ship-response.md.
@@ -108,8 +108,8 @@ def run_example(output_dir: Path):
     columns += [
         f"{line.line_id}_tension_n" for line in spec.moored_vessel.mooring_lines
     ]
-    with (output_dir / "response.csv").open("w", newline="") as stream:
-        writer = csv.writer(stream)
+    with (output_dir / "response.csv").open("w", encoding="utf-8", newline="\n") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(columns)
         for case in results:
             for i, time in enumerate(case.time):
@@ -130,7 +130,7 @@ def run_example(output_dir: Path):
         f"<script>{get_plotlyjs()}</script><body>"
         f"{response_sections(results)}</body></html>"
     )
-    (output_dir / "response.html").write_text(html, encoding="utf-8")
+    (output_dir / "response.html").write_text(html, encoding="utf-8", newline="\n")
     return results
 
 
