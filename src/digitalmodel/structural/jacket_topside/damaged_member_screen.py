@@ -6,8 +6,8 @@ explicit inspection interpretation, not a minimum substituted for an average.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 from dataclasses import asdict
-from datetime import date
 import json
 import math
 from pathlib import Path
@@ -17,12 +17,12 @@ from digitalmodel.asset_integrity.assessment.ffs_decision import decide
 from digitalmodel.asset_integrity.assessment.ffs_report import FFSReport
 
 from .dented_axial_screen import CITATIONS, DentedAxialInput, screen_dented_axial
-from .member_checks import MemberLoads, TubularSection, member_checks
+from .member_checks import TubularSection
 
 CORROSION_SOURCE = {
     "designation": "Comparison of API, ISO, and NORSOK Offshore Structural Standards",
     "year": 2012,
-    "locator": "BOEMRE TA&R 677, Appendix A: ISO 19902:2007 A13.8 / NORSOK N-004 corroded members",
+    "locator": "BOEMRE TA&R 677, Appendix A: ISO 19902:2007 A13.8 / NORSOK N-004 corroded members (secondary citation)",
     "url": "https://www.bsee.gov/sites/bsee.gov/files/research-reports/677aa.pdf",
 }
 LIMITATIONS = (
@@ -30,8 +30,8 @@ LIMITATIONS = (
     "published experimental qualification is missing.",
     "Uniform corrosion uses an explicit representative remaining wall and unchanged OD. "
     "External diameter loss and localized patches require separate geometry/strength assessment.",
-    "Existing member checks are diagnostic only: compression, bending compactness, "
-    "and tension interaction have not been qualified for this workflow.",
+    "Only section geometry, stresses, D/t and KL/r are reported for corrosion; "
+    "member strength checks have not been qualified for this workflow.",
     "NOT_EVALUATED: joint capacity, applied-bending dent reduction, pressure, "
     "fatigue, cracks, and combined corrosion/dent strength.",
     "Flooded/severed members request Level 3 engineering review by workflow policy; "
@@ -39,6 +39,22 @@ LIMITATIONS = (
     "No licensed or open-source solver is executed. A system model, loads, "
     "boundary conditions and a reviewed assessment basis are needed for the handoff.",
 )
+FLAG_NOTES = {
+    "EXPERIMENTAL_VALIDATION_MISSING": "Published experimental qualification is missing.",
+    "FLOODED": "Flooded member requires system-level engineering review.",
+    "SEVERED": "Severed member requires system-level engineering review.",
+    "MEMBER_CHECKS_NOT_QUALIFIED": "Corroded member strength checks are not qualified.",
+    "LOCALIZED_CORROSION": "Localized wall loss requires separate geometry and strength assessment.",
+    "COMBINED_DAMAGE_NOT_QUALIFIED": "Combined corrosion and dent strength is not qualified.",
+    "CORROSION_INPUT_MISSING": "Uniform corrosion requires an explicit remaining_thickness.",
+    "DAMAGE_INPUT_MISSING": "No remaining thickness or dent input was supplied.",
+}
+
+
+def _mapping(value, name):
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{name} must be a mapping")
+    return value
 
 
 def _number(block, key, *, positive=True):
@@ -69,7 +85,7 @@ def _finite_payload(value):
 
 
 def _corrosion(item):
-    raw = item["section"]
+    raw = _mapping(item.get("section"), "section")
     section = TubularSection(**{
         key: _number(raw, key) for key in
         ("outer_diameter", "wall_thickness", "yield_strength", "elastic_modulus", "effective_length")
@@ -81,7 +97,7 @@ def _corrosion(item):
     if wall > section.wall_thickness:
         raise ValueError("remaining_thickness cannot exceed nominal wall_thickness")
     section.wall_thickness = wall
-    actions = item["actions"]
+    actions = _mapping(item.get("actions"), "actions")
     axial = _number(actions, "axial_force", positive=False)
     bending = _number(actions, "bending_moment", positive=False)
     # Elementary beam theory: N=integral(sigma dA), M=integral(sigma*y dA).
@@ -90,16 +106,16 @@ def _corrosion(item):
     # https://engineeringlibrary.org/reference/simple-beam-bending-air-force-stress-manual
     fa = axial / section.cross_sectional_area
     fb = bending / section.section_modulus
-    loads = MemberLoads(fa=fa, fb=fb, Cm=_number(actions, "Cm"),
-                        is_tension=_condition(actions, "is_tension"))
-    checks = member_checks(section, loads)
+    # Keep the explicit input contract; no strength/interaction check uses it yet.
+    _number(actions, "Cm")
+    _condition(actions, "is_tension")
     return {
         "status": "NOT_EVALUATED", "remaining_thickness_in": wall,
         "area_in2": section.cross_sectional_area,
         "section_modulus_in3": section.section_modulus,
         "diameter_to_thickness": section.dt_ratio,
+        "slenderness_ratio": section.slenderness_ratio,
         "axial_stress_ksi": fa, "bending_stress_ksi": fb,
-        "diagnostic_checks": {name: asdict(value) for name, value in checks.items()},
         "citation": CORROSION_SOURCE,
     }
 
@@ -109,7 +125,11 @@ def _decision(flags):
     # is applied. NaN denotes an unevaluated margin, not a strength measurement.
     decision = decide(
         math.nan, math.nan, math.nan, "jacket_member",
-        applicability=Applicability(False, flags, ["; ".join(LIMITATIONS)]),
+        applicability=Applicability(False, flags, [
+            f"{flag}: " + FLAG_NOTES.get(
+                flag, f"Dent input {flag} is outside the supported study conditions."
+            ) for flag in flags
+        ]),
     ).to_dict()
     # Shared jacket policy calls its margin RSR. No system ratio exists here.
     decision["governing_criterion"] = (
@@ -124,6 +144,7 @@ def screen_member(item):
     Flooding/severance takes precedence over local strength calculations.
     Independent dent inputs are never combined with a corroded-section result.
     """
+    item = _mapping(item, "member")
     identifier = item.get("id")
     if not isinstance(identifier, str) or not identifier.strip():
         raise ValueError("id must be a nonempty string")
@@ -131,6 +152,8 @@ def screen_member(item):
     severed = _condition(item, "severed")
     uniform = _condition(item, "uniform_corrosion")
     flags = ["EXPERIMENTAL_VALIDATION_MISSING"]
+    if not (flooded or severed) and uniform and "remaining_thickness" not in item:
+        flags.append("CORROSION_INPUT_MISSING")
     result = {"id": identifier, "status": "NOT_EVALUATED", "dent": None,
               "corrosion": None, "handoff": None,
               "engineering_acceptance_established": False}
@@ -154,6 +177,8 @@ def screen_member(item):
     elif "dent" in item:
         result["dent"] = asdict(screen_dented_axial(DentedAxialInput(**item["dent"])))
         flags.extend(result["dent"]["applicability_flags"])
+        if uniform:
+            flags.append("COMBINED_DAMAGE_NOT_QUALIFIED")
     else:
         flags.append("DAMAGE_INPUT_MISSING")
     result["flags"] = flags
@@ -164,7 +189,7 @@ def screen_member(item):
 
 def screen_campaign(config):
     """Compose strict JSON data and the shared offline FFS screening report."""
-    members = config.get("members")
+    members = _mapping(config, "config").get("members")
     if not isinstance(members, list) or not members:
         raise ValueError("members must be a nonempty list")
     results = [screen_member(item) for item in members]
@@ -172,8 +197,13 @@ def screen_campaign(config):
         raise ValueError("member ids must be unique")
     sections = {
         "Summary": {"Assessment": "NOT_EVALUATED; engineering review required"},
-        "Revision history": {"Revision": "0", "Date": date.today().isoformat(),
-                             "Change and reason": "Initial damaged/corroded member screening"},
+        "Revision history": {
+            "Revision 0, 2026-10-20": "Initial damaged/corroded member screening",
+            "Revision 1, 2026-10-22": (
+                "Remove unqualified strength outputs, retain campaign flags, "
+                "preserve precision and validate missing inputs."
+            ),
+        },
     }
     for index, result in enumerate(results, start=1):
         metrics = {"status": result["status"], "flags": ", ".join(result["flags"])}
@@ -181,18 +211,22 @@ def screen_campaign(config):
             metrics.update({key: result["dent"][key] for key in ("capacity_ratio", "utilization", "verdict")})
         if result["corrosion"]:
             metrics.update({key: value for key, value in result["corrosion"].items()
-                            if key not in ("diagnostic_checks", "citation")})
+                            if key != "citation"})
         if result["handoff"]:
             metrics["handoff"] = result["handoff"]["requested_assessment"]
         sections[f"Member {index}: {result['id']}"] = {
-            key: f"{value:.1f}" if isinstance(value, float) else value
+            key: (format(value, ".3f" if key in {
+                "remaining_thickness_in", "capacity_ratio", "utilization",
+                "diameter_to_thickness", "slenderness_ratio",
+            } else ".1f") if isinstance(value, (int, float)) else value)
             for key, value in metrics.items()
         }
     sections["Sources"] = {"Uniform corrosion": " ".join(str(v) for v in CORROSION_SOURCE.values()),
                            "Dent and bow": " ".join(str(v) for v in asdict(CITATIONS[2]).values())}
+    flags = list(dict.fromkeys(flag for result in results for flag in result["flags"]))
     report = FFSReport.generate_screening_html(
         "Jacket members", "Damaged and corroded jacket member analysis",
-        results[0]["decision"], sections, LIMITATIONS,
+        _decision(flags), sections, LIMITATIONS,
     )
     return {"workflow": "jacket-damaged-member-screen", "verdict": "ESCALATE",
             "engineering_acceptance_established": False,

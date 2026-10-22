@@ -54,7 +54,8 @@ def test_uniform_corrosion_preserves_actions(api, case):
     assert diagnostic["bending_stress_ksi"] == pytest.approx(6400 / (3439 * math.pi))
     assert diagnostic["diameter_to_thickness"] == 20
     assert diagnostic["status"] == "NOT_EVALUATED"
-    assert diagnostic["diagnostic_checks"]["axial_compression"]["applied_stress"] == pytest.approx(120 / (19 * math.pi))
+    # r² = I/A = (D² + d²)/16, so KL/r = 400/sqrt(181).
+    assert diagnostic["slenderness_ratio"] == pytest.approx(400 / math.sqrt(181))
     assert case == original
     assert result["decision"]["verdict"] == "ESCALATE"
     assert result["engineering_acceptance_established"] is False
@@ -72,6 +73,7 @@ def test_dent_prediction_keeps_qualification_gap(api, case):
     Decimal tolerance covers hand rounding only.
     """
     case.pop("remaining_thickness")
+    case["uniform_corrosion"] = False
     case["dent"] = {
         "midwall_diameter_to_thickness": 40.0, "reduced_slenderness": 1.0,
         "dent_depth_ratio": 0.1, "neutral_axis_bow_ratio": 0.005,
@@ -176,10 +178,10 @@ def test_worked_example_cli(api, tmp_path):
         capture_output=True, text=True, check=False,
     )
     assert completed.returncode == 0, completed.stderr
-    result = json.loads(output.read_text())
+    result = json.loads(output.read_text(encoding="utf-8"))
     assert len(result["members"]) == 3
     assert result["members"][0]["dent"]["capacity_ratio"] == pytest.approx(.4081429636)
-    assert output.with_suffix(".html").read_text() == result["report_html"]
+    assert output.with_suffix(".html").read_text(encoding="utf-8") == result["report_html"]
 
 
 def test_report_escapes_ids_and_preserves_summary(api, case):
@@ -199,3 +201,148 @@ def test_invalid_actions_cannot_produce_diagnostics(api, case, field, value):
     case["actions"][field] = value
     with pytest.raises(ValueError):
         api.screen_member(case)
+
+
+@pytest.mark.parametrize("is_tension", [False, True])
+def test_corrosion_never_publishes_unqualified_strength_checks(api, case, is_tension):
+    case["actions"]["is_tension"] = is_tension
+    corrosion = api.screen_member(case)["corrosion"]
+
+    def check_keys(value):
+        if isinstance(value, dict):
+            assert not {"allowable_stress", "unity_check", "passes"}.intersection(value)
+            for item in value.values():
+                check_keys(item)
+        elif isinstance(value, (list, tuple)):
+            for item in value:
+                check_keys(item)
+
+    check_keys(corrosion)
+    assert "diagnostic_checks" not in corrosion
+
+
+def test_campaign_headline_unites_all_member_flags_in_order(api, case):
+    dent = {"id": "dent", "flooded": False, "severed": False,
+            "uniform_corrosion": False, "dent": {
+                "midwall_diameter_to_thickness": 40., "reduced_slenderness": 1.,
+                "dent_depth_ratio": .1, "neutral_axis_bow_ratio": .005,
+                "elastic_to_yield_ratio": 600., "axial_demand_ratio": .2,
+                "simply_supported": True, "sharp_midspan_dent": True,
+                "bow_at_plastic_neutral_axis": True, "has_applied_bending": False,
+                "has_hydrostatic_pressure": False,
+            }}
+    severed = dict(case, id="severed", severed=True)
+    result = api.screen_campaign({"members": [dent, severed, case]})
+    headline = result["report_html"].split("<h3>Summary</h3>")[0]
+    expected = "EXPERIMENTAL_VALIDATION_MISSING, SEVERED, MEMBER_CHECKS_NOT_QUALIFIED"
+    assert expected in headline
+    assert headline.count("EXPERIMENTAL_VALIDATION_MISSING") == 1
+    assert result["members"][0]["flags"] == ["EXPERIMENTAL_VALIDATION_MISSING"]
+
+
+def test_report_keeps_thickness_and_ratio_precision(api, case):
+    case["remaining_thickness"] = .375
+    dent = dict(case, id="dent", uniform_corrosion=False, dent={
+        "midwall_diameter_to_thickness": 40., "reduced_slenderness": 1.,
+        "dent_depth_ratio": .1, "neutral_axis_bow_ratio": .005,
+        "elastic_to_yield_ratio": 600., "axial_demand_ratio": .4081429636 * 1.04,
+        "simply_supported": True, "sharp_midspan_dent": True,
+        "bow_at_plastic_neutral_axis": True, "has_applied_bending": False,
+        "has_hydrostatic_pressure": False,
+    })
+    dent.pop("remaining_thickness")
+    report = api.screen_campaign({"members": [case, dent]})["report_html"]
+    assert "<td>remaining_thickness_in</td><td>0.375</td>" in report
+    assert "<td>capacity_ratio</td><td>0.408</td>" in report
+    assert "<td>utilization</td><td>1.040</td>" in report
+    assert "<td>diameter_to_thickness</td><td>26.667</td>" in report
+
+
+def test_applicability_has_one_ordered_explanation_per_flag(api, case):
+    case["severed"] = True
+    case["flooded"] = True
+    result = api.screen_member(case)
+    applicability = result["decision"]["applicability"]
+    assert applicability["flags"] == result["flags"]
+    assert len(applicability["notes"]) == len(result["flags"])
+    for flag, note in zip(result["flags"], applicability["notes"]):
+        assert note.startswith(flag + ": ")
+        assert len(note) > len(flag) + 2
+
+
+@pytest.mark.parametrize("with_dent", [False, True])
+def test_uniform_corrosion_requires_remaining_wall(api, case, with_dent):
+    case.pop("remaining_thickness")
+    if with_dent:
+        case["dent"] = {
+            "midwall_diameter_to_thickness": 40., "reduced_slenderness": 1.,
+            "dent_depth_ratio": .1, "neutral_axis_bow_ratio": .005,
+            "elastic_to_yield_ratio": 600., "axial_demand_ratio": .2,
+            "simply_supported": True, "sharp_midspan_dent": True,
+            "bow_at_plastic_neutral_axis": True, "has_applied_bending": False,
+            "has_hydrostatic_pressure": False,
+        }
+    result = api.screen_member(case)
+    assert "CORROSION_INPUT_MISSING" in result["flags"]
+    assert result["corrosion"] is None
+    assert result["decision"]["verdict"] == "ESCALATE"
+    if with_dent:
+        assert result["dent"]["capacity_ratio"] is not None
+        assert "COMBINED_DAMAGE_NOT_QUALIFIED" in result["flags"]
+
+
+@pytest.mark.parametrize("key", ["section", "actions"])
+@pytest.mark.parametrize("value", ["missing", None, [], 1])
+def test_required_blocks_raise_named_value_error(api, case, key, value):
+    if value == "missing":
+        case.pop(key)
+    else:
+        case[key] = value
+    with pytest.raises(ValueError, match=key):
+        api.screen_member(case)
+
+
+@pytest.mark.parametrize("config", [None, [], "members", 1])
+def test_campaign_requires_top_level_mapping(api, config):
+    with pytest.raises(ValueError, match="config.*mapping"):
+        api.screen_campaign(config)
+
+
+def test_empty_yaml_reports_named_config_error(api, tmp_path):
+    source = tmp_path / "empty.yml"
+    source.write_text("", encoding="utf-8")
+    output = tmp_path / "result.json"
+    completed = subprocess.run(
+        [sys.executable, "-m", api.__name__, str(source), "--output", str(output)],
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode != 0
+    assert "ValueError: config must be a mapping" in completed.stderr
+    assert not output.exists()
+
+
+def test_corrosion_locator_is_secondary_and_consistent(api):
+    root = Path(__file__).resolve().parents[3]
+    locator = api.CORROSION_SOURCE["locator"]
+    assert "ISO 19902:2007 A13.8" in locator
+    assert "secondary citation" in locator
+    for path in ("docs/domains/asset-integrity/jacket-damaged-member-screen.md",
+                 "examples/workflows/jacket-damaged-member-screen/input.yml"):
+        assert locator in (root / path).read_text(encoding="utf-8")
+
+
+def test_revision_date_does_not_follow_execution_date(api, case, monkeypatch):
+    from datetime import date
+
+    class LaterDate(date):
+        @classmethod
+        def today(cls):
+            return cls(2099, 1, 1)
+
+    monkeypatch.setattr(api, "date", LaterDate, raising=False)
+    report = api.screen_campaign({"members": [case]})["report_html"]
+    revision = report.split("<h3>Revision history</h3>")[1].split("</table>")[0]
+    assert "2026-10-20" in revision
+    assert "2026-10-22" in revision
+    assert "Initial damaged/corroded member screening" in revision
+    assert "2099-01-01" not in revision

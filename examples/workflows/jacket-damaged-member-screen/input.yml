@@ -1,8 +1,8 @@
 # Synthetic demonstration, not measured data or a qualified platform design.
 # Dent inputs: Design Approximations for Offshore Tubulars Against Collisions
 # (1987), Volume I, section 6.3.1 and equations 6.13-6.17.
-# Uniform wall preparation: BOEMRE TA&R 677 (2012), Appendix A,
-# ISO 19902:2007 A13.8 / NORSOK N-004 corroded tubular members comparison.
+# Uniform wall preparation (2012):
+# BOEMRE TA&R 677, Appendix A: ISO 19902:2007 A13.8 / NORSOK N-004 corroded members (secondary citation)
 members:
   - id: dent-example
     flooded: false
