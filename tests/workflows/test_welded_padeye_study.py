@@ -123,14 +123,14 @@ def test_export_roundtrip_and_report(geometry, load, tmp_path):
 
     data = study.build_study(geometry, load)
     study.write_outputs(data, tmp_path)
-    saved = json.loads((tmp_path / "study.json").read_text())
+    saved = json.loads((tmp_path / "study.json").read_text(encoding="utf-8"))
     assert saved == data
     assert study.lookup(saved, data["revision"], [1.25, 1, 1, 45], "screening")
-    with (tmp_path / "study.csv").open() as stream:
+    with (tmp_path / "study.csv").open(encoding="utf-8") as stream:
         records = list(csv.DictReader(stream))
     assert len(records) == 450
     assert sum(r["status"] == "NOT_APPLICABLE" for r in records) == 75
-    report = (tmp_path / "report.html").read_text()
+    report = (tmp_path / "report.html").read_text(encoding="utf-8")
     assert "Revision history" in report
     assert "UNVERIFIED_SOURCE" in report
     assert "<svg" in report
@@ -142,8 +142,8 @@ def test_export_roundtrip_and_report(geometry, load, tmp_path):
 @pytest.mark.parametrize("scale", [0.8, 1, 1.2])
 @pytest.mark.parametrize("weld", [1, 1.5])
 @pytest.mark.parametrize("angle", [0, 30, 45])
-def test_independent_minimum_subgrid(geometry, load, thickness, scale, weld, angle):
-    """Independent force-couple reconstruction: 54 cases, 90 directions.
+def test_regression_minimum_subgrid(geometry, load, thickness, scale, weld, angle):
+    """Regression re-implementation: 54 cases, 90 directions.
 
     OpenStax (2016) §12.1: sum forces and moments. Divide each line into
     four intervals and integrate x² exactly as (x1³-x0³)/3; both welds
@@ -190,7 +190,7 @@ def test_no_overwrite_and_html_escaping(geometry, load, tmp_path):
     with pytest.raises(FileExistsError):
         study.write_outputs(data, tmp_path)
     assert (tmp_path / "study.json").read_bytes() == original
-    report = (tmp_path / "report.html").read_text()
+    report = (tmp_path / "report.html").read_text(encoding="utf-8")
     assert "<script>" not in report
     assert "&lt;script&gt;" in report
 
@@ -204,3 +204,214 @@ def test_lookup_cannot_mutate_dataset(geometry, load):
         study.lookup(data, data["revision"], [1.25, 1, 1, 45], "screening")["status"]
         == "CALCULATED_SCREENING"
     )
+
+
+def test_revision_is_independent_of_source_line_endings(
+    geometry, load, tmp_path, monkeypatch
+):
+    from pathlib import Path
+
+    source = Path(study.__file__).read_bytes().replace(b"\r\n", b"\n")
+    lf = tmp_path / "lf.py"
+    crlf = tmp_path / "crlf.py"
+    lf.write_bytes(source)
+    crlf.write_bytes(source.replace(b"\n", b"\r\n"))
+    monkeypatch.setattr(study, "__file__", str(lf))
+    first = study.build_study(geometry, load)
+    monkeypatch.setattr(study, "__file__", str(crlf))
+    second = study.build_study(geometry, load)
+    assert first["code_sha256"] == second["code_sha256"]
+    assert first["revision"] == second["revision"]
+    crlf.write_bytes(source + b"# changed source\n")
+    changed = study.build_study(geometry, load)
+    assert changed["code_sha256"] != first["code_sha256"]
+    assert changed["revision"] != first["revision"]
+
+
+@pytest.mark.parametrize("edge", ["left", "right", "bottom", "top"])
+def test_zero_ligament_boundary_is_invalid(geometry, load, edge):
+    changes = {
+        "left": {"hole_x": -1.5},
+        "right": {"hole_x": 1.5},
+        "bottom": {"hole_y": 0.5},
+        "top": {"hole_y": 5.5},
+    }
+    boundary = replace(geometry, **changes[edge])
+    assert (
+        boundary.invalid_reason(1)
+        == "hole lacks positive edge ligament in rectangular profile"
+    )
+    with pytest.raises(ValueError, match="positive edge ligament"):
+        study.demands(boundary, load, 1, 1, 1, 45, 1)
+    key, value = next(iter(changes[edge].items()))
+    interior = replace(
+        boundary, **{key: math.nextafter(value, 0 if "hole_x" == key else 3)}
+    )
+    assert interior.invalid_reason(1) is None
+    assert all(
+        math.isfinite(v) for v in study.demands(interior, load, 1, 1, 1, 45, 1).values()
+    )
+
+
+def test_mixed_validity_retains_nulls_and_report_gaps(geometry, load, tmp_path):
+    import csv
+    import json
+
+    data = study.build_study(replace(geometry, hole_radius=1.7), load)
+    invalid = [row for row in data["rows"] if row["status"] == "INVALID_GEOMETRY"]
+    # Only s=0.8 fails: B/2=1.6 < r=1.7; 5 thicknesses * 3 welds * 3 angles.
+    assert len(data["rows"]) == 225
+    assert len(invalid) == 45
+    assert all(row["key"][1] == "0.8" for row in invalid)
+    assert all(row["envelopes"] is None for row in invalid)
+    assert all(
+        d["values"] is None for row in invalid for d in row["directions"].values()
+    )
+    directions = [d for row in data["rows"] for d in row["directions"].values()]
+    # Four valid scales give 4*5*3*(1+2+2)=300 calculations; zero-angle duplicates stay 75.
+    assert sum(d["status"] == "CALCULATED_SCREENING" for d in directions) == 300
+    assert sum(d["status"] == "INVALID_GEOMETRY" for d in directions) == 75
+    assert sum(d["status"] == "NOT_APPLICABLE" for d in directions) == 75
+    study.write_outputs(data, tmp_path)
+    saved = json.loads((tmp_path / "study.json").read_text(encoding="utf-8"))
+    assert saved == data
+    with (tmp_path / "study.csv").open(encoding="utf-8") as stream:
+        records = list(csv.DictReader(stream))
+    assert len(records) == 450
+    assert sum(r["status"] == "INVALID_GEOMETRY" for r in records) == 75
+    assert all(
+        r[name] == ""
+        for r in records
+        if r["status"] != "CALCULATED_SCREENING"
+        for name in study.UNITS
+    )
+    report = (tmp_path / "report.html").read_text(encoding="utf-8")
+    assert "225 cases; 180 calculated cases; 300 calculated directions." in report
+    assert report.count(">invalid</text>") == 1
+    assert report.count("<td>INVALID_GEOMETRY</td>") == 45
+    assert report.count("<td>NOT_EVALUATED</td>") == 405
+
+
+def test_report_thickness_has_three_decimals(geometry, load):
+    from digitalmodel.lifting_lug.welded_study_output import render_report
+
+    report = render_report(study.build_study(geometry, load))
+    assert "<td>0.750, 0.8, 1, 0</td>" in report
+    assert "<td>1.000, 1, 1, 45</td>" in report
+    assert "<td>1.750, 1.2, 1.5, 45</td>" in report
+
+
+def test_exact_lookup_accepts_negative_zero(geometry, load):
+    data = study.build_study(geometry, load)
+    row = study.lookup(data, data["revision"], [1.25, 1, 1, -0.0], "screening")
+    assert row["key"] == ["1.25", "1", "1", "0"]
+    assert row["directions"]["positive"]["values"]["fx_kip"] == pytest.approx(0)
+    assert row["directions"]["negative"]["status"] == "NOT_APPLICABLE"
+
+
+def test_table_captions_precede_rows(geometry, load):
+    from html.parser import HTMLParser
+    from pathlib import Path
+    from digitalmodel.lifting_lug.welded_study_output import render_report
+
+    class Tables(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.first_children = []
+            self.awaiting_child = False
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "table":
+                self.awaiting_child = True
+            elif self.awaiting_child:
+                self.first_children.append(tag)
+                self.awaiting_child = False
+
+    document = (
+        Path(__file__).resolve().parents[2] / "docs/domains/lifting/welded-padeye.html"
+    )
+    for html in (
+        render_report(study.build_study(geometry, load)),
+        document.read_text(encoding="utf-8"),
+    ):
+        parser = Tables()
+        parser.feed(html)
+        assert parser.first_children
+        assert set(parser.first_children) == {"caption"}
+
+
+@pytest.mark.parametrize("stage", ["csv", "html", "readback"])
+@pytest.mark.parametrize("preexisting", [False, True])
+def test_failed_export_leaves_no_partial_issue(
+    geometry, load, tmp_path, monkeypatch, stage, preexisting
+):
+    from digitalmodel.lifting_lug import welded_study_output as output
+
+    data = study.build_study(geometry, load)
+    destination = tmp_path / "issue"
+    if preexisting:
+        destination.mkdir()
+
+    def fail(*args, **kwargs):
+        raise OSError("injected output failure")
+
+    with monkeypatch.context() as patch:
+        if stage == "csv":
+            patch.setattr(output.csv.DictWriter, "writerow", fail)
+        elif stage == "html":
+            patch.setattr(output, "render_report", fail)
+        else:
+            original_validate = output.validate
+
+            def fail_readback(payload):
+                if payload is not data:
+                    fail()
+                return original_validate(payload)
+
+            patch.setattr(output, "validate", fail_readback)
+        with pytest.raises(OSError, match="injected output failure"):
+            study.write_outputs(data, destination)
+    assert not destination.exists() or list(destination.iterdir()) == []
+    assert sorted(p.name for p in tmp_path.iterdir()) == (
+        ["issue"] if preexisting else []
+    )
+    study.write_outputs(data, destination)
+    assert sorted(p.name for p in destination.iterdir()) == [
+        "report.html",
+        "study.csv",
+        "study.json",
+    ]
+
+
+def test_atomic_export_preserves_unrelated_content(geometry, load, tmp_path):
+    note = tmp_path / "retained.txt"
+    note.write_text("retained data\n", encoding="utf-8", newline="\n")
+    with pytest.raises(FileExistsError, match="new revision directory"):
+        study.write_outputs(study.build_study(geometry, load), tmp_path)
+    assert note.read_text(encoding="utf-8") == "retained data\n"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["retained.txt"]
+
+
+def test_exports_use_utf8_and_lf_without_rounding_inputs(geometry, load, tmp_path):
+    data = study.build_study(
+        replace(geometry, weld_leg=0.0254, source="synthetic rectangle — exact"), load
+    )
+    study.write_outputs(data, tmp_path)
+    for name in ("study.json", "study.csv", "report.html"):
+        contents = (tmp_path / name).read_bytes()
+        assert b"\r\n" not in contents
+        contents.decode("utf-8")
+    report = (tmp_path / "report.html").read_text(encoding="utf-8")
+    assert "synthetic rectangle — exact" in report
+    assert "<dt>geometry.weld_leg</dt><dd>0.0254</dd>" in report
+
+
+def test_atomic_export_resolves_destination_before_staging(geometry, load, tmp_path):
+    destination = tmp_path / "unused" / ".." / "issue"
+    study.write_outputs(study.build_study(geometry, load), destination)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["issue"]
+    assert sorted(p.name for p in (tmp_path / "issue").iterdir()) == [
+        "report.html",
+        "study.csv",
+        "study.json",
+    ]

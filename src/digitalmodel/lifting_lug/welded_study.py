@@ -221,6 +221,8 @@ def _key(parameters):
         decimal = Decimal(str(value))
         if not decimal.is_finite():
             raise ValueError("nonfinite parameter")
+        if decimal.is_zero():
+            decimal = Decimal(0)
         result.append(format(decimal.normalize(), "f"))
     return result
 
@@ -294,7 +296,9 @@ def build_study(geometry, load):
     load.fy  # Fail before generation, even if geometry would withhold every row.
     data = {
         "method": METHOD,
-        "code_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
+        "code_sha256": sha256(
+            Path(__file__).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest(),
         "criteria_revision": "2026-10-20",
         "geometry": asdict(geometry),
         "load": asdict(load),

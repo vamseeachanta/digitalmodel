@@ -6,6 +6,7 @@ import csv
 from html import escape
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from digitalmodel.lifting_lug.welded_study import UNITS, validate
 
@@ -28,10 +29,11 @@ def _intro(data):
         f"{evaluated} calculated directions. Historical benchmark: UNVERIFIED_SOURCE. ",
         "The results establish nominal elastic demand for an idealized rectangular plate only. ",
         "No capacity, utilization or design acceptance is established.</p>",
-        "<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>",
+        "<h2>Revision history</h2><table><caption>Table 1. Content revision and issue reason.</caption>",
+        "<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>",
         f"<tr><td>{escape(data['revision'])}</td><td>{escape(data['criteria_revision'])}</td>",
         "<td>Initial screening study; explicit inputs retain unresolved historical qualification.</td></tr>",
-        "<caption>Table 1. Content revision and issue reason.</caption></table>",
+        "</table>",
         "<h2>Basis and method</h2><p>Positive Y is upward; X is in-plane horizontal; ",
         "positive moment follows the right-hand rule. Angles are from upward vertical. ",
         "The gross load is unfactored. Fy = gross × factor / lug count; Fx = ±Fy tan(angle); ",
@@ -114,14 +116,15 @@ def _table(data):
     rows = data["rows"]
     html = []
     html.append(
-        "<h2>Complete case envelopes</h2><table><tr><th>t (in), scale, weld multiplier, angle (°)</th><th>Status</th>"
+        "<h2>Complete case envelopes</h2><table><caption>Table 2. Signed maximum-absolute envelopes; invalid cases retain null demands in JSON/CSV. Demand display precision is one decimal place; thickness is shown to three decimals.</caption><tr><th>t (in), scale, weld multiplier, angle (°)</th><th>Status</th>"
     )
     for name, unit in UNITS.items():
         html.append(f"<th>{escape(name)} ({escape(unit)})</th>")
     html.append("</tr>")
     for row in rows:
+        display_key = [f"{float(row['key'][0]):.3f}", *row["key"][1:]]
         html.append(
-            f"<tr><td>{escape(', '.join(row['key']))}</td><td>{row['status']}</td>"
+            f"<tr><td>{escape(', '.join(display_key))}</td><td>{row['status']}</td>"
         )
         for name in UNITS:
             envelope = row["envelopes"][name] if row["envelopes"] else None
@@ -132,9 +135,7 @@ def _table(data):
             )
             html.append(f"<td>{value}</td>")
         html.append("</tr>")
-    html.append(
-        "<caption>Table 2. Signed maximum-absolute envelopes; invalid cases retain null demands in JSON/CSV. Display precision is one decimal place.</caption></table><h2>Sources</h2><ul>"
-    )
+    html.append("</table><h2>Sources</h2><ul>")
     for source in data["citations"]:
         html.append(
             f'<li><a href="{escape(source["url"], quote=True)}">{escape(source["document"])}</a>, {escape(source["edition"])}, {escape(source["section"])}: {escape(source["use"])}</li>'
@@ -149,20 +150,11 @@ def render_report(data):
     return "".join(_intro(data) + _basis(data) + _chart(data) + _table(data))
 
 
-def write_outputs(data, directory):
-    """Exclusive writes prevent silent replacement of a previously issued study."""
-    validate(data)
-    directory = Path(directory)
-    directory.mkdir(parents=True, exist_ok=True)
-    names = ("study.json", "study.csv", "report.html")
-    if any((directory / name).exists() for name in names):
-        raise FileExistsError(
-            "study outputs already exist; use a new revision directory"
-        )
+def _write_staged(data, directory):
     serialized = json.dumps(data, indent=2, allow_nan=False) + "\n"
-    with (directory / "study.json").open("x", encoding="utf-8") as stream:
+    with (directory / "study.json").open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(serialized)
-    with (directory / "study.csv").open("x", newline="", encoding="utf-8") as stream:
+    with (directory / "study.csv").open("x", encoding="utf-8", newline="\n") as stream:
         fields = [
             "revision",
             "thickness_in",
@@ -174,7 +166,7 @@ def write_outputs(data, directory):
             "reason",
             *UNITS,
         ]
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for row in data["rows"]:
             for name, direction in row["directions"].items():
@@ -187,7 +179,27 @@ def write_outputs(data, directory):
                         **(direction["values"] or {}),
                     }
                 )
-    with (directory / "report.html").open("x", encoding="utf-8") as stream:
+    with (directory / "report.html").open(
+        "x", encoding="utf-8", newline="\n"
+    ) as stream:
         stream.write(render_report(data))
     # Readback validates serialized numerical values and the content-addressed revision.
     validate(json.loads((directory / "study.json").read_text(encoding="utf-8")))
+
+
+def write_outputs(data, directory):
+    """Publish all three validated outputs together into a new or empty directory."""
+    validate(data)
+    directory = Path(directory).resolve()
+    if directory.exists() and (not directory.is_dir() or any(directory.iterdir())):
+        raise FileExistsError(
+            "study outputs already exist; use a new revision directory"
+        )
+    directory.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix=".welded-study-", dir=directory.parent) as temporary:
+        staged = Path(temporary) / "outputs"
+        staged.mkdir()
+        _write_staged(data, staged)
+        if directory.exists():
+            directory.rmdir()  # Only an empty directory can be removed.
+        staged.rename(directory)
