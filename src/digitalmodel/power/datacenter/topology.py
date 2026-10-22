@@ -22,6 +22,8 @@ class DataCenterPowerPath:
     power factors are assumed throughout; no power-factor model is present.
     The effective-capacity approximation applies all losses to the minimum
     rating, without position-dependent load propagation or nameplate sizing.
+    It is a lower bound on propagated capacity only for finite nonnegative ratings
+    and efficiencies in (0, 1]; generic components do not enforce these bounds.
 
     Attributes
     ----------
@@ -64,8 +66,13 @@ class DataCenterPowerPath:
         """Local approximation: minimum input rating times full-chain efficiency.
 
         Every component loss is included regardless of bottleneck position.
-        Equal, nonzero power factors are assumed. This estimate is not a
-        position-dependent output nameplate capacity or a design-load check.
+        With finite nonnegative ratings and every efficiency in (0, 1], this is a
+        lower bound on min_i(rating_i * product(efficiency_j for j >= i)).
+        Generic components do not enforce these bounds. For input ratings
+        (400, 200, 100) kVA and efficiencies (0.5, 0.75, 0.8), the estimate is
+        30.0 kVA versus a propagated limit of 80.0 kVA, 62.5% lower.
+        Equal, nonzero power factors are assumed. This is not a design-load
+        check; the underestimate depends on ratings, losses and their order.
         Basis: local convention in docs/agent-pack.md, section 3, and issue 2749
         item 4; no standards sizing method is claimed.
         """

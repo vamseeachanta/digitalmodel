@@ -19,9 +19,10 @@ from digitalmodel.power.datacenter import (
 )
 
 
-# Issue 2749 item 3: finite efficiency in (0, 1]; -1 and 1.5 straddle the bounds.
+# The next float above unity pins the local passive-efficiency upper boundary.
 @pytest.mark.parametrize(
-    "efficiency", [math.nan, math.inf, -math.inf, 0.0, -0.0, -1.0, 1.5]
+    "efficiency",
+    [math.nan, math.inf, -math.inf, 0.0, -0.0, -1.0, math.nextafter(1.0, 2.0), 1.5],
 )
 def test_sts_rejects_invalid_efficiency(efficiency):
     """Nonfinite values and values outside 0 < eta <= 1 cannot define losses.
@@ -31,6 +32,24 @@ def test_sts_rejects_invalid_efficiency(efficiency):
     """
     with pytest.raises(ValueError, match="efficiency"):
         STSModule(rated_kva=1.0, efficiency=efficiency)
+
+
+@pytest.mark.parametrize("efficiency", [True, False, "0.5", None, complex(0.5, 0.0)])
+def test_sts_rejects_boolean_and_nonnumeric_efficiency(efficiency):
+    """Boolean or non-real input raises ValueError without numeric coercion.
+
+    Accepting True silently makes a switch lossless; allowing TypeError to
+    escape instead breaks the constructor's invalid-efficiency contract.
+    """
+    with pytest.raises(ValueError, match="efficiency"):
+        STSModule(rated_kva=1.0, efficiency=efficiency)
+
+
+@pytest.mark.parametrize("efficiency", [math.nan, math.inf, -math.inf])
+def test_ups_rejects_nonfinite_efficiency(efficiency):
+    """Nonfinite efficiency cannot define a finite passive UPS output."""
+    with pytest.raises(ValueError, match="efficiency"):
+        UPSModule(rated_kva=1.0, efficiency=efficiency)
 
 
 # Synthetic boundary inputs: smallest positive float, 1/2, and lossless 1.
@@ -117,12 +136,13 @@ def test_upstream_bottleneck_uses_input_rating_and_full_chain_losses():
 
 
 def test_full_chain_approximation_retains_upstream_losses_at_downstream_bottleneck():
-    """Hand calculation: min(400, 200, 100)*(1/2)*(3/4)*(4/5)=30 kVA.
+    """The local lower bound is 30.0 kVA; the propagated limit is 80.0 kVA.
 
-    Synthetic inputs deliberately put the bottleneck last. The retained local
-    convention applies every efficiency, including upstream losses, rather than
-    claiming a position-dependent nameplate capacity. Basis: issue 2749 item 4
-    and the rating convention in the module knowledge pack, section 3.
+    Propagating each input rating through its own and downstream efficiencies
+    gives min(400*0.3, 200*0.6, 100*0.8)=80.0 kVA. Applying all losses to the
+    minimum input rating gives 30.0 kVA, an underestimate of 62.5%. The lower
+    bound requires finite nonnegative ratings and every efficiency in (0, 1].
+    Basis: the local rating convention in the module knowledge pack, section 3.
     """
     path = DataCenterPowerPath(
         "downstream bottleneck",
@@ -133,3 +153,4 @@ def test_full_chain_approximation_retains_upstream_losses_at_downstream_bottlene
         ],
     )
     assert path.effective_capacity_kva == pytest.approx(30.0)
+    assert path.effective_capacity_kva <= 80.0

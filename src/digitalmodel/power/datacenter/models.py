@@ -74,7 +74,7 @@ class UPSModule(PowerComponent):
         # Local positive-rating contract: issue 2749, item 2 (not a design limit).
         if self.rated_kva <= 0:
             raise ValueError(f"rated_kva must be positive, got {self.rated_kva}")
-        if not 0.0 < self.efficiency <= 1.0:
+        if not math.isfinite(self.efficiency) or not 0.0 < self.efficiency <= 1.0:
             raise ValueError(
                 f"efficiency must be in (0, 1], got {self.efficiency}"
             )
@@ -102,6 +102,7 @@ class STSModule(PowerComponent):
     Construction requires a finite, positive rated_kva and a finite,
     nonnegative transfer_time_ms. Efficiency must be finite and in (0, 1]
     under the local passive-component contract (issue 2749, item 3).
+    Boolean and non-real efficiencies are rejected with ValueError.
 
     Attributes
     ----------
@@ -141,9 +142,18 @@ class STSModule(PowerComponent):
             )
         # Local finite, passive-efficiency contract: issue 2749, item 3.
         # Bounds 0 < eta <= 1 exclude zero output and power creation.
-        if not math.isfinite(self.efficiency) or not 0.0 < self.efficiency <= 1.0:
+        try:
+            valid_efficiency = (
+                not isinstance(self.efficiency, bool)
+                and math.isfinite(self.efficiency)
+                and 0.0 < self.efficiency <= 1.0
+            )
+        except TypeError:
+            valid_efficiency = False
+        if not valid_efficiency:
             raise ValueError(
-                f"efficiency must be finite and in (0, 1], got {self.efficiency}"
+                "efficiency must be a non-boolean finite real number in (0, 1], "
+                f"got {self.efficiency}"
             )
         if not self.component_type:
             self.component_type = "sts"
