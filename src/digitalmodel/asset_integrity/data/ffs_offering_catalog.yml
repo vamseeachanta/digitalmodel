@@ -116,7 +116,8 @@ engines:
   annex-f-material: {status: planned, issue: 2171}
   calculix-nonlinear: {status: planned, issue: 2173}
   parts-3-7-10: {status: planned, issue: 1274}
-  parts-8-11-13-14: {module: asset_integrity.api579_coverage, status: workflow, workflow: api579-coverage-screen, issue: 2203, caveat: "evidence intake only; all engineering verdicts NOT_EVALUATED; published-example qualification pending"}
+  parts-8-11-13-14: {status: planned, issue: 2203}
+  api579-coverage-intake: {module: asset_integrity.api579_coverage, status: workflow, workflow: api579-coverage-screen, issue: 2203, caveat: "evidence intake only; all engineering verdicts NOT_EVALUATED; published-example qualification pending"}
   platform-damaged-member: {status: planned, issue: 2198}
   mooring-chain-degradation: {status: planned, issue: 2199}
   flexible-pipe-screen: {status: planned, issue: 2200}

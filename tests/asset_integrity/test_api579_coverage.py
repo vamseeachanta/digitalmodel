@@ -10,6 +10,7 @@ FFS-1, December 2021, public contents, sections 8/11/13/14.3 and .4.
 
 import ast
 import copy
+from importlib.util import find_spec
 import json
 from pathlib import Path
 import subprocess
@@ -89,17 +90,31 @@ def test_preparation_routes_preserve_existing_capability_boundaries():
     assert "shell_distortion_screen" in shell["related_modules"][0]
     assert any("sn_curves" in name for name in fatigue["related_modules"])
     assert any("rainflow" in name for name in fatigue["related_modules"])
+    for part in (8, 11, 13, 14):
+        for name in assess_coverage(part=part)["related_modules"]:
+            assert find_spec(name) is not None, name
     assert "2016" in shell["limitations"]
     assert "DNV" in fatigue["limitations"]
 
 
 def test_router_and_committed_example():
-    cfg = yaml.safe_load((ROOT / "examples/workflows/api579-coverage-screen/input.yml").read_text())
-    result = router(copy.deepcopy(cfg))["api579_coverage_screen"]
+    example = ROOT / "examples/workflows/api579-coverage-screen/input.yml"
+    cfg = yaml.safe_load(example.read_text(encoding="utf-8"))
+    returned = router(cfg)
+    assert returned is cfg
+    result = returned["api579_coverage_screen"]
     assert [entry["part"] for entry in result["assessments"]] == [8, 14, 13, 11]
+    assert [
+        (entry["evidence_status"], entry["missing_evidence"])
+        for entry in result["assessments"]
+    ] == [
+        ("RECORDED", []),
+        ("INCOMPLETE", ["inspection_data"]),
+        ("INCOMPLETE", ["design_data", "operating_history", "inspection_data"]),
+        ("INCOMPLETE", ["design_data", "operating_history", "inspection_data"]),
+    ]
     assert result["verdict"] == "NOT_EVALUATED"
     assert all(entry["verdict"] == "NOT_EVALUATED" for entry in result["assessments"])
-    assert cfg.get("api579_coverage_screen") is None
 
 
 @pytest.mark.parametrize("requests", [None, [], {}, [{"part": 8, "typo": True}], [8]])
@@ -111,16 +126,33 @@ def test_router_rejects_malformed_requests(requests):
 def test_standalone_cli_returns_batch_verdict():
     command = [sys.executable, "-m", "digitalmodel.asset_integrity.api579_coverage",
                str(ROOT / "examples/workflows/api579-coverage-screen/input.yml")]
-    completed = subprocess.run(command, check=True, capture_output=True, text=True)
+    completed = subprocess.run(
+        command, check=True, capture_output=True, text=True, encoding="utf-8"
+    )
     assert json.loads(completed.stdout)["verdict"] == "NOT_EVALUATED"
 
 
 def test_engine_route_is_registered_without_importing_solver_integrations():
-    tree = ast.parse((ROOT / "src/digitalmodel/engine.py").read_text())
-    assert any(isinstance(node, ast.Compare) and any(
-        isinstance(value, ast.Constant) and value.value == "api579_coverage_screen"
-        for value in node.comparators) for node in ast.walk(tree))
-    registry = yaml.safe_load((ROOT / "docs/registry/workflows.yaml").read_text())
+    tree = ast.parse((ROOT / "src/digitalmodel/engine.py").read_text(encoding="utf-8"))
+    branches = [
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.If) and isinstance(node.test, ast.Compare)
+        and isinstance(node.test.left, ast.Name) and node.test.left.id == "basename"
+        and len(node.test.ops) == 1 and isinstance(node.test.ops[0], ast.Eq)
+        and any(
+            isinstance(value, ast.Constant) and value.value == "api579_coverage_screen"
+            for value in node.test.comparators
+        )
+    ]
+    assert len(branches) == 1
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "digitalmodel.asset_integrity.api579_coverage"
+        and any(alias.name == "router" for alias in node.names)
+        for node in branches[0].body
+    )
+    registry_path = ROOT / "docs/registry/workflows.yaml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     entry = next(row for row in registry["workflows"] if row["id"] == "api579-coverage-screen")
     assert entry["basename"] == "api579_coverage_screen"
     assert entry["result"] == {"kind": "in_memory", "key": "api579_coverage_screen"}
@@ -130,10 +162,17 @@ def test_catalog_separates_available_intake_from_planned_calculations():
     from digitalmodel.asset_integrity.offering_catalog import load
 
     catalog = load()
-    intake = catalog.ffs["engines"]["parts-8-11-13-14"]
+    assert catalog.ffs["engines"]["parts-8-11-13-14"] == {"status": "planned", "issue": 2203}
+    intake = catalog.ffs["engines"]["api579-coverage-intake"]
     assert intake["status"] == "workflow"
     assert intake["workflow"] == "api579-coverage-screen"
     assert "NOT_EVALUATED" in intake["caveat"]
+    assert not any("api579-coverage-intake" in row.engines for row in catalog.rows)
+    capability_map = yaml.safe_load(
+        (ROOT / "docs/capability-map/capabilities-added.yml").read_text(encoding="utf-8")
+    )["engines"]["ffs"]
+    assert capability_map["parts-8-11-13-14"] == {"status": "planned", "issue": 2203}
+    assert capability_map["api579-coverage-intake"]["status"] == "workflow"
     rows = [row for row in catalog.rows if "parts-8-11-13-14" in row.engines]
     assert rows
     assert all(row.status == "planned" and row.issue == 2203 for row in rows)
