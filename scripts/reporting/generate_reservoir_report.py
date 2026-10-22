@@ -32,8 +32,8 @@ DESTINATION = Path("docs/reports/modules/reservoir")
 BRIEF = Path("docs/collide_pe/briefs/pe-2026-05-21.html")
 STYLE_SOURCE = Path("docs/reports/pipeline-ffs-assessment.html")
 EVIDENCE = DESTINATION / "validation.json"
-REVISION = "0"
-DATE = "2026-10-21"
+REVISION = "1"
+DATE = "2026-10-22"
 AAPG = "https://wiki.aapg.org/index.php?title=Reserves_estimation&oldid=27160"
 
 
@@ -95,8 +95,9 @@ def public_inputs() -> tuple[VolumetricInputs, dict[str, float]]:
 
 
 def digest(path: str | Path) -> str:
-    """Identify the bytes used for calculation, styling or test evidence."""
-    return hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+    """Identify UTF-8 source text after normalizing line endings to LF."""
+    text = (ROOT / path).read_text(encoding="utf-8")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def calculation() -> dict[str, Any]:
@@ -141,11 +142,11 @@ def value(data: dict[str, Any], key: str, fmt: str = ",.1f", tag: str = "span") 
 def changes() -> dict[str, Any]:
     """Describe engineering content since the preceding reader revision."""
     return {"report": "reservoir-volumetric-analysis", "revision": REVISION,
-            "date": DATE, "previous_revision": None,
-            "changes": [{"section": "section-5", "description":
-                         "Initial issue presents oil in place, recovery scenarios and the physical volume bound."},
-                        {"section": "section-7", "description":
-                         "Arithmetic evidence and missing field qualification are distinguished."}]}
+            "date": DATE, "previous_revision": "0",
+            "changes": [{"section": "section-9", "description":
+                         "Source identities use LF-normalized text and validation covers reservoir sources and tests only."},
+                        {"section": "section-10", "description":
+                         "Comment files follow the report revision and imports preserve existing comments without exact duplicates."}]}
 
 
 def recovery_chart(data: dict[str, Any]) -> str:
@@ -244,7 +245,7 @@ INTERFACE = r'''
     input.value = ''; render(); status.textContent = 'Comment added in memory. Save comments before closing.';
   });
   document.getElementById('comment-export').addEventListener('click', async () => {
-    const bytes = JSON.stringify({report: 'reservoir-volumetric-analysis', revision: '0', comments}, null, 2);
+    const bytes = JSON.stringify({report: 'reservoir-volumetric-analysis', revision: change.revision, comments}, null, 2);
     const suggestedName = 'reservoir.comments.json';
     if (window.showSaveFilePicker) {
       try {
@@ -265,12 +266,16 @@ INTERFACE = r'''
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 1000000) throw new Error('Comments file exceeds the interface size limit.');
       const incoming = JSON.parse(await file.text());
-      if (incoming.report !== 'reservoir-volumetric-analysis' || incoming.revision !== '0' || !Array.isArray(incoming.comments)
+      if (incoming.report !== 'reservoir-volumetric-analysis' || incoming.revision !== change.revision || !Array.isArray(incoming.comments)
           || !incoming.comments.every(item => allowed.has(item.section) && typeof item.text === 'string' && item.text.length <= 10000)) {
         throw new Error('Comments do not match this report and revision.');
       }
-      comments = incoming.comments.map(({section, text}) => ({section, text})); render();
-      status.textContent = 'Saved comments loaded.';
+      incoming.comments.forEach(({section, text}) => {
+        if (!comments.some(item => item.section === section && item.text === text)) {
+          comments.push({section, text});
+        }
+      });
+      render(); status.textContent = 'Saved comments merged. Save comments before closing.';
     } catch (error) { status.textContent = error.message; }
   });
 })();
@@ -284,7 +289,7 @@ def report_body(data: dict[str, Any]) -> str:
 
     counts = data["evidence"]["counts"]
     return f'''
-<header><h1>Reservoir volumetric analysis</h1><p>Draft for client review</p>
+<header><h1>Reservoir volumetric analysis</h1><p>Draft for review</p>
 <p>Revision {REVISION} · {DATE}</p></header><div class="layout">
 <nav aria-label="Contents"><ol>
 <li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li>
@@ -306,8 +311,9 @@ def report_body(data: dict[str, Any]) -> str:
 <p>Source: the retained teaching example, current scalar calculation and open reserves reference; see <a href="#section-5">Detailed Results</a> and <a href="#section-9">References</a>.</p>
 </section>
 <div id="revision-history"><h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>{REVISION}</td><td>{DATE}</td><td>Initial issue explains the scalar workflow and separates arithmetic evidence from reservoir qualification.</td></tr></tbody>
-<caption>Revision history. Initial engineering issue.</caption></table></div>
+<tbody><tr><td>0</td><td>2026-10-21</td><td>Initial issue explains the scalar workflow and separates arithmetic evidence from reservoir qualification.</td></tr>
+<tr><td>{REVISION}</td><td>{DATE}</td><td>Source identities and output line endings are normalized for reproducible builds; validation scope and comment handling are corrected.</td></tr></tbody>
+<caption>Revision history. Engineering issues.</caption></table></div>
 
 <section id="section-2"><h2>2. Introduction</h2>
 <p>The public scalar workflow is assessed for a reservoir engineer reviewing an early volumetric estimate. The retained teaching problem is used to demonstrate the callable interface with a documented numerical basis.</p>
@@ -369,7 +375,7 @@ def report_body(data: dict[str, Any]) -> str:
 <section id="section-9"><h2>9. References</h2>
 <p>The equation basis and retained input record are distinguished below. Repository locators identify implementation and executable evidence; they are not external field-validation records.</p>
 <h3>9.1 Published basis</h3>
-<p><a href="{AAPG}">AAPG, Development Geology Reference Manual, Reserves estimation, Volumetric estimation, wiki revision 27160</a>, accessed {DATE}. The open edition states the conversion coefficient and oil-in-place and recovery equations. No licensed table or standard is reproduced.</p>
+<p><a href="{AAPG}">AAPG, Development Geology Reference Manual, Reserves estimation, Volumetric estimation, wiki revision 27160</a>, accessed 2026-10-21. The open edition states the conversion coefficient and oil-in-place and recovery equations. No licensed table or standard is reproduced.</p>
 <p><a href="https://app.collide.io/posts/pe-problem-of-the-day-5-21-2026">Public petroleum-engineering teaching problem, 21 May 2026</a>, Given inputs, worked solution and recovery scenarios, retained repository edition. Original page unavailable at checking; no independently checked edition identifier is available.</p>
 <h3>9.2 Repository evidence and reproduction</h3>
 <p>Retained input record: <code>{BRIEF.as_posix()}</code>. Public calculation: <code>src/digitalmodel/reservoir/volumetrics.py</code>. Plotting interface: <code>src/digitalmodel/reservoir/stratigraphic.py</code>. Broader API status: <code>src/digitalmodel/reservoir/__init__.py</code> and <code>tests/test_reservoir_framework.py</code>.</p>
@@ -397,7 +403,7 @@ increment = incremental_recovery_stb(original, primary_factor, raised_factor)</c
 </tbody><caption>Table 10.1. Data register. No missing field value is replaced by a guessed number.</caption></table>
 <h3>10.2 Quality checks and limits of evidence</h3>
 {validation_table(data)}
-<p>Input and result units are stated in the basis. Source digests identify the retained bytes. The report rebuild and interface checks cover numerical agreement, internal references, offline interaction, and comment export and import. The record above covers the existing module checks; it does not count the report checks as reservoir validation.</p>
+<p>Input and result units are stated in the basis. Source digests identify UTF-8 text with line endings normalized to LF. The report rebuild and interface checks cover numerical agreement, internal references, offline interaction, and comment export and import. The record above covers the existing module checks; it does not count the report checks as reservoir validation.</p>
 <p>Comments are held in memory until saved. Use the save control and select a file beside this report. Where the browser offers download only, move the downloaded comments file beside the report. Load that file to continue a review; no automatic adjacent-file access is assumed.</p>
 </section>
 <details id="comments-panel"><summary>Comments on this report</summary>
@@ -411,11 +417,11 @@ increment = incremental_recovery_stb(original, primary_factor, raised_factor)</c
 
 
 def source_table(data: dict[str, Any]) -> str:
-    """Keep source locators and exact byte identities in the reference register."""
+    """Keep source locators and LF-normalized text identities in the register."""
     rows = "".join(f'<tr><td><code>{escape(path)}</code></td><td><code>{sha}</code></td></tr>'
                    for path, sha in data["source_digests"].items())
     return ('<table><thead><tr><th>Record</th><th>SHA-256 digest</th></tr></thead>'
-            f'<tbody>{rows}</tbody><caption>Table 9.1. Byte identities for the report basis.</caption></table>')
+            f'<tbody>{rows}</tbody><caption>Table 9.1. SHA-256 identities of LF-normalized UTF-8 text for the report basis.</caption></table>')
 
 
 def validation_table(data: dict[str, Any]) -> str:
@@ -468,8 +474,8 @@ button{padding:6px 12px}svg text{font:15px sans-serif}th,td{overflow-wrap:anywhe
 <script>{INTERFACE}</script></body></html>
 '''
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "index.html").write_text(page, encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(changes(), indent=2) + "\n", encoding="utf-8")
+    (output_dir / "index.html").write_text(page, encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(changes(), indent=2) + "\n", encoding="utf-8", newline="\n")
     return data
 
 

@@ -14,11 +14,65 @@ be free of hard-coded core brand tokens.
 """
 
 from pathlib import Path
+from threading import Event
 
 import pytest
 
 from scripts import brand_guard
 from scripts import check_generated_html as checker
+
+
+def test_generated_input_is_rebuilt_before_its_consumer(tmp_path, monkeypatch):
+    """A shared stylesheet must exist before a dependent report starts."""
+    style = "style.html"
+    consumer = checker.Generator("report.py", ("report.html",), inputs=(style,))
+    producer = checker.Generator("style.py", (style,))
+    monkeypatch.setattr(checker, "GENERATORS", (consumer, producer))
+    for name in (style, "report.html"):
+        (tmp_path / name).write_text("old", encoding="utf-8")
+    started = Event()
+
+    def generate(root, entry):
+        if entry == producer:
+            started.wait(timeout=0.1)
+            (root / style).write_text("fresh", encoding="utf-8")
+        else:
+            started.set()
+            if not (root / style).exists():
+                return "generated input was cleared before its producer ran"
+            assert (root / style).read_text(encoding="utf-8") == "fresh"
+        return None
+
+    monkeypatch.setattr(checker, "run_generator", generate)
+    assert checker.regenerate(tmp_path) == []
+
+
+def test_generated_input_cycle_is_reported(tmp_path, monkeypatch):
+    monkeypatch.setattr(checker, "GENERATORS", (
+        checker.Generator("a.py", ("a.html",), inputs=("b.html",)),
+        checker.Generator("b.py", ("b.html",), inputs=("a.html",)),
+    ))
+    for name in ("a.html", "b.html"):
+        (tmp_path / name).write_text("old", encoding="utf-8")
+    monkeypatch.setattr(checker, "run_generator", lambda root, entry: None)
+    assert checker.regenerate(tmp_path) == ["cyclic generated HTML input dependencies"]
+
+
+def test_failed_generated_input_prevents_consumer_execution(tmp_path, monkeypatch):
+    consumer = checker.Generator("report.py", ("report.html",), inputs=("style.html",))
+    producer = checker.Generator("style.py", ("style.html",))
+    monkeypatch.setattr(checker, "GENERATORS", (consumer, producer))
+    for name in ("style.html", "report.html"):
+        (tmp_path / name).write_text("old", encoding="utf-8")
+    calls = []
+
+    def generate(root, entry):
+        calls.append(entry.script)
+        return "style generation failed" if entry == producer else None
+
+    monkeypatch.setattr(checker, "run_generator", generate)
+    assert checker.regenerate(tmp_path) == ["style generation failed"]
+    assert calls == ["style.py"]
 
 
 @pytest.fixture(scope="module")
@@ -96,8 +150,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 29  # includes the reservoir report and change sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9

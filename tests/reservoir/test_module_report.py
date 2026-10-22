@@ -21,6 +21,15 @@ REPORT = ROOT / "docs/reports/modules/reservoir"
 GENERATOR = ROOT / "scripts/reporting/generate_reservoir_report.py"
 
 
+@pytest.fixture
+def generator():
+    """Load the builder so disposable source trees can exercise its contract."""
+    spec = importlib.util.spec_from_file_location("reservoir_report", GENERATOR)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @pytest.fixture(scope="module")
 def rebuilt(tmp_path_factory):
     """Run the shipped generator without relying on an installed package."""
@@ -39,7 +48,82 @@ def rebuilt(tmp_path_factory):
 def test_rebuild_matches_committed_artifacts(rebuilt):
     target, _, _, _ = rebuilt
     for name in ("index.html", "changes.json"):
-        assert (target / name).read_bytes() == (REPORT / name).read_bytes()
+        generated = (target / name).read_bytes()
+        assert b"\r" not in generated
+        assert generated == (REPORT / name).read_bytes().replace(b"\r\n", b"\n")
+
+
+def test_freshness_registry_includes_report_and_all_inputs():
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == GENERATOR.relative_to(ROOT).as_posix()]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert set(entry.outputs) == {
+        "docs/reports/modules/reservoir/index.html",
+        "docs/reports/modules/reservoir/changes.json",
+    }
+    record = json.loads((REPORT / "validation.json").read_text(encoding="utf-8"))
+    assert set(record["source_digests"]) <= set(entry.inputs)
+    assert {"docs/collide_pe/briefs/pe-2026-05-21.html", "pyproject.toml",
+            "docs/reports/modules/reservoir/validation.json",
+            "docs/reports/pipeline-ffs-assessment.html"} <= set(entry.inputs)
+
+
+def test_text_digest_is_independent_of_checkout_line_endings(tmp_path, monkeypatch, generator):
+    monkeypatch.setattr(generator, "ROOT", tmp_path)
+    source = tmp_path / "source.txt"
+    text = "first line\nsecond line\n"
+    source.write_bytes(text.encode("utf-8"))
+    expected = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    assert generator.digest(source.name) == expected
+    source.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    assert generator.digest(source.name) == expected
+
+
+def test_crlf_sources_preserve_evidence_and_rebuild(tmp_path, monkeypatch, generator, rebuilt):
+    record = json.loads((REPORT / "validation.json").read_text(encoding="utf-8"))
+    paths = set(record["source_digests"]) | {
+        generator.BRIEF.as_posix(), generator.STYLE_SOURCE.as_posix(),
+        generator.EVIDENCE.as_posix(),
+    }
+    for relative in paths:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        target.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    # Global configuration is deliberately unrelated to the reservoir evidence.
+    for relative in ("pytest.ini", "tests/conftest.py", "conftest.py"):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"unrelated configuration change\r\n")
+    monkeypatch.setattr(generator, "ROOT", tmp_path)
+    generator.build(tmp_path / "built")
+    for name in ("index.html", "changes.json"):
+        assert (tmp_path / "built" / name).read_bytes() == (rebuilt[0] / name).read_bytes()
+
+
+def test_generated_outputs_remain_lf_on_windows(tmp_path, monkeypatch, generator, rebuilt):
+    write_text = Path.write_text
+
+    def windows_write_text(path, text, *args, **kwargs):
+        if kwargs.get("newline") is None:
+            text = text.replace("\n", "\r\n")
+        return write_text(path, text, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", windows_write_text)
+    generator.build(tmp_path)
+    for name in ("index.html", "changes.json"):
+        assert (tmp_path / name).read_bytes() == (rebuilt[0] / name).read_bytes()
+
+
+def test_validation_binds_only_reservoir_sources_and_tests():
+    record = json.loads((REPORT / "validation.json").read_text(encoding="utf-8"))
+    paths = set(record["source_digests"])
+    assert len(paths) == 7
+    assert all(path.startswith(("src/digitalmodel/reservoir/", "tests/reservoir/"))
+               or path == "tests/test_reservoir_framework.py" for path in paths)
 
 
 def test_documented_inputs_are_read_from_the_retained_public_example(rebuilt):
@@ -90,6 +174,7 @@ def test_every_example_number_and_chart_point_comes_from_module(rebuilt):
 
 def test_sources_evidence_and_document_contract(rebuilt):
     _, page, soup, data = rebuilt
+    assert soup.select_one("header > p").get_text() == "Draft for review"
     assert "hs-doc" in soup.body["class"]
     headings = soup.select("main > section > h2")
     assert len(headings) == 10
@@ -133,11 +218,17 @@ def test_changed_source_invalidates_recorded_validation(tmp_path, monkeypatch):
     assert hashlib.sha256(original.read_bytes()).hexdigest() == before
 
 
-def test_actual_browser_interaction_and_comment_roundtrip(rebuilt, tmp_path):
+@pytest.mark.parametrize("revision", ["0", "1"])
+def test_actual_browser_interaction_and_comment_roundtrip(
+    rebuilt, tmp_path, monkeypatch, generator, revision,
+):
     """Exercise the shipped UI offline, including real export and import."""
     sync_playwright = pytest.importorskip("playwright.sync_api").sync_playwright
 
     target, _, _, data = rebuilt
+    monkeypatch.setattr(generator, "REVISION", revision)
+    target = tmp_path / "report"
+    generator.build(target)
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,
@@ -156,6 +247,29 @@ def test_actual_browser_interaction_and_comment_roundtrip(rebuilt, tmp_path):
         page.locator("#comment-text").fill("Check the recovery basis <literal text>.")
         page.locator("#comment-add").click()
         assert "<literal text>" in page.locator("#comment-list").inner_text()
+        page.locator("#comment-text").fill("Keep this unsaved comment.")
+        page.locator("#comment-add").click()
+        incoming = {"report": "reservoir-volumetric-analysis", "revision": revision,
+                    "comments": [
+                        {"section": "section-5", "text": "Check the recovery basis <literal text>."},
+                        {"section": "section-7", "text": "Retain the arithmetic evidence."},
+                    ]}
+        upload = {"name": "comments.json", "mimeType": "application/json",
+                  "buffer": json.dumps(incoming).encode("utf-8")}
+        page.locator("#comment-import").set_input_files(upload)
+        assert page.locator("#comment-list li").count() == 3
+        assert "Keep this unsaved comment." in page.locator("#comment-list").inner_text()
+        assert "<literal text>" in page.locator("#comment-list").inner_text()
+        # Re-importing the same file must preserve both comments without duplicates.
+        page.locator("#comment-import").set_input_files(upload)
+        assert page.locator("#comment-list li").count() == 3
+        incoming["revision"] = "different-revision"
+        incoming["comments"] = [{"section": "section-5", "text": "Stale note."}]
+        upload["buffer"] = json.dumps(incoming).encode("utf-8")
+        page.locator("#comment-import").set_input_files(upload)
+        assert page.locator("#comment-status").inner_text() == "Comments do not match this report and revision."
+        assert page.locator("#comment-list li").count() == 3
+        assert "Stale note." not in page.locator("#comment-list").inner_text()
         page.evaluate("window.showSaveFilePicker = undefined")
         with page.expect_download() as download_info:
             page.locator("#comment-export").click()
@@ -164,6 +278,7 @@ def test_actual_browser_interaction_and_comment_roundtrip(rebuilt, tmp_path):
         download.save_as(file)
         comments = json.loads(file.read_text(encoding="utf-8"))
         assert comments["report"] == "reservoir-volumetric-analysis"
+        assert comments["revision"] == revision
         assert comments["comments"][0]["section"] == "section-5"
         page.reload()
         page.locator("#comments-panel").evaluate("node => node.open = true")

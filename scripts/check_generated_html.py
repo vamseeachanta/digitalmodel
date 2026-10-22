@@ -70,6 +70,24 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/generate_reservoir_report.py",
+        ("docs/reports/modules/reservoir/index.html",
+         "docs/reports/modules/reservoir/changes.json"),
+        inputs=(
+            "pyproject.toml",
+            "docs/collide_pe/briefs/pe-2026-05-21.html",
+            "docs/reports/modules/reservoir/validation.json",
+            "docs/reports/pipeline-ffs-assessment.html",
+            "src/digitalmodel/reservoir/__init__.py",
+            "src/digitalmodel/reservoir/volumetrics.py",
+            "src/digitalmodel/reservoir/stratigraphic.py",
+            "tests/reservoir/test_reservoir.py",
+            "tests/reservoir/test_stratigraphic.py",
+            "tests/reservoir/test_volumetrics.py",
+            "tests/test_reservoir_framework.py",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -425,11 +443,24 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
 
 def regenerate(shadow: Path) -> list[str]:
     """Regenerate all committed outputs in the isolated shadow tree."""
+    outputs = {entry: {path.relative_to(shadow).as_posix()
+                       for path in output_paths(shadow, entry)}
+               for entry in GENERATORS}
     for entry in GENERATORS:
         clear_generated_html(shadow, entry)
+    pending = list(GENERATORS)
     with ThreadPoolExecutor(max_workers=4) as pool:
-        results = pool.map(lambda entry: run_generator(shadow, entry), GENERATORS)
-        return [error for error in results if error]
+        while pending:
+            ready = [entry for entry in pending if not set(entry.inputs) & {
+                path for other in pending if other != entry for path in outputs[other]
+            }]
+            if not ready:
+                return ["cyclic generated HTML input dependencies"]
+            results = pool.map(lambda entry: run_generator(shadow, entry), ready)
+            if errors := [error for error in results if error]:
+                return errors
+            pending = [entry for entry in pending if entry not in ready]
+    return []
 
 
 def all_registered_outputs(root: Path) -> set[Path]:

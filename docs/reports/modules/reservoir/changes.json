@@ -1,16 +1,16 @@
 {
   "report": "reservoir-volumetric-analysis",
-  "revision": "0",
-  "date": "2026-10-21",
-  "previous_revision": null,
+  "revision": "1",
+  "date": "2026-10-22",
+  "previous_revision": "0",
   "changes": [
     {
-      "section": "section-5",
-      "description": "Initial issue presents oil in place, recovery scenarios and the physical volume bound."
+      "section": "section-9",
+      "description": "Source identities use LF-normalized text and validation covers reservoir sources and tests only."
     },
     {
-      "section": "section-7",
-      "description": "Arithmetic evidence and missing field qualification are distinguished."
+      "section": "section-10",
+      "description": "Comment files follow the report revision and imports preserve existing comments without exact duplicates."
     }
   ]
 }

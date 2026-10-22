@@ -1,6 +1,7 @@
 {
   "scope": "Existing reservoir module checks; report checks excluded",
   "date": "2026-10-21",
+  "digest_basis": "SHA-256 of LF-normalized UTF-8 source text",
   "command": "python -m pytest tests/reservoir/test_reservoir.py tests/reservoir/test_stratigraphic.py tests/reservoir/test_volumetrics.py tests/test_reservoir_framework.py -q -p no:cacheprovider",
   "counts": {
     "passed": 23,
@@ -282,9 +283,6 @@
     "tests/reservoir/test_reservoir.py": "f1447aa57031ef5932856b8e4c774b345a1d70573b65f0925cd37d3746a14d86",
     "tests/reservoir/test_stratigraphic.py": "2db251d86c94e1464cb1b1261e2957e1c79b9b915acda9a5a4991e7ba6a0645c",
     "tests/reservoir/test_volumetrics.py": "9788ef8151ab0ae1706207c7c906d8135bf43929ca6eef65862d3744b67a8864",
-    "tests/test_reservoir_framework.py": "842a030cb9b3fc23f1851e79e84fc0f4fe7344d0af52ae71317c86b42852b5bc",
-    "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-    "tests/conftest.py": "02942e332c8dbd0c51f575c3073fb152aa92ece15efc6418c16f5f9fb8202a00",
-    "conftest.py": "842669d8b60bfa0252086645f9e7440e1fc4409e9ec603e48e904c813565b038"
+    "tests/test_reservoir_framework.py": "842a030cb9b3fc23f1851e79e84fc0f4fe7344d0af52ae71317c86b42852b5bc"
   }
 }
