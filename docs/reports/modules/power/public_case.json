@@ -2,7 +2,7 @@
   "source": {
     "title": "MATPOWER 8.1, case4gs, bus/gen/branch tables",
     "url": "https://raw.githubusercontent.com/MATPOWER/matpower/8.1/data/case4gs.m",
-    "basis": "Power System Analysis, 1994 edition, pages 337–338, as transcribed in the open case file; the textbook itself is not consulted."
+    "basis": "Power System Analysis by John Grainger, Jr. and William Stevenson, McGraw-Hill, 1994, pages 337–338, as transcribed in the open case file; the textbook itself is not consulted."
   },
   "base_mva": 100.0,
   "buses": [

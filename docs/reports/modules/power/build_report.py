@@ -26,9 +26,15 @@ TOL = 1e-12  # Explicit numerical criterion, not an engineering acceptance limit
 MAX_ITER = 50  # Explicit cap, matching solve_power_flow's documented default.
 
 
+def read_utf8(path):
+    """Read UTF-8 and normalize all source line endings to LF."""
+    with path.open(encoding="utf-8", newline=None) as stream:
+        return stream.read()
+
+
 def read_case():
     """Read the transcribed, cited public circuit inputs."""
-    return json.loads((HERE / "public_case.json").read_text(encoding="utf-8"))
+    return json.loads(read_utf8(HERE / "public_case.json"))
 
 
 def public_network(case):
@@ -76,6 +82,8 @@ def calculate():
     for group, result in [("public", public), ("hand", hand)]:
         record[f"{group}.converged"] = result.converged
         record[f"{group}.iterations"] = result.iterations
+        # A converged solve checks mismatch once more after its last update.
+        record[f"{group}.newton_updates"] = result.iterations - 1
         for kind, rows in [("bus", result.bus_results), ("branch", result.branch_results)]:
             for i, row in enumerate(rows):
                 for key, value in row.items():
@@ -98,6 +106,15 @@ def calculate():
             flow["q_loss_pu"] - flow["q_flow_pu"],
         ) * net.base_mva
     record["public.total_loss_mw"] = sum(row["p_loss_pu"] for row in public.branch_results) * net.base_mva
+    record["public.voltage_bounds_satisfied"] = all(
+        row["v_min"] <= public.bus_results[i]["v_pu"] <= row["v_max"]
+        for i, row in enumerate(case["buses"])
+    )
+    record["public.branch_ratings_satisfied"] = all(
+        max(record[f"public.branch.{i}.sending_mva"],
+            record[f"public.branch.{i}.receiving_mva"]) <= row["rating_mva"]
+        for i, row in enumerate(case["branches"])
+    )
     return record
 
 
@@ -117,6 +134,10 @@ def build(destination=None):
     """Write the self-contained report; destinations outside the tree are allowed."""
     r = calculate()
     case = read_case()
+    voltage_disposition = "lie inside" if r["public.voltage_bounds_satisfied"] else "violate"
+    plotted_disposition = "are satisfied" if r["public.voltage_bounds_satisfied"] else "are violated"
+    rating_disposition = "do not exceed the supplied ratings" if r["public.branch_ratings_satisfied"] else "exceed at least one supplied rating"
+    generator_indices = {row["bus"]: i for i, row in enumerate(case["generators"])}
 
     def n(key, digits=6):
         return f'<span data-value="{key}" data-digits="{digits}">{format_number(r[key], digits)}</span>'
@@ -142,21 +163,21 @@ def build(destination=None):
     bus_inputs = table(["Bus", "Type", "Demand (MW)", "Demand (Mvar)", "Start/set voltage (pu)", "Source"], [
         [n(f"input.buses.{i}.id", 0), ["Reference", "Fixed demand", "Fixed demand", "Fixed active power and voltage"][i],
          n(f"input.buses.{i}.p_mw", 0), n(f"input.buses.{i}.q_mvar", 2),
-         n("input.generators.0.v_set" if i == 3 else f"input.buses.{i}.v_initial", 2), '<a href="#ref-case">Public case</a>'] for i in range(4)])
+         n(f"input.generators.{generator_indices[row['id']]}.v_set" if row["id"] in generator_indices else f"input.buses.{i}.v_initial", 2), '<a href="#ref-case">Public case</a>'] for i, row in enumerate(case["buses"])])
     line_inputs = table(["From → to", "Resistance (pu)", "Reactance (pu)", "Charging (pu)", "Source"], [
         [n(f"input.branches.{i}.from", 0) + ' → ' + n(f"input.branches.{i}.to", 0),
          n(f"input.branches.{i}.r_pu", 5), n(f"input.branches.{i}.x_pu", 4),
          n(f"input.branches.{i}.b_pu", 4), '<a href="#ref-case">Public case</a>'] for i in range(4)])
-    changes = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))
+    changes = json.loads(read_utf8(HERE / "changes.json"))
     # Reuse the existing house layout verbatim, with its canonical colour tokens.
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
+    brand = read_utf8(ROOT / "docs/api/_assets/brand.css")
+    exemplar = read_utf8(ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html")
     layout = re.search(r'<style>(.*?)</style>', exemplar, re.S).group(1)
     points = []
     for i in range(4):
         v = r[f"public.bus.{i}.v_pu"]
         x, y = 105 + i * 175, 245 - (v - 0.85) * 800
-        tip = f'Public four-bus case; bus {i+1}; voltage demand {format_number(v, 6)} pu; limits {case["buses"][i]["v_min"]:.1f}–{case["buses"][i]["v_max"]:.1f} pu'
+        tip = f'Public four-bus case; bus {i+1}; voltage magnitude {format_number(v, 6)} pu; limits {case["buses"][i]["v_min"]:.1f}–{case["buses"][i]["v_max"]:.1f} pu'
         points.append(f'<circle tabindex="0" data-case="{escape(tip)}" cx="{x}" cy="{y:.3f}" r="7" fill="var(--accent)"><title>{escape(tip)}</title></circle>')
     chart = '<svg viewBox="0 0 720 300" role="img" aria-label="Voltage magnitude by bus with public-case limits">'
     chart += '<path d="M65 30V245H680" fill="none" stroke="currentColor"/>'
@@ -166,20 +187,20 @@ def build(destination=None):
     chart += ''.join(points)
     chart += ''.join(f'<text x="{105+i*175}" y="269">{i+1}</text>' for i in range(4))
     chart += '<text x="330" y="292">Bus identifier</text><text x="5" y="22">Voltage (pu)</text></svg>'
-    # Rounded JSON values prevent CPU-specific final floating-point digits.
-    chart_record = {key: round(value, 6) if isinstance(value, float) and key != "tol" else value for key, value in r.items()}
+    # Limit CPU-specific final digits and canonicalize signed rounded zero.
+    chart_record = {key: round(value, 6) + 0.0 if isinstance(value, float) and key != "tol" else value for key, value in r.items()}
     body = f'''
 <header><div class="kicker">Power systems analysis</div><h1>Power module analysis</h1>
 <p class="sub">Steady-state alternating-current load flow</p><p>Draft for maintainer review</p></header>
 <section id="s1"><h2>1. Executive summary</h2>
 <p>The power module is a set of electrical-network calculation tools. Analysis is performed to determine bus voltages and power transfers for specified loads and generation; key results are summarized below.</p>
 <ul><li>A converged electrical state is calculated for the public four-bus example.
-<ul><li>Voltage magnitudes lie inside the supplied case limits; the plotted limits are input data rather than a general operating standard.</li></ul></li>
+<ul><li>Voltage magnitudes {voltage_disposition} the supplied case limits; the plotted limits are input data rather than a general operating standard.</li></ul></li>
 <li>Both specified generator operating points exceed their supplied reactive-power limits.
-<ul><li>Bus four reactive generation is {n('public.qg4_mvar', 1)} Mvar against an upper limit of {n('input.generators.0.q_max_mvar', 0)} Mvar. Reference-bus reactive generation is {n('public.qg1_mvar', 1)} Mvar against an upper limit of {n('input.generators.1.q_max_mvar', 0)} Mvar. The fixed-voltage operating point is excluded pending a generator-limit study.</li></ul></li></ul>
+<ul><li>Bus four reactive generation is {n('public.qg4_mvar', 1)} Mvar against an upper limit of {n('input.generators.0.q_max_mvar', 0)} Mvar. Reference-bus reactive generation is {n('public.qg1_mvar', 1)} Mvar against an upper limit of {n('input.generators.1.q_max_mvar', 0)} Mvar. The fixed-voltage operating point is excluded conditional on the supplied case limits, pending a generator-limit study.</li></ul></li></ul>
 <p>The application limits and required next analysis are stated in Sections 7 and 8. The case basis is cited in <a href="#ref-case">Reference 2</a>.</p></section>
 <div id="revision-history"><h3>Revision history</h3>
-<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>1</td><td>2026-10-21</td><td>The public circuit and hand-derived example are calculated to document the numerical workflow and its operating limits.</td></tr></tbody></table></div>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>1</td><td>2026-10-21</td><td>The public circuit and hand-derived example are calculated to document the numerical workflow and its operating limits.</td></tr><tr><td>2</td><td>2026-10-22</td><td>Embedded zero values, reference-voltage bindings, iteration terminology and citations are corrected; independent four-bus results and computed limit checks strengthen the numerical evidence.</td></tr></tbody></table></div>
 <section id="s2"><h2>2. Introduction</h2>
 <p>The alternating-current load-flow workflow is described for an engineer specifying a balanced steady-state network. The calculated state is separated from equipment acceptance.</p>
 <p>Bus and branch objects are assembled into a network and passed to the documented solver. Bus voltages, angles, injections, branch flows, losses, convergence and iteration count are returned. No external engineering program is required for this workflow.</p>
@@ -189,6 +210,7 @@ def build(destination=None):
 <p>The common power base is {n('base_mva', 0)} MVA. Active and reactive powers are divided by this base before entry; positive net injection means generation minus demand. The generator voltage setpoint takes precedence over the bus starting magnitude. Angles enter in radians and are returned in degrees. The supplied case input tables and their source are reproduced in Appendix 10.1.</p>
 <p>At the reference bus, voltage magnitude and angle are fixed and net powers are solved. At the generator bus, active injection and voltage magnitude are fixed and reactive injection is solved. At demand buses, both net powers are fixed and voltage magnitude and angle are solved (<a href="#ref-manual">Reference 1, Section 4.1</a>).</p>
 <p>The mismatch tolerance is {n('tol', 12)} pu and the iteration cap is {n('max_iter', 0)}. These explicit calculation settings are numerical controls; the tolerance is selected to support the hand-reference assertions and is not a plant acceptance criterion. Voltage bounds and generator reactive bounds come from the case tables. Branch ratings are compared at both ends outside the solver. A converged state is not an acceptance decision.</p>
+<p>The reactive bounds, voltage bounds and branch ratings are entries in the open case file; a textbook basis for these limits is not established. Their physical equipment basis is NOT_EVALUATED. The exclusion of the fixed-voltage operating point is conditional on the supplied case limits; the unconstrained numerical solution alone does not establish an equipment violation.</p>
 <figure><svg viewBox="0 0 760 320" role="img" aria-label="Electrical single-line model with reference supply, generator, four buses, line impedances and constant-power demands">
 <g fill="none" stroke="var(--ink)" stroke-width="3"><path d="M140 80H560V220H140Z"/><path d="M140 58V102M560 58V102M140 198V242M560 198V242" stroke-width="7"/>
 <circle cx="70" cy="80" r="23"/><path d="M93 80H140M560 220H620"/><circle cx="644" cy="220" r="23"/>
@@ -204,17 +226,17 @@ def build(destination=None):
 <p>The complex-voltage vector V, injected-current vector I and complex injected-power vector S satisfy <a href="#ref-text">Reference 3, Chapter 5, equations (1), (6) and (8)</a>, also expressed in <a href="#ref-manual">Reference 1, Section 3.6, equations (3.8)–(3.17)</a>:</p>
 <div class="eq">I = YV; S = diag(V) conjugate(YV); S = P + jQ.</div>
 <p>Y is the assembled admittance matrix; P and Q denote active and reactive injection. For terminal flows, Sf = Vf conjugate(If) and St = Vt conjugate(It); the branch complex loss is Sf + St. These are terminal power definitions in the same source. Charging can make net branch reactive loss negative without implying active generation.</p>
-<p>The unknown vector u contains non-reference angles and demand-bus magnitudes. With scheduled-minus-calculated mismatch Δs, the update is J Δu = Δs, followed by u ← u + Δu (<a href="#ref-newton">Reference 4, Section 4.5.2, equations (4.5.8)–(4.5.11)</a>). J contains the derivatives of calculated active and reactive injections. Only active equations at non-reference buses and reactive equations at demand buses enter the solve (<a href="#ref-manual">Reference 1, Section 4.1, equations (4.2)–(4.5) and Newton-method paragraph</a>).</p>
+<p>The unknown vector u contains non-reference angles and demand-bus magnitudes. With scheduled-minus-calculated mismatch Δs, the update is J Δu = Δs, followed by u ← u + Δu (<a href="#ref-newton">Reference 4, Section 4.5.2, equations (4.5.8)–(4.5.10)</a>). J contains the derivatives of calculated active and reactive injections. Only active equations at non-reference buses and reactive equations at demand buses enter the solve (<a href="#ref-manual">Reference 1, Section 4.1, equations (4.2)–(4.5) and Newton-method paragraph</a>).</p>
 <p>A result is marked converged when the maximum absolute scheduled-power mismatch is strictly less than the supplied tolerance. Voltage and equipment bounds are not part of that stopping test. The system base is stored by the module; dimensional conversion is performed explicitly in this report.</p></section>
 <section id="s5"><h2>5. Detailed results and worked example</h2>
 <p>The documented public circuit is calculated by calling the module with the input mapping in Section 9.2. Numerical outputs are reported below; generator and branch checks are calculated separately from those outputs.</p>
-<p>The public example converges in {n('public.iterations', 0)} iterations. Total active branch loss is {n('public.total_loss_mw', 1)} MW. Bus injection results include local demand; generator reactive output is recovered by adding that demand to net injection.</p>
-<figure>{chart}<figcaption>Figure 2. Voltage versus bus identifier. Points are selected by pointer or keyboard focus; dashed lines show the case voltage bounds. The plotted bounds are satisfied. Engineering acceptance remains blocked by the reactive-generation result.</figcaption></figure>
-<button type="button" id="limits">Toggle voltage limits</button><p id="chart-detail" role="status">Select a voltage point for case, component, demand, limit and units.</p>
+<p>The public example converges after {n('public.newton_updates', 0)} Newton updates and {n('public.iterations', 0)} mismatch evaluations, including the final convergence check. The module's iteration count reports mismatch evaluations. Total active branch loss is {n('public.total_loss_mw', 1)} MW. Bus injection results include local demand; generator reactive output is recovered by adding that demand to net injection.</p>
+<figure>{chart}<figcaption>Figure 2. Voltage versus bus identifier. Points are selected by pointer or keyboard focus; dashed lines show the case voltage bounds. The plotted bounds {plotted_disposition}. Engineering acceptance remains blocked by the reactive-generation result conditional on the supplied case limits.</figcaption></figure>
+<button type="button" id="limits">Toggle voltage limits</button><p id="chart-detail" role="status">Select a voltage point for case, component, voltage magnitude, limit and units.</p>
 {buses}<p>Table 1. Module bus results, with positive powers injected into the network.</p>
 {branches}<p>Table 2. Module branch outputs in sending-end orientation; losses sum both terminal powers.</p>
-<p>At bus four, Qg = Qnet × Sbase + Qd = {n('public.bus.3.q_net_pu')} × {n('base_mva', 0)} + {n('input.buses.3.q_mvar', 2)} = {n('public.qg4_mvar', 1)} Mvar. The supplied upper limit is {n('input.generators.0.q_max_mvar', 0)} Mvar; excess is {n('public.q_excess_mvar', 1)} Mvar, or {n('public.q_excess_pct', 1)} % relative to that limit. The fixed-voltage operating point is excluded pending a generator-limit study.</p>
-{ratings}<p>Table 3. Apparent terminal power magnitude compared with the public-case branch rating. These circuit values are below the supplied ratings. Rating duration and equipment temperature basis are not supplied.</p>
+<p>At bus four, Qg = Qnet × Sbase + Qd = {n('public.bus.3.q_net_pu')} × {n('base_mva', 0)} + {n('input.buses.3.q_mvar', 2)} = {n('public.qg4_mvar', 1)} Mvar. The supplied upper limit is {n('input.generators.0.q_max_mvar', 0)} Mvar; excess is {n('public.q_excess_mvar', 1)} Mvar, or {n('public.q_excess_pct', 1)} % relative to that limit. The fixed-voltage operating point is excluded conditional on the supplied case limits, pending a generator-limit study.</p>
+{ratings}<p>Table 3. Apparent terminal power magnitude compared with the public-case branch rating. These circuit values {rating_disposition}. Rating duration and equipment temperature basis are not supplied.</p>
 {generator_checks}<p>Table 4. Both generator reactive outputs exceed their supplied upper limits. The reference-bus excess is {n('public.q_excess1_mvar', 1)} Mvar. The percentage difference is calculated against each generator’s upper limit.</p>
 <p>At the reference bus, Qg = Qnet × Sbase + Qd = {n('public.bus.0.q_net_pu')} × {n('base_mva', 0)} + {n('input.buses.0.q_mvar', 2)} = {n('public.qg1_mvar', 1)} Mvar. Both regulated sources are above their reactive bounds; an acceptable revised operating state is not calculated.</p></section>
 <section id="s6"><h2>6. Validation evidence</h2>
@@ -222,9 +244,10 @@ def build(destination=None):
 <p>The existing tests exercise bus and branch construction, input rejection, admittance assembly, convergence flags, output fields, power balance and nonconvergence. The hand-reference tests additionally compare a solved state against prescribed rectangular phasors, reject a deliberately incomplete iteration, and check terminal powers for tapped branches with charging. Test locations are listed in Section 9.2.</p>
 <p>For the documented hand case, V1 = 1 + j0, V2 = 0.96 + j0.28 and V3 = 0.90 − j0.12 pu. Series reactances are 0.5 and 0.25 pu, with zero resistance and charging and unity taps. The scheduled injections are obtained from S = V conjugate(I), giving generator-bus active injection 2.0288 pu and demand-bus consumption 1.4688 + j0.024 pu. These are constructed circuit data, not an installation assumption (<a href="#ref-hand">Reference 5</a>).</p>
 <p>The module returns reference-bus reactive injection {n('hand.bus.0.q_net_pu', 4)} pu, generator-bus reactive injection {n('hand.bus.1.q_net_pu', 4)} pu and final demand-bus voltage {n('hand.bus.2.v_pu')} pu. Hand arithmetic gives the same values within the absolute numerical criterion of 10⁻⁸ pu. The arithmetic and literal assertions are provided in the report test; the theory is cited in Section 4.</p>
+<p>The four-bus headline reactive outputs and active loss are also checked against prescribed independent pi-model calculation literals, cross-checked by Gauss-Seidel, with an absolute numerical criterion of 0.00005 Mvar or MW. Two demand-bus voltage magnitudes are checked within 0.0000005 pu. These independent reference assertions are distinct from recalculating report bindings with the module. The inputs are taken from <a href="#ref-case">Reference 2</a> and the electrical equations from Section 4.</p>
 <p>The report consistency checks compare every displayed numerical binding with fresh module outputs or the cited inputs. Those consistency checks do not replace the hand-worked literals. Field measurements, certified equipment results, a separate program solution and a published solved-output comparison are not evaluated.</p></section>
 <section id="s7"><h2>7. Key findings and limits of use</h2>
-<p>The supplied operating point is limited by reactive generation at both sources rather than bus-voltage bounds. Numerical convergence is established only for the stated inputs.</p>
+<p>Voltage magnitudes {voltage_disposition} the supplied case limits. Reactive generation exceeds the supplied upper bounds at both sources; the resulting exclusion is conditional on the supplied case limits. Numerical convergence is established only for the stated inputs.</p>
 <p>Both source voltage setpoints are held even after their supplied reactive bounds are exceeded. Reactive-limit enforcement, conversion of generator buses to demand buses, tap control, voltage-dependent loads, phase-shifting transformers, explicit bus shunts and unbalanced circuits are outside the implemented load-flow model. The case has no unsupported bus shunts or phase shifts.</p>
 <p>Exactly one reference bus and unique bus identifiers are required. Constructor checks reject zero branch impedance, nonpositive tap and inverted voltage bounds. The caller also needs to check finite numbers, existing branch endpoints, positive power base, a connected network, sensible starting voltages and valid iteration settings; comprehensive checks are absent. A singular linear solve can raise an exception. An iteration-limit result still contains numerical values and requires rejection when convergence is false.</p>
 <p>The dense admittance and Jacobian matrices are used. Large-network performance and ill-conditioned operating points are not evaluated. Voltage bounds stored on buses do not reject a solved voltage violation. The reported branch flows omit explicit receiving-end records; receiving powers in Table 3 are reconstructed from sending powers and reported losses.</p></section>
@@ -235,10 +258,10 @@ def build(destination=None):
 <section id="s9"><h2>9. References and calculation records</h2>
 <p>The open textbooks, manual and circuit tables are used as the external basis. Repository records are identified separately so numerical regression evidence is not confused with an external acceptance standard.</p>
 <h3>9.1 Public sources</h3><ol class="refs">
-<li id="ref-manual"><a href="https://matpower.org/docs/MATPOWER-manual-8.1.pdf">MATPOWER User’s Manual, version 8.1, July 2025</a>: Section 3.2, Branches; Section 3.6, Network Model; Section 4.1, AC Power Flow; Appendix B, case format. Branch equations, complex power definitions, Newton method and generator-limit sequence are used. No value from a licensed standard is adopted.</li>
-<li id="ref-case"><a href="{escape(case['source']['url'])}">MATPOWER 8.1 public four-bus case tables</a>: system power base, bus, generator and branch tables. The source identifies Power System Analysis, 1994 edition, pages 337–338; that textbook is not consulted. The open case is the input authority used here. Only supported fields are mapped; no source-program execution is used.</li>
+<li id="ref-manual"><a href="https://matpower.org/docs/MATPOWER-manual-8.1.pdf">MATPOWER User’s Manual, version 8.1, July 2025</a>: Section 3.2, Branches; Section 3.6, Network Equations; Section 4.1, AC Power Flow; Appendix B, case format. Branch equations, complex power definitions, Newton method and generator-limit sequence are used. No value from a licensed standard is adopted.</li>
+<li id="ref-case"><a href="{escape(case['source']['url'])}">MATPOWER 8.1 public four-bus case tables</a>: system power base, bus, generator and branch tables. The source identifies Power System Analysis by John Grainger, Jr. and William Stevenson, McGraw-Hill, 1994, pages 337–338; that textbook is not consulted. The open case is the input authority used here. Only supported fields are mapped; no source-program execution is used.</li>
 <li id="ref-text"><a href="https://ocw.mit.edu/courses/6-061-introduction-to-electric-power-systems-spring-2011/resources/mit6_061s11_ch5/">Introduction to Electric Power Systems, open textbook, Chapter 5: Introduction to Load Flow</a>, 2003 chapter in the Spring 2011 collection; Section 2, Power Flow, equation (1), and Section 3, Bus Admittance, equations (2)–(8). These provide the electrical power definitions and network-assembly basis.</li>
-<li id="ref-newton"><a href="https://fncbook.com/newtonsys/">Fundamentals of Numerical Computation, online Julia edition</a>, accessed 21 October 2026; Section 4.5.2, The multidimensional Newton iteration, equations (4.5.8)–(4.5.11). This provides the Jacobian linearization and update, with mismatch sign expressed in scheduled-minus-calculated form here.</li></ol>
+<li id="ref-newton"><a href="https://fncbook.com/newtonsys/">Fundamentals of Numerical Computation, online Julia edition</a>, accessed 22 October 2026; Section 4.5.2, The multidimensional Newton iteration, equations (4.5.8)–(4.5.10). This provides the Jacobian linearization and update, with mismatch sign expressed in scheduled-minus-calculated form here.</li></ol>
 <h3>9.2 Repository evidence and rebuild</h3><ul>
 <li id="ref-code">Calculation entry: <code>src/digitalmodel/power/analysis/load_flow.py</code>, documented classes <code>Bus</code>, <code>Branch</code>, <code>Network</code> and function <code>solve_power_flow</code>.</li>
 <li id="ref-hand">Reference 5: <code>src/digitalmodel/power/analysis/docs/reference-cases.md</code>, “Solved three-bus reference” and “Tap and charging convention”. Exact rectangular phasors and circuit inputs are recorded there.</li>
@@ -249,9 +272,9 @@ def build(destination=None):
 network = public_network(read_case())
 result = solve_power_flow(network, tol=TOL, max_iter=MAX_ITER)
 assert result.converged</pre>
-<pre>PYTHONPATH=src uv run --no-project --with numpy python docs/reports/modules/power/build_report.py
-PYTHONPATH=src uv run --no-project --with pytest --with numpy python -m pytest tests/power/analysis -q -p no:cacheprovider</pre>
-<p>The generator and tests use explicit UTF-8 text encoding and line-feed output. The report test compares rounded numerical text rather than unrounded floating-point strings; a stale report names the rebuild command.</p></section>
+<pre>PYTHONPATH=src uv run --locked python docs/reports/modules/power/build_report.py
+PYTHONPATH=src uv run --locked --extra test python -m pytest tests/power/analysis -q -p no:cacheprovider</pre>
+<p>The project environment supplies the locked dependency versions. The generator and tests use explicit UTF-8 text encoding, normalize source newlines and write line-feed output. Embedded rounded zero is normalized to positive zero. The report test compares embedded JSON numerically while requiring exact narrative and displayed numerical text; a stale report names the rebuild command.</p></section>
 <section id="s10"><h2>10. Appendices</h2>
 <p>The input and quality records are provided for detailed review. Data absent from the public case is identified without assigning an operating value.</p>
 <h3>10.1 Input and data register</h3>{bus_inputs}{line_inputs}
@@ -266,8 +289,8 @@ PYTHONPATH=src uv run --no-project --with pytest --with numpy python -m pytest t
 ['Assumptions', 'No estimated installation data is used', 'Public and constructed circuits only']])}
 <h3>10.2 Symbols and units</h3><p>Per unit (pu) denotes a quantity divided by its consistent system base. MW is megawatt, Mvar is megavolt-ampere reactive and MVA is megavolt-ampere. Alternating current is the sinusoidal steady-state basis. A reference bus fixes voltage and angle; a fixed-active-power-and-voltage bus is conventionally called PV; a fixed-active-and-reactive-power bus is called PQ. V is complex voltage; I is complex current; Y is complex admittance; S is complex power; P is active power; Q is reactive power; Qg is generator reactive power; Qd is local reactive demand; Sbase is the power base. J is the Jacobian, u is the unknown vector and Δ is an increment. Remaining branch symbols are defined immediately after their equation.</p>
 <h3>10.3 Quality pre-flight</h3><p>The report checks cover numerical bindings, hand literals, displayed-input reconstruction of generator reactive output, offline resources, source links, section count, public wording, UTF-8 and line-feed output, and fresh-build equality at displayed precision. The existing numerical tests provide broader circuit evidence. Test outcomes are recorded with the submitted change; a checklist is not a substitute for those executions.</p>
-<h3>10.4 Engineering changes</h3><p>Revision 1 establishes the initial engineering basis. Select the preceding revision to display subsequent changes.</p>
-<label>Last read revision <select id="prior-revision"><option value="0">Before initial issue</option><option value="1">1</option></select></label><ul id="change-list"></ul>
+<h3>10.4 Engineering changes</h3><p>Revision 1 establishes the initial engineering basis; revision 2 corrects reproducibility, numerical evidence and interpretation. Select the preceding revision to display subsequent changes.</p>
+<label>Last read revision <select id="prior-revision"><option value="0">Before initial issue</option><option value="1">1</option><option value="2">2</option></select></label><ul id="change-list"></ul>
 <h3>10.5 Report comments</h3><p>Comments are saved beside this HTML by choosing its folder in the save dialog. Where a folder picker is unavailable, select the same folder in Save As; the download fallback uses the browser destination. Load the sidecar before adding to an existing review. No comments are sent to a server.</p>
 <label>Section <select id="comment-section">{''.join(f'<option value="s{i}">Section {i}</option>' for i in range(1,11))}</select></label>
 <label>Comment <textarea id="comment-text" rows="3"></textarea></label>

@@ -4,7 +4,9 @@
 
 import importlib.util
 import json
+import math
 import re
+import shlex
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
@@ -13,11 +15,23 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 REPORT = ROOT / "docs/reports/modules/power"
-REBUILD = "PYTHONPATH=src uv run --no-project --with numpy python docs/reports/modules/power/build_report.py"
+REBUILD = "PYTHONPATH=src uv run --locked python docs/reports/modules/power/build_report.py"
 spec = importlib.util.spec_from_file_location("power_report", REPORT / "build_report.py")
 builder = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = builder
 spec.loader.exec_module(builder)
+
+
+def read_utf8(path):
+    """Normalize source line endings on every supported platform."""
+    with path.open(encoding="utf-8", newline=None) as stream:
+        return stream.read()
+
+
+def calculation_data(html):
+    return json.loads(re.search(
+        r'<script id="calculation-data" type="application/json">(.*?)</script>', html, re.S,
+    ).group(1))
 
 
 class Numbers(HTMLParser):
@@ -76,11 +90,138 @@ def test_public_case_mapping_and_headline():
     assert record["public.converged"] is True
 
 
+@pytest.mark.parametrize(("key", "expected", "tolerance"), [
+    ("public.qg4_mvar", 181.4296, 0.00005),
+    ("public.qg1_mvar", 114.5008, 0.00005),
+    ("public.total_loss_mw", 4.8091, 0.00005),
+    ("public.bus.1.v_pu", 0.982421, 0.0000005),
+    ("public.bus.2.v_pu", 0.969005, 0.0000005),
+])
+def test_four_bus_independent_literals(key, expected, tolerance):
+    # Independent pi-model Newton calculation, cross-checked by Gauss-Seidel,
+    # with inputs typed from MATPOWER 8.1 case4gs. These literals are prescribed
+    # reference results, never obtained by calling the builder or solver here.
+    assert builder.calculate()[key] == pytest.approx(expected, rel=0, abs=tolerance)
+
+
+@pytest.mark.parametrize("violates", [False, True])
+def test_limit_dispositions_follow_inputs(monkeypatch, tmp_path, violates):
+    case = builder.read_case()
+    if violates:
+        for bus in case["buses"]:
+            bus["v_min"] = 1.03
+        for branch in case["branches"]:
+            branch["rating_mva"] = 1.0
+    monkeypatch.setattr(builder, "read_case", lambda: case)
+    target = tmp_path / "report.html"
+    record = builder.build(target)
+    assert record["public.voltage_bounds_satisfied"] is (not violates)
+    assert record["public.branch_ratings_satisfied"] is (not violates)
+    assert record["public.voltage_bounds_satisfied"] is all(
+        row["v_min"] <= record[f"public.bus.{i}.v_pu"] <= row["v_max"]
+        for i, row in enumerate(case["buses"])
+    )
+    assert record["public.branch_ratings_satisfied"] is all(
+        max(record[f"public.branch.{i}.sending_mva"],
+            record[f"public.branch.{i}.receiving_mva"]) <= row["rating_mva"]
+        for i, row in enumerate(case["branches"])
+    )
+    html = read_utf8(target)
+    assert ("Voltage magnitudes violate the supplied case limits" in html) is violates
+    assert ("These circuit values exceed at least one supplied rating" in html) is violates
+    assert ("The plotted bounds are satisfied" in html) is (not violates)
+
+
+def test_reference_voltage_uses_generator_setpoint(monkeypatch, tmp_path):
+    case = builder.read_case()
+    case["buses"][0]["v_initial"] = 0.93
+    case["generators"][1]["v_set"] = 1.04
+    monkeypatch.setattr(builder, "read_case", lambda: case)
+    assert builder.public_network(case).buses[0].voltage_pu == 1.04
+    target = tmp_path / "report.html"
+    builder.build(target)
+    parser = Numbers()
+    parser.feed(read_utf8(target))
+    assert sum(key == "input.generators.1.v_set" for key, _, _ in parser.values) >= 2
+    assert not any(key == "input.buses.0.v_initial" for key, _, _ in parser.values)
+
+
+def test_rating_equality_uses_inclusive_criterion(monkeypatch, tmp_path):
+    case = builder.read_case()
+    record = builder.calculate()
+    for i, branch in enumerate(case["branches"]):
+        branch["rating_mva"] = max(record[f"public.branch.{i}.sending_mva"],
+                                   record[f"public.branch.{i}.receiving_mva"])
+    monkeypatch.setattr(builder, "read_case", lambda: case)
+    target = tmp_path / "report.html"
+    assert builder.build(target)["public.branch_ratings_satisfied"] is True
+    assert "These circuit values do not exceed the supplied ratings" in read_utf8(target)
+
+
+@pytest.mark.parametrize("bus_count", [3, 4])
+def test_nonconverged_report_is_not_written(monkeypatch, tmp_path, bus_count):
+    from types import SimpleNamespace
+
+    solve = builder.solve_power_flow
+
+    def fail_selected(network, **kwargs):
+        if len(network.buses) == bus_count:
+            return SimpleNamespace(converged=False)
+        return solve(network, **kwargs)
+
+    monkeypatch.setattr(builder, "solve_power_flow", fail_selected)
+    target = tmp_path / "report.html"
+    with pytest.raises(ValueError, match="has not converged"):
+        builder.build(target)
+    assert not target.exists()
+
+
+def test_inadequate_display_precision_is_rejected():
+    with pytest.raises(ValueError, match="needs more displayed digits"):
+        builder.format_number(0.004, 2)
+    assert builder.format_number(-0.0, 6) == "0.000000"
+    assert builder.format_number(-1e-14, 6) == "−1.0e−14"
+
+
+def test_iteration_count_and_reference_corrections():
+    record = builder.calculate()
+    assert record["public.iterations"] == 5
+    assert record["public.newton_updates"] == 4
+    html = read_utf8(REPORT / "report.html")
+    assert "mismatch evaluations" in html and "Newton updates" in html
+    assert "voltage demand" not in html
+    assert "voltage magnitude" in html
+    assert "Network Equations" in html
+    assert "(4.5.8)–(4.5.10)" in html and "(4.5.11)" not in html
+    assert "John Grainger" in html and "William Stevenson" in html and "McGraw-Hill" in html
+    assert "conditional on the supplied case limits" in html
+    assert "textbook basis for these limits is not established" in html
+
+
+def test_power_report_is_owned_and_collected_by_ci():
+    import yaml
+
+    gate = yaml.safe_load(read_utf8(ROOT / ".claude/quality-gates.yaml"))["gates"]["tests-specialized"]
+    assert gate["enabled"] is True
+    assert "tests/power/" in gate["test_roots"]
+    command = shlex.split(gate["command"])
+    assert "tests/power/" in command
+    assert not any(arg.startswith("--ignore") and "power" in arg for arg in command)
+    path = ROOT / "scripts/ci/detect_touched_domains.py"
+    spec = importlib.util.spec_from_file_location("power_ci_detector", path)
+    detector = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = detector
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+    selected = detector.touched_domains(["tests/power/analysis/test_module_report.py"], domains)
+    assert "specialized" in {domain.name for domain in selected}
+
+
 def test_displayed_number_consistency():
     """Consistency check: every numerical binding equals a fresh module call."""
     record = builder.calculate()
     parser = Numbers()
-    parser.feed((REPORT / "report.html").read_text(encoding="utf-8"))
+    parser.feed(read_utf8(REPORT / "report.html"))
     assert len(parser.values) > 60
     for key, digits, displayed in parser.values:
         assert displayed == builder.format_number(record[key], digits), f"{key}: {REBUILD}"
@@ -89,17 +230,45 @@ def test_displayed_number_consistency():
 def test_rebuild(tmp_path):
     destination = tmp_path / "report.html"
     builder.build(destination)
-    committed = (REPORT / "report.html").read_text(encoding="utf-8")
-    rebuilt = destination.read_text(encoding="utf-8")
-    # Output numbers are rounded to displayed precision before embedding.
-    assert committed == rebuilt, f"Report is stale. Rebuild with: {REBUILD}"
+    committed = read_utf8(REPORT / "report.html")
+    rebuilt = read_utf8(destination)
+    # Keep narrative and displayed precision exact, compare the JSON numerically.
+    pattern = r'(<script id="calculation-data" type="application/json">).*?(</script>)'
+    assert re.sub(pattern, r'\1\2', committed, flags=re.S) == re.sub(
+        pattern, r'\1\2', rebuilt, flags=re.S,
+    ), f"Report is stale. Rebuild with: {REBUILD}"
+    expected, actual = calculation_data(committed), calculation_data(rebuilt)
+    assert expected.keys() == actual.keys()
+    for key, value in expected.items():
+        if isinstance(value, float) and key != "tol":
+            assert actual[key] == pytest.approx(value, rel=0, abs=1e-6), key
+        else:
+            assert actual[key] == value, key
+    for value in actual.values():
+        if isinstance(value, float) and value == 0:
+            assert math.copysign(1.0, value) == 1.0
     assert b"\r" not in destination.read_bytes()
-    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == "1"
+    changes = json.loads(read_utf8(REPORT / "changes.json"))
+    assert changes["revision"] == "2"
+    assert "<td>1</td><td>2026-10-21</td>" in rebuilt
+    assert "<td>2</td><td>2026-10-22</td>" in rebuilt
+
+
+def test_crlf_templates_generate_lf_output(monkeypatch, tmp_path):
+    for relative in ["docs/api/_assets/brand.css", "docs/api/cfd/turbulent-flat-plate-verification.html"]:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("w", encoding="utf-8", newline="\r\n") as stream:
+            stream.write(read_utf8(ROOT / relative))
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    destination = tmp_path / "report.html"
+    builder.build(destination)
+    assert b"\r" not in destination.read_bytes()
+    assert read_utf8(destination) == read_utf8(REPORT / "report.html")
 
 
 def test_report_contract():
-    html = (REPORT / "report.html").read_text(encoding="utf-8")
+    html = read_utf8(REPORT / "report.html")
     assert '<body class="hs-doc">' in html
     assert len(re.findall(r'<section id="s\d+">', html)) == 10
     assert "Draft for maintainer review" in html
@@ -125,7 +294,7 @@ def test_offline_interactions():
     node = shutil.which("node")
     if not node:
         pytest.skip("Node is unavailable; offline interaction check requires Node.")
-    html = (REPORT / "report.html").read_text(encoding="utf-8")
+    html = read_utf8(REPORT / "report.html")
     script = re.findall(r"<script>(.*?)</script>", html, re.S)[0]
     changes = re.search(r'<script id="changes-data" type="application/json">(.*?)</script>', html, re.S).group(1)
     harness = r'''
@@ -162,7 +331,7 @@ function start() {
   ui.get('limits').events.click(); assert.equal(ui.limit.style.display, 'none');
   ui.get('limits').events.click(); assert.equal(ui.limit.style.display, '');
   assert.equal(ui.get('change-list').children.length, 3);
-  ui.get('prior-revision').value = '1'; ui.get('prior-revision').events.change();
+  ui.get('prior-revision').value = '2'; ui.get('prior-revision').events.change();
   assert.equal(ui.get('change-list').children[0].textContent, 'No later engineering changes.');
   ui.get('comment-section').value = 's5'; ui.get('comment-text').value = '<example> Review reactive limit.';
   ui.get('add-comment').events.click();

@@ -1,9 +1,9 @@
 {
-  "revision": "1",
-  "date": "2026-10-21",
+  "revision": "2",
+  "date": "2026-10-22",
   "changes": [
-    "AC load flow is described with bus, branch and generator input conventions.",
-    "A public four-bus circuit is calculated and both unconstrained generator reactive outputs are compared with their supplied limits.",
-    "Hand-derived circuit values, numerical checks and application limits are provided."
+    "Embedded rounded zero and source newlines are normalized for reproducible output with the locked dependencies.",
+    "Independent four-bus literals, both terminal-rating checks and voltage-bound checks strengthen the numerical evidence; the reference voltage is bound to its generator setpoint.",
+    "Newton updates are distinguished from mismatch evaluations, external citations are corrected and operating-point exclusion is conditional on the supplied case limits."
   ]
 }
