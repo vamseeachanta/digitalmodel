@@ -13,6 +13,7 @@ import re
 from dataclasses import asdict, replace
 from html import escape
 from pathlib import Path
+from unittest import SkipTest
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
@@ -66,26 +67,54 @@ def example_spec():
                                 fiscal_regime=FiscalRegime[fiscal], **values)
 
 
+def independent_schedule(spec, costs, decline_rate):
+    """Reconstruct the stated local cash-flow basis without private module calls.
+
+    The 60% plateau and 30/50/20 capital schedule are implemented assumptions,
+    not calibrated engineering coefficients. Section 5 states their values.
+    """
+    plateau_years = max(1, int(spec.field_life_years * 0.6))
+    annual_volume = spec.production_capacity_bopd * 365 / 1_000_000
+    volumes = [0.0] + [annual_volume * (
+        1.0 if year <= plateau_years else math.exp(-decline_rate * (year - plateau_years))
+    ) for year in range(1, spec.field_life_years + 1)]
+    cash = [volume * spec.oil_price_usd_per_bbl
+            - costs.opex_usd_mm_per_yr * volume / annual_volume for volume in volumes]
+    for year, fraction in enumerate((0.30, 0.50, 0.20)):
+        if year < len(cash):
+            cash[year] -= costs.capex_usd_mm * fraction
+    cash[-1] -= costs.abex_usd_mm
+    return cash, volumes, plateau_years
+
+
+def depth_band(host):
+    """Read the cited depth-band data without importing private module symbols."""
+    from digitalmodel.field_development.concept_selection import HostType
+
+    tree = ast.parse((ROOT / MODULE / "concept_selection.py").read_text(encoding="utf-8"))
+    bands = next(node.value for node in tree.body if isinstance(node, ast.AnnAssign)
+                 and isinstance(node.target, ast.Name) and node.target.id == "_DEPTH_LIMITS")
+    return next(ast.literal_eval(value) for key, value in zip(bands.keys, bands.values)
+                if HostType[key.attr] == host)
+
+
 def compute():
-    """Call the public entry point and retain only neutral, reproducible evidence."""
+    """Call public workflows and independently reconcile the local example."""
     if importlib.util.find_spec("worldenergydata") is not None:
-        raise RuntimeError("This example requires the documented local fallback backend")
+        raise SkipTest("Report requires the local fallback; worldenergydata is importable")
     from digitalmodel.field_development.workflow import (
-        evaluate_field_development, _spec_to_economics_input,
+        evaluate_field_development, compare_concepts,
     )
-    from digitalmodel.field_development.economics import _build_annual_cashflows
-    from digitalmodel.field_development.concept_selection import _DEPTH_LIMITS
+    from digitalmodel.field_development.economics import EconomicsInput
 
     spec = example_spec()
     result = evaluate_field_development(spec)
     costs, metrics = result.economics.costs, result.economics.metrics
-    inp = _spec_to_economics_input(spec, result.evaluated_host)
-    cash = _build_annual_cashflows(inp, costs.capex_usd_mm,
-                                  costs.opex_usd_mm_per_yr, costs.abex_usd_mm)
-    # At unit price and zero costs, cash in million USD equals million barrels.
-    volumes = _build_annual_cashflows(replace(inp, oil_price_usd_per_bbl=1.0), 0, 0, 0)
     inputs = {key: value for key, value in asdict(spec).items()
               if isinstance(value, (float, int))}
+    inp = EconomicsInput(field_name=spec.field_name, host_type=result.evaluated_host,
+                         fiscal_regime=spec.fiscal_regime, **inputs)
+    cash, volumes, plateau_years = independent_schedule(spec, costs, inp.decline_rate)
     sweep = []
     # Sampling convention, not an engineering coefficient: half to one-and-a-half
     # of the documented price, in ten equal intervals. Defined in Appendix 10.1.
@@ -93,19 +122,37 @@ def compute():
         price = spec.oil_price_usd_per_bbl * index / 10
         evaluated = evaluate_field_development(replace(spec, oil_price_usd_per_bbl=price))
         sweep.append({"price": price, "npv": evaluated.economics.metrics.npv_usd_mm})
-    lo, hi = _DEPTH_LIMITS[result.concept.selected_host]
+    tied = [option for option in result.concept.ranked_options
+            if option.score == result.concept.ranked_options[0].score]
+    alternatives = []
+    for alternative in compare_concepts(spec, top_n=len(tied)).results:
+        if alternative.evaluated_host != result.evaluated_host:
+            cost = alternative.economics.costs
+            alternatives.append({"host": alternative.evaluated_host,
+                                 "npv": alternative.economics.metrics.npv_usd_mm,
+                                 "capital": cost.capex_usd_mm,
+                                 "operating": cost.opex_usd_mm_per_yr,
+                                 "abandonment": cost.abex_usd_mm})
+    lo, hi = depth_band(result.concept.selected_host)
+    production = math.fsum(volumes)
+    eur = spec.reservoir_size_mmbbl * 0.15
     return {"inputs": inputs, "selected": result.evaluated_host,
             "ranking": [{"host": o.host_type.value, "score": o.score}
                         for o in result.concept.ranked_options],
+            "tied_alternatives": alternatives,
             "costs": {"capital": costs.capex_usd_mm,
                       "operating": costs.opex_usd_mm_per_yr,
                       "abandonment": costs.abex_usd_mm},
             "npv": metrics.npv_usd_mm, "sensitivity": sweep,
-            "reconciled_npv": math.fsum(float(c) / (1 + spec.discount_rate) ** t
+            "reconciled_npv": math.fsum(c / (1 + spec.discount_rate) ** t
                                         for t, c in enumerate(cash)),
-            "production_mmbbl": float(sum(volumes)),
-            "excess_percent": (float(sum(volumes)) / spec.reservoir_size_mmbbl - 1) * 100,
+            "production_mmbbl": production,
+            "excess_percent": (production / spec.reservoir_size_mmbbl - 1) * 100,
+            "eur_mmbbl": eur, "eur_multiple": production / eur,
+            "plateau_years": plateau_years,
+            "plateau_mmbbl": spec.production_capacity_bopd * 365 / 1_000_000 * plateau_years,
             "decline_rate": inp.decline_rate, "depth_low": lo, "depth_high": hi,
+            "payback_years": metrics.payback_years,
             "tax_applied": metrics.pre_tax_npv_usd_mm is not None}
 
 
@@ -113,17 +160,25 @@ def display_values(data):
     """Enumerate all displayed worked-example numbers for readback testing."""
     values = {**data["inputs"], **data["costs"]}
     for key in ("npv", "production_mmbbl", "excess_percent", "decline_rate",
-                "depth_low", "depth_high"):
+                "depth_low", "depth_high", "eur_mmbbl", "eur_multiple",
+                "plateau_years", "plateau_mmbbl", "payback_years"):
         values[key] = data[key]
     values.update({"score_" + row["host"]: row["score"] for row in data["ranking"]})
     for i, point in enumerate(data["sensitivity"]):
         values[f"price_{i}"] = point["price"]
         values[f"npv_{i}"] = point["npv"]
+    for row in data["tied_alternatives"]:
+        for key in ("npv", "capital", "operating", "abandonment"):
+            values[f"tied_{row['host']}_{key}"] = row[key]
     return values
 
 
-def format_value(value):
+def format_value(value, key=""):
     """Use engineering precision, retaining small nonzero values."""
+    if key in {"field_life_years", "production_capacity_bopd", "plateau_years", "payback_years"}:
+        return f"{value:,.0f}"
+    if key in {"excess_percent", "eur_multiple"}:
+        return f"{value:,.1f}"
     return (f"{value:,.2f}" if abs(value) >= 0.01 or value == 0
             else f"{value:.3g}").replace("-", "−")
 
@@ -141,6 +196,7 @@ def chart(data):
     xmin, xmax = points[0]["price"], points[-1]["price"]
     ymin = min(0, min(p["npv"] for p in points))
     ymax = max(0, max(p["npv"] for p in points))
+    ymin -= (ymax - ymin) * 0.1  # Keep the zero criterion clear of the x-axis.
     x = lambda value: 90 + (value - xmin) / (xmax - xmin) * 600
     y = lambda value: 300 - (value - ymin) / (ymax - ymin) * 230
     marks = []
@@ -161,7 +217,7 @@ def chart(data):
             + f'<text x="90" y="325">{format_value(xmin)}</text>'
             + f'<text x="665" y="325">{format_value(xmax)}</text>'
             + f'<text x="35" y="65">{format_value(ymax)}</text>'
-            + '<text x="55" y="305">0</text>'
+            + f'<text x="55" y="{y(0) + 5:.2f}">0</text>'
             + '<text x="260" y="350">Oil price (USD/bbl)</text>'
             '<text transform="translate(22 285) rotate(-90)">Net present value (million USD)</text>'
             '<text x="100" y="35">Dashed line: zero net present value</text></svg>'
@@ -171,7 +227,7 @@ def chart(data):
 def fragments(data):
     """Build numeric tables from computed values only."""
     values = display_values(data)
-    spans = {key: f'<span data-value="{key}">{format_value(value)}</span>'
+    spans = {key: f'<span data-value="{key}">{format_value(value, key)}</span>'
              for key, value in values.items()}
     labels = {"water_depth_m": ("Water depth", "m"),
               "reservoir_size_mmbbl": ("Reservoir size", "million bbl"),
@@ -184,15 +240,34 @@ def fragments(data):
                     for k in data["inputs"]], "Table A. Documented illustrative inputs.")
     ranking = table(["Host concept", "Suitability score (dimensionless)", "Source"],
                     [(LABELS[r["host"]], spans["score_" + r["host"]], "Ranking calculation; §9.2")
-                     for r in data["ranking"]], "Table B. Computed ranking; score is not probability.")
+                     for r in data["ranking"]], "Table B. Spar and Semi-submersible tie at 92.50; the stable sort preserves "
+                    "LEGACY_HOST_TYPES order (Spar before Semi). Score is not probability.")
+    alternatives = table(
+        ["Tied alternative", "Capital (million USD)", "Annual operating (million USD/year)",
+         "Abandonment (million USD)", "Pre-tax net present value (million USD)"],
+        [(LABELS[row["host"]], *(spans[f"tied_{row['host']}_{key}"]
+          for key in ("capital", "operating", "abandonment", "npv")))
+         for row in data["tied_alternatives"]],
+        "Table D. Economics of the tied alternative; the same production limitation applies.")
     sensitivity = table(["Oil price (USD/bbl)", "Net present value (million USD)", "Source"],
                         [(spans[f"price_{i}"], spans[f"npv_{i}"], "Workflow calculation; §9.2")
                          for i in range(len(data["sensitivity"]))], "Table C. Price sensitivity readback.")
     refs = "".join(f'<li>{escape(r["description"])}: <code>{r["path"]}</code>. '
                    f'Text edition SHA-256: <code>{r["digest"]}</code>.</li>' for r in source_records())
     return {**spans, "input_table": inputs, "ranking_table": ranking,
-            "sensitivity_table": sensitivity, "references": refs,
+            "sensitivity_table": sensitivity, "alternative_table": alternatives, "references": refs,
             "selected": LABELS[data["selected"]], "chart": chart(data)}
+
+
+def rounded_evidence(value):
+    """Serialize numerical evidence to 14 significant digits across platforms."""
+    if isinstance(value, float):
+        return float(f"{value:.14g}")
+    if isinstance(value, dict):
+        return {key: rounded_evidence(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [rounded_evidence(item) for item in value]
+    return value
 
 
 def render():
@@ -208,15 +283,21 @@ def render():
         encoding="utf-8"), re.S).group(0)
     brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     interaction = (HERE / "interaction.js").read_text(encoding="utf-8")
-    changes = {"revision": "Initial", "status": "Draft for client review",
-               "changes": ["Concept selection and local economic screening are documented.",
-                           "The production-volume discrepancy is identified as a limit of use."]}
+    changes = {"revision": "1", "date": "2026-10-22", "status": "Draft for technical review",
+               "changes": ["The host tie, alternative economics and decline fallback are stated.",
+                           "Numerical evidence is rounded and independently reconciled."],
+               "history": [
+                   {"revision": "Initial", "date": "Not recorded",
+                    "changes": ["Concept selection and local economic screening are documented.",
+                                "The production-volume discrepancy is identified as a limit of use."]},
+                   {"revision": "1", "date": "2026-10-22",
+                    "changes": ["The tie and fallback basis are clarified; evidence is made portable."]}]}
     html = ('<!DOCTYPE html>\n<html lang="en" data-theme="light"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>Field development: concept and economic screening</title>'
             f'<style>{brand}</style>{style}</head><body class="hs-doc"><main class="wrap">'
             + body + '</main><script id="evidence" type="application/json">'
-            + json.dumps(data, sort_keys=True, allow_nan=False) + '</script>'
+            + json.dumps(rounded_evidence(data), sort_keys=True, allow_nan=False) + '</script>'
             + '<script id="changes" type="application/json">'
             + json.dumps(changes, sort_keys=True) + '</script>'
             + f'<script>{interaction}</script></body></html>\n')
@@ -234,4 +315,7 @@ def build(destination=HERE):
 
 
 if __name__ == "__main__":
-    build()
+    try:
+        build()
+    except SkipTest as reason:
+        print(f"SKIP: {reason}")
