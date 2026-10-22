@@ -1,8 +1,8 @@
 {
-  "revision": "A",
+  "revision": "B",
   "status": "Draft for maintainer review",
   "changes": [
-    "Initial issue: ideal duty-cycle energy and peak battery discharge are evaluated using the public example.",
-    "Battery rating, recharge, reserve and installation weather limits remain not evaluated."
+    "Shared regression inputs and independent energy-share and duration checks are added; source locators and table order are corrected.",
+    "Comment imports retain unsaved notes and avoid duplicates. Battery rating, recharge and reserve remain not evaluated."
   ]
 }

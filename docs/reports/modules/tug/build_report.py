@@ -18,32 +18,23 @@ import sys
 ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
-FIXTURE = "tests/tug/test_tug_toolkit.py"
+FIXTURE = "tests/tug/duty_cycle.json"
+TESTS = ROOT / "tests/tug/test_tug_toolkit.py"
 sys.path.insert(0, str(ROOT / "src"))
 
 from digitalmodel.tug.emissions import OperatingPhase, cycle_energy, size_hybrid
 
 
 def read_example():
-    """Read literals from the public test without executing its imports."""
-    tree = ast.parse((ROOT / FIXTURE).read_text(encoding="utf-8"))
-    suite = next(n for n in tree.body
-                 if isinstance(n, ast.ClassDef) and n.name == "TestEmissions")
-    profile = next(n.value for n in suite.body if isinstance(n, ast.Assign)
-                   and n.targets[0].id == "PROFILE")
-    rows = [tuple(ast.literal_eval(a) for a in call.args)
-            for call in profile.elts]
-    case = next(n for n in suite.body if isinstance(n, ast.FunctionDef)
-                and n.name == "test_hybrid_sizing_shaves_assist_peak")
-    call = next(n for n in ast.walk(case) if isinstance(n, ast.Call)
-                and isinstance(n.func, ast.Name) and n.func.id == "size_hybrid")
-    power = ast.literal_eval(call.args[0])
-    baseline = next(ast.literal_eval(k.value) for k in call.keywords
-                    if k.arg == "baseline_fraction")
+    """Read the shared regression inputs and count test definitions."""
+    example = json.loads((ROOT / FIXTURE).read_text(encoding="utf-8"))
+    rows = [(p["name"], p["power_fraction"], p["duration_h"])
+            for p in example["profile"]]
+    tree = ast.parse(TESTS.read_text(encoding="utf-8"))
     counts = {n.name: sum(isinstance(f, ast.FunctionDef)
                          and f.name.startswith("test_") for f in n.body)
               for n in tree.body if isinstance(n, ast.ClassDef)}
-    return power, rows, baseline, counts
+    return example["installed_power_kw"], rows, example["baseline_fraction"], counts
 
 
 def validate_profile(power, rows, baseline):
@@ -82,7 +73,9 @@ def lookup(data, key):
 
 
 def number(data, key):
-    return f'<span data-value="{key}">{lookup(data, key):,.3f}</span>'
+    value = lookup(data, key)
+    printed = f"{value:,}" if key.startswith("input.") else f"{value:,.3f}"
+    return f'<span data-value="{key}">{printed}</span>'
 
 
 def tables(data):
@@ -123,7 +116,8 @@ def chart(data):
                 (-38, "peak_power_kw", "Propulsion demand", "var(--brand)"),
                 (12, "battery_power_kw", "Battery discharge", "var(--caution)")]:
             value = r[key]
-            tip = (f'Public example; {row["name"]}; {label}; demand {value:.3f} kW; '
+            quantity = "demand" if key == "peak_power_kw" else "power"
+            tip = (f'Public example; {row["name"]}; {label}; {quantity} {value:.3f} kW; '
                    f'engine baseline {baseline:.3f} kW; battery rating NOT_EVALUATED')
             parts.append(f'<rect tabindex="0" x="{x+offset}" y="{y(value):.3f}" '
                          f'width="42" height="{max(1,260-y(value)):.3f}" fill="{colour}" '
@@ -134,9 +128,9 @@ def chart(data):
 
 
 def changes():
-    return {"revision": "A", "status": "Draft for maintainer review", "changes": [
-        "Initial issue: ideal duty-cycle energy and peak battery discharge are evaluated using the public example.",
-        "Battery rating, recharge, reserve and installation weather limits remain not evaluated."
+    return {"revision": "B", "status": "Draft for maintainer review", "changes": [
+        "Shared regression inputs and independent energy-share and duration checks are added; source locators and table order are corrected.",
+        "Comment imports retain unsaved notes and avoid duplicates. Battery rating, recharge and reserve remain not evaluated."
     ]}
 
 

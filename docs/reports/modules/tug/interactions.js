@@ -2,6 +2,7 @@
 (() => {
   const byId = (id) => document.getElementById(id);
   const comments = [];
+  const revision = JSON.parse(byId('change-data').textContent).revision;
   const sections = [...document.querySelectorAll('section[id]')];
   for (const section of sections) {
     const option = document.createElement('option');
@@ -34,7 +35,7 @@
     byId('comment-status').textContent = 'Comment added. Save the comment file to retain it.';
   });
   byId('save-comments').addEventListener('click', async () => {
-    const content = JSON.stringify({revision: 'A', comments}, null, 2) + '\n';
+    const content = JSON.stringify({revision, comments}, null, 2) + '\n';
     try {
       if (window.showSaveFilePicker) {
         const file = await window.showSaveFilePicker({suggestedName: 'comments.json',
@@ -62,12 +63,16 @@
     if (!file) return;
     try {
       const record = JSON.parse(await file.text());
-      if (record.revision !== 'A' || !Array.isArray(record.comments)
+      if (!['A', revision].includes(record.revision) || !Array.isArray(record.comments)
           || !record.comments.every((c) => c && typeof c.text === 'string'
             && sections.some((s) => s.id === c.section))) throw new Error('Invalid record');
-      comments.splice(0, comments.length, ...record.comments);
+      for (const comment of record.comments) {
+        if (!comments.some((c) => c.section === comment.section && c.text === comment.text)) {
+          comments.push(comment);
+        }
+      }
       showComments();
-      byId('comment-status').textContent = 'Saved comments loaded.';
+      byId('comment-status').textContent = 'Saved comments merged. Save the comment file to retain them.';
     } catch {
       byId('comment-status').textContent = 'Invalid comment file; existing comments retained.';
     }
