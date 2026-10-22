@@ -1,0 +1,14 @@
+{
+  "document": "Subsea module analysis",
+  "revisions": [
+    {
+      "revision": "00",
+      "date": "2026-10-21",
+      "changes": [
+        "First issue: static riser geometry, tension and available-length screening are presented so that the calculation boundary is explicit.",
+        "The documented riser example and a published cable geometry are distinguished from measured validation and installation acceptance.",
+        "Missing strength, fatigue and environmental inputs are recorded as requirements for further assessment."
+      ]
+    }
+  ]
+}

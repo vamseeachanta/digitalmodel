@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Static catenary riser calculations, evidence and limits of the subsea module.">
+<title>Subsea module analysis — static catenary riser</title>
+<style>{{ style }}</style>
+<style>
+svg{display:block;width:100%;height:auto}input[type=range]{width:70%}
+table{display:block;overflow-x:auto}textarea{font:inherit}
+@media print{aside{display:none}}
+</style>
+</head>
+<body class="hs-doc"><div class="wrap">
+<header>
+<div class="kicker">Subsea engineering calculations</div>
+<h1>Subsea module analysis</h1>
+<p class="sub">Static catenary riser geometry, tension and available length</p>
+<p>Draft for client review</p>
+</header>
+<nav aria-label="Contents"><p>
+<a href="#summary">Executive Summary</a> · <a href="#introduction">Introduction</a> ·
+<a href="#controls">Summary</a> · <a href="#design-data">Design Data</a> ·
+<a href="#method">Methodology</a> · <a href="#results">Detailed Results</a> ·
+<a href="#validation">Validation</a> · <a href="#recommendations">Findings and Recommendations</a> ·
+<a href="#references">References</a> · <a href="#appendix">Appendices</a>
+</p></nav>
+<main>
+<section id="summary">
+<h2>1. Executive Summary</h2>
+<p>The subsea module is a collection of engineering calculations for risers, pipelines,
+moorings and subsea equipment. Analysis is performed to determine the static suspended
+geometry and tension of the documented catenary riser example; key results are summarized below.</p>
+<ul>
+<li>Use the analytical result to screen suspended geometry and available length.
+  <ul><li>The suspended length is {{ number('arc_length') }} m against
+  {{ number('length') }} m available; {{ number('grounded_length') }} m remains on the seabed
+  under the horizontal-tangent model.</li></ul></li>
+<li>Carry the calculated force into a separate strength assessment.
+  <ul><li>Top tension is {{ number('top_tension_kN') }} kN. Strength and fatigue acceptance are not established:
+  the allowable tension, bending criterion and environmental loading are required inputs.</li></ul></li>
+<li>Keep the calculation within its static geometry boundary.
+  <ul><li>The calculated limiting suspended offset is {{ number('offset_limit_m') }} m at full
+  use of the available length. This is a length boundary, not an installation operating limit.</li></ul></li>
+</ul>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody>{% for revision in changes.revisions %}<tr><td>{{ revision.revision }}</td><td>{{ revision.date }}</td>
+<td>{{ revision.changes | join(' ') }}</td></tr>{% endfor %}</tbody>
+<caption>Revision history. The first issue establishes the calculation boundary.</caption></table></div>
+</section>
+
+<section id="introduction">
+<h2>2. Introduction</h2>
+<p>The module is assessed through its public static riser workflow. The purpose is to give
+an engineer a reproducible calculation, its evidence basis and the information required
+before installation or operational use.</p>
+<p>The main workflow starts with pipe dimensions and constituent densities, calculates submerged
+weight, and solves the suspended shape for water depth and horizontal offset. Tension,
+top angle, curvature and grounded length are returned. The calculation is useful for early
+layout and load definition; an installation decision requires dynamic loads and component capacities.</p>
+<p>The worked example is the public repository's documented Python example. It is an illustrative
+input set, not a measured riser or a qualified material specification. A published cable
+geometry provides a separate mathematical comparison in <a href="#validation">Validation</a>.</p>
+</section>
+
+<section id="controls">
+<h2>3. Summary</h2>
+<p>Available length is checked against the suspended length demanded by the static shape.
+The boundary below is calculated at fixed water depth and fixed total riser length.</p>
+<figure>
+<svg id="length-chart" viewBox="0 0 840 350" role="img" aria-label="Required suspended length against horizontal offset with available-length limit"></svg>
+<label>Inspect suspended offset <input id="length-slider" type="range" min="0" max="60" value="30" aria-label="Inspect suspended offset"></label>
+<p id="length-readout" aria-live="polite"></p>
+<figcaption>Required suspended length against horizontal offset. The dashed line is the available
+length. Values beyond the plotted boundary have no solution within the available length. Hover a point
+or use the slider to read the demand and limit. The input basis is identified in References.</figcaption>
+</figure>
+<p>The length condition is satisfied for the documented example. The calculation is not an
+operating envelope: vessel orientation, significant wave height, wave period and forecast triggers
+are NOT_EVALUATED because environmental response and installation equipment are not defined.</p>
+<p>For use, confirm the suspended offset datum, positive net submerged weight and convergence;
+then assess strength, fatigue, seabed contact and vessel motion with qualified inputs.
+The returned top angle is measured from vertical. Angles along the riser are measured from horizontal.</p>
+</section>
+
+<section id="design-data">
+<h2>4. Design Data</h2>
+<p>Pipe geometry and material densities are taken from the documented public example and its
+material library. Every example input is classified ASSUMED - to be confirmed for application to an asset.</p>
+<h3>4.1 Physical model and boundary conditions</h3>
+<figure>
+<svg id="riser-schematic" viewBox="0 0 840 420" role="img" aria-label="Calculated static riser centreline from horizontal seabed touchdown to fixed hang-off">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker></defs>
+<path d="M55 365 L785 365" stroke="currentColor" stroke-width="2"/>
+<text x="590" y="390">Horizontal seabed</text>
+<path id="shape-path" fill="none" stroke="var(--brand)" stroke-width="5"/>
+<circle cx="100" cy="365" r="5" fill="var(--brand)"/>
+<text x="60" y="332">Touchdown: horizontal tangent</text>
+<path d="M100 365 L100 305 M100 365 L160 365" stroke="currentColor" marker-end="url(#arrow)"/>
+<text x="110" y="306">Height z</text><text x="167" y="358">Offset x</text>
+<path id="weight-arrow" stroke="currentColor" marker-end="url(#arrow)"/>
+<text id="weight-label">Uniform effective weight w</text>
+<text id="hangoff-label" x="450" y="45">Fixed hang-off; top tension acts along tangent</text>
+<text x="50" y="25">Planar centreline; dimensions calculated below; no bending stiffness</text>
+</svg>
+<figcaption>Calculated static centreline, scaled equally in both directions. The hang-off is fixed;
+the touchdown tangent is horizontal. Pipe outside diameter is {{ number('outer_diameter') }} m,
+wall thickness is {{ number('wall_thickness') }} m and radial coating thickness is
+{{ number('coating_thickness') }} m. The line represents a coated tubular riser; its diameter is
+not drawn to the centreline scale.</figcaption>
+</figure>
+<p>The water depth is {{ number('water_depth') }} m and suspended horizontal offset is
+{{ number('horizontal_offset') }} m. The total available length is {{ number('length') }} m.
+The remaining length is treated as grounded without a seabed friction calculation.</p>
+<h3>4.2 Calculation inputs and criteria</h3>
+<p>The steel, contents and external-water densities are {{ number('density_steel') }},
+{{ number('density_contents') }} and {{ number('density_water') }} kg/m³ respectively.
+The coating density is {{ number('coating_density') }} kg/m³. Gravity is
+{{ number('gravity') }} m/s² in the model properties. These are repository example values;
+no material certificate or environmental measurement is inferred.</p>
+<p>The geometry criterion is suspended length no greater than available length, with positive
+weight, positive depth and a converged solution. The rationale is physical length closure of an
+inextensible line. Tension and curvature limits require the component design basis; none is assigned here.
+No factor or capacity from a licensed standard is reproduced.</p>
+</section>
+
+<section id="method">
+<h2>5. Methodology</h2>
+<p>Uniform-weight static equilibrium is solved for a perfectly flexible, inextensible line.
+The horizontal tangent at touchdown defines the coordinate origin.</p>
+<h3>5.1 Weight and catenary equations</h3>
+<div class="eq">A<sub>s</sub> = π(D² − d²)/4;
+A<sub>i</sub> = πd²/4; A<sub>c</sub> = π(D<sub>c</sub>² − D²)/4;<br>
+w = g(ρ<sub>s</sub>A<sub>s</sub> + ρ<sub>i</sub>A<sub>i</sub> + ρ<sub>c</sub>A<sub>c</sub> − ρ<sub>w</sub>πD<sub>c</sub>²/4).</div>
+<p>D, d and D<sub>c</sub> are the steel outside, bore and coated diameters in metres.
+A is cross-sectional area in square metres; subscripts s, i and c denote steel, contents
+and coating. Density ρ is in kg/m³, g is gravity in m/s², and w is net force per unit length
+in N/m. The expression is the annular mass and displaced-water balance implemented by the weight model.</p>
+<div class="eq">a = H/w; z = a[cosh(x/a) − 1];
+s = √[z(z + 2a)]; T = H + wz;<br>
+θ = atan2(H, ws); κ<sub>max</sub> = 1/a.</div>
+<p>H is horizontal tension in N, a is the catenary parameter in m, z is height above touchdown
+in m, x is horizontal distance from touchdown in m, and s is suspended arc length in m.
+T is top tension in N, θ is top angle from vertical, and κ is curvature in m⁻¹.
+The equations are based on <a href="#source-curve">Catenary Curve, 2019, equations (1), (3), (4),
+(9), (10) and (34)</a>, with the vertical origin shifted to the vertex.
+The angle is converted from radians to degrees for reporting.</p>
+<h3>5.2 Inputs, solution and outputs</h3>
+<p>The public configuration object carries dimensions, length, material and fluid objects,
+coating and the depth/offset datum. The weight calculator returns steel, coating, contents,
+buoyancy and net submerged force per unit length. The analyzer bisects for H when both depth
+and suspended offset are specified; alternatively, H or top tension is supplied.</p>
+<p>The result object returns geometry, top and touchdown tensions, top angle, curvature and
+convergence. Tension along arc length is obtained from the public distribution method. The
+length boundary follows s ≤ L, giving a ≤ (L² − z²)/(2z), where L is available length in m.
+This inequality is derived from length closure; it is not a material allowable.</p>
+</section>
+
+<section id="results">
+<h2>6. Detailed Results</h2>
+<p>The documented public riser example is evaluated through the module's weight calculator
+and simple catenary analyzer. All values below are inserted from returned objects.</p>
+<div id="worked-example">
+<p>The weight breakdown is {{ number('steel_weight') }} N/m for steel,
+{{ number('coating_weight') }} N/m for coating and {{ number('contents_weight') }} N/m for contents.
+Buoyancy is {{ number('buoyancy') }} N/m upward. Net submerged weight is
+{{ number('effective_weight') }} N/m downward.</p>
+<p>The solved horizontal tension is {{ number('horizontal_tension_kN') }} kN and top tension
+is {{ number('top_tension_kN') }} kN. The catenary parameter is
+{{ number('catenary_parameter') }} m, top angle from vertical is {{ number('top_angle') }}°,
+and minimum geometric curvature radius is {{ number('minimum_radius_m') }} m.</p>
+<p>The suspended length is {{ number('arc_length') }} m against {{ number('length') }} m
+available; {{ number('grounded_length') }} m remains on the seabed under the horizontal-tangent
+model. The calculated limiting suspended offset is {{ number('offset_limit_m') }} m at full
+use of the available length. This is a length boundary, not an installation operating limit.</p>
+<p>Top tension is {{ number('top_tension_kN') }} kN. Strength and fatigue acceptance are not established:
+the allowable tension, bending criterion and environmental loading are required inputs.</p>
+</div>
+<figure>
+<svg id="tension-chart" viewBox="0 0 840 350" role="img" aria-label="Static tension against suspended arc length"></svg>
+<label>Inspect suspended position <input id="tension-slider" type="range" min="0" max="80" value="80" aria-label="Inspect suspended position"></label>
+<p id="tension-readout" aria-live="polite"></p>
+<figcaption>Tension against arc length from touchdown. Hover or use the slider to inspect demand.
+The allowable tension is NOT_EVALUATED; no capacity line is invented.</figcaption>
+</figure>
+<p>The top carries the largest static tension in this positive-weight model. Curvature is highest
+at touchdown in the ideal flexible shape. Local bending stress and contact response are outside
+the model, so the geometric curvature alone is not a bending acceptance check.</p>
+</section>
+
+<section id="validation">
+<h2>7. Validation</h2>
+<p>Calculation evidence is evaluated at the analytical level. The selected existing tests exercise
+the public weight and geometry calculations and the explicit rejection of the unavailable lazy-wave route.</p>
+<p>The selected analytical test set contains {{ evidence.collected }} collected cases:
+{{ evidence.passed }} passed, {{ evidence.failed }} failed and {{ evidence.skipped }} skipped.
+The source files are bound to the retained evidence by content digests. The evidence does not
+extend to the complete subsea module, dynamic response or field performance.</p>
+<p>The existing unit worksheet independently specifies annular weights, suspended length,
+offset, top tension and angle for an uncoated riser. Those expected values are tested with
+explicit numerical tolerances. The documented coated example is also rebuilt from the public API;
+agreement with that API establishes report consistency, not independent physical validation.</p>
+<h3>7.1 Published geometry comparison</h3>
+<p>The upper vertex-to-support branch of the open <a href="#source-curve">Catenary Curve example,
+2019, page 11</a> is evaluated with its published parameter and rise. The module returns
+{{ '%.1f' | format(reference.offset_m) }} m offset against
+{{ '%.1f' | format(reference.expected_offset_m) }} m reference, and
+{{ '%.1f' | format(reference.length_m) }} m arc length against
+{{ '%.1f' | format(reference.expected_length_m) }} m reference. Each result is within
+{{ '%.1f' | format(reference.difference_bound_pct) }} % of its reference value; the bound is calculated
+from unrounded differences and rounded upward. Reference input and tolerance details are in the appendix.</p>
+<p>The example weight is used only to scale horizontal force while preserving H/w. No published
+cable weight, cable capacity or subsea performance is inferred. Field measurements and native
+dynamic-response comparisons are not supplied; physical validation remains NOT_EVALUATED.</p>
+</section>
+
+<section id="recommendations">
+<h2>8. Key Findings, Limitations and Recommendations</h2>
+<p>The static example satisfies the available-length criterion. Further acceptance is conditional
+on the following inputs and assessments.</p>
+<h3>8.1 Findings and limits of use</h3>
+<p>The solution represents a uniform-weight planar line with a horizontal touchdown tangent,
+without axial extension, bending stiffness, current, wave loading, vessel motion or soil friction.
+The result is restricted to positive net submerged weight and a converged feasible geometry.</p>
+<p>The model configuration does not fully validate physical geometry or material certificates.
+The weight properties use fixed gravity; changing the calculator's gravity argument does not
+change those properties. A caller-supplied force takes precedence over requested offset, so
+the returned geometry requires examination. A limits check with no supplied limits returns an
+empty-set aggregate; it does not establish engineering acceptance.</p>
+<h3>8.2 Recommendations</h3>
+<p>Use the static result for early geometry and load definition within these assumptions.
+Before adopting a layout, confirm the as-built dimensions, coating, contents state, water density,
+available length and touchdown datum. The evidence basis is the public configuration and
+weight balance described in Methodology.</p>
+<p>Before accepting tension or curvature, supply the allowable component tension and bending
+criteria from the approved design basis and assess the combined loads. Before assigning any sea-state
+limit, include environmental response, vessel and handling-system limits, and seabed interaction.
+The mathematical reference contains no installation acceptance criterion.</p>
+<p>Exclude the package's lazy-wave analyzer from calculations until a functioning equilibrium
+implementation and its validation are provided. The existing quarantine tests record its
+explicit rejection. Missing capacities and physical validation remain required inputs,
+not assumed passing results.</p>
+</section>
+
+<section id="references">
+<h2>9. References and Evidence</h2>
+<p>The calculation basis is limited to open mathematical theory and repository implementation
+and test records. No licensed standard value is used as an acceptance criterion.</p>
+<h3>9.1 External source</h3>
+<p id="source-curve"><a href="{{ reference_url }}">Catenary Curve</a>, dated 15 August 2019:
+equations (1), (3), (4), (9), (10) and (34) for equilibrium and geometry;
+page 11, Table 1 and solution steps for the published comparison. The source describes a
+hanging cable; the vertex-to-support branch is mapped explicitly into this calculation.</p>
+<h3>9.2 Repository locators</h3>
+<table><thead><tr><th>Record</th><th>Locator</th><th>Use</th></tr></thead><tbody>
+<tr><td>Documented public example</td><td><code>src/digitalmodel/subsea/catenary_riser/README.md</code>, Python API</td><td>Geometry, coating and named materials/fluids; current repository edition.</td></tr>
+<tr><td>Input objects and properties</td><td><code>src/digitalmodel/subsea/catenary_riser/models.py</code></td><td>Dimensions, densities, fixed gravity and annular weight balance.</td></tr>
+<tr><td>Public calculation entry points</td><td><code>src/digitalmodel/subsea/catenary_riser/effective_weight.py</code> and <code>simple_catenary.py</code></td><td>EffectiveWeightCalculator.calculate; SimpleCatenaryAnalyzer.analyze_riser and calculate_tension_along_riser.</td></tr>
+<tr><td>Independent analytical worksheet</td><td><code>src/digitalmodel/subsea/catenary_riser/docs/engineering-basis.md</code>, equations E1–E4</td><td>Vertex convention and uncoated-riser worksheet.</td></tr>
+<tr><td>Selected existing calculation tests</td><td><code>tests/subsea/catenary_riser/test_catenary_riser_unit.py</code></td><td>Weight, force, geometry and angle assertions.</td></tr>
+<tr><td>Unavailable calculation boundary</td><td><code>tests/subsea/catenary_riser/test_lazy_wave_quarantine.py</code></td><td>Explicit rejection of the unavailable lazy-wave analysis.</td></tr>
+<tr><td>Retained execution record</td><td><a href="validation.json">validation.json</a></td><td>Selected test counts, command and source digests; {{ evidence.date }}.</td></tr>
+<tr><td>Report reproduction</td><td><code>scripts/generate_subsea_module_report.py</code> and <code>tests/docs/test_subsea_module_report.py</code></td><td>Rebuild, exact module-value reconciliation, curve arrays and public comparison.</td></tr>
+<tr><td>Layout exemplar</td><td><code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and <code>docs/api/_assets/brand.css</code></td><td>Existing report stylesheet and canonical brand tokens, inlined.</td></tr>
+<tr><td>Subsea inventory roots</td><td><code>src/digitalmodel/subsea</code> and <code>tests/subsea</code></td><td>Immediate package folders and corresponding top-level test files; counts do not establish validation.</td></tr>
+</tbody><caption>Table 9.2. Repository evidence used by this analysis. Locators apply to the current repository edition.</caption></table>
+</section>
+
+<section id="appendix">
+<h2>10. Appendices</h2>
+<p>Input readiness and the limits of the inspected evidence are recorded below. Records distinguish
+illustrative data, numerical evidence and missing application criteria.</p>
+<h3>10.1 Data register and quality pre-flight</h3>
+<table><thead><tr><th>Data or criterion</th><th>Status</th><th>Source and disposition</th></tr></thead><tbody>
+<tr><td>Pipe, coating, depth, offset and available length</td><td>ASSUMED - to be confirmed</td><td>Documented example in Table 9.2; illustrative values, no asset applicability established.</td></tr>
+<tr><td>Steel, contents, coating and water densities; gravity</td><td>ASSUMED - to be confirmed</td><td>Example and model properties in Table 9.2; material and site confirmation required.</td></tr>
+<tr><td>Published curve parameter and upper rise</td><td>Mathematical reference input.</td><td>Parameter {{ '%.1f' | format(reference.parameter_m) }} m and upper rise {{ '%.1f' | format(reference.upper_rise_m) }} m; the full source precision is retained in the reproduction calculation. See section 9.1, page 11, Table 1 and step 4.</td></tr>
+<tr><td>Tension, curvature, fatigue and sea-state acceptance</td><td>NOT_EVALUATED</td><td>Required application inputs; no default capacities assigned.</td></tr>
+<tr><td>Physical validation</td><td>NOT_EVALUATED</td><td>No field measurement, tank experiment or native dynamic result is presented.</td></tr>
+<tr><td>Units and origin</td><td>Defined.</td><td>Metres, N, N/m and degrees; vertex origin; top angle from vertical; distribution angle from horizontal.</td></tr>
+<tr><td>Length closure</td><td>The example satisfies the length condition.</td><td>Detailed Results; available-length boundary in Summary.</td></tr>
+<tr><td>Selected calculation evidence</td><td>{{ evidence.passed }} cases passed.</td><td>Table 9.2 execution record; independent worksheet assertions are distinguished from API readback.</td></tr>
+<tr><td>Published comparison criterion</td><td>Numerical agreement is established within the stated tolerance.</td><td>Absolute offset and arc-length differences are each below one ten-millionth of a metre, reflecting source rounding rather than an engineering margin.</td></tr>
+<tr><td>Visible values and pointers</td><td>Reproduction checks are provided.</td><td>Example numbers, chart arrays, section links, source locators and self-contained styling are checked on the built document.</td></tr>
+</tbody><caption>Data readiness and pre-flight evidence. NOT_EVALUATED denotes an absent assessment, not zero demand.</caption></table>
+<h3>10.2 Not covered</h3>
+<p>The remaining subsea areas are inventoried below. Test-file presence is an inventory count,
+not a passing-test count or a qualification claim. Other riser and legacy routes are also excluded
+from the main workflow; no complete subsea-module test run is claimed.</p>
+<table><thead><tr><th>Sub-area</th><th>Existing test files</th><th>Coverage in this analysis</th><th>Source</th></tr></thead><tbody>
+{% for area in inventory %}<tr><td>{{ area.name }}</td><td>{{ area.test_files }}</td><td>{% if area.name == 'catenary riser' %}Static example, selected analytical tests and explicit lazy-wave exclusion.{% else %}Not covered; separate application basis and validation required.{% endif %}</td><td>Table 9.2, inventory roots.</td></tr>{% endfor %}
+<tr><td>Mining riser standalone calculation</td><td>Not counted.</td><td>Not covered.</td><td>Table 9.2, inventory roots.</td></tr>
+</tbody><caption>Observed subsea sub-areas and matching top-level test-file inventory.</caption></table>
+</section>
+</main>
+
+<aside id="changes-panel"><h2>Engineering changes</h2>
+<label>Changes since revision <select id="changes-since"><option value="none">Before first issue</option>
+{% for revision in changes.revisions %}<option value="{{ revision.revision }}">{{ revision.revision }}</option>{% endfor %}</select></label>
+<ul id="change-list"></ul></aside>
+<aside id="comments-panel"><h2>Review comments</h2>
+<p>Choose the folder containing this report to read and save comments beside it. A browser with
+directory access is required for direct saving. Download comments provides a portable copy;
+place that file beside the report. Comments are local review notes and are not submitted elsewhere.</p>
+<label>Report section <select id="comment-section">
+{% for section in ['Executive Summary', 'Introduction', 'Summary', 'Design Data', 'Methodology', 'Detailed Results', 'Validation', 'Recommendations', 'References', 'Appendices'] %}<option>{{ section }}</option>{% endfor %}
+</select></label>
+<label>Comment <textarea id="comment-text" rows="4" style="width:100%"></textarea></label>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Read or save beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label>Import comments <input id="import-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status">No comments saved.</p><ul id="comment-list"></ul>
+</aside>
+<footer><p>Static analytical calculation. Application acceptance requires the missing design and environmental basis.</p></footer>
+</div>
+<script id="chart-data" type="application/json">{{ chart | tojson }}</script>
+<script id="changes-data" type="application/json">{{ changes | tojson }}</script>
+<script>
+"use strict";
+const data = JSON.parse(document.getElementById("chart-data").textContent);
+const svgNS = "http://www.w3.org/2000/svg";
+function element(name, attrs, text) {
+  const node = document.createElementNS(svgNS, name);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+function chart(id, x, y, xLabel, yLabel, limit, sliderId, readoutId, caseName, component) {
+  const svg = document.getElementById(id), margin = 65, width = 700, height = 235;
+  const ymax = Math.max(...y, limit || 0) * 1.08, xmin = Math.min(...x), xmax = Math.max(...x);
+  const sx = value => margin + width * (value - xmin) / (xmax - xmin);
+  const sy = value => 285 - height * value / ymax;
+  svg.append(element("path", {d: "M65 45 V285 H765", fill: "none", stroke: "currentColor"}));
+  for (let i = 0; i <= 4; i++) {
+    const xv = xmin + (xmax - xmin) * i / 4, yv = ymax * i / 4;
+    svg.append(element("text", {x: sx(xv), y: 308, "text-anchor": "middle"}, xv.toFixed(1)));
+    svg.append(element("text", {x: 58, y: sy(yv) + 4, "text-anchor": "end"}, yv.toFixed(1)));
+  }
+  svg.append(element("text", {x: 420, y: 340, "text-anchor": "middle"}, xLabel));
+  svg.append(element("text", {x: 65, y: 25}, yLabel));
+  if (limit !== null) {
+    svg.append(element("path", {d: `M65 ${sy(limit)} H765`, stroke: "var(--caution)", "stroke-dasharray": "7 5"}));
+    svg.append(element("text", {x: 765, y: sy(limit) - 9, "text-anchor": "end"}, `Available length ${limit.toFixed(1)} m`));
+  }
+  svg.append(element("polyline", {points: x.map((value, index) => `${sx(value)},${sy(y[index])}`).join(" "), fill: "none", stroke: "var(--brand)", "stroke-width": 3}));
+  const cursor = element("circle", {r: 6, fill: "var(--accent)", "pointer-events": "none"});
+  const slider = document.getElementById(sliderId), readout = document.getElementById(readoutId);
+  function inspect(index) {
+    slider.value = index;
+    const units = id === "length-chart" ? "m" : "kN";
+    const status = limit === null ? "The capacity is not evaluated." : "The length condition is satisfied within calculation tolerance.";
+    const description = `${caseName}; ${component}; position ${x[index].toFixed(1)} m; demand ${y[index].toFixed(1)} ${units}; limit ${limit === null ? "NOT_EVALUATED" : limit.toFixed(1) + " m"}. ${status}`;
+    readout.textContent = description;
+    cursor.setAttribute("cx", sx(x[index])); cursor.setAttribute("cy", sy(y[index]));
+  }
+  x.forEach((value, index) => {
+    const point = element("circle", {cx: sx(value), cy: sy(y[index]), r: 8, fill: "transparent"});
+    point.append(element("title", {}, `${caseName}; ${component}; ${xLabel}: ${value.toFixed(1)}; demand ${y[index].toFixed(1)} ${id === "length-chart" ? "m" : "kN"}; limit ${limit === null ? "NOT_EVALUATED" : limit.toFixed(1) + " m"}`));
+    point.addEventListener("mouseenter", () => inspect(index));
+    svg.append(point);
+  });
+  svg.append(cursor); slider.addEventListener("input", () => inspect(Number(slider.value))); inspect(Number(slider.value));
+}
+chart("length-chart", data.offset_m, data.required_length_m, "Suspended horizontal offset (m)", "Required suspended length (m)", data.length_limit_m, "length-slider", "length-readout", "Fixed-depth static example", "Available riser length");
+chart("tension-chart", data.arc_m, data.tension_kN, "Arc length from touchdown (m)", "Static tension (kN)", null, "tension-slider", "tension-readout", "Documented static example", "Coated tubular riser");
+const scale = Math.min(600 / Math.max(...data.shape_x_m), 300 / Math.max(...data.shape_z_m));
+document.getElementById("shape-path").setAttribute("d", data.shape_x_m.map((x, i) => `${i ? "L" : "M"}${100 + x * scale} ${365 - data.shape_z_m[i] * scale}`).join(" "));
+const endX = 100 + data.shape_x_m.at(-1) * scale, endY = 365 - data.shape_z_m.at(-1) * scale;
+document.getElementById("riser-schematic").append(element("path", {d: `M${endX - 22} ${endY - 12} H${endX + 22} M${endX} ${endY - 12} V${endY}`, stroke: "currentColor", "stroke-width": 3}));
+document.getElementById("hangoff-label").setAttribute("x", endX + 15);
+document.getElementById("hangoff-label").setAttribute("y", endY + 10);
+const middle = Math.floor(data.shape_x_m.length / 2);
+const weightX = 100 + data.shape_x_m[middle] * scale, weightY = 365 - data.shape_z_m[middle] * scale;
+document.getElementById("weight-arrow").setAttribute("d", `M${weightX} ${weightY} v55`);
+document.getElementById("weight-label").setAttribute("x", weightX + 15);
+document.getElementById("weight-label").setAttribute("y", weightY + 40);
+const revisions = JSON.parse(document.getElementById("changes-data").textContent).revisions;
+function showChanges() {
+  const list = document.getElementById("change-list"); list.replaceChildren();
+  const since = document.getElementById("changes-since").value;
+  const changes = revisions.filter(row => since === "none" || row.revision > since).flatMap(row => row.changes);
+  for (const text of changes.length ? changes : ["No engineering changes after the selected revision."]) {
+    const item = document.createElement("li"); item.textContent = text; list.append(item);
+  }
+}
+document.getElementById("changes-since").addEventListener("change", showChanges); showChanges();
+let comments = [], directory;
+const commentFilename = "subsea-module-report.comments.json";
+function showComments() {
+  const list = document.getElementById("comment-list"); list.replaceChildren();
+  comments.forEach(comment => { const item = document.createElement("li"); item.textContent = `${comment.section}: ${comment.text}`; list.append(item); });
+}
+function validateComments(value) {
+  if (!Array.isArray(value) || value.some(row => !row || typeof row.section !== "string" || typeof row.text !== "string")) throw new Error("The comments file has an unsupported format.");
+  return value.map(row => ({section: row.section, text: row.text}));
+}
+const status = document.getElementById("comment-status");
+document.getElementById("add-comment").addEventListener("click", () => {
+  const text = document.getElementById("comment-text");
+  if (!text.value.trim()) return;
+  comments.push({section: document.getElementById("comment-section").value, text: text.value.trim()});
+  text.value = ""; showComments(); status.textContent = "Comments changed; save beside the report or download a copy.";
+});
+document.getElementById("save-comments").addEventListener("click", async () => {
+  try {
+    if (!window.showDirectoryPicker) throw new Error("Direct saving is unavailable in this browser. Use Download comments and place the file beside the report.");
+    if (!directory) {
+      directory = await window.showDirectoryPicker({mode: "readwrite"});
+      try {
+        const handle = await directory.getFileHandle(commentFilename);
+        comments = [...validateComments(JSON.parse(await (await handle.getFile()).text())), ...comments]; showComments();
+      } catch (error) { if (error.name !== "NotFoundError") { directory = undefined; throw error; } }
+    }
+    const handle = await directory.getFileHandle(commentFilename, {create: true});
+    const stream = await handle.createWritable();
+    await stream.write(JSON.stringify(comments, null, 2) + "\n"); await stream.close();
+    status.textContent = "Comments saved in the selected folder. Confirm that it is the report folder.";
+  } catch (error) { status.textContent = error.message; }
+});
+document.getElementById("download-comments").addEventListener("click", () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(comments, null, 2) + "\n"], {type: "application/json"}));
+  const link = document.createElement("a"); link.href = url; link.download = commentFilename; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000); status.textContent = "Comments downloaded; place the file beside the report.";
+});
+document.getElementById("import-comments").addEventListener("change", async event => {
+  try { comments = [...comments, ...validateComments(JSON.parse(await event.target.files[0].text()))]; showComments(); status.textContent = "Comments imported; save to retain the combined notes."; }
+  catch (error) { status.textContent = error.message; }
+});
+</script>
+</body>
+</html>
