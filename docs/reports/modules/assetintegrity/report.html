@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asset integrity module analysis</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+<style>
+.hs-doc svg{width:100%;height:auto;color:var(--ink)}
+.hs-doc svg text{fill:currentColor;font:14px sans-serif}
+.hs-doc .chart-line{fill:none;stroke:var(--ink);stroke-width:3}
+.hs-doc .reference-line{fill:none;stroke:var(--report-accent);stroke-width:3;stroke-dasharray:8 4}
+.hs-doc .limit-line{stroke:#a54236;stroke-width:2;stroke-dasharray:6 4}
+.hs-doc .sample{fill:var(--ink);stroke:white;stroke-width:1;cursor:crosshair}
+.hs-doc .sample[data-disposition="met"]{fill:#205843}
+.hs-doc .sample[data-disposition="shortfall"]{fill:#a54236}
+.hs-doc .sample[data-disposition="outside"]{fill:#9b6910}
+.hs-doc .sample:focus,.hs-doc .sample:hover{r:7;fill:var(--report-accent)}
+.hs-doc .panel{background:#f2f7f8;border:1px solid var(--line);padding:18px;margin:20px 0}
+.hs-doc label{display:block;margin:12px 0 5px;font:14px sans-serif}
+.hs-doc textarea,.hs-doc select,.hs-doc input[type=range]{width:100%}
+.hs-doc textarea,.hs-doc select{font:16px/1.5 sans-serif;padding:8px;border:1px solid var(--line)}
+.hs-doc button{background:var(--ink);color:white;border:0;padding:10px 14px;cursor:pointer;margin:8px 8px 8px 0}
+.hs-doc button:focus-visible,.hs-doc a:focus-visible{outline:3px solid var(--report-accent);outline-offset:3px}
+.hs-doc pre{overflow-x:auto;padding:12px;background:#f2f7f8;font:13px/1.6 monospace}
+.hs-doc .note{white-space:pre-wrap;overflow-wrap:anywhere}
+.hs-doc .table-wrap td{overflow-wrap:anywhere}
+@media print{.hs-doc .review-controls{display:none}}
+</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Asset integrity module analysis</h1>
+<p>Pipeline corrosion pressure screening and the evidence required for use</p>
+<p>Revision 00 | 2026-10-21</p>
+<p>Draft for client review</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction and scope</a></li>
+<li><a href="#section-3">Design basis and criteria</a></li>
+<li><a href="#section-4">Inputs and outputs</a></li>
+<li><a href="#section-5">Theory and methodology</a></li>
+<li><a href="#section-6">Worked example</a></li>
+<li><a href="#section-7">Validation evidence</a></li>
+<li><a href="#section-8">Limitations and recommendations</a></li>
+<li><a href="#section-9">Appendix: data and references</a></li>
+<li><a href="#section-10">Review notes and changes</a></li>
+</ol></nav>
+<main>
+<section id="section-1">
+<h2>1. Executive Summary</h2>
+<p>The asset integrity module is a collection of metallic-component screening and assessment calculations. Analysis is performed to determine the remaining pressure resistance of a blunt corrosion defect and the evidence required before a component decision is made. The key results are summarized below.</p>
+<ul>
+<li>The published shallow pipe example meets the stated pressure comparison.
+  <ul><li>The capped reference pressure is <span data-value="case0.reference_pressure_psi">1,093.2</span> psi against an operating-pressure demand of <span data-value="input.maop_psi">910.0</span> psi. The implemented relative-depth boundary is <span data-value="limit.depth_fraction">0.80</span> of the nominal wall; the example lies within that boundary. This is an example reproduction, without operating-asset qualification. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></li></ul>
+</li>
+<li>The intact design-pressure cap changes the interpretation of the module result.
+  <ul><li>The module returns an uncapped factored pressure of <span data-value="case0.safe_pressure_psi">1,099.1</span> psi for the shallow defect. The public example also caps pressure at the intact design pressure. That cap is applied separately for the reference comparison. <sup><a href="#source-cap">[C]</a><a href="#source-tests">[E]</a></sup></li></ul>
+</li>
+<li>An operating limit requires the component record.
+  <ul><li>The adopted standard edition, design factor, sizing uncertainty, full defect boundaries, other loads and degradation history are required before an operating decision is established. Remaining life and a next inspection date are not evaluated from this example. <sup><a href="#source-workflow">[F]</a><a href="#data-register">[G]</a></sup></li></ul>
+</li>
+</ul>
+</section>
+<div id="revision-history">
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>The original corrosion-pressure calculation is demonstrated on a published pipe example, with the intact design-pressure cap distinguished from the module&#39;s uncapped factored pressure. Pressure demand and the implemented relative-depth boundary are drawn with a calculated depth sensitivity so that pressure shortfalls and the limit of the calculation are visible. Existing numerical comparisons are distinguished from field qualification, and the additional data required for an operating decision are identified.</td></tr></tbody>
+<caption>Revision history. Engineering changes are listed newest first.</caption></table>
+</div>
+
+<section id="section-2">
+<h2>2. Introduction and scope</h2>
+<p>Remaining strength, measurement sufficiency and the disposition of a damaged component are addressed by the module. The pressure-resistance calculation for an isolated longitudinal corrosion defect is examined in detail because documented callable functions and public numerical comparisons are present. <sup><a href="#source-engine">[D]</a><a href="#source-tests">[E]</a></sup></p>
+<h3>2.1 Main workflow</h3>
+<p>Outside diameter, nominal wall, maximum loss depth, axial flaw length and specified minimum yield strength are entered. Original B31G is called with an explicit pressure demand and a factor derived from the public example. Failure pressure, factored pressure and the separate applicability record are returned. The intact design-pressure cap is then applied only for comparison with the published example. <sup><a href="#source-engine">[D]</a><a href="#source-cap">[C]</a></sup></p>
+<p>The general measured-grid route is also available: the grid is parsed, damage morphology is classified, screening calculations are applied, a disposition is produced and measurement sufficiency is assessed. This orchestration route is distinct from the standalone corrosion-pressure function used here. <sup><a href="#source-architecture">[H]</a></sup></p>
+<h3>2.2 Not covered</h3>
+<p>Modified B31G, the effective-area profile search, circumferential projection and the separate DNV corrosion-pressure method are present but are not calculated in this worked example. Crack assessment, pitting, dents, shell distortion, hull wastage, mooring-chain dimensions, composite-repair screening, inspection planning, campaign comparability and riser-joint assessment are additional surfaces. Their presence does not extend the qualification of this pressure example to those damage mechanisms. The escalation interface prepares assessment information; it does not establish a numerical higher-level solution. <sup><a href="#source-catalog">[I]</a><a href="#source-pack">[J]</a></sup></p>
+</section>
+
+<section id="section-3">
+<h2>3. Design basis and criteria</h2>
+<p>A straight pipe with isolated blunt metal loss is assessed under internal pressure. The example geometry and material strength are taken from the public program documentation; no measured component is represented. <sup><a href="#source-example">[A]</a></sup></p>
+<h3>3.1 Governing basis</h3>
+<p>The implemented original method carries the ASME B31G-2012 label. The historical example is attributed by its public documentation to ASME B31G-1991, Nonmandatory Appendix A. The numerical comparison therefore establishes reproduction of that public example, rather than edition-matched qualification of every requirement of the later standard. Equations and example values below are obtained from the open program documentation and the repository implementation; a licensed publication is not reproduced. <sup><a href="#source-theory">[B]</a><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+<h3>3.2 Comparison criteria and rationale</h3>
+<p>The pressure comparison is met when the capped reference pressure is at least the stated operating-pressure demand and no implemented applicability flag is raised. The cap prevents the example calculation from exceeding the intact design-pressure basis. The relative-depth boundary is <span data-value="limit.depth_fraction">0.80</span> of nominal wall in the implementation; equality remains inside the implemented check. This check alone does not establish complete material, flaw or loading applicability. <sup><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Agreement with the published shallow-example pressure is checked within <span data-value="case0.tolerance_psi">1.0</span> psi. The calculation at the published rounded depth boundary is checked within <span data-value="case1.tolerance_psi">3.0</span> psi of the operating-pressure demand. These are the existing numerical test tolerances, rather than measurement allowances or operating margins. <sup><a href="#source-tests">[E]</a></sup></p>
+<p>The factor entered for this example is the reciprocal of its published combined design factor, <span data-value="input.design_factor">0.72</span>. A different design basis requires an explicit corresponding factor. The module's default factor is not adopted implicitly. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-4">
+<h2>4. Inputs and outputs</h2>
+<p>Pipe geometry is entered in inches and strength and pressure are entered in pounds per square inch. Loss depth is positive into the wall; remaining wall and loss depth are different quantities. The selected function performs no automatic unit conversion. <sup><a href="#source-engine">[D]</a></sup></p>
+<h3>4.1 Required inputs</h3>
+<p>Outside diameter is <span data-value="input.D">30.0</span> in, nominal wall is <span data-value="input.t">0.438</span> in, axial corrosion length is <span data-value="input.L">7.5</span> in and specified minimum yield strength is <span data-value="input.smys_psi">52,000.0</span> psi. The shallow corrosion depth is <span data-value="case0.depth_in">0.100</span> in. Pressure demand is <span data-value="input.maop_psi">910.0</span> psi. These values describe the published example; they are not site design data. <sup><a href="#source-example">[A]</a></sup></p>
+<p>The low-level function rejects nonpositive geometry, wall at least as large as diameter, negative length and depth outside the wall. Complete finite-value, strength, pressure and factor checks remain the caller's responsibility. The broader pipeline-screen adapter has stronger input validation; its input contract is listed in the appendix. <sup><a href="#source-engine">[D]</a><a href="#source-workflow">[F]</a></sup></p>
+<figure>
+<svg viewBox="0 0 800 370" role="img" aria-labelledby="pipe-title pipe-description">
+<title id="pipe-title">Pressurized pipe with a longitudinal external corrosion patch</title>
+<desc id="pipe-description">A cylindrical pipe and a magnified axial wall section show internal pressure, outside diameter, nominal wall, corrosion depth and axial length. Diagram proportions are illustrative.</desc>
+<defs>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6b5bd"/><stop offset="0.45" stop-color="#edf2f4"/><stop offset="1" stop-color="#8397a4"/></linearGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
+</defs>
+<path d="M130 60 L640 60 Q690 120 640 180 L130 180 Q80 120 130 60" fill="url(#steel)" stroke="currentColor" stroke-width="2"/>
+<ellipse cx="130" cy="120" rx="40" ry="60" fill="#d3dfe4" stroke="currentColor" stroke-width="2"/>
+<ellipse cx="130" cy="120" rx="32" ry="49" fill="white" stroke="currentColor"/>
+<path d="M365 64 Q405 103 455 65 L455 82 Q410 115 365 82 Z" fill="#af7859" stroke="#77432e"/>
+<path d="M160 120 L260 120 M205 120 L205 85 M205 120 L205 155" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="275" y="127">Internal pressure: <tspan data-value="input.maop_psi">910.0</tspan> psi</text>
+<path d="M65 60 L65 180" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="8" y="220">D = <tspan data-value="input.D">30.0</tspan> in</text>
+<path d="M365 43 L455 43" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="350" y="25">L = <tspan data-value="input.L">7.5</tspan> in</text>
+<path d="M365 90 L300 265 M455 90 L580 265" stroke="#8397a4" stroke-dasharray="4 4"/>
+<path d="M235 265 L320 265 Q425 335 540 265 L650 265 L650 335 L235 335 Z" fill="url(#steel)" stroke="currentColor" stroke-width="2"/>
+<path d="M320 265 L540 265" stroke="#77432e" stroke-dasharray="4 4"/>
+<path d="M425 265 L425 300" stroke="currentColor" marker-end="url(#arrow)"/>
+<text x="455" y="296">d = <tspan data-value="case0.depth_in">0.100</tspan> in</text>
+<path d="M675 265 L675 335" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="690" y="300">t = <tspan data-value="input.t">0.438</tspan> in</text>
+<text x="235" y="357">Magnified axial wall section; parabolic loss idealization</text>
+</svg>
+<figcaption>Figure A. Pipe geometry and internal-pressure loading. The wall detail is magnified and is not to scale; circumferential patch width and actual end restraint are not supplied. Geometry is from Reference A; idealization is from Reference B.</figcaption>
+</figure>
+<h3>4.2 Returned quantities</h3>
+<p>Predicted failure pressure, intact flow-stress pressure, flow stress, the bulging factor, lost-area fraction, remaining strength factor and uncapped factored pressure are returned. A pressure comparison boolean is returned when demand is supplied. Applicability is returned separately; a positive pressure comparison with an applicability flag is not an established operating result. Exact field names and the call example are confined to the reference appendix. <sup><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-5">
+<h2>5. Theory and methodology</h2>
+<p>Pressure resistance is estimated by reducing the intact flow-stress pressure for longitudinal loss of load-carrying area and local bulging. The original method uses a parabolic area idealization for the shorter-defect branch and a remaining-ligament expression for the longer-defect branch. <sup><a href="#source-theory">[B]</a></sup></p>
+<h3>5.1 Equations and symbols</h3>
+<p>D is outside diameter, t is nominal wall, d is maximum loss depth and L is axial loss length. S<sub>y</sub> is specified minimum yield strength, S<sub>f</sub> is flow stress, z is the dimensionless geometry parameter, a is fractional lost area, M is the dimensionless bulging factor and P<sub>f</sub> is predicted failure pressure. <sup><a href="#source-theory">[B]</a></sup></p>
+<div class="eq">z = L² / (D t); S<sub>f</sub> = c<sub>f</sub> S<sub>y</sub>; a = c<sub>a</sub> d / t; M = √(1 + c<sub>m</sub> z)</div>
+<p>The implemented coefficients are c<sub>f</sub> = <span data-value="formula.flow_multiplier">1.1</span>, c<sub>a</sub> = two thirds (<span data-value="formula.area_multiplier">0.667</span> when displayed), and c<sub>m</sub> = <span data-value="formula.bulging_coefficient">0.8</span>. The bulging expression applies for z at or below <span data-value="formula.branch_limit">20.0</span>. The coefficient display is rounded; full precision is retained by the called module. <sup><a href="#source-theory">[B]</a><a href="#source-engine">[D]</a></sup></p>
+<div class="eq">P<sub>f</sub> = (2 S<sub>f</sub> t / D) (1 − a) / (1 − a / M)</div>
+<p>For z above the stated branch boundary, the implemented remaining-ligament expression is used instead. <sup><a href="#source-theory">[B]</a></sup></p>
+<div class="eq">P<sub>f</sub> = (2 S<sub>f</sub> t / D) (1 − d / t)</div>
+<h3>5.2 Pressure factor, reference cap and disposition</h3>
+<p>F is the combined design factor taken from the public example. P<sub>module</sub> is the module's uncapped factored pressure, P<sub>design</sub> is the intact yield-based design-pressure cap and P<sub>reference</sub> is the capped comparison pressure. The remaining strength factor is P<sub>f</sub> divided by the intact flow-stress pressure. <sup><a href="#source-example">[A]</a><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<div class="eq">P<sub>module</sub> = F P<sub>f</sub>; P<sub>design</sub> = 2 S<sub>y</sub> t F / D; P<sub>reference</sub> = min(P<sub>module</sub>, P<sub>design</sub>)</div>
+<p>The reference cap is a comparison adapter outside the selected function. The published program applies additional intermediate rounding; exact equality of rounded boundary values is not inferred. At an operating asset, independent design and applicability checks remain necessary even when the example pressure comparison is met. <sup><a href="#source-cap">[C]</a><a href="#source-tests">[E]</a></sup></p>
+</section>
+
+<section id="section-6">
+<h2>6. Worked example</h2>
+<p>The public shallow-defect example is calculated by calling the original corrosion-pressure function. A second call uses the published rounded depth boundary with the same geometry, material strength and pressure factor. Every displayed result in this section is bound to those returned quantities or to the stated reference-cap calculation. <sup><a href="#source-example">[A]</a><a href="#source-tests">[E]</a></sup></p>
+<h3>6.1 Calculated pressure resistance</h3>
+<p>For the shallow depth of <span data-value="case0.depth_in">0.100</span> in, flow stress is <span data-value="case0.flow_stress_psi">57,200.0</span> psi, the bulging factor is <span data-value="case0.folias_factor">2.103</span>, and the fractional lost area is <span data-value="case0.area_ratio">0.152</span>. Predicted failure pressure is <span data-value="case0.failure_pressure_psi">1,526.5</span> psi and the remaining strength factor is <span data-value="case0.rsf">0.914</span>. The uncapped factored pressure is <span data-value="case0.safe_pressure_psi">1,099.1</span> psi. <sup><a href="#source-engine">[D]</a></sup></p>
+<p>The intact design-pressure cap governs at <span data-value="case0.reference_pressure_psi">1,093.2</span> psi against the operating-pressure demand of <span data-value="input.maop_psi">910.0</span> psi, leaving a calculated pressure difference of <span data-value="case0.margin_psi">183.2</span> psi. The capped pressure is within <span data-value="case0.difference_bound_percent">0.1</span> % of the published rounded pressure of <span data-value="case0.published_pressure_psi">1,093.0</span> psi. The example lies within the implemented depth boundary; this result does not establish an operating limit for a measured component. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+<p>At the published rounded depth boundary of <span data-value="case1.depth_in">0.249</span> in, predicted failure pressure is <span data-value="case1.failure_pressure_psi">1,265.2</span> psi and the factored pressure governs at <span data-value="case1.reference_pressure_psi">910.9</span> psi. That pressure is within <span data-value="case1.difference_bound_percent">0.2</span> % of the published pressure demand, within the stated numerical tolerance. The rounded depth boundary is not an inspection trigger because sizing uncertainty and future loss are absent. <sup><a href="#source-example">[A]</a><a href="#source-tests">[E]</a><a href="#data-register">[G]</a></sup></p>
+<h3>6.2 Depth sensitivity</h3>
+<p>Depth is varied while pipe geometry, material strength, flaw length and pressure factor are held fixed. Pressure resistance decreases as depth increases. The chart in the validation section draws the demand and the implemented depth boundary; each pressure point is obtained from a separate module call. No corrosion rate or time projection is assigned. <sup><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-7">
+<h2>7. Validation evidence</h2>
+<p>Numerical agreement with a public example is checked separately from physical qualification of an operating component. Existing tests, previous-calculation anchors, synthetic workflow examples and inspection-fixture tests are held in the repository; their evidence scopes differ. <sup><a href="#source-tests">[E]</a><a href="#source-pack">[J]</a></sup></p>
+<h3>7.1 Public and repository evidence</h3>
+<p>The existing published-example tests cover capped original-method pressure and the rounded depth boundary. The shallow comparison alone is governed by the intact cap; the deeper call exercises corrosion resistance directly. Separate published single-defect comparisons are held for the DNV capacity method. Those capacity checks do not establish the choice of operating factors or qualification of interacting defects. <sup><a href="#source-tests">[E]</a></sup></p>
+<p>Modified-method pressure and uniform-profile effective-area results in that test file are previous-calculation anchors, without independent published outputs for those exact cases. The focused corrosion tests also check limiting geometry, depth and length trends, invalid geometry and critical-profile segment selection. Their passing assertions establish those checks, without field calibration. <sup><a href="#source-tests">[E]</a><a href="#source-corrosion-tests">[K]</a></sup></p>
+<p>Documented synthetic pipeline grids exercise the wider screening workflow. Separate inspection-fixture tests exercise parsing and the general assessment chain; no inspection record is incorporated in this report. The existing source audit identifies unresolved edition and formula bindings in the general and local metal-loss routes. A screening status from those routes is not treated as complete standard qualification. <sup><a href="#source-workflow">[F]</a><a href="#source-field-tests">[L]</a><a href="#source-audit">[M]</a></sup></p>
+<h3>7.2 Interactive calculated comparison</h3>
+<figure>
+<svg id="pressure-chart" viewBox="0 0 800 410" role="img" aria-labelledby="chart-title chart-description">
+<title id="chart-title">Pressure resistance against corrosion depth</title>
+<desc id="chart-description">Calculated uncapped and capped pressures are plotted against depth. The horizontal operating-pressure demand and vertical implemented relative-depth boundary are drawn. Points support pointer and keyboard inspection.</desc>
+<rect x="80" y="50" width="620" height="270" fill="#f2f7f8"/>
+<rect x="576.0" y="50" width="124.0" height="270" fill="#e4e6e7"/>
+<path d="M80 320.0 H700" stroke="#d3dfe4"/><text x="70" y="325.0" text-anchor="end">0.0</text><path d="M80 252.5 H700" stroke="#d3dfe4"/><text x="70" y="257.5" text-anchor="end">325.0</text><path d="M80 185.0 H700" stroke="#d3dfe4"/><text x="70" y="190.0" text-anchor="end">650.0</text><path d="M80 117.5 H700" stroke="#d3dfe4"/><text x="70" y="122.5" text-anchor="end">975.0</text><path d="M80 50.0 H700" stroke="#d3dfe4"/><text x="70" y="55.0" text-anchor="end">1300.0</text>
+<text x="80.0" y="345" text-anchor="middle">0.000</text><text x="235.0" y="345" text-anchor="middle">0.110</text><text x="390.0" y="345" text-anchor="middle">0.219</text><text x="545.0" y="345" text-anchor="middle">0.329</text><text x="700.0" y="345" text-anchor="middle">0.438</text>
+<path d="M80 50 V320 H700" fill="none" stroke="currentColor"/>
+<text x="390" y="380" text-anchor="middle">Corrosion depth (in)</text>
+<text transform="translate(22 190) rotate(-90)" text-anchor="middle">Pressure (psi)</text>
+<polyline class="chart-line" points="80.00,70.23 86.20,71.11 92.40,71.99 98.60,72.88 104.80,73.77 111.00,74.67 117.20,75.58 123.40,76.49 129.60,77.40 135.80,78.33 142.00,79.26 148.20,80.19 154.40,81.13 160.60,82.08 166.80,83.03 173.00,83.99 179.20,84.96 185.40,85.93 191.60,86.91 197.80,87.90 204.00,88.89 210.20,89.89 216.40,90.89 221.55,91.73 222.60,91.91 228.80,92.93 235.00,93.95 241.20,94.99 247.40,96.03 253.60,97.07 259.80,98.13 266.00,99.19 272.20,100.26 278.40,101.34 284.60,102.43 290.80,103.52 297.00,104.62 303.20,105.73 309.40,106.85 315.60,107.97 321.80,109.11 328.00,110.25 334.20,111.40 340.40,112.56 346.60,113.72 352.80,114.90 359.00,116.08 365.20,117.27 371.40,118.48 377.60,119.69 383.80,120.91 390.00,122.13 396.20,123.37 402.40,124.62 408.60,125.88 414.80,127.14 421.00,128.42 427.20,129.71 432.47,130.81 433.40,131.00 439.60,132.31 445.80,133.63 452.00,134.95 458.20,136.29 464.40,137.64 470.60,139.00 476.80,140.36 483.00,141.74 489.20,143.14 495.40,144.54 501.60,145.95 507.80,147.38 514.00,148.81 520.20,150.26 526.40,151.72 532.60,153.19 538.80,154.68 545.00,156.18 551.20,157.69 557.40,159.21 563.60,160.74 569.80,162.29 576.00,163.85"/>
+<polyline class="reference-line" points="80.00,92.94 86.20,92.94 92.40,92.94 98.60,92.94 104.80,92.94 111.00,92.94 117.20,92.94 123.40,92.94 129.60,92.94 135.80,92.94 142.00,92.94 148.20,92.94 154.40,92.94 160.60,92.94 166.80,92.94 173.00,92.94 179.20,92.94 185.40,92.94 191.60,92.94 197.80,92.94 204.00,92.94 210.20,92.94 216.40,92.94 221.55,92.94 222.60,92.94 228.80,92.94 235.00,93.95 241.20,94.99 247.40,96.03 253.60,97.07 259.80,98.13 266.00,99.19 272.20,100.26 278.40,101.34 284.60,102.43 290.80,103.52 297.00,104.62 303.20,105.73 309.40,106.85 315.60,107.97 321.80,109.11 328.00,110.25 334.20,111.40 340.40,112.56 346.60,113.72 352.80,114.90 359.00,116.08 365.20,117.27 371.40,118.48 377.60,119.69 383.80,120.91 390.00,122.13 396.20,123.37 402.40,124.62 408.60,125.88 414.80,127.14 421.00,128.42 427.20,129.71 432.47,130.81 433.40,131.00 439.60,132.31 445.80,133.63 452.00,134.95 458.20,136.29 464.40,137.64 470.60,139.00 476.80,140.36 483.00,141.74 489.20,143.14 495.40,144.54 501.60,145.95 507.80,147.38 514.00,148.81 520.20,150.26 526.40,151.72 532.60,153.19 538.80,154.68 545.00,156.18 551.20,157.69 557.40,159.21 563.60,160.74 569.80,162.29 576.00,163.85"/>
+<path id="pressure-demand-limit" class="limit-line" d="M80 131.0 H700"/>
+<path id="depth-applicability-limit" class="limit-line" d="M576.0 50 V320"/>
+<text x="90" y="123.0">Pressure demand: <tspan data-value="input.maop_psi">910.0</tspan> psi</text>
+<text x="586.0" y="78">Outside</text><text x="586.0" y="98">depth range</text>
+
+<circle class="sample" cx="80.0" cy="92.9408" r="3" tabindex="0" data-sample="0" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.000 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.000 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="86.2" cy="92.9408" r="3" tabindex="0" data-sample="1" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.004 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.004 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="92.4" cy="92.9408" r="3" tabindex="0" data-sample="2" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.009 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.009 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="98.6" cy="92.9408" r="3" tabindex="0" data-sample="3" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.013 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.013 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="104.8" cy="92.9408" r="3" tabindex="0" data-sample="4" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.018 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.018 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="111.0" cy="92.9408" r="3" tabindex="0" data-sample="5" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.022 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.022 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="117.2" cy="92.9408" r="3" tabindex="0" data-sample="6" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.026 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.026 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="123.4" cy="92.9408" r="3" tabindex="0" data-sample="7" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.031 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.031 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="129.6" cy="92.9408" r="3" tabindex="0" data-sample="8" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.035 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.035 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="135.8" cy="92.9408" r="3" tabindex="0" data-sample="9" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.039 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.039 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="142.0" cy="92.9408" r="3" tabindex="0" data-sample="10" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.044 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.044 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="148.2" cy="92.9408" r="3" tabindex="0" data-sample="11" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.048 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.048 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="154.4" cy="92.9408" r="3" tabindex="0" data-sample="12" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.053 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.053 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="160.60000000000002" cy="92.9408" r="3" tabindex="0" data-sample="13" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.057 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.057 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="166.8" cy="92.9408" r="3" tabindex="0" data-sample="14" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.061 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.061 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="173.0" cy="92.9408" r="3" tabindex="0" data-sample="15" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.066 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.066 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="179.2" cy="92.9408" r="3" tabindex="0" data-sample="16" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.070 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.070 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="185.40000000000003" cy="92.9408" r="3" tabindex="0" data-sample="17" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.074 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.074 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="191.60000000000002" cy="92.9408" r="3" tabindex="0" data-sample="18" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.079 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.079 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="197.8" cy="92.9408" r="3" tabindex="0" data-sample="19" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.083 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.083 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="204.0" cy="92.9408" r="3" tabindex="0" data-sample="20" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.088 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.088 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="210.20000000000005" cy="92.9408" r="3" tabindex="0" data-sample="21" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.092 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.092 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="216.4" cy="92.9408" r="3" tabindex="0" data-sample="22" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.096 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.096 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="221.55251141552512" cy="92.9408" r="3" tabindex="0" data-sample="23" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.100 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.100 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="222.6" cy="92.9408" r="3" tabindex="0" data-sample="24" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.101 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.101 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="228.8" cy="92.9408" r="3" tabindex="0" data-sample="25" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.105 in; demand 910.0 psi; capped limit 1093.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.105 in · demand 910.0 psi · capped limit 1093.2 psi</title></circle>
+
+<circle class="sample" cx="235.00000000000003" cy="93.95180730893622" r="3" tabindex="0" data-sample="26" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.110 in; demand 910.0 psi; capped limit 1088.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.110 in · demand 910.0 psi · capped limit 1088.4 psi</title></circle>
+
+<circle class="sample" cx="241.20000000000002" cy="94.98567832446142" r="3" tabindex="0" data-sample="27" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.114 in; demand 910.0 psi; capped limit 1083.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.114 in · demand 910.0 psi · capped limit 1083.4 psi</title></circle>
+
+<circle class="sample" cx="247.4" cy="96.0267159841678" r="3" tabindex="0" data-sample="28" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.118 in; demand 910.0 psi; capped limit 1078.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.118 in · demand 910.0 psi · capped limit 1078.4 psi</title></circle>
+
+<circle class="sample" cx="253.60000000000002" cy="97.07499506443457" r="3" tabindex="0" data-sample="29" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.123 in; demand 910.0 psi; capped limit 1073.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.123 in · demand 910.0 psi · capped limit 1073.3 psi</title></circle>
+
+<circle class="sample" cx="259.8" cy="98.13059138555519" r="3" tabindex="0" data-sample="30" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.127 in; demand 910.0 psi; capped limit 1068.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.127 in · demand 910.0 psi · capped limit 1068.3 psi</title></circle>
+
+<circle class="sample" cx="266.0" cy="99.1935818300183" r="3" tabindex="0" data-sample="31" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.131 in; demand 910.0 psi; capped limit 1063.1 psi">
+<title>Depth sensitivity · pipe wall · depth 0.131 in · demand 910.0 psi · capped limit 1063.1 psi</title></circle>
+
+<circle class="sample" cx="272.20000000000005" cy="100.26404436117366" r="3" tabindex="0" data-sample="32" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.136 in; demand 910.0 psi; capped limit 1058.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.136 in · demand 910.0 psi · capped limit 1058.0 psi</title></circle>
+
+<circle class="sample" cx="278.4" cy="101.34205804229381" r="3" tabindex="0" data-sample="33" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.140 in; demand 910.0 psi; capped limit 1052.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.140 in · demand 910.0 psi · capped limit 1052.8 psi</title></circle>
+
+<circle class="sample" cx="284.6" cy="102.42770305603989" r="3" tabindex="0" data-sample="34" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.145 in; demand 910.0 psi; capped limit 1047.6 psi">
+<title>Depth sensitivity · pipe wall · depth 0.145 in · demand 910.0 psi · capped limit 1047.6 psi</title></circle>
+
+<circle class="sample" cx="290.80000000000007" cy="103.52106072434248" r="3" tabindex="0" data-sample="35" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.149 in; demand 910.0 psi; capped limit 1042.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.149 in · demand 910.0 psi · capped limit 1042.3 psi</title></circle>
+
+<circle class="sample" cx="297.0" cy="104.62221352870796" r="3" tabindex="0" data-sample="36" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.153 in; demand 910.0 psi; capped limit 1037.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.153 in · demand 910.0 psi · capped limit 1037.0 psi</title></circle>
+
+<circle class="sample" cx="303.20000000000005" cy="105.73124513096047" r="3" tabindex="0" data-sample="37" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.158 in; demand 910.0 psi; capped limit 1031.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.158 in · demand 910.0 psi · capped limit 1031.7 psi</title></circle>
+
+<circle class="sample" cx="309.4000000000001" cy="106.84824039443097" r="3" tabindex="0" data-sample="38" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.162 in; demand 910.0 psi; capped limit 1026.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.162 in · demand 910.0 psi · capped limit 1026.3 psi</title></circle>
+
+<circle class="sample" cx="315.6" cy="107.97328540560378" r="3" tabindex="0" data-sample="39" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.166 in; demand 910.0 psi; capped limit 1020.9 psi">
+<title>Depth sensitivity · pipe wall · depth 0.166 in · demand 910.0 psi · capped limit 1020.9 psi</title></circle>
+
+<circle class="sample" cx="321.80000000000007" cy="109.10646749623376" r="3" tabindex="0" data-sample="40" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.171 in; demand 910.0 psi; capped limit 1015.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.171 in · demand 910.0 psi · capped limit 1015.4 psi</title></circle>
+
+<circle class="sample" cx="328.0" cy="110.2478752659442" r="3" tabindex="0" data-sample="41" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.175 in; demand 910.0 psi; capped limit 1009.9 psi">
+<title>Depth sensitivity · pipe wall · depth 0.175 in · demand 910.0 psi · capped limit 1009.9 psi</title></circle>
+
+<circle class="sample" cx="334.20000000000005" cy="111.39759860531916" r="3" tabindex="0" data-sample="42" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.180 in; demand 910.0 psi; capped limit 1004.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.180 in · demand 910.0 psi · capped limit 1004.4 psi</title></circle>
+
+<circle class="sample" cx="340.4000000000001" cy="112.5557287195025" r="3" tabindex="0" data-sample="43" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.184 in; demand 910.0 psi; capped limit 998.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.184 in · demand 910.0 psi · capped limit 998.8 psi</title></circle>
+
+<circle class="sample" cx="346.6" cy="113.72235815231554" r="3" tabindex="0" data-sample="44" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.188 in; demand 910.0 psi; capped limit 993.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.188 in · demand 910.0 psi · capped limit 993.2 psi</title></circle>
+
+<circle class="sample" cx="352.8" cy="114.89758081090923" r="3" tabindex="0" data-sample="45" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.193 in; demand 910.0 psi; capped limit 987.5 psi">
+<title>Depth sensitivity · pipe wall · depth 0.193 in · demand 910.0 psi · capped limit 987.5 psi</title></circle>
+
+<circle class="sample" cx="359.0" cy="116.08149199096115" r="3" tabindex="0" data-sample="46" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.197 in; demand 910.0 psi; capped limit 981.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.197 in · demand 910.0 psi · capped limit 981.8 psi</title></circle>
+
+<circle class="sample" cx="365.2" cy="117.27418840243547" r="3" tabindex="0" data-sample="47" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.201 in; demand 910.0 psi; capped limit 976.1 psi">
+<title>Depth sensitivity · pipe wall · depth 0.201 in · demand 910.0 psi · capped limit 976.1 psi</title></circle>
+
+<circle class="sample" cx="371.40000000000003" cy="118.47576819591686" r="3" tabindex="0" data-sample="48" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.206 in; demand 910.0 psi; capped limit 970.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.206 in · demand 910.0 psi · capped limit 970.3 psi</title></circle>
+
+<circle class="sample" cx="377.6" cy="119.68633098953575" r="3" tabindex="0" data-sample="49" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.210 in; demand 910.0 psi; capped limit 964.5 psi">
+<title>Depth sensitivity · pipe wall · depth 0.210 in · demand 910.0 psi · capped limit 964.5 psi</title></circle>
+
+<circle class="sample" cx="383.80000000000007" cy="120.90597789649985" r="3" tabindex="0" data-sample="50" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.215 in; demand 910.0 psi; capped limit 958.6 psi">
+<title>Depth sensitivity · pipe wall · depth 0.215 in · demand 910.0 psi · capped limit 958.6 psi</title></circle>
+
+<circle class="sample" cx="390.00000000000006" cy="122.13481155324749" r="3" tabindex="0" data-sample="51" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.219 in; demand 910.0 psi; capped limit 952.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.219 in · demand 910.0 psi · capped limit 952.7 psi</title></circle>
+
+<circle class="sample" cx="396.20000000000005" cy="123.37293614823932" r="3" tabindex="0" data-sample="52" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.223 in; demand 910.0 psi; capped limit 946.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.223 in · demand 910.0 psi · capped limit 946.7 psi</title></circle>
+
+<circle class="sample" cx="402.40000000000003" cy="124.6204574514066" r="3" tabindex="0" data-sample="53" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.228 in; demand 910.0 psi; capped limit 940.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.228 in · demand 910.0 psi · capped limit 940.7 psi</title></circle>
+
+<circle class="sample" cx="408.6" cy="125.87748284427104" r="3" tabindex="0" data-sample="54" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.232 in; demand 910.0 psi; capped limit 934.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.232 in · demand 910.0 psi · capped limit 934.7 psi</title></circle>
+
+<circle class="sample" cx="414.8" cy="127.1441213507569" r="3" tabindex="0" data-sample="55" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.237 in; demand 910.0 psi; capped limit 928.6 psi">
+<title>Depth sensitivity · pipe wall · depth 0.237 in · demand 910.0 psi · capped limit 928.6 psi</title></circle>
+
+<circle class="sample" cx="421.00000000000006" cy="128.42048366871214" r="3" tabindex="0" data-sample="56" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.241 in; demand 910.0 psi; capped limit 922.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.241 in · demand 910.0 psi · capped limit 922.4 psi</title></circle>
+
+<circle class="sample" cx="427.20000000000005" cy="129.70668220215828" r="3" tabindex="0" data-sample="57" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.245 in; demand 910.0 psi; capped limit 916.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.245 in · demand 910.0 psi · capped limit 916.2 psi</title></circle>
+
+<circle class="sample" cx="432.4657534246575" cy="130.80687971682448" r="3" tabindex="0" data-sample="58" data-disposition="met" aria-label="Depth sensitivity, pipe wall; depth 0.249 in; demand 910.0 psi; capped limit 910.9 psi">
+<title>Depth sensitivity · pipe wall · depth 0.249 in · demand 910.0 psi · capped limit 910.9 psi</title></circle>
+
+<circle class="sample" cx="433.40000000000003" cy="131.00283109428892" r="3" tabindex="0" data-sample="59" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.250 in; demand 910.0 psi; capped limit 910.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.250 in · demand 910.0 psi · capped limit 910.0 psi</title></circle>
+
+<circle class="sample" cx="439.6" cy="132.30904626123737" r="3" tabindex="0" data-sample="60" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.254 in; demand 910.0 psi; capped limit 903.7 psi">
+<title>Depth sensitivity · pipe wall · depth 0.254 in · demand 910.0 psi · capped limit 903.7 psi</title></circle>
+
+<circle class="sample" cx="445.8" cy="133.62544542663326" r="3" tabindex="0" data-sample="61" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.258 in; demand 910.0 psi; capped limit 897.4 psi">
+<title>Depth sensitivity · pipe wall · depth 0.258 in · demand 910.0 psi · capped limit 897.4 psi</title></circle>
+
+<circle class="sample" cx="452.0" cy="134.95214815697153" r="3" tabindex="0" data-sample="62" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.263 in; demand 910.0 psi; capped limit 891.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.263 in · demand 910.0 psi · capped limit 891.0 psi</title></circle>
+
+<circle class="sample" cx="458.20000000000005" cy="136.28927589781458" r="3" tabindex="0" data-sample="63" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.267 in; demand 910.0 psi; capped limit 884.5 psi">
+<title>Depth sensitivity · pipe wall · depth 0.267 in · demand 910.0 psi · capped limit 884.5 psi</title></circle>
+
+<circle class="sample" cx="464.40000000000003" cy="137.63695201085116" r="3" tabindex="0" data-sample="64" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.272 in; demand 910.0 psi; capped limit 878.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.272 in · demand 910.0 psi · capped limit 878.0 psi</title></circle>
+
+<circle class="sample" cx="470.6" cy="138.99530181183653" r="3" tabindex="0" data-sample="65" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.276 in; demand 910.0 psi; capped limit 871.5 psi">
+<title>Depth sensitivity · pipe wall · depth 0.276 in · demand 910.0 psi · capped limit 871.5 psi</title></circle>
+
+<circle class="sample" cx="476.8" cy="140.3644526094365" r="3" tabindex="0" data-sample="66" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.280 in; demand 910.0 psi; capped limit 864.9 psi">
+<title>Depth sensitivity · pipe wall · depth 0.280 in · demand 910.0 psi · capped limit 864.9 psi</title></circle>
+
+<circle class="sample" cx="483.0000000000001" cy="141.74453374500314" r="3" tabindex="0" data-sample="67" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.285 in; demand 910.0 psi; capped limit 858.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.285 in · demand 910.0 psi · capped limit 858.3 psi</title></circle>
+
+<circle class="sample" cx="489.2000000000001" cy="143.13567663330545" r="3" tabindex="0" data-sample="68" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.289 in; demand 910.0 psi; capped limit 851.6 psi">
+<title>Depth sensitivity · pipe wall · depth 0.289 in · demand 910.0 psi · capped limit 851.6 psi</title></circle>
+
+<circle class="sample" cx="495.4000000000001" cy="144.5380148042448" r="3" tabindex="0" data-sample="69" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.293 in; demand 910.0 psi; capped limit 844.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.293 in · demand 910.0 psi · capped limit 844.8 psi</title></circle>
+
+<circle class="sample" cx="501.6000000000001" cy="145.9516839455803" r="3" tabindex="0" data-sample="70" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.298 in; demand 910.0 psi; capped limit 838.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.298 in · demand 910.0 psi · capped limit 838.0 psi</title></circle>
+
+<circle class="sample" cx="507.80000000000007" cy="147.37682194669532" r="3" tabindex="0" data-sample="71" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.302 in; demand 910.0 psi; capped limit 831.1 psi">
+<title>Depth sensitivity · pipe wall · depth 0.302 in · demand 910.0 psi · capped limit 831.1 psi</title></circle>
+
+<circle class="sample" cx="514.0" cy="148.8135689434324" r="3" tabindex="0" data-sample="72" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.307 in; demand 910.0 psi; capped limit 824.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.307 in · demand 910.0 psi · capped limit 824.2 psi</title></circle>
+
+<circle class="sample" cx="520.2" cy="150.2620673640287" r="3" tabindex="0" data-sample="73" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.311 in; demand 910.0 psi; capped limit 817.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.311 in · demand 910.0 psi · capped limit 817.3 psi</title></circle>
+
+<circle class="sample" cx="526.4000000000001" cy="151.72246197618375" r="3" tabindex="0" data-sample="74" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.315 in; demand 910.0 psi; capped limit 810.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.315 in · demand 910.0 psi · capped limit 810.2 psi</title></circle>
+
+<circle class="sample" cx="532.6000000000001" cy="153.19489993529086" r="3" tabindex="0" data-sample="75" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.320 in; demand 910.0 psi; capped limit 803.1 psi">
+<title>Depth sensitivity · pipe wall · depth 0.320 in · demand 910.0 psi · capped limit 803.1 psi</title></circle>
+
+<circle class="sample" cx="538.8000000000002" cy="154.67953083386703" r="3" tabindex="0" data-sample="76" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.324 in; demand 910.0 psi; capped limit 796.0 psi">
+<title>Depth sensitivity · pipe wall · depth 0.324 in · demand 910.0 psi · capped limit 796.0 psi</title></circle>
+
+<circle class="sample" cx="545.0000000000001" cy="156.17650675221626" r="3" tabindex="0" data-sample="77" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.329 in; demand 910.0 psi; capped limit 788.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.329 in · demand 910.0 psi · capped limit 788.8 psi</title></circle>
+
+<circle class="sample" cx="551.2" cy="157.68598231036137" r="3" tabindex="0" data-sample="78" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.333 in; demand 910.0 psi; capped limit 781.5 psi">
+<title>Depth sensitivity · pipe wall · depth 0.333 in · demand 910.0 psi · capped limit 781.5 psi</title></circle>
+
+<circle class="sample" cx="557.4000000000001" cy="159.20811472128247" r="3" tabindex="0" data-sample="79" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.337 in; demand 910.0 psi; capped limit 774.2 psi">
+<title>Depth sensitivity · pipe wall · depth 0.337 in · demand 910.0 psi · capped limit 774.2 psi</title></circle>
+
+<circle class="sample" cx="563.6000000000001" cy="160.7430638455004" r="3" tabindex="0" data-sample="80" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.342 in; demand 910.0 psi; capped limit 766.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.342 in · demand 910.0 psi · capped limit 766.8 psi</title></circle>
+
+<circle class="sample" cx="569.8000000000001" cy="162.29099224704444" r="3" tabindex="0" data-sample="81" data-disposition="shortfall" aria-label="Depth sensitivity, pipe wall; depth 0.346 in; demand 910.0 psi; capped limit 759.3 psi">
+<title>Depth sensitivity · pipe wall · depth 0.346 in · demand 910.0 psi · capped limit 759.3 psi</title></circle>
+
+<circle class="sample" cx="576.0" cy="163.85206525084618" r="3" tabindex="0" data-sample="82" data-disposition="outside" aria-label="Depth sensitivity, pipe wall; depth 0.350 in; demand 910.0 psi; capped limit 751.8 psi">
+<title>Depth sensitivity · pipe wall · depth 0.350 in · demand 910.0 psi · capped limit 751.8 psi</title></circle>
+
+</svg>
+<div class="panel">
+<p>Solid navy: uncapped factored pressure. Dashed teal: capped reference pressure. Dashed red: pressure demand and depth boundary. Grey: outside the implemented depth range.</p>
+<label for="depth-slider">Inspect calculated depth points</label>
+<input id="depth-slider" type="range" min="0" max="82" value="0" step="1">
+<p id="chart-readout" aria-live="polite">Select a depth point to read pressure demand and calculated resistance.</p>
+</div>
+<figcaption>Figure B. Calculated depth sensitivity for the published pipe geometry. The demand is <span data-value="input.maop_psi">910.0</span> psi and the implemented depth boundary is <span data-value="limit.depth_fraction">0.80</span> of nominal wall (<span data-value="limit.depth_in">0.350</span> in when displayed). Reference A supplies the example basis; Reference D supplies every pressure point. Chart endpoints and labels are rounded for display.</figcaption>
+</figure>
+<p>The point dispositions are: green, the pressure criterion is met; red, the pressure criterion is not met; amber, method applicability is exceeded. A calculated pressure shortfall requires review of a lower operating pressure or repair before the stated demand is adopted. An applicability exceedance requires a different qualified assessment or a repair disposition; extrapolated pressure is not used. <sup><a href="#source-workflow">[F]</a><a href="#source-engine">[D]</a></sup></p>
+<p>The nominal depth-boundary sample raises the native applicability flag because binary representation places its recomputed relative depth just above the implemented comparison. That sample is reference-only; no tolerance is added to force a passing status. The returned flag requires examination before component screening is interpreted. <sup><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-8">
+<h2>8. Limitations and recommendations</h2>
+<p>Numerical behavior is established for the example's stated input basis. Operating-asset acceptance, measurement uncertainty, future degradation and complete standard applicability are not established. <sup><a href="#source-tests">[E]</a><a href="#source-workflow">[F]</a></sup></p>
+<h3>8.1 Limits of use</h3>
+<p>Crack-like loss, dents with associated damage, defect interaction, weld flaws, external pressure, bending, compression and combined-load failure are outside this calculation. Material applicability is not inferred from a supplied yield-strength number. The reference implementation applies additional restrictions that the selected low-level function does not enforce. The implemented depth flag is therefore a necessary software check, rather than a complete method-selection decision. <sup><a href="#source-theory">[B]</a><a href="#source-engine">[D]</a><a href="#source-workflow">[F]</a></sup></p>
+<p>The function's pressure-comparison field is independent of its applicability record. Both records require examination. The factored pressure field is not automatically capped at the intact design pressure. A returned number or a positive boolean does not authorize operation. <sup><a href="#source-engine">[D]</a></sup></p>
+<p>Thickness-sizing uncertainty, future corrosion allowance, complete flaw boundaries, pressure history and other loads are absent from the public example. Remaining life, inspection interval and a repair design are recorded as NOT_EVALUATED. No assumed site value is substituted for these required inputs. <sup><a href="#data-register">[G]</a></sup></p>
+<h3>8.2 Recommendations and way forward</h3>
+<p>Establish the original design basis and the adopted assessment edition before selecting a factor or interpreting a pressure margin. Retain the intact design cap when reproducing this public comparison. For an operating component, apply the restrictions of the adopted method rather than transferring the example's factor. <sup><a href="#source-example">[A]</a><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Resolve the full axial defect extent and inspection sizing accuracy before a pressure decision is issued. Where the required pressure exceeds calculated resistance, assess a lower pressure or a qualified repair. Where applicability is exceeded or another damage mechanism is present, refer the component to the relevant assessment route rather than extending this curve. These actions follow the documented screening disposition and applicability handling. <sup><a href="#source-workflow">[F]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Obtain comparable dated inspections before assigning a corrosion rate or inspection interval. For the general measured-grid workflow, resolve the existing source-audit limitations before a complete general- or local-loss acceptance claim is issued. The next engineering deliverable is a component-specific input and applicability record, followed by a calculation on that confirmed basis. <sup><a href="#source-inspection">[N]</a><a href="#source-audit">[M]</a></sup></p>
+</section>
+
+<section id="section-9">
+<h2>9. Appendix: data and references</h2>
+<p>The numerical basis, source records and limits of the evidence are retained here. Public example inputs are distinguished from missing operating data so that a reproduction is not mistaken for a component assessment.</p>
+<h3 id="data-register">9.1 Data register</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Quantity or record</th><th>Value and unit</th><th>Readiness for use</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Outside diameter</td><td><span data-value="input.D">30.0</span> in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Nominal wall</td><td><span data-value="input.t">0.438</span> in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Axial flaw length</td><td><span data-value="input.L">7.5</span> in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Specified minimum yield strength</td><td><span data-value="input.smys_psi">52,000.0</span> psi</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Shallow loss depth</td><td><span data-value="case0.depth_in">0.100</span> in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Rounded depth boundary</td><td><span data-value="case1.depth_in">0.249</span> in</td><td>Public comparison input; not a measurement trigger</td><td>Reference A, example output</td></tr>
+<tr><td>Combined design factor</td><td><span data-value="input.design_factor">0.72</span>, dimensionless</td><td>Public example input; site applicability absent</td><td>Reference A, example input</td></tr>
+<tr><td>Pressure demand</td><td><span data-value="input.maop_psi">910.0</span> psi</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Implemented relative-depth boundary</td><td><span data-value="limit.depth_fraction">0.80</span>, dimensionless</td><td>Implemented software boundary; full applicability absent</td><td>References B and D</td></tr>
+<tr><td>Circumferential extent, proximity and other flaws</td><td>Required input</td><td>NOT_EVALUATED for an operating component</td><td>Reference F, bounded defect-window contract</td></tr>
+<tr><td>Sizing uncertainty and future loss</td><td>Required input</td><td>NOT_EVALUATED; no numerical allowance assigned</td><td>Reference F, scope limitations</td></tr>
+<tr><td>Rate, remaining life and inspection date</td><td>Required input</td><td>NOT_EVALUATED; dated comparable measurements absent</td><td>Reference N, inspection input contract</td></tr>
+<tr><td>Site design, material and other loads</td><td>Required input</td><td>NOT_EVALUATED; no operating record supplied</td><td>References B, D and F</td></tr>
+<tr><td>Wall-detail proportions</td><td>ASSUMED - to be confirmed</td><td>Illustrative only; not used by the pressure function</td><td>Figure A; axial parabolic idealization from Reference B</td></tr>
+</tbody><caption>Table A. Data basis and intended-use readiness. A true zero denotes no entered loss only in the calculated sensitivity; it is not a replacement for missing operating data.</caption>
+</table></div>
+<h3 id="section-9-2">9.2 References, interfaces and reproduction</h3>
+<ol type="A" class="refs">
+<li id="source-example"><a href="https://rdrr.io/cran/pipenostics/man/b31crvl.html">Public corrosion program documentation</a>, pipenostics 0.2.0, documentation dated 2024-05-29, Examples, Standard example 1. The source attributes the example to ASME B31G-1991, Manual for Determining the Remaining Strength of Corroded Pipelines, Nonmandatory Appendix A. Accessed 2026-10-21. Example inputs and rounded outputs are used, without copying the licensed document.</li>
+<li id="source-theory"><a href="https://rdrr.io/cran/pipenostics/src/R/b31gpf.R">Public original-method source</a>, pipenostics 0.2.0, b31gpf function, flow stress, geometry parameter, bulging and failure-pressure expressions. Its named basis is ASME B31G-2012, Manual for Determining the Remaining Strength of Corroded Pipelines, Level 1 algorithm. Accessed 2026-10-21. The open source is cited for the displayed coefficients; complete standard applicability is not established by this report.</li>
+<li id="source-cap"><a href="https://rdrr.io/cran/pipenostics/src/R/b31gsap.R">Public capped-pressure source</a>, pipenostics 0.2.0, b31gsap function, final intact-pressure comparison; named basis ASME B31G-1991. Accessed 2026-10-21.</li>
+<li id="source-engine"><a href="../../../../src/digitalmodel/asset_integrity/corroded_pipe.py">Corroded-pipe functions</a>: b31g_original, CorrodedPipeResult and the final pressure/applicability assembly; <a href="../../../../src/digitalmodel/asset_integrity/applicability.py">applicability record</a>. The method label records ASME B31G-2012. The depth boundary and every calculated pressure in this report are read from the current implementation.</li>
+<li id="source-tests"><a href="../../../../tests/asset_integrity/test_ffs_published_examples.py">Published-example and previous-calculation tests</a>: capped original pressure, rounded depth boundary, separate DNV mean-capacity examples and explicitly labelled regression anchors. The DNV reference is the public example of DNV-RP-F101, Corroded Pipelines, October 2010, Section 8.2; its capacity evidence does not qualify operating factors.</li>
+<li id="source-workflow"><a href="../../../../examples/workflows/pipeline-corroded-defect-screen/README.md">Pipeline-screen input contract, units and disposition</a>; <a href="../../../../src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py">validated adapter inputs</a>; <a href="../../../../examples/workflows/pipeline-corroded-defect-screen/input.yml">synthetic input example</a>.</li>
+<li id="source-data">Table A is the data register for the public example. <a href="public-example.json">Retained public-example inputs and source descriptors</a> identify source version, units, intended use, numerical tolerances and missing operating data.</li>
+<li id="source-architecture"><a href="../../../../docs/domains/asset-integrity/ffs-architecture.md">Assessment architecture</a>, dated 2026-06-27, canonical assessment route and returned component record; <a href="../../../../src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py">assessment coordinator</a>.</li>
+<li id="source-catalog"><a href="../../../../src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml">Assessment offering catalog</a>, engine registry and qualification caveats. Availability labels are not independent qualification records.</li>
+<li id="source-pack"><a href="../../../../src/digitalmodel/asset_integrity/docs/agent-pack.md">Module evidence inventory</a>, revision 4, dated 2026-10-15; <a href="../../../../docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md">consolidated calculation record</a>, including subsequent qualification corrections. These records are used within their stated evidence limits.</li>
+<li id="source-corrosion-tests"><a href="../../../../tests/asset_integrity/test_corroded_pipe.py">Corrosion function tests</a>, geometry, branch, monotonicity and profile assertions; <a href="../../../../tests/asset_integrity/test_applicability.py">applicability propagation tests</a>.</li>
+<li id="source-field-tests"><a href="../../../../tests/asset_integrity/test_real_inspection_fixtures.py">Inspection-fixture tests</a>, parsing and general assessment-chain assertions. No fixture values or inspection payloads are copied into this report.</li>
+<li id="source-audit"><a href="../../../../docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md">General- and local-loss source audit</a>, dated 2026-10-06, unresolved extent, reference-wall and edition bindings. Its named standard is API 579-1/ASME FFS-1, Fitness-For-Service, 2021, Parts 4 and 5.</li>
+<li id="source-inspection"><a href="../../../../src/digitalmodel/asset_integrity/inspection_planning.py">Inspection-planning input contract</a>, measured thickness, required thickness and rate or dated readings. The implementation names API 510, API 570 and API 653 without adopted editions; code-compliant interval selection is NOT_EVALUATED here.</li>
+</ol>
+<p>The primary callable interface used by the calculation is shown below. The factor is derived from the documented example input, rather than from a hidden default. The full measured-grid route remains a separate interface.</p>
+<pre>from digitalmodel.asset_integrity.corroded_pipe import b31g_original
+
+# Values are read from public-example.json, not entered again here.
+result = b31g_original(
+    inputs["D"], inputs["t"], case["depth_in"], inputs["L"],
+    inputs["smys_psi"], maop_psi=inputs["maop_psi"],
+    safety_factor=1 / inputs["design_factor"],
+)
+# Examine both result.safe_pressure_psi and result.applicability.
+# The published-example intact-pressure cap is a separate comparison.</pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Returned field</th><th>Unit</th><th>Meaning and limit</th><th>Source</th></tr></thead><tbody>
+<tr><td>failure_pressure_psi</td><td>psi</td><td>Predicted failure pressure; no operating factor applied</td><td>Reference D</td></tr>
+<tr><td>intact_pressure_psi, flow_stress_psi</td><td>psi</td><td>Intact flow-stress resistance and flow stress; distinct from yield-based design cap</td><td>Reference D</td></tr>
+<tr><td>folias_factor, area_ratio, rsf</td><td>Dimensionless</td><td>Bulging, area loss and failure/intact resistance ratio</td><td>Reference D</td></tr>
+<tr><td>safe_pressure_psi</td><td>psi</td><td>Legacy field name; uncapped factored pressure, without a complete operating decision</td><td>References C and D</td></tr>
+<tr><td>acceptable, applicability</td><td>Boolean and record</td><td>Demand comparison and independent method flag; both require examination</td><td>Reference D</td></tr>
+</tbody><caption>Table B. Selected public return fields. Field names do not extend their physical or qualification scope.</caption></table></div>
+<p>Reproduction from a source checkout uses the following commands from the repository root. Only the report's calculation, rendering and test dependencies are selected; a neighboring package checkout is not required. The report template contains the whole narrative, and the calculation is called anew during every rebuild.</p>
+<pre>PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' python docs/reports/modules/assetintegrity/build_report.py
+PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' --with 'pytest&gt;=7.4.3,&lt;9' --with 'pytest-asyncio==0.21.1' --with 'beautifulsoup4&gt;=4.13,&lt;5' python -m pytest tests/asset_integrity/test_module_report.py</pre>
+<h3>9.3 Quality pre-flight evidence</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Check</th><th>Evidence</th><th>Scope or limit</th><th>Source</th></tr></thead><tbody>
+<tr><td>Input origin and units</td><td>Public source locators and the retained input descriptor</td><td>Public example only; no operating data</td><td>References A and G; Table A</td></tr>
+<tr><td>Worked quantities and chart samples</td><td>Direct comparison with new calls to the selected function</td><td>Software reproducibility; no field qualification</td><td>Report rebuild test</td></tr>
+<tr><td>Published comparison</td><td>Existing capped-pressure and rounded-depth assertions</td><td>Numerical tolerances stated in the design basis</td><td>Reference E</td></tr>
+<tr><td>Display and references</td><td>Numeric data bindings, fixed precision, section anchors and local reference targets</td><td>Built document is checked</td><td>Report rebuild test</td></tr>
+<tr><td>Single-file delivery</td><td>Inline stylesheet, chart data and review controls; no external rendering dependency</td><td>Reference links remain optional external reads</td><td>Report rebuild test</td></tr>
+<tr><td>Wider engineering acceptance</td><td>Missing operating inputs identified</td><td>NOT_EVALUATED</td><td>Table A and Reference M</td></tr>
+</tbody><caption>Table C. Quality pre-flight evidence and the bounds of each check. These checks do not establish independent component approval.</caption></table></div>
+</section>
+
+<section id="section-10">
+<h2>10. Review notes and changes</h2>
+<p>Engineering changes are listed by revision and comments are attached to named sections. Comments are saved as a separate file beside this report when a report folder is selected. Browser support for folder access varies; the download control provides a portable alternative.</p>
+<details id="changes-panel" class="panel"><summary>Engineering changes</summary>
+<p>Revision 00 · 2026-10-21</p><ul><li>The original corrosion-pressure calculation is demonstrated on a published pipe example, with the intact design-pressure cap distinguished from the module&#39;s uncapped factored pressure.</li><li>Pressure demand and the implemented relative-depth boundary are drawn with a calculated depth sensitivity so that pressure shortfalls and the limit of the calculation are visible.</li><li>Existing numerical comparisons are distinguished from field qualification, and the additional data required for an operating decision are identified.</li></ul>
+</details>
+<div id="comments-panel" class="panel">
+<div class="review-controls">
+<label for="comment-section">Report section</label>
+<select id="comment-section"><option value="section-1">Executive Summary</option><option value="section-2">Introduction and scope</option><option value="section-3">Design basis and criteria</option><option value="section-4">Inputs and outputs</option><option value="section-5">Theory and methodology</option><option value="section-6">Worked example</option><option value="section-7">Validation evidence</option><option value="section-8">Limitations and recommendations</option><option value="section-9">Appendix: data and references</option><option value="section-10">Review notes and changes</option></select>
+<label for="comment-text">Engineering comment</label><textarea id="comment-text" rows="4" maxlength="4000"></textarea>
+<button type="button" id="add-comment">Add comment</button>
+<button type="button" id="save-comments">Save comments beside report</button>
+<button type="button" id="download-comments">Download comments</button>
+<label for="import-comments">Open saved comments</label><input type="file" id="import-comments" accept="application/json,.json">
+<p>For folder saving, select the folder containing this report. For a download, place report.comments.json beside the report and use Open saved comments to restore it. Unsaved comments remain in this page until it is closed.</p>
+</div>
+<p id="comment-status" role="status">No comments have been added.</p>
+<ol id="comment-list"></ol>
+</div>
+</section>
+</main></div>
+<script type="application/json" id="calculation-data">{"cases": [{"criterion_source": "Existing published-example test, capped pressure assertion", "depth_in": 0.1, "difference_bound_percent": 0.1, "name": "Published shallow defect", "published_pressure_psi": 1093.0, "reference_cap_psi": 1093.248, "reference_pressure_psi": 1093.248, "result": {"acceptable": true, "applicability": {"flags": [], "notes": [], "ok": true}, "area_ratio": 0.15220700152207, "code_reference": "ASME B31G (2012)", "details": {"applicability_note": null, "d_over_t": 0.22831050228310504, "regime": "parabolic", "safety_factor": 1.3888888888888888, "safety_factor_basis": "caller-supplied", "within_applicability": true, "z": 4.280821917808219}, "failure_pressure_psi": 1526.4723618866508, "flow_stress_psi": 57200.00000000001, "folias_factor": 2.103486994075926, "intact_pressure_psi": 1670.2400000000002, "method": "B31G", "rsf": 0.9139239641528466, "safe_pressure_psi": 1099.0601005583885}, "source": "example", "tolerance_psi": 1.0}, {"criterion_source": "Existing published-example test, rounded depth boundary assertion", "depth_in": 0.249, "difference_bound_percent": 0.2, "name": "Published rounded depth boundary", "published_pressure_psi": 910.0, "reference_cap_psi": 1093.248, "reference_pressure_psi": 910.9298384004746, "result": {"acceptable": true, "applicability": {"flags": [], "notes": [], "ok": true}, "area_ratio": 0.3789954337899544, "code_reference": "ASME B31G (2012)", "details": {"applicability_note": null, "d_over_t": 0.5684931506849316, "regime": "parabolic", "safety_factor": 1.3888888888888888, "safety_factor_basis": "caller-supplied", "within_applicability": true, "z": 4.280821917808219}, "failure_pressure_psi": 1265.1803311117703, "flow_stress_psi": 57200.00000000001, "folias_factor": 2.103486994075926, "intact_pressure_psi": 1670.2400000000002, "method": "B31G", "rsf": 0.7574841526437938, "safe_pressure_psi": 910.9298384004746}, "source": "example", "tolerance_psi": 3.0}], "display_values": {"case0.area_ratio": {"format": ",.3f", "value": 0.15220700152207}, "case0.depth_in": {"format": ",.3f", "value": 0.1}, "case0.difference_bound_percent": {"format": ",.1f", "value": 0.1}, "case0.failure_pressure_psi": {"format": ",.1f", "value": 1526.4723618866508}, "case0.flow_stress_psi": {"format": ",.1f", "value": 57200.00000000001}, "case0.folias_factor": {"format": ",.3f", "value": 2.103486994075926}, "case0.intact_pressure_psi": {"format": ",.1f", "value": 1670.2400000000002}, "case0.margin_psi": {"format": ",.1f", "value": 183.24800000000005}, "case0.published_pressure_psi": {"format": ",.1f", "value": 1093.0}, "case0.reference_cap_psi": {"format": ",.1f", "value": 1093.248}, "case0.reference_pressure_psi": {"format": ",.1f", "value": 1093.248}, "case0.rsf": {"format": ",.3f", "value": 0.9139239641528466}, "case0.safe_pressure_psi": {"format": ",.1f", "value": 1099.0601005583885}, "case0.tolerance_psi": {"format": ",.1f", "value": 1.0}, "case1.area_ratio": {"format": ",.3f", "value": 0.3789954337899544}, "case1.depth_in": {"format": ",.3f", "value": 0.249}, "case1.difference_bound_percent": {"format": ",.1f", "value": 0.2}, "case1.failure_pressure_psi": {"format": ",.1f", "value": 1265.1803311117703}, "case1.flow_stress_psi": {"format": ",.1f", "value": 57200.00000000001}, "case1.folias_factor": {"format": ",.3f", "value": 2.103486994075926}, "case1.intact_pressure_psi": {"format": ",.1f", "value": 1670.2400000000002}, "case1.margin_psi": {"format": ",.1f", "value": 0.9298384004746367}, "case1.published_pressure_psi": {"format": ",.1f", "value": 910.0}, "case1.reference_cap_psi": {"format": ",.1f", "value": 1093.248}, "case1.reference_pressure_psi": {"format": ",.1f", "value": 910.9298384004746}, "case1.rsf": {"format": ",.3f", "value": 0.7574841526437938}, "case1.safe_pressure_psi": {"format": ",.1f", "value": 910.9298384004746}, "case1.tolerance_psi": {"format": ",.1f", "value": 3.0}, "formula.area_multiplier": {"format": ",.3f", "value": 0.6666666666666666}, "formula.branch_limit": {"format": ",.1f", "value": 20.0}, "formula.bulging_coefficient": {"format": ",.1f", "value": 0.8}, "formula.flow_multiplier": {"format": ",.1f", "value": 1.1}, "input.D": {"format": ",.1f", "value": 30.0}, "input.L": {"format": ",.1f", "value": 7.5}, "input.design_factor": {"format": ",.2f", "value": 0.72}, "input.maop_psi": {"format": ",.1f", "value": 910.0}, "input.smys_psi": {"format": ",.1f", "value": 52000.0}, "input.t": {"format": ",.3f", "value": 0.438}, "limit.depth_fraction": {"format": ",.2f", "value": 0.8}, "limit.depth_in": {"format": ",.3f", "value": 0.35040000000000004}}, "formula": {"area_multiplier": 0.6666666666666666, "branch_limit": 20.0, "bulging_coefficient": 0.8, "flow_multiplier": 1.1}, "inputs": {"D": 30.0, "L": 7.5, "design_factor": 0.72, "maop_psi": 910.0, "smys_psi": 52000.0, "t": 0.438}, "limits": {"depth_fraction": 0.8, "depth_in": 0.35040000000000004}, "sensitivity": [{"depth_in": 0.0, "pressure_psi": 1202.5728000000001, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.00438, "pressure_psi": 1198.353638803456, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.00876, "pressure_psi": 1194.107563086857, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.013140000000000002, "pressure_psi": 1189.834314489866, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.01752, "pressure_psi": 1185.5336313347632, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.021900000000000003, "pressure_psi": 1181.2052485730294, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.026280000000000005, "pressure_psi": 1176.848897730895, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.030660000000000003, "pressure_psi": 1172.4643068538285, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.03504, "pressure_psi": 1168.0512004499435, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.039420000000000004, "pressure_psi": 1163.6092994322985, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.043800000000000006, "pressure_psi": 1159.138321060061, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.04818000000000001, "pressure_psi": 1154.6379788785134, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.05256000000000001, "pressure_psi": 1150.1079826578757, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.05694000000000001, "pressure_psi": 1145.5480383309111, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.061320000000000006, "pressure_psi": 1140.95784792929, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.06570000000000001, "pressure_psi": 1136.3371095186883, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.07008, "pressure_psi": 1131.685517132579, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.07446000000000001, "pressure_psi": 1127.0027607046982, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.07884000000000001, "pressure_psi": 1122.2885260001474, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.08322, "pressure_psi": 1117.5424945450993, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.08760000000000001, "pressure_psi": 1112.7643435550826, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.09198000000000002, "pressure_psi": 1107.953745861798, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.09636000000000002, "pressure_psi": 1103.1103698384447, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.1, "pressure_psi": 1099.0601005583885, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.10074000000000001, "pressure_psi": 1098.2338793235115, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.10512000000000002, "pressure_psi": 1093.3239335430012, "reference_pressure_psi": 1093.248, "within_applicability": true}, {"depth_in": 0.10950000000000001, "pressure_psi": 1088.3801870310479, "reference_pressure_psi": 1088.3801870310479, "within_applicability": true}, {"depth_in": 0.11388000000000002, "pressure_psi": 1083.4022895488895, "reference_pressure_psi": 1083.4022895488895, "within_applicability": true}, {"depth_in": 0.11826, "pressure_psi": 1078.389886002155, "reference_pressure_psi": 1078.389886002155, "within_applicability": true}, {"depth_in": 0.12264000000000001, "pressure_psi": 1073.342616356426, "reference_pressure_psi": 1073.342616356426, "within_applicability": true}, {"depth_in": 0.12702000000000002, "pressure_psi": 1068.2601155510306, "reference_pressure_psi": 1068.2601155510306, "within_applicability": true}, {"depth_in": 0.13140000000000002, "pressure_psi": 1063.142013411023, "reference_pressure_psi": 1063.142013411023, "within_applicability": true}, {"depth_in": 0.13578, "pressure_psi": 1057.987934557312, "reference_pressure_psi": 1057.987934557312, "within_applicability": true}, {"depth_in": 0.14016, "pressure_psi": 1052.7974983148815, "reference_pressure_psi": 1052.7974983148815, "within_applicability": true}, {"depth_in": 0.14454000000000003, "pressure_psi": 1047.5703186190672, "reference_pressure_psi": 1047.5703186190672, "within_applicability": true}, {"depth_in": 0.14892000000000002, "pressure_psi": 1042.3060039198326, "reference_pressure_psi": 1042.3060039198326, "within_applicability": true}, {"depth_in": 0.15330000000000002, "pressure_psi": 1037.0041570839987, "reference_pressure_psi": 1037.0041570839987, "within_applicability": true}, {"depth_in": 0.15768000000000001, "pressure_psi": 1031.6643752953755, "reference_pressure_psi": 1031.6643752953755, "within_applicability": true}, {"depth_in": 0.16206000000000004, "pressure_psi": 1026.2862499527398, "reference_pressure_psi": 1026.2862499527398, "within_applicability": true}, {"depth_in": 0.16644, "pressure_psi": 1020.8693665656115, "reference_pressure_psi": 1020.8693665656115, "within_applicability": true}, {"depth_in": 0.17082000000000003, "pressure_psi": 1015.4133046477634, "reference_pressure_psi": 1015.4133046477634, "within_applicability": true}, {"depth_in": 0.17520000000000002, "pressure_psi": 1009.9176376084168, "reference_pressure_psi": 1009.9176376084168, "within_applicability": true}, {"depth_in": 0.17958000000000002, "pressure_psi": 1004.3819326410559, "reference_pressure_psi": 1004.3819326410559, "within_applicability": true}, {"depth_in": 0.18396000000000004, "pressure_psi": 998.8057506098029, "reference_pressure_psi": 998.8057506098029, "within_applicability": true}, {"depth_in": 0.18834, "pressure_psi": 993.1886459332954, "reference_pressure_psi": 993.1886459332954, "within_applicability": true}, {"depth_in": 0.19272000000000003, "pressure_psi": 987.5301664659927, "reference_pressure_psi": 987.5301664659927, "within_applicability": true}, {"depth_in": 0.19710000000000003, "pressure_psi": 981.8298533768537, "reference_pressure_psi": 981.8298533768537, "within_applicability": true}, {"depth_in": 0.20148000000000002, "pressure_psi": 976.0872410253107, "reference_pressure_psi": 976.0872410253107, "within_applicability": true}, {"depth_in": 0.20586000000000002, "pressure_psi": 970.3018568344744, "reference_pressure_psi": 970.3018568344744, "within_applicability": true}, {"depth_in": 0.21024000000000004, "pressure_psi": 964.4732211614946, "reference_pressure_psi": 964.4732211614946, "within_applicability": true}, {"depth_in": 0.21462000000000003, "pressure_psi": 958.6008471650007, "reference_pressure_psi": 958.6008471650007, "within_applicability": true}, {"depth_in": 0.21900000000000003, "pressure_psi": 952.6842406695492, "reference_pressure_psi": 952.6842406695492, "within_applicability": true}, {"depth_in": 0.22338000000000005, "pressure_psi": 946.7229000269958, "reference_pressure_psi": 946.7229000269958, "within_applicability": true}, {"depth_in": 0.22776000000000005, "pressure_psi": 940.716315974709, "reference_pressure_psi": 940.716315974709, "within_applicability": true}, {"depth_in": 0.23214, "pressure_psi": 934.6639714905468, "reference_pressure_psi": 934.6639714905468, "within_applicability": true}, {"depth_in": 0.23652, "pressure_psi": 928.5653416445037, "reference_pressure_psi": 928.5653416445037, "within_applicability": true}, {"depth_in": 0.24090000000000003, "pressure_psi": 922.4198934469416, "reference_pressure_psi": 922.4198934469416, "within_applicability": true}, {"depth_in": 0.24528000000000003, "pressure_psi": 916.2270856933121, "reference_pressure_psi": 916.2270856933121, "within_applicability": true}, {"depth_in": 0.249, "pressure_psi": 910.9298384004746, "reference_pressure_psi": 910.9298384004746, "within_applicability": true}, {"depth_in": 0.24966000000000005, "pressure_psi": 909.9863688052756, "reference_pressure_psi": 909.9863688052756, "within_applicability": true}, {"depth_in": 0.25404000000000004, "pressure_psi": 903.6971846681164, "reference_pressure_psi": 903.6971846681164, "within_applicability": true}, {"depth_in": 0.25842000000000004, "pressure_psi": 897.3589664643583, "reference_pressure_psi": 897.3589664643583, "within_applicability": true}, {"depth_in": 0.26280000000000003, "pressure_psi": 890.9711385034703, "reference_pressure_psi": 890.9711385034703, "within_applicability": true}, {"depth_in": 0.26718000000000003, "pressure_psi": 884.5331160475595, "reference_pressure_psi": 884.5331160475595, "within_applicability": true}, {"depth_in": 0.27156, "pressure_psi": 878.0443051329389, "reference_pressure_psi": 878.0443051329389, "within_applicability": true}, {"depth_in": 0.27594, "pressure_psi": 871.5041023874538, "reference_pressure_psi": 871.5041023874538, "within_applicability": true}, {"depth_in": 0.28032, "pressure_psi": 864.9118948434538, "reference_pressure_psi": 864.9118948434538, "within_applicability": true}, {"depth_in": 0.28470000000000006, "pressure_psi": 858.2670597462812, "reference_pressure_psi": 858.2670597462812, "within_applicability": true}, {"depth_in": 0.28908000000000006, "pressure_psi": 851.568964358159, "reference_pressure_psi": 851.568964358159, "within_applicability": true}, {"depth_in": 0.29346000000000005, "pressure_psi": 844.81696575734, "reference_pressure_psi": 844.81696575734, "within_applicability": true}, {"depth_in": 0.29784000000000005, "pressure_psi": 838.0104106323912, "reference_pressure_psi": 838.0104106323912, "within_applicability": true}, {"depth_in": 0.30222000000000004, "pressure_psi": 831.148635071467, "reference_pressure_psi": 831.148635071467, "within_applicability": true}, {"depth_in": 0.30660000000000004, "pressure_psi": 824.2309643464366, "reference_pressure_psi": 824.2309643464366, "within_applicability": true}, {"depth_in": 0.31098000000000003, "pressure_psi": 817.2567126917137, "reference_pressure_psi": 817.2567126917137, "within_applicability": true}, {"depth_in": 0.31536000000000003, "pressure_psi": 810.2251830776337, "reference_pressure_psi": 810.2251830776337, "within_applicability": true}, {"depth_in": 0.31974, "pressure_psi": 803.1356669782292, "reference_pressure_psi": 803.1356669782292, "within_applicability": true}, {"depth_in": 0.3241200000000001, "pressure_psi": 795.9874441332328, "reference_pressure_psi": 795.9874441332328, "within_applicability": true}, {"depth_in": 0.32850000000000007, "pressure_psi": 788.779782304144, "reference_pressure_psi": 788.779782304144, "within_applicability": true}, {"depth_in": 0.33288, "pressure_psi": 781.5119370241861, "reference_pressure_psi": 781.5119370241861, "within_applicability": true}, {"depth_in": 0.33726, "pressure_psi": 774.1831513419734, "reference_pressure_psi": 774.1831513419734, "within_applicability": true}, {"depth_in": 0.34164000000000005, "pressure_psi": 766.7926555587019, "reference_pressure_psi": 766.7926555587019, "within_applicability": true}, {"depth_in": 0.34602000000000005, "pressure_psi": 759.3396669586749, "reference_pressure_psi": 759.3396669586749, "within_applicability": true}, {"depth_in": 0.35040000000000004, "pressure_psi": 751.8233895329628, "reference_pressure_psi": 751.8233895329628, "within_applicability": false}], "source_digests": {"docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md": "95d1e4f2b909b043d2109c84f0db690b11d169d2fedcc195369bb52334a73d70", "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f", "public-example.json": "4daf21bcb31ac04a90e7cb60a1446f27e4d2cd91f7eeead3490147bd2a4e1feb", "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6", "src/digitalmodel/asset_integrity/corroded_pipe.py": "4c8a45a6a0f05e4a777e705e95ae71e98d2ecb044fce866409b13c700bf371bd", "tests/asset_integrity/test_ffs_published_examples.py": "6ee4628a6b84d06bd952a66f71c49160141f79627c41873af18af872f912d9f2"}, "sources": {"example": {"fields": ["D", "t", "d", "L", "smys_psi", "maop_psi", "design_factor", "published_pressure_psi", "published_boundary_depth_in"], "locator": "Examples, Standard example 1; ASME B31G-1991, Nonmandatory Appendix A, as reproduced in the public program documentation", "url": "https://rdrr.io/cran/pipenostics/man/b31crvl.html"}, "reference_cap": {"locator": "b31gsap function, final comparison with intact design pressure; public implementation referring to ASME B31G-1991", "url": "https://rdrr.io/cran/pipenostics/src/R/b31gsap.R"}, "theory": {"locator": "b31gpf function, flow stress, geometry parameter, bulging factor and failure pressure; public implementation of ASME B31G-2012, Level 1", "url": "https://rdrr.io/cran/pipenostics/src/R/b31gpf.R"}}}</script>
+<script type="application/json" id="changes-data">{"document": "Asset integrity module analysis", "revisions": [{"changes": ["The original corrosion-pressure calculation is demonstrated on a published pipe example, with the intact design-pressure cap distinguished from the module\u0027s uncapped factored pressure.", "Pressure demand and the implemented relative-depth boundary are drawn with a calculated depth sensitivity so that pressure shortfalls and the limit of the calculation are visible.", "Existing numerical comparisons are distinguished from field qualification, and the additional data required for an operating decision are identified."], "date": "2026-10-21", "revision": "00"}]}</script>
+<script>
+'use strict';
+(() => {
+  const calculation = JSON.parse(document.getElementById('calculation-data').textContent);
+  const slider = document.getElementById('depth-slider');
+  const readout = document.getElementById('chart-readout');
+  const demand = calculation.inputs.maop_psi;
+  function showSample(index) {
+    const point = calculation.sensitivity[index];
+    slider.value = String(index);
+    const disposition = point.within_applicability
+      ? (point.reference_pressure_psi >= demand ? 'The pressure criterion is met.' : 'The pressure criterion is not met.')
+      : 'Method applicability is exceeded.';
+    readout.textContent = 'Depth sensitivity; pipe wall; depth ' + point.depth_in.toFixed(3)
+      + ' in; demand ' + demand.toFixed(1) + ' psi; capped limit '
+      + point.reference_pressure_psi.toFixed(1) + ' psi; uncapped factored pressure '
+      + point.pressure_psi.toFixed(1) + ' psi. ' + disposition;
+    readout.style.color = !point.within_applicability ? '#9b6910' : point.reference_pressure_psi >= demand ? '#205843' : '#a54236';
+  }
+  document.querySelectorAll('[data-sample]').forEach(point => {
+    point.addEventListener('pointerenter', () => showSample(Number(point.dataset.sample)));
+    point.addEventListener('focus', () => showSample(Number(point.dataset.sample)));
+  });
+  slider.addEventListener('input', () => showSample(Number(slider.value)));
+  showSample(0);
+
+  const documentTitle = 'Asset integrity module analysis';
+  const revision = JSON.parse(document.getElementById('changes-data').textContent).revisions[0].revision;
+  const notes = [];
+  const status = document.getElementById('comment-status');
+  const section = document.getElementById('comment-section');
+  const text = document.getElementById('comment-text');
+  const sections = Array.from(section.options).map(option => option.value);
+  function renderNotes() {
+    const list = document.getElementById('comment-list');
+    list.replaceChildren();
+    notes.forEach(note => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = '#' + note.section;
+      link.textContent = section.querySelector('option[value="' + note.section + '"]').textContent;
+      const paragraph = document.createElement('p');
+      paragraph.className = 'note';
+      paragraph.textContent = note.text;
+      item.append(link, paragraph);
+      list.append(item);
+    });
+  }
+  function payload() {
+    return JSON.stringify({document: documentTitle, revision, comments: notes}, null, 2) + '\n';
+  }
+  document.getElementById('add-comment').addEventListener('click', () => {
+    if (!text.value.trim()) { status.textContent = 'Enter a comment before adding it.'; return; }
+    if (notes.length >= 200) { status.textContent = 'The comment limit has been reached; save these comments first.'; return; }
+    notes.push({section: section.value, text: text.value.trim()});
+    text.value = '';
+    renderNotes();
+    status.textContent = 'Comment added. Save comments before closing this report.';
+  });
+  document.getElementById('save-comments').addEventListener('click', async () => {
+    if (!window.showDirectoryPicker) {
+      status.textContent = 'Folder access is unavailable in this browser. Download comments and place the file beside the report.';
+      return;
+    }
+    try {
+      const directory = await window.showDirectoryPicker({mode: 'readwrite'});
+      const handle = await directory.getFileHandle('report.comments.json', {create: true});
+      const writable = await handle.createWritable();
+      await writable.write(payload());
+      await writable.close();
+      status.textContent = 'Comments saved as report.comments.json in the selected report folder.';
+    } catch (error) {
+      status.textContent = error.name === 'AbortError' ? 'Saving was cancelled; comments remain unsaved.' : 'Saving failed; download comments to retain them.';
+    }
+  });
+  document.getElementById('download-comments').addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'report.comments.json';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Comments download requested. Place report.comments.json beside the report.';
+  });
+  document.getElementById('import-comments').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 2000000) throw new Error('Comment file is too large.');
+      const saved = JSON.parse(await file.text());
+      if (saved.document !== documentTitle || saved.revision !== revision || !Array.isArray(saved.comments)
+          || saved.comments.length > 200 || !saved.comments.every(note => note && sections.includes(note.section)
+            && typeof note.text === 'string' && note.text.trim().length > 0 && note.text.length <= 4000)) {
+        throw new Error('Comment file does not match this report and revision.');
+      }
+      notes.splice(0, notes.length, ...saved.comments.map(note => ({section: note.section, text: note.text})));
+      renderNotes();
+      status.textContent = 'Saved comments opened for this report revision.';
+    } catch (error) {
+      status.textContent = 'Comments were not opened. ' + error.message;
+    }
+  });
+})();
+</script>
+</body>
+</html>

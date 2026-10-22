@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asset integrity module analysis</title>
+<style>{{ style }}</style>
+<style>
+.hs-doc svg{width:100%;height:auto;color:var(--ink)}
+.hs-doc svg text{fill:currentColor;font:14px sans-serif}
+.hs-doc .chart-line{fill:none;stroke:var(--ink);stroke-width:3}
+.hs-doc .reference-line{fill:none;stroke:var(--report-accent);stroke-width:3;stroke-dasharray:8 4}
+.hs-doc .limit-line{stroke:#a54236;stroke-width:2;stroke-dasharray:6 4}
+.hs-doc .sample{fill:var(--ink);stroke:white;stroke-width:1;cursor:crosshair}
+.hs-doc .sample[data-disposition="met"]{fill:#205843}
+.hs-doc .sample[data-disposition="shortfall"]{fill:#a54236}
+.hs-doc .sample[data-disposition="outside"]{fill:#9b6910}
+.hs-doc .sample:focus,.hs-doc .sample:hover{r:7;fill:var(--report-accent)}
+.hs-doc .panel{background:#f2f7f8;border:1px solid var(--line);padding:18px;margin:20px 0}
+.hs-doc label{display:block;margin:12px 0 5px;font:14px sans-serif}
+.hs-doc textarea,.hs-doc select,.hs-doc input[type=range]{width:100%}
+.hs-doc textarea,.hs-doc select{font:16px/1.5 sans-serif;padding:8px;border:1px solid var(--line)}
+.hs-doc button{background:var(--ink);color:white;border:0;padding:10px 14px;cursor:pointer;margin:8px 8px 8px 0}
+.hs-doc button:focus-visible,.hs-doc a:focus-visible{outline:3px solid var(--report-accent);outline-offset:3px}
+.hs-doc pre{overflow-x:auto;padding:12px;background:#f2f7f8;font:13px/1.6 monospace}
+.hs-doc .note{white-space:pre-wrap;overflow-wrap:anywhere}
+.hs-doc .table-wrap td{overflow-wrap:anywhere}
+@media print{.hs-doc .review-controls{display:none}}
+</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Asset integrity module analysis</h1>
+<p>Pipeline corrosion pressure screening and the evidence required for use</p>
+<p>Revision {{ revision.revision }} | {{ revision.date }}</p>
+<p>Draft for client review</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction and scope</a></li>
+<li><a href="#section-3">Design basis and criteria</a></li>
+<li><a href="#section-4">Inputs and outputs</a></li>
+<li><a href="#section-5">Theory and methodology</a></li>
+<li><a href="#section-6">Worked example</a></li>
+<li><a href="#section-7">Validation evidence</a></li>
+<li><a href="#section-8">Limitations and recommendations</a></li>
+<li><a href="#section-9">Appendix: data and references</a></li>
+<li><a href="#section-10">Review notes and changes</a></li>
+</ol></nav>
+<main>
+<section id="section-1">
+<h2>1. Executive Summary</h2>
+<p>The asset integrity module is a collection of metallic-component screening and assessment calculations. Analysis is performed to determine the remaining pressure resistance of a blunt corrosion defect and the evidence required before a component decision is made. The key results are summarized below.</p>
+<ul>
+<li>The published shallow pipe example meets the stated pressure comparison.
+  <ul><li>The capped reference pressure is {{ n('case0.reference_pressure_psi') }} psi against an operating-pressure demand of {{ n('input.maop_psi') }} psi. The implemented relative-depth boundary is {{ n('limit.depth_fraction') }} of the nominal wall; the example lies within that boundary. This is an example reproduction, without operating-asset qualification. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></li></ul>
+</li>
+<li>The intact design-pressure cap changes the interpretation of the module result.
+  <ul><li>The module returns an uncapped factored pressure of {{ n('case0.safe_pressure_psi') }} psi for the shallow defect. The public example also caps pressure at the intact design pressure. That cap is applied separately for the reference comparison. <sup><a href="#source-cap">[C]</a><a href="#source-tests">[E]</a></sup></li></ul>
+</li>
+<li>An operating limit requires the component record.
+  <ul><li>The adopted standard edition, design factor, sizing uncertainty, full defect boundaries, other loads and degradation history are required before an operating decision is established. Remaining life and a next inspection date are not evaluated from this example. <sup><a href="#source-workflow">[F]</a><a href="#data-register">[G]</a></sup></li></ul>
+</li>
+</ul>
+</section>
+<div id="revision-history">
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody>{% for item in changes.revisions %}<tr><td>{{ item.revision }}</td><td>{{ item.date }}</td><td>{{ item.changes | join(' ') }}</td></tr>{% endfor %}</tbody>
+<caption>Revision history. Engineering changes are listed newest first.</caption></table>
+</div>
+
+<section id="section-2">
+<h2>2. Introduction and scope</h2>
+<p>Remaining strength, measurement sufficiency and the disposition of a damaged component are addressed by the module. The pressure-resistance calculation for an isolated longitudinal corrosion defect is examined in detail because documented callable functions and public numerical comparisons are present. <sup><a href="#source-engine">[D]</a><a href="#source-tests">[E]</a></sup></p>
+<h3>2.1 Main workflow</h3>
+<p>Outside diameter, nominal wall, maximum loss depth, axial flaw length and specified minimum yield strength are entered. Original B31G is called with an explicit pressure demand and a factor derived from the public example. Failure pressure, factored pressure and the separate applicability record are returned. The intact design-pressure cap is then applied only for comparison with the published example. <sup><a href="#source-engine">[D]</a><a href="#source-cap">[C]</a></sup></p>
+<p>The general measured-grid route is also available: the grid is parsed, damage morphology is classified, screening calculations are applied, a disposition is produced and measurement sufficiency is assessed. This orchestration route is distinct from the standalone corrosion-pressure function used here. <sup><a href="#source-architecture">[H]</a></sup></p>
+<h3>2.2 Not covered</h3>
+<p>Modified B31G, the effective-area profile search, circumferential projection and the separate DNV corrosion-pressure method are present but are not calculated in this worked example. Crack assessment, pitting, dents, shell distortion, hull wastage, mooring-chain dimensions, composite-repair screening, inspection planning, campaign comparability and riser-joint assessment are additional surfaces. Their presence does not extend the qualification of this pressure example to those damage mechanisms. The escalation interface prepares assessment information; it does not establish a numerical higher-level solution. <sup><a href="#source-catalog">[I]</a><a href="#source-pack">[J]</a></sup></p>
+</section>
+
+<section id="section-3">
+<h2>3. Design basis and criteria</h2>
+<p>A straight pipe with isolated blunt metal loss is assessed under internal pressure. The example geometry and material strength are taken from the public program documentation; no measured component is represented. <sup><a href="#source-example">[A]</a></sup></p>
+<h3>3.1 Governing basis</h3>
+<p>The implemented original method carries the ASME B31G-2012 label. The historical example is attributed by its public documentation to ASME B31G-1991, Nonmandatory Appendix A. The numerical comparison therefore establishes reproduction of that public example, rather than edition-matched qualification of every requirement of the later standard. Equations and example values below are obtained from the open program documentation and the repository implementation; a licensed publication is not reproduced. <sup><a href="#source-theory">[B]</a><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+<h3>3.2 Comparison criteria and rationale</h3>
+<p>The pressure comparison is met when the capped reference pressure is at least the stated operating-pressure demand and no implemented applicability flag is raised. The cap prevents the example calculation from exceeding the intact design-pressure basis. The relative-depth boundary is {{ n('limit.depth_fraction') }} of nominal wall in the implementation; equality remains inside the implemented check. This check alone does not establish complete material, flaw or loading applicability. <sup><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Agreement with the published shallow-example pressure is checked within {{ n('case0.tolerance_psi') }} psi. The calculation at the published rounded depth boundary is checked within {{ n('case1.tolerance_psi') }} psi of the operating-pressure demand. These are the existing numerical test tolerances, rather than measurement allowances or operating margins. <sup><a href="#source-tests">[E]</a></sup></p>
+<p>The factor entered for this example is the reciprocal of its published combined design factor, {{ n('input.design_factor') }}. A different design basis requires an explicit corresponding factor. The module's default factor is not adopted implicitly. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-4">
+<h2>4. Inputs and outputs</h2>
+<p>Pipe geometry is entered in inches and strength and pressure are entered in pounds per square inch. Loss depth is positive into the wall; remaining wall and loss depth are different quantities. The selected function performs no automatic unit conversion. <sup><a href="#source-engine">[D]</a></sup></p>
+<h3>4.1 Required inputs</h3>
+<p>Outside diameter is {{ n('input.D') }} in, nominal wall is {{ n('input.t') }} in, axial corrosion length is {{ n('input.L') }} in and specified minimum yield strength is {{ n('input.smys_psi') }} psi. The shallow corrosion depth is {{ n('case0.depth_in') }} in. Pressure demand is {{ n('input.maop_psi') }} psi. These values describe the published example; they are not site design data. <sup><a href="#source-example">[A]</a></sup></p>
+<p>The low-level function rejects nonpositive geometry, wall at least as large as diameter, negative length and depth outside the wall. Complete finite-value, strength, pressure and factor checks remain the caller's responsibility. The broader pipeline-screen adapter has stronger input validation; its input contract is listed in the appendix. <sup><a href="#source-engine">[D]</a><a href="#source-workflow">[F]</a></sup></p>
+<figure>
+<svg viewBox="0 0 800 370" role="img" aria-labelledby="pipe-title pipe-description">
+<title id="pipe-title">Pressurized pipe with a longitudinal external corrosion patch</title>
+<desc id="pipe-description">A cylindrical pipe and a magnified axial wall section show internal pressure, outside diameter, nominal wall, corrosion depth and axial length. Diagram proportions are illustrative.</desc>
+<defs>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6b5bd"/><stop offset="0.45" stop-color="#edf2f4"/><stop offset="1" stop-color="#8397a4"/></linearGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
+</defs>
+<path d="M130 60 L640 60 Q690 120 640 180 L130 180 Q80 120 130 60" fill="url(#steel)" stroke="currentColor" stroke-width="2"/>
+<ellipse cx="130" cy="120" rx="40" ry="60" fill="#d3dfe4" stroke="currentColor" stroke-width="2"/>
+<ellipse cx="130" cy="120" rx="32" ry="49" fill="white" stroke="currentColor"/>
+<path d="M365 64 Q405 103 455 65 L455 82 Q410 115 365 82 Z" fill="#af7859" stroke="#77432e"/>
+<path d="M160 120 L260 120 M205 120 L205 85 M205 120 L205 155" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="275" y="127">Internal pressure: {{ n('input.maop_psi', 'tspan') }} psi</text>
+<path d="M65 60 L65 180" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="8" y="220">D = {{ n('input.D', 'tspan') }} in</text>
+<path d="M365 43 L455 43" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="350" y="25">L = {{ n('input.L', 'tspan') }} in</text>
+<path d="M365 90 L300 265 M455 90 L580 265" stroke="#8397a4" stroke-dasharray="4 4"/>
+<path d="M235 265 L320 265 Q425 335 540 265 L650 265 L650 335 L235 335 Z" fill="url(#steel)" stroke="currentColor" stroke-width="2"/>
+<path d="M320 265 L540 265" stroke="#77432e" stroke-dasharray="4 4"/>
+<path d="M425 265 L425 300" stroke="currentColor" marker-end="url(#arrow)"/>
+<text x="455" y="296">d = {{ n('case0.depth_in', 'tspan') }} in</text>
+<path d="M675 265 L675 335" stroke="currentColor" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="690" y="300">t = {{ n('input.t', 'tspan') }} in</text>
+<text x="235" y="357">Magnified axial wall section; parabolic loss idealization</text>
+</svg>
+<figcaption>Figure A. Pipe geometry and internal-pressure loading. The wall detail is magnified and is not to scale; circumferential patch width and actual end restraint are not supplied. Geometry is from Reference A; idealization is from Reference B.</figcaption>
+</figure>
+<h3>4.2 Returned quantities</h3>
+<p>Predicted failure pressure, intact flow-stress pressure, flow stress, the bulging factor, lost-area fraction, remaining strength factor and uncapped factored pressure are returned. A pressure comparison boolean is returned when demand is supplied. Applicability is returned separately; a positive pressure comparison with an applicability flag is not an established operating result. Exact field names and the call example are confined to the reference appendix. <sup><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-5">
+<h2>5. Theory and methodology</h2>
+<p>Pressure resistance is estimated by reducing the intact flow-stress pressure for longitudinal loss of load-carrying area and local bulging. The original method uses a parabolic area idealization for the shorter-defect branch and a remaining-ligament expression for the longer-defect branch. <sup><a href="#source-theory">[B]</a></sup></p>
+<h3>5.1 Equations and symbols</h3>
+<p>D is outside diameter, t is nominal wall, d is maximum loss depth and L is axial loss length. S<sub>y</sub> is specified minimum yield strength, S<sub>f</sub> is flow stress, z is the dimensionless geometry parameter, a is fractional lost area, M is the dimensionless bulging factor and P<sub>f</sub> is predicted failure pressure. <sup><a href="#source-theory">[B]</a></sup></p>
+<div class="eq">z = L² / (D t); S<sub>f</sub> = c<sub>f</sub> S<sub>y</sub>; a = c<sub>a</sub> d / t; M = √(1 + c<sub>m</sub> z)</div>
+<p>The implemented coefficients are c<sub>f</sub> = {{ n('formula.flow_multiplier') }}, c<sub>a</sub> = two thirds ({{ n('formula.area_multiplier') }} when displayed), and c<sub>m</sub> = {{ n('formula.bulging_coefficient') }}. The bulging expression applies for z at or below {{ n('formula.branch_limit') }}. The coefficient display is rounded; full precision is retained by the called module. <sup><a href="#source-theory">[B]</a><a href="#source-engine">[D]</a></sup></p>
+<div class="eq">P<sub>f</sub> = (2 S<sub>f</sub> t / D) (1 − a) / (1 − a / M)</div>
+<p>For z above the stated branch boundary, the implemented remaining-ligament expression is used instead. <sup><a href="#source-theory">[B]</a></sup></p>
+<div class="eq">P<sub>f</sub> = (2 S<sub>f</sub> t / D) (1 − d / t)</div>
+<h3>5.2 Pressure factor, reference cap and disposition</h3>
+<p>F is the combined design factor taken from the public example. P<sub>module</sub> is the module's uncapped factored pressure, P<sub>design</sub> is the intact yield-based design-pressure cap and P<sub>reference</sub> is the capped comparison pressure. The remaining strength factor is P<sub>f</sub> divided by the intact flow-stress pressure. <sup><a href="#source-example">[A]</a><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<div class="eq">P<sub>module</sub> = F P<sub>f</sub>; P<sub>design</sub> = 2 S<sub>y</sub> t F / D; P<sub>reference</sub> = min(P<sub>module</sub>, P<sub>design</sub>)</div>
+<p>The reference cap is a comparison adapter outside the selected function. The published program applies additional intermediate rounding; exact equality of rounded boundary values is not inferred. At an operating asset, independent design and applicability checks remain necessary even when the example pressure comparison is met. <sup><a href="#source-cap">[C]</a><a href="#source-tests">[E]</a></sup></p>
+</section>
+
+<section id="section-6">
+<h2>6. Worked example</h2>
+<p>The public shallow-defect example is calculated by calling the original corrosion-pressure function. A second call uses the published rounded depth boundary with the same geometry, material strength and pressure factor. Every displayed result in this section is bound to those returned quantities or to the stated reference-cap calculation. <sup><a href="#source-example">[A]</a><a href="#source-tests">[E]</a></sup></p>
+<h3>6.1 Calculated pressure resistance</h3>
+<p>For the shallow depth of {{ n('case0.depth_in') }} in, flow stress is {{ n('case0.flow_stress_psi') }} psi, the bulging factor is {{ n('case0.folias_factor') }}, and the fractional lost area is {{ n('case0.area_ratio') }}. Predicted failure pressure is {{ n('case0.failure_pressure_psi') }} psi and the remaining strength factor is {{ n('case0.rsf') }}. The uncapped factored pressure is {{ n('case0.safe_pressure_psi') }} psi. <sup><a href="#source-engine">[D]</a></sup></p>
+<p>The intact design-pressure cap governs at {{ n('case0.reference_pressure_psi') }} psi against the operating-pressure demand of {{ n('input.maop_psi') }} psi, leaving a calculated pressure difference of {{ n('case0.margin_psi') }} psi. The capped pressure is within {{ n('case0.difference_bound_percent') }} % of the published rounded pressure of {{ n('case0.published_pressure_psi') }} psi. The example lies within the implemented depth boundary; this result does not establish an operating limit for a measured component. <sup><a href="#source-example">[A]</a><a href="#source-engine">[D]</a></sup></p>
+<p>At the published rounded depth boundary of {{ n('case1.depth_in') }} in, predicted failure pressure is {{ n('case1.failure_pressure_psi') }} psi and the factored pressure governs at {{ n('case1.reference_pressure_psi') }} psi. That pressure is within {{ n('case1.difference_bound_percent') }} % of the published pressure demand, within the stated numerical tolerance. The rounded depth boundary is not an inspection trigger because sizing uncertainty and future loss are absent. <sup><a href="#source-example">[A]</a><a href="#source-tests">[E]</a><a href="#data-register">[G]</a></sup></p>
+<h3>6.2 Depth sensitivity</h3>
+<p>Depth is varied while pipe geometry, material strength, flaw length and pressure factor are held fixed. Pressure resistance decreases as depth increases. The chart in the validation section draws the demand and the implemented depth boundary; each pressure point is obtained from a separate module call. No corrosion rate or time projection is assigned. <sup><a href="#source-engine">[D]</a></sup></p>
+</section>
+
+<section id="section-7">
+<h2>7. Validation evidence</h2>
+<p>Numerical agreement with a public example is checked separately from physical qualification of an operating component. Existing tests, previous-calculation anchors, synthetic workflow examples and inspection-fixture tests are held in the repository; their evidence scopes differ. <sup><a href="#source-tests">[E]</a><a href="#source-pack">[J]</a></sup></p>
+<h3>7.1 Public and repository evidence</h3>
+<p>The existing published-example tests cover capped original-method pressure and the rounded depth boundary. The shallow comparison alone is governed by the intact cap; the deeper call exercises corrosion resistance directly. Separate published single-defect comparisons are held for the DNV capacity method. Those capacity checks do not establish the choice of operating factors or qualification of interacting defects. <sup><a href="#source-tests">[E]</a></sup></p>
+<p>Modified-method pressure and uniform-profile effective-area results in that test file are previous-calculation anchors, without independent published outputs for those exact cases. The focused corrosion tests also check limiting geometry, depth and length trends, invalid geometry and critical-profile segment selection. Their passing assertions establish those checks, without field calibration. <sup><a href="#source-tests">[E]</a><a href="#source-corrosion-tests">[K]</a></sup></p>
+<p>Documented synthetic pipeline grids exercise the wider screening workflow. Separate inspection-fixture tests exercise parsing and the general assessment chain; no inspection record is incorporated in this report. The existing source audit identifies unresolved edition and formula bindings in the general and local metal-loss routes. A screening status from those routes is not treated as complete standard qualification. <sup><a href="#source-workflow">[F]</a><a href="#source-field-tests">[L]</a><a href="#source-audit">[M]</a></sup></p>
+<h3>7.2 Interactive calculated comparison</h3>
+<figure>
+<svg id="pressure-chart" viewBox="0 0 800 410" role="img" aria-labelledby="chart-title chart-description">
+<title id="chart-title">Pressure resistance against corrosion depth</title>
+<desc id="chart-description">Calculated uncapped and capped pressures are plotted against depth. The horizontal operating-pressure demand and vertical implemented relative-depth boundary are drawn. Points support pointer and keyboard inspection.</desc>
+<rect x="80" y="50" width="620" height="270" fill="#f2f7f8"/>
+<rect x="{{ plot.depth_limit_x }}" y="50" width="{{ 700 - plot.depth_limit_x }}" height="270" fill="#e4e6e7"/>
+{% for tick in plot.y_ticks %}<path d="M80 {{ tick.y }} H700" stroke="#d3dfe4"/><text x="70" y="{{ tick.y + 5 }}" text-anchor="end">{{ '%.1f' | format(tick.value) }}</text>{% endfor %}
+{% for tick in plot.x_ticks %}<text x="{{ tick.x }}" y="345" text-anchor="middle">{{ '%.3f' | format(tick.value) }}</text>{% endfor %}
+<path d="M80 50 V320 H700" fill="none" stroke="currentColor"/>
+<text x="390" y="380" text-anchor="middle">Corrosion depth (in)</text>
+<text transform="translate(22 190) rotate(-90)" text-anchor="middle">Pressure (psi)</text>
+<polyline class="chart-line" points="{{ plot.raw_line }}"/>
+<polyline class="reference-line" points="{{ plot.reference_line }}"/>
+<path id="pressure-demand-limit" class="limit-line" d="M80 {{ plot.demand_y }} H700"/>
+<path id="depth-applicability-limit" class="limit-line" d="M{{ plot.depth_limit_x }} 50 V320"/>
+<text x="90" y="{{ plot.demand_y - 8 }}">Pressure demand: {{ n('input.maop_psi', 'tspan') }} psi</text>
+<text x="{{ plot.depth_limit_x + 10 }}" y="78">Outside</text><text x="{{ plot.depth_limit_x + 10 }}" y="98">depth range</text>
+{% for point in plot.points %}
+<circle class="sample" cx="{{ point.x }}" cy="{{ point.reference_y }}" r="3" tabindex="0" data-sample="{{ point.index }}" data-disposition="{{ 'outside' if not point.within_applicability else 'met' if point.reference_pressure_psi >= data.inputs.maop_psi else 'shortfall' }}" aria-label="Depth sensitivity, pipe wall; depth {{ '%.3f' | format(point.depth_in) }} in; demand {{ '%.1f' | format(data.inputs.maop_psi) }} psi; capped limit {{ '%.1f' | format(point.reference_pressure_psi) }} psi">
+<title>Depth sensitivity · pipe wall · depth {{ '%.3f' | format(point.depth_in) }} in · demand {{ '%.1f' | format(data.inputs.maop_psi) }} psi · capped limit {{ '%.1f' | format(point.reference_pressure_psi) }} psi</title></circle>
+{% endfor %}
+</svg>
+<div class="panel">
+<p>Solid navy: uncapped factored pressure. Dashed teal: capped reference pressure. Dashed red: pressure demand and depth boundary. Grey: outside the implemented depth range.</p>
+<label for="depth-slider">Inspect calculated depth points</label>
+<input id="depth-slider" type="range" min="0" max="{{ plot.points | length - 1 }}" value="0" step="1">
+<p id="chart-readout" aria-live="polite">Select a depth point to read pressure demand and calculated resistance.</p>
+</div>
+<figcaption>Figure B. Calculated depth sensitivity for the published pipe geometry. The demand is {{ n('input.maop_psi') }} psi and the implemented depth boundary is {{ n('limit.depth_fraction') }} of nominal wall ({{ n('limit.depth_in') }} in when displayed). Reference A supplies the example basis; Reference D supplies every pressure point. Chart endpoints and labels are rounded for display.</figcaption>
+</figure>
+<p>The point dispositions are: green, the pressure criterion is met; red, the pressure criterion is not met; amber, method applicability is exceeded. A calculated pressure shortfall requires review of a lower operating pressure or repair before the stated demand is adopted. An applicability exceedance requires a different qualified assessment or a repair disposition; extrapolated pressure is not used. <sup><a href="#source-workflow">[F]</a><a href="#source-engine">[D]</a></sup></p>
+{% if not data.sensitivity[-1].within_applicability %}<p>The nominal depth-boundary sample raises the native applicability flag because binary representation places its recomputed relative depth just above the implemented comparison. That sample is reference-only; no tolerance is added to force a passing status. The returned flag requires examination before component screening is interpreted. <sup><a href="#source-engine">[D]</a></sup></p>{% endif %}
+</section>
+
+<section id="section-8">
+<h2>8. Limitations and recommendations</h2>
+<p>Numerical behavior is established for the example's stated input basis. Operating-asset acceptance, measurement uncertainty, future degradation and complete standard applicability are not established. <sup><a href="#source-tests">[E]</a><a href="#source-workflow">[F]</a></sup></p>
+<h3>8.1 Limits of use</h3>
+<p>Crack-like loss, dents with associated damage, defect interaction, weld flaws, external pressure, bending, compression and combined-load failure are outside this calculation. Material applicability is not inferred from a supplied yield-strength number. The reference implementation applies additional restrictions that the selected low-level function does not enforce. The implemented depth flag is therefore a necessary software check, rather than a complete method-selection decision. <sup><a href="#source-theory">[B]</a><a href="#source-engine">[D]</a><a href="#source-workflow">[F]</a></sup></p>
+<p>The function's pressure-comparison field is independent of its applicability record. Both records require examination. The factored pressure field is not automatically capped at the intact design pressure. A returned number or a positive boolean does not authorize operation. <sup><a href="#source-engine">[D]</a></sup></p>
+<p>Thickness-sizing uncertainty, future corrosion allowance, complete flaw boundaries, pressure history and other loads are absent from the public example. Remaining life, inspection interval and a repair design are recorded as NOT_EVALUATED. No assumed site value is substituted for these required inputs. <sup><a href="#data-register">[G]</a></sup></p>
+<h3>8.2 Recommendations and way forward</h3>
+<p>Establish the original design basis and the adopted assessment edition before selecting a factor or interpreting a pressure margin. Retain the intact design cap when reproducing this public comparison. For an operating component, apply the restrictions of the adopted method rather than transferring the example's factor. <sup><a href="#source-example">[A]</a><a href="#source-cap">[C]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Resolve the full axial defect extent and inspection sizing accuracy before a pressure decision is issued. Where the required pressure exceeds calculated resistance, assess a lower pressure or a qualified repair. Where applicability is exceeded or another damage mechanism is present, refer the component to the relevant assessment route rather than extending this curve. These actions follow the documented screening disposition and applicability handling. <sup><a href="#source-workflow">[F]</a><a href="#source-engine">[D]</a></sup></p>
+<p>Obtain comparable dated inspections before assigning a corrosion rate or inspection interval. For the general measured-grid workflow, resolve the existing source-audit limitations before a complete general- or local-loss acceptance claim is issued. The next engineering deliverable is a component-specific input and applicability record, followed by a calculation on that confirmed basis. <sup><a href="#source-inspection">[N]</a><a href="#source-audit">[M]</a></sup></p>
+</section>
+
+<section id="section-9">
+<h2>9. Appendix: data and references</h2>
+<p>The numerical basis, source records and limits of the evidence are retained here. Public example inputs are distinguished from missing operating data so that a reproduction is not mistaken for a component assessment.</p>
+<h3 id="data-register">9.1 Data register</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Quantity or record</th><th>Value and unit</th><th>Readiness for use</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Outside diameter</td><td>{{ n('input.D') }} in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Nominal wall</td><td>{{ n('input.t') }} in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Axial flaw length</td><td>{{ n('input.L') }} in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Specified minimum yield strength</td><td>{{ n('input.smys_psi') }} psi</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Shallow loss depth</td><td>{{ n('case0.depth_in') }} in</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Rounded depth boundary</td><td>{{ n('case1.depth_in') }} in</td><td>Public comparison input; not a measurement trigger</td><td>Reference A, example output</td></tr>
+<tr><td>Combined design factor</td><td>{{ n('input.design_factor') }}, dimensionless</td><td>Public example input; site applicability absent</td><td>Reference A, example input</td></tr>
+<tr><td>Pressure demand</td><td>{{ n('input.maop_psi') }} psi</td><td>Public example input</td><td>Reference A, example input</td></tr>
+<tr><td>Implemented relative-depth boundary</td><td>{{ n('limit.depth_fraction') }}, dimensionless</td><td>Implemented software boundary; full applicability absent</td><td>References B and D</td></tr>
+<tr><td>Circumferential extent, proximity and other flaws</td><td>Required input</td><td>NOT_EVALUATED for an operating component</td><td>Reference F, bounded defect-window contract</td></tr>
+<tr><td>Sizing uncertainty and future loss</td><td>Required input</td><td>NOT_EVALUATED; no numerical allowance assigned</td><td>Reference F, scope limitations</td></tr>
+<tr><td>Rate, remaining life and inspection date</td><td>Required input</td><td>NOT_EVALUATED; dated comparable measurements absent</td><td>Reference N, inspection input contract</td></tr>
+<tr><td>Site design, material and other loads</td><td>Required input</td><td>NOT_EVALUATED; no operating record supplied</td><td>References B, D and F</td></tr>
+<tr><td>Wall-detail proportions</td><td>ASSUMED - to be confirmed</td><td>Illustrative only; not used by the pressure function</td><td>Figure A; axial parabolic idealization from Reference B</td></tr>
+</tbody><caption>Table A. Data basis and intended-use readiness. A true zero denotes no entered loss only in the calculated sensitivity; it is not a replacement for missing operating data.</caption>
+</table></div>
+<h3 id="section-9-2">9.2 References, interfaces and reproduction</h3>
+<ol type="A" class="refs">
+<li id="source-example"><a href="https://rdrr.io/cran/pipenostics/man/b31crvl.html">Public corrosion program documentation</a>, pipenostics 0.2.0, documentation dated 2024-05-29, Examples, Standard example 1. The source attributes the example to ASME B31G-1991, Manual for Determining the Remaining Strength of Corroded Pipelines, Nonmandatory Appendix A. Accessed 2026-10-21. Example inputs and rounded outputs are used, without copying the licensed document.</li>
+<li id="source-theory"><a href="https://rdrr.io/cran/pipenostics/src/R/b31gpf.R">Public original-method source</a>, pipenostics 0.2.0, b31gpf function, flow stress, geometry parameter, bulging and failure-pressure expressions. Its named basis is ASME B31G-2012, Manual for Determining the Remaining Strength of Corroded Pipelines, Level 1 algorithm. Accessed 2026-10-21. The open source is cited for the displayed coefficients; complete standard applicability is not established by this report.</li>
+<li id="source-cap"><a href="https://rdrr.io/cran/pipenostics/src/R/b31gsap.R">Public capped-pressure source</a>, pipenostics 0.2.0, b31gsap function, final intact-pressure comparison; named basis ASME B31G-1991. Accessed 2026-10-21.</li>
+<li id="source-engine"><a href="../../../../src/digitalmodel/asset_integrity/corroded_pipe.py">Corroded-pipe functions</a>: b31g_original, CorrodedPipeResult and the final pressure/applicability assembly; <a href="../../../../src/digitalmodel/asset_integrity/applicability.py">applicability record</a>. The method label records ASME B31G-2012. The depth boundary and every calculated pressure in this report are read from the current implementation.</li>
+<li id="source-tests"><a href="../../../../tests/asset_integrity/test_ffs_published_examples.py">Published-example and previous-calculation tests</a>: capped original pressure, rounded depth boundary, separate DNV mean-capacity examples and explicitly labelled regression anchors. The DNV reference is the public example of DNV-RP-F101, Corroded Pipelines, October 2010, Section 8.2; its capacity evidence does not qualify operating factors.</li>
+<li id="source-workflow"><a href="../../../../examples/workflows/pipeline-corroded-defect-screen/README.md">Pipeline-screen input contract, units and disposition</a>; <a href="../../../../src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py">validated adapter inputs</a>; <a href="../../../../examples/workflows/pipeline-corroded-defect-screen/input.yml">synthetic input example</a>.</li>
+<li id="source-data">Table A is the data register for the public example. <a href="public-example.json">Retained public-example inputs and source descriptors</a> identify source version, units, intended use, numerical tolerances and missing operating data.</li>
+<li id="source-architecture"><a href="../../../../docs/domains/asset-integrity/ffs-architecture.md">Assessment architecture</a>, dated 2026-06-27, canonical assessment route and returned component record; <a href="../../../../src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py">assessment coordinator</a>.</li>
+<li id="source-catalog"><a href="../../../../src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml">Assessment offering catalog</a>, engine registry and qualification caveats. Availability labels are not independent qualification records.</li>
+<li id="source-pack"><a href="../../../../src/digitalmodel/asset_integrity/docs/agent-pack.md">Module evidence inventory</a>, revision 4, dated 2026-10-15; <a href="../../../../docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md">consolidated calculation record</a>, including subsequent qualification corrections. These records are used within their stated evidence limits.</li>
+<li id="source-corrosion-tests"><a href="../../../../tests/asset_integrity/test_corroded_pipe.py">Corrosion function tests</a>, geometry, branch, monotonicity and profile assertions; <a href="../../../../tests/asset_integrity/test_applicability.py">applicability propagation tests</a>.</li>
+<li id="source-field-tests"><a href="../../../../tests/asset_integrity/test_real_inspection_fixtures.py">Inspection-fixture tests</a>, parsing and general assessment-chain assertions. No fixture values or inspection payloads are copied into this report.</li>
+<li id="source-audit"><a href="../../../../docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md">General- and local-loss source audit</a>, dated 2026-10-06, unresolved extent, reference-wall and edition bindings. Its named standard is API 579-1/ASME FFS-1, Fitness-For-Service, 2021, Parts 4 and 5.</li>
+<li id="source-inspection"><a href="../../../../src/digitalmodel/asset_integrity/inspection_planning.py">Inspection-planning input contract</a>, measured thickness, required thickness and rate or dated readings. The implementation names API 510, API 570 and API 653 without adopted editions; code-compliant interval selection is NOT_EVALUATED here.</li>
+</ol>
+<p>The primary callable interface used by the calculation is shown below. The factor is derived from the documented example input, rather than from a hidden default. The full measured-grid route remains a separate interface.</p>
+<pre>from digitalmodel.asset_integrity.corroded_pipe import b31g_original
+
+# Values are read from public-example.json, not entered again here.
+result = b31g_original(
+    inputs["D"], inputs["t"], case["depth_in"], inputs["L"],
+    inputs["smys_psi"], maop_psi=inputs["maop_psi"],
+    safety_factor=1 / inputs["design_factor"],
+)
+# Examine both result.safe_pressure_psi and result.applicability.
+# The published-example intact-pressure cap is a separate comparison.</pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Returned field</th><th>Unit</th><th>Meaning and limit</th><th>Source</th></tr></thead><tbody>
+<tr><td>failure_pressure_psi</td><td>psi</td><td>Predicted failure pressure; no operating factor applied</td><td>Reference D</td></tr>
+<tr><td>intact_pressure_psi, flow_stress_psi</td><td>psi</td><td>Intact flow-stress resistance and flow stress; distinct from yield-based design cap</td><td>Reference D</td></tr>
+<tr><td>folias_factor, area_ratio, rsf</td><td>Dimensionless</td><td>Bulging, area loss and failure/intact resistance ratio</td><td>Reference D</td></tr>
+<tr><td>safe_pressure_psi</td><td>psi</td><td>Legacy field name; uncapped factored pressure, without a complete operating decision</td><td>References C and D</td></tr>
+<tr><td>acceptable, applicability</td><td>Boolean and record</td><td>Demand comparison and independent method flag; both require examination</td><td>Reference D</td></tr>
+</tbody><caption>Table B. Selected public return fields. Field names do not extend their physical or qualification scope.</caption></table></div>
+<p>Reproduction from a source checkout uses the following commands from the repository root. Only the report's calculation, rendering and test dependencies are selected; a neighboring package checkout is not required. The report template contains the whole narrative, and the calculation is called anew during every rebuild.</p>
+<pre>PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' python docs/reports/modules/assetintegrity/build_report.py
+PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' --with 'pytest&gt;=7.4.3,&lt;9' --with 'pytest-asyncio==0.21.1' --with 'beautifulsoup4&gt;=4.13,&lt;5' python -m pytest tests/asset_integrity/test_module_report.py</pre>
+<h3>9.3 Quality pre-flight evidence</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Check</th><th>Evidence</th><th>Scope or limit</th><th>Source</th></tr></thead><tbody>
+<tr><td>Input origin and units</td><td>Public source locators and the retained input descriptor</td><td>Public example only; no operating data</td><td>References A and G; Table A</td></tr>
+<tr><td>Worked quantities and chart samples</td><td>Direct comparison with new calls to the selected function</td><td>Software reproducibility; no field qualification</td><td>Report rebuild test</td></tr>
+<tr><td>Published comparison</td><td>Existing capped-pressure and rounded-depth assertions</td><td>Numerical tolerances stated in the design basis</td><td>Reference E</td></tr>
+<tr><td>Display and references</td><td>Numeric data bindings, fixed precision, section anchors and local reference targets</td><td>Built document is checked</td><td>Report rebuild test</td></tr>
+<tr><td>Single-file delivery</td><td>Inline stylesheet, chart data and review controls; no external rendering dependency</td><td>Reference links remain optional external reads</td><td>Report rebuild test</td></tr>
+<tr><td>Wider engineering acceptance</td><td>Missing operating inputs identified</td><td>NOT_EVALUATED</td><td>Table A and Reference M</td></tr>
+</tbody><caption>Table C. Quality pre-flight evidence and the bounds of each check. These checks do not establish independent component approval.</caption></table></div>
+</section>
+
+<section id="section-10">
+<h2>10. Review notes and changes</h2>
+<p>Engineering changes are listed by revision and comments are attached to named sections. Comments are saved as a separate file beside this report when a report folder is selected. Browser support for folder access varies; the download control provides a portable alternative.</p>
+<details id="changes-panel" class="panel"><summary>Engineering changes</summary>
+{% for item in changes.revisions %}<p>Revision {{ item.revision }} · {{ item.date }}</p><ul>{% for change in item.changes %}<li>{{ change }}</li>{% endfor %}</ul>{% endfor %}
+</details>
+<div id="comments-panel" class="panel">
+<div class="review-controls">
+<label for="comment-section">Report section</label>
+<select id="comment-section">{% for title in ['Executive Summary', 'Introduction and scope', 'Design basis and criteria', 'Inputs and outputs', 'Theory and methodology', 'Worked example', 'Validation evidence', 'Limitations and recommendations', 'Appendix: data and references', 'Review notes and changes'] %}<option value="section-{{ loop.index }}">{{ title }}</option>{% endfor %}</select>
+<label for="comment-text">Engineering comment</label><textarea id="comment-text" rows="4" maxlength="4000"></textarea>
+<button type="button" id="add-comment">Add comment</button>
+<button type="button" id="save-comments">Save comments beside report</button>
+<button type="button" id="download-comments">Download comments</button>
+<label for="import-comments">Open saved comments</label><input type="file" id="import-comments" accept="application/json,.json">
+<p>For folder saving, select the folder containing this report. For a download, place report.comments.json beside the report and use Open saved comments to restore it. Unsaved comments remain in this page until it is closed.</p>
+</div>
+<p id="comment-status" role="status">No comments have been added.</p>
+<ol id="comment-list"></ol>
+</div>
+</section>
+</main></div>
+<script type="application/json" id="calculation-data">{{ data | tojson }}</script>
+<script type="application/json" id="changes-data">{{ changes | tojson }}</script>
+<script>
+'use strict';
+(() => {
+  const calculation = JSON.parse(document.getElementById('calculation-data').textContent);
+  const slider = document.getElementById('depth-slider');
+  const readout = document.getElementById('chart-readout');
+  const demand = calculation.inputs.maop_psi;
+  function showSample(index) {
+    const point = calculation.sensitivity[index];
+    slider.value = String(index);
+    const disposition = point.within_applicability
+      ? (point.reference_pressure_psi >= demand ? 'The pressure criterion is met.' : 'The pressure criterion is not met.')
+      : 'Method applicability is exceeded.';
+    readout.textContent = 'Depth sensitivity; pipe wall; depth ' + point.depth_in.toFixed(3)
+      + ' in; demand ' + demand.toFixed(1) + ' psi; capped limit '
+      + point.reference_pressure_psi.toFixed(1) + ' psi; uncapped factored pressure '
+      + point.pressure_psi.toFixed(1) + ' psi. ' + disposition;
+    readout.style.color = !point.within_applicability ? '#9b6910' : point.reference_pressure_psi >= demand ? '#205843' : '#a54236';
+  }
+  document.querySelectorAll('[data-sample]').forEach(point => {
+    point.addEventListener('pointerenter', () => showSample(Number(point.dataset.sample)));
+    point.addEventListener('focus', () => showSample(Number(point.dataset.sample)));
+  });
+  slider.addEventListener('input', () => showSample(Number(slider.value)));
+  showSample(0);
+
+  const documentTitle = 'Asset integrity module analysis';
+  const revision = JSON.parse(document.getElementById('changes-data').textContent).revisions[0].revision;
+  const notes = [];
+  const status = document.getElementById('comment-status');
+  const section = document.getElementById('comment-section');
+  const text = document.getElementById('comment-text');
+  const sections = Array.from(section.options).map(option => option.value);
+  function renderNotes() {
+    const list = document.getElementById('comment-list');
+    list.replaceChildren();
+    notes.forEach(note => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = '#' + note.section;
+      link.textContent = section.querySelector('option[value="' + note.section + '"]').textContent;
+      const paragraph = document.createElement('p');
+      paragraph.className = 'note';
+      paragraph.textContent = note.text;
+      item.append(link, paragraph);
+      list.append(item);
+    });
+  }
+  function payload() {
+    return JSON.stringify({document: documentTitle, revision, comments: notes}, null, 2) + '\n';
+  }
+  document.getElementById('add-comment').addEventListener('click', () => {
+    if (!text.value.trim()) { status.textContent = 'Enter a comment before adding it.'; return; }
+    if (notes.length >= 200) { status.textContent = 'The comment limit has been reached; save these comments first.'; return; }
+    notes.push({section: section.value, text: text.value.trim()});
+    text.value = '';
+    renderNotes();
+    status.textContent = 'Comment added. Save comments before closing this report.';
+  });
+  document.getElementById('save-comments').addEventListener('click', async () => {
+    if (!window.showDirectoryPicker) {
+      status.textContent = 'Folder access is unavailable in this browser. Download comments and place the file beside the report.';
+      return;
+    }
+    try {
+      const directory = await window.showDirectoryPicker({mode: 'readwrite'});
+      const handle = await directory.getFileHandle('report.comments.json', {create: true});
+      const writable = await handle.createWritable();
+      await writable.write(payload());
+      await writable.close();
+      status.textContent = 'Comments saved as report.comments.json in the selected report folder.';
+    } catch (error) {
+      status.textContent = error.name === 'AbortError' ? 'Saving was cancelled; comments remain unsaved.' : 'Saving failed; download comments to retain them.';
+    }
+  });
+  document.getElementById('download-comments').addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'report.comments.json';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Comments download requested. Place report.comments.json beside the report.';
+  });
+  document.getElementById('import-comments').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 2000000) throw new Error('Comment file is too large.');
+      const saved = JSON.parse(await file.text());
+      if (saved.document !== documentTitle || saved.revision !== revision || !Array.isArray(saved.comments)
+          || saved.comments.length > 200 || !saved.comments.every(note => note && sections.includes(note.section)
+            && typeof note.text === 'string' && note.text.trim().length > 0 && note.text.length <= 4000)) {
+        throw new Error('Comment file does not match this report and revision.');
+      }
+      notes.splice(0, notes.length, ...saved.comments.map(note => ({section: note.section, text: note.text})));
+      renderNotes();
+      status.textContent = 'Saved comments opened for this report revision.';
+    } catch (error) {
+      status.textContent = 'Comments were not opened. ' + error.message;
+    }
+  });
+})();
+</script>
+</body>
+</html>
