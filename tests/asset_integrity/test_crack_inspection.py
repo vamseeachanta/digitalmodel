@@ -321,6 +321,50 @@ def test_existing_inspection_router_accepts_crack_growth(tmp_path):
     assert saved["crack_assessment"]["growth"]["status"] == "LIMIT_REACHED"
 
 
+@pytest.mark.parametrize("steps", [1, 4, 100])
+def test_coarse_router_growth_preserves_life_interval_and_error(steps, tmp_path):
+    """Route the MIT hand integral through inspection policy and saved JSON."""
+    inputs = dict(
+        law=dict(coefficient=1e-11, exponent=3, threshold=0, stress_ratio=0,
+                 walker_exponent=1, basis="Independent arithmetic fixture"),
+        stress_range_mpa=950,
+        geometry_factor=1,
+        initial_depth_mm=0.1,
+        critical_depth_mm=2.5,
+        wall_thickness_mm=10,
+        critical_depth_basis="Supplied arithmetic endpoint",
+        steps=steps,
+        cycles_per_year=1000,
+        code_max_interval_years=2,
+        life_divisor=2,
+        policy_basis="Synthetic inspection policy",
+    )
+    payload = router({"inspection_planning": {
+        "crack_growth": inputs,
+        "outputs": {"directory": tmp_path.as_posix()},
+    }})["inspection_planning"]
+    saved = json.loads(Path(payload["summary_json"]).read_text(encoding="utf-8"))
+    # Integrate a**(-3/2) directly, independently of the numerical kernel.
+    expected_cycles = 160 / (1e-11 * 950**3 * math.pi**1.5)
+    expected_years = expected_cycles / 1000
+    for result in (payload, saved):
+        plan = result["result"]
+        growth_result = result["crack_assessment"]["growth"]
+        assert plan["remaining_life_years"] == pytest.approx(expected_years, rel=2e-6)
+        assert plan["next_inspection_interval_years"] == pytest.approx(
+            expected_years / 2, rel=2e-6,
+        )
+        assert plan["next_inspection_interval_years"] < plan["code_max_interval_years"]
+        assert result["screening_status"] == "pass"
+        assert growth_result["status"] == "LIMIT_REACHED"
+        assert growth_result["life_cycles"] == pytest.approx(expected_cycles, rel=2e-6)
+        assert 0 <= growth_result["estimated_error_cycles"] <= (
+            1e-6 + 1e-6 * growth_result["life_cycles"]
+        )
+        assert growth_result["history"][-1]["cycles"] == growth_result["life_cycles"]
+        assert growth_result["history"][-1]["depth_m"] == 0.0025
+
+
 def test_worked_example_matches_independent_published_integral():
     """MIT Table 1 / Problem 6: direct integral, not the implementation output."""
     root = Path(__file__).resolve().parents[2]
