@@ -18,10 +18,10 @@ velocity number of 1.5, above the supplied limit of 1.0. The armour comparison
 therefore fails; the grading or loading requires revision before a protection
 design can be assessed. Inputs are synthetic arithmetic examples, not design data.</p>
 <h2>Revision history</h2>
-<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<table><caption>Table 1. Initial issue of the screening analysis.</caption><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-21</td><td>Document sourced motion thresholds and explicit missing
 scour basis; replace unsupported depth and armour acceptance claims.</td></tr>
-<caption>Table 1. Initial issue of the screening analysis.</caption></table>
+</table>
 <h2>Method and reference qualification</h2>
 <p><a href="https://www.fhwa.dot.gov/publications/research/infrastructure/hydraulics/03052/05b.cfm">FHWA-RD-03-052,
 Field Observations and Evaluations of Streambed Scour at Bridges (May 2005),
@@ -51,7 +51,7 @@ is claimed. No value from a licensed publication is reproduced.</p>
 <p>The runnable input is <a href="../../examples/workflows/scour-assessment/input.yml">the scour
 workflow example</a>. All properties and limits below are explicitly supplied
 synthetic inputs. They are selected for independent arithmetic, not field use.</p>
-<table><tr><th>Input</th><th>Value</th><th>Units</th></tr>
+<table><caption>Table 2. Synthetic calculation inputs.</caption><tr><th>Input</th><th>Value</th><th>Units</th></tr>
 <tr><td>Sediment median diameter</td><td>1.0</td><td>mm</td></tr>
 <tr><td>Water depth</td><td>64.0</td><td>m</td></tr>
 <tr><td>Critical Shields parameter</td><td>0.04</td><td>dimensionless</td></tr>
@@ -60,7 +60,7 @@ synthetic inputs. They are selected for independent arithmetic, not field use.</
 <tr><td>Rock and water density</td><td>2000.0; 1000.0</td><td>kg/m³</td></tr>
 <tr><td>Rock median diameter; gravity</td><td>0.4; 10.0</td><td>m; m/s²</td></tr>
 <tr><td>Armour current; comparison limit; layer count</td><td>3.0; 1.0; 3.0</td><td>m/s; dimensionless; dimensionless</td></tr>
-<caption>Table 2. Synthetic calculation inputs.</caption></table>
+</table>
 <p>Independent threshold calculation: <code>sqrt(0.04) = 0.2</code>,
 <code>64^(1/6) = 2</code> and <code>0.001^(1/3) = 0.1</code>.
 Multiplying these factors by the cited SI coefficient gives a critical current

@@ -38,7 +38,7 @@ validation is established. See [the screening analysis and worked example](../..
 
 ## 1. Purpose and scope
 
-The package computes axial pile resistance in clay and sand, drag-anchor holding, suction-caisson resistance, pipeline and monopile scour, rock-armour thickness, shallow-foundation bearing/sliding resistance and liquefaction-triggering screening. [src/digitalmodel/geotechnical/piles.py:L107-L302] [src/digitalmodel/geotechnical/anchors.py:L61-L163] [src/digitalmodel/geotechnical/scour.py:L53-L224] [src/digitalmodel/geotechnical/mudmat.py:L96-L226] [src/digitalmodel/geotechnical/liquefaction.py:L101-L156]
+The package computes axial pile resistance in clay and sand, drag-anchor holding, suction-caisson resistance, pipeline and monopile sediment-motion screening and supplied-limit armour comparison (depth NOT_EVALUATED), shallow-foundation bearing/sliding resistance and liquefaction-triggering screening. [src/digitalmodel/geotechnical/piles.py:L107-L302] [src/digitalmodel/geotechnical/anchors.py:L61-L163] [src/digitalmodel/geotechnical/scour.py] [src/digitalmodel/geotechnical/mudmat.py:L96-L226] [src/digitalmodel/geotechnical/liquefaction.py:L101-L156]
 
 The database loader preserves printed source records, qualifiers, units and explicit reasons for unavailable numeric conversions; it does not select soil properties for a design. [src/digitalmodel/geotechnical/database.py:L69-L121] [src/digitalmodel/geotechnical/database.py:L154-L171]
 

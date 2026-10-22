@@ -70,7 +70,8 @@ def test_invalid_critical_current_inputs(name, value):
     "velocity, expected",
     [
         (0.5, "BELOW_THRESHOLD"),
-        (1.2432, "AT_OR_ABOVE_THRESHOLD"),
+        pytest.param(1.2432 - 1e-9, "BELOW_THRESHOLD", id="just below the hand value"),
+        pytest.param(1.2432 + 1e-9, "AT_OR_ABOVE_THRESHOLD", id="just above the hand value"),
         (2.0, "AT_OR_ABOVE_THRESHOLD"),
     ],
 )
@@ -324,3 +325,11 @@ def test_workflow_example_and_json_readback(tmp_path):
     saved = json.loads(Path(routed["scour"]["summary_json"]).read_text())
     assert saved["results"] == results
     assert "DNV-RP-F107" not in json.dumps(results)
+
+
+@pytest.mark.parametrize("layer_count", [2.5, 0.5, True])
+def test_armour_requires_whole_layer_count(layer_count):
+    with pytest.raises(ValueError, match="layer_count"):
+        scour.rock_armour_thickness(
+            1.0, 2000.0, 1000.0, 0.4, layer_count=layer_count
+        )

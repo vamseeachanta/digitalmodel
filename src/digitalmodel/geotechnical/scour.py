@@ -171,6 +171,9 @@ def critical_current_velocity(
     d50 and h are in metres. This empirical SI coefficient shall not be
     used with other units. The caller supplies a qualified Shields value;
     the report's temperature/material-specific theta fits are not defaults.
+    The coefficient's sediment specific gravity, fluid and roughness basis
+    are not established for marine use. The source concerns riverine bridge
+    field data; the synthetic 64 m example is outside that data domain.
     The relation concerns steady noncohesive approach flow, not wave motion,
     cohesive erosion, local pile amplification, or an equilibrium depth.
     """
@@ -327,8 +330,9 @@ def rock_armour_thickness(
     Ns=U/sqrt(g*d50*(rho_rock/rho_water-1)) is a nondimensionalization,
     not an Izbash calibration. The caller qualifies the matching velocity
     basis and limit; no universal limit is implied. Nominal thickness is
-    layer_count*d50, not a minimum design thickness. Full protection design
-    remains NOT_EVALUATED even when this single comparison passes: filter,
+    layer_count*d50, not a minimum design thickness. A supplied layer_count
+    must be a positive integer value; integral floats are accepted.
+    Full protection design remains NOT_EVALUATED even when this single comparison passes: filter,
     grading, placement, waves and edge scour are outside this calculation.
     """
     _velocity("current_velocity_ms", current_velocity_ms)
@@ -348,6 +352,10 @@ def rock_armour_thickness(
     for name, value in inputs.items():
         if value is not None:
             _positive(name, value)
+    if layer_count is not None and (
+        isinstance(layer_count, bool) or not float(layer_count).is_integer()
+    ):
+        raise ValueError("layer_count must be an integer")
     stability = None
     status = "NOT_EVALUATED"
     if gravity_ms2 is not None:

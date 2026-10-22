@@ -571,7 +571,7 @@ SPECS: list[dict] = [
                   "Drag-anchor holding from empirical efficiency factors (DNV-RP-E302, API RP 2SK) live across soft clay / stiff clay / sand; suction-caisson capacity (DNV-RP-E303) in the same engine",
                   "Mudmat bearing capacity (DNV-RP-C212 / Brinch Hansen) with shape, depth and effective-area corrections, plus base sliding",
                   "Seed-Idriss / NCEER per-layer liquefaction factor of safety with magnitude scaling",
-                  "DNV-RP-F107 equilibrium scour for pipelines and monopiles and rock-armour thickness"]),
+                  "Scour screening: sediment-motion threshold (FHWA-RD-03-052 eq. 3) and supplied-limit armour comparison; depth NOT_EVALUATED"]),
     dict(id="sec-production-engineering", kind="section",
          title="Production engineering — nodal analysis & well deliverability",
          std="Vogel · Fetkovich · simplified homogeneous lift traverse (published methods not yet implemented) · Brent-method operating point",
