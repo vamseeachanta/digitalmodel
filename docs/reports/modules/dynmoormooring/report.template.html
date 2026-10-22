@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Static spread-mooring module assessment</title>
+{{STYLE}}
+<style>svg{width:100%;height:auto}svg text{font:13px sans-serif;fill:var(--ink)}circle:focus,circle:hover{stroke:var(--nogo);stroke-width:3}td{overflow-wrap:anywhere}code{word-break:break-all}textarea{width:100%;min-height:6em}details{margin:1em 0}button,select,input{font:inherit;margin:.3em;padding:.4em}pre{white-space:pre-wrap}table{display:block;overflow-x:auto}h1,h2,h3,th{font-weight:500}</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Mooring analysis</p><h1>Static spread-mooring module assessment</h1>
+<p>Draft for client review</p></header>
+<section id="summary"><h2>1. Executive Summary</h2>
+<p>The mooring module is a static line-response and passing-body force calculator. Analysis is performed to determine the available static calculation capability and the key results are summarized below.</p>
+<ul><li>The synthetic spread example establishes a reproducible prescribed-offset calculation.
+<ul><li>The initial line pretension is {{PRETENSION}} kip and the horizontal fairlead-to-anchor span is {{SPAN}} ft, from the static calculation in Section 5.</li>
+<li>The displaced example returns {{SURGE}} kip of surge restoring force. This is a prescribed-position result; an equilibrium offset is not established.</li></ul></li>
+<li>An operating envelope is not established.
+<ul><li>The plotted breaking-strength reference is not an allowable tension. A governing design criterion and environmental demand are required before a connected operating limit is determined.</li>
+<li>Dynamic response and failure transients are not evaluated because the time integration method is absent.</li></ul></li></ul>
+<p>Revision history: Initial issue — the static calculation basis, reproducible example and missing acceptance evidence are presented together.</p>
+<details id="change-panel"><summary>Engineering changes</summary><ul id="changes"></ul></details>
+</section>
+<section id="introduction"><h2>2. Introduction</h2>
+<p>A spread of chain lines connects fixed seabed anchors to moving hull fairleads. Static analysis is performed at prescribed surge, sway and yaw positions using load–distance tables and interpolated line forces.</p>
+<p>The example is synthetic public repository data, not a measured installation. The routed interface accepts a configuration dictionary, writes comma-separated result files and returns the enriched dictionary. The same underlying static functions are available for direct calculations. The public source records are identified in Section 9.2.</p>
+</section>
+<section id="basis"><h2>3. Design Data</h2>
+<p>The synthetic workflow fixture is adopted without changing its engineering inputs. All input values and their units are retained in the data appendix in Section 9.2.</p>
+<h3>3.1 System and environment</h3>
+<p>The line material, air weight, length, area, apparent modulus, breaking strength, bottom friction and anchor efficiencies are specified by the example. Fairlead coordinates, initial line directions, pretension percentages and prescribed offsets are also inputs. The vertical anchor-to-fairlead distance governs the line model; it is distinct from the environmental water-depth field.</p>
+<p>ASSUMED - to be confirmed: the synthetic flat-bottom chain arrangement represents the illustrative system only. Actual geometry, material certificates, soil properties and environmental loading are not supplied. Neither wind nor passing-body forces are applied to this static example.</p>
+<h3>3.2 Criteria and rationale</h3>
+<p>Numerical reproduction is assessed against the frozen legacy values and the tolerances defined by the existing tests. These tolerances account for printed rounding and arithmetic precision; they are not structural acceptance factors. The original numerical method is identified in the repository as legacy edition 6.10, March 2007.</p>
+<p>The minimum segment breaking strength bounds the horizontal-force sampling grid for this chain model. Total tension can exceed that reference at the end of the grid. The table extent is therefore not a design limit. Allowable tension, anchor resistance acceptance, offset allowance and fatigue criteria are NOT_EVALUATED: the governing design basis is required.</p>
+</section>
+<section id="method"><h2>4. Analysis Methodology</h2>
+<p>The load–distance curve is calculated first, anchor positions are then obtained from the prescribed pretension, and static forces are calculated at each supplied offset. No time integration or external licensed calculation program is used by this example.</p>
+<h3>4.1 Physical model and boundary conditions</h3>
+<figure>{{SCHEMATIC}}<figcaption>Figure 1. Plan of the synthetic spread. Anchors remain fixed; hull translation and rotation move the fairleads. Directions and coordinates are retained in the input appendix.</figcaption></figure>
+<figure><svg viewBox="0 0 800 220" role="img" aria-label="Chain profile, grounded length and suspended segment">
+<path d="M55 170 H750 M120 170 H320 Q460 170 650 55" fill="none" stroke="var(--brand)" stroke-width="3"/>
+<rect x="630" y="25" width="100" height="30" fill="none" stroke="currentColor"/>
+<circle cx="120" cy="170" r="6"/><circle cx="650" cy="55" r="5"/>
+<text x="65" y="200">Fixed anchor</text><text x="205" y="155">Grounded chain</text>
+<text x="410" y="115">Suspended chain</text><text x="635" y="18">Fairlead</text>
+<text x="40" y="30">Elevation: schematic, not to scale</text><text x="660" y="115">Vertical rise d</text>
+<text x="370" y="205">Horizontal span U</text></svg>
+<figcaption>Figure 2. Single-line boundary conditions. Seabed contact and friction act on the grounded chain. The fairlead carries horizontal and vertical force; the anchor remains fixed.</figcaption></figure>
+<h3>4.2 Equations and calculation sequence</h3>
+<p>The following equations describe the grounded, flat-bottom branch used for the low-load portion of this example. The implementation changes branch after the entire line lifts from the bottom. Equation sources are the legacy static implementation and its documentation, identified in Section 9.2; these are implementation sources, not a design standard.</p>
+<div class="eq">c = H / w; &nbsp; s = √[d(2c + d)]; &nbsp; z = L − s<br>
+U = c asinh(s/c) + z + ΔU; &nbsp; T = H + wd</div>
+<p>H is horizontal fairlead force, w is submerged line weight per length, d is vertical rise, s is suspended length, z is grounded length, L is total unstretched length, U is horizontal span, ΔU is the implemented elastic extension and T is total fairlead tension. Forces use pounds and lengths use feet in these equations.</p>
+<div class="eq">H<sub>a</sub> = max(H − μwz, 0)<br>
+ΔU = Hs/(EA) + (2H − μwz)z/(2EA), when H &gt; μwz</div>
+<p>H<sub>a</sub> is horizontal anchor pull, μ is bottom friction as a fraction, and EA is axial stiffness: area multiplied by apparent modulus in consistent units. When friction exhausts the grounded-chain force, the implementation integrates extension over the loaded part of the grounded length. The chain submerged-weight multiplier is {{WEIGHT_FACTOR}}, read from the legacy material definition; it is not a measured buoyancy correction.</p>
+<div class="eq">H<sub>j</sub> = B[j/(N − 1)]²; &nbsp; P = pB/100<br>
+F<sub>i</sub> = H<sub>i</sub>(a<sub>i</sub> − r<sub>i</sub>)/|a<sub>i</sub> − r<sub>i</sub>|;<br>
+M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
+<p>B is minimum segment breaking strength, j is the zero-based table index, N is the table length, P is prescribed pretension and p is its percentage of B. The table contains {{TABLE_ROWS}} rows, as defined by the implementation. Quadratic interpolation, with a linear low-load branch, supplies force at intermediate spans. The position vectors a and r denote the fixed anchor and displaced fairlead; the subscript identifies a line. The summed forces are rotated into hull axes. M is yaw moment about the displaced hull origin; positive surge is forward and positive sway is starboard.</p>
+<p>The routed example is evaluated in still water at its initial and displaced positions. Current loading and wave-driven response are not added because the required dynamic calculation chain is not implemented.</p>
+</section>
+<section id="results-section"><h2>5. Detailed Results</h2>
+<p>The static outputs below are obtained by calling the public workflow on the recorded example. Every displayed input and output is regenerated from the input record or returned calculation; the full precision output is embedded in this document.</p>
+<h3>5.1 Static line response and numerical evidence</h3>
+<p>The legacy comparison is retained in Appendix C. Differences are expressed relative to each frozen tension value; the reference is historical printed output, not measured performance.</p>
+<figure>{{CHART}}<figcaption>Figure 3. Total fairlead tension versus horizontal span for the synthetic chain. Hover over a point for component, demand, reference strength and units. The red dashed line is the input breaking strength; no allowable-tension line is established.</figcaption></figure>
+{{LINE_TABLE}}<p>Table 1. Initial line settings returned by the static workflow. Source: returned static calculation, Section 9.2.</p>
+<p>The existing tests compare the single-chain table and pretension geometry with frozen printed legacy results. Separate comparisons cover a segmented line with buoyancy and parallel and perpendicular passing-body force histories. Arithmetic-transliteration comparisons test agreement with the same method; they do not provide independent physical validation. Symmetry, force direction, interpolation, broken-line zeroing and separation guards are also exercised.</p>
+<h3>5.2 Prescribed displacement</h3>
+{{OFFSET_TABLE}}<p>Table 2. Restoring forces at the supplied offsets, with surge, sway and yaw varied together in the displaced case. Source: returned static calculation, Section 9.2.</p>
+<p>The displaced example returns {{SURGE}} kip of surge restoring force. This is a prescribed-position result; an equilibrium offset is not established. Initial force cancellation is subject to floating-point residuals, which are retained in the data appendix rather than reported as exact zeros.</p>
+</section>
+<section id="findings"><h2>6. Key Findings</h2>
+<p>The implemented workflow supplies static geometry, line tensions and restoring forces for the synthetic spread. The initial line pretension is {{PRETENSION}} kip and the horizontal fairlead-to-anchor span is {{SPAN}} ft, from the static calculation in Section 5.</p>
+<p>Legacy arithmetic agreement supports numerical reproduction within the existing test tolerances. Measured mooring performance, environmental equilibrium, anchor adequacy and a connected operating envelope are not established by that evidence.</p>
+</section>
+<section id="limits"><h2>7. Limitations</h2>
+<p>The calculation is limited to the implemented static and external-force methods. Engineering acceptance is not inferred from successful execution or from agreement with historical arithmetic.</p>
+<h3>7.1 Limits of use</h3>
+<p>Off-table force lookups clamp at the final row. A flat force response beyond that point is a numerical boundary, not additional physical capacity. Pretension below the supported interpolation range raises an error. The nonlinear-spring formulations retain a documented inconsistency between the single-segment and segmented branches.</p>
+<p>The reported anchor holding powers are weight multiplied by supplied efficiencies; no site-specific geotechnical resistance assessment is performed. The reported most-loaded-line index is selected using horizontal tension, not necessarily total tension, and broken-line indexing retains legacy ordering. The wrapper replaces its line-input list with output summaries; an independent input copy is required for subsequent evaluations.</p>
+<h3>7.2 Not covered</h3>
+<p>Elevated attachments, segmented lines, intermediate buoyancy, clump weights, nonlinear springs, fenders, static wind and passing-body histories are available sub-areas but are not calculated in the worked example. The passing-body methods retain legacy empirical and arithmetic conventions; their calibration range is not qualified here.</p>
+<p>Wave response, gusts, drift-off, recoil, failure transients and fatigue are not evaluated. A passing-body force history is an excitation history, not a predicted hull trajectory. Riser-specific travel, wall tension and pressure checks are outside this mooring assessment.</p>
+</section>
+<section id="recommendations"><h2>8. Recommendations</h2>
+<p>The static workflow is suitable for reproducing the documented numerical example within its stated scope. Progression to design use is conditional on the following evidence, derived from the documented implementation gaps and boundary behavior.</p>
+<ul><li>Retain the example as a regression case and compare any changed implementation against the existing frozen values before using its results.</li>
+<li>Reject off-table spans as unqualified calculations and require an explicit interpolation-range check before reporting operating limits.</li>
+<li>Obtain component certificates, surveyed geometry, environmental loads, soil resistance and the governing design criteria before assigning allowable tension or offset.</li>
+<li>Use an independently qualified dynamic method for transient or environmental response until the missing integration chain has benchmark evidence. No dynamic operating limit is supplied by this static example.</li></ul>
+</section>
+<section id="references"><h2>9. References</h2>
+<p>The calculation basis is the public repository implementation, documentation and synthetic regression evidence. No licensed standard coefficient is reproduced or used as an acceptance limit.</p>
+<h3>9.1 Source scope</h3>
+<p>The repository documentation identifies the historical algorithm as legacy edition 6.10, March 2007. Frozen comparison values are retained in the physics tests; the original binary is not executed for this report. The public example is the static workflow fixture, reproduced in the adjacent input record. A published experimental validation dataset is not established by these records.</p>
+<h3>9.2 Source locators and data appendix</h3>
+<p>The following paths identify the input record, callable interface, equation implementation, test evidence and stylesheet exemplar. Digests identify normalized text content and exclude checkout line-ending differences.</p>
+{{SOURCES}}<p>Table 3. Sources and content identities.</p>
+<p>The public call is <code>digitalmodel.dynmoor_mooring.workflow.router(config)</code>. Input values originate in <code>_base_config</code>; historical comparisons originate in <code>CASE_A_CATENARY</code> and <code>CASE_A_PRETENSION</code>. The grounded-chain equations correspond to <code>_catinb</code> and <code>_stretc</code>; interpolation and force resolution correspond to <code>solve_pretension</code>, <code>interp_table</code> and <code>restoring_force</code>.</p>
+<p>Rebuild with the source package on the Python import path:</p>
+<pre>python docs/reports/modules/dynmoormooring/generate.py --work-dir disposable-results</pre>
+<p>The output directory is required and receives calculation files. The report and change panel are regenerated beside the generator. NumPy and PyYAML are required by package imports. Output tables contain line curves, anchor geometry and prescribed-offset forces; optional passing-body settings additionally produce force histories.</p>
+<details><summary>Appendix A — input and output ledger</summary>{{APPENDIX}}
+<p>Table A. All numeric values retained from the synthetic input, returned workflow and line-table file. Indexes and percentages are dimensionless; suffixes identify engineering units. Default slope, auxiliary loads and optional components follow the implementation defaults. No current, wind or wave acceptance calculation is implied.</p></details>
+<details><summary>Appendix B — data register and quality evidence</summary>
+<table><tr><th>Data</th><th>Status</th><th>Intended use</th></tr>
+<tr><td>Synthetic geometry and chain inputs</td><td>ASSUMED - to be confirmed</td><td>Numerical illustration only; not an installation design.</td></tr>
+<tr><td>Frozen legacy comparisons</td><td>Recorded in the existing tests</td><td>Arithmetic reproduction, not measured physical performance.</td></tr>
+<tr><td>Actual environment, certificates and soil resistance</td><td>Not supplied</td><td>Required before engineering acceptance.</td></tr>
+<tr><td>Governing allowable tension and offset</td><td>NOT_EVALUATED</td><td>Required before an operating envelope is issued.</td></tr>
+<tr><td>Dynamics and fatigue</td><td>NOT_EVALUATED</td><td>Missing calculation method and qualified inputs.</td></tr></table>
+<p>Table B. Data readiness and intended-use restrictions.</p>
+<p>The physics test suite checks frozen legacy values, arithmetic transliterations and invariants. The report test compares the embedded returned values with a separate workflow call and checks reproducible rendering. Successful static checks do not resolve the skipped dynamic-response placeholders. Report rebuild execution status is supplied separately with the delivery checks; it is not inferred from the presence of a test.</p>
+</details>
+<details><summary>Appendix C — static tension comparison</summary>
+{{BENCHMARK_TABLE}}
+<p>Table C. Calculated total fairlead tension compared with the frozen single-chain legacy reference in the physics tests. Difference is calculated as the calculated value minus the reference, divided by the reference and expressed as a percentage. The applicable absolute-plus-relative tolerance is defined by <code>_tol_exe</code> in the cited test source. Other table columns and pretension geometry are checked by the existing suite.</p>
+</details>
+</section>
+<section id="acronyms"><h2>10. Acronyms and Units</h2>
+<p>Units are the legacy English engineering units used by the implementation. Symbols are defined with the equations in Section 4.</p>
+<p>A foot is abbreviated ft, an inch is abbreviated in, a pound-force is abbreviated lb, and a kilopound-force is abbreviated kip. The modulus unit ksi denotes kilopounds-force per square inch. Yaw moments are expressed in kip-ft. NOT_EVALUATED denotes a result that has not been calculated against an established criterion; it does not denote zero.</p>
+</section>
+<aside aria-label="Review comments"><h2>Review comments</h2>
+<p>Comments are kept in memory until saved. Choose the report directory when saving the comments file beside this document. If direct file saving is unavailable, download the file and place it beside the report. Load that file to resume review.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Comment <textarea id="comment-text"></textarea></label>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load comments <input id="load-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status"></p><ul id="comment-list"></ul></aside>
+</main>
+<script id="results" type="application/json">{{RESULTS}}</script>
+<script id="change-data" type="application/json">{{CHANGES}}</script>
+<script>
+const byId = id => document.getElementById(id);
+let comments = [];
+document.querySelectorAll('main > section').forEach(section => {
+  const option = document.createElement('option'); option.value = section.id;
+  option.textContent = section.querySelector('h2').textContent;
+  byId('comment-section').append(option);
+});
+JSON.parse(byId('change-data').textContent).changes.forEach(change => {
+  const item = document.createElement('li'); item.textContent = change; byId('changes').append(item);
+});
+function renderComments() {
+  byId('comment-list').replaceChildren();
+  comments.forEach(comment => {
+    const item = document.createElement('li');
+    item.textContent = comment.section + ': ' + comment.text; byId('comment-list').append(item);
+  });
+}
+byId('add-comment').onclick = () => {
+  const text = byId('comment-text').value.trim(); if (!text) return;
+  comments.push({section: byId('comment-section').value, text});
+  byId('comment-text').value = ''; renderComments();
+  byId('comment-status').textContent = 'Unsaved comments.';
+};
+byId('save-comments').onclick = async () => {
+  const text = JSON.stringify({revision: 'Initial', comments}, null, 2);
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+        types: [{description: 'Review comments', accept: {'application/json': ['.json']}}]});
+      const stream = await handle.createWritable(); await stream.write(text); await stream.close();
+      byId('comment-status').textContent = 'Comments saved to the selected file.';
+    } else {
+      const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      byId('comment-status').textContent = 'Download requested. Place the comments file beside the report.';
+    }
+  } catch (error) { byId('comment-status').textContent = 'Comments were not saved: ' + error.message; }
+};
+byId('load-comments').onchange = async event => {
+  try {
+    const file = event.target.files[0]; if (!file) return;
+    const data = JSON.parse(await file.text());
+    if (data.revision !== 'Initial' || !Array.isArray(data.comments) || !data.comments.every(
+      item => typeof item.section === 'string' && typeof item.text === 'string')) throw Error('Invalid comments file');
+    comments = data.comments; renderComments(); byId('comment-status').textContent = 'Comments loaded.';
+  } catch (error) { byId('comment-status').textContent = 'Comments were not loaded: ' + error.message; }
+};
+</script></body></html>
