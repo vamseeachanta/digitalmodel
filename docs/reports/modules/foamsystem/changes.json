@@ -1,0 +1,8 @@
+{
+  "revision": "0",
+  "date": "2026-10-22",
+  "changes": [
+    "The public synthetic foam sizing example is evaluated to identify supply, concentrate and equipment screening demand.",
+    "The monitor minimum, governing-edition gap and omitted equipment losses are stated as limits on design acceptance."
+  ]
+}

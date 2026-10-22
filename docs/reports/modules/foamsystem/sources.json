@@ -1,0 +1,40 @@
+{
+  "sources": [
+    {
+      "title": "International Code for Fire Safety Systems, Resolution MSC.98(73), adopted 2000",
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.98(73).pdf",
+      "accessed_utc": "2026-10-22T04:53:36Z",
+      "http_status": 200,
+      "content_sha256": "27c1e6e6db551638bb9c84d33eefbffbddc8d8f35e0863367a5e8153dfe4edfd",
+      "locators": "Chapter 14, paragraphs 2.1.3, 2.2.1.1–2.2.1.2, 2.2.2.1–2.2.2.2, 2.3"
+    },
+    {
+      "title": "EPANET 2.2 User Manual, 2020",
+      "url": "https://usepa.github.io/EPANET2.2/3_network_model.html",
+      "accessed_utc": "2026-10-22T04:54:36Z",
+      "http_status": 200,
+      "content_sha256": "6edfe217bdd94ca0e7f5c64e1d58fbf14edb5d6e047b72ddc6e4ca93739ae86a",
+      "locators": "Section 3.1, Pipes; Table 3.1"
+    },
+    {
+      "title": "NIST Special Publication 811, 2008 edition",
+      "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf",
+      "accessed_utc": "2026-10-22T04:55:04Z",
+      "http_status": 200,
+      "content_sha256": "788dd8f0bcb0ec06e40c300690266742532a7e760a93be57764b77ed0ef3482f",
+      "locators": "Sections 5.1–5.2, 7.10.2 and 8.6.6; Appendix B.8"
+    },
+    {
+      "title": "University Physics, Volume 1, 2016 edition",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/14-6-bernoullis-equation",
+      "accessed_utc": "2026-10-22T04:56:27Z",
+      "http_status": 200,
+      "content_sha256": "12f771194517df8c0e286b803d269e63a60bc383a39e27bb17437dec58bc16ef",
+      "locators": "Section 14.6, Bernoulli’s Equation"
+    }
+  ],
+  "limitations": [
+    "The original 2000 fire-safety resolution was opened; the library-labelled 2015 consolidated edition was not opened.",
+    "The EPANET formula is a method reference, not an exact benchmark for the rounded implementation."
+  ]
+}

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Foam system sizing analysis</title>
+<style>
+/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+
+</style>
+</head><body class="hs-doc"><div class="wrap">
+
+<header><p class="kicker">Foam system module analysis</p>
+<h1>Foam system sizing analysis</h1><p class="sub">Draft for maintainer review</p></header>
+<section id="summary"><h2>1 Executive Summary</h2>
+<p>A low-expansion foam system is a water and concentrate supply feeding discharge devices over a protected area.
+Analysis is performed to determine solution demand, concentrate inventory, proportioner duty and pipe-network head demand;
+key results are summarized below. The public synthetic example is evaluated as a screening calculation <a href="#ref-5">[5]</a>.</p>
+<ul><li>The calculation is used to identify the governing supply basis.
+<ul><li>The largest tank sectional area governs at <span data-value="metrics.design_flow">3000</span> L/min, with
+<span data-value="metrics.concentrate">1800</span> L of concentrate at the example duration and concentration <a href="#ref-1">[1]</a> <a href="#ref-5">[5]</a>.</li></ul></li>
+<li>The example is used to identify equipment data required for design review.
+<ul><li>The returned head margin is <span data-value="metrics.head_margin">25.6</span> m against the assumed
+<span data-value="inputs.hydraulics.pump.rated_head_m">130</span> m pump rating; installed-system acceptance is NOT_EVALUATED.
+Pressure losses through the proportioner and discharge-device performance are absent <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-22</td><td>The public synthetic sizing example and evidence limits are documented to support input review.</td></tr></tbody></table>
+</section>
+<nav aria-label="Contents"><p><a href="#introduction">Introduction</a> · <a href="#basis">Design data</a> ·
+<a href="#method">Methodology</a> · <a href="#results">Results</a> · <a href="#validation">Validation</a> ·
+<a href="#limits">Limits</a> · <a href="#recommendations">Recommendations</a> · <a href="#references">References</a> ·
+<a href="#appendix">Appendix and comments</a></p></nav>
+<section id="introduction"><h2>2 Introduction</h2>
+<p>The documented sizing workflow is assessed from its public example and existing tests. The calculation is used for preliminary
+low-expansion foam sizing; a fire-extinguishment prediction is not made <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+<p>The main workflow comprises protected-area demand, concentrate quantity, rated proportioner checks and a single-scenario tree network.
+Criteria are selected by library key or supplied inline with a standard, edition and clause. Missing citation fields and library-key
+collisions are rejected. A citation string records the selected basis; its presence does not establish applicability <a href="#ref-6">[6]</a>.</p>
+<p>Inputs comprise protected areas and criteria, the single-fire or simultaneous-area policy, optional concurrent hoses,
+concentration and reserve, optional proportioner ratings, and optional hydraulic geometry and terminal duties.
+The returned configuration contains per-area demand, concentrate quantities, envelope flags and hydraulic margins.
+Three comma-separated tables are written for demand with citations, pipe flow and friction loss, and terminal path heads;
+the latter two are written only when hydraulics is supplied. The public example also demonstrates transfer of these tables
+into a report pack <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+</section>
+<section id="basis"><h2>3 Design Data and Criteria</h2>
+<p>The documented public example is used without altering its engineering inputs. Its areas, geometry, concentration and equipment
+ratings are synthetic inputs, marked ASSUMED - to be confirmed; the source tables are in the appendix <a href="#ref-5">[5]</a>.</p>
+<h3>3.1 Physical arrangement and boundary conditions</h3>
+<p>Water is mixed with concentrate upstream of the pipe header. Flow is prescribed at both monitors and terminal pressure is imposed;
+no nozzle discharge curve or pump operating-point intersection is solved. The diagram shows connectivity and elevation, not a fabrication drawing.</p>
+<figure id="schematic"><svg viewBox="0 0 860 310" role="img" aria-labelledby="system-title" style="width:100%">
+<title id="system-title">Water supply, concentrate injection, pump and branched monitor header; synthetic boundary conditions</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="2">
+<path d="M35 193V250H112V193M35 200Q74 184 112 200M112 225H150"/>
+<circle cx="174" cy="225" r="24"/><path d="M162 237L190 225L162 213Z"/>
+<path d="M198 225H455V115H598M455 160H720V115" marker-end="url(#arrow)"/>
+<path d="M242 160V195H284V160ZM263 195V225"/>
+<path d="M584 115V103H608L629 89M706 115V103H730L751 89"/>
+<path d="M568 100Q620 60 660 98M690 100Q743 60 784 98" stroke-dasharray="4 4"/>
+</g><g font-size="13" fill="currentColor">
+<text x="22" y="277">Water supply</text><text x="145" y="277">Pump</text>
+<text x="212" y="147">Concentrate</text><text x="289" y="192">Proportioner</text>
+<text x="315" y="251">Header → junction</text><text x="535" y="44">Forward monitor</text><text x="697" y="44">Aft monitor</text>
+<text x="535" y="62">Prescribed flow and pressure</text><text x="508" y="292">Elevated terminals; pump is elevation datum</text>
+</g></svg><figcaption>Figure 3.1. Synthetic tree arrangement. Geometry and boundary values are given in Tables A.2–A.3.
+The mixing-device loss is omitted. Monitor throw and coverage geometry are NOT_EVALUATED.</figcaption></figure>
+<h3>3.2 Acceptance basis</h3>
+<p>The greatest of the cargo deck, largest tank section and largest monitor area demands is selected. The opened Fire Safety Systems
+Code resolution, adopted in 2000, sets these supply bases and an additional monitor minimum in Chapter 14, paragraph 2.2.1.1;
+the inert-gas-fitted duration is addressed in paragraph 2.2.1.2 <a href="#ref-1">[1]</a>. The repository library labels its basis as the 2015 consolidated
+edition and uses different clause numbering. That consolidated edition was not opened; equivalence to later amendments is NOT_EVALUATED <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+<p>The example assumes inert-gas-fitted service. The monitor minimum of 1250 L/min is stated in the opened resolution,
+Chapter 14, paragraphs 2.2.1.1.3 and 2.2.2.2 <a href="#ref-1">[1]</a>. This minimum is not enforced by the area-rate multiplication.
+Each example monitor is assigned <span data-value="inputs.hydraulics.terminals.0.flow_lpm">1500</span> L/min; monitor coverage and the required fire-main
+simultaneity are outside this calculation. A nonnegative pump margin and a proportioner point inside the assumed envelope are screening
+criteria selected from the example, with actual equipment suitability NOT_EVALUATED <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+</section>
+<section id="method"><h2>4 Analysis Methodology</h2>
+<p>Area demand and concentrate conservation are calculated before equipment duty and pipe-network head are assessed. The solution
+is treated as water for friction screening, using the synthetic density and pipe coefficient in Table A.5 <a href="#ref-5">[5]</a>.</p>
+<h3>4.1 Demand and concentrate</h3>
+<div class="eq">Qᵢ = Aᵢ rᵢ; Q = max(Qᵢ) + Qₕ; V꜀ = c [max(Qᵢ tᵢ) + Vₕ] (1 + R); Q꜀ = Q c.</div>
+<p>Aᵢ is protected area in m²; rᵢ is solution application rate in L/min/m²; Qᵢ and Q are area and design flows in L/min;
+Qₕ is concurrent hose flow in L/min; tᵢ is discharge time in minutes; Vₕ is hose solution volume in litres; c is concentrate volume fraction;
+R is reserve fraction; V꜀ is total concentrate in litres; Q꜀ is injection in L/min. Rate times area and flow times duration implement
+Chapter 14, paragraphs 2.2.1.1–2.2.1.2 of the opened 2000 resolution <a href="#ref-1">[1]</a>; volume fraction and percent conversion follow
+NIST Special Publication 811, 2008 edition, Sections 8.6.6 and 7.10.2 <a href="#ref-3">[3]</a>. Reserve and hose allowances are explicit inputs.</p>
+<p>The maximum-flow and maximum-volume scenarios are selected separately: different discharge durations can make different areas
+govern flow and inventory. For simultaneous protected areas the sum policy replaces each maximum with a sum. Hose streams are
+always added. In this example no hoses or reserve are specified <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+<h3>4.2 Equipment and pipe network</h3>
+<p>Solution flow is checked between the proportioner's input minimum and maximum; concentrate injection is checked against its input
+maximum; concentration is checked against its input rating. Utilization is design flow divided by maximum rated solution flow,
+expressed as a percentage. These are envelope comparisons with assumed inputs, not vendor performance calculations <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a>.</p>
+<div class="eq">hꜰ = 10.67 L q^1.852 / (C^1.852 d^4.87); H = Σhꜰ + (zₜ − zₚ) + pₜ/(ρg).</div>
+<p>hꜰ is friction loss in m; L is physical plus equivalent pipe length in m; q is pipe flow in m³/s; C is the dimensionless
+Hazen–Williams pipe coefficient; d is internal diameter in m; H is required pump head in m; zₜ and zₚ are terminal and pump elevations
+in m; pₜ is required terminal pressure in Pa; ρ is solution density in kg/m³; g is standard gravitational acceleration in m/s².
+The required head is the largest terminal-path head. Flow in each pipe is the sum of downstream terminal flows.</p>
+<p>The friction equation is the implementation's rounded SI form of Hazen–Williams. The public EPANET 2.2 manual, 2020 edition,
+Section 3.1, Table 3.1 gives the customary-unit coefficient 4.727, flow exponent 1.852 and diameter exponent 4.871 <a href="#ref-2">[2]</a>.
+SI conversion gives approximately 10.67; the implementation rounds the diameter exponent to 4.87. Exact equality to the EPANET
+form is not asserted. Unit conversion is based on NIST Special Publication 811, 2008 edition, Appendix B.8 <a href="#ref-3">[3]</a>.
+Hazen–Williams is empirical for water in turbulent flow; its use for foam solution is an assumption requiring fluid data <a href="#ref-2">[2]</a>.</p>
+<p>Pressure head and static lift follow the energy balance in University Physics, Volume 1, 2016 edition, Section 14.6 <a href="#ref-4">[4]</a>.
+The implementation uses standard gravity 9.80665 m/s² and 100000 Pa per bar; the unit bases are NIST Special Publication 811,
+2008 edition, Appendix B.8 and Section 5.2, Table 8 <a href="#ref-3">[3]</a>. Mixing-device loss, velocity-head changes and nozzle curves are omitted.</p>
+</section>
+<section id="results"><h2>5 Detailed Results</h2>
+<p>The public workflow is called on the documented example to obtain the values below. The largest tank sectional area governs
+solution supply, and the forward terminal governs pump head <a href="#ref-5">[5]</a>.</p>
+<p>The displayed inputs give <span data-value="result.demand.per_area.1.area_m2">500</span> m² ×
+<span data-value="result.demand.per_area.1.application_rate_lpm_per_m2">6</span> L/min/m² = <span data-value="metrics.design_flow">3000</span> L/min.
+At <span data-value="result.demand.per_area.1.discharge_time_min">20</span> min and
+<span data-value="inputs.concentrate.concentration_percent">3</span> % concentration, the returned inventory is <span data-value="metrics.concentrate">1800</span> L.
+The returned injection is <span data-value="metrics.injection">90</span> L/min. Input precision is preserved for this arithmetic.</p>
+<table id="results-table"><caption>Table 5.1. Returned screening quantities; equipment ratings are assumed.</caption><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Basis</th><th>Source</th></tr></thead><tbody><tr><td>Solution supply</td><td><span data-value="metrics.design_flow">3000</span></td><td>L/min</td><td>Greatest area basis</td><td>Table A.1</td></tr><tr><td>Concentrate inventory</td><td><span data-value="metrics.concentrate">1800</span></td><td>L</td><td>Selected duration and concentration</td><td>Table A.1; Table A.5</td></tr><tr><td>Concentrate injection</td><td><span data-value="metrics.injection">90</span></td><td>L/min</td><td>Selected concentration</td><td>Table A.5</td></tr><tr><td>Proportioner utilization</td><td><span data-value="metrics.utilization">75</span></td><td>%</td><td>Assumed maximum solution flow</td><td>Table A.5</td></tr><tr><td>Required pump head</td><td><span data-value="metrics.head">104.4</span></td><td>m</td><td>Forward terminal governs</td><td>Tables A.2–A.3</td></tr><tr><td>Pump head margin</td><td><span data-value="metrics.head_margin">25.6</span></td><td>m</td><td>Assumed pump rating</td><td>Table A.5</td></tr><tr><td>Pump flow margin</td><td><span data-value="metrics.flow_margin">500</span></td><td>L/min</td><td>Assumed pump rating</td><td>Table A.5</td></tr></tbody></table>
+<p>The proportioner envelope check passes for the assumed ratings. Pump flow and head checks also pass for the assumed ratings.
+These results do not establish installed performance: no pump curve, mixing-device loss or discharge-device test is supplied.</p>
+<figure id="head-chart"><svg id="chart" viewBox="0 0 820 340" role="img" aria-label="Required pump head against prescribed total flow with assumed pump-head limit" style="width:100%"></svg>
+<label for="case-slider">Select sensitivity case</label> <input id="case-slider" type="range" min="0" max="20" value="10" aria-label="Sensitivity case">
+<p id="chart-tooltip" aria-live="polite"></p>
+<figcaption>Figure 5.1. Required head versus prescribed total terminal flow. The dashed line is the assumed pump-head limit.
+Hover over a point or select a case for component, demand, limit and units. Terminal pressures remain fixed, and both terminal flows
+are scaled together; no curve intersection or operating envelope is inferred.</figcaption></figure>
+<p>The sensitivity range is a selected arithmetic range of half to one and a half times the example terminal flows, rather than an
+operating allowance. Values beyond the assumed pump flow rating are displayed for sensitivity only. No monitor pressure-flow relation
+is supplied, so the sensitivity points are not discharge-device operating points.</p>
+</section>
+<section id="validation"><h2>6 Validation Evidence</h2>
+<p>The repository holds analytical arithmetic tests, hydraulic screening tests and a report-pack example. This evidence exercises
+software behavior; physical validation against a fire test or measured hydraulic network is not established <a href="#ref-6">[6]</a>.</p>
+<p>The sizing tests cover demand, concentration and reserve arithmetic, proportioner flags, Hazen–Williams arithmetic, laminar
+Darcy–Weisbach agreement with Hagen–Poiseuille, a turbulent cross-method comparison, tree validation and routed outputs.
+The criteria tests cover citation fields, explicit source-review flags, selection and collisions. The report-pack tests compare
+checked-in sizing tables with fresh calculation output and exercise rendering. The inventory in Table A.4 counts test functions,
+without implying execution or engineering acceptance.</p>
+<p>The accompanying report tests assert hand-worked supply, inventory and injection values, compare every tagged worked-example
+value with the workflow return, recalculate chart points and rebuild the committed page at displayed precision. These latter checks
+are consistency checks. The hand arithmetic does not validate the regulatory inputs. Execution results and checks not performed are
+listed in the appendix; no field-validation record is held with this report.</p>
+</section>
+<section id="limits"><h2>7 Limits of Use and Not Covered</h2>
+<p>Use is limited to preliminary low-expansion sizing with cited, applicable criteria and a connected tree network. Installed-system
+acceptance is NOT_EVALUATED because equipment, coverage and governing-edition evidence are absent.</p>
+<p>Area-rate multiplication does not enforce the fixed monitor minimum. Optional pump and proportioner checks use input ratings,
+and hydraulic terminal flow is not reconciled automatically with the demand calculation. Concentrate hose allowances rely on the caller
+passing the same hoses and durations used in demand. Nonfinite input rejection is not established across all input fields <a href="#ref-6">[6]</a>.</p>
+<p>Not covered: loop balancing; medium- or high-expansion foam; fuel compatibility and environmental approval; foam quality and
+extinguishment; monitor throw and coverage; fire-main simultaneity; suction losses and cavitation; vendor mixing-device losses;
+transients; and detailed equipment selection. The alternative Darcy–Weisbach branch, storage-tank criteria and helideck criteria
+are described in the module documentation but are not worked examples here <a href="#ref-6">[6]</a>.</p>
+<p>The alternative friction branch uses an abrupt laminar-to-turbulent switch, whereas the public EPANET manual describes a transition
+interpolation. This report supplies no accuracy claim for that transition region <a href="#ref-2">[2]</a> <a href="#ref-6">[6]</a>.</p>
+</section>
+<section id="recommendations"><h2>8 Recommendations</h2>
+<p>Input qualification and omitted physical losses are resolved before design acceptance. The recommendations below address the
+specific evidence gaps exposed by this calculation.</p>
+<ul><li>Obtain the applicable governing edition, fuel basis, coverage drawing and inert-gas status; review each supply basis and duration
+against the opened resolution and applicable amendments before issuing a design <a href="#ref-1">[1]</a>.</li>
+<li>Enforce the monitor minimum as a separate input check before accepting any area-based result; review monitor coverage and fire-main
+simultaneity separately. The opened Chapter 14 monitor and installation requirements provide the basis <a href="#ref-1">[1]</a>.</li>
+<li>Replace assumed equipment ratings with supplier pressure-flow curves and include mixing-device, suction and fitting losses.
+Reassess head margin whenever the selected flow, geometry or fluid properties change; the energy balance and empirical water-friction
+limitations provide the trigger <a href="#ref-2">[2]</a> <a href="#ref-4">[4]</a>.</li>
+<li>Reconcile terminal supply with the governing area demand in every scenario. If a required minimum or equipment envelope is exceeded,
+revise device allocation or equipment rating and repeat the screening before acceptance <a href="#ref-1">[1]</a> <a href="#ref-5">[5]</a>.</li>
+<li>Extend analytical input-rejection and transition-region tests before expanding the supported hydraulic use range. Compare a measured
+network or qualified public benchmark before making a physical-performance accuracy claim <a href="#ref-2">[2]</a> <a href="#ref-6">[6]</a>.</li></ul>
+</section>
+<section id="references"><h2>9 References</h2>
+<p>The public references provide the physical and regulatory basis. Repository records identify the implementation and synthetic inputs;
+a library label alone is not a review of its cited edition.</p>
+<h3>9.1 Public engineering sources</h3>
+<ol class="refs"><li id="ref-1"><a href="https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.98(73).pdf">International Code for Fire Safety Systems, Resolution MSC.98(73), adopted 2000</a>, Chapter 14,
+paragraphs 2.1.3, 2.2.1.1–2.2.1.2, 2.2.2.1–2.2.2.2 and 2.3. Original resolution; no claim of current consolidated applicability.</li>
+<li id="ref-2"><a href="https://usepa.github.io/EPANET2.2/3_network_model.html">EPANET 2.2 User Manual, 2020</a>, Section 3.1, Pipes, Table 3.1 and friction-regime discussion. It is a water-network method source, not a foam-system benchmark.</li>
+<li id="ref-3"><a href="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf">NIST Special Publication 811, 2008 edition</a>, Sections 5.1–5.2, 7.10.2 and 8.6.6, and Appendix B.8: units, percent, fractions and standard-gravity basis.</li>
+<li id="ref-4"><a href="https://openstax.org/books/university-physics-volume-1/pages/14-6-bernoullis-equation">University Physics, Volume 1, 2016 edition</a>, Section 14.6, Bernoulli’s Equation. It supplies the steady-flow energy-balance basis.</li></ol>
+<p>These public sources were opened on 2026-10-22; their access metadata and content digests are supplied in the source record.
+Full publications are not distributed with this report.</p>
+<h3>9.2 Repository records and rebuild locators</h3>
+<p id="ref-5">[5] Documented public synthetic example: <code>examples/workflows/foam-system-report-pack/foam_system_sizing.yml</code>;
+usage and limitations: <code>docs/domains/fire_safety/foam-system-sizing.md</code>.
+The example is an arithmetic fixture, not a measured installation.</p>
+<p id="ref-6">[6] Public entry point: <code>digitalmodel.foam_system.router</code>;
+pure sizing functions: <code>src/digitalmodel/foam_system/sizing.py</code>;
+workflow: <code>src/digitalmodel/foam_system/workflow.py</code>; cited criteria:
+<code>src/digitalmodel/foam_system/data/foam_criteria_library.yml</code>.
+Test records: <code>tests/fire_safety/test_foam_system_sizing.py</code>, <code>tests/fire_safety/test_foam_criteria_library.py</code> and <code>tests/report_pack/test_foam_report_pack.py</code>.
+Checked-in example tables: <code>examples/workflows/foam-system-report-pack/data/</code>.</p>
+<p>Report source: <code>docs/reports/modules/foamsystem/build_report.py</code>;
+consistency and hand-anchor tests: <code>tests/reporting/test_foamsystem_module_report.py</code>;
+source access: <code>docs/reports/modules/foamsystem/sources.json</code>;
+test execution record: <code>docs/reports/modules/foamsystem/checks.json</code>.
+Rebuild from repository root with <code>PYTHONPATH=src uv run --no-project --with pyyaml python docs/reports/modules/foamsystem/build_report.py --scratch &lt;temporary-directory&gt;</code>.
+The temporary directory is supplied outside the repository. No licensed solver is required.</p>
+</section>
+<section id="appendix"><h2>10 Appendix</h2>
+<p>The detailed input register and calculation inventory are provided for review. Missing physical evidence remains an input requirement.</p>
+<h3>10.1 Data register</h3>
+<table id="areas"><caption>Table A.1. Public synthetic inputs and returned area demands.</caption><thead><tr><th>Basis</th><th>Area (m²)</th><th>Rate (L/min/m²)</th><th>Duration (min)</th><th>Demand (L/min)</th><th>Source</th></tr></thead><tbody><tr><td>cargo deck area basis</td><td><span data-value="result.demand.per_area.0.area_m2">3000</span></td><td><span data-value="result.demand.per_area.0.application_rate_lpm_per_m2">0.6</span></td><td><span data-value="result.demand.per_area.0.discharge_time_min">20</span></td><td><span data-value="result.demand.per_area.0.solution_flow_lpm">1800</span></td><td><a href="#ref-1">[1]</a> <a href="#ref-5">[5]</a></td></tr><tr><td>largest tank sectional area basis</td><td><span data-value="result.demand.per_area.1.area_m2">500</span></td><td><span data-value="result.demand.per_area.1.application_rate_lpm_per_m2">6</span></td><td><span data-value="result.demand.per_area.1.discharge_time_min">20</span></td><td><span data-value="result.demand.per_area.1.solution_flow_lpm">3000</span></td><td><a href="#ref-1">[1]</a> <a href="#ref-5">[5]</a></td></tr><tr><td>largest monitor protected area basis</td><td><span data-value="result.demand.per_area.2.area_m2">450</span></td><td><span data-value="result.demand.per_area.2.application_rate_lpm_per_m2">3</span></td><td><span data-value="result.demand.per_area.2.discharge_time_min">20</span></td><td><span data-value="result.demand.per_area.2.solution_flow_lpm">1350</span></td><td><a href="#ref-1">[1]</a> <a href="#ref-5">[5]</a></td></tr></tbody></table><table id="runs"><caption>Table A.2. Assumed pipe geometry; equivalent fitting lengths default to zero in this example.</caption><thead><tr><th>Pipe</th><th>Length (m)</th><th>Internal diameter (mm)</th><th>Source</th></tr></thead><tbody><tr><td>Pump → Header junction</td><td><span data-value="inputs.hydraulics.runs.0.length_m">120</span></td><td><span data-value="inputs.hydraulics.runs.0.diameter_mm">200</span></td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Header junction → Forward monitor</td><td><span data-value="inputs.hydraulics.runs.1.length_m">60</span></td><td><span data-value="inputs.hydraulics.runs.1.diameter_mm">150</span></td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Header junction → Aft monitor</td><td><span data-value="inputs.hydraulics.runs.2.length_m">40</span></td><td><span data-value="inputs.hydraulics.runs.2.diameter_mm">150</span></td><td><a href="#ref-5">[5]</a></td></tr></tbody></table><table id="terminals"><caption>Table A.3. Assumed terminal boundary conditions.</caption><thead><tr><th>Terminal</th><th>Flow (L/min)</th><th>Pressure (bar)</th><th>Elevation (m)</th><th>Source</th></tr></thead><tbody><tr><td>Forward monitor</td><td><span data-value="inputs.hydraulics.terminals.0.flow_lpm">1500</span></td><td><span data-value="inputs.hydraulics.terminals.0.required_pressure_bar">8</span></td><td><span data-value="inputs.hydraulics.terminals.0.elevation_m">20</span></td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Aft monitor</td><td><span data-value="inputs.hydraulics.terminals.1.flow_lpm">1500</span></td><td><span data-value="inputs.hydraulics.terminals.1.required_pressure_bar">8</span></td><td><span data-value="inputs.hydraulics.terminals.1.elevation_m">20</span></td><td><a href="#ref-5">[5]</a></td></tr></tbody></table><table id="equipment"><caption>Table A.5. Equipment and fluid inputs. All are ASSUMED - to be confirmed; no vendor rating or material record is supplied.</caption><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Concentration</td><td><span data-value="inputs.concentrate.concentration_percent">3</span></td><td>%</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Reserve</td><td><span data-value="inputs.concentrate.reserve_percent">0</span></td><td>%</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Proportioner minimum solution flow</td><td><span data-value="inputs.proportioner.min_solution_flow_lpm">500</span></td><td>L/min</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Proportioner maximum solution flow</td><td><span data-value="inputs.proportioner.max_solution_flow_lpm">4000</span></td><td>L/min</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Proportioner maximum injection</td><td><span data-value="inputs.proportioner.max_concentrate_flow_lpm">150</span></td><td>L/min</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Proportioner rated concentration</td><td><span data-value="inputs.proportioner.rated_concentration_percent">3</span></td><td>%</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Pump rated flow</td><td><span data-value="inputs.hydraulics.pump.rated_flow_lpm">3500</span></td><td>L/min</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Pump rated head</td><td><span data-value="inputs.hydraulics.pump.rated_head_m">130</span></td><td>m</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Pump elevation</td><td><span data-value="inputs.hydraulics.pump.elevation_m">0</span></td><td>m</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Water-like solution density</td><td><span data-value="inputs.hydraulics.density_kg_m3">1000</span></td><td>kg/m³</td><td><a href="#ref-5">[5]</a></td></tr><tr><td>Hazen–Williams coefficient C</td><td><span data-value="inputs.hydraulics.hazen_williams_c">120</span></td><td>dimensionless</td><td><a href="#ref-5">[5]</a></td></tr></tbody></table>
+<p>Areas, concentration, reserve, geometry, fluid coefficient, density, monitor duty and equipment ratings in Tables A.1–A.5 are
+ASSUMED - to be confirmed from the public synthetic example. The rates and duration in Table A.1 are library inputs with the opened
+original-resolution basis in reference [1]; applicability of the library's consolidated edition remains NOT_EVALUATED.
+No geometry scale or monitor coverage boundary is inferred from Figure 3.1.</p>
+<p>Required inputs not supplied: governing-edition review, fluid viscosity and foam compatibility, supplier curves, mixing-device loss,
+fitting schedule, suction conditions, fire-main demand, coverage drawing and measured acceptance results. Each is NOT_EVALUATED.</p>
+<h3>10.2 Symbols and units</h3>
+<p>Demand and inventory symbols are defined beside the demand equations. Hydraulic symbols are defined beside the head equations.
+L/min denotes litres per minute; m, mm and m² denote metres, millimetres and square metres; bar denotes pressure;
+kg/m³ denotes density. SI means the International System of Units. The displayed percentages use the percent definition in reference [3].</p>
+<h3>10.3 Quality pre-flight and evidence inventory</h3>
+<table id="inventory"><caption>Table A.4. Existing test-function inventory, not a test execution record.</caption><thead><tr><th>Evidence area</th><th>Test functions</th><th>Source</th></tr></thead><tbody><tr><td>Sizing and workflow</td><td><span data-value="inventory.0.functions">15</span></td><td><a href="#ref-6">[6]</a></td></tr><tr><td>Criteria library</td><td><span data-value="inventory.1.functions">18</span></td><td><a href="#ref-6">[6]</a></td></tr><tr><td>Report-pack example</td><td><span data-value="inventory.2.functions">4</span></td><td><a href="#ref-6">[6]</a></td></tr></tbody></table>
+<p>The embedded numerical record is generated by calls to the module, with floating-point results rounded for cross-platform comparison.
+The automated checks cover tagged values, hand arithmetic, chart consistency, local links, heading structure, explicit text encoding,
+line endings and a fresh page rebuild. The inherited stylesheet is inlined and the body carries the house document class.
+The page has no external script or stylesheet dependency.</p>
+<table id="checks-table"><caption>Table A.6. Recorded test results; dependency failures are not engineering results.</caption><thead><tr><th>Check</th><th>Passed</th><th>Unavailable</th><th>Qualification</th></tr></thead><tbody><tr><td>Module report</td><td>12</td><td>0</td><td>Hand arithmetic, displayed-value consistency, sensitivity consistency, rebuild, encoding, references and simulated document interactions pass.</td></tr><tr><td>Existing sizing, library and report-pack example</td><td>36</td><td>1</td><td>The engine-routing test fails during dependency import with ModuleNotFoundError: No module named &#x27;pandas&#x27;. The unchanged base imports the same application dependency.</td></tr></tbody></table>
+<p>The report tests are executed with the Python UTF-8 override unset. Chart and comment handlers are exercised with a simulated document,
+including save, load, export and rejected permission. Browser rendering and actual file-picker interaction are not exercised.
+The application-routing check ends at an unavailable data-library dependency; its test and import are unchanged in the base revision.
+The sizing and library checks and the report-pack example complete without this application import.</p>
+<h3>10.4 Engineering changes and section comments</h3>
+<p>The change panel records engineering changes since the previous revision. Comments are stored as a separate file beside the HTML
+when that location is selected in the save dialog. Load a saved file to continue a review. Browser file access requires permission;
+where the file dialog is unavailable, the export is downloaded and is placed beside the HTML manually.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><ul id="changes-list"></ul></details>
+<label for="comment-section">Report section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="3" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept="application/json">
+<p id="comment-status" aria-live="polite"></p><ol id="comment-list"></ol>
+</section>
+<script id="calculation-data" type="application/json">{"inputs": {"criteria_library": ["fss_deck_foam_cargo_deck_area", "fss_deck_foam_largest_tank_section", "fss_deck_foam_largest_monitor_area"], "protected_areas": [{"name": "cargo deck area basis", "area_m2": 3000.0, "criterion": "fss_deck_foam_cargo_deck_area"}, {"name": "largest tank sectional area basis", "area_m2": 500.0, "criterion": "fss_deck_foam_largest_tank_section"}, {"name": "largest monitor protected area basis", "area_m2": 450.0, "criterion": "fss_deck_foam_largest_monitor_area"}], "demand_policy": "max", "concentrate": {"concentration_percent": 3.0, "reserve_percent": 0.0}, "proportioner": {"min_solution_flow_lpm": 500.0, "max_solution_flow_lpm": 4000.0, "max_concentrate_flow_lpm": 150.0, "rated_concentration_percent": 3.0}, "hydraulics": {"method": "hazen_williams", "hazen_williams_c": 120.0, "density_kg_m3": 1000.0, "pump": {"node": "PUMP", "rated_flow_lpm": 3500.0, "rated_head_m": 130.0, "elevation_m": 0.0}, "runs": [{"from": "PUMP", "to": "J1", "length_m": 120.0, "diameter_mm": 200.0}, {"from": "J1", "to": "MON_FWD", "length_m": 60.0, "diameter_mm": 150.0}, {"from": "J1", "to": "MON_AFT", "length_m": 40.0, "diameter_mm": 150.0}], "terminals": [{"node": "MON_FWD", "flow_lpm": 1500.0, "required_pressure_bar": 8.0, "elevation_m": 20.0}, {"node": "MON_AFT", "flow_lpm": 1500.0, "required_pressure_bar": 8.0, "elevation_m": 20.0}]}}, "result": {"demand": {"demand_policy": "max", "governing_area": "largest tank sectional area basis", "governing_area_flow_lpm": 3000.0, "hose_flow_lpm": 0, "design_solution_flow_lpm": 3000.0, "per_area": [{"name": "cargo deck area basis", "area_m2": 3000.0, "criterion": "fss_deck_foam_cargo_deck_area", "application_rate_lpm_per_m2": 0.6, "discharge_time_min": 20.0, "solution_flow_lpm": 1800.0, "solution_volume_l": 36000.0, "citation": "SOLAS FSS Code (Res. MSC.98(73) as amended (2015 consolidated edition)) Ch. 14 (fixed deck foam systems), para. 2.2.2.1 — 0.6 L/min per m2 of cargo tanks deck area. Duration basis: at least 20 min of foam generation for tankers fitted with an inert gas installation (30 min when not fitted), same chapter."}, {"name": "largest tank sectional area basis", "area_m2": 500.0, "criterion": "fss_deck_foam_largest_tank_section", "application_rate_lpm_per_m2": 6.0, "discharge_time_min": 20.0, "solution_flow_lpm": 3000.0, "solution_volume_l": 60000.0, "citation": "SOLAS FSS Code (Res. MSC.98(73) as amended (2015 consolidated edition)) Ch. 14 (fixed deck foam systems), para. 2.2.2.2 — 6 L/min per m2 of the horizontal sectional area of the single largest cargo tank. Duration basis: at least 20 min of foam generation for tankers fitted with an inert gas installation (30 min when not fitted), same chapter."}, {"name": "largest monitor protected area basis", "area_m2": 450.0, "criterion": "fss_deck_foam_largest_monitor_area", "application_rate_lpm_per_m2": 3.0, "discharge_time_min": 20.0, "solution_flow_lpm": 1350.0, "solution_volume_l": 27000.0, "citation": "SOLAS FSS Code (Res. MSC.98(73) as amended (2015 consolidated edition)) Ch. 14 (fixed deck foam systems), para. 2.2.2.3 — 3 L/min per m2 of the area protected by the largest monitor, with a minimum monitor capacity of 1250 L/min. Duration basis: at least 20 min of foam generation for tankers fitted with an inert gas installation (30 min when not fitted), same chapter."}]}, "concentrate_result": {"concentration_percent": 3.0, "reserve_percent": 0.0, "area_concentrate_l": 1800.0, "hose_concentrate_l": 0, "base_concentrate_l": 1800.0, "reserve_concentrate_l": 0.0, "total_concentrate_l": 1800.0, "injection_rate_lpm": 90.0}, "proportioner_result": {"design_solution_flow_lpm": 3000.0, "injection_rate_lpm": 90.0, "utilization_percent": 75.0, "solution_flow_ok": true, "concentrate_flow_ok": true, "concentration_match_ok": true, "ok": true, "messages": []}, "hydraulics_result": {"method": "hazen_williams", "total_flow_lpm": 3000.0, "governing_terminal": "MON_FWD", "required_pump_head_m": 104.3629, "pump_head_margin_m": 25.6371, "pump_head_margin_percent": 19.7208, "pump_flow_margin_lpm": 500.0, "pump_head_ok": true, "pump_flow_ok": true, "max_velocity_m_s": 1.5915}}, "metrics": {"design_flow": 3000.0, "concentrate": 1800.0, "injection": 90.0, "utilization": 75.0, "head": 104.3629, "head_margin": 25.6371, "flow_margin": 500.0}, "tables": {"runs": [{"from_node": "PUMP", "to_node": "J1", "flow_lpm": "3000.0", "velocity_m_s": "1.5915494309189533", "headloss_m": "1.7831109497610946"}, {"from_node": "J1", "to_node": "MON_FWD", "flow_lpm": "1500.0", "velocity_m_s": "1.4147106052612919", "headloss_m": "1.0025186637964902"}, {"from_node": "J1", "to_node": "MON_AFT", "flow_lpm": "1500.0", "velocity_m_s": "1.4147106052612919", "headloss_m": "0.6683457758643269"}], "terminals": [{"terminal": "MON_FWD", "flow_lpm": "1500.0", "path": "PUMP -> J1 -> MON_FWD", "friction_headloss_m": "2.785629613557585", "static_head_m": "20.0", "pressure_head_m": "81.57729703823426", "required_pump_head_m": "104.36292665179185"}, {"terminal": "MON_AFT", "flow_lpm": "1500.0", "path": "PUMP -> J1 -> MON_AFT", "friction_headloss_m": "2.4514567256254214", "static_head_m": "20.0", "pressure_head_m": "81.57729703823426", "required_pump_head_m": "104.02875376385968"}]}, "curve": [{"scale": 0.5, "flow": 1500.0, "head": 102.3489, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.55, "flow": 1650.0, "head": 102.4979, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.6, "flow": 1800.0, "head": 102.6589, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.65, "flow": 1950.0, "head": 102.8317, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.7, "flow": 2100.0, "head": 103.0162, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.75, "flow": 2250.0, "head": 103.2124, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.8, "flow": 2400.0, "head": 103.42, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.85, "flow": 2550.0, "head": 103.6389, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.9, "flow": 2700.0, "head": 103.8691, "component": "Forward monitor", "limit": 130.0}, {"scale": 0.95, "flow": 2850.0, "head": 104.1105, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.0, "flow": 3000.0, "head": 104.3629, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.05, "flow": 3150.0, "head": 104.6264, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.1, "flow": 3300.0, "head": 104.9007, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.15, "flow": 3450.0, "head": 105.1859, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.2, "flow": 3600.0, "head": 105.4818, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.25, "flow": 3750.0, "head": 105.7884, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.3, "flow": 3900.0, "head": 106.1057, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.35, "flow": 4050.0, "head": 106.4336, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.4, "flow": 4200.0, "head": 106.7719, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.45, "flow": 4350.0, "head": 107.1207, "component": "Forward monitor", "limit": 130.0}, {"scale": 1.5, "flow": 4500.0, "head": 107.4799, "component": "Forward monitor", "limit": 130.0}], "inventory": [{"path": "tests/fire_safety/test_foam_system_sizing.py", "functions": 15}, {"path": "tests/fire_safety/test_foam_criteria_library.py", "functions": 18}, {"path": "tests/report_pack/test_foam_report_pack.py", "functions": 4}]}</script>
+<script id="changes-data" type="application/json">{"revision": "0", "date": "2026-10-22", "changes": ["The public synthetic foam sizing example is evaluated to identify supply, concentrate and equipment screening demand.", "The monitor minimum, governing-edition gap and omitted equipment losses are stated as limits on design acceptance."]}</script>
+
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('calculation-data').textContent);
+  const changes = JSON.parse(document.getElementById('changes-data').textContent);
+  for (const change of changes.changes) {
+    const item = document.createElement('li'); item.textContent = change;
+    document.getElementById('changes-list').append(item);
+  }
+  const svg = document.getElementById('chart'), ns = 'http://www.w3.org/2000/svg';
+  function element(tag, attrs, text) {
+    const node = document.createElementNS(ns, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+    if (text !== undefined) node.textContent = text;
+    svg.append(node); return node;
+  }
+  const points = data.curve, maxHead = Math.ceil(Math.max(...points.map(p => p.head), points[0].limit) / 10) * 10;
+  const minFlow = points[0].flow, maxFlow = points[points.length-1].flow;
+  const x = value => 80 + (value-minFlow)/(maxFlow-minFlow)*680;
+  const y = value => 275-value/maxHead*220;
+  element('path', {d:'M80 55V275H760', fill:'none', stroke:'currentColor'});
+  for (let i=0; i<=4; i++) {
+    const head = maxHead*i/4, flow = minFlow+(maxFlow-minFlow)*i/4;
+    element('text', {x:70, y:y(head)+4, 'text-anchor':'end'}, head.toFixed(1));
+    element('text', {x:x(flow), y:298, 'text-anchor':'middle'}, flow.toFixed(0));
+  }
+  element('text', {x:80, y:27}, 'Required pump head (m)');
+  element('text', {x:390, y:330, 'text-anchor':'middle'}, 'Prescribed total terminal flow (L/min)');
+  element('line', {x1:80,x2:760,y1:y(points[0].limit),y2:y(points[0].limit),stroke:'var(--nogo)','stroke-dasharray':'8 4'});
+  element('text', {x:755,y:y(points[0].limit)-8,'text-anchor':'end'}, 'Assumed pump-head limit');
+  element('polyline', {points:points.map(p=>`${x(p.flow)},${y(p.head)}`).join(' '),fill:'none',stroke:'var(--brand)','stroke-width':2});
+  const marker = element('circle', {cx:0,cy:0,r:7,fill:'none',stroke:'currentColor','stroke-width':2});
+  function select(i) {
+    const p = points[i], rating = data.inputs.hydraulics.pump.rated_flow_lpm;
+    marker.setAttribute('cx',x(p.flow)); marker.setAttribute('cy',y(p.head));
+    document.getElementById('case-slider').value=i;
+    document.getElementById('chart-tooltip').textContent = `Case: terminal flow ${p.flow.toFixed(0)} L/min; component: ${p.component}; head demand: ${p.head.toFixed(1)} m; assumed head limit: ${p.limit.toFixed(1)} m. ` + (p.flow>rating ? `Flow exceeds the assumed ${rating.toFixed(0)} L/min pump rating; this is a sensitivity case.` : 'Flow remains within the assumed pump rating.');
+  }
+  points.forEach((p,i)=>{
+    const point=element('circle',{cx:x(p.flow),cy:y(p.head),r:5,fill:'var(--brand)',tabindex:0,role:'button','aria-label':`Select flow ${p.flow.toFixed(0)} litres per minute`});
+    const title=document.createElementNS(ns,'title');
+    title.textContent=`Case ${p.flow.toFixed(0)} L/min; ${p.component}; demand ${p.head.toFixed(1)} m; limit ${p.limit.toFixed(1)} m`;point.append(title);
+    point.addEventListener('mouseenter',()=>select(i));point.addEventListener('focus',()=>select(i));
+    point.addEventListener('click',()=>select(i));
+  });
+  document.getElementById('case-slider').addEventListener('input',event=>select(Number(event.target.value)));
+  select(10);
+  const sections = Array.from(document.querySelectorAll('section[id]')).map(s=>({id:s.id,title:s.querySelector('h2').textContent}));
+  const sectionSelect=document.getElementById('comment-section'), text=document.getElementById('comment-text');
+  sections.forEach(s=>{const option=document.createElement('option');option.value=s.id;option.textContent=s.title;sectionSelect.append(option);});
+  let comments=[];
+  function showComments() {
+    const list=document.getElementById('comment-list');list.replaceChildren();
+    comments.forEach(c=>{const item=document.createElement('li');item.textContent=`${c.section}: ${c.text}`;list.append(item);});
+  }
+  document.getElementById('add-comment').addEventListener('click',()=>{
+    if(!text.value.trim())return;
+    comments.push({section:sectionSelect.value,text:text.value.trim()});text.value='';showComments();
+    document.getElementById('comment-status').textContent='Comment added in memory. Save comments to keep them.';
+  });
+  document.getElementById('save-comments').addEventListener('click',async()=>{
+    const content=JSON.stringify({revision:changes.revision,comments},null,2)+'\n';
+    try {
+      if(window.showSaveFilePicker) {
+        const handle=await window.showSaveFilePicker({suggestedName:'report.comments.json',types:[{description:'Section comments',accept:{'application/json':['.json']}}]});
+        const stream=await handle.createWritable();await stream.write(content);await stream.close();
+        document.getElementById('comment-status').textContent='Comments saved to the selected file.';
+      } else {
+        const url=URL.createObjectURL(new Blob([content],{type:'application/json'}));
+        const a=document.createElement('a');a.href=url;a.download='report.comments.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        document.getElementById('comment-status').textContent='Comments exported. Place the downloaded file beside the report.';
+      }
+    } catch(error) {document.getElementById('comment-status').textContent='Comments were not saved. Select a writable location and try again.';}
+  });
+  document.getElementById('load-comments').addEventListener('change',async event=>{
+    try {
+      const loaded=JSON.parse(await event.target.files[0].text());
+      if(loaded.revision!==changes.revision||!Array.isArray(loaded.comments)||!loaded.comments.every(c=>sections.some(s=>s.id===c.section)&&typeof c.text==='string'))throw Error('Invalid comments');
+      comments=loaded.comments;showComments();document.getElementById('comment-status').textContent='Saved comments loaded.';
+    } catch(error) {document.getElementById('comment-status').textContent='The comment file has an invalid format or a different revision.';}
+  });
+})();
+</script>
+
+</div></body></html>

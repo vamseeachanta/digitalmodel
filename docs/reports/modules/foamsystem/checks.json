@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-22",
+  "command_convention": "Commands are shown in portable form; temporary directories are supplied outside the repository.",
+  "test_results": [
+    {
+      "scope": "Module report",
+      "passed": 12,
+      "unavailable": 0,
+      "note": "Hand arithmetic, displayed-value consistency, sensitivity consistency, rebuild, encoding, references and simulated document interactions pass.",
+      "command": "PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pytest-asyncio python -m pytest tests/reporting/test_foamsystem_module_report.py -q -rA -p no:cacheprovider --basetemp=<temporary-directory>",
+      "environment": "PYTHONUTF8 unset; bytecode disabled; caches outside the repository"
+    },
+    {
+      "scope": "Existing sizing, library and report-pack example",
+      "passed": 36,
+      "unavailable": 1,
+      "note": "The engine-routing test fails during dependency import with ModuleNotFoundError: No module named 'pandas'. The unchanged base imports the same application dependency.",
+      "command": "PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pytest-asyncio --with pydantic --with jinja2 --with plotly python -m pytest tests/fire_safety/test_foam_system_sizing.py tests/fire_safety/test_foam_criteria_library.py tests/report_pack/test_foam_report_pack.py -q -rA -p no:cacheprovider --basetemp=<temporary-directory>",
+      "base_evidence": ["src/digitalmodel/engine.py:10", "tests/fire_safety/test_foam_system_sizing.py:371", "pyproject.toml:54"]
+    }
+  ],
+  "not_exercised": [
+    "Actual browser rendering and file-picker permissions",
+    "Physical fire-extinguishment or measured network validation",
+    "The complete repository test suite"
+  ]
+}

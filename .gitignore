@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Publish the foam system module analysis and its rebuild sources only.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/foamsystem/
+docs/reports/modules/foamsystem/*
+!docs/reports/modules/foamsystem/build_report.py
+!docs/reports/modules/foamsystem/report.html
+!docs/reports/modules/foamsystem/changes.json
+!docs/reports/modules/foamsystem/sources.json
+!docs/reports/modules/foamsystem/checks.json
