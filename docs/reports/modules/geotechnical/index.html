@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geotechnical module analysis — axial clay-pile resistance</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}</style>
+<style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><div class="kicker">Engineering module analysis</div>
+<h1>Geotechnical module analysis</h1><p class="sub">Axial clay-pile resistance and an illustrative load check</p>
+<p>Draft for client review</p></header>
+<nav aria-label="Report sections"><a href="#summary">1 Executive Summary</a> · <a href="#introduction">2 Introduction</a> · <a href="#controls">3 Engineering summary</a> · <a href="#basis">4 Design basis and inputs</a> · <a href="#method">5 Theory and methodology</a> · <a href="#worked-example">6 Worked example</a> · <a href="#evidence">7 Validation evidence</a> · <a href="#limits">8 Limits and recommendations</a> · <a href="#appendix">9 Appendices</a> · <a href="#review">10 Review comments and changes</a></nav>
+
+<h2 id="summary">1 Executive Summary</h2>
+<p>The geotechnical module is a collection of soil-resistance and screening calculators. Analysis is performed to determine axial clay-pile resistance and the margin against an illustrative applied load; key results are summarized below.</p>
+<ul><li>The public example passes its illustrative axial load check.
+<ul><li>The allowable axial resistance is <span data-quantity="design.allowable_capacity_kn" data-value="8068.991969159975" data-source="workflow" data-precision="1">8,069.0</span> kN against <span data-quantity="design.demand_kn" data-value="5000.0" data-source="workflow" data-precision="1">5,000.0</span> kN applied load, using the example design divisor of <span data-quantity="design.factor_of_safety" data-value="2.0" data-source="workflow" data-precision="1">2.0</span>. The stated load is the acceptance boundary for this illustration. <a href="#source-example">Input basis</a>; <a href="#source-workflow">criterion</a>.</li>
+<li>The full circular tip area is used. Plugging and an independent pile load-test comparison are not evaluated. <a href="#source-calculator">Calculation basis</a>; <a href="#source-pack">qualification record</a>.</li></ul></li>
+<li>The calculation is available for reproducible screening.
+<ul><li>Design release is withheld until the soil profile, tip condition, method edition and design factors are qualified. The numerical load check alone does not establish design acceptance. <a href="#limits">Limits and recommendations</a>.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
+<tr><td>A</td><td>2026-10-22</td><td>Document the public pile calculation, its load boundary and qualification gaps to support engineering use.</td></tr></tbody></table>
+
+<h2 id="introduction">2 Introduction</h2>
+<p>The main axial clay-pile workflow is described from input selection through the returned capacities and load verdict. A documented public repository example is replayed by calling the module; it is not represented as a published field benchmark. <a href="#source-example">Example record</a>.</p>
+<p>Pile primitives and composite clay-pile functions are provided alongside anchor, foundation, scour, sediment-motion, liquefaction, parameter-database and optional slope interfaces. The interfaces are assessed as software entry points, rather than as a common design certification. <a href="#source-pack">Scope record</a>; <a href="#source-slope">slope interface</a>.</p>
+
+<h2 id="controls">3 Engineering summary</h2>
+<p>The applied load is compared with ultimate resistance divided by the supplied design factor. Sensitivity to embedded length is evaluated with diameter, soil strength, effective stress and design factor held at the public example values. <a href="#source-workflow">Criterion and implementation</a>.</p>
+<figure>
+<svg id="capacity-chart" viewBox="0 0 760 390" role="img" aria-labelledby="chart-title chart-description">
+<title id="chart-title">Allowable axial resistance against embedded length</title>
+<desc id="chart-description">Calculated length sensitivity with the example soil held constant. The applied load is drawn as a dashed limit. Each point is focusable and provides demand, resistance and the illustrative load verdict.</desc>
+<path d="M80 45V320H660" stroke="currentColor" fill="none"/>
+<path id="demand-limit" d="M80 219.20H660" stroke="var(--nogo)" stroke-dasharray="8 5"/>
+<text x="85" y="207.20">Applied load limit</text>
+<polyline points="80.00,229.43 108.50,222.22 137.00,215.01 165.50,207.80 194.00,200.58 222.50,193.37 251.00,186.16 279.50,178.95 308.00,171.74 336.50,164.53 365.00,157.32 393.50,150.11 422.00,142.90 450.50,135.69 479.00,128.48 507.50,121.27 536.00,114.06 564.50,106.85 593.00,99.64 621.50,92.43 650.00,85.22" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle class="case-point" data-index="0" tabindex="0" role="button" aria-label="Case: length 20.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 4492.5 kN. The illustrative load check fails." cx="80.00" cy="229.43" r="5" fill="var(--nogo)"><title>Case: length 20.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 4492.5 kN. The illustrative load check fails.</title></circle><circle class="case-point" data-index="1" tabindex="0" role="button" aria-label="Case: length 22.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 4850.2 kN. The illustrative load check fails." cx="108.50" cy="222.22" r="5" fill="var(--nogo)"><title>Case: length 22.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 4850.2 kN. The illustrative load check fails.</title></circle><circle class="case-point" data-index="2" tabindex="0" role="button" aria-label="Case: length 24.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5207.8 kN. The illustrative load check passes." cx="137.00" cy="215.01" r="5" fill="var(--go)"><title>Case: length 24.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5207.8 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="3" tabindex="0" role="button" aria-label="Case: length 26.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5565.5 kN. The illustrative load check passes." cx="165.50" cy="207.80" r="5" fill="var(--go)"><title>Case: length 26.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5565.5 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="4" tabindex="0" role="button" aria-label="Case: length 28.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5923.1 kN. The illustrative load check passes." cx="194.00" cy="200.58" r="5" fill="var(--go)"><title>Case: length 28.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 5923.1 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="5" tabindex="0" role="button" aria-label="Case: length 30.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6280.8 kN. The illustrative load check passes." cx="222.50" cy="193.37" r="5" fill="var(--go)"><title>Case: length 30.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6280.8 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="6" tabindex="0" role="button" aria-label="Case: length 32.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6638.4 kN. The illustrative load check passes." cx="251.00" cy="186.16" r="5" fill="var(--go)"><title>Case: length 32.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6638.4 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="7" tabindex="0" role="button" aria-label="Case: length 34.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6996.1 kN. The illustrative load check passes." cx="279.50" cy="178.95" r="5" fill="var(--go)"><title>Case: length 34.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 6996.1 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="8" tabindex="0" role="button" aria-label="Case: length 36.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 7353.7 kN. The illustrative load check passes." cx="308.00" cy="171.74" r="5" fill="var(--go)"><title>Case: length 36.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 7353.7 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="9" tabindex="0" role="button" aria-label="Case: length 38.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 7711.3 kN. The illustrative load check passes." cx="336.50" cy="164.53" r="5" fill="var(--go)"><title>Case: length 38.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 7711.3 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="10" tabindex="0" role="button" aria-label="Case: length 40.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8069.0 kN. The illustrative load check passes." cx="365.00" cy="157.32" r="5" fill="var(--go)"><title>Case: length 40.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8069.0 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="11" tabindex="0" role="button" aria-label="Case: length 42.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8426.6 kN. The illustrative load check passes." cx="393.50" cy="150.11" r="5" fill="var(--go)"><title>Case: length 42.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8426.6 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="12" tabindex="0" role="button" aria-label="Case: length 44.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8784.3 kN. The illustrative load check passes." cx="422.00" cy="142.90" r="5" fill="var(--go)"><title>Case: length 44.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 8784.3 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="13" tabindex="0" role="button" aria-label="Case: length 46.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9141.9 kN. The illustrative load check passes." cx="450.50" cy="135.69" r="5" fill="var(--go)"><title>Case: length 46.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9141.9 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="14" tabindex="0" role="button" aria-label="Case: length 48.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9499.6 kN. The illustrative load check passes." cx="479.00" cy="128.48" r="5" fill="var(--go)"><title>Case: length 48.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9499.6 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="15" tabindex="0" role="button" aria-label="Case: length 50.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9857.2 kN. The illustrative load check passes." cx="507.50" cy="121.27" r="5" fill="var(--go)"><title>Case: length 50.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 9857.2 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="16" tabindex="0" role="button" aria-label="Case: length 52.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10214.9 kN. The illustrative load check passes." cx="536.00" cy="114.06" r="5" fill="var(--go)"><title>Case: length 52.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10214.9 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="17" tabindex="0" role="button" aria-label="Case: length 54.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10572.5 kN. The illustrative load check passes." cx="564.50" cy="106.85" r="5" fill="var(--go)"><title>Case: length 54.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10572.5 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="18" tabindex="0" role="button" aria-label="Case: length 56.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10930.2 kN. The illustrative load check passes." cx="593.00" cy="99.64" r="5" fill="var(--go)"><title>Case: length 56.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 10930.2 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="19" tabindex="0" role="button" aria-label="Case: length 58.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 11287.8 kN. The illustrative load check passes." cx="621.50" cy="92.43" r="5" fill="var(--go)"><title>Case: length 58.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 11287.8 kN. The illustrative load check passes.</title></circle><circle class="case-point" data-index="20" tabindex="0" role="button" aria-label="Case: length 60.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 11645.4 kN. The illustrative load check passes." cx="650.00" cy="85.22" r="5" fill="var(--go)"><title>Case: length 60.0 m; Component: total allowable axial resistance; demand 5000.0 kN; limit 11645.4 kN. The illustrative load check passes.</title></circle>
+<text x="270" y="374">Embedded length (m)</text>
+<text x="24" y="290" transform="rotate(-90 24 290)">Allowable axial resistance (kN)</text>
+<text x="70" y="343">20.0</text><text x="635" y="343">60.0</text>
+<text x="28" y="323">0.0</text><text x="12" y="224.20">5,000.0</text>
+</svg>
+<label for="case-selector">Select a calculated length</label>
+<input id="case-selector" type="range" min="0" max="20" step="1" value="10">
+<p id="case-readout" aria-live="polite"></p>
+<figcaption>Length sensitivity is calculated by calling the same workflow at each point.
+Green means the illustrative load check passes; red means the illustrative load check fails; amber means design qualification is not evaluated.
+The applied-load line is the same load as the public example, not an environmental or settlement limit.
+The plotted soil and stress remain constant over the whole sensitivity interval. <a href="#source-example">Public example</a>; <a href="#source-workflow">load criterion</a>.</figcaption></figure>
+<p>The failing shorter-length cases are arithmetic sensitivity cases. For the illustrative check, the load is limited to the calculated allowable resistance; design use remains conditional on qualification of the physical pile and soil profile. Lengthening is not accepted as a design recommendation without depth-dependent soil evidence. <a href="#source-workflow">Load criterion</a>; <a href="#source-calculator">constant-property model</a>.</p>
+
+<h2 id="basis">4 Design basis and inputs</h2>
+<p>A uniform undrained clay idealisation and concentric compressive loading are adopted from the public example. The source calls the pile open-ended, while the calculator uses the full circular tip area; this discrepancy is retained explicitly as a limitation. <a href="#source-example">Geometry description</a>; <a href="#source-calculator">tip-area expression</a>.</p>
+<figure>
+<svg viewBox="0 0 760 450" role="img" aria-labelledby="pile-title pile-description">
+<title id="pile-title">Axially loaded pile in a uniform clay idealisation</title>
+<desc id="pile-description">A cylindrical pile transfers a downward axial load into upward shaft resistance and upward tip resistance. Diameter is shown in plan. Wall thickness and plugging are unspecified; a full circular tip area is used in the calculation. The vertical drawing is compressed.</desc>
+<defs><linearGradient id="steel"><stop stop-color="#bdc7d1"/><stop offset=".5" stop-color="#edf1f5"/><stop offset="1" stop-color="#8c9caa"/></linearGradient>
+<pattern id="clay" width="22" height="18" patternUnits="userSpaceOnUse"><path d="M2 6h9m3 8h7" stroke="#b8a88c"/></pattern>
+<marker id="arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto-start-reverse"><path d="M0 0L6 3L0 6Z" fill="currentColor"/></marker></defs>
+<path d="M25 125H735V410H25Z" fill="#eae1d1"/><path d="M25 125H735V410H25Z" fill="url(#clay)"/>
+<path d="M25 125H735" stroke="currentColor"/><text x="35" y="113">Soil surface</text>
+<path d="M320 65V370Q350 386 380 370V65" fill="url(#steel)" stroke="currentColor"/>
+<ellipse cx="350" cy="65" rx="30" ry="9" fill="#b4c0cb" stroke="currentColor"/>
+<path d="M350 12V48" marker-end="url(#arrow)" stroke="currentColor"/>
+<text x="405" y="30">Axial compression P</text>
+<path d="M295 280V220M405 280V220M350 425V390" marker-end="url(#arrow)" stroke="currentColor"/>
+<text x="65" y="255">Shaft resistance Qₛ</text><text x="410" y="419">Tip resistance Qᵦ</text>
+<path d="M455 128V370" marker-start="url(#arrow)" marker-end="url(#arrow)" stroke="currentColor"/>
+<text x="468" y="205">Embedded length L</text>
+<circle cx="620" cy="72" r="30" fill="url(#steel)" stroke="currentColor"/>
+<path d="M590 72H650" marker-start="url(#arrow)" marker-end="url(#arrow)" stroke="currentColor"/>
+<text x="560" y="20">Plan: diameter D</text>
+<text x="65" y="335">Uniform undrained clay</text><text x="65" y="357">sᵤ and σ′ᵥ supplied</text>
+</svg>
+<figcaption>Calculation idealisation. D = <span data-quantity="inputs.D" data-value="1.8" data-source="example" data-precision="1">1.8</span> m and L = <span data-quantity="inputs.L" data-value="40.0" data-source="example" data-precision="1">40.0</span> m.
+The vertical scale is compressed; the full circular tip area is an arithmetic assumption, not a plugging assessment. <a href="#source-example">Public example</a>; <a href="#source-calculator">calculation basis</a>.</figcaption></figure>
+<p>The design factor is treated as an example input, not a prescribed code factor. Load acceptance means applied load does not exceed the calculated allowable resistance; equality is accepted by the workflow. Geometry, strength, effective stress, bearing factor, design factor and demand are required engineering inputs for a qualified use. <a href="#source-workflow">Load comparison</a>.</p>
+<p>The public example inputs are marked ASSUMED - to be confirmed for any physical application. They are not measured site properties. No property is selected from the parameter database in this calculation; the data register is provided in the appendix. <a href="#data-register">Input qualification register</a>.</p>
+
+<h2 id="method">5 Theory and methodology</h2>
+<p>Shaft adhesion and tip bearing are summed in the public composite pile function. The following equations describe the implementation being replayed; normative attribution and the applicable edition of American Petroleum Institute Recommended Practice 2GEO (API RP 2GEO) remain NOT_EVALUATED. No coefficient is asserted as a qualified standard value. <a href="#source-calculator">Composite function</a>; <a href="#source-alpha">coefficient source</a>.</p>
+<div class="eq">ψ = sᵤ / σ′ᵥ; f = α sᵤ; qᵦ = N꜀ sᵤ<br>
+α = min(α<sub>cap</sub>, a ψ<sup>b</sup>)<br>
+ψ ≤ <span data-quantity="method.branch_ratio" data-value="1.0" data-source="calculator" data-precision="1">1.0</span>: a = <span data-quantity="method.lower_coefficient" data-value="0.5" data-source="calculator" data-precision="1">0.5</span>, b = <span data-quantity="method.lower_exponent" data-value="-0.5" data-source="calculator" data-precision="1">−0.5</span><br>
+ψ &gt; <span data-quantity="method.branch_ratio" data-value="1.0" data-source="calculator" data-precision="1">1.0</span>: a = <span data-quantity="method.upper_coefficient" data-value="0.5" data-source="calculator" data-precision="1">0.5</span>, b = <span data-quantity="method.upper_exponent" data-value="-0.25" data-source="calculator" data-precision="2">−0.25</span><br>
+α<sub>cap</sub> = <span data-quantity="method.alpha_cap" data-value="1.0" data-source="calculator" data-precision="1">1.0</span>. <a href="#source-alpha">Implemented alpha expression</a>.</div>
+<p>Here ψ is the dimensionless strength-to-effective-stress ratio; sᵤ is undrained shear strength and σ′ᵥ is effective vertical stress, both in kPa. The symbols a, b and α<sub>cap</sub> denote the implemented coefficient, exponent and adhesion cap, and α is dimensionless adhesion. The exact upper exponent is the negative quarter-power in the cited implementation. N꜀ is the supplied dimensionless tip bearing factor, f is unit shaft resistance and qᵦ is tip pressure in kPa. <a href="#source-alpha">Definitions and expressions</a>.</p>
+<div class="eq">Aₛ = πDL; Aᵦ = πD²/4; Qₛ = f Aₛ; Qᵦ = qᵦ Aᵦ<br>
+Qᵤ = Qₛ + Qᵦ; Q<sub>allow</sub> = Qᵤ/F; U = P/Q<sub>allow</sub>.
+<a href="#source-calculator">Geometry and resistance</a>; <a href="#source-workflow">design division</a>.</div>
+<p>D and L are pile outside diameter and embedded length in metres. Aₛ and Aᵦ are shaft and full circular tip areas in square metres; π is the circle constant. Qₛ, Qᵦ, Qᵤ and Q<sub>allow</sub> are shaft, tip, ultimate and allowable resistance in kN. F is the supplied design divisor, P is applied axial compression in kN, and U is dimensionless load utilization. Acceptance is P ≤ Q<sub>allow</sub>. <a href="#source-calculator">Resistance definitions</a>; <a href="#source-workflow">acceptance expression</a>.</p>
+<p>For layered clay, shaft resistance is summed over the supplied layer thicknesses and the final layer supplies tip strength. Returned adhesion and unit shaft resistance refer to the final layer. Layer thicknesses are not reconciled with a separate embedded-length field by the composite function. <a href="#source-calculator">Multilayer interface</a>.</p>
+
+<h2 id="worked-example">6 Worked example</h2>
+<p>The public example is evaluated by the documented composite function and by its configuration workflow. All input and result quantities below are inserted from those calls and the example record. <a href="#source-example">Input record</a>; <a href="#source-calculator">public function</a>; <a href="#source-workflow">workflow</a>.</p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Pile outside diameter</td><td><span data-quantity="inputs.D" data-value="1.8" data-source="example" data-precision="1">1.8</span></td><td>m</td><td><a href="#source-example">Public example input</a></td></tr><tr><td>Embedded length</td><td><span data-quantity="inputs.L" data-value="40.0" data-source="example" data-precision="1">40.0</span></td><td>m</td><td><a href="#source-example">Public example input</a></td></tr><tr><td>Undrained shear strength</td><td><span data-quantity="inputs.Su" data-value="80.0" data-source="example" data-precision="1">80.0</span></td><td>kPa</td><td><a href="#source-example">Public example input</a></td></tr><tr><td>Effective vertical stress</td><td><span data-quantity="inputs.sigma_v" data-value="200.0" data-source="example" data-precision="1">200.0</span></td><td>kPa</td><td><a href="#source-example">Public example input</a></td></tr><tr><td>Tip bearing factor</td><td><span data-quantity="inputs.Nc" data-value="9.0" data-source="example" data-precision="1">9.0</span></td><td>dimensionless</td><td><a href="#source-example">Public example input</a></td></tr></tbody></table>
+<table><thead><tr><th>Output</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Adhesion factor α</td><td><span data-quantity="result.alpha" data-value="0.7905694150420948" data-source="calculator" data-precision="1">0.8</span></td><td>dimensionless</td><td><a href="#source-calculator">Calculated result</a></td></tr><tr><td>Unit shaft resistance f</td><td><span data-quantity="result.unit_skin_friction_kpa" data-value="63.24555320336758" data-source="calculator" data-precision="1">63.2</span></td><td>kPa</td><td><a href="#source-calculator">Calculated result</a></td></tr><tr><td>Shaft resistance Qₛ</td><td><span data-quantity="result.skin_friction_kn" data-value="14305.807102746383" data-source="calculator" data-precision="1">14,305.8</span></td><td>kN</td><td><a href="#source-calculator">Calculated result</a></td></tr><tr><td>Tip resistance Qᵦ</td><td><span data-quantity="result.end_bearing_kn" data-value="1832.1768355735676" data-source="calculator" data-precision="1">1,832.2</span></td><td>kN</td><td><a href="#source-calculator">Calculated result</a></td></tr><tr><td>Ultimate resistance Qᵤ</td><td><span data-quantity="result.total_capacity_kn" data-value="16137.98393831995" data-source="calculator" data-precision="1">16,138.0</span></td><td>kN</td><td><a href="#source-calculator">Calculated result</a></td></tr></tbody></table>
+<p>At length <span data-quantity="design.length_m" data-value="40.0" data-source="workflow" data-precision="1">40.0</span> m, the allowable resistance is <span data-quantity="design.allowable_capacity_kn" data-value="8068.991969159975" data-source="workflow" data-precision="1">8,069.0</span> kN after division by <span data-quantity="design.factor_of_safety" data-value="2.0" data-source="workflow" data-precision="1">2.0</span>. The applied load is <span data-quantity="design.demand_kn" data-value="5000.0" data-source="workflow" data-precision="1">5,000.0</span> kN and utilization is <span data-quantity="design.utilization" data-value="0.6196560882834199" data-source="workflow" data-precision="1">0.6</span>. The illustrative load check passes. <a href="#source-workflow">Design calculation</a>.</p>
+<p>Inputs are supplied in the example configuration under the pile, soil and design blocks. The public function returns a result dataclass containing the quantities above and a method tag. The workflow accepts the configuration mapping, adds the design quantities and status, and writes a JavaScript Object Notation (JSON) summary to the configured output directory. The return mapping also contains the summary location; that location is added after the file is written. <a href="#source-calculator">Function contract</a>; <a href="#source-workflow">output contract</a>.</p>
+
+<h2 id="evidence">7 Validation evidence</h2>
+<p>Arithmetic regressions, component identities, input-domain checks and optional public slope benchmark reproductions are held in the repository. These evidence classes are distinguished because replaying a formula does not qualify its soil model or establish field performance. <a href="#source-tests">Pile tests</a>; <a href="#source-pack">evidence inventory</a>.</p>
+<p>For piles, component summation, single/multilayer equivalence, final-layer tip selection and response to changed dimensions are tested. Existing fixed-value assertions are retained as regressions; their external numerical provenance is not established here and their reference values are not reproduced. An independent pile load-test comparison is NOT_EVALUATED. <a href="#source-tests">Existing pile assertions</a>.</p>
+<p>Independent rectangular-area checks are held for foundation eccentricity. Sediment-motion tests hold independent arithmetic checks of threshold stress and friction velocity. Neither validates the pile calculation. Public slope workbooks and optional reproduction tests are documented separately; slope results are not recalculated for this report. <a href="#source-mudmat">Area checks</a>; <a href="#source-sediment">threshold checks</a>; <a href="#source-slope">public benchmark record</a>.</p>
+<p>The report rebuild test compares every result field with a fresh public-function call and every plotted case with a fresh workflow call. Printed engineering values are checked against their unrounded calculation fields. Byte equality is required for the rebuilt report and change record. The appendix inventory counts source test functions, rather than executed parameterized cases. <a href="#source-rebuild">Rebuild contract</a>.</p>
+
+<h2 id="limits">8 Limits and recommendations</h2>
+<p>Design acceptance is not assigned beyond the illustrative load inequality. The following gaps are material to physical pile resistance and are not resolved by a passing software regression. <a href="#source-calculator">Model boundary</a>; <a href="#source-pack">qualification record</a>.</p>
+<h3>8.1 Recommendations and limits of use</h3>
+<p>The full-area tip result is conditional on the model idealisation; wall thickness, annular bearing and plugging are not represented. Before design release, establish the applicable tip condition and compare an appropriate tip model with independent evidence. For a failing load check, limit applied compression to the calculated allowable value while the physical model is qualified. <a href="#source-calculator">Tip formulation</a>; <a href="#source-workflow">load criterion</a>.</p>
+<p>Strength and effective stress are constant within each supplied layer; the calculation does not derive a stress or strength profile. Before extending embedment, establish depth-dependent soil properties and reconcile the supplied layer thicknesses with geometry. Settlement, installation effects, cyclic degradation, tension, lateral response and group interaction require separate assessments. <a href="#source-calculator">Supported inputs and equations</a>.</p>
+<p>The composite entry point does not enforce a complete finite, positive input domain. Validate dimensions, stresses, strengths, layer order and the positive design divisor before use; the optional range checker in the lower-level pile interface is not a site-specific validity envelope. Before design release, record the selected standard edition, formula attribution and independent acceptance evidence. <a href="#source-alpha">Input validation</a>; <a href="#source-calculator">composite contract</a>.</p>
+<h3>8.2 Not covered</h3>
+<p>Sand piles, drag and suction anchors, mudmat bearing and sliding, legacy pipeline and monopile scour, armour sizing, liquefaction, sediment-motion thresholds, database property selection and optional slope/seepage calculations are outside the worked example. The legacy scour attribution is not qualified by the separately sourced sediment-motion helper. Future calculations require an explicit method basis, qualified inputs and independent reference cases for each sub-area. <a href="#source-pack">Module boundaries</a>; <a href="#source-sediment">threshold scope</a>; <a href="#source-slope">slope boundaries</a>.</p>
+
+<h2 id="appendix">9 Appendices</h2>
+<p>The input qualification register and reproducibility evidence are retained here. Implementation locators and source editions are collected in the source register so that the main calculation remains readable.</p>
+<h3 id="data-register">9.1 Data register and QA pre-flight</h3>
+<table><thead><tr><th>Data group</th><th>Qualification</th><th>Required confirmation</th><th>Source</th></tr></thead><tbody>
+<tr><td>Diameter and embedded length</td><td>ASSUMED - to be confirmed</td><td>Physical geometry and embedment</td><td><a href="#source-example">Public example</a></td></tr>
+<tr><td>Strength and effective stress</td><td>ASSUMED - to be confirmed</td><td>Site profile and appropriate drainage basis</td><td><a href="#source-example">Public example</a></td></tr>
+<tr><td>Tip factor and design divisor</td><td>ASSUMED - to be confirmed</td><td>Method edition, load basis and acceptance factor</td><td><a href="#source-example">Public example</a></td></tr>
+<tr><td>Applied load</td><td>ASSUMED - to be confirmed</td><td>Governing load combination</td><td><a href="#source-example">Public example</a></td></tr>
+<tr><td>Plugging, wall thickness and field comparison</td><td>NOT_EVALUATED</td><td>Required input and independent evidence; no value is inferred</td><td><a href="#source-calculator">Model boundary</a></td></tr>
+</tbody></table>
+<table><thead><tr><th>Evidence group</th><th>Test functions</th><th>Source</th></tr></thead><tbody><tr><td>Pile primitives</td><td>9</td><td><a href="#source-tests">Test inventory</a></td></tr><tr><td>Composite clay pile</td><td>19</td><td><a href="#source-tests">Test inventory</a></td></tr><tr><td>Input range checks</td><td>24</td><td><a href="#source-tests">Test inventory</a></td></tr><tr><td>Foundation eccentricity</td><td>8</td><td><a href="#source-tests">Test inventory</a></td></tr><tr><td>Sediment-motion arithmetic</td><td>5</td><td><a href="#source-tests">Test inventory</a></td></tr><tr><td>Optional slope benchmarks</td><td>16</td><td><a href="#source-tests">Test inventory</a></td></tr></tbody></table>
+<p>Quality assurance (QA pre-flight) is defined by the attached rebuild test: standalone resources, unique anchors, linked source records, numeric bindings, result equality, chart point equality, demand line, house stylesheet reuse and change/comment controls are checked. Browser rendering and folder-write behaviour require reader confirmation in the review controls; automated checks do not claim browser compatibility. <a href="#source-rebuild">Test contract</a>.</p>
+<h3>9.2 Sources and locators</h3>
+<ol><li id="source-example"><a href="../../../../examples/workflows/pile-axial-capacity/input.yml">examples/workflows/pile-axial-capacity/input.yml</a>. Public axial clay-pile example; pile, soil and design blocks. Repository edition accompanying this report. Inputs are illustrative; external provenance is not established.</li><li id="source-calculator"><a href="../../../../src/digitalmodel/geotechnical/pile_capacity.py">src/digitalmodel/geotechnical/pile_capacity.py</a>. Public function documentation and single/multilayer assembly: alpha_method_capacity and alpha_method_capacity_multilayer. Repository edition accompanying this report.</li><li id="source-alpha"><a href="../../../../src/digitalmodel/geotechnical/piles.py">src/digitalmodel/geotechnical/piles.py</a>. skin_friction_clay, end_bearing_clay and axial_capacity. Repository implementation is the source of the displayed coefficients; it is not an edition-qualified standard.</li><li id="source-workflow"><a href="../../../../src/digitalmodel/geotechnical/workflow.py">src/digitalmodel/geotechnical/workflow.py</a>. GeotechnicalWorkflow.router and _run_pile_axial_capacity: configuration routing, design divisor, load comparison and JSON output. Repository edition accompanying this report.</li><li id="source-tests"><a href="../../../../tests/geotechnical/test_pile_capacity_composite.py">tests/geotechnical/test_pile_capacity_composite.py</a>. Component identity, single/multilayer equivalence, tip-layer selection and fixed arithmetic assertions. Test-function counts below exclude parameter expansion and are not execution counts.</li><li id="source-mudmat"><a href="../../../../tests/geotechnical/test_mudmat_eccentricity.py">tests/geotechnical/test_mudmat_eccentricity.py</a>. Independent rectangular-area arithmetic and axis-selection regressions; no soil-bearing qualification is implied.</li><li id="source-slope"><a href="../../../../docs/domains/geotechnical/slope-stability.md">docs/domains/geotechnical/slope-stability.md</a>. Optional slope and steady-seepage interface, upstream benchmark references, version restrictions and unsupported analyses. No slope result is recomputed in this report.</li><li id="source-sediment"><a href="../../../../tests/geotechnical/test_sediment_motion.py">tests/geotechnical/test_sediment_motion.py</a>. Independent threshold arithmetic and finite/positive input tests. USACE HEC-RAS 2D Sediment Technical Reference Manual, version 6.4.1 (2023), sections 2.14.1 and 2.13.1 is cited by the existing test; the external document is not reopened here.</li><li id="source-pack"><a href="../../../../src/digitalmodel/geotechnical/docs/agent-pack.md">src/digitalmodel/geotechnical/docs/agent-pack.md</a>. Module evidence inventory and unresolved source-qualification limits. Historical execution statements are not presented as current test results.</li><li id="source-style"><a href="../../../../docs/api/cfd/turbulent-flat-plate-verification.html">docs/api/cfd/turbulent-flat-plate-verification.html</a>. Existing engineering report layout and stylesheet exemplar; the canonical brand stylesheet is inlined without alteration.</li>
+<li id="source-rebuild"><a href="../../../../tests/geotechnical/test_module_report.py">tests/geotechnical/test_module_report.py</a>. Rebuild, numeric and document checks for this report. <a href="build_report.py">build_report.py</a> calls the module; the scratch directory is required. Rebuild with the repository source directory on the Python import path, PyYAML available, and the builder's scratch option pointing to a temporary directory.</li></ol>
+<p>The public repository example is the numerical example source, not an independently published design calculation. No licensed publication was opened and no value is quoted from one. External manual retrieval did not supply usable evidence; standard-edition and clause qualification remain NOT_EVALUATED. Source test-function inventory:</p><ul><li><a href="../../../../tests/test_geotechnical_piles.py">tests/test_geotechnical_piles.py</a>: 9 test functions.</li><li><a href="../../../../tests/geotechnical/test_pile_capacity_composite.py">tests/geotechnical/test_pile_capacity_composite.py</a>: 19 test functions.</li><li><a href="../../../../tests/geotechnical/test_pile_validation.py">tests/geotechnical/test_pile_validation.py</a>: 24 test functions.</li><li><a href="../../../../tests/geotechnical/test_mudmat_eccentricity.py">tests/geotechnical/test_mudmat_eccentricity.py</a>: 8 test functions.</li><li><a href="../../../../tests/geotechnical/test_sediment_motion.py">tests/geotechnical/test_sediment_motion.py</a>: 5 test functions.</li><li><a href="../../../../tests/geotechnical/test_slope_stability.py">tests/geotechnical/test_slope_stability.py</a>: 16 test functions.</li></ul>
+
+<h2 id="review">10 Review comments and changes</h2>
+<p>Engineering changes are listed for this revision. Section comments are retained in a separate JSON file beside the report, so that calculation content remains intact.</p>
+<details id="changes-panel" open><summary>Engineering changes</summary><ul id="changes-list"></ul></details>
+<details id="comments-panel" open><summary>Section comments</summary>
+<p>Select a section, add a comment, and save it. Save comments beside report opens a folder selector; select the folder containing this report. When folder saving is unavailable, use Download comments and place the file beside the report. Load comments reads that file on reopening. Unsaved comments remain only in memory.</p>
+<label for="comment-section">Report section</label><select id="comment-section"><option value="summary">1 Executive Summary</option><option value="introduction">2 Introduction</option><option value="controls">3 Engineering summary</option><option value="basis">4 Design basis and inputs</option><option value="method">5 Theory and methodology</option><option value="worked-example">6 Worked example</option><option value="evidence">7 Validation evidence</option><option value="limits">8 Limits and recommendations</option><option value="appendix">9 Appendices</option><option value="review">10 Review comments and changes</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-message" role="status">No comments have been saved.</p><ul id="comment-list"></ul></details>
+<noscript>Interactive charts and comments require JavaScript. The input and result tables remain readable.</noscript>
+<footer>Geotechnical module analysis. The illustrative load check is conditional on the stated model and inputs.</footer>
+</main>
+<script id="calculation" type="application/json">{"inputs": {"D": 1.8, "L": 40.0, "Su": 80.0, "sigma_v": 200.0, "Nc": 9.0}, "result": {"total_capacity_kn": 16137.98393831995, "skin_friction_kn": 14305.807102746383, "end_bearing_kn": 1832.1768355735676, "alpha": 0.7905694150420948, "unit_skin_friction_kpa": 63.24555320336758}, "design": {"length_m": 40.0, "allowable_capacity_kn": 8068.991969159975, "demand_kn": 5000.0, "utilization": 0.6196560882834199, "factor_of_safety": 2.0, "status": "PASS"}, "sweep": [{"length_m": 20.0, "allowable_capacity_kn": 4492.54019347338, "demand_kn": 5000.0, "utilization": 1.1129560971460737, "factor_of_safety": 2.0, "status": "FAIL"}, {"length_m": 22.0, "allowable_capacity_kn": 4850.185371042039, "demand_kn": 5000.0, "utilization": 1.0308884336364599, "factor_of_safety": 2.0, "status": "FAIL"}, {"length_m": 24.0, "allowable_capacity_kn": 5207.830548610698, "demand_kn": 5000.0, "utilization": 0.960092682227124, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 26.0, "allowable_capacity_kn": 5565.475726179358, "demand_kn": 5000.0, "utilization": 0.8983957968733157, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 28.0, "allowable_capacity_kn": 5923.120903748018, "demand_kn": 5000.0, "utilization": 0.8441495760851534, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 30.0, "allowable_capacity_kn": 6280.766081316678, "demand_kn": 5000.0, "utilization": 0.7960812320129932, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 32.0, "allowable_capacity_kn": 6638.411258885337, "demand_kn": 5000.0, "utilization": 0.7531922631800844, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 34.0, "allowable_capacity_kn": 6996.056436453996, "demand_kn": 5000.0, "utilization": 0.7146883455580424, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 36.0, "allowable_capacity_kn": 7353.701614022656, "demand_kn": 5000.0, "utilization": 0.6799296820074369, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 38.0, "allowable_capacity_kn": 7711.346791591315, "demand_kn": 5000.0, "utilization": 0.6483951682022848, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 40.0, "allowable_capacity_kn": 8068.991969159975, "demand_kn": 5000.0, "utilization": 0.6196560882834199, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 42.0, "allowable_capacity_kn": 8426.637146728634, "demand_kn": 5000.0, "utilization": 0.5933565090008754, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 44.0, "allowable_capacity_kn": 8784.282324297295, "demand_kn": 5000.0, "utilization": 0.5691984632791249, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 46.0, "allowable_capacity_kn": 9141.927501865954, "demand_kn": 5000.0, "utilization": 0.5469306116220516, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 48.0, "allowable_capacity_kn": 9499.572679434612, "demand_kn": 5000.0, "utilization": 0.5263394648081777, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 50.0, "allowable_capacity_kn": 9857.217857003274, "demand_kn": 5000.0, "utilization": 0.5072425173648406, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 52.0, "allowable_capacity_kn": 10214.863034571932, "demand_kn": 5000.0, "utilization": 0.4894828235168336, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 54.0, "allowable_capacity_kn": 10572.50821214059, "demand_kn": 5000.0, "utilization": 0.4729246740388828, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 56.0, "allowable_capacity_kn": 10930.153389709252, "demand_kn": 5000.0, "utilization": 0.45745012185350514, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 58.0, "allowable_capacity_kn": 11287.79856727791, "demand_kn": 5000.0, "utilization": 0.442956168131353, "factor_of_safety": 2.0, "status": "PASS"}, {"length_m": 60.0, "allowable_capacity_kn": 11645.443744846572, "demand_kn": 5000.0, "utilization": 0.42935246690042506, "factor_of_safety": 2.0, "status": "PASS"}], "method": {"lower_coefficient": 0.5, "lower_exponent": -0.5, "upper_coefficient": 0.5, "upper_exponent": -0.25, "branch_ratio": 1.0, "alpha_cap": 1.0}, "inventory": {"Pile primitives": 9, "Composite clay pile": 19, "Input range checks": 24, "Foundation eccentricity": 8, "Sediment-motion arithmetic": 5, "Optional slope benchmarks": 16}}</script>
+<script id="engineering-changes" type="application/json">{"revision": "A", "date": "2026-10-22", "changes": [{"section": "worked-example", "description": "Axial clay-pile resistance and the illustrative load boundary are documented, with the full-area tip assumption and qualification gaps exposed.", "reason": "Separate reproducible calculation behaviour from design acceptance."}]}</script>
+
+<script>
+"use strict";
+const calculation = JSON.parse(document.getElementById("calculation").textContent);
+const changes = JSON.parse(document.getElementById("engineering-changes").textContent);
+const selector = document.getElementById("case-selector");
+function showCase(index) {
+  const point = calculation.sweep[index];
+  const status = point.status === "PASS" ? "The illustrative load check passes." : "The illustrative load check fails.";
+  document.getElementById("case-readout").textContent =
+    `Case: length ${point.length_m.toFixed(1)} m. Component: total allowable axial resistance. ` +
+    `Demand: ${point.demand_kn.toFixed(1)} kN. Limit: ${point.allowable_capacity_kn.toFixed(1)} kN. ${status}`;
+  selector.value = index;
+}
+selector.addEventListener("input", () => showCase(Number(selector.value)));
+document.querySelectorAll(".case-point").forEach(point => {
+  const show = () => showCase(Number(point.dataset.index));
+  point.addEventListener("mouseenter", show);
+  point.addEventListener("focus", show);
+  point.addEventListener("click", show);
+  point.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); show(); }
+  });
+});
+showCase(Number(selector.value));
+changes.changes.forEach(change => {
+  const item = document.createElement("li");
+  const link = document.createElement("a");
+  link.href = "#" + change.section;
+  link.textContent = change.description;
+  item.appendChild(link);
+  item.appendChild(document.createTextNode(" " + change.reason));
+  document.getElementById("changes-list").appendChild(item);
+});
+let comments = [];
+const message = document.getElementById("comment-message");
+function renderComments() {
+  const list = document.getElementById("comment-list");
+  list.replaceChildren();
+  comments.forEach(comment => {
+    const item = document.createElement("li");
+    item.textContent = `${comment.section}: ${comment.text}`;
+    list.appendChild(item);
+  });
+}
+document.getElementById("add-comment").addEventListener("click", () => {
+  const text = document.getElementById("comment-text").value.trim();
+  if (!text) { message.textContent = "Enter a comment before adding it."; return; }
+  comments.push({section: document.getElementById("comment-section").value, text});
+  document.getElementById("comment-text").value = "";
+  renderComments();
+  message.textContent = "Comment added in memory. Save the comments before closing this document.";
+});
+function commentFile() {
+  return JSON.stringify({revision: changes.revision, comments}, null, 2) + "\n";
+}
+document.getElementById("save-comments").addEventListener("click", async () => {
+  try {
+    if (!window.showDirectoryPicker) {
+      message.textContent = "Folder saving is unavailable. Use Download comments and place the file beside this report.";
+      return;
+    }
+    const directory = await window.showDirectoryPicker({mode: "readwrite"});
+    const handle = await directory.getFileHandle("index.comments.json", {create: true});
+    const writable = await handle.createWritable();
+    await writable.write(commentFile());
+    await writable.close();
+    message.textContent = "Comments saved as index.comments.json in the selected report folder.";
+  } catch (error) {
+    message.textContent = error.name === "AbortError" ? "Saving cancelled; comments remain in memory." : "Saving failed; use Download comments.";
+  }
+});
+document.getElementById("download-comments").addEventListener("click", () => {
+  const url = URL.createObjectURL(new Blob([commentFile()], {type: "application/json"}));
+  const link = document.createElement("a");
+  link.href = url; link.download = "index.comments.json";
+  document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+  message.textContent = "Comments downloaded. Place index.comments.json beside this report.";
+});
+document.getElementById("load-comments").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const record = JSON.parse(await file.text());
+    const allowed = new Set(Array.from(document.getElementById("comment-section").options).map(option => option.value));
+    if (record.revision !== changes.revision || !Array.isArray(record.comments) ||
+        !record.comments.every(comment => typeof comment.text === "string" && allowed.has(comment.section))) {
+      throw new Error("Invalid comment record");
+    }
+    comments = record.comments.map(comment => ({section: comment.section, text: comment.text}));
+    renderComments(); message.textContent = "Saved comments loaded.";
+  } catch (error) { message.textContent = "The comment file is invalid or belongs to another revision. Existing comments are retained."; }
+});
+</script>
+</body></html>
