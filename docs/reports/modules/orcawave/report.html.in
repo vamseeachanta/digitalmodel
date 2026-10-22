@@ -5,14 +5,18 @@
 <style>{{style}}</style></head><body class="hs-doc"><main class="wrap">
 <header><p class="kicker">Hydrodynamics · Module assessment</p>
 <h1>OrcaWave utilities: spectral response assessment</h1>
-<p>Draft for client review</p></header>
+<p>Draft for maintainer review</p></header>
 <h2>1. Executive Summary</h2>
 <p>The OrcaWave utilities module is a collection of frequency-domain hydrodynamic calculation and reporting functions. Analysis is performed to determine the numerical response of a documented synthetic example; key results are summarized below.</p>
 <ul><li>The spectral calculation can be reproduced without a diffraction solution.
 <ul><li>The response variance is {{m0}} m², compared with {{reference_variance}} m² for the full-frequency analytic reference. The difference is {{variance_difference_percent}}% on the supplied finite-frequency grid.</li></ul></li>
 <li>An operating decision is not established by this example.
 <ul><li>The response operator is synthetic. An operating limit is not supplied, and physical performance is not evaluated.</li></ul></li></ul>
-<p>Revision A — Initial assessment: the spectral calculation, its analytic comparator and its qualification limits are presented.</p>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>A</td><td>2026-10-21</td><td>Initial assessment: the spectral calculation, its analytic comparator and its qualification limits are presented.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Equation citations, independent numerical checks, display precision and the bandwidth qualification clarify the calculation basis and its limits.</td></tr>
+</tbody></table><p>Table R. Revision history.</p>
 <details><summary>Engineering changes</summary><ul id="changes"></ul></details>
 <h2>2. Introduction</h2>
 <p>The purpose, scope and status of the assessment are presented in this section. The main workflow is the conversion of a wave spectrum and a response-amplitude operator into a response spectrum and short-term motion statistics.</p>
@@ -36,15 +40,15 @@
 <p>The implemented spectral relations are evaluated on the supplied angular-frequency grid. The equations below describe the code identified in Section 9.2; they do not assert conformity with a design standard.</p>
 <h3>4.1 Spectrum and response</h3>
 <div class="eq">ωₚ = 2π/Tₚ<br>Sη(ω) = (5/16)Hₛ²ωₚ⁴ω⁻⁵ exp[−(5/4)(ωₚ/ω)⁴]<br>Sz(ω) = |R(ω)|² Sη(ω)<br>mₙ = ∫ ωⁿ Sz(ω) dω</div>
-<p>Here ω is angular frequency in rad/s, ωₚ is peak angular frequency, Tₚ is peak period in seconds, Hₛ is significant wave height in metres, R is the response-amplitude operator, and Sη and Sz are incident-wave and response spectral densities in m²·s/rad. The moment order is n. The coefficients are those of the implemented modified Pierson–Moskowitz expression, recorded in the spectrum function. The integral is evaluated by the trapezoidal rule over the supplied range.</p>
+<p>Here ω is angular frequency in rad/s, ωₚ is peak angular frequency, Tₚ is peak period in seconds, Hₛ is significant wave height in metres, R is the response-amplitude operator, and Sη and Sz are incident-wave and response spectral densities in m²·s/rad. The moment order is n. The coefficients follow DNV-RP-C205 (2014), Section 3.5.5, JONSWAP spectrum with peak enhancement γ = 1, which gives the modified Pierson–Moskowitz spectrum (citation record W2). The integral is evaluated by the trapezoidal rule over the supplied range.</p>
 <h3>4.2 Statistics and comparison basis</h3>
 <div class="eq">σ = √m₀; Aₛ = 2σ; Hₛ,z = 4σ<br>Tz = 2π√(m₀/m₂); ε = √[1 − m₂²/(m₀m₄)]<br>N = D/Tz; xmode ≈ σ√(2 ln N)<br>E[xmax] ≈ xmode + γE σ²/xmode</div>
-<p>The symbols σ, Aₛ and Hₛ,z denote root-mean-square motion, significant single amplitude and significant double amplitude, all in metres. Tz is zero-crossing period, ε is spectral bandwidth, D is duration, N is the cycle count and γE is the Euler–Mascheroni constant. The maximum expressions are narrow-band Rayleigh asymptotes, as derived in the equation record. They require more than one cycle and are not broadband certification criteria.</p>
-<p>For a constant operator, full-frequency integration gives the analytic variance (R Hₛ/4)². The relative variance difference is defined as 100(m₀/reference − 1)%. This comparator exposes grid truncation; no acceptance tolerance is assigned to that difference. The spectrum has a nonnegative-density mathematical bound. A physical motion limit is not supplied and is not evaluated.</p>
+<p>The symbols σ, Aₛ and Hₛ,z denote root-mean-square motion, significant single amplitude and significant double amplitude, all in metres. Tz is zero-crossing period, ε is spectral bandwidth, D is duration, N is the cycle count and γE is the Euler–Mascheroni constant. The maximum expressions are narrow-band Rayleigh/Gumbel asymptotes; citation record R1 derives them from the Rayleigh peak law through the exponential transformation and square-root expansion. They require more than one cycle and are not broadband certification criteria.</p>
+<p>The significant-height relation Hₛ = 4√m₀ gives the full-frequency wave variance Hₛ²/16 for the spectrum in DNV-RP-C205 (2014), Section 3.5.5, with γ = 1 (W2). For a constant operator, multiplication by R² gives the analytic response variance (R Hₛ/4)². The relative variance difference is defined as 100(m₀/reference − 1)%. This comparator exposes grid truncation; no acceptance tolerance is assigned to that difference. The spectrum has a nonnegative-density mathematical bound. A physical motion limit is not supplied and is not evaluated.</p>
 <h2>5. Detailed Results</h2>
 <p>The module returns the values below for the public synthetic example. All example values and chart ordinates are calculated during report generation from the same inputs.</p>
 <p>The root-mean-square response is {{rms}} m. The significant single amplitude is {{significant_single_amplitude}} m and the significant double amplitude is {{significant_double_amplitude}} m. These quantities are different and are not interchangeable.</p>
-<p>The zero-crossing period is {{mean_zero_crossing_period}} s, the spectral bandwidth is {{spectral_bandwidth}}, and the duration contains {{cycles}} cycles. The most probable maximum estimate is {{most_probable_maximum_3hr}} m; the expected maximum asymptote is {{expected_maximum_3hr}} m. Their physical applicability remains conditional on a suitable narrow-band response.</p>
+<p>The zero-crossing period is {{mean_zero_crossing_period}} s, the spectral bandwidth is {{spectral_bandwidth}}, and the duration contains approximately {{cycles}} cycles. The most probable maximum estimate is {{most_probable_maximum_3hr}} m; the expected maximum asymptote is {{expected_maximum_3hr}} m. This computed bandwidth is not narrow-band: ε is not close to the narrow-band limit of zero. The Rayleigh/Gumbel maxima are therefore approximate numerical comparisons; their physical applicability is not established.</p>
 <p>The response spectral density is plotted against angular frequency. The dashed line is the nonnegative-density bound, not an operating limit. Hover over the curve or use the point selector to inspect the case, component, demand, bound and units.</p>
 <figure><svg id="spectrum" viewBox="0 0 760 350" style="width:100%" role="img" aria-label="Synthetic vertical response spectrum with zero-density bound"></svg>
 <label>Frequency point <input id="point" type="range" min="0" value="0"></label>
@@ -68,7 +72,7 @@
 <h2>9. References</h2>
 <p>The calculation basis and evidence are identified below. Implementation records support reproduction; they are not substituted for licensed standards or physical qualification.</p>
 <h3>9.1 Basis</h3>
-<p>The spectrum equation is taken directly from the public implementation. The spectral-response and Rayleigh equations follow its documented mathematical derivation. No vendor-licensed document is reproduced, and no uncited design coefficient or physical limit is introduced.</p>
+<p>The spectrum basis is <a href="https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/">DNV-RP-C205, Environmental conditions and environmental loads</a>, April 2014, Section 3.5.5, JONSWAP spectrum, with γ = 1 (citation record W2). This edition-specific citation does not assert conformity with a later edition. Citation record R1 supplies the mathematical derivation of the Rayleigh/Gumbel maximum estimates. The citation records are identified in Section 9.2. No vendor-licensed document is reproduced, and no physical limit is introduced.</p>
 <h3>9.2 Source records and reproduction</h3>
 <ul class="refs">
 <li>Public example: <code>tests/orcawave/test_motion_statistics.py</code>, <code>TestShortTermStatistics.test_significant_response</code>; grid, height, period and response amplitude.</li>
@@ -84,7 +88,7 @@
 <p>The abbreviations used by the module are defined here. Angular frequency is distinguished from frequency in cycles per second throughout the calculation.</p>
 <p>RAO means response-amplitude operator. RMS means root mean square. The mathematical symbols are defined beside their equations in Section 4. NOT_EVALUATED means that evidence required for an assessment is absent; it does not mean zero demand or compliance.</p>
 <h2>Appendix A. Data register and numerical evidence</h2>
-<p>The retained input and output arrays are embedded in this document. Source digests of UTF-8 text with normalized line endings are included with them to identify the calculation records.</p>
+<p>The retained input and output arrays are embedded in this document. Source digests of UTF-8 text with normalized line endings identify only the two calculation source files. Test files, citation prose and layout assets are excluded from those digests. Full-document regeneration still depends on the inlined stylesheet and layout exemplar; a presentation change requires regenerating the report. Embedded numerical data are compared with relative tolerance 10⁻¹² and zero absolute tolerance to allow platform roundoff; the remaining document content and source digests are compared exactly.</p>
 <table><thead><tr><th>Item</th><th>Readiness</th><th>Source</th></tr></thead><tbody>
 <tr><td>Wave height, peak period, grid and constant response amplitude</td><td>Public synthetic calculation inputs; no physical design status</td><td>Section 9.2 public example</td></tr>
 <tr><td>Vertical-translation interpretation</td><td>ASSUMED - to be confirmed</td><td>Section 3 explanatory assumption</td></tr>

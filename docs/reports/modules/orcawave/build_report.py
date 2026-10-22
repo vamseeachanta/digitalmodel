@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import json
 import re
+from decimal import Decimal
 from pathlib import Path
 
 import numpy as np
@@ -21,20 +22,18 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 EXEMPLAR = "docs/api/cfd/wave-excited-body-rao-verification.html"
 SOURCES = [
-    "tests/orcawave/test_motion_statistics.py",
-    "tests/orcawave/test_wave_spectrum.py",
     "src/digitalmodel/orcawave/motion_statistics.py",
     "src/digitalmodel/orcawave/wave_spectrum.py",
-    "src/digitalmodel/orcawave/docs/engineering-citations.md",
-    EXEMPLAR,
-    "docs/api/_assets/brand.css",
 ]
 CHANGES = {
-    "revision": "A",
+    "revision": "B",
     "changes": [
         "The spectral response example is introduced with separate single and double amplitudes.",
         "Finite-frequency variance is compared with the full-frequency analytic reference.",
         "Physical response qualification and operating limits remain not evaluated.",
+        "Equation citations and independent reference values establish the numerical basis.",
+        "Display precision and portable regeneration checks clarify the example results.",
+        "The computed response is not narrow-band; extreme estimates remain approximate.",
     ],
 }
 
@@ -49,7 +48,9 @@ def calculate():
     wave = pierson_moskowitz(omega, inputs["hs"], inputs["tp"])
     response = compute_response_spectrum(omega, np.full_like(omega, inputs["rao"]), wave)
     statistics = short_term_statistics(response, duration_s=inputs["duration"])
-    reference = (inputs["rao"] * inputs["hs"] / 4) ** 2
+    # W2: DNV-RP-C205 (2014), 3.5.5, gamma=1; Hs=4*sqrt(m0).
+    # Decimal arithmetic retains the exact decimal-input analytic comparator.
+    reference = float((Decimal(str(inputs["rao"])) * Decimal(str(inputs["hs"])) / 4) ** 2)
     return {
         "inputs": inputs,
         "results": {**statistics.model_dump(), "m0": response.m0,
@@ -65,9 +66,11 @@ def calculate():
     }
 
 
-def number(value):
-    """Use four significant figures without rounding nonzero values to zero."""
-    return f"{value:.4g}".replace("-", "\N{MINUS SIGN}")
+def number(value, key=None):
+    """Format counts, comparators and other results for their reported use."""
+    precision = {"points": ".0f", "duration": ".0f", "cycles": ".0f",
+                 "reference_variance": ".4f", "variance_difference_percent": ".1f"}
+    return format(value, precision.get(key, ".4g")).replace("-", "\N{MINUS SIGN}")
 
 
 def render():
@@ -76,7 +79,7 @@ def render():
     template = (HERE / "report.html.in").read_text(encoding="utf-8")
     for key, value in values.items():
         template = template.replace("{{" + key + "}}",
-                                    f'<span data-value="{key}">{number(value)}</span>')
+                                    f'<span data-value="{key}">{number(value, key)}</span>')
     css = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     exemplar = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
