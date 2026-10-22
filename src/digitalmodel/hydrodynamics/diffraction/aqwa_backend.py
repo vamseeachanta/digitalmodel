@@ -26,6 +26,10 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_hz
+from digitalmodel.hydrodynamics.diffraction.external_matrices import (
+    prepare_matrix,
+    write_matrix_provenance,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     VesselGeometry,
@@ -212,6 +216,7 @@ class AQWABackend:
         content = "\r\n".join(all_cards) + "\r\n"
         with open(output_path, "w", newline="") as f:
             f.write(content)
+        write_matrix_provenance(spec, "aqwa", output_dir)
         return output_path
 
     def generate_modular(
@@ -254,6 +259,7 @@ class AQWABackend:
             file_cards = header + cards if idx == 0 else cards
             file_path.write_text("\n".join(file_cards) + "\n")
 
+        write_matrix_provenance(spec, "aqwa", output_dir)
         return output_dir
 
     # -----------------------------------------------------------------
@@ -833,12 +839,12 @@ class AQWABackend:
     # -----------------------------------------------------------------
 
     def build_deck7(self, spec: DiffractionSpec) -> list[str]:
-        """Build Deck 7: wave force spectrum with optional FIDP/FISK cards.
+        """Build Deck 7 with SI damping at the centre of gravity.
 
         Emits FIDP (Frequency Independent DamPing) cards when a body has
-        ``external_damping`` defined, and FISK (Frequency Independent
-        StifFness/sKiffness) cards when ``external_stiffness`` is defined.
-        All-zero matrices are skipped.
+        ``external_damping`` defined. Nonzero external stiffness is refused
+        pending qualification of SSTF global-frame composition semantics.
+        Source: Aqwa Reference Manual 2024 R2, 11.6.1 and 11.7.1.
         """
         cards: list[str] = []
         cards.extend(_deck_banner(7))
@@ -847,24 +853,25 @@ class AQWABackend:
         bodies = spec.get_bodies()
         for body in bodies:
             vessel = body.vessel
+            stiffness = prepare_matrix(vessel, "stiffness", "aqwa")
+            damping = prepare_matrix(vessel, "damping", "aqwa")
+            if damping is not None or stiffness is not None:
+                if (any(body.attitude) or any(body.position)
+                        or any(vessel.geometry.reference_point) or len(bodies) != 1):
+                    raise ValueError(
+                        "AQWA external matrices require one unrotated, unpositioned "
+                        "body with coincident mesh and body origins"
+                    )
             if vessel.external_damping is not None and self._matrix_has_nonzero(
                 vessel.external_damping
             ):
                 cards.extend(
                     self._build_matrix_cards(
-                        vessel.external_damping,
+                        damping["native_values"],
                         keyword="FIDP",
                     )
                 )
-            if vessel.external_stiffness is not None and self._matrix_has_nonzero(
-                vessel.external_stiffness
-            ):
-                cards.extend(
-                    self._build_matrix_cards(
-                        vessel.external_stiffness,
-                        keyword="FISK",
-                    )
-                )
+                cards.insert(len(cards) - 6, "* External damping: SI N,m,s,rad; origin centre_of_gravity")
 
         cards.append(" END")
         return cards

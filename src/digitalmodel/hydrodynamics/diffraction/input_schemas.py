@@ -267,7 +267,21 @@ class VesselInertia(BaseModel):
 
 
 class VesselSpec(BaseModel):
-    """Complete vessel specification."""
+    """Complete vessel specification.
+
+    External matrices use surge, sway, heave, roll, pitch, yaw order in
+    right-handed axes parallel to the body axes. Each supplied matrix requires
+    explicit SI units and its own reference point. Only reciprocal linear
+    matrices are supported: exact symmetry is required for stiffness and
+    damping; no numerical acceptance tolerance is assumed. Positive
+    definiteness and suitability for a particular physical system are not
+    evaluated here.
+
+    Block dimensions follow OrcaWave help, Constraints, External stiffness
+    matrix and External damping matrix (accessed 2026-10-22): rows are forces
+    then moments, columns translations then rotations in radians. The SI
+    declaration means N, m, s, rad, irrespective of the backend's native units.
+    """
 
     name: str = Field(..., description="Vessel name identifier")
     type: Optional[str] = Field(
@@ -280,12 +294,59 @@ class VesselSpec(BaseModel):
     inertia: VesselInertia
     external_stiffness: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external stiffness matrix",
+        description=("6x6 SI stiffness; TT N/m, TR N/rad, RT N.m/m, "
+                     "RR N.m/rad; reciprocal (symmetric) linear terms"),
     )
     external_damping: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external damping matrix",
+        description=("6x6 SI damping; TT N.s/m, TR N.s/rad, RT N.m.s/m, "
+                     "RR N.m.s/rad; reciprocal (symmetric) linear terms"),
     )
+    external_stiffness_units: Optional[Literal["SI"]] = Field(
+        None, description="Required with external_stiffness: N, m, s, rad",
+    )
+    external_damping_units: Optional[Literal["SI"]] = Field(
+        None, description="Required with external_damping: N, m, s, rad",
+    )
+    external_stiffness_reference_point: Optional[
+        Literal["body_origin", "centre_of_gravity"]
+    ] = Field(None, description="Required with external_stiffness; no assumed origin")
+    external_damping_reference_point: Optional[
+        Literal["body_origin", "centre_of_gravity"]
+    ] = Field(None, description="Required with external_damping; no assumed origin")
+
+    @field_validator("external_stiffness", "external_damping")
+    @classmethod
+    def validate_external_matrix(cls, value):
+        """Require finite reciprocal 6x6 data; never repair supplied entries."""
+        if value is None:
+            return value
+        if len(value) != 6 or any(len(row) != 6 for row in value):
+            raise ValueError("external matrix must be 6x6")
+        matrix = np.asarray(value, dtype=float)
+        if not np.all(np.isfinite(matrix)):
+            raise ValueError("external matrix must be finite")
+        if not np.array_equal(matrix, matrix.T):
+            raise ValueError("external matrix must be exactly symmetric")
+        return value
+
+    @model_validator(mode="after")
+    def check_external_matrix_contract(self) -> VesselSpec:
+        """Reject ambiguous units, axes and missing or orphaned declarations."""
+        for kind in ("stiffness", "damping"):
+            field = f"external_{kind}"
+            matrix = getattr(self, field)
+            for suffix in ("units", "reference_point"):
+                declaration = f"{field}_{suffix}"
+                if matrix is not None and getattr(self, declaration) is None:
+                    raise ValueError(f"{declaration} is required with {field}")
+                if matrix is None and getattr(self, declaration) is not None:
+                    raise ValueError(f"{declaration} requires {field}")
+        if any(getattr(self, f"external_{kind}") is not None
+               for kind in ("stiffness", "damping")):
+            if not np.all(np.isfinite(self.inertia.centre_of_gravity)):
+                raise ValueError("external matrices require finite centre_of_gravity")
+        return self
     fixed_dofs: Optional[list[str]] = Field(
         None,
         description=(

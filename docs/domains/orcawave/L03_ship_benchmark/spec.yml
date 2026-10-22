@@ -25,11 +25,14 @@ vessel:
       Ixy: 0.0
       Ixz: 0.0
       Iyz: 0.0
+  external_damping_units: SI
+  external_damping_reference_point: body_origin
   external_damping:
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    - [0.0, 0.0, 0.0, 36010.0, 0.0, 0.0]  # Roll damping (passed through without conversion)
+    # Source: adjacent native input named above, body-origin matrix; OrcaWave Model/Units: kN to N.
+    - [0.0, 0.0, 0.0, 36010000.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 

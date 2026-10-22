@@ -1,0 +1,11 @@
+{
+  "document": "diffraction-external-matrix-analysis",
+  "revision": 1,
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "external-matrices",
+      "description": "Initial unit, reference-transfer and native-input analysis; explicit contracts replace ambiguous matrix emission."
+    }
+  ]
+}
