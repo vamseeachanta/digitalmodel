@@ -89,16 +89,12 @@ def _load_reference_data():
 @pytest.fixture(scope="module")
 def reference():
     """Load reference data once for all tests in this module."""
-    if not HYDRO_DATA_PATH.exists():
-        pytest.skip(f"Reference data not found: {HYDRO_DATA_PATH}")
     return _load_reference_data()
 
 
 @pytest.fixture(scope="module")
 def capytaine_result():
     """Run Capytaine on the cylinder mesh — subset of frequencies for speed."""
-    if not MESH_PATH.exists():
-        pytest.skip(f"Mesh file not found: {MESH_PATH}")
 
     # Use every 5th frequency for speed (10 out of 50)
     omegas = np.arange(0.5, 5.1, 0.5)

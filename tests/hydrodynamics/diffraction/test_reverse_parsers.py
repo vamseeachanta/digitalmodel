@@ -1014,10 +1014,17 @@ class TestParseExistingOrcaWaveFile:
 
         Source: docs/domains/orcawave/examples/L01_default_vessel/
         L01 Default vessel.yml (OrcaWave 11.5e, 2025), Environment and Bodies.
-        Expected depth is WaterDepth = 400 m. SI density and mass convert
+        Lines 34-36 give WaterDepth = 400 m, WaterDensity = 1.025 t/m^3
+        and period input. Lines 78 and 82 give Body1 and the mesh reference
+        L01 Vessel mesh.gdf. SI density and mass convert
         tonnes to kilograms: 1.025 * 1000 = 1025 kg/m^3 and
-        9017.95 * 1000 = 9017950 kg. Counting the literal PeriodOrFrequency
-        and WaveHeading entries gives 24 periods and 9 headings.
+        9017.95 * 1000 = 9017950 kg (mass: line 99). Counting the literal
+        PeriodOrFrequency entries at lines 40-63 gives 24 periods:
+        [4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13,
+        14, 15, 16, 17, 18, 19, 20, 21, 22]. Lines 65-73 give 9 headings:
+        [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180].
+        Hand calculation: one cycle spans 2*pi radians, so omega = 2*pi/T.
+        The endpoint periods give pi/2 and pi/11 rad/s respectively.
         Conversion source: BIPM, SI Brochure, ninth edition (2019),
         version 4.01 (2026), Table 8, tonne: 1 t = 1000 kg.
 
@@ -1055,6 +1062,26 @@ class TestParseExistingOrcaWaveFile:
         assert len(result.frequencies.to_frequencies_rad_s()) == 24
         assert len(result.wave_headings.to_heading_list()) == 9
         assert result.vessel.inertia.mass == pytest.approx(9017950.0)
+        # Independent literal expectations: reference YAML lines 34-36, 78, 82, 99.
+        assert result.vessel.name == "Body1"
+        assert result.vessel.geometry.mesh_file == "L01 Vessel mesh.gdf"
+        assert result.environment.water_depth == 400.0
+        assert result.environment.water_density == 1025.0
+        assert result.vessel.inertia.mass == 9017950.0
+        assert result.frequencies.input_type.value == "frequency"
+        # Reference YAML lines 40-63 and 65-73, transcribed without parser calls.
+        expected_periods = [
+            4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13,
+            14, 15, 16, 17, 18, 19, 20, 21, 22,
+        ]
+        from math import tau
+
+        assert result.frequencies.values == pytest.approx([
+            tau / period for period in expected_periods
+        ])
+        assert result.wave_headings.to_heading_list() == [
+            0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180,
+        ]
 
     def test_missing_reference_is_an_error(self, tmp_path):
         """An absent reference must fail file reading rather than skip coverage."""

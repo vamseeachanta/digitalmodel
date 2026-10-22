@@ -34,20 +34,18 @@ SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
 FPSO_DIR = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
             / "003_FPSO_Turret")
 
-ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship deck absent")
 
 
 def _fpso_decks():
-    if not FPSO_DIR.is_dir():
-        return []
-    return sorted(p for p in FPSO_DIR.iterdir() if p.suffix.lower() == ".dat")
+    decks = sorted(p for p in FPSO_DIR.iterdir() if p.suffix.lower() == ".dat")
+    assert decks, "Tracked reference decks must be present"
+    return decks
 
 
-fpso_only = pytest.mark.skipif(not _fpso_decks(), reason="FPSO deck absent")
 
 
 class TestMultiStructureDecks:
-    @fpso_only
+
     @pytest.mark.parametrize("deck", _fpso_decks(), ids=lambda p: p.name)
     def test_more_than_one_structure_is_refused_rather_than_mixed(self, deck):
         """Silence is the defect. A mixed basis must not be returned."""
@@ -58,7 +56,6 @@ class TestMultiStructureDecks:
         # The message has to be actionable: it names what to pass.
         assert "structure=" in message
 
-    @fpso_only
     @pytest.mark.parametrize("deck", _fpso_decks(), ids=lambda p: p.name)
     def test_structures_can_be_enumerated_before_choosing(self, deck):
         found = structures_in_deck(deck)
@@ -66,7 +63,6 @@ class TestMultiStructureDecks:
         assert all(isinstance(s, int) for s in found)
         assert found == tuple(sorted(found))
 
-    @fpso_only
     @pytest.mark.parametrize("deck", _fpso_decks(), ids=lambda p: p.name)
     def test_each_structure_reads_as_a_self_consistent_body(self, deck):
         """Mass, inertia and node must come from the same structure.
@@ -88,13 +84,11 @@ class TestMultiStructureDecks:
                     "which is the signature of inertia taken from another body"
                 )
 
-    @ship_only
     def test_a_single_structure_deck_still_reads_without_an_argument(self):
         b = read_aqwa_basis(SHIP)
         assert b.mass == pytest.approx(45184268.0)
         assert b.structure == 1
 
-    @ship_only
     def test_asking_for_a_structure_the_deck_does_not_have_is_an_error(self):
         with pytest.raises(AmbiguousDeck):
             read_aqwa_basis(SHIP, structure=7)

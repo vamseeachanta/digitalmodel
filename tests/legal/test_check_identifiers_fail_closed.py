@@ -28,9 +28,6 @@ CHECKER = REPO / "scripts" / "legal" / "check_identifiers.py"
 RULES = REPO / ".legal-deny-list.yaml"
 TOKEN = "zzsynthetictestclient"
 
-pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not RULES.exists(),
-    reason="identifier gate not installed")
 
 #: Git variables that would bind a child git to the caller's repository.
 _GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")

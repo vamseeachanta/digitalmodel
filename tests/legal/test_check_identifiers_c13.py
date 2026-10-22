@@ -28,9 +28,6 @@ RULES = REPO / ".legal-deny-list.yaml"
 OLD_SALT = "digitalmodel-identifier-check-v1"
 _GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
 
-pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not RULES.exists(), reason="identifier gate not installed"
-)
 
 
 def _h(salt: str, token: str) -> str:

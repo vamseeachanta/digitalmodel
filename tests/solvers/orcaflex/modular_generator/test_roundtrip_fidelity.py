@@ -172,10 +172,6 @@ class TestShadowedPropertiesWarning:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skipif(
-    not _CATENARY_SPEC.exists(),
-    reason="a01_catenary_riser spec.yml not found",
-)
 class TestRoundtripPreservesLineTypes:
     """Spec -> modular -> extract should preserve line type properties."""
 
@@ -264,10 +260,6 @@ class TestRoundtripPreservesLineTypes:
                     )
 
 
-@pytest.mark.skipif(
-    not _CATENARY_SPEC.exists(),
-    reason="a01_catenary_riser spec.yml not found",
-)
 class TestRoundtripPreservesEnvironment:
     """Spec -> modular -> extract should preserve environment settings."""
 
@@ -318,10 +310,6 @@ class TestRoundtripPreservesEnvironment:
         )
 
 
-@pytest.mark.skipif(
-    not _CATENARY_SPEC.exists(),
-    reason="a01_catenary_riser spec.yml not found",
-)
 class TestRoundtripPreservesVessels:
     """Spec -> modular -> extract should preserve vessel names."""
 
@@ -356,10 +344,6 @@ class TestRoundtripPreservesVessels:
         assert spec_vt_names == mod_vt_names
 
 
-@pytest.mark.skipif(
-    not _CATENARY_SPEC.exists(),
-    reason="a01_catenary_riser spec.yml not found",
-)
 class TestRoundtripExtraction:
     """Full round-trip: spec -> modular -> extract spec -> compare."""
 

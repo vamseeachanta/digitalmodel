@@ -153,8 +153,6 @@ class TestTemplateManager:
         """Test that discover_templates finds directories ending in _hybrid."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
-        if not TEMPLATES_DIR.exists():
-            pytest.skip("Templates directory not found")
 
         manager = TemplateManager(TEMPLATES_DIR)
         templates = manager.discover_templates()
@@ -170,8 +168,6 @@ class TestTemplateManager:
         """Test that discovered templates have required fields."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
-        if not TEMPLATES_DIR.exists():
-            pytest.skip("Templates directory not found")
 
         manager = TemplateManager(TEMPLATES_DIR)
         templates = manager.discover_templates()
@@ -187,16 +183,13 @@ class TestTemplateManager:
         """Test getting a specific template by name."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
-        if not TEMPLATES_DIR.exists():
-            pytest.skip("Templates directory not found")
 
         manager = TemplateManager(TEMPLATES_DIR)
 
         # Try to get calm_buoy_hybrid template
         template = manager.get_template('calm_buoy_hybrid')
 
-        if template is None:
-            pytest.skip("calm_buoy_hybrid template not found")
+        assert template is not None, "Tracked template must be present"
 
         assert template['name'] == 'calm_buoy_hybrid'
         assert 'base_files' in template
@@ -206,14 +199,11 @@ class TestTemplateManager:
         """Test listing available variations for a template."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
 
-        if not TEMPLATES_DIR.exists():
-            pytest.skip("Templates directory not found")
 
         manager = TemplateManager(TEMPLATES_DIR)
         template = manager.get_template('calm_buoy_hybrid')
 
-        if template is None:
-            pytest.skip("calm_buoy_hybrid template not found")
+        assert template is not None, "Tracked template must be present"
 
         variations = template['variations']
         assert isinstance(variations, list)
@@ -399,8 +389,6 @@ class TestCLI:
         """Test the list-templates command."""
         from digitalmodel.solvers.orcaflex.template_generator import main
 
-        if not TEMPLATES_DIR.exists():
-            pytest.skip("Templates directory not found")
 
         # Run list-templates command
         exit_code = main(['list-templates', '--templates-dir', str(TEMPLATES_DIR)])
@@ -464,7 +452,6 @@ class TestCLI:
 class TestIntegration:
     """Integration tests with actual template files."""
 
-    @pytest.mark.skipif(not TEMPLATES_DIR.exists(), reason="Templates directory not found")
     def test_full_workflow_calm_buoy(self, temp_output_dir):
         """Test full workflow: discover -> generate -> validate."""
         from digitalmodel.solvers.orcaflex.template_generator import (
@@ -475,12 +462,10 @@ class TestIntegration:
         manager = TemplateManager(TEMPLATES_DIR)
         template = manager.get_template('calm_buoy_hybrid')
 
-        if template is None:
-            pytest.skip("calm_buoy_hybrid template not found")
+        assert template is not None, "Tracked template must be present"
 
         # 2. Get base and variation
-        if not template['base_files'] or not template['variations']:
-            pytest.skip("Template missing base or variations")
+        assert template["base_files"] and template["variations"]
 
         base_file = template['base_files'][0]
         variation_file = template['variations'][0]

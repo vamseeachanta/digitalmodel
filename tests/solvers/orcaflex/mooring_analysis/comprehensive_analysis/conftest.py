@@ -136,19 +136,20 @@ def sample_csv_files(temp_directory, sample_pretension_dataframe,
 
 
 @pytest.fixture
-def real_csv_paths():
+def real_csv_paths(sample_pretension_dataframe):
     """Provide paths to real CSV files from example folders."""
-    return {
-        'pretension': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
-                          'fsts-l015-test-cases/output/collate/csv/'
-                          'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv'),
-        'stiffness': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
-                         'fsts-l015-test-cases/output/collate/csv/'
-                         'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_mooring_stiffness_analysis.csv'),
-        'fender': Path('D:/github/digitalmodel/tests/domains/orcaflex/mooring-tension-iteration/'
-                      'fsts-l015-test-cases/output/collate/csv/'
-                      'fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_fender_force_analysis.csv')
-    }
+    directory = Path(__file__).resolve().parents[2] / "mooring-tension-iteration"
+    stem = sample_pretension_dataframe["filename_stem"].iloc[0]
+    paths = {}
+    for kind, suffix in {
+        "pretension": "pretension_analysis.csv",
+        "stiffness": "mooring_stiffness_analysis.csv",
+        "fender": "fender_force_analysis.csv",
+    }.items():
+        matches = sorted(directory.glob(f"*/output/collate/csv/{stem}_{suffix}"))
+        assert len(matches) == 1, f"Expected one tracked {kind} reference CSV"
+        paths[kind] = matches[0]
+    return paths
 
 
 @pytest.fixture

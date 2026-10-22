@@ -13,7 +13,8 @@ import shutil
 
 
 # Test data paths
-TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = (Path(__file__).resolve().parents[3]
+                 / "docs/domains/aqwa/examples/03_dat/001_ship_raos")
 TEST_LIS_DIR = TEST_DATA_DIR
 
 
@@ -41,10 +42,6 @@ class TestCLIConvertAQWA:
         assert result.returncode == 0
         assert "Convert AQWA diffraction results" in result.stdout
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_convert_aqwa_basic(self, output_dir):
         """Test basic AQWA conversion"""
         result = subprocess.run(
@@ -70,10 +67,6 @@ class TestCLIConvertAQWA:
         assert (output_dir / "SHIP_RAOS_Results.xlsx").exists()
         assert (output_dir / "SHIP_RAOS_validation.json").exists()
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_convert_aqwa_validation(self, output_dir):
         """Test validation report generation"""
         subprocess.run(
@@ -100,10 +93,6 @@ class TestCLIConvertAQWA:
         assert 'overall_status' in validation
         assert validation['overall_status'] in ['PASS', 'WARNING', 'FAIL']
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_convert_aqwa_selective_formats(self, output_dir):
         """Test selective format export"""
         result = subprocess.run(
@@ -137,8 +126,6 @@ class TestCLIBatch:
     @pytest.fixture
     def config_file(self, tmp_path):
         """Create test batch configuration"""
-        if not TEST_LIS_DIR.exists():
-            pytest.skip("Test data not available")
 
         config = {
             "configurations": [
@@ -180,10 +167,6 @@ class TestCLIBatch:
         assert result.returncode == 0
         assert "Batch process multiple vessels" in result.stdout
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_batch_processing(self, config_file, tmp_path):
         """Test batch processing with config file"""
         result = subprocess.run(

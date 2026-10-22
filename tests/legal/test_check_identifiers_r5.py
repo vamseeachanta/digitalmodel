@@ -30,10 +30,6 @@ PHRASE = " ".join(PHRASE_WORDS)
 NAME = "zzsynthetic" + "fifthname"
 MARKER = "[redacted]"
 
-pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not (REPO / RULES_NAME).exists(),
-    reason="identifier gate not installed",
-)
 
 _COUNTER = [0]
 

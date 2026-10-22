@@ -61,8 +61,6 @@ def generated_includes(tmp_path_factory: pytest.TempPathFactory) -> dict[str, di
     Returns a dict mapping include filename -> loaded YAML body, plus
     ``_parameters`` and ``_master_text`` entries for parameters.yml / master.yml.
     """
-    if not SPEC_PATH.exists():
-        pytest.skip(f"Canonical jumper spec not present: {SPEC_PATH}")
 
     with open(SPEC_PATH, encoding="utf-8") as f:
         data = yaml.safe_load(f)

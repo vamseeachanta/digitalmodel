@@ -29,9 +29,6 @@ MULTIBODY = (REPO / "docs" / "domains" / "orcaflex" / "aqwa" / "to_orcaflex"
 SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
         / "001_ship_raos" / "001_SHIP_RAOS.LIS")
 
-multibody_only = pytest.mark.skipif(
-    not MULTIBODY.exists(), reason="multibody listing absent")
-ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship listing absent")
 
 
 def _synthetic(tmp_path, rows: int):
@@ -100,7 +97,7 @@ class TestLongGrids:
 
 
 class TestAgainstShippedListings:
-    @multibody_only
+
     def test_the_grids_agree_on_the_multibody_listing(self):
         """The case that exposed it: 43 frequencies against 10 matrices."""
         parser = AQWALISParser(str(MULTIBODY))
@@ -113,7 +110,6 @@ class TestAgainstShippedListings:
         assert len(damping) == len(freqs), (
             f"{len(freqs)} frequencies but {len(damping)} damping matrices")
 
-    @ship_only
     def test_the_grids_agree_on_the_ship_listing(self):
         parser = AQWALISParser(str(SHIP))
         freqs, _periods = parser.extract_frequencies_and_periods()
@@ -122,7 +118,7 @@ class TestAgainstShippedListings:
 
 
 class TestParseAllIsSelfConsistent:
-    @multibody_only
+
     def test_parse_all_reports_a_grid_mismatch_rather_than_padding(self):
         """`parse_all` must not hand on grids that disagree without saying so."""
         parser = AQWALISParser(str(MULTIBODY))
