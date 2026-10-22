@@ -1,0 +1,19 @@
+{
+  "report": "rao-spectral-fatigue",
+  "revision": "A",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "Purpose and basis",
+      "description": "Initial assessment of the linear wave-to-stress fatigue calculation and its input requirements."
+    },
+    {
+      "section": "Detailed results",
+      "description": "Published illustrative inputs are evaluated with the module; life criteria and unresolved calculation limits are stated."
+    },
+    {
+      "section": "Recommendations",
+      "description": "Engineering use is conditioned on corrected fatigue estimation, qualified stress transfers and an independent benchmark."
+    }
+  ]
+}

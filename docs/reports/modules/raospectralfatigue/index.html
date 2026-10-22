@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Response amplitude operator spectral fatigue module analysis</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+</style><style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Fatigue analysis</p>
+<h1>Response amplitude operator spectral fatigue module analysis</h1>
+<p>Draft for client review</p>
+<p class="sub">Illustrative public example; screening arithmetic with unresolved method limitations.</p></header>
+
+<section id="s1"><h2>1. Executive Summary</h2>
+<p>The response amplitude operator spectral fatigue module is a frequency-domain calculation for structural hot spots subjected to wave loading. Analysis is performed to determine the available calculation capability and the limits of the published illustrative example; the key results are summarized below.</p>
+<ul><li>The public example can be reproduced from its supplied wave spectra and scalar stress transfers.
+<ul><li>The splash-zone detail gives a screening arithmetic life of <span data-value="example.locations.0.fatigue_life_years">30.8</span> years against the configured <span data-value="example.locations.0.required_life_years">75.0</span> years. The arithmetic criterion is not met.</li>
+<li>The keel-joint detail gives a screening arithmetic life of <span data-value="example.locations.1.fatigue_life_years">193.8</span> years against the configured <span data-value="example.locations.1.required_life_years">75.0</span> years. The arithmetic criterion is met; engineering acceptance is not established.</li></ul></li>
+<li>Design or operating decisions are deferred pending calculation qualification.
+<ul><li>The cycle-rate convention and the default fatigue estimator require correction and independent comparison. The illustrative stress transfer also has an unresolved amplitude-versus-range convention. [1–4]</li></ul></li></ul>
+<figure><div id="life-chart" aria-label="Screening arithmetic fatigue life against configured required life"></div>
+<figcaption>Figure 1. Screening arithmetic life by detail. The line is the configured required life; every plotted life retains the unresolved method limitations. [1, 2]</figcaption></figure>
+<noscript><p>Interactive charts and comment controls require JavaScript. The calculation values remain available in the tables.</p></noscript>
+</section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-22</td><td>Initial module assessment, issued to distinguish reproducible screening arithmetic from qualified engineering results.</td></tr></tbody></table>
+<p>Table 1. Document revision history.</p></div>
+
+<section id="s2"><h2>2. Introduction</h2>
+<p>The system is represented by supplied scalar stress responses at a splash-zone detail and a keel-joint detail. Spectral fatigue analysis is performed for the documented illustrative wave environments; water depth, a physical riser stack-up and an actual host response are not supplied. [1]</p>
+<p>The intended use is reproducible calculation demonstration. Structural life, allowable offset and permission to remain connected are not established by these inputs.</p>
+</section>
+
+<section id="s3"><h2>3. Design Data</h2>
+<p>The design basis is read from the public example without alteration of its engineering values. A real structure is not represented by qualified geometry, site data or calibrated stress transfer measurements. [1]</p>
+<h3>3.1 System and environmental basis</h3>
+<p>The configured design life is <span data-value="example.design_life_years">25.0</span> years and the design fatigue factor is <span data-value="example.dff">3.0</span>. These are example inputs, rather than prescribed project requirements. The stress-versus-cycle relation is supplied by the example; its material, weld class and environmental applicability remain unverified. [1]</p>
+<p>The supplied spectra use the Joint North Sea Wave Project formulation, abbreviated JONSWAP. Significant wave height, peak period, peak enhancement and occurrence are recorded below. The example response amplitude operators are illustrated in Figure 2. [1]</p>
+<table><thead><tr><th>Detail and environment</th><th>Wave height (m)</th><th>Peak period (s)</th><th>Peak enhancement (dimensionless)</th><th>Occurrence (dimensionless)</th><th>Source</th></tr></thead><tbody><tr><td>Splash-zone detail; first sea state</td><td><span data-value="example.locations.0.sea_states.0.Hs">2.5</span></td><td><span data-value="example.locations.0.sea_states.0.Tp">9.0</span></td><td><span data-value="example.locations.0.sea_states.0.gamma">3.3</span></td><td><span data-value="example.locations.0.sea_states.0.occurrence_fraction">0.85</span></td><td>[1]</td></tr><tr><td>Splash-zone detail; second sea state</td><td><span data-value="example.locations.0.sea_states.1.Hs">6.0</span></td><td><span data-value="example.locations.0.sea_states.1.Tp">12.0</span></td><td><span data-value="example.locations.0.sea_states.1.gamma">2.0</span></td><td><span data-value="example.locations.0.sea_states.1.occurrence_fraction">0.15</span></td><td>[1]</td></tr><tr><td>Keel-joint detail; first sea state</td><td><span data-value="example.locations.1.sea_states.0.Hs">3.0</span></td><td><span data-value="example.locations.1.sea_states.0.Tp">10.0</span></td><td><span data-value="example.locations.1.sea_states.0.gamma">3.3</span></td><td><span data-value="example.locations.1.sea_states.0.occurrence_fraction">1.00</span></td><td>[1]</td></tr></tbody></table>
+<p>Table 2. Published illustrative sea-state inputs. The occurrence is a time fraction at the named detail. [1]</p>
+<figure><div id="rao-chart" aria-label="Supplied stress transfer against wave frequency"></div>
+<figcaption>Figure 2. Supplied illustrative stress transfer magnitudes against cyclic frequency. Phase and heading are not inputs to this module. A stress-transfer acceptance limit is not supplied. [1, 3]</figcaption></figure>
+<h3>3.2 Criteria and required data</h3>
+<p>The implemented criterion compares reciprocal annual damage with design life multiplied by the design fatigue factor. The purpose of this criterion is to reserve a fatigue-life margin against the configured exposure; passing the arithmetic test alone does not qualify the physical design. The criterion and damage weighting are implementation definitions, rather than an independently checked standards requirement. [2]</p>
+<p>Geometry, stiffness, boundary conditions, stress concentration, material environment, stress amplitude convention and an independently supported stress transfer are required inputs for engineering use. These quantities are NOT_EVALUATED; no substitute field values are introduced.</p>
+</section>
+
+<section id="s4"><h2>4. Analysis Methodology</h2>
+<p>The wave spectrum is transferred to a stress spectrum and is evaluated by the downstream fatigue library. Linear response, stationary exposure within each sea state and a scalar stress response are assumed by the calculation; applicability to an actual structure is not established. [2–4]</p>
+<h3>4.1 Model and boundary conditions</h3>
+<figure><svg viewBox="0 0 780 310" role="img" aria-label="Qualitative floating-host riser model with two supplied stress-response locations" style="max-width:100%">
+<path d="M80 60 H270 L240 95 H110 Z" fill="var(--soft)" stroke="var(--brand)" stroke-width="3"/>
+<path d="M130 60 V30 H220 V60 M175 95 V270" fill="none" stroke="var(--brand)" stroke-width="5"/>
+<path d="M20 125 Q60 110 100 125 T180 125 T260 125 T340 125 M70 275 H290" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="175" cy="125" r="7" fill="var(--nogo)"/><circle cx="175" cy="95" r="7" fill="var(--caution)"/>
+<path d="M185 95 H360 M185 125 L300 155 H360 M180 220 H360" fill="none" stroke="var(--mut)"/>
+<text x="375" y="45">Floating host; motions not supplied</text>
+<text x="375" y="100">Keel-joint stress transfer</text><text x="375" y="160">Splash-zone stress transfer</text>
+<text x="375" y="220">Riser; geometry and stiffness not supplied</text>
+<text x="375" y="255">Supports, tension and seabed connection:</text><text x="375" y="280">boundary conditions not evaluated</text>
+<text x="20" y="150">Waterline</text></svg>
+<figcaption>Figure 3. Qualitative physical context of the supplied hot-spot transfers. The sketch is not a structural model or a dimensional stack-up. The module consumes transfers; it does not solve host motions, riser statics or support reactions. [1, 3]</figcaption></figure>
+<h3>4.2 Transfer, moments and fatigue equations</h3>
+<div class="eq">Sσ(f) = |H(f)|² Sη(f); ω = 2πf; Sη(f) = 2π Sη(ω).</div>
+<p>The symbol f is cyclic frequency in hertz and ω is angular frequency in radians per second. H is stress amplitude per unit wave amplitude in megapascals per metre. Sη is wave-elevation power spectral density, per hertz or per angular frequency as indicated. Sσ is stress power spectral density in square megapascals per hertz. The density conversion preserves the integral when the frequency axis changes. [3]</p>
+<div class="eq">mₙ = ∫ fⁿ Sσ(f) df; σ = √m₀; α₂ = m₂ / √(m₀m₄); ε = √(1 − α₂²).</div>
+<p>The symbol mₙ is a stress spectral moment of order n; σ is root-mean-square stress, α₂ is the irregularity factor and ε is the bandwidth measure. With a cyclic-frequency axis, the zero-upcrossing rate is √(m₂/m₀) and the peak rate is √(m₄/m₂), in cycles per second. The library divides these rates by an additional angular-to-cyclic conversion. Its returned damage and life therefore remain screening arithmetic. [4, 5]</p>
+<div class="eq">N = A / Δσᵇ; d = ν E[(Δσ)ᵇ] / A; Dannual = Σ pᵢ dᵢ Tyear; L = 1 / Dannual; Lrequired = Ldesign F; M = L / Lrequired.</div>
+<p>The symbol N is cycles to failure, Δσ is stress range in megapascals, b is the supplied stress-versus-cycle slope and A is its intercept in a consistent stress unit. The symbol d is damage per second, ν is the estimator's cycle rate, E is the cycle-range expectation, pᵢ is sea-state occurrence, Tyear is the library's annual duration, Dannual is annual damage, L is life in years, F is the configured design fatigue factor and M is the dimensionless life margin. The annual conversion follows the library convention. [2, 4]</p>
+<p>The default estimator represents cycle ranges by an exponential and Rayleigh mixture. Its parameter implementation uses the bandwidth measure where the published method uses the irregularity factor. Agreement with another route sharing this estimator does not establish fatigue accuracy. [4, 5]</p>
+</section>
+
+<section id="s5"><h2>5. Detailed Results</h2>
+<p>The worked example is calculated by calling the documented module router with the public input. Every reported example number is taken from that input, the returned summary, or the generated detailed output; intermediate stress spectra are obtained from the module transfer function. [1–3]</p>
+<h3>5.1 Worked example and configured life criterion</h3>
+<p>The splash-zone detail gives a screening arithmetic life of <span data-value="example.locations.0.fatigue_life_years">30.8</span> years against the configured <span data-value="example.locations.0.required_life_years">75.0</span> years. The arithmetic criterion is not met. The keel-joint detail gives a screening arithmetic life of <span data-value="example.locations.1.fatigue_life_years">193.8</span> years against the configured <span data-value="example.locations.1.required_life_years">75.0</span> years. The arithmetic criterion is met; engineering acceptance is not established. [1, 2]</p>
+<table><thead><tr><th>Detail</th><th>Annual damage (year⁻¹)</th><th>Screening life (years)</th><th>Required life (years)</th><th>Life margin (dimensionless)</th><th>Arithmetic disposition</th><th>Source</th></tr></thead><tbody><tr><td>Splash-zone detail</td><td><span data-value="example.locations.0.annual_damage">0.0324</span></td><td><span data-value="example.locations.0.fatigue_life_years">30.8</span></td><td><span data-value="example.locations.0.required_life_years">75.0</span></td><td><span data-value="example.locations.0.margin">0.4</span></td><td>The arithmetic criterion is not met.</td><td>[2]</td></tr><tr><td>Keel-joint detail</td><td><span data-value="example.locations.1.annual_damage">0.00516</span></td><td><span data-value="example.locations.1.fatigue_life_years">193.8</span></td><td><span data-value="example.locations.1.required_life_years">75.0</span></td><td><span data-value="example.locations.1.margin">2.6</span></td><td>The arithmetic criterion is met.</td><td>[2]</td></tr></tbody></table>
+<p>Table 3. Provisional fatigue arithmetic from the unchanged illustrative example. The known rate and estimator limitations affect every row. [2, 4]</p>
+<p>The failure of the splash-zone arithmetic criterion is addressed by withholding engineering acceptance, correcting the estimator and establishing the stress transfer basis before any structural mitigation is selected. Stress reduction at the hot spot is a candidate design measure after recalculation establishes the governing stress and exposure. [2–5]</p>
+<h3>5.2 Transferred spectra and existing evidence</h3>
+<label for="spectrum-case">Detail and environment</label><select id="spectrum-case"></select>
+<figure><div id="spectrum-chart" aria-label="Calculated stress spectral density against cyclic frequency"></div>
+<figcaption>Figure 4. Stress power spectral density obtained from the module. Hover or focus a point to inspect detail, environment, demand, limit status and units. A spectral-density acceptance limit is not supplied. [3]</figcaption></figure>
+<p id="chart-readout" aria-live="polite">Select or focus a chart point for its values.</p>
+<p>The existing registry regression checks the transfer expression, governing detail, arithmetic status and reciprocal-life relation. The constant-transfer regression compares annual damage and life with the fixed-gain route. Both are internal consistency evidence. Neither provides an independent published numerical result for this example. [6]</p>
+<p>The library tests exercise spectral moments, positive damage, response scaling and bandwidth behaviour. Passing those assertions does not resolve the cycle-rate or estimator discrepancies described above. A published independently reproduced example with an accepted tolerance is NOT_EVALUATED. [4–6]</p>
+</section>
+
+<section id="s6"><h2>6. Key Findings</h2>
+<p>The wave-to-stress transfer and occurrence-weighted damage sequence are available through a documented public function. Reproduction of the example is established as calculation-output consistency by the accompanying rebuild test; physical calibration and fatigue-method accuracy are not established. [1–4, 6]</p>
+<p>The splash-zone detail governs the current screening arithmetic. Its life is below the configured required life; the other detail's arithmetic pass is insufficient for engineering acceptance while the common estimator remains unqualified. [2, 4]</p>
+</section>
+
+<section id="s7"><h2>7. Limitations</h2>
+<p>The applicability boundary is set by the supplied scalar transfer and the unresolved numerical conventions. Project design life, inspection intervals and allowable operations cannot be established from the present example. [1–5]</p>
+<p>The wave grid is fixed by the spectrum generator because the router does not expose grid controls. The spectrum is normalized over that finite band; this preserves a target variance without demonstrating that omitted tails or resonant responses are insignificant. Transfers are linearly interpolated and clamped at their endpoints outside their supplied frequency band. Frequency convergence and transfer-band coverage are required before engineering use. [3, 7]</p>
+<p>The input checks do not comprehensively reject non-finite values or enforce a normalized occurrence distribution. Independent checks of finiteness, units, ordering, amplitude convention and total exposure remain necessary. The public example calls its response a stress range per wave amplitude, while the module describes stress amplitude per wave amplitude; that ambiguity is unresolved. [1–3]</p>
+<h3>Not covered</h3>
+<p>Alternative wave spectra and fatigue estimators are available but are not assessed here. Complex phase, heading combinations, multiaxial fatigue, nonlinear response, corrosion allowance, thickness effects and local stress concentration are not resolved by the demonstrated scalar transfer. Still-water statics, current loading, offset envelopes, stroke, drift-off, recoil, weak-point strength and vortex-induced vibration are not evaluated by this report. [2, 3]</p>
+</section>
+
+<section id="s8"><h2>8. Recommendations</h2>
+<p>Engineering acceptance is conditioned on removal of the identified calculation and input-basis gaps. The next assessment is defined by an independent reference calculation and a documented physical stress-transfer basis. [1–5]</p>
+<ul><li>Correct and independently test the frequency-unit convention and estimator parameters before using life or arithmetic pass results to establish an inspection or design decision. A single-frequency analytical rate and an independently integrated cycle-range distribution provide separate checks. [4, 5]</li>
+<li>Resolve whether the supplied response is stress amplitude or stress range; provide calibrated structural transfers covering the energetic wave band, with material, detail category and environment stated. [1, 3]</li>
+<li>Establish wave-grid and response-grid convergence, retain omitted-tail evidence, and enforce finite inputs and a stated exposure normalization. [2, 3, 7]</li>
+<li>After correction, recalculate the splash-zone detail against the configured required life. If that criterion remains unmet, assess stress reduction or a revised operating exposure with the same qualified calculation basis. No numerical operating limit or retrofit date is established by this example. [1, 2, 5]</li></ul>
+</section>
+
+<section id="s9"><h2>9. References</h2>
+<p>The evidence is separated into published method literature and repository implementation records. Unchecked standards references are identified without reproducing licensed coefficient tables.</p>
+<h3>9.1 Theory and standards basis</h3>
+<p>[5] “Dirlik and Tovo–Benasciutti Spectral Methods in Vibration Fatigue: A Review with a Historical Perspective”, Metals, 2021, volume 11, article 1333, sections 2–4. This open article is used for the method definitions and the need to distinguish cyclic from angular frequency; it is not a numerical benchmark for the repository example.</p>
+<p>The library cites DNV-RP-C203, 2021, “Frequency domain fatigue analysis”. The wave generator cites DNV-RP-C205, “Environmental conditions and environmental loads”, without an edition in its spectrum definitions. The module also cites DNV-RP-F204, “Riser fatigue”, without an edition or a specific clause. These attributions do not establish edition or clause alignment; licensed text has not been checked for this report. No standards-derived material coefficient is asserted as qualified.</p>
+<h3>9.2 Evidence locators and reproduction</h3>
+<ul><li>[1] <code>examples/workflows/rao-spectral-fatigue/input.yml</code>: public illustrative input, all fields and stress-convention comment.</li>
+<li>[2] <code>src/digitalmodel/spectral_fatigue/workflow.py</code>: <code>router</code> and <code>_evaluate_location</code>; returned summary and detailed comma-separated values.</li>
+<li>[3] <code>src/digitalmodel/rao_spectral_fatigue/workflow.py</code>: <code>router</code>, <code>_stress_psd_from_rao</code> and input checks; <code>src/digitalmodel/hydrodynamics/wave_spectra.py</code>: spectrum generation and normalization.</li>
+<li>[4] <code>src/digitalmodel/fatigue/spectral_fatigue.py</code>: <code>compute_spectral_moments</code>, rate properties and <code>dirlik_damage</code>.</li>
+<li>[5] <a href="https://doi.org/10.3390/met11091333">Open method article</a>.</li>
+<li>[6] <code>tests/workflows/test_durable_workflows.py</code>: registry case <code>rao-spectral-fatigue</code> and <code>test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening</code>; <code>tests/fatigue/test_spectral_fatigue.py</code>: dependency regression assertions.</li>
+<li>[7] <a href="https://numpy.org/doc/1.26/reference/generated/numpy.interp.html">NumPy 1.26 interpolation reference</a>: endpoint fill conventions.</li></ul>
+<p>The documented public call is <code>from digitalmodel.rao_spectral_fatigue.workflow import router</code>, followed by <code>router(cfg)</code> for the parsed input mapping. The calculation returns the summary in <code>cfg["rao_spectral_fatigue"]</code>, a screening status and detailed and location-summary CSV destinations. Intermediate spectra are not part of the returned summary.</p>
+<p>Reproduction command: <code>PYTHONPATH=src python scripts/reporting/build_rao_spectral_fatigue_report.py --scratch-dir "$TMPDIR"</code>. The rebuild test is <code>tests/reporting/test_rao_spectral_fatigue_report.py</code>. Only the output destination is redirected during evaluation; engineering inputs are retained. Complete unrounded example arrays are embedded in this document for the interactive plots and numerical comparison.</p>
+<details><summary>Source integrity record</summary><table><thead><tr><th>Repository source</th><th>SHA-256 digest</th></tr></thead><tbody><tr><td><code>examples/workflows/rao-spectral-fatigue/input.yml</code></td><td><code>88c233b08a69d9435cc65cea812e1a5897aa0027cd6b291607b993326be175cb</code></td></tr><tr><td><code>docs/api/cfd/turbulent-flat-plate-verification.html</code></td><td><code>bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25</code></td></tr><tr><td><code>docs/api/_assets/brand.css</code></td><td><code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></td></tr><tr><td><code>scripts/reporting/rao_spectral_fatigue_ui.js</code></td><td><code>a309b86f9c08946871c40004b511ff3e34bcd6db66787abc19117b660cb034dc</code></td></tr><tr><td><code>scripts/reporting/build_rao_spectral_fatigue_report.py</code></td><td><code>e20ae90c7eac376f2f9c6e7529316d9b7c15b0f106892cf5b43cc28745c14fa2</code></td></tr><tr><td><code>src/digitalmodel/rao_spectral_fatigue/__init__.py</code></td><td><code>f34dfdad687115dc809b18e511856fc345c2a15e98d66d94040a64571e3c127b</code></td></tr><tr><td><code>src/digitalmodel/rao_spectral_fatigue/workflow.py</code></td><td><code>3fd7d78cc0d121f6c79f2bd3967ca4fdebd602b384d00ac4458c75cc5bf9c6f8</code></td></tr><tr><td><code>src/digitalmodel/spectral_fatigue/workflow.py</code></td><td><code>3755b0fb80858c2897cdd4fab2aff4fed4d5e127645f8639bbaaf8346edb274d</code></td></tr><tr><td><code>src/digitalmodel/fatigue/spectral_fatigue.py</code></td><td><code>bbe8d25d230c8f239865e7d9cb52c5c15d858f1f903ea54e2c43c36beb0045df</code></td></tr><tr><td><code>src/digitalmodel/hydrodynamics/wave_spectra.py</code></td><td><code>5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290</code></td></tr><tr><td><code>tests/workflows/test_durable_workflows.py</code></td><td><code>31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2</code></td></tr><tr><td><code>tests/fatigue/test_spectral_fatigue.py</code></td><td><code>fc304707361055c89bead612042e188ca267c7004113626476b32097dd4e5946</code></td></tr></tbody></table><p>Table 4. Source digests at document generation. Source identity is separate from engineering qualification.</p></details>
+</section>
+
+<section id="s10"><h2>10. Acronyms</h2>
+<p>The terminology is defined for reading the calculation basis and the source records. Symbols are defined beside their equations.</p>
+<p>A response amplitude operator is the frequency-dependent stress transfer per unit wave amplitude. Power spectral density describes variance distributed over frequency. JONSWAP means Joint North Sea Wave Project. A stress-versus-cycle curve relates cyclic stress range to cycles to failure. The design fatigue factor multiplies the required design life. CSV means comma-separated values.</p>
+</section>
+
+<div id="appendix"><h2>Appendix. Supporting data and quality checks</h2>
+<p>The supporting calculation values and missing-data disposition are retained below. Engineering qualification is separate from reproduction of the software output.</p>
+<h3>Detailed calculation output</h3>
+<table><thead><tr><th>Detail and environment</th><th>Root-mean-square stress (MPa)</th><th>Bandwidth (dimensionless)</th><th>Returned peak rate (Hz)</th><th>Full annual damage (year⁻¹)</th><th>Weighted annual damage (year⁻¹)</th><th>Source</th></tr></thead><tbody><tr><td>Splash-zone detail; first sea state</td><td><span data-value="example.locations.0.sea_states.0.rms_stress_MPa">4.1</span></td><td><span data-value="example.locations.0.sea_states.0.bandwidth_parameter">0.3</span></td><td><span data-value="example.locations.0.sea_states.0.peak_rate_Hz">0.0189</span></td><td><span data-value="example.locations.0.sea_states.0.damage_per_year_full">0.0162</span></td><td><span data-value="example.locations.0.sea_states.0.damage_per_year_weighted">0.0138</span></td><td>[2]</td></tr><tr><td>Splash-zone detail; second sea state</td><td><span data-value="example.locations.0.sea_states.1.rms_stress_MPa">10.6</span></td><td><span data-value="example.locations.0.sea_states.1.bandwidth_parameter">0.4</span></td><td><span data-value="example.locations.0.sea_states.1.peak_rate_Hz">0.0165</span></td><td><span data-value="example.locations.0.sea_states.1.damage_per_year_full">0.1</span></td><td><span data-value="example.locations.0.sea_states.1.damage_per_year_weighted">0.0186</span></td><td>[2]</td></tr><tr><td>Keel-joint detail; first sea state</td><td><span data-value="example.locations.1.sea_states.0.rms_stress_MPa">3.0</span></td><td><span data-value="example.locations.1.sea_states.0.bandwidth_parameter">0.3</span></td><td><span data-value="example.locations.1.sea_states.0.peak_rate_Hz">0.0175</span></td><td><span data-value="example.locations.1.sea_states.0.damage_per_year_full">0.00516</span></td><td><span data-value="example.locations.1.sea_states.0.damage_per_year_weighted">0.00516</span></td><td>[2]</td></tr></tbody></table>
+<p>Table 5. Detailed outputs from the called module. Peak rates and damage retain the unresolved frequency convention and estimator limitations. [2, 4]</p>
+<h3>Data register</h3>
+<table><thead><tr><th>Data item</th><th>Status and intended use</th><th>Source</th></tr></thead><tbody>
+<tr><td>Wave and stress-transfer example</td><td>Published illustrative data; demonstration only. No field calibration is established.</td><td>[1]</td></tr>
+<tr><td>Design life, fatigue factor and stress-versus-cycle relation</td><td>Published example settings; project applicability is NOT_EVALUATED.</td><td>[1]</td></tr>
+<tr><td>Geometry, stack-up, material environment and boundary conditions</td><td>Required inputs; NOT_EVALUATED. No values are assumed.</td><td>[1, 3]</td></tr>
+<tr><td>Stress amplitude convention and transfer calibration</td><td>Required confirmation; NOT_EVALUATED.</td><td>[1, 3]</td></tr>
+<tr><td>Independent fatigue benchmark and convergence tolerance</td><td>Required qualification evidence; NOT_EVALUATED.</td><td>[4–6]</td></tr>
+</tbody></table><p>Table 6. Data readiness register. No missing physical value is filled by an assumed number.</p>
+<h3>Quality pre-flight evidence</h3>
+<p>The rebuild test separately calls the module, reads its detailed CSV and compares every displayed example value and plotted array with the input and returned output. Repeated generation is checked for identical report bytes, and source hashes are read back. These checks establish reproducibility and source preservation, rather than engineering accuracy. [6]</p>
+<p>The existing module-specific workflow assertions are recorded as evidence by source inspection. Their top-level engine imports solver adapters; they are not executed for this assessment. Pure numerical dependency tests are executed separately, and their results accompany the document delivery. No licensed solver is required by the report generator.</p>
+<h3>Changes and comments</h3>
+<details><summary>Engineering changes in this revision</summary><div id="change-panel"></div></details>
+<p>Comments are associated with this exact report content. Save comments to the folder containing this HTML file. Where folder access is unavailable, download the comments file and place it beside this document. Unsaved comments are held only while this document is open.</p>
+<label for="comment-section">Section</label><select id="comment-section"><option value="s1">Section 1</option><option value="s2">Section 2</option><option value="s3">Section 3</option><option value="s4">Section 4</option><option value="s5">Section 5</option><option value="s6">Section 6</option><option value="s7">Section 7</option><option value="s8">Section 8</option><option value="s9">Section 9</option><option value="s10">Section 10</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="3" style="width:100%"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept=".json,application/json">
+<p id="comment-status" role="status">No comments have been saved.</p><pre id="comment-list" style="white-space:pre-wrap"></pre>
+</div></main>
+<script id="report-data" type="application/json">{"changes":{"changes":[{"description":"Initial assessment of the linear wave-to-stress fatigue calculation and its input requirements.","section":"Purpose and basis"},{"description":"Published illustrative inputs are evaluated with the module; life criteria and unresolved calculation limits are stated.","section":"Detailed results"},{"description":"Engineering use is conditioned on corrected fatigue estimation, qualified stress transfers and an independent benchmark.","section":"Recommendations"}],"date":"2026-10-22","report":"rao-spectral-fatigue","revision":"A"},"content_id":"529388fc6f5020ce258cfbb413ad6f4e5f4114ce13368abfbe40da13846f6cd6","example":{"design_life_years":25.0,"dff":3.0,"locations":[{"annual_damage":0.03244336902494615,"fatigue_life_years":30.822939480517153,"label":"Splash-zone detail","margin":0.41097252640689536,"passes":false,"rao_frequency_Hz":[0.04,0.06,0.08,0.1,0.12,0.16,0.24,0.4],"rao_stress_MPa_per_m":[1.2,3.3,7.4,9.0,6.7,2.9,0.8,0.2],"required_life_years":75.0,"sea_states":[{"Hs":2.5,"Tp":9.0,"bandwidth_parameter":0.3018718097336791,"damage_per_year_full":0.016234939823451967,"damage_per_year_weighted":0.01379969884993417,"frequency_Hz":[0.003183098861837907,0.006366197723675814,0.00954929658551372,0.012732395447351628,0.015915494309189534,0.019098593171027443,0.022281692032865345,0.025464790894703257,0.02864788975654116,0.03183098861837907,0.03501408748021698,0.03819718634205488,0.04138028520389279,0.0445633840657307,0.04774648292756861,0.050929581789406514,0.05411268065124442,0.05729577951308233,0.060478878374920234,0.06366197723675814,0.06684507609859605,0.07002817496043395,0.07321127382227186,0.07639437268410977,0.07957747154594767,0.08276057040778557,0.08594366926962349,0.0891267681314614,0.09230986699329931,0.0954929658551372,0.09867606471697511,0.10185916357881303,0.10504226244065093,0.10822536130248885,0.11140846016432675,0.11459155902616466,0.11777465788800255,0.12095775674984047,0.12414085561167837,0.12732395447351627,0.1305070533353542,0.1336901521971921,0.13687325105903,0.1400563499208679,0.1432394487827058,0.1464225476445437,0.14960564650638164,0.15278874536821954,0.15597184423005744,0.15915494309189535,0.16233804195373325,0.16552114081557115,0.16870423967740908,0.17188733853924698,0.17507043740108488,0.1782535362629228,0.18143663512476071,0.18461973398659862,0.1878028328484365,0.1909859317102744,0.19416903057211232,0.19735212943395022,0.20053522829578813,0.20371832715762606,0.20690142601946396,0.21008452488130186,0.21326762374313976,0.2164507226049777,0.2196338214668156,0.2228169203286535,0.2260000191904914,0.22918311805232927,0.2323662169141672,0.2355493157760051,0.238732414637843,0.24191551349968093,0.24509861236151884,0.24828171122335674,0.25146481008519467,0.25464790894703254,0.25783100780887047,0.2610141066707084,0.2641972055325463,0.2673803043943842,0.2705634032562221,0.27374650211806,0.2769296009798979,0.2801126998417358,0.2832957987035737,0.2864788975654116,0.28966199642724955,0.2928450952890874,0.29602819415092535,0.2992112930127633,0.30239439187460115,0.3055774907364391,0.30876058959827696,0.3119436884601149,0.31512678732195276,0.3183098861837907],"gamma":3.3,"label":"First sea state","occurrence_fraction":0.85,"peak_rate_Hz":0.018853268731055802,"rms_stress_MPa":4.143017122906726,"stress_psd_MPa2_Hz":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.489670579409949e-193,2.1122782057974867e-119,2.1978338629771412e-77,4.824854962455059e-52,4.7359542675076504e-36,1.7768711997093585e-25,3.317311620028873e-18,3.875811433909027e-13,1.5992906031241102e-09,6.857138162629959e-07,6.113811842653501e-05,0.0018437243478839945,0.028450101966613964,0.23495439988482725,1.2203450291253197,4.469704756324811,12.539551805209435,28.63594727005319,51.00748407603327,80.06598882579941,115.93819707770545,160.2909071631792,220.25267421740486,312.3610482101425,426.88918027951087,552.6100134984976,656.2641916659228,651.65928096596,546.3451863382062,407.82474399135936,285.54773095403226,199.2017393476769,142.11105422450743,105.55178298285492,81.56435021654603,64.84280840364093,52.31366076945135,42.34781295308602,34.131834673106674,27.26018676400341,21.507403137714196,16.71971553191208,12.771869114381419,10.734268548270204,9.366081183996455,8.15702115888594,7.0908824897216425,6.1525762625405145,5.32820921169821,4.605104075258409,3.9717764357149443,3.4178825981494096,2.9341497811531507,2.512296787493904,2.1449508854900627,1.825564811708618,1.5483364705882008,1.3081329406994684,1.1004197083629192,0.9211955661128925,0.7669332818222475,0.6345259232351541,0.5212385814858309,0.4246651530389751,0.3426897954577199,0.2734526560658469,0.21531947487182207,0.16685467752640643,0.1417950678352072,0.12921987584574396,0.11778321963951553,0.10737755578223503,0.09790598313294818,0.08928115087784469,0.08142428007349214,0.07426428728580964,0.06773699989569722,0.06178445359101508,0.05635426346280572,0.05139906096280669,0.046875989755375415,0.042746254209031956,0.03897471492209771,0.03552952626594613,0.032381811461602204,0.029505371184733526,0.026876422124571517,0.024473362308115094,0.02227656034613144,0.020268166065818036,0.01843194027014302,0.016753101609188727,0.0152181887673703],"type":"jonswap"},{"Hs":6.0,"Tp":12.0,"bandwidth_parameter":0.3814813699822816,"damage_per_year_full":0.12429113450007986,"damage_per_year_weighted":0.018643670175011978,"frequency_Hz":[0.003183098861837907,0.006366197723675814,0.00954929658551372,0.012732395447351628,0.015915494309189534,0.019098593171027443,0.022281692032865345,0.025464790894703257,0.02864788975654116,0.03183098861837907,0.03501408748021698,0.03819718634205488,0.04138028520389279,0.0445633840657307,0.04774648292756861,0.050929581789406514,0.05411268065124442,0.05729577951308233,0.060478878374920234,0.06366197723675814,0.06684507609859605,0.07002817496043395,0.07321127382227186,0.07639437268410977,0.07957747154594767,0.08276057040778557,0.08594366926962349,0.0891267681314614,0.09230986699329931,0.0954929658551372,0.09867606471697511,0.10185916357881303,0.10504226244065093,0.10822536130248885,0.11140846016432675,0.11459155902616466,0.11777465788800255,0.12095775674984047,0.12414085561167837,0.12732395447351627,0.1305070533353542,0.1336901521971921,0.13687325105903,0.1400563499208679,0.1432394487827058,0.1464225476445437,0.14960564650638164,0.15278874536821954,0.15597184423005744,0.15915494309189535,0.16233804195373325,0.16552114081557115,0.16870423967740908,0.17188733853924698,0.17507043740108488,0.1782535362629228,0.18143663512476071,0.18461973398659862,0.1878028328484365,0.1909859317102744,0.19416903057211232,0.19735212943395022,0.20053522829578813,0.20371832715762606,0.20690142601946396,0.21008452488130186,0.21326762374313976,0.2164507226049777,0.2196338214668156,0.2228169203286535,0.2260000191904914,0.22918311805232927,0.2323662169141672,0.2355493157760051,0.238732414637843,0.24191551349968093,0.24509861236151884,0.24828171122335674,0.25146481008519467,0.25464790894703254,0.25783100780887047,0.2610141066707084,0.2641972055325463,0.2673803043943842,0.2705634032562221,0.27374650211806,0.2769296009798979,0.2801126998417358,0.2832957987035737,0.2864788975654116,0.28966199642724955,0.2928450952890874,0.29602819415092535,0.2992112930127633,0.30239439187460115,0.3055774907364391,0.30876058959827696,0.3119436884601149,0.31512678732195276,0.3183098861837907],"gamma":2.0,"label":"Second sea state","occurrence_fraction":0.15,"peak_rate_Hz":0.016521141317897416,"rms_stress_MPa":10.551562260320676,"stress_psd_MPa2_Hz":[0.0,0.0,0.0,0.0,0.0,4.189635308027313e-192,7.0295568940988275e-102,3.23411844099085e-58,4.4194603736295484e-35,6.074214151591219e-22,4.573164527141015e-14,3.899430351023854e-09,7.685013496905842e-06,0.0016145605078044978,0.06558976451737711,0.9040919307883681,5.99934095245591,23.991295961689854,68.99790319419806,175.34264108290407,358.7418267437157,639.805790639689,1074.4486772562498,1788.7158913747355,2865.3538329461076,3609.764693290843,3681.5101682427576,3309.0255393595726,2807.516434084686,2400.0255884031203,2134.0837031893093,1818.4650343682754,1494.1882019600728,1235.4794987500804,1019.6047532313329,837.0932471279837,683.0426215983188,557.0111995047577,457.98097715341606,374.807115547816,305.26148053707317,247.34656585401436,199.30189539496274,159.5955284933413,126.90708804802698,100.1068060029154,78.23342005771339,60.47260813799976,46.13689257310553,34.64746323336594,28.67346084923611,24.670625639547666,21.214158698250785,18.229054331319983,15.6507591922784,13.423716377741984,11.500103103660205,9.838740482790234,8.404154655008698,7.1657699573041835,6.097216593931585,5.17573714996955,4.381678144907308,3.6980545680147285,3.1101769337642438,2.605331827469851,2.1725081774914066,1.8021625984157343,1.486018111816152,1.2168913818335472,0.9885443167275483,0.7955564990673843,0.6332154297376573,0.4974220165556038,0.3846091178430316,0.32616981276851037,0.2966679475187706,0.2699207662993418,0.24565574126633805,0.22362920573412334,0.20362308381522354,0.18544201456222634,0.168910820317457,0.15387227569372738,0.14018513939679564,0.1277224160890508,0.11636981979742612,0.10602441408349694,0.09659340740319496,0.08799308485863397,0.08014785994611219,0.07298943198457011,0.06645603671232114,0.06049177910502207,0.05504603882742474,0.05007293991361838,0.04553087729938276,0.04138209372669287,0.03759230132218027,0.03413034283380671],"type":"jonswap"}]},{"annual_damage":0.005160867712874218,"fatigue_life_years":193.76586567127384,"label":"Keel-joint detail","margin":2.5835448756169845,"passes":true,"rao_frequency_Hz":[0.04,0.06,0.08,0.1,0.12,0.16,0.24,0.4],"rao_stress_MPa_per_m":[0.9,2.2,4.0,4.9,3.6,1.6,0.4,0.1],"required_life_years":75.0,"sea_states":[{"Hs":3.0,"Tp":10.0,"bandwidth_parameter":0.3133644562774499,"damage_per_year_full":0.005160867712874218,"damage_per_year_weighted":0.005160867712874218,"frequency_Hz":[0.003183098861837907,0.006366197723675814,0.00954929658551372,0.012732395447351628,0.015915494309189534,0.019098593171027443,0.022281692032865345,0.025464790894703257,0.02864788975654116,0.03183098861837907,0.03501408748021698,0.03819718634205488,0.04138028520389279,0.0445633840657307,0.04774648292756861,0.050929581789406514,0.05411268065124442,0.05729577951308233,0.060478878374920234,0.06366197723675814,0.06684507609859605,0.07002817496043395,0.07321127382227186,0.07639437268410977,0.07957747154594767,0.08276057040778557,0.08594366926962349,0.0891267681314614,0.09230986699329931,0.0954929658551372,0.09867606471697511,0.10185916357881303,0.10504226244065093,0.10822536130248885,0.11140846016432675,0.11459155902616466,0.11777465788800255,0.12095775674984047,0.12414085561167837,0.12732395447351627,0.1305070533353542,0.1336901521971921,0.13687325105903,0.1400563499208679,0.1432394487827058,0.1464225476445437,0.14960564650638164,0.15278874536821954,0.15597184423005744,0.15915494309189535,0.16233804195373325,0.16552114081557115,0.16870423967740908,0.17188733853924698,0.17507043740108488,0.1782535362629228,0.18143663512476071,0.18461973398659862,0.1878028328484365,0.1909859317102744,0.19416903057211232,0.19735212943395022,0.20053522829578813,0.20371832715762606,0.20690142601946396,0.21008452488130186,0.21326762374313976,0.2164507226049777,0.2196338214668156,0.2228169203286535,0.2260000191904914,0.22918311805232927,0.2323662169141672,0.2355493157760051,0.238732414637843,0.24191551349968093,0.24509861236151884,0.24828171122335674,0.25146481008519467,0.25464790894703254,0.25783100780887047,0.2610141066707084,0.2641972055325463,0.2673803043943842,0.2705634032562221,0.27374650211806,0.2769296009798979,0.2801126998417358,0.2832957987035737,0.2864788975654116,0.28966199642724955,0.2928450952890874,0.29602819415092535,0.2992112930127633,0.30239439187460115,0.3055774907364391,0.30876058959827696,0.3119436884601149,0.31512678732195276,0.3183098861837907],"gamma":3.3,"label":"First sea state","occurrence_fraction":1.0,"peak_rate_Hz":0.017541772938086852,"rms_stress_MPa":2.9738801821087475,"stress_psd_MPa2_Hz":[0.0,0.0,0.0,0.0,0.0,0.0,1.5676888587637296e-216,1.111221723356169e-125,1.96967807609024e-77,6.070561528682139e-50,2.180747282802769e-33,5.83349386570412e-23,4.58648559821791e-16,2.6009476484649215e-11,5.290844035281949e-08,1.2006612761695717e-05,0.0006169871723066554,0.011319265395622363,0.10121994690033172,0.5635871867749543,2.10949779550699,5.875364729207481,13.098680645497685,24.68946381822682,41.18815221512749,60.070072354530865,85.61859610339637,126.79783775403064,197.58224837428847,303.1812335849801,402.4560304229831,390.16353688275655,302.01231442996897,210.60095477799538,142.0221296139308,98.06783211194102,71.19419271782228,54.6937561701723,44.3089959079987,36.539517583564354,30.284877506784376,25.04603905811291,20.596680279002303,16.81566207235122,13.617434327325684,10.929005239903644,8.684219730495506,6.822941072665926,5.291104337699388,4.040674004443843,3.372917455304276,2.9158671705955723,2.517309800656721,2.170118633698392,1.8679609564283126,1.6052325671992496,1.3769900030115234,1.1788838006542444,1.0070948580705965,0.8582750879023151,0.7294929566226016,0.6181841019475758,0.522106961048225,0.4393031806400341,0.3680624870026186,0.30689164759363796,0.25448714063910505,0.2097111539316746,0.1715705513758268,0.13919847028540072,0.11183824046460838,0.08882934529407749,0.06959517385330269,0.05363234058667613,0.04050137461618905,0.03399379427168964,0.03094885469797507,0.02818396190233213,0.025672024844728036,0.023388730498865397,0.021312243117010236,0.019422937492823693,0.017703162277387587,0.01613702986025473,0.01471022973416691,0.013409862623405124,0.012224292975884298,0.011143017702226653,0.010156549295056251,0.00925631168226648,0.008434547362336616,0.0076842345409124015,0.006999013138520433,0.006373118671873788,0.005801323127898961,0.005278882052283213,0.004801487164696427,0.0043652238923758725,0.003966533283790888,0.0036021778257840377],"type":"jonswap"}]}]},"sources":{"docs/api/_assets/brand.css":"a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a","docs/api/cfd/turbulent-flat-plate-verification.html":"bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25","examples/workflows/rao-spectral-fatigue/input.yml":"88c233b08a69d9435cc65cea812e1a5897aa0027cd6b291607b993326be175cb","scripts/reporting/build_rao_spectral_fatigue_report.py":"e20ae90c7eac376f2f9c6e7529316d9b7c15b0f106892cf5b43cc28745c14fa2","scripts/reporting/rao_spectral_fatigue_ui.js":"a309b86f9c08946871c40004b511ff3e34bcd6db66787abc19117b660cb034dc","src/digitalmodel/fatigue/spectral_fatigue.py":"bbe8d25d230c8f239865e7d9cb52c5c15d858f1f903ea54e2c43c36beb0045df","src/digitalmodel/hydrodynamics/wave_spectra.py":"5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290","src/digitalmodel/rao_spectral_fatigue/__init__.py":"f34dfdad687115dc809b18e511856fc345c2a15e98d66d94040a64571e3c127b","src/digitalmodel/rao_spectral_fatigue/workflow.py":"3fd7d78cc0d121f6c79f2bd3967ca4fdebd602b384d00ac4458c75cc5bf9c6f8","src/digitalmodel/spectral_fatigue/workflow.py":"3755b0fb80858c2897cdd4fab2aff4fed4d5e127645f8639bbaaf8346edb274d","tests/fatigue/test_spectral_fatigue.py":"fc304707361055c89bead612042e188ca267c7004113626476b32097dd4e5946","tests/workflows/test_durable_workflows.py":"31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"}}</script>
+<script>/* Offline numerical charts and content-bound comment transfer. */
+(() => {
+  'use strict';
+  const el = id => document.getElementById(id);
+  const data = JSON.parse(el('report-data').textContent);
+  const example = data.example;
+  const sections = new Set(Array.from({length: 10}, (_, i) => `s${i + 1}`));
+  const comments = [];
+  const esc = text => String(text).replace(/[&<>"']/g, c =>
+    ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+  const number = n => Math.abs(n) > 0 && Math.abs(n) < 0.1 ?
+    n.toPrecision(3) : n.toFixed(1);
+  const message = text => { el('comment-status').textContent = text; };
+
+  function chart(id, series, {xLabel, yLabel, units, limit = null, categories = null}) {
+    const points = series.flatMap(s => s.x.map((x, i) => [x, s.y[i]]));
+    const xmin = Math.min(...points.map(p => p[0]));
+    const xmax = Math.max(...points.map(p => p[0]));
+    const ymax = Math.max(...points.map(p => p[1]), limit || 0) * 1.15;
+    const x = v => 90 + (v - xmin) / (xmax - xmin || 1) * 590;
+    const y = v => 280 - v / (ymax || 1) * 220;
+    const palette = ['var(--brand)', 'var(--nogo)', 'var(--accent)'];
+    let svg = `<svg viewBox="0 0 760 370" role="img" aria-label="${esc(yLabel)} against ${esc(xLabel)}" style="width:100%">`;
+    svg += '<path d="M90 55V280H700" fill="none" stroke="var(--mut)"/>';
+    for (let i = 0; i <= 4; i++) {
+      const v = ymax * i / 4;
+      svg += `<text x="82" y="${y(v) + 5}" text-anchor="end">${number(v)}</text>`;
+    }
+    if (limit !== null) {
+      svg += `<path d="M90 ${y(limit)}H700" stroke="var(--nogo)" stroke-dasharray="6 4"/>`;
+      svg += `<text x="100" y="${y(limit) - 8}">Required life: ${number(limit)} ${esc(units)}</text>`;
+    }
+    for (const [index, seriesItem] of series.entries()) {
+      const color = palette[index % palette.length];
+      const coords = seriesItem.x.map((v, i) => `${x(v)},${y(seriesItem.y[i])}`).join(' ');
+      svg += `<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="2"/>`;
+      for (let i = 0; i < seriesItem.x.length; i++) {
+        const variable = categories ? categories[i] : `${number(seriesItem.x[i])} Hz`;
+        const tip = `${seriesItem.label}; ${variable}; demand ${number(seriesItem.y[i])}; ` +
+          `limit ${limit === null ? 'not established' : number(limit)}; units ${units}`;
+        svg += `<circle cx="${x(seriesItem.x[i])}" cy="${y(seriesItem.y[i])}" r="4" ` +
+          `fill="${color}" tabindex="0" data-tooltip="${esc(tip)}" aria-label="${esc(tip)}"><title>${esc(tip)}</title></circle>`;
+      }
+      svg += `<text x="100" y="${22 + index * 18}" fill="${color}">${esc(seriesItem.label)}</text>`;
+    }
+    if (categories) {
+      for (let i = 0; i < categories.length; i++)
+        svg += `<text x="${x(i)}" y="305" text-anchor="middle">${esc(categories[i])}</text>`;
+    } else {
+      for (let i = 0; i <= 4; i++) {
+        const v = xmin + (xmax - xmin) * i / 4;
+        svg += `<text x="${x(v)}" y="305" text-anchor="middle">${number(v)}</text>`;
+      }
+    }
+    svg += `<text x="390" y="350" text-anchor="middle">${esc(xLabel)}</text>`;
+    svg += `<text transform="translate(18 180) rotate(-90)" text-anchor="middle">${esc(yLabel)}</text></svg>`;
+    el(id).innerHTML = svg;
+    const readout = event => {
+      const point = event.target.closest('[data-tooltip]');
+      if (point) el('chart-readout').textContent = point.getAttribute('data-tooltip');
+    };
+    el(id).addEventListener('pointermove', readout);
+    el(id).addEventListener('focusin', readout);
+    el(id).addEventListener('click', readout);
+  }
+
+  chart('life-chart', [{label: 'Screening arithmetic',
+    x: example.locations.map((_, i) => i),
+    y: example.locations.map(location => location.fatigue_life_years)}], {
+    xLabel: 'Structural detail', yLabel: 'Screening life (years)', units: 'years',
+    limit: example.locations[0].required_life_years,
+    categories: example.locations.map(location => location.label),
+  });
+  chart('rao-chart', example.locations.map(location => ({label: location.label,
+    x: location.rao_frequency_Hz, y: location.rao_stress_MPa_per_m})), {
+    xLabel: 'Cyclic frequency (Hz)', yLabel: 'Stress transfer (MPa/m)', units: 'MPa/m',
+  });
+  el('spectrum-case').innerHTML = example.locations.map((location, i) =>
+    location.sea_states.map((state, j) => `<option value="${i}:${j}">${esc(location.label)}; ${esc(state.label.toLowerCase())}</option>`).join('')).join('');
+  function spectrum() {
+    const [i, j] = (el('spectrum-case').value || '0:0').split(':').map(Number);
+    const location = example.locations[i], state = location.sea_states[j];
+    chart('spectrum-chart', [{label: `${location.label}; ${state.label.toLowerCase()}`,
+      x: state.frequency_Hz, y: state.stress_psd_MPa2_Hz}], {
+      xLabel: 'Cyclic frequency (Hz)', yLabel: 'Stress density (MPa²/Hz)', units: 'MPa²/Hz',
+    });
+  }
+  el('spectrum-case').addEventListener('change', spectrum);
+  spectrum();
+
+  el('change-panel').textContent = data.changes.changes.map(change =>
+    `${change.section}: ${change.description}`).join('\n');
+  el('change-panel').style && (el('change-panel').style.whiteSpace = 'pre-wrap');
+  const showComments = () => {
+    el('comment-list').textContent = comments.map(comment =>
+      `${comment.section}: ${comment.text}`).join('\n\n');
+  };
+  function mergeComments(incoming) {
+    if (incoming.report !== 'rao-spectral-fatigue' || incoming.revision !== data.changes.revision ||
+        incoming.content_id !== data.content_id)
+      throw new Error('Comments belong to a different report content or revision.');
+    if (!Array.isArray(incoming.comments) || incoming.comments.some(comment =>
+      !comment || !sections.has(comment.section) || typeof comment.text !== 'string' || !comment.text.trim()))
+      throw new Error('Invalid comment data.');
+    const existing = new Set(comments.map(comment => JSON.stringify(comment)));
+    for (const comment of incoming.comments) {
+      const normalized = {section: comment.section, text: comment.text};
+      if (!existing.has(JSON.stringify(normalized))) {
+        comments.push(normalized); existing.add(JSON.stringify(normalized));
+      }
+    }
+    showComments();
+  }
+  el('add-comment').addEventListener('click', () => {
+    const text = el('comment-text').value.trim(), section = el('comment-section').value;
+    if (!text || !sections.has(section)) return message('Select a section and enter a comment.');
+    comments.push({section, text});
+    el('comment-text').value = '';
+    showComments();
+    message('Comment added; save comments before closing the document.');
+  });
+  el('save-comments').addEventListener('click', async () => {
+    const serialize = () => JSON.stringify({report: 'rao-spectral-fatigue', revision: data.changes.revision,
+      content_id: data.content_id, comments}, null, 2);
+    try {
+      if (window.showDirectoryPicker) {
+        const folder = await window.showDirectoryPicker({mode: 'readwrite'});
+        const file = await folder.getFileHandle('index.comments.json', {create: true});
+        const previous = await (await file.getFile()).text();
+        if (previous.trim()) mergeComments(JSON.parse(previous));
+        const stream = await file.createWritable();
+        await stream.write(serialize());
+        await stream.close();
+        message('Comments saved as index.comments.json in the selected folder.');
+      } else {
+        const url = URL.createObjectURL(new Blob([serialize()], {type: 'application/json'}));
+        const link = document.createElement('a');
+        link.href = url; link.download = 'index.comments.json';
+        link.click(); URL.revokeObjectURL(url);
+        message('Download requested; place index.comments.json beside this report.');
+      }
+    } catch (error) { message(`Comments were not saved: ${error.message}`); }
+  });
+  el('load-comments').addEventListener('change', async () => {
+    try {
+      const file = el('load-comments').files[0];
+      if (!file) return;
+      mergeComments(JSON.parse(await file.text()));
+      message('Comments loaded for this report content.');
+    } catch (error) { message(error.message); }
+    el('load-comments').value = '';
+  });
+})();
+</script></body></html>

@@ -267,6 +267,12 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/raospectralfatigue/
+docs/reports/modules/raospectralfatigue/*
+!docs/reports/modules/raospectralfatigue/index.html
+!docs/reports/modules/raospectralfatigue/changes.json
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
