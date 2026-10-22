@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Bounded research adapter over existing plate/panel buckling implementations.
 
 No ingestion pipeline, engineering acceptance, local-patch model or solver dispatch.
@@ -135,10 +137,251 @@ def cases():
                 loss_model='whole_field_uniform', gamma_m=1.15, web_loss_mm=web_loss)
 
 
-def main():
+REFERENCE_METHOD = 'mit_elastic_plate_reference_v1'
+REFERENCE_SCHEMA = ROOT / 'data/ship_structure_reference/elastic_reference.schema.json'
+REFERENCE_LIMIT = (
+    'Ideal thin isotropic elastic plate only; elastic range, imperfections, '
+    'renewal rules and design factors are unqualified. No asset FFS acceptance.'
+)
+
+
+def read_reference_json(path):
+    """Read strict JSON without ambiguous keys or nonfinite numbers (RFC 8259)."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('Duplicate JSON object key')
+            result[key] = value
+        return result
+
+    data = json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=unique)
+    json.dumps(data, allow_nan=False)
+    return data
+
+
+def validate_reference_study(data):
+    """Validate synthetic inputs, units and provenance without downloading sources."""
+    from jsonschema import Draft202012Validator, FormatChecker, ValidationError
+    from urllib.parse import urlsplit
+
+    # RFC 8259 (2017), section 6: JSON excludes NaN and Infinity.
+    data = json.loads(json.dumps(data, allow_nan=False))
+    schema = json.loads(REFERENCE_SCHEMA.read_text(encoding='utf-8'))
+    try:
+        Draft202012Validator(schema, format_checker=FormatChecker()).validate(data)
+    except ValidationError:
+        # Validation diagnostics must not echo arbitrary input records or paths.
+        raise ValueError('Invalid elastic reference input contract') from None
+    keys = [s['key'] for s in data['sources']]
+    if len(keys) != len(set(keys)):
+        raise ValueError('Duplicate source identities')
+    for source in data['sources']:
+        pointer = urlsplit(source['url'])
+        if not pointer.hostname or pointer.username or pointer.password:
+            raise ValueError('Source requires a public URL without credentials')
+        _ = pointer.port
+    for material in data['materials'].values():
+        if not set(material['source_keys']) <= set(keys):
+            raise ValueError('Unknown material equation source')
+    if any(c['material_id'] not in data['materials'] for c in data['cases']):
+        raise ValueError('Unknown material identity')
+    return data
+
+
+def _reference_inapplicable(case):
+    """Keep unsupported loss and loading models outside the reference domain."""
+    if case['structure'] != 'plate':
+        return 'panel thresholds unqualified; plate, web and flange losses remain separate inputs'
+    if case['profile'] != 'none':
+        return 'profile unsupported for a bare plate reference'
+    if case['web_loss_mm'] or case['flange_loss_mm']:
+        return 'stiffener loss cannot be applied to a bare plate'
+    if case['loss_model'] != 'whole_field_uniform':
+        return 'local loss requires independently validated embedded-damage supports'
+    if case['support'] != 'simply_supported_free_transverse_expansion':
+        return 'support must be simply supported with free transverse in-plane expansion'
+    if case['load_basis'] != 'fixed_stress':
+        return 'fixed stress required; fixed force is a different loading path'
+    if case['sigma_y_MPa'] or case['tau_MPa']:
+        return 'uniaxial longitudinal compression only'
+    if case['plate_loss_mm'] >= case['initial_thickness_mm']:
+        return 'positive remaining thickness required'
+    return None
+
+
+def _reference_row(case, material):
+    """Compute elastic eigenvalues, never a design or renewal verdict."""
+    from digitalmodel.structural.plate_capacity.elastic_buckling import (
+        square_plate_elastic_buckling_stress,
+    )
+
+    row = dict(case=case, material=material, engineering_status='NOT_EVALUATED',
+               minimum_remaining_thickness_mm=None,
+               elastic_reference_crossing_mm=None, limitation=REFERENCE_LIMIT)
+    reason = _reference_inapplicable(case)
+    if reason:
+        return dict(row, reference_status='INAPPLICABLE', reason=reason)
+    try:
+        alpha = case['span_mm'] / case['breadth_mm']
+        if not math.isfinite(alpha) or alpha <= 0:
+            raise ValueError('Unrepresentable aspect ratio')
+        # MIT 2.080J (2013), Lecture 11, Eqs. 11.16-11.17:
+        # k=(m/alpha+alpha/m)^2, n=1; minimum at continuous m=alpha.
+        # The positive integer minimum is among floor(alpha), ceil(alpha),
+        # with m>=1. No empirical coefficient or aspect-ratio cutoff is used.
+        modes = {max(1, math.floor(alpha)), max(1, math.ceil(alpha))}
+        k, mode = min(((m/alpha + alpha/m)**2, m) for m in modes)
+        nominal = case['initial_thickness_mm']
+        remaining = nominal - case['plate_loss_mm']
+        # Reuse the independently tested square-plate kernel; multiply by k/4
+        # from MIT Lecture 11 (2013), Eqs. 11.15-11.16 (square m=n=1: k=4).
+        nominal_stress = square_plate_elastic_buckling_stress(
+            youngs_modulus=material['youngs_modulus_MPa'],
+            poisson_ratio=material['poisson_ratio'], thickness=nominal,
+            side_length=case['breadth_mm']) * (k/4)
+        # MIT Lecture 4 (2013), Eq. 4.60: D proportional to t^3, hence
+        # sigma_cr=Ncr/t proportional to t^2 at fixed E, nu, a, b.
+        retained = (remaining/nominal)**2
+        critical = nominal_stress * retained
+        # Algebraic inversion of the same equations at fixed imposed stress;
+        # no safety factor, fabrication gauge, yield or acceptance limit.
+        crossing = nominal * math.sqrt(case['sigma_x_MPa']/nominal_stress)
+        utilization = case['sigma_x_MPa']/critical
+        if not all(math.isfinite(x) and x > 0 for x in
+                   (k, nominal_stress, critical, crossing, utilization, retained)):
+            raise ValueError('Unrepresentable elastic reference result')
+    except (ValueError, OverflowError, ZeroDivisionError):
+        return dict(row, reference_status='INAPPLICABLE',
+                    reason='Inputs or results outside floating-point evaluation range')
+    within = crossing <= nominal
+    return dict(row, reference_status='COMPUTED' if within else 'NO_ELASTIC_CROSSING_IN_RANGE',
+                remaining_thickness_mm=remaining, longitudinal_half_waves=mode,
+                buckling_coefficient=k, elastic_critical_stress_MPa=critical,
+                nominal_elastic_critical_stress_MPa=nominal_stress,
+                elastic_capacity_retained_fraction=retained,
+                elastic_stress_ratio=utilization,
+                elastic_reference_crossing_mm=crossing if within else None,
+                reason='Analytical reference only; engineering qualification pending')
+
+
+def compute_reference_study(data):
+    """Precompute the explicitly supplied synthetic cases; no implicit grid."""
+    data = validate_reference_study(data)
+    return dict(schema_version=1, method=REFERENCE_METHOD, inputs=data,
+                engineering_status='NOT_EVALUATED', limitation=REFERENCE_LIMIT,
+                evidence_repository='digitalmodel-data',
+                rows=[_reference_row(c, data['materials'][c['material_id']])
+                      for c in data['cases']])
+
+
+def lookup_reference(saved, selection):
+    """Retrieve an exact saved combination without calculation or interpolation."""
+    missing = dict(reference_status='UNCOMPUTED', engineering_status='NOT_EVALUATED',
+                   minimum_remaining_thickness_mm=None, elastic_reference_crossing_mm=None,
+                   reason='No exact saved combination; no interpolation or execution')
+    if saved.get('method') != REFERENCE_METHOD or not isinstance(selection, dict):
+        return missing
+    for row in saved.get('rows', []):
+        case = row['case']
+        # Python regards True==1: reject booleans explicitly before comparing
+        # numerical controls; integer and floating representations may match.
+        if set(selection) != set(case) or any(isinstance(v, bool) for v in selection.values()):
+            continue
+        if selection == case:
+            return row
+    return missing
+
+
+def render_reference(saved, output):
+    """Render controls over saved rows only, using no external script or service."""
+    import html
+
+    rows = saved['rows']
+    controls = []
+    for key in rows[0]['case']:
+        options = list(dict.fromkeys(row['case'][key] for row in rows))
+        values = ''.join(f'<option value="{html.escape(json.dumps(v), quote=True)}">'
+                         f'{html.escape(str(v))}</option>' for v in options)
+        controls.append(f'<label>{html.escape(key)} <select data-key="{key}">{values}</select></label>')
+    # Escape '<' before embedding JSON in a script to prevent closing tags.
+    payload = json.dumps(rows, allow_nan=False).replace('<', '\\u003c')
+    page = '''<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Elastic plate reference lookup</title>
+<style>body{font:16px sans-serif;max-width:70em;margin:2em auto;padding:1em}
+#controls{display:flex;flex-wrap:wrap;gap:1em}label{display:grid}pre{white-space:pre-wrap}</style>
+<h1>Saved elastic plate references</h1>
+<p>Engineering minimum thickness: NOT_EVALUATED. Ideal elastic model only;
+no renewal or asset FFS acceptance. Controls retrieve saved combinations only.</p>
+<div id="controls">CONTROLS</div><pre id="result" role="status"></pre>
+<script>
+const rows=PAYLOAD;
+const controls=[...document.querySelectorAll('select')];
+function show(){
+ const selection=Object.fromEntries(controls.map(s=>[s.dataset.key,JSON.parse(s.value)]));
+ const row=rows.find(r=>Object.entries(selection).every(([k,v])=>r.case[k]===v));
+ document.getElementById('result').textContent=row?
+ JSON.stringify(row,(k,v)=>typeof v==='number'?Number(v.toFixed(1)):v,2):
+ 'UNCOMPUTED: no exact saved combination; no interpolation or execution. Engineering minimum thickness: NOT_EVALUATED.';
+}
+controls.forEach(s=>s.addEventListener('change',show));show();
+</script></html>
+'''.replace('CONTROLS', ''.join(controls)).replace('PAYLOAD', payload)
+    output.write_text(page, encoding='utf-8')
+
+
+def write_reference_study(source, output):
+    """Write a new evidence bundle without overwriting existing computation data."""
+    if output.exists() and any(output.iterdir()):
+        raise ValueError('Output must be new/empty to preserve previous runs')
+    saved = compute_reference_study(read_reference_json(source))
+    output.mkdir(parents=True, exist_ok=True)
+    result = output / 'reference.json'
+    result.write_text(json.dumps(saved, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    render_reference(saved, output / 'lookup.html')
+    paths = [Path(__file__), REFERENCE_SCHEMA,
+             ROOT / 'src/digitalmodel/structural/plate_capacity/elastic_buckling.py']
+    manifest = dict(method=REFERENCE_METHOD, evidence_repository='digitalmodel-data',
+                    retention_status='execution_replica_not_archived',
+                    engineering_status='NOT_EVALUATED',
+                    input_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                    result_sha256=hashlib.sha256(result.read_bytes()).hexdigest(),
+                    lookup_sha256=hashlib.sha256((output / 'lookup.html').read_bytes()).hexdigest(),
+                    workflow_revision=subprocess.check_output(
+                        ['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+                    workflow_dirty=bool(subprocess.check_output(
+                        ['git', 'diff', '--name-only'], cwd=ROOT, text=True).strip()),
+                    executed_utc=datetime.now(timezone.utc).isoformat(),
+                    algorithms={p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                                for p in paths}, rows=len(saved['rows']))
+    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    return saved
+
+
+def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--output', type=Path, required=True)
-    args = p.parse_args()
+    p.add_argument('--output', type=Path)
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--reference-input', type=Path)
+    group.add_argument('--reference-lookup', type=Path)
+    p.add_argument('--selection', type=Path)
+    args = p.parse_args(argv)
+    if args.reference_lookup:
+        if args.selection is None or args.output is not None:
+            p.error('Saved lookup requires --selection and no --output')
+        saved = read_reference_json(args.reference_lookup)
+        manifest = read_reference_json(args.reference_lookup.parent / 'manifest.json')
+        digest = hashlib.sha256(args.reference_lookup.read_bytes()).hexdigest()
+        if digest != manifest['result_sha256']:
+            raise ValueError('Saved reference digest mismatch')
+        print(json.dumps(lookup_reference(saved, read_reference_json(args.selection)), allow_nan=False))
+        return 0
+    if args.selection is not None or args.output is None:
+        p.error('Computation requires --output and no --selection')
+    if args.reference_input:
+        saved = write_reference_study(args.reference_input, args.output)
+        print(json.dumps(dict(rows=len(saved['rows']), engineering_status='NOT_EVALUATED')))
+        return 0
     rows = [compute(c) for c in cases()]
     args.output.mkdir(parents=True, exist_ok=True)
     output = args.output/'precomputed.json'
