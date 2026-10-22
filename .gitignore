@@ -581,3 +581,11 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the production chemistry module analysis and its change register.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/productionchemistry/
+docs/reports/modules/productionchemistry/*
+!docs/reports/modules/productionchemistry/report.html
+!docs/reports/modules/productionchemistry/changes.json

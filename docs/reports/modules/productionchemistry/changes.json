@@ -1,0 +1,15 @@
+{
+  "report": "productionchemistry",
+  "revision": "00",
+  "revisions": [
+    {
+      "revision": "00",
+      "date": "2026-10-21",
+      "changes": [
+        "Initial analysis of mineral-scale screening along a production string.",
+        "Synthetic public-example results are separated from field design acceptance.",
+        "Coefficient calibration and independent physical comparison remain required."
+      ]
+    }
+  ]
+}
