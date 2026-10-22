@@ -5237,7 +5237,7 @@ families:
     signals: *a509c5dfbb2
     relation: independent
     module: scripts
-    file_sha256: 26d2feef6eea371f7b9c698b335feffb058e47a92d42d704465b2e832987b9fc
+    file_sha256: 9b7faf2ec52146bededa16d5ae58d3851391d3337b68f47479d01413ee4806cd
     body_sha256: 7189a055e2e1560419691ee5b136b3ae0e6e217513e9edd2c97f86100ba66476
   - path: scripts/consolidate_panels.py
     symbol: _build_manual_entries

@@ -17,6 +17,11 @@ available: `git ls-files` lists cached entries even after a local file removal.
 See the [Git ls-files options](https://git-scm.com/docs/git-ls-files#_options),
 particularly `--cached` and `--deleted`.
 
+The check expects a full checkout. Sparse checkouts and `skip-worktree` entries
+can leave tracked files unavailable: omitted source YAML causes an extraction
+error, and an omitted referenced target is reported as missing from the working
+tree. Populate the tracked input files before running the check.
+
 The command fails on extraction errors, new broken references, and stale
 baseline entries. Existing defects are recorded as `[source, reference]` JSON
 rows in `scripts/ci/include_target_baseline.txt`. Repair a chain and remove its
@@ -51,8 +56,10 @@ repositories without loading engineering inputs or licensed software.
 
 ## Ignore rules and limits
 
-The root virtual environment is excluded by `/env/`. A leading slash anchors
-this pattern; unanchored `env/` would also exclude nested engineering inputs.
+Root virtual environments are excluded by `/env/` and `/ENV/`. Leading slashes
+anchor both patterns, so nested engineering inputs remain visible with either
+`core.ignorecase=false` or `core.ignorecase=true`. Unanchored `env/` or `ENV/`
+would also exclude nested inputs under the matching Git case rules.
 See [Git ignore pattern format](https://git-scm.com/docs/gitignore#_pattern_format).
 Specific nested virtual-environment paths remain ignored, while YAML environment
 inputs under `docs/` have explicit re-inclusions. Re-inclusion cannot override
