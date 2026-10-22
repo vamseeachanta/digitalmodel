@@ -39,8 +39,8 @@ CASES = [
     (0.9501, 10.0, Verdict.ACCEPT),         # just above the band edge
     (0.9499, 10.0, Verdict.MONITOR),        # just inside band
     (0.90, 10.0, Verdict.MONITOR),          # exactly at allowable
-    (0.8999, 10.0, Verdict.ESCALATE),       # rating evidence absent
-    (0.50, 10.0, Verdict.ESCALATE),         # rating evidence absent
+    (0.8999, 10.0, Verdict.DERATE),         # just below allowable
+    (0.50, 10.0, Verdict.DERATE),           # floor inclusive
     (0.4999, 10.0, Verdict.REPLACE),        # below floor
     (0.95, 0.0, Verdict.REPAIR),            # screening fails (life exhausted), margin OK
     (float("nan"), 10.0, Verdict.ESCALATE), # margin not evaluable
@@ -53,11 +53,29 @@ CASES = [
 @pytest.mark.parametrize("asset_class", CLASSES)
 @pytest.mark.parametrize("margin,life,expected", CASES)
 def test_verdict_boundaries_per_class(asset_class, margin, life, expected):
-    d = decide(margin, RSFA, life, asset_class)
+    if asset_class in ("pressure", "pipeline", "tank"):
+        derate = reduced_mawp(Q_(1000, "psi"))
+    else:
+        label = {"mooring_chain": "T_limit", "hull_plating": "loading_limit",
+                 "jacket_member": "member_load_limit"}[asset_class]
+        derate = scaled_limit(Q_(8000, "kN"), "[force]", label=label)
+    d = decide(margin, RSFA, life, asset_class, derate=derate)
     assert d.verdict is expected
+    if expected is Verdict.DERATE:
+        assert d.derated is not None
+        assert d.derated.magnitude > 0
     assert d.asset_class == asset_class
     assert d.action == action_for(expected, asset_class)
     assert isinstance(d.governing_criterion, str) and d.governing_criterion
+
+
+@pytest.mark.parametrize("asset_class", CLASSES)
+@pytest.mark.parametrize("margin", [0.8999, 0.50])
+def test_derate_boundaries_escalate_without_rating_callable(asset_class, margin):
+    result = decide(margin, RSFA, 10.0, asset_class)
+    assert result.verdict is Verdict.ESCALATE
+    assert result.derated is None
+    assert "not calculated" in result.governing_criterion
 
 
 @pytest.mark.parametrize("asset_class", CLASSES)

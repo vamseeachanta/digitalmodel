@@ -55,3 +55,15 @@ def test_at_least_one_take_more(dashboard_data):
 def test_at_least_one_not_accept(dashboard_data):
     verdicts = [s["verdict"] for s in dashboard_data["scenarios"]]
     assert any(v != "ACCEPT" for v in verdicts)
+
+
+def test_missing_life_remains_null_in_dashboard_data(monkeypatch):
+    import json
+
+    module = _load_module()
+    spec = module._scenario_grids()[0]
+    spec["component"].corrosion_rate_in_per_yr = None
+    monkeypatch.setattr(module, "_scenario_grids", lambda: [spec])
+    data = module.build_dashboard_data()
+    assert data["scenarios"][0]["remaining_life_yr"] is None
+    assert json.loads(json.dumps(data))["scenarios"][0]["remaining_life_yr"] is None

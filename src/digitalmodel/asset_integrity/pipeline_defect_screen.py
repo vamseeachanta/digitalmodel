@@ -125,6 +125,19 @@ def _circumferential_row(inputs, depth, length):
 
 
 def _decision(rows, applicability):
+    if any(not np.isfinite(row["margin"]) for row in rows):
+        return None, {
+            "verdict": "ESCALATE", "action": "ESCALATE",
+            "asset_class": "pipeline", "margin": None,
+            "margin_allowable": 1.0, "remaining_life_yr": None,
+            "rerated_mawp_psi": None, "derated": None, "derated_units": None,
+            "applicability": applicability.to_dict(), "demand_limits_psi": None,
+            "governing_criterion": (
+                "A method has a non-finite allowable/demand margin; "
+                "a governing method and fitness verdict cannot be established. "
+                "Engineering review is required."
+            ),
+        }
     governing = min(rows, key=lambda row: row["margin"])
     # Unity is the definition of allowable/demand, not an RSF policy band.
     # Each physical demand limit was calculated in _methods; life is absent.

@@ -110,13 +110,12 @@ class DecisionBands:
 
 @dataclass(frozen=True)
 class AssetClassPolicy:
-    """Everything class-specific: bands, wording, margin label, fallback note."""
+    """Class-specific bands, action wording and margin label."""
 
     name: str
     bands: DecisionBands
     actions: Mapping[Verdict, str]
     margin_label: str
-    no_derate_note: str
 
 
 _PRESSURE_ACTIONS = {
@@ -152,29 +151,24 @@ _JACKET_ACTIONS = {
     Verdict.ESCALATE: "ESCALATE",
 }
 
-_PRESSURE_NOTE = "Reduce MAWP or operating pressure."
-
 ASSET_CLASSES: Mapping[str, AssetClassPolicy] = {
     "pressure": AssetClassPolicy(
-        "pressure", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+        "pressure", DecisionBands(), _PRESSURE_ACTIONS, "RSF"
     ),
     "pipeline": AssetClassPolicy(
-        "pipeline", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+        "pipeline", DecisionBands(), _PRESSURE_ACTIONS, "RSF"
     ),
     "tank": AssetClassPolicy(
-        "tank", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+        "tank", DecisionBands(), _PRESSURE_ACTIONS, "RSF"
     ),
     "mooring_chain": AssetClassPolicy(
         "mooring_chain", DecisionBands(), _MOORING_ACTIONS, "RF",
-        "Reduce the line tension limit or pretension.",
     ),
     "hull_plating": AssetClassPolicy(
         "hull_plating", DecisionBands(), _HULL_ACTIONS, "t_ratio",
-        "Restrict loading until renewal.",
     ),
     "jacket_member": AssetClassPolicy(
         "jacket_member", DecisionBands(), _JACKET_ACTIONS, "RSR",
-        "Mitigate: reduce loads or exposure category.",
     ),
 }
 

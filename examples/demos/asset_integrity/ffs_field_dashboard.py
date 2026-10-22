@@ -151,7 +151,8 @@ def build_dashboard_data() -> dict:
             "rsf": round(float(result.rsf), 4),
             "rsf_a": round(float(result.rsf_a), 4),
             "folias_factor": round(float(result.folias_factor), 4),
-            "remaining_life_yr": round(float(result.remaining_life_yr), 2),
+            "remaining_life_yr": (None if result.remaining_life_yr is None else
+                                  round(float(result.remaining_life_yr), 2)),
             "rerated_pressure_psi": round(float(result.rerated_pressure_psi), 1),
             "sufficiency_status": result.sufficiency_status,
             "sufficiency_confidence": str(suf.confidence),

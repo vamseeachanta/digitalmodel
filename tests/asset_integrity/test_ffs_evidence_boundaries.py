@@ -87,6 +87,27 @@ def test_uniform_decimal_index_preserves_pitch_and_equivalent_extent():
     assert l2["equivalent_lta"]["axial_extent_in"] == pytest.approx(0.4)
 
 
+@pytest.mark.parametrize("rows,pitch", [(60, 0.1), (40, 0.2)])
+def test_long_decimal_index_preserves_pitch_extent_and_verdict(rows, pitch):
+    """Cell-centred lengths are 60*0.1=6 in and 40*0.2=8 in."""
+    from digitalmodel.asset_integrity.assessment.ffs_coordinator import (
+        FFSComponent, assess_component,
+    )
+
+    grid = pd.DataFrame([[0.3, 0.5]] * rows,
+                        index=[i * pitch for i in range(rows)])
+    char = characterize_pit_field(grid, 0.5)
+    assert char.row_spacing_in == pytest.approx(pitch)
+    assert char.spacing_basis == "uniform numeric index"
+    assert char.pitted_region_length_in == pytest.approx(rows * pitch)
+    component = FFSComponent("SYNTHETIC", "B31.8", 16, 0.5, 1000, smys_psi=52000)
+    decimal = assess_component(component, grid, force_type="PITTING")
+    explicit = assess_component(component, grid.reset_index(drop=True),
+                                force_type="PITTING", row_spacing_in=pitch)
+    assert decimal.verdict == explicit.verdict
+    assert decimal.rsf == pytest.approx(explicit.rsf)
+
+
 @pytest.mark.parametrize("index", [
     [0], ["row"], [0, 0], [0, 1, 3],
     [0.0, 0.1, 0.2, 0.30000000001],

@@ -138,9 +138,9 @@ class PitFieldCharacterization:
 def _physical_pitch(index, explicit):
     """Return an explicit or observed uniform pitch, with its provenance.
 
-    Inferred gaps may differ by at most eight float64 epsilons relative to
-    the first gap, with no absolute tolerance. This allows binary roundoff
-    in decimal-coordinate subtraction, not an engineering spacing tolerance.
+    Inferred gaps may differ by eight float64 epsilons scaled to the largest
+    absolute coordinate. Subtraction roundoff grows with coordinate magnitude;
+    this is a numerical allowance, not an engineering spacing tolerance.
     """
     if explicit is not None:
         if (isinstance(explicit, bool) or not isinstance(explicit, (int, float))
@@ -152,8 +152,11 @@ def _physical_pitch(index, explicit):
     except (TypeError, ValueError):
         return None, "not evaluated"
     gaps = np.diff(positions)
-    if (not gaps.size or not np.isfinite(gaps).all() or gaps[0] <= 0
-            or not np.allclose(gaps, gaps[0], rtol=8 * np.finfo(float).eps, atol=0)):
+    if (not gaps.size or not np.isfinite(positions).all()
+            or not np.isfinite(gaps).all() or not (gaps > 0).all()):
+        return None, "not evaluated"
+    tolerance = 8 * np.finfo(float).eps * np.max(np.abs(positions))
+    if not np.allclose(gaps, gaps[0], rtol=0, atol=tolerance):
         return None, "not evaluated"
     return float(gaps[0]), "uniform numeric index"
 
