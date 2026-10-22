@@ -269,9 +269,7 @@ reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/reports/modules/
-docs/reports/modules/*
-!docs/reports/modules/syntheticropemooringfatigue/
-docs/reports/modules/syntheticropemooringfatigue/*
+docs/reports/modules/*/*
 !docs/reports/modules/syntheticropemooringfatigue/build_report.py
 !docs/reports/modules/syntheticropemooringfatigue/changes.json
 !docs/reports/modules/syntheticropemooringfatigue/report.html

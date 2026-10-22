@@ -8,6 +8,7 @@ import copy
 import csv
 import importlib.util
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -106,6 +107,12 @@ def example(tmp_path_factory):
 def expected_numbers(inputs, summary, bins):
     """Assemble expectations from a fresh call, without builder helpers."""
     expected = {"design_life": inputs["design_life_years"]}
+    for group in ("dff", "creep_safety_factor", "tn_curve", "creep", "min_tension"):
+        value = inputs[group]
+        if isinstance(value, dict):
+            expected.update((f"parameter.{group}.{key}", item) for key, item in value.items())
+        else:
+            expected[f"parameter.{group}"] = value
     for index, (source, result) in enumerate(zip(inputs["lines"], summary["lines"])):
         prefix = f"line.{index}."
         for field in ("MBL_kN", "mean_tension_kN", "min_tension_kN"):
@@ -139,7 +146,11 @@ def test_rebuild_and_every_worked_example_number(builder, example):
     assert {key for key, _ in page.numbers} == set(expected)
     for key, displayed in page.numbers:
         # Match displayed precision; no exact comparison of library float tails.
-        assert displayed == builder.display(expected[key]), key
+        numeric = float(displayed.replace(",", "").replace("−", "-"))
+        tolerance = 1e-12 if key.startswith("parameter.") else 0.005
+        # Non-decision loads and requirements retain one decimal place.
+        absolute = 0.05 if "." not in displayed and "," in displayed else 1e-12
+        assert numeric == pytest.approx(expected[key], rel=tolerance, abs=absolute), key
         if key.endswith(("normalised_range", "min_tension_ratio")):
             # Ratios retain four significant figures so that visible range /
             # visible breaking load agrees at the stated display precision.
@@ -166,9 +177,122 @@ def test_hand_anchors_are_reported(builder, example):
     numbers = dict(Page(html).numbers)
     assert numbers["line.0.bin.0.normalised_range"] == builder.display(0.05)
     assert numbers["line.0.min_tension_ratio"] == builder.display(0.0833333333333333)
-    assert numbers["line.0.compression_margin"] == builder.display(1.66666666666667)
-    assert numbers["line.1.creep_life_years"] == builder.display(3.162277660168379)
+    assert float(numbers["line.0.compression_margin"]) == pytest.approx(1.66666666666667, rel=0.003)
+    assert float(numbers["line.1.creep_life_years"]) == pytest.approx(3.162277660168379, abs=0.0005)
     assert numbers["line.1.creep_required_years"] == builder.display(75.0)
+
+
+def test_fatigue_and_governing_results_have_independent_anchors(builder, example):
+    html, _ = builder.build(example[0] / "fatigue-anchors")
+    numbers = dict(Page(html).numbers)
+    # N(0.15) = 0.259 * exp(-13.46 * ln(0.15)) = 3.185014525e10.
+    # D1 = 600000/8.417119746e16 + 250000/7.469641593e12
+    #      + 60000/3.185014525e10 = 1.917297801e-6.
+    # L1 = 25/D1 = 1.303918462e7; fatigue margin = 1/(60*D1) = 8692.789748.
+    # D2 = 450000/7.234090439e15 + 180000/3.084576794e13
+    #      + 50000/6.419780692e11 = 8.378197042e-8; L2 = 25/D2.
+    # Governing second-line creep margin = sqrt(10)/75 = 0.04216370214.
+    # Second-line minimum-tension margin = 1200/(18000*0.05) = 4/3.
+    anchors = {
+        "line.0.bin.2.allowable_cycles": 3.185014525e10,
+        "line.0.total_damage": 1.917297801e-6,
+        "line.0.fatigue_life_years": 1.303918462e7,
+        "line.0.fatigue_margin": 8692.789748,
+        "line.1.total_damage": 8.378197042e-8,
+        "line.1.fatigue_life_years": 2.983935550e8,
+        "line.1.line_margin": 0.04216370214,
+        "line.1.compression_margin": 1.3333333333333333,
+    }
+    for key, expected in anchors.items():
+        observed = float(numbers[key].replace(",", "").replace("−", "-"))
+        assert observed == pytest.approx(expected, rel=0.005), key
+
+
+def test_all_model_parameters_are_visible_with_their_basis(builder, example):
+    html, _ = builder.build(example[0] / "parameters")
+    numbers = dict(Page(html).numbers)
+    expected = {
+        "dff": 60.0, "creep_safety_factor": 3.0,
+        "tn_curve.intercept": 0.259, "tn_curve.slope": 13.46,
+        "tn_curve.mean_load_knockdown": 0.0,
+        "creep.reference_life_years": 100.0, "creep.load_ratio_ref": 0.30,
+        "creep.decades_per_load_ratio": 6.0, "min_tension.min_ratio_allow": 0.05,
+    }
+    for key, value in expected.items():
+        assert float(numbers[f"parameter.{key}"]) == value
+    assert 'id="table-parameters"' in html
+    assert "Unsourced demonstration value" in html
+    assert "2018-07" in html and "Edition conflict" in html
+
+
+@pytest.mark.parametrize("case, mechanism, status", [
+    ("fatigue", "Tension-range fatigue", "does not meet"),
+    ("creep", "Creep rupture", "does not meet"),
+    ("compression", "Minimum tension", "does not meet"),
+    ("pass", "Minimum tension", "meets"),
+])
+def test_verdicts_follow_each_governing_mechanism(builder, example, tmp_path, monkeypatch, case, mechanism, status):
+    inputs = copy.deepcopy(example[1])
+    inputs["lines"][1]["mean_tension_kN"] = 3600.0
+    if case == "fatigue":
+        inputs["lines"][0]["tension_range_bins"][2]["n_cycles"] *= 1000000000
+    elif case == "creep":
+        inputs["lines"][0]["mean_tension_kN"] = 9900.0
+    elif case == "compression":
+        inputs["lines"][0]["min_tension_kN"] = 0.0
+    source = tmp_path / "input.yml"
+    source.write_text(yaml.safe_dump({"synthetic_rope_mooring_fatigue": inputs}), encoding="utf-8", newline="\n")
+    monkeypatch.setattr(builder, "EXAMPLE", source)
+    html, _ = builder.build(tmp_path / "outputs")
+    page = Page(html)
+    visible = " ".join(page.visible)
+    assert f"{mechanism} governs" in visible
+    assert f"Overall screening {status} the supplied criteria" in visible
+    verdicts = re.findall(r'<p data-verdict="overall">(.*?)</p>', html, re.S)
+    assert len(verdicts) == 4
+    assert all(f"Overall screening {status} the supplied criteria" in item for item in verdicts)
+    assert "against unity (1.000)" in visible
+    assert ("No screening shortfall" in visible) == (case == "pass")
+    if case == "compression":
+        assert "lower plotting boundary" in visible
+    if case != "creep":
+        assert "second line governs the overall failure" not in visible.lower()
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_decisions_are_rejected(builder, value):
+    values = {f"line.{i}.compression_margin": value for i in range(2)}
+    with pytest.raises(ValueError, match="finite"):
+        builder.chart("compression", values)
+
+
+def test_boundary_margins_and_integer_cycle_counts_keep_their_meaning(builder):
+    assert builder.display(0.99996, "line.0.line_margin") == "< 1.00"
+    assert builder.display(1.0, "line.0.line_margin") == "1.00"
+    assert builder.display(600000, "line.0.bin.0.n_cycles") == "600,000"
+    assert builder.display(0.0254, "parameter.example") == "0.0254"
+
+
+def test_sibling_report_rules_do_not_reignore_deliverables(tmp_path):
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    subprocess.run(["git", "init", "-q", tmp_path.as_posix()], env=env, check=True)
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    rules += "\n!docs/reports/modules/anothermodule/\n!docs/reports/modules/anothermodule/report.html\n"
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
+    paths = [
+        "docs/reports/modules/syntheticropemooringfatigue/report.html",
+        "docs/reports/modules/anothermodule/report.html",
+        "docs/reports/modules/anothermodule/scratch.csv",
+        "docs/reports/modules/unlistedmodule/scratch.csv",
+    ]
+    for name in paths:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("test\n", encoding="utf-8", newline="\n")
+    result = subprocess.run(["git", "check-ignore", *paths], cwd=tmp_path, env=env,
+                            capture_output=True, text=True, encoding="utf-8", check=False)
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == paths[2:]
 
 
 def test_structure_sources_and_offline_assets(builder, example):
@@ -227,7 +351,8 @@ def test_report_files_are_not_ignored():
     paths = [REPORT_DIR / name for name in ("build_report.py", "report.html", "changes.json")]
     result = subprocess.run(
         ["git", "check-ignore", *(str(path.relative_to(ROOT)) for path in paths)],
-        cwd=ROOT, capture_output=True, text=True, check=False,
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=False,
+        env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
     )
     assert result.returncode == 1 and not result.stdout, "Report files must be stageable without forcing."
 
@@ -275,7 +400,7 @@ vm.runInNewContext(payload.script, context);
   await point.emit('focus');
   assert.match(get('chart-readout').textContent, /Case: Second polyester line; component: Synthetic rope span;/);
   assert.match(get('chart-readout').textContent, /limit .*kN; margin:/);
-  assert.equal(get('changes-panel').children.length, 1);
+  assert.equal(get('changes-panel').children.length, 2);
   await get('comment-folder').emit('click');
   assert.equal(get('comment-list').children[0].textContent, 'Results: Existing note');
   get('comment-section').value = 'Results';
@@ -302,5 +427,5 @@ vm.runInNewContext(payload.script, context);
     result = subprocess.run(["node", "-"], input=harness.replace(
         "const payload = JSON.parse(fs.readFileSync(0, 'utf8'));",
         "const payload = " + payload + ";",
-    ), text=True, capture_output=True, check=False)
+    ), text=True, encoding="utf-8", capture_output=True, check=False)
     assert result.returncode == 0, result.stderr

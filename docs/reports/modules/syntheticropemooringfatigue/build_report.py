@@ -19,6 +19,7 @@ import csv
 import json
 import math
 import re
+from html import escape
 from pathlib import Path
 
 import yaml
@@ -30,6 +31,11 @@ ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 EXAMPLE = ROOT / "examples/workflows/synthetic-rope-mooring-fatigue/input.yml"
 LABELS = ("First polyester line", "Second polyester line")
+MECHANISMS = {
+    "fatigue": ("Tension-range fatigue", "fatigue_life_years", "fatigue_required_years", "years"),
+    "creep": ("Creep rupture", "creep_life_years", "creep_required_years", "years"),
+    "compression": ("Minimum tension", "min_tension_kN", "min_required_kN", "kN"),
+}
 CHANGES = {
     "document": "Synthetic rope mooring fatigue analysis",
     "revisions": [
@@ -41,13 +47,35 @@ CHANGES = {
                 "Fatigue, creep and minimum-tension margins are separated from material qualification.",
                 "Input provenance, limits of use and actions for the creep shortfall are recorded.",
             ],
-        }
+        },
+        {
+            "revision": "1",
+            "date": "2026-10-22",
+            "changes": [
+                "Model inputs and their unqualified source basis are exposed so the calculation can be checked.",
+                "Verdicts follow the calculated mechanism, zero margins are plotted explicitly and boundary precision preserves failures.",
+                "Independent fatigue arithmetic and the current workflow and atlas checks extend the evidence.",
+            ],
+        },
     ],
 }
 
 
-def display(value: float) -> str:
+def display(value: float, key: str = "") -> str:
     """Use engineering precision without displaying small nonzero values as zero."""
+    if not math.isfinite(value):
+        raise ValueError("Report values must be finite")
+    if key.startswith("parameter."):
+        return str(value)
+    if key.endswith("n_cycles"):
+        return f"{value:,.0f}" if value == int(value) else f"{value:,}"
+    if key.endswith("_life_years"):
+        return f"{value:.3f}" if 0.001 <= abs(value) < 1000 else f"{value:.3g}"
+    if key.endswith("_margin"):
+        rounded = f"{value:.3g}"
+        if 0 < value < 1 and float(rounded) >= 1:
+            return "< 1.00"
+        return f"{value:.2f}" if value == 1 else rounded
     if value == 0:
         return "0.0"
     magnitude = abs(value)
@@ -66,6 +94,12 @@ def calculate(scratch: Path) -> tuple[dict, dict, list[dict], dict[str, float]]:
     with Path(summary["results_csv"]).open(encoding="utf-8", newline="\n") as stream:
         bins = list(csv.DictReader(stream))
     values = {"design_life": inputs["design_life_years"]}
+    for group in ("dff", "creep_safety_factor", "tn_curve", "creep", "min_tension"):
+        value = inputs[group]
+        if isinstance(value, dict):
+            values.update((f"parameter.{group}.{key}", item) for key, item in value.items())
+        else:
+            values[f"parameter.{group}"] = value
     for index, (source, result) in enumerate(zip(inputs["lines"], summary["lines"])):
         prefix = f"line.{index}."
         for field in ("MBL_kN", "mean_tension_kN", "min_tension_kN"):
@@ -87,7 +121,45 @@ def calculate(scratch: Path) -> tuple[dict, dict, list[dict], dict[str, float]]:
 
 def number(key: str, values: dict[str, float]) -> str:
     """Mark every worked-example number for the rebuild test."""
-    return f'<span data-number="{key}">{display(values[key])}</span>'
+    return f'<span data-number="{key}">{escape(display(values[key], key))}</span>'
+
+
+def mechanism_statement(index: int, mechanism: str, values: dict) -> str:
+    """State a decision with its actual value, requirement and input basis."""
+    title, actual, required, units = MECHANISMS[mechanism]
+    prefix = f"line.{index}."
+    n = lambda field: number(prefix + field, values)
+    status = "is met" if values[prefix + mechanism + "_margin"] >= 1 else "is not met"
+    return (
+        f"{LABELS[index]}: {title} criterion {status}; calculated {n(actual)} {units} "
+        f"against {n(required)} {units} required, margin {n(mechanism + '_margin')} "
+        'against unity (1.000). Basis: <a href="#table-parameters">supplied model parameters</a> '
+        'and <a href="#table-inputs">prescribed loads</a>.'
+    )
+
+
+def verdicts(summary: dict, values: dict) -> tuple[str, str]:
+    """Derive repeated conclusions and the next action from the governing result."""
+    statements = []
+    for i, line in enumerate(summary["lines"]):
+        mechanism = line["governing_mechanism"]
+        title = MECHANISMS[mechanism][0]
+        statements.append(f"{title} governs. " + mechanism_statement(i, mechanism, values))
+    governing = min(range(len(summary["lines"])), key=lambda i: values[f"line.{i}.line_margin"])
+    mechanism = summary["lines"][governing]["governing_mechanism"]
+    passes = all(values[f"line.{i}.{m}_margin"] >= 1 for i in range(len(LABELS)) for m in MECHANISMS)
+    status = "meets" if passes else "does not meet"
+    overall = f'Overall screening {status} the supplied criteria. ' + " ".join(statements)
+    if passes:
+        action = "No screening shortfall is calculated; material qualification and a site exposure basis remain required before service use."
+    else:
+        actions = {
+            "fatigue": "Qualify the tension-range curve and exposure histogram, then reassess cyclic demand and breaking capacity.",
+            "creep": "Obtain qualified supplier creep data at the intended load, temperature and environment, then reassess mean tension and breaking capacity.",
+            "compression": "Obtain a qualified low-tension criterion, then reassess pretension and minimum tension against the prescribed threshold.",
+        }
+        action = f"{LABELS[governing]} requires reassessment for {MECHANISMS[mechanism][0].lower()}. " + actions[mechanism]
+    return f'<p data-verdict="overall">{overall}</p>', action
 
 
 def table(headers: tuple[str, ...], rows: list[list[str]], caption: str, ident: str) -> str:
@@ -99,18 +171,15 @@ def table(headers: tuple[str, ...], rows: list[list[str]], caption: str, ident: 
 
 def chart(mechanism: str, values: dict[str, float]) -> str:
     """Draw margins against line identity with a unity limit and bound hovers."""
-    descriptions = {
-        "fatigue": ("Tension-range fatigue", "fatigue_life_years", "fatigue_required_years", "years"),
-        "creep": ("Creep rupture", "creep_life_years", "creep_required_years", "years"),
-        "compression": ("Minimum tension", "min_tension_kN", "min_required_kN", "kN"),
-    }
-    title, demand, required, units = descriptions[mechanism]
+    title, demand, required, units = MECHANISMS[mechanism]
     margins = [values[f"line.{index}.{mechanism}_margin"] for index in range(len(LABELS))]
-    lower = min(-0.15, math.log10(min(margins + [1.0])) - 0.25)
+    if not all(math.isfinite(margin) for margin in margins):
+        raise ValueError("Chart margins must be finite")
+    lower = min(-0.15, math.log10(min([m for m in margins if m > 0] + [1.0])) - 0.25)
     upper = max(0.15, math.log10(max(margins + [1.0])) + 0.25)
 
     def y(value):
-        return 215 - (math.log10(value) - lower) / (upper - lower) * 160
+        return 215 if value <= 0 else 215 - (math.log10(value) - lower) / (upper - lower) * 160
 
     limit_y = y(1.0)
     points = []
@@ -125,7 +194,7 @@ def chart(mechanism: str, values: dict[str, float]) -> str:
             f'data-required="{prefix}{required}" data-units="{units}">'
             f'<circle cx="{x}" cy="{cy:.1f}" r="8" fill="{colour}"/>'
             f'<text x="{x}" y="{cy - 15:.1f}" text-anchor="middle" '
-            f'data-number="{prefix}{mechanism}_margin">{display(margin)}</text>'
+            f'data-number="{prefix}{mechanism}_margin">{escape(display(margin, prefix + mechanism + "_margin"))}</text>'
             f'<text x="{x}" y="250" text-anchor="middle">{LABELS[index]}</text></g>'
         )
     return (
@@ -140,6 +209,7 @@ def chart(mechanism: str, values: dict[str, float]) -> str:
         + "".join(points)
         + '</svg><figcaption>Hover, focus or select a marker for case, component, calculated life or tension, '
         'required life or tension, and units. The dashed line is the supplied acceptance limit. '
+        'Zero or negative margins are shown at the lower plotting boundary with their actual values. '
         '<a href="#criteria">Basis: acceptance criteria.</a></figcaption></figure>'
     )
 
@@ -278,6 +348,11 @@ INTERACTION = r"""
 def build(scratch: Path) -> tuple[str, dict]:
     """Write the complete report narrative with the full workflow in context."""
     inputs, summary, bins, values = calculate(scratch)
+    # Reject invalid numerical returns before producing a decision or a chart.
+    for value in values.values():
+        if not math.isfinite(value):
+            raise ValueError("Report inputs and results must be finite")
+    overall, action = verdicts(summary, values)
     n = lambda key: number(key, values)
     input_rows = []
     result_rows = []
@@ -291,8 +366,8 @@ def build(scratch: Path) -> tuple[str, dict]:
             n(prefix + "fatigue_margin"), n(prefix + "creep_life_years"),
             n(prefix + "creep_margin"), n(prefix + "min_tension_ratio"),
             n(prefix + "compression_margin"), n(prefix + "line_margin"),
-            "Minimum tension" if line["governing_mechanism"] == "compression" else "Creep rupture",
-            "The supplied criteria are met." if line["passes"] else "The supplied creep criterion is not met.",
+            MECHANISMS[line["governing_mechanism"]][0],
+            mechanism_statement(i, line["governing_mechanism"], values),
             '<a href="#method">Module calculation</a>',
         ])
         for j, _ in enumerate(inputs["lines"][i]["tension_range_bins"]):
@@ -314,6 +389,25 @@ def build(scratch: Path) -> tuple[str, dict]:
         ("Synthetic span", "Required fatigue life (years)", "Required creep life (years)", "Required minimum tension (kN)", "Source"),
         [[label] + [n(f"line.{i}." + field) for field in ("fatigue_required_years", "creep_required_years", "min_required_kN")] + ['<a href="#criteria">Supplied acceptance criteria</a>'] for i, label in enumerate(LABELS)],
         "Table D. Acceptance limits calculated from the public example inputs.", "table-limits",
+    )
+    attributed = 'Public input attribution to <a href="#ref-standard">DNV-OS-E301, October 2010, Table F3/F702</a>; primary text not opened; NOT_EVALUATED.'
+    unsourced = "Unsourced demonstration value; material applicability is NOT_EVALUATED."
+    parameters = (
+        ("Fatigue safety factor, DFF (dimensionless)", "dff", 5, attributed),
+        ("Creep safety factor (dimensionless)", "creep_safety_factor", 6, unsourced),
+        ("T-N intercept, aD (cycles)", "tn_curve.intercept", 8, attributed),
+        ("T-N slope, m (dimensionless)", "tn_curve.slope", 9, attributed),
+        ("Mean-load knockdown coefficient (dimensionless)", "tn_curve.mean_load_knockdown", 10, unsourced),
+        ("Creep reference life (years)", "creep.reference_life_years", 12, unsourced),
+        ("Creep reference load ratio (dimensionless)", "creep.load_ratio_ref", 13, unsourced),
+        ("Creep load-ratio exponent coefficient (dimensionless)", "creep.decades_per_load_ratio", 14, unsourced),
+        ("Minimum allowable tension ratio (dimensionless)", "min_tension.min_ratio_allow", 16, unsourced),
+    )
+    parameter_table = table(
+        ("Parameter and units", "Input value", "Input line", "Basis and qualification"),
+        [[label, n("parameter." + key), f'<a href="../../../../examples/workflows/synthetic-rope-mooring-fatigue/input.yml#L{line}">input.yml:{line}</a>', basis]
+         for label, key, line, basis in parameters],
+        "Table F. Supplied model parameters; public configuration values are reproduced without source qualification.", "table-parameters",
     )
     # Reuse the existing page stylesheet and canonical tokens, with no network assets.
     exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text(encoding="utf-8")
@@ -339,17 +433,17 @@ button,select,input{font:inherit;margin:4px;padding:4px} .hs-doc th,.hs-doc .bad
 <section id="summary"><h2>1. Executive summary</h2>
 <p>The synthetic rope mooring fatigue module is an algebraic service-life screening tool for prescribed rope loads.
 Analysis is performed to determine fatigue, creep-rupture and minimum-tension margins, and the key results are summarized below.</p>
-<ul><li>The public example is screened against its supplied material laws and acceptance limits.
-<ul><li>The first polyester line meets the supplied criteria, with minimum tension governing at a margin of {n('line.0.line_margin')} against unity.</li>
-<li>The second polyester line does not meet the supplied creep criterion: calculated creep life is {n('line.1.creep_life_years')} years against {n('line.1.creep_required_years')} years required.</li></ul></li>
+{overall}
+<ul><li>The public example is screened against its supplied material laws and acceptance limits.</li>
 <li>Engineering acceptance is not established by these screening results.
 <ul><li>Material-specific creep qualification, low-tension evidence and a site load basis are required before service use.</li>
-<li>The first decision is to resolve the second line's creep shortfall using qualified rope data and a revised mean-load basis; the large fatigue lives are not service-life recommendations.</li></ul></li></ul>
+<li>{action} The large fatigue lives are not service-life recommendations.</li></ul></li></ul>
 <p>All numerical findings are calculated from the <a href="#record-example">public example</a> through the <a href="#record-module">module workflow</a>.
 Detailed values are given in <a href="#table-results">Table B</a> and limits in <a href="#table-limits">Table D</a>.</p>
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and cause</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-21</td><td>The screening workflow is documented to distinguish its calculated example from material qualification.</td></tr></tbody></table></div>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>The screening workflow is documented to distinguish its calculated example from material qualification.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>The input basis is exposed and independent arithmetic checks are added; decisions and margin displays are corrected to follow the calculation.</td></tr></tbody></table></div>
 <p>Legend: The supplied criterion is met. The supplied criterion is not met. Material qualification is not evaluated.</p>
 {chart('creep', values)}
 </section>
@@ -375,14 +469,15 @@ This interpretation is required because the module divides design life by the ac
 They are not invented. Geometry is shown only as a labelled load-path schematic in <a href="#mooring-schematic">the system figure</a>.
 The physical input values and complete bin set are recorded in <a href="#table-inputs">Table A</a> and <a href="#table-bins">Table C</a>.</p>
 <h3 id="criteria">3.2 Criteria and rationale</h3>
-<p>A fatigue margin is defined as calculated fatigue life divided by design life multiplied by the supplied fatigue safety factor.
-A creep margin is defined separately using the supplied creep safety factor. The minimum-tension margin is the observed minimum tension divided by the prescribed minimum allowable tension.
+<p>The fatigue margin is L / (T × DFF). The creep margin is Lcreep / (T × creep safety factor).
+The minimum-tension margin is Tmin / (MBL × minimum allowable tension ratio).
 Every margin is required to reach unity; a life below its factored requirement or a tension below its prescribed minimum therefore fails the supplied criterion.
 These definitions and the unity comparison are <a href="#record-module">implementation acceptance rules</a>, not an assertion of code compliance.</p>
 <p>The public example attributes its polyester curve and fatigue factor to <a href="#ref-standard">Position mooring, October 2010, polyester fatigue provisions</a>.
-That edition has not been opened for this analysis. Numerical values from that publication are not reproduced here, and source qualification is NOT_EVALUATED.
+That edition has not been opened for this analysis. The public configuration values are reproduced in Table F, including its attributed curve and factor; source qualification is NOT_EVALUATED.
 The example's mean-load modifier, creep parameters and low-tension threshold are demonstration inputs; their material applicability is NOT_EVALUATED.
 The complete unchanged configuration remains the input record identified in <a href="#record-example">Section 9.2</a>.</p>
+{parameter_table}
 </section>
 
 <section id="method"><h2>4. Analysis methodology</h2>
@@ -399,11 +494,13 @@ The life expression follows by repeating the same exposure block: damage is prop
 This bookkeeping does not qualify a rope material curve.</p>
 <p>The required fatigue input function maps tension range divided by breaking load to allowable cycles.
 Its power-law intercept, slope and mean-load modifier are supplied in the public configuration, rather than selected by the module.
-The implementation applies an exponential mean-load modifier to that intercept.
+The implemented relation is N = aD × exp(−k × mean tension / MBL) × R<sup>−m</sup>, where R is tension range / MBL.
+The public configuration attributes aD and m to the cited 2010 Table F3; k is an unsourced demonstration coefficient (Table F).
 The public example disables that modifier; no mean-load fatigue sensitivity is demonstrated.
 The claimed curve basis is identified in <a href="#ref-standard">the cited standard edition and clause titles</a>; qualification is NOT_EVALUATED because the primary text is not in hand.</p>
 <p>The required creep input function maps mean tension divided by breaking load to creep life in years.
-The implementation evaluates a supplied reference life with a base-ten load-ratio dependence.
+The supplied demonstration relation is Lcreep = Lref × 10<sup>(rref − mean tension / MBL) × c</sup>.
+Lref, rref and c are the unsourced demonstration coefficients in Table F; no standard calibration is claimed.
 No open material calibration is held for that input law. Its coefficients are required inputs and its physical qualification is NOT_EVALUATED;
 the calculated creep life is conditional on that law. The minimum-tension threshold is likewise a required input, not a predicted axial-compression fatigue life.</p>
 <h3>4.2 Interface, outputs and arithmetic checks</h3>
@@ -416,8 +513,8 @@ high-modulus polyethylene requires line-specific fatigue and creep models. Chain
 the governing line and mechanism, screening status and paths to the bin and line-summary comma-separated-value files.
 A copy of the input mapping is therefore required when the original input record is needed after the call.
 The bin file contains range, normalised range, count, allowable count and damage. The summary file contains calculated lives, margins and governing results.</p>
-<p>Arithmetic is checked separately against hand-derived range normalisation, minimum-tension normalisation,
-minimum-tension margin, required creep life and the prescribed creep-law result.
+<p>Arithmetic is checked separately against hand-derived range and minimum-tension normalisation,
+allowable cycles, both line damages and fatigue lives, fatigue margin, required creep life, governing creep margin and minimum-tension margins.
 These are arithmetic anchors, not physical material tests. The rebuild test also checks every marked example value against a fresh call.</p>
 </section>
 
@@ -425,19 +522,14 @@ These are arithmetic anchors, not physical material tests. The rebuild test also
 <p>The supplied example is calculated by calling the module, and the line results are presented against their own supplied limits.
 The plotted margins are dimensionless and increase with distance above the unity acceptance line.</p>
 <h3>5.1 Fatigue and minimum tension</h3>
-<p>Both lines meet the supplied fatigue and minimum-tension criteria.
-The first line is governed by minimum tension at a margin of {n('line.0.compression_margin')} against unity.
-Its observed minimum tension is {n('line.0.min_tension_kN')} kN against {n('line.0.min_required_kN')} kN required.
-The supplied low-tension check does not calculate damage from repeated compression events.</p>
+{''.join('<p>' + mechanism_statement(i, m, values) + '</p>' for i in range(len(LABELS)) for m in ('fatigue', 'compression'))}
+<p>The supplied low-tension check does not calculate damage from repeated compression events.</p>
 {chart('fatigue', values)}
 {chart('compression', values)}
 <h3>5.2 Creep and overall screening result</h3>
-<p>The first line's calculated creep life is {n('line.0.creep_life_years')} years against {n('line.0.creep_required_years')} years required.
-The second line's calculated creep life is {n('line.1.creep_life_years')} years against {n('line.1.creep_required_years')} years required,
-giving a creep margin of {n('line.1.creep_margin')} against unity. The second line governs the overall failure.</p>
-<p>The failure follows from the higher mean-load ratio in the prescribed creep model, despite the second line's lower accumulated tension-range fatigue damage.
-A small fatigue damage value therefore does not remove the creep shortfall.
-The action is to qualify the material model and reassess mean tension or rope breaking capacity before accepting the span for the intended exposure;
+{''.join('<p>' + mechanism_statement(i, 'creep', values) + '</p>' for i in range(len(LABELS)))}
+{overall}
+<p>{action}
 the basis is the separate life-limit definition in <a href="#criteria">Section 3.2</a> and the missing calibration recorded in <a href="#data-register">the data register</a>.</p>
 <div id="chart-readout" class="callout" role="status" aria-live="polite">Select a chart marker to read its values and limit.</div>
 <p>Full bin results, calculated life requirements and all returned numerical line fields are recorded in
@@ -447,9 +539,8 @@ the basis is the separate life-limit definition in <a href="#criteria">Section 3
 <section id="findings"><h2>6. Key findings</h2>
 <p>The screening outcome is controlled by the least of the separate mechanism margins.
 Fatigue damage alone is insufficient to determine the overall result.</p>
-<p>The first line meets the supplied criteria with a governing minimum-tension margin of {n('line.0.line_margin')} against unity.
-The second line does not meet the supplied creep criterion, with {n('line.1.creep_life_years')} years calculated against {n('line.1.creep_required_years')} years required.
-The large calculated fatigue lives are extrapolations of the prescribed exposure and input curve, not recommended service lives.</p>
+{overall}
+<p>The large calculated fatigue lives are extrapolations of the prescribed exposure and input curve, not recommended service lives.</p>
 <p>Existing repository tests provide workflow status and curve-wiring checks.
 No physical rope benchmark or source-qualified creep calibration is established by those assertions.
 The evidence inventory and the checks performed for this report are separated in <a href="#qa">the quality-assurance appendix</a>.</p>
@@ -476,9 +567,8 @@ No dynamic solver, rainflow counting, tension-history generation, static equilib
 <section id="recommendations"><h2>8. Recommendations</h2>
 <p>Material qualification and exposure definition are required before these margins are used for service decisions.
 The following actions are based on the failure and the missing-data entries recorded in this analysis.</p>
-<p>The second span is not accepted for the supplied exposure on this screening basis.
-Qualified supplier creep data at the intended mean load, temperature and environment are required,
-followed by reassessment of mean tension and breaking capacity against the separately factored creep-life requirement.
+{overall}
+<p>{action}
 Reducing tension or changing capacity also changes global stiffness, offsets and anchor loads; those effects require a global mooring assessment outside this calculation.</p>
 <p>A design-exposure tension histogram is required with explicit environmental weights and cycle-counting conventions.
 The distinction between full tension range and half-range amplitude is recorded before evaluating the curve.
@@ -499,7 +589,7 @@ section “Miner’s law for cumulative damage”, equation (1), printed pages 4
 The open copy was read on 2026-10-22. It supports linear damage bookkeeping and explains its limitations; it does not establish synthetic-rope coefficients.</p>
 <p id="ref-standard">DNV-OS-E301, Position mooring, October 2010 edition, Table F3 (polyester tension-range fatigue) and F702 (polyester fatigue safety factor), as described by the public example.
 This is the edition and provision basis attributed by the public example. Primary text was not opened;
-clause titles and applicability require confirmation against the cited edition before design use. No numerical standard value is reproduced.</p>
+clause titles and applicability require confirmation against the cited edition before design use. Table F reproduces the public inputs, without verifying the attributed standard values.</p>
 <h3>9.2 Repository records and rebuild instructions</h3>
 <ul>
 <li id="record-example"><a href="../../../../examples/workflows/synthetic-rope-mooring-fatigue/README.md">Public example description</a> and
@@ -543,7 +633,9 @@ Scientific notation preserves small nonzero damage and large extrapolated lives.
 <thead><tr><th scope="col">Item</th><th scope="col">Status and basis</th><th scope="col">Consequence or action</th><th scope="col">Source</th></tr></thead>
 <tbody>
 <tr><td>Loads and exposure</td><td>ASSUMED - to be confirmed: example values represent the complete design exposure.</td><td>Supply site-weighted counts and physical tension histories before service use.</td><td><a href="#record-example">Public example</a></td></tr>
-<tr><td>Polyester fatigue curve and factor</td><td>NOT_EVALUATED: primary standard text is not in hand.</td><td>Check the cited edition and material/strength applicability; no standard coefficients are reproduced.</td><td><a href="#ref-standard">Standard citation</a></td></tr>
+<tr><td>Polyester fatigue curve and factor</td><td>NOT_EVALUATED: primary standard text is not in hand; Table F reproduces the attributed public inputs.</td><td>Check the cited edition and material/strength applicability.</td><td><a href="#ref-standard">Standard citation</a></td></tr>
+<tr><td>Creep safety factor</td><td>Unsourced demonstration value in Table F; the required life is design exposure multiplied by this factor.</td><td>Qualify this separate factor before using its factored creep-life requirement for service decisions.</td><td><a href="#record-example">Public input line 6</a></td></tr>
+<tr><td>Edition conflict</td><td>The example attributes October 2010; the parametric provenance record pins 2018-07.</td><td>Resolve edition and provision applicability against primary text; neither attribution establishes qualification.</td><td><a href="../../../../src/digitalmodel/parametric/refresh.py#L35">Parametric provenance record, line 35</a></td></tr>
 <tr><td>Creep law and low-tension threshold</td><td>ASSUMED - to be confirmed: supplied demonstration inputs; material qualification is NOT_EVALUATED.</td><td>Obtain supplier test evidence at the service load, temperature and environment.</td><td><a href="#record-example">Public example</a></td></tr>
 <tr><td>Geometry, host and metocean</td><td>Not supplied; no assumption is used to produce a geometric or dynamic result.</td><td>Global mooring loads and boundary motions require a separate assessment.</td><td><a href="#record-module">Input interface</a></td></tr>
 <tr><td>Temperature and environment</td><td>Not supplied in the example; temperature does not modify the implemented laws.</td><td>Restrict interpretation to arithmetic until material applicability is established.</td><td><a href="#record-module">Implementation</a></td></tr>
@@ -552,13 +644,15 @@ Scientific notation preserves small nonzero damage and large extrapolated lives.
 <h3 id="qa">Appendix C. Calculation and quality-assurance evidence</h3>
 <p>The existing workflow registry test asserts the two line statuses, overall creep failure, positive bin outputs and decreasing allowable cycles with increasing range.
 The existing curve-wiring test compares calculated allowable cycles with the same input power law; it is a regression assertion, not an independently sourced physical benchmark.
-Those engine-based tests were not run for this report because their shared module requires application dependencies unavailable in the isolated report environment.
+Both named workflow nodes in Section 9.2 passed with their application dependencies installed; they run in the <code>tests-workflows</code> CI shard.
+The two rope-specific atlas nodes, <code>test_synthetic_rope_fatigue_atlas_is_log_log_exact</code> and <code>test_fatigue_bins_handler_shared_by_both_ropes</code>, also passed.
 No solver integration is imported by this report.</p>
 <p>The report test suite checks the full rebuild, every marked example value, hand-derived arithmetic anchors,
 the section and reference structure, offline assets, interactive chart bindings, public wording and explicit UTF-8 text input/output with line-feed output.
 The report tests are run with the interpreter's UTF-8 override unset.
 The mathematical anchors are range divided by breaking load, minimum tension divided by breaking load,
-minimum tension divided by required minimum tension, the factored creep exposure and the square-root form of the second line's prescribed creep calculation.
+minimum tension divided by required minimum tension, independent power-law cycle counts and damage sums, exposure divided by damage,
+the reciprocal factored damage, the factored creep exposure and the square-root form of the second line's prescribed creep calculation divided by its requirement.
 The test source records each arithmetic derivation.</p>
 <p>Pre-flight record: system scope and boundary inputs are named; units and exposure are stated; acceptance criteria and their qualification status are stated;
 all plotted limits are drawn; numerical example values come from the calculation; missing data and the action for the failing result are recorded;
@@ -581,7 +675,7 @@ No comments are transmitted over a network.</p>
 </section>
 <footer>Draft engineering analysis. Results are conditional on the prescribed exposure and supplied material laws.</footer>
 """
-    record = json.dumps({key: display(value) for key, value in values.items()}, ensure_ascii=False, sort_keys=True)
+    record = json.dumps({key: display(value, key) for key, value in values.items()}, ensure_ascii=False, sort_keys=True)
     changes = json.dumps(CHANGES, ensure_ascii=False, sort_keys=True)
     result = (
         '<!DOCTYPE html>\n<html lang="en" data-theme="light"><head><meta charset="utf-8">\n'
