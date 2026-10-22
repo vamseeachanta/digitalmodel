@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Pipelay pre-processing utilities for OrcaFlex analysis.
 
 Provides S-lay and J-lay geometry, stinger radius calculation,
@@ -261,9 +264,9 @@ class JLayConfig(BaseModel):
             "catenary_parameter_m": a,
             "sagbend_radius_m": a,
             "sagbend_bending_strain": bending_strain,
-            "sagbend_bending_stress_MPa": round(bending_stress / 1e6, 1),
-            "horizontal_offset_m": round(x_tdp, 1),
-            "suspended_length_m": round(s_suspended, 1),
+            "sagbend_bending_stress_MPa": bending_stress / 1e6,
+            "horizontal_offset_m": x_tdp,
+            "suspended_length_m": s_suspended,
             "derived_top_tension_kN": derived_tension / 1000.0,
             "horizontal_tension_kN": w * a / 1000.0,
             "tension_closure_relative_error": closure_error,

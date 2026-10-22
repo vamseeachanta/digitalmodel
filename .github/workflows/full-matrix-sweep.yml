@@ -152,6 +152,12 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
 
+      - name: Run pipelay analytical and report tests
+        if: matrix.domain == 'marine-ops-other'
+        run: >-
+          PYTHONPATH=src uv run --no-sync python -m pytest tests/pipelay/
+          tests/orcaflex/test_pipelay_analysis.py -q -rA -p no:cacheprovider
+
       - name: Extract shard result
         if: always()
         env:

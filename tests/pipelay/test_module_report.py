@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Check rebuilt client text, numerical bindings and standalone report controls."""
+"""Check rebuilt report text, numerical bindings and standalone controls."""
 
 import copy
 import importlib.util
@@ -13,6 +13,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/pipelay"
@@ -89,11 +90,11 @@ def test_report_rebuilds_exactly(builder, tmp_path):
 
 def test_report_deliverables_are_unignored():
     for name in ("build_report.py", "report.html", "changes.json"):
-        result = subprocess.run(["git", "check-ignore", "-q", str(REPORT / name)],
+        result = subprocess.run(["git", "check-ignore", "--no-index", "-q", str(REPORT / name)],
                                 cwd=ROOT, capture_output=True)
         assert result.returncode == 1, name
     # Review comments remain local and are not offered for publication.
-    result = subprocess.run(["git", "check-ignore", "-q", str(REPORT / "report.comments.json")],
+    result = subprocess.run(["git", "check-ignore", "--no-index", "-q", str(REPORT / "report.comments.json")],
                             cwd=ROOT, capture_output=True)
     assert result.returncode == 0
 
@@ -117,8 +118,134 @@ def test_all_worked_numbers_equal_fresh_module_returns(builder, tmp_path):
             assert value == returned[key]
     for attrs, text in page.bindings:
         value = builder.lookup(record, attrs["data-value"])
-        expected = builder.format_value(value, float(attrs["data-scale"]))
+        expected = builder.format_value(value, float(attrs["data-scale"]),
+                                        int(attrs["data-decimals"]), attrs["data-rounding"])
         assert text == expected
+
+
+def test_displayed_values_against_hand_worked_literals(builder, tmp_path):
+    """Independent E1-E7 anchors, without using the report formatter as oracle."""
+    page = Page()
+    page.feed(builder.render(builder.calculate(tmp_path)))
+    values = {}
+    for attrs, text in page.bindings:
+        values.setdefault(attrs["data-value"], set()).add(text)
+    # screening-basis.md: independently evaluated anchors, with display units.
+    expected = {
+        "jlay.result.pipe_submerged_weight_N_per_m": ("1658.3", "N/m"),
+        "jlay.result.top_tension_kN": ("2624.9", "kN"),
+        "jlay.result.sagbend.sagbend_radius_m": ("82.8", "m"),
+        "jlay.result.sagbend.sagbend_bending_strain": ("1954.4", "µm/m"),
+        "jlay.result.sagbend_strain_utilisation": ("65.1", "%"),
+        "jlay.result.sagbend.horizontal_offset_m": ("301.7", "m"),
+        "jlay.result.sagbend.suspended_length_m": ("1580.7", "m"),
+        "reel.result.reeling_bending_strain": ("17068.8", "µm/m"),
+        "reel.result.reeling_strain_utilisation": ("85.3", "%"),
+        "reel.result.residual_out_of_straightness_m": ("112.5", "mm"),
+        "reel.result.residual_bending_strain": ("853.4", "µm/m"),
+        "reel.result.residual_curvature_1_per_m": ("6.3", "1/km"),
+        "jlay.result.min_stinger_radius_m": ("81.0", "m"),
+    }
+    text = builder.render(builder.calculate(tmp_path / "units"))
+    for key, (literal, unit) in expected.items():
+        assert values[key] == {literal}, key
+        assert re.search(r'data-value="' + re.escape(key) + r'"[^>]*>' + literal
+                         + r'</span></td><td>' + re.escape(unit) + r'</td>', text), key
+    assert values["jlay.inputs.pipe.wall_thickness"] == {"20.600"}
+    assert values["reel.inputs.pipe.wall_thickness"] == {"19.100"}
+    assert 0.3238 / (2 * float(next(iter(values["jlay.result.min_stinger_radius_m"])))) <= 0.002
+
+
+@pytest.mark.parametrize("case, key, limit, label", [
+    ("jlay", "allowable_sagbend_strain", 0.0019, "sagbend"),
+    ("reel", "allowable_reeling_strain", 0.016, "core"),
+])
+def test_failing_input_rebuild_changes_verdicts_and_bars(builder, tmp_path, monkeypatch,
+                                                       case, key, limit, label):
+    original = builder.load_example
+
+    def failing(name):
+        cfg = original(name)
+        if name == case:
+            cfg["pipelay"]["config"][key] = limit
+        return cfg
+
+    monkeypatch.setattr(builder, "load_example", failing)
+    record = builder.build(tmp_path / "report", tmp_path / "calculations")
+    text = (tmp_path / "report/report.html").read_text(encoding="utf-8")
+    assert record[case]["result"]["screening_status"] == "fail"
+    assert f"exceeds the assumed {label} strain limit" in text
+    assert f"The {label} strain screen fails" in text
+    assert "The public examples meet the selected strain screens" not in text
+    bars = re.findall(r'<rect[^>]+fill="([^"]+)"[^>]+aria-label="([^"]+)"', text)
+    assert len(bars) == 2
+    color, tip = bars[0 if case == "jlay" else 1]
+    assert color == "var(--nogo)"
+    assert "fails" in tip
+
+
+def test_stress_verdict_uses_unrounded_proxy(builder, tmp_path, monkeypatch):
+    original = builder.load_example
+
+    def lower_yield(name):
+        cfg = original(name)
+        if name == "jlay":
+            # E5 gives 404.5574 MPa: rounds to 404.6 but is below this SMYS.
+            cfg["pipelay"]["pipe"]["smys"] = 404.58e6
+        return cfg
+
+    monkeypatch.setattr(builder, "load_example", lower_yield)
+    record = builder.calculate(tmp_path)
+    assert "below" in builder.stress_verdict(record)
+    record["jlay"]["inputs"]["pipe"]["smys"] = 400e6
+    assert "exceeds" in builder.stress_verdict(record)
+    assert "proxy exceeds" in builder.render(record)
+    record["jlay"]["inputs"]["pipe"]["smys"] = (
+        record["jlay"]["result"]["sagbend"]["sagbend_bending_stress_MPa"] * 1e6)
+    assert "equals" in builder.stress_verdict(record)
+
+
+def test_inconsistent_status_fails_closed(builder, tmp_path):
+    record = builder.calculate(tmp_path)
+    record["jlay"]["result"]["screening_status"] = "fail"
+    with pytest.raises(ValueError, match="screening status"):
+        builder.render(record)
+
+
+def test_lf_source_digests_and_output_bytes(builder, tmp_path, monkeypatch):
+    record = builder.calculate(tmp_path / "original")
+    checkout = tmp_path / "checkout"
+    for name in record["source_digests"]:
+        target = checkout / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source_text = (ROOT / name).read_text(encoding="utf-8")
+        target.write_bytes(source_text.replace("\n", "\r\n").encode("utf-8"))
+    monkeypatch.setattr(builder, "ROOT", checkout)
+    assert builder.calculate(tmp_path / "crlf") == record
+    monkeypatch.setattr(builder, "ROOT", ROOT)
+    builder.build(tmp_path / "report", tmp_path / "calculations")
+    for name in ("report.html", "changes.json"):
+        assert b"\r" not in (tmp_path / "report" / name).read_bytes()
+    attrs = subprocess.run(["git", "check-attr", "eol", "--", "docs/reports/modules/pipelay/report.html"],
+                           cwd=ROOT, capture_output=True, text=True, check=True)
+    assert attrs.stdout.strip().endswith(": eol: lf")
+
+
+def test_captions_and_figure_order(builder, tmp_path):
+    text = builder.render(builder.calculate(tmp_path))
+    figures = re.findall(r"<figcaption>Figure ([A-Z])\.", text)
+    assert figures == ["A", "B", "C", "D"]
+    assert len(re.findall(r'</table><p class="table-caption">Table \d+\.', text)) == text.count("<table>")
+    assert "plastic-strain limit" not in text
+
+
+@pytest.mark.parametrize("workflow", ["quality-gates-by-domain.yml", "full-matrix-sweep.yml"])
+def test_marine_domain_executes_pipelay_directory(workflow):
+    config = yaml.safe_load((ROOT / ".github/workflows" / workflow).read_text(encoding="utf-8"))
+    steps = [step for job in config["jobs"].values() for step in job.get("steps", [])]
+    pipelay_steps = [step for step in steps if "python -m pytest tests/pipelay/" in step.get("run", "")]
+    assert pipelay_steps
+    assert all(step.get("if") == "matrix.domain == 'marine-ops-other'" for step in pipelay_steps)
 
 
 def test_rebuild_responds_to_module_result_changes(builder, tmp_path, monkeypatch):
@@ -169,7 +296,7 @@ def test_house_style_sections_links_and_public_text(builder, tmp_path):
         if link and not link.startswith("#"):
             assert (REPORT / link.split("#")[0]).resolve().exists(), link
     visible = " ".join(page.visible)
-    assert "Draft for client review" in visible
+    assert "Draft for maintainer review" in visible
     assert "ASSUMED - to be confirmed" in visible
     assert "NOT_EVALUATED" in visible
     assert not re.search(r"\b(could|should|would|validated|certified|compliant)\b", visible, re.I)
@@ -243,11 +370,22 @@ const folder = {getFileHandle: async (name, options) => {
   createCalls++; return savedHandle;
 }};
 const document = {getElementById: get, createElement: element,
-  querySelectorAll: selector => selector === 'main > section' ? sections : []};
+  querySelectorAll: selector => selector === 'main > section' ? sections :
+    selector === '[data-point]' ? [point] : []};
+const handlers = new Map();
+const point = {dataset: {point: 'jlay:1.5'},
+  getAttribute: name => {
+    assert.equal(name, 'aria-label');
+    return input.page.match(/data-point="jlay:1\.5" aria-label="([^"]+)"/)[1];
+  },
+  addEventListener: (name, handler) => handlers.set(name, handler)};
 const window = {showDirectoryPicker: async () => folder};
 vm.runInNewContext(input.script, {document, window, crypto, TextEncoder, Blob, URL, setTimeout});
 (async () => {
   assert.equal(sections.length, 10);
+  handlers.get('focus')();
+  assert.match(get('point-status').textContent, /rate 2\.3 km\/day/);
+  assert.match(input.page, /height 1\.5 m; rate 2\.3 km\/day/);
   get('comment-text').value = 'Confirm the supplied coating density.';
   get('add-comment').onclick();
   await get('save-comments').onclick();
@@ -255,6 +393,12 @@ vm.runInNewContext(input.script, {document, window, crypto, TextEncoder, Blob, U
   const first = JSON.parse(saved);
   assert.equal(first.comments.length, 1);
   assert.equal(first.report_digest, config.report_digest);
+  // A CRLF checkout of the same report is accepted after LF normalization.
+  selectedPage = input.page.replace(/\n/g, '\r\n');
+  await get('save-comments').onclick();
+  assert.equal(writes, 2);
+  assert.equal(JSON.parse(saved).report_digest, config.report_digest);
+  selectedPage = input.page;
   // Existing compatible comments are retained on save without an explicit import.
   saved = JSON.stringify({...first, comments: [...first.comments,
     {section: 'design-data', text: 'Confirm the empty-bore assumption.'}]});
