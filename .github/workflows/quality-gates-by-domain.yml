@@ -406,9 +406,12 @@ jobs:
           import os
           import yaml
 
-          with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
+          with open(".claude/quality-gates.yaml", encoding="utf-8", newline="\n") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          print(gates[os.environ["GATE_NAME"]]["command"])
+          command = gates[os.environ["GATE_NAME"]]["command"]
+          if os.environ["GATE_NAME"] == "tests-infrastructure-core" and "tests/uncertainty/" not in command.split():
+              command += " tests/uncertainty/"
+          print(command)
           PY
           )
           {
