@@ -21,6 +21,8 @@ from collections.abc import Callable, Sequence
 
 from digitalmodel.citations.schema import Citation
 
+from ._validation import _number
+
 
 def _finite(name: str, value: float, *, positive: bool = False) -> None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -216,8 +218,7 @@ def evaluate_case(case: Case, *, diameter_m: float, rho_water_kg_m3: float,
     """
     _finite('diameter_m', diameter_m, positive=True)
     _finite('rho_water_kg_m3', rho_water_kg_m3, positive=True)
-    if not math.isfinite(available_weight_n_m):
-        raise ValueError('available_weight_n_m must be finite')
+    _number('available_weight_n_m', available_weight_n_m, signed=True)
     phases = (case.phase_rad,) if case.phase_rad is not None else (
         2 * math.pi * i / case.phase_count for i in range(case.phase_count))
     demand, phase, drag, inertia, lift = max(
