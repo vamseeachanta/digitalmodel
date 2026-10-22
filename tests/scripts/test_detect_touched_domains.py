@@ -4,6 +4,7 @@
 import importlib.util
 import json
 import re
+import runpy
 import shlex
 import subprocess
 import sys
@@ -1394,3 +1395,56 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+REPORT_FOLDER = "docs/reports/modules/fielddevelopment/"
+REPORT_SOURCES = tuple(
+    path for path, _description in runpy.run_path(
+        str(SCRIPT.parents[2] / REPORT_FOLDER / "build_report.py")
+    )["SOURCES"]
+)
+
+
+@pytest.mark.parametrize("path", REPORT_SOURCES + tuple(
+    REPORT_FOLDER + name for name in (
+        "build_report.py", "changes.json", "interaction.js", "report.html",
+        "report_body.html.in",
+    )
+))
+def test_field_development_report_inputs_select_its_domain(path: str) -> None:
+    """Every digest-bound input and report artifact runs its report regression."""
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    expected = {"field-development"}
+    if path.startswith("src/digitalmodel/"):
+        # Bound source edits retain their existing full-matrix coverage.
+        expected = {domain.name for domain in domains}
+    elif path.startswith("docs/domains/"):
+        expected.add("contracts")
+    assert selected == expected
+
+
+def test_field_development_report_gate_collects_changed_tests() -> None:
+    root = SCRIPT.parents[2]
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    gate = gates["tests-field-development"]
+    assert gate["enabled"] is True
+    assert gate["domain"] == "field-development"
+    assert "tests/field_development/" in gate["test_roots"]
+    command = shlex.split(gate["command"])
+    assert "tests/field_development/" in command[command.index("pytest") + 1:]
+    assert gate["failure_action"] == "block"
+
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    harness = workflow["jobs"]["ci-harness-tests"]
+    assert "if" not in harness
+    step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
+    assert "if" not in step
+    assert "tests/scripts/test_detect_touched_domains.py" in shlex.split(step["run"])

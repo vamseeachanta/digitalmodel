@@ -125,23 +125,31 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 .refs li{font-size:.86rem;margin:.35em 0}
 </style></head><body class="hs-doc"><main class="wrap"><header><div class="kicker">Field development</div>
 <h1>Concept and economic screening</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for technical review</p></header>
 
 <h2 id="summary">1. Executive Summary</h2>
 <p>The field development module is a screening tool for offshore host concepts, costs,
 layouts and production economics. Analysis is performed to determine how a documented
 illustrative field is ranked and evaluated. The key results are summarized below.</p>
 <ul><li>Concept shortlisting is supported under the stated heuristic assumptions.
-<ul><li>The Spar is ranked first for the documented example. The water depth of
-<span data-value="water_depth_m">2,100.00</span> m lies within its implemented screening band of <span data-value="depth_low">1,200.00</span> to
-<span data-value="depth_high">3,000.00</span> m. This is a model applicability check, not a structural capacity check.</li></ul></li>
+<ul><li>Spar and Semi-submersible tie at <span data-value="score_Spar">92.50</span> each. Stable legacy enumeration
+order places Spar first; the score does not establish a preference between them.
+The tied alternative has a separate net present value of <span data-value="tied_npv">13,743.90</span> million USD.
+The water depth of
+<span data-value="water_depth_m">2,100</span> m lies within the selected Spar's implemented screening band of <span data-value="depth_low">1,200</span> to
+<span data-value="depth_high">3,000</span> m. This is a model applicability check, not a structural capacity check.</li></ul></li>
 <li>The calculated economic value is unsuitable for investment acceptance.
 <ul><li>Pre-tax net present value is <span data-value="npv">16,045.82</span> million USD, above the zero-value comparison
 line. Scheduled production is <span data-value="production_mmbbl">662.71</span> million barrels against the supplied
 reservoir size of <span data-value="reservoir_size_mmbbl">400.00</span> million barrels. The production discrepancy
 prevents acceptance of that economic value.</li></ul></li></ul>
-<p class="sub">Revision history: Initial — concept-screening calculations and their
-production-volume limitation are presented for client review.</p>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>concept-screening calculations and their
+production-volume limitation are presented for client review.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Numeric precision, the concept tie and fallback
+assumptions are clarified to make the worked example reproducible.</td></tr></tbody></table>
+<p class="sub">Revision history records the initial issue and this correction.</p>
 
 <h2 id="introduction">2. Introduction</h2>
 <p>Offshore development choices are screened using water depth, reservoir size, access to
@@ -161,7 +169,7 @@ a verified fiscal basis.</p>
 not establish technical feasibility. A positive net present value only describes the
 discounted cash-flow balance under the supplied assumptions. The production-volume
 discrepancy in this example overrides that financial comparison.</p>
-<figure><svg viewBox="0 0 780 370" role="img" aria-label="Price sensitivity"><path d="M90 60 V300 H710" fill="none" stroke="var(--ink)"/><line id="zero-limit" x1="90" x2="710" y1="300.00" y2="300.00" stroke="var(--red)" stroke-dasharray="6 4"/><polyline points="90.00,259.69 150.00,240.72 210.00,221.75 270.00,202.78 330.00,183.81 390.00,164.85 450.00,145.88 510.00,126.91 570.00,107.94 630.00,88.97 690.00,70.00" fill="none" stroke="var(--accent)"/><circle data-point="0" tabindex="0" cx="90.00" cy="259.69" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 37.50 USD/bbl; net present value 4,785.60 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 37.50 USD/bbl; net present value 4,785.60 million USD; comparison limit zero million USD</title></circle><circle data-point="1" tabindex="0" cx="150.00" cy="240.72" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 45.00 USD/bbl; net present value 7,037.64 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 45.00 USD/bbl; net present value 7,037.64 million USD; comparison limit zero million USD</title></circle><circle data-point="2" tabindex="0" cx="210.00" cy="221.75" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 52.50 USD/bbl; net present value 9,289.68 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 52.50 USD/bbl; net present value 9,289.68 million USD; comparison limit zero million USD</title></circle><circle data-point="3" tabindex="0" cx="270.00" cy="202.78" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 60.00 USD/bbl; net present value 11,541.73 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 60.00 USD/bbl; net present value 11,541.73 million USD; comparison limit zero million USD</title></circle><circle data-point="4" tabindex="0" cx="330.00" cy="183.81" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 67.50 USD/bbl; net present value 13,793.77 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 67.50 USD/bbl; net present value 13,793.77 million USD; comparison limit zero million USD</title></circle><circle data-point="5" tabindex="0" cx="390.00" cy="164.85" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 75.00 USD/bbl; net present value 16,045.82 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 75.00 USD/bbl; net present value 16,045.82 million USD; comparison limit zero million USD</title></circle><circle data-point="6" tabindex="0" cx="450.00" cy="145.88" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 82.50 USD/bbl; net present value 18,297.86 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 82.50 USD/bbl; net present value 18,297.86 million USD; comparison limit zero million USD</title></circle><circle data-point="7" tabindex="0" cx="510.00" cy="126.91" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 90.00 USD/bbl; net present value 20,549.90 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 90.00 USD/bbl; net present value 20,549.90 million USD; comparison limit zero million USD</title></circle><circle data-point="8" tabindex="0" cx="570.00" cy="107.94" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 97.50 USD/bbl; net present value 22,801.95 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 97.50 USD/bbl; net present value 22,801.95 million USD; comparison limit zero million USD</title></circle><circle data-point="9" tabindex="0" cx="630.00" cy="88.97" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 105.00 USD/bbl; net present value 25,053.99 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 105.00 USD/bbl; net present value 25,053.99 million USD; comparison limit zero million USD</title></circle><circle data-point="10" tabindex="0" cx="690.00" cy="70.00" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 112.50 USD/bbl; net present value 27,306.04 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 112.50 USD/bbl; net present value 27,306.04 million USD; comparison limit zero million USD</title></circle><text x="90" y="325">37.50</text><text x="665" y="325">112.50</text><text x="35" y="65">27,306.04</text><text x="55" y="305">0</text><text x="260" y="350">Oil price (USD/bbl)</text><text transform="translate(22 285) rotate(-90)">Net present value (million USD)</text><text x="100" y="35">Dashed line: zero net present value</text></svg><p id="chart-readout" aria-live="polite">Hover or focus a point for its value and limit.</p><figcaption>Figure A. Pre-tax price sensitivity for the selected host.
+<figure><svg viewBox="0 0 780 370" role="img" aria-label="Price sensitivity"><path d="M90 60 V300 H710" fill="none" stroke="var(--ink)"/><line id="zero-limit" x1="90" x2="710" y1="289.55" y2="289.55" stroke="var(--red)" stroke-dasharray="6 4"/><polyline points="90.00,252.90 150.00,235.66 210.00,218.41 270.00,201.17 330.00,183.92 390.00,166.68 450.00,149.43 510.00,132.19 570.00,114.94 630.00,97.70 690.00,80.45" fill="none" stroke="var(--accent)"/><circle data-point="0" tabindex="0" cx="90.00" cy="252.90" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 37.50 USD/bbl; net present value 4,785.60 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 37.50 USD/bbl; net present value 4,785.60 million USD; comparison limit zero million USD</title></circle><circle data-point="1" tabindex="0" cx="150.00" cy="235.66" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 45.00 USD/bbl; net present value 7,037.64 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 45.00 USD/bbl; net present value 7,037.64 million USD; comparison limit zero million USD</title></circle><circle data-point="2" tabindex="0" cx="210.00" cy="218.41" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 52.50 USD/bbl; net present value 9,289.68 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 52.50 USD/bbl; net present value 9,289.68 million USD; comparison limit zero million USD</title></circle><circle data-point="3" tabindex="0" cx="270.00" cy="201.17" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 60.00 USD/bbl; net present value 11,541.73 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 60.00 USD/bbl; net present value 11,541.73 million USD; comparison limit zero million USD</title></circle><circle data-point="4" tabindex="0" cx="330.00" cy="183.92" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 67.50 USD/bbl; net present value 13,793.77 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 67.50 USD/bbl; net present value 13,793.77 million USD; comparison limit zero million USD</title></circle><circle data-point="5" tabindex="0" cx="390.00" cy="166.68" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 75.00 USD/bbl; net present value 16,045.82 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 75.00 USD/bbl; net present value 16,045.82 million USD; comparison limit zero million USD</title></circle><circle data-point="6" tabindex="0" cx="450.00" cy="149.43" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 82.50 USD/bbl; net present value 18,297.86 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 82.50 USD/bbl; net present value 18,297.86 million USD; comparison limit zero million USD</title></circle><circle data-point="7" tabindex="0" cx="510.00" cy="132.19" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 90.00 USD/bbl; net present value 20,549.90 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 90.00 USD/bbl; net present value 20,549.90 million USD; comparison limit zero million USD</title></circle><circle data-point="8" tabindex="0" cx="570.00" cy="114.94" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 97.50 USD/bbl; net present value 22,801.95 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 97.50 USD/bbl; net present value 22,801.95 million USD; comparison limit zero million USD</title></circle><circle data-point="9" tabindex="0" cx="630.00" cy="97.70" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 105.00 USD/bbl; net present value 25,053.99 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 105.00 USD/bbl; net present value 25,053.99 million USD; comparison limit zero million USD</title></circle><circle data-point="10" tabindex="0" cx="690.00" cy="80.45" r="6" fill="var(--accent)" aria-label="Documented example; Spar; price 112.50 USD/bbl; net present value 27,306.04 million USD; comparison limit zero million USD"><title>Documented example; Spar; price 112.50 USD/bbl; net present value 27,306.04 million USD; comparison limit zero million USD</title></circle><text x="90" y="325">37.50</text><text x="665" y="325">112.50</text><text x="35" y="65">28,671.34</text><text x="5" y="305">−1,365.30</text><text x="260" y="350">Oil price (USD/bbl)</text><text transform="translate(22 285) rotate(-90)">Net present value (million USD)</text><text x="100" y="35">Dashed line: zero net present value</text></svg><p id="chart-readout" aria-live="polite">Hover or focus a point for its value and limit.</p><figcaption>Figure A. Pre-tax price sensitivity for the selected host.
 The dashed line is the mathematical zero-value comparison, not an approval boundary.
 Hover or keyboard focus identifies price, calculated value, component and limit.
 The complete values are retained in Table C.</figcaption></figure>
@@ -170,7 +178,9 @@ not represent a price forecast. All plotted cases retain the unresolved producti
 
 <h2 id="basis">4. Design data and basis</h2>
 <p>The example is evaluated as an oil development with infrastructure distance unspecified.
-The local economic fallback is used without the optional external data package. The fiscal
+The local economic fallback is used in an isolated environment without the optional
+external data package. Report calculations are explicitly skipped when that package is
+installed; no backend is silently substituted. The fiscal
 identifier is retained, but no tax adjustment is applied.</p>
 <h3>4.1 System representation</h3>
 <p>A floating spar host, production riser and seabed connection are shown schematically.
@@ -193,10 +203,10 @@ well count, pressure boundary conditions and metocean loads are not supplied.</p
 <figcaption>Figure B. Physical interpretation of the selected host. The arrangement is
 illustrative; structural, riser and mooring adequacy are not evaluated.</figcaption></figure>
 <h3>4.2 Inputs and criteria</h3>
-<p>Water depth is <span data-value="water_depth_m">2,100.00</span> m; reservoir size is <span data-value="reservoir_size_mmbbl">400.00</span> million
-barrels; production capacity is <span data-value="production_capacity_bopd">100,000.00</span> barrels per day; price is
+<p>Water depth is <span data-value="water_depth_m">2,100</span> m; reservoir size is <span data-value="reservoir_size_mmbbl">400.00</span> million
+barrels; production capacity is <span data-value="production_capacity_bopd">100,000</span> barrels per day; price is
 <span data-value="oil_price_usd_per_bbl">75.00</span> USD per barrel; annual discount rate is <span data-value="discount_rate">0.10</span> as a
-fraction; and field life is <span data-value="field_life_years">30.00</span> years. These are illustrative assumptions,
+fraction; and field life is <span data-value="field_life_years">30</span> years. These are illustrative assumptions,
 not verified field measurements. Table A supplies the input register.</p>
 <p>The depth band is the host exclusion criterion implemented by the ranking model.
 The zero-value line follows the definition of net present value. Neither criterion is
@@ -215,7 +225,10 @@ source editions are recorded in §9.2.</p>
 implemented weight; and subscripts d, r, l and f denote depth, reservoir size,
 infrastructure distance and fluid type. A host outside its hard depth band receives a
 zero score before the weighted sum. These are engineering heuristics, not calibrated
-probabilities. The source defines the coefficients; their independent empirical
+probabilities. Depth, reservoir, distance and fluid weights are respectively
+<span data-value="weight_depth">0.40</span>, <span data-value="weight_reservoir">0.30</span>, <span data-value="weight_distance">0.20</span> and <span data-value="weight_fluid">0.10</span>
+(<code>concept_selection.py</code>, composite score). These values are
+ASSUMED - to be confirmed, based on previous experience; their independent empirical
 calibration is NOT_EVALUATED.</p>
 <div class="eq">C = C<sub>ref</sub>(Q/Q<sub>ref</sub>)<sup>a</sup>
 [1 + k max(0, d − d<sub>ref</sub>)]<br>
@@ -225,7 +238,9 @@ Q is daily production capacity; d is water depth; ref denotes the implemented re
 condition; a and b are capacity exponents; k is the depth coefficient; and A is the
 age multiplier. The economic fallback uses the base cost estimates and the reference
 operating age. Abandonment expenditure is a fixed fraction of capital expenditure when
-no external estimate or override is available. The historical cost basis is recorded in
+no external estimate or override is available. That fraction is <span data-value="abandonment_fraction">0.07</span>
+(<code>economics.py</code>, <code>evaluate_economics</code>),
+ASSUMED - to be confirmed, based on previous experience. The historical cost basis is recorded in
 the source; escalation, location adjustment and quotation accuracy are not established.</p>
 <h3>5.2 Production and discounted cash flow</h3>
 <div class="eq">q<sub>t</sub> = Qf<sub>t</sub>; &nbsp;
@@ -238,23 +253,39 @@ revenue; C is capital expenditure; O is operating expenditure; A is abandonment 
 r is annual discount rate; and V is net present value. The time index t includes the
 initial development period. Monetary cash flows are in million USD.</p>
 <p>Supplying reservoir size activates automatic exponential decline in this workflow.
-The derived decline rate is <span data-value="decline_rate">2.00</span> per year. The implemented plateau remains
+The recovery factor is <span data-value="recovery_factor">0.15</span> and the plateau fraction of field life is
+<span data-value="plateau_fraction">0.60</span>, ASSUMED - to be confirmed, based on previous experience
+(<code>economics.py</code>, <code>EconomicsInput</code>,
+<code>_derive_decline_rate_from_eur</code> and <code>_production_factors</code>).
+Estimated ultimate recovery (EUR) is <span data-value="eur_mmbbl">60.00</span> million barrels: reservoir size
+multiplied by the recovery factor. The <span data-value="plateau_years">18</span>-year plateau alone produces
+<span data-value="plateau_mmbbl">657.00</span> million barrels, exceeding that EUR before decline begins.
+The decline rate <span data-value="decline_rate">2.0</span> per year is therefore a fixed fallback constant,
+not a rate derived to satisfy EUR. The implemented plateau remains
 at capacity even when its cumulative volume exceeds the recovery target. Operating
 expenditure falls with the production multiplier; fixed operating costs are not separated.
 Capital spending overlaps early production, and abandonment is charged in the final year.
 Carbon cost is omitted because no carbon-price input is supplied.</p>
 
 <h2 id="results">6. Worked example results</h2>
-<p>The documented example is evaluated through the public workflow. The Spar
-is ranked first; the ordered scores are retained in Table B.</p>
+<p>The documented example is evaluated through the public workflow. Spar and
+Semi-submersible tie at <span data-value="score_Semi">92.50</span> each. Stable legacy enumeration order places
+Spar first; the ordered scores are retained in Table B. The tie-break is an
+implementation convention, not a demonstrated engineering preference.</p>
 <p>Calculated capital expenditure is <span data-value="capital">5,450.00</span> million USD. Reference annual operating
 expenditure is <span data-value="operating">175.00</span> million USD/year, and abandonment expenditure is
 <span data-value="abandonment">381.50</span> million USD. Pre-tax net present value is <span data-value="npv">16,045.82</span> million USD, above
 the zero-value comparison line. These estimates inherit the unverified cost calibration
-and the production discrepancy.</p>
+and the production discrepancy. For the tied Semi-submersible, the public
+<code>compare_concepts</code> call gives capital expenditure <span data-value="tied_capital">7,630.00</span> million USD,
+annual operating expenditure <span data-value="tied_operating">210.00</span> million USD/year, abandonment expenditure
+<span data-value="tied_abandonment">534.10</span> million USD, and net present value <span data-value="tied_npv">13,743.90</span> million USD.
+The concepts share the production limitation; the two NPVs are separate cost cases,
+not a basis for investment selection.</p>
 <p>Scheduled production is <span data-value="production_mmbbl">662.71</span> million barrels, exceeding the supplied
-reservoir size of <span data-value="reservoir_size_mmbbl">400.00</span> million barrels by <span data-value="excess_percent">65.68</span>% relative
-to that supplied size. Reservoir size is described as recoverable reserves by the ranking
+reservoir size of <span data-value="reservoir_size_mmbbl">400.00</span> million barrels by <span data-value="excess_percent">65.7</span>% relative
+to that supplied size. Production is <span data-value="production_to_eur">11.0</span> times the module EUR of
+<span data-value="eur_mmbbl">60.00</span> million barrels. Reservoir size is described as recoverable reserves by the ranking
 interface, while the economics calculation applies a further recovery-factor assumption.
 The inconsistent meaning and the uncapped plateau require reconciliation before this
 economic value is used for a development decision.</p>
@@ -269,8 +300,12 @@ integration paths; their existence does not establish the accuracy of the extern
 or fiscal models. Benchmark tests include explicitly synthetic records. The public
 reference catalogue supplies descriptive analogues, but no independent measured
 cash-flow comparison for this worked example is established.</p>
-<p>Report verification compares the displayed values and plotted samples with fresh module
-returns. Discounted cash-flow summation is also reconciled to the returned value.
+<p>Report verification compares displayed values and plotted samples with fresh module
+returns and hand-worked literal expectations for capital, operating and abandonment costs,
+production, suitability scores and all sensitivity values. An independent Decimal schedule
+checks the arithmetic without private model helpers; a separate standard-library schedule
+is reconciled to module NPV. The reference production is reconstructed from the cited
+schedule because the public result does not expose cumulative production.
 This is a reproducibility check, not independent validation of reserves, costs or tax.</p>
 
 <h2 id="limits">8. Key findings, limits and recommendations</h2>
@@ -319,7 +354,11 @@ limits are in <code>_DEPTH_LIMITS</code>. Cost correlations are in
 <p>The production definitions are in <code>economics.EconomicsInput.__post_init__</code>,
 <code>_derive_decline_rate_from_eur</code> and <code>_production_factors</code>.
 Cash flow and discounting are in <code>_build_annual_cashflows</code> and
-<code>_numpy_financial_metrics</code>. Adapter selection is in
+<code>_numpy_financial_metrics</code>. The cash-flow allocation is 0.30, 0.50 and 0.20
+of capital expenditure in years zero, one and two; annual conversion uses 365 days
+(<code>economics.py</code>, <code>_build_annual_cashflows</code>).
+Reference arithmetic in <code>build_report.py</code> follows those model definitions;
+the model source, rather than this report, supplies each coefficient. Adapter selection is in
 <code>_resolve_capex_adapter</code>, <code>_resolve_fiscal_calculator</code> and
 <code>evaluate_economics</code>. The source edition for every quoted coefficient or
 limit is the corresponding text digest below.</p>
@@ -329,18 +368,23 @@ limit is the corresponding text digest below.</p>
 <p>The detailed numerical register is retained below. Each worked-example value is
 generated from the documented inputs or module returns rather than entered as report text.</p>
 <h3>10.1 Data and numerical register</h3>
-<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Water depth</td><td><span data-value="water_depth_m">2,100.00</span></td><td>m</td><td>Documented example; §9.2</td></tr><tr><td>Reservoir size</td><td><span data-value="reservoir_size_mmbbl">400.00</span></td><td>million bbl</td><td>Documented example; §9.2</td></tr><tr><td>Production capacity</td><td><span data-value="production_capacity_bopd">100,000.00</span></td><td>bbl/day</td><td>Documented example; §9.2</td></tr><tr><td>Oil price</td><td><span data-value="oil_price_usd_per_bbl">75.00</span></td><td>USD/bbl</td><td>Documented example; §9.2</td></tr><tr><td>Annual discount rate</td><td><span data-value="discount_rate">0.10</span></td><td>fraction</td><td>Documented example; §9.2</td></tr><tr><td>Field life</td><td><span data-value="field_life_years">30.00</span></td><td>years</td><td>Documented example; §9.2</td></tr></tbody></table><p class="sub">Table A. Documented illustrative inputs.</p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Water depth</td><td><span data-value="water_depth_m">2,100</span></td><td>m</td><td>workflow.py — Usage example</td></tr><tr><td>Reservoir size</td><td><span data-value="reservoir_size_mmbbl">400.00</span></td><td>million bbl</td><td>workflow.py — Usage example</td></tr><tr><td>Production capacity</td><td><span data-value="production_capacity_bopd">100,000</span></td><td>bbl/day</td><td>workflow.py — Usage example</td></tr><tr><td>Oil price</td><td><span data-value="oil_price_usd_per_bbl">75.00</span></td><td>USD/bbl</td><td>workflow.py — Usage example</td></tr><tr><td>Annual discount rate</td><td><span data-value="discount_rate">0.10</span></td><td>fraction</td><td>workflow.py — Usage example</td></tr><tr><td>Field life</td><td><span data-value="field_life_years">30</span></td><td>years</td><td>workflow.py — Usage example</td></tr></tbody></table><p class="sub">Table A. Documented illustrative inputs.</p>
 <p>ASSUMED - to be confirmed: illustrative input values, oil fluid type, unspecified
 infrastructure distance, cost reference conditions, automatic recovery and decline
 assumptions, and abandonment fraction. Required confirmation: recoverable reserves,
 production schedule, cost quotations, currency date and applicable fiscal calculation.
 The price sensitivity is a display sampling convention from half to one-and-a-half of
 the documented price at ten equal intervals; it is not an engineering limit or forecast.</p>
-<table><thead><tr><th>Host concept</th><th>Suitability score (dimensionless)</th><th>Source</th></tr></thead><tbody><tr><td>Spar</td><td><span data-value="score_Spar">92.50</span></td><td>Ranking calculation; §9.2</td></tr><tr><td>Semi-submersible</td><td><span data-value="score_Semi">92.50</span></td><td>Ranking calculation; §9.2</td></tr><tr><td>Floating production, storage and offloading</td><td><span data-value="score_FPSO">92.00</span></td><td>Ranking calculation; §9.2</td></tr><tr><td>Subsea tieback</td><td><span data-value="score_Subsea_Tieback">53.90</span></td><td>Ranking calculation; §9.2</td></tr><tr><td>Tension-leg platform</td><td><span data-value="score_TLP">0.00</span></td><td>Ranking calculation; §9.2</td></tr></tbody></table><p class="sub">Table B. Computed ranking; score is not probability.</p>
-<table><thead><tr><th>Oil price (USD/bbl)</th><th>Net present value (million USD)</th><th>Source</th></tr></thead><tbody><tr><td><span data-value="price_0">37.50</span></td><td><span data-value="npv_0">4,785.60</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_1">45.00</span></td><td><span data-value="npv_1">7,037.64</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_2">52.50</span></td><td><span data-value="npv_2">9,289.68</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_3">60.00</span></td><td><span data-value="npv_3">11,541.73</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_4">67.50</span></td><td><span data-value="npv_4">13,793.77</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_5">75.00</span></td><td><span data-value="npv_5">16,045.82</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_6">82.50</span></td><td><span data-value="npv_6">18,297.86</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_7">90.00</span></td><td><span data-value="npv_7">20,549.90</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_8">97.50</span></td><td><span data-value="npv_8">22,801.95</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_9">105.00</span></td><td><span data-value="npv_9">25,053.99</span></td><td>Workflow calculation; §9.2</td></tr><tr><td><span data-value="price_10">112.50</span></td><td><span data-value="npv_10">27,306.04</span></td><td>Workflow calculation; §9.2</td></tr></tbody></table><p class="sub">Table C. Price sensitivity readback.</p>
+<table><thead><tr><th>Host concept</th><th>Suitability score (dimensionless)</th><th>Source</th></tr></thead><tbody><tr><td>Spar</td><td><span data-value="score_Spar">92.50</span></td><td>concept_selection.py — concept_selection and composite score</td></tr><tr><td>Semi-submersible</td><td><span data-value="score_Semi">92.50</span></td><td>concept_selection.py — concept_selection and composite score</td></tr><tr><td>Floating production, storage and offloading</td><td><span data-value="score_FPSO">92.00</span></td><td>concept_selection.py — concept_selection and composite score</td></tr><tr><td>Subsea tieback</td><td><span data-value="score_Subsea_Tieback">53.90</span></td><td>concept_selection.py — concept_selection and composite score</td></tr><tr><td>Tension-leg platform</td><td><span data-value="score_TLP">0.00</span></td><td>concept_selection.py — concept_selection and composite score</td></tr></tbody></table><p class="sub">Table B. Spar and Semi tie; stable legacy enumeration order places Spar first. Score is not probability.</p>
+<table><thead><tr><th>Oil price (USD/bbl)</th><th>Net present value (million USD)</th><th>Source</th></tr></thead><tbody><tr><td><span data-value="price_0">37.50</span></td><td><span data-value="npv_0">4,785.60</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_1">45.00</span></td><td><span data-value="npv_1">7,037.64</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_2">52.50</span></td><td><span data-value="npv_2">9,289.68</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_3">60.00</span></td><td><span data-value="npv_3">11,541.73</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_4">67.50</span></td><td><span data-value="npv_4">13,793.77</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_5">75.00</span></td><td><span data-value="npv_5">16,045.82</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_6">82.50</span></td><td><span data-value="npv_6">18,297.86</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_7">90.00</span></td><td><span data-value="npv_7">20,549.90</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_8">97.50</span></td><td><span data-value="npv_8">22,801.95</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_9">105.00</span></td><td><span data-value="npv_9">25,053.99</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr><tr><td><span data-value="price_10">112.50</span></td><td><span data-value="npv_10">27,306.04</span></td><td>workflow.py — evaluate_field_development; economics.py — annual cash flow</td></tr></tbody></table><p class="sub">Table C. Price sensitivity readback.</p>
 <h3>10.2 Quality evidence and reader comments</h3>
 <p>The numerical readback, source-edition binding, self-contained presentation and
-rebuild equality are checked automatically. Independent engineering validation remains
+rebuild equality are checked automatically. Embedded machine evidence is rounded to
+13 significant digits and compared numerically at relative tolerance 1e-12;
+the remaining HTML is compared exactly. Monetary values and scores are displayed to
+two decimal places; counts and years use integers; differences and ratios use one decimal.
+These are presentation and regression conventions, not engineering acceptance limits.
+Independent engineering validation remains
 NOT_EVALUATED. The schematic is conceptual and carries no inferred design dimensions.</p>
 <details><summary>Engineering changes</summary><ul id="change-list"></ul></details>
 <p>Comments are retained only when saved. Select the report folder and save the comment
@@ -355,8 +399,8 @@ file; move that download beside the report. Load that file to resume commenting.
 <label>Load comments <input id="load-comments" type="file" accept="application/json"></label>
 <p id="comment-status" aria-live="polite">No comments saved.</p>
 <ol id="comment-list"></ol>
-<footer>Field development — concept and economic screening. Draft for client review.</footer>
-</main><script id="evidence" type="application/json">{"costs": {"abandonment": 381.50000000000006, "capital": 5450.0, "operating": 175.0}, "decline_rate": 2.0, "depth_high": 3000.0, "depth_low": 1200.0, "excess_percent": 65.67822349003679, "inputs": {"discount_rate": 0.1, "field_life_years": 30, "oil_price_usd_per_bbl": 75.0, "production_capacity_bopd": 100000.0, "reservoir_size_mmbbl": 400.0, "water_depth_m": 2100.0}, "npv": 16045.815300531536, "production_mmbbl": 662.7128939601471, "ranking": [{"host": "Spar", "score": 92.5}, {"host": "Semi", "score": 92.5}, {"host": "FPSO", "score": 92.0}, {"host": "Subsea_Tieback", "score": 53.9}, {"host": "TLP", "score": 0.0}], "reconciled_npv": 16045.815300531538, "selected": "Spar", "sensitivity": [{"npv": 4785.595023726286, "price": 37.5}, {"npv": 7037.639079087336, "price": 45.0}, {"npv": 9289.683134448383, "price": 52.5}, {"npv": 11541.727189809435, "price": 60.0}, {"npv": 13793.77124517049, "price": 67.5}, {"npv": 16045.815300531536, "price": 75.0}, {"npv": 18297.859355892586, "price": 82.5}, {"npv": 20549.903411253632, "price": 90.0}, {"npv": 22801.94746661468, "price": 97.5}, {"npv": 25053.99152197574, "price": 105.0}, {"npv": 27306.03557733679, "price": 112.5}], "tax_applied": false}</script><script id="changes" type="application/json">{"changes": ["Concept selection and local economic screening are documented.", "The production-volume discrepancy is identified as a limit of use."], "revision": "Initial", "status": "Draft for client review"}</script><script>"use strict";
+<footer>Field development — concept and economic screening. Draft for technical review.</footer>
+</main><script id="evidence" type="application/json">{"abandonment_fraction": 0.07, "costs": {"abandonment": 381.5, "capital": 5450.0, "operating": 175.0}, "decline_rate": 2.0, "depth_high": 3000.0, "depth_low": 1200.0, "eur_mmbbl": 60.0, "excess_percent": 65.67822349004, "inputs": {"discount_rate": 0.1, "field_life_years": 30, "oil_price_usd_per_bbl": 75.0, "production_capacity_bopd": 100000.0, "reservoir_size_mmbbl": 400.0, "water_depth_m": 2100.0}, "npv": 16045.81530053, "plateau_fraction": 0.6, "plateau_mmbbl": 657.0, "plateau_years": 18, "production_mmbbl": 662.7128939601, "production_to_eur": 11.04521489934, "ranking": [{"host": "Spar", "score": 92.5}, {"host": "Semi", "score": 92.5}, {"host": "FPSO", "score": 92.0}, {"host": "Subsea_Tieback", "score": 53.9}, {"host": "TLP", "score": 0.0}], "ranking_weights": {"depth": 0.4, "distance": 0.2, "fluid": 0.1, "reservoir": 0.3}, "reconciled_npv": 16045.81530053, "recovery_factor": 0.15, "selected": "Spar", "sensitivity": [{"npv": 4785.595023726, "price": 37.5}, {"npv": 7037.639079087, "price": 45.0}, {"npv": 9289.683134448, "price": 52.5}, {"npv": 11541.72718981, "price": 60.0}, {"npv": 13793.77124517, "price": 67.5}, {"npv": 16045.81530053, "price": 75.0}, {"npv": 18297.85935589, "price": 82.5}, {"npv": 20549.90341125, "price": 90.0}, {"npv": 22801.94746661, "price": 97.5}, {"npv": 25053.99152198, "price": 105.0}, {"npv": 27306.03557734, "price": 112.5}], "tax_applied": false, "tied_alternatives": [{"costs": {"abandonment": 534.1, "capital": 7630.0, "operating": 210.0}, "host": "Semi", "npv": 13743.89777259}]}</script><script id="changes" type="application/json">{"changes": ["Numeric evidence is stabilized across calculation platforms.", "The concept tie and fallback production basis are disclosed."], "date": "2026-10-22", "history": [{"changes": ["Concept selection and local economic screening are documented.", "The production-volume discrepancy is identified as a limit of use."], "date": "2026-10-21", "revision": "Initial"}, {"changes": ["Numeric precision, tied economics and assumptions are clarified."], "date": "2026-10-22", "revision": "1"}], "revision": "1", "status": "Draft for technical review"}</script><script>"use strict";
 (() => {
   const readout = document.getElementById("chart-readout");
   document.querySelectorAll("[data-point]").forEach(point => {
