@@ -65,9 +65,14 @@
       if (record.revision !== 'A' || !Array.isArray(record.comments)
           || !record.comments.every((c) => c && typeof c.text === 'string'
             && sections.some((s) => s.id === c.section))) throw new Error('Invalid record');
-      comments.splice(0, comments.length, ...record.comments);
+      for (const comment of record.comments) {
+        if (!comments.some((existing) => existing.section === comment.section
+            && existing.text === comment.text)) {
+          comments.push({section: comment.section, text: comment.text});
+        }
+      }
       showComments();
-      byId('comment-status').textContent = 'Saved comments loaded.';
+      byId('comment-status').textContent = 'Saved comments merged. Save the comment file to retain all comments.';
     } catch {
       byId('comment-status').textContent = 'Invalid comment file; existing comments retained.';
     }

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Build the self-contained tug report from the public regression example.
 
 From the repository root: python docs/reports/modules/tug/build_report.py
@@ -18,32 +21,32 @@ import sys
 ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
-FIXTURE = "tests/tug/test_tug_toolkit.py"
+FIXTURE = "tests/tug/fixtures/duty_cycle.json"
+TESTS = "tests/tug/test_tug_toolkit.py"
 sys.path.insert(0, str(ROOT / "src"))
 
 from digitalmodel.tug.emissions import OperatingPhase, cycle_energy, size_hybrid
 
 
+def read_utf8(path):
+    """Read report sources with explicit UTF-8 encoding and LF handling."""
+    with Path(path).open(encoding="utf-8", newline="\n") as stream:
+        return stream.read()
+
+
 def read_example():
-    """Read literals from the public test without executing its imports."""
-    tree = ast.parse((ROOT / FIXTURE).read_text(encoding="utf-8"))
-    suite = next(n for n in tree.body
-                 if isinstance(n, ast.ClassDef) and n.name == "TestEmissions")
-    profile = next(n.value for n in suite.body if isinstance(n, ast.Assign)
-                   and n.targets[0].id == "PROFILE")
-    rows = [tuple(ast.literal_eval(a) for a in call.args)
-            for call in profile.elts]
-    case = next(n for n in suite.body if isinstance(n, ast.FunctionDef)
-                and n.name == "test_hybrid_sizing_shaves_assist_peak")
-    call = next(n for n in ast.walk(case) if isinstance(n, ast.Call)
-                and isinstance(n.func, ast.Name) and n.func.id == "size_hybrid")
-    power = ast.literal_eval(call.args[0])
-    baseline = next(ast.literal_eval(k.value) for k in call.keywords
-                    if k.arg == "baseline_fraction")
+    """Read the same data fixture used by the sizing regression test."""
+    with (ROOT / FIXTURE).open(encoding="utf-8", newline="\n") as stream:
+        example = json.load(stream)
+    rows = [(p["name"], p["power_fraction"], p["duration_h"])
+            for p in example["profile"]]
+    # AST is used only for the definition inventory, never for calculation inputs.
+    with (ROOT / TESTS).open(encoding="utf-8", newline="\n") as stream:
+        tree = ast.parse(stream.read())
     counts = {n.name: sum(isinstance(f, ast.FunctionDef)
                          and f.name.startswith("test_") for f in n.body)
               for n in tree.body if isinstance(n, ast.ClassDef)}
-    return power, rows, baseline, counts
+    return example["installed_power_kw"], rows, example["baseline_fraction"], counts
 
 
 def validate_profile(power, rows, baseline):
@@ -123,7 +126,7 @@ def chart(data):
                 (-38, "peak_power_kw", "Propulsion demand", "var(--brand)"),
                 (12, "battery_power_kw", "Battery discharge", "var(--caution)")]:
             value = r[key]
-            tip = (f'Public example; {row["name"]}; {label}; demand {value:.3f} kW; '
+            tip = (f'Public example; {row["name"]}; {label}; power {value:.3f} kW; '
                    f'engine baseline {baseline:.3f} kW; battery rating NOT_EVALUATED')
             parts.append(f'<rect tabindex="0" x="{x+offset}" y="{y(value):.3f}" '
                          f'width="42" height="{max(1,260-y(value)):.3f}" fill="{colour}" '
@@ -134,16 +137,17 @@ def chart(data):
 
 
 def changes():
-    return {"revision": "A", "status": "Draft for maintainer review", "changes": [
-        "Initial issue: ideal duty-cycle energy and peak battery discharge are evaluated using the public example.",
-        "Battery rating, recharge, reserve and installation weather limits remain not evaluated."
+    return {"revision": "B", "status": "Draft for maintainer review", "changes": [
+        "Shared illustrative inputs, independent energy-share and duration checks, and corrected source and table locators.",
+        "Imported comments merge with existing notes to retain unsaved edits.",
+        "Battery rating, recharge and reserve remain not evaluated."
     ]}
 
 
 def render(data):
-    source = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
+    source = read_utf8(ROOT / EXEMPLAR)
     style = re.search(r"<style>.*?</style>", source, re.S).group()
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    brand = read_utf8(ROOT / "docs/api/_assets/brand.css")
     inputs, results = tables(data)
     values = {k: number(data, f"result.{k}") for k in data["result"]}
     values.update(power=number(data, "input.installed_power_kw"),
@@ -156,9 +160,8 @@ def render(data):
                   styles=f"<style>{brand}</style>\n{style}",
                   calculation=json.dumps(data, ensure_ascii=True, sort_keys=True),
                   change_data=json.dumps(changes(), ensure_ascii=True),
-                  interactions=(HERE / "interactions.js").read_text(encoding="utf-8"))
-    return Template((HERE / "report.html.template").read_text(
-        encoding="utf-8")).substitute(values)
+                  interactions=read_utf8(HERE / "interactions.js"))
+    return Template(read_utf8(HERE / "report.html.template")).substitute(values)
 
 
 def build(output):
@@ -174,7 +177,7 @@ def check(output):
     expected = {"index.html": render(calculate()),
                 "changes.json": json.dumps(changes(), indent=2) + "\n"}
     for name, content in expected.items():
-        if (Path(output) / name).read_text(encoding="utf-8") != content:
+        if read_utf8(Path(output) / name) != content:
             raise ValueError(f"Stale {name}; run python docs/reports/modules/tug/build_report.py")
 
 

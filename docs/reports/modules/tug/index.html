@@ -140,10 +140,12 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <li>At the assumed engine baseline of <span data-value="result.baseline_engine_kw">2,000.000</span> kW, peak battery discharge is <span data-value="result.battery_power_kw">1,600.000</span> kW and discharge energy is <span data-value="result.battery_energy_kwh">1,600.000</span> kWh.</li></ul></li>
 <li>A battery specification cannot be selected from these results alone.
 <ul><li>Recharge, conversion losses, reserve and ageing are not evaluated; installed battery capacity remains NOT_EVALUATED.</li>
-<li>No installation weather limit or tug operating approval is established.</li></ul></li></ul>
+<li>No tug operating approval is established.</li></ul></li></ul>
 <p>The numerical basis is the <a href="#source-example">public example</a>; the interpretation is conditional on the <a href="#assumptions">data register</a>.</p>
 <h3>1.1 Revision history</h3>
-<p>Revision A — Initial issue to distinguish ideal discharge demand from an installed battery rating.</p>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>A</td><td>2026-10-21</td><td>Initial issue to distinguish ideal discharge demand from an installed battery rating.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Share illustrative inputs with the regression test, strengthen arithmetic checks, correct source and table locators, and retain comments during import.</td></tr></table>
 </section>
 
 <section id="introduction"><h2>2 Introduction</h2>
@@ -160,19 +162,19 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <text x="8" y="74">4000</text>
 <path d="M70 165.000 H720" stroke="var(--nogo)" stroke-dasharray="8 5"/>
 <text x="440" y="155.000">Engine baseline: 2000 kW</text>
-<rect tabindex="0" x="112" y="184.000" width="42" height="76.000" fill="var(--brand)" data-detail="Public example; transit; Propulsion demand; demand 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; transit; Propulsion demand; demand 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
-<rect tabindex="0" x="162" y="260.000" width="42" height="1.000" fill="var(--caution)" data-detail="Public example; transit; Battery discharge; demand 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; transit; Battery discharge; demand 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="112" y="184.000" width="42" height="76.000" fill="var(--brand)" data-detail="Public example; transit; Propulsion demand; power 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; transit; Propulsion demand; power 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="162" y="260.000" width="42" height="1.000" fill="var(--caution)" data-detail="Public example; transit; Battery discharge; power 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; transit; Battery discharge; power 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
 <text x="150" y="290" text-anchor="middle">transit</text>
-<rect tabindex="0" x="322" y="89.000" width="42" height="171.000" fill="var(--brand)" data-detail="Public example; assist; Propulsion demand; demand 3600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; assist; Propulsion demand; demand 3600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
-<rect tabindex="0" x="372" y="184.000" width="42" height="76.000" fill="var(--caution)" data-detail="Public example; assist; Battery discharge; demand 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; assist; Battery discharge; demand 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="322" y="89.000" width="42" height="171.000" fill="var(--brand)" data-detail="Public example; assist; Propulsion demand; power 3600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; assist; Propulsion demand; power 3600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="372" y="184.000" width="42" height="76.000" fill="var(--caution)" data-detail="Public example; assist; Battery discharge; power 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; assist; Battery discharge; power 1600.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
 <text x="360" y="290" text-anchor="middle">assist</text>
-<rect tabindex="0" x="532" y="241.000" width="42" height="19.000" fill="var(--brand)" data-detail="Public example; standby; Propulsion demand; demand 400.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; standby; Propulsion demand; demand 400.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
-<rect tabindex="0" x="582" y="260.000" width="42" height="1.000" fill="var(--caution)" data-detail="Public example; standby; Battery discharge; demand 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; standby; Battery discharge; demand 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="532" y="241.000" width="42" height="19.000" fill="var(--brand)" data-detail="Public example; standby; Propulsion demand; power 400.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; standby; Propulsion demand; power 400.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
+<rect tabindex="0" x="582" y="260.000" width="42" height="1.000" fill="var(--caution)" data-detail="Public example; standby; Battery discharge; power 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED"><title>Public example; standby; Battery discharge; power 0.000 kW; engine baseline 2000.000 kW; battery rating NOT_EVALUATED</title></rect>
 <text x="570" y="290" text-anchor="middle">standby</text>
 <text x="220" y="320">Phase (categorical; bar width does not represent duration)</text></svg><figcaption>Figure A. Public example: propulsion demand and battery discharge by phase. The dashed line is the engine baseline. Hover over or focus a bar to inspect its values.</figcaption></figure>
 <p>Blue denotes propulsion demand. Amber denotes battery discharge. The dashed red line denotes the assumed engine baseline; it does not denote a failed equipment rating.</p>
 <p id="chart-detail" aria-live="polite">Select a bar to inspect the phase and component.</p>
-<p>Demand above the engine baseline is supplied by the ideal battery model. The component power rating is required before a demand-to-capacity comparison can be made. Head-sea orientation, wave height, wave period and forecast triggers are not calculated by this workflow, so no sea-state envelope is issued.</p>
+<p>Demand above the engine baseline is supplied by the ideal battery model. The component discharge power rating is required before comparison with the calculated battery power.</p>
 </section>
 
 <section id="basis"><h2>4 Design data and assessment basis</h2>
@@ -207,7 +209,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 </section>
 
 <section id="results"><h2>6 Worked example and results</h2>
-<p>The public example is evaluated by calling the module with its published duty-cycle inputs. Each phase is also evaluated separately to obtain the plotted power demand and battery contribution.</p>
+<p>The software regression example is evaluated by calling the module with the illustrative duty-cycle inputs shared by the tests and this report. Each phase is also evaluated separately to obtain the plotted power demand and battery contribution.</p>
 <p>The cycle requires <span data-value="result.total_energy_kwh">13,200.000</span> kWh, with peak demand of <span data-value="result.peak_power_kw">3,600.000</span> kW. At the assumed engine baseline of <span data-value="result.baseline_engine_kw">2,000.000</span> kW, peak battery discharge is <span data-value="result.battery_power_kw">1,600.000</span> kW and discharge energy is <span data-value="result.battery_energy_kwh">1,600.000</span> kWh. All returned sizing quantities are recorded in Table B.</p>
 <p>Assist governs peak demand and battery discharge. Transit and standby do not exceed the chosen baseline; that condition establishes neither available charging power nor a recharge schedule. Battery share is reported as a fraction in Table B, not as a fuel-saving percentage.</p>
 </section>
@@ -215,17 +217,17 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <section id="validation"><h2>7 Validation evidence</h2>
 <p>Existing regression checks are inspected as software evidence. The tug test file contains 34 test definitions distributed across the calculation areas in Table C; this inventory is not a count of field trials or passed tests.</p>
 <p>The energy tests contain literal expected cycle energy and peak-shaving results. Other checks exercise propulsion dependence, force scaling, stability boundaries, fender overlap and energy, towline sizing, and emissions. No measured battery discharge record or separately published hybrid benchmark is identified in the inspected tug source, tests and documentation.</p>
-<p>The report checks compare all sizing fields with fresh module calls, compare displayed values at their printed precision, and include hand-calculated energy, peak power and baseline anchors. Numerical tolerance is applied to arithmetic comparisons. Field validation remains NOT_EVALUATED; confirmation requires measured power and time histories at a declared electrical or mechanical boundary.</p>
+<p>The report checks compare all sizing fields with fresh module calls, compare displayed values at their printed precision, and include hand-calculated energy, peak power, baseline and battery energy-share anchors. Additional cases vary assist duration to check energy integration. Numerical tolerance is applied to arithmetic comparisons. Field validation remains NOT_EVALUATED; confirmation requires measured power and time histories at a declared electrical or mechanical boundary.</p>
 </section>
 
 <section id="limits"><h2>8 Findings, limits and recommendations</h2>
-<p>The calculation establishes an ideal discharge demand for the assumed profile. Installed battery capacity and installation conditions remain not evaluated because their governing data are absent.</p>
+<p>The calculation establishes an ideal discharge demand for the assumed profile. Installed battery capacity remains NOT_EVALUATED because its governing data are absent.</p>
 <h3>8.1 Recommendations</h3>
 <p>A measured phase profile at the selected power boundary is recommended before equipment sizing, because energy depends directly on phase power and duration under the <a href="#source-theory">energy integral</a>. A time-dependent charge and discharge assessment with efficiency, usable capacity, reserve and ageing inputs is recommended before selecting a battery, because those terms are absent from the <a href="#source-api">sizing calculation</a>.</p>
 <p>Input validation is recommended at the application boundary. The underlying energy function checks installed power and an empty profile, but does not reject negative phase durations, out-of-range phase fractions or all non-finite inputs. This report checks the selected profile before calculation. The module is not modified by this assessment.</p>
 <h3>8.2 Not covered</h3>
 <p>Bollard pull and escort estimates, girting stability, fender optimization and berthing energy, towline strength and recoil, and fuel and emissions are not evaluated numerically here. Their implementations include empirical coefficients or simplified criteria whose cited source editions and clauses are incomplete in the inspected code. Those values require a separate basis review before engineering use. No nominal class factor is adopted in this example.</p>
-<p>Rigging, crane capacity, structural geometry, wave response and forecast support are outside the selected energy workflow. No orientation tolerance, wave-height threshold, slack criterion or installation envelope is inferred.</p>
+<p>Machinery integration, battery thermal limits and charge management are outside the selected energy workflow.</p>
 </section>
 
 <section id="appendix"><h2>9 Appendix: data and evidence</h2>
@@ -233,17 +235,17 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <h3 id="assumptions">9.1 Data register and numerical record</h3>
 <table id="table-a"><tr><th>Phase</th><th>Power fraction (–)</th><th>Duration (h)</th><th>Source</th></tr><tr><td>transit</td><td><span data-value="input.profile.0.power_fraction">0.400</span></td><td><span data-value="input.profile.0.duration_h">5.000</span></td><td><a href="#source-example">Public example</a></td></tr><tr><td>assist</td><td><span data-value="input.profile.1.power_fraction">0.900</span></td><td><span data-value="input.profile.1.duration_h">1.000</span></td><td><a href="#source-example">Public example</a></td></tr><tr><td>standby</td><td><span data-value="input.profile.2.power_fraction">0.100</span></td><td><span data-value="input.profile.2.duration_h">4.000</span></td><td><a href="#source-example">Public example</a></td></tr></table><p>Table A. Public duty-cycle inputs. All phase inputs are ASSUMED - to be confirmed for a physical application.</p>
 <table id="table-b"><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr><tr><td>Cycle energy</td><td><span data-value="result.total_energy_kwh">13,200.000</span></td><td>kWh</td><td><a href="#source-api">Sizing calculation</a></td></tr><tr><td>Peak demand</td><td><span data-value="result.peak_power_kw">3,600.000</span></td><td>kW</td><td><a href="#source-api">Sizing calculation</a></td></tr><tr><td>Engine baseline</td><td><span data-value="result.baseline_engine_kw">2,000.000</span></td><td>kW</td><td><a href="#source-api">Sizing calculation</a></td></tr><tr><td>Peak battery discharge</td><td><span data-value="result.battery_power_kw">1,600.000</span></td><td>kW</td><td><a href="#source-api">Sizing calculation</a></td></tr><tr><td>Battery discharge energy</td><td><span data-value="result.battery_energy_kwh">1,600.000</span></td><td>kWh</td><td><a href="#source-api">Sizing calculation</a></td></tr><tr><td>Battery share of cycle energy</td><td><span data-value="result.peak_energy_fraction">0.121</span></td><td>–</td><td><a href="#source-api">Sizing calculation</a></td></tr></table><p>Table B. Sizing results obtained from the module. Printed precision does not imply measurement accuracy.</p>
+<table><tr><th>Calculation area</th><th>Test definitions</th><th>Source</th></tr><tr><td>BollardPull</td><td>7</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Girting</td><td>8</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Fendering</td><td>5</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Towline</td><td>6</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Emissions</td><td>8</td><td><a href="#source-tests">Test definitions</a></td></tr></table><p>Table C. Existing test definitions, counted from the public tug test file; execution results are separate evidence.</p>
 <table><tr><th>Data item</th><th>Readiness</th><th>Source</th></tr>
-<tr><td>Installed power and baseline fraction</td><td>ASSUMED - to be confirmed</td><td><a href="#basis">Design data</a></td></tr>
-<tr><td>Duty-cycle phases</td><td>ASSUMED - to be confirmed</td><td>Table A</td></tr>
+<tr><td>Installed power and baseline fraction</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Illustrative fixture</a></td></tr>
+<tr><td>Duty-cycle phases</td><td>ASSUMED - to be confirmed</td><td><a href="#source-example">Illustrative fixture</a></td></tr>
 <tr><td>Losses, reserve, ageing and available capacity</td><td>Required inputs; NOT_EVALUATED</td><td><a href="#limits">Assessment limits</a></td></tr>
 <tr><td>Recharge schedule and charge limits</td><td>Required inputs; NOT_EVALUATED</td><td><a href="#method">Model boundary</a></td></tr>
-<tr><td>Sea-state operating limits</td><td>NOT_EVALUATED</td><td><a href="#controls">Scope</a></td></tr></table>
+<tr><td>Thermal and machinery integration limits</td><td>NOT_EVALUATED</td><td><a href="#limits">Assessment limits</a></td></tr></table>
 <p>Table D. Data readiness. Missing inputs are not represented by zero.</p>
-<table><tr><td>BollardPull</td><td>7</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Girting</td><td>8</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Fendering</td><td>5</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Towline</td><td>6</td><td><a href="#source-tests">Test definitions</a></td></tr><tr><td>Emissions</td><td>8</td><td><a href="#source-tests">Test definitions</a></td></tr></table><p>Table C. Existing test definitions, counted from the public tug test file; execution results are separate evidence.</p>
 <h3 id="locators">9.2 Source register and calculation access</h3>
-<ul><li id="source-theory">OpenStax, University Physics Volume 1, 2016 publication, section 7.4, equations 7.10 and 7.11: <a href="https://openstax.org/books/university-physics-volume-1/pages/7-4-power">power and the time integral of power</a>. Consulted for the energy definition; no empirical battery coefficient is taken from this source.</li>
-<li id="source-example">Public example: <code>tests/tug/test_tug_toolkit.py</code>, <code>TestEmissions.PROFILE</code>, <code>test_hybrid_sizing_shaves_assist_peak</code>. The inputs are read directly from these definitions.</li>
+<ul><li id="source-theory">OpenStax, University Physics Volume 1, 2016 publication, section 7.4: <a href="https://openstax.org/books/university-physics-volume-1/pages/7-4-power">power and the time integral of power</a>. Equations 7.10 and 7.11 define average and instantaneous power; the unnumbered work integral following equation 7.11 provides the energy relation. Consulted for the energy definition; no empirical battery coefficient is taken from this source.</li>
+<li id="source-example">Illustrative regression inputs: <code>tests/tug/fixtures/duty_cycle.json</code>. The report generator and <code>TestEmissions</code> in <code>tests/tug/test_tug_toolkit.py</code> read this shared fixture directly. These assumed inputs are not measured or independently published operating data.</li>
 <li id="source-api">Implementation: <code>src/digitalmodel/tug/emissions.py</code>, documented <code>OperatingPhase</code>, <code>cycle_energy</code>, <code>size_hybrid</code> and <code>HybridSizingResult</code>. Inputs are installed power in kW, phase fractions and durations in h, and baseline fraction. Outputs are energy in kWh, power in kW and a dimensionless energy share.</li>
 <li id="source-tests">Existing evidence: <code>tests/tug/test_tug_toolkit.py</code>. Report checks: <code>tests/tug/test_module_report.py</code>. The original energy fixture is illustrative; its presence does not establish field validation.</li>
 <li>Rebuild: <code>python docs/reports/modules/tug/build_report.py</code>. The calculation data are embedded in this HTML. Styles are copied from <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and <code>docs/api/_assets/brand.css</code>.</li></ul>
@@ -266,7 +268,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 </section>
 <footer>Preliminary calculation assessment. Draft for maintainer review.</footer>
 <script id="calculation" type="application/json">{"input": {"baseline_fraction": 0.5, "installed_power_kw": 4000, "profile": [{"duration_h": 5.0, "name": "transit", "power_fraction": 0.4}, {"duration_h": 1.0, "name": "assist", "power_fraction": 0.9}, {"duration_h": 4.0, "name": "standby", "power_fraction": 0.1}]}, "phases": [{"name": "transit", "result": {"baseline_engine_kw": 2000.0, "battery_energy_kwh": 0.0, "battery_power_kw": 0.0, "peak_energy_fraction": 0.0, "peak_power_kw": 1600.0, "total_energy_kwh": 8000.0}}, {"name": "assist", "result": {"baseline_engine_kw": 2000.0, "battery_energy_kwh": 1600.0, "battery_power_kw": 1600.0, "peak_energy_fraction": 0.4444444444444444, "peak_power_kw": 3600.0, "total_energy_kwh": 3600.0}}, {"name": "standby", "result": {"baseline_engine_kw": 2000.0, "battery_energy_kwh": 0.0, "battery_power_kw": 0.0, "peak_energy_fraction": 0.0, "peak_power_kw": 400.0, "total_energy_kwh": 1600.0}}], "result": {"baseline_engine_kw": 2000.0, "battery_energy_kwh": 1600.0, "battery_power_kw": 1600.0, "peak_energy_fraction": 0.12121212121212122, "peak_power_kw": 3600.0, "total_energy_kwh": 13200.0}, "test_inventory": {"TestBollardPull": 7, "TestEmissions": 8, "TestFendering": 5, "TestGirting": 8, "TestTowline": 6}}</script>
-<script id="change-data" type="application/json">{"revision": "A", "status": "Draft for maintainer review", "changes": ["Initial issue: ideal duty-cycle energy and peak battery discharge are evaluated using the public example.", "Battery rating, recharge, reserve and installation weather limits remain not evaluated."]}</script>
+<script id="change-data" type="application/json">{"revision": "B", "status": "Draft for maintainer review", "changes": ["Shared illustrative inputs, independent energy-share and duration checks, and corrected source and table locators.", "Imported comments merge with existing notes to retain unsaved edits.", "Battery rating, recharge and reserve remain not evaluated."]}</script>
 <script>/* Local-only chart inspection and portable section comments. */
 (() => {
   const byId = (id) => document.getElementById(id);
@@ -334,9 +336,14 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
       if (record.revision !== 'A' || !Array.isArray(record.comments)
           || !record.comments.every((c) => c && typeof c.text === 'string'
             && sections.some((s) => s.id === c.section))) throw new Error('Invalid record');
-      comments.splice(0, comments.length, ...record.comments);
+      for (const comment of record.comments) {
+        if (!comments.some((existing) => existing.section === comment.section
+            && existing.text === comment.text)) {
+          comments.push({section: comment.section, text: comment.text});
+        }
+      }
       showComments();
-      byId('comment-status').textContent = 'Saved comments loaded.';
+      byId('comment-status').textContent = 'Saved comments merged. Save the comment file to retain all comments.';
     } catch {
       byId('comment-status').textContent = 'Invalid comment file; existing comments retained.';
     }
