@@ -634,7 +634,7 @@ def test_aggregate_compares_successful_shards_too():
     steps = workflow["jobs"]["domain-tests-required"]["steps"]
     for name in ("Checkout baseline tools", "Download domain results"):
         step = next(step for step in steps if step["name"] == name)
-        assert "domain-tests.result" not in step["if"]
+        assert "domain-tests.result" not in step.get("if", "")
     enforce = next(step for step in steps if step["name"] == "Enforce required domain result")
     assert 'if [ "$HAS_DOMAINS" = "true" ]; then' in enforce["run"]
 
