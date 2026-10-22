@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Fatigue Damage Accumulation — Miner's Rule
 
@@ -31,11 +34,27 @@ def miner_damage(
         The returned DataFrame has a `total_damage` attribute.
     """
     result = stress_histogram.copy()
+    if result.empty:
+        raise ValueError("Miner damage requires a non-empty stress histogram")
+    for column in ("stress_range", "cycles"):
+        values = result[column].to_numpy(dtype=float)
+        if not np.isfinite(values).all() or (values < 0).any():
+            raise ValueError(f"Miner damage {column} must be finite and non-negative")
     stress_ranges = result["stress_range"].values.astype(float)
-    allowable = sn_curve.cycles(stress_ranges)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        allowable = np.asarray(sn_curve.cycles(stress_ranges), dtype=float)
+        if np.isnan(allowable).any() or (allowable <= 0).any():
+            raise ValueError("Miner damage allowable cycles must be positive and not NaN")
+        damage = result["cycles"].to_numpy(dtype=float) / allowable
+    if not np.isfinite(damage).all() or (damage < 0).any():
+        raise ValueError("Miner damage contributions must be finite and non-negative")
     result["allowable_cycles"] = allowable
-    result["damage"] = result["cycles"].values / allowable
-    result.attrs["total_damage"] = float(result["damage"].sum())
+    result["damage"] = damage
+    with np.errstate(over="ignore", invalid="ignore"):
+        total_damage = float(result["damage"].sum(skipna=False))
+    if not np.isfinite(total_damage):
+        raise ValueError("Miner total damage must be finite")
+    result.attrs["total_damage"] = total_damage
     return result
 
 
