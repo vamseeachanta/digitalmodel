@@ -1,0 +1,221 @@
+{
+  "public_sources": [
+    {
+      "title": "International Code on Intact Stability, resolution MSC.267(85)",
+      "edition": "2008",
+      "locators": [
+        "Part A 2.2.1–2.2.4",
+        "Part B 3.1"
+      ],
+      "url": "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.267(85).pdf",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-22T04:40:42Z",
+      "response_sha256": "d04db58f4af735d3d98221eb3c040fca23739b5d87197dd857279ea22f7f2a13"
+    },
+    {
+      "title": "Principles of Ship Performance: Course Notes",
+      "edition": "Summer 2020",
+      "locators": [
+        "1.6, linear interpolation",
+        "2.8, numerical integration",
+        "3.2.2.1, weighted averages",
+        "3.3.2, metacentric height",
+        "3.6.2, trim calculation",
+        "4.4, stability interpretation",
+        "4.5, sine correction",
+        "4.8.3–4.8.5, free surfaces",
+        "Example 4.1, page 4-14"
+      ],
+      "url": "https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-22T04:41:29Z",
+      "response_sha256": "f8f4807492bffcc61cfe1b03bc7a0f457d7ab5209bb0404bba44a4e363be7cec"
+    },
+    {
+      "title": "Guide for the Use of the International System of Units, Special Publication 811",
+      "edition": "2008",
+      "locators": [
+        "Appendix B.8, foot to metre"
+      ],
+      "url": "https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-22T04:42:30Z",
+      "response_sha256": "35d7036b061c38cc6116f2f4641b659d1486e704a6917efd1c80e373fce3920e"
+    }
+  ],
+  "public_example": {
+    "source": "Course Notes, Summer 2020, example 4.1, page 4-14",
+    "heel_deg": [
+      0,
+      5,
+      10,
+      15,
+      20,
+      30,
+      40,
+      50,
+      60,
+      70,
+      80,
+      90,
+      100,
+      110
+    ],
+    "kn_ft": [
+      0,
+      2.55,
+      5.08,
+      7.6,
+      10.1,
+      15.02,
+      19.67,
+      22.96,
+      24.97,
+      26.04,
+      26.28,
+      25.45,
+      23.6,
+      20.95
+    ],
+    "kg_ft": 23.84,
+    "m_per_ft": 0.3048,
+    "published_gz_ft": [
+      0,
+      0.47,
+      0.94,
+      1.43,
+      1.95,
+      3.11,
+      4.36,
+      4.71,
+      4.34,
+      3.66,
+      2.82,
+      1.63,
+      0.14,
+      -1.43
+    ]
+  },
+  "synthetic": {
+    "source": "Public repository calculation fixture; assumed, based on previous experience. ASSUMED - to be confirmed for any physical use.",
+    "lbp_m": 100.0,
+    "beam_m": 20.0,
+    "depth_m": 10.0,
+    "water_density_t_m3": 1.025,
+    "deck_edge_immersion_deg": 30.96375653207352,
+    "hydrostatics": {
+      "table": [
+        {
+          "draft_m": 2.0,
+          "displacement_t": 4099.999999999999,
+          "km_m": 17.666666666666668,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        },
+        {
+          "draft_m": 3.0,
+          "displacement_t": 6149.999999999998,
+          "km_m": 12.61111111111111,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        },
+        {
+          "draft_m": 4.0,
+          "displacement_t": 8199.999999999998,
+          "km_m": 10.333333333333334,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        },
+        {
+          "draft_m": 5.0,
+          "displacement_t": 10249.999999999998,
+          "km_m": 9.166666666666668,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        },
+        {
+          "draft_m": 6.0,
+          "displacement_t": 12299.999999999996,
+          "km_m": 8.555555555555555,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        },
+        {
+          "draft_m": 8.0,
+          "displacement_t": 16399.999999999996,
+          "km_m": 8.166666666666668,
+          "lcb_m": 50.0,
+          "lcf_m": 50.0,
+          "mct_t_m_per_cm": 170.8333333,
+          "tpc_t_per_cm": 20.5
+        }
+      ]
+    },
+    "loading_condition": {
+      "name": "reference condition",
+      "items": [
+        {
+          "name": "lightship",
+          "weight_t": 4000.0,
+          "vcg_m": 5.0,
+          "lcg_m": 50.0
+        },
+        {
+          "name": "cargo",
+          "weight_t": 3000.0,
+          "vcg_m": 6.0,
+          "lcg_m": 52.0
+        },
+        {
+          "name": "fuel",
+          "weight_t": 1000.0,
+          "vcg_m": 2.0,
+          "lcg_m": 40.0,
+          "fsm_t_m": 410.0
+        },
+        {
+          "name": "ballast",
+          "weight_t": 200.0,
+          "vcg_m": 1.0,
+          "lcg_m": 50.0
+        }
+      ]
+    },
+    "gz": {
+      "heel_deg": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "kn_m": [
+        0.0,
+        0.9033889803083821,
+        1.8168600481329025,
+        2.7518900134824573,
+        3.722995188628887,
+        4.7499525034482115,
+        5.861111111111111,
+        7.098702897104909,
+        8.527885155628857
+      ]
+    },
+    "excess_fsm_t_m": 82000.0,
+    "max_kg_tolerance_m": 0.0001
+  }
+}
