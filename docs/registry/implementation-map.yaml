@@ -53634,3 +53634,12 @@ rejected_candidates:
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
+
+# Documentation bindings; calculation inventory above remains the pinned snapshot.
+agent_packs:
+  nde:
+    agent_pack: src/digitalmodel/nde/docs/agent-pack.md
+    qa_family: EC
+  production_engineering:
+    agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
+    qa_family: EC
