@@ -15,6 +15,7 @@ import html
 import json
 import math
 import re
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 from pathlib import Path
 
 import yaml
@@ -22,8 +23,8 @@ import yaml
 from digitalmodel.pipelay.workflow import router
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION = "1"
-DATE = "2026-10-21"
+REVISION = "2"
+DATE = "2026-10-22"
 EXAMPLES = {
     "jlay": "examples/workflows/jlay-pipelay/input.yml",
     "reel": "examples/workflows/reel-lay-pipelay/input.yml",
@@ -42,19 +43,93 @@ def calculate(scratch):
     for case in EXAMPLES:
         cfg = load_example(case)
         inputs = {key: cfg["pipelay"][key] for key in ("pipe", "config", "operability")}
-        cfg["pipelay"]["outputs"]["directory"] = str(Path(scratch).resolve() / case)
+        cfg["pipelay"]["outputs"]["directory"] = (Path(scratch).resolve() / case).as_posix()
         result = router(cfg)["pipelay"]
         payload = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
-        assert all(result[key] == value for key, value in payload.items())
+        if not all(result[key] == value for key, value in payload.items()):
+            raise ValueError("Router summary differs from returned calculation")
         record[case] = {"inputs": inputs, "result": payload}
+        record[case]["display"] = display_values(inputs, payload)
     record["source_digests"] = {
-        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        name: hashlib.sha256((ROOT / name).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
         for name in [*EXAMPLES.values(), "src/digitalmodel/pipelay/workflow.py",
                      "src/digitalmodel/pipelay/validation.py",
                      "src/digitalmodel/orcaflex/pipelay_analysis.py",
                      "src/digitalmodel/pipelay/docs/screening-basis.md"]
     }
     return record
+
+
+def positive(value, name, *, zero=False):
+    """Reject missing, boolean, nonfinite and nonphysical decision quantities."""
+    if isinstance(value, bool):
+        raise ValueError(f'{name} must be finite and positive')
+    try:
+        value = float(value)
+    except (ValueError, TypeError):
+        raise ValueError(f'{name} must be finite and positive') from None
+    if not math.isfinite(value) or value < 0 or (value == 0 and not zero):
+        raise ValueError(f"{name} must be finite and {'nonnegative' if zero else 'positive'}")
+    return value
+
+
+def display_values(inputs, result):
+    """Check E5-E6 precision; Mechanics of Materials (2000), Normal Stresses, (2)."""
+    diameter = positive(inputs['pipe']['outer_diameter'], 'diameter')
+    limit = positive(inputs['config']['allowable_overbend_strain'], 'overbend limit')
+    radius = Decimal(str(diameter)) / (2 * Decimal(str(limit)))
+    values = {'min_stinger_radius_m': float(radius)}
+    tolerances = {'min_stinger_radius_m': 0.05}
+    if result['method'] == 'Reel-Lay':
+        core = positive(inputs['config']['reel_core_radius_m'], 'core radius')
+        removal = positive(inputs['config']['straightener_efficiency'], 'removal fraction', zero=True)
+        if removal > 1:
+            raise ValueError('Removal fraction exceeds unity')
+        values.update(reeling_bending_strain=diameter / (2 * core),
+                      residual_bending_strain=diameter * (1 - removal) / (2 * core),
+                      reeling_strain_utilisation=diameter / (2 * core) / positive(
+                          result['allowable_reeling_strain'], 'reeling limit'))
+        tolerances.update(reeling_bending_strain=5e-7, residual_bending_strain=5e-7,
+                          reeling_strain_utilisation=5e-5)
+    else:
+        values['sagbend_strain_utilisation'] = result['sagbend']['sagbend_bending_strain'] / positive(
+            result['allowable_sagbend_strain'], 'sagbend limit')
+        tolerances['sagbend_strain_utilisation'] = 5e-5
+    for key, value in values.items():
+        returned = positive(result[key], key, zero=True)
+        if abs(returned - value) > tolerances[key] + 1e-12:
+            raise ValueError(f'{key} differs from the input-derived value beyond router rounding')
+    if result['method'] == 'J-Lay':
+        values['tension_closure_relative_error'] = abs(
+            result['supplied_top_tension_kN'] - result['top_tension_kN']) / result['top_tension_kN']
+        values['yield_strain'] = positive(inputs['pipe']['smys'], 'yield strength') / positive(
+            inputs['pipe']['youngs_modulus'], 'elastic modulus')
+    return values
+
+
+def screen(record, case):
+    """Bind the router verdict to finite unrounded demand and its stated limit."""
+    data = record[case]
+    result = data['result']
+    if result.get('screening_status') not in {'pass', 'fail'}:
+        raise ValueError('Unknown screening status')
+    for key, expected in display_values(data['inputs'], result).items():
+        shown = positive(data['display'][key], 'display value', zero=True)
+        if not math.isclose(shown, expected, rel_tol=1e-12, abs_tol=1e-12):
+            raise ValueError('Display value disagrees with retained inputs and router result')
+    demand = (result['sagbend']['sagbend_bending_strain'] if case == 'jlay'
+              else data['display']['reeling_bending_strain'])
+    limit = result.get('allowable_sagbend_strain' if case == 'jlay' else 'allowable_reeling_strain')
+    ratio = positive(demand, 'strain demand', zero=True) / positive(limit, 'strain limit')
+    status = 'pass' if ratio <= 1 else 'fail'
+    if status != result['screening_status']:
+        raise ValueError('Screening status disagrees with unrounded demand and limit')
+    return status, ratio
+
+
+def text_digest(text):
+    """Hash UTF-8 text after CRLF-to-LF normalization, matching the browser."""
+    return hashlib.sha256(text.replace('\r\n', '\n').encode('utf-8')).hexdigest()
 
 
 def lookup(record, key):
@@ -65,35 +140,62 @@ def lookup(record, key):
     return value
 
 
-def format_value(value, scale=1.0):
-    """Use one decimal place, retaining nonzero small quantities explicitly."""
+def format_value(value, scale=1.0, places=1, rounding='nearest'):
+    """Round once, upward for minima, retaining small nonzero quantities."""
     scaled = float(value) * scale
     if not math.isfinite(scaled):
         raise ValueError("Report quantities must be finite")
     if scaled and abs(scaled) < 0.05:
-        return f"{scaled:.1e}".replace("-", "−")
-    return f"{scaled:.1f}".replace("-", "−")
+        return f"{scaled:.{places}e}"
+    exact = Decimal(str(value)) * Decimal(str(scale))
+    mode = ROUND_CEILING if rounding == 'up' else ROUND_HALF_UP
+    rounded = exact.quantize(Decimal(1).scaleb(-places), rounding=mode)
+    return f"{abs(rounded) if rounded == 0 else rounded:.{places}f}"
 
 
 def number(record, key, scale=1.0):
     """Bind visible numerical text to an exact module output or source input."""
-    return (f'<span data-value="{key}" data-scale="{scale}">'
-            f'{format_value(lookup(record, key), scale)}</span>')
+    case, _, field = key.partition('.result.')
+    if field in record.get(case, {}).get('display', {}):
+        key = f'{case}.display.{field}'
+    value = lookup(record, key)
+    if value is None:
+        case = key.split('.')[0]
+        if (key.endswith('.residual_radius_m') and record[case]['result'].get(
+                'residual_radius_status') == 'unbounded_zero_curvature'):
+            return '<span>Unbounded (zero residual curvature)</span>'
+        raise ValueError('Missing report quantity')
+    places, rounding = 1, 'nearest'
+    if '.inputs.' in key:
+        exact = Decimal(str(value)) * Decimal(str(scale))
+        places = max(1, -exact.normalize().as_tuple().exponent)
+    if key.endswith(('wall_thickness', 'coating_thickness')):
+        places = max(places, 3)
+    if key.endswith('residual_curvature_1_per_m'):
+        places = 2
+    if key.endswith('min_stinger_radius_m'):
+        rounding = 'up'
+    if key.endswith(('tension_closure_relative_error', 'tension_closure_relative_tolerance')):
+        places = 3
+    return (f'<span data-value="{key}" data-scale="{scale}" data-places="{places}" data-rounding="{rounding}">'
+            f'{format_value(value, scale, places, rounding)}</span>')
 
 
 def source(name):
     """Keep source locators in the reference subsection."""
     labels = {"basis": "Analytical basis", "jlay": "Public J-lay example",
               "reel": "Public reel-lay example", "tests": "Regression evidence",
-              "code": "Implemented interface", "clearance": "Evidence register"}
+              "code": "Implemented interface", "clearance": "Evidence register",
+              "textbooks": "Textbook basis"}
     return f'<a href="#source-{name}">{labels[name]}</a>'
 
 
-def table(headers, rows):
+def table(headers, rows, caption='Calculation inputs, results and their stated evidence.'):
     """Render real columns; cell markup is supplied by this trusted template."""
     return ('<table><thead><tr>' + ''.join(f'<th scope="col">{ESC(h)}</th>' for h in headers)
             + '</tr></thead><tbody>' + ''.join('<tr>' + ''.join(f'<td>{c}</td>' for c in row)
-                                              + '</tr>' for row in rows) + '</tbody></table>')
+                                              + '</tr>' for row in rows) + '</tbody></table>'
+            + f'<p class="table-caption">{ESC(caption)}</p>')
 
 
 def house_style():
@@ -109,6 +211,8 @@ def house_style():
 def changes():
     """Describe engineering content introduced at this issue."""
     return {"revision": REVISION, "date": DATE, "changes": [
+        "Screening verdicts and chart colours follow unrounded demands and the router status.",
+        "Display precision, minimum-radius rounding and portable report hashes are corrected.",
         "Static J-lay geometry and strain screening are documented against the public example.",
         "Reel strain and straightener assumptions are distinguished from material qualification.",
         "Supplied sea-state cutoffs are distinguished from a qualified installation envelope.",
@@ -122,6 +226,8 @@ def schematic(record):
     a = r["sagbend"]["catenary_parameter_m"]
     depth = r["water_depth_m"]
     offset = a * math.acosh(1 + depth / a)
+    if abs(offset - r['sagbend']['horizontal_offset_m']) > 0.05 + 1e-12:
+        raise ValueError('Catenary offset differs from router geometry beyond rounding')
     scale = 430 / depth
     points = ' '.join(f'{340 + offset * i / 80 * scale:.3f},'
                       f'{520 - a * (math.cosh(offset * i / 80 / a) - 1) * scale:.3f}'
@@ -158,7 +264,7 @@ The line coordinates use equal length scales. The annulus inset uses the example
 <text x="505" y="365">Steel diameter (mm): {svg_number('jlay.inputs.pipe.outer_diameter', 1000)}</text>
 <text x="505" y="390">Wall thickness (mm): {svg_number('jlay.inputs.pipe.wall_thickness', 1000)}</text>
 <text x="505" y="415">Radial coating (mm): {svg_number('jlay.inputs.pipe.coating_thickness', 1000)}</text>
-</svg><figcaption>Figure A. The catenary shape is computed from the example geometry.
+</svg><figcaption>Figure C. The catenary shape is computed from the example geometry.
 The cross-section is enlarged independently. Pipe line thickness is symbolic.
 No support-vessel geometry, crane or rigging arrangement is represented. {source('basis')}; {source('jlay')}.</figcaption></figure>'''
 
@@ -189,7 +295,7 @@ def rate_chart(record, case):
 <text x="300" y="355">Significant wave height (m)</text>
 <text x="45" y="305">{format_value(0)}</text><text x="35" y="80">{format_value(ymax)}</text>
 <text x="70" y="325">{format_value(0)}</text><text x="680" y="325">{format_value(xmax)}</text>
-{''.join(points)}</svg><figcaption>{name} rate samples. Green: the supplied wave-height condition is met.
+{''.join(points)}</svg><figcaption>Figure {'B' if case == 'jlay' else 'D'}. {name} rate samples. Green: the supplied wave-height condition is met.
 Red: the supplied condition is exceeded. Amber: the supplied cutoff is shown.
 Hover or focus a point for the case, component, rate, cutoff and units.
 These colours describe assumed conditions, not installation acceptance. {source(case)}; {source('basis')}.</figcaption></figure>'''
@@ -203,21 +309,25 @@ def component_chart(record):
     bars = []
     for i, (label, demand_key, limit_key) in enumerate(parts):
         demand, limit = lookup(record, demand_key), lookup(record, limit_key)
-        # Utilisation is displayed from the returned module field, including its rounding.
-        key = ('jlay.result.sagbend_strain_utilisation' if i == 0
-               else 'reel.result.reeling_strain_utilisation')
-        percent = lookup(record, key) * 100
+        case = 'jlay' if i == 0 else 'reel'
+        status, ratio = screen(record, case)
+        if case == 'reel':
+            demand = record[case]['display']['reeling_bending_strain']
+        percent = ratio * 100
         tip = (f'{label}; demand {format_value(demand, 1e6)} µm/m; assumed limit '
-               f'{format_value(limit, 1e6)} µm/m; utilisation {format_value(percent)} %')
+               f'{format_value(limit, 1e6)} µm/m; utilisation {format_value(percent)} %; {status}')
         yy = 75 + i * 65
-        bars.append(f'<text x="20" y="{yy + 20}">{label}</text><rect x="215" y="{yy}" '
-                    f'width="{percent * 3.6:.3f}" height="30" fill="var(--go)" tabindex="0" '
-                    f'aria-label="{ESC(tip)}"><title>{ESC(tip)}</title></rect>')
+        color = 'var(--go)' if status == 'pass' else 'var(--nogo)'
+        bars.append(f'<text x="20" y="{yy + 20}">{label}: {status}</text><rect x="215" y="{yy}" '
+                    f'width="{min(percent, 140) * 3.6:.3f}" height="30" fill="{color}" tabindex="0" '
+                    f'data-screen="{case}" data-status="{status}" '
+                    f'aria-label="{ESC(tip)}"><title>{ESC(tip)}</title></rect>'
+                    + (f'<text x="725" y="{yy + 20}">&gt;140%</text>' if percent > 140 else ''))
     return ('<figure><svg viewBox="0 0 780 255" role="img" aria-label="Strain utilisation by screening component">' +
         '<text x="215" y="35">Strain demand / assumed strain limit (%)</text>' + \
         '<path class="limit" d="M575 50 V190" stroke="var(--caution)" stroke-dasharray="6 4"/>' + \
         ''.join(bars) + '<text x="200" y="220">0.0</text><text x="555" y="220">100.0</text></svg>' + \
-        f'<figcaption>Figure B. Each green bar meets its own assumed strain criterion. '
+        f'<figcaption>Figure A. Green indicates a met strain criterion; red indicates an exceeded criterion. '
         f'The amber line marks equality to that criterion. Only the listed strain components are assessed. '
         f'Hover or focus a bar for its demand and limit. {source("basis")}.</figcaption></figure>')
 
@@ -235,7 +345,7 @@ def input_table(record):
     rows = [[label, number(record, f'jlay.inputs.pipe.{key}', scale),
              number(record, f'reel.inputs.pipe.{key}', scale), unit,
              source('jlay') + '; ' + source('reel')] for key, label, unit, scale in pipe_fields]
-    return table(["Quantity", "J-lay", "Reel-lay", "Unit", "Source"], rows)
+    return table(["Quantity", "J-lay", "Reel-lay", "Unit", "Source"], rows, 'Pipe inputs from the two public examples.')
 
 
 def rate_input_table(record):
@@ -248,20 +358,41 @@ def rate_input_table(record):
     return table(["Quantity", "J-lay", "Reel-lay", "Unit", "Source"], [
         [label, number(record, f'jlay.inputs.operability.{key}'),
          number(record, f'reel.inputs.operability.{key}'), unit,
-         source('jlay') + '; ' + source('reel')] for key, label, unit in fields])
+         source('jlay') + '; ' + source('reel')] for key, label, unit in fields],
+         'Assumed rate coefficients and wave-height cutoffs.')
 
 
 def result_table(record, case, fields):
-    """Show source-bound quantities, preserving the module's rounding."""
+    """Show source-bound quantities with checked unrounded display values."""
     return table(["Quantity", "Value", "Unit", "Source"], [
         [label, number(record, f'{case}.result.{key}', scale), unit,
          source(case) + '; ' + source('basis')]
-        for key, label, unit, scale in fields])
+        for key, label, unit, scale in fields],
+        f'{"J-lay" if case == "jlay" else "Reel-lay"} results and source basis.')
 
 
 def content(record):
     """Write the complete engineering narrative with the module scope in context."""
     n = lambda key, scale=1: number(record, key, scale)
+    jstatus, _ = screen(record, 'jlay')
+    rstatus, _ = screen(record, 'reel')
+    limit_vs_yield = ('above' if record['jlay']['result']['allowable_sagbend_strain'] >
+                     record['jlay']['display']['yield_strain'] else 'at or below')
+    verdict = lambda status: 'meets' if status == 'pass' else 'exceeds'
+    stress = positive(record['jlay']['result']['sagbend']['sagbend_bending_stress_MPa'], 'stress proxy', zero=True)
+    smys = positive(record['jlay']['inputs']['pipe']['smys'], 'yield strength') / 1e6
+    exact_stress = (positive(record['jlay']['inputs']['pipe']['youngs_modulus'], 'elastic modulus')
+                    * record['jlay']['result']['sagbend']['sagbend_bending_strain'] / 1e6)
+    if abs(stress - exact_stress) > 0.05 + 1e-12:
+        raise ValueError('Stress proxy differs beyond router rounding')
+    stress_verdict = 'is at or below' if exact_stress <= smys else 'exceeds'
+    sagbend = record['jlay']['result']['sagbend']
+    derived = positive(record['jlay']['result']['top_tension_kN'], 'derived tension')
+    supplied = positive(record['jlay']['result']['supplied_top_tension_kN'], 'supplied tension')
+    closure = abs(supplied - derived) / derived
+    tolerance = positive(sagbend['tension_closure_relative_tolerance'], 'closure tolerance')
+    if closure > tolerance:
+        raise ValueError('Supplied tension exceeds input-consistency tolerance')
     jfields = [
         ('water_depth_m', 'Water depth', 'm', 1),
         ('tower_angle_deg', 'Top angle from vertical', 'degrees', 1),
@@ -270,6 +401,7 @@ def content(record):
         ('pipe_submerged_weight_N_per_m', 'Empty-pipe submerged weight', 'N/m', 1),
         ('sagbend.horizontal_tension_kN', 'Horizontal tension', 'kN', 1),
         ('sagbend.sagbend_radius_m', 'Touchdown radius', 'm', 1),
+        ('sagbend.catenary_parameter_m', 'Catenary parameter', 'm', 1),
         ('sagbend.sagbend_bending_strain', 'Touchdown bending strain', 'µm/m', 1e6),
         ('allowable_sagbend_strain', 'Assumed sagbend strain limit', 'µm/m', 1e6),
         ('sagbend_strain_utilisation', 'Sagbend strain utilisation', '%', 100),
@@ -279,7 +411,7 @@ def content(record):
         ('min_stinger_radius_m', 'Reference overbend radius', 'm', 1),
     ]
     rfields = [
-        ('reel_core_radius_m', 'Reel core radius', 'm', 1),
+        ('reel_core_radius_m', 'Reel radius treated as neutral-axis', 'm', 1),
         ('reeling_bending_strain', 'Core bending strain', 'µm/m', 1e6),
         ('allowable_reeling_strain', 'Assumed reeling strain limit', 'µm/m', 1e6),
         ('reeling_strain_utilisation', 'Reeling strain utilisation', '%', 100),
@@ -294,19 +426,25 @@ def content(record):
 <section id="executive-summary"><h2>1. Executive Summary</h2>
 <p>Pipelay is an analytical pipeline installation screening module. Analysis is performed to determine
 static suspended geometry, bending strain and assumed lay-rate restrictions; key results are summarized below.</p>
-<ul><li>The public J-lay example meets the assumed sagbend strain limit.
+<ul><li>The public J-lay example {verdict(jstatus)} the assumed sagbend strain limit.
 <ul><li>Strain utilisation is {n('jlay.result.sagbend_strain_utilisation', 100)} % against
 the assumed limit of {n('jlay.result.allowable_sagbend_strain', 1e6)} µm/m.
+The elastic yield strain from the supplied yield strength and modulus is
+{n('jlay.display.yield_strain', 1e6)} µm/m. The assumed limit is {limit_vs_yield} that value;
+the reported utilisation is relative to the assumed strain limit rather than to yield.
 The example is suitable for reproducing the static screen, not for authorising installation.</li></ul></li>
-<li>The public reel-lay example meets its assumed core strain limit.
+<li>The public reel-lay example {verdict(rstatus)} its assumed core strain limit.
 <ul><li>Strain utilisation is {n('reel.result.reeling_strain_utilisation', 100)} % against
 the assumed limit of {n('reel.result.allowable_reeling_strain', 1e6)} µm/m.
-The straightener response remains an input assumption.</li></ul></li></ul>
+The straightener response and neutral-axis radius remain input assumptions.</li></ul></li></ul>
 <p>Vessel orientation, station-keeping tolerance and an installation sea-state envelope are NOT_EVALUATED.
-The assumed joining cutoff of {n('jlay.result.operability.operating_limit_m')} m significant wave height
-does not establish a safe operating limit. {source('jlay')}; {source('reel')}; {source('basis')}.</p>
+The assumed combined laying and joining cutoff of {n('jlay.result.operability.operating_limit_m')} m significant wave height
+does not establish an operating limit without a qualified vessel response analysis.
+{source('jlay')}; {source('reel')}; {source('basis')}.</p>
 <h3 id="revision-history">Revision history</h3>
-{table(['Revision', 'Date', 'What changed and why'], [[REVISION, DATE, 'Initial analytical module analysis; example calculations and evidence limits are presented for engineering use.']])}
+{table(['Revision', 'Date', 'What changed and why'], [
+['1', '2026-10-21', 'Initial analytical module analysis; example calculations and evidence limits are presented for engineering use.'],
+[REVISION, DATE, 'Screen verdicts, numerical precision and portable rebuilding are corrected to prevent misleading results.']], 'Report revision history.')}
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -317,7 +455,10 @@ writes a strict JavaScript Object Notation (JSON) summary and returns the augmen
 The direct calculation functions return result mappings without writing files. {source('code')}.</p>
 <p>J-lay geometry is solved using depth and the angle from vertical. Supplied top tension is a consistency check,
 not an independent means of tuning curvature at a fixed depth and angle. Reel-lay screening uses the innermost
-wrap radius and a prescribed fraction of curvature removal. {source('basis')}.</p>
+wrap radius and a prescribed fraction of curvature removal. The supplied radius is treated as a
+neutral-axis radius in this screen. The input example calls it a hub radius; no half-diameter
+correction is applied, so the physical wrap radius remains unestablished. Confirm that interpretation
+before applying the result to an installation. {source('basis')}.</p>
 </section>
 
 <section id="summary"><h2>3. Summary</h2>
@@ -363,21 +504,27 @@ and coated diameters. Areas Aₛ, A꜀ and A𝑑 denote steel, coating and displ
 <div class="eq">Dᵢ = D − 2t; D꜀ = D + 2c; Aₛ = π(D² − Dᵢ²)/4;<br>
 A꜀ = π(D꜀² − D²)/4; A𝑑 = πD꜀²/4; w = g(ρₛAₛ + ρ꜀A꜀ − ρ𝑤A𝑑).</div>
 <p>The annular areas and empty-pipe buoyancy expression are defined by the analytical basis. Its gravity
-convention is retained without a new environmental assumption. {source('basis')}.</p>
+convention is retained without a new environmental assumption. {source('basis')}; {source('textbooks')}.</p>
 <p>Let h be water depth, θ top angle from vertical, T top resultant force, H horizontal force, a catenary parameter,
 x horizontal touchdown offset, z height above seabed and s suspended arc length. Consistent force units are used.</p>
 <div class="eq">H = T sin θ; T = H + wh; a = H/w = h sin θ/(1 − sin θ);<br>
 z = a[cosh(x/a) − 1]; x = a acosh(1 + h/a); s = √(h² + 2ah).</div>
+<p>The catenary and arc-length relations follow Calculus Volume 2, 2016 edition, section 2.9;
+the force closure follows static force balance in University Physics Volume 1, 2016 edition, section 12.1.
+{source('textbooks')}.</p>
 <p>Let κ be touchdown curvature, ε bending strain, E Young’s modulus and σ the elastic stress proxy.
 The minimum reference radius Rₘᵢₙ follows from an assumed maximum strain εₘₐₓ.</p>
 <div class="eq">κ = 1/a; ε = Dκ/2; σ = Eε; Rₘᵢₙ = D/(2εₘₐₓ).</div>
 <p>These equations and their numerical constants are geometric identities derived in the analytical basis,
 not values copied from a licensed standard. Axial extension, flexural stiffness in equilibrium, contents pressure,
 contact, hydrodynamic forcing and material plasticity are excluded. The elastic proxy is not a combined stress check.
-{source('basis')}.</p>
-<p>For reel-lay, let R be core radius, η the assumed fraction of curvature removed, κᵣ residual curvature,
+{source('basis')}; {source('textbooks')}.</p>
+<p>For reel-lay, let R be the assumed neutral-axis radius of the innermost wrap, η the assumed fraction of curvature removed, κᵣ residual curvature,
 L the measurement span and δ its small-slope midspan offset.</p>
 <div class="eq">εᵣₑₑₗ = D/(2R); κᵣ = (1 − η)/R; εᵣ = Dκᵣ/2; δ ≈ κᵣL²/8.</div>
+<p>The strain-curvature and elastic-stress relations follow Mechanics of Materials, 2000 teaching edition,
+Stresses in Beams, Normal Stresses, equations (2)–(3). Integrating constant small-slope curvature twice
+with zero span-end offsets gives the factor in the residual-offset expression. {source('textbooks')}.</p>
 <p>The straightener fraction is prescribed rather than predicted from cyclic material response. Perfect removal
 produces zero curvature and an unbounded residual radius encoded as null in JSON. {source('basis')}.</p>
 <p>For the assumed rate rule, Hₛ denotes significant wave height, v₀ calm-water rate, b degradation per unit
@@ -390,7 +537,8 @@ J-lay uses the lower laying and joining cutoff; reel-lay uses the laying cutoff.
 Only the output destination is redirected; engineering inputs are retained.</p>
 <section id="worked-example"><h3>J-lay worked example</h3>
 <p>The calculated radius and top tension follow from the supplied depth and angle. The detailed values are
-retained in the appendix using the module’s returned precision and engineering display units.</p>
+retained in the appendix. Selected display values are evaluated from retained inputs before rounding;
+their agreement with router results is checked against each result’s rounding quantum.</p>
 <p>At depth {n('jlay.result.water_depth_m')} m and top angle {n('jlay.result.tower_angle_deg')} degrees from vertical,
 the top tension is {n('jlay.result.top_tension_kN')} kN and the touchdown radius is
 {n('jlay.result.sagbend.sagbend_radius_m')} m. Touchdown offset is
@@ -400,8 +548,10 @@ the top tension is {n('jlay.result.top_tension_kN')} kN and the touchdown radius
 {n('jlay.result.allowable_sagbend_strain', 1e6)} µm/m; utilisation is
 {n('jlay.result.sagbend_strain_utilisation', 100)} %. The elastic bending stress proxy is
 {n('jlay.result.sagbend.sagbend_bending_stress_MPa')} MPa. {source('jlay')}; {source('basis')}.</p>
-<p>The sagbend strain screen passes against the assumed limit. The supplied tension closes within the
-input-consistency tolerance. The elastic stress proxy is below the example’s specified minimum yield strength of
+<p>The sagbend strain screen {verdict(jstatus)} the assumed limit. The supplied tension closure error is
+{n('jlay.display.tension_closure_relative_error', 100)} % against a tolerance of
+{n('jlay.result.sagbend.tension_closure_relative_tolerance', 100)} %.
+The elastic stress proxy {stress_verdict} the example’s specified minimum yield strength of
 {n('jlay.inputs.pipe.smys', 1e-6)} MPa; this observation does not assess axial stress, local buckling or installation acceptance.
 {source('basis')}; {source('jlay')}.</p></section>
 <h3>Reel-lay example</h3>
@@ -410,7 +560,7 @@ input-consistency tolerance. The elastic stress proxy is below the example’s s
 {n('reel.result.residual_out_of_straightness_m', 1000)} mm over the supplied span of
 {n('reel.result.residual_out_of_straightness_span_m')} m. The full component values are retained in the appendix.
 {source('reel')}; {source('basis')}.</p>
-<p>The core strain screen passes against the assumed plastic-strain limit. The residual offset is calculated
+<p>The core strain screen {verdict(rstatus)} the assumed total reeling-strain criterion. The residual offset is calculated
 using the supplied straightener fraction and span; no residual-offset acceptance criterion is supplied, so its
 engineering acceptance is NOT_EVALUATED. {source('basis')}; {source('reel')}.</p>
 {rate_chart(record, 'reel')}
@@ -428,12 +578,13 @@ non-positive submerged weight and inconsistent force closure before summary outp
 cover perfect straightening, unrounded strain acceptance, the joining cutoff and strict summary readback.
 {source('tests')}.</p>
 <p>The report rebuild test compares all displayed numerical bindings with fresh router returns, checks that
-worked-example numerical text has a binding and compares the committed HTML with a deterministic rebuild.
+J-lay worked-example numerical text has a binding and compares the committed HTML with a deterministic rebuild.
 These checks establish reproducibility of the presentation, not independent physical qualification. {source('tests')}.</p>
 </section>
 
 <section id="recommendations"><h2>8. Key Findings, Limitations and Recommendations</h2>
-<p>The public examples meet the selected strain screens under the stated assumptions. Engineering release
+<p>The J-lay strain screen {verdict(jstatus)} its selected criterion and the reel-lay strain screen
+{verdict(rstatus)} its selected criterion, with demands and limits reported above. Engineering release
 is restricted by missing operating conditions, acceptance criteria and independent installation evidence.</p>
 <p>Use the J-lay calculation to check static input consistency and preliminary curvature. Confirm pipe contents,
 coating tolerances, material certificates and the governing edition-qualified criteria before extending the screen
@@ -456,7 +607,7 @@ depth-dependent formulation and independent reference cases are provided. {sourc
 </section>
 
 <section id="references"><h2>9. References</h2>
-<p>The source basis is limited to public repository records available with this report. No external published
+<p>The source basis includes public repository records and the textbook sections identified below. No external published
 benchmark, licensed standard value or field dataset is substituted for the repository examples.</p>
 <h3>9.1 Engineering basis</h3>
 <p>The analytical screening basis, as identified by the knowledge pack dated 2026-10-18, supplies equilibrium,
@@ -464,6 +615,14 @@ geometry, curvature and rate assumptions. The public examples supply all applied
 criteria. The knowledge pack and evidence register distinguish analytical regression from installation qualification.</p>
 <h3>9.2 Source and reproducibility locators</h3>
 <ul class="refs">
+<li id="source-textbooks">University Physics Volume 1, 2016 edition, sections 12.1
+(Conditions for Static Equilibrium), 12.3 (Stress, Strain, and Elastic Modulus) and 14.4
+(Archimedes’ Principle and Buoyancy); Calculus Volume 2, 2016 edition, section 2.9
+(Calculus of the Hyperbolic Functions), both published by OpenStax.
+Mechanics of Materials, 2000 teaching edition, Stresses in Beams, Normal Stresses,
+equations (2)–(3), published by MIT OpenCourseWare. These references supply physical and geometric
+relations, not installation allowables. Curvature removal, rate degradation and wave-height cutoffs are
+explicit example assumptions; they are not textbook acceptance coefficients.</li>
 <li id="source-basis"><a href="../../../../src/digitalmodel/pipelay/docs/screening-basis.md">Analytical screening basis</a>:
 equations E1–E7, validation criteria V1–V4 and independently evaluated anchors;
 <a href="../../../../src/digitalmodel/pipelay/docs/agent-pack.md">knowledge pack</a>, revision 1, dated 2026-10-18, sections 1–8.</li>
@@ -486,7 +645,7 @@ strict expected failure in test_departure_angle_recomputed_with_depth;
 <li id="source-clearance"><a href="../../../registry/pipelay-review-clearance.json">Review and clearance register</a>:
 pack and installation evidence requirements; execution fields are not execution receipts.</li>
 <li><a href="build_report.py">Report generator</a>: with the repository source on the Python import path,
-execute <code>python docs/reports/modules/pipelay/build_report.py --output-dir docs/reports/modules/pipelay --scratch-dir "$TMPDIR/pipelay-report"</code>.
+execute <code>python docs/reports/modules/pipelay/build_report.py --output-dir docs/reports/modules/pipelay --scratch-dir "${{TMPDIR:?Set TMPDIR to an external scratch directory}}/pipelay-report"</code>.
 Dependencies: NumPy, pandas, SciPy, Pydantic and PyYAML; pytest and pytest-asyncio are used for the rebuild tests.</li>
 <li>Presentation exemplar: <a href="../../../api/cfd/turbulent-flat-plate-verification.html">existing CFD prose report</a>;
 canonical stylesheet: <a href="../../../api/_assets/brand.css">brand tokens</a>. Their style declarations are inlined.</li>
@@ -508,7 +667,7 @@ The source is the public illustrative example, not a material certificate or an 
 ['Optional pipe property', 'Poisson’s ratio uses the module default; unused in these equations.', 'Applied defaults are retained in the embedded calculation record; no additional material inference is made.'],
 ['Contents, pressure, vessel response and forecast', 'NOT_EVALUATED', 'Required inputs and qualified analysis are absent.'],
 ['Residual-offset acceptance', 'NOT_EVALUATED', 'An approved criterion and straightener qualification are required.'],
-['Field and external benchmark evidence', 'NOT_EVALUATED', 'Repository arithmetic anchors are available; no measured installation comparison is supplied.']])}
+['Field and external benchmark evidence', 'NOT_EVALUATED', 'Repository arithmetic anchors are available; no measured installation comparison is supplied.']], 'Assumptions, evidence gaps and required actions.')}
 <h3>10.2 Interface coverage</h3>
 {table(['Block', 'Inputs / outputs', 'Treatment'], [
 ['Method and case', 'Lay method; optional descriptive case metadata', 'The router selects J-lay or reel-lay and rejects unsupported methods.'],
@@ -518,14 +677,14 @@ The source is the public illustrative example, not a material certificate or an 
 ['Operability', 'Laying, joining and recovery cutoffs, calm rate and degradation', 'Optional; recovery cutoff is reported without a recovery assessment.'],
 ['Output destination', 'Directory and summary filename', 'A relative directory is resolved against configuration location or working directory.'],
 ['Returned mapping', 'Geometry, strain, stress proxy, selected limits, utilisation, defaults and screening status', 'Engineering values are returned alongside a summary-file reference.'],
-['Summary file', 'Strict JSON of the calculated results', 'Non-finite serialization is rejected before directory creation; the destination is excluded from this report’s embedded record.']])}
+['Summary file', 'Strict JSON of the calculated results', 'Non-finite serialization is rejected before directory creation; the destination is excluded from this report’s embedded record.']], 'Interface coverage and treatment of supplied inputs.')}
 <p>The detailed J-lay result quantities are retained below.</p>
 {result_table(record, 'jlay', jfields)}
 <p>The detailed reel-lay result quantities are retained below.</p>
 {result_table(record, 'reel', rfields)}
 <h3>10.3 Quality pre-flight</h3>
 <p>The displayed quantities are bound to source inputs or module returns. The rebuilt artifact is checked for
-complete worked-example numerical bindings, local reference resolution, heading structure, self-contained resources
+complete J-lay worked-example numerical bindings, local reference resolution, heading structure, self-contained resources
 and unchanged deterministic output. Interactive points expose case, component, demand, cutoff and units without
 colour-only interpretation. Browser appearance and file-permission prompts remain untested.</p>
 <p>Supporting regression execution counts and environment limitations are retained with the accompanying change;
@@ -558,7 +717,7 @@ REVIEW_SCRIPT = r'''
   let comments = [];
   const message = text => { status.textContent = text; };
   const digest = async text => [...new Uint8Array(await crypto.subtle.digest(
-    'SHA-256', new TextEncoder().encode(text)))].map(n => n.toString(16).padStart(2, '0')).join('');
+    'SHA-256', new TextEncoder().encode(text.replace(/\r\n/g, '\n'))))].map(n => n.toString(16).padStart(2, '0')).join('');
   const stripConfig = text => text.replace(/<script id="review-config" type="application\/json">[\s\S]*?<\/script>/, '');
   for (const section of sections) {
     const option = document.createElement('option');
@@ -658,19 +817,19 @@ REVIEW_SCRIPT = r'''
 
 def render(record):
     """Render one portable HTML file and bind comments to its full content."""
-    payload = json.dumps(record, ensure_ascii=False, allow_nan=False, sort_keys=True)
     body = content(record)
+    payload = json.dumps(record, ensure_ascii=False, allow_nan=False, sort_keys=True)
     page = ('<!DOCTYPE html>\n<html lang="en" data-theme="light"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>Pipelay module analysis</title>' + house_style() + '</head><body class="hs-doc">'
             '<div class="wrap"><header><div class="kicker">Marine installation</div>'
-            '<h1>Pipelay module analysis</h1><p class="sub">Draft for client review</p></header>'
+            '<h1>Pipelay module analysis</h1><p class="sub">Draft for maintainer review</p></header>'
             '<main>' + body + '</main><p id="point-status" role="status" aria-live="polite">'
             'Hover or focus a chart point to read its assumed rate and cutoff.</p></div>'
             '<script id="calculation-record" type="application/json">' + payload + '</script>'
             '<script id="engineering-changes" type="application/json">' + json.dumps(changes(), ensure_ascii=False)
             + '</script><script>' + REVIEW_SCRIPT + '</script></body></html>\n')
-    config = json.dumps({"revision": REVISION, "report_digest": hashlib.sha256(page.encode()).hexdigest()})
+    config = json.dumps({"revision": REVISION, "report_digest": text_digest(page)})
     # Digest excludes only this configuration block, avoiding a self-referential hash.
     return page.replace('</body>', '<script id="review-config" type="application/json">' + config + '</script></body>')
 
@@ -683,8 +842,8 @@ def build(output_dir, scratch):
     page = render(record)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / 'report.html').write_text(page, encoding='utf-8')
-    (output_dir / 'changes.json').write_text(json.dumps(changes(), ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (output_dir / 'report.html').write_text(page, encoding='utf-8', newline='\n')
+    (output_dir / 'changes.json').write_text(json.dumps(changes(), ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     return record
 
 
