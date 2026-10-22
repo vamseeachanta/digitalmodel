@@ -1,0 +1,15 @@
+{
+  "document": "rao-response-module-analysis",
+  "revision": 0,
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "worked-example",
+      "description": "Add computed regular-wave and spectral-response examples with independent arithmetic checks."
+    },
+    {
+      "section": "limits",
+      "description": "State phase, frequency, finite-band and hydrostatic applicability limits."
+    }
+  ]
+}
