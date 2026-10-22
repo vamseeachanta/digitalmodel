@@ -41,9 +41,11 @@ The audit uses the following method:
   Require each expected report input once per model and check cells against
   the cited raw-model line, key and value, including stage-duration range ends.
 - Require the worksheet's statics, free-decay and operating/parked families,
-  marked required inputs and a source disposition. Require marked report result
-  rows with nonnumeric placeholders; every data row in the results section
-  must carry the result class.
+  marked required inputs and a source disposition. Require exactly one results
+  section and its exact four-column header once. Every other row in that section
+  must carry the result class and all four cells, with nonempty, nonnumeric
+  result placeholders in its three value cells, whether they use data or header
+  tags. Marked result rows outside that section are rejected.
 
 The expected answer for the current sources is:
 
@@ -75,7 +77,7 @@ to redistribute model files, or qualify a controller version. Inventory prose
 and technical case-reference suitability still require review. The worksheet's
 as-held values and their Markdown citations, including the NPD wind parameters,
 are not audited; they require manual comparison with the raw models before use.
-The report check covers its required source-cited input cells and every data
+The report check covers its required source-cited input cells and every table
 row in the results section, not arbitrary HTML.
 
 A nonzero exit indicates missing audit inputs or inconsistent documentation.

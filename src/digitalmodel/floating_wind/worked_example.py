@@ -171,7 +171,7 @@ class _TableRows(HTMLParser):
         self.has_basis = False
         self.rows = []
         self.result_rows = []
-        self.unmarked_results = False
+        self.result_sections = 0
         self.is_result = False
         self.row = None
         self.cell = None
@@ -181,6 +181,7 @@ class _TableRows(HTMLParser):
             section = dict(attrs).get("id")
             self.sections.append(section)
             self.has_basis |= section == "as-held"
+            self.result_sections += section == "results"
         elif tag == "tr":
             self.row = []
             self.is_result = "result" in (dict(attrs).get("class") or "").split()
@@ -198,12 +199,9 @@ class _TableRows(HTMLParser):
             self.cell = None
         elif tag == "tr" and self.row is not None:
             self.rows.append(("as-held" in self.sections, self.row))
-            in_results = "results" in self.sections and any(
-                kind == "td" for kind, _ in self.row
-            )
-            self.unmarked_results |= in_results and not self.is_result
+            in_results = "results" in self.sections
             if self.is_result or in_results:
-                self.result_rows.append(self.row)
+                self.result_rows.append((in_results, self.is_result, self.row))
             self.row = None
         elif tag == "section" and self.sections:
             self.sections.pop()
@@ -257,24 +255,43 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
 
 
 def audit_result_rows(html: str) -> list[str]:
-    """Require all result cells to remain explicit nonnumeric placeholders."""
+    """Allow only the expected header and complete marked placeholder rows."""
     parser = _TableRows()
     parser.feed(html)
     parser.close()
-    if not parser.result_rows:
-        return ["report has no marked result rows"]
     errors = []
-    if parser.unmarked_results:
-        errors.append("report result row contains an unmarked or numeric result")
-    for row in parser.result_rows:
-        if len(row) < 2 or any(
-            kind != "td"
-            or not cell.startswith("[RESULT:")
-            or not cell.endswith("]")
-            or re.search(r"\d", cell)
-            for kind, cell in row[1:]
+    if parser.result_sections != 1:
+        errors.append("report requires exactly one results section")
+    header = [
+        ("th", label)
+        for label in (
+            "Result field",
+            "Result and governing case",
+            "Criterion / comparator",
+            "Evidence / disposition",
+        )
+    ]
+    headers, results = 0, 0
+    for in_results, marked, row in parser.result_rows:
+        if in_results and not marked and row == header:
+            headers += 1
+            continue
+        results += 1
+        if (
+            not in_results
+            or not marked
+            or len(row) != len(header)
+            or any(
+                not re.fullmatch(r"\[RESULT: [^\d\[\]]+\]", cell)
+                or not cell[len("[RESULT:") : -1].strip()
+                for _, cell in row[1:]
+            )
         ):
             errors.append("report result row contains an unmarked or numeric result")
+    if headers != 1:
+        errors.append("report requires the exact results header once")
+    if not results:
+        errors.append("report has no marked result rows")
     return errors
 
 

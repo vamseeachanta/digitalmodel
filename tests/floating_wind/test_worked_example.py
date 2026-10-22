@@ -11,6 +11,14 @@ import pytest
 from digitalmodel.floating_wind import worked_example as subject
 
 ROOT = Path(__file__).resolve().parents[2]
+RESULT_HEADER = (
+    "<tr><th>Result field</th><th>Result and governing case</th>"
+    "<th>Criterion / comparator</th><th>Evidence / disposition</th></tr>"
+)
+
+
+def result_table(rows):
+    return '<section id="results"><table>' + RESULT_HEADER + rows + "</table></section>"
 
 
 @pytest.fixture(scope="module")
@@ -85,12 +93,15 @@ def test_input_audit_detects_changed_value_and_key():
 def test_result_audit_rejects_numeric_or_unmarked_results():
     good = (
         '<tr class="result"><td>Surge natural period</td>'
-        "<td>[RESULT: not calculated]</td></tr>"
+        "<td>[RESULT: not calculated]</td>"
+        "<td>[RESULT: comparator unselected]</td>"
+        "<td>[RESULT: evidence absent]</td></tr>"
     )
-    assert subject.audit_result_rows(good) == []
-    assert subject.audit_result_rows(good.replace("[RESULT: not calculated]", "12 s"))
+    html = result_table(good)
+    assert subject.audit_result_rows(html) == []
+    assert subject.audit_result_rows(html.replace("[RESULT: not calculated]", "12 s"))
     assert subject.audit_result_rows(
-        good.replace("[RESULT: not calculated]", "[RESULT: 12 s]")
+        html.replace("[RESULT: not calculated]", "[RESULT: 12 s]")
     )
     assert subject.audit_result_rows("<p>No results table</p>")
 
@@ -103,12 +114,15 @@ def test_result_audit_rejects_numeric_or_unmarked_results():
         "<tr id='surge' class='highlighted result'>",
     ],
 )
-def test_result_audit_accepts_placeholder_rows_with_attributes(row_tag):
+@pytest.mark.parametrize("cell_tag", ["td", "th"])
+def test_result_audit_accepts_placeholder_rows_with_attributes(row_tag, cell_tag):
     html = (
         row_tag + '<td scope="row">Surge natural period</td>'
-        '<td class="value"><strong>[RESULT: not calculated]</strong></td></tr>'
+        f'<{cell_tag} class="value"><strong>[RESULT: not calculated]</strong>'
+        f"</{cell_tag}><{cell_tag}>[RESULT: comparator unselected]</{cell_tag}>"
+        f"<{cell_tag}>[RESULT: evidence absent]</{cell_tag}></tr>"
     )
-    assert subject.audit_result_rows(html) == []
+    assert subject.audit_result_rows(result_table(html)) == []
 
 
 @pytest.mark.parametrize(
@@ -125,6 +139,82 @@ def test_result_audit_checks_every_value_cell(cell):
         '<tr class="result"><td>Surge natural period</td>'
         + cell
         + "<td>[RESULT: comparator unselected]</td>"
+        "<td>[RESULT: evidence absent]</td></tr>"
+    )
+    assert subject.audit_result_rows(result_table(html))
+
+
+@pytest.mark.parametrize(
+    "mutation", ["renamed-section", "duplicate-section", "header-row"]
+)
+def test_complete_audit_rejects_results_structure_bypasses(monkeypatch, mutation):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            if mutation == "renamed-section":
+                text = text.replace('id="results"', 'id="archived-results"')
+                text = text.replace(
+                    '<tr class="result"><td>Surge natural period</td>'
+                    "<td>[RESULT: not calculated; case unselected]</td>",
+                    "<tr><td>Surge natural period</td><td>12.4 s</td>",
+                )
+            elif mutation == "duplicate-section":
+                text += '<section id="results"></section>'
+            else:
+                text = text.replace(
+                    '<section id="results">',
+                    '<section id="results"><table><tr><th>Surge natural period</th>'
+                    "<th>12.4 s</th></tr></table>",
+                )
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    evidence = subject.audit_phase_a(ROOT)
+    assert any("report" in error for error in evidence["errors"])
+    assert evidence["execution_ready"] is False
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate", "changed-label"])
+def test_result_audit_requires_exact_header_once(mutation):
+    html = result_table(
+        '<tr class="result"><td>Surge natural period</td>'
+        "<td>[RESULT: not calculated]</td><td>[RESULT: comparator unselected]</td>"
+        "<td>[RESULT: evidence absent]</td></tr>"
+    )
+    replacement = {
+        "missing": "",
+        "duplicate": RESULT_HEADER * 2,
+        "changed-label": RESULT_HEADER.replace("Result field", "Other field"),
+    }[mutation]
+    assert subject.audit_result_rows(html.replace(RESULT_HEADER, replacement))
+
+
+@pytest.mark.parametrize("values", [1, 2, 4])
+def test_result_audit_requires_all_four_columns(values):
+    row = (
+        '<tr class="result"><td>Surge natural period</td>'
+        + "<td>[RESULT: evidence absent]</td>" * values
+        + "</tr>"
+    )
+    assert subject.audit_result_rows(result_table(row))
+
+
+def test_result_audit_rejects_marked_rows_outside_results():
+    row = (
+        '<tr class="result"><td>Surge natural period</td>'
+        "<td>[RESULT: not calculated]</td><td>[RESULT: comparator unselected]</td>"
+        "<td>[RESULT: evidence absent]</td></tr>"
+    )
+    assert subject.audit_result_rows(result_table(row) + "<table>" + row + "</table>")
+
+
+@pytest.mark.parametrize("cell", ["[RESULT: not calculated] extra ]", "[RESULT: ]"])
+def test_result_audit_rejects_incomplete_or_mixed_placeholders(cell):
+    html = result_table(
+        '<tr class="result"><td>Surge natural period</td>'
+        f"<td>{cell}</td><td>[RESULT: comparator unselected]</td>"
         "<td>[RESULT: evidence absent]</td></tr>"
     )
     assert subject.audit_result_rows(html)
@@ -168,15 +258,13 @@ def test_complete_audit_rejects_numeric_result_markup(
 
 
 def test_result_section_requires_class_even_on_placeholder_rows():
-    row = "<tr><td>Period</td><td>[RESULT: not calculated]</td></tr>"
+    row = (
+        "<tr><td>Period</td><td>[RESULT: not calculated]</td>"
+        "<td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent]</td></tr>"
+    )
     marked = row.replace("<tr>", '<tr class="result">')
-    assert (
-        subject.audit_result_rows('<section id="results">' + marked + "</section>")
-        == []
-    )
-    assert subject.audit_result_rows(
-        '<section id="results">' + row + marked + "</section>"
-    )
+    assert subject.audit_result_rows(result_table(marked)) == []
+    assert subject.audit_result_rows(result_table(row + marked))
 
 
 def test_repository_phase_a_evidence():
