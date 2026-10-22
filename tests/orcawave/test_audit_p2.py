@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Numerical and invalid-domain regressions for audit sections 10-19."""
 
 import numpy as np
@@ -121,6 +123,15 @@ def test_11_generation_grid(kwargs):
 
 
 def test_12_jonswap_published_ordinates():
+    """DNV-RP-C205, April 2014, 3.5.5.2-3; sidecar W2.
+
+    Hand normalizer: A_gamma=1-.287*ln(3.3)=.6573442515484114.
+    The scalar ordinates below use the angular-frequency closed form and
+    assumed Hs=4 m, Tp=10 s. An independently integrated variance is not
+    exactly Hs^2/16 because this normalizer is approximate; grid-based
+    rescaling would change the ordinates and fail the test. The numerical
+    comparison tolerances are test choices, not standard acceptance limits.
+    """
     # DNV-RP-C205 (2014) 3.5.5, angular-frequency expression, A_gamma=.6573442515.
     omega = np.linspace(0.01, 20, 200000)
     actual = jonswap(omega, 4, 10, 3.3)
@@ -144,6 +155,14 @@ def test_12_jonswap_published_ordinates():
 
 
 def test_12_issc_period_ratio():
+    """Sidecar W3, derivation from S=C*w^-5*exp(-B/w^4).
+
+    Substitute u=B/w^4: m_n=(C/4)*B^((n-4)/4)*Gamma(1-n/4).
+    Thus m2/m0=sqrt(B*pi), Tz=2*pi/(B*pi)^(1/4). The peak
+    satisfies wp^4=4*B/5, so Tp/Tz=(5*pi/4)^(1/4)=1.40771588.
+    The .01-20 rad/s grid approximates the improper integral; relative
+    tolerance .001 is #2748 section 12 acceptance for that quadrature.
+    """
     omega = np.linspace(0.01, 20, 200000)
     s = issc_spectrum(omega, 4, 10)
     tz = spectral_periods(compute_spectral_moments(omega, s))["Tz"]
@@ -258,11 +277,12 @@ def test_17_pitch_resonance_and_long_wave_limit(monkeypatch):
 @pytest.mark.parametrize("tp", [8, 16])
 def test_18_heuristic_explicit(tp):
     omega = np.linspace(0.01, 20, 200000)
-    with pytest.raises(ValueError, match="Torsethaugen"):
-        torsethaugen(omega, 4, tp)
+    with pytest.warns(DeprecationWarning, match="unqualified heuristic"):
+        legacy = torsethaugen(omega, 4, tp)
     with pytest.raises(ValueError, match="HeuristicTwoPeak"):
         generate_spectrum(SpectrumParameters(spectrum_type="Torsethaugen", hs=4, tp=tp))
     actual = heuristic_two_peak(omega, 4, tp)
+    np.testing.assert_array_equal(legacy, actual)
     # Fixed partition's independent closed-form peak ordinate; frozen values below.
     i = np.argmin(abs(omega - 2 * np.pi / tp))
     assert actual[i] == pytest.approx(
