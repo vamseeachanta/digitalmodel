@@ -19,11 +19,13 @@ HERE = Path(__file__).resolve().parent
 STYLE_SOURCE = "docs/api/cfd/turbulent-flat-plate-verification.html"
 SOURCE = "src/digitalmodel/orcaflex/riser_config.py"
 EXAMPLE = "tests/orcaflex/test_riser_config.py"
-CHANGES = {"revision": "A", "status": "Draft for client review", "changes": [
+CHANGES = {"revision": "B", "status": "Draft for maintainer review", "changes": [
     {"section": "Detailed Results", "description":
      "Initial analytical example of submerged weight and still-water catenary geometry; operating capacity is not established."},
     {"section": "Limitations", "description":
-     "The minimum-offset input and total-length allowance are distinguished from verified design criteria."}
+     "The minimum-offset input and total-length allowance are distinguished from verified design criteria."},
+    {"section": "Input register", "description":
+     "Thicknesses and corrosion allowance are shown in millimetres to retain the calculation input precision; numerical anchors and solver-free rebuild checks are added."}
 ]}
 
 
@@ -106,7 +108,7 @@ def display_value(key, value):
     if key == "gravity":
         return f"{value:.5f}"
     if key.startswith("pipe.") and ("thickness" in key or "allowance" in key):
-        return f"{value:.3f}"
+        return f"{value * 1000:.3f}"
     if key.startswith("pipe.") and "diameter" in key:
         return f"{value:.4f}"
     return f"{value:.1f}".replace("-", "−")

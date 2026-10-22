@@ -131,7 +131,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 </head><body class="hs-doc"><div class="wrap">
 <header><div class="kicker">Riser engineering · analytical configuration</div>
 <h1>OrcaFlex module: still-water catenary configuration</h1>
-<p class="sub">Draft for client review</p></header>
+<p class="sub">Draft for maintainer review</p></header>
 
 <h2 id="s1">1. Executive Summary</h2>
 <p>The OrcaFlex module is a collection of preliminary marine analysis utilities and simulation reporting interfaces. Analysis is performed to determine the analytical geometry and weight of a steel catenary riser, and the key results are summarized below.</p>
@@ -142,6 +142,12 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <ul><li>The separate force-balance calculation agrees with the module at its returned precision. This comparison checks arithmetic within the same idealisation, not physical validation.</li>
 <li>An allowable operating envelope is not established because capacity, environmental loading and host-motion evidence are absent from this example.</li></ul></li></ul>
 <p>Revision A — initial issue. Cause: documentation of the analytical configuration example and its limits of use.</p>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>A</td><td>2026-10-21</td><td>Initial issue: documentation of the analytical configuration example and its limits of use.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Thicknesses and corrosion allowance are shown in millimetres so the displayed inputs reproduce the calculation. Numerical anchors, rebuild guidance and solver-free checks are added; the draft status identifies maintainer review.</td></tr>
+</tbody></table>
+<p class="sub">Table R. Report revision history.</p>
 
 <h2 id="s2">2. Introduction</h2>
 <p>The riser is represented as a uniform suspended pipe with a horizontal tangent at seabed touchdown. Riser analysis is performed for a public, synthetic regression example rather than a field installation.</p>
@@ -240,18 +246,18 @@ V = ws; T = √(H² + V²) = w(a + h)</div>
 </ul>
 
 <h2 id="s10">10. Acronyms and Appendices</h2>
-<p>The terms and data records below define the example's scope and distinguish assumptions from missing evidence. All physical dimensions are reported in the native metric system; displayed thicknesses are rounded, while the embedded evidence retains the input precision.</p>
+<p>The terms and data records below define the example's scope and distinguish assumptions from missing evidence. All physical dimensions are reported in the metric system; thicknesses and corrosion allowance are shown in millimetres to three decimals, retaining the calculation input precision.</p>
 <h3>10.1 Terms</h3>
 <p>A steel catenary riser is a suspended steel pipe whose global shape is approximated by a catenary. Touchdown is the point where the suspended segment becomes tangent to the seabed. Hang-off is the upper support. A response amplitude operator describes a host's motion response to incident waves; none is supplied in this example. A true zero is a numerical input or result; “not evaluated” denotes missing analysis, and “not applicable” denotes a method outside the stated scope.</p>
 <h3>10.2 Input and missing-data register</h3>
 <table><thead><tr><th>Property</th><th>Value</th><th>Unit</th><th>Source / status</th></tr></thead><tbody>
 <tr><td>Steel grade designation</td><td>X65</td><td>Not applicable</td><td>Default library entry; material certification not established</td></tr>
 <tr><td>Steel outer diameter</td><td><span data-value="pipe.outer_diameter">0.2731</span></td><td>m</td><td>Configuration default; assumed</td></tr>
-<tr><td>Wall thickness</td><td><span data-value="pipe.wall_thickness">0.025</span></td><td>m</td><td>Configuration default; assumed</td></tr>
-<tr><td>Coating thickness</td><td><span data-value="pipe.coating_thickness">0.040</span></td><td>m</td><td>Configuration default; assumed</td></tr>
+<tr><td>Wall thickness</td><td><span data-value="pipe.wall_thickness">25.400</span></td><td>mm</td><td>Configuration default; assumed</td></tr>
+<tr><td>Coating thickness</td><td><span data-value="pipe.coating_thickness">40.000</span></td><td>mm</td><td>Configuration default; assumed</td></tr>
 <tr><td>Coating density</td><td><span data-value="pipe.coating_density">900.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
 <tr><td>Contents density</td><td><span data-value="pipe.contents_density">800.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
-<tr><td>Corrosion allowance</td><td><span data-value="pipe.corrosion_allowance">0.003</span></td><td>m</td><td>Recorded; not applied to weight</td></tr>
+<tr><td>Corrosion allowance</td><td><span data-value="pipe.corrosion_allowance">3.000</span></td><td>mm</td><td>Recorded; not applied to weight</td></tr>
 <tr><td>Seawater density</td><td><span data-value="pipe.seawater_density">1025.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
 <tr><td>Hang-off angle from vertical</td><td><span data-value="inputs.hang_off_angle_from_vertical">12.0</span></td><td>degrees</td><td>Public regression example</td></tr>
 <tr><td>Requested minimum touchdown distance</td><td><span data-value="inputs.min_tdp_offset">200.0</span></td><td>m</td><td>Default; not enforced</td></tr>
@@ -273,8 +279,8 @@ V = ws; T = √(H² + V²) = w(a + h)</div>
 <ul id="comments"></ul>
 <footer>Analytical configuration example. Engineering acceptance is not established.</footer>
 </div>
-<script id="evidence" type="application/json">{"angle_limit": 30.0, "chart": [{"angle": 12.0, "reference": 2236.7226268490317, "tension": 2236.7}, {"angle": 15.0, "reference": 2390.3499299379187, "tension": 2390.3}, {"angle": 30.0, "reference": 3543.363687221018, "tension": 3543.4}], "geometry": {"catenary_parameter_m": 391.1, "estimated_total_length_m": 2116.0, "hang_off_angle_deg": 12.0, "horizontal_offset_m": 881.1, "horizontal_tension_kN": 465.0, "suspended_length_m": 1840.0, "tdp_tension_kN": 465.0, "top_tension_kN": 2236.7}, "gravity": 9.80665, "inputs": {"hang_off_angle_from_vertical": 12.0, "hang_off_elevation": -10.0, "min_tdp_offset": 200.0, "pipe": {"coating_density": 900.0, "coating_thickness": 0.04, "contents_density": 800.0, "corrosion_allowance": 0.003, "grade": "X65", "outer_diameter": 0.2731, "seawater_density": 1025.0, "wall_thickness": 0.0254}, "vessel_draft": 12.0, "water_depth": 1500.0}, "reference": {"catenary_parameter_m": 391.1033854776747, "horizontal_offset_m": 881.0787645143188, "horizontal_tension_kN": 465.04078323852235, "suspended_length_m": 1839.9967632372266, "tdp_tension_kN": 465.04078323852235, "top_tension_kN": 2236.7226268490317}, "sources": {"src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90", "src/digitalmodel/orcaflex/riser_config.py": "4fa1bf445420b62a1a19d2081bbcc13f7f1fb5c0f60189e4e46bb9a47dfd6acd", "tests/orcaflex/test_riser_config.py": "8c10fe07910c6a26a3b845ca487c4a60f3a75c6097f9319de4b3e475ef47f39e"}, "steel_density": 7850.0, "test_count": 18, "weight": 1189.0482171882609}</script>
-<script id="change-data" type="application/json">{"changes": [{"description": "Initial analytical example of submerged weight and still-water catenary geometry; operating capacity is not established.", "section": "Detailed Results"}, {"description": "The minimum-offset input and total-length allowance are distinguished from verified design criteria.", "section": "Limitations"}], "revision": "A", "status": "Draft for client review"}</script>
+<script id="evidence" type="application/json">{"angle_limit": 30.0, "chart": [{"angle": 12.0, "reference": 2236.7226268490317, "tension": 2236.7}, {"angle": 15.0, "reference": 2390.3499299379187, "tension": 2390.3}, {"angle": 30.0, "reference": 3543.363687221018, "tension": 3543.4}], "geometry": {"catenary_parameter_m": 391.1, "estimated_total_length_m": 2116.0, "hang_off_angle_deg": 12.0, "horizontal_offset_m": 881.1, "horizontal_tension_kN": 465.0, "suspended_length_m": 1840.0, "tdp_tension_kN": 465.0, "top_tension_kN": 2236.7}, "gravity": 9.80665, "inputs": {"hang_off_angle_from_vertical": 12.0, "hang_off_elevation": -10.0, "min_tdp_offset": 200.0, "pipe": {"coating_density": 900.0, "coating_thickness": 0.04, "contents_density": 800.0, "corrosion_allowance": 0.003, "grade": "X65", "outer_diameter": 0.2731, "seawater_density": 1025.0, "wall_thickness": 0.0254}, "vessel_draft": 12.0, "water_depth": 1500.0}, "reference": {"catenary_parameter_m": 391.1033854776747, "horizontal_offset_m": 881.078764514319, "horizontal_tension_kN": 465.04078323852235, "suspended_length_m": 1839.9967632372266, "tdp_tension_kN": 465.04078323852235, "top_tension_kN": 2236.7226268490317}, "sources": {"src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90", "src/digitalmodel/orcaflex/riser_config.py": "4fa1bf445420b62a1a19d2081bbcc13f7f1fb5c0f60189e4e46bb9a47dfd6acd", "tests/orcaflex/test_riser_config.py": "8c10fe07910c6a26a3b845ca487c4a60f3a75c6097f9319de4b3e475ef47f39e"}, "steel_density": 7850.0, "test_count": 18, "weight": 1189.0482171882609}</script>
+<script id="change-data" type="application/json">{"changes": [{"description": "Initial analytical example of submerged weight and still-water catenary geometry; operating capacity is not established.", "section": "Detailed Results"}, {"description": "The minimum-offset input and total-length allowance are distinguished from verified design criteria.", "section": "Limitations"}, {"description": "Thicknesses and corrosion allowance are shown in millimetres to retain the calculation input precision; numerical anchors and solver-free rebuild checks are added.", "section": "Input register"}], "revision": "B", "status": "Draft for maintainer review"}</script>
 <script>/* Offline chart interaction and explicitly saved document comments. */
 "use strict";
 const evidence = JSON.parse(document.getElementById("evidence").textContent);

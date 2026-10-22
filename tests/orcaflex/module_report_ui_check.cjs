@@ -74,7 +74,7 @@ async function check() {
   await elements.get("save-comments").click();
   assert(closed);
   assert.deepEqual(saved.comments, [{section: "s5", text: "Check the <support> capacity."}]);
-  assert.equal(saved.revision, "A");
+  assert.equal(saved.revision, "B");
   const load = elements.get("load-comments").events.change;
   await load({target: {files: [{async text() { return JSON.stringify(saved); }}]}});
   assert.equal(elements.get("comments").children.length, 2);

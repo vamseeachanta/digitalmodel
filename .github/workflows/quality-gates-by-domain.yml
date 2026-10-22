@@ -291,6 +291,14 @@ jobs:
             tests/workflows/test_ci_triggers.py \
             -q --tb=line
 
+      # Shared material inputs and report sources can change in different domains.
+      # Keep this rebuild check in the unconditional harness job to cover both.
+      - name: Check analytical riser report
+        run: |
+          uv run --no-sources --with-editable '.[test]' python -m pytest \
+            tests/orcaflex/test_module_report.py tests/orcaflex/test_riser_config.py \
+            --confcutdir=tests/orcaflex -p no:cacheprovider -q --tb=short
+
       - name: Report implementation map staleness
         run: uv run --no-sources python scripts/generate_implementation_map.py
 
