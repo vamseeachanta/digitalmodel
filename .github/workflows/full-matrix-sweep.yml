@@ -116,26 +116,7 @@ jobs:
         env:
           GATE_NAME: tests-${{ matrix.domain }}
         run: |
-          command=$(uv run --no-sources --with pyyaml==6.0.2 python - <<'PY'
-          import os
-          import yaml
-
-          with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
-              gates = yaml.safe_load(handle)["gates"]
-          # Roots outside DOMAINS.md still run in existing sweep shards.
-          sweep_roots = {
-              "tests-infrastructure-core": ["tests/data/"],
-              "tests-structural": [
-                  "tests/test_steel_shapes.py",
-                  "tests/test_steel_shapes_import.py",
-                  "tests/test_fetch_steel_shapes.py",
-              ],
-          }
-          gate_name = os.environ["GATE_NAME"]
-          roots = sweep_roots.get(gate_name, [])
-          print(" ".join([gates[gate_name]["command"], *roots]))
-          PY
-          )
+          command=$(uv run --no-sources --with pyyaml==6.0.2 python scripts/ci/domain_gate.py --gate "$GATE_NAME" --sweep)
           {
             echo "command<<EOF"
             echo "$command"

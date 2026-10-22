@@ -1,0 +1,499 @@
+{
+  "held": {
+    "tests/governance/test_identifier_gate_retirement.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_c11_private_paths.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_c11_review_r2_scripts.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_c11.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_c13.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_fail_closed.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_label_salt.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_r3.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_r4.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_identifiers_r5.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_check_numeric_text.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_published_pages_have_no_internal_paths.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_sanitize_s7_audit_private.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_sanitize_s7_cli_r5.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_sanitize_s7_logging_r4.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/legal/test_sanitize_s7_private_map.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/maintenance/test_archive_candidates.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/maintenance/test_archive_safety.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/maintenance/test_safe_issue_body_update.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_audit.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_capability_demo.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_class_level_record.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_confidence.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_go_no_go_demo.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_gyradii.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_hulls_adapter.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_loader.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_mass_properties.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_promote.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/marine_ops/vessel_db/test_wed_adapter.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_atlas.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_atlas_coverage.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_atlas_pinned_versions.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_catalog.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_drilling_riser_envelope_library.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_library.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametric/test_refresh.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametrics/test_atlas_bridge.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametrics/test_atlas_serving.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametrics/test_pilots.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/parametrics/test_sweep.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/pipelay/test_audit_regressions.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/pipelay/test_pack_gates.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/pipelay/test_pipelay_workflow.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/production_chemistry/test_scale_si.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/benchmark/test_cases.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/benchmark/test_report.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/benchmark/test_runner.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_boundaries.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_comparison.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_contracts.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_qualification.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_qualification_finalization.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_runner.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_windows_job.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_windows_launch.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/ghs/test_windows_qualification.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/mystran/test_bdf_writer.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/mystran/test_convergence.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/mystran/test_fem_chain.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/solvers/mystran/test_result_parser.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/test_engine_embed_root.py": {
+      "gate": "tests-misc",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/test_main_exit_status.py": {
+      "gate": "tests-misc",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/test_main_module_routing.py": {
+      "gate": "tests-misc",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/test_usecase_registry.py": {
+      "gate": "tests-solver-smoke",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/tug/test_tug_toolkit.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/well_access/test_wed_calibration.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/well_access/test_well_access.py": {
+      "gate": "tests-marine-ops-other",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_determinism_harness.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_result_descriptors.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_run_workflow_buckling.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_run_workflow_ffs.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_run_workflow_mooring_mbl.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_run_workflow_viv_screening.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_run_workflow_wall_thickness.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    },
+    "tests/workflow_api/test_viv_screening_publication.py": {
+      "gate": "tests-workflows",
+      "issue": "#2083",
+      "reason": "New family deferred until exact shard replay passes; existing shard roots remain required."
+    }
+  },
+  "collection": {
+    "tests/data_systems/data_scraping/test_direct_manufacturers.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/data_systems/data_scraping; collection coverage is not claimed."
+    },
+    "tests/data_systems/data_scraping/test_fender_scraper.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/data_systems/data_scraping; collection coverage is not claimed."
+    },
+    "tests/data_systems/data_scraping/test_pdf_extraction.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/data_systems/data_scraping; collection coverage is not claimed."
+    },
+    "tests/data_systems/data_scraping/test_selenium.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/data_systems/data_scraping; collection coverage is not claimed."
+    },
+    "tests/hydrodynamics/hull_library/test_hull_library_expansion.py": {
+      "issue": "#1923",
+      "reason": "Existing collect_ignore: hull-profile input data is not committed (#1923)."
+    },
+    "tests/marine_ops/artificial_lift/dynacard/benchmark/test_set_builder.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/marine_ops/artificial_lift/dynacard/benchmark; collection coverage is not claimed."
+    },
+    "tests/solvers/orcaflex/examples_integration/test_converter.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: standalone example imports an unavailable local module."
+    },
+    "tests/solvers/orcaflex/examples_integration/test_single_download.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: standalone download example imports an unavailable local module."
+    },
+    "tests/solvers/orcaflex/test_orcaflex_unit.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: referenced source implementation is missing."
+    },
+    "tests/structural/fatigue_analysis/test_reference_seastate_scaling.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: referenced local fatigue module is unavailable."
+    },
+    "tests/structural/fatigue_apps/test_load_scaling.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: referenced source implementation is missing."
+    },
+    "tests/subsea/pipeline/test_on_bottom_stability.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: referenced source implementation is missing."
+    },
+    "tests/test_plate_capacity.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: referenced source implementation is missing."
+    },
+    "tests/visualization/design_tools/pilot_program/test_case_1_separator.py": {
+      "issue": "#2083",
+      "reason": "Existing collect_ignore: standalone design example depends on unavailable local modules."
+    },
+    "tests/workflows/integration/test_all_components.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_complete_workflow.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_cross_module_integration.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_full_pipeline_workflow.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_integration_performance.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_legacy_compatibility.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_metocean_streaming.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_multi_module_interaction.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/integration/test_template_validation.py": {
+      "issue": "#2083",
+      "reason": "Existing pytest.ini norecursedirs excludes tests/workflows/integration; collection coverage is not claimed."
+    },
+    "tests/workflows/orcawave/test_com_connection.py": {
+      "issue": "#1923",
+      "reason": "Existing collect_ignore: patch targets use removed top-level api and core modules (#1923)."
+    },
+    "tests/workflows/orcawave/test_end_to_end.py": {
+      "issue": "#1923",
+      "reason": "Existing collect_ignore: test bodies import removed source modules (#1923)."
+    },
+    "tests/workflows/orcawave/test_integration.py": {
+      "issue": "#1923",
+      "reason": "Existing collect_ignore: module-level import refers to a removed source tree (#1923)."
+    },
+    "tests/workflows/standalone/markitdown/test_converter.py": {
+      "issue": "#1923",
+      "reason": "Existing collect_ignore: undeclared markitdown dependency and stale patch targets (#1923)."
+    }
+  }
+}

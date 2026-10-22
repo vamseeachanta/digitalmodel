@@ -1417,3 +1417,30 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+@pytest.mark.parametrize("path", [
+    "config/ci-domain-exceptions.json", "scripts/ci/domain_gate.py",
+])
+def test_gate_policy_changes_dispatch_every_shard(path):
+    """Releasing a held test must execute its shard on the same change."""
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    assert detector.touched_domains([path], domains) == domains
+
+
+@pytest.mark.parametrize("path,expected", [
+    ("docs/usage.md", set()),
+    ("src/digitalmodel/engine.py", None),
+    ("tests/data/test_fetch.py", {"infrastructure-core"}),
+    ("tests/test_steel_shapes.py", {"structural"}),
+    ("tests/hydrodynamics/test_quad_mesh_quality.py", {"hydrodynamics-other"}),
+    ("tests/hydrodynamics/test_shear_flow_values.py", {"hydrodynamics-other"}),
+    ("tests/marine_ops/test_response_benchmark.py", {"marine-ops-other"}),
+])
+def test_gate_selection_for_documentation_source_and_promoted_tests(path, expected):
+    """Use committed ownership metadata for PR routing examples."""
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == (expected if expected is not None else {domain.name for domain in domains})

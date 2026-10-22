@@ -25,6 +25,8 @@ FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
 FULL_MATRIX_PATHS = {
     ".claude/quality-gates.yaml",
     "tests/DOMAINS.md",
+    "config/ci-domain-exceptions.json",
+    "scripts/ci/domain_gate.py",
     "tests/conftest.py",
     # The repository-root conftest.py carries collect_ignore, which decides what
     # a recursive collect can see at all. It belongs here for the same reason
