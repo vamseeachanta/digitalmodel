@@ -6,6 +6,7 @@ import copy
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -164,6 +165,52 @@ def test_archive_rejects_links_at_or_below_root(tmp_path, location):
         history.archive_reader(root)(name)
 
 
+@pytest.mark.parametrize("location", ["root", "directory"])
+def test_archive_rejects_resolved_redirection(tmp_path, monkeypatch, location):
+    """Model a directory junction on platforms without native junctions."""
+    root = tmp_path / "archive"
+    redirected = root if location == "root" else root / "nested"
+    redirected.mkdir(parents=True)
+    (redirected / "evidence.txt").write_bytes(b"external evidence\n")
+    target = tmp_path / "external"
+    target.mkdir()
+    resolve = Path.resolve
+
+    def resolve_redirected(path, *args, **kwargs):
+        if path == redirected or redirected in path.parents:
+            path = target / path.relative_to(redirected)
+        return resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve_redirected)
+    name = "evidence.txt" if location == "root" else "nested/evidence.txt"
+    with pytest.raises(history.EvidenceError, match="Redirected evidence"):
+        history.archive_reader(root)(name)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Requires Windows directory junctions")
+@pytest.mark.parametrize("location", ["root", "directory"])
+def test_archive_rejects_windows_junctions(tmp_path, location):
+    target = tmp_path / "external"
+    target.mkdir()
+    (target / "evidence.txt").write_bytes(b"external evidence\n")
+    root = tmp_path / "archive"
+    if location == "root":
+        junction = root
+        name = "evidence.txt"
+    else:
+        root.mkdir()
+        junction = root / "nested"
+        name = "nested/evidence.txt"
+    subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(junction), str(target)],
+        check=True, capture_output=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    assert not junction.is_symlink()
+    with pytest.raises(history.EvidenceError, match="Redirected evidence"):
+        history.archive_reader(root)(name)
+
+
 def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
     row = retained_record
     for name in row["artifacts"]:
@@ -181,6 +228,10 @@ def artifact_checkout(inventory, tmp_path, monkeypatch, request):
     """Share read-only Git objects while keeping artifact edits temporary."""
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         monkeypatch.delenv(key, raising=False)
+    # Explicit defaults make raw-CRLF drift tests independent of global config.
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
     row = copy.deepcopy(next(r for r in inventory["atlases"] if r["status"] == request.param))
     git_dir = subprocess.check_output(
         ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
@@ -224,6 +275,28 @@ def test_git_reports_no_drift_for_exact_checkout(artifact_checkout):
     result = history.verify_git(row, root)
     assert result["status"] == row["status"]
     assert result["working_tree_drift"] == []
+
+
+@pytest.mark.parametrize("autocrlf", ["true", "input"])
+@pytest.mark.parametrize("edited", [False, True])
+def test_git_distinguishes_autocrlf_conversion_from_content_edits(
+    artifact_checkout, monkeypatch, edited, autocrlf,
+):
+    row, root = artifact_checkout
+    # Process-local configuration leaves the shared repository config untouched.
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", autocrlf)
+    for name in row["artifacts"]:
+        if Path(name).suffix in {".yaml", ".json"}:
+            path = root / name
+            path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+    if edited:
+        path = root / row["manifest"]
+        path.write_bytes(path.read_bytes() + b"# changed\r\n")
+    result = history.verify_git(row, root)
+    assert result["status"] == row["status"]
+    assert result["working_tree_drift"] == ([row["manifest"]] if edited else [])
 
 
 def test_git_rejects_committed_artifact_digest_mismatch(artifact_checkout):
@@ -282,6 +355,26 @@ def test_cli_reports_status_and_refuses_incomplete_audit(
     monkeypatch.setattr(history, "verify_git", verify)
     assert history.main(["--index", str(index)]) == int(status != "VERIFIED")
     assert json.loads(capsys.readouterr().out)["status"] == status
+
+
+def test_cli_exits_nonzero_on_checkout_content_drift(
+    artifact_checkout, monkeypatch, capsys,
+):
+    row, root = artifact_checkout
+    path = root / row["manifest"]
+    path.write_bytes(path.read_bytes() + b"# changed\n")
+    index = root / "index.json"
+    index.write_text(json.dumps({"atlases": [row]}), encoding="utf-8")
+    verify = history.verify_git
+
+    def verify_checkout(record, *, retained_ref):
+        return verify(record, root, retained_ref=retained_ref)
+
+    monkeypatch.setattr(history, "verify_git", verify_checkout)
+    assert history.main(["--index", str(index)]) == 1
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == row["status"]
+    assert result["working_tree_drift"] == [row["manifest"]]
 
 
 def test_cli_reads_utf8_index_under_legacy_default(retained_record, tmp_path, monkeypatch, capsys):

@@ -49,30 +49,34 @@ def _relative(name: str) -> str:
 
 
 def archive_reader(root: Path) -> Reader:
-    """Read an extracted source archive; reject links, including its root."""
+    """Read an extracted source archive; reject links and directory junctions."""
     root = Path(root).absolute()
 
     def read(name: str) -> bytes:
         name = _relative(name)
-        if root.is_symlink():
-            raise EvidenceError(f"Redirected evidence: {name}")
-        path = root
-        for part in PurePosixPath(name).parts:
-            path = path / part
-            if path.is_symlink():
-                raise EvidenceError(f"Redirected evidence: {name}")
         try:
+            # Resolve parents above the boundary, then require each component
+            # to retain its identity, including junctions on older Python.
+            expected = root.parent.resolve() / root.name
+            if root.is_symlink() or root.resolve() != expected:
+                raise EvidenceError(f"Redirected evidence: {name}")
+            path = root
+            for part in PurePosixPath(name).parts:
+                path = path / part
+                expected = expected / part
+                if path.is_symlink() or path.resolve() != expected:
+                    raise EvidenceError(f"Redirected evidence: {name}")
             return path.read_bytes()
-        except OSError:
+        except (OSError, RuntimeError):
             raise EvidenceError(f"Unavailable evidence: {name}") from None
 
     return read
 
 
-def _git(root: Path, *args: str) -> bytes:
+def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
     try:
         return subprocess.check_output(
-            ["git", "-C", str(root), *args], stderr=subprocess.DEVNULL
+            ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL
         )
     except (OSError, subprocess.CalledProcessError):
         raise EvidenceError("Unavailable Git evidence or retained history") from None
@@ -202,12 +206,15 @@ def verify_artifacts(record: dict, root: Path, *, revision: str | None = None) -
         raise EvidenceError("Manifest provenance mismatch")
 
 
-def _working_tree_drift(record: dict, root: Path) -> list[str]:
+def _working_tree_drift(record: dict, root: Path, revision: str) -> list[str]:
     read = archive_reader(root)
     drift = []
-    for name, expected in record["artifacts"].items():
+    for name in record["artifacts"]:
         try:
-            unchanged = sha256(read(name)) == expected
+            # Hash validated bytes without writing objects or re-opening a path.
+            actual = _git(root, "hash-object", f"--path={name}", "--stdin", input_bytes=read(name))
+            expected = _git(root, "rev-parse", f"{revision}:{name}")
+            unchanged = actual == expected
         except EvidenceError:
             unchanged = False
         if not unchanged:
@@ -231,7 +238,7 @@ def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/m
         if record["status"] != "VERIFIED":
             raise EvidenceError("Recorded status contradicts reconstructed evidence")
         result = {"status": "VERIFIED", "fingerprint": fingerprint}
-    result["working_tree_drift"] = _working_tree_drift(record, root)
+    result["working_tree_drift"] = _working_tree_drift(record, root, revision)
     return result
 
 
@@ -248,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         except EvidenceError as error:
             result = {"status": "REJECTED", "reason": str(error)}
         print(json.dumps({"manifest": record["manifest"], **result}, sort_keys=True))
-        incomplete |= result["status"] != "VERIFIED"
+        incomplete |= result["status"] != "VERIFIED" or bool(result.get("working_tree_drift"))
     return int(incomplete)
 
 
