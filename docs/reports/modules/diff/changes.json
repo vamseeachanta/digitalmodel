@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "report": "Diffraction module analysis",
+  "revisions": [
+    {
+      "revision": 1,
+      "date": "2026-10-22",
+      "changes": [
+        "The public cylinder radiation example is calculated with explicit expansion-refinement targets.",
+        "All motion-mode long-wave comparators are shown separately from observed diffraction results.",
+        "Missing mass, metocean, damping and independent reference evidence is registered before wider design use."
+      ]
+    }
+  ]
+}
