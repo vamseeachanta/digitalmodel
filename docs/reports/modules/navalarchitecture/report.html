@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Naval architecture calculations, a public tank example and evidence for preliminary engineering use.">
+<meta name="report-revision" content="00">
+<meta name="report-content-digest" content="3bdea1368cae38bea26b60afd1eefa15b5f785aab8b9d1c0a21e61c6c147f0b4">
+<title>Naval architecture module analysis</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+<style>
+/* Interactive components consume the existing report palette and typography. */
+svg{max-width:100%;height:auto}svg text{fill:var(--ink);font-size:14px}
+.axis{stroke:var(--mut);fill:none}.boundary{stroke:var(--red);stroke-dasharray:8 5;fill:none;stroke-width:2}
+.curve{stroke:var(--brand);stroke-width:3;fill:none}.sample{fill:var(--brand);cursor:crosshair}
+.sample:focus,.sample:hover{stroke:var(--ink);stroke-width:3;fill:var(--panel)}
+fieldset{border:1px solid var(--line);margin:1em 0;padding:1em}label{display:block;margin:.5em 0}
+textarea{width:100%;min-height:6em}button,select,textarea,input{font:inherit;max-width:100%}
+code{overflow-wrap:anywhere}
+button{cursor:pointer;margin:.3em;padding:.3em .7em}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.schematic{fill:var(--panel-2);stroke:var(--ink);stroke-width:2}.liquid{fill:var(--grid);stroke:var(--brand)}
+.dimension{stroke:var(--mut);stroke-width:1;fill:none}.review-tools{border-top:1px solid var(--line)}
+caption{caption-side:bottom;text-align:left}th,td{vertical-align:top;overflow-wrap:anywhere}
+@media print{.review-tools,.chart-control{display:none}.wrap{box-shadow:none;padding:0}a{color:inherit}section{break-inside:auto}figure{break-inside:avoid}}
+</style>
+</head>
+<body class="hs-doc">
+<div class="wrap">
+<header>
+<p class="kicker">Engineering calculation module</p>
+<h1>Naval architecture module analysis</h1>
+<p class="sub">Draft for client review</p>
+<p>Revision 00 · 2026-10-21</p>
+<nav aria-label="Contents"><a href="#summary">Summary</a> · <a href="#basis">Design basis</a> ·
+<a href="#example">Worked example</a> · <a href="#validation">Validation</a> ·
+<a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendix</a></nav>
+</header>
+<main>
+<section id="summary">
+<h2>1 Executive Summary</h2>
+<p>The naval architecture module is a collection of callable calculations for floating-body geometry,
+hydrostatics, stability, resistance, motions, manoeuvring and longitudinal strength.
+Analysis is performed to determine the supported preliminary calculation workflow and its limits of use;
+key results are summarized below. The implementation and evidence records are identified in
+<a href="#records">Section 9.2</a>.</p>
+<ul>
+<li>The public rectangular-tank calculation gives an effective initial metacentric height of
+<span data-number="effective_gm_ft" data-value="14.044899453551912">14.045</span> ft, above the neutral boundary of <span data-number="neutral_gm_ft" data-value="0.0">0.000</span> ft, with the source loading condition held fixed.
+<ul><li>The free-surface correction is <span data-number="correction_ft" data-value="0.3551005464480875">0.355</span> ft, reducing the uncorrected height by <span data-number="reduction_pct" data-value="2.4659760170006075">2.5</span> %.
+The calculation supports a preliminary estimate of the static liquid-surface penalty; an operational
+stability margin is not established. <a href="#ref-public">Reference A, sections 3.3 and 4.8.3</a>.</li></ul></li>
+<li>Use is limited to the supplied loading condition and an unrestricted rectangular slack surface at initial heel.
+<ul><li>A complete righting-arm curve, downflooding information and applicable criteria are required before
+an operational loading decision is made. <a href="#limits">Section 8</a> defines the restriction.</li></ul></li>
+</ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr></tbody>
+<caption>Revision record. The initial issue is the current engineering account.</caption></table>
+</section>
+<section id="introduction">
+<h2>2 Introduction</h2>
+<p>The module is assessed as a preliminary engineering calculation library. A documented scalar stability
+function is exercised directly, while the broader package is described from its existing interfaces and
+test records. No licensed analysis program is required for the worked example.</p>
+<p>The principal workflow is the assessment of initial transverse stability after allowing for liquid motion
+inside a tank. Hydrostatic properties and the loading condition are supplied by the engineer; hull geometry
+and the mass distribution are not reconstructed by this function. This distinction controls the intended
+use of the result.</p>
+<h3>2.1 Not covered</h3>
+<p>Mesh ingestion, mesh hydrostatics and trim, box-hull loading analysis, supplied-table intact and damage
+screening, tank gauging, resistance transfer and prediction, propeller performance, rudder loads,
+turning-circle estimates, seakeeping, hull-girder strength, scantlings, submarine buoyancy,
+hull-form sizing, numerical integration and inertia estimates are available as separate sub-areas.
+Their callable interfaces and example records are identified in Section 9.2. A common
+engineering qualification across these sub-areas is not established by this report.</p>
+</section>
+<section id="controls">
+<h2>3 Summary</h2>
+<p>The input controls are established before the stability function is called. The result is interpreted as
+an initial-heel static correction within the stated tank model.</p>
+<ul>
+<li>Confirm displacement, gravity height and transverse metacentre for the same loading condition.
+Liquid mass is already included in that condition.</li>
+<li>Retain the native units at the calculation boundary: feet, long tons and mass density in slugs per cubic foot.
+A long ton is denoted LT in the source; it is not a metric tonne.</li>
+<li>Use the free-surface length and breadth of the connected slack surface, rather than the gross tank
+dimensions where baffles, divisions, pocketing or irregular geometry alter that surface.</li>
+<li>Record the liquid correction and corrected metacentric height separately. A positive corrected value
+does not replace the applicable intact-stability, damage-stability or operating criteria.</li>
+<li>Confirm caller input validation. The scalar function performs arithmetic without rejecting nonphysical
+dimensions, inconsistent density units or a nonpositive displacement.</li>
+</ul>
+<p>The free-surface model, sign criterion and data requirements are taken from
+<a href="#ref-public">Reference A, sections 3.3 and 4.8.3–4.8.4</a>.
+The physical arrangement and sensitivity are shown below.</p>
+</section>
+<section id="basis">
+<h2>4 Design Data and Criteria</h2>
+<p>The design data are taken from an openly available educational problem, with the original units retained
+to avoid an implicit conversion at the module boundary. The source values and formula locations are
+recorded in <a href="#ref-public">Reference A</a>.</p>
+<h3>4.1 Loading condition and tank</h3>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Displacement</td><td><span data-number="displacement_lt" data-value="12200.0">12,200.000</span></td><td>long ton</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr><tr><td>Gravity centre above keel</td><td><span data-number="kg_ft" data-value="22.6">22.600</span></td><td>ft</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr><tr><td>Transverse metacentre above keel</td><td><span data-number="km_ft" data-value="37.0">37.000</span></td><td>ft</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr><tr><td>Tank length</td><td><span data-number="tank_length_ft" data-value="35.0">35.000</span></td><td>ft</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr><tr><td>Tank free-surface breadth</td><td><span data-number="tank_breadth_ft" data-value="40.0">40.000</span></td><td>ft</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr><tr><td>Fuel mass density</td><td><span data-number="rho_fluid" data-value="1.616">1.616</span></td><td>slug/ft³</td><td><a href="#ref-public">Reference A, problem 26</a></td></tr></tbody><caption>Table A. Public example inputs; the original units are retained at the API boundary.</caption></table>
+<p>The source also supplies tank depth and location. These are geometry descriptors, not inputs to the
+initial rectangular-surface correction. The same correction is obtained for the source's centred and
+off-centre tank positions when displacement, gravity height and free-surface shape are held fixed.
+The equilibrium list of an off-centre loading condition is a separate calculation.</p>
+<figure>
+<svg viewBox="0 0 860 385" role="img" aria-labelledby="tank-title tank-desc">
+<title id="tank-title">Rectangular slack fuel tank inside a floating hull</title>
+<desc id="tank-desc">Conceptual transverse hull section and tank perspective. A horizontal free surface,
+buoyancy, weight and the keel datum are labelled. Hull lines and liquid depth are illustrative; no hull dimensions are supplied.</desc>
+<path d="M35 70Q60 270 205 295Q355 270 375 70Z" class="schematic"/>
+<path d="M20 150H390" class="liquid"/>
+<path d="M110 105H300V225H110Z" class="schematic"/>
+<path d="M111 170H299V224H111Z" class="liquid"/>
+<path d="M110 170H300" stroke="var(--brand)" stroke-width="3"/>
+<path d="M205 235V85M205 85l-6 12m6-12l6 12M230 110V260m0 0l-6-12m6 12l6-12" class="dimension"/>
+<text x="40" y="43">Conceptual transverse section</text>
+<text x="70" y="145">External waterline</text>
+<text x="135" y="164">Free surface</text>
+<text x="210" y="82">Buoyancy</text><text x="237" y="255">Weight</text>
+<text x="105" y="320">Keel datum; upright static condition</text>
+<path d="M490 125L730 125L810 75L570 75ZM490 125V215L730 215V125M730 215L810 165V75M490 215L570 165" class="schematic"/>
+<path d="M490 185L730 185L810 135L570 135ZM490 185V215H730V185M730 185L810 135V165L730 215" class="liquid"/>
+<path d="M490 238H730M490 231V245M730 231V245M740 227L820 177M735 222l10 10M815 172l10 10" class="dimension"/>
+<text x="490" y="43">Tank perspective; dimensions in Table A</text>
+<text x="485" y="276">Breadth <tspan data-number="tank_breadth_ft" data-value="40.0">40.000</tspan> ft; depth <tspan data-number="tank_depth_ft" data-value="15.0">15.000</tspan> ft</text>
+<text x="600" y="310">Length <tspan data-number="tank_length_ft" data-value="35.0">35.000</tspan> ft</text>
+<text x="485" y="370">Slack liquid; initial heel; no internal division</text>
+</svg>
+<figcaption>Figure A. The modelled free surface is shown inside a conceptual hull and in perspective.
+The dimensioned tank perspective follows the public problem; hull lines, immersion and liquid depth are illustrative.
+The model is not a hull drawing. <a href="#ref-public">Reference A, problem 26 and Figure 4.12</a>.</figcaption>
+</figure>
+<h3>4.2 Criteria and rationale</h3>
+<p>The neutral initial-stability boundary is a metacentric height of <span data-number="neutral_gm_ft" data-value="0.0">0.000</span> ft.
+It separates restoring and overturning behaviour at an infinitesimal heel and is drawn as a diagnostic
+line in Figure B. The operational minimum metacentric height, required curve areas and downflooding
+angle are not supplied; their assessment is recorded as NOT_EVALUATED.
+The neutral boundary is not an operating limit. <a href="#ref-public">Reference A, sections 3.3 and 4.4</a>.</p>
+</section>
+<section id="method">
+<h2>5 Theory and Calculation Method</h2>
+<p>The free-surface penalty is represented as a virtual rise of the centre of gravity. The liquid moves
+transversely as the hull heels, reducing the initial restoring moment without changing the displacement.</p>
+<h3>5.1 Equations and symbols</h3>
+<div class="eq">i = L B³ / 12; C = ρ g i / (Δ c); GM<sub>effective</sub> = KM − KG − C.</div>
+<p>Here i is the transverse second moment of the liquid surface in ft⁴; L and B are its length and breadth
+in ft; ρ is fuel mass density in slug/ft³; g is gravitational acceleration in ft/s²; Δ is displacement in
+long tons; c converts long tons to pounds-force; C is the free-surface correction in ft; K is the keel
+datum, G the gravity centre and M the transverse metacentre. KM and KG are their heights above K in ft.
+The rectangular coefficient and correction are sourced to <a href="#ref-public">Reference A,
+sections 4.8.3 and 4.8.3.1, printed pages 4-29–4-30</a>.</p>
+<p>The module uses gravitational acceleration <span data-number="g_ft_s2" data-value="32.17">32.170</span> ft/s² and a conversion of
+<span data-number="lb_per_long_ton" data-value="2240.0">2,240.000</span> lb per long ton. These constants are checked against the
+<a href="#ref-public">same edition's Equations and Conversion Factors, Miscellaneous Conversions</a>.
+The liquid-surface coefficient is geometric, rather than a fitted material coefficient.</p>
+<h3>5.2 Calculation sequence</h3>
+<p>The source inputs are read, their finite positive values and unit conventions are checked, and the
+documented free-surface function is called. Its ordered outputs are the correction and effective
+metacentric height. An uncorrected comparison is obtained with the correction suppressed. Every
+point in Figure B is obtained from another call to the same function, with only surface breadth changed.
+The callable example and reproduction command are given in Section 9.2.</p>
+</section>
+<section id="example">
+<h2>6 Worked Example and Results</h2>
+<p>The calculation is performed for the public rectangular fuel-tank problem using the inputs in Table A.
+The source loading condition is held fixed; the slack-surface assumption is identified in Table B.</p>
+<p>The uncorrected metacentric height is <span data-number="solid_gm_ft" data-value="14.399999999999999">14.400</span> ft. The free-surface correction is <span data-number="correction_ft" data-value="0.3551005464480875">0.355</span> ft,
+reducing that height by <span data-number="reduction_pct" data-value="2.4659760170006075">2.5</span> %. The effective initial metacentric height is <span data-number="effective_gm_ft" data-value="14.044899453551912">14.045</span> ft,
+above the neutral boundary of <span data-number="neutral_gm_ft" data-value="0.0">0.000</span> ft. An operational stability margin is not established.
+<a href="#ref-public">Reference A, problem 26 and sections 3.3 and 4.8.3</a>.</p>
+<p>The centred and off-centre positions give the same correction within this initial-surface model.
+No equilibrium heel is returned by the function. The breadth sensitivity holds liquid mass, gravity
+height, metacentre, surface length and density fixed; it is not a sequence of redesigned tanks or
+loading conditions.</p>
+<figure>
+<svg id="gm-chart" viewBox="0 0 860 360" role="group" aria-labelledby="chart-title chart-desc"><title id="chart-title">Effective metacentric height against free-surface breadth</title><desc id="chart-desc">One loading condition; all other inputs held fixed. The dashed line is the neutral initial stability boundary, not an operational criterion.</desc><path d="M70 30V285H810" class="axis"/><path d="M70 285H810" class="boundary"/><polyline points="70.00,40.29 94.67,40.33 119.33,40.36 144.00,40.41 168.67,40.46 193.33,40.52 218.00,40.59 242.67,40.66 267.33,40.75 292.00,40.85 316.67,40.95 341.33,41.07 366.00,41.20 390.67,41.35 415.33,41.50 440.00,41.67 464.67,41.86 489.33,42.06 514.00,42.27 538.67,42.50 563.33,42.75 588.00,43.01 612.67,43.29 637.33,43.59 662.00,43.91 686.67,44.24 711.33,44.60 736.00,44.98 760.67,45.38 785.33,45.80 810.00,46.24" class="curve"/><circle cx="70.00" cy="40.29" r="4" tabindex="0" role="img" class="sample" data-index="0" aria-label="Public tank sensitivity; rectangular free surface; breadth 10.000 ft; effective metacentric height 14.394 ft; neutral boundary 0.000 ft; correction 0.006 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 10.000 ft; effective metacentric height 14.394 ft; neutral boundary 0.000 ft; correction 0.006 ft; operational criterion not supplied.</title></circle><circle cx="94.67" cy="40.33" r="4" tabindex="0" role="img" class="sample" data-index="1" aria-label="Public tank sensitivity; rectangular free surface; breadth 11.000 ft; effective metacentric height 14.393 ft; neutral boundary 0.000 ft; correction 0.007 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 11.000 ft; effective metacentric height 14.393 ft; neutral boundary 0.000 ft; correction 0.007 ft; operational criterion not supplied.</title></circle><circle cx="119.33" cy="40.36" r="4" tabindex="0" role="img" class="sample" data-index="2" aria-label="Public tank sensitivity; rectangular free surface; breadth 12.000 ft; effective metacentric height 14.390 ft; neutral boundary 0.000 ft; correction 0.010 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 12.000 ft; effective metacentric height 14.390 ft; neutral boundary 0.000 ft; correction 0.010 ft; operational criterion not supplied.</title></circle><circle cx="144.00" cy="40.41" r="4" tabindex="0" role="img" class="sample" data-index="3" aria-label="Public tank sensitivity; rectangular free surface; breadth 13.000 ft; effective metacentric height 14.388 ft; neutral boundary 0.000 ft; correction 0.012 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 13.000 ft; effective metacentric height 14.388 ft; neutral boundary 0.000 ft; correction 0.012 ft; operational criterion not supplied.</title></circle><circle cx="168.67" cy="40.46" r="4" tabindex="0" role="img" class="sample" data-index="4" aria-label="Public tank sensitivity; rectangular free surface; breadth 14.000 ft; effective metacentric height 14.385 ft; neutral boundary 0.000 ft; correction 0.015 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 14.000 ft; effective metacentric height 14.385 ft; neutral boundary 0.000 ft; correction 0.015 ft; operational criterion not supplied.</title></circle><circle cx="193.33" cy="40.52" r="4" tabindex="0" role="img" class="sample" data-index="5" aria-label="Public tank sensitivity; rectangular free surface; breadth 15.000 ft; effective metacentric height 14.381 ft; neutral boundary 0.000 ft; correction 0.019 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 15.000 ft; effective metacentric height 14.381 ft; neutral boundary 0.000 ft; correction 0.019 ft; operational criterion not supplied.</title></circle><circle cx="218.00" cy="40.59" r="4" tabindex="0" role="img" class="sample" data-index="6" aria-label="Public tank sensitivity; rectangular free surface; breadth 16.000 ft; effective metacentric height 14.377 ft; neutral boundary 0.000 ft; correction 0.023 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 16.000 ft; effective metacentric height 14.377 ft; neutral boundary 0.000 ft; correction 0.023 ft; operational criterion not supplied.</title></circle><circle cx="242.67" cy="40.66" r="4" tabindex="0" role="img" class="sample" data-index="7" aria-label="Public tank sensitivity; rectangular free surface; breadth 17.000 ft; effective metacentric height 14.373 ft; neutral boundary 0.000 ft; correction 0.027 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 17.000 ft; effective metacentric height 14.373 ft; neutral boundary 0.000 ft; correction 0.027 ft; operational criterion not supplied.</title></circle><circle cx="267.33" cy="40.75" r="4" tabindex="0" role="img" class="sample" data-index="8" aria-label="Public tank sensitivity; rectangular free surface; breadth 18.000 ft; effective metacentric height 14.368 ft; neutral boundary 0.000 ft; correction 0.032 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 18.000 ft; effective metacentric height 14.368 ft; neutral boundary 0.000 ft; correction 0.032 ft; operational criterion not supplied.</title></circle><circle cx="292.00" cy="40.85" r="4" tabindex="0" role="img" class="sample" data-index="9" aria-label="Public tank sensitivity; rectangular free surface; breadth 19.000 ft; effective metacentric height 14.362 ft; neutral boundary 0.000 ft; correction 0.038 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 19.000 ft; effective metacentric height 14.362 ft; neutral boundary 0.000 ft; correction 0.038 ft; operational criterion not supplied.</title></circle><circle cx="316.67" cy="40.95" r="4" tabindex="0" role="img" class="sample" data-index="10" aria-label="Public tank sensitivity; rectangular free surface; breadth 20.000 ft; effective metacentric height 14.356 ft; neutral boundary 0.000 ft; correction 0.044 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 20.000 ft; effective metacentric height 14.356 ft; neutral boundary 0.000 ft; correction 0.044 ft; operational criterion not supplied.</title></circle><circle cx="341.33" cy="41.07" r="4" tabindex="0" role="img" class="sample" data-index="11" aria-label="Public tank sensitivity; rectangular free surface; breadth 21.000 ft; effective metacentric height 14.349 ft; neutral boundary 0.000 ft; correction 0.051 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 21.000 ft; effective metacentric height 14.349 ft; neutral boundary 0.000 ft; correction 0.051 ft; operational criterion not supplied.</title></circle><circle cx="366.00" cy="41.20" r="4" tabindex="0" role="img" class="sample" data-index="12" aria-label="Public tank sensitivity; rectangular free surface; breadth 22.000 ft; effective metacentric height 14.341 ft; neutral boundary 0.000 ft; correction 0.059 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 22.000 ft; effective metacentric height 14.341 ft; neutral boundary 0.000 ft; correction 0.059 ft; operational criterion not supplied.</title></circle><circle cx="390.67" cy="41.35" r="4" tabindex="0" role="img" class="sample" data-index="13" aria-label="Public tank sensitivity; rectangular free surface; breadth 23.000 ft; effective metacentric height 14.332 ft; neutral boundary 0.000 ft; correction 0.068 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 23.000 ft; effective metacentric height 14.332 ft; neutral boundary 0.000 ft; correction 0.068 ft; operational criterion not supplied.</title></circle><circle cx="415.33" cy="41.50" r="4" tabindex="0" role="img" class="sample" data-index="14" aria-label="Public tank sensitivity; rectangular free surface; breadth 24.000 ft; effective metacentric height 14.323 ft; neutral boundary 0.000 ft; correction 0.077 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 24.000 ft; effective metacentric height 14.323 ft; neutral boundary 0.000 ft; correction 0.077 ft; operational criterion not supplied.</title></circle><circle cx="440.00" cy="41.67" r="4" tabindex="0" role="img" class="sample" data-index="15" aria-label="Public tank sensitivity; rectangular free surface; breadth 25.000 ft; effective metacentric height 14.313 ft; neutral boundary 0.000 ft; correction 0.087 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 25.000 ft; effective metacentric height 14.313 ft; neutral boundary 0.000 ft; correction 0.087 ft; operational criterion not supplied.</title></circle><circle cx="464.67" cy="41.86" r="4" tabindex="0" role="img" class="sample" data-index="16" aria-label="Public tank sensitivity; rectangular free surface; breadth 26.000 ft; effective metacentric height 14.302 ft; neutral boundary 0.000 ft; correction 0.098 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 26.000 ft; effective metacentric height 14.302 ft; neutral boundary 0.000 ft; correction 0.098 ft; operational criterion not supplied.</title></circle><circle cx="489.33" cy="42.06" r="4" tabindex="0" role="img" class="sample" data-index="17" aria-label="Public tank sensitivity; rectangular free surface; breadth 27.000 ft; effective metacentric height 14.291 ft; neutral boundary 0.000 ft; correction 0.109 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 27.000 ft; effective metacentric height 14.291 ft; neutral boundary 0.000 ft; correction 0.109 ft; operational criterion not supplied.</title></circle><circle cx="514.00" cy="42.27" r="4" tabindex="0" role="img" class="sample" data-index="18" aria-label="Public tank sensitivity; rectangular free surface; breadth 28.000 ft; effective metacentric height 14.278 ft; neutral boundary 0.000 ft; correction 0.122 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 28.000 ft; effective metacentric height 14.278 ft; neutral boundary 0.000 ft; correction 0.122 ft; operational criterion not supplied.</title></circle><circle cx="538.67" cy="42.50" r="4" tabindex="0" role="img" class="sample" data-index="19" aria-label="Public tank sensitivity; rectangular free surface; breadth 29.000 ft; effective metacentric height 14.265 ft; neutral boundary 0.000 ft; correction 0.135 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 29.000 ft; effective metacentric height 14.265 ft; neutral boundary 0.000 ft; correction 0.135 ft; operational criterion not supplied.</title></circle><circle cx="563.33" cy="42.75" r="4" tabindex="0" role="img" class="sample" data-index="20" aria-label="Public tank sensitivity; rectangular free surface; breadth 30.000 ft; effective metacentric height 14.250 ft; neutral boundary 0.000 ft; correction 0.150 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 30.000 ft; effective metacentric height 14.250 ft; neutral boundary 0.000 ft; correction 0.150 ft; operational criterion not supplied.</title></circle><circle cx="588.00" cy="43.01" r="4" tabindex="0" role="img" class="sample" data-index="21" aria-label="Public tank sensitivity; rectangular free surface; breadth 31.000 ft; effective metacentric height 14.235 ft; neutral boundary 0.000 ft; correction 0.165 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 31.000 ft; effective metacentric height 14.235 ft; neutral boundary 0.000 ft; correction 0.165 ft; operational criterion not supplied.</title></circle><circle cx="612.67" cy="43.29" r="4" tabindex="0" role="img" class="sample" data-index="22" aria-label="Public tank sensitivity; rectangular free surface; breadth 32.000 ft; effective metacentric height 14.218 ft; neutral boundary 0.000 ft; correction 0.182 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 32.000 ft; effective metacentric height 14.218 ft; neutral boundary 0.000 ft; correction 0.182 ft; operational criterion not supplied.</title></circle><circle cx="637.33" cy="43.59" r="4" tabindex="0" role="img" class="sample" data-index="23" aria-label="Public tank sensitivity; rectangular free surface; breadth 33.000 ft; effective metacentric height 14.201 ft; neutral boundary 0.000 ft; correction 0.199 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 33.000 ft; effective metacentric height 14.201 ft; neutral boundary 0.000 ft; correction 0.199 ft; operational criterion not supplied.</title></circle><circle cx="662.00" cy="43.91" r="4" tabindex="0" role="img" class="sample" data-index="24" aria-label="Public tank sensitivity; rectangular free surface; breadth 34.000 ft; effective metacentric height 14.182 ft; neutral boundary 0.000 ft; correction 0.218 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 34.000 ft; effective metacentric height 14.182 ft; neutral boundary 0.000 ft; correction 0.218 ft; operational criterion not supplied.</title></circle><circle cx="686.67" cy="44.24" r="4" tabindex="0" role="img" class="sample" data-index="25" aria-label="Public tank sensitivity; rectangular free surface; breadth 35.000 ft; effective metacentric height 14.162 ft; neutral boundary 0.000 ft; correction 0.238 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 35.000 ft; effective metacentric height 14.162 ft; neutral boundary 0.000 ft; correction 0.238 ft; operational criterion not supplied.</title></circle><circle cx="711.33" cy="44.60" r="4" tabindex="0" role="img" class="sample" data-index="26" aria-label="Public tank sensitivity; rectangular free surface; breadth 36.000 ft; effective metacentric height 14.141 ft; neutral boundary 0.000 ft; correction 0.259 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 36.000 ft; effective metacentric height 14.141 ft; neutral boundary 0.000 ft; correction 0.259 ft; operational criterion not supplied.</title></circle><circle cx="736.00" cy="44.98" r="4" tabindex="0" role="img" class="sample" data-index="27" aria-label="Public tank sensitivity; rectangular free surface; breadth 37.000 ft; effective metacentric height 14.119 ft; neutral boundary 0.000 ft; correction 0.281 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 37.000 ft; effective metacentric height 14.119 ft; neutral boundary 0.000 ft; correction 0.281 ft; operational criterion not supplied.</title></circle><circle cx="760.67" cy="45.38" r="4" tabindex="0" role="img" class="sample" data-index="28" aria-label="Public tank sensitivity; rectangular free surface; breadth 38.000 ft; effective metacentric height 14.096 ft; neutral boundary 0.000 ft; correction 0.304 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 38.000 ft; effective metacentric height 14.096 ft; neutral boundary 0.000 ft; correction 0.304 ft; operational criterion not supplied.</title></circle><circle cx="785.33" cy="45.80" r="4" tabindex="0" role="img" class="sample" data-index="29" aria-label="Public tank sensitivity; rectangular free surface; breadth 39.000 ft; effective metacentric height 14.071 ft; neutral boundary 0.000 ft; correction 0.329 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 39.000 ft; effective metacentric height 14.071 ft; neutral boundary 0.000 ft; correction 0.329 ft; operational criterion not supplied.</title></circle><circle cx="810.00" cy="46.24" r="4" tabindex="0" role="img" class="sample" data-index="30" aria-label="Public tank sensitivity; rectangular free surface; breadth 40.000 ft; effective metacentric height 14.045 ft; neutral boundary 0.000 ft; correction 0.355 ft; operational criterion not supplied."><title>Public tank sensitivity; rectangular free surface; breadth 40.000 ft; effective metacentric height 14.045 ft; neutral boundary 0.000 ft; correction 0.355 ft; operational criterion not supplied.</title></circle><text x="60" y="289.00" text-anchor="end">0.0</text><text x="60" y="204.00" text-anchor="end">5.0</text><text x="60" y="119.00" text-anchor="end">10.0</text><text x="60" y="34.00" text-anchor="end">15.0</text><text x="70.00" y="310" text-anchor="middle">10.0</text><text x="440.00" y="310" text-anchor="middle">25.0</text><text x="810.00" y="310" text-anchor="middle">40.0</text><text x="440" y="345" text-anchor="middle">Free-surface breadth (ft)</text><text x="17" y="165" text-anchor="middle" transform="rotate(-90 17 165)">Effective metacentric height (ft)</text></svg>
+<figcaption>Figure B. Effective metacentric height against free-surface breadth at the public loading
+condition. The solid curve is the module result; the dashed line is the neutral initial-stability
+boundary. Positive height alone does not establish an operating envelope.
+<a href="#ref-public">Reference A, sections 3.3 and 4.8.3</a>.</figcaption>
+</figure>
+<p class="chart-control"><label for="sample-index">Inspect a calculated breadth</label>
+<input id="sample-index" type="range" min="0" max="30" value="30" step="1"></p>
+<p id="chart-readout" aria-live="polite">Hover over a curve point, focus it with the keyboard, or move the control to inspect the condition, component, demand and diagnostic boundary.</p>
+</section>
+<section id="validation">
+<h2>7 Validation Evidence</h2>
+<p>The existing evidence is assessed by comparator type. Arithmetic regression is distinguished from
+physical validation and from acceptance of an operational loading condition.</p>
+<h3>7.1 Existing regression and benchmark records</h3>
+<p>The repository holds textbook-labelled tests and input vectors for buoyancy, gravity shifts,
+inclining, righting-arm corrections, free surface, resistance and submarine buoyancy. The selected
+stability test checks both the free-surface penalty and the corrected metacentric height against its
+stored expectations. Those expectations are repository transcriptions; the textbook labels are not
+treated as independent proof of each numerical value. The present public example is taken directly
+from the cited problem and is also checked against the governing equation.</p>
+<p>Mesh benchmark tests compare analytic parabolic-hull volume and wetted area with generated geometry.
+Loading-analysis tests exercise box-hull equilibrium and strength calculations. The resistance
+reproduction record explicitly identifies approximate reference values as unverified; that record does
+not qualify the resistance method. These evidence locations are listed in Section 9.2.</p>
+<h3>7.2 Interpretation of evidence</h3>
+<p>The report rebuild compares every embedded input, returned example result and sensitivity point with
+fresh calls to the module. An independent rectangular-surface identity is also evaluated, and the
+displayed rounding is checked. The accompanying quality checks inspect section structure, source
+records and offline interactions. The retained check record is described in Section 10.</p>
+<p>No measured roll response, inclining survey or approved stability booklet is supplied for this example.
+Agreement with arithmetic and stored regression expectations therefore does not establish performance
+of an actual hull, dynamic liquid motion, regulatory compliance or operational acceptance.</p>
+</section>
+<section id="limits">
+<h2>8 Key Findings and Limits of Use</h2>
+<p>The static initial-surface penalty is calculated for the public tank model. The correction
+increases with the cube of the connected free-surface breadth, as defined by the cited rectangular
+second-moment relation.</p>
+<p>The effective initial metacentric height remains above the neutral boundary for the illustrated breadth
+range. This finding applies only to the fixed public loading condition. The boundary supplies no margin
+against large-angle heel, flooding, wind heeling, waves or cargo movement.</p>
+<p>The simple surface formula requires revision where a roof or bottom clips the liquid surface, the tank
+is not rectangular, the liquid is restricted by internal divisions, or the surface shape varies materially
+with heel. Dynamic sloshing is not represented. The source distinguishes static and dynamic effects in
+<a href="#ref-public">Reference A, sections 4.8.1–4.8.3</a>.</p>
+<p>Units are explicit but not enforced by a dimensional type system in the scalar function. The simple
+buoyancy helpers also choose fresh-water arithmetic for any water selector other than the exact
+salt-water selector. Input qualification is therefore required at the calling boundary. Signed trim and
+longitudinal origins differ between some package interfaces; those conventions require reconciliation
+before results are exchanged between them.</p>
+</section>
+<section id="recommendations">
+<h2>9 Recommendations and References</h2>
+<p>The preliminary result is used to identify the liquid-surface penalty and the further evidence required
+for an operating decision. The following recommendations follow from the model boundaries.</p>
+<h3>9.1 Recommendations</h3>
+<p>Confirm the loading survey, liquid density, connected slack-surface dimensions and tank divisions for
+each intended condition. Obtain the applicable minimum stability margin, downflooding information and
+complete righting-arm curve before an operating limit is assigned. These items complete the basis
+identified in <a href="#ref-public">Reference A, sections 3.3, 4.4 and 4.8</a>.</p>
+<p>Use a supplied-table stability calculation with qualified hydrostatic and cross-curve data when a full
+loading condition is assessed. Reconcile coordinate and trim conventions at that interface. Validate
+each engineering criterion against the applicable edition before a design conclusion is issued.</p>
+<p>Where the liquid-surface penalty governs a future condition, assess longitudinal compartment divisions
+or a controlled filling arrangement against the complete loading and stability calculation. The rationale
+is the breadth dependence and mitigation discussion in <a href="#ref-public">Reference A, section 4.8.4</a>.
+A target filling percentage or retrofit requirement is not assigned without the missing tank geometry
+and operational criteria.</p>
+<h3 id="records">9.2 References and reproduction records</h3>
+<p id="ref-public">Reference A. United States Naval Academy, Principles of Ship Performance, Summer 2020:
+Equations and Conversion Factors; section 3.3; sections 4.4 and 4.8; problem 26, printed page 4-49,
+PDF page 188. <a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes%2C_Summer_2020.pdf">Public course notes</a>.
+The source inputs, access date, document digest and formula locations are retained in the source record.</p>
+<p>Reference B. <code>src/digitalmodel/naval_architecture/stability.py</code>:
+<code>free_surface_correction</code>, <code>gz_from_cross_curves</code> and
+<code>gz_with_tcg_correction</code>. Hydrostatic helpers are documented in
+<code>hydrostatics.py</code>; the broader interface map is in <code>docs/agent-pack.md</code>
+within the same package.</p>
+<p>Reference C. <code>tests/naval_architecture/test_en400_worked_examples.py</code>,
+<code>test_gz_curves.py</code>, <code>test_mesh_benchmark.py</code>,
+<code>test_loading_computer.py</code> and <code>test_holtrop_reproduction.py</code>.
+The textbook-labelled vectors are under <code>tests/fixtures/test_vectors/naval_architecture/</code>.</p>
+<p>Reference D. Additional package interfaces: <code>mesh_hydrostatics.compute_hydrostatics</code>,
+<code>trim_hydrostatics.hydrostatics_at</code>, <code>loading_computer.run_loading_computer</code>,
+<code>vessel_stability_screening</code>, <code>damage_stability_screening</code>,
+<code>tank_gauging</code>, <code>friction_scaling.transfer_model_to_ship</code>,
+<code>seakeeping</code>, <code>hull_girder_smith.smith_ultimate</code>,
+<code>turning_circle.simulate_nomoto_turning_circle</code> and
+<code>workflow.NavalArchitectureWorkflow</code>.</p>
+<p>Reference E. This report's source record is <code>example.json</code>; the source-bound software
+check record is <code>checks.json</code>; its rebuild checks are in
+<code>tests/naval_architecture/test_module_report.py</code>. Reproduction command:</p>
+<pre><code>PYTHONPATH=src python scripts/reporting/build_navalarchitecture_module_report.py --check</code></pre>
+<p>The same values are obtained with the following public call, using the input mapping from the source record:</p>
+<pre><code>import json
+from pathlib import Path
+from digitalmodel.naval_architecture.stability import free_surface_correction
+
+source = json.loads(Path("docs/reports/modules/navalarchitecture/example.json").read_text())
+correction_ft, effective_gm_ft = free_surface_correction(**source["inputs"])</code></pre>
+<p>Presentation exemplar: <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and its canonical
+brand stylesheet. The stylesheet and interactive components are embedded in this document.</p>
+</section>
+<section id="appendix">
+<h2>10 Appendices</h2>
+<p>The missing-data register and quality pre-flight record are retained with the calculation basis.
+The document remains a draft for client review while operational evidence is absent.</p>
+<h3>10.1 Data register</h3>
+<table><thead><tr><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Basis</th></tr></thead><tbody><tr><td>Upright loading condition and unchanged liquid mass</td><td>ASSUMED - to be confirmed</td><td>The source loading condition is held fixed while free-surface geometry is compared; displacement and gravity height are not recomputed.</td></tr><tr><td>Unrestricted rectangular slack surface</td><td>ASSUMED - to be confirmed</td><td>The textbook rectangular-surface equation is applied at initial heel; fill level and pocketing are not supplied.</td></tr><tr><td>Required operational stability margin, downflooding and complete righting-arm curve</td><td>NOT_EVALUATED</td><td>These inputs are not supplied by the public problem and cannot be inferred from positive initial metacentric height.</td></tr></tbody><caption>Table B. Missing-data and assumption register.</caption></table>
+<p>The assumptions define the demonstration; none is inferred from a previous vessel, field or client
+record. The tank is not accepted for an operational condition by this report.</p>
+<h3>10.2 Quality pre-flight and review notes</h3>
+<p>The public problem inputs and conversion constants are checked against the cited edition.
+Numerical text and chart points are generated from module calls. The retained document is rebuilt
+and compared byte for byte, and an independent arithmetic identity is checked. Local chart controls,
+comment export and change records are included for review. Test outcomes and exclusions are carried
+in Table C; they do not replace engineering acceptance.</p>
+<table><thead><tr><th scope="col">Software check outcome</th><th scope="col">Count</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Passed</td><td>1271</td><td>Retained check record</td></tr><tr><td>Failed</td><td>0</td><td>Retained check record</td></tr><tr><td>Skipped</td><td>10</td><td>Retained check record</td></tr><tr><td>Expected failure</td><td>1</td><td>Retained check record</td></tr><tr><td>Total</td><td>1282</td><td>Retained check record</td></tr></tbody><caption>Table C. Recorded software checks for the stated source set; these counts do not denote engineering acceptance.</caption></table>
+<p>The skipped cases concern optional geometry readers, missing external fleet data and fixture
+dependency versions. The expected failure concerns missing
+hydrostatic-table data in an existing textbook-labelled example. No physical validation is inferred
+from the software outcome counts.</p>
+<p>The chart's restoring-side curve is shown in blue and its neutral boundary is dashed red.
+An operational criterion is not supplied. A result requiring further evidence is described as
+NOT_EVALUATED; it does not denote a true zero.</p>
+<details id="changes-panel"><summary>Engineering changes in this revision</summary><ul id="changes-list"></ul></details>
+<div class="review-tools" aria-label="Report comments">
+<p>Comments are retained as a separate JSON file beside the HTML. The save dialog selects the report
+folder; browsers without a save dialog download the file for placement beside the HTML. A download
+request alone does not confirm a saved copy. Reload the file to check it. Unsaved comments remain
+only in this open document.</p>
+<fieldset><legend>Comment on a section</legend>
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" maxlength="10000"></textarea>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-save" type="button">Save comments beside report</button>
+<label for="comment-load">Reload saved comments</label><input id="comment-load" type="file" accept=".json">
+<p id="comment-message" role="status">No comments have been saved.</p>
+<ol id="comment-list"></ol></fieldset>
+</div>
+</section>
+</main>
+<footer>Naval architecture module analysis · Revision 00 · Draft for client review</footer>
+</div>
+<script id="example-data" type="application/json">{"constants": {"g_ft_s2": 32.17, "lb_per_long_ton": 2240.0}, "derived": {"neutral_gm_ft": 0.0, "reduction_pct": 2.4659760170006075}, "geometry": {"off_center_distance_ft": 10.0, "tank_center_above_keel_ft": 15.0, "tank_depth_ft": 15.0}, "inputs": {"displacement_lt": 12200.0, "kg_ft": 22.6, "km_ft": 37.0, "rho_fluid": 1.616, "tank_breadth_ft": 40.0, "tank_length_ft": 35.0}, "results": {"correction_ft": 0.3551005464480875, "effective_gm_ft": 14.044899453551912, "solid_gm_ft": 14.399999999999999}, "source": {"accessed": "2026-10-21", "clause": "Chapter 4, problem 26, printed page 4-49; sections 4.8.3 and 4.8.3.1", "edition": "Summer 2020", "pdf_page": 188, "publisher": "United States Naval Academy", "sha256": "f8f4807492bffcc61cfe1b03bc7a0f457d7ab5209bb0404bba44a4e363be7cec", "title": "Principles of Ship Performance", "url": "https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes%2C_Summer_2020.pdf", "use": "Public educational example; preliminary static calculation only"}, "sweep": [{"breadth_ft": 10.0, "correction_ft": 0.005548446038251367, "effective_gm_ft": 14.394451553961748}, {"breadth_ft": 11.0, "correction_ft": 0.00738498167691257, "effective_gm_ft": 14.392615018323086}, {"breadth_ft": 12.0, "correction_ft": 0.009587714754098363, "effective_gm_ft": 14.390412285245901}, {"breadth_ft": 13.0, "correction_ft": 0.012189935946038252, "effective_gm_ft": 14.38781006405396}, {"breadth_ft": 14.0, "correction_ft": 0.01522493592896175, "effective_gm_ft": 14.384775064071038}, {"breadth_ft": 15.0, "correction_ft": 0.018726005379098364, "effective_gm_ft": 14.3812739946209}, {"breadth_ft": 16.0, "correction_ft": 0.0227264349726776, "effective_gm_ft": 14.377273565027322}, {"breadth_ft": 17.0, "correction_ft": 0.027259515385928964, "effective_gm_ft": 14.37274048461407}, {"breadth_ft": 18.0, "correction_ft": 0.03235853729508197, "effective_gm_ft": 14.367641462704917}, {"breadth_ft": 19.0, "correction_ft": 0.038056791376366125, "effective_gm_ft": 14.361943208623632}, {"breadth_ft": 20.0, "correction_ft": 0.044387568306010934, "effective_gm_ft": 14.355612431693988}, {"breadth_ft": 20.999999999999996, "correction_ft": 0.05138415876024588, "effective_gm_ft": 14.348615841239752}, {"breadth_ft": 22.0, "correction_ft": 0.05907985341530056, "effective_gm_ft": 14.340920146584699}, {"breadth_ft": 23.0, "correction_ft": 0.06750794294740438, "effective_gm_ft": 14.332492057052594}, {"breadth_ft": 24.0, "correction_ft": 0.0767017180327869, "effective_gm_ft": 14.323298281967212}, {"breadth_ft": 25.0, "correction_ft": 0.0866944693476776, "effective_gm_ft": 14.313305530652322}, {"breadth_ft": 26.0, "correction_ft": 0.09751948756830602, "effective_gm_ft": 14.302480512431693}, {"breadth_ft": 27.0, "correction_ft": 0.10921006337090165, "effective_gm_ft": 14.290789936629096}, {"breadth_ft": 28.0, "correction_ft": 0.121799487431694, "effective_gm_ft": 14.278200512568304}, {"breadth_ft": 29.0, "correction_ft": 0.13532105042691256, "effective_gm_ft": 14.264678949573087}, {"breadth_ft": 30.0, "correction_ft": 0.14980804303278691, "effective_gm_ft": 14.250191956967212}, {"breadth_ft": 30.999999999999996, "correction_ft": 0.1652937559255464, "effective_gm_ft": 14.234706244074452}, {"breadth_ft": 31.999999999999996, "correction_ft": 0.1818114797814207, "effective_gm_ft": 14.218188520218577}, {"breadth_ft": 33.0, "correction_ft": 0.19939450527663938, "effective_gm_ft": 14.200605494723359}, {"breadth_ft": 34.0, "correction_ft": 0.2180761230874317, "effective_gm_ft": 14.181923876912567}, {"breadth_ft": 35.0, "correction_ft": 0.23788962389002735, "effective_gm_ft": 14.162110376109972}, {"breadth_ft": 36.0, "correction_ft": 0.2588682983606558, "effective_gm_ft": 14.141131701639344}, {"breadth_ft": 37.0, "correction_ft": 0.2810454371755464, "effective_gm_ft": 14.118954562824452}, {"breadth_ft": 38.0, "correction_ft": 0.304454331010929, "effective_gm_ft": 14.09554566898907}, {"breadth_ft": 39.0, "correction_ft": 0.32912827054303284, "effective_gm_ft": 14.070871729456966}, {"breadth_ft": 40.0, "correction_ft": 0.3551005464480875, "effective_gm_ft": 14.044899453551912}]}</script>
+<script id="changes-data" type="application/json">{"changes": [{"description": "Initial account of the available calculation workflow and its limits of use.", "section": "summary"}, {"description": "Public rectangular-tank calculation and breadth sensitivity establish the initial-stability result.", "section": "example"}, {"description": "Existing regression and benchmark records are distinguished from operational qualification.", "section": "validation"}], "date": "2026-10-21", "document": "navalarchitecture-module-report", "revision": "00"}</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('example-data').textContent);
+  const control = document.getElementById('sample-index');
+  control.max = data.sweep.length - 1;
+  control.value = control.max;
+  const inspect = index => {
+    const p = data.sweep[Number(index)];
+    document.getElementById('chart-readout').textContent =
+      'Public tank sensitivity; rectangular free surface; breadth ' + p.breadth_ft.toFixed(3) +
+      ' ft; effective metacentric height ' + p.effective_gm_ft.toFixed(3) +
+      ' ft; neutral boundary ' + data.derived.neutral_gm_ft.toFixed(3) +
+      ' ft; correction ' + p.correction_ft.toFixed(3) +
+      ' ft. Operational criterion is not supplied.';
+    control.value = index;
+  };
+  control.addEventListener('input', () => inspect(control.value));
+  document.querySelectorAll('.sample').forEach(point => {
+    point.addEventListener('mouseenter', () => inspect(point.dataset.index));
+    point.addEventListener('focus', () => inspect(point.dataset.index));
+  });
+  inspect(control.value);
+  const changes = JSON.parse(document.getElementById('changes-data').textContent);
+  changes.changes.forEach(change => {
+    const item = document.createElement('li');
+    item.textContent = change.description;
+    document.getElementById('changes-list').appendChild(item);
+  });
+  const sections = new Map([...document.querySelectorAll('main > section')].map(section =>
+    [section.id, section.querySelector('h2').textContent]));
+  const select = document.getElementById('comment-section');
+  sections.forEach((title, id) => {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = title;
+    select.appendChild(option);
+  });
+  const digest = document.querySelector('meta[name="report-content-digest"]').content;
+  const state = {document: changes.document, revision: changes.revision, content_digest: digest, comments: []};
+  const message = text => { document.getElementById('comment-message').textContent = text; };
+  const show = () => {
+    const list = document.getElementById('comment-list');
+    list.replaceChildren();
+    state.comments.forEach(comment => {
+      const item = document.createElement('li');
+      item.textContent = sections.get(comment.section) + ': ' + comment.text;
+      list.appendChild(item);
+    });
+  };
+  const validate = incoming => {
+    if (incoming.document !== state.document || incoming.revision !== state.revision ||
+        incoming.content_digest !== state.content_digest || !Array.isArray(incoming.comments) ||
+        incoming.comments.some(c => !c || !sections.has(c.section) ||
+          typeof c.text !== 'string' || !c.text.trim() || c.text.length > 10000))
+      throw new Error('The comments do not match this document or contain invalid entries.');
+  };
+  document.getElementById('comment-add').onclick = () => {
+    const input = document.getElementById('comment-text');
+    const text = input.value.trim();
+    if (!text) return message('Enter a comment before adding it.');
+    state.comments.push({section: select.value, text});
+    input.value = '';
+    show();
+    message('Comment added to this open document. Save comments to retain them.');
+  };
+  document.getElementById('comment-save').onclick = async () => {
+    try {
+      validate(state);
+      const text = JSON.stringify(state, null, 2) + '\n';
+      if (typeof window.showSaveFilePicker === 'function') {
+        const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+          types: [{description: 'Report comments', accept: {'application/json': ['.json']}}]});
+        const file = await handle.createWritable();
+        await file.write(text);
+        await file.close();
+        if (await (await handle.getFile()).text() !== text) throw new Error('Saved comments differ on read-back.');
+        message('Comments saved and read back. Keep the JSON beside this HTML.');
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'report.comments.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message('Comment download requested. Place it beside this HTML, then reload it to check the saved copy.');
+      }
+    } catch (error) { message(error.message); }
+  };
+  document.getElementById('comment-load').onchange = async event => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.size > 1000000) throw new Error('The comments file exceeds the supported size.');
+      const incoming = JSON.parse(await file.text());
+      validate(incoming);
+      incoming.comments.forEach(comment => {
+        if (!state.comments.some(c => c.section === comment.section && c.text === comment.text))
+          state.comments.push({section: comment.section, text: comment.text});
+      });
+      show();
+      message('Saved comments reloaded and checked against this document.');
+    } catch (error) { message(error.message); }
+    event.target.value = '';
+  };
+})();
+</script>
+</body>
+</html>

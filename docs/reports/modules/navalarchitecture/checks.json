@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-21",
+  "scope": "Naval architecture tests and report sources",
+  "command": "python -m pytest tests/naval_architecture -q -o addopts='' --tb=short",
+  "source_digest": "444a88963ae8c149b81f845ec7e1624d132cc54451e402a357ca6f03a4e2339d",
+  "tests": 1282,
+  "passed": 1271,
+  "failed": 0,
+  "skipped": 10,
+  "expected_failures": 1,
+  "qualification": "Software checks; no operational stability acceptance"
+}
