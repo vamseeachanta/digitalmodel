@@ -19,7 +19,6 @@ permissions:
 
 jobs:
   quality-gates-aggregate:
-    timeout-minutes: 15
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
@@ -33,7 +32,6 @@ jobs:
 
   quality-gates:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    timeout-minutes: 60
     name: Quality Gates (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
@@ -136,8 +134,13 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event_name == 'workflow_dispatch' && 'origin/main' || github.event.before }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            REGISTER_BASE=$(git merge-base origin/main HEAD)
+          fi
+          python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
       - name: Create reports directory
         run: mkdir -p reports

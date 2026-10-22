@@ -393,7 +393,7 @@ def test_base_consumers_use_local_tip() -> None:
                     if step.get("name") == "Check engineering register changes")
     assert register["env"]["REGISTER_BASE"] == (
         "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || "
-        "github.event_name == 'workflow_dispatch' && 'origin/main' || github.event.before }}"
+        "github.event.before }}"
     )
 
 
@@ -411,7 +411,9 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert set(triggers) == {"schedule", "workflow_dispatch"}
+    assert triggers["push"]["branches"] == ["main"]
+    assert "pull_request" not in triggers
+    assert "workflow_dispatch" in triggers
 
 
 @pytest.mark.parametrize("filename,job_id", (
@@ -429,14 +431,13 @@ def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id:
     assert int(depth) == 0, "Subsea must fetch history to verify the pinned manifest commit"
 
 
-@pytest.mark.parametrize("event", ("schedule", "workflow_dispatch"))
-def test_full_sweep_replaces_older_sweep_on_same_ref(event: str) -> None:
-    """Scheduled and manual sweeps replace older work for the same workflow/ref."""
+@pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
+def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
+    """Every sweep keeps its own group and cannot cancel another sweep."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
     groups = []
     for run_id in (101, 102):
         context = {
-            "github.workflow": load_workflow("full-matrix-sweep.yml")["name"],
             "github.ref": "refs/heads/main",
             "github.event_name": event,
             "github.run_id": run_id,
@@ -448,8 +449,11 @@ def test_full_sweep_replaces_older_sweep_on_same_ref(event: str) -> None:
                 concurrency["group"],
             )
         )
-    assert groups == ["Full Matrix Sweep-refs/heads/main"] * 2
-    assert concurrency["cancel-in-progress"] is True
+    assert groups == [
+        "full-matrix-sweep-refs/heads/main-101",
+        "full-matrix-sweep-refs/heads/main-102",
+    ]
+    assert concurrency["cancel-in-progress"] is False
 
 
 def test_full_sweep_bounds_each_shard() -> None:
@@ -514,3 +518,62 @@ def test_repo_structure_cancels_superseded_runs(
     )
     assert group == expected
     assert concurrency["cancel-in-progress"] is True
+
+
+@pytest.mark.parametrize("event,base,merge_base", [
+    ("pull_request", "current-tip", None),
+    ("push", "push-before", None),
+    ("workflow_dispatch", "", "shared-ancestor"),
+    ("workflow_dispatch", "", "unchanged-head"),
+    ("workflow_dispatch", "", None),
+])
+def test_register_diff_executes_with_event_base(event, base, merge_base, tmp_path):
+    """Dispatch scans from the shared ancestor and fails if it is unavailable.
+
+    An unchanged main dispatch has its own HEAD as the shared ancestor, so the
+    resulting diff is empty. Pull requests and pushes retain their event bases.
+    """
+    import json
+    import sys
+
+    workflow = load_workflow("quality-gates.yml")
+    step = next(step for step in workflow["jobs"]["quality-gates"]["steps"]
+                if step.get("name") == "Check engineering register changes")
+    scripts = {
+        "git": '''import os, sys
+from pathlib import Path
+assert sys.argv[1:] == ["merge-base", "origin/main", "HEAD"]
+Path(os.environ["GIT_CALLED"]).write_text("called", encoding="utf-8")
+value = os.environ["MERGE_BASE"]
+if not value:
+    sys.exit(1)
+print(value)
+''',
+        "python": '''import json, os, sys
+from pathlib import Path
+Path(os.environ["REGISTER_ARGS"]).write_text(json.dumps(sys.argv[1:]), encoding="utf-8")
+''',
+    }
+    for name, source in scripts.items():
+        script = tmp_path / name
+        script.write_text(f"#!{sys.executable}\n" + source, encoding="utf-8", newline="\n")
+        script.chmod(0o755)
+    arguments, git_called = tmp_path / "arguments.json", tmp_path / "git-called"
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    environment.update(PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
+                       EVENT_NAME=event, REGISTER_BASE=base, MERGE_BASE=merge_base or "",
+                       REGISTER_ARGS=str(arguments), GIT_CALLED=str(git_called))
+    completed = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", step["run"]],
+                               env=environment, capture_output=True, text=True, timeout=10)
+    dispatch = event == "workflow_dispatch"
+    assert git_called.exists() is dispatch
+    if dispatch and merge_base is None:
+        assert completed.returncode != 0
+        assert not arguments.exists()
+    else:
+        assert completed.returncode == 0, completed.stderr
+        assert json.loads(arguments.read_text(encoding="utf-8")) == [
+            "scripts/enforcement/check-engineering-register.py", "--diff",
+            merge_base if dispatch else base,
+        ]

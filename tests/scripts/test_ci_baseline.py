@@ -470,14 +470,14 @@ def test_selection_falls_back_when_newest_has_no_baseline(newest, expected):
 
 
 def test_selection_does_not_fall_back_to_stale_sweep():
-    old = sweep(updated_at=(NOW - timedelta(hours=31)).isoformat())
+    old = sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())
     assert ci.select_baseline_run([sweep(101, conclusion="cancelled"), old],
                                   [artifact()], "example/repository", NOW) is None
 
 
 @pytest.mark.parametrize("event", ["schedule", "workflow_dispatch"])
-@pytest.mark.parametrize("age,accepted", [(25, True), (30, True), (30.1, False), (-1, False)])
-def test_sweep_baseline_allows_daily_schedule_margin(event, age, accepted):
+@pytest.mark.parametrize("age,accepted", [(23, True), (24, True), (24.1, False), (-1, False)])
+def test_sweep_baseline_preserves_existing_freshness_limit(event, age, accepted):
     row = sweep(event=event, updated_at=(NOW - timedelta(hours=age)).isoformat())
     selected = ci.select_baseline_run([row], [artifact()], "example/repository", NOW)
     assert (selected is not None) is accepted
@@ -563,7 +563,7 @@ def test_main_execution_must_also_be_proven(tmp_path, change):
 
 def test_reader_stale_only_fallback_fails_closed(tmp_path, monkeypatch):
     runs = [sweep(101, conclusion="cancelled"),
-            sweep(updated_at=(NOW - timedelta(hours=31)).isoformat())]
+            sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())]
     mock_download(monkeypatch, runs, [artifact()])
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW) is False
 
@@ -847,8 +847,8 @@ def test_main_run_evidence_is_accepted(monkeypatch, event):
     assert ci.verified_evidence(EVIDENCE_URL, "example") is True
 
 
-def test_reader_accepts_manual_sweep_with_schedule_margin(tmp_path, monkeypatch):
-    row = sweep(event="workflow_dispatch", updated_at=(NOW - timedelta(hours=25)).isoformat())
+def test_reader_accepts_fresh_manual_main_sweep(tmp_path, monkeypatch):
+    row = sweep(event="workflow_dispatch", updated_at=(NOW - timedelta(hours=23)).isoformat())
     mock_download(monkeypatch, [row], [artifact()], verified=row)
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
 
@@ -894,3 +894,15 @@ def test_register_runtime_dependency_is_pinned(name):
     workflow = (ROOT / ".github/workflows" / name).read_text()
     assert "--with pyyaml " not in workflow
     assert "--with pyyaml==6.0.2 " in workflow
+
+
+def test_compare_cli_preserves_existing_freshness_default(tmp_path, monkeypatch):
+    captured = []
+    monkeypatch.setattr(ci, "compare_results", lambda *args: captured.append(args[2]) or 0)
+    assert ci.main([
+        "compare", "--baseline", str(tmp_path / "baseline.json"),
+        "--results", str(tmp_path / "results"),
+        "--summary", str(tmp_path / "summary.md"),
+        "--verdict", str(tmp_path / "verdict.json"),
+    ]) == 0
+    assert captured == [24]

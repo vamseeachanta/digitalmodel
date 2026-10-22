@@ -2,7 +2,7 @@ name: Content store tests
 
 "on":
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - ".gitignore"
       - ".github/workflows/store-data-tests.yml"
@@ -18,14 +18,9 @@ name: Content store tests
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   content-store:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

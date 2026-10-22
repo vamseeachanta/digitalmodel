@@ -370,7 +370,7 @@ def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
 
 
 def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, Any]],
-                        repository: str, now: datetime, max_age: float = 30) -> dict[str, Any] | None:
+                        repository: str, now: datetime, max_age: float = 24) -> dict[str, Any] | None:
     """Stop at the newest eligible result; missing evidence forbids fallback."""
     for run in sorted(runs, key=lambda row: row["id"], reverse=True):
         if not is_main_sweep(run, repository) or run.get("conclusion") == "cancelled":
@@ -510,7 +510,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_argument("--baseline", type=Path, required=True)
     sub.add_argument("--results", type=Path, required=True)
     sub.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))
-    sub.add_argument("--max-age-hours", type=float, default=30)
+    sub.add_argument("--max-age-hours", type=float, default=24)
     sub.add_argument("--summary", type=Path, required=True)
     sub.add_argument("--verdict", type=Path, required=True)
     sub.add_argument("--now", type=instant)

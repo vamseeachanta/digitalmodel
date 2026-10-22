@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Pin workflow cost controls and exercise mutations without editing live files."""
+"""Pin draft guards and preserve the existing sweep and runtime policies."""
 
 import json
 import os
@@ -23,33 +23,47 @@ PR_WORKFLOWS = {
 DRAFT_GUARD = (
     "github.event_name != 'pull_request' || github.event.pull_request.draft == false"
 )
-PR_TYPES = ["opened", "synchronize", "reopened", "edited", "ready_for_review"]
+PR_TYPES = {
+    filename: ["opened", "synchronize", "reopened", *(
+        ["edited"] if filename in {
+            "gmsh-meshing-tests.yml", "parametric-atlas-drift.yml",
+            "quality-gates-by-domain.yml", "quality-gates.yml",
+        } else []
+    ), "ready_for_review"]
+    for filename in PR_WORKFLOWS
+}
 AGGREGATES = {
     "quality-gates-by-domain.yml": "domain-tests-required",
     "quality-gates.yml": "quality-gates-aggregate",
 }
+# Preserve the two pre-existing budgets; new limits require separate evidence.
 TIMEOUTS = {
-    "capability-card-links.yml": {"card-links": 15},
-    "docs.yml": {"docs": 60},
-    "full-matrix-sweep.yml": {"full-matrix": 15, "sweep-tests": 40, "sweep-result": 15},
+    "full-matrix-sweep.yml": {"sweep-tests": 40},
     "gmsh-meshing-tests.yml": {"focused-tests": 20},
-    "pages.yml": {"build": 60, "deploy": 15},
-    "parametric-atlas-drift.yml": {"atlas-drift": 15},
-    "publish.yml": {"publish": 120},
-    "quality-gates-by-domain.yml": {
-        "detect-domains": 15, "ci-harness-tests": 60,
-        "domain-tests": 60, "domain-tests-required": 15,
-    },
-    "quality-gates.yml": {"quality-gates": 60, "quality-gates-aggregate": 15},
-    "repo-structure.yml": {"repo-structure": 15},
-    "store-data-tests.yml": {"content-store": 60},
-    "workflow-automation-tests.yml": {"test": 60},
 }
 RUN_GROUP = (
     "${{ github.workflow }}-${{ github.event_name == 'pull_request' && "
     "format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}"
 )
 PR_CANCEL = "${{ github.event_name == 'pull_request' }}"
+CONCURRENCY = {
+    filename: {"group": RUN_GROUP, "cancel-in-progress": PR_CANCEL}
+    for filename in {
+        "quality-gates-by-domain.yml", "quality-gates.yml",
+        "gmsh-meshing-tests.yml", "parametric-atlas-drift.yml",
+    }
+}
+CONCURRENCY.update({
+    "pages.yml": {"group": "pages", "cancel-in-progress": "true"},
+    "repo-structure.yml": {
+        "group": "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+        "cancel-in-progress": "true",
+    },
+    "full-matrix-sweep.yml": {
+        "group": "full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}",
+        "cancel-in-progress": "false",
+    },
+})
 
 
 class UniqueLoader(yaml.BaseLoader):
@@ -71,20 +85,20 @@ def read_workflows():
 
 def assert_policy(workflows):
     """Assert complete expressions so an added OR cannot defeat a draft guard."""
-    assert set(workflows) == set(SNAPSHOT) == set(TIMEOUTS)
+    assert set(workflows) == set(SNAPSHOT)
     for filename, workflow in workflows.items():
         jobs = workflow["jobs"]
         assert {key: job.get("name", key) for key, job in jobs.items()} == SNAPSHOT[filename]
-        assert set(jobs) == set(TIMEOUTS[filename])
         for job_id, job in jobs.items():
-            assert job.get("timeout-minutes") == str(TIMEOUTS[filename][job_id])
+            timeout = TIMEOUTS.get(filename, {}).get(job_id)
+            assert job.get("timeout-minutes") == (str(timeout) if timeout else None)
         events = workflow["on"]
         assert isinstance(events, dict), "explicit event mappings are required"
         assert "pull_request_target" not in events
         assert ("pull_request" in events) == (filename in PR_WORKFLOWS)
         assert "workflow_dispatch" in events
         if filename in PR_WORKFLOWS:
-            assert events["pull_request"]["types"] == PR_TYPES
+            assert events["pull_request"]["types"] == PR_TYPES[filename]
             for job_id, job in jobs.items():
                 if job_id == AGGREGATES.get(filename):
                     assert job.get("if") == "always()"
@@ -95,28 +109,16 @@ def assert_policy(workflows):
                     )
                 else:
                     assert job.get("if") == DRAFT_GUARD
-        concurrency = workflow["concurrency"]
-        if filename in AGGREGATES:
-            # Each push uses event.before; replacing a push could lose its diff.
-            assert concurrency == {"group": RUN_GROUP, "cancel-in-progress": PR_CANCEL}
-        elif filename == "pages.yml":
-            assert concurrency == {"group": "pages", "cancel-in-progress": "true"}
-        elif filename == "publish.yml":
-            assert concurrency == {"group": "publish", "cancel-in-progress": "false"}
-        elif filename == "repo-structure.yml":
-            assert concurrency == {
-                "group": "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
-                "cancel-in-progress": "true",
-            }
-        elif filename == "full-matrix-sweep.yml":
-            assert concurrency == {
-                "group": "${{ github.workflow }}-${{ github.ref }}", "cancel-in-progress": "true",
-            }
-        else:
-            assert concurrency == {"group": RUN_GROUP, "cancel-in-progress": PR_CANCEL}
+        assert workflow.get("concurrency") == CONCURRENCY.get(filename)
 
     sweep = workflows["full-matrix-sweep.yml"]
-    assert sweep["on"] == {"schedule": [{"cron": "17 7 * * *"}], "workflow_dispatch": ""}
+    assert sweep["on"] == {
+        "push": {"branches": ["main"]},
+        "schedule": [{"cron": "17 7 * * *"}], "workflow_dispatch": "",
+    }
+    assert workflows["workflow-automation-tests.yml"]["on"]["push"].get("branches") == [
+        "main", "develop",
+    ]
     builder = next(step for step in sweep["jobs"]["full-matrix"]["steps"]
                    if step.get("id") == "matrix")
     assert "--mode full" in builder["run"] and "--mode touched" not in builder["run"]
@@ -134,7 +136,13 @@ def assert_policy(workflows):
                     if step.get("name") == "Check engineering register changes")
     assert register["env"]["REGISTER_BASE"] == (
         "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || "
-        "github.event_name == 'workflow_dispatch' && 'origin/main' || github.event.before }}"
+        "github.event.before }}"
+    )
+    assert register["env"]["EVENT_NAME"] == "${{ github.event_name }}"
+    assert 'REGISTER_BASE=$(git merge-base origin/main HEAD)' in register["run"]
+    assert 'python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"' in register["run"]
+    assert "--max-age-hours 24" in "\n".join(
+        step.get("run", "") for step in domains["jobs"]["domain-tests-required"]["steps"]
     )
 
 
@@ -148,7 +156,7 @@ def test_duplicate_key_negative_controls(filename, position):
     """Mutate raw YAML at three depths; parsing must reject identical keys too."""
     text = (WORKFLOWS / filename).read_text()
     if position == "top":
-        text += "\nconcurrency:\n  group: duplicate\n"
+        text += "\nname: duplicate\n"
     elif position == "job":
         job_id = next(iter(SNAPSHOT[filename]))
         text = text.replace(f"  {job_id}:\n", f"  {job_id}:\n    runs-on: duplicate\n", 1)
@@ -172,7 +180,11 @@ def test_job_inventory_negative_controls(filename, job_id, mutation):
     elif mutation == "name":
         workflows[filename]["jobs"][job_id]["name"] = "renamed"
     else:
-        workflows[filename]["jobs"][job_id].pop("timeout-minutes", None)
+        job = workflows[filename]["jobs"][job_id]
+        if "timeout-minutes" in job:
+            del job["timeout-minutes"]
+        else:
+            job["timeout-minutes"] = "15"
     with pytest.raises(AssertionError):
         assert_policy(workflows)
 
@@ -185,7 +197,11 @@ def test_draft_policy_negative_controls(filename, mutation):
     workflow = workflows[filename]
     if mutation.endswith("event"):
         event = "ready_for_review" if mutation == "ready-event" else "edited"
-        workflow["on"]["pull_request"]["types"].remove(event)
+        types = workflow["on"]["pull_request"]["types"]
+        if event in types:
+            types.remove(event)
+        else:
+            types.append(event)
     elif mutation == "dispatch":
         del workflow["on"]["workflow_dispatch"]
     with pytest.raises(AssertionError):
@@ -229,7 +245,7 @@ def test_required_gate_negative_controls(filename, mutation):
 def test_deployment_group_negative_controls(filename, group):
     workflows = read_workflows()
     assert_policy(workflows)
-    workflows[filename]["concurrency"]["group"] = group
+    workflows[filename].setdefault("concurrency", {})["group"] = group
     with pytest.raises(AssertionError):
         assert_policy(workflows)
 
@@ -237,20 +253,21 @@ def test_deployment_group_negative_controls(filename, group):
 @pytest.mark.parametrize("mutation", [
     "sweep-push", "sweep-mode", "sweep-group", "sweep-cancel", "repo-group",
     "stale-pr-base", "missing-manual-base", "remove-workflow", "target-event", "list-events",
+    "automation-branch-push", "baseline-age",
 ])
 def test_routing_negative_controls(mutation):
     workflows = read_workflows()
     assert_policy(workflows)
     sweep = workflows["full-matrix-sweep.yml"]
     if mutation == "sweep-push":
-        sweep["on"]["push"] = {"branches": ["main"]}
+        del sweep["on"]["push"]
     elif mutation == "sweep-mode":
         step = next(step for step in sweep["jobs"]["full-matrix"]["steps"] if step.get("id") == "matrix")
         step["run"] = step["run"].replace("--mode full", "--mode touched")
     elif mutation == "sweep-group":
-        sweep["concurrency"]["group"] += "-${{ github.run_id }}"
+        sweep["concurrency"]["group"] = "full-matrix-sweep-${{ github.ref }}"
     elif mutation == "sweep-cancel":
-        sweep["concurrency"]["cancel-in-progress"] = "false"
+        sweep["concurrency"]["cancel-in-progress"] = "true"
     elif mutation == "repo-group":
         workflows["repo-structure.yml"]["concurrency"]["group"] = "changed"
     elif mutation == "stale-pr-base":
@@ -260,7 +277,14 @@ def test_routing_negative_controls(mutation):
     elif mutation == "missing-manual-base":
         step = next(step for step in workflows["quality-gates.yml"]["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-        step["env"]["REGISTER_BASE"] = "${{ github.event.before }}"
+        step["run"] = step["run"].replace("git merge-base origin/main HEAD", "echo origin/main")
+    elif mutation == "automation-branch-push":
+        del workflows["workflow-automation-tests.yml"]["on"]["push"]["branches"]
+    elif mutation == "baseline-age":
+        job = workflows["quality-gates-by-domain.yml"]["jobs"]["domain-tests-required"]
+        for step in job["steps"]:
+            if "run" in step:
+                step["run"] = step["run"].replace("--max-age-hours 24", "--max-age-hours 30")
     elif mutation == "remove-workflow":
         del workflows["docs.yml"]
     elif mutation == "target-event":
