@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Sampled acoustic pulse timing, its analytical example, and the evidence required for inspection use.">
+<title>Nondestructive evaluation module analysis</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+</style>
+<style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+<style>
+.hs-doc svg{display:block;width:100%;height:auto}
+.hs-doc svg [hidden]{display:none}
+.hs-doc circle{fill:var(--brand);stroke:var(--panel);stroke-width:2;cursor:crosshair}
+.hs-doc circle:focus,.hs-doc circle:hover{fill:var(--caution);stroke:var(--ink)}
+.hs-doc textarea{display:block;width:100%;min-height:6em}
+.hs-doc output{display:block;min-height:3em;text-align:left}
+.hs-doc pre,.hs-doc code{white-space:pre-wrap;overflow-wrap:anywhere}
+.hs-doc caption{caption-side:bottom;text-align:left;color:var(--mut)}
+.hs-doc .review-controls{margin-top:2em;padding:1em;border:1px solid var(--line)}
+@media print{.review-controls,button,select{display:none}}
+</style></head><body class="hs-doc"><div class="wrap">
+<header><p class="kicker">Acoustic inspection</p>
+<h1>Nondestructive evaluation module analysis</h1>
+<p>Draft for client review</p><p class="sub">22 October 2026 · Revision A</p>
+<p class="source">Prepared by: analysis team. Checked by: pending. Approved by: pending.</p>
+</header>
+<nav aria-label="Contents"><p>Contents</p><ol><li><a href="#s1">1. Executive Summary</a></li><li><a href="#s2">2. Introduction</a></li><li><a href="#s3">3. Summary of Results</a></li><li><a href="#s4">4. Data and Basis</a></li><li><a href="#s5">5. Methodology</a></li><li><a href="#s6">6. Worked Example</a></li><li><a href="#s7">7. Validation</a></li><li><a href="#s8">8. Findings and Recommendations</a></li><li><a href="#s9">9. Appendices and References</a></li><li><a href="#s10">10. Not Covered</a></li></ol></nav>
+<main>
+<section id="s1"><h2>1. Executive Summary</h2>
+<p>The nondestructive evaluation module is a set of acoustic data utilities and a sampled pulse-timing
+function. Analysis is performed to determine which timing results are supported by the available
+evidence, and the key results are summarized below.</p>
+<ul><li>Use the timing function to identify the unique largest absolute pressure sample in an isolated pulse.
+<ul><li>The synthetic example returns <span data-metric="positive.peak_time_s">3.0</span> s for either polarity, matching the
+constant-speed target of <span data-metric="positive.reference_peak_time_s">3.0</span> s with a <span data-metric="positive.difference_percent">0.0</span> %
+difference relative to that target. This example establishes the sampled peak convention only.
+<a href="#s6">Worked example</a></li></ul></li>
+<li>Supply an inspection basis before interpreting the time as a material or defect measurement.
+<ul><li>Measured accuracy and inspection acceptance remain NOT_EVALUATED because calibration records,
+material properties and an acceptance criterion are absent from the example.
+<a href="#s8">Findings and recommendations</a></li></ul></li></ul>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
+<tbody><tr><td>A</td><td>22 October 2026</td><td>Initial analysis to distinguish demonstrated pulse timing
+from the evidence required for inspection use.</td></tr></tbody>
+<caption>Revision history for this analysis.</caption></table></section>
+
+<section id="s2"><h2>2. Introduction</h2>
+<p>The acoustic timing capability and its data-loading interface are described for an inspection
+engineer selecting tools for a calculation. The available analytical evidence is examined before
+any interpretation of the result as a physical measurement.</p>
+<p>Nondestructive evaluation, abbreviated NDE, examines a component without intentional damage.
+The present calculation accepts a receiver trace; it does not simulate a transducer or classify a
+defect. The acoustic data loader is described separately because its tests use substitute datasets.
+<a href="#ref-A">[A]</a> <a href="#ref-C">[C]</a> <a href="#ref-D">[D]</a></p>
+</section>
+
+<section id="s3"><h2>3. Summary of Results</h2>
+<p>The sampled receiver pressure is displayed against time, and its peak is compared with a
+constant-speed analytical target. Positive and negative pulses are evaluated using the same
+timestamps and the same magnitude convention.</p>
+<p>The returned time is <span data-metric="positive.peak_time_s">3.0</span> s for either polarity. The target is
+<span data-metric="positive.reference_peak_time_s">3.0</span> s, and the difference is <span data-metric="positive.difference_percent">0.0</span> % of the target.
+This agreement is specific to a pulse whose peak is sampled exactly. <a href="#ref-B">[B]</a></p>
+<figure id="pulse-figure"><label for="polarity">Pulse polarity</label>
+<select id="polarity"><option value="positive">Positive pulse</option>
+<option value="negative">Negative pulse</option></select>
+<svg viewBox="0 0 800 350" role="group" aria-label="Receiver pressure against time">
+<path d="M70 30V285H735 M70 160H735" fill="none" stroke="currentColor"/>
+<path d="M460.000 30V285" stroke="var(--caution)" stroke-dasharray="6 4"/>
+<text x="400" y="342" text-anchor="middle">Receiver time (s)</text>
+<text transform="translate(18 160) rotate(-90)" text-anchor="middle">Pressure (relative units)</text>
+<text x="468.000" y="28">Analytical peak target</text>
+<text x="62" y="280.000" text-anchor="end">−1.0</text><text x="62" y="165.000" text-anchor="end">0</text><text x="62" y="50.000" text-anchor="end">1.0</text><text x="70.000" y="307" text-anchor="middle">0.0</text><text x="200.000" y="307" text-anchor="middle">1.0</text><text x="330.000" y="307" text-anchor="middle">2.0</text><text x="460.000" y="307" text-anchor="middle">3.0</text><text x="590.000" y="307" text-anchor="middle">4.0</text><text x="720.000" y="307" text-anchor="middle">5.0</text><g id="trace-positive"><polyline points="70.000,160.000 200.000,160.000 330.000,157.894 460.000,45.000 590.000,157.894 720.000,160.000" fill="none" stroke="currentColor"/><circle data-case="positive" data-index="0" data-time="0.0" data-pressure="2.3195228302435696e-16" cx="70.000" cy="160.000" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 0.0 s; demand: 2.32e−16 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 0.0 s; demand: 2.32e−16 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="positive" data-index="1" data-time="1.0" data-pressure="1.1253517471925912e-07" cx="200.000" cy="160.000" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 1.0 s; demand: 1.13e−07 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 1.0 s; demand: 1.13e−07 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="positive" data-index="2" data-time="2.0" data-pressure="0.01831563888873418" cx="330.000" cy="157.894" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 2.0 s; demand: 0.0183 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 2.0 s; demand: 0.0183 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="positive" data-index="3" data-time="3.0" data-pressure="1.0" cx="460.000" cy="45.000" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 3.0 s; demand: 1.0 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 3.0 s; demand: 1.0 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="positive" data-index="4" data-time="4.0" data-pressure="0.01831563888873418" cx="590.000" cy="157.894" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 4.0 s; demand: 0.0183 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 4.0 s; demand: 0.0183 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="positive" data-index="5" data-time="5.0" data-pressure="1.1253517471925912e-07" cx="720.000" cy="160.000" r="6" tabindex="0" aria-label="Case: positive pulse; component: receiver; time: 5.0 s; demand: 1.13e−07 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: positive pulse; component: receiver; time: 5.0 s; demand: 1.13e−07 relative units; limit: not specified; analytical target: 3.0 s</title></circle></g><g id="trace-negative" hidden=""><polyline points="70.000,160.000 200.000,160.000 330.000,162.106 460.000,275.000 590.000,162.106 720.000,160.000" fill="none" stroke="currentColor"/><circle data-case="negative" data-index="0" data-time="0.0" data-pressure="-2.3195228302435696e-16" cx="70.000" cy="160.000" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 0.0 s; demand: −2.32e−16 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 0.0 s; demand: −2.32e−16 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="negative" data-index="1" data-time="1.0" data-pressure="-1.1253517471925912e-07" cx="200.000" cy="160.000" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 1.0 s; demand: −1.13e−07 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 1.0 s; demand: −1.13e−07 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="negative" data-index="2" data-time="2.0" data-pressure="-0.01831563888873418" cx="330.000" cy="162.106" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 2.0 s; demand: −0.0183 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 2.0 s; demand: −0.0183 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="negative" data-index="3" data-time="3.0" data-pressure="-1.0" cx="460.000" cy="275.000" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 3.0 s; demand: −1.0 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 3.0 s; demand: −1.0 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="negative" data-index="4" data-time="4.0" data-pressure="-0.01831563888873418" cx="590.000" cy="162.106" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 4.0 s; demand: −0.0183 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 4.0 s; demand: −0.0183 relative units; limit: not specified; analytical target: 3.0 s</title></circle><circle data-case="negative" data-index="5" data-time="5.0" data-pressure="-1.1253517471925912e-07" cx="720.000" cy="160.000" r="6" tabindex="0" aria-label="Case: negative pulse; component: receiver; time: 5.0 s; demand: −1.13e−07 relative units; limit: not specified; analytical target: 3.0 s"><title>Case: negative pulse; component: receiver; time: 5.0 s; demand: −1.13e−07 relative units; limit: not specified; analytical target: 3.0 s</title></circle></g></svg>
+<output id="pulse-detail" aria-live="polite">Point to a sample or use the tab key for its values.</output>
+<figcaption>Receiver pressure samples and the analytical peak-time target. The line joins samples;
+it does not represent interpolation by the timing function. No inspection acceptance limit is supplied.
+<a href="#ref-B">[B]</a></figcaption></figure>
+</section>
+
+<section id="s4"><h2>4. Data and Basis</h2>
+<p>The public synthetic example is used as the calculation basis. Its parameters are numerical
+test inputs, and no measured material or inspection acceptance data are assigned.</p>
+<h3>4.1 Inputs and outputs</h3>
+<p>The timing function is supplied with finite timestamps in seconds and signed, baseline-corrected
+pressure samples in consistent units. The sequences are required to be nonempty and equal in
+length; timestamps are required to increase strictly. The pressure requires a nonzero, unique
+absolute maximum. A timestamp in seconds is returned. Invalid or ambiguous input raises a value
+error. <a href="#ref-A">[A]</a></p>
+<p>The loader accepts a dataset variant and a requested sample count. Its returned mapping contains
+the collected frames, variant, dataset name, actual count and attribution. The frames are passed
+through without a receiver-coordinate or pressure-unit conversion. The optional dataset package
+is required for access to real data. The requested count is not validated; reject non-positive
+requests before calling the loader. <a href="#ref-C">[C]</a></p>
+<h3>4.2 Analytical basis and criteria</h3>
+<p>For an isolated, nondispersive pulse emitted with its peak at the time origin, the ideal peak time
+is the one-way travel distance divided by constant speed. This relation is obtained by rearranging
+the velocity definition in College Physics, second edition, Time, Velocity, and Speed.
+<a href="#ref-G">[G]</a></p>
+<div class="eq">t<sub>reference</sub> = L / c</div>
+<p>The symbol L denotes the one-way path length in metres; c denotes the assumed constant speed
+in metres per second; t<sub>reference</sub> denotes the analytical peak time in seconds.
+The example supplies L = <span data-metric="distance">6.0</span> m and c = <span data-metric="speed">2.0</span> m/s. The speed is a numerical fixture value,
+not a sound speed assigned to any material. <a href="#ref-B">[B]</a></p>
+<p>The target benchmark is agreement with the analytical peak when that peak lies on the sample
+grid. The rationale is to check time selection independently of material properties. This is an
+algorithm check, not an engineering acceptance criterion. The inspection limit remains NOT_EVALUATED.
+<a href="#ref-A">[A]</a> <a href="#ref-B">[B]</a></p>
+</section>
+
+<section id="s5"><h2>5. Methodology</h2>
+<p>The timestamp of the unique largest absolute sample is selected by the timing function.
+The straight propagation path is used only to provide an independent analytical comparison.</p>
+<div class="eq">k = arg max<sub>i</sub> |p<sub>i</sub>|; t<sub>peak</sub> = t<sub>k</sub></div>
+<p>The index i identifies a sample; p<sub>i</sub> is its signed pressure; k is the unique index with
+the largest magnitude; t<sub>i</sub> is its timestamp in seconds; t<sub>peak</sub> is the returned
+timestamp. Taking the absolute value makes the result independent of polarity. This is a sampled
+peak convention, not a first-arrival detector. <a href="#ref-A">[A]</a></p>
+<p>The schematic identifies the source, the ideal one-way path and the receiver record.</p>
+<figure><svg viewBox="0 0 800 240" role="img" aria-labelledby="scheme-title scheme-desc">
+<title id="scheme-title">Ideal source-to-receiver acoustic timing path</title>
+<desc id="scheme-desc">A cylindrical emitter and a receiver face one another across a straight path.
+The source imposes a pulse and the receiver records pressure against time. This is a numerical
+idealization with no specified hardware dimensions.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+<path d="M0 0L10 5L0 10Z" fill="currentColor"/></marker></defs>
+<g fill="var(--panel-2)" stroke="var(--brand)" stroke-width="2">
+<path d="M70 75Q90 60 110 75V145Q90 160 70 145Z"/>
+<ellipse cx="110" cy="110" rx="12" ry="35"/>
+<path d="M670 75Q690 60 710 75V145Q690 160 670 145Z"/>
+<ellipse cx="670" cy="110" rx="12" ry="35"/></g>
+<path d="M150 110H630" stroke="var(--brand)" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M220 90Q245 110 220 130M270 80Q305 110 270 140M330 70Q375 110 330 150"
+fill="none" stroke="var(--accent)"/>
+<g fill="currentColor" text-anchor="middle"><text x="100" y="45">Emitter: prescribed pulse</text>
+<text x="670" y="45">Receiver: sampled pressure</text>
+<text x="395" y="185">One-way distance L; constant speed c</text>
+<text x="395" y="215">No reflections, attenuation or material model is solved</text></g>
+</svg><figcaption>Ideal timing arrangement used for the synthetic comparison; hardware dimensions
+and boundary reflections are not represented. <a href="#ref-B">[B]</a></figcaption></figure>
+<p>The example's Gaussian is evaluated at the recorded sample times. In dimensionally explicit form,
+its exponent is the negative square of (L − ct) divided by a length scale, with relative amplitude
+and length scale set by the synthetic fixture. These choices describe the test waveform only.
+<a href="#ref-B">[B]</a></p>
+<p>The difference is calculated as the returned time minus the reference time, divided by the reference
+time and expressed as a percentage. A different emission reference requires subtraction of that
+reference from the returned timestamp. <a href="#ref-A">[A]</a> <a href="#ref-G">[G]</a></p>
+</section>
+
+<section id="s6"><h2>6. Worked Example</h2>
+<p>The public synthetic pulse example is evaluated by calling the timing function for both
+polarities. Every input and result below is inserted from that calculation.</p>
+<p>The one-way distance is <span data-metric="distance">6.0</span> m and the numerical speed is <span data-metric="speed">2.0</span> m/s. The record contains
+<span data-metric="samples">6</span> samples from <span data-metric="start">0.0</span> s to <span data-metric="end">5.0</span> s. The Gaussian exponent has power <span data-metric="power">2</span>; these are
+fixture inputs rather than engineering coefficients. <a href="#ref-B">[B]</a></p>
+<p>The positive pulse returns <span data-metric="positive.peak_time_s">3.0</span> s against a reference of
+<span data-metric="positive.reference_peak_time_s">3.0</span> s. Its difference is <span data-metric="positive.difference_percent">0.0</span> % of the
+analytical reference. The negative pulse returns <span data-metric="negative.peak_time_s">3.0</span> s against
+<span data-metric="negative.reference_peak_time_s">3.0</span> s, with a difference of <span data-metric="negative.difference_percent">0.0</span> %.
+The result establishes peak selection for the documented sample grid only.
+<a href="#ref-A">[A]</a> <a href="#ref-B">[B]</a></p>
+</section>
+
+<section id="s7"><h2>7. Validation</h2>
+<p>The available validation evidence is separated into analytical timing checks and interface checks
+with substitute datasets. Inspection performance is not established by either evidence category.</p>
+<p>The timing checks cover both polarities, an irregular timestamp record with a shifted emission
+reference, and rejection of empty, mismatched, unordered, nonfinite, zero-signal and tied-peak
+inputs. A single sample with a negative time origin is also checked. The analytical target is
+computed from the fixture distance, speed and emission reference. <a href="#ref-B">[B]</a></p>
+<p>The loader tests check construction, variant selection, attribution, returned mapping and optional
+dependency behaviour using substitute data objects. These checks establish the tested interface
+behaviour, not compatibility with a real release of the external dataset package.
+<a href="#ref-D">[D]</a> <a href="#ref-E">[E]</a></p>
+<p>The published loader example demonstrates the intended access pattern but contains a
+defect-detection placeholder. No measured receiver benchmark or accepted defect result is supplied
+by that example. A real-data validation requires a versioned receiver trace and a calibration
+reference with stated uncertainty. <a href="#ref-F">[F]</a></p>
+</section>
+
+<section id="s8"><h2>8. Findings and Recommendations</h2>
+<p>The demonstrated calculation and the evidence gaps governing inspection use are identified
+below. The recommendations are tied to the documented function contract and available tests.</p>
+<ul><li>The synthetic peak is selected at the analytical target for either polarity.
+<ul><li>Retain the analytical example as a regression check when changing the timing calculation.
+<a href="#ref-B">[B]</a></li></ul></li>
+<li>Timing accuracy between samples is not established; interpolation is absent.
+<ul><li>Provide a calibrated timing reference and a sampling-resolution assessment before assigning
+a measurement uncertainty. <a href="#ref-A">[A]</a></li></ul></li>
+<li>Noise, multiple echoes, baseline offset and dispersion are not resolved by the timing function.
+<ul><li>Supply an isolated, baseline-corrected pulse and a known emission reference. Reassess the
+record when a maximum is tied or a pulse cannot be isolated. <a href="#ref-A">[A]</a></li></ul></li>
+<li>Measured accuracy and inspection acceptance remain NOT_EVALUATED because calibration records,
+material properties and an acceptance criterion are absent from the example.
+<ul><li>Obtain those inputs and the governing inspection procedure before accepting a material or
+defect result. <a href="#ref-A">[A]</a> <a href="#ref-F">[F]</a></li></ul></li>
+<li>Real dataset compatibility is not established by the substitute-data tests.
+<ul><li>Check the installed dataset version, constructor arguments, frame schema, receiver selection,
+units and timestamps against an actual sample before coupling the loader to timing.
+<a href="#ref-C">[C]</a> <a href="#ref-D">[D]</a> <a href="#ref-E">[E]</a></li></ul></li></ul>
+</section>
+
+<section id="s9"><h2>9. Appendices and References</h2>
+<p>The data status, symbols, source records and calculation checks are provided to support
+independent interpretation of this analysis.</p>
+<h3>9.1 Data register, acronyms and symbols</h3>
+<p>The synthetic inputs are distinguished from the information required for an inspection result.</p>
+<table><thead><tr><th>Item</th><th>Status and intended use</th><th>Source</th></tr></thead><tbody>
+<tr><td>Distance, speed, times, relative pressures</td><td>Public synthetic inputs for an algorithm
+example. ASSUMED - to be confirmed for any physical application; not assigned to a real material.</td><td><a href="#ref-B">[B]</a></td></tr>
+<tr><td>Emission reference and isolated pulse</td><td>Fixture assumptions; a calibrated reference and
+window selection are required for inspection data.</td><td><a href="#ref-A">[A]</a></td></tr>
+<tr><td>Material speed and its uncertainty</td><td>Required input for a physical distance interpretation;
+NOT_EVALUATED.</td><td><a href="#ref-A">[A]</a></td></tr>
+<tr><td>Acceptance criterion and detection threshold</td><td>Required inspection basis;
+NOT_EVALUATED. No numerical limit is assigned.</td><td><a href="#ref-A">[A]</a></td></tr>
+<tr><td>Measured trace and reference instrument</td><td>Required validation data;
+NOT_EVALUATED.</td><td><a href="#ref-B">[B]</a></td></tr>
+<tr><td>Real acoustic dataset schema</td><td>Compatibility is NOT_EVALUATED; substitute-data tests
+do not establish a real receiver trace.</td><td><a href="#ref-C">[C]</a> <a href="#ref-E">[E]</a></td></tr>
+</tbody><caption>Data register for the stated calculation and its inspection-use boundary.</caption></table>
+<p>NDE means nondestructive evaluation. L is path length in metres; c is constant speed in metres
+per second; t is time in seconds; p is signed receiver pressure in relative units in this example;
+i is a sample index; k is the index of the unique largest magnitude. The symbols t<sub>peak</sub>
+and t<sub>reference</sub> are the returned timestamp and analytical target respectively.
+Relative units carry no pressure calibration.</p>
+<h3>9.2 Sources and calculation access</h3>
+<p>The source locators identify the implementation and published examples used for this edition.
+No external dataset or licensed numerical model is consumed by the calculation.</p>
+<ul class="refs"><li id="ref-A">[A] Digitalmodel, package edition 2.1.0: <a href="../../../../src/digitalmodel/nde/pulse_timing.py">src/digitalmodel/nde/pulse_timing.py</a>. Source digest: <code>920a7001f3d5c10d433fe30af95590a7ead4922369d111290600827100e1955d</code>.</li>
+<li id="ref-B">[B] Digitalmodel, package edition 2.1.0: <a href="../../../../tests/nde/test_pulse_timing.py">tests/nde/test_pulse_timing.py</a>. Source digest: <code>133322a48466d8a8344e27c81f92641019cd1ea98803ade8b4b31c5a70b4bca1</code>.</li>
+<li id="ref-C">[C] Digitalmodel, package edition 2.1.0: <a href="../../../../src/digitalmodel/nde/well_acoustic/acoustic_scattering_loader.py">src/digitalmodel/nde/well_acoustic/acoustic_scattering_loader.py</a>. Source digest: <code>ea87f9e116895af04d749567d85c59b9df37ff0be0f1db84618491de9ed0322e</code>.</li>
+<li id="ref-D">[D] Digitalmodel, package edition 2.1.0: <a href="../../../../tests/nde/test_nde.py">tests/nde/test_nde.py</a>. Source digest: <code>87d65eb97ba33a33ea128920d9b25e24df1b9faa609b19a26da1eed0d5e474f0</code>.</li>
+<li id="ref-E">[E] Digitalmodel, package edition 2.1.0: <a href="../../../../tests/test_acoustic_scattering_loader.py">tests/test_acoustic_scattering_loader.py</a>. Source digest: <code>1f75c3b35ff0d06777f96d82155a330c4a472c91394db9dc234a2f206cc6669b</code>.</li>
+<li id="ref-F">[F] Digitalmodel, package edition 2.1.0: <a href="../../../../docs/examples/acoustic_nde_validation.py">docs/examples/acoustic_nde_validation.py</a>. Source digest: <code>28800da2ed181313ed2e86cafa0059e9ecd72066d65d548d5e175b11e09a3ef8</code>.</li>
+<li id="ref-G">[G] OpenStax, College Physics, second edition, 2022, section 2.3,
+Time, Velocity, and Speed, equations 2.4 and 2.5. The elapsed-time and velocity definitions
+are used as a kinematic basis; no textbook case data or figures are reproduced.
+<a href="https://openstax.org/books/college-physics-2e/pages/2-3-time-velocity-and-speed">Public source</a>.</li>
+<li>Layout exemplar: <a href="../../../api/cfd/turbulent-flat-plate-verification.html">existing technical
+report layout</a>, with <a href="../../../api/_assets/brand.css">canonical brand stylesheet</a>.
+Both stylesheets are inlined for standalone reading.</li></ul>
+<p>The calculation is rebuilt from the repository root with the following command.</p>
+<pre>PYTHONPATH=src uv run python docs/reports/modules/nde/build_report.py</pre>
+<p>The direct timing entry point is documented in source A.</p>
+<pre>from digitalmodel.nde.pulse_timing import pulse_peak_time
+peak_time_s = pulse_peak_time(time_s, pressure)</pre>
+<p>The report regression checks are executed with the existing NDE checks.</p>
+<pre>PYTHONPATH=src uv run python -m pytest tests/nde tests/test_acoustic_scattering_loader.py</pre>
+<h3>9.3 Quality assurance pre-flight evidence</h3>
+<p>The rebuild checks compare the saved report with its reconstruction and compare the calculation
+with a direct call of the timing function.</p>
+<p>Every displayed worked-example value is checked against the computed inputs or results. The
+chart samples are checked against the public fixture, and the signed percentage difference is
+calculated from unrounded times. The printed pressure values retain nonzero small samples.
+Internal section links, source paths and standalone delivery are checked by the rebuild tests.</p>
+<p>The analytical peak falls exactly on a sample in this example. Sampling sensitivity away from that
+grid point, measured noise and calibration uncertainty are not evaluated. No finite-element mesh,
+structural load or buoyancy calculation is involved.</p>
+</section>
+
+<section id="s10"><h2>10. Not Covered</h2>
+<p>The excluded capabilities are listed to bound the timing result and prevent its use as an
+inspection acceptance decision.</p>
+<p>Real-data execution of the basic, maze and inclusions loader variants is not performed. Scattering
+field solution, receiver extraction, material characterization, defect detection, echo discrimination,
+wall-thickness calculation and probability of detection are not evaluated. The calculation supports
+selection of a sampled peak from a supplied trace only. <a href="#ref-A">[A]</a>
+<a href="#ref-C">[C]</a> <a href="#ref-F">[F]</a></p>
+</section>
+</main>
+<aside class="review-controls" aria-label="Document changes and comments">
+<details><summary>Changes in this revision</summary><div id="change-panel"></div></details>
+<details><summary>Comments on this analysis</summary>
+<p>Choose the folder containing this report to save comments beside it. If folder access is unavailable,
+save the downloaded comments file in that folder. Existing comments can be loaded before adding more.</p>
+<button id="choose-folder" type="button">Choose report folder</button>
+<label>Load comments <input id="load-comments" type="file" accept="application/json,.json"></label>
+<form id="comment-form"><label for="comment-section">Section</label>
+<select id="comment-section"><option value="s1">Executive Summary</option><option value="s2">Introduction</option><option value="s3">Summary of Results</option><option value="s4">Data and Basis</option><option value="s5">Methodology</option><option value="s6">Worked Example</option><option value="s7">Validation</option><option value="s8">Findings and Recommendations</option><option value="s9">Appendices and References</option><option value="s10">Not Covered</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" maxlength="6000" required></textarea>
+<button type="submit">Add comment</button></form>
+<ol id="comment-list"></ol><button id="save-comments" type="button">Save comments</button>
+<output id="comment-status" aria-live="polite">Comments are kept in this page until saved.</output>
+</details></aside>
+<footer>Acoustic pulse timing · Numerical example only · Inspection acceptance is not evaluated.</footer>
+</div><script id="example-data" type="application/json">{"inputs": {"distance_m": 6.0, "speed_m_s": 2.0, "time_s": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], "exponent_power": 2}, "cases": [{"name": "positive", "polarity": 1.0, "pressure": [2.3195228302435696e-16, 1.1253517471925912e-07, 0.01831563888873418, 1.0, 0.01831563888873418, 1.1253517471925912e-07], "peak_time_s": 3.0, "reference_peak_time_s": 3.0, "difference_percent": 0.0}, {"name": "negative", "polarity": -1.0, "pressure": [-2.3195228302435696e-16, -1.1253517471925912e-07, -0.01831563888873418, -1.0, -0.01831563888873418, -1.1253517471925912e-07], "peak_time_s": 3.0, "reference_peak_time_s": 3.0, "difference_percent": 0.0}], "source_digest": "133322a48466d8a8344e27c81f92641019cd1ea98803ade8b4b31c5a70b4bca1", "engineering_limit": {"state": "NOT_EVALUATED", "reason": "No inspection acceptance limit is supplied."}}</script>
+<script id="changes-data" type="application/json">{"document": "nde-module-analysis", "revision": "A", "date": "2026-10-22", "changes": [{"section": "s1", "summary": "Initial analysis of sampled acoustic pulse timing, with a computed synthetic example and the evidence needed for inspection use.", "reason": "Distinguish the demonstrated timing calculation from unestablished inspection accuracy and dataset compatibility."}]}</script>
+<script>"use strict";
+const example = JSON.parse(document.getElementById("example-data").textContent);
+const changes = JSON.parse(document.getElementById("changes-data").textContent);
+const numberText = value => (Number.isInteger(value) ? value.toFixed(1) :
+  value.toPrecision(3)).replaceAll("-", "−");
+const detail = document.getElementById("pulse-detail");
+document.querySelectorAll("circle[data-case]").forEach(point => {
+  const inspect = () => { detail.textContent = point.getAttribute("aria-label"); };
+  point.addEventListener("pointerenter", inspect);
+  point.addEventListener("focus", inspect);
+});
+document.getElementById("polarity").addEventListener("change", event => {
+  example.cases.forEach(item => {
+    const group = document.getElementById(`trace-${item.name}`);
+    group.toggleAttribute("hidden", item.name !== event.target.value);
+  });
+  const item = example.cases.find(item => item.name === event.target.value);
+  detail.textContent = `${item.name} pulse; receiver peak time: ${numberText(item.peak_time_s)} s; ` +
+    `analytical target: ${numberText(item.reference_peak_time_s)} s; inspection limit: not specified.`;
+});
+const panel = document.getElementById("change-panel");
+changes.changes.forEach(change => {
+  const paragraph = document.createElement("p");
+  const link = document.createElement("a");
+  link.href = `#${change.section}`;
+  link.textContent = change.summary;
+  paragraph.append(link, document.createTextNode(` ${change.reason}`));
+  panel.append(paragraph);
+});
+let comments = [];
+let directory = null;
+let saved = true;
+const status = document.getElementById("comment-status");
+const sectionSelect = document.getElementById("comment-section");
+const knownSections = new Set(Array.from(sectionSelect.options, item => item.value));
+const decodeComments = incoming => {
+  if (incoming.document !== changes.document || incoming.revision !== changes.revision ||
+      !Array.isArray(incoming.comments) || incoming.comments.some(comment => !comment ||
+        !knownSections.has(comment.section) || typeof comment.text !== "string" ||
+        !comment.text.trim() || comment.text.length > 6000)) {
+    throw new Error("The file does not contain comments for this analysis and revision.");
+  }
+  return incoming.comments.map(({section, text}) => ({section, text}));
+};
+const refresh = () => {
+  const list = document.getElementById("comment-list");
+  list.replaceChildren();
+  comments.forEach(comment => {
+    const item = document.createElement("li");
+    const label = Array.from(sectionSelect.options).find(option => option.value === comment.section).text;
+    item.textContent = `${label}: ${comment.text}`;
+    list.append(item);
+  });
+};
+document.getElementById("comment-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const field = document.getElementById("comment-text");
+  const text = field.value.trim();
+  if (!text) return;
+  comments.push({section: sectionSelect.value, text});
+  field.value = "";
+  saved = false;
+  refresh();
+  status.textContent = "Comment added. Save comments before closing the page.";
+});
+document.getElementById("choose-folder").addEventListener("click", async () => {
+  try {
+    if (!window.showDirectoryPicker) {
+      status.textContent = "Folder access is unavailable. Save the downloaded comments file beside this report.";
+      return;
+    }
+    directory = await window.showDirectoryPicker({mode: "readwrite"});
+    status.textContent = "Report folder selected. Save comments to write the comments file there.";
+  } catch (error) { status.textContent = `Folder selection was not completed: ${error.message}`; }
+});
+document.getElementById("load-comments").addEventListener("change", async event => {
+  try {
+    const file = event.target.files[0];
+    if (!file) return;
+    comments = [...comments, ...decodeComments(JSON.parse(await file.text()))];
+    saved = false;
+    refresh();
+    status.textContent = "Comments loaded. Save to retain the combined comments.";
+  } catch (error) { status.textContent = `Comments were not loaded: ${error.message}`; }
+});
+document.getElementById("save-comments").addEventListener("click", async () => {
+  const name = "nde-module-analysis.comments.json";
+  try {
+    if (directory) {
+      let existing = [];
+      try {
+        const handle = await directory.getFileHandle(name);
+        existing = decodeComments(JSON.parse(await (await handle.getFile()).text()));
+      } catch (error) { if (error.name !== "NotFoundError") throw error; }
+      comments = Array.from(new Map([...existing, ...comments].map(comment =>
+        [JSON.stringify([comment.section, comment.text]), comment])).values());
+      refresh();
+    }
+    const text = JSON.stringify({document: changes.document, revision: changes.revision, comments}, null, 2) + "\n";
+    if (directory) {
+      const handle = await directory.getFileHandle(name, {create: true});
+      const stream = await handle.createWritable();
+      await stream.write(text);
+      await stream.close();
+      saved = true;
+      status.textContent = "Comments saved in the selected report folder.";
+    } else {
+      const url = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = "Comments download requested. Save the file beside this report; unsaved comments remain in this page.";
+    }
+  } catch (error) { status.textContent = `Comments were not saved: ${error.message}`; }
+});
+window.addEventListener("beforeunload", event => {
+  if (!saved) { event.preventDefault(); event.returnValue = ""; }
+});
+</script></body></html>
