@@ -1,0 +1,9 @@
+{
+  "revision": "A",
+  "changes": [
+    {
+      "section": "Static configuration screening",
+      "description": "Initial assessment of the public synthetic steel catenary example, with explicit static screening criteria and unassessed operating limits."
+    }
+  ]
+}
