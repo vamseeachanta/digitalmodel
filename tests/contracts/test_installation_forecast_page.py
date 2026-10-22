@@ -10,7 +10,7 @@ import subprocess
 from copy import deepcopy
 from decimal import Decimal
 from html.parser import HTMLParser
-from pathlib import Path
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -301,6 +301,21 @@ def test_embedded_data_reproduces_page():
     assert render_embedded_scenario().encode('utf-8') == PAGE.read_bytes()
 
 
+def checkout_prefix(path: PurePath) -> str:
+    """Build the forward-slash prefix required by Git checkout-index."""
+    return path.as_posix() + '/'
+
+
+@pytest.mark.parametrize(('path', 'expected'), [
+    (PurePosixPath('checkout'), 'checkout/'),
+    (PurePosixPath('checkout/output'), 'checkout/output/'),
+    (PureWindowsPath(r'C:\checkout'), 'C:/checkout/'),
+    (PureWindowsPath(r'checkout\output'), 'checkout/output/'),
+])
+def test_checkout_prefix_uses_posix_separators(path, expected):
+    assert checkout_prefix(path) == expected
+
+
 def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
     env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
     repo, checkout = tmp_path / 'repo', tmp_path / 'checkout'
@@ -317,9 +332,7 @@ def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
 
     git('init', '--quiet')
     git('add', '--', *map(str, paths))
-    prefix = checkout.as_posix() + '/'
-    assert '\\' not in prefix
-    git('checkout-index', '--all', '--prefix=' + prefix)
+    git('checkout-index', '--all', '--prefix=' + checkout_prefix(checkout))
     page = checkout / PAGE.relative_to(ROOT)
     manifest_bytes = page.with_suffix('.manifest.json').read_bytes()
     manifest = json.loads(manifest_bytes)
