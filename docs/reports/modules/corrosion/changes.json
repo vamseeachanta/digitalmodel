@@ -1,0 +1,15 @@
+{
+  "revision": "0",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-22",
+      "change": "Galvanic screening results and evidence gaps are documented to separate software categories from engineering acceptance."
+    }
+  ],
+  "changes": [
+    "Potential differences and environment limits are reported for the public zinc\u2013steel regression case.",
+    "Default numerical criteria are separated from independently supported physical principles.",
+    "A protection category for a sacrificial coating is distinguished from rejection of that coating."
+  ]
+}
