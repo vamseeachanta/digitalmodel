@@ -72,6 +72,32 @@ def _parameter_target(base: Mapping[str, Any], path: str) -> tuple[str, str]:
     return section, key
 
 
+def _validate_zone_depth(structure: Mapping[str, Any], name: str, depth: float) -> None:
+    geometry = structure.get("report_geometry")
+    if geometry is None:
+        return
+    if not isinstance(geometry, Mapping):
+        raise ValueError("report geometry must be a mapping")
+    if "zones" not in geometry:
+        return
+    bands = geometry["zones"]
+    if (not isinstance(bands, list) or not bands
+            or any(not isinstance(band, Mapping) for band in bands)):
+        raise ValueError("report geometry zones must be a non-empty list of mappings")
+    matches = [band for band in bands if band.get("calculation_zone") == name]
+    if len(matches) != 1:
+        raise ValueError("report geometry requires one matching calculation zone")
+    lower = _number(matches[0].get("lower_m"), "report geometry lower bound")
+    upper = _number(matches[0].get("upper_m"), "report geometry upper bound")
+    if lower >= upper:
+        raise ValueError("report geometry lower bound must be below upper bound")
+    # Geometry uses elevations; table lookups use positive-down seawater depths.
+    # A shared boundary belongs to the shallower zone (B401 2021, Table 8-1,
+    # 0-30 m versus >30-100 m); the surface at zero depth remains included.
+    if not lower <= -depth <= upper or (upper < 0 and -depth == upper):
+        raise ValueError("standard_table_zones depth is outside its zone bounds")
+
+
 def prepare_base(
     base: Mapping[str, Any], spec: Mapping[str, Any], mode: str,
 ) -> dict[str, Any]:
@@ -115,6 +141,7 @@ def prepare_base(
                 or zone.get("coating_category") != "bare"
                 or not isinstance(zone.get("effective_current_density_A_m2"), Mapping)):
             raise ValueError("standard_tables requires two bare seawater zones with published densities")
+        _validate_zone_depth(inputs["structure"], name, depth)
         del zone["effective_current_density_A_m2"]
         zone.pop("density_source", None)
         zone["depth_m"] = depth

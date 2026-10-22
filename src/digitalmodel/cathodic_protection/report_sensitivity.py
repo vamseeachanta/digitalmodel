@@ -17,7 +17,8 @@ def _criterion(ver: Mapping[str, Any], flag: str, required: str) -> str:
     if passed != (provided >= needed):
         raise ValueError("sensitivity count criterion disagrees with engine flag")
     status = "PASS" if passed else "FAIL"
-    return (f"{status}; N_verified {provided} >= {needed} required; "
+    comparator = ">=" if passed else "<"
+    return (f"{status}; N_verified {provided} {comparator} {needed} required; "
             f"margin {provided - needed:+d} anodes; B401 Sec. 7.8")
 
 
@@ -58,7 +59,11 @@ def sensitivity_section(rows: Any) -> Section:
     return Section(key="sensitivity", title="Sensitivity analysis", blocks=[
         TextBlock(markdown=(
             "One parameter changes at a time; other inputs retain their base values. "
-            "published retains effective phase densities. standard_tables is a what-if "
+            "Temperature has no effect in published mode because it retains effective "
+            "phase densities; identical rows do not establish physical temperature "
+            "insensitivity. In standard_tables mode temperature changes the table "
+            "densities for the two bare seawater zones only; coated and buried zones "
+            "retain their published densities. standard_tables is a what-if "
             "on a modified input, not a published result. The surrounding analysis uses "
             "the unchanged base input. Status checks use the base installed count, not "
             "the recommended count. Integer count criteria preserve shortfalls even "
