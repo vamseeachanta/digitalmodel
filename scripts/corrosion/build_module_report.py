@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 from dataclasses import asdict
 from html import escape
@@ -25,17 +26,22 @@ from digitalmodel.corrosion import galvanic_screening as screening
 
 ROOT = Path(__file__).resolve().parents[2]
 DESTINATION = ROOT / "docs/reports/modules/corrosion"
-REVISION = "0"
+REVISION = "1"
 CHANGES = {
     "revision": REVISION,
     "history": [{
         "revision": REVISION,
+        "date": "2026-10-22",
+        "change": "Report dispositions follow returned categories and material roles; figures, material-group wording and deterministic output are corrected.",
+    }, {
+        "revision": "0",
         "date": "2026-10-22",
         "change": "Galvanic screening results and evidence gaps are documented to separate software categories from engineering acceptance.",
     }],
     "changes": [
         "Potential differences and environment limits are reported for the public zinc–steel regression case.",
         "Default numerical criteria are separated from independently supported physical principles.",
+        "Dispositions and material roles follow calculation records; chart scales and the conductive-film sketch are corrected.",
         "A protection category for a sacrificial coating is distinguished from rejection of that coating.",
     ],
 }
@@ -57,31 +63,23 @@ SECTIONS = [
 
 
 def calculations() -> dict:
-    """Call the module and compare the complete published matrix evidence."""
+    """Call the module and compare matrix cells with the public pair results."""
     cases = []
-    symmetric = diagonal = matches = explorer_matches = True
-    explorer = json.loads((ROOT / "docs/api/corrosion/galvanic-compatibility-explorer.json").read_text())
+    symmetric = diagonal = matches = True
     metals = list(ANODIC_INDEX_V)
     for environment in ENVIRONMENTS:
         result = screen_couple("zinc", "carbon_steel", environment)
         case = asdict(result)
-        case["excess_v"] = result.delta_v - result.allowable_delta_v
-        case["marginal_upper_v"] = result.allowable_delta_v + screening.MARGINAL_BAND_V
+        case["excess_v"] = round(result.delta_v - result.allowable_delta_v, 6)
+        case["marginal_upper_v"] = round(result.allowable_delta_v + screening.MARGINAL_BAND_V, 6)
         cases.append(case)
         matrix = compatibility_matrix(environment)
         symmetric &= matrix.equals(matrix.T)
         diagonal &= all(matrix.loc[metal, metal] == "OK" for metal in metals)
-        published = explorer["environments"][environment]
-        for i, metal_a in enumerate(metals):
-            for j, metal_b in enumerate(metals):
+        for metal_a in metals:
+            for metal_b in metals:
                 pair = screen_couple(metal_a, metal_b, environment)
                 matches &= matrix.loc[metal_a, metal_b] == pair.verdict
-                explorer_matches &= (
-                    explorer["metals"] == metals
-                    and published["verdict"][i][j] == pair.verdict
-                    and published["delta_v"][i][j] == round(pair.delta_v, 2)
-                    and published["allowable_v"] == pair.allowable_delta_v
-                )
     return {
         "indices": {metal: ANODIC_INDEX_V[metal] for metal in ("zinc", "carbon_steel")},
         "cases": cases,
@@ -91,7 +89,6 @@ def calculations() -> dict:
         "matrix_symmetric": bool(symmetric),
         "matrix_diagonal_ok": bool(diagonal),
         "matrix_matches_pairs": bool(matches),
-        "explorer_matches_pairs": bool(explorer_matches),
     }
 
 
@@ -101,7 +98,7 @@ def display(value: float) -> str:
 
 
 def number(data: dict, key: str) -> str:
-    """Bind visible values to their unrounded calculation record."""
+    """Bind visible values to their calculation record."""
     value = data
     for part in key.split("."):
         value = value[int(part)] if isinstance(value, list) else value[part]
@@ -129,20 +126,23 @@ def heading(index: int) -> str:
 def chart(data: dict) -> str:
     """Plot potential difference and both software limits against environment."""
     x_values = [150 + i * 235 for i in range(len(data["cases"]))]
-    maximum = max(case["delta_v"] + case["marginal_upper_v"] for case in data["cases"])
+    maximum = math.ceil(max(
+        max(case["delta_v"], case["marginal_upper_v"])
+        for case in data["cases"]
+    ) * 10) / 10
+    maximum = max(maximum, 0.1)
 
     def y(value):
         return 300 - value / maximum * 240
 
     series = []
-    for field, label, color, dash in (
-        ("delta_v", "Potential difference", "var(--ro)", ""),
-        ("allowable_delta_v", "Software allowable", "var(--cfd)", "8 5"),
-        ("marginal_upper_v", "Upper marginal boundary", "var(--proj)", "2 5"),
+    for field, label, color in (
+        ("delta_v", "Potential difference", "var(--ro)"),
+        ("allowable_delta_v", "Software allowable", "var(--cfd)"),
+        ("marginal_upper_v", "Upper marginal boundary", "var(--proj)"),
     ):
-        points = " ".join(f'{x},{y(case[field]):.2f}' for x, case in zip(x_values, data["cases"]))
-        series.append(f'<polyline data-limit="{field}" points="{points}" fill="none" stroke="{color}" stroke-width="3" stroke-dasharray="{dash}"/>')
-        for i, (x, case) in enumerate(zip(x_values, data["cases"])):
+        series.append(f'<g data-limit="{field}">')
+        for x, case in zip(x_values, data["cases"]):
             text = (f'Zinc–steel case; component: zinc coating and steel substrate; '
                     f'environment: {ENV_LABELS[case["environment"]]}; '
                     f'demand: {display(case["delta_v"])} V; '
@@ -150,15 +150,23 @@ def chart(data: dict) -> str:
                     f'upper marginal boundary: {display(case["marginal_upper_v"])} V; '
                     f'{label}: {display(case[field])} V.')
             series.append(f'<circle tabindex="0" role="img" aria-label="{escape(text)}" data-chart-note="{escape(text)}" cx="{x}" cy="{y(case[field]):.2f}" r="7" fill="{color}"><title>{escape(text)}</title></circle>')
+        series.append('</g>')
+    ticks = ''.join(
+        f'<g data-y-tick="{i / 10:.1f}"><path d="M75 {y(i / 10):.2f} H700" '
+        f'stroke="currentColor" opacity="0.2"/>'
+        f'<text x="68" y="{y(i / 10) + 5:.2f}" text-anchor="end" '
+        f'fill="currentColor">{i / 10:.1f}</text></g>'
+        for i in range(round(maximum * 10) + 1)
+    )
     labels = ''.join(f'<text x="{x}" y="330" text-anchor="middle" fill="currentColor">{ENV_LABELS[case["environment"]]}</text>' for x, case in zip(x_values, data["cases"]))
     return f'''<figure id="environment-chart"><svg viewBox="0 0 770 390" role="img" aria-labelledby="chart-title chart-description" style="width:100%">
 <title id="chart-title">Zinc–steel potential difference by environment</title>
-<desc id="chart-description">Solid line: potential difference. Dashed line: software allowable. Dotted line: upper marginal boundary. Focus or hover a point for values in volts.</desc>
+<desc id="chart-description">Separate markers show potential difference, software allowable and upper marginal boundary; environment classes are discrete. Focus or hover a point for values in volts.</desc>
 <path d="M80 40 V300 H700" fill="none" stroke="currentColor"/>
 <text x="25" y="180" transform="rotate(-90 25 180)" text-anchor="middle" fill="currentColor">Potential difference (V)</text>
 <text x="385" y="365" text-anchor="middle" fill="currentColor">Environment class</text>
-{''.join(series)}{labels}</svg>
-<figcaption>Figure B. Potential difference and the repository screening boundaries. Solid: demand. Dashed: allowable. Dotted: upper marginal boundary. Values are also tabulated below.</figcaption>
+{ticks}{''.join(series)}{labels}</svg>
+<figcaption>Figure B. Potential difference and the repository screening boundaries. Blue markers: demand. Green markers: allowable. Orange markers: upper marginal boundary. Markers are not joined between environment classes. Values are also tabulated below.</figcaption>
 <p id="chart-readout" aria-live="polite">Focus or hover a plotted point to read the case, component, demand, limit and units.</p></figure>'''
 
 
@@ -227,6 +235,9 @@ def render() -> str:
     """Write the complete technical narrative with the module in context."""
     data = calculations()
     n = lambda key: number(data, key)
+    harsh, _, indoor = data["cases"]
+    anodic = escape(harsh["anodic"].replace("_", " ").capitalize())
+    cathodic = escape(harsh["cathodic"].replace("_", " "))
     rows = []
     for i, case in enumerate(data["cases"]):
         rows.append([
@@ -247,23 +258,22 @@ def render() -> str:
         ("Matrix symmetry", data["matrix_symmetric"]),
         ("Same-material diagonal within the software allowable", data["matrix_diagonal_ok"]),
         ("Matrix cells match public pair calls", data["matrix_matches_pairs"]),
-        ("Published explorer differences and categories match public pair calls", data["explorer_matches_pairs"]),
     ]
     if not all(passed for _, passed in checks):
-        raise ValueError("Existing matrix or published example evidence differs from the module")
+        raise ValueError("Matrix evidence differs from the module")
     check_rows = [[label, "The evidence agrees.", '<a href="#repository-basis">Repository calculation basis</a>'] for label, _ in checks]
     nav = ''.join(f'<li><a href="#section-{i}">{title}</a></li>' for i, title in enumerate(SECTIONS, 1))
     options = ''.join(f'<option value="section-{i}">{title}</option>' for i, title in enumerate(SECTIONS, 1))
     body = f'''
 <header class="hero"><div class="wrap"><h1>Corrosion module analysis</h1>
 <p class="lede">Galvanic compatibility screening: calculated categories and evidence limits</p>
-<p>Draft for client review</p></div></header>
+<p>Draft for review</p></div></header>
 <div class="shell"><nav class="toc" aria-label="Contents"><ol>{nav}</ol></nav>
 <main class="main">
 <section>{heading(1)}
 <p>The corrosion module is a dissimilar-metal compatibility screening tool. Analysis is performed to determine the potential difference and protection category of a zinc–steel couple; key results are summarized below.</p>
 <ul><li>Screen material pairs before detailed corrosion assessment.
-<ul><li>The zinc–steel difference is {n('cases.0.delta_v')} V against the harsh-marine software allowable of {n('cases.0.allowable_delta_v')} V. The difference exceeds the software marginal band; protection is requested.</li></ul></li>
+<ul><li>The zinc–steel difference is {n('cases.0.delta_v')} V against the harsh-marine software allowable of {n('cases.0.allowable_delta_v')} V. {STATUS[harsh['verdict']]}</li></ul></li>
 <li>Retain the distinction between software screening and engineering acceptance.
 <ul><li>Independent applicability of the numerical defaults is NOT_EVALUATED. No corrosion rate, coating life or structural acceptance is established.</li></ul></li></ul>
 <p>Numerical values are taken from the <a href="#repository-basis">repository calculation basis</a>. The result for intentional zinc protection does not establish rejection of a galvanized component.</p>
@@ -282,7 +292,7 @@ def render() -> str:
 <figure><svg viewBox="0 0 760 300" role="img" aria-labelledby="joint-title joint-description" style="width:100%">
 <title id="joint-title">Section through a wetted zinc-coated steel surface</title>
 <desc id="joint-description">A surface defect exposes steel through a zinc coating. A conductive wet film bridges zinc and steel; the substrate provides electrical continuity. No dimensions or mesh are specified.</desc>
-<rect x="60" y="55" width="640" height="55" fill="var(--cfd-soft)" stroke="var(--cfd)"/>
+<path id="wet-film" d="M60 55 H700 V110 H420 V125 H320 V110 H60 Z" fill="var(--cfd-soft)" stroke="var(--cfd)"/>
 <rect x="60" y="110" width="260" height="30" fill="var(--surface-2)" stroke="currentColor"/>
 <rect x="420" y="110" width="280" height="30" fill="var(--surface-2)" stroke="currentColor"/>
 <path d="M60 140 H320 V125 H420 V140 H700 V235 H60 Z" fill="var(--ro-soft)" stroke="currentColor"/>
@@ -298,7 +308,7 @@ def render() -> str:
 </svg><figcaption>Figure A. Zinc–steel coating cross-section with the assumed conductive paths. The algebraic screen has no mesh or field boundary solution.</figcaption></figure>
 <h3>Inputs and acceptance basis</h3>
 <p>Material keys, environment key, an optional environment-to-voltage mapping and an optional marginal-band width are accepted. The shipped catalogue contains {n('metals_count')} material groups and {n('environments_count')} environment classes, counted directly from the <a href="#repository-basis">repository tables</a>.</p>
-<p>The input indices are {n('indices.zinc')} V for zinc and {n('indices.carbon_steel')} V for carbon steel, relative to the module's gold reference. The marginal band is {n('marginal_band_v')} V. These are implementation data, not independently established electrochemical properties or approved criteria. Their external edition and table provenance are NOT_EVALUATED.</p>
+<p>The example uses the zinc wrought / die-cast / plated group, as named by the implementation; it does not represent a separately qualified hot-dip galvanizing group. The input indices are {n('indices.zinc')} V for zinc and {n('indices.carbon_steel')} V for carbon steel, relative to the module's gold reference. The marginal band is {n('marginal_band_v')} V. These are implementation data, not independently established electrochemical properties or approved criteria. Their external edition and table provenance are NOT_EVALUATED.</p>
 <p>ASSUMED - to be confirmed: the wetted coating and substrate remain electrically connected. Area ratio, alloy condition, water chemistry, temperature, coating thickness and design life are required for a physical corrosion assessment and remain NOT_EVALUATED here. No numerical substitute is introduced.</p>
 <p>The software limit is retained to reproduce existing behaviour, not to set a design acceptance criterion. A qualified environment limit is required before an engineering disposition is made. The <a href="#faa-basis">public physical guidance</a> supports considering electrical contact, electrolyte and relative surface areas.</p>
 </section>
@@ -319,18 +329,18 @@ def render() -> str:
 <p>The zinc–steel public regression case is calculated by calling the module. Environment variation is then calculated with the same material pair; no measured corrosion behaviour is inferred.</p>
 <article id="worked-example"><h3>Worked example: zinc coating and carbon steel</h3>
 <p>The source is the <a href="#public-example">public regression example</a>. The supplied indices give |{n('indices.zinc')} − {n('indices.carbon_steel')}| = {n('cases.0.delta_v')} V. The returned harsh-marine allowable is {n('cases.0.allowable_delta_v')} V and the marginal-band width is {n('marginal_band_v')} V.</p>
-<p>The difference exceeds the allowable by {n('cases.0.excess_v')} V and exceeds the upper marginal boundary of {n('cases.0.marginal_upper_v')} V. The difference exceeds the software marginal band; protection is requested. Zinc is returned as anodic and carbon steel as cathodic.</p>
-<p>The returned request is a generic dissimilar-metal category. In an intentional galvanized coating, zinc consumption is part of the protection mechanism; coating adequacy is NOT_EVALUATED by this screen. For an unintended conductive joint, electrical isolation is the recommended next design action, supported by the <a href="#faa-basis">public physical guidance</a>.</p></article>
+<p>The difference minus allowable is {n('cases.0.excess_v')} V; the upper marginal boundary is {n('cases.0.marginal_upper_v')} V. {STATUS[harsh['verdict']]} {anodic} is returned as anodic and {cathodic} as cathodic.</p>
+<p>The returned request is a generic dissimilar-metal category. For an intentional sacrificial zinc coating, zinc consumption is part of the protection mechanism; the example uses the wrought / die-cast / plated material group and does not qualify hot-dip galvanizing; coating adequacy is NOT_EVALUATED by this screen. For an unintended conductive joint, electrical isolation is the recommended next design action, supported by the <a href="#faa-basis">public physical guidance</a>.</p></article>
 {chart(data)}
 {results_table}
-<p>The potential difference remains fixed while the environment limit changes. The difference is within the controlled-indoor software allowable; this category establishes no coating life or field performance.</p>
+<p>The potential difference remains fixed while the environment limit changes. Controlled indoor: {STATUS[indoor['verdict']]} This category establishes no coating life or field performance.</p>
 <h3>Existing validation evidence</h3>
 <p>The existing tests exercise index anchors, thresholds, material-order symmetry, identical-metal cases, boundary examples, ordering with potential difference, anodic designation, unknown keys, custom thresholds and matrix consistency. Anchor tests repeat repository values and are not independent evidence for their physical accuracy.</p>
 {table(['Evidence comparison', 'Result', 'Source'], check_rows, 'Table B. Recomputed software consistency evidence across the complete current material catalogue and environment set.')}
 <p>The published explorer is a second presentation of the same module calculations. Agreement with it is regression evidence, not independent validation. No measured-rate dataset or independently qualified physical benchmark is supplied by these cited screening records.</p>
 </section>
 <section>{heading(6)}
-<p>The zinc–steel difference exceeds the harsh-marine software marginal band, so protection is requested. The anodic direction is reproduced across material order and matrix presentation.</p>
+<p>Harsh marine: {STATUS[harsh['verdict']]} The anodic direction is reproduced across material order and matrix presentation.</p>
 <p>The example establishes deterministic software behaviour against repository data. External provenance for numerical acceptance criteria, coating adequacy and physical rate prediction remain NOT_EVALUATED. The harsher environment label changes the threshold rather than predicting the effects of salinity, wetting time or temperature.</p>
 </section>
 <section>{heading(7)}
@@ -342,7 +352,7 @@ def render() -> str:
 <section>{heading(8)}
 <p>Engineering acceptance is deferred until the material condition, exposure and governing criterion are established. Actions are assigned to the evidence gaps and to the calculated protection request.</p>
 <ul><li>For an unintended zinc–steel conductive joint, introduce electrical isolation and confirm separation of the conductive path at detailed design. This action addresses the protection request and is based on elimination of electrical contact in the <a href="#faa-basis">public physical guidance</a>.</li>
-<li>For intentional galvanizing, retain the coating intent and assess coating thickness, exposed steel area, environment and depletion before defining an inspection interval. This recommendation follows the missing physical inputs and the area effect described by the <a href="#faa-basis">public physical guidance</a>; no unsupported service date or depletion rate is assigned.</li>
+<li>For an intentional sacrificial zinc coating, retain the coating intent and assess coating thickness, exposed steel area, environment and depletion before defining an inspection interval. This recommendation follows the missing physical inputs and the area effect described by the <a href="#faa-basis">public physical guidance</a>; no unsupported service date or depletion rate is assigned.</li>
 <li>Before adopting a numerical default as an acceptance criterion, obtain its public edition and table or replace it with an approved required input. This action resolves the missing external provenance recorded in the <a href="#data-register">data register</a>.</li>
 <li>As the first extension, add sourced criterion metadata, finite non-negative custom-input checks and notes derived from the selected marginal width. Preserve the existing public examples as regression checks and add tests at the selected boundaries. The scope follows the interface limitations and existing <a href="#repository-basis">repository evidence</a>.</li></ul>
 </section>
@@ -373,12 +383,12 @@ print(result.delta_v, result.allowable_delta_v, result.verdict)</code></pre><ul>
     ['Thickness, design life and inspection interval', 'NOT_EVALUATED; no numerical assumption is made.', 'Supply the protection design and service basis.', 'Model output limitations'],
 ], 'Table C. Assumptions, missing data and required resolution.')}
 <h3>10.2 Quality checks</h3>
-<p>All worked-example values are inserted from public module calls and embedded with their calculation record. Displayed potential values use a consistent decimal precision; comparisons use unrounded module results. The rebuild test compares the complete generated file with the retained report and binds every displayed example number to a returned or derived value. Changed module defaults are detected and rendering is refused when the published example no longer agrees.</p>
+<p>All worked-example values are inserted from public module calls and embedded with their calculation record. Displayed potential values use a consistent decimal precision; comparisons use unrounded module results. The rebuild test compares the complete generated file with the retained report and binds every displayed example number to a returned or derived value. A separate test compares all published explorer cells with public pair calls. The generator does not read the explorer data while it may be regenerated concurrently. Rendering is refused when matrix cells disagree with pair calls.</p>
 <p>Source claims are limited to the cited records. Geometry is explanatory and dimensionless; no design drawing or exposure experiment is represented. Offline chart points support pointer and keyboard focus. Comment persistence requires the explicit save action; a browser without file-picker support downloads the sidecar for placement beside the report. Browser execution and print layout require separate review.</p>
 <h3>10.3 Symbols and status legend</h3>
 <p>V denotes volt. ΔV denotes the absolute difference of the material-group indices. I<sub>a</sub> and I<sub>b</sub> denote those indices; L denotes the environment allowable and B the marginal-band width. Anodic denotes the member assigned the larger index by the software. Cathodic denotes the other member. NOT_EVALUATED means that a physical conclusion or its evidence is absent.</p>
 <p>The difference is within the software allowable for “OK”. The difference exceeds the software allowable within its marginal band for “MARGINAL”. The difference exceeds the software marginal band and protection is requested for “PROTECT”. These sentences describe software categories, not engineering acceptance.</p>
-<details><summary>Engineering changes since the previous issue</summary><p>This is the first issue. Its engineering content is listed below.</p><ul id="changes-list"></ul></details>
+<details><summary>Engineering changes since the previous issue</summary><p>The current issue corrects presentation and reproducibility. Its engineering content is listed below.</p><ul id="changes-list"></ul></details>
 <details><summary>Report comments</summary>
 <p>Comments are retained in a separate file. Save the comments beside this HTML as <code>report.comments.json</code>; load that file when reopening the report. File-picker support depends on the browser. Without it, the download requires manual placement beside the report. No automatic save is performed.</p>
 <form id="comment-form"><p><label for="comment-section">Section</label> <select id="comment-section" name="section">{options}</select></p>
@@ -399,8 +409,8 @@ print(result.delta_v, result.allowable_delta_v, result.verdict)</code></pre><ul>
 def build(output_dir: Path = DESTINATION) -> None:
     """Write the requested report and engineering change panel data."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "report.html").write_text(render(), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> None:

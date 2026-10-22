@@ -126,15 +126,121 @@ def test_every_worked_value_matches_api(builder):
         assert shown == builder.display(resolve(evidence, key))
 
 
-def test_changed_module_values_reach_report(builder, monkeypatch):
-    monkeypatch.setitem(ANODIC_INDEX_V, "zinc", 1.30)
-    monkeypatch.setitem(ENVIRONMENTS, "harsh_marine", 0.18)
-    data = builder.calculations()
-    assert data["indices"]["zinc"] == ANODIC_INDEX_V["zinc"]
-    assert data["cases"][0]["delta_v"] == screen_couple("zinc", "carbon_steel").delta_v
-    assert not data["explorer_matches_pairs"]
-    with pytest.raises(ValueError, match="published example evidence differs"):
-        builder.render()
+@pytest.mark.parametrize("allowable,status", [
+    (0.50, "The difference is within the software allowable."),
+    (0.38, "The difference exceeds the software allowable within its marginal band."),
+    (0.15, "The difference exceeds the software marginal band; protection is requested."),
+])
+def test_changed_module_values_reach_report(builder, monkeypatch, allowable, status):
+    monkeypatch.setitem(ANODIC_INDEX_V, "zinc", 0.45)
+    for environment in ENVIRONMENTS:
+        monkeypatch.setitem(ENVIRONMENTS, environment, allowable)
+    text = builder.render()
+    summary = text.split('id="section-1"', 1)[1].split('id="revision-history"', 1)[0]
+    worked = text.split('id="worked-example"', 1)[1].split('</article>', 1)[0]
+    indoor = text.split('Table A.', 1)[1]
+    findings = text.split('id="section-6"', 1)[1].split('id="section-7"', 1)[0]
+    for section in (summary, worked, findings):
+        assert status in section
+    assert f"Controlled indoor: {status}" in indoor
+    assert "Carbon steel is returned as anodic and zinc as cathodic." in worked
+
+
+def test_render_does_not_read_explorer(builder, monkeypatch):
+    original = Path.read_text
+
+    def read_without_explorer(path, *args, **kwargs):
+        if path.name == "galvanic-compatibility-explorer.json":
+            pytest.fail("Rendering must not read a concurrently regenerated explorer")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_without_explorer)
+    builder.render()
+
+
+def test_published_explorer_matches_all_pairs():
+    explorer = json.loads((ROOT / "docs/api/corrosion/galvanic-compatibility-explorer.json").read_text())
+    metals = list(ANODIC_INDEX_V)
+    assert explorer["metals"] == metals
+    comparisons = 0
+    for environment in ENVIRONMENTS:
+        published = explorer["environments"][environment]
+        for i, metal_a in enumerate(metals):
+            for j, metal_b in enumerate(metals):
+                pair = screen_couple(metal_a, metal_b, environment)
+                assert published["verdict"][i][j] == pair.verdict
+                assert published["delta_v"][i][j] == round(pair.delta_v, 2)
+                assert published["allowable_v"] == pair.allowable_delta_v
+                comparisons += 1
+    assert comparisons == 768
+
+
+def test_hand_calculated_rendered_values_and_dispositions(builder):
+    """Independent arithmetic: |1.25 - 0.85| = 0.40 V."""
+    text = builder.render()
+    page = Page(text)
+    bindings = dict(page.bindings)
+    expected = [
+        ("0.15", "0.25", "0.20", "PROTECT", "The difference exceeds the software marginal band; protection is requested."),
+        ("0.25", "0.15", "0.30", "PROTECT", "The difference exceeds the software marginal band; protection is requested."),
+        ("0.50", "−0.10", "0.55", "OK", "The difference is within the software allowable."),
+    ]
+    for i, (allowable, excess, upper, verdict, sentence) in enumerate(expected):
+        assert bindings[f"cases.{i}.delta_v"] == "0.40"
+        assert bindings[f"cases.{i}.allowable_delta_v"] == allowable
+        assert bindings[f"cases.{i}.excess_v"] == excess
+        assert page.payload["cases"][i]["verdict"] == verdict
+        assert page.payload["cases"][i]["excess_v"] == (0.25, 0.15, -0.10)[i]
+        assert page.payload["cases"][i]["marginal_upper_v"] == (0.20, 0.30, 0.55)[i]
+        notes = page.chart_notes[i::3]
+        assert len(notes) == 3
+        for note in notes:
+            assert "demand: 0.40 V;" in note
+            assert f"limit: {allowable} V;" in note
+            assert f"upper marginal boundary: {upper} V;" in note
+        table_row = text.split('Table A.', 1)[1].split('<tbody>', 1)[1].split('</tr>')[i]
+        assert sentence in table_row
+    summary = text.split('id="section-1"', 1)[1].split('id="revision-history"', 1)[0]
+    assert "The difference exceeds the software marginal band; protection is requested." in summary
+    assert 'cases.0.delta_v">0.40</span> V against' in summary
+    assert 'cases.0.allowable_delta_v">0.15</span> V.' in summary
+    assert "Controlled indoor: The difference is within the software allowable." in text
+    assert "Zinc is returned as anodic and carbon steel as cathodic." in text
+
+
+def test_output_newlines_are_explicit(builder, monkeypatch, tmp_path):
+    """Inspect the cross-platform write contract on any operating system."""
+    writes = []
+    original = Path.write_text
+
+    def record(path, text, *args, **kwargs):
+        writes.append(kwargs.get("newline"))
+        return original(path, text, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", record)
+    builder.build(tmp_path)
+    assert writes == ["\n", "\n"]
+    assert b"\r" not in (tmp_path / "report.html").read_bytes()
+    assert b"\r" not in (tmp_path / "changes.json").read_bytes()
+
+
+def test_figures_and_public_wording(builder):
+    text = builder.render()
+    chart = text.split('<figure id="environment-chart">', 1)[1].split('</figure>', 1)[0]
+    assert '<polyline' not in chart
+    assert len(re.findall(r'data-y-tick=', chart)) == 7
+    assert 'data-y-tick="0.6"' in chart
+    assert 'data-y-tick="0.0"' in chart
+    points = re.findall(r'cx="([0-9.]+)" cy="([0-9.]+)"', chart)
+    assert points == [
+        ("150", "140.00"), ("385", "140.00"), ("620", "140.00"),
+        ("150", "240.00"), ("385", "200.00"), ("620", "100.00"),
+        ("150", "220.00"), ("385", "180.00"), ("620", "80.00"),
+    ]
+    assert 'id="wet-film"' in text and 'V125 H320 V110' in text
+    assert 'zinc wrought / die-cast / plated group' in text
+    assert 'Draft for review' in text
+    assert 'Draft for client review' not in text
 
 
 def test_public_example_and_matrix_evidence(builder):
@@ -145,7 +251,19 @@ def test_public_example_and_matrix_evidence(builder):
     assert data["metals_count"] == len(ANODIC_INDEX_V)
     assert data["environments_count"] == len(ENVIRONMENTS)
     assert data["marginal_band_v"] == screening.MARGINAL_BAND_V
-    assert data["explorer_matches_pairs"]
+
+
+def test_inconsistent_matrix_refuses_rendering(builder, monkeypatch):
+    original = builder.compatibility_matrix
+
+    def inconsistent(environment):
+        matrix = original(environment)
+        matrix.loc["zinc", "carbon_steel"] = "OK"
+        return matrix
+
+    monkeypatch.setattr(builder, "compatibility_matrix", inconsistent)
+    with pytest.raises(ValueError, match="Matrix evidence differs"):
+        builder.render()
 
 
 def test_document_integrity_and_house_style(builder):

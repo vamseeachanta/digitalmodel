@@ -1,6 +1,11 @@
 {
-  "revision": "0",
+  "revision": "1",
   "history": [
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "change": "Report dispositions follow returned categories and material roles; figures, material-group wording and deterministic output are corrected."
+    },
     {
       "revision": "0",
       "date": "2026-10-22",
@@ -10,6 +15,7 @@
   "changes": [
     "Potential differences and environment limits are reported for the public zinc\u2013steel regression case.",
     "Default numerical criteria are separated from independently supported physical principles.",
+    "Dispositions and material roles follow calculation records; chart scales and the conductive-film sketch are corrected.",
     "A protection category for a sacrificial coating is distinguished from rejection of that coating."
   ]
 }
