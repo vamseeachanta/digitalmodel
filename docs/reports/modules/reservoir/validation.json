@@ -1,0 +1,290 @@
+{
+  "scope": "Existing reservoir module checks; report checks excluded",
+  "date": "2026-10-21",
+  "command": "python -m pytest tests/reservoir/test_reservoir.py tests/reservoir/test_stratigraphic.py tests/reservoir/test_volumetrics.py tests/test_reservoir_framework.py -q -p no:cacheprovider",
+  "counts": {
+    "passed": 23,
+    "skipped": 30,
+    "failed": 0,
+    "errors": 0
+  },
+  "cases": [
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_import_reservoir_package",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_package_has_docstring",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_init_exists",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_stratigraphic_module_exists",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_script_uses_matplotlib",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_script_uses_pandas",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_script_references_well_data",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_reservoir.py",
+      "name": "test_script_not_importable_due_to_globals",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_import_module",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_import_all_public_functions",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_create_cross_section_returns_figure",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_plot_gr_track_accepts_ax_and_df",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_plot_rt_track_accepts_ax_and_df",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_create_cross_section_empty_wells_list",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_create_cross_section_missing_columns",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_stratigraphic.py",
+      "name": "test_plot_facies_track_accepts_ax_and_df",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_known_volumetric",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_higher_boi_lowers_ooip",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_recoverable_is_fraction_of_ooip",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_incremental_uplift",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_a_ooip",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_b_primary_recoverable_22pct",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/reservoir/test_volumetrics.py",
+      "name": "test_c_secondary_uplift_22_to_30pct",
+      "outcome": "passed"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_bulk_density_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_formation_factor_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_rock_properties_creation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_rock_properties_validation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_api_to_specific_gravity",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_oil_density_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_helper_functions",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_ooip_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_pore_volume_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_saturation_validation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_permeability_correlations",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_porosity_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_water_saturation_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_facies_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_log_curve_creation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_net_pay_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_porosity_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_water_saturation_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_cumulative_production_calculation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_production_data_addition",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_tank_material_balance",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_decline_analysis",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_production_forecast",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_tvd_auto_assignment",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_well_data_creation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_integrated_analysis",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_model_creation",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_model_export",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_well_addition",
+      "outcome": "skipped"
+    },
+    {
+      "file": "tests/test_reservoir_framework.py",
+      "name": "test_complete_reservoir_analysis_workflow",
+      "outcome": "skipped"
+    }
+  ],
+  "source_digests": {
+    "src/digitalmodel/reservoir/__init__.py": "1479e966e408017977ec0287e40f857e14e85fa8640b285d1de35a70f138d662",
+    "src/digitalmodel/reservoir/volumetrics.py": "80ecf9dc374d64d8403bbd3305846a976b739781b76fd8a77a40291f03be9a04",
+    "src/digitalmodel/reservoir/stratigraphic.py": "e21bbbb5097b173249913f632a77e5691adf9e9adcefddb65a5a2f718f56d72a",
+    "tests/reservoir/test_reservoir.py": "f1447aa57031ef5932856b8e4c774b345a1d70573b65f0925cd37d3746a14d86",
+    "tests/reservoir/test_stratigraphic.py": "2db251d86c94e1464cb1b1261e2957e1c79b9b915acda9a5a4991e7ba6a0645c",
+    "tests/reservoir/test_volumetrics.py": "9788ef8151ab0ae1706207c7c906d8135bf43929ca6eef65862d3744b67a8864",
+    "tests/test_reservoir_framework.py": "842a030cb9b3fc23f1851e79e84fc0f4fe7344d0af52ae71317c86b42852b5bc",
+    "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
+    "tests/conftest.py": "02942e332c8dbd0c51f575c3073fb152aa92ece15efc6418c16f5f9fb8202a00",
+    "conftest.py": "842669d8b60bfa0252086645f9e7440e1fc4409e9ec603e48e904c813565b038"
+  }
+}

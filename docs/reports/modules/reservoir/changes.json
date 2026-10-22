@@ -1,0 +1,16 @@
+{
+  "report": "reservoir-volumetric-analysis",
+  "revision": "0",
+  "date": "2026-10-21",
+  "previous_revision": null,
+  "changes": [
+    {
+      "section": "section-5",
+      "description": "Initial issue presents oil in place, recovery scenarios and the physical volume bound."
+    },
+    {
+      "section": "section-7",
+      "description": "Arithmetic evidence and missing field qualification are distinguished."
+    }
+  ]
+}
