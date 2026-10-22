@@ -45,16 +45,41 @@ def test_campaign_fixture_is_in_checkout(spec_name):
     assert spec_path.is_file()
 
 
-@pytest.mark.parametrize("spec_name", ["FLOATING_SPEC", "SLAY_SPEC"])
+@pytest.mark.parametrize(
+    "spec_name, fixture_relative_path, compatibility_class, compatibility_method",
+    [
+        (
+            "FLOATING_SPEC",
+            "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml",
+            "TestBackwardCompatSingleRunFloating",
+            "test_backward_compat_single_run_floating",
+        ),
+        (
+            "SLAY_SPEC",
+            "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml",
+            "TestBackwardCompatSingleRunSlay",
+            "test_backward_compat_single_run_slay",
+        ),
+    ],
+    ids=["floating", "slay"],
+)
+@pytest.mark.parametrize("fixture_present", [True, False], ids=["present", "absent"])
 def test_campaign_fixture_paths_follow_relocated_checkout(
-    spec_name, tmp_path, monkeypatch
+    spec_name,
+    fixture_relative_path,
+    compatibility_class,
+    compatibility_method,
+    fixture_present,
+    tmp_path,
+    monkeypatch,
 ):
     """Resolve from the test location after copying to a synthetic checkout.
 
-    Expected paths are the synthetic root plus each tracked fixture's relative
-    path. Empty fixture placeholders suffice: this test exercises only path
-    declarations and skip conditions, without running the generated models.
-    Changing the working directory also rules out resolution from the caller.
+    Source: the tracked fixture locations and acceptance criteria in issue #2517.
+    Hand derivation: expected = synthetic checkout / literal relative fixture
+    path; skip = not fixture_present. Neither expectation uses the constants
+    under test. Empty placeholders exercise paths and collection-time skip
+    predicates without loading models. An unrelated cwd rules out caller roots.
     """
     source_file = Path(__file__).resolve()
     repo_root = next(
@@ -65,9 +90,10 @@ def test_campaign_fixture_paths_follow_relocated_checkout(
     checkout = tmp_path / "checkout"
     relocated_module = checkout / source_file.relative_to(repo_root)
     relocated_module.parent.mkdir(parents=True)
-    relocated_module.write_text(source_file.read_text())
-    for name in ("FLOATING_SPEC", "SLAY_SPEC"):
-        fixture = checkout / globals()[name].relative_to(repo_root)
+    relocated_module.write_text(source_file.read_text(encoding="utf-8"), encoding="utf-8")
+    expected = checkout / fixture_relative_path
+    if fixture_present:
+        fixture = expected
         fixture.parent.mkdir(parents=True, exist_ok=True)
         fixture.touch()
     elsewhere = tmp_path / "elsewhere"
@@ -76,9 +102,15 @@ def test_campaign_fixture_paths_follow_relocated_checkout(
 
     namespace = runpy.run_path(str(relocated_module))
 
-    expected = checkout / globals()[spec_name].relative_to(repo_root)
     assert namespace[spec_name] == expected
-    assert namespace[spec_name].is_file()
+    assert namespace[spec_name].is_file() is fixture_present
+    compatibility_test = getattr(namespace[compatibility_class], compatibility_method)
+    skip_conditions = [
+        mark.args[0]
+        for mark in compatibility_test.pytestmark
+        if mark.name == "skipif"
+    ]
+    assert skip_conditions == [not fixture_present]
 
 
 # ------------------------------------------------------------------
