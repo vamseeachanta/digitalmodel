@@ -1,6 +1,16 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+# Pack references are maintained separately from the historical method snapshot.
+agent_packs:
+  subsea/capping_stack:
+    agent_pack: src/digitalmodel/subsea/capping_stack/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+  subsea/hipps:
+    agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
 searched:
   tracked_files: 17815
   text_files_searched: 15629
