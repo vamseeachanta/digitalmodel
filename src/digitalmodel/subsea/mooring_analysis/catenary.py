@@ -33,7 +33,9 @@ class CatenaryAnalyzer:
             water_depth: Water depth in meters
         """
         self.water_depth = water_depth
-        self.g = 9.81  # Gravity acceleration (m/s²)
+        # NIST 2022 CODATA standard gravity rounded to two decimal places (m/s²):
+        # https://physics.nist.gov/cgi-bin/cuu/Value?gn
+        self.g = 9.81
 
     def solve_catenary(
         self,
@@ -45,8 +47,11 @@ class CatenaryAnalyzer:
         Solve catenary equations for mooring line.
 
         Uses analytical catenary equations to determine line geometry and tension
-        distribution. The catenary equation relates the horizontal tension H,
-        line weight w, and geometry.
+        distribution for an inextensible, uniformly weighted line with zero
+        vertical tension at touchdown. The vertical span is measured upward
+        from that lowest point; horizontal_distance covers the suspended part.
+        Arc length is the required suspended length, even if it exceeds the
+        supplied line length; this method does not establish feasibility.
 
         Args:
             line: Mooring line properties
@@ -57,16 +62,17 @@ class CatenaryAnalyzer:
             CatenaryResult with geometry and tensions
 
         Raises:
-            ValueError: If horizontal tension is too low for catenary solution
+            ValueError: If tension or submerged weight is not finite and positive,
+                or vertical height is not finite and nonnegative.
         """
-        if horizontal_tension <= 0:
-            raise ValueError("Horizontal tension must be positive")
+        if not np.isfinite(horizontal_tension) or horizontal_tension <= 0:
+            raise ValueError("Horizontal tension must be finite and positive")
 
         # Line weight per unit length in water (kN/m)
         w = line.weight_water * self.g / 1000.0
 
-        if abs(w) < 1e-6:
-            raise ValueError("Line weight too close to zero for catenary analysis")
+        if not np.isfinite(w) or w <= 0:
+            raise ValueError("Line weight must be finite and positive for touchdown")
 
         # Catenary parameter a = H/w (m)
         H = horizontal_tension
@@ -74,27 +80,20 @@ class CatenaryAnalyzer:
 
         # Vertical height (default to water depth)
         z = vertical_height if vertical_height is not None else self.water_depth
+        if not np.isfinite(z) or z < 0:
+            raise ValueError("Vertical height must be finite and nonnegative")
 
-        # Calculate suspended arc length using catenary equation
-        # For vertical span z: s = a * sinh(z/a)
-        # For large z/a, use exponential approximation to avoid overflow
-        if abs(z / a) < 20:
-            s = a * np.sinh(z / a)
-        else:
-            # Approximation for large arguments: sinh(x) ≈ exp(x)/2
-            s = a * np.exp(z / a) / 2
+        # Classical Mechanics (LibreTexts, 2017), section 18.3, equations
+        # 18.3.4-18.3.6: y=a+z, y²=a²+s² -> s²=z²+2az.
+        # https://phys.libretexts.org/@go/page/7046
+        s = np.sqrt(z) * np.sqrt(z + 2 * a)
 
-        # Horizontal distance from touchdown to fairlead
-        # x = a * (cosh(z/a) - 1) = a * arccosh(1 + z/a)
-        if abs(z / a) < 20:
-            x = a * (np.cosh(z / a) - 1)
-        else:
-            # Approximation: cosh(x) - 1 ≈ exp(x)/2 for large x
-            x = a * np.exp(z / a) / 2
+        # x=a*acosh(1+z/a)=a*asinh(s/a), from equations 18.3.4-18.3.5.
+        # The asinh form avoids losing the small increment in 1+z/a.
+        x = a * np.arcsinh(s / a)
 
-        # Tension at fairlead (top of catenary)
-        # T = sqrt(H² + (w*s)²)
-        T_fairlead = np.sqrt(H**2 + (w * s)**2)
+        # Equation 18.3.9: T=w*y=w*(a+z)=H+w*z at fixed vertical height.
+        T_fairlead = H + w * z
 
         # Tension at touchdown point (vertical component = 0)
         T_touchdown = H
@@ -129,8 +128,8 @@ class CatenaryAnalyzer:
         """
         Solve for horizontal tension given target fairlead tension.
 
-        Uses iterative Newton-Raphson method to find H that produces
-        the desired fairlead tension.
+        Uses Newton-Raphson with the exact fixed-height derivative dT/dH=1
+        from T=H+w*z (Classical Mechanics, 2017, equation 18.3.9).
 
         Args:
             line: Mooring line properties
@@ -143,13 +142,20 @@ class CatenaryAnalyzer:
             CatenaryResult with converged solution
 
         Raises:
+            ValueError: If the target is not finite or does not exceed w*z,
+                or the touchdown geometry inputs are invalid.
             RuntimeError: If solution doesn't converge
         """
-        # Initial guess: H ≈ 0.8 * T_fairlead
-        H = 0.8 * target_fairlead_tension
-
         z = vertical_height if vertical_height is not None else self.water_depth
         w = line.weight_water * self.g / 1000.0
+        if (
+            not np.isfinite(target_fairlead_tension)
+            or target_fairlead_tension <= w * z
+        ):
+            raise ValueError("Target fairlead tension must be finite and exceed w*z")
+
+        # T itself is a positive initial guess for admissible touchdown inputs.
+        H = target_fairlead_tension
 
         for iteration in range(max_iterations):
             # Calculate fairlead tension with current H
@@ -162,13 +168,9 @@ class CatenaryAnalyzer:
                 logger.debug(f"Converged in {iteration + 1} iterations")
                 return result
 
-            # Newton-Raphson update
-            # dT/dH ≈ H/T
-            dT_dH = H / T_current if T_current > 0 else 1.0
-            H -= error / dT_dH
-
-            # Ensure H stays positive
-            H = max(0.1, H)
+            # dT/dH=1 at fixed z (equation 18.3.9 cited above); the new H is
+            # T_target-w*z, positive by the admissibility check.
+            H -= error
 
         raise RuntimeError(
             f"Failed to converge after {max_iterations} iterations. "
@@ -193,7 +195,6 @@ class CatenaryAnalyzer:
         Returns:
             StiffnessResult with stiffness components
         """
-        H = catenary_result.horizontal_tension
         w = line.weight_water * self.g / 1000.0
         a = catenary_result.catenary_parameter
         s = catenary_result.arc_length
