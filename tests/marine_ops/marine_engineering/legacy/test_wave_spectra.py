@@ -192,11 +192,10 @@ class TestJONSWAPSpectrum:
         assert omega_min < omega_p / 2, "Lower frequency limit too high"
         assert omega_max > omega_p * 3, "Upper frequency limit too low"
 
-        # Most energy should be in central region
+        # A tail-resolving grid places the peak early in the array; sample
+        # fraction is not a coverage criterion. The peak must be bracketed.
         peak_idx = np.argmax(S)
-        assert 0.1 < peak_idx / len(S) < 0.9, (
-            "Peak is at edge of frequency range"
-        )
+        assert omega[0] < omega[peak_idx] < omega[-1]
 
 
 class TestPiersonMoskowitzSpectrum:
@@ -261,8 +260,11 @@ class TestSpectralMoments:
         )
 
     def test_higher_moments(self, ws):
-        """Validate higher moment calculations (m2, m4)."""
-        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3)
+        """Preserve existing finite-band moment snapshots on their original grid."""
+        # Former grid documented in issue #2613; these existing snapshots
+        # describe that finite band, not infinite-spectrum fourth moments.
+        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3,
+                              freq_max=2.0, n_points=100)
 
         m0 = ws.spectral_moment(omega, S, n=0)
         m2 = ws.spectral_moment(omega, S, n=2)
@@ -293,10 +295,13 @@ class TestSpectralMoments:
             f"Bandwidth parameter {epsilon:.3f} outside [0,1] range"
         )
 
-        # JONSWAP is moderately narrow-band
-        assert 0.2 < epsilon < 0.8, (
-            f"JONSWAP bandwidth {epsilon:.3f} outside typical range"
-        )
+        # The Orcina JONSWAP equation has an omega^-5 tail: m4 diverges
+        # logarithmically, so bandwidth depends on the cutoff. A fixed
+        # "typical" upper bound would reject the restored spectral tail.
+        # Former grid bounds are recorded in issue #2613.
+        short_omega, short_s = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3,
+                                         freq_max=2.0, n_points=100)
+        assert epsilon > ws.spectrum_statistics(short_omega, short_s)['spectral_width']
 
 
 class TestIrregularWaveSynthesis:
