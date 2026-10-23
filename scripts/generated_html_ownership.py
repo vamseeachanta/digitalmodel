@@ -31,6 +31,21 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/build_motionforecast_report.py": (
+        "writes the motion report outside docs/api; "
+        "tests/motion_forecast/test_module_report.py checks exact reproduction; "
+        "rerun it after changes to the embedded stylesheet in "
+        "docs/reports/pipeline-ffs-assessment.html or to source-digest dependencies: "
+        "src/digitalmodel/motion_forecast/reconstruct.py, "
+        "src/digitalmodel/motion_forecast/models.py, "
+        "src/digitalmodel/motion_forecast/rao_adapter.py, "
+        "src/digitalmodel/motion_forecast/conventions.py, "
+        "tests/motion_forecast/test_reconstruct.py, "
+        "tests/motion_forecast/test_validation.py, "
+        "src/digitalmodel/motion_forecast/wave_forecast.py, "
+        "src/digitalmodel/motion_forecast/criteria_defaults.yml, "
+        "src/digitalmodel/motion_forecast/docs/agent-pack.md"
+    ),
     "scripts/attestation_manifest.py": (
         "writes a caller-selected attestation summary, not committed docs/api pages"
     ),
