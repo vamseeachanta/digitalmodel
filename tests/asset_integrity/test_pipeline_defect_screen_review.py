@@ -174,3 +174,26 @@ def test_report_reads_geometry_from_saved_assessment(reference):
     reference["nominal_od_in"] = 99.0
     report = render_report(reference, result)
     assert "<td>OD (in)</td><td>30.000</td>" in report
+
+
+@pytest.mark.parametrize("margin", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("row_index", [0, 1, -1])
+def test_nonfinite_method_margin_escalates_before_governing_selection(
+    reference, monkeypatch, margin, row_index,
+):
+    import digitalmodel.asset_integrity.pipeline_defect_screen as screen
+
+    original = screen._methods
+
+    def methods(*args):
+        rows, applicability = original(*args)
+        rows[row_index]["margin"] = margin
+        return rows, applicability
+
+    monkeypatch.setattr(screen, "_methods", methods)
+    decision = screen.assess(reference)["decision"]
+    assert decision["verdict"] == "ESCALATE"
+    assert decision["action"] == "ESCALATE"
+    assert decision["margin"] is None
+    assert decision["demand_limits_psi"] is None
+    assert "non-finite" in decision["governing_criterion"]

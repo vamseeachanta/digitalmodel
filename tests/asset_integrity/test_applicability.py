@@ -283,7 +283,7 @@ def test_ffs_decision_escalates_when_any_flag_is_raised():
     assert d["applicability"] == flagged.to_dict()
     # the numeric result is still carried for reference, not used as a verdict
     assert d["rsf"] == 0.97
-    assert d["rerated_mawp_psi"] == pytest.approx(1000.0)
+    assert d["rerated_mawp_psi"] is None  # applicability does not establish a rating
     assert math.isfinite(d["remaining_life_yr"])
 
 

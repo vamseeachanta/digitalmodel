@@ -148,7 +148,8 @@ class FFSRouter:
         total = max(char.total_valid_cells, 1)
         largest_fraction = char.largest_pit_cells / total
         background_ratio = (
-            char.background_median_in / nominal_wt_in if nominal_wt_in > 0 else 0.0
+            char.background_median_in / nominal_wt_in
+            if nominal_wt_in > 0 and char.background_median_in is not None else 0.0
         )
 
         detected = (

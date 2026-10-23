@@ -28,6 +28,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -62,7 +64,7 @@ class FFSComponent:
     nominal_wt_in: float
     design_pressure_psi: float
     smys_psi: Optional[float] = None
-    corrosion_rate_in_per_yr: float = 0.0
+    corrosion_rate_in_per_yr: Optional[float] = None
     fca_in: float = 0.0  # future corrosion allowance
     rsf_a: float = 0.90  # allowable remaining strength factor
     component_type: str = "pipe"
@@ -83,7 +85,7 @@ class FFSAssessmentResult:
     rsf: float
     rsf_a: float
     folias_factor: float
-    remaining_life_yr: float
+    remaining_life_yr: Optional[float]
     verdict: str  # ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE/ESCALATE
     rerated_pressure_psi: float  # screening re-rate = P_design * min(1, rsf/rsf_a)
     sufficiency_status: str  # SUFFICIENT/TAKE_MORE/ESCALATE
@@ -125,6 +127,11 @@ class FFSAssessmentResult:
             "passes": self.passes,
             "code_reference": self.code_reference,
         }
+        # Non-finite strength/rating means no evaluated physical result. Keep
+        # the internal numerical sentinel out of the indexed JSON surface.
+        for key in ("rsf", "folias_factor", "rerated_pressure_psi"):
+            if not math.isfinite(payload[key]):
+                payload[key] = None
         if self.repair_recommendation is not None:
             payload["repair_recommendation"] = self.repair_recommendation
         if not self.applicability.ok:
@@ -141,6 +148,7 @@ def assess_component(
     input_units: str = "in",
     force_type: Optional[str] = None,
     repair_context: Optional[Mapping[str, Any]] = None,
+    row_spacing_in: Optional[float] = None,
 ) -> FFSAssessmentResult:
     """Run the full Phase-1 FFS chain and return one unified result.
 
@@ -151,6 +159,8 @@ def assess_component(
         input_units: ``"in"`` (default) or ``"mm"`` — passed to GridParser.
         force_type: override the auto-classification
             ("GML"/"LML"/"PITTING").
+        row_spacing_in: Explicit axial pitch in inches for the pitting route.
+            Otherwise a uniform numeric index is required to establish pitch.
         repair_context: optional composite-repair screening context. Used only
             for REPAIR verdicts.
     """
@@ -178,7 +188,8 @@ def assess_component(
         # conservative closed-form Level 1 screen on top of the code t_min
         # check, and bound Level 2 by an equivalent LTA run through the
         # validated Part 5 engine (see assessment/pitting.py for the basis).
-        pit_char = characterize_pit_field(df, component.nominal_wt_in)
+        pit_char = characterize_pit_field(df, component.nominal_wt_in,
+                                          row_spacing_in=row_spacing_in)
         pit_l1 = screen_pitting_level1(
             pit_char, t_min_in=t_min, fca_in=component.fca_in
         )
@@ -246,7 +257,7 @@ def assess_component(
         rsf=rsf,
         rsf_a=component.rsf_a,
         folias_factor=float(l2.get("folias_factor", 1.0)),
-        remaining_life_yr=float(decision.get("remaining_life_yr", float("nan"))),
+        remaining_life_yr=decision["remaining_life_yr"],
         verdict=str(decision.get("verdict", "UNKNOWN")),
         rerated_pressure_psi=float(rerated),
         sufficiency_status=str(sufficiency.status),

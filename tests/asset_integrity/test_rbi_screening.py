@@ -323,3 +323,34 @@ def test_baseline_heuristics_constant_shape():
     }
     for lo, hi in NON_RBI_BASELINE_INTERVALS_YR.values():
         assert 0 < lo <= hi <= 5.0
+
+
+@pytest.mark.parametrize("life", [None, float("nan")])
+def test_screen_ffs_result_requires_rate_when_life_is_absent(life):
+    with pytest.raises(ValueError, match="corrosion_rate_in_per_yr.*required"):
+        screen_ffs_result(_ffs_result(remaining_life_yr=life), "C")
+
+
+def test_screen_ffs_result_with_default_coordinator_rate_requires_evidence():
+    from digitalmodel.asset_integrity.assessment.ffs_coordinator import (
+        FFSComponent, assess_component,
+    )
+
+    component = FFSComponent("SYNTHETIC", "B31.8", 16, 0.5, 1000, smys_psi=52000)
+    result = assess_component(component, pd.DataFrame([[0.48] * 4] * 4))
+    assert result.remaining_life_yr is None
+    with pytest.raises(ValueError, match="corrosion_rate_in_per_yr.*required"):
+        screen_ffs_result(result, "C")
+    rated = screen_ffs_result(result, "C", corrosion_rate_in_per_yr=0.01)
+    assert rated.inputs["remaining_life_yr"] > 0
+
+
+@pytest.mark.parametrize("rate", [0.0, 0.01])
+def test_screen_ffs_result_explicit_rate_with_absent_life(rate):
+    res = screen_ffs_result(_ffs_result(remaining_life_yr=None), "C",
+                            corrosion_rate_in_per_yr=rate)
+    if rate == 0:
+        assert res.inputs["remaining_life_yr"] is None
+    else:
+        # Excess wall 0.820-0.761=0.059 in; 0.059/0.01=5.9 yr.
+        assert res.inputs["remaining_life_yr"] == pytest.approx(5.9)

@@ -43,9 +43,9 @@ def test_accept_caps_rerated_at_design_pressure():
 
 def test_without_design_pressure_falls_back():
     d = _decide(0.72)
-    assert d["verdict"] == "RE_RATE"
+    assert d["verdict"] == "ESCALATE"
     assert d["rerated_mawp_psi"] is None
-    assert "Reduce MAWP or operating pressure" in d["governing_criterion"]
+    assert "not calculated" in d["governing_criterion"]
 
 
 def test_replace_floor_still_carries_rerated_value():

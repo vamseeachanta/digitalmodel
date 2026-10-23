@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from digitalmodel.asset_integrity.applicability import Applicability, merge
-from .ffs_decision import decide
+from .ffs_decision import decide, from_screening
 from .ffs_report import FFSReport
 from .pitting import (
     DEFAULT_PIT_THRESHOLD_FRACTION, DEFAULT_RT_MIN, characterize_pit_field,
@@ -56,11 +56,6 @@ def _levels(char, od, wt, minimum, fca, rsfa, rt_min):
     if effective.t_min_pit_in <= 0:
         return l1, {"rsf": None, "verdict": "not evaluated",
                     "assessment_basis": "FCA consumes the deepest ligament; strength is not evaluated."}
-    if effective.pitted_region_row_count == 1:
-        # Two half-pitch rows represent the same uniform region and preserve
-        # its physical length despite the engine's single-index spacing default.
-        effective = replace(effective, pitted_region_row_count=2,
-                            row_spacing_in=effective.row_spacing_in / 2)
     l2 = assess_pitting_level2_equivalent_lta(
         effective, nominal_od_in=od, nominal_wt_in=wt, t_min_in=minimum, rsf_a=rsfa)
     l2["assessment_basis"] = (
@@ -77,7 +72,8 @@ def _applicability(grid, char, minimum, fca, rt_min, l2):
     checks = [
         (char.pit_count == 0, "pitting.no_pits",
          "No pits identified; a pitting disposition is not evaluated. Use measured-wall metal-loss assessment."),
-        ((char.t_min_pit_in - fca) / char.nominal_wt_in < rt_min,
+        (char.t_min_pit_in is not None and
+         (char.t_min_pit_in - fca) / char.nominal_wt_in < rt_min,
          "pitting.deep_ligament", "Remaining deepest ligament after FCA is below rt_min; detailed assessment required."),
     ]
     values = grid.to_numpy()
@@ -100,27 +96,29 @@ def _applicability(grid, char, minimum, fca, rt_min, l2):
 
 def _assess(block):
     grid, od, wt, minimum, fca, rsfa, rt_min, threshold = _read_input(block)
-    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold)
-    spacing = float(block["row_spacing_in"])
-    char = replace(char, row_spacing_in=spacing,
-                   pitted_region_length_in=char.pitted_region_row_count * spacing)
-    if char.pit_count == 0:
-        char = replace(char, t_min_pit_in=float(grid.to_numpy().min()),
-                       t_avg_pit_in=float(grid.to_numpy().mean()))
+    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold,
+                                  row_spacing_in=float(block["row_spacing_in"]))
     l1, l2 = _levels(char, od, wt, minimum, fca, rsfa, rt_min)
     applicability = _applicability(grid, char, minimum, fca, rt_min, l2)
-    margin = l2["rsf"] if l2["rsf"] is not None else float("nan")
+    margin = l2["rsf"]
     # Level 2 supersedes the Level 1 mean-wall screen on RSF; independent
     # ligament and method applicability gates still override the disposition.
-    passed = np.isfinite(margin) and margin >= rsfa
-    # Failed/unsupported screens have no established rerating or life basis:
-    # a non-finite margin invokes the shared ESCALATE path before its bands.
-    decision = decide(margin if passed else float("nan"), rsfa, float("nan"),
-                      "pipeline", screening_pass=passed, applicability=applicability).to_dict()
+    passed = margin is not None and np.isfinite(margin) and margin >= rsfa
+    if passed:
+        decision = decide(margin, rsfa, None, "pipeline", screening_pass=True,
+                          applicability=applicability).to_dict()
+    else:
+        # Failed pitting screens have no established life/rating basis. Map
+        # the disposition directly; no artificial nonfinite strength token.
+        decision = from_screening("ESCALATE", "pipeline",
+                                  "Pitting strength screen unmet or not evaluated").to_dict()
+        decision["applicability"] = applicability.to_dict()
     strength = l2["rsf"] if l2["rsf"] is not None else "not evaluated"
+    mean_wall = (f"{char.t_avg_pit_in - fca:.3f} in"
+                 if char.t_avg_pit_in is not None else "not evaluated")
     decision["governing_criterion"] = (
         f"Part 5 equivalent-LTA estimate: RSF={strength}, RSFa={rsfa}; "
-        f"mean effective pit wall={char.t_avg_pit_in - fca:.3f} in, required={minimum:.3f} in; "
+        f"mean effective pit wall={mean_wall}, required={minimum:.3f} in; "
         f"screening disposition={decision['verdict']}. "
         "Synthetic formula screening only; published-case qualification and "
         "measured-component acceptance are not established. "
@@ -129,7 +127,7 @@ def _assess(block):
     if not applicability.ok:
         decision["governing_criterion"] += " " + " ".join(applicability.notes)
     for key in ("remaining_life_yr", "rsf", "margin"):
-        if not np.isfinite(decision[key]):
+        if decision[key] is not None and not np.isfinite(decision[key]):
             decision[key] = None
     if "applicability" in l2:
         l2["applicability"] = l2["applicability"].to_dict()

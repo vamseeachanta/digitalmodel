@@ -175,7 +175,7 @@ class TestLevel1Screen:
     def test_no_pits_accepts(self):
         char = characterize_pit_field(_grid(), NOMINAL)
         r = screen_pitting_level1(char, t_min_in=0.45)
-        assert r["verdict"] == "ACCEPT"
+        assert r["verdict"] == "NOT_EVALUATED"
 
 
 # ===========================================================================
@@ -226,8 +226,8 @@ class TestLevel2EquivalentLTA:
         r = assess_pitting_level2_equivalent_lta(
             char, nominal_od_in=self.OD, nominal_wt_in=NOMINAL, t_min_in=self.TMIN
         )
-        assert r["rsf"] == 1.0
-        assert r["verdict"] == "ACCEPT"
+        assert np.isnan(r["rsf"])
+        assert r["verdict"] == "NOT_EVALUATED"
         assert r["equivalent_lta"] is None
 
     def test_one_call_convenience(self):

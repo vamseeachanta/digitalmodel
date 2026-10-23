@@ -377,6 +377,7 @@ def screen_ffs_result(
     corrosion rate is not supplied it is back-calculated from the result's
     ``remaining_life_yr`` so that ``plan_inspection`` reproduces the FFS
     remaining life exactly (single source, no duplicated half-life logic).
+    An absent life requires an explicit rate; it is not evidence of zero corrosion.
     """
     mm = 25.4
     current_mm = float(result.t_measured_min_in) * mm
@@ -386,6 +387,10 @@ def screen_ffs_result(
     if corrosion_rate_in_per_yr is not None:
         rate_mm_yr = float(corrosion_rate_in_per_yr) * mm
     else:
+        if result.remaining_life_yr is None or pd.isna(result.remaining_life_yr):
+            raise ValueError(
+                "corrosion_rate_in_per_yr is required when remaining life is absent"
+            )
         life = float(result.remaining_life_yr)
         if allowance_mm > 0.0 and life > 0.0 and life != float("inf"):
             rate_mm_yr = allowance_mm / life

@@ -667,7 +667,7 @@ class TestFFSDecision:
         )
         assert result["verdict"] in ("REPAIR", "REPLACE", "RE_RATE")
 
-    def test_repair_when_level2_fails_with_remaining_life(self):
+    def test_escalate_when_level2_fails_without_rating_evidence(self):
         from digitalmodel.asset_integrity.assessment.ffs_decision import FFSDecision
         result = FFSDecision.decide(
             level1_verdict="FAIL_LEVEL_1",
@@ -678,7 +678,24 @@ class TestFFSDecision:
             t_min_in=0.300,
             corrosion_rate_in_per_yr=0.010,
         )
-        assert result["verdict"] in ("REPAIR", "REPLACE", "RE_RATE", "MONITOR")
+        assert result["verdict"] == "ESCALATE"  # no rating evidence
+
+    def test_rerate_when_level2_fails_with_pressure_evidence(self):
+        """Existing pressure scale: 1000*(0.75/0.9) = 833.3 psi."""
+        from digitalmodel.asset_integrity.assessment.ffs_decision import FFSDecision
+
+        result = FFSDecision.decide(
+            level1_verdict="FAIL_LEVEL_1",
+            level2_verdict="FAIL_LEVEL_2",
+            rsf=0.75,
+            rsf_a=0.9,
+            t_mm_in=0.280,
+            t_min_in=0.300,
+            corrosion_rate_in_per_yr=0.010,
+            design_pressure_psi=1000.0,
+        )
+        assert result["verdict"] == "RE_RATE"
+        assert result["rerated_mawp_psi"] == pytest.approx(833.3, abs=0.1)
 
     def test_accept_result_has_remaining_life(self):
         from digitalmodel.asset_integrity.assessment.ffs_decision import FFSDecision
