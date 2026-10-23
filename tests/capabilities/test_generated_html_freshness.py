@@ -132,7 +132,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     assert len(checker.GENERATORS) == 25
     assert len(outputs) == 29  # includes the fetched load-explorer sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
-    assert len(checker.PAGE_EXCLUSIONS) == 21
+    assert len(checker.PAGE_EXCLUSIONS) == 22
     assert len(checker.EXCLUDED_GENERATORS) == 9
     # The verification generator needs a caller-supplied solved case;
     # repository inputs alone cannot reproduce its page.
