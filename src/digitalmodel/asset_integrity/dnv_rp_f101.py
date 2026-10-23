@@ -78,6 +78,7 @@ from digitalmodel.asset_integrity.applicability import (
 from digitalmodel.asset_integrity.corroded_pipe import (
     ASME_B318_CLASS1_DESIGN_FACTOR,
 )
+from .input_validation import finite_number, pressure_basis
 from digitalmodel.codes import DNV_RP_F101
 from digitalmodel.materials import legacy_smts_psi_dict
 
@@ -198,8 +199,9 @@ def epsilon_d_fractile(std_rel_depth: float) -> float:
 
     (The quadratic gives epsilon_d ~ 0, 1.0, 2.0 at a = 0.04, 0.08, 0.16 — so
     the legacy scalar default epsilon_d = 1.0 corresponds to StD[d/t] = 0.08.)
-    For ``a`` above the calibrated 0.16 the value is clamped at the 0.16 point.
+    Values outside the calibrated uncertainty range are rejected.
     """
+    finite_number("std_rel_depth", std_rel_depth, minimum=0, maximum=_DNV_F101_MAX_STD)
     a = std_rel_depth
     if a <= 0.04:
         return 0.0
@@ -226,9 +228,10 @@ def gamma_d_factor(
     (``normal`` aliases ``medium``.)  Larger StD and higher safety class both
     raise ``gamma_d`` (more conservative); e.g. at a = 0.08 gamma_d is 1.20
     (Low) / 1.279 (Medium) / 1.318 (High) / 1.435 (Very High), matching the
-    Table 3-7 tabulated points.  ``a`` above 0.16 is clamped to the 0.16 point.
+    Table 3-7 tabulated points. Uncertainty outside calibration is rejected.
     """
-    a = min(max(std_rel_depth, 0.0), _DNV_F101_MAX_STD)
+    finite_number("std_rel_depth", std_rel_depth, minimum=0, maximum=_DNV_F101_MAX_STD)
+    a = std_rel_depth
     sc = _normalise_safety_class(safety_class)
     if sc == "low":
         if a < 0.04:
@@ -277,7 +280,9 @@ def length_correction_factor(D: float, t: float, L: float) -> float:
 
 def _intact_pressure(t: float, f_u: float, D: float) -> float:
     """Defect-free hoop capacity ``2 t f_u / (D - t)``."""
-    return 2.0 * t * f_u / (D - t)
+    pressure = 2.0 * t * f_u / (D - t)
+    finite_number("intact pressure capacity", pressure, minimum=0)
+    return pressure
 
 
 def _depth_applicability(dt: float) -> Applicability:
@@ -329,6 +334,7 @@ def dnv_f101_single_defect(
             * capacity. A default 0.72 total F is used when both usage inputs are absent.
     """
     _validate(D, t, d, L)
+    pressure_basis(smts_psi, maop_psi)
     f_u = smts_psi
     dt = d / t
     Q = length_correction_factor(D, t, L)
@@ -339,6 +345,7 @@ def dnv_f101_single_defect(
         usage_factor, modelling_factor, operational_usage_factor
     )
     p_allow = total_factor * p_cap
+    finite_number("allowable pressure", p_allow, minimum=0)
     applicability = _depth_applicability(dt)
     return DNVF101Result(
         method="DNV-F101-AS",
@@ -347,7 +354,9 @@ def dnv_f101_single_defect(
         Q=Q,
         d_over_t=dt,
         intact_pressure_psi=_intact_pressure(t, f_u, D),
-        acceptable=(None if maop_psi is None else bool(p_allow >= maop_psi)),
+        # Acceptance requires applicability and allowable pressure >= demand.
+        acceptable=(None if maop_psi is None or not applicability.ok
+                    else bool(p_allow >= maop_psi)),
         details={
             "usage_factor": total_factor,
             "total_usage_factor": total_factor,
@@ -375,7 +384,9 @@ def _single_defect_usage_factor(total_alias, modelling_factor, operational_facto
                 DeprecationWarning,
                 stacklevel=3,
             )
-        return _DEFAULT_USAGE_FACTOR if total_alias is None else total_alias
+        total = _DEFAULT_USAGE_FACTOR if total_alias is None else total_alias
+        finite_number("usage_factor", total, positive=True, maximum=1)
+        return total
     if total_alias is not None:
         raise ValueError("Specify either legacy total F or operational F2, not both")
     for name, value in (
@@ -426,14 +437,27 @@ def dnv_f101_psf(
     (Very-High class, absolute sizing, StD = 0.08) reproduce the historical
     scalar ``gamma_m = 0.77`` (which Table 3-2 places at Very-High/absolute, not
     Normal as the prior code assumed).  Any of ``gamma_m``/``gamma_d``/
-    ``epsilon_d`` may be passed explicitly to override the table lookup.
+    ``epsilon_d`` may be passed explicitly only when they retain or increase
+    the penalty for the selected safety class and measurement uncertainty.
 
     The PSF pressure is reported as the allowable pressure; the un-factored mean
     capacity is also returned for reference.
     """
     _validate(D, t, d, L)
+    pressure_basis(smts_psi, maop_psi)
     f_u = smts_psi
     dt = d / t
+    finite_number("std_rel_depth", std_rel_depth, minimum=0, maximum=_DNV_F101_MAX_STD)
+    calibrated_m = gamma_m_factor(safety_class, measurement_method)
+    calibrated_d = gamma_d_factor(std_rel_depth, safety_class)
+    calibrated_e = epsilon_d_fractile(std_rel_depth)
+    # Explicit overrides may only retain or increase the calibrated penalty.
+    if gamma_m is not None:
+        finite_number("gamma_m", gamma_m, positive=True, maximum=calibrated_m)
+    if gamma_d is not None:
+        finite_number("gamma_d", gamma_d, minimum=calibrated_d)
+    if epsilon_d is not None:
+        finite_number("epsilon_d", epsilon_d, minimum=calibrated_e)
     if gamma_m is None:
         gamma_m = gamma_m_factor(safety_class, measurement_method)
     if gamma_d is None:
@@ -441,13 +465,16 @@ def dnv_f101_psf(
     if epsilon_d is None:
         epsilon_d = epsilon_d_fractile(std_rel_depth)
     dt_star = dt + epsilon_d * std_rel_depth
-    dt_star = min(dt_star, 0.999)
+    finite_number("corrected relative depth", dt_star, minimum=0)
+    # A consumed factored ligament has no pressure capacity; never evaluate
+    # the rational equation beyond its positive-ligament domain.
+    factored_depth = gamma_d * dt_star
+    finite_number("factored relative depth", factored_depth, minimum=0)
     Q = length_correction_factor(D, t, L)
     intact = _intact_pressure(t, f_u, D)
-    p_corr = (
-        gamma_m * intact * (1.0 - gamma_d * dt_star) / (1.0 - gamma_d * dt_star / Q)
-    )
-    p_corr = max(p_corr, 0.0)
+    p_corr = (0.0 if factored_depth >= 1.0 else
+              gamma_m * intact * (1.0 - factored_depth) / (1.0 - factored_depth / Q))
+    finite_number("factored pressure capacity", p_corr, minimum=0)
     p_cap = _capacity(t, f_u, D, dt, Q)  # un-factored mean capacity, for reference
     applicability = merge(
         _depth_applicability(dt),
@@ -457,7 +484,7 @@ def dnv_f101_psf(
             flag=DNV_F101_SIZING_STD_FLAG,
             quantity="StD[d/t]",
             method="DNV-RP-F101 Part-A PSF calibration",
-            advice="gamma_d/epsilon_d clamped at the 0.16 point",
+            advice="qualified sizing uncertainty is required",
         ),
     )
     return DNVF101Result(
@@ -467,13 +494,16 @@ def dnv_f101_psf(
         Q=Q,
         d_over_t=dt,
         intact_pressure_psi=intact,
-        acceptable=(None if maop_psi is None else bool(p_corr >= maop_psi)),
+        # Acceptance requires applicability and factored pressure >= demand.
+        acceptable=(None if maop_psi is None or not applicability.ok
+                    else bool(p_corr >= maop_psi)),
         details={
             "gamma_m": gamma_m,
             "gamma_d": gamma_d,
             "epsilon_d": epsilon_d,
             "std_rel_depth": std_rel_depth,
             "d_over_t_star": dt_star,
+            "factored_ligament_positive": bool(factored_depth < 1.0),
             "safety_class": _normalise_safety_class(safety_class),
             "measurement_method": measurement_method.strip().lower(),
             "L_in": L,
@@ -533,11 +563,14 @@ def dnv_f101_interacting(
     (zero spacing); a non-zero gap dilutes the combined depth below the members'.
     """
     _validate_geometry(D, t)
+    pressure_basis(smts_psi, maop_psi)
     if not defects:
         raise ValueError("defects must be a non-empty sequence.")
 
     items = []
     for pos, length, depth in defects:
+        finite_number("defect position", pos)
+        _validate(D, t, depth, length)
         if length < 0:
             raise ValueError(f"defect length {length} must be >= 0.")
         if not (0.0 <= depth <= t):
@@ -596,7 +629,8 @@ def dnv_f101_interacting(
 
     governing = min(candidates, key=lambda c: c["res"].capacity_pressure_psi)
     gres = governing["res"]
-    applicability = gres.applicability
+    # Every supplied defect must be applicable, including non-governing ones.
+    applicability = merge(*(candidate["res"].applicability for candidate in candidates))
     gov_details = {
         "interaction_limit_in": limit,
         "governing_kind": governing["kind"],
@@ -617,7 +651,9 @@ def dnv_f101_interacting(
         d_over_t=gres.d_over_t,
         intact_pressure_psi=gres.intact_pressure_psi,
         acceptable=(
-            None if maop_psi is None else bool(gres.allowable_pressure_psi >= maop_psi)
+            # Acceptance needs every defect applicable and pressure >= demand.
+            None if maop_psi is None or not applicability.ok
+            else bool(gres.allowable_pressure_psi >= maop_psi)
         ),
         details=gov_details,
         applicability=applicability,
@@ -628,13 +664,17 @@ def dnv_f101_interacting(
 # Validation
 # ---------------------------------------------------------------------------
 def _validate_geometry(D: float, t: float) -> None:
+    finite_number("D", D, positive=True)
+    finite_number("t", t, positive=True)
     if D <= 0 or t <= 0 or t >= D:
         raise ValueError(f"Invalid geometry: D={D}, t={t} (need D > t > 0).")
 
 
 def _validate(D: float, t: float, d: float, L: float) -> None:
     _validate_geometry(D, t)
+    finite_number("defect depth d", d, minimum=0, maximum=t)
     if not (0.0 <= d <= t):
         raise ValueError(f"defect depth d={d} must be in [0, t={t}].")
-    if L < 0:
-        raise ValueError(f"defect length L={L} must be >= 0.")
+    finite_number("defect length L", L, minimum=0)
+    if d > 0 and L == 0:
+        raise ValueError("positive defect depth requires positive measured flaw length")

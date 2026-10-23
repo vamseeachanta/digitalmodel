@@ -17,6 +17,7 @@ from pathlib import Path
 import pandas as pd
 
 from digitalmodel.asset_integrity.riser_joint_ffs import (
+    DEFAULT_WELD_CVN_JOULES,
     acceptable_water_depth_ft,
     fleet_rollup,
     level1_flaw_envelope,
@@ -50,13 +51,21 @@ def build_tables() -> dict:
                 for region in ("base", "weld"):
                     env = level1_flaw_envelope(
                         OD, WT, GRADE, p, region=region,
-                        corrosion_rate_in_per_yr=cr / MM, campaign_years=T)
+                        corrosion_rate_in_per_yr=cr / MM, campaign_years=T,
+                        # Illustrative basis, not measured weld evidence.
+                        weld_sigma_b_mpa=0.0, weld_cvn_joules=DEFAULT_WELD_CVN_JOULES)
                     key = f"{int(p)}|{cr:g}|{T:g}|{region}"
                     envelopes[key] = {
                         "depth_mm": [round(d * MM, 2) for d in env["depth_in"]],
-                        "length_mm": [round(v * MM, 1)
+                        "length_mm": [None if v is None else round(v * MM, 1)
                                       for v in env["max_acceptable_length_in"]],
+                        "applicability": env["applicability"],
+                        "reason": env.get("reason", ""),
                     }
+                    if region == "weld":
+                        envelopes[key].update({name: env[name] for name in (
+                            "weld_sigma_m_mpa", "weld_sigma_b_mpa", "weld_cvn_joules",
+                            "weld_k_mat_mpa_sqrt_m")})
 
     # collapse-limited depth vs measured min wall (evacuated basis)
     wt_mm = [14.0 + 0.25 * i for i in range(38)]  # 14.0 .. 23.25 mm
@@ -171,14 +180,17 @@ string. Every number is precomputed in Python
     <div id="depthchart" style="height:250px"></div></div>
 </div>
 
+<p class="note" id="envelope-status" role="status"></p>
 <p class="note"><b>Basis.</b> Base-metal envelope: Modified B31G (0.85 dL) safe
 pressure ≥ design pressure, inverted by bisection. Weld envelope: BS 7910:2013
 Option-1 failure-assessment diagram (<code>assessment.crack_fad</code>,
 digitalmodel#1270) — semi-elliptical surface flaw, Newman–Raju K, Annex P reference
 stress — inverted to max acceptable length at each depth; membrane stress is the
 Barlow hoop stress p·D/(2t) at the design pressure (through-wall bending taken as
-zero), toughness is the BS 7910 Annex J lower bound from a conservative CVN 27 J
-default (no weld-metal toughness test assumed — supply measured values to relax).
+zero), toughness is the BS 7910:2013 Annex J lower bound from an explicitly
+assumed CVN 27 J. Bending, toughness and linear corrosion growth are illustrative
+assumptions, based on previous experience; no measured weld basis is established.
+Campaign curves are conditional illustrations and do not qualify continued service.
 Depth caps 0.85·WT (base metal) / 0.60·WT (weld) per the source integrity program
 apply on top of the computed envelopes; campaign-end curves assess each depth at
 d + rate × duration. Collapse depth: API RP 1111 elastic/yield interaction at the
@@ -203,6 +215,15 @@ function envTrace(key, name, color, dashed){
           line:{color, width:2.5, dash: dashed?"dash":"solid"}};
 }
 
+function flawAcceptance(flaw, envelope){
+  if(!Number.isFinite(flaw.depth_mm) || !Number.isFinite(flaw.length_mm) ||
+     flaw.depth_mm <= 0 || flaw.length_mm <= 0) return null;
+  const i = envelope.depth_mm.findIndex(depth => depth >= flaw.depth_mm);
+  if(i < 0 || !Number.isFinite(envelope.length_mm[i]) || envelope.length_mm[i] < 0 ||
+     envelope.applicability?.[i]?.ok !== true) return null;
+  return flaw.length_mm <= envelope.length_mm[i];
+}
+
 function draw(){
   const p=$("pres").value, r=$("rate").value, T=$("dur").value;
   const traces = [
@@ -211,19 +232,29 @@ function draw(){
     envTrace(`${p}|${r}|0|weld`, "weld — campaign start", C.weld, false),
     envTrace(`${p}|${r}|${T}|weld`, "weld — campaign end", C.weldEnd, true),
   ];
+  const summaries = [["base", "0"], ["base", T], ["weld", "0"], ["weld", T]];
+  $("envelope-status").textContent = `Design pressure ${p} psi; corrosion ${r} mm/yr; ` +
+    `campaign ${T} yr. ` + summaries.map(([region, duration]) => {
+      const e = DATA.envelopes[`${p}|${r}|${duration}|${region}`];
+      const missing = e.length_mm.flatMap((length, i) => length === null ?
+        [`${e.depth_mm[i]} mm (${e.reason || e.applicability[i].notes.join("; ")})`] : []);
+      return `${region}, ${duration} yr: ` + (missing.length ?
+        `not evaluated at depths ${missing.join(", ")}` : "all depths evaluated");
+    }).join(". ");
   const endKey = `${p}|${r}|${T}|weld`, env = DATA.envelopes[endKey];
-  const accept = f => {
-    // acceptable if under the weld campaign-end curve (register flaws are weld flaws)
-    let ok=false;
-    for(let i=0;i<env.depth_mm.length;i++)
-      if(f.depth_mm<=env.depth_mm[i] && f.length_mm<=env.length_mm[i]) ok=true;
-    return ok;
-  };
+  const accept = f => flawAcceptance(f, env);
   traces.push({x:DATA.flaws.map(f=>f.length_mm), y:DATA.flaws.map(f=>f.depth_mm),
     mode:"markers+text", name:"flaw register (real)", text:DATA.flaws.map(f=>f.joint),
     textposition:"top center", textfont:{size:10},
+    hovertext:DATA.flaws.map(f=>{
+      const i = env.depth_mm.findIndex(depth=>depth >= f.depth_mm);
+      const limit = accept(f) === null ? "not evaluated" : `${env.length_mm[i]} mm`;
+      return `${f.joint}: length ${f.length_mm} mm; weld limit ${limit} ` +
+        `at ${f.depth_mm} mm depth and ${p} psi; BS 7910 Option-1 illustrative basis`;
+    }),
     marker:{size:11, symbol:"diamond",
-            color:DATA.flaws.map(f=>accept(f)?"#1f9d57":"#c0392b"),
+            color:DATA.flaws.map(f=>accept(f) === null ? "#5b6b86" :
+              (accept(f)?"#1f9d57":"#c0392b")),
             line:{color:"#13233f",width:1}}});
   Plotly.newPlot("chart", traces, {
     margin:{l:60,r:10,t:10,b:45}, paper_bgcolor:"#fff", plot_bgcolor:"#fff",
@@ -281,8 +312,8 @@ def main() -> None:
             f"{tables['geometry']['grade']}, the real inspected fleet")
     html = _TEMPLATE.replace("__DATA__", json.dumps(tables, separators=(",", ":")))
     html = html.replace("__GEOM__", geom)
-    _OUT.write_text(html, encoding="utf-8")
-    print(f"wrote {_OUT.relative_to(_REPO)} "
+    _OUT.write_text(html, encoding="utf-8", newline="\n")
+    print(f"wrote {_OUT.relative_to(_REPO).as_posix()} "
           f"({len(tables['envelopes'])} envelopes, {len(tables['placements'])} placements)")
 
 

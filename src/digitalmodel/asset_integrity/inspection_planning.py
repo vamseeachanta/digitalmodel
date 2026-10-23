@@ -25,13 +25,15 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from .input_validation import finite_number
+
 
 @dataclass
 class InspectionPlan:
     standard: str
     corrosion_rate_mm_yr: float
     corrosion_allowance_remaining_mm: float
-    remaining_life_years: float | None  # None => not corroding (rate <= 0)
+    remaining_life_years: float | None  # None => explicitly supplied/derived zero corrosion
     half_life_interval_years: float | None
     code_max_interval_years: float
     next_inspection_interval_years: float
@@ -43,6 +45,9 @@ def corrosion_rate_mm_yr(
     previous_mm: float, current_mm: float, years_between: float
 ) -> float:
     """Long-term corrosion rate from two thickness readings."""
+    finite_number("previous_mm", previous_mm, positive=True)
+    finite_number("current_mm", current_mm, positive=True)
+    finite_number("years_between", years_between, positive=True)
     if years_between <= 0.0:
         raise ValueError("years_between must be positive")
     return (previous_mm - current_mm) / years_between
@@ -58,6 +63,13 @@ def plan_inspection(
     required_remaining_life_years: float | None = None,
 ) -> InspectionPlan:
     """Remaining life and next-inspection interval (API 510/570/653)."""
+    for name, value in (("current_mm", current_mm), ("required_mm", required_mm),
+                        ("code_max_interval_years", code_max_interval_years)):
+        finite_number(name, value, positive=True)
+    for name, value in (("previous_mm", previous_mm), ("years_between", years_between),
+                        ("required_remaining_life_years", required_remaining_life_years)):
+        if value is not None:
+            finite_number(name, value, positive=True)
     if current_mm <= 0.0 or required_mm <= 0.0:
         raise ValueError("current_mm and required_mm must be positive")
     if code_max_interval_years <= 0.0:
@@ -69,6 +81,7 @@ def plan_inspection(
                 "supply corrosion_rate, or previous_mm and years_between to derive it"
             )
         corrosion_rate = corrosion_rate_mm_yr(previous_mm, current_mm, years_between)
+    finite_number("corrosion_rate", corrosion_rate, minimum=0)
     if corrosion_rate < 0.0:
         raise ValueError("corrosion_rate must be non-negative (metal loss)")
 
@@ -105,13 +118,16 @@ def plan_inspection(
         )
 
     remaining_life = allowance_remaining / corrosion_rate
+    finite_number("derived remaining life", remaining_life, positive=True)
     half_life = remaining_life / 2.0
+    finite_number("derived half-life interval", half_life, positive=True)
     next_interval = min(half_life, code_max_interval_years)
     if half_life < code_max_interval_years:
         notes.append("half-life rule governs (below the code maximum interval)")
     else:
         notes.append("code maximum interval governs")
 
+    # Pass requires valid evidence, positive allowance and the required life.
     status = "pass"
     if (
         required_remaining_life_years is not None

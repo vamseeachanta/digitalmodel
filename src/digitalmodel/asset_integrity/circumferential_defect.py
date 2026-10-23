@@ -60,6 +60,7 @@ from digitalmodel.asset_integrity.applicability import Applicability, flagged
 
 from digitalmodel.asset_integrity.dnv_rp_f101 import dnv_f101_single_defect
 from digitalmodel.codes import API_579, DNV_RP_F101
+from .input_validation import finite_number
 
 # ---------------------------------------------------------------------------
 # API 579-1/ASME FFS-1 Part 5 — cylinder (longitudinal) Folias factor M_t.
@@ -115,7 +116,7 @@ class NetSectionCircumferentialResult:
     method: str  # "API579-Part5-circumferential-net-section"
     rsf_netsection: float  # net-section membrane RSF
     sigma_flow_psi: float  # flow stress used
-    allowable_axial_stress_psi: float  # RSF_netsection * sigma_flow
+    allowable_axial_stress_psi: Optional[float]  # RSF_netsection * sigma_flow
     level1_screen_ok: Optional[bool] = None  # c <= 2 s (E_L/E_C) if s given
     details: dict = field(default_factory=dict)
     code_reference: str = API_579.label
@@ -181,6 +182,17 @@ def api579_part5_longitudinal_rsf(
         :class:`Part5LongitudinalRSFResult` with ``RSF``, ``M_t``, ``lambda``,
         ``Rt``, the accept/reject flag and (on failure) the reduced MAWP.
     """
+    for name, value in (("D", D), ("Tc", Tc), ("tmm", tmm)):
+        finite_number(name, value, positive=True)
+    finite_number("FCA", FCA, minimum=0)
+    finite_number("rsf_allowable", rsf_allowable, positive=True, maximum=1)
+    if MAWP_psi is not None:
+        finite_number("MAWP_psi", MAWP_psi, positive=True)
+    if tmm > Tc or tmm - FCA <= 0:
+        raise ValueError("require measured wall <= reference wall and positive effective ligament")
+    finite_number("axial flaw length s", s, minimum=0)
+    if (tmm < Tc or FCA > 0) and s == 0:
+        raise ValueError("nonzero flaw requires positive measured axial length")
     if Tc <= 0 or D <= 0:
         raise ValueError(f"Invalid geometry: D={D}, Tc={Tc} (need both > 0).")
     if tmm < 0:
@@ -256,6 +268,18 @@ def api579_part5_circumferential_netsection(
         E_L, E_C: longitudinal / circumferential weld joint efficiencies
             (default 1.0 for seamless).
     """
+    for name, value in (("Dm", Dm), ("t", t), ("sigma_flow_psi", sigma_flow_psi)):
+        finite_number(name, value, positive=True)
+    for name, value in (("E_L", E_L), ("E_C", E_C)):
+        finite_number(name, value, positive=True, maximum=1)
+    finite_number("circumferential width c", c, minimum=0)
+    finite_number("flaw depth d", d, minimum=0, maximum=t)
+    if d > 0 and c == 0:
+        raise ValueError("nonzero flaw requires positive measured circumferential extent")
+    if s is not None:
+        finite_number("axial flaw length s", s, minimum=0)
+        if d > 0 and s == 0:
+            raise ValueError("nonzero flaw requires positive measured axial extent")
     if Dm <= 0 or t <= 0:
         raise ValueError(f"Invalid geometry: Dm={Dm}, t={t} (need both > 0).")
     if not (0.0 <= d <= t):
@@ -271,7 +295,8 @@ def api579_part5_circumferential_netsection(
         )
 
     rsf_circ = 1.0 - (d / t) * (c / circ)
-    allowable_axial = rsf_circ * sigma_flow_psi
+    # Capacity eligibility requires the axial extent screen to be evaluated.
+    allowable_axial = None if s is None else rsf_circ * sigma_flow_psi
 
     screen_ok: Optional[bool] = None
     screen_limit = None
@@ -292,7 +317,9 @@ def api579_part5_circumferential_netsection(
         applicability=(
             flagged("CIRCUMFERENTIAL_THROUGH_WALL",
                     "Through-wall loss requires leak/repair assessment")
-            if d >= t else Applicability()
+            if d >= t else (flagged("AXIAL_EXTENT_UNKNOWN",
+                "Measured axial extent is required for capacity eligibility")
+                if s is None else Applicability())
         ),
         details={
             "Dm_in": Dm,

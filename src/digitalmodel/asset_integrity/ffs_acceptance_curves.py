@@ -30,6 +30,7 @@ from .corroded_pipe import (
 )
 from .dnv_rp_f101 import SMTS_PSI, dnv_f101_single_defect
 from .ffs_lookup import barlow_maop_psi
+from .input_validation import finite_number, InapplicableAssessment
 from ..structural.structural_analysis.models import MARINE_GRADES, PlateGeometry
 from ..structural.structural_analysis.plate_metal_loss_ffs import (
     max_acceptable_loss as _plate_max_loss,
@@ -43,18 +44,25 @@ def _pipe_safe_pressure(method, D, t, d, L, grade) -> float:
     smys = SMYS_PSI[grade]
     m = method.lower().replace("-", "_").replace(" ", "_")
     if m in ("b31g", "b31g_original"):
-        return b31g_original(D, t, d, L, smys).safe_pressure_psi
-    if m in ("modified_b31g", "mod_b31g", "modified"):
-        return modified_b31g(D, t, d, L, smys).safe_pressure_psi
-    if m == "rstreng":
-        return rstreng_effective_area(D, t, [0.0, L], [d, d], smys).safe_pressure_psi
-    if m in ("dnv_f101", "dnv_rp_f101", "dnv"):
-        return dnv_f101_single_defect(D, t, d, L, SMTS_PSI[grade]).allowable_pressure_psi
-    raise ValueError(f"unknown method '{method}'.")
+        result = b31g_original(D, t, d, L, smys)
+    elif m in ("modified_b31g", "mod_b31g", "modified"):
+        result = modified_b31g(D, t, d, L, smys)
+    elif m == "rstreng":
+        result = rstreng_effective_area(D, t, [0.0, L], [d, d], smys)
+    elif m in ("dnv_f101", "dnv_rp_f101", "dnv"):
+        result = dnv_f101_single_defect(D, t, d, L, SMTS_PSI[grade])
+    else:
+        raise ValueError(f"unknown method '{method}'.")
+    if not result.applicability.ok:
+        raise InapplicableAssessment(result.applicability)
+    return (result.safe_pressure_psi if hasattr(result, "safe_pressure_psi")
+            else result.allowable_pressure_psi)
 
 
 def _max_acceptable_length(method, D, t, d, grade, maop, max_length_in) -> float:
     """Largest defect length whose safe pressure still meets MAOP."""
+    finite_number("pressure demand", maop, positive=True)
+    finite_number("max_length_in", max_length_in, minimum=1.0e-4)
     # Safe pressure decreases monotonically with length.
     if _pipe_safe_pressure(method, D, t, d, 1.0e-4, grade) < maop:
         return 0.0  # even a vanishing flaw of this depth fails at MAOP
@@ -77,19 +85,29 @@ def pipe_acceptance_curve(
 ) -> dict:
     """Max acceptable defect length for a range of depths, at the pipe's MAOP."""
     maop = maop_psi if maop_psi is not None else barlow_maop_psi(D, t, SMYS_PSI[grade])
-    depth_fracs = depth_fracs or [round(0.1 * i, 2) for i in range(1, 9)]  # 0.1..0.8
-    depth_in, max_len = [], []
+    finite_number("pressure demand", maop, positive=True)
+    finite_number("max_length_in", max_length_in, minimum=1.0e-4)
+    depth_fracs = [round(0.1 * i, 2) for i in range(1, 9)] if depth_fracs is None else depth_fracs  # 0.1..0.8
+    depth_in, max_len, applicability = [], [], []
     for frac in depth_fracs:
+        finite_number("depth fraction", frac, minimum=0, maximum=1)
         d = frac * t
         depth_in.append(round(d, 4))
-        max_len.append(round(
-            _max_acceptable_length(method, D, t, d, grade, maop, max_length_in), 3))
+        try:
+            length = _max_acceptable_length(method, D, t, d, grade, maop, max_length_in)
+        except InapplicableAssessment as exc:
+            max_len.append(None)  # no acceptance length outside method applicability
+            applicability.append(exc.applicability.to_dict())
+        else:
+            max_len.append(round(length, 3))
+            applicability.append(dict(ok=True, flags=[], notes=[]))
     return {
         "domain": "pipe_acceptance_envelope",
         "D_in": D, "t_in": t, "grade": grade, "method": method,
         "maop_psi": round(float(maop), 2),
         "depth_frac": depth_fracs, "depth_in": depth_in,
         "max_acceptable_length_in": max_len,
+        "applicability": applicability,
     }
 
 

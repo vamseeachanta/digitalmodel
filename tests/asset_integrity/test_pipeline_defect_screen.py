@@ -246,8 +246,8 @@ def test_area_weighted_property_preserves_projected_profile_contract():
     result = rstreng_2d_river_bottom(
         24, 0.5, [0, 8], [[0.475, 0.025]] * 2, 52000, projection="area_weighted"
     )
-    # Existing sensitivity mode checks its averaged profile, not the raw pit.
-    assert result.within_applicability is result.applicability.ok is True
+    # A43: averaging cannot qualify an unresolved deep local defect.
+    assert result.within_applicability is result.applicability.ok is False
     assert result.applicability is result.result.applicability
 
 

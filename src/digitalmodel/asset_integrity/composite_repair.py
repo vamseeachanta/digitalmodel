@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from .input_validation import finite_number
+
 BASIS_NOTES = (
     "ISO 24817 (composite repairs for pipework)",
     "ASME PCC-2, non-metallic composite repair articles",
@@ -54,13 +56,14 @@ class CompositeRepairParameters:
     allow_steam_service: bool = False
 
     def __post_init__(self) -> None:
+        if type(self.allow_steam_service) is not bool:
+            raise ValueError("allow_steam_service must be an explicit boolean")
         for name in (
             "default_temperature_f",
             "default_repair_life_yr",
             "reinspection_fraction_of_repair_life",
         ):
-            if getattr(self, name) <= 0:
-                raise ValueError(f"{name} must be positive")
+            finite_number(name, getattr(self, name), positive=True)
         if self.reinspection_fraction_of_repair_life > 1.0:
             raise ValueError("reinspection_fraction_of_repair_life must be <= 1")
         _validate_class_limits(
@@ -79,15 +82,15 @@ class CompositeRepairParameters:
 class RepairContext:
     """Operating and defect context used to screen repair classes."""
 
-    active_leak: bool = False
-    through_wall_now: bool = False
-    through_wall_within_repair_life: bool = False
-    defect_type: str = "external_metal_loss"
-    service: str = "oil"
-    pressure_psi: float = 0.0
-    temperature_f: float = 100.0
-    repair_life_yr: float = 20.0
-    axial_load: bool = False
+    active_leak: bool | None = None
+    through_wall_now: bool | None = None
+    through_wall_within_repair_life: bool | None = None
+    defect_type: str | None = None
+    service: str | None = None
+    pressure_psi: float | None = None
+    temperature_f: float | None = None
+    repair_life_yr: float | None = None
+    axial_load: bool | None = None
 
     @classmethod
     def from_mapping(
@@ -99,19 +102,31 @@ class RepairContext:
         if isinstance(value, cls):
             return value
         data = dict(value or {})
-        data.setdefault("temperature_f", params.default_temperature_f)
-        data.setdefault("repair_life_yr", params.default_repair_life_yr)
         return cls(**data)
 
     def __post_init__(self) -> None:
-        if self.service.lower() not in {"water", "oil", "gas", "steam"}:
+        if self.service is not None and (
+            not isinstance(self.service, str)
+            or self.service.lower() not in {"water", "oil", "gas", "steam"}
+        ):
             raise ValueError(f"unsupported service {self.service!r}")
-        if self.pressure_psi < 0:
-            raise ValueError("pressure_psi must be non-negative")
-        if self.temperature_f <= 0:
-            raise ValueError("temperature_f must be positive")
-        if self.repair_life_yr <= 0:
-            raise ValueError("repair_life_yr must be positive")
+        for name in ("pressure_psi", "temperature_f", "repair_life_yr"):
+            value = getattr(self, name)
+            if value is not None:
+                finite_number(name, value, minimum=0, positive=name != "pressure_psi")
+        for name in ("active_leak", "through_wall_now", "through_wall_within_repair_life", "axial_load"):
+            if getattr(self, name) is not None and type(getattr(self, name)) is not bool:
+                raise ValueError(f"{name} must be an explicit boolean confirmation")
+        if self.defect_type is not None and (
+            not isinstance(self.defect_type, str) or self.defect_type.lower() not in {
+                "external_metal_loss", "internal_metal_loss", "pitting", "structural_only"
+            }
+        ):
+            raise ValueError("unsupported defect_type")
+
+    def missing_fields(self) -> list[str]:
+        """Evidence needed before any repair class or interval is screened."""
+        return [name for name in self.__dataclass_fields__ if getattr(self, name) is None]
 
 
 @dataclass(frozen=True)
@@ -122,19 +137,25 @@ class CompositeRepairRecommendation:
     excluded: dict[str, str]
     iso_defect_type: str
     standards_basis: list[str]
-    reinspection_interval_yr: float
+    reinspection_interval_yr: float | None
     summary: str
+    evaluation_status: str = "EVALUATED"  # all service/load/leak/life fields supplied
+    missing_fields: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly payload for FFS reports and APIs."""
-        return {
+        payload = {
             "candidate_classes": list(self.candidate_classes),
             "excluded": dict(self.excluded),
             "iso_defect_type": self.iso_defect_type,
             "standards_basis": list(self.standards_basis),
-            "reinspection_interval_yr": float(self.reinspection_interval_yr),
+            "reinspection_interval_yr": self.reinspection_interval_yr,
             "summary": self.summary,
         }
+        if self.evaluation_status != "EVALUATED":
+            payload.update(evaluation_status=self.evaluation_status,
+                           missing_fields=list(self.missing_fields))
+        return payload
 
 
 def recommend_from_ffs_result(
@@ -157,7 +178,19 @@ def recommend_composite_repair(
 ) -> CompositeRepairRecommendation:
     """Screen candidate repair classes from defect and operating context."""
     params = params or CompositeRepairParameters()
+    # Class-limit mappings can change even in a frozen parameter container.
+    params.__post_init__()
     context = RepairContext.from_mapping(repair_context, params)
+    missing = context.missing_fields()
+    if missing:
+        # No candidates or schedule until service, loads, leak state and life
+        # have an explicit basis. Practice defaults are not confirmations.
+        return CompositeRepairRecommendation(
+            candidate_classes=[], excluded={}, iso_defect_type="UNKNOWN",
+            standards_basis=params.basis_notes(), reinspection_interval_yr=None,
+            summary="NOT_EVALUATED: missing repair basis: " + ", ".join(missing),
+            evaluation_status="NOT_EVALUATED", missing_fields=missing,
+        )
     iso_type = _iso_defect_type(context)
     pool, excluded = _class_pool(context)
     candidates: list[str] = []
@@ -172,6 +205,7 @@ def recommend_composite_repair(
     reinspection_interval = (
         context.repair_life_yr * params.reinspection_fraction_of_repair_life
     )
+    finite_number("reinspection_interval_yr", reinspection_interval, positive=True)
     summary = _summary(candidates, reinspection_interval)
     return CompositeRepairRecommendation(
         candidate_classes=candidates,
@@ -256,11 +290,13 @@ def _summary(candidates: list[str], reinspection_interval_yr: float) -> str:
 
 
 def _validate_class_limits(name: str, values: Mapping[str, float]) -> None:
+    if not isinstance(values, Mapping):
+        raise ValueError(f"{name} requires a complete class-limit mapping")
     missing = set(REPAIR_CLASS_ORDER) - set(values)
     if missing:
         raise ValueError(f"{name} missing classes: {sorted(missing)}")
     for repair_class, value in values.items():
         if repair_class not in REPAIR_CLASSES:
             raise ValueError(f"{name} has unknown class {repair_class!r}")
-        if value < 0:
-            raise ValueError(f"{name}[{repair_class!r}] must be non-negative")
+        finite_number(f"{name}[{repair_class!r}]", value, minimum=0,
+                      positive=(name == "max_temperature_f_by_class" or repair_class != "E"))

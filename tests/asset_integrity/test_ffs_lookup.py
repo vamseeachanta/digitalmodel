@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from digitalmodel.asset_integrity import ffs_lookup
+
 from digitalmodel.asset_integrity.ffs_lookup import (
     barlow_maop_psi,
     build_lookup,
@@ -79,6 +81,27 @@ def test_barlow_maop():
     assert barlow_maop_psi(20.0, 0.5, 52000.0) == pytest.approx(1872.0, rel=1e-6)
 
 
+@pytest.mark.parametrize("domain,handler,inputs,defaults", [
+    ("pipe_corroded_strength", "evaluate_pipe_corroded",
+     dict(method="b31g", grade="X52", D_in=20.0, t_in=0.5, d_in=0.15,
+          L_in=6.0, maop_psi=900.0),
+     {"safety_factor": "DEFAULT_PIPE_SAFETY_FACTOR"}),
+    ("plate_metal_loss", "evaluate_plate_metal_loss",
+     dict(grade="AH36", length_mm=2400.0, width_mm=800.0,
+          thickness_mm=16.0, sigma_x_mpa=150.0, metal_loss_mm=2.0),
+     {"fca_mm": "DEFAULT_FCA_MM", "gamma_m": "DEFAULT_PLATE_MATERIAL_FACTOR"}),
+])
+def test_signature_and_query_share_named_defaults(domain, handler, inputs, defaults):
+    explicit = {field: getattr(ffs_lookup, constant) for field, constant in defaults.items()}
+    function = getattr(ffs_lookup, handler)
+    assert all(function.__kwdefaults__[field] == value for field, value in explicit.items())
+    record = evaluate_query(domain, **inputs)
+    assert signature(domain, inputs) == record["key"]
+    assert signature(domain, {**inputs, **explicit}) == record["key"]
+    changed = {field: value + 0.1 for field, value in explicit.items()}
+    assert signature(domain, {**inputs, **changed}) != record["key"]
+
+
 # --- index round-trip ------------------------------------------------------
 def test_index_round_trip():
     recs = [
@@ -90,7 +113,7 @@ def test_index_round_trip():
     lookup = build_lookup(recs)
     assert lookup["meta"]["n_records"] == 3
     hit = query_index(lookup, "pipe_corroded_strength", method="modified_b31g",
-                      grade="X52", D_in=20.0, t_in=0.5, d_in=0.20, L_in=6.0)
+                      grade="X52", D_in=20.0, t_in=0.5, d_in=0.20, L_in=6.0, maop_psi=900.0)
     assert hit is not None
     # matches the record's metric
     rec = next(r for r in recs if r["inputs"]["d_in"] == 0.20)
@@ -112,7 +135,8 @@ def test_write_lookup(tmp_path):
                            D_in=20.0, t_in=0.5, d_in=0.15, L_in=6.0, maop_psi=900.0)]
     lookup = build_lookup(recs)
     paths = write_lookup(lookup, tmp_path)
-    d = json.loads(open(paths["json"]).read())
+    with open(paths["json"], encoding="utf-8") as stream:
+        d = json.load(stream)
     assert set(d.keys()) >= {"meta", "lookup", "index"}
     assert len(d["index"]) == 1
     df = pd.read_csv(paths["csv"])
@@ -129,4 +153,9 @@ def test_record_from_assessment():
     rec = record_from_assessment(res)
     assert rec["key"] == "component|L-9"
     assert rec["metric_name"] == "rsf"
-    assert isinstance(rec["acceptable"], bool)
+    if res.sufficiency_status == "SUFFICIENT" and res.applicability.ok:
+        assert isinstance(rec["acceptable"], bool)
+    else:
+        assert rec["acceptable"] is None  # A50: unqualified acceptance is unknown
+        assert rec["verdict"] == "UNKNOWN"
+    assert rec["applicability"] == res.applicability.to_dict()

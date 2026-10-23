@@ -80,6 +80,10 @@ def _envelopes(spec, rate):
         args = (
             {"region": "weld"} if method == "bs7910_option1_fad" else {"method": method}
         )
+        if method == "bs7910_option1_fad":
+            args.update({key: spec[key] for key in (
+                "weld_sigma_m_mpa", "weld_sigma_b_mpa", "weld_k_mat", "weld_cvn_joules"
+            ) if key in spec})
         envelopes[method] = {
             "start": level1_flaw_envelope(**basis, **args),
             "campaign_end": level1_flaw_envelope(
@@ -149,6 +153,10 @@ def _table(headers, rows):
 
 
 def _reported_lengths(envelope):
+    if envelope.get("evaluation_status") == "NOT_EVALUATED":
+        for _ in envelope["max_acceptable_length_in"]:
+            yield "Not evaluated: " + envelope["reason"]
+        return
     limits = dict.fromkeys(("b31g", "modified_b31g"), _B31G_MAX_DT)
     limits["dnv_f101"] = _DNV_F101_MAX_DT
     limit = limits.get(envelope["method"], envelope["depth_cap_frac"])
@@ -158,7 +166,7 @@ def _reported_lengths(envelope):
         envelope["depth_frac"], envelope["max_acceptable_length_in"]
     ):
         outside = fraction + growth > limit + 1e-12  # construction roundoff only
-        yield "Not evaluated: OUT OF APPLICABILITY" if outside else length
+        yield "Not evaluated: OUT OF APPLICABILITY" if outside or length is None else length
 
 
 def _envelope_sections(result):
@@ -175,7 +183,7 @@ def _envelope_sections(result):
                 f"<h3>{html.escape(method)}</h3>",
                 f"<p>Depth limits: B31G/Modified B31G d/t ≤ {_B31G_MAX_DT:.2f}; "
                 f"DNV-RP-F101 ≤ {_DNV_F101_MAX_DT:.2f}; weld practice cap ≤ {DEPTH_CAP_WELD:.2f}. "
-                "Campaign-end depth includes growth. Out-of-limit lengths are not evaluated for report acceptance; unchanged raw JSON lengths are unqualified.</p>",
+                "Campaign-end depth includes growth. Out-of-limit lengths and incomplete campaign bases are not evaluated for acceptance.</p>",
                 _table(
                     [
                         "Depth (in)",
@@ -258,6 +266,16 @@ class RiserJointReport(FFSReport):
             FFSReport._html_head(
                 "Riser fleet", str(result["provenance"]["inspection_epoch"])
             ),
+            "<h2>Summary</h2>",
+            "<p>Campaign weld acceptance requires an explicit growth, bending and "
+            "toughness basis. Missing evidence withholds allowable lengths; supply "
+            "the missing inputs before using an envelope for campaign acceptance. "
+            "Placement remains subject to the stated life and collapse criteria.</p>",
+            "<h2>Revision history</h2>",
+            _table(["Revision", "Date", "What changed and why"], [
+                [0, "baseline inspection", "Initial inspection assessment and limitations"],
+                [1, "2026-10-22", "Withhold campaign weld allowances without evidence and retain method applicability"],
+            ]),
             "<h2>Basis and limitations</h2>",
             f"<p>{LIMITS}</p>",
             _table(["Input", "Value"], spec.items()),
@@ -284,7 +302,7 @@ class RiserJointReport(FFSReport):
             f'<p><a href="https://github.com/vamseeachanta/digitalmodel/blob/main/{p}">{p}</a></p>'
             for p in RECORDS
         ]
-        return "\n".join(sections) + "\n</body></html>"
+        return "\n".join(sections) + "\n</body></html>\n"
 
 
 def _calculate(spec, base):
@@ -348,8 +366,8 @@ def run_report(spec, analysis):
     result["report_html"] = str(output / "riser-joint-ffs.html")
     result["result_json"] = str(output / "riser-joint-ffs.json")
     encoded = json.dumps(result, indent=2, allow_nan=False)
-    Path(result["report_html"]).write_text(report, encoding="utf-8")
-    Path(result["result_json"]).write_text(encoded, encoding="utf-8")
+    Path(result["report_html"]).write_text(report, encoding="utf-8", newline="\n")
+    Path(result["result_json"]).write_text(encoded, encoding="utf-8", newline="\n")
     return result
 
 

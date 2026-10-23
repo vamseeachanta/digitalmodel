@@ -295,17 +295,10 @@ def _repair_context_from_component(
     repair_context: Optional[Mapping[str, Any]],
     params: CompositeRepairParameters,
 ) -> dict[str, Any]:
-    """Build default repair context from FFS fields, then overlay caller data."""
+    """Carry established component facts without inventing confirmations."""
     context: dict[str, Any] = {
-        "active_leak": False,
-        "through_wall_now": False,
-        "through_wall_within_repair_life": False,
         "defect_type": _repair_defect_type(assessment_type),
-        "service": "oil",
         "pressure_psi": component.design_pressure_psi,
-        "temperature_f": params.default_temperature_f,
-        "repair_life_yr": params.default_repair_life_yr,
-        "axial_load": False,
     }
     if repair_context:
         context.update(repair_context)

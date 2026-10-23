@@ -65,7 +65,7 @@ def test_pof_rsf_margin_band_edges():
     rsf_a = 0.90
     expected = {1.10: 1, 1.05: 2, 1.00: 3, 0.90: 4, 0.899: 5}
     for margin, cat in expected.items():
-        got, _ = pof_category(rsf=margin * rsf_a, rsf_a=rsf_a, params=PARAMS)
+        got, _ = pof_category(rsf=margin * rsf_a, rsf_a=rsf_a, corrosion_rate_mm_yr=0, params=PARAMS)
         assert got == cat, f"margin {margin} -> {got}, expected {cat}"
 
 
@@ -73,13 +73,13 @@ def test_pof_life_ratio_band_edges():
     """Default reference interval 5 yr => life edges 40/20/10/5 yr."""
     expected = {40.0: 1, 20.0: 2, 10.0: 3, 5.0: 4, 4.99: 5}
     for life, cat in expected.items():
-        got, _ = pof_category(remaining_life_yr=life, params=PARAMS)
+        got, _ = pof_category(remaining_life_yr=life, corrosion_rate_mm_yr=0, params=PARAMS)
         assert got == cat, f"life {life} -> {got}, expected {cat}"
 
 
 def test_pof_takes_most_conservative_subscore():
     # good margin, poor life -> life governs
-    cat, subs = pof_category(rsf=1.0, rsf_a=0.9, remaining_life_yr=3.0, params=PARAMS)
+    cat, subs = pof_category(rsf=1.0, rsf_a=0.9, remaining_life_yr=3.0, corrosion_rate_mm_yr=0, params=PARAMS)
     assert subs["rsf_margin"] == 1 and subs["life_ratio"] == 5
     assert cat == 5
 
@@ -101,10 +101,10 @@ def test_pof_requires_at_least_one_condition_input():
 
 def test_pof_monotonic_in_rsf_and_life():
     rsf_grid = [1.0, 0.98, 0.95, 0.92, 0.88, 0.80]
-    cats = [pof_category(rsf=r, rsf_a=0.9)[0] for r in rsf_grid]
+    cats = [pof_category(rsf=r, rsf_a=0.9, corrosion_rate_mm_yr=0)[0] for r in rsf_grid]
     assert cats == sorted(cats)  # lower RSF -> PoF never decreases
     life_grid = [100.0, 45.0, 25.0, 12.0, 6.0, 2.0]
-    cats = [pof_category(remaining_life_yr=y)[0] for y in life_grid]
+    cats = [pof_category(remaining_life_yr=y, corrosion_rate_mm_yr=0)[0] for y in life_grid]
     assert cats == sorted(cats)  # shorter life -> PoF never decreases
 
 
@@ -273,7 +273,7 @@ def register():
 
 
 def test_register_ranking_regression_anchor(register):
-    ranked = rbi_rank_register(register)
+    ranked = rbi_rank_register(register, cof_by_joint=dict.fromkeys(register.joint_id, "C"))
     assert len(ranked) == 142
     summary = summarize_ranking(ranked)
     # REGRESSION-ANCHOR: band counts on the real register with default
@@ -289,7 +289,7 @@ def test_register_ranking_regression_anchor(register):
 
 
 def test_register_ranking_sorted_most_critical_first(register):
-    ranked = rbi_rank_register(register)
+    ranked = rbi_rank_register(register, cof_by_joint=dict.fromkeys(register.joint_id, "C"))
     scores = ranked["risk_score"].tolist()
     assert scores == sorted(scores, reverse=True)
     # the shortest-life joint (RJ-101 box end, ~3.5 yr) ranks in the top rows
@@ -297,7 +297,7 @@ def test_register_ranking_sorted_most_critical_first(register):
 
 
 def test_register_intervals_bounded_by_half_life_and_code_max(register):
-    ranked = rbi_rank_register(register)
+    ranked = rbi_rank_register(register, cof_by_joint=dict.fromkeys(register.joint_id, "C"))
     assert (ranked["recommended_interval_yr"] <= PARAMS.code_max_interval_yr).all()
     assert (
         ranked["recommended_interval_yr"] <= ranked["half_life_interval_yr"] + 1e-12
@@ -306,13 +306,13 @@ def test_register_intervals_bounded_by_half_life_and_code_max(register):
 
 
 def test_register_cof_overrides_shift_bands(register):
-    low = summarize_ranking(rbi_rank_register(register, default_cof="A"))
-    high = summarize_ranking(rbi_rank_register(register, default_cof="E"))
+    low = summarize_ranking(rbi_rank_register(register, cof_by_joint=dict.fromkeys(register.joint_id, "A")))
+    high = summarize_ranking(rbi_rank_register(register, cof_by_joint=dict.fromkeys(register.joint_id, "E")))
     assert low["band_counts"]["HIGH"] == 0
     assert high["band_counts"]["HIGH"] >= 1
     assert high["min_recommended_interval_yr"] <= low["min_recommended_interval_yr"]
     # per-joint override: bump one joint to class E, its rows move up
-    ranked = rbi_rank_register(register, cof_by_joint={"RJ-103": "E"})
+    ranked = rbi_rank_register(register, cof_by_joint={**dict.fromkeys(register.joint_id, "C"), "RJ-103": "E"})
     rj103 = ranked[ranked["joint_id"] == "RJ-103"]
     assert (rj103["cof_category"] == 5).all()
 

@@ -51,7 +51,8 @@ import pandas as pd
 from .assessment.crack_fad import assess_crack_like_flaw, kmat_from_charpy
 from .corroded_pipe import SMYS_PSI
 from .dnv_rp_f101 import SMTS_PSI
-from .ffs_acceptance_curves import _max_acceptable_length
+from .ffs_acceptance_curves import _max_acceptable_length, _pipe_safe_pressure
+from .input_validation import finite_number, InapplicableAssessment
 
 # Seawater hydrostatic gradient (psi per ft of depth) — 64 lb/ft3 seawater.
 SEAWATER_PSI_PER_FT = 0.4444
@@ -136,12 +137,12 @@ def level1_flaw_envelope(
     *,
     region: str = "base",
     method: str = "modified_b31g",
-    corrosion_rate_in_per_yr: float = 0.0,
+    corrosion_rate_in_per_yr: Optional[float] = None,
     campaign_years: float = 0.0,
     depth_fracs: Optional[list] = None,
     max_length_in: float = 40.0,
     weld_sigma_m_mpa: Optional[float] = None,
-    weld_sigma_b_mpa: float = 0.0,
+    weld_sigma_b_mpa: Optional[float] = None,
     weld_k_mat: Optional[float] = None,
     weld_cvn_joules: Optional[float] = None,
 ) -> dict:
@@ -172,12 +173,65 @@ def level1_flaw_envelope(
     (0.0 where the region cap or the strength/fracture check excludes the
     depth); weld results also carry the stress/toughness basis used.
     """
+    for name, value in (("od_in", od_in), ("wt_in", wt_in),
+                        ("design_pressure_psi", design_pressure_psi)):
+        finite_number(name, value, positive=True)
+    if 2 * wt_in >= od_in:
+        raise ValueError("require 0 < wall thickness < OD/2")
+    finite_number("campaign_years", campaign_years, minimum=0)
+    finite_number("max_length_in", max_length_in, minimum=1e-4)
     if region not in ("base", "weld"):
         raise ValueError(f"region must be 'base' or 'weld', got '{region}'.")
     if grade not in SMYS_PSI:
         raise ValueError(f"unknown grade '{grade}'. Use one of {sorted(SMYS_PSI)}.")
+    for name, value, minimum in (
+        ("corrosion_rate_in_per_yr", corrosion_rate_in_per_yr, 0),
+        ("weld_sigma_b_mpa", weld_sigma_b_mpa, None),
+        ("weld_sigma_m_mpa", weld_sigma_m_mpa, 0),
+    ):
+        if value is not None:
+            finite_number(name, value, minimum=minimum)
+    for name, value in (("weld_k_mat", weld_k_mat), ("weld_cvn_joules", weld_cvn_joules)):
+        if value is not None:
+            finite_number(name, value, positive=True)
+    if campaign_years > 0:
+        missing = []
+        if corrosion_rate_in_per_yr is None:
+            missing.append("corrosion growth")
+        if region == "weld":
+            if weld_sigma_b_mpa is None:
+                missing.append("weld bending load")
+            if weld_k_mat is None and weld_cvn_joules is None:
+                missing.append("weld toughness")
+        if missing:
+            fractions = ([round(.05 * i, 2) for i in range(1, 18)]
+                         if depth_fracs is None else depth_fracs)
+            for fraction in fractions:
+                finite_number("depth fraction", fraction, positive=True, maximum=1)
+            # No campaign acceptance lengths without growth, load and toughness
+            # evidence. The reason travels through reports and workflow results.
+            return dict(
+                domain="riser_joint_flaw_envelope", evaluation_status="NOT_EVALUATED",
+                reason="campaign acceptance basis missing: " + ", ".join(missing),
+                missing_fields=missing, od_in=od_in, wt_in=wt_in, grade=grade,
+                method="bs7910_option1_fad" if region == "weld" else method,
+                design_pressure_psi=design_pressure_psi, region=region,
+                depth_cap_frac=DEPTH_CAP_WELD if region == "weld" else DEPTH_CAP_BASE_METAL,
+                corrosion_rate_in_per_yr=corrosion_rate_in_per_yr,
+                campaign_years=campaign_years, depth_frac=list(fractions),
+                depth_in=[round(f * wt_in, 4) for f in fractions],
+                max_acceptable_length_in=[None for _ in fractions],
+                applicability=[dict(ok=False, flags=["CAMPAIGN_BASIS_MISSING"],
+                                    notes=["campaign acceptance basis missing: " + ", ".join(missing)])
+                               for _ in fractions],
+            )
+    # Instantaneous envelopes retain their disclosed illustrative assumptions;
+    # none of those assumptions qualifies campaign acceptance.
+    rate = 0.0 if corrosion_rate_in_per_yr is None else corrosion_rate_in_per_yr
+    bending = 0.0 if weld_sigma_b_mpa is None else weld_sigma_b_mpa
     cap = DEPTH_CAP_BASE_METAL if region == "base" else DEPTH_CAP_WELD
-    growth_in = corrosion_rate_in_per_yr * campaign_years
+    growth_in = rate * campaign_years
+    finite_number("campaign growth", growth_in, minimum=0)
     depth_fracs = depth_fracs or [round(0.05 * i, 2) for i in range(1, 18)]  # 0.05..0.85
 
     weld_basis: dict = {}
@@ -193,38 +247,58 @@ def level1_flaw_envelope(
                       else kmat_from_charpy(cvn, thickness_mm=wt_in * MM_PER_IN))
         weld_basis = {
             "weld_sigma_m_mpa": round(sigma_m, 2),
-            "weld_sigma_b_mpa": weld_sigma_b_mpa,
+            "weld_sigma_b_mpa": bending,
             "weld_k_mat_mpa_sqrt_m": round(k_mat_used, 1),
             "weld_cvn_joules": cvn,
         }
 
-    depth_in, max_len = [], []
+    depth_in, max_len, applicability = [], [], []
     for frac in depth_fracs:
+        finite_number("depth fraction", frac, positive=True, maximum=1)
         d = frac * wt_in
         d_end = d + growth_in
+        if region == "base":
+            # Check method validity even where a separate practice cap rejects
+            # the cell; no numeric allowance represents an unsupported model.
+            if d_end <= wt_in:
+                try:
+                    _pipe_safe_pressure(method, od_in, wt_in, d_end, 1e-4, grade)
+                except InapplicableAssessment as exc:
+                    depth_in.append(round(d, 4))
+                    max_len.append(None)
+                    applicability.append(exc.applicability.to_dict())
+                    continue
         if frac > cap or (d_end / wt_in) > cap or d_end >= wt_in:
             length = 0.0
         elif region == "weld":
             length = _max_acceptable_crack_length_in(
-                d_end, wt_in, sigma_m, weld_sigma_b_mpa, sigma_y, sigma_u,
+                d_end, wt_in, sigma_m, bending, sigma_y, sigma_u,
                 weld_k_mat, cvn, max_length_in,
             )
         else:
-            length = _max_acceptable_length(
-                method, od_in, wt_in, d_end, grade, design_pressure_psi, max_length_in
-            )
+            try:
+                length = _max_acceptable_length(
+                    method, od_in, wt_in, d_end, grade, design_pressure_psi, max_length_in
+                )
+            except InapplicableAssessment as exc:
+                depth_in.append(round(d, 4))
+                max_len.append(None)  # unsupported depth cannot qualify a length
+                applicability.append(exc.applicability.to_dict())
+                continue
         depth_in.append(round(d, 4))
         max_len.append(round(length, 3))
+        applicability.append(dict(ok=True, flags=[], notes=[]))
     return {
         "domain": "riser_joint_flaw_envelope",
         "od_in": od_in, "wt_in": wt_in, "grade": grade,
         "method": "bs7910_option1_fad" if region == "weld" else method,
         "design_pressure_psi": design_pressure_psi,
         "region": region, "depth_cap_frac": cap,
-        "corrosion_rate_in_per_yr": corrosion_rate_in_per_yr,
+        "corrosion_rate_in_per_yr": rate,
         "campaign_years": campaign_years,
         "depth_frac": list(depth_fracs), "depth_in": depth_in,
         "max_acceptable_length_in": max_len,
+        "applicability": applicability,
         **weld_basis,
     }
 
@@ -239,6 +313,8 @@ def collapse_pressure_psi(od_in: float, wt_in: float, smys_psi: float) -> dict:
     p_c = p_el*p_y/sqrt(p_el^2 + p_y^2).
     Same equations as ``wall_thickness_codes.api_rp_1111._check_collapse``.
     """
+    for name, value in (("od_in", od_in), ("wt_in", wt_in), ("smys_psi", smys_psi)):
+        finite_number(name, value, positive=True)
     if od_in <= 0 or wt_in <= 0 or wt_in >= od_in / 2:
         raise ValueError("require 0 < wt < OD/2.")
     ratio = wt_in / od_in
@@ -314,7 +390,14 @@ def place_joint(
     depth goes to repair; a joint failing only on depth is RESTRICTED
     (usable in shallower campaigns).
     """
-    margins = zone_margins or ZONE_FATIGUE_MARGIN
+    finite_number("min_life_years", min_life_years, minimum=0)
+    finite_number("campaign_water_depth_ft", campaign_water_depth_ft, positive=True)
+    finite_number("campaign_years", campaign_years, positive=True)
+    margins = ZONE_FATIGUE_MARGIN if zone_margins is None else zone_margins
+    if set(margins) != set(ZONE_FATIGUE_MARGIN):
+        raise ValueError("zone_margins must specify top, mid and bottom")
+    for zone, margin in margins.items():
+        finite_number(f"zone margin {zone}", margin, minimum=1)
     depth_ok_ft = acceptable_water_depth_ft(
         od_in, wt_min_in, grade,
         differential_head_fraction=differential_head_fraction)
@@ -329,6 +412,7 @@ def place_joint(
         eligible_zones=zones,
     )
     if zones:
+        # ACCEPT requires a supported zone life margin and campaign collapse depth.
         return placement
     strong_at_half = depth_ok_ft >= 0.5 * campaign_water_depth_ft
     fits_mid = min_life_years >= campaign_years * margins.get("mid", 1.0)

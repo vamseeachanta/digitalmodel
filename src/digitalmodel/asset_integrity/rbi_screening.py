@@ -58,6 +58,9 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping, Optional, Sequence
 
 import pandas as pd
+import math
+
+from .input_validation import finite_number
 
 from .inspection_planning import InspectionPlan, plan_inspection
 
@@ -226,6 +229,14 @@ def pof_category(
     contribution (``None`` when that input was not supplied). At least one of
     the strength-margin or remaining-life inputs is required.
     """
+    finite_number("corrosion_rate_mm_yr", corrosion_rate_mm_yr, minimum=0)
+    if rsf is not None:
+        finite_number("rsf", rsf, minimum=0)
+        finite_number("rsf_a", rsf_a, positive=True, maximum=1)
+    if remaining_life_yr is not None:
+        # Infinity is eligible only for an explicitly confirmed zero rate.
+        if not (remaining_life_yr == math.inf and corrosion_rate_mm_yr == 0):
+            finite_number("remaining_life_yr", remaining_life_yr, minimum=0)
     subscores: dict[str, Optional[int]] = {
         "rsf_margin": None,
         "life_ratio": None,
@@ -378,6 +389,15 @@ def screen_ffs_result(
     ``remaining_life_yr`` so that ``plan_inspection`` reproduces the FFS
     remaining life exactly (single source, no duplicated half-life logic).
     """
+    verdict = getattr(result, "verdict", None)
+    sufficiency = getattr(result, "sufficiency_status", None)
+    applicability = getattr(result, "applicability", None)
+    applicable = (applicability.get("ok") if isinstance(applicability, Mapping)
+                  else getattr(applicability, "ok", None))
+    # Normal scheduling requires an accepted, sufficient and applicable source.
+    if verdict not in {"ACCEPT", "MONITOR"} or sufficiency != "SUFFICIENT" or applicable is not True:
+        raise ValueError("source assessment is not eligible for RBI scheduling: "
+                         f"verdict={verdict}, sufficiency={sufficiency}, applicability={applicable}")
     mm = 25.4
     current_mm = float(result.t_measured_min_in) * mm
     required_mm = float(result.t_min_in) * mm
@@ -386,11 +406,11 @@ def screen_ffs_result(
     if corrosion_rate_in_per_yr is not None:
         rate_mm_yr = float(corrosion_rate_in_per_yr) * mm
     else:
-        life = float(result.remaining_life_yr)
-        if allowance_mm > 0.0 and life > 0.0 and life != float("inf"):
-            rate_mm_yr = allowance_mm / life
-        else:
-            rate_mm_yr = 0.0 if allowance_mm > 0.0 else 1e-9  # fail path if <= t_min
+        life = getattr(result, "remaining_life_yr", None)
+        finite_number("source remaining life", life, positive=True)
+        if not math.isfinite(allowance_mm) or allowance_mm <= 0:
+            raise ValueError("source life cannot establish corrosion rate without positive thickness allowance")
+        rate_mm_yr = allowance_mm / life
 
     return screen_component(
         component_id=str(result.component_id),
@@ -417,7 +437,8 @@ def rbi_rank_register(
     ``measured_avg_wt_mm``, ``min_required_wt_mm``,
     ``corrosion_rate_mm_per_year`` (``scan_location`` echoed when present).
     ``cof_by_joint`` maps joint_id -> consequence class (A-E or 1-5); joints
-    not in the map fall back to ``default_cof``.
+    not in the map are rejected. ``default_cof`` is retained for API compatibility
+    but cannot replace mapped consequence evidence.
 
     Returns one row per input row with PoF/CoF/risk band/recommended
     interval, sorted most-critical first (risk score desc, remaining life
@@ -427,9 +448,11 @@ def rbi_rank_register(
     rows: list[dict[str, Any]] = []
     for _, rec in register_df.iterrows():
         joint = str(rec["joint_id"])
+        if joint not in cof_by_joint:
+            raise ValueError("mapped consequence evidence required for every register joint")
         res = screen_component(
             component_id=joint,
-            consequence_class=cof_by_joint.get(joint, default_cof),
+            consequence_class=cof_by_joint[joint],
             current_mm=float(rec["measured_avg_wt_mm"]),
             required_mm=float(rec["min_required_wt_mm"]),
             corrosion_rate_mm_yr=float(rec["corrosion_rate_mm_per_year"]),

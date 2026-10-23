@@ -126,6 +126,8 @@ def test_repair_context_adds_recommendation_only_for_repair_verdict():
         repair_context={
             "active_leak": True,
             "through_wall_now": True,
+            "through_wall_within_repair_life": False,
+            "axial_load": False,
             "defect_type": "external_metal_loss",
             "service": "oil",
             "pressure_psi": 1000.0,

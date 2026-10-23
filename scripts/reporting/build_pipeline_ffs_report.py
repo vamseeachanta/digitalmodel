@@ -53,6 +53,7 @@ CALCULATION_SOURCES = (
     "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
     "src/digitalmodel/asset_integrity/circumferential_defect.py",
     "src/digitalmodel/asset_integrity/applicability.py",
+    "src/digitalmodel/asset_integrity/input_validation.py",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py",
     "src/digitalmodel/asset_integrity/assessment/ffs_decision.py",
     "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py",

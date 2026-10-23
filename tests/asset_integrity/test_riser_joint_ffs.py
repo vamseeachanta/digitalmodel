@@ -5,10 +5,14 @@ composition behavior and run the real-inspection fixtures end to end.
 """
 
 import math
+import json
 from pathlib import Path
+import subprocess
 
 import pandas as pd
 import pytest
+
+from scripts.ffs import build_riser_joint_explorer as explorer
 
 from digitalmodel.asset_integrity.assessment.crack_fad import assess_crack_like_flaw
 from digitalmodel.asset_integrity.corroded_pipe import SMYS_PSI, modified_b31g
@@ -34,13 +38,91 @@ DATA = Path(__file__).parent / "test_data" / "real_inspection"
 OD, WT, GRADE, P_DESIGN = 21.25, 0.875, "X80", 500.0
 
 
+def explorer_tables():
+    return explorer.build_tables()
+
+
+def test_explorer_tables_preserve_nulls_and_explicit_weld_basis():
+    tables = explorer_tables()
+    assert len(tables["envelopes"]) == 72
+    # Hand conversions: 0.875 * 25.4 = 22.225 mm;
+    # rounded engine depths 0.0438 * 25.4 = 1.11252 mm and
+    # 0.7438 * 25.4 = 18.89252 mm, displayed to two decimals.
+    assert tables["geometry"]["wt_mm"] == pytest.approx(22.225)
+    for key, envelope in tables["envelopes"].items():
+        assert envelope["depth_mm"][0] == pytest.approx(1.11)
+        assert envelope["depth_mm"][-1] == pytest.approx(18.89)
+        assert len(envelope["applicability"]) == len(envelope["length_mm"])
+        if key.endswith("|base"):
+            assert envelope["length_mm"][-1] is None
+            assert not envelope["applicability"][-1]["ok"]
+            assert envelope["length_mm"][0] > 0
+        else:
+            assert envelope["weld_sigma_b_mpa"] == 0
+            assert envelope["weld_cvn_joules"] == 27
+            assert any(value is not None and value > 0
+                       for value in envelope["length_mm"])
+
+
+def test_explorer_rendering_distinguishes_unknown_and_failed():
+    script = explorer._TEMPLATE.split("<script>\n", 1)[1].split("</script>", 1)[0]
+    script = script.replace("__DATA__", json.dumps(explorer_tables()))
+    harness = """
+const nodes = {};
+const document = {getElementById(id) {
+  return nodes[id] ||= {value: id === 'joint' ? 'RJ-101' : '5000',
+                       innerHTML: '', textContent: '', addEventListener() {}};
+}};
+const Plotly = {newPlot() {}};
+"""
+    checks = """
+console.log(JSON.stringify({
+  status: nodes['envelope-status'].textContent,
+  decisions: [null, 0, 10].map(length => flawAcceptance(
+    {depth_mm: 1, length_mm: 1},
+    {depth_mm: [2], length_mm: [length], applicability: [{ok: true}]})),
+  unqualified: [undefined, [{ok: false}]].map(applicability => flawAcceptance(
+    {depth_mm: 1, length_mm: 1}, {depth_mm: [2], length_mm: [10], applicability}))
+}));
+"""
+    result = subprocess.run(["node", "-e", harness + script + checks],
+                            capture_output=True, text=True, encoding="utf-8", check=True)
+    rendered = json.loads(result.stdout)
+    assert "not evaluated" in rendered["status"]
+    assert "3000 psi" in rendered["status"]
+    assert rendered["decisions"] == [None, False, True]
+    assert rendered["unqualified"] == [None, None]
+
+
+def test_explorer_rebuild_matches_committed_numbers(tmp_path, monkeypatch):
+    output = tmp_path / "explorer.html"
+    monkeypatch.setattr(explorer, "_OUT", output)
+    monkeypatch.setattr(explorer, "_REPO", tmp_path)
+    explorer.main()
+    rebuilt = output.read_text(encoding="utf-8")
+    committed = (Path(__file__).resolve().parents[2] /
+                 "docs/api/ffs/riser-joint-acceptance-explorer.html").read_text(encoding="utf-8")
+
+    def data(page):
+        return json.loads(page.split("const DATA = ", 1)[1].split(";\nconst $", 1)[0])
+
+    fresh, saved = data(rebuilt), data(committed)
+    assert fresh["envelopes"].keys() == saved["envelopes"].keys()
+    for key in fresh["envelopes"]:
+        for field in ("depth_mm", "length_mm"):
+            assert saved["envelopes"][key][field] == pytest.approx(
+                fresh["envelopes"][key][field], abs=0.001
+            ), "Rebuild with: PYTHONPATH=src uv run python scripts/ffs/build_riser_joint_explorer.py"
+    assert b"\r\n" not in output.read_bytes()
+
+
 # ---------------------------------------------------------------------------
 # Level-1 envelope
 # ---------------------------------------------------------------------------
 def test_envelope_monotone_and_capped():
     env = level1_flaw_envelope(OD, WT, GRADE, P_DESIGN, region="base")
     lengths = env["max_acceptable_length_in"]
-    nonzero = [v for v in lengths if v > 0]
+    nonzero = [v for v in lengths if v is not None and v > 0]
     # deeper flaw -> shorter acceptable length
     assert nonzero == sorted(nonzero, reverse=True)
     # depths beyond the base-metal cap are excluded
@@ -82,6 +164,7 @@ def test_weld_campaign_end_envelope_is_stricter():
     end = level1_flaw_envelope(
         OD, WT, GRADE, 3000.0, region="weld",
         corrosion_rate_in_per_yr=0.25 / MM_PER_IN, campaign_years=3.0,
+        weld_sigma_b_mpa=0, weld_cvn_joules=27,  # explicit synthetic basis (A58)
     )
     assert all(e <= s for s, e in zip(start["max_acceptable_length_in"],
                                       end["max_acceptable_length_in"]))
@@ -127,10 +210,15 @@ def test_campaign_end_envelope_is_stricter():
         OD, WT, GRADE, P_DESIGN,
         corrosion_rate_in_per_yr=0.25 / 25.4, campaign_years=3.0,
     )
-    assert any(e < s for s, e in zip(start["max_acceptable_length_in"],
-                                     end["max_acceptable_length_in"]))
-    assert all(e <= s for s, e in zip(start["max_acceptable_length_in"],
-                                      end["max_acceptable_length_in"]))
+    pairs = [(s, e) for s, e in zip(start["max_acceptable_length_in"],
+                                   end["max_acceptable_length_in"]) if s is not None and e is not None]
+    assert any(e < s for s, e in pairs) or any(
+        s is not None and e is None
+        for s, e in zip(start["max_acceptable_length_in"], end["max_acceptable_length_in"]))
+    assert all(e <= s for s, e in pairs)
+    for length, validity in zip(end["max_acceptable_length_in"], end["applicability"]):
+        if not validity["ok"]:
+            assert length is None  # A48: unsupported cells withhold acceptance
 
 
 def test_envelope_boundary_matches_direct_method_check():
