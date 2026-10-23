@@ -8,6 +8,7 @@ import json
 import math
 import re
 import shutil
+import subprocess
 from dataclasses import asdict, replace
 from pathlib import Path
 from threading import Event
@@ -188,7 +189,7 @@ def test_change_panel_matches_engineering_change_record(rebuilt):
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     embedded = json.loads(rebuilt.find("script", id="changes-data").string)
     assert embedded == changes
-    assert changes["revisions"][0]["revision"] == "01"
+    assert changes["revisions"][0]["revision"] == "02"
     assert changes["revisions"][-1]["revision"] == "00"
     assert changes["revisions"][0]["changes"]
 
@@ -369,3 +370,243 @@ def test_registered_prerequisite_finishes_before_dependent_generator(
 
     monkeypatch.setattr(checker, "run_generator", run)
     assert checker.regenerate(tmp_path) == []
+
+
+def test_reproduction_command_includes_prerequisite_and_control_dependencies(rebuilt):
+    reproduction = rebuilt.select_one("#section-9-2").parent.get_text()
+    command = next(
+        node.get_text() for node in rebuilt.select("pre")
+        if "python -m pytest tests/asset_integrity/test_module_report.py" in node.get_text()
+    )
+    for dependency in ("pandas", "pyyaml", "scipy", "pint", "plotly", "pydantic"):
+        assert f"--with '{dependency}" in command
+    assert "Node.js 18" in reproduction
+
+
+# Execute the delivered script unchanged. These DOM and file API doubles expose
+# the handler boundary; they do not emulate browser rendering or permissions.
+# Rejecting markup sinks makes a text-to-HTML regression fail immediately.
+REVIEW_CONTROL_HARNESS = r"""
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
+function openReport() {
+  const downloads = [], timers = [], revoked = [];
+  class Element {
+    constructor(tag, text = '') {
+      this.tagName = tag;
+      this.textContent = text;
+      this.children = [];
+      this.handlers = {};
+      this.style = {};
+      this.value = '';
+    }
+    set innerHTML(value) { throw new Error('Unexpected HTML insertion'); }
+    addEventListener(type, handler) { this.handlers[type] = handler; }
+    async emit(type, event = {}) { await this.handlers[type](event); }
+    append(...children) {
+      children.forEach(child => { child.parent = this; this.children.push(child); });
+    }
+    replaceChildren() { this.children = []; }
+    remove() { this.parent.children = this.parent.children.filter(item => item !== this); }
+    click() { downloads.push({href: this.href, name: this.download}); }
+    querySelector(selector) {
+      return this.options.find(option => selector === 'option[value="' + option.value + '"]');
+    }
+  }
+  const elements = Object.fromEntries(input.ids.map(id => [id, new Element('div')]));
+  elements['calculation-data'].textContent = JSON.stringify(input.calculation);
+  elements['changes-data'].textContent = JSON.stringify(input.changes);
+  elements['comment-section'].options = input.options;
+  elements['comment-section'].value = input.options[0].value;
+  const body = new Element('body');
+  const blobs = new Map();
+  const window = {};
+  vm.runInNewContext(input.script, {
+    document: {
+      getElementById: id => { assert.ok(elements[id], 'Unknown element ' + id); return elements[id]; },
+      querySelectorAll: selector => {
+        assert.equal(selector, '[data-sample]');
+        return [];
+      },
+      createElement: tag => new Element(tag), body,
+    },
+    window, Blob,
+    URL: {
+      createObjectURL: blob => { const url = 'blob:' + blobs.size; blobs.set(url, blob); return url; },
+      revokeObjectURL: url => revoked.push(url),
+    },
+    setTimeout: (callback, delay) => timers.push({callback, delay}),
+  });
+  return {elements, window, body, blobs, downloads, timers, revoked};
+}
+const click = (page, id) => page.elements[id].emit('click');
+const status = page => page.elements['comment-status'].textContent;
+const rows = page => page.elements['comment-list'].children;
+async function add(page, text, section = input.options[0].value) {
+  page.elements['comment-text'].value = text;
+  page.elements['comment-section'].value = section;
+  await click(page, 'add-comment');
+}
+async function download(page) {
+  await click(page, 'download-comments');
+  const request = page.downloads.at(-1);
+  assert.equal(request.name, 'report.comments.json');
+  const blob = page.blobs.get(request.href);
+  assert.equal(blob.type, 'application/json');
+  assert.equal(page.body.children.length, 0);
+  const timer = page.timers.at(-1);
+  assert.equal(timer.delay, 1000);
+  timer.callback();
+  assert.equal(page.revoked.at(-1), request.href);
+  return await blob.text();
+}
+async function importText(page, text, size = Buffer.byteLength(text)) {
+  await page.elements['import-comments'].emit('change', {
+    target: {files: [{size, text: async () => text}]},
+  });
+}
+async function main() {
+  const page = openReport();
+  const markup = '<img src=x onerror="throw 1"> & <script>throw 2</script> Δ';
+  await add(page, '  ' + markup + '  ');
+  assert.equal(page.elements['comment-text'].value, '');
+  assert.match(status(page), /^Comment added/);
+  const original = await download(page);
+  const payload = JSON.parse(original);
+  assert.equal(payload.document, 'Asset integrity module analysis');
+  assert.equal(payload.revision, input.changes.revisions[0].revision);
+  assert.deepEqual(payload.comments, [{section: input.options[0].value, text: markup}]);
+  assert.ok(original.endsWith('\n'));
+  if (input.scenario === 'roundtrip') {
+    await add(page, 'Second comment', input.options[1].value);
+    const exported = await download(page);
+    const restored = openReport();
+    await importText(restored, exported);
+    await importText(restored, exported);
+    assert.match(status(restored), /^Saved comments opened/);
+    assert.equal(rows(restored).length, 2);
+    assert.equal(rows(restored)[0].children[0].href, '#' + input.options[0].value);
+    assert.equal(rows(restored)[0].children[0].textContent, input.options[0].textContent);
+    assert.equal(rows(restored)[0].children[1].textContent, markup);
+    assert.equal(rows(restored)[0].children[1].children.length, 0);
+    assert.equal(rows(restored)[1].children[0].href, '#' + input.options[1].value);
+    assert.equal(await download(restored), exported);
+  } else if (input.scenario === 'invalid-import') {
+    let size;
+    switch (input.invalid) {
+      case 'document': payload.document = 'Other report'; break;
+      case 'revision': payload.revision = 'unmatched'; break;
+      case 'collection': payload.comments = {}; break;
+      case 'section': payload.comments[0].section = 'section-missing'; break;
+      case 'empty': payload.comments[0].text = ''; break;
+      case 'whitespace': payload.comments[0].text = '   '; break;
+      case 'text-type': payload.comments[0].text = 42; break;
+      case 'null': payload.comments = [null]; break;
+      case 'text-limit': payload.comments[0].text = 'x'.repeat(4001); break;
+      case 'count-limit': payload.comments = Array(201).fill(payload.comments[0]); break;
+      case 'size-limit': size = 2000001; break;
+      case 'json': break;
+      default: throw new Error('Unknown invalid import');
+    }
+    await importText(page, input.invalid === 'json' ? '{' : JSON.stringify(payload), size);
+    assert.match(status(page), /^Comments were not opened\./);
+    assert.equal(await download(page), original);
+    assert.equal(rows(page).length, 1);
+    assert.equal(rows(page)[0].children[1].textContent, markup);
+  } else if (input.scenario === 'save') {
+    const calls = [];
+    if (input.save !== 'unsupported') {
+      page.window.showDirectoryPicker = async options => {
+        calls.push(['picker', options.mode]);
+        if (input.save === 'cancelled') throw {name: 'AbortError'};
+        if (input.save === 'picker-failure') throw new Error('Permission denied');
+        return {getFileHandle: async (name, options) => {
+          calls.push(['file', name, options.create]);
+          return {createWritable: async () => ({
+            write: async text => {
+              if (input.save === 'write-failure') throw new Error('Write failed');
+              calls.push(['write', text]);
+            },
+            close: async () => { calls.push(['close']); },
+          })};
+        }};
+      };
+    }
+    await click(page, 'save-comments');
+    const messages = {
+      success: /^Comments saved as report.comments.json/,
+      unsupported: /^Folder access is unavailable/,
+      cancelled: /^Saving was cancelled/,
+      'picker-failure': /^Saving failed/,
+      'write-failure': /^Saving failed/,
+    };
+    assert.match(status(page), messages[input.save]);
+    if (input.save === 'success') {
+      assert.deepEqual(calls, [
+        ['picker', 'readwrite'], ['file', 'report.comments.json', true],
+        ['write', original], ['close'],
+      ]);
+    } else {
+      assert.ok(!calls.some(call => call[0] === 'close'));
+    }
+    assert.equal(await download(page), original);
+  } else if (input.scenario === 'add-limits') {
+    await add(page, '   ');
+    assert.match(status(page), /^Enter a comment/);
+    assert.equal(rows(page).length, 1);
+    for (let index = 1; index < 200; index++) await add(page, 'Note ' + index);
+    await add(page, 'Excess comment');
+    assert.match(status(page), /^The comment limit has been reached/);
+    assert.equal(rows(page).length, 200);
+    assert.equal(JSON.parse(await download(page)).comments.length, 200);
+  } else {
+    throw new Error('Unknown scenario');
+  }
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });
+"""
+
+
+def run_review_controls(rebuilt, **scenario):
+    node = shutil.which("node")
+    assert node, "Node.js 18 or later is required for offline review-control tests"
+    result = subprocess.run(
+        [node, "-e", REVIEW_CONTROL_HARNESS],
+        input=json.dumps({
+            "script": rebuilt.find_all("script")[-1].string,
+            "ids": [element["id"] for element in rebuilt.select("[id]")],
+            "calculation": evidence(rebuilt),
+            "changes": json.loads(rebuilt.find("script", id="changes-data").string),
+            "options": [
+                {"value": option["value"], "textContent": option.get_text()}
+                for option in rebuilt.select("#comment-section option")
+            ],
+            **scenario,
+        }),
+        text=True, capture_output=True, timeout=20,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_review_comments_roundtrip_and_escape_markup(rebuilt):
+    run_review_controls(rebuilt, scenario="roundtrip")
+
+
+@pytest.mark.parametrize("invalid", [
+    "document", "revision", "collection", "section", "empty", "whitespace",
+    "text-type", "null", "text-limit", "count-limit", "size-limit", "json",
+])
+def test_review_import_rejects_invalid_payload_without_losing_notes(rebuilt, invalid):
+    run_review_controls(rebuilt, scenario="invalid-import", invalid=invalid)
+
+
+@pytest.mark.parametrize("save", [
+    "success", "unsupported", "cancelled", "picker-failure", "write-failure",
+])
+def test_review_save_handler_and_download_fallback(rebuilt, save):
+    run_review_controls(rebuilt, scenario="save", save=save)
+
+
+def test_review_add_handler_rejects_empty_and_excess_comments(rebuilt):
+    run_review_controls(rebuilt, scenario="add-limits")

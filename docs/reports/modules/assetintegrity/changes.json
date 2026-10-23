@@ -2,6 +2,14 @@
   "document": "Asset integrity module analysis",
   "revisions": [
     {
+      "revision": "02",
+      "date": "2026-10-23",
+      "changes": [
+        "The complete isolated test dependency set and the JavaScript runtime requirement are documented so the registered prerequisite and review controls can be tested together.",
+        "Retained behavioral tests cover comment round trips, literal text handling, invalid-import rejection and save and download handlers; browser rendering and permissions remain outside this evidence."
+      ]
+    },
+    {
       "revision": "01",
       "date": "2026-10-22",
       "changes": [

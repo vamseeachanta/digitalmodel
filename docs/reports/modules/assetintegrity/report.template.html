@@ -273,9 +273,9 @@ result = b31g_original(
 <tr><td>safe_pressure_psi</td><td>psi</td><td>Legacy field name; uncapped factored pressure, without a complete operating decision</td><td>References C and D</td></tr>
 <tr><td>acceptable, applicability</td><td>Boolean and record</td><td>Demand comparison and independent method flag; both require examination</td><td>Reference D</td></tr>
 </tbody><caption>Table B. Selected public return fields. Field names do not extend their physical or qualification scope.</caption></table></div>
-<p>Reproduction from a source checkout uses the following commands from the repository root. Only the report's calculation, rendering and test dependencies are selected; a neighboring package checkout is not required. The report template contains the whole narrative, and the calculation is called anew during every rebuild.</p>
+<p>Reproduction from a source checkout uses the following commands from the repository root. The build command selects calculation and rendering dependencies. The complete test command also selects the registered prerequisite's assessment and reporting dependencies; a neighboring package checkout is not required. Node.js 18 or later must be available as <code>node</code> for the offline review-control tests. Those tests execute the delivered JavaScript with controlled DOM and file APIs; browser rendering and folder permissions remain outside their scope. The report template contains the whole narrative, and the calculation is called anew during every rebuild.</p>
 <pre>PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' python docs/reports/modules/assetintegrity/build_report.py
-PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' --with 'pytest&gt;=7.4.3,&lt;9' --with 'pytest-asyncio==0.21.1' --with 'beautifulsoup4&gt;=4.13,&lt;5' python -m pytest tests/asset_integrity/test_module_report.py</pre>
+PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&gt;=3.1,&lt;4' --with 'pytest&gt;=7.4.3,&lt;9' --with 'pytest-asyncio==0.21.1' --with 'beautifulsoup4&gt;=4.13,&lt;5' --with 'pandas&gt;=2,&lt;3' --with 'pyyaml&gt;=6,&lt;7' --with 'scipy&gt;=1.10,&lt;2' --with 'pint&gt;=0.25.3,&lt;1' --with 'plotly==5.17.0' --with 'pydantic&gt;=2.7,&lt;3' python -m pytest tests/asset_integrity/test_module_report.py</pre>
 <h3>9.3 Quality pre-flight evidence</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Check</th><th>Evidence</th><th>Scope or limit</th><th>Source</th></tr></thead><tbody>
@@ -284,6 +284,7 @@ PYTHONPATH=src uv run --no-project --with 'numpy&gt;=1.24,&lt;2' --with 'jinja2&
 <tr><td>Published comparison</td><td>Existing capped-pressure and rounded-depth assertions</td><td>Numerical tolerances stated in the design basis</td><td>Reference E</td></tr>
 <tr><td>Display and references</td><td>Numeric data bindings, fixed precision, section anchors and local reference targets</td><td>Built document is checked</td><td>Report rebuild test</td></tr>
 <tr><td>Single-file delivery</td><td>Inline stylesheet, chart data and review controls; no external rendering dependency</td><td>Reference links remain optional external reads</td><td>Report rebuild test</td></tr>
+<tr><td>Offline review controls</td><td>Comment round trips, literal text handling, invalid-import rejection, folder save and download handlers</td><td>Controlled DOM and file APIs; browser rendering and permissions are not exercised</td><td>Report review-control tests</td></tr>
 <tr><td>Wider engineering acceptance</td><td>Missing operating inputs identified</td><td>NOT_EVALUATED</td><td>Table A and Reference M</td></tr>
 </tbody><caption>Table C. Quality pre-flight evidence and the bounds of each check. These checks do not establish independent component approval.</caption></table></div>
 </section>
