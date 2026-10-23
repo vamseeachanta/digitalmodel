@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrcaFlex module — analytical riser configuration</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><div class="wrap">
+<header><div class="kicker">Riser engineering · analytical configuration</div>
+<h1>OrcaFlex module: still-water catenary configuration</h1>
+<p class="sub">Draft for maintainer review</p></header>
+
+<h2 id="s1">1. Executive Summary</h2>
+<p>The OrcaFlex module is a collection of preliminary marine analysis utilities and simulation reporting interfaces. Analysis is performed to determine the analytical geometry and weight of a steel catenary riser, and the key results are summarized below.</p>
+<ul><li>Preliminary hang-off geometry can be calculated from pipe properties, water depth and hang-off angle.
+<ul><li>The documented regression example returns a top tension of <span data-value="geometry.top_tension_kN">2236.7</span> kN and a suspended length of <span data-value="geometry.suspended_length_m">1840.0</span> m in still water. These are analytical estimates, with no allowable tension established.</li>
+<li>The module can support initial geometry selection; it does not establish how far a host can operate or remain connected.</li></ul></li>
+<li>Engineering acceptance requires additional evidence.
+<ul><li>The separate force-balance calculation agrees with the module at its returned precision. This comparison checks arithmetic within the same idealisation, not physical validation.</li>
+<li>An allowable operating envelope is not established because capacity, environmental loading and host-motion evidence are absent from this example.</li></ul></li></ul>
+<p>Revision A — initial issue. Cause: documentation of the analytical configuration example and its limits of use.</p>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>A</td><td>2026-10-21</td><td>Initial issue: documentation of the analytical configuration example and its limits of use.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Thicknesses and corrosion allowance are shown in millimetres so the displayed inputs reproduce the calculation. Numerical anchors, rebuild guidance and solver-free checks are added; the draft status identifies maintainer review.</td></tr>
+</tbody></table>
+<p class="sub">Table R. Report revision history.</p>
+
+<h2 id="s2">2. Introduction</h2>
+<p>The riser is represented as a uniform suspended pipe with a horizontal tangent at seabed touchdown. Riser analysis is performed for a public, synthetic regression example rather than a field installation.</p>
+<p>The selected workflow starts with pipe properties, calculates submerged weight, and returns still-water catenary geometry and tension. The numerical input and output convention is the International System of Units. This preserves the implementation's native units without introducing a conversion layer.</p>
+<p>The wider module supplies environment definitions, model dictionaries, mooring design, installation and pipelay estimates, weather-window calculations, code-check routines, vibration screening, response statistics and simulation report generation. These are distinct capabilities; their presence is not evidence of a completed riser design. <a href="#ref-interface">Public interface record</a>.</p>
+
+<h2 id="s3">3. Design Data</h2>
+<p>The design data are taken from the documented regression example and the configuration model's defaults. All default geometry and fluid properties are classified as ASSUMED - to be confirmed for any physical installation.</p>
+<h3>3.1 Site, host and riser</h3>
+<p>The example water depth is <span data-value="inputs.water_depth">1500.0</span> m and the hang-off elevation is <span data-value="inputs.hang_off_elevation">−10.0</span> m relative to mean sea level. The host draft is recorded as <span data-value="inputs.vessel_draft">12.0</span> m but is not used in the selected geometry calculation. No field, host-motion response, metocean record, pressure basis or material certificate is supplied. The input register in the appendix distinguishes these gaps from a true zero.</p>
+<p>The pipe is treated as a constant steel section with external coating and uniform internal contents. The submerged weight returned by the module is <span data-value="weight">1189.0</span> N/m, positive downward. Source: <a href="#ref-source">pipe properties and gravity implementation</a>; the material density source is the <a href="#ref-material">material registry</a>.</p>
+<h3>3.2 Criteria and rationale</h3>
+<p>The analytical model requires a positive vertical span and positive submerged weight. These conditions define a hanging catenary of the selected type; buoyant pipe requires a different model. The hang-off angle is positive and no greater than <span data-value="angle_limit">30.0</span> degrees. That bound is a software input restriction, not a demonstrated operating limit. <a href="#ref-source">Configuration definition</a>.</p>
+<p>No allowable tension, curvature, stress, fatigue life or host offset is established by this example. The minimum-touchdown-distance input is retained in the data register but is not enforced by the calculation. No compliance conclusion is drawn from it.</p>
+
+<h2 id="s4">4. Analysis Methodology</h2>
+<p>The riser is idealised as an inextensible, perfectly flexible catenary under uniform submerged weight. Only still-water gravity and buoyancy are represented; pressure, current drag, bending stiffness, seabed penetration and dynamic motion are excluded from the geometry solution.</p>
+<h3>4.1 Physical model and boundary conditions</h3>
+<figure><svg viewBox="0 0 820 330" role="img" aria-labelledby="schematic-title" style="width:100%">
+<title id="schematic-title">Suspended catenary, seabed touchdown and uniform pipe section; schematic, not to scale</title>
+<path d="M25 65 H400 M25 290 H410" stroke="var(--brand)" fill="none"/>
+<rect x="50" y="26" width="100" height="35" fill="var(--panel-2)" stroke="var(--brand)"/>
+<text x="60" y="48">Host support</text><text x="190" y="58">Mean sea level</text>
+<path d="M110 85 C140 235 245 290 355 290 H400" stroke="var(--brand)" stroke-width="4" fill="none"/>
+<path d="M110 70 V145 M92 85 H130" stroke="var(--muted)" stroke-dasharray="4 3"/>
+<text x="145" y="110">Hang-off; prescribed angle</text><text x="145" y="130">measured from vertical</text>
+<text x="45" y="195">Weight ↓</text><text x="240" y="275">Horizontal tangent</text>
+<text x="55" y="316">Seabed</text><text x="290" y="316">Touchdown</text>
+<circle cx="560" cy="120" r="65" fill="var(--panel-2)" stroke="var(--brand)"/>
+<circle cx="560" cy="120" r="49" fill="var(--muted)"/>
+<circle cx="560" cy="120" r="35" fill="white" stroke="var(--brand)"/>
+<path d="M620 90 H655 M605 145 H655 M560 120 H655" stroke="var(--brand)"/>
+<text x="660" y="95">Coating</text><text x="660" y="150">Steel wall</text><text x="660" y="125">Contents</text>
+<text x="470" y="220">Uniform section along suspended length</text>
+<text x="470" y="245">No buoyancy modules or foam zone</text>
+<text x="470" y="270">No tensioner, stops or centralisers represented</text>
+</svg><figcaption>Figure A. Analytical configuration and section stack-up. Geometry is schematic; a finite-element mesh is not part of this method.</figcaption></figure>
+<h3>4.2 Weight and catenary equations</h3>
+<p>The implementation equations are reproduced below. The numerical comparison uses an independently arranged form of the same equations. Sources are the <a href="#ref-source">analytical implementation</a> and <a href="#ref-rebuild">document calculation definition</a>; no standard-derived acceptance coefficient is applied.</p>
+<div class="eq">d = D − 2t; D<sub>c</sub> = D + 2c<br>
+A<sub>s</sub> = π(D² − d²)/4; A<sub>i</sub> = πd²/4; A<sub>c</sub> = π(D<sub>c</sub>² − D²)/4<br>
+w = g[ρ<sub>s</sub>A<sub>s</sub> + ρ<sub>i</sub>A<sub>i</sub> + ρ<sub>c</sub>A<sub>c</sub> − ρ<sub>w</sub>πD<sub>c</sub>²/4]</div>
+<p>D is steel outer diameter, d is bore diameter, t is wall thickness, c is coating thickness, and D<sub>c</sub> is coated diameter. A denotes area; subscripts s, i, c and w identify steel, internal contents, coating and seawater. The corresponding densities are denoted by ρ. Gravity g is <span data-value="gravity">9.80665</span> m/s² as specified in the implementation. The steel density is <span data-value="steel_density">7850.0</span> kg/m³ from the material registry; neither value constitutes material certification.</p>
+<div class="eq">h = water depth + hang-off elevation; a = h sin θ/(1 − sin θ)<br>
+H = wa; s = √[h(h + 2a)]; x = a arcosh(1 + h/a)<br>
+V = ws; T = √(H² + V²) = w(a + h)</div>
+<p>h is the vertical span, θ is the hang-off angle from vertical, a is the catenary parameter, H is horizontal tension, s is suspended arc length, x is horizontal hang-off-to-touchdown distance, V is vertical top force and T is total top tension. At touchdown the tension equals H. This is a geometric distance, not a permissible host excursion.</p>
+<p>The supplied estimated total length includes an implementation allowance beyond the suspended length. Its design basis is not established; it is reported for interface completeness and is excluded from procurement or installation decisions. Corrosion allowance is recorded but is not subtracted from the wall in this submerged-weight calculation.</p>
+
+<h2 id="s5">5. Detailed Results</h2>
+<p>The worked example is computed by calling the documented riser configuration class and its geometry method with the existing regression example. The table reports the complete returned geometry, with native units and returned precision.</p>
+<h3>5.1 Still-water benchmark</h3>
+<table><thead><tr><th>Output</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Catenary parameter</td><td><span data-value="geometry.catenary_parameter_m">391.1</span></td><td>m</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Horizontal tension</td><td><span data-value="geometry.horizontal_tension_kN">465.0</span></td><td>kN</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Top tension</td><td><span data-value="geometry.top_tension_kN">2236.7</span></td><td>kN</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Touchdown tension</td><td><span data-value="geometry.tdp_tension_kN">465.0</span></td><td>kN</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Suspended length</td><td><span data-value="geometry.suspended_length_m">1840.0</span></td><td>m</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Hang-off to touchdown distance</td><td><span data-value="geometry.horizontal_offset_m">881.1</span></td><td>m</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Hang-off angle from vertical</td><td><span data-value="geometry.hang_off_angle_deg">12.0</span></td><td>degrees</td><td><a href="#ref-source">Analytical implementation</a></td></tr><tr><td>Estimated total length; allowance unqualified</td><td><span data-value="geometry.estimated_total_length_m">2116.0</span></td><td>m</td><td><a href="#ref-source">Analytical implementation</a></td></tr></tbody></table>
+<p class="sub">Table A. Module returns for the public regression example. The estimated total length has an unqualified allowance; it is not an installation length.</p>
+<p>The separate weight and force-balance calculation agrees with each geometry result at the module's returned precision. Display rounding is not evidence of physical accuracy. The comparison is reproducible from the supplied calculation definition, while the full numerical evidence is embedded in this document.</p>
+<figure><svg id="tension-chart" viewBox="0 0 800 380" role="img" aria-label="Still-water top tension against hang-off angle, with software angle bound" style="width:100%"></svg>
+<p id="chart-readout" aria-live="polite">Select or hover over a marker to inspect the case, component, tension and limits.</p>
+<figcaption>Figure B. Still-water top tension at the example depth. Module values are circles; force-balance references are crosses. The vertical dashed line marks the software angle bound. No engineering tension limit is established.</figcaption></figure>
+<p>The angle comparison retains the primary example's depth and pipe properties. The additional angle is read from the second geometry regression example; the endpoint is read from the software input bound. This is an analytical parameter comparison, not a current-dominated or wave-dominated operating envelope.</p>
+<h3>5.2 Existing validation evidence</h3>
+<p>The riser-configuration test source contains <span data-value="test_count">18</span> test functions. Its assertions cover pipe dimensions, positive mass and stiffness, catenary geometry relationships, lazy-wave uplift and sizing, top-tensioned-riser stroke and overpull, and weight/angle utilities. Source inventory is distinct from an execution result. <a href="#ref-tests">Regression test record</a>.</p>
+<p>The selected catenary tests check positive tension and length relationships. They do not compare against measured data or native solver output. The added numerical checks reproduce the complete example and compare it with an algebraic reference at the module's rounding precision. The module also holds mock-based report-interface tests; mock responses do not qualify engineering results. <a href="#ref-mocks">Report test fixtures</a>.</p>
+<p>No independent physical benchmark or native solver comparison is established for this worked example. Published examples elsewhere in the repository are not adopted as verification of this implementation without a matched input and output comparison.</p>
+
+<h2 id="s6">6. Key Findings</h2>
+<p>The analytical example returns a top tension of <span data-value="geometry.top_tension_kN">2236.7</span> kN and a suspended length of <span data-value="geometry.suspended_length_m">1840.0</span> m in still water. These are analytical estimates, with no allowable tension established.</p>
+<p>The arithmetic comparison supports reproducibility of preliminary geometry within the stated idealisation. It does not establish wall tension, pressure containment, connection capacity, fatigue life or a permissible operating offset. The top-tension value is the resultant of the ideal cable equilibrium; it is not a pressure-adjusted wall-tension assessment.</p>
+
+<h2 id="s7">7. Limitations</h2>
+<p>The module output is limited by its idealisations and by incomplete enforcement of configuration intent. The software angle bound is enforced by the input model, but the requested minimum touchdown distance and host draft do not affect the geometry calculation.</p>
+<p>The pipe model constrains individual dimensions to positive values but does not establish all cross-field physical conditions, such as a positive bore or a corrosion allowance smaller than wall thickness. Input acceptance therefore does not constitute geometry qualification. The material defaults and coating properties remain assumptions until matched to a physical system.</p>
+<h3>7.1 Not covered</h3>
+<p>Current-loaded statics, irregular waves, host-motion response, dynamic stroke, tensioner stops, weak-point design, vortex-induced vibration and fatigue are not evaluated. Drift-off time and connected-operation limits are not evaluated: data needed are environmental cases, a watch circle and a qualified transient model. Do not use this example as a connection authorisation.</p>
+<p>Recoil is not evaluated: data needed are closure curves and a qualified transient model. Weak point analysis is not performed. Lazy-wave sizing, top-tensioned configurations, mooring and synthetic-rope design, installation, pipelay, weather windows, automated code checks and simulation-file reporting are outside the worked example. Their individual methods require separate qualification.</p>
+
+<h2 id="s8">8. Recommendations</h2>
+<p>The next engineering use is a bounded preliminary geometry study with explicit input checks. The following actions address the limitations identified in the configuration and test records.</p>
+<ul><li>Check the bore, wall allowance, submerged weight and vertical span before accepting a physical case; reject inconsistent geometry. Basis: the input-validation gaps described in the <a href="#ref-source">configuration record</a>.</li>
+<li>Compare the returned touchdown distance against the required separation explicitly. Establish the installed length from a documented layout rather than the implementation allowance. Basis: the unused distance input and estimated-length expression in the <a href="#ref-source">geometry method</a>.</li>
+<li>Establish an independent still-water benchmark, then current-loaded statics, then host-motion-driven irregular-wave dynamics before setting operating limits. Include pressure, bending, seabed contact, connection capacities and fatigue criteria. Basis: the evidence boundary in the <a href="#ref-tests">existing tests</a> and the idealisation in the <a href="#ref-source">method</a>.</li>
+<li>Require an approved design basis, applicable standard editions and clause-specific criteria before issuing a capacity conclusion. The implementation's reference list alone does not establish compliance.</li></ul>
+
+<h2 id="s9">9. References</h2>
+<p>The reference basis is the public repository edition supplied with this document. Source digests of text with normalised line endings are embedded with the numerical evidence to distinguish the calculation inputs from subsequent revisions.</p>
+<h3>9.1 Engineering basis and source status</h3>
+<p>The implementation cites Design of Risers for Floating Production Systems, Dynamic Risers, and Subsea Pipelines and Risers. The first two editions are unspecified in the source, and their licensed text has not been used here. The textbook citation is recorded as the 2005 edition, chapters 16–18, but its equations have not been independently checked for this report. No value or acceptance limit is attributed to those unverified references.</p>
+<h3>9.2 Source locators</h3>
+<ul class="refs">
+<li id="ref-source"><a href="../../../../src/digitalmodel/orcaflex/riser_config.py">riser_config.py</a>: RiserPipeProperties; SCRDesignInput.calculate_geometry; configuration field constraints. Source of inputs, gravity, equations, outputs and documented limitations.</li>
+<li id="ref-material"><a href="../../../../src/digitalmodel/materials/grades.py">materials/grades.py</a>: density defaults and legacy_riser_pipe_grades_mpa. Source of the steel density used by the pipe calculation.</li>
+<li id="ref-tests"><a href="../../../../tests/orcaflex/test_riser_config.py">test_riser_config.py</a>: TestSCRDesign.test_scr_geometry_calculation is the primary public example; test_scr_length_exceeds_depth supplies the comparison angle. Values not explicit in the test are configuration defaults.</li>
+<li id="ref-interface"><a href="../../../../src/digitalmodel/orcaflex/__init__.py">orcaflex/__init__.py</a>: public capability inventory and analytical entry-point exports.</li>
+<li id="ref-mocks"><a href="../../../../tests/orcaflex/conftest.py">orcaflex/conftest.py</a>: synthetic report fixtures; no native simulation evidence.</li>
+<li id="ref-rebuild"><a href="build_report.py">build_report.py</a> and <a href="../../../../tests/orcaflex/test_module_report.py">test_module_report.py</a>: numerical provenance, separate force-balance comparison and repeatable document checks.</li>
+<li><a href="../../../api/cfd/turbulent-flat-plate-verification.html">Existing verification-report layout</a> and <a href="../../../api/_assets/brand.css">canonical brand stylesheet</a>: inlined presentation basis.</li>
+</ul>
+
+<h2 id="s10">10. Acronyms and Appendices</h2>
+<p>The terms and data records below define the example's scope and distinguish assumptions from missing evidence. All physical dimensions are reported in the metric system; thicknesses and corrosion allowance are shown in millimetres to three decimals, retaining the calculation input precision.</p>
+<h3>10.1 Terms</h3>
+<p>A steel catenary riser is a suspended steel pipe whose global shape is approximated by a catenary. Touchdown is the point where the suspended segment becomes tangent to the seabed. Hang-off is the upper support. A response amplitude operator describes a host's motion response to incident waves; none is supplied in this example. A true zero is a numerical input or result; “not evaluated” denotes missing analysis, and “not applicable” denotes a method outside the stated scope.</p>
+<h3>10.2 Input and missing-data register</h3>
+<table><thead><tr><th>Property</th><th>Value</th><th>Unit</th><th>Source / status</th></tr></thead><tbody>
+<tr><td>Steel grade designation</td><td>X65</td><td>Not applicable</td><td>Default library entry; material certification not established</td></tr>
+<tr><td>Steel outer diameter</td><td><span data-value="pipe.outer_diameter">0.2731</span></td><td>m</td><td>Configuration default; assumed</td></tr>
+<tr><td>Wall thickness</td><td><span data-value="pipe.wall_thickness">25.400</span></td><td>mm</td><td>Configuration default; assumed</td></tr>
+<tr><td>Coating thickness</td><td><span data-value="pipe.coating_thickness">40.000</span></td><td>mm</td><td>Configuration default; assumed</td></tr>
+<tr><td>Coating density</td><td><span data-value="pipe.coating_density">900.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
+<tr><td>Contents density</td><td><span data-value="pipe.contents_density">800.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
+<tr><td>Corrosion allowance</td><td><span data-value="pipe.corrosion_allowance">3.000</span></td><td>mm</td><td>Recorded; not applied to weight</td></tr>
+<tr><td>Seawater density</td><td><span data-value="pipe.seawater_density">1025.0</span></td><td>kg/m³</td><td>Configuration default; assumed</td></tr>
+<tr><td>Hang-off angle from vertical</td><td><span data-value="inputs.hang_off_angle_from_vertical">12.0</span></td><td>degrees</td><td>Public regression example</td></tr>
+<tr><td>Requested minimum touchdown distance</td><td><span data-value="inputs.min_tdp_offset">200.0</span></td><td>m</td><td>Default; not enforced</td></tr>
+<tr><td>Pressure, capacities, weather, host response</td><td>Not evaluated</td><td>Not applicable</td><td>Required before physical acceptance</td></tr>
+</tbody></table>
+<p class="sub">Table B. Input register, from the configuration definition and public regression example in Section 9.2. All defaults are ASSUMED - to be confirmed; they are not field measurements.</p>
+<p>Adjacent-component stiffness, added mass, tensioner travel, closure curves and connection ratings are not held in this example. A uniform section is represented; there is no component-transition or foam-zone assessment. Current and wave effects are omitted from the still-water method, not recorded as measured zeros.</p>
+<h3>10.3 Quality-assurance pre-flight</h3>
+<p>The document checks reconstruct the example from the test source, call the module, compare each returned quantity and chart marker, and reproduce the HTML and change record. The separate equilibrium calculation checks geometry at the returned precision. These are software and arithmetic checks; physical qualification and native solver validation are not established.</p>
+<p>The source files and complete numerical returns are embedded as structured evidence. The report remains usable without a network connection. Commentary can be saved beside the document; it does not alter the calculated results.</p>
+<h3>10.4 Changes and comments</h3>
+<details><summary>Engineering changes in this revision</summary><ul id="change-panel"></ul></details>
+<label for="comment-section">Section</label><select id="comment-section" aria-label="Comment section"></select>
+<p><label for="comment-text">Review comment</label><br><textarea id="comment-text" rows="4" style="width:100%"></textarea></p>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load saved comments <input id="load-comments" type="file" accept="application/json,.json"></label>
+<p id="comment-status" role="status">Comments remain in this page until saved. Select the report folder when saving; if a download is offered, place it beside the report.</p>
+<ul id="comments"></ul>
+<footer>Analytical configuration example. Engineering acceptance is not established.</footer>
+</div>
+<script id="evidence" type="application/json">{"angle_limit": 30.0, "chart": [{"angle": 12.0, "reference": 2236.7226268490317, "tension": 2236.7}, {"angle": 15.0, "reference": 2390.3499299379187, "tension": 2390.3}, {"angle": 30.0, "reference": 3543.363687221018, "tension": 3543.4}], "geometry": {"catenary_parameter_m": 391.1, "estimated_total_length_m": 2116.0, "hang_off_angle_deg": 12.0, "horizontal_offset_m": 881.1, "horizontal_tension_kN": 465.0, "suspended_length_m": 1840.0, "tdp_tension_kN": 465.0, "top_tension_kN": 2236.7}, "gravity": 9.80665, "inputs": {"hang_off_angle_from_vertical": 12.0, "hang_off_elevation": -10.0, "min_tdp_offset": 200.0, "pipe": {"coating_density": 900.0, "coating_thickness": 0.04, "contents_density": 800.0, "corrosion_allowance": 0.003, "grade": "X65", "outer_diameter": 0.2731, "seawater_density": 1025.0, "wall_thickness": 0.0254}, "vessel_draft": 12.0, "water_depth": 1500.0}, "reference": {"catenary_parameter_m": 391.1033854776747, "horizontal_offset_m": 881.078764514319, "horizontal_tension_kN": 465.04078323852235, "suspended_length_m": 1839.9967632372266, "tdp_tension_kN": 465.04078323852235, "top_tension_kN": 2236.7226268490317}, "sources": {"src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90", "src/digitalmodel/orcaflex/riser_config.py": "4fa1bf445420b62a1a19d2081bbcc13f7f1fb5c0f60189e4e46bb9a47dfd6acd", "tests/orcaflex/test_riser_config.py": "8c10fe07910c6a26a3b845ca487c4a60f3a75c6097f9319de4b3e475ef47f39e"}, "steel_density": 7850.0, "test_count": 18, "weight": 1189.0482171882609}</script>
+<script id="change-data" type="application/json">{"changes": [{"description": "Initial analytical example of submerged weight and still-water catenary geometry; operating capacity is not established.", "section": "Detailed Results"}, {"description": "The minimum-offset input and total-length allowance are distinguished from verified design criteria.", "section": "Limitations"}, {"description": "Thicknesses and corrosion allowance are shown in millimetres to retain the calculation input precision; numerical anchors and solver-free rebuild checks are added.", "section": "Input register"}], "revision": "B", "status": "Draft for maintainer review"}</script>
+<script>/* Offline chart interaction and explicitly saved document comments. */
+"use strict";
+const evidence = JSON.parse(document.getElementById("evidence").textContent);
+const chart = document.getElementById("tension-chart");
+const svgNamespace = "http://www.w3.org/2000/svg";
+function shape(tag, attributes, text = "") {
+  const node = document.createElementNS(svgNamespace, tag);
+  Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+  node.textContent = text;
+  chart.appendChild(node);
+  return node;
+}
+function drawChart() {
+  const maxTension = Math.max(...evidence.chart.map(row => row.tension)) * 1.12;
+  const x = angle => 80 + angle / evidence.angle_limit * 640;
+  const y = tension => 300 - tension / maxTension * 240;
+  shape("path", {d: "M80 45 V300 H750", fill: "none", stroke: "var(--ink)"});
+  shape("text", {x: 240, y: 365}, "Hang-off angle from vertical (degrees)");
+  shape("text", {x: 80, y: 25}, "Top tension (kN); engineering limit not established");
+  shape("line", {x1: x(evidence.angle_limit), x2: x(evidence.angle_limit), y1: 45, y2: 300,
+    stroke: "var(--caution)", "stroke-dasharray": "6 4"});
+  shape("text", {x: 440, y: 47}, "Software angle bound");
+  evidence.chart.forEach(row => {
+    shape("text", {x: x(row.angle) - 10, y: 323}, row.angle.toFixed(1));
+    shape("line", {x1: 80, x2: x(row.angle), y1: y(row.tension), y2: y(row.tension),
+      stroke: "var(--edge)", "stroke-dasharray": "3 3"});
+    shape("text", {x: 6, y: y(row.tension) + 5}, row.tension.toFixed(1));
+    const difference = (row.tension - row.reference) / row.reference * 100;
+    const detail = `Case: still water at ${row.angle.toFixed(1)} degrees; component: upper support; ` +
+      `demand: ${row.tension.toFixed(1)} kN; tension limit: not established; ` +
+      `software angle limit: ${evidence.angle_limit.toFixed(1)} degrees; ` +
+      `force-balance reference: ${row.reference.toFixed(1)} kN; difference: ` +
+      `${difference.toExponential(2).replace("-", "−")} % of reference.`;
+    const marker = shape("circle", {cx: x(row.angle), cy: y(row.tension), r: 8,
+      fill: "white", stroke: "var(--brand)", "stroke-width": 2, tabindex: 0,
+      role: "button", "aria-label": detail});
+    const title = document.createElementNS(svgNamespace, "title");
+    title.textContent = detail;
+    marker.appendChild(title);
+    ["mouseenter", "focus", "click"].forEach(event => marker.addEventListener(event, () => {
+      document.getElementById("chart-readout").textContent = detail;
+    }));
+    shape("path", {d: `M${x(row.angle)-5} ${y(row.reference)-5} l10 10 m-10 0 l10 -10`,
+      stroke: "var(--ink)", fill: "none", "pointer-events": "none"});
+  });
+}
+drawChart();
+const changes = JSON.parse(document.getElementById("change-data").textContent);
+changes.changes.forEach(change => {
+  const item = document.createElement("li");
+  item.textContent = `${change.section}: ${change.description}`;
+  document.getElementById("change-panel").appendChild(item);
+});
+const sectionSelect = document.getElementById("comment-section");
+document.querySelectorAll("h2").forEach(heading => {
+  const option = document.createElement("option");
+  option.value = heading.id;
+  option.textContent = heading.textContent;
+  sectionSelect.appendChild(option);
+});
+let comments = [];
+const statusText = document.getElementById("comment-status");
+function renderComments() {
+  const list = document.getElementById("comments");
+  list.replaceChildren();
+  comments.forEach(comment => {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = `#${comment.section}`;
+    link.textContent = document.getElementById(comment.section).textContent;
+    item.append(link, document.createTextNode(`: ${comment.text}`));
+    list.appendChild(item);
+  });
+}
+document.getElementById("add-comment").addEventListener("click", () => {
+  const field = document.getElementById("comment-text");
+  if (!field.value.trim()) return;
+  comments.push({section: sectionSelect.value, text: field.value.trim()});
+  field.value = "";
+  renderComments();
+  statusText.textContent = "Comment added; save comments to retain it.";
+});
+document.getElementById("save-comments").addEventListener("click", async () => {
+  const content = JSON.stringify({revision: changes.revision, comments}, null, 2);
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({suggestedName: "report.comments.json",
+        types: [{description: "Document comments", accept: {"application/json": [".json"]}}]});
+      const writable = await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      statusText.textContent = "Comments saved to the selected file.";
+    } else {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([content], {type: "application/json"}));
+      link.download = "report.comments.json";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      statusText.textContent = "Download requested; place report.comments.json beside this report.";
+    }
+  } catch (error) {
+    statusText.textContent = "Comments were not saved; retain this page and try saving again.";
+  }
+});
+document.getElementById("load-comments").addEventListener("change", async event => {
+  try {
+    const file = event.target.files[0];
+    if (!file) return;
+    const loaded = JSON.parse(await file.text());
+    if (loaded.revision !== changes.revision || !Array.isArray(loaded.comments) ||
+        !loaded.comments.every(c => /^s(?:[1-9]|10)$/.test(c.section) && typeof c.text === "string")) {
+      throw new Error("Invalid comment record");
+    }
+    comments = comments.concat(loaded.comments);
+    renderComments();
+    statusText.textContent = "Comments loaded and appended; save to retain the combined record.";
+  } catch (error) {
+    statusText.textContent = "Comments were not loaded: the file format or revision does not match.";
+  }
+});
+</script>
+</body></html>

@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the bounded analytical module report and its reproducible sources.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/orcaflex/
+docs/reports/modules/orcaflex/*
+!docs/reports/modules/orcaflex/build_report.py
+!docs/reports/modules/orcaflex/report_template.html
+!docs/reports/modules/orcaflex/report_ui.js
+!docs/reports/modules/orcaflex/report.html
+!docs/reports/modules/orcaflex/changes.json
