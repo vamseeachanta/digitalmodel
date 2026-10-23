@@ -1,9 +1,8 @@
-"""Tests for AQWA backend Deck 7 FIDP/FISK card generation.
+"""Tests for AQWA backend Deck 7 damping and stiffness refusal.
 
-Validates that the AQWABackend.build_deck7() method correctly emits
-Frequency Independent DamPing (FIDP) and Frequency Independent
-StiFFness/sKiffness (FISK) cards from DiffractionSpec external_damping
-and external_stiffness matrices.
+Validates that AQWABackend.build_deck7() emits Frequency Independent
+DamPing (FIDP) and refuses unqualified nonzero structural stiffness.
+Source: Aqwa Reference Manual, Release 2024 R2, 11.6.1 and 11.7.1.
 
 Each FIDP/FISK card row follows the AQWA fixed-column format:
     <6 spaces><keyword><5 spaces><row_idx (5-wide)><6 x 10-char values>
@@ -90,6 +89,14 @@ def _make_spec(
         ),
         external_damping=external_damping,
         external_stiffness=external_stiffness,
+        external_damping_units="SI" if external_damping is not None else None,
+        external_damping_reference_point=(
+            "centre_of_gravity" if external_damping is not None else None
+        ),
+        external_stiffness_units="SI" if external_stiffness is not None else None,
+        external_stiffness_reference_point=(
+            "centre_of_gravity" if external_stiffness is not None else None
+        ),
     )
     return DiffractionSpec(
         metadata=MetadataSpec(project="test_damping"),
@@ -248,76 +255,54 @@ class TestDeck7Stiffness:
         fisk_lines = _extract_keyword_lines(cards, "FISK")
         assert len(fisk_lines) == 0
 
-    def test_deck7_stiffness_emits_fisk(self):
-        """Non-zero external_stiffness produces exactly 6 FISK rows."""
+    def test_deck7_nonzero_stiffness_is_refused(self):
+        """Unqualified structural stiffness is refused before emitting cards."""
         spec = _make_spec(external_stiffness=_stiffness_matrix())
         backend = AQWABackend()
-        cards = backend.build_deck7(spec)
+        with pytest.raises(ValueError, match="AQWA external stiffness.*NOT_EVALUATED"):
+            backend.build_deck7(spec)
 
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        assert len(fisk_lines) == 6
-
-    def test_deck7_stiffness_values_correct(self):
-        """FISK row 3 contains the heave stiffness 2e6."""
+    def test_deck7_stiffness_cannot_be_emitted_as_fisk(self):
+        """Unqualified structural stiffness is refused before emitting cards."""
         matrix = _stiffness_matrix()
         spec = _make_spec(external_stiffness=matrix)
         backend = AQWABackend()
-        cards = backend.build_deck7(spec)
-
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        row3 = fisk_lines[2]
-        # Heave stiffness = 2e6 at position [2][2]
-        values = re.findall(r'[+-]?\d+\.\d+e[+-]\d+', row3)
-        parsed_heave = float(values[2])
-        assert abs(parsed_heave - 2e6) / 2e6 < 0.01, (
-            f"Row 3 heave stiffness expected 2e6, got {parsed_heave}"
-        )
+        with pytest.raises(ValueError, match="AQWA external stiffness.*NOT_EVALUATED"):
+            backend.build_deck7(spec)
 
 
 class TestDeck7DampingAndStiffness:
     """Deck 7 with both external_damping and external_stiffness."""
 
-    def test_deck7_both_present(self):
-        """Both FIDP and FISK cards emitted when both are defined."""
+    def test_deck7_stiffness_prevents_partial_damping_emission(self):
+        """Unqualified structural stiffness is refused before emitting cards."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(36010.0),
             external_stiffness=_stiffness_matrix(),
         )
         backend = AQWABackend()
-        cards = backend.build_deck7(spec)
+        with pytest.raises(ValueError, match="AQWA external stiffness.*NOT_EVALUATED"):
+            backend.build_deck7(spec)
 
-        fidp_lines = _extract_keyword_lines(cards, "FIDP")
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        assert len(fidp_lines) == 6
-        assert len(fisk_lines) == 6
-
-    def test_deck7_fidp_before_fisk(self):
-        """FIDP cards appear before FISK cards in the card list."""
+    def test_deck7_no_unqualified_stiffness_card_order(self):
+        """Unqualified structural stiffness is refused before emitting cards."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(36010.0),
             external_stiffness=_stiffness_matrix(),
         )
         backend = AQWABackend()
-        cards = backend.build_deck7(spec)
+        with pytest.raises(ValueError, match="AQWA external stiffness.*NOT_EVALUATED"):
+            backend.build_deck7(spec)
 
-        card_text = "\n".join(cards)
-        first_fidp = card_text.index("FIDP")
-        first_fisk = card_text.index("FISK")
-        assert first_fidp < first_fisk, (
-            "FIDP cards must appear before FISK cards"
-        )
-
-    def test_deck7_wfs1_and_end_present(self):
-        """WFS1 banner and END card bracket the FIDP/FISK content."""
+    def test_deck7_no_partial_deck_for_unqualified_stiffness(self):
+        """Unqualified structural stiffness is refused before emitting cards."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(),
             external_stiffness=_stiffness_matrix(),
         )
         backend = AQWABackend()
-        cards = backend.build_deck7(spec)
-
-        assert any("WFS1" in c for c in cards)
-        assert cards[-1].strip() == "END"
+        with pytest.raises(ValueError, match="AQWA external stiffness.*NOT_EVALUATED"):
+            backend.build_deck7(spec)
 
 
 class TestFIDPCardFormat:

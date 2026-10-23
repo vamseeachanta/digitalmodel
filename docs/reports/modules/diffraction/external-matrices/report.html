@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffraction external matrix analysis</title><style>
+body{font:16px system-ui,sans-serif;color:#172b3a;background:#f5f7fa;margin:0}
+main{max-width:1100px;margin:auto;padding:2rem}section{background:white;padding:1.5rem;margin:1rem 0}
+table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{border:1px solid #cad5df;padding:.5rem;text-align:right}
+th:first-child,td:first-child{text-align:left}pre{overflow:auto;background:#edf2f6;padding:1rem}
+svg{width:100%;max-width:700px}nav a{margin-right:1rem}a{color:#125a91}
+</style></head><body><main><h1>Diffraction external matrix analysis</h1>
+<nav aria-label="Contents"><a href="#summary">Summary</a><a href="#inputs">Inputs</a>
+<a href="#method">Method</a><a href="#example">Worked example</a><a href="#limits">Limits of use</a></nav>
+<section id="summary"><h2>Summary</h2><p>External matrices require declared SI units and
+a body-origin or centre-of-gravity reference. The computed example transfers a reciprocal
+matrix and emits physically equivalent damping inputs with explicit native units.
+AQWA nonzero external stiffness is refused pending native semantic qualification.</p>
+<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>1</td><td>2026-10-22</td><td>Initial unit, reference-transfer and native-input analysis; explicit contracts replace ambiguous matrix emission.</td></tr></tbody></table></section>
+<section id="inputs"><h2>Inputs</h2><p>This is a synthetic arithmetic example.
+The six coordinates are surge, sway, heave, roll, pitch and yaw, in right-handed parallel
+body axes; translations are metres and rotations radians. CoG offset from body origin:
+(0.0, 0.0, 2.0) m. Coefficients are independently chosen inputs, with no physical acceptance claim.</p>
+<table><thead><tr><th scope="col">Row / column</th><th scope="col">surge</th><th scope="col">sway</th><th scope="col">heave</th><th scope="col">roll</th><th scope="col">pitch</th><th scope="col">yaw</th></tr></thead><tbody><tr><td>1</td><td>2000.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2</td><td>0.0</td><td>3000.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>3</td><td>0.0</td><td>0.0</td><td>5000.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>4</td><td>0.0</td><td>0.0</td><td>0.0</td><td>7000.0</td><td>0.0</td><td>0.0</td></tr><tr><td>5</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>11000.0</td><td>0.0</td></tr><tr><td>6</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>13000.0</td></tr></tbody></table><h3>Canonical unit contract by matrix block</h3><table><thead><tr><th scope="col">Load rows / motion columns</th><th scope="col">Stiffness</th><th scope="col">Damping</th></tr></thead><tbody><tr><td>Translation / translation</td><td>N/m</td><td>N.s/m</td></tr><tr><td>Translation / rotation</td><td>N/rad</td><td>N.s/rad</td></tr><tr><td>Rotation / translation</td><td>N.m/m</td><td>N.m.s/m</td></tr><tr><td>Rotation / rotation</td><td>N.m/rad</td><td>N.m.s/rad</td></tr></tbody></table>
+<p>Each matrix requires its own external_stiffness_units or external_damping_units = SI
+and external_stiffness_reference_point or external_damping_reference_point.
+Accepted points are body_origin and centre_of_gravity. Missing declarations are rejected.
+Legacy inputs require a documented unit and origin audit before migration.</p></section>
+<section id="method"><h2>Method</h2><p>Source 1 supplies matrix block dimensions.
+Source 2 defines OrcaWave SI force as kN; source 8 defines the kilo prefix,
+so every N-based block is divided by 1000.
+Sources 4–6 define the AQWA local CoG axes, SI units and additive FIDP damping.</p>
+<p>Source 3 supplies S(r)a = r cross a. For r from target to source,
+u_source = u_target + theta cross r, T = [[I,-S(r)],[0,I]].
+Substitution in quadratic energy or virtual work gives K_target = Tᵀ K_source T.
+The same relation holds for damping using velocity and power.</p>
+<p>Exact symmetry is the supported reciprocal linear-input rule for both matrices;
+no physical tolerance is introduced. Positivity and passivity are NOT_EVALUATED.</p>
+<h3>Nested numeric policy inventory</h3><table><thead><tr><th scope="col">Numeric policy field</th><th scope="col">Valid domain</th><th scope="col">Reason</th></tr></thead><tbody><tr><td>min_samples</td><td>Integer &gt;= 2; excludes booleans</td><td>Two points define an interval</td></tr><tr><td>min_coverage</td><td>None or finite real in (0,1]; excludes booleans</td><td>Ratio of spans</td></tr><tr><td>max_relative_gap</td><td>Finite real &gt; 0; excludes booleans</td><td>Bounds frequency gap / frequency</td></tr></tbody></table><p>Physical defaults are unchanged;
+custom thresholds require nonblank custom justification. Nonfinite numbers never disable a check.</p></section>
+<section id="example"><h2>Worked example</h2><p>Independently expand twice the energy divided by 1000:
+2(x+2 pitch)² + 3(y−2 roll)² + 5z² + 7 roll² + 11 pitch² + 13 yaw².
+This yields the body-origin matrix below. The test docstring records each diagonal and coupling.</p>
+<table><thead><tr><th scope="col">Row / column</th><th scope="col">surge</th><th scope="col">sway</th><th scope="col">heave</th><th scope="col">roll</th><th scope="col">pitch</th><th scope="col">yaw</th></tr></thead><tbody><tr><td>1</td><td>2000.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>4000.0</td><td>0.0</td></tr><tr><td>2</td><td>0.0</td><td>3000.0</td><td>0.0</td><td>-6000.0</td><td>0.0</td><td>0.0</td></tr><tr><td>3</td><td>0.0</td><td>0.0</td><td>5000.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>4</td><td>0.0</td><td>-6000.0</td><td>0.0</td><td>19000.0</td><td>0.0</td><td>0.0</td></tr><tr><td>5</td><td>4000.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>19000.0</td><td>0.0</td></tr><tr><td>6</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>13000.0</td></tr></tbody></table><figure><svg viewBox="0 0 540 360" role="img" aria-label="Computed body-origin matrix; numerical values also tabulated"><rect x="0" y="0" width="90" height="60" fill="hsl(210,50%,92.7%)" stroke="white"/><text x="45" y="35" text-anchor="middle">2000.0</text><rect x="90" y="0" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="135" y="35" text-anchor="middle">0.0</text><rect x="180" y="0" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="225" y="35" text-anchor="middle">0.0</text><rect x="270" y="0" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="315" y="35" text-anchor="middle">0.0</text><rect x="360" y="0" width="90" height="60" fill="hsl(210,50%,87.5%)" stroke="white"/><text x="405" y="35" text-anchor="middle">4000.0</text><rect x="450" y="0" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="495" y="35" text-anchor="middle">0.0</text><rect x="0" y="60" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="45" y="95" text-anchor="middle">0.0</text><rect x="90" y="60" width="90" height="60" fill="hsl(210,50%,90.1%)" stroke="white"/><text x="135" y="95" text-anchor="middle">3000.0</text><rect x="180" y="60" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="225" y="95" text-anchor="middle">0.0</text><rect x="270" y="60" width="90" height="60" fill="hsl(10,50%,82.2%)" stroke="white"/><text x="315" y="95" text-anchor="middle">-6000.0</text><rect x="360" y="60" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="405" y="95" text-anchor="middle">0.0</text><rect x="450" y="60" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="495" y="95" text-anchor="middle">0.0</text><rect x="0" y="120" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="45" y="155" text-anchor="middle">0.0</text><rect x="90" y="120" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="135" y="155" text-anchor="middle">0.0</text><rect x="180" y="120" width="90" height="60" fill="hsl(210,50%,84.8%)" stroke="white"/><text x="225" y="155" text-anchor="middle">5000.0</text><rect x="270" y="120" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="315" y="155" text-anchor="middle">0.0</text><rect x="360" y="120" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="405" y="155" text-anchor="middle">0.0</text><rect x="450" y="120" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="495" y="155" text-anchor="middle">0.0</text><rect x="0" y="180" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="45" y="215" text-anchor="middle">0.0</text><rect x="90" y="180" width="90" height="60" fill="hsl(10,50%,82.2%)" stroke="white"/><text x="135" y="215" text-anchor="middle">-6000.0</text><rect x="180" y="180" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="225" y="215" text-anchor="middle">0.0</text><rect x="270" y="180" width="90" height="60" fill="hsl(210,50%,48.0%)" stroke="white"/><text x="315" y="215" text-anchor="middle">19000.0</text><rect x="360" y="180" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="405" y="215" text-anchor="middle">0.0</text><rect x="450" y="180" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="495" y="215" text-anchor="middle">0.0</text><rect x="0" y="240" width="90" height="60" fill="hsl(210,50%,87.5%)" stroke="white"/><text x="45" y="275" text-anchor="middle">4000.0</text><rect x="90" y="240" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="135" y="275" text-anchor="middle">0.0</text><rect x="180" y="240" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="225" y="275" text-anchor="middle">0.0</text><rect x="270" y="240" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="315" y="275" text-anchor="middle">0.0</text><rect x="360" y="240" width="90" height="60" fill="hsl(210,50%,48.0%)" stroke="white"/><text x="405" y="275" text-anchor="middle">19000.0</text><rect x="450" y="240" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="495" y="275" text-anchor="middle">0.0</text><rect x="0" y="300" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="45" y="335" text-anchor="middle">0.0</text><rect x="90" y="300" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="135" y="335" text-anchor="middle">0.0</text><rect x="180" y="300" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="225" y="335" text-anchor="middle">0.0</text><rect x="270" y="300" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="315" y="335" text-anchor="middle">0.0</text><rect x="360" y="300" width="90" height="60" fill="hsl(210,50%,98.0%)" stroke="white"/><text x="405" y="335" text-anchor="middle">0.0</text><rect x="450" y="300" width="90" height="60" fill="hsl(210,50%,63.8%)" stroke="white"/><text x="495" y="335" text-anchor="middle">13000.0</text></svg><figcaption>Computed body-origin matrix. Each block retains the units in the unit table.</figcaption></figure>
+<p>The same body-origin matrix is used as damping for both input emitters.
+OrcaWave keeps the declared point; AQWA transfers it to CoG and preserves N-based units.</p>
+<h3>OrcaWave emitted text</h3><pre>  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 2.0
+      - 0.0
+      - 0.0
+      - 0.0
+      - 4.0
+      - 0.0
+    - - 0.0
+      - 3.0
+      - 0.0
+      - -6.0
+      - 0.0
+      - 0.0
+    - - 0.0
+      - 0.0
+      - 5.0
+      - 0.0
+      - 0.0
+      - 0.0
+    - - 0.0
+      - -6.0
+      - 0.0
+      - 19.0
+      - 0.0
+      - 0.0
+    - - 4.0
+      - 0.0
+      - 0.0
+      - 0.0
+      - 19.0
+      - 0.0
+    - - 0.0
+      - 0.0
+      - 0.0
+      - 0.0
+      - 0.0
+      - 13.0
+  BodyExternalDampingMatrixOriginType: Body origin</pre>
+<h3>AQWA emitted text</h3><pre>********************************************************************************
+*********************************** DECK  7 ************************************
+********************************************************************************
+          WFS1
+* External damping: SI N,m,s,rad; origin centre_of_gravity
+      FIDP         1 2.000e+03 0.000e+00 0.000e+00 0.000e+00 0.000e+00 0.000e+00
+      FIDP         2 0.000e+00 3.000e+03 0.000e+00 0.000e+00 0.000e+00 0.000e+00
+      FIDP         3 0.000e+00 0.000e+00 5.000e+03 0.000e+00 0.000e+00 0.000e+00
+      FIDP         4 0.000e+00 0.000e+00 0.000e+00 7.000e+03 0.000e+00 0.000e+00
+      FIDP         5 0.000e+00 0.000e+00 0.000e+00 0.000e+00 1.100e+04 0.000e+00
+      FIDP         6 0.000e+00 0.000e+00 0.000e+00 0.000e+00 0.000e+00 1.300e+04
+ END</pre>
+<h3>AQWA stiffness disposition</h3><pre>AQWA external stiffness is NOT_EVALUATED: FISK is undocumented; SSTF global-frame composition requires qualification</pre>
+<p>Each generated input directory receives external-matrix-provenance.json with
+canonical, normalized and native values, units, points, CoG offset and conversion revision.</p></section>
+<section id="limits"><h2>Limits of use</h2><p>Small rotations, parallel axes and
+constant reciprocal linear matrices are required. The transfer excludes orientation changes,
+preload-dependent geometric stiffness and nonlinear damping. AQWA supports damping for one
+unrotated body with coincident mesh and body origins; rotated, positioned and coupled
+cases are refused. CoG-dependent free-floating matrices
+are refused because their CoG is determined by the solver.</p>
+<h3>NOT_EVALUATED</h3><ul><li>Native solver loading, execution and physical response.</li>
+<li>AQWA structural stiffness: source 7 specifies global-frame SSTF semantics;
+the old FISK emission has no confirmed contract. Restoring composition remains separate.</li>
+<li>Positive definiteness, passivity, physical acceptance and field calibration.</li>
+<li>Legacy matched-case matrix migration without a confirmed data basis.</li>
+<li>Nonlinear, preloaded, multibody and rotated-body external matrix behaviour.</li></ul>
+<p>Way forward: qualify native stiffness coordinates and composition, audit legacy units
+against their sources, then perform independently reviewed solver benchmarks.</p></section>
+<section><h2>Sources</h2><ol><li><a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Constraints.htm">OrcaWave help, Constraints, external stiffness and damping block equations (accessed 2026-10-22; online edition)</a></li><li><a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Model.htm#Units">OrcaWave help, Model, Units: SI force is kN, length m, time s (accessed 2026-10-22; online edition)</a></li><li><a href="https://www.fossen.biz/html/marineCraftModel.html">Handbook of Marine Craft Hydrodynamics and Motion Control, second edition (2021), public marine craft model: skew cross-product matrix and CoG offset</a></li><li><a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/aqwa_ref/aqwaref_intro_axes.html">Aqwa Reference Manual, Release 2024 R2, 1.2.1 Axes Systems: local axes at CoG</a></li><li><a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/aqwa_ref/aqwaref_unitsconv.html">Aqwa Reference Manual, Release 2024 R2, 1.4 Units: N, m, kg, s; matrix angles radians</a></li><li><a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/aqwa_ref/aqwaref_deck7_fiam_fidp.html">Aqwa Reference Manual, Release 2024 R2, 11.6.1 FIAM/FIDP: additive damping matrix</a></li><li><a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/aqwa_ref/aqwaref_deck7_sstf.html">Aqwa Reference Manual, Release 2024 R2, 11.7.1 SSTF: global-frame structural stiffness</a></li><li><a href="https://www.bipm.org/en/measurement-units/si-prefixes">BIPM SI prefixes table: kilo is exactly ten cubed (accessed 2026-10-22)</a></li></ol><h3>Reproducibility</h3>
+<pre>PYTHONPATH=src python scripts/reporting/build_diffraction_external_matrices_report.py --output-dir docs/reports/modules/diffraction/external-matrices --scratch "$TMPDIR/native-report"</pre>
+<p>The builder computes every figure and table, extracts actual emitted input text,
+and writes report.html, results.json and changes.json. The offline report test rebuilds
+twice and compares both results with the committed bytes. No solver is imported or started.</p>
+</section></main></body></html>

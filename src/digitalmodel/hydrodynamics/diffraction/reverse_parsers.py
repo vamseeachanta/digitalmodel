@@ -447,6 +447,10 @@ class OrcaWaveInputParser:
         solver_options = self._parse_solver_options(data)
 
         bodies = data.get("Bodies", [])
+        if any(self._parse_6x6_matrix(body, kind) is not None
+               for body in bodies for kind in ("Stiffness", "Damping")):
+            if data.get("UnitsSystem") != "SI":
+                raise ValueError("external matrices require explicit OrcaWave SI units")
 
         if len(bodies) == 1:
             vessel = self._parse_single_body(bodies[0])
@@ -643,6 +647,17 @@ class OrcaWaveInputParser:
         # External stiffness
         external_stiffness = self._parse_6x6_matrix(body_data, "Stiffness")
         external_damping = self._parse_6x6_matrix(body_data, "Damping")
+        external_contract = {}
+        for kind, matrix in (("Stiffness", external_stiffness),
+                             ("Damping", external_damping)):
+            if matrix is not None:
+                origin = body_data.get(f"BodyExternal{kind}MatrixOriginType")
+                origins = {"Body origin": "body_origin",
+                           "Centre of mass": "centre_of_gravity"}
+                if origin not in origins:
+                    raise ValueError(f"unsupported or missing external {kind} origin")
+                external_contract[f"external_{kind.lower()}_units"] = "SI"
+                external_contract[f"external_{kind.lower()}_reference_point"] = origins[origin]
 
         # Fixed DOFs
         fixed_dofs = self._parse_fixed_dofs(body_data)
@@ -653,6 +668,7 @@ class OrcaWaveInputParser:
             inertia=inertia,
             external_stiffness=external_stiffness,
             external_damping=external_damping,
+            **external_contract,
             fixed_dofs=fixed_dofs if fixed_dofs else None,
         )
 
@@ -760,7 +776,9 @@ class OrcaWaveInputParser:
                     )
                     if all_zero:
                         return None
-                    return [[float(v) for v in row] for row in matrix]
+                    # OrcaWave Model / Units (accessed 2026-10-22): SI force
+                    # is kN. Canonical external matrices use N in every block.
+                    return [[float(v) * 1000.0 for v in row] for row in matrix]
         return None
 
     def _parse_fixed_dofs(

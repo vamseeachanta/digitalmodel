@@ -40,6 +40,10 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     SymmetryType,
     IrregularFrequencyMethod,
 )
+from digitalmodel.hydrodynamics.diffraction.external_matrices import (
+    prepare_matrix,
+    write_matrix_provenance,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -408,10 +412,15 @@ def _build_body_dict(
         "BodyExternalStiffnessMatrixRz"
     )
     if vessel.external_stiffness is not None:
-        body[stiffness_key] = [list(row) for row in vessel.external_stiffness]
+        stiffness = prepare_matrix(vessel, "stiffness", "orcawave")
+        body[stiffness_key] = stiffness["native_values"]
     else:
         body[stiffness_key] = _zero_6x6()
-    body["BodyExternalStiffnessMatrixOriginType"] = "Body origin"
+    origin_names = {"body_origin": "Body origin", "centre_of_gravity": "Centre of mass"}
+    body["BodyExternalStiffnessMatrixOriginType"] = (
+        origin_names[vessel.external_stiffness_reference_point]
+        if vessel.external_stiffness is not None else "Body origin"
+    )
 
     # External damping matrix
     damping_key = (
@@ -423,10 +432,14 @@ def _build_body_dict(
         "BodyExternalDampingMatrixRz"
     )
     if vessel.external_damping is not None:
-        body[damping_key] = [list(row) for row in vessel.external_damping]
+        damping = prepare_matrix(vessel, "damping", "orcawave")
+        body[damping_key] = damping["native_values"]
     else:
         body[damping_key] = _zero_6x6()
-    body["BodyExternalDampingMatrixOriginType"] = "Body origin"
+    body["BodyExternalDampingMatrixOriginType"] = (
+        origin_names[vessel.external_damping_reference_point]
+        if vessel.external_damping is not None else "Body origin"
+    )
 
     # Connection parent
     if body_spec.connection_parent is not None:
@@ -836,6 +849,7 @@ class OrcaWaveBackend:
         # Determine filename
         name = self._analysis_name(spec)
         output_path = output_dir / f"{name}.yml"
+        write_matrix_provenance(spec, "orcawave", output_dir)
         return _write_yml(data, output_path)
 
     def generate_modular(
@@ -897,6 +911,7 @@ class OrcaWaveBackend:
         merged.update(_build_qtf_section(spec))
 
         master_path = output_dir / "master.yml"
+        write_matrix_provenance(spec, "orcawave", output_dir)
         return _write_yml(merged, master_path)
 
     @staticmethod

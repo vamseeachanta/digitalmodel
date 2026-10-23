@@ -67,6 +67,7 @@ class AbscissaConfig:
     abscissa validation requires two points to define an interval.
     ``min_coverage`` must be None or a finite real in (0, 1]: shared-interval
     coverage is a positive ratio bounded by the smaller source span.
+    Booleans are excluded from both real-valued policy fields.
     ``max_relative_gap`` must be a finite, strictly positive real: it bounds
     d(omega)/omega, and a non-finite threshold disables the gap comparison.
     """
@@ -84,12 +85,14 @@ class AbscissaConfig:
         ):
             raise ValueError("min_samples must be an integer of at least 2, not a boolean")
         if self.min_coverage is not None and (
-            not isinstance(self.min_coverage, Real)
+            isinstance(self.min_coverage, bool)
+            or not isinstance(self.min_coverage, Real)
             or not 0.0 < self.min_coverage <= 1.0
         ):
             raise ValueError("min_coverage must be None or a finite real in (0, 1]")
         if (
-            not isinstance(self.max_relative_gap, Real)
+            isinstance(self.max_relative_gap, bool)
+            or not isinstance(self.max_relative_gap, Real)
             or not 0.0 < self.max_relative_gap < np.inf
         ):
             raise ValueError("max_relative_gap must be a finite, strictly positive real")
@@ -100,6 +103,8 @@ class AbscissaConfig:
         )
         if custom_threshold and self.justification == DEFAULT_JUSTIFICATION:
             raise ValueError("custom thresholds require custom justification")
+        if not isinstance(self.justification, str) or not self.justification.strip():
+            raise ValueError("justification must be nonblank text")
 
 
 @dataclass(frozen=True)
