@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Shear7 mode finder implementation plan</title>
+<main><h1>Shear7 mode finder implementation plan</h1>
+<p>The implementation will port the result-reading behavior of ModesFind.m and
+FindModes.m (2009), inspected read-only under the authority of issue 1642.
+No restricted source files or analysis data will be published.</p>
+<h2>Scope and sequence</h2>
+<ol>
+<li>The first slice will parse the above-cutoff mode list and the first modal
+excitation region into immutable records. Regex markers will tolerate spacing
+and capitalization. Missing markers, malformed rows and truncated tables will
+raise errors rather than produce plausible empty results.</li>
+<li>The second slice will process sorted directory inputs without changing the
+working directory and reproduce the ordinal NodeList cross-tabulation with zero
+padding. Explicit zero-mode cases will produce empty lists.</li>
+<li>The third slice will expose an installed command and module CLI, export CSV,
+JSON and YAML, and document a synthetic worked example.</li>
+</ol>
+<h2>Files and method</h2>
+<p>The code will live in the current installable package at
+<code>src/digitalmodel/subsea/viv_tools/</code>, rather than recreating the obsolete
+hyphenated source tree. The entrypoint will be declared in pyproject.toml.
+Tests will live in <code>tests/subsea/viv_tools/</code>; documentation and synthetic
+inputs will live in <code>docs/domains/viv/</code> and <code>examples/viv/</code>.</p>
+<p>No physical equations, coefficients or acceptance limits will be introduced.
+The algorithm will read counts and identifiers from input. For each file column,
+each row will equal the correspondingly listed node, or zero beyond that list's length.
+This indexing rule and first-mode selection will follow ModesFind.m (2009),
+NodeList assignment and output loops. The mode count will follow its
+above-cutoff sentinel, rather than the potentially-excited modal table.</p>
+<h2>Validation and adversarial plan assessment</h2>
+<p>Tests will precede implementation. Synthetic expected values will be written
+out independently in test docstrings. Tests will cover first-mode selection,
+ragged columns, repeated calls, zero modes, whitespace, malformed data, missing
+sections, CLI discovery, each export format and readback. Available archive
+outputs will be compared read-only to their saved ExcitedModes.dat and
+PowerInRegion.dat counterparts; only aggregate results will be reported.</p>
+<p>The defect assessment will challenge accidental selection of potentially
+excited modes, unioning all modal regions, silent truncation, stale column
+padding, output overwriting input, empty discovery and changes to process cwd.
+The original algorithm's first-mode limitation will remain explicit. No
+independent provider verdict will be claimed; independent review will remain
+pending before merge.</p>
+<p>Required checks will include the new module tests and Ruff on touched Python
+files, direct file checks, an added-line publication scan, LFS attribute checks
+and a cleanup audit. Tests will run against the uncommitted tree.</p>
+<h2>Limits and later work</h2>
+<p>Support for other undocumented output dialects and extraction of every modal
+region will remain outside the compatibility port. No solver will be invoked.
+Public manual access failures will be recorded without inferring unseen content.</p>
+</main></html>
