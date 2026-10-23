@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLWR buoyancy screening analysis</title>
+<style>
+body { max-width: 68em; margin: 2em auto; padding: 0 1em; font: 1em/1.5 sans-serif; color: #182535; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #b6c3ce; padding: .5em; text-align: left; }
+caption { caption-side: bottom; text-align: left; }
+code, pre { background: #eef2f5; }
+pre { padding: 1em; overflow-x: auto; }
+.boundary { padding: 1em; border-left: .3em solid #9b5a00; background: #fff5df; }
+</style>
+</head>
+<body>
+<h1>SLWR buoyancy screening analysis</h1>
+<p>The analysis ranks exact atlas configurations by maximum touchdown-zone stress
+range across supplied near, far and cross excursions. Every configuration is retained,
+including constraint violations and missing evidence. Optional stress spectra are
+passed to the existing narrow-band fatigue engine. The worked example is synthetic;
+no qualified physical optimum or certified fatigue result is established.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-19</td><td>Added the screening interface, evidence gates
+and independent worked example to connect atlas candidates with excursion response.</td></tr>
+<caption>Table 1. Revision record.</caption>
+</table>
+<h2>Validity and required evidence</h2>
+<p class="boundary"><strong>SCREEN:</strong> static excursion stress range is a proxy.
+A scalar transfer from an excursion envelope to a stress PSD is an assumption,
+not a dynamic model. Narrow-band fatigue remains a screening estimate.
+<strong>CERTIFY: NOT_EVALUATED.</strong> Qualified dynamic stress extraction,
+at least two independent OrcaFlex candidate comparisons and held-out corpus evidence
+are required before a certified optimum or client-facing fatigue damage is established.
+Both tiers appear on every returned configuration, including incomplete rows.</p>
+<p>The static geometry source for upstream response is
+<code>marine_ops.marine_analysis.catenary.lazy_wave.LazyWaveSolver</code>.
+The quarantined <code>subsea.catenary_riser.lazy_wave.LazyWaveAnalyzer</code>
+is excluded. This interface does not call either geometry implementation, generate
+excursion stresses or certify imported response. Existing kernel sign, closure,
+radius-binding, equilibrium and legacy-comparison tests provide regression evidence;
+they do not qualify dynamic stress response. Input source strings record a caller's
+basis and do not authenticate it.</p>
+<h2>Inputs and interface</h2>
+<p>Import <code>rank_buoyancy_candidates</code> from
+<code>digitalmodel.riser_fatigue.buoyancy_screening</code>. Supply an existing
+<code>digitalmodel.parametric.atlas.Atlas</code>, responses keyed by its
+<code>case_id</code>, caller criteria and an optional spectral basis. The atlas grid
+is the candidate set. Its surrogate response is ignored, no interpolation or new
+sweep is performed, and a minimum is established only among supplied feasible nodes.</p>
+<table>
+<tr><th>Input</th><th>Required content and units</th></tr>
+<tr><td>Exact atlas node</td><td>Unique case_id; module_count; module_length_m;
+module_spacing_m (clear gap); net_buoyancy_per_module_N (positive net module uplift);
+buoyancy_start_m (material arc position). Response layout must match all fields.</td></tr>
+<tr><td>Excursion response</td><td>Common increasing material arc stations [m],
+touchdown interval [m], near/far/cross stress profiles [MPa] with the same stress
+component and stress-concentration convention; no regridding is performed.</td></tr>
+<tr><td>Constraint observations</td><td>Each excursion supplies top tension [N],
+minimum sag/hog bend radii [m], minimum hog seabed clearance [m] and minimum
+interference clearance [m]. Missing observations are unknown, not zero.</td></tr>
+<tr><td>Constraint limits</td><td>Maximum tension [N], minimum radius [m], minimum
+hog clearance [m], minimum interference clearance [m], and a source. No standard
+default or unstated tolerance is applied. Equality passes the stated comparator.</td></tr>
+<tr><td>Optional spectra</td><td>One-sided stress PSD [MPa²/Hz] at every sampled
+TDZ station, frequency [Hz], source; single-slope S-N slope m, log10(A), duration [s]
+and their source. Nonnegative PSD, finite values and ordered frequencies are required.</td></tr>
+<caption>Table 2. Input contract. All dimensional quantities carry units in field names.</caption>
+</table>
+<p>Module distribution is uniform, set by starting position and clear gap.
+Irregular module arrangements, dynamic response generation, code-derived S-N
+curve selection, certification, automatic search refinement, and historical corpus
+ingestion remain outside this interface. A missing configuration response remains
+visible as <code>NOT_EVALUATED</code>; no synthetic fallback is used.</p>
+<h2>Method and sources</h2>
+<ol>
+<li>At each material station s, the excursion envelope is defined as
+<code>R(s) = max_case stress(s) − min_case stress(s)</code>. The screening objective
+is <code>max_s_in_TDZ R(s)</code>. This is a defined proxy, not a fatigue equation.
+The complete R(s) profile, governing interval and controlling station are returned.</li>
+<li>Each observation is compared to its caller-supplied limit in every excursion.
+Any violation gives <code>VIOLATED</code>. Otherwise missing evidence gives
+<code>NOT_EVALUATED</code>. Only complete feasible nodes receive ordinal ranks;
+ties sort by case identifier. All excluded rows remain in the result with observations,
+limits and comparators.</li>
+<li>The optional scalar secant helper assumes
+<code>H(s) = R(s)/reference_excursion_range</code> and
+<code>G_stress(s,f) = H(s)² G_excursion(f)</code>. This is the variance scaling
+of a scalar linear map. The reference excursion span and motion PSD are required
+inputs; near/far/cross multi-directional response is not reduced to a qualified
+transfer function by this operation.</li>
+<li>Spectral moments are integrated as
+<code>M_n = integral (2πf)^n G_stress(f) df</code>, for n = 0, 1, 2, 4, using
+the trapezoidal rule. This preserves variance M_0 and converts Hz moments to
+angular-frequency moments. Crossing rate is
+<code>ν_0 = sqrt(M_2/M_0)/(2π)</code>. The public source is
+<a href="https://wrap.warwick.ac.uk/id/eprint/2949/">Application of computers in
+fatigue analysis (1985), section 3.3.1, equations 3.16–3.17</a>.
+The source text was opened on 2026-10-19.</li>
+<li>The existing <code>fatigue.spectral_fatigue.narrow_band_damage</code> engine
+computes the Rayleigh narrow-band expectation:
+<code>D = ν_0 T (2 sqrt(2 M_0))^m Γ(1+m/2) / A</code>.
+The range assumption is supported by section 3.3.1 of the same public source;
+the repository implementation is reused rather than duplicated.
+A zero PSD gives true zero damage; absent spectra give <code>NOT_EVALUATED</code>.
+The unrounded engine damage rate is multiplied by the supplied duration;
+calendar-year conversion and rounded equivalent stress are not used. The caller's
+S-N coefficients, duration and source are retained in the exported spectral basis.</li>
+</ol>
+<p>No coefficient or acceptance limit from a licensed publication is embedded.
+S-N data, stress transfer, geometry and constraints remain the caller's responsibility.
+A narrow-band assumption does not establish accuracy for a broad-band process.</p>
+<h2>Worked example: inputs</h2>
+<p>Every number in this example is an invented input for independent arithmetic,
+not an engineering recommendation. Material stations are 0, 50 and 100 m; TDZ is
+50–100 m. All layouts start at 10 m, use 2 m modules, 1 m clear gaps and 100 N net
+uplift per module. A, B and C have 4, 6 and 8 modules, respectively.</p>
+<table>
+<tr><th>Candidate</th><th>Near stress [MPa]</th><th>Far stress [MPa]</th><th>Cross stress [MPa]</th><th>Top tension [N]</th></tr>
+<tr><td>A</td><td>10, 10, 10</td><td>14, 12, 16</td><td>12, 11, 13</td><td>100</td></tr>
+<tr><td>B</td><td>10, 10, 10</td><td>12, 11, 13</td><td>11, 10.5, 11.5</td><td>100</td></tr>
+<tr><td>C</td><td>10, 10, 10</td><td>11, 10.5, 11.5</td><td>10.5, 10.25, 10.75</td><td>140</td></tr>
+<caption>Table 3. Synthetic excursion stress profiles and tension observations.</caption>
+</table>
+<p>Every excursion has sag radius 20 m, hog radius 25 m, hog clearance 40 m
+and interference clearance 3 m. Invented limits are top tension ≤120 N,
+bend radius ≥10 m, hog clearance ≥5 m and interference clearance ≥2 m.
+C fails tension because 140 N exceeds 120 N, despite its lower proxy.</p>
+<h2>Worked example: independent answer</h2>
+<p>The envelope profiles are A=(4,2,6), B=(2,1,3), C=(1,0.5,1.5) MPa.
+The TDZ maxima are 6, 3 and 1.5 MPa. B ranks first among feasible supplied nodes;
+A ranks second; C is retained without a rank. This does not establish a physical
+relationship between module count and stress; the profiles are deliberately supplied.</p>
+<p>For the optional spectral screen, motion PSD ordinates (0,1,0) m²/Hz on
+frequencies (0,1,2) Hz integrate to variance 1 m² by trapezoidal quadrature.
+The reference excursion span is an invented 2 m. A's gains at TDZ stations are
+(1,3) MPa/m, B's are (0.5,1.5), and C's are (0.25,0.75).
+Stress variances are the squares of those gains. This discrete example has
+<code>M_2=(2π)² M_0</code>, hence <code>ν_0=1 Hz</code>.</p>
+<p>Choose invented S-N inputs <code>N=1000/S²</code> and duration 10 s.
+For m=2, <code>Γ(2)=1</code> and
+<code>E[range²]=8 M_0</code>; therefore <code>D=0.08 M_0</code>.</p>
+<table>
+<tr><th>Candidate</th><th>Rank</th><th>TDZ proxy [MPa]</th><th>Screen damage at 50 m [1]</th><th>Screen damage at 100 m [1]</th><th>Constraint disposition</th></tr>
+<tr><td>B</td><td>1</td><td>3.0</td><td>0.02</td><td>0.18</td><td>All supplied limits pass</td></tr>
+<tr><td>A</td><td>2</td><td>6.0</td><td>0.08</td><td>0.72</td><td>All supplied limits pass</td></tr>
+<tr><td>C</td><td>No rank</td><td>1.5</td><td>0.005</td><td>0.045</td><td>Tension 140 N &gt; 120 N</td></tr>
+<caption>Table 4. Synthetic screening answer; CERTIFY is NOT_EVALUATED for every row.</caption>
+</table>
+<h2>Reproduce and inspect</h2>
+<pre>PYTHONPATH=src python examples/riser_fatigue/buoyancy_screening.py
+python -m pytest tests/riser_fatigue/test_buoyancy_screening.py -q</pre>
+<p>The example prints JSON and creates no files. Its test reads back that JSON
+and compares ranking and damage to the hand calculation. The tests also cover
+constraint failures across excursions, missing evidence, layout identity, non-finite
+inputs, PSD validity, zero stress variance and deterministic ties.</p>
+<h2>Way forward</h2>
+<p>Qualified aligned stress profiles and stress spectra are needed to populate
+real atlas configurations. Extend the response producer before claiming a minimum
+for an SLWR design. Complete independent dynamic comparisons and held-out corpus
+validation under <a href="../../../issues/1947">the
+buoyancy optimisation issue</a>, with response extraction and corpus work tracked
+in its linked dependencies. Existing synthetic examples do not satisfy those criteria.</p>
+</body>
+</html>
