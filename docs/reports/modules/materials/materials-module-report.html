@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Materials module analysis</title><style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+</style><style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Materials · engineering analysis</p>
+<h1>Materials module analysis</h1><p class="sub">Grade selection, line-pipe geometry and bare-pipe mass</p>
+<p>Draft for client review</p><p>Revision 00 · 2026-10-21</p></header>
+<nav aria-label="Contents"><p><a href="#executive-summary">Summary</a> · <a href="#basis">Basis</a> · <a href="#worked-example">Example</a> · <a href="#validation">Validation</a> · <a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendix</a> · <a href="#comments">Comments</a></p></nav>
+<section id="executive-summary"><h2>1. Executive Summary</h2>
+<p>The materials module is a library of steel-grade properties and line-pipe section calculations. Analysis is performed to determine the information available for preliminary material selection and bare-pipe quantity estimates; key results are summarized below.</p>
+<ul><li>Use the documented pipe-size example to obtain section geometry and nominal bare-pipe mass.
+<ul><li>The computed plain-end mass is <span data-quantity="weight_kg_m" data-format=".1f">42.5</span> kg/m. Its difference from the public reference is +0.1 %, within the existing numerical-check tolerance of ±0.3 %; this criterion checks a tabulated mass, not structural adequacy.</li></ul></li>
+<li>Keep the strength basis separate from the dimensional catalogue.
+<ul><li>The selected grade supplies specified minima; procurement qualification and allowable operating pressure are NOT_EVALUATED.</li></ul></li>
+<li>Obtain the missing design basis before release for engineering use.
+<ul><li>Confirm dimensional editions, material certification, tolerances, corrosion allowance and operating loads. The displayed geometric boundary only requires a positive hollow bore.</li></ul></li></ul>
+</section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-21</td><td>First issue: line-pipe geometry, grade selection and bare-pipe mass are explained; evidence gaps and the basis required for design use are identified.</td></tr></tbody><caption style="caption-side:bottom;text-align:left">Document revisions, newest first.</caption></table></div>
+<section id="introduction"><h2>2. Introduction</h2>
+<p>Steel-grade lookup and pipe-section calculations are examined as a connected workflow. A public catalogue example is used to show how material identity, dimensions and derived quantities remain distinguishable.</p>
+<p>The module stores minimum strengths for line-pipe, hull, structural, austenitic stainless and duplex steels. It also exposes an indexed material database, lower-bound toughness estimates and monotonic true stress–strain curves. Only the grade-to-line-pipe workflow is evaluated numerically in this document.</p>
+<p>Nominal pipe size is a catalogue label rather than a measured outside diameter. Product specification level is the quality and testing level attached to a line-pipe strength query; the pipe-section object does not itself certify either level.</p>
+</section>
+<section id="basis"><h2>3. Basis and criteria</h2>
+<p>The calculation basis is separated into published nominal geometry, a selected grade and an assumed density. Numerical agreement is judged against existing repository assertions; design acceptance is not assigned.</p>
+<h3>3.1 Source and material basis</h3>
+<p>The selected dimensions are the public standard-wall pipe example in the <a href="#ref-public-dimensions">dimensional reference</a>. The independently selected X52 grade is listed in the <a href="#ref-public-grade">public grade reference</a>. Their combination demonstrates the module interface; availability of that exact product is not established.</p>
+<p>The grade record cites API Specification 5L, Line Pipe, edition 46 (2018), clauses 9.3.1 and 9.3.2, tensile-property tables for product specification levels 1 and 2. The dimensional catalogue cites ASME B36.10M, Welded and Seamless Wrought Steel Pipe; its edition is not recorded. Licensed source tables have not been independently requalified by this analysis.</p>
+<p>The mass calculation uses a density of <span data-quantity="rho_kg_m3" data-format=".0f">7850</span> kg/m³ from the <a href="#ref-method">method record</a>: ASSUMED - to be confirmed for the ordered material. The line-pipe mass implementation uses a fixed carbon-steel density; a different grade density is not automatically substituted.</p>
+<h3>3.2 Acceptance criteria</h3>
+<p>The catalogue dimensions are required to match the public dimensional entries. The mass comparison uses the existing <a href="#ref-tests">plain-end mass assertion</a>, with a relative tolerance equivalent to ±0.3 %. This is a rounding and numerical-consistency criterion, not an operating limit. The geometry requires D &gt; 0, t &gt; 0 and t &lt; D/2, where D is outside diameter and t is wall thickness. Equality at the upper boundary removes the hollow bore and is rejected.</p>
+<p>Pressure, external collapse, local buckling, fracture, fatigue, weld qualification and corrosion-life criteria are NOT_EVALUATED. No loads, manufacturing tolerances, inspection measurements or material certificates are supplied for this example.</p>
+</section>
+<section id="interface"><h2>4. Inputs and outputs</h2>
+<p>A grade and a complete diameter-and-wall specification are required by the public pipe factory. The returned immutable section contains nominal dimensions, a grade record and derived cross-section properties.</p>
+<h3>4.1 Required inputs</h3>
+<p>A canonical grade name or recognised alias is supplied. Diameter is entered as nominal pipe size or explicit outside diameter in inches. Wall thickness is entered as a catalogue schedule with nominal pipe size, or as an explicit value in inches. Providing both alternatives for either dimension is rejected; missing or unlisted combinations are rejected.</p>
+<p>Grade strengths are stored in megapascals. A tensile-strength query selects the product specification level explicitly; the default query selects level 2. An absent level is rejected rather than replaced with another level. Exact grade identities are retained: a bare line-pipe grade and a hull grade with the same letter remain different materials.</p>
+<h3>4.2 Returned information</h3>
+<p>Outputs include inside diameter, diameter-to-wall ratio, metal area, bore area, plain-end mass per length and bore volume per length. Metric dimensions and customary mass units are available. The text product reference is an identifier assembled by the module; it is not a certificate of compliance.</p>
+<p>The indexed database adds source citations, nullable edition fields and explicit missing links to other material datasets. A matching source fingerprint establishes agreement with the inspected repository data only. Original-standard qualification and purchase-order suitability are separate requirements.</p>
+</section>
+<section id="method"><h2>5. Theory and equations</h2>
+<p>A concentric, uniform circular section is used to calculate the geometry. Mass per length is obtained by multiplying metal area by the fixed implementation density.</p>
+<h3>5.1 Section relationships</h3>
+<p>Inside diameter is denoted d, metal area A<sub>m</sub>, bore area A<sub>b</sub>, density ρ, mass per length m′ and bore volume per length V′. All lengths in each equation use the same unit.</p>
+<div class="eq">d = D − 2t<br>A<sub>m</sub> = π(D² − d²)/4 = πt(D − t)<br>A<sub>b</sub> = πd²/4<br>m′ = ρA<sub>m</sub><br>V′ = A<sub>b</sub><br>Diameter-to-wall ratio = D/t</div>
+<p>These are annular and circular area identities, implemented by the <a href="#ref-method">method record</a>; π is the circle constant, and the factors follow directly from the radius-to-diameter relation. Areas are converted to square metres before multiplying by density. Bore volume is reported in litres per metre using the metric volume relation in the <a href="#ref-units">unit reference</a>.</p>
+<h3>5.2 Representation</h3>
+<p>The cross-section is shown with the calculated wall-to-diameter relationship. No pressure boundary condition, finite-element mesh, coating, contents, weld reinforcement, end fittings or corrosion loss is modelled.</p>
+<figure id="pipe-section">
+<svg viewBox="0 0 720 295" role="img" aria-labelledby="section-title section-description" style="width:100%">
+<title id="section-title">Dimensioned annular pipe cross-section</title>
+<desc id="section-description">A concentric bare steel pipe is shown at its calculated wall-to-diameter scale. No coating, contents or applied load is included.</desc>
+<circle cx="215" cy="148" r="104" fill="var(--faint)" stroke="var(--ink)"/>
+<circle cx="215" cy="148" r="96.2" fill="var(--panel)" stroke="var(--ink)"/>
+<path d="M111 148H319M215 44V252" stroke="var(--muted)" stroke-dasharray="5 5"/>
+<path d="M111 42V25H319V42M111 25L119 21M111 25L119 29M319 25L311 21M319 25L311 29" fill="none" stroke="var(--ink)"/>
+<text x="143" y="16">Outside diameter D</text>
+<path d="M305 115L395 75H640M285 175L395 203H640" fill="none" stroke="var(--ink)"/>
+<text x="400" y="65">Steel wall, thickness t</text>
+<text x="400" y="225">Empty bore, diameter d</text>
+<text x="110" y="283">Concentric circular section; bare pipe only</text>
+</svg>
+<figcaption>Figure 1. Outside diameter D = <span data-quantity="od_mm" data-format=".1f">219.1</span> mm, wall t = <span data-quantity="wt_mm" data-format=".3f">8.179</span> mm and bore d = <span data-quantity="id_mm" data-format=".1f">202.7</span> mm are computed for the selected public dimensions. The material wall and empty bore are shown to scale; dimensions govern. Source: <a href="#ref-method">method record</a>.</figcaption>
+</figure>
+</section>
+<section id="worked-example"><h2>6. Worked example and results</h2>
+<p>The public example is computed by calling the module with nominal pipe size <span data-quantity="nps" data-format=".0f">8</span>, schedule 40 and grade X52. The size and schedule reproduce the dimensional reference; the grade is selected independently from the public grade reference.</p>
+<p>The module returns outside diameter <span data-quantity="od_in" data-format=".3f">8.625</span> in and wall thickness <span data-quantity="wt_in" data-format=".3f">0.322</span> in, with inside diameter <span data-quantity="id_in" data-format=".3f">7.981</span> in. Plain-end mass is <span data-quantity="weight_lb_ft" data-format=".1f">28.6</span> lb/ft, equivalent to <span data-quantity="weight_kg_m" data-format=".1f">42.5</span> kg/m. These are nominal bare-pipe quantities.</p>
+<p>Every numerical result is generated from the module call; the complete output is given in <a href="#example-table">Tables A.1a and A.1b</a>. The figure varies explicit wall thickness at the same outside diameter to illustrate the hollow-section constraint. Sensitivity sections are mathematical examples, not available catalogue products.</p>
+<p>The upper wall boundary is <span data-quantity="wall_limit_mm" data-format=".3f">109.537</span> mm. A wall at or above that value is outside the hollow-section domain; no bore capacity is reported there.</p>
+<figure id="bore-plot">
+<svg viewBox="0 0 740 315" role="img" aria-labelledby="plot-title plot-description" style="width:100%">
+<title id="plot-title">Bore diameter against wall thickness</title>
+<desc id="plot-description">Outside diameter is fixed. The red line marks the excluded solid-section boundary. Hover or focus a point to read its dimensions.</desc>
+<path d="M65 45V250H680" fill="none" stroke="var(--ink)"/>
+<path d="M65 55L650 250" fill="none" stroke="var(--go)"/>
+<path id="geometry-limit" d="M650 45V250" stroke="var(--nogo)" stroke-dasharray="6 4"/>
+<circle cx="650" cy="250" r="6" fill="white" stroke="var(--nogo)"/>
+<circle id="zero-wall-limit" cx="65" cy="55" r="6" fill="white" stroke="var(--nogo)"/>
+<text x="70" y="31">Bore diameter (mm)</text>
+<text x="240" y="303">Wall thickness (mm)</text>
+<text x="45" y="269">0</text>
+<text x="15" y="60">219.1</text>
+<text x="625" y="275">109.537</text>
+<text x="410" y="40" fill="var(--nogo)">Hollow-section boundary is excluded.</text>
+<text x="80" y="80" fill="var(--nogo)">Zero wall is excluded.</text>
+<circle tabindex="0" data-point="0" cx="82.0" cy="60.7" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 3.175 mm; open wall limit: 109.537 mm; bore diameter: 212.7 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 3.175 mm; open wall limit: 109.537 mm; bore diameter: 212.7 mm.</title></circle><circle tabindex="0" data-point="1" cx="98.9" cy="66.3" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 6.350 mm; open wall limit: 109.537 mm; bore diameter: 206.4 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 6.350 mm; open wall limit: 109.537 mm; bore diameter: 206.4 mm.</title></circle><circle tabindex="0" data-point="2" cx="108.7" cy="69.6" r="5" fill="var(--caution)" aria-label="Case: selected catalogue section; component: pipe wall; wall demand: 8.179 mm; open wall limit: 109.537 mm; bore diameter: 202.7 mm."><title>Case: selected catalogue section; component: pipe wall; wall demand: 8.179 mm; open wall limit: 109.537 mm; bore diameter: 202.7 mm.</title></circle><circle tabindex="0" data-point="3" cx="132.8" cy="77.6" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 12.700 mm; open wall limit: 109.537 mm; bore diameter: 193.7 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 12.700 mm; open wall limit: 109.537 mm; bore diameter: 193.7 mm.</title></circle><circle tabindex="0" data-point="4" cx="200.7" cy="100.2" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 25.400 mm; open wall limit: 109.537 mm; bore diameter: 168.3 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 25.400 mm; open wall limit: 109.537 mm; bore diameter: 168.3 mm.</title></circle><circle tabindex="0" data-point="5" cx="268.5" cy="122.8" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 38.100 mm; open wall limit: 109.537 mm; bore diameter: 142.9 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 38.100 mm; open wall limit: 109.537 mm; bore diameter: 142.9 mm.</title></circle><circle tabindex="0" data-point="6" cx="336.3" cy="145.4" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 50.800 mm; open wall limit: 109.537 mm; bore diameter: 117.5 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 50.800 mm; open wall limit: 109.537 mm; bore diameter: 117.5 mm.</title></circle><circle tabindex="0" data-point="7" cx="404.1" cy="168.0" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 63.500 mm; open wall limit: 109.537 mm; bore diameter: 92.1 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 63.500 mm; open wall limit: 109.537 mm; bore diameter: 92.1 mm.</title></circle><circle tabindex="0" data-point="8" cx="472.0" cy="190.6" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 76.200 mm; open wall limit: 109.537 mm; bore diameter: 66.7 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 76.200 mm; open wall limit: 109.537 mm; bore diameter: 66.7 mm.</title></circle><circle tabindex="0" data-point="9" cx="539.8" cy="213.2" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 88.900 mm; open wall limit: 109.537 mm; bore diameter: 41.3 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 88.900 mm; open wall limit: 109.537 mm; bore diameter: 41.3 mm.</title></circle><circle tabindex="0" data-point="10" cx="607.6" cy="235.8" r="5" fill="var(--go)" aria-label="Case: geometry sensitivity; component: pipe wall; wall demand: 101.600 mm; open wall limit: 109.537 mm; bore diameter: 15.9 mm."><title>Case: geometry sensitivity; component: pipe wall; wall demand: 101.600 mm; open wall limit: 109.537 mm; bore diameter: 15.9 mm.</title></circle>
+</svg>
+<label for="point-select">Select a section to read its dimensions</label>
+<input id="point-select" type="range" min="0" max="10" value="2" step="1" style="width:100%">
+<p id="chart-readout" aria-live="polite"></p>
+<figcaption>Figure 2. The bore closes at the hollow-section boundary; zero wall is also excluded. These geometric limits are not pressure, buckling or procurement limits. Green points retain a bore and positive wall. The amber point identifies the selected catalogue section. The red boundaries are excluded. Sources: <a href="#ref-method">method record</a> and <a href="#ref-public-dimensions">public dimensions</a>.</figcaption>
+</figure><script id="chart-data" type="application/json">{"points": [{"wt_in": 0.125, "wall_mm": "3.175", "bore_mm": "212.7", "selected": false}, {"wt_in": 0.25, "wall_mm": "6.350", "bore_mm": "206.4", "selected": false}, {"wt_in": 0.322, "wall_mm": "8.179", "bore_mm": "202.7", "selected": true}, {"wt_in": 0.5, "wall_mm": "12.700", "bore_mm": "193.7", "selected": false}, {"wt_in": 1.0, "wall_mm": "25.400", "bore_mm": "168.3", "selected": false}, {"wt_in": 1.5, "wall_mm": "38.100", "bore_mm": "142.9", "selected": false}, {"wt_in": 2.0, "wall_mm": "50.800", "bore_mm": "117.5", "selected": false}, {"wt_in": 2.5, "wall_mm": "63.500", "bore_mm": "92.1", "selected": false}, {"wt_in": 3.0, "wall_mm": "76.200", "bore_mm": "66.7", "selected": false}, {"wt_in": 3.5, "wall_mm": "88.900", "bore_mm": "41.3", "selected": false}, {"wt_in": 4.0, "wall_mm": "101.600", "bore_mm": "15.9", "selected": false}], "wall_limit_mm": "109.537", "outside_mm": "219.1"}</script>
+</section>
+<section id="validation"><h2>7. Validation evidence</h2>
+<p>Repository validation is assessed from the shipped tests and public references. The evidence supports numerical consistency for the exercised cases, with the qualification limits stated below.</p>
+<p>The line-pipe tests compare nominal outside diameters and published plain-end masses, check area-to-mass consistency, exercise schedule aliases and reject ordinary missing, conflicting and invalid geometry. The grade tests check published minima, distinguish hull and line-pipe aliases and preserve legacy conversions. The database tests check identity, nullable edition metadata and source fingerprint behaviour.</p>
+<p>The selected outside diameter, wall and bore match the public dimensional table. The computed mass differs from the public mass by +0.1 %, meeting the existing ±0.3 % numerical criterion. The public dimensional page is internally mixed in its product-standard labelling; it is used only as a dimensional and mass reference. The selected grade minima agree with the public supplier table; this is not independent certification against the licensed specification.</p>
+<p>The existing toughness tests exercise equation anchors, material-class restrictions and input units; the stress–strain tests exercise yield, hardening and curve-table relationships. These test records do not establish material-specific fracture performance. No measured pipe, mill certificate, laboratory curve or field benchmark is held for this example. Historical validation notes are retained as supporting records, but current source and test assertions govern this report.</p>
+</section>
+<section id="recommendations"><h2>8. Limits and recommendations</h2>
+<p>Use is limited to nominal material lookup and circular-section calculations within the stated geometry. Engineering release remains conditional on a supplied design basis and qualified material data.</p>
+<h3>8.1 Recommended actions</h3>
+<p>For preliminary quantities, retain the bare-pipe basis and identify the density as assumed. Before procurement, confirm the dimensional-standard edition, product level, delivery condition and mill certification. Before pressure or structural assessment, supply tolerances, corrosion allowance, temperature, pressure and other loads to the applicable design assessment. This follows the missing inputs and unqualified fields identified in the <a href="#data-register">data register</a> and <a href="#ref-gap-record">material qualification record</a>.</p>
+<p>Reject non-finite dimensions before calling the pipe factory; its comparison-only checks do not establish rejection of every non-finite value. Restrict this catalogue workflow to its intended line-pipe grade family: the factory also accepts other material records, yet its generated product reference retains the line-pipe label and its mass uses the fixed density. Source: <a href="#ref-method">method record</a>. A positive hollow bore alone does not establish a manufacturable or structurally adequate section.</p>
+<p>Use canonical grade and explicit product-level queries for new work. Legacy adapters intentionally preserve earlier conversion conventions; equality with the canonical minimum is not established for every adapter. Review the adapter basis before combining its outputs with canonical values.</p>
+<h3>8.2 Not covered</h3>
+<p>Hull and general structural-grade selection, stainless and duplex product suitability, fracture-toughness estimation, monotonic stress–strain curve generation, fatigue-curve associations and structural-shape associations are not evaluated. Temperature-dependent strength reduction is not applied by the grade lookup. Toughness and hardening require their own measured or qualified inputs; no such inputs are inferred from grade identity.</p>
+</section>
+<section id="references"><h2>9. References and evidence</h2>
+<p>Public references and repository records are identified separately. Web references were inspected on 2026-10-21; an absent edition remains an evidence gap.</p>
+<h3>9.1 Source qualification</h3>
+<p>Manufacturer and supplier publications are used as openly accessible numerical references, not as substitutes for the applicable licensed standard or purchase specification. The dimensional page is undated; no dimensional-standard edition is assigned. Repository records describe implementation and test coverage, not original-document approval.</p>
+<h3>9.2 Source register and reproducibility</h3>
+<ol class="refs">
+<li id="ref-public-dimensions"><a href="https://continentalsteel.com/item/pipe-and-tubing/seamless-and-welded-pipe/wsp-800-322">Continental Steel, Seamless and Welded Pipe, item WSP40-800-322</a>, Specifications: Pipe Size, O.D., Thickness, I.D. and Weight (Plain End). Undated web edition. Nominal dimensions and mass comparator only.</li>
+<li id="ref-public-grade"><a href="https://uniasen.com/standards/api-5l/">UNIASEN, API 5L Pipe Specification</a>, Specification and Mechanical Requirement PSL1/PSL2, L360/X52 rows. The page names edition 46 (2018). The repository cites API 5L, Line Pipe, clauses 9.3.1/Table 6 and 9.3.2/Table 7. Supplier transcription; original-table qualification remains pending.</li>
+<li id="ref-method">Repository implementation: <code>src/digitalmodel/materials/line_pipe.py</code>, <code>LinePipe</code> geometry, mass and volume properties, density constant and <code>line_pipe</code>; <code>src/digitalmodel/materials/grades.py</code>, <code>get</code> and <code>smts_mpa</code>. Current repository edition. Geometry identities, conversions, grade records and legacy views.</li>
+<li id="ref-tests">Repository tests: <code>tests/materials/test_line_pipe.py</code>, <code>test_plain_end_weight_matches_asme</code> and geometry assertions; <code>test_grade_matrix.py</code>, <code>test_audit_regressions.py</code> and <code>test_psl1_example.py</code>, grade assertions and executable public example. Current repository edition. Historical supporting records: <code>docs/domains/materials/line-pipe-validation-2026-06-28.md</code> and <code>grade-matrix-validation-2026-06-28.md</code>; their older counts and scope descriptions are not adopted as current results.</li>
+<li id="ref-gap-record">Repository qualification record: <code>docs/domains/materials/database-gaps.html</code>; <code>src/digitalmodel/materials/database.py</code>, <code>load_database</code>; <code>database_schema.py</code>; <code>tests/materials/test_database.py</code>. Current repository edition. Nullable editions, missing dataset associations and source-fingerprint limitations.</li>
+<li id="ref-units">Repository unit definitions: <code>line_pipe.py</code>, inch-to-metre and kilogram-per-metre conversions. <a href="https://www.bipm.org/en/publications/si-brochure">BIPM, The International System of Units, edition 9 (2019), version 4.01 (June 2026), Table 8, litre</a>: a litre is a cubic decimetre. The multiplier used for litres per metre follows from that definition. π and integer factors in the area identities are mathematical, not empirical coefficients.</li>
+<li id="ref-report">Example call: <code>from digitalmodel.materials import line_pipe; pipe = line_pipe("X52", nps=8.0, schedule="SCH 40")</code>. Rebuild: <code>PYTHONPATH=src python scripts/generate_materials_report.py</code>. Verification: <code>PYTHONPATH=src python -m pytest tests/materials</code>. New assertions: <code>tests/materials/test_materials_report.py</code>. Report layout is reused from <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and <code>docs/api/_assets/brand.css</code>; both stylesheets are inlined. The required <code>hs-doc</code> body class identifies the document surface.</li>
+</ol>
+</section>
+<section id="appendix"><h2>10. Appendices</h2>
+<p>Detailed output, missing-data disposition and calculation checks are recorded below. Numerical entries are generated at issue from the public interface and are rounded only for display.</p>
+<h3 id="example-table">10.1 Computed output and data register</h3>
+<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead>
+<tbody><tr><td>Outside diameter</td><td><span data-quantity="od_in" data-format=".3f">8.625</span></td><td>in</td><td>Public dimensions and catalogue lookup</td></tr><tr><td>Wall thickness</td><td><span data-quantity="wt_in" data-format=".3f">0.322</span></td><td>in</td><td>Public dimensions and catalogue lookup</td></tr><tr><td>Inside diameter</td><td><span data-quantity="id_in" data-format=".3f">7.981</span></td><td>in</td><td>Circular-section identity</td></tr><tr><td>Outside diameter</td><td><span data-quantity="od_mm" data-format=".3f">219.075</span></td><td>mm</td><td>Module length conversion</td></tr><tr><td>Wall thickness</td><td><span data-quantity="wt_mm" data-format=".3f">8.179</span></td><td>mm</td><td>Module length conversion</td></tr><tr><td>Inside diameter</td><td><span data-quantity="id_mm" data-format=".3f">202.717</span></td><td>mm</td><td>Module length conversion</td></tr></tbody><caption style="caption-side:bottom;text-align:left">Table A.1a. Nominal geometry. The source names resolve to the records in section 9.2. Full precision is retained in the module calls; displayed values are rounded.</caption></table><table><thead><tr><th scope="col">Quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead>
+<tbody><tr><td>Diameter / wall</td><td><span data-quantity="d_over_t" data-format=".1f">26.8</span></td><td>dimensionless</td><td>Circular-section identity</td></tr><tr><td>Metal area</td><td><span data-quantity="metal_area_in2" data-format=".1f">8.4</span></td><td>in²</td><td>Annular-section identity</td></tr><tr><td>Bore area</td><td><span data-quantity="bore_area_in2" data-format=".1f">50.0</span></td><td>in²</td><td>Circular-section identity</td></tr><tr><td>Plain-end mass per length</td><td><span data-quantity="weight_kg_m" data-format=".1f">42.5</span></td><td>kg/m</td><td>Module calculation; assumed density</td></tr><tr><td>Plain-end mass per length</td><td><span data-quantity="weight_lb_ft" data-format=".1f">28.6</span></td><td>lb/ft</td><td>Module mass conversion</td></tr><tr><td>Internal volume per length</td><td><span data-quantity="volume_l_m" data-format=".1f">32.3</span></td><td>L/m</td><td>Module bore volume; litre conversion</td></tr><tr><td>Specified minimum yield strength</td><td><span data-quantity="smys_mpa" data-format=".1f">360.0</span></td><td>MPa</td><td>Public grade table; repository grade record</td></tr><tr><td>Specified minimum tensile strength, product specification level 1</td><td><span data-quantity="smts_psl1_mpa" data-format=".1f">460.0</span></td><td>MPa</td><td>Public grade table; explicit level selection</td></tr><tr><td>Specified minimum tensile strength, product specification level 2</td><td><span data-quantity="smts_psl2_mpa" data-format=".1f">460.0</span></td><td>MPa</td><td>Public grade table; explicit level selection</td></tr></tbody><caption style="caption-side:bottom;text-align:left">Table A.1b. Derived quantities and strengths. The source names resolve to the records in section 9.2. Full precision is retained in the module calls; displayed values are rounded.</caption></table>
+<table id="data-register"><thead><tr><th scope="col">Data</th><th scope="col">Readiness</th><th scope="col">Disposition and source</th></tr></thead><tbody>
+<tr><td>Nominal dimensions</td><td>Public reference is available.</td><td>Geometry matches the public dimensional entries; original dimensional edition remains unestablished. Source: dimensional reference in section 9.2.</td></tr>
+<tr><td>Grade minima</td><td>Supplier transcription and repository values agree.</td><td>Original-table qualification and ordered-product level remain required. Source: public grade reference in section 9.2.</td></tr>
+<tr><td>Density</td><td>ASSUMED - to be confirmed</td><td><span data-quantity="rho_kg_m3" data-format=".0f">7850</span> kg/m³ is the fixed implementation basis. Source: method record in section 9.2. Replace or qualify the mass basis for a different material.</td></tr>
+<tr><td>Manufacturing tolerance, corrosion allowance and coating</td><td>NOT_EVALUATED</td><td>No measured or specified values are supplied; obtain the procurement and inspection basis.</td></tr>
+<tr><td>Operating loads and temperature properties</td><td>NOT_EVALUATED</td><td>No pressure or structural acceptance calculation is performed; supply the design case before assessment.</td></tr>
+<tr><td>Material certification and delivery condition</td><td>NOT_EVALUATED</td><td>Grade identity does not establish a supplied product's test results.</td></tr>
+<tr><td>Fracture, hardening and fatigue inputs</td><td>NOT_EVALUATED</td><td>These sub-areas are not evaluated; no default is inferred from the selected grade.</td></tr>
+</tbody><caption style="caption-side:bottom;text-align:left">Table A.2. Data register and conditions of use. NOT_EVALUATED means evidence or calculation is absent; it is not a zero result.</caption></table>
+<h3>10.2 Quality checks and document comments</h3>
+<p>The existing materials tests pass at the time of issue. Rebuild checks compare every marked example quantity and chart point with fresh module calls, require deterministic output and detect a changed module result. Style inlining, local links, source-fingerprint mismatch rejection and visible wording are checked. These checks establish reproducibility of this numerical example; browser interaction and material-source qualification are separate evidence.</p>
+<p>The public reference mass is 28.55 lb/ft. Its signed percentage difference is calculated from unrounded values as 100 × (computed − reference) / reference. The nominal geometry uses the stated positive hollow-bore domain. No numerical result outside that domain is returned.</p>
+<details id="change-panel"><summary>Engineering changes</summary><div id="changes-list"></div></details>
+<div id="comments"><p>Comments are attached to this revision. Select a section and enter a comment. Save the comment file in the same folder as this report. A local browser copy supports recovery; it does not replace a saved file.</p>
+<label for="comment-section">Section</label><select id="comment-section"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" style="width:100%" maxlength="4000"></textarea>
+<button id="add-comment" type="button">Add comment</button> <button id="save-comments" type="button">Save comments beside report</button>
+<label for="import-comments">Load saved comments</label><input id="import-comments" type="file" accept="application/json,.json">
+<p id="comment-status" role="status"></p><ol id="comment-list"></ol></div>
+</section></main>
+<script id="changes-data" type="application/json">{"document": "Materials module analysis", "revision": "00", "date": "2026-10-21", "changes": [{"section": "Whole document", "description": "First issue: line-pipe geometry, grade selection and bare-pipe mass are explained; evidence gaps and the basis required for design use are identified."}]}</script>
+<script>
+"use strict";
+(() => {
+  const data = JSON.parse(document.getElementById("chart-data").textContent);
+  function showPoint(index) {
+    const point = data.points[index];
+    document.getElementById("point-select").value = index;
+    document.getElementById("chart-readout").textContent =
+      `Case: ${point.selected ? "selected catalogue section" : "geometry sensitivity"}; component: pipe wall; wall demand: ${point.wall_mm} mm; open wall limit: ${data.wall_limit_mm} mm; bore diameter: ${point.bore_mm} mm.`;
+  }
+  document.querySelectorAll("[data-point]").forEach(point => {
+    ["mouseenter", "focus", "click"].forEach(event =>
+      point.addEventListener(event, () => showPoint(Number(point.dataset.point))));
+  });
+  document.getElementById("point-select").addEventListener("input", event => showPoint(Number(event.target.value)));
+  showPoint(data.points.findIndex(point => point.selected));
+  const changes = JSON.parse(document.getElementById("changes-data").textContent);
+  changes.changes.forEach(change => {
+    const line = document.createElement("p");
+    line.textContent = `${change.section}: ${change.description}`;
+    document.getElementById("changes-list").appendChild(line);
+  });
+  const key = "materials-module-report-comments-" + changes.revision;
+  const status = document.getElementById("comment-status");
+  let comments = [], handle = null;
+  function validate(value) {
+    if (!value || value.document !== changes.document || value.revision !== changes.revision ||
+        !Array.isArray(value.comments) || value.comments.length > 500) throw new Error("The comment file does not match this document and revision.");
+    return value.comments.map(item => {
+      if (!item || !Number.isInteger(item.section) || item.section < 1 || item.section > 10 ||
+          typeof item.text !== "string" || !item.text.trim() || item.text.length > 4000)
+        throw new Error("A comment has an invalid section or text.");
+      return {section: item.section, text: item.text};
+    });
+  }
+  function envelope() { return {document: changes.document, revision: changes.revision, comments}; }
+  function display() {
+    const list = document.getElementById("comment-list");
+    list.replaceChildren();
+    comments.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = `Section ${item.section}: ${item.text}`;
+      list.appendChild(li);
+    });
+  }
+  function recover() {
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) comments = validate(JSON.parse(saved));
+    } catch (_) { status.textContent = "Local comment recovery is unavailable. Save a comment file for retention."; }
+    display();
+  }
+  function remember() {
+    try { localStorage.setItem(key, JSON.stringify(envelope())); }
+    catch (_) { status.textContent = "Browser storage is unavailable. Save the comment file for retention."; }
+  }
+  document.getElementById("add-comment").addEventListener("click", () => {
+    const input = document.getElementById("comment-text");
+    if (!input.value.trim()) { status.textContent = "Enter comment text before adding it."; return; }
+    if (comments.length >= 500) { status.textContent = "The comment limit is reached. Save this file before starting a separate record."; return; }
+    comments.push({section: Number(document.getElementById("comment-section").value), text: input.value.trim()});
+    input.value = "";
+    status.textContent = "Comment added. Save the comment file for retention.";
+    remember(); display();
+  });
+  document.getElementById("save-comments").addEventListener("click", async () => {
+    const filename = "materials-module-report.comments.json";
+    const text = JSON.stringify(envelope(), null, 2) + "\n";
+    try {
+      if (typeof window.showSaveFilePicker === "function") {
+        if (!handle) handle = await window.showSaveFilePicker({suggestedName: filename,
+          types: [{description: "Document comments", accept: {"application/json": [".json"]}}]});
+        const writable = await handle.createWritable();
+        await writable.write(text); await writable.close();
+        status.textContent = "Comments saved to the selected file. Keep that file beside the report.";
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+        const link = document.createElement("a");
+        link.href = url; link.download = filename; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        status.textContent = "Comment download requested. Place the downloaded file beside the report.";
+      }
+    } catch (error) {
+      status.textContent = error.name === "AbortError" ? "Save cancelled; comments remain in this page." : "Comments were not saved. Check file access and try again.";
+    }
+  });
+  document.getElementById("import-comments").addEventListener("change", async event => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.size > 2000000) throw new Error("The comment file exceeds the size limit.");
+      comments = validate(JSON.parse(await file.text()));
+      remember(); display(); status.textContent = "Saved comments loaded for this revision.";
+    } catch (error) { status.textContent = "Comments were not loaded: " + error.message; }
+  });
+  recover();
+})();
+</script></body></html>

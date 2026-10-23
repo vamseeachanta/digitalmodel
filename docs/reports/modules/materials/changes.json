@@ -1,0 +1,11 @@
+{
+  "document": "Materials module analysis",
+  "revision": "00",
+  "date": "2026-10-21",
+  "changes": [
+    {
+      "section": "Whole document",
+      "description": "First issue: line-pipe geometry, grade selection and bare-pipe mass are explained; evidence gaps and the basis required for design use are identified."
+    }
+  ]
+}
