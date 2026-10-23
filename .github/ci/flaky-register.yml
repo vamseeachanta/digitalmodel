@@ -1,5 +1,5 @@
 - id: tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis
-  kind: same-tree-mismatch
+  kind: repeated-failure
   first_seen: '2026-10-14'
   last_seen: '2026-10-14'
   evidence:
@@ -11,7 +11,7 @@
     - https://api.github.com/repositories/590299785/actions/runs/38635174949
   cause: Last-bit floating-point differences; runner dependence is inferred, not measured.
   fix_issue: 2576
-  status: open
+  status: fixed
 - id: parametric.refresh
   kind: signal-exit
   first_seen: '2026-10-14'

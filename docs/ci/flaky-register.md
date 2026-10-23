@@ -3,6 +3,10 @@
 The planned daily main-health loop will propose entries from retry artifacts
 and evidenced same-tree mismatches through a pull request. That automation is
 not part of this change. Entries close with the merged fix recorded in `fix_issue`.
+Repeated failures without a passing run on the same tree use
+`kind: repeated-failure`, rather than claiming a same-tree mismatch.
+The repeated numerical failure is fixed by pull request 2576; its recorded
+failures on different trees do not establish a same-tree mismatch.
 
 The register never deselects or skips a test. In enforce mode, a retry-recovered
 test ID can clear only when its register entry has `status: open` and a nonempty
@@ -57,3 +61,6 @@ the base register on PRs before approving any entry. An absent base register
 means no registered IDs; fetch or object-read errors fail closed. Other events
 use the checked-out register. A pull request cannot certify its own failures
 by adding entries to its checkout.
+
+Mutable dependency references may resolve to different revisions between
+attempts; dependency revision pinning is not implemented by the retry wrapper.
