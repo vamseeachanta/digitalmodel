@@ -235,7 +235,8 @@ def verified_evidence(url: str, shard: str) -> bool:
         run_id = job["run_id"] if job is not None else int(number)
         run = gh_json(f"{prefix}/runs/{run_id}")
         if (str(run.get("id")) != str(run_id) or run.get("head_branch") != "main"
-                or run.get("event") not in {"push", "schedule"} or run.get("status") != "completed"
+                or run.get("event") not in {"push", "schedule", "workflow_dispatch"}
+                or run.get("status") != "completed"
                 or not isinstance(run.get("head_repository"), dict)
                 or run["head_repository"].get("full_name") != repository):
             return False
@@ -360,8 +361,8 @@ def gh_json(endpoint: str) -> dict[str, Any]:
 
 
 def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
-    """Require a completed push or schedule from this repository's own main."""
-    return (run.get("event") in {"push", "schedule"}
+    """Require a completed sweep from this repository's own main."""
+    return (run.get("event") in {"push", "schedule", "workflow_dispatch"}
             and run.get("head_branch") == "main"
             and run.get("head_repository", {}).get("full_name") == repository
             and run.get("path") == ".github/workflows/full-matrix-sweep.yml"

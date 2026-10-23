@@ -31,13 +31,17 @@ def test_local_structure_hook_checks_all_paths_on_every_commit():
     assert not any(key in hook for key in ("files", "exclude", "types", "types_or"))
 
 
-def test_structure_workflow_runs_unconditionally_for_pull_requests():
+def test_structure_workflow_runs_for_ready_pull_requests():
     config = workflow("repo-structure.yml")
     assert set(config["on"]) == {"pull_request", "push", "workflow_dispatch"}
-    assert not config["on"]["pull_request"]
+    assert config["on"]["pull_request"]["types"] == [
+        "opened", "synchronize", "reopened", "ready_for_review",
+    ]
     assert config["on"]["push"]["branches"] == ["main"]
     job = config["jobs"]["repo-structure"]
-    assert "if" not in job
+    assert job["if"] == (
+        "github.event_name != 'pull_request' || github.event.pull_request.draft == false"
+    )
     assert job.get("continue-on-error", "false") == "false"
     steps = job["steps"]
     commands = [step for step in steps if "run" in step]

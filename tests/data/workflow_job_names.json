@@ -1,0 +1,26 @@
+{
+  "capability-card-links.yml": {"card-links": "card-links"},
+  "docs.yml": {"docs": "docs"},
+  "full-matrix-sweep.yml": {
+    "full-matrix": "Build full shard matrix",
+    "sweep-result": "Full matrix sweep result",
+    "sweep-tests": "sweep-tests-${{ matrix.domain }}"
+  },
+  "gmsh-meshing-tests.yml": {"focused-tests": "focused-tests"},
+  "pages.yml": {"build": "build", "deploy": "deploy"},
+  "parametric-atlas-drift.yml": {"atlas-drift": "Atlas staleness check"},
+  "publish.yml": {"publish": "Build and Publish"},
+  "quality-gates-by-domain.yml": {
+    "ci-harness-tests": "CI harness and compliance tests",
+    "detect-domains": "Detect touched test domains",
+    "domain-tests": "tests-${{ matrix.domain }}",
+    "domain-tests-required": "Domain test aggregate"
+  },
+  "quality-gates.yml": {
+    "quality-gates": "Quality Gates (Python ${{ matrix.python-version }})",
+    "quality-gates-aggregate": "Run Quality Gates"
+  },
+  "repo-structure.yml": {"repo-structure": "Repository structure contract"},
+  "store-data-tests.yml": {"content-store": "content-store"},
+  "workflow-automation-tests.yml": {"test": "test"}
+}

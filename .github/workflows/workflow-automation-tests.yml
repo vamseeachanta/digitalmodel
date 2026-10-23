@@ -1,18 +1,22 @@
 name: Workflow Automation Tests
 
 on:
+  workflow_dispatch:
   push:
+    branches: [main, develop]
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
       - '.github/workflows/workflow-automation-tests.yml'
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
 
 jobs:
   test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

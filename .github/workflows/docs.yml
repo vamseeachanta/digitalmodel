@@ -20,6 +20,7 @@ on:
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'src/**'
       - 'scripts/**'
@@ -37,6 +38,7 @@ on:
 
 jobs:
   docs:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
