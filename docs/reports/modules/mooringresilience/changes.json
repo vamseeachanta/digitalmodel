@@ -1,0 +1,10 @@
+[
+  {
+    "revision": "R1",
+    "date": "2026-10-22",
+    "changes": [
+      "The screening workflow is documented with a synthetic arithmetic example so that its outputs can be distinguished from a qualified design assessment.",
+      "Atlas interpolation evidence and missing physical validation are identified separately."
+    ]
+  }
+]

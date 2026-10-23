@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mooring resilience screening analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><main class="wrap">
+<header><h1>Mooring resilience screening analysis</h1><p>Draft for maintainer review</p><p>R1 · 22 October 2026</p></header>
+<section><h2>1. Executive Summary</h2>
+<p>The mooring resilience module is a scalar screening calculation for a spread-moored floating system. Analysis is performed to determine how atlas tension, anchor capacity and an illustrative fatigue curve are combined; the key results are summarized below.</p>
+<ul><li>The public interface can be exercised without a licensed solver.<ul><li>The documented example returns a synthetic fatigue life of 5.0 years and a margin of 0.500 against the chosen 10-year duration. These values test arithmetic, not chain endurance.</li></ul></li>
+<li>A design disposition is not established.<ul><li>The material curve, safety factors, damaged-load redistribution and physical benchmark require a qualified basis before the traffic light is used for an operating decision.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr><tr><td>R1</td><td>22 October 2026</td><td>The workflow and a synthetic example are introduced to distinguish executable calculations from design evidence.</td></tr></table><p>Table 1. Revision history.</p>
+</section>
+<section><h2>2. Introduction</h2>
+<p>A spread mooring is represented by peak line tension and anchor holding capacity. Screening analysis is performed using scalar environmental queries rather than a coupled floating-body and line model.</p>
+<p>The main workflow combines intact strength, damaged strength, foundation demand and a constant-amplitude fatigue proxy. The report covers the public assessment interface and existing atlas evidence. Not covered: line geometry solution, seabed contact, heading effects, coupled dynamics, corrosion, inspection updates, rainflow counting and the separate higher-fidelity fatigue atlas.</p>
+</section>
+<section><h2>3. Design Data</h2>
+<p>The public unit-test configuration is adopted as an arithmetic example [1]. No site, hull, line layout or measured environment is supplied; a physical configuration is not inferred from the atlas names.</p>
+<p>The wave-height sweep and period are printed with the result chart. Every factor below is explicitly supplied; the module's standards-attributed defaults are not adopted. The factors and fatigue curve are synthetic demonstration inputs, labelled ASSUMED - to be confirmed for any engineering application [3].</p>
+<details><summary>Input register and units</summary><table><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr><tr><td>Line count</td><td>12</td><td>count</td><td>Public test geometry [1]</td></tr><tr><td>Minimum breaking load</td><td>15000</td><td>kN</td><td>Public test geometry [1]</td></tr><tr><td>Steel area</td><td>22600</td><td>mm²</td><td>Public test geometry [1]</td></tr><tr><td>Anchor diameter</td><td>5</td><td>m</td><td>Public test geometry [1]</td></tr><tr><td>Anchor skirt length</td><td>20</td><td>m</td><td>Public test geometry [1]</td></tr><tr><td>Undrained shear strength</td><td>60</td><td>kPa</td><td>Public test geometry [1]</td></tr><tr><td>Water depth</td><td>1000</td><td>m</td><td>Public test geometry [1]</td></tr><tr><td>Intact strength factor</td><td>2</td><td>dimensionless</td><td>Synthetic input [3]</td></tr><tr><td>Damaged strength factor</td><td>2</td><td>dimensionless</td><td>Synthetic input [3]</td></tr><tr><td>Foundation factor</td><td>2</td><td>dimensionless</td><td>Synthetic input [3]</td></tr><tr><td>Damaged-to-intact tension multiplier</td><td>2</td><td>dimensionless</td><td>Synthetic input [3]</td></tr><tr><td>Specified duration</td><td>10</td><td>years</td><td>Synthetic input [3]</td></tr><tr><td>Annual cycles</td><td>100</td><td>cycles/year</td><td>Synthetic input [3]</td></tr><tr><td>Dynamic tension per wave height</td><td>22.6</td><td>kN/m</td><td>Synthetic input [3]</td></tr><tr><td>Fatigue curve coefficient</td><td>1000</td><td>cycles·MPa for the chosen exponent</td><td>Synthetic input [3]</td></tr><tr><td>Fatigue curve exponent</td><td>1</td><td>dimensionless</td><td>Synthetic input [3]</td></tr></table><p>Table 2. Public configuration inputs and synthetic calculation inputs. The fatigue coefficient has units tied to the chosen exponent; it is not a published material property.</p></details>
+<p>Minimum breaking load is the line strength denominator. Steel area converts tension range to nominal stress range. Anchor diameter, skirt length and undrained shear strength query holding capacity. Water depth, significant wave height and peak period query tension. Line count is stored but is not used by the assessment.</p>
+</section>
+<section><h2>4. Analysis Methodology</h2>
+<p>The assessment is performed by querying the tension and capacity atlases and then applying scalar arithmetic [1]. The following diagram is a conceptual load path, not a geometry model or installation drawing.</p>
+<figure><svg viewBox="0 0 720 250" role="img" aria-label="Floating body, line and suction anchor load path; fixed soil boundary, wave loading and omitted line geometry">
+<path d="M25 65 H695 M25 212 H695" stroke="currentColor" fill="none"/>
+<path d="M80 50 H260 L235 95 H105 Z M220 95 Q365 190 530 192 L565 208" stroke="currentColor" fill="none" stroke-width="3"/>
+<path d="M540 210 V240 H590 V210" stroke="currentColor" fill="none" stroke-width="3"/>
+<text x="100" y="35">Floating body: motions not resolved</text><text x="400" y="50">Waves: height and period</text>
+<text x="270" y="125">Peak tension from atlas</text><text x="280" y="153">Damaged demand: scaled peak</text>
+<text x="35" y="201">Seabed: fixed soil capacity</text><text x="470" y="175">Suction anchor</text>
+</svg><figcaption>Figure 1. Conceptual system and boundary conditions. Geometry, pretension and load direction are absent from the wrapper.</figcaption></figure>
+<h3>4.1 Calculation basis</h3>
+<p>Nominal stress range is tension range divided by steel area; this is the axial-stress definition in University Physics, volume 1, 2016, section 12.3 [4]. Fatigue life is expressed using a stress–life curve and constant-amplitude damage accumulation; the general basis is described in Fatigue, 2001, sections “S-N curves” and “Miner’s law for cumulative damage” [5]. Those sources do not establish chain coefficients or the wrapper's environmental scaling.</p>
+<div class="eq">Damaged tension = redistribution × intact tension.<br>Strength utilization = supplied strength factor × tension / minimum breaking load.<br>Foundation utilization = supplied foundation factor × damaged tension / anchor capacity.<br>Tension range = supplied dynamic coefficient × significant wave height.<br>Stress range = tension range / steel area, with consistent force and area units.<br>Allowable cycles = supplied curve coefficient × stress range raised to minus the supplied exponent.<br>Life = allowable cycles / annual cycles. Fatigue margin = life / specified duration.</div>
+<p>These are software definitions [1], not a claim of a standards-qualified mooring model. Redistribution, environmental scaling and the chosen curve require project-independent engineering evidence before design use. The general fatigue source does not validate a single-range approximation for a variable sea-state history.</p>
+<h3>4.2 Criteria and rationale</h3>
+<p>Unity utilization means factored demand equals capacity; unity fatigue margin means calculated life equals specified duration. These are the arithmetic comparison limits. The program gives escalation priority when either atlas query is outside its range. Otherwise a utilization above unity or fatigue margin below unity gives red. An amber classification begins above 0.8 utilization or below 2.0 fatigue margin; equality is governed by strict comparisons [1]. These amber thresholds are software policy, not sourced design limits.</p>
+<p>The design factors remain NOT_EVALUATED. API RP 2SK is named by the code without an edition or clause. DNV-OS-E301 has an edition mismatch between the tension atlas and citation registry. DNV-RP-C203 is named without a fatigue clause. No numerical value attributed to those licensed publications is reproduced here.</p>
+</section>
+<section><h2>5. Detailed Results</h2>
+<p>The public assessment function is called for each displayed wave height [3]. The geometry comes from the public test example, while the fatigue and strength inputs are replaced by the declared synthetic values.</p>
+<p>The first point returns a synthetic fatigue life of 5.0 years and a margin of 0.500 against the chosen 10-year duration. The margin is below unity, so this synthetic curve does not meet that chosen duration; this is an arithmetic outcome rather than an operating restriction on a real mooring.</p>
+<figure><svg id="chart" viewBox="0 0 720 310" role="img" aria-label="Synthetic fatigue margin versus wave height with unity limit"></svg><figcaption>Figure 2. Synthetic fatigue margin. Hover or focus each point for demand, limit, component and units. No operating envelope is established.</figcaption></figure>
+<p id="chart-detail" aria-live="polite">Each plotted point is also available in the result data below.</p>
+<details><summary>First-point outputs and all plotted values</summary><table><tr><th>Output</th><th>Value</th><th>Unit</th><th>Source</th></tr><tr><td>Intact tension</td><td>6593.9</td><td>kN</td><td>Module call [3]</td></tr><tr><td>Damaged tension</td><td>13187.8</td><td>kN</td><td>Module call [3]</td></tr><tr><td>Intact utilization</td><td>0.879</td><td>dimensionless</td><td>Module call [3]</td></tr><tr><td>Damaged utilization</td><td>1.758</td><td>dimensionless</td><td>Module call [3]</td></tr><tr><td>Anchor capacity</td><td>34911.3</td><td>kN</td><td>Module call [3]</td></tr><tr><td>Foundation utilization</td><td>0.756</td><td>dimensionless</td><td>Module call [3]</td></tr><tr><td>Synthetic fatigue life</td><td>5.0</td><td>years</td><td>Module call [3]</td></tr><tr><td>Synthetic fatigue margin</td><td>0.500</td><td>dimensionless</td><td>Module call [3]</td></tr><tr><td>Governing utilization</td><td>1.758</td><td>dimensionless</td><td>Module call [3]</td></tr></table><p>Table 3. First-point output from the assessment. Notes are empty; the status is red for the synthetic inputs.</p><table id="sweep"><tr><th>Wave height (m)</th><th>Period (s)</th><th>Fatigue margin (dimensionless)</th><th>Limit (dimensionless)</th></tr></table><p>Table 4. Plotted calculation values. The full machine-readable result is embedded in this document.</p></details>
+<h3>5.1 Existing evidence</h3>
+<p>The saved validation records compare atlas interpolants with recorded reference responses [2]. They establish interpolation agreement for the recorded samples, not agreement with measured mooring response.</p>
+<table><tr><th>Atlas</th><th>Holdout count</th><th>Maximum difference (%)</th><th>Recorded threshold (%)</th><th>Source</th></tr><tr><td>Intact-tension atlas</td><td>7</td><td>2.7</td><td>10.0</td><td>[2]</td></tr><tr><td>Anchor-capacity atlas</td><td>12</td><td>1.4</td><td>10.0</td><td>[2]</td></tr></table><p>Table 5. Repository validation records, rounded to one decimal place; the stored unrounded differences are below their stored thresholds.</p>
+<p>Existing tests exercise classification boundaries, fatigue monotonicity, area scaling, atlas range handling, depth, soil strength, breaking load and citation availability [1]. The report tests add hand-worked synthetic arithmetic anchors and consistency checks against fresh module calls. No measured or published physical benchmark is identified in these records. A public configuration is not a publicly validated physical example.</p>
+</section>
+<section><h2>6. Key Findings</h2>
+<p>The wrapper is executable and its returned quantities can be checked against the declared arithmetic inputs. A physical design conclusion is not established by the public example or the atlas interpolation records.</p>
+<p>Damaged demand is a scalar multiplier; actual line removal and load redistribution are not solved. Changing line count does not change the result. The tension query also omits line stiffness, strength, anchor geometry and soil strength; changing those inputs does not regenerate the tension response.</p>
+</section>
+<section><h2>7. Limitations</h2>
+<p>Use is limited to scalar screening within the active atlas domains [2]. Dataclass construction does not validate positive finite strength, area, cycles, duration or factors.</p>
+<details><summary>Active atlas query domains [2]</summary><ul><li>Intact-tension atlas: Significant wave height (m) from 2 to 5; Peak period (s) from 9 to 13; Water depth (m) from 500 to 1500</li><li>Anchor-capacity atlas: Anchor diameter (m) from 2 to 8; Skirt length (m) from 10 to 30; Undrained strength (kPa) from 20 to 100</li></ul><p>Wave height and water depth are in metres; peak period is in seconds; anchor dimensions are in metres; undrained strength is in kilopascals. The domain values are read from the evidence records in section 9.2.</p></details>
+<p>Nonpositive stress range or annual damage can return infinite life, and invalid divisors can fail. Missing atlas files can raise errors rather than return escalation. The citation helper is separate from assessment and can return an empty mapping; calculation is not blocked by absent standards evidence.</p>
+<p>Wave heading, return period, combined wind and current, seabed degradation, anchor inclination, chain wear and fatigue stress concentration are not represented by this wrapper. Its traffic light is not a station-keeping authorization.</p>
+</section>
+<section><h2>8. Recommendations</h2>
+<p>The next engineering slice is a bounded screening interface with validated input domains and an explicit basis for every factor. Release for design use is conditional on the evidence below.</p>
+<p>Reject nonfinite and nonpositive divisors before calculation. Replace synthetic fatigue inputs with a qualified material curve and a documented cycle spectrum; the stress–life and damage-accumulation basis is given in [5]. Reconcile standards editions and resolve citations within assessment before strength utilization is used for a decision.</p>
+<p>For the synthetic failing fatigue margin, select a curve, section area and loading history that produce a margin at least equal to unity against the specified duration, then recalculate. This is the arithmetic remedy defined in section 4, not a specified chain redesign. Compare intact tension, a genuinely removed-line case and anchor loading with an openly documented physical benchmark before assigning an operating envelope. Preserve escalation for any query outside the atlas bounds.</p>
+</section>
+<section><h2>9. References</h2>
+<p>Repository records and open teaching sources are separated from unresolved licensed design references. Locators are provided here so that the evidence can be inspected without implying physical qualification.</p>
+<h3>9.1 Public theory sources</h3>
+<p>[4] OpenStax, University Physics, volume 1, 2016, section 12.3, “Stress, Strain, and Elastic Modulus”. The axial-stress definition is used; no chain capacity is supplied.</p>
+<p>[5] Massachusetts Institute of Technology, Fatigue, edition dated 1 May 2001, sections “S-N curves” and “Miner’s law for cumulative damage”. General fatigue concepts are used; chain parameters are not established.</p>
+<p>Design references requiring resolution: API RP 2SK, edition and clause not established; DNV-OS-E301, 2018-07 in the atlas and 2021-07 in the registry, station-keeping strength basis; DNV-RP-E303, 2005, anchor basis with clause not established; DNV-RP-C203, edition and fatigue clause not established. These documents have not been consulted for numerical design values.</p>
+<h3>9.2 Evidence locators</h3>
+<ul><li>[1] <code>src/digitalmodel/mooring_resilience/screening.py</code>, functions assess and safety_factor_citations; <code>tests/unit/marine_ops/test_mooring_resilience.py</code>, public configuration and invariants; <code>src/digitalmodel/citations/registry.py</code>, standards metadata.</li>
+<li>[2] <code>atlases/fpso_mooring_full/879f4f041243/manifest.yaml</code> and <code>validation.json</code>; <code>atlases/anchor_capacity/c8f67ad7b69c/manifest.yaml</code> and <code>validation.json</code>.</li>
+<li>[3] <code>docs/reports/modules/mooringresilience/generate.py</code>, calculate; <code>test_report.py</code>, hand anchors and consistency checks. Rebuild: <code>PYTHONPATH=src python docs/reports/modules/mooringresilience/generate.py</code>.</li>
+<li>[4] <a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">Open teaching text: axial stress</a>.</li>
+<li>[5] <a href="https://web.mit.edu/course/3/3.11/www/modules/fatigue.pdf">Open teaching notes: fatigue</a>.</li>
+<li>Layout exemplar: <code>docs/api/cfd/turbulent-flat-plate-verification.html</code>; canonical tokens: <code>docs/api/_assets/brand.css</code>. Their existing styles are inlined; the body uses the required house-document class.</li></ul>
+</section>
+<section><h2>10. Acronyms and Appendices</h2>
+<p>The input register separates demonstration data from missing engineering evidence. Abbreviations and quality checks are provided for interpreting the calculations.</p>
+<h3>10.1 Definitions and data readiness</h3>
+<p>API denotes the American Petroleum Institute. DNV denotes the standards publisher. S-N denotes stress versus cycles to failure. Minimum breaking load denotes the line strength used in the utilization denominator. Significant wave height and peak period describe the scalar sea-state query. Utilization and fatigue margin are dimensionless.</p>
+<table><tr><th>Data group</th><th>State</th><th>Effect</th></tr><tr><td>Public test geometry</td><td>Available [1]</td><td>Arithmetic example only; physical configuration unqualified.</td></tr><tr><td>Synthetic factors and fatigue curve</td><td>ASSUMED - to be confirmed [3]</td><td>No physical material or standards claim.</td></tr><tr><td>Atlas interpolation records</td><td>Available [2]</td><td>Interpolation error only.</td></tr><tr><td>Site, hull, layout, inspection and measured benchmark</td><td>NOT_EVALUATED</td><td>No operating decision.</td></tr><tr><td>Standards clauses and common edition</td><td>NOT_EVALUATED</td><td>No standards compliance conclusion.</td></tr></table><p>Table 6. Data register and intended-use limits.</p>
+<h3>10.2 Quality pre-flight</h3>
+<p>The arithmetic anchors use the declared synthetic curve. At the first plotted height the nominal stress is calculated from displayed inputs, allowable cycles are divided by the displayed annual cycles, and calculated life is divided by the displayed duration. Another height provides a separate arithmetic anchor. The rebuild test compares rounded module results and the generated document; it does not establish physical accuracy.</p>
+<p>The main-workflow tests and report tests are the bounded checks for this document. Coupled solvers, physical benchmarks, the complete repository test suite and browser execution are not part of this evidence. The chart and comment controls are inline and require JavaScript. Comments are exported as a separate JSON file for saving beside this document; importing that file restores them. An explicit save action is required.</p>
+<details id="change-panel"><summary>Engineering changes</summary><div id="changes"></div></details>
+<details id="comments"><summary>Document comments</summary><label for="comment-text">Comment with section or figure reference</label><textarea id="comment-text" rows="4"></textarea><p><button id="add-comment" type="button">Add comment</button> <button id="save-comments" type="button">Save comments beside report</button> <label>Import comments <input id="load-comments" type="file" accept="application/json"></label></p><ol id="comment-list"></ol><p id="comment-status" role="status">Comments are held in this page until saved.</p></details>
+</section>
+</main>
+<script id="calculation-data" type="application/json">{"configuration": {"n_lines": 12, "mbl_kN": 15000, "line_area_mm2": 22600, "anchor_diameter_m": 5, "anchor_length_m": 20, "soil_su_kpa": 60, "water_depth_m": 1000}, "factors": {"fos_intact": 2, "fos_damaged": 2, "fos_foundation": 2, "redistribution": 2, "design_life_years": 10, "annual_cycles": 100, "dyn_tension_per_Hs_kN": 22.6, "sn_a_D": 1000, "sn_m": 1}, "period_s": 11, "cases": [{"wave_height_m": 2, "result": {"t_intact_kN": 6593.9, "t_damaged_kN": 13187.8, "util_intact": 0.879, "util_damaged": 1.758, "foundation_capacity_kN": 34911.3, "util_foundation": 0.756, "fatigue_life_years": 5.0, "fatigue_margin": 0.5, "governing_util": 1.758, "light": "RED", "notes": []}}, {"wave_height_m": 3, "result": {"t_intact_kN": 6627.0, "t_damaged_kN": 13254.0, "util_intact": 0.884, "util_damaged": 1.767, "foundation_capacity_kN": 34911.3, "util_foundation": 0.759, "fatigue_life_years": 3.3, "fatigue_margin": 0.333, "governing_util": 1.767, "light": "RED", "notes": []}}, {"wave_height_m": 4, "result": {"t_intact_kN": 6674.0, "t_damaged_kN": 13348.0, "util_intact": 0.89, "util_damaged": 1.78, "foundation_capacity_kN": 34911.3, "util_foundation": 0.765, "fatigue_life_years": 2.5, "fatigue_margin": 0.25, "governing_util": 1.78, "light": "RED", "notes": []}}, {"wave_height_m": 5, "result": {"t_intact_kN": 6735.3, "t_damaged_kN": 13470.6, "util_intact": 0.898, "util_damaged": 1.796, "foundation_capacity_kN": 34911.3, "util_foundation": 0.772, "fatigue_life_years": 2.0, "fatigue_margin": 0.2, "governing_util": 1.796, "light": "RED", "notes": []}}], "evidence": {"fpso_mooring_full": {"domains": {"Hs": [2.0, 5.0], "Tp": [9.0, 13.0], "water_depth_m": [500.0, 1500.0]}, "version": "879f4f041243", "holdouts": 7, "error_percent": 2.7, "threshold_percent": 10.0}, "anchor_capacity": {"domains": {"diameter_m": [2.0, 8.0], "length_m": [10.0, 30.0], "su_kpa": [20.0, 100.0]}, "version": "c8f67ad7b69c", "holdouts": 12, "error_percent": 1.4, "threshold_percent": 10.0}}}</script>
+<script id="change-data" type="application/json">[
+  {
+    "revision": "R1",
+    "date": "2026-10-22",
+    "changes": [
+      "The screening workflow is documented with a synthetic arithmetic example so that its outputs can be distinguished from a qualified design assessment.",
+      "Atlas interpolation evidence and missing physical validation are identified separately."
+    ]
+  }
+]</script>
+<script>
+const data = JSON.parse(document.getElementById('calculation-data').textContent);
+const svg = document.getElementById('chart');
+const ns = 'http://www.w3.org/2000/svg';
+function shape(tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text) node.textContent = text;
+  svg.appendChild(node); return node;
+}
+shape('path', {d:'M70 25 V250 H680', fill:'none', stroke:'currentColor'});
+const y = value => 250 - value * 180;
+shape('path', {d:`M70 ${y(1)} H680`, stroke:'var(--nogo)', 'stroke-dasharray':'6 4'});
+shape('text', {x:80, y:y(1)-10}, 'Synthetic fatigue margin limit = 1.000');
+shape('text', {x:230, y:295}, 'Significant wave height (m)');
+shape('text', {x:75, y:20}, 'Fatigue margin (dimensionless)');
+const points = data.cases.map((c, i) => [90+i*180, y(c.result.fatigue_margin)]);
+shape('polyline', {points:points.map(p=>p.join(',')).join(' '), fill:'none', stroke:'var(--brand)', 'stroke-width':2});
+data.cases.forEach((c, i) => {
+  const [x, cy] = points[i];
+  const label = `Case: wave height ${c.wave_height_m} m; period ${data.period_s} s; component: chain; demand: fatigue margin ${c.result.fatigue_margin.toFixed(3)}; limit: 1.000; units: dimensionless`;
+  const point = shape('circle', {cx:x, cy, r:7, fill:'var(--brand)', tabindex:0, 'aria-label':label});
+  const title = document.createElementNS(ns, 'title'); title.textContent = label; point.appendChild(title);
+  ['focus','mouseenter'].forEach(event => point.addEventListener(event, () => document.getElementById('chart-detail').textContent = label));
+  shape('text', {x:x-4,y:270}, String(c.wave_height_m));
+  const row = document.getElementById('sweep').insertRow();
+  [c.wave_height_m, data.period_s, c.result.fatigue_margin.toFixed(3), '1.000'].forEach(value => row.insertCell().textContent = value);
+});
+JSON.parse(document.getElementById('change-data').textContent).forEach(change => {
+  const p = document.createElement('p'); p.textContent = `${change.revision}: ${change.changes.join(' ')}`;
+  document.getElementById('changes').appendChild(p);
+});
+let comments = [];
+function showComments() {
+  const list = document.getElementById('comment-list'); list.replaceChildren();
+  comments.forEach(text => {const item=document.createElement('li'); item.textContent=text; list.appendChild(item);});
+}
+document.getElementById('add-comment').onclick = () => {
+  const box=document.getElementById('comment-text');
+  if (box.value.trim()) {comments.push(box.value.trim()); box.value=''; showComments();}
+};
+document.getElementById('save-comments').onclick = async () => {
+  const text=JSON.stringify({revision:'R1', comments}, null, 2)+'\n';
+  try {
+    if (window.showSaveFilePicker) {
+      const handle=await window.showSaveFilePicker({suggestedName:'report.comments.json'});
+      const stream=await handle.createWritable(); await stream.write(text); await stream.close();
+    } else {
+      const url=URL.createObjectURL(new Blob([text], {type:'application/json'}));
+      const link=document.createElement('a'); link.href=url; link.download='report.comments.json'; link.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+    document.getElementById('comment-status').textContent='Save requested. Keep the comment file beside this report.';
+  } catch {document.getElementById('comment-status').textContent='Comments were not saved. Retry the save action.';}
+};
+document.getElementById('load-comments').onchange = async event => {
+  try {
+    const loaded=JSON.parse(await event.target.files[0].text());
+    if (loaded.revision!=='R1' || !Array.isArray(loaded.comments) || !loaded.comments.every(item=>typeof item==='string')) throw Error();
+    comments=loaded.comments; showComments();
+    document.getElementById('comment-status').textContent='Comments imported.';
+  } catch {document.getElementById('comment-status').textContent='Comment file is invalid; current comments are unchanged.';}
+};
+</script></body></html>
