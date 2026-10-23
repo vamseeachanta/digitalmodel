@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Near-wall mesh acceptance</title>
+<style>body{font:17px/1.55 system-ui;max-width:920px;margin:3rem auto;padding:0 1rem;color:#172b3a;background:#fafcfb}h1,h2{font-weight:550;color:#164e63}h1{margin-top:2.5rem}h2{font-size:1.2rem}svg{width:100%;background:white;border:1px solid #bdd0d6}figcaption{font-size:.9rem;color:#435965}textarea{display:block;width:95%;min-height:7rem}button{padding:.7rem;margin:.5rem}pre{white-space:pre-wrap;background:#eef4f6;padding:1rem}a{color:#036578}.status{border-left:4px solid #c28324;padding:.5rem 1rem}.revision{font-size:.9rem}li{margin:.3rem 0}footer{margin-top:3rem;border-top:1px solid #aac1c8;padding-top:1rem}</style>
+<header>Near-wall mesh acceptance<p class="status">Draft for client review</p></header>
+<main>
+<h1>1. Executive summary</h1>
+<p>The near-wall assessment is a check of supplied wall-resolution measurements. Analysis is performed to determine whether declared wall-coordinate and layer-coverage limits are met; key results are summarized below.</p>
+<ul><li>Comparison eligibility is determined from explicit limits.<ul><li>Missing measurements prevent qualification.</li><li>A synthetic coverage difference of 10 percentage points exceeds the assumed limit of 5 percentage points.</li></ul></li><li>Physical resolution remains unestablished.<ul><li>No native mesh or flow solution is assessed in this example.</li><li>Additional wall patches require separate assessments.</li></ul></li></ul>
+<p class="revision">Revision 1 — Initial issue; measured-wall acceptance and a synthetic worked example are introduced.</p>
+<h1>2. Scope</h1>
+<p>Relative layer sizing is retained. Qualification is withheld when supplied near-wall evidence is absent or fails its stated criterion.</p>
+<p>The assessment applies to one consistently identified wall patch across the comparison set. The presence of a passing hull assessment does not establish resolution on an appendage or another force-bearing surface. Each such patch requires a separate assessment before a combined engineering conclusion is issued.</p>
+<h1>3. Physical system</h1>
+<p>The wall-adjacent mesh is represented by a local section through a wetted surface. Velocity is prescribed in the outer fluid, and the wall-normal distance is measured to the first cell centre.</p>
+<figure><svg viewBox="0 0 800 250" role="img" aria-label="Schematic wall-layer mesh section, not to scale">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#164e63"/></marker></defs>
+<path d="M60 210 H740" stroke="#172b3a" stroke-width="12"/><path d="M60 180 H740 M60 135 H740 M60 65 H740 M180 65 V210 M350 65 V210 M520 65 V210 M690 65 V210" fill="none" stroke="#638d9c"/>
+<circle cx="265" cy="195" r="5" fill="#bf6227"/><path d="M300 207 V196" stroke="#164e63" marker-end="url(#arrow)"/><text x="310" y="200">y: wall to cell centre</text><text x="75" y="240">Wetted wall; no-slip boundary</text><text x="75" y="35">Outer fluid velocity U</text><path d="M300 29 H450" stroke="#164e63" stroke-width="2" marker-end="url(#arrow)"/><text x="545" y="108">Layer cells</text></svg><figcaption>Figure 1. Local wall-layer section; geometry is schematic and not to scale.</figcaption></figure>
+<h1>4. Basis and criteria</h1>
+<p>The wall coordinate y+ is dimensionless. Acceptance bounds and coverage limits are required inputs; no universal wall-treatment limits are assigned.</p>
+<p>For this demonstration only, the target y+ is 50, the relative tolerance is 0.20, the minimum coverage is 0.90, and the maximum coverage spread is 0.05. All four inputs are ASSUMED - to be confirmed for an engineering application. The bounds are inclusive. These values exercise the calculation and are not a validated turbulence-model specification.</p>
+<p>Coverage is the area carrying the requested layer count divided by the total assessed wall area. Face-count coverage and coverage by any single layer are different quantities and are not interchangeable with this definition.</p>
+<h1>5. Method</h1>
+<p>The measured minimum and maximum y+ are compared with the target bounds over the stated solution window. Each coverage fraction is assessed against its minimum, and the difference between the largest and smallest coverage is assessed across every expected case.</p>
+<p>Let T denote target y+, e relative tolerance, A<sub>L</sub> area carrying the requested layers, and A<sub>W</sub> total assessed wall area. The lower bound is T(1−e), the upper bound is T(1+e), and coverage C=A<sub>L</sub>/A<sub>W</sub>. The comparison spread is max(C)−min(C). These are definitions of the selected acceptance calculation, not empirical correlations.</p>
+<p>Decimal input values are compared as exact rational numbers. This prevents arithmetic rounding from rejecting an inclusive limit and adds no engineering tolerance.</p>
+<h1>6. Results</h1>
+<p>The synthetic observations are assessed against the assumed criteria. Both cases have y+ extrema of 40 and 60, which meet the inclusive bounds 50(1−0.20)=40 and 50(1+0.20)=60.</p>
+<p>The small case has 9 m² covered out of 10 m², giving C=0.90. The large case has 1,000 m² covered out of 1,000 m², giving C=1.00. The geometric length scale changes from 1 to 10; the area scale changes accordingly. The coverage increases by 11.1% relative to the small case. Its absolute spread is 0.10, exceeding the limit of 0.05, so the comparison fails despite both individual coverage fractions meeting the minimum.</p>
+<figure><svg viewBox="0 0 800 300" role="img" aria-label="Synthetic coverage against geometric scale; hover points for values">
+<path d="M90 35 V240 H735" fill="none" stroke="#172b3a"/><path d="M90 155 H735" stroke="#b45309" stroke-dasharray="8 5"/><text x="420" y="175">Minimum coverage 0.90</text><path d="M145 155 L680 55" fill="none" stroke="#087e8b" stroke-width="3"/>
+<circle cx="145" cy="155" r="8" fill="#087e8b"><title>Small case; hull; coverage 0.90; minimum 0.90; units: area fraction</title></circle><circle cx="680" cy="55" r="8" fill="#087e8b"><title>Large case; hull; coverage 1.00; minimum 0.90; units: area fraction</title></circle>
+<text x="30" y="60">1.00</text><text x="30" y="160">0.90</text><text x="30" y="240">0.82</text><text x="140" y="265">1</text><text x="670" y="265">10</text><text x="290" y="292">Geometric length scale (dimensionless)</text><text x="100" y="25">Layer coverage (area fraction)</text></svg><figcaption>Figure 2. Synthetic coverage; points expose case, patch, value, criterion and units on hover.</figcaption></figure>
+<p>Comparison is withheld until measured bounds and layer coverage meet the declared criteria. A mesh adjustment requires a new measurement and a new assessment; no corrective thickness is inferred from these invented observations.</p>
+<h1>7. Verification checklist</h1>
+<p>The acceptance arithmetic and result-consumer behavior are checked with synthetic inputs. Verification of native achieved wall resolution is not established.</p>
+<ul><li>Input finiteness, positive assessed area, ordered extrema and coverage range are checked.</li><li>Missing evidence is distinguished from a failed measured criterion.</li><li>Inclusive bounds and unequal comparison coverage are checked.</li><li>Qualification is prevented when expected-case evidence is absent.</li><li>Case-construction checks at both geometric scales require completion where temporary-file access is available.</li><li>Native measurement extraction, mesh identity and solution-window identity require independent confirmation.</li></ul>
+<h1>8. Limitations</h1>
+<p>Measurement values and source descriptions are supplied by the caller. Source text is a traceability assertion; it is not authentication of a mesh, a solution window or an output artifact.</p>
+<p>A wall-distance design estimate is not achieved y+. Construction alone establishes neither layer retention nor flow-dependent wall stress. Native comparison acceptance therefore remains NOT_EVALUATED until measured evidence is provided against criteria selected before examining the results.</p>
+<h1>9. Reproduction</h1>
+<p>The example is reproduced with explicit synthetic inputs. No solver execution is required for the acceptance arithmetic.</p>
+<h2>9.1 Inputs and answer</h2>
+<pre>Target = 50; relative tolerance = 0.20
+Minimum area coverage = 0.90; maximum spread = 0.05
+Small: y+ minimum 40, maximum 60; covered 9 m²; total 10 m²
+Large: y+ minimum 40, maximum 60; covered 1000 m²; total 1000 m²
+Bounds: 40 to 60
+Coverage: 0.90 and 1.00
+Spread: 1.00 - 0.90 = 0.10 > 0.05
+Answer: FAIL; withhold the comparison</pre>
+<h2>9.2 Source locators and executable example</h2>
+<p>Basis: repository issue 2025, Acceptance and Options. Method: <code>src/digitalmodel/solvers/openfoam/near_wall_acceptance.py</code>, assessment definitions. Relative-sizing semantics: <code>src/digitalmodel/solvers/openfoam/templates/hull_resistance/system/snappyHexMeshDict</code>, addLayersControls comments. Zero-output limitation: <code>scripts/cfd/yplus_after.sh</code>, missing turbulence-model diagnostic. Verification: <code>tests/solvers/openfoam/test_near_wall_acceptance.py</code> and <code>test_near_wall_case_scales.py</code>.</p>
+<pre>from digitalmodel.solvers.openfoam.near_wall_acceptance import (
+    NearWallCriteria, WallMeasurement, assess_near_wall,
+)
+criteria = NearWallCriteria(50, .20, .90, .05, "synthetic demonstration")
+measurements = {
+    "small": WallMeasurement(40, 60, 9, 10, "hull", "synthetic small case"),
+    "large": WallMeasurement(40, 60, 1000, 1000, "hull", "synthetic large case"),
+}
+assert assess_near_wall(measurements, criteria)["status"] == "FAIL"</pre>
+<p>GCI report inputs use case directory names as keys. Benchmark inputs use <code>primary</code> and <code>companion</code>; referent-free inputs use <code>primary</code> and <code>companion_0</code>, continuing in supplied order. Double-body inputs use <code>primary</code>. Result APIs accept <code>near_wall_criteria</code> and <code>near_wall_measurements</code>. The GCI command accepts <code>--near-wall</code> with a JSON object containing <code>criteria</code> and <code>measurements</code> fields matching the dataclass fields above.</p>
+<h1>10. Appendix: data register</h1>
+<p>Every numerical observation in this example is synthetic. No observation is designated measured engineering input.</p>
+<ul><li>Criteria: assumed demonstration inputs; engineering readiness not established.</li><li>Coverage areas: invented demonstration values in square metres.</li><li>Wall-coordinate extrema: invented dimensionless values.</li><li>Geometric scales: the requested order-of-magnitude comparison.</li><li>Required real evidence: case identity, exact wall-patch population, requested layer count, assessed areas, solution window, mesh identity, source artifact and criterion basis.</li></ul>
+</main>
+<footer><h2>Comments and changes</h2><p>Comments remain in this page until saved. Select the report directory when saving the adjacent comments file.</p><textarea id="comments" aria-label="Review comments"></textarea><button id="save">Save comments beside report</button><p id="save-status" role="status"></p><details><summary>Changes</summary><p>Initial edition: explicit criteria, missing-evidence disposition, worked coverage comparison and verification limitations.</p></details></footer>
+<script>
+document.getElementById('save').addEventListener('click',async()=>{
+ const status=document.getElementById('save-status');
+ try{
+  if(!window.showDirectoryPicker)throw new Error('This browser does not support adjacent-file saving. Copy the comments to report.comments.json beside this report.');
+  const dir=await window.showDirectoryPicker({mode:'readwrite'});
+  const file=await dir.getFileHandle('report.comments.json',{create:true});
+  const writer=await file.createWritable();
+  await writer.write(JSON.stringify({comments:document.getElementById('comments').value},null,2)+'\n');
+  await writer.close();status.textContent='Comments saved in the selected directory.';
+ }catch(error){status.textContent=error.message;}
+});
+</script></html>
