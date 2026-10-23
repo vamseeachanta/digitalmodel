@@ -31,6 +31,10 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/reporting/build_seismic_module_report.py": (
+        "writes docs/reports/modules/seismic rather than docs/api pages; "
+        "tests/seismic/test_module_report.py checks issued content and numerical evidence"
+    ),
     "scripts/attestation_manifest.py": (
         "writes a caller-selected attestation summary, not committed docs/api pages"
     ),
