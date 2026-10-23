@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Part 9 Level 1 crack screening readiness</title>
+<style>
+body { max-width: 64rem; margin: 2rem auto; padding: 0 1rem; font-family: sans-serif; line-height: 1.5; color: #172a3a; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccd5dd; padding: .5rem; text-align: left; }
+caption { caption-side: bottom; text-align: left; margin: .5rem 0 1rem; }
+pre { overflow: auto; background: #f1f4f7; padding: 1rem; }
+</style>
+</head>
+<body>
+<h1>Part 9 Level 1 crack screening readiness</h1>
+<h2>Summary</h2>
+<p>The readiness screen records explicit crack requests for plates, cylinders and
+spheres, each with a quarter-thickness or full-thickness reference-flaw family.
+The result is <strong>NOT_EVALUATED</strong> for every family because qualified
+Level 1 curves and their validation evidence are unavailable. No allowable crack
+size or fitness-for-service acceptance is established. The decision is
+<strong>ESCALATE</strong> for a qualified Part 9 Level 2 assessment.</p>
+<h2>Revision history</h2>
+<table>
+<caption>Table 1. Issue history.</caption>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-20</td><td>The readiness interface and worked example are introduced to expose missing curve evidence without an inferred acceptance result.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>The intake context, input-domain checks and assessment-level wording are corrected so an unevaluated request cannot imply a completed assessment.</td></tr></tbody>
+</table>
+<h2>Source basis and limits</h2>
+<p>The <a href="https://www.asme.org/getmedia/5726e673-eb65-456e-913d-3d0dce0359ff/asme-ffs-1_2021_toc.pdf">publisher's public contents for API 579-1/ASME FFS-1 (2021)</a>
+was retrieved on 2026-10-20 with HTTP status 200. It identifies applicability in
+section 9.2.2, data requirements in section 9.3, Level 1 in section 9.4.2,
+Level 2 in section 9.4.3, stress-intensity solutions in Annex 9B and reference-stress
+solutions in Annex 9C. Only these locators are used. The contents supplies no
+curve ordinates, coefficients, applicability limits or regeneration assumptions.</p>
+<p>No licensed numeric values are reproduced. No new standards-derived
+constant or engineering equation is implemented. The source response is retained
+outside the repository; its SHA-256 digest is
+<code>bdfc67d0395d5d9054a1c56837b43bf55fb767dd91314fd2891d1b493a4bd893</code>.
+No source catalog identifier is available in this checkout.</p>
+<h2>Method</h2>
+<ol>
+<li>An explicitly identified crack is supplied as a <code>Part9Level1Case</code>.
+Thickness-grid morphology classification does not identify or exclude cracks.</li>
+<li>Software input checks reject unsupported geometry and reference-flaw names,
+non-finite or non-numeric quantities, non-positive dimensions or material
+properties, inconsistent flaw position and depth, temperatures below absolute zero,
+and ultimate strength below yield strength.
+These checks do not establish standards applicability.</li>
+<li>Omitted inputs are listed separately from missing method evidence. Zero stress
+and negative assessment temperatures at or above absolute zero remain supplied
+values. Inside radius is requested for cylinders and spheres. Total flaw length
+is used, not half-length. Flaw orientation and position, base/weld/HAZ location,
+post-weld heat treatment, cyclic service and toughness basis are required context.
+Explicit false service and heat-treatment flags remain supplied values.</li>
+<li>All curve requests return <code>NOT_EVALUATED</code>, with
+<code>acceptable: null</code> and <code>allowable_flaw_length_mm: null</code>.
+The decision adapter returns <code>ESCALATE</code> without a metal-loss strength
+factor or reduced rating. Routing records <code>level_attempted: 1</code> and
+<code>level_reached: null</code>, including for an empty intake.</li>
+</ol>
+<p>The reference-flaw family selects a requested curve; it does not set the measured
+depth or establish a depth-to-thickness acceptance limit. Surface and embedded
+flaws require depth below thickness; through-wall flaws require depth equal to
+thickness. A supplied through-wall flaw remains unevaluated under either
+reference family. Loading signs are retained without claiming their applicability
+to a Level 1 curve.</p>
+<p>The temperature bound is a physical input-domain check based on the Celsius
+definition in BIPM's SI Brochure, 9th edition (2019), section 2.3.1, kelvin,
+also published in <a href="https://www.nist.gov/pml/special-publication-330/sp-330-section-2">NIST SP 330 (2019), section 2.3.1</a>.
+It is not a Part 9 applicability or acceptance limit. Direct construction of a
+result applies the same input checks and requires its missing-input list to match
+the supplied case.</p>
+<h2>Worked example</h2>
+<p>The following inputs are synthetic demonstration data. They are not an assessed
+design and are not taken from a standard or an earlier analysis.</p>
+<table>
+<caption>Table 2. Synthetic intake for the runnable example.</caption>
+<thead><tr><th>Input</th><th>Value</th><th>Unit or interpretation</th></tr></thead>
+<tbody>
+<tr><td>Geometry</td><td>cylinder</td><td>Explicit crack request</td></tr>
+<tr><td>Reference-flaw family</td><td>quarter_thickness</td><td>Requested curve family</td></tr>
+<tr><td>Thickness</td><td>20.000</td><td>mm</td></tr>
+<tr><td>Measured flaw depth</td><td>5.0</td><td>mm</td></tr>
+<tr><td>Measured total flaw length</td><td>40.0</td><td>mm</td></tr>
+<tr><td>Inside radius</td><td>500.0</td><td>mm</td></tr>
+<tr><td>Membrane stress</td><td>100.0</td><td>MPa</td></tr>
+<tr><td>Bending stress</td><td>0.0</td><td>MPa</td></tr>
+<tr><td>Assessment temperature</td><td>20.0</td><td>degrees Celsius</td></tr>
+<tr><td>Yield strength</td><td>300.0</td><td>MPa</td></tr>
+<tr><td>Ultimate strength</td><td>450.0</td><td>MPa</td></tr>
+<tr><td>Fracture toughness</td><td>80.0</td><td>MPa sqrt(m)</td></tr>
+<tr><td>Flaw orientation</td><td>axial</td><td>Supplied direction</td></tr>
+<tr><td>Flaw position</td><td>surface</td><td>Supplied position</td></tr>
+<tr><td>Material location</td><td>base</td><td>Base material</td></tr>
+<tr><td>Post-weld heat treatment</td><td>false</td><td>Explicitly not applied</td></tr>
+<tr><td>Cyclic service</td><td>false</td><td>Explicitly absent</td></tr>
+<tr><td>Toughness basis</td><td>synthetic demonstration input</td><td>No measured or qualified material basis</td></tr>
+</tbody>
+</table>
+<p>The input-domain checks pass and no listed intake field is missing. The method
+evidence gate remains unsatisfied. Therefore the answer is
+<code>NOT_EVALUATED / ESCALATE</code>, with no allowable flaw length.
+The expected answer follows this evidence rule; no physical calculation is asserted.</p>
+<pre>PYTHONPATH=src python examples/asset_integrity/example_part9_level1.py</pre>
+<p>The <a href="../../../examples/asset_integrity/example_part9_level1.py">runnable example</a>
+prints inputs, method locator, missing evidence and answer as strict JSON.
+The <a href="../../../tests/asset_integrity/test_part9_level1.py">tests</a>
+exercise all six curve requests, missing and invalid data, routing, JSON readback
+and the example's answer. Test dimensions are synthetic; no code-produced value
+is used as a published comparator.</p>
+<h2>Remaining evidence and way forward</h2>
+<ul>
+<li>Readable Level 1 applicability rules and reference-flaw regeneration assumptions
+for the selected edition and geometry.</li>
+<li>A qualified Part 9 Level 2 basis with the applicable stress-intensity,
+reference-stress, material, residual-stress and other required treatments.
+The existing plate FAD alone does not qualify the requested curves.</li>
+<li>Independent, source-identified digitized figure points for both curve families
+and all three geometries, with documented comparison tolerance.</li>
+</ul>
+<p>Future numeric screening will require this evidence before an acceptance branch
+is enabled. The current intake is a software readiness checklist; a complete
+standards applicability assessment, curve regeneration and figure-point validation
+remain deferred. Intake consolidation with the separate inspection workflow also
+remains deferred; completeness here does not establish completeness there.</p>
+</body>
+</html>

@@ -1,4 +1,4 @@
-"""FFS assessment router — API 579-1 Part 4 (GML) / Part 5 (LML) / Part 6 (pitting).
+"""FFS router for API 579 Parts 4/5/6 and explicit Part 9 crack readiness.
 
 Classification logic follows the applicability criteria of API 579-1/ASME FFS-1
 2021 Edition:
@@ -34,11 +34,17 @@ The router computes the fraction of grid cells that have degraded below
 (nominal_wt - DEGRADED_THRESHOLD_FRACTION * nominal_wt) to separate uniform
 from localised loss patterns.  Engineers may override via ``force_type``
 ('GML', 'LML' or 'PITTING').
+
+Explicit crack cases use ``route_crack_like_flaw`` rather than grid
+classification. The Part 9 readiness route remains NOT_EVALUATED and
+escalates without claiming a completed assessment level.
 """
 
 from __future__ import annotations
 
 import pandas as pd
+
+from .part9_level1 import Part9Level1Case
 
 # Fraction of nominal WT below which a cell is considered "degraded"
 _DEGRADED_FRACTION_OF_NOMINAL = 0.10  # >10 % loss counts as degraded cell
@@ -56,7 +62,27 @@ _VALID_FORCE_TYPES = {"GML", "LML", "PITTING"}
 
 
 class FFSRouter:
-    """Classify a wall-thickness grid as GML, LML or PITTING per API 579."""
+    """Classify metal-loss grids or route explicit cracks to Part 9 readiness."""
+
+    @staticmethod
+    def route_crack_like_flaw(case: Part9Level1Case) -> dict:
+        """Route an explicitly identified crack to Part 9 Level 1 readiness.
+
+        A thickness grid cannot establish the absence of a crack. The caller
+        supplies a crack case explicitly, separate from morphology inference.
+        See API 579-1/ASME FFS-1 (2021), 9.3 and 9.4.2 (section locators).
+        """
+        from .ffs_decision import decide_part9_level1
+        from .part9_level1 import screen_part9_level1
+
+        result = screen_part9_level1(case)
+        return {
+            "assessment_type": "CRACK_LIKE",
+            "level_reached": None,
+            "level_attempted": 1,
+            "level1": result.to_dict(),
+            "decision": decide_part9_level1(result),
+        }
 
     @staticmethod
     def classify(
