@@ -21,6 +21,11 @@ straights, connectors vertical at the ends). The A-G orientation mapping is
 an engineering assumption pending GA-drawing verification (#480/#481); end
 coordinates and the spline starting shape derive from that walk.
 
+An optional domain ``installation`` block supplies vessel definitions and
+suspended-stage end attachments with a global starting spline. Without it,
+the converter retains its fixed-end in-place geometry. Parameter sources,
+assumptions and a worked example are documented in the installation README.
+
 No OrcFxAPI or license required.
 """
 from __future__ import annotations
@@ -28,12 +33,13 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Tuple
 
+from digitalmodel.marine_ops.installation.jumper_installation_schema import (
+    JumperInstallationStageSpec,
+)
 from digitalmodel.marine_ops.installation.jumper_lift import (
     BarePipeProperties,
-    PipeSectionLengths,
     compute_bare_pipe,
     compute_buoyancy,
-    compute_pipe_geometry,
     compute_strake,
 )
 from digitalmodel.marine_ops.installation.jumper_installation import (
@@ -212,8 +218,14 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
     Returns a dict accepted by ``ProjectInputSpec(**data)`` (generic track)
     containing the full 27-section jumper line, the four jumper line types,
     and the environment/simulation data carried over from the domain spec.
+    The optional ``installation`` block adds supplied vessels; its suspended
+    stage replaces the fixed end connections and initial spline explicitly.
     """
     spec = stage_1_load_spec(spec_path)
+    installation = (
+        JumperInstallationStageSpec.model_validate(spec["installation"])
+        if spec.get("installation") is not None else None
+    )
     config = parse_jumper_config(spec)
     results = run_jumper_analysis(config)
 
@@ -281,6 +293,18 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
         ],
     }
 
+    if installation is not None and installation.stage == "suspended":
+        # Source: Orcina online help (2026), Line data: End connections.
+        # Preserve attachment-local coordinates; the supplied spline is global.
+        key = next(k for k in line_properties if k.startswith("Connection,"))
+        line_properties[key] = [
+            installation.end_a.to_connection_row(),
+            installation.end_b.to_connection_row(),
+        ]
+        line_properties[
+            "SplineControlPointX, SplineControlPointY, SplineControlPointZ"
+        ] = installation.spline_control_points
+
     meta_in = spec.get("metadata", {})
     name = meta_in.get("name", config.name)
 
@@ -329,6 +353,14 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
             },
         },
         "generic": {
+            "vessel_types": [
+                obj.model_dump(exclude_none=True)
+                for obj in installation.vessel_types
+            ] if installation else [],
+            "vessels": [
+                obj.model_dump(exclude_none=True)
+                for obj in installation.vessels
+            ] if installation else [],
             "line_types": build_line_types(
                 pipe,
                 connector_weight_kg=config.connector_weight_kg,
