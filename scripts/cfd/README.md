@@ -151,6 +151,11 @@ Rules the scripts encode, learned on the lanes:
 - Never edit a running bash script in place; bash resumes at a byte offset in
   the rewritten file.
 
+Recorded-PID inspection, marker interpretation and explicit cleanup are described
+in the [process supervision runbook](../../docs/domains/openfoam/process_supervision_runbook.md).
+`case_process.py` validates an exact working directory and executable before
+optional descriptor-based TERM; inspection is the default.
+
 Tests: `tests/scripts/test_cfd_*_guards.py` assert on the TEXT of these
 scripts (a script that cannot run still reads correctly, so the guards pin
 the invariants); `tests/scripts/test_cfd_chain_lib.py` executes the library;
