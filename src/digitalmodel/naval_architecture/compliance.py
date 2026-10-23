@@ -1,9 +1,14 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Regulatory compliance engine — IMO/ABS/DNV automated checks
 # ABOUTME: Preliminary checks with explicit missing-data status
 """Legacy compliance screens with PASS, FAIL and NOT_EVALUATED results."""
 
 import math
+from dataclasses import dataclass, field
 from numbers import Real
+from typing import Literal, Sequence
 
 from digitalmodel.naval_architecture.damage_stability import (
     check_imo_intact_stability,
@@ -15,13 +20,96 @@ _POSITIVE_INPUTS = {
     "lwl_m", "beam_m", "draft_m", "depth_m", "prop_diameter_m",
     "displacement_tonnes", "min_ratio", "max_ratio", "max_trim_fraction",
 }
+CheckStatus = Literal["PASS", "FAIL", "NOT_EVALUATED"]
 
 
-def _not_evaluated(name, code, reason, unit=None) -> dict:
+@dataclass(frozen=True)
+class CheckResult:
+    """Typed evidence envelope; the legacy dictionary API uses ``to_dict``.
+
+    ``missing_inputs`` includes absent and invalid data. A null clause reference
+    explicitly records an unqualified legacy screen rather than inventing a
+    standard clause. PASS describes the screen only, not statutory approval.
+    """
+
+    name: str
+    code: str
+    status: CheckStatus
+    missing_inputs: tuple[str, ...] = ()
+    clause_reference: str | None = None
+    values: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.status not in ("PASS", "FAIL", "NOT_EVALUATED"):
+            raise ValueError("Invalid check status")
+        if self.missing_inputs and self.status != "NOT_EVALUATED":
+            raise ValueError("An evaluated check cannot have missing inputs")
+
+    def to_dict(self) -> dict:
+        """Serialize evidence using native status strings, lists and booleans."""
+        return {
+            **self.values,
+            "name": self.name, "code": self.code, "status": self.status,
+            "pass": self.status == "PASS",
+            "missing_inputs": list(self.missing_inputs),
+            "clause_reference": self.clause_reference,
+            "reference_status": "RECORDED" if self.clause_reference else "UNVERIFIED",
+        }
+
+    @classmethod
+    def from_dict(cls, row: dict) -> "CheckResult":
+        """Reconstruct a typed row and reject contradictory serialized status."""
+        if row["pass"] is not (row["status"] == "PASS"):
+            raise ValueError("Serialized pass flag contradicts status")
+        fields = {"name", "code", "status", "pass", "missing_inputs",
+                  "clause_reference", "reference_status"}
+        return cls(row["name"], row["code"], row["status"],
+                   tuple(row["missing_inputs"]), row["clause_reference"],
+                   {key: value for key, value in row.items() if key not in fields})
+
+
+@dataclass(frozen=True)
+class ComplianceResult:
+    """Typed aggregate; empty or incomplete evidence never has PASS status."""
+
+    checks: tuple[CheckResult, ...]
+
+    @property
+    def status(self) -> CheckStatus:
+        if any(row.status == "FAIL" for row in self.checks):
+            return "FAIL"
+        if not self.checks or any(row.status == "NOT_EVALUATED" for row in self.checks):
+            return "NOT_EVALUATED"
+        return "PASS"
+
+    def to_dict(self) -> dict:
+        """Expose the legacy report keys alongside structured missing evidence."""
+        return {
+            "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
+            "overall_pass": self.status == "PASS", "status": self.status,
+            "checks": [row.to_dict() for row in self.checks],
+            "total": len(self.checks),
+            "passed": sum(row.status == "PASS" for row in self.checks),
+            "failed": sum(row.status == "FAIL" for row in self.checks),
+            "not_evaluated": sum(row.status == "NOT_EVALUATED" for row in self.checks),
+            "missing_inputs": list(dict.fromkeys(
+                key for row in self.checks for key in row.missing_inputs
+            )) if self.checks else ["check_ids"],
+        }
+
+
+def _clause_reference(code: str) -> str | None:
+    # Source: damage_stability.py, MSC.267(85) (2008), Part A 2.2.
+    # Other legacy code labels lack a qualified clause: do not infer one.
+    return "MSC.267(85), 2008, Part A 2.2" if code == "IMO-IS-2008" else None
+
+
+def _not_evaluated(name, code, reason, unit=None, missing_inputs=()) -> dict:
     """Issue #2597: absence of evidence must never produce a passing check."""
-    return {"name": name, "code": code, "pass": False,
-            "status": "NOT_EVALUATED", "reason": reason,
-            "value": None, "required": None, "unit": unit}
+    return CheckResult(
+        name, code, "NOT_EVALUATED", tuple(missing_inputs), _clause_reference(code),
+        {"reason": reason, "value": None, "required": None, "unit": unit},
+    ).to_dict()
 
 
 def _finite(value) -> bool:
@@ -52,26 +140,31 @@ def _validate_inputs(name, code, unit=None, **inputs):
             invalid.append(key)
     if invalid:
         return _not_evaluated(
-            name, code, "Missing or invalid inputs: " + ", ".join(invalid), unit)
+            name, code, "Missing or invalid inputs: " + ", ".join(invalid), unit, invalid)
     if "min_ratio" in inputs and inputs["min_ratio"] > inputs["max_ratio"]:
-        return _not_evaluated(name, code, "min_ratio must not exceed max_ratio", unit)
+        return _not_evaluated(name, code, "min_ratio must not exceed max_ratio", unit,
+                              ("min_ratio", "max_ratio"))
     if "angles_deg" in inputs:
         angles, gz = inputs["angles_deg"], inputs["gz_m"]
         if (len(angles) != len(gz)
                 or any(b <= a for a, b in zip(angles, angles[1:]))):
             return _not_evaluated(
-                name, code, "angles_deg and gz_m require equal lengths and increasing angles")
+                name, code, "angles_deg and gz_m require equal lengths and increasing angles",
+                missing_inputs=("angles_deg", "gz_m"))
         if angles[0] != 0 or angles[-1] < 40:
             return _not_evaluated(
-                name, code, "angles_deg must start at 0 and cover at least 40 degrees")
+                name, code, "angles_deg must start at 0 and cover at least 40 degrees",
+                missing_inputs=("angles_deg",))
     return None
 
 
 def _evaluated(name, code, passed, **values) -> dict:
     """Return a consistent status and a native boolean for every public check."""
     passed = bool(passed)
-    return {"name": name, "code": code, "pass": passed,
-            "status": "PASS" if passed else "FAIL", **values}
+    return CheckResult(
+        name, code, "PASS" if passed else "FAIL",
+        clause_reference=_clause_reference(code), values=values,
+    ).to_dict()
 
 
 def check_imo_intact(angles_deg, gz_m, gm_m) -> dict:
@@ -184,7 +277,9 @@ def check_max_trim(trim_m, lwl_m, max_trim_fraction=0.015) -> dict:
                       value=round(abs(trim_m), 2), required=round(mx, 2), unit="m")
 
 
-def run_compliance_checks(vessel: dict) -> dict:
+def evaluate_compliance_checks(
+    vessel: dict, *, check_ids: Sequence[str] | None = None,
+) -> ComplianceResult:
     """Evaluate the complete check set, exposing missing or invalid inputs.
 
     Each check requires every named input; no geometry or measured strength is
@@ -193,40 +288,40 @@ def run_compliance_checks(vessel: dict) -> dict:
     is true only when every intended check was evaluated and passed. ``failed``
     excludes unevaluated checks, counted separately as ``not_evaluated``.
 
+    ``check_ids=None`` selects the complete legacy set. An explicit sequence
+    selects only those screens in that order; an empty sequence is
+    NOT_EVALUATED. Unknown or duplicate identifiers raise ValueError.
+
     IMO stability covers Part A 2.2 only, excluding the Part A 2.3 weather
     criterion. These are legacy preliminary screens; their approximate rule coefficients
     are unchanged and do not establish class or statutory compliance.
     """
-    specifications = (
-        (check_imo_intact, ("angles_deg", "gz_m", "gm_m")),
-        (check_min_freeboard, ("freeboard_m", "lwl_m")),
-        (check_beam_draft_ratio, ("beam_m", "draft_m")),
-        (check_length_beam_ratio, ("lwl_m", "beam_m")),
-        (check_draft_depth_ratio, ("draft_m", "depth_m")),
-        (check_displacement_lwl_ratio, ("displacement_tonnes", "lwl_m")),
-        (check_section_modulus, ("lwl_m", "beam_m", "draft_m", "cb", "actual_z_cm3")),
-        (check_propeller_immersion, ("draft_m", "prop_diameter_m")),
-        (check_max_trim, ("trim_m", "lwl_m")),
-    )
-    checks = [function(*(vessel.get(key) for key in keys))
-              for function, keys in specifications]
-
-    passed = sum(c["status"] == "PASS" for c in checks)
-    failed = sum(c["status"] == "FAIL" for c in checks)
-    not_evaluated = sum(c["status"] == "NOT_EVALUATED" for c in checks)
-    if failed:
-        status = "FAIL"
-    elif not checks or not_evaluated:
-        status = "NOT_EVALUATED"
-    else:
-        status = "PASS"
-    return {
-        "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
-        "overall_pass": status == "PASS",
-        "status": status,
-        "checks": checks,
-        "total": len(checks),
-        "passed": passed,
-        "failed": failed,
-        "not_evaluated": not_evaluated,
+    specifications = {
+        "imo_intact": (check_imo_intact, ("angles_deg", "gz_m", "gm_m")),
+        "min_freeboard": (check_min_freeboard, ("freeboard_m", "lwl_m")),
+        "beam_draft_ratio": (check_beam_draft_ratio, ("beam_m", "draft_m")),
+        "length_beam_ratio": (check_length_beam_ratio, ("lwl_m", "beam_m")),
+        "draft_depth_ratio": (check_draft_depth_ratio, ("draft_m", "depth_m")),
+        "displacement_lwl_ratio": (check_displacement_lwl_ratio,
+                                    ("displacement_tonnes", "lwl_m")),
+        "section_modulus": (check_section_modulus,
+                             ("lwl_m", "beam_m", "draft_m", "cb", "actual_z_cm3")),
+        "propeller_immersion": (check_propeller_immersion, ("draft_m", "prop_diameter_m")),
+        "max_trim": (check_max_trim, ("trim_m", "lwl_m")),
     }
+    selected = list(specifications) if check_ids is None else list(check_ids)
+    if len(set(selected)) != len(selected):
+        raise ValueError("Duplicate compliance check identifiers")
+    if any(key not in specifications for key in selected):
+        raise ValueError("Unknown compliance check identifier")
+    checks = []
+    for key in selected:
+        function, keys = specifications[key]
+        row = function(*(vessel.get(name) for name in keys))
+        checks.append(CheckResult.from_dict({**row, "check_id": key}))
+    return ComplianceResult(tuple(checks))
+
+
+def run_compliance_checks(vessel: dict, *, check_ids: Sequence[str] | None = None) -> dict:
+    """Serialize :func:`evaluate_compliance_checks` with legacy dictionary keys."""
+    return evaluate_compliance_checks(vessel, check_ids=check_ids).to_dict()

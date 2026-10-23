@@ -1,0 +1,11 @@
+{
+  "document": "naval-architecture-evidence-analysis",
+  "revision": 1,
+  "history": [
+    {
+      "revision": 1,
+      "date": "2026-10-22",
+      "change": "Record explicit missing evidence, empty selections and uncapped response for issue #2597."
+    }
+  ]
+}

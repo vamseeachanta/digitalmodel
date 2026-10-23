@@ -1,0 +1,2229 @@
+{
+  "basis": {
+    "kind": "synthetic arithmetic",
+    "equation_source": "https://eng.libretexts.org/@go/page/55503",
+    "equation_edition": "2021",
+    "equation_section": "15.5"
+  },
+  "partial": {
+    "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
+    "overall_pass": false,
+    "status": "NOT_EVALUATED",
+    "checks": [
+      {
+        "reason": "Missing or invalid inputs: angles_deg, gz_m, gm_m",
+        "value": null,
+        "required": null,
+        "unit": null,
+        "check_id": "imo_intact",
+        "name": "IMO Intact Stability (Part A 2.2, 6 criteria)",
+        "code": "IMO-IS-2008",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "angles_deg",
+          "gz_m",
+          "gm_m"
+        ],
+        "clause_reference": "MSC.267(85), 2008, Part A 2.2",
+        "reference_status": "RECORDED"
+      },
+      {
+        "reason": "Missing or invalid inputs: freeboard_m, lwl_m",
+        "value": null,
+        "required": null,
+        "unit": "m",
+        "check_id": "min_freeboard",
+        "name": "Minimum freeboard (Type B)",
+        "code": "ICLL-1966",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "freeboard_m",
+          "lwl_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: beam_m",
+        "value": null,
+        "required": null,
+        "unit": "dimensionless",
+        "check_id": "beam_draft_ratio",
+        "name": "Beam/draft ratio",
+        "code": "DNV-RU-SHIP",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "beam_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: lwl_m, beam_m",
+        "value": null,
+        "required": null,
+        "unit": "dimensionless",
+        "check_id": "length_beam_ratio",
+        "name": "Length/beam ratio",
+        "code": "DNV-RU-SHIP",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "lwl_m",
+          "beam_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "value": 0.7,
+        "required": "\u22640.85",
+        "unit": "dimensionless",
+        "check_id": "draft_depth_ratio",
+        "name": "Draft/depth ratio",
+        "code": "DNV-RU-SHIP",
+        "status": "PASS",
+        "pass": true,
+        "missing_inputs": [],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: displacement_tonnes, lwl_m",
+        "value": null,
+        "required": null,
+        "unit": "tonnes/((0.01\u00b7L)\u00b3)",
+        "check_id": "displacement_lwl_ratio",
+        "name": "Displacement/length ratio",
+        "code": "GENERAL",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "displacement_tonnes",
+          "lwl_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: lwl_m, beam_m, cb, actual_z_cm3",
+        "value": null,
+        "required": null,
+        "unit": "cm\u00b3",
+        "check_id": "section_modulus",
+        "name": "Hull girder section modulus",
+        "code": "ABS-SVR",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "lwl_m",
+          "beam_m",
+          "cb",
+          "actual_z_cm3"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: prop_diameter_m",
+        "value": null,
+        "required": null,
+        "unit": "m",
+        "check_id": "propeller_immersion",
+        "name": "Propeller tip immersion",
+        "code": "DNV-RU-SHIP",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "prop_diameter_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      },
+      {
+        "reason": "Missing or invalid inputs: trim_m, lwl_m",
+        "value": null,
+        "required": null,
+        "unit": "m",
+        "check_id": "max_trim",
+        "name": "Maximum trim",
+        "code": "GENERAL",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "trim_m",
+          "lwl_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      }
+    ],
+    "total": 9,
+    "passed": 1,
+    "failed": 0,
+    "not_evaluated": 8,
+    "missing_inputs": [
+      "angles_deg",
+      "gz_m",
+      "gm_m",
+      "freeboard_m",
+      "lwl_m",
+      "beam_m",
+      "displacement_tonnes",
+      "cb",
+      "actual_z_cm3",
+      "prop_diameter_m",
+      "trim_m"
+    ]
+  },
+  "empty_selection": {
+    "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
+    "overall_pass": false,
+    "status": "NOT_EVALUATED",
+    "checks": [],
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "not_evaluated": 0,
+    "missing_inputs": [
+      "check_ids"
+    ]
+  },
+  "missing_depth": {
+    "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
+    "overall_pass": false,
+    "status": "NOT_EVALUATED",
+    "checks": [
+      {
+        "reason": "Missing or invalid inputs: depth_m",
+        "value": null,
+        "required": null,
+        "unit": "dimensionless",
+        "check_id": "draft_depth_ratio",
+        "name": "Draft/depth ratio",
+        "code": "DNV-RU-SHIP",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "depth_m"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      }
+    ],
+    "total": 1,
+    "passed": 0,
+    "failed": 0,
+    "not_evaluated": 1,
+    "missing_inputs": [
+      "depth_m"
+    ]
+  },
+  "missing_modulus": {
+    "name": "Preliminary compliance screens (IMO Part A 2.2 only)",
+    "overall_pass": false,
+    "status": "NOT_EVALUATED",
+    "checks": [
+      {
+        "reason": "Missing or invalid inputs: actual_z_cm3",
+        "value": null,
+        "required": null,
+        "unit": "cm\u00b3",
+        "check_id": "section_modulus",
+        "name": "Hull girder section modulus",
+        "code": "ABS-SVR",
+        "status": "NOT_EVALUATED",
+        "pass": false,
+        "missing_inputs": [
+          "actual_z_cm3"
+        ],
+        "clause_reference": null,
+        "reference_status": "UNVERIFIED"
+      }
+    ],
+    "total": 1,
+    "passed": 0,
+    "failed": 0,
+    "not_evaluated": 1,
+    "missing_inputs": [
+      "actual_z_cm3"
+    ]
+  },
+  "oscillator": [
+    {
+      "r": 0.5,
+      "damping": 0.0,
+      "value": 1.3333333333333333,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.5,
+      "damping": 0.05,
+      "value": 1.3303802104754785,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.0,
+      "damping": 0.05,
+      "value": 10.0,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.0,
+      "damping": 0.0,
+      "value": null,
+      "status": "UNBOUNDED"
+    }
+  ],
+  "curves": [
+    {
+      "r": 0.0,
+      "damping": 0.0,
+      "value": 1.0,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.025,
+      "damping": 0.0,
+      "value": 1.0006253908692933,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.05,
+      "damping": 0.0,
+      "value": 1.0025062656641603,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.075,
+      "damping": 0.0,
+      "value": 1.005656819610308,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.1,
+      "damping": 0.0,
+      "value": 1.0101010101010102,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.125,
+      "damping": 0.0,
+      "value": 1.0158730158730158,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.15,
+      "damping": 0.0,
+      "value": 1.0230179028132993,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.175,
+      "damping": 0.0,
+      "value": 1.0315925209542232,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.2,
+      "damping": 0.0,
+      "value": 1.0416666666666667,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.225,
+      "damping": 0.0,
+      "value": 1.0533245556287032,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.25,
+      "damping": 0.0,
+      "value": 1.0666666666666667,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.275,
+      "damping": 0.0,
+      "value": 1.0818120351588911,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.3,
+      "damping": 0.0,
+      "value": 1.0989010989010988,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.325,
+      "damping": 0.0,
+      "value": 1.1180992313067784,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.35,
+      "damping": 0.0,
+      "value": 1.1396011396011396,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.375,
+      "damping": 0.0,
+      "value": 1.1636363636363636,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.4,
+      "damping": 0.0,
+      "value": 1.1904761904761905,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.425,
+      "damping": 0.0,
+      "value": 1.2204424103737606,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.45,
+      "damping": 0.0,
+      "value": 1.2539184952978057,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.475,
+      "damping": 0.0,
+      "value": 1.29136400322841,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.5,
+      "damping": 0.0,
+      "value": 1.3333333333333333,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.525,
+      "damping": 0.0,
+      "value": 1.380500431406385,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.55,
+      "damping": 0.0,
+      "value": 1.4336917562724014,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.575,
+      "damping": 0.0,
+      "value": 1.4939309056956114,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.6,
+      "damping": 0.0,
+      "value": 1.5625,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.625,
+      "damping": 0.0,
+      "value": 1.641025641025641,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.65,
+      "damping": 0.0,
+      "value": 1.7316017316017318,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.675,
+      "damping": 0.0,
+      "value": 1.836969001148106,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.7,
+      "damping": 0.0,
+      "value": 1.9607843137254901,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.725,
+      "damping": 0.0,
+      "value": 2.1080368906455864,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.75,
+      "damping": 0.0,
+      "value": 2.2857142857142856,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.775,
+      "damping": 0.0,
+      "value": 2.5039123630672933,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.8,
+      "damping": 0.0,
+      "value": 2.7777777777777786,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.825,
+      "damping": 0.0,
+      "value": 3.1311154598825826,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.85,
+      "damping": 0.0,
+      "value": 3.6036036036036028,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.875,
+      "damping": 0.0,
+      "value": 4.266666666666667,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.9,
+      "damping": 0.0,
+      "value": 5.263157894736843,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.925,
+      "damping": 0.0,
+      "value": 6.92640692640693,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.95,
+      "damping": 0.0,
+      "value": 10.256410256410254,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.975,
+      "damping": 0.0,
+      "value": 20.253164556962002,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.0,
+      "damping": 0.0,
+      "value": null,
+      "status": "UNBOUNDED"
+    },
+    {
+      "r": 1.025,
+      "damping": 0.0,
+      "value": 19.753086419753117,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.05,
+      "damping": 0.0,
+      "value": 9.756097560975606,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.075,
+      "damping": 0.0,
+      "value": 6.425702811244984,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.1,
+      "damping": 0.0,
+      "value": 4.761904761904757,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.125,
+      "damping": 0.0,
+      "value": 3.764705882352941,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.15,
+      "damping": 0.0,
+      "value": 3.1007751937984516,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.175,
+      "damping": 0.0,
+      "value": 2.6272577996715913,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.2,
+      "damping": 0.0,
+      "value": 2.272727272727273,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.225,
+      "damping": 0.0,
+      "value": 1.9975031210986254,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.25,
+      "damping": 0.0,
+      "value": 1.7777777777777777,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.275,
+      "damping": 0.0,
+      "value": 1.5984015984015987,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.3,
+      "damping": 0.0,
+      "value": 1.4492753623188401,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.325,
+      "damping": 0.0,
+      "value": 1.3234077750206783,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.35,
+      "damping": 0.0,
+      "value": 1.2158054711246198,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.375,
+      "damping": 0.0,
+      "value": 1.1228070175438596,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.4,
+      "damping": 0.0,
+      "value": 1.041666666666667,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.425,
+      "damping": 0.0,
+      "value": 0.9702850212249847,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.45,
+      "damping": 0.0,
+      "value": 0.9070294784580498,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.475,
+      "damping": 0.0,
+      "value": 0.8506113769271663,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.5,
+      "damping": 0.0,
+      "value": 0.8,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.525,
+      "damping": 0.0,
+      "value": 0.7543611504007546,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.55,
+      "damping": 0.0,
+      "value": 0.71301247771836,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.575,
+      "damping": 0.0,
+      "value": 0.675390460109751,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.6,
+      "damping": 0.0,
+      "value": 0.6410256410256409,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.625,
+      "damping": 0.0,
+      "value": 0.6095238095238096,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.65,
+      "damping": 0.0,
+      "value": 0.5805515239477504,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.675,
+      "damping": 0.0,
+      "value": 0.5538248528902734,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.7,
+      "damping": 0.0,
+      "value": 0.5291005291005292,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.725,
+      "damping": 0.0,
+      "value": 0.5061689338816829,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.75,
+      "damping": 0.0,
+      "value": 0.48484848484848486,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.775,
+      "damping": 0.0,
+      "value": 0.4649811101424005,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.8,
+      "damping": 0.0,
+      "value": 0.4464285714285714,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.825,
+      "damping": 0.0,
+      "value": 0.4290694556181282,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.85,
+      "damping": 0.0,
+      "value": 0.4127966976264189,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.875,
+      "damping": 0.0,
+      "value": 0.39751552795031053,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.9,
+      "damping": 0.0,
+      "value": 0.3831417624521073,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.925,
+      "damping": 0.0,
+      "value": 0.36960036960036957,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.95,
+      "damping": 0.0,
+      "value": 0.35682426404995543,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.975,
+      "damping": 0.0,
+      "value": 0.3447532859297565,
+      "status": "FINITE"
+    },
+    {
+      "r": 2.0,
+      "damping": 0.0,
+      "value": 0.3333333333333333,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.0,
+      "damping": 0.05,
+      "value": 1.0,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.025,
+      "damping": 0.05,
+      "value": 1.0006222600172807,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.05,
+      "damping": 0.05,
+      "value": 1.0024936716807717,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.075,
+      "damping": 0.05,
+      "value": 1.0056282158315024,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.1,
+      "damping": 0.05,
+      "value": 1.0100494835363274,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.125,
+      "damping": 0.05,
+      "value": 1.0157911211750685,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.15,
+      "damping": 0.05,
+      "value": 1.0228974753515938,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.175,
+      "damping": 0.05,
+      "value": 1.0314244608928989,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.2,
+      "damping": 0.05,
+      "value": 1.0414406840917836,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.225,
+      "damping": 0.05,
+      "value": 1.0530288641814567,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.25,
+      "damping": 0.05,
+      "value": 1.0662876095592222,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.275,
+      "damping": 0.05,
+      "value": 1.0813336225086405,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.3,
+      "damping": 0.05,
+      "value": 1.0983044284767225,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.325,
+      "damping": 0.05,
+      "value": 1.117361755242075,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.35,
+      "damping": 0.05,
+      "value": 1.1386957262234436,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.375,
+      "damping": 0.05,
+      "value": 1.1625300845094004,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.4,
+      "damping": 0.05,
+      "value": 1.1891287353862352,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.425,
+      "damping": 0.05,
+      "value": 1.2188039931472125,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.45,
+      "damping": 0.05,
+      "value": 1.2519270545265457,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.475,
+      "damping": 0.05,
+      "value": 1.2889414138244326,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.5,
+      "damping": 0.05,
+      "value": 1.3303802104754785,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.525,
+      "damping": 0.05,
+      "value": 1.376888899908887,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.55,
+      "damping": 0.05,
+      "value": 1.42925522825729,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.575,
+      "damping": 0.05,
+      "value": 1.488449375256716,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.6,
+      "damping": 0.05,
+      "value": 1.5556784782176376,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.625,
+      "damping": 0.05,
+      "value": 1.6324618479771114,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.65,
+      "damping": 0.05,
+      "value": 1.720736521008411,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.675,
+      "damping": 0.05,
+      "value": 1.823008208773426,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.7,
+      "damping": 0.05,
+      "value": 1.9425717247145284,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.725,
+      "damping": 0.05,
+      "value": 2.0838403786201614,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.75,
+      "damping": 0.05,
+      "value": 2.2528508681446096,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.775,
+      "damping": 0.05,
+      "value": 2.45805891658176,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.8,
+      "damping": 0.05,
+      "value": 2.711630722733203,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.825,
+      "damping": 0.05,
+      "value": 3.0316027971906117,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.85,
+      "damping": 0.05,
+      "value": 3.4455882452372544,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.875,
+      "damping": 0.05,
+      "value": 3.997190462836723,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.9,
+      "damping": 0.05,
+      "value": 4.756514941544942,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.925,
+      "damping": 0.05,
+      "value": 5.8320796911748785,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.95,
+      "damping": 0.05,
+      "value": 7.345944493793985,
+      "status": "FINITE"
+    },
+    {
+      "r": 0.975,
+      "damping": 0.05,
+      "value": 9.150030590998135,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.0,
+      "damping": 0.05,
+      "value": 10.0,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.025,
+      "damping": 0.05,
+      "value": 8.747349608629953,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.05,
+      "damping": 0.05,
+      "value": 6.814992436959853,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.075,
+      "damping": 0.05,
+      "value": 5.286981707420866,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.1,
+      "damping": 0.05,
+      "value": 4.218245406095975,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.125,
+      "damping": 0.05,
+      "value": 3.466607686690399,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.15,
+      "damping": 0.05,
+      "value": 2.9206418377590806,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.175,
+      "damping": 0.05,
+      "value": 2.5103637729193724,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.2,
+      "damping": 0.05,
+      "value": 2.1926450482675732,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.225,
+      "damping": 0.05,
+      "value": 1.9402607471829039,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.25,
+      "damping": 0.05,
+      "value": 1.7354436625492493,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.275,
+      "damping": 0.05,
+      "value": 1.56620789986077,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.3,
+      "damping": 0.05,
+      "value": 1.4242182297397123,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.325,
+      "damping": 0.05,
+      "value": 1.303519096272968,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.35,
+      "damping": 0.05,
+      "value": 1.1997522767296422,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.375,
+      "damping": 0.05,
+      "value": 1.1096604996149366,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.4,
+      "damping": 0.05,
+      "value": 1.0307635219409186,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.425,
+      "damping": 0.05,
+      "value": 0.961141263909097,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.45,
+      "damping": 0.05,
+      "value": 0.899285211814544,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.475,
+      "damping": 0.05,
+      "value": 0.8439944415315739,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.5,
+      "damping": 0.05,
+      "value": 0.7943014707895376,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.525,
+      "damping": 0.05,
+      "value": 0.7494184657603628,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.55,
+      "damping": 0.05,
+      "value": 0.7086975995459671,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.575,
+      "damping": 0.05,
+      "value": 0.6716014200761549,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.6,
+      "damping": 0.05,
+      "value": 0.637680409366059,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.625,
+      "damping": 0.05,
+      "value": 0.6065557843724135,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.65,
+      "damping": 0.05,
+      "value": 0.5779061692579127,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.675,
+      "damping": 0.05,
+      "value": 0.5514571622122042,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.7,
+      "damping": 0.05,
+      "value": 0.5269730910696191,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.725,
+      "damping": 0.05,
+      "value": 0.504250441489964,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.75,
+      "damping": 0.05,
+      "value": 0.4831125757421679,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.775,
+      "damping": 0.05,
+      "value": 0.4634054564431404,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.8,
+      "damping": 0.05,
+      "value": 0.4449941594899848,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.825,
+      "damping": 0.05,
+      "value": 0.4277600116840804,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.85,
+      "damping": 0.05,
+      "value": 0.41159822652646355,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.875,
+      "damping": 0.05,
+      "value": 0.39641594007380687,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.9,
+      "damping": 0.05,
+      "value": 0.3821305701853631,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.925,
+      "damping": 0.05,
+      "value": 0.3686684388093873,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.95,
+      "damping": 0.05,
+      "value": 0.35596360947555106,
+      "status": "FINITE"
+    },
+    {
+      "r": 1.975,
+      "damping": 0.05,
+      "value": 0.3439569018348071,
+      "status": "FINITE"
+    },
+    {
+      "r": 2.0,
+      "damping": 0.05,
+      "value": 0.3325950526188696,
+      "status": "FINITE"
+    }
+  ],
+  "sweep": [
+    {
+      "path": "src/digitalmodel/naval_architecture/appendage_submergence.py",
+      "line": 199,
+      "function": "_area_submerged",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/appendage_submergence.py",
+      "line": 201,
+      "function": "_area_submerged",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 808,
+      "function": "_rhino_bbox",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 861,
+      "function": "tessellate_3dm",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 871,
+      "function": "tessellate_3dm",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 872,
+      "function": "tessellate_3dm",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 882,
+      "function": "tessellate_3dm",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/brep_tessellate.py",
+      "line": 919,
+      "function": "tessellate_3dm",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/compliance.py",
+      "line": 130,
+      "function": "_validate_inputs",
+      "kind": "all",
+      "disposition": "GUARDED: curve length validated before finite-value reduction"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/curves_of_form.py",
+      "line": 33,
+      "function": "displacement_at_draft",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/curves_of_form.py",
+      "line": 34,
+      "function": "displacement_at_draft",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/damage_stability.py",
+      "line": 147,
+      "function": "check_imo_intact_stability",
+      "kind": "all",
+      "disposition": "FIXED_SET: six criteria constructed before reduction"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/damage_stability_screening.py",
+      "line": 469,
+      "function": "__post_init__",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/damage_stability_screening.py",
+      "line": 508,
+      "function": "passed",
+      "kind": "all",
+      "disposition": "GUARDED: empty result collections cannot pass"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/gyradius.py",
+      "line": 275,
+      "function": "gyradius_for_fleet_vessel",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/gyradius.py",
+      "line": 276,
+      "function": "gyradius_for_fleet_vessel",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_fixtures.py",
+      "line": 117,
+      "function": "centre_only",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_form.py",
+      "line": 158,
+      "function": "validate_drilling_rig_hull_form",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_form.py",
+      "line": 229,
+      "function": "summarize_drilling_rig_hull_validation",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_girder_screening.py",
+      "line": 928,
+      "function": "section_modulus_screen",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 849,
+      "function": "_meshes_of",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 857,
+      "function": "_meshes_of",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 862,
+      "function": "_meshes_of",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 935,
+      "function": "read_3dm_triangles",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 947,
+      "function": "read_3dm_triangles",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 948,
+      "function": "read_3dm_triangles",
+      "kind": "broad_handler",
+      "disposition": "FOLLOW_UP: geometry metadata or partial-reader fallback; qualify omitted geometry and units"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_ingest.py",
+      "line": 959,
+      "function": "read_3dm_triangles",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_properties.py",
+      "line": 191,
+      "function": "hull_weight_groups",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/kcs_geometry.py",
+      "line": 344,
+      "function": "orient_consistently",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/kcs_geometry.py",
+      "line": 640,
+      "function": "build_kcs_surface",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/knowledge.py",
+      "line": 147,
+      "function": "_search_examples",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 516,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 522,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 523,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 526,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 531,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 540,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 545,
+      "function": "run_loading_computer",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 566,
+      "function": "_write_summary",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 568,
+      "function": "_write_summary",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 570,
+      "function": "_write_summary",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/loading_computer.py",
+      "line": 590,
+      "function": "router",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 139,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 162,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 165,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 183,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 190,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 198,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 207,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 209,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 210,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py",
+      "line": 213,
+      "function": "validate_maneuvering_envelope_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_clipping.py",
+      "line": 35,
+      "function": "_clip_keep_below",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_clipping.py",
+      "line": 36,
+      "function": "_clip_keep_below",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_clipping.py",
+      "line": 37,
+      "function": "_clip_keep_below",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_hydrostatics.py",
+      "line": 133,
+      "function": "_grid_inputs",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_hydrostatics.py",
+      "line": 133,
+      "function": "_grid_inputs",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_topology.py",
+      "line": 88,
+      "function": "_check_components",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_validation.py",
+      "line": 99,
+      "function": "_validate_arrays",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/prohaska.py",
+      "line": 90,
+      "function": "_validated_inputs",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/prohaska.py",
+      "line": 90,
+      "function": "_validated_inputs",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/prohaska.py",
+      "line": 90,
+      "function": "_validated_inputs",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/region_report.py",
+      "line": 117,
+      "function": "_region_dict",
+      "kind": "mapping_default",
+      "disposition": "GUARDED: absent cut evidence produces NOT_EVALUATED note"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 285,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 290,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 291,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 292,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 293,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 297,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 306,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 307,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 314,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 321,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 324,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 327,
+      "function": "validate_rudder_stock_torque_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 429,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 429,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 429,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 432,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 432,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 432,
+      "function": "write_rudder_stock_torque_results",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/rudder_stock_torque.py",
+      "line": 471,
+      "function": "write_rudder_stock_torque_charts",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/ship_data.py",
+      "line": 243,
+      "function": "normalize_drilling_rig_record",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/ship_dimensions.py",
+      "line": 79,
+      "function": "load_dimension_template",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/ship_dimensions.py",
+      "line": 178,
+      "function": "_resolve_hull_id",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/solid_occlusion.py",
+      "line": 140,
+      "function": "bbox_contains",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/solid_occlusion.py",
+      "line": 304,
+      "function": "_may_touch",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/solid_occlusion.py",
+      "line": 358,
+      "function": "_split_triangle",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/symmetry_cut.py",
+      "line": 150,
+      "function": "_clip",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/symmetry_cut.py",
+      "line": 152,
+      "function": "_clip",
+      "kind": "all",
+      "disposition": "STRUCTURAL: geometry or input validation; not a compliance verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/symmetry_cut.py",
+      "line": 283,
+      "function": "ok",
+      "kind": "all",
+      "disposition": "GUARDED: empty result collections cannot pass"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 310,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 311,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 312,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 313,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 317,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 322,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 336,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 340,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 341,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 349,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 352,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 355,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle.py",
+      "line": 357,
+      "function": "validate_turning_circle_input",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 105,
+      "function": "write_turning_circle_results",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 105,
+      "function": "write_turning_circle_results",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 106,
+      "function": "write_turning_circle_results",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 115,
+      "function": "write_turning_circle_results",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 149,
+      "function": "_write_json_table",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/turning_circle_artifacts.py",
+      "line": 173,
+      "function": "write_turning_circle_charts",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/vessel_stability_screening.py",
+      "line": 714,
+      "function": "passed",
+      "kind": "all",
+      "disposition": "GUARDED: empty result collections cannot pass"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow.py",
+      "line": 31,
+      "function": "_resolve_dir",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow.py",
+      "line": 71,
+      "function": "router",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow.py",
+      "line": 217,
+      "function": "_store_result",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow.py",
+      "line": 217,
+      "function": "_store_result",
+      "kind": "mapping_default",
+      "disposition": "REVIEWED: lookup, counter, optional metadata or output control; no direct success verdict"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow_calculations.py",
+      "line": 127,
+      "function": "_hull_form_coefficients",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow_calculations.py",
+      "line": 142,
+      "function": "_holtrop_resistance",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/workflow_calculations.py",
+      "line": 143,
+      "function": "_holtrop_resistance",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: qualify physical assumptions separately from output and sampling defaults"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 245,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 249,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 266,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 271,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 272,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 273,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 277,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 286,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 287,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 293,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/yaw_moment.py",
+      "line": 304,
+      "function": "validate_yaw_moment_input",
+      "kind": "mapping_default",
+      "disposition": "FOLLOW_UP: distinguish declared hull context from optional artifact settings"
+    }
+  ],
+  "source_digests": {
+    "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
+    "src/digitalmodel/naval_architecture/appendage_submergence.py": "6b32a7b86da2b5d49bbff03c09ed76e84ecb579a91fd8bd19f13a5706eae3581",
+    "src/digitalmodel/naval_architecture/brep_tessellate.py": "9e38346cfc275c4dba28fd147d62d9d5ebe8562e3507185d3ad2f0804601e504",
+    "src/digitalmodel/naval_architecture/compliance.py": "25558f38e4595129d4119474e54e90341961bcf75e3a245abf28ae43b1a6a590",
+    "src/digitalmodel/naval_architecture/constants.py": "02bfd5dda2e8dc0e257a966747022c37a9057f9dd53017c04b20621f676f1afc",
+    "src/digitalmodel/naval_architecture/curves_of_form.py": "a2c739a7b2b9bba018ccf788d1b7ba2861e46c77fafd40ae0a31ac343ac5a4b4",
+    "src/digitalmodel/naval_architecture/damage_stability.py": "43eafddd08e651605198b4fb853c6f6c4d39e98ac9cc439792dbca1c93d08410",
+    "src/digitalmodel/naval_architecture/damage_stability_screening.py": "236a6310081fa2384889b3104bb3110eb382539489d75caed2cc811e5e91b44e",
+    "src/digitalmodel/naval_architecture/data/__init__.py": "cd979982be80e4b5eaa17984e41cc64a93a359f8dd6e89fd4dc466bebc059df8",
+    "src/digitalmodel/naval_architecture/depth_validity.py": "d7275247d33831b0c4114d4a87f62d0dcd82f41739ce36bc6c7ab4ceb9fc0e9c",
+    "src/digitalmodel/naval_architecture/floating_platform_stability.py": "d0bdc7e865864e9f132f697c85a00e682c29de7c36ce052748d2bdaad6058658",
+    "src/digitalmodel/naval_architecture/friction_scaling.py": "206f74f00f5cb93e3f9cee8b8c56d61d9935967b94eb0abf598e203c2aa3b3fa",
+    "src/digitalmodel/naval_architecture/fundamentals.py": "5a5366882d0ca162d1e5d8d35e56f7f537ed61342975ef055f44633ac06525cc",
+    "src/digitalmodel/naval_architecture/gyradius.py": "a6648498ed40e74b647fd10db067f91212f03b88ae43ce41df5b1f0de03d05ba",
+    "src/digitalmodel/naval_architecture/holtrop_coefficients.py": "7be63f297c6e42996adf23cabfa71aaaebd5c63feda629bfba7ccfd21fa4fc4c",
+    "src/digitalmodel/naval_architecture/holtrop_mennen.py": "e24a22120fb9ac2660dfecba8e49d1fa9a6cef6c7f805fe5f1e3da407a40aa77",
+    "src/digitalmodel/naval_architecture/hull_cap.py": "1be4b6aa55fa9389279ce8c05439eb8a1c152d2f35d953c9adf0074b05752fdc",
+    "src/digitalmodel/naval_architecture/hull_fixtures.py": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+    "src/digitalmodel/naval_architecture/hull_form.py": "ed5ad85bc88a30b329c62f45be6970f3255b5848843771315c61e2035fd595de",
+    "src/digitalmodel/naval_architecture/hull_girder_screening.py": "6e6526f0880a7abf97e5717984f60dcebde70c7e9ab3ea37ac02da9317e5d04b",
+    "src/digitalmodel/naval_architecture/hull_girder_smith.py": "c8cb9c53574c0299193e8d40ee6477dab3cd891b64ed29d20b9d4615850778b5",
+    "src/digitalmodel/naval_architecture/hull_girder_strength.py": "4ea47451d661e48f90d9a7d853714de176e051e0e01f8635ba96499f3986793e",
+    "src/digitalmodel/naval_architecture/hull_ingest.py": "0be9bc554f30f88f96889f9db35fb38aa149d429001de707620a80c09b66ec24",
+    "src/digitalmodel/naval_architecture/hull_properties.py": "0942721baa4edc3d9a6ad475854308f5f504e4ead6b99624e37cfaf13f5f890a",
+    "src/digitalmodel/naval_architecture/hull_regions.py": "3bc03332e93e4015aeb4ef9d8805d0b1deb1ba99d17da24a4008744b0d24f605",
+    "src/digitalmodel/naval_architecture/hydrostatics.py": "84ab1cdc9cba7f25ba88df846f3b9929f8b9300a7abd034007abc2fdd753aa6b",
+    "src/digitalmodel/naval_architecture/integration.py": "ffcebc41d2f048e7e374735518de12ce67b579036a4133aa6a81ca080fc77862",
+    "src/digitalmodel/naval_architecture/kcs_geometry.py": "ef64dd91539b4a4c0b4884eb295d868bce104952fe0a059e6ac5063005f318a5",
+    "src/digitalmodel/naval_architecture/knowledge.py": "55ab5abcfe8e009e042be18ac648d043968fb970e37735bed868a3df3ed1ecc8",
+    "src/digitalmodel/naval_architecture/loading_computer.py": "a44cec40d36d870cda8e7ef1efed00bb00d2aa9fd32ec4428b120b23c899a3fb",
+    "src/digitalmodel/naval_architecture/maneuverability.py": "2d7043d28a7864e2696ddfaa884de0fa8cece9c13decb91978138172d49a2f6f",
+    "src/digitalmodel/naval_architecture/maneuvering_envelope.py": "f83a27817d1c6ecd99443de142518b75486611017bf8ebf2f1365903537762c1",
+    "src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py": "3b149ea93f7353bc930e6091fe7bd1515c69ec67d1ca889ba2e80ff649c38167",
+    "src/digitalmodel/naval_architecture/mesh_clipping.py": "a176d01ecd176184558ebed3364e03d8301f0c74ca1c48df0b768dacc3078902",
+    "src/digitalmodel/naval_architecture/mesh_geometry.py": "3a7f0676a8749723d8b99a1c864fee87d650eff45808460f49431270c2365783",
+    "src/digitalmodel/naval_architecture/mesh_hydrostatics.py": "a157e7c61b38889622de302a94aa391f67399b558d1fbb205c78969b01625aa7",
+    "src/digitalmodel/naval_architecture/mesh_results.py": "758311c7d3f5f5a653a6f18b93298ea8cbf4b87d3b25152cbd16eec019e125c6",
+    "src/digitalmodel/naval_architecture/mesh_sections.py": "9fa9e20563e06c1398a7bdd8f3e56198feadeaaf18bdcd959bb5a42303d47893",
+    "src/digitalmodel/naval_architecture/mesh_topology.py": "d54bf4712ada0dc6ebdc339f700b898c130b1e28ef8cef02addb092bec96dc08",
+    "src/digitalmodel/naval_architecture/mesh_validation.py": "885d88f96be708fe94b290ae703917ed03d4c5502e823da0f4a6b7be13e61e6b",
+    "src/digitalmodel/naval_architecture/prohaska.py": "81f18905fca58ef612f581069d039d084c1ecd8266bac7ee46e9e1c9d10a9d09",
+    "src/digitalmodel/naval_architecture/propeller.py": "b096ae0833d7a45644b3745cabbbc4a0743a2db715f6c05ade0e19273e31b3bf",
+    "src/digitalmodel/naval_architecture/region_report.py": "4c671a8c2d7a6cd04834bcb0130dfd772a912477e1bac0f17fa36e657c3492c3",
+    "src/digitalmodel/naval_architecture/resistance.py": "9c95175da33277e07fb0bdd7ed6ab91c7dc11cce6068d6d0f8e2d2845dc049fe",
+    "src/digitalmodel/naval_architecture/rudder_stock_torque.py": "5e8a84256cf095bf4ab5cd52c7b33d74e639674f36affe37f1260c994393e597",
+    "src/digitalmodel/naval_architecture/scantlings.py": "a138325225b50a1139813696718155c741cc8a8261035b631935c3d4f477b304",
+    "src/digitalmodel/naval_architecture/seakeeping.py": "b464d04ae9e14b9f60bb13b855586308dd453c77207a5bf36ef4dcaf756ef00f",
+    "src/digitalmodel/naval_architecture/ship_data.py": "57d77bc732205f0fab894e1b48d2d067e3569b66f0ff1cd48a66c3680f4a5a78",
+    "src/digitalmodel/naval_architecture/ship_dimensions.py": "acdfe1ef6c68ed6c45a34f4d87e332a4f617e2f4a8ce788c46ba0ff82dc6b29d",
+    "src/digitalmodel/naval_architecture/solid_occlusion.py": "cbfd56fcd433b2278e977ad8d8a9c37df1cf2e3a59f7ab53d223ba5c6800eb9c",
+    "src/digitalmodel/naval_architecture/stability.py": "6f1b8bd3b239602350c295af9fb23995b1b31872cd2850132aba7369d76fe75f",
+    "src/digitalmodel/naval_architecture/submarines.py": "bf1ef87357b0d2a634dda9fcaec56dad3892d6a88d0c2ccfc060d0016295a16f",
+    "src/digitalmodel/naval_architecture/symmetry_cut.py": "a328824aef3d3dee9675eaaae1e9681c6decca232ce82c80b3b9246a6ed8448d",
+    "src/digitalmodel/naval_architecture/tank_gauging/__init__.py": "281fd5a825cf0f584aa8cbc89abde2f108f2a75a575bb9c4cca7998c824420c7",
+    "src/digitalmodel/naval_architecture/tank_gauging/calibration.py": "92a0bb9b08a4c81e51d105bc995332bb33abad94722c44e7b38a16550d818597",
+    "src/digitalmodel/naval_architecture/tank_gauging/contents.py": "9922647acd9261b07acdfcc0a770d74440e593d343fb788b288de8719b091abe",
+    "src/digitalmodel/naval_architecture/tank_gauging/free_surface.py": "1e92363f48557b7482c43af6f6a284165fa09c7edcbf2245d0a5281b7871ac7a",
+    "src/digitalmodel/naval_architecture/trim_hydrostatics.py": "3052372e38d91595264a575d18481383f4c64ef56f02ee312025bdfebc9b7495",
+    "src/digitalmodel/naval_architecture/turning_circle.py": "09ae42cdab47a13cbbc92d6dc3cd3caae806f1bfa6568d4ed5cc26a940c7d678",
+    "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
+    "src/digitalmodel/naval_architecture/vessel_stability_screening.py": "748b2023cfd0e83c21f823399ff73b6214d1b1f185505d433aedbf7be74409ae",
+    "src/digitalmodel/naval_architecture/wigley_geometry.py": "71ee8fdf5ec69d7a58e798c98e88944b5288e5b1b192bed04a5cdab5efeceb8c",
+    "src/digitalmodel/naval_architecture/workflow.py": "c794f6def13714572e4da1a5e9230cca03367ee142d877f1f55bd66ea8b5f877",
+    "src/digitalmodel/naval_architecture/workflow_calculations.py": "aa237e042e1dea912d18a9e7a369cb1f533690ec04e3fd3260b55f1cbf06cdd7",
+    "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
+    "scripts/reporting/build_naval_evidence_report.py": "f32663020fd7c8903cfa9ca8f4a6a9ba9373aa9640dd9933af876a08c6b698ca",
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a"
+  }
+}

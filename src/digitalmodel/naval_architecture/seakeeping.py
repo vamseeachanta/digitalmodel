@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Seakeeping module — 6-DOF frequency-domain ship motion analysis
 # ABOUTME: Strip theory, RAO estimation, natural periods, motion criteria
 """
@@ -198,6 +201,8 @@ def significant_motion(
     """
     if len(rao_values) != len(wave_spectrum_values):
         raise ValueError("RAO and spectrum arrays must have same length")
+    if not rao_values:
+        raise ValueError("RAO and spectrum arrays must be nonempty")
 
     m0 = sum(
         rao**2 * s_w * freq_step_rad

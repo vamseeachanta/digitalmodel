@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 #!/usr/bin/env python3
 """
 ABOUTME: Verification that a body straddling the centreplane is cut CLEANLY by
@@ -277,7 +280,7 @@ class SymmetryCutReport:
 
     @property
     def ok(self) -> bool:
-        return self.location_outside_all and all(
+        return bool(self.sections) and self.location_outside_all and all(
             section.clean for section in self.sections.values()
         )
 
@@ -293,6 +296,8 @@ class SymmetryCutReport:
             for name, section in sorted(self.sections.items())
             if not section.clean
         ]
+        if not self.sections:
+            out.append("Centreplane cut is NOT_EVALUATED: no region sections supplied")
         if not self.location_outside_all:
             out.append(
                 f"locationInMesh {self.location_in_mesh} is INSIDE "

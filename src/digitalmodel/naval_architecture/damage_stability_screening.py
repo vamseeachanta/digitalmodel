@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Damage-stability screening core — flooded-compartment (added-weight)
 # ABOUTME: equilibrium, damaged-GZ analysis, cited survival criteria (CFR/MODU).
 """Damage-stability screening — deterministic core (slice 2 of the
@@ -502,7 +505,7 @@ class DamageCaseResult:
 
     @property
     def passed(self) -> bool:
-        return all(c.passed for c in self.criteria)
+        return bool(self.criteria) and all(c.passed for c in self.criteria)
 
 
 def evaluate_damage_case(

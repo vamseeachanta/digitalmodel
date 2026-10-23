@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Intact vessel stability screening core — hydrostatic-table interface,
 # ABOUTME: loading condition + FSC, GZ/KN criteria (IMO IS 2008, 46 CFR), max-KG.
 """Vessel intact-stability screening — deterministic core (L1 slice).
@@ -708,7 +711,7 @@ class LiftingResult:
 
     @property
     def passed(self) -> bool:
-        return all(c.passed for c in self.criteria)
+        return bool(self.criteria) and all(c.passed for c in self.criteria)
 
 
 def equilibrium_heel_deg(

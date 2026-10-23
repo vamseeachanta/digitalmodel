@@ -1,6 +1,9 @@
 # Naval architecture knowledge pack
 
-Revision 4 tightens input validation and identifies the limited stability scope.
+Revision 5 adds structured evidence, explicit check selection and empty-evidence
+refusals. The [computed supplement](../../../../docs/reports/modules/navalarchitecture/evidence/report.html)
+records worked answers, a generated response figure and the package-wide pattern
+sweep with unresolved candidates. Revision 4 tightens input validation and identifies the limited stability scope.
 Revision 3 supplements the historical evidence below with the missing-input
 contract and resonance regression for #2597. The original code pin and test
 records remain historical; the supplement does not requalify other methods.
@@ -12,13 +15,14 @@ records remain historical; the supplement does not requalify other methods.
 | 2 | 2026-10-15 | Existing pack records calculation interfaces and evidence. |
 | 3 | 2026-10-21 | Add completeness and resonance pitfalls, regression checks and worked inputs for #2597. |
 | 4 | 2026-10-21 | Reject malformed direct inputs and incomplete curves, clarify stability scope and pin revision 3 evidence. |
+| 5 | 2026-10-22 | Add typed evidence and empty-selection handling; reject empty result collections and publish reproducible worked answers for #2597. |
 
 | Header field | Value |
 | --- | --- |
 | Module | naval_architecture |
 | Repository | digitalmodel |
 | Package path | src/digitalmodel/naval_architecture |
-| Pack revision | 4, 2026-10-21 |
+| Pack revision | 5, 2026-10-22 |
 | Historical code revision | `d96aad6b05f0da8b01be3cc490277bf8080bf663` |
 | Revision 3 code revision (C11/C12) | `902f77a12f4efda52cbfbc1e400e7ada93ca919f` |
 | Analysis family | EC — Python engineering calculations |
@@ -166,6 +170,14 @@ the earlier checks retain the historical code revision.
 | --- | --- | --- | --- |
 | C11 | G0 | `tests/naval_architecture/test_compliance_missing_inputs.py`: no passing aggregate on missing or malformed required data; counts partition all intended checks | Synthetic input/status cases; ratio hand calculation in test docstring |
 | C12 | G2 | `tests/naval_architecture/test_heave_rao_resonance.py`: undamped resonance raises; finite damped and off-resonance values agree with the documented hand calculations | Mechanics Map, 2021 online edition, section 15.5; numerical tolerances in test docstrings |
+| C13 | G0 | `tests/naval_architecture/test_compliance_contract.py`: explicit empty selection is NOT_EVALUATED; structured missing inputs, status and clause survive JSON serialization | Synthetic inputs and independent ratio margins in docstrings; absent legacy clauses are null and UNVERIFIED |
+| C14 | G0 | `tests/naval_architecture/test_evidence_gaps.py`: empty damage, lifting and symmetry results cannot pass; absent spectrum raises; missing cut evidence is reported | Completeness assertions introduce no engineering acceptance limit |
+| C15 | G2 | `tests/naval_architecture/test_evidence_report.py`: rebuild reproduces the committed supplement; tables and figure respond to module values; stale output is refused | Mechanics Map (2021), section 15.5; independent hand substitutions in test docstrings |
+
+Revision 5 evidence uses the uncommitted source tree; the generated supplement's
+`results.json` records digests of every package source file and the builder.
+C11/C12 remain historical evidence at their recorded revision. C13-C15 extend
+coverage without qualifying the legacy regulatory expressions.
 
 Worked inputs, method, answers and remaining rule-basis limits:
 [compliance-inputs-example.md](compliance-inputs-example.md).
@@ -177,6 +189,11 @@ sweep: not run (legacy pack)
 | --- | --- | --- | --- |
 | Missing depth, measured section modulus or other required input previously produced a passing or omitted row; the empty aggregate also passed | C11: every intended row is reported; missing or invalid inputs are NOT_EVALUATED and cannot pass the aggregate | #2597 | 2026-10-21; `compliance.py`, `tests/naval_architecture/test_compliance_missing_inputs.py` |
 | The simplified heave oscillator previously returned a finite cap at undamped resonance | C12: the existing fix raises ValueError for an unbounded response and preserves finite near-resonance magnitudes | #2597 | 2026-10-21; `seakeeping.py::simple_heave_rao`, `tests/naval_architecture/test_heave_rao_resonance.py` |
+| An explicit empty compliance selection could be confused with the default complete selection | C13: `check_ids=None` selects all checks; `check_ids=[]` is NOT_EVALUATED; unknown or duplicate identifiers raise | #2597 | 2026-10-22; `test_compliance_contract.py` |
+| Boolean reduction over empty damage, lifting or symmetry evidence returned success; an empty spectrum returned zero motion | C14: nonempty evidence is required; the spectrum raises and symmetry reports a missing-evidence note | #2597 | 2026-10-22; `test_evidence_gaps.py` |
+| A missing clean-cut flag suppressed a geometry warning | C14: absent or null cut evidence produces a NOT_EVALUATED note | #2597 | 2026-10-22; `region_report.py::_notes` |
+| A code label could be mistaken for a qualified clause reference | C13: every row has `clause_reference`; unresolved legacy clauses are null and `reference_status` is UNVERIFIED | #2597 | 2026-10-22; `compliance.py::CheckResult` |
+| Physical defaults and broad geometry-reader fallbacks need method-specific qualification | C15 regenerates every explicit mapping-default, all-reduction and broad-handler candidate; unresolved cases remain follow-ups in the supplement | #2597 | 2026-10-22; `scripts/reporting/build_naval_evidence_report.py::sweep` |
 | Silent empty citation list when the resolver is unconfigured; other citation errors raise | C9; inspect returned `citations` count before relying on provenance | issue pending (6) | 2026-10-15 [src/digitalmodel/naval_architecture/fundamentals.py:L52-L88] |
 | Density lookup clamps outside its table; buoyancy water selectors treat any non-saltwater string as fresh water | No detection check exists for either out-of-table clamping or selector typos; the density boundary tests preserve the clamp rather than reject it | issue pending (6) | 2026-10-15 [src/digitalmodel/naval_architecture/fundamentals.py:L91-L125] [tests/naval_architecture/test_na_fundamentals.py:L72-L81] |
 | Existing curves-of-form example is expected to fail because the required ship table is unavailable | C10 preserves the XFAIL evidence; no missing-table detection check exists; the repository node does not qualify the calculation | #1751 | 2026-10-15 [tests/naval_architecture/test_en400_worked_examples.py:L115-L125] |
