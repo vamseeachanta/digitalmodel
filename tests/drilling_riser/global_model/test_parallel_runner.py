@@ -3,12 +3,20 @@
 from __future__ import annotations
 
 import json
+import threading
+import time as _time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from digitalmodel.solvers.orcaflex import orcaflex_api
 from digitalmodel.solvers.orcaflex import parallel_runner as pr
+from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext, AdmissionRefused
+from tests.solvers.orcaflex.qa_fixtures import control_fingerprint, make_qa
 
 # --------------------------------------------------------------------------- fault classes (W306)
 
@@ -106,6 +114,25 @@ def test_case_ids_must_be_unique_and_safe():
 solver = pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
 
 
+def _native_qa(cases, root):
+    """Synthetic approval controls for round-trip mechanics, not qualification.
+
+    Fingerprints are independently prepared before worker execution. These
+    fixtures test the contract and do not authenticate real engineering QA.
+    """
+    from tests.drilling_riser.global_model.runner_adapter import ADAPTER
+
+    fingerprints = {}
+    for case in cases:
+        # A deliberately broken builder still needs an independently admitted
+        # candidate identity to exercise the worker's build-failure path.
+        if case.get("params", {}).get("break_build"):
+            continue
+        master = ADAPTER.build(case, root / case["case_id"] / "model")
+        fingerprints[case["case_id"]] = control_fingerprint(master, case)
+    return make_qa(cases, root / "qa", fingerprints, version="11.6c")
+
+
 @solver
 @pytest.mark.solver
 def test_runner_round_trip_two_workers(tmp_path: Path):
@@ -115,15 +142,17 @@ def test_runner_round_trip_two_workers(tmp_path: Path):
         {"case_id": "D-1", "analysis": "dynamics", "params": {"wave_height_m": 3.0}},
     ]
     out = pr.run_cases(cases, adapter=adapter, out_dir=tmp_path, max_workers=2, keep_sim=False,
-                       pin="11.6", expected_dll="11.6c")
+                       pin="11.6", expected_dll="11.6c", qa=_native_qa(cases, tmp_path / "controls"))
     assert out["stop_reason"] is None
     by = {r["case_id"]: r for r in out["results"]}
     assert by["S-1"]["status"] == "ok" and by["D-1"]["status"] == "ok"
-    bad = pr.run_cases([{"case_id": "BAD-1", "analysis": "statics", "params": {"break_build": True}}],
-                       adapter=adapter, out_dir=tmp_path, max_workers=1)
+    bad_cases = [{"case_id": "BAD-1", "analysis": "statics", "params": {"break_build": True}}]
+    bad = pr.run_cases(bad_cases, adapter=adapter, out_dir=tmp_path, max_workers=1,
+                       qa=_native_qa(bad_cases, tmp_path / "bad-controls"))
     assert bad["results"][0]["status"] == "build_failed" and bad["results"][0]["attempt"] == 1  # no retry
-    odd = pr.run_cases([{"case_id": "ODD-1", "analysis": "statics", "params": {"nonphysical": True}}],
-                       adapter=adapter, out_dir=tmp_path, max_workers=1)
+    odd_cases = [{"case_id": "ODD-1", "analysis": "statics", "params": {"nonphysical": True}}]
+    odd = pr.run_cases(odd_cases, adapter=adapter, out_dir=tmp_path, max_workers=1,
+                       qa=_native_qa(odd_cases, tmp_path / "odd-controls"))
     assert odd["results"][0]["status"] == "nonphysical_static" and odd["results"][0]["retry"] is False
     ledger = [json.loads(x) for x in (tmp_path / "ledger.jsonl").read_text(encoding="utf-8").splitlines()]
     assert sorted(r["case_id"] for r in ledger) == ["BAD-1", "D-1", "ODD-1", "S-1"]
@@ -146,7 +175,8 @@ def test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file
 
     adapter = "tests.drilling_riser.global_model.runner_adapter:ADAPTER"
     case = {"case_id": "S-2", "analysis": "statics", "params": {}}
-    out = pr.run_cases([case], adapter=adapter, out_dir=tmp_path, max_workers=1, keep_sim=True)
+    out = pr.run_cases([case], adapter=adapter, out_dir=tmp_path, max_workers=1, keep_sim=True,
+                       qa=_native_qa([case], tmp_path / "controls"))
     rec = out["results"][0]
     assert rec["status"] == "ok" and (tmp_path / rec["sim_kept"]).exists()
     re = pr.reextract(case, adapter=adapter, out_dir=tmp_path, ledger_record=rec)
@@ -160,13 +190,6 @@ def test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file
 
 
 # --------------------------------------------------------------------------- scheduling (no solver)
-
-import threading
-import time as _time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures.process import BrokenProcessPool
-from types import SimpleNamespace
-
 
 class _CountingPool(ThreadPoolExecutor):
     """Thread pool that records how many futures are outstanding (submitted, not yet done)."""
@@ -214,7 +237,8 @@ def _cases(n):
 
 def test_in_flight_cases_never_exceed_the_worker_slots(monkeypatch, counting_pool, tmp_path):
     monkeypatch.setattr(pr, "run_one", _ok)
-    out = pr.run_cases(_cases(12), adapter="x:y", out_dir=tmp_path, max_workers=2)
+    out = pr.run_cases(_cases(12), adapter="x:y", out_dir=tmp_path, max_workers=2,
+                       qa=make_qa(_cases(12), tmp_path / "qa", version="11.6c"))
     assert [r["status"] for r in out["results"]] == ["ok"] * 12
     (pool,) = counting_pool.created
     assert len(pool.submitted) == 12 and pool.max_outstanding <= 2
@@ -225,7 +249,8 @@ def test_early_stop_leaves_unsubmitted_cases_not_run(monkeypatch, counting_pool,
         return {"case_id": case["case_id"], "attempt": attempt, "status": "version_drift", "retry": False}
 
     monkeypatch.setattr(pr, "run_one", drift)
-    out = pr.run_cases(_cases(6), adapter="x:y", out_dir=tmp_path, max_workers=1)
+    out = pr.run_cases(_cases(6), adapter="x:y", out_dir=tmp_path, max_workers=1,
+                       qa=make_qa(_cases(6), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] == "solver version drift from the pin"
     (pool,) = counting_pool.created
     assert pool.submitted == [("C00", 1)]  # nothing submitted after the stop rule tripped
@@ -241,7 +266,8 @@ def test_broken_pool_is_replaced_and_the_lost_case_retried(monkeypatch, counting
         return _ok(case, attempt=attempt)
 
     monkeypatch.setattr(pr, "run_one", flaky)
-    out = pr.run_cases(_cases(5), adapter="x:y", out_dir=tmp_path, max_workers=2)
+    out = pr.run_cases(_cases(5), adapter="x:y", out_dir=tmp_path, max_workers=2,
+                       qa=make_qa(_cases(5), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] is None
     assert [r["status"] for r in out["results"]] == ["ok"] * 5
     assert {r["case_id"]: r["attempt"] for r in out["results"]}["C01"] == 2
@@ -258,7 +284,8 @@ def test_a_pool_that_keeps_breaking_ends_the_batch_cleanly(monkeypatch, counting
     monkeypatch.setattr(pr.BatchGuard, "__init__", lambda self, n, fail_fraction=1.0: (
         setattr(self, "limit", n), setattr(self, "failed", 0), setattr(self, "licence_run", 0),
         setattr(self, "stop_reason", None))[0])
-    out = pr.run_cases(_cases(8), adapter="x:y", out_dir=tmp_path, max_workers=2, max_attempts=10)
+    out = pr.run_cases(_cases(8), adapter="x:y", out_dir=tmp_path, max_workers=2, max_attempts=10,
+                       qa=make_qa(_cases(8), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] == f"worker pool broken {pr.MAX_POOL_RESTARTS + 1} times"
     assert len(counting_pool.created) == pr.MAX_POOL_RESTARTS + 1
     assert len(out["results"]) == 8 and all(r["status"] in ("infra_fault", "not_run") for r in out["results"])
@@ -299,7 +326,200 @@ def test_failed_case_leaves_no_orphan_sim_when_not_kept(monkeypatch, tmp_path):
 
     monkeypatch.setattr(pr, "_api", lambda pin, dll: (ofx, "11.6c"))
     monkeypatch.setattr(pr, "_adapter", lambda path: Adapter())
-    rec = pr.run_one({"case_id": "F1", "analysis": "statics"}, adapter="x:y", out_dir=str(tmp_path))
+    case = {"case_id": "F1", "analysis": "statics"}
+    prepared = Adapter().build(case, tmp_path / "prepared")
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256=control_fingerprint(prepared, case),
+                     qa_evidence_sha256="synthetic-approved-record")
     assert rec["status"] == "extraction_failed" and rec["sim_kept"] is None
     assert not (tmp_path / "work" / "F1" / "F1.sim").exists()
     assert not (tmp_path / "work" / "F1" / "model").exists()
+
+
+@pytest.mark.parametrize("filename", ("test_campaign.py", "test_w5_channels.py"))
+def test_native_batch_callers_supply_qa_context(filename):
+    import ast
+
+    tree = ast.parse(Path(__file__).with_name(filename).read_text())
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Attribute) and node.func.attr == "run_cases"]
+    assert calls
+    assert all(any(keyword.arg == "qa" for keyword in call.keywords) for call in calls)
+
+
+@pytest.mark.parametrize("error", (ImportError("missing adapter"), AttributeError("missing adapter")))
+def test_adapter_resolution_failure_is_a_load_failure(monkeypatch, tmp_path, error):
+    def fail(_):
+        raise error
+
+    monkeypatch.setattr(pr, "_adapter", fail)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == "load_failed"
+    assert rec["retry"] is False
+
+
+@pytest.mark.parametrize("refresh_at", ("signature", "validation-return"))
+def test_replaced_request_cannot_admit_replacement_inputs(monkeypatch, tmp_path, refresh_at):
+    case = _cases(1)[0]
+    original = tmp_path / "original" / "master.yml"
+    original.parent.mkdir()
+    original.write_text("synthetic: original\n", encoding="utf-8")
+    replacement = tmp_path / "replacement" / "master.yml"
+    replacement.parent.mkdir()
+    replacement.write_text("synthetic: replacement\n", encoding="utf-8")
+    original_digest = control_fingerprint(original, case)
+    replacement_digest = control_fingerprint(replacement, case)
+    qa = make_qa([case], tmp_path / "qa", {case["case_id"]: original_digest}, version="11.6c")
+    replacement_request = replace(qa.requests[case["case_id"]], input_sha256=replacement_digest)
+    verifying, refreshed = threading.Event(), threading.Event()
+    verify = qa.verify_signature
+    validate = AdmissionContext.validate
+
+    def refresh():
+        assert verifying.wait(timeout=5)
+        qa.requests[case["case_id"]] = replacement_request
+        refreshed.set()
+
+    def verify_while_refreshing(payload, signature):
+        verifying.set()
+        assert refreshed.wait(timeout=5)
+        return verify(payload, signature)
+
+    def refresh_after_validation(self, candidate, version):
+        binding = validate(self, candidate, version)
+        verifying.set()
+        assert refreshed.wait(timeout=5)
+        return binding
+
+    if refresh_at == "signature":
+        qa = replace(qa, verify_signature=verify_while_refreshing)
+    else:
+        monkeypatch.setattr(AdmissionContext, "validate", refresh_after_validation)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        refresh_future = pool.submit(refresh)
+        _, bindings = pr.check_cases([case], qa=qa)
+        refresh_future.result(timeout=5)
+
+    def build(candidate, directory):
+        directory.mkdir(parents=True)
+        master = directory / "master.yml"
+        master.write_bytes(replacement.read_bytes())
+        return master
+
+    def native_access(*_):
+        pytest.fail("replacement inputs reached native access")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    monkeypatch.setattr(pr, "_api", native_access)
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path / "worker"),
+                     **bindings[case["case_id"]])
+    assert rec["status"] == "admission_failed"
+    assert rec["retry"] is False
+    assert "B2" in rec["message"]
+    assert bindings[case["case_id"]]["admitted_input_sha256"] == original_digest
+
+
+@pytest.mark.parametrize("operation", ("build", "hash"))
+@pytest.mark.parametrize("error, status, retry", (
+    (OSError("transient file failure"), "infra_fault", True),
+    (FileNotFoundError("model file unavailable"), "infra_fault", True),
+    (PermissionError("model file temporarily inaccessible"), "infra_fault", True),
+    (ValueError("invalid model"), "build_failed", False),
+    (AdmissionRefused("B2", "unapproved inputs"), "build_failed", False),
+))
+def test_pre_native_file_errors_keep_retry_policy(monkeypatch, tmp_path, operation, error, status, retry):
+    def fail(*_):
+        raise error
+
+    def native_access(*_):
+        pytest.fail("a failed build or hash reached native access")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(
+        build=fail if operation == "build" else lambda *args: tmp_path / "master.yml"))
+    if operation == "hash":
+        monkeypatch.setattr(pr, "input_digest", fail)
+    monkeypatch.setattr(pr, "_api", native_access)
+    rec = pr.run_one(_cases(1)[0], adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256="synthetic-input", qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == status
+    assert rec["retry"] is retry
+    assert str(error) in rec["message"]
+
+
+@pytest.mark.parametrize("status, expected, retry", (
+    (17, "infra_fault", True), (18, "infra_fault", True), (19, "load_failed", False),
+))
+def test_native_file_status_keeps_retry_policy(monkeypatch, tmp_path, status, expected, retry):
+    class FileFailure(Exception):
+        pass
+
+    def load(_):
+        error = FileFailure("native file unavailable")
+        error.status = status
+        raise error
+
+    def build(case, directory):
+        directory.mkdir(parents=True)
+        master = directory / "master.yml"
+        master.write_text("synthetic: model\n", encoding="utf-8")
+        return master
+
+    case = _cases(1)[0]
+    fingerprint = control_fingerprint(build(case, tmp_path / "prepared"), case)
+    api = SimpleNamespace(Model=load, stFileReadError=17, stFileWriteError=18)
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    monkeypatch.setattr(pr, "_api", lambda *_: (api, "11.6c"))
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path / "worker"),
+                     admitted_input_sha256=fingerprint, qa_evidence_sha256="synthetic-evidence")
+    assert rec["status"] == expected
+    assert rec["retry"] is retry
+    assert rec["phase"] == "load"
+
+
+def test_pre_native_io_retries_stop_at_attempt_limit(monkeypatch, counting_pool, tmp_path):
+    def build(*_):
+        raise OSError("transient file failure")
+
+    monkeypatch.setattr(pr, "_adapter", lambda _: SimpleNamespace(build=build))
+    cases = _cases(1)
+    result = pr.run_cases(cases, adapter="x:y", out_dir=tmp_path / "worker", max_workers=1,
+                          max_attempts=3, qa=make_qa(cases, tmp_path / "qa", version="11.6c"))
+    record = result["results"][0]
+    assert record["status"] == "infra_fault"
+    assert record["attempt"] == 3
+    ledger = [json.loads(line) for line in
+              (tmp_path / "worker" / "ledger.jsonl").read_text().splitlines()]
+    assert [item["attempt"] for item in ledger] == [1, 2, 3]
+
+
+def test_worker_receives_the_validated_evidence_digest(monkeypatch, counting_pool, tmp_path):
+    cases = _cases(1)
+    qa = make_qa(cases, tmp_path / "qa", version="11.6c")
+    validate = AdmissionContext.validate
+    validated = {}
+
+    def mutate_after_validation(self, case, version):
+        binding = validate(self, case, version)
+        validated[case["case_id"]] = binding.qa_evidence_sha256
+        self.requests[case["case_id"]].record["deviations"].append({"disposition": "changed"})
+        return binding
+
+    def worker(case, **kwargs):
+        assert kwargs["qa_evidence_sha256"] == validated[case["case_id"]]
+        return _ok(case, **kwargs)
+
+    monkeypatch.setattr(AdmissionContext, "validate", mutate_after_validation)
+    monkeypatch.setattr(pr, "run_one", worker)
+    result = pr.run_cases(cases, adapter="x:y", out_dir=tmp_path, max_workers=1, qa=qa)
+    assert result["results"][0]["status"] == "ok"
+
+
+def test_shared_qa_controls_select_both_consumer_shards():
+    import runpy
+
+    root = Path(__file__).resolve().parents[3]
+    detector = runpy.run_path(str(root / "scripts/ci/detect_touched_domains.py"))
+    domains = detector["parse_domains"](root / "tests/DOMAINS.md")
+    selected = detector["touched_domains"](["tests/solvers/orcaflex/qa_fixtures.py"], domains)
+    assert {domain.name for domain in selected} == {"orcaflex-solver", "subsea"}
