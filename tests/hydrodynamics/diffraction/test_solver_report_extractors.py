@@ -53,6 +53,9 @@ def _install_mock_orcfxapi(monkeypatch):
 def _mock_diffraction_object():
     """Return a mock OrcFxAPI.Diffraction() whose data arrays mimic real shapes."""
     d = MagicMock()
+    # Synthetic environment for the hand calculation below (t/m^3, m/s^2).
+    d.WaterDensity = 1.0
+    d.g = 10.0
 
     # frequencies: Hz descending (as OrcFxAPI returns)
     freq_hz = np.array([0.20, 0.15, 0.10, 0.05])  # 4 freqs
@@ -113,6 +116,39 @@ def _mock_diffraction_object():
 
 
 class TestExtractReportDataFromOwr:
+
+    @pytest.mark.parametrize(
+        "density, gravity, transverse, longitudinal",
+        [(1.0, 10.0, 2.0, 6.0), (1.25, 10.0, 1.6, 4.8),
+         (1.0, 8.0, 2.5, 7.5)],
+    )
+    def test_gm_uses_native_environment(
+        self, tmp_path, density, gravity, transverse, longitudinal
+    ):
+        """Independent hand calculation, synthetic inputs; no solver is run.
+
+        C44=rho*g*V*GM_T (OrcaWave help, Results: Hydrostatics,
+        Hydrostatic stiffness matrix, accessed 2026-10-22). Choose V=10 m^3,
+        C44=200 kN m/rad, C55=600 kN m/rad. For rho=1 t/m^3, g=10 m/s^2,
+        the denominator is 100 kN: GM_T=2 m and GM_L=6 m. Raising rho to
+        1.25 makes the denominator 125: 1.6 and 4.8 m. Reducing g to 8
+        makes it 80: 2.5 and 7.5 m. All inputs are synthetic, not constants.
+        """
+        from digitalmodel.hydrodynamics.diffraction.solver import report_extractors
+
+        mock_d = _mock_diffraction_object()
+        mock_d.WaterDensity = density
+        mock_d.g = gravity
+        hs = mock_d.hydrostaticResults[0]
+        hs["volume"] = 10.0
+        hs["restoringMatrix"][3, 3] = 200.0
+        hs["restoringMatrix"][4, 4] = 600.0
+        with patch.object(report_extractors, "OrcFxAPI") as fake_api:
+            fake_api.Diffraction.return_value = mock_d
+            data = report_extractors.extract_report_data_from_owr(tmp_path / "case.owr")
+
+        assert data.gm_transverse == pytest.approx(transverse)
+        assert data.gm_longitudinal == pytest.approx(longitudinal)
 
     def test_returns_diffraction_report_data(self, tmp_path):
         from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (

@@ -254,7 +254,7 @@ def _build_appendices_html() -> str:
   <ul style="font-size:0.85em;color:#555;">
     <li>T_n = 2pi * sqrt((M_ii + A_ii(omega_n)) / C_ii)</li>
     <li>zeta(omega) = B_ii(omega) / (2 * sqrt((M_ii + A_ii(omega)) * C_ii))</li>
-    <li>GM_T = C_44 / (rho * g * V), where rho=1025 kg/m3, g=9.81 m/s2</li>
+    <li>GM_T = C_44 / (rho * g * V), using the input water density rho and gravity g in units consistent with C_44</li>
     <li>BM_T = I_xx / V; GM_T = KB + BM_T - KG (cross-check)</li>
   </ul>
 
