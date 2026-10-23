@@ -1,0 +1,11 @@
+{
+  "revision": "A",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "worked-example",
+      "description": "Axial clay-pile resistance and the illustrative load boundary are documented, with the full-area tip assumption and qualification gaps exposed.",
+      "reason": "Separate reproducible calculation behaviour from design acceptance."
+    }
+  ]
+}
