@@ -1,0 +1,29 @@
+# Synthetic plate inputs chosen for the independent arithmetic in
+# tests/asset_integrity/test_crack_fad_workflow.py; no material grade is implied.
+basename: crack_fad_level2_handoff
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+crack_assessment:
+  component_id: SYNTHETIC-PLATE
+  geometry: plate_surface
+  a_mm: 4.0
+  c_mm: 5.0
+  t_mm: 20.0
+  # Half-width, not total plate width.
+  width_mm: 50.0
+  sigma_m_mpa: 100.0
+  sigma_b_mpa: 0.0
+  sigma_y_mpa: 400.0
+  sigma_u_mpa: 600.0
+  e_mpa: 200000.0
+  # Explicit synthetic toughness in MPa sqrt(m); no Charpy inference.
+  k_mat: 100.0
+  # User-selected numerical search domain and resolution, not code limits.
+  max_depth_fraction: 0.8
+  tol_mm: 0.001
+  interacting_defects: false
+  complex_geometry: false
+  output_dir: results

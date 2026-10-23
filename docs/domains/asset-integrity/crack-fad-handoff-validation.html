@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Plate crack assessment: arithmetic validation record</title>
+<style>body{font:16px/1.5 sans-serif;max-width:65em;margin:2em auto;padding:0 1em}table{border-collapse:collapse;width:100%}td,th{border:1px solid #aaa;padding:.4em;text-align:left}code{font-family:monospace}</style></head>
+<body>
+<h1>Plate crack assessment: arithmetic validation record</h1>
+<h2>Summary</h2>
+<p>The offline <code>crack-fad-level2-handoff</code> workflow composes the existing
+plate surface-flaw calculation, fixed-length critical-depth search and specialist
+handoff. The curve is labelled <strong>BS 7910:2013 Option 1</strong> in the
+calculation output, report and handoff. Every case is escalated for specialist
+review, including a point inside the computed envelope. Published Annex-case
+validation is <strong>NOT_EVALUATED</strong>; arithmetic checks do not establish
+code-qualified service acceptance.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-20</td><td>Add the plate workflow and
+record independent arithmetic and the remaining qualification gaps.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Reduce the example depth so the search
+extends above the assessed flaw; state the wide-plate and continuous-yield
+limits and identify the stress-intensity reference.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>Correct the governing crack-front point
+and record both point values so the explanation matches the hand calculation.</td></tr></tbody></table>
+<p>Table 1. Issue history.</p>
+<h2>Inputs and data basis</h2>
+<p>The committed <a href="../../../examples/workflows/crack-fad-level2-handoff/input.yml">input example</a>
+is synthetic. It is neither measured inspection data nor a reproduction of a
+licensed worked example. The engineering inputs are explicit; numerical search
+settings are chosen by the caller. No material grade is inferred.</p>
+<table><thead><tr><th>Quantity</th><th>Value</th><th>Units</th></tr></thead><tbody>
+<tr><td>Depth a; half-length c</td><td>4.0; 5.0</td><td>mm</td></tr>
+<tr><td>Plate thickness; half-width</td><td>20.0; 50.0</td><td>mm</td></tr>
+<tr><td>Membrane; bending stress</td><td>100.0; 0.0</td><td>MPa</td></tr>
+<tr><td>Yield; tensile strength</td><td>400.0; 600.0</td><td>MPa</td></tr>
+<tr><td>Elastic modulus</td><td>200000.0</td><td>MPa</td></tr>
+<tr><td>Toughness Kmat</td><td>100.0</td><td>MPa sqrt(m)</td></tr>
+<tr><td>Depth search fraction; tolerance</td><td>0.8; 0.001</td><td>dimensionless; mm</td></tr>
+</tbody></table><p>Table 2. Synthetic demonstration inputs.</p>
+<h2>Method and source traceability</h2>
+<p>The existing <a href="../../../src/digitalmodel/asset_integrity/assessment/crack_fad.py">crack_fad.py</a>
+is reused without introducing new standard coefficients. Its documented sources
+are BS 7910:2013, <em>Guide to methods for assessing the acceptability of flaws
+in metallic structures</em>, Clause 7.3.2 (Option 1) and Annex P (reference stress),
+and Newman and Raju (1981), <em>An empirical stress-intensity factor equation
+for the surface crack</em>, Engineering Fracture Mechanics 15(1-2):185-192,
+doi:10.1016/0013-7944(81)90116-8.
+The existing method checks the surface and deepest points
+of a semi-elliptical flaw in a plate under membrane plus bending stress.</p>
+<p>Kr is applied stress intensity divided by the supplied toughness; Lr is
+reference stress divided by yield strength. The computed point is compared with
+the cited curve and collapse cutoff. The depth search holds half-length, width,
+material and loading fixed. The finite-width correction is now propagated to
+every search trial, matching the point calculation.</p>
+<p>The source documents were not opened for this change. The repository's
+existing documented equations are the calculation basis, not fresh independent
+source qualification. No licensed standard or its example values are copied.
+</p>
+<h2>Independent arithmetic and answer</h2>
+<p>The complete arithmetic is written out in the test docstrings in
+<a href="../../../tests/asset_integrity/test_crack_fad_workflow.py">test_crack_fad_workflow.py</a>.
+Expected values are calculated without calling the implementation under test.
+At the demonstration geometry, the Annex P expression gives alpha = 0.04,
+reference stress = 104.2 MPa and Lr = 0.260. The independently evaluated plate
+expression gives governing deepest-point stress intensity = 8.48 MPa sqrt(m),
+with g = f_phi = 1; surface-point stress intensity = 8.45 MPa sqrt(m).
+Kr = 0.085 and curve height = 0.983. The point is inside the curve and below
+Lr_max = 1.250. These rounded values are display values; tests retain precision.</p>
+<p>A separate collapse-governed synthetic case uses half-length and thickness
+20.0 mm, membrane and yield stress 400.0 MPa, tensile strength 600.0 MPa, and
+artificially large toughness so fracture does not govern. Then alpha = a/40
+and Lr = 1/(1-a/40). Setting Lr to the collapse cutoff gives a = 8.0 mm.
+The returned passing-side depth is checked against that hand solution at the
+supplied numerical resolution.</p>
+<p>A finite-width regression checks that narrowing the plate lowers the searched
+depth. Report readback, JSON handoff equality, HTML escaping, registry routing,
+invalid-input rejection and retention of the qualification gap are also tested.</p>
+<h2>Limits and way forward</h2>
+<ul>
+<li>Published Annex plate-case validation: <strong>NOT_EVALUATED</strong>.
+An accessible example with source rights and independently regenerated values
+is needed before a published-case validation claim.</li>
+<li>The catalog status is <code>workflow</code>; a live qualified assessment is
+not established by the presence of this record.</li>
+<li>Only flat-plate surface flaws, positive tensile membrane stress and
+nonnegative bending are supported. Half-length and half-width conventions are
+explicit. Unsupported keys, missing toughness, nonfinite inputs, invalid geometry
+and unsupported curve selection are rejected.</li>
+<li>The Annex P wide-plate expression requires plate half-width at least c + t;
+the narrow-plate reference-stress branch is not evaluated. Only the continuous-yield
+Option 1 form is implemented; the Clause 7.3.2 yield-discontinuity (Luders plateau)
+form is <strong>NOT_EVALUATED</strong>.</li>
+<li>Residual/secondary stress, weld mismatch, hydrogen, intermediate crack-front
+maxima, fatigue growth, service-temperature toughness and remaining life are
+not evaluated. The handoff asks the specialist to establish the missing basis.</li>
+<li><code>SEARCH_BOUND_REACHED</code> is a domain cap, not a failure depth.
+<code>NO_ACCEPTABLE_DEPTH_FOUND</code> denotes no passing point at the supplied
+resolution. A bracketed boundary assumes a single crossing; global monotonicity
+is not established.</li>
+<li>API 579 Part 9 partial safety factors and cylinder-specific solutions remain
+under <a href="https://github.com/vamseeachanta/digitalmodel/issues/2175">the Part 9 follow-up</a>.
+No API 579 curve selection is exposed by this workflow.</li>
+<li>Independent provider review remains required before merge. No advanced
+analysis or licensed solver is run by this workflow.</li>
+</ul>
+<p>Traceability: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2184">workflow issue</a>.</p>
+</body></html>

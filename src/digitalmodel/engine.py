@@ -813,6 +813,10 @@ def engine(
 
         production = ProductionEngineeringWorkflow()
         cfg_base = production.router(cfg_base)
+    elif basename == "crack_fad_level2_handoff":
+        from digitalmodel.asset_integrity.assessment.crack_fad_workflow import router
+
+        cfg_base = router(cfg_base)
     elif basename == "ffs":
         # workspace-hub#3285: Phase-1 FFS coordinator (assess_component) engine route.
         # NEW basename -- legacy "API579" arm (a different engine) is untouched.
