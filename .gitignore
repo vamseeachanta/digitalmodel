@@ -267,6 +267,14 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/hydrostatics/
+docs/reports/modules/hydrostatics/*
+!docs/reports/modules/hydrostatics/basis.json
+!docs/reports/modules/hydrostatics/build_report.py
+!docs/reports/modules/hydrostatics/changes.json
+!docs/reports/modules/hydrostatics/report.html
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
