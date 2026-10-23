@@ -75,7 +75,7 @@ Frameworks: API RP 2SIM, ISO 19902, NORSOK N-006. Typical findings: member dents
 | Corrosion wastage (splash zone, atmospheric) | API RP 2SIM, API RP 2A | jacket-member-joint | T1, T2 | engine (thickness-reduced re-check possible) |
 | Fatigue cracks at tubular joints | API RP 2SIM, BS 7910, DNV-RP-C203 | crack-fad, sn-fatigue | T2, T3 | engine |
 | Missing / severed / flooded members (pushover, RSR) | API RP 2SIM, ISO 19902 | platform-damaged-member (#2198), calculix-nonlinear (#2173) | T3 | planned |
-| Scour, subsidence, marine growth beyond design | API RP 2SIM | scour | T1 | engine (scour capacity only; no SIM verdict) |
+| Scour, subsidence, marine growth beyond design | API RP 2SIM | scour, air-gap | T1 | engine (scour capacity and subsidence clearance screening only; marine growth not assessed; no SIM verdict) |
 | Structural health monitoring alerts | API RP 2SIM, DNV-ST-0126 | structural-health | T1 | engine |
 | Conductors, caissons, boat landings, risers guards: conductor / caisson wall loss, guide wear, fatigue | API RP 2SIM, API RP 17G, DNV-RP-C203 | — | T1, T2 | none |
 

@@ -83,6 +83,7 @@ codes:
 # Engine registry. `workflow` ids must exist in docs/registry/workflows.yaml, and the registered row's
 # example input (examples/workflows/<id>/input.yml) must be committed; the workflow run writes the report.
 engines:
+  air-gap: {module: structural.jacket_topside.air_gap, status: engine, issue: 3443, note: "subsidence clearance, generic horizontal drag and raising geometry only; no code-qualified wave-in-deck or SIM verdict"}
   ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: live, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator"}
   api579-legacy: {module: asset_integrity.API579, status: workflow, workflow: api579-pipe-ffs-b314, note: "no validation record; superseded by ffs-metal-loss (#1075), kept as a regression reference"}
   corroded-pipe: {module: asset_integrity.corroded_pipe, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181, note: "workflow covers original/Modified B31G and effective-area pressure methods only"}
@@ -207,7 +208,7 @@ industries:
           - {mechanism: "corrosion wastage (splash zone, atmospheric)", codes: [api-rp-2sim, api-rp-2a], engines: [jacket-member-joint], tiers: [T1, T2], status: engine, note: "thickness-reduced re-check possible"}
           - {mechanism: fatigue cracks at tubular joints, codes: [api-rp-2sim, bs-7910, dnv-rp-c203], engines: [crack-fad, sn-fatigue], tiers: [T2, T3], status: engine}
           - {mechanism: "missing / severed / flooded members (pushover, RSR)", codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, calculix-nonlinear], tiers: [T3], status: planned}
-          - {mechanism: "scour, subsidence, marine growth beyond design", codes: [api-rp-2sim], engines: [scour], tiers: [T1], status: engine, note: "scour capacity only; no SIM verdict"}
+          - {mechanism: "scour, subsidence, marine growth beyond design", codes: [api-rp-2sim], engines: [scour, air-gap], tiers: [T1], status: engine, note: "scour capacity and subsidence clearance screening only; marine growth not assessed; no SIM verdict"}
           - {mechanism: structural health monitoring alerts, codes: [api-rp-2sim, dnv-st-0126], engines: [structural-health], tiers: [T1], status: engine}
       - asset: conductors, caissons, boat landings, risers guards
         defects:
