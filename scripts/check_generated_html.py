@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Regenerate committed ``docs/api/**`` HTML in isolation and detect drift.
+"""Regenerate committed HTML and registered JSON sidecars in isolation.
 
 Run from the repository root, inside the project environment:
     uv run python scripts/check_generated_html.py --check
@@ -16,6 +16,7 @@ Generators currently write to fixed repository paths, so this check builds a
 temporary shadow repository. It never rewrites the developer's working tree.
 Every discovered generator must be registered or carry an explicit reason for
 being a discovery false-positive; generated pages themselves are never skipped.
+See docs/standards/generated-capability-artifacts.html for scope and examples.
 """
 
 from __future__ import annotations
@@ -67,6 +68,8 @@ class Generator:
     # deterministically from the repository.
     prerequisites: tuple[str, ...] = ()
     inputs: tuple[str, ...] = ()
+    # Data outputs are checked separately from the HTML page census and brand guard.
+    sidecars: tuple[str, ...] = ()
 
 
 GENERATORS = (
@@ -121,6 +124,7 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_dynacard_troubleshooting.py",
         ("docs/api/artificial-lift/dynacard-troubleshooting.html",),
+        sidecars=("docs/api/artificial-lift/dynacard-troubleshooting.json",),
     ),
     Generator(
         "scripts/capabilities/build_field_economics_explorer.py",
@@ -151,6 +155,7 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_sloshing_explorer.py",
         ("docs/api/structural/sloshing-explorer.html",),
+        sidecars=("docs/api/structural/sloshing-explorer.json",),
     ),
     Generator(
         "scripts/capabilities/build_viv_explorer.py",
@@ -165,6 +170,7 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_wall_thickness_explorer.py",
         ("docs/api/structural/wall-thickness-explorer.html",),
+        sidecars=("docs/api/structural/wall-thickness-explorer.json",),
     ),
     Generator(
         "scripts/corrosion/build_galvanic_explorer.py",
@@ -348,6 +354,9 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
     """Copy repository inputs into an isolated regeneration tree."""
     shutil.copytree(repo / "scripts", shadow / "scripts")
     shutil.copytree(repo / "docs" / "api", shadow / "docs" / "api")
+    # Source-only imports obtain the package version from this metadata.
+    if (repo / "pyproject.toml").is_file():
+        shutil.copy2(repo / "pyproject.toml", shadow / "pyproject.toml")
     for name in ("assets", "atlases", "data", "src"):
         source = repo / name
         if source.exists():
@@ -360,7 +369,7 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
         if source.exists():
             shutil.copytree(source, shadow / relative)
     for entry in GENERATORS:
-        for relative in (*entry.inputs, *entry.outputs):
+        for relative in (*entry.inputs, *entry.outputs, *entry.sidecars):
             source, target = repo / relative, shadow / relative
             if source.is_file():
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -375,14 +384,21 @@ def output_paths(root: Path, entry: Generator) -> set[Path]:
 
 
 def clear_generated_html(shadow: Path, entry: Generator) -> None:
-    """Remove registered outputs from the isolated shadow tree."""
-    for path in output_paths(shadow, entry):
-        path.unlink()
+    """Remove registered pages and sidecars from the isolated shadow tree."""
+    for path in artifact_paths(shadow, entry):
+        path.unlink(missing_ok=True)
+
+
+def artifact_paths(root: Path, entry: Generator) -> set[Path]:
+    """Include data outputs without adding JSON to the HTML-only page census."""
+    return output_paths(root, entry) | {root / path for path in entry.sidecars}
 
 
 def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[str]:
     """Execute a generator with captured output in the shadow tree."""
     env = os.environ.copy()
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+        env.pop(name, None)
     env["PYTHONPATH"] = str(shadow / "src")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
@@ -424,9 +440,9 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
     if result.returncode:
         detail = result.stderr.strip() or result.stdout.strip()
         return f"{entry.script} failed ({result.returncode}): {detail}"
-    produced = output_paths(shadow, entry)
+    produced = artifact_paths(shadow, entry)
     if not produced or any(not path.is_file() for path in produced):
-        return f"{entry.script} produced no registered HTML output"
+        return f"{entry.script} did not produce every registered output"
     return None
 
 
@@ -447,6 +463,11 @@ def all_registered_outputs(root: Path) -> set[Path]:
     return paths
 
 
+def all_registered_artifacts(root: Path) -> set[Path]:
+    """Collect the HTML pages and data sidecars covered by byte comparison."""
+    return {path for entry in GENERATORS for path in artifact_paths(root, entry)}
+
+
 def short_diff(committed: Path, generated: Path) -> list[str]:
     """Return a bounded text diff for a generated page."""
     old = committed.read_text(encoding="utf-8").splitlines()
@@ -464,8 +485,8 @@ def short_diff(committed: Path, generated: Path) -> list[str]:
 
 def compare_outputs(repo: Path, shadow: Path) -> list[tuple[str, list[str]]]:
     """Find differences between committed and regenerated pages."""
-    committed = {path.relative_to(repo) for path in all_registered_outputs(repo)}
-    fresh = {path.relative_to(shadow) for path in all_registered_outputs(shadow)}
+    committed = {path.relative_to(repo) for path in all_registered_artifacts(repo)}
+    fresh = {path.relative_to(shadow) for path in all_registered_artifacts(shadow)}
     drift = []
     for relative in sorted(committed | fresh):
         old, new = repo / relative, shadow / relative
@@ -495,16 +516,17 @@ def check(repo: Path = REPO) -> int:
             return 1
         drift = compare_outputs(repo, shadow)
     if drift:
-        print("GENERATED HTML CHECK FAILED — committed pages differ from generators")
+        print("GENERATED HTML CHECK FAILED — committed artifacts differ from generators")
         for path, diff in drift:
             print(f"\n  x {path}")
             for line in diff:
                 print(f"    {line}")
-        print(f"\n{len(drift)} generated HTML page(s) drifted.")
+        print(f"\n{len(drift)} generated artifact(s) drifted.")
         return 1
     pages = len(all_registered_outputs(repo))
+    sidecars = sum(len(entry.sidecars) for entry in GENERATORS)
     print(
-        f"generated HTML check OK — {pages} page(s) from "
+        f"generated HTML check OK — {pages} page(s) and {sidecars} sidecar(s) from "
         f"{len(GENERATORS)} generator(s); "
         f"{len(EXCLUDED_GENERATORS)} excluded generator(s); "
         f"{len(PAGE_EXCLUSIONS)} explicit exclusion(s); "
