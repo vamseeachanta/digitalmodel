@@ -1,0 +1,10 @@
+{
+  "revision": "2",
+  "date": "2026-10-22",
+  "changes": [
+    "Screening wording and chart colours follow calculated strain and stress comparisons.",
+    "Unrounded workflow results are formatted once; minimum radii are rounded upward.",
+    "UTF-8 and LF-normalised source and report digests retain portable comment bindings.",
+    "Independent numerical anchors, captions and total reeling-strain terminology are retained."
+  ]
+}

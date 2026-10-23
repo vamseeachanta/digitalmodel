@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Durable workflow: J-lay and reel-lay pipelay screening (offline).
 
 Routes a ``basename: pipelay`` input through the analytical pipelay
@@ -15,7 +18,7 @@ Two lay methods are supported, selected by ``pipelay.method``:
 - ``Reel-Lay``: reel + straightener residual-curvature screening. The pipe is
   spooled onto a reel of given core radius, then passed through a
   straightener. The reeling bending strain ``D / (2 * R_reel)`` must stay below
-  the plastic-strain limit, and the residual curvature / out-of-straightness
+  the total reeling-strain criterion, and the residual curvature / out-of-straightness
   after straightening is reported.
 
 References:
@@ -76,10 +79,10 @@ def run_jlay(settings: Dict[str, Any]) -> Dict[str, Any]:
         "supplied_top_tension_kN": jlay.top_tension,
         "applied_defaults": defaults,
         "pipe_outer_diameter_m": pipe.outer_diameter,
-        "pipe_submerged_weight_N_per_m": round(pipe.submerged_weight_per_m, 3),
+        "pipe_submerged_weight_N_per_m": pipe.submerged_weight_per_m,
         "sagbend": sagbend,
         "allowable_sagbend_strain": strain_limit,
-        "sagbend_strain_utilisation": round(utilisation, 4),
+        "sagbend_strain_utilisation": utilisation,
         "screening_status": "pass" if utilisation <= 1.0 else "fail",
     }
     if "operability" in settings:
@@ -93,7 +96,7 @@ def run_reel_lay(settings: Dict[str, Any]) -> Dict[str, Any]:
     The reeling bending strain is ``epsilon = D / (2 * R_reel)`` where
     ``R_reel`` is the reel core radius plus the part of the pipe already
     wound on. The pipe yields plastically on the reel (this is intended in
-    reel-lay) but must stay below an allowable plastic strain. After
+    reel-lay); the screen compares total bending strain with the supplied criterion. After
     straightening, a residual curvature remains; the residual
     out-of-straightness over a span is reported.
 
@@ -135,17 +138,17 @@ def _reel_result(pipe, config) -> Dict[str, Any]:
         "method": LayMethod.REEL_LAY.value,
         "reel_core_radius_m": reel_core_radius,
         "pipe_outer_diameter_m": D,
-        "pipe_submerged_weight_N_per_m": round(pipe.submerged_weight_per_m, 3),
-        "reeling_bending_strain": round(reeling_strain, 6),
+        "pipe_submerged_weight_N_per_m": pipe.submerged_weight_per_m,
+        "reeling_bending_strain": reeling_strain,
         "allowable_reeling_strain": allowable_reeling_strain,
-        "reeling_strain_utilisation": round(reeling_utilisation, 4),
+        "reeling_strain_utilisation": reeling_utilisation,
         "straightener_efficiency": straightener_efficiency,
-        "residual_curvature_1_per_m": round(residual_curvature, 8),
-        "residual_radius_m": round(residual_radius, 1) if residual_radius is not None else None,
+        "residual_curvature_1_per_m": residual_curvature,
+        "residual_radius_m": residual_radius,
         "residual_radius_status": "finite" if residual_radius is not None else "unbounded_zero_curvature",
-        "residual_bending_strain": round(residual_strain, 6),
+        "residual_bending_strain": residual_strain,
         "residual_out_of_straightness_span_m": residual_span_m,
-        "residual_out_of_straightness_m": round(residual_oos_m, 5),
+        "residual_out_of_straightness_m": residual_oos_m,
         "screening_status": "pass" if reeling_utilisation <= 1.0 else "fail",
     }
 
@@ -168,12 +171,9 @@ def router(cfg: dict) -> dict:
         )
 
     # Minimum stinger radius is a useful reference for any method.
-    result["min_stinger_radius_m"] = round(
-        calculate_stinger_radius(
-            result["pipe_outer_diameter_m"],
-            float(settings.get("config", {}).get("allowable_overbend_strain", 0.002)),
-        ),
-        1,
+    result["min_stinger_radius_m"] = calculate_stinger_radius(
+        result["pipe_outer_diameter_m"],
+        float(settings.get("config", {}).get("allowable_overbend_strain", 0.002)),
     )
 
     result['applied_defaults'].update({f'outputs.{key}': value
@@ -194,5 +194,5 @@ def _write_summary(cfg: dict, output_cfg: dict, payload: Dict[str, Any]) -> Path
         directory = Path(cfg.get("_config_dir_path", Path.cwd())) / directory
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", "pipelay_summary.json")
-    summary_path.write_text(text, encoding="utf-8")
+    summary_path.write_text(text, encoding="utf-8", newline="\n")
     return summary_path
