@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uncertainty module: sampling, evaluation and interpretation</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+</head><body class="hs-doc">
+<header><h1>Uncertainty module: sampling, evaluation and interpretation</h1>
+<p>Draft for maintainer review</p></header>
+<div class="layout"><nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li>
+<li><a href="#section-3">Inputs and Outputs</a></li><li><a href="#section-4">Basis and Criteria</a></li>
+<li><a href="#section-5">Methodology</a></li><li><a href="#section-6">Detailed Results</a></li>
+<li><a href="#section-7">Validation Evidence</a></li><li><a href="#section-8">Findings, Limits and Recommendations</a></li>
+<li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li>
+</ol></nav><main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The uncertainty module is a sampling and response-analysis library. Analysis is performed to determine whether its public linear example recovers analytical moments; key results are summarized below.</p>
+<ul><li>Use the library to propagate declared input distributions through a scalar evaluator.
+<ul><li>The sampled mean is @@MEAN@@ against an analytical mean of @@REFERENCE_MEAN@@; the numerical comparison limit is @@MEAN_LIMIT_PCT@@ percent.</li>
+<li>The sampled variance is @@VARIANCE@@ against an analytical variance of @@REFERENCE_VARIANCE@@; the numerical comparison limit is @@VARIANCE_LIMIT_PCT@@ percent.</li></ul></li>
+<li>Use these comparisons to assess this numerical example.
+<ul><li>Physical validation and application acceptance are not evaluated. The comparison limits are software-test tolerances, not operating limits.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><caption>Revision history. Report issues and reasons for change.</caption><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>Initial</td><td>2026-10-21</td><td>The public linear example, numerical criteria and application limitations are documented together.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Independent numerical checks, covariance context, evidence precision, retained styling and current rebuild evidence are added to resolve numerical and reproducibility gaps.</td></tr>
+</tbody></table>
+</section>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>Input uncertainty is represented by probability distributions, and responses are evaluated for sampled combinations. The module separates distribution specification, sample generation, response evaluation and statistical interpretation.</p>
+<p>The example is dimensionless and is defined by the repository's existing linear-model verification test. It represents a mathematical response with uncertain slope and offset; it is not a representation of a physical installation. No physical geometry, mesh or boundary condition is assigned.</p>
+<p>The main workflow comprises normal and uniform priors, Latin hypercube sampling, callable evaluation, percentiles and sensitivity ranking. The term Latin hypercube denotes stratified sampling of each marginal distribution.</p>
+</section>
+<section id="section-3"><h2>3. Inputs and Outputs</h2>
+<p>Distribution parameters and sampling controls are supplied by the user. Named input columns are returned with finite scalar output columns after evaluation.</p>
+<h3>3.1 Example inputs</h3>
+<p>The response is y = ax + b. Here x is the fixed argument, a is the uncertain slope, b is the uncertain offset and y is the calculated response. All quantities are dimensionless. The fixed argument is @@X@@; the normal slope has mean @@MEAN_A@@ and standard deviation @@STD_A@@; the uniform offset extends from @@LOW_B@@ to @@HIGH_B@@. The design contains @@N_SAMPLES@@ samples with seed @@SEED@@. These are example inputs from the existing test, not measured properties.</p>
+<p>Input dependence is not specified by this interface. The analytical comparison assumes independent slope and offset. Distribution names and their parameters are checked, including finite values, positive scales and ordered bounds. Samplers reject duplicate prior names.</p>
+<h3>3.2 Interface and returned data</h3>
+<p>The Prior class defines a distribution. The sample_lhs function returns a table with prior names as columns. The run_matrix function accepts that table and either a callable or an object exposing run; the evaluator returns a mapping from output names to scalar values. An exception aborts evaluation and identifies the failing row. An output name matching an input is prefixed with output_.</p>
+<p>The percentile_summary function returns named output quantiles. The tornado function ranks standardized regression coefficients by absolute magnitude. The spearman_ranks function returns rank correlations and significance estimates. These quantities describe sampled responses; none is a physical acceptance decision.</p>
+</section>
+<section id="section-4"><h2>4. Basis and Criteria</h2>
+<p>The example is assessed against analytical moments of the declared distributions. Acceptance is restricted to the numerical comparisons defined in the existing test.</p>
+<h3>4.1 Theory</h3>
+<p>For a uniform offset between bounds L and H, the density is 1/(H − L). Integrating b times this density gives E[b] = (L + H)/2; integrating (b − E[b])² gives Var[b] = (H − L)²/12. The density and inverse-distribution mapping are described in the SciPy uniform-distribution reference, edition 1.15.3, description and methods.</p>
+<p>For a normal slope, the mean μ and standard deviation σ are the location and scale. Their meanings and the normal density are stated in the SciPy normal-distribution reference, edition 1.15.3, description and notes. Independence makes the cross term in the variance integral vanish, giving E[y] = xμ + (L + H)/2 and Var[y] = x²σ² + (H − L)²/12. These equations are derived here from the stated densities and the defined linear response.</p>
+<p>Each marginal probability interval [j/n, (j + 1)/n) contains one Latin hypercube draw, with j the interval index and n the sample count. The inverse cumulative distribution maps each draw to its physical or dimensionless input value. This construction follows the SciPy LatinHypercube reference, edition 1.15.3, description.</p>
+<p>Sample percentiles use linear interpolation between sorted responses at position (n − 1)p, where p is the cumulative probability. This is the default linear method in the NumPy percentile reference, edition 1.26, notes. A percentile of response is not a confidence bound on the estimated percentile.</p>
+<h3>4.2 Numerical criteria</h3>
+<p>The signed percentage difference is 100(sample estimate − analytical reference)/analytical reference. Absolute mean difference is limited to @@MEAN_LIMIT_PCT@@ percent and absolute variance difference to @@VARIANCE_LIMIT_PCT@@ percent. These limits come from the relative tolerances in <code>tests/uncertainty/test_roundtrip.py:23-24</code> (percentage limit = 100 × rtol); they check approximate moment recovery for this sample design. They do not establish tail convergence or a reliability target.</p>
+</section>
+<section id="section-5"><h2>5. Methodology</h2>
+<p>The public module is called directly for sampling, evaluation and response summaries. The analytical reference is calculated separately from the declared distribution moments.</p>
+<figure><svg viewBox="0 0 760 150" role="img" aria-label="Calculation sequence from distributions to sampled responses and numerical comparison">
+<rect x="5" y="20" width="200" height="90" fill="#edf2f4" stroke="#183449"/>
+<text x="15" y="50">Normal slope a</text><text x="15" y="80">Uniform offset b</text>
+<text x="215" y="70">→</text><rect x="245" y="20" width="215" height="90" fill="#edf2f4" stroke="#183449"/>
+<text x="255" y="50">Sample and evaluate</text><text x="255" y="80">y = ax + b; fixed x</text>
+<text x="470" y="70">→</text><rect x="500" y="20" width="250" height="90" fill="#edf2f4" stroke="#183449"/>
+<text x="510" y="50">Summarize responses</text><text x="510" y="80">Compare analytical moments</text>
+</svg><figcaption>Figure 1. Mathematical model and calculation sequence; no physical geometry is implied.</figcaption></figure>
+<p>The sampled variance uses the population divisor n, consistent with the existing comparison test. For regression sensitivity, each input and the output are centered and divided by their population standard deviation; least squares minimizes the residual norm of the standardized output against the standardized input matrix. The mathematical minimization is described in the NumPy least-squares reference, edition 1.26, description.</p>
+<p>Spearman correlation measures monotonic association as described in the SciPy spearmanr reference, edition 1.15.3, description. Neither regression magnitude nor correlation establishes causal contribution. No significance decision is made from the returned significance estimates for this stratified design.</p>
+</section>
+<section id="section-6"><h2>6. Detailed Results</h2>
+<p>The sampled mean is @@MEAN@@ against an analytical mean of @@REFERENCE_MEAN@@; the numerical comparison limit is @@MEAN_LIMIT_PCT@@ percent. The sampled variance is @@VARIANCE@@ against an analytical variance of @@REFERENCE_VARIANCE@@; the numerical comparison limit is @@VARIANCE_LIMIT_PCT@@ percent.</p>
+<p>The mean difference is @@MEAN_DIFFERENCE_PCT@@ percent and the variance difference is @@VARIANCE_DIFFERENCE_PCT@@ percent. The absolute differences lie within the respective numerical limits.</p>
+<figure><label for="metric">Moment comparison: </label><select id="metric"><option value="mean">Mean</option><option value="variance">Variance</option></select>
+<svg id="chart" viewBox="0 0 720 280" role="img" aria-label="Absolute percentage difference and numerical limit"></svg>
+<p id="chart-detail" aria-live="polite"></p>
+<figcaption>Figure 2. Absolute percentage difference by response moment. The selected numerical limit is drawn. Hover or focus the result marker for its case, quantity, demand, limit and units.</figcaption></figure>
+<p>The sampled input correlation corr(a,b) is @@INPUT_CORRELATION@@. The covariance cross term contributes @@COVARIANCE_DIFFERENCE_PCT@@ percentage points to the total variance difference of @@VARIANCE_DIFFERENCE_PCT@@ percent. Finite-sample correlation therefore explains most of the variance difference; the analytical reference continues to assume independent inputs. The cross term is 2x Cov(a,b), following JCGM 100:2008, first edition, clause 5.2.2, Evaluation of combined standard uncertainty for correlated input quantities. For this linear response the propagation is exact.</p>
+<p>The output percentiles are @@PERCENTILES@@, dimensionless. Standardized regression coefficients are @@SENSITIVITY@@. Spearman correlations are @@RANKS@@. The slope dominates the sampled response ranking for this example; that ordering depends on the supplied distributions.</p>
+<table><caption>Table 1. Deterministic anchor calls of the same linear evaluator, with the slope fixed at its mean and the offset at its bounds and midpoint. These are arithmetic checks, not random samples.</caption><thead><tr><th>a (dimensionless)</th><th>x (dimensionless)</th><th>b (dimensionless)</th><th>y (dimensionless)</th><th>Source</th></tr></thead>
+<tbody>@@ANCHORS@@</tbody></table>
+</section>
+<section id="section-7"><h2>7. Validation Evidence</h2>
+<p>Existing evidence consists of automated numerical and interface tests. Experimental validation is not established by the inspected uncertainty tests.</p>
+<p>The sampling tests compare a fixed-seed Latin hypercube with SciPy, check one draw in each uniform stratum, check repeatability of random sampling, and reject malformed priors. Configuration tests exercise text loading and reject invalid evaluator selection, blank identifiers and non-finite values. Evaluator tests check object and callable dispatch, name prefixing, exception reporting and invalid outputs.</p>
+<p>Analytics tests check ranking, correlation signs, ordered percentiles and step summaries. The round-trip test compares sampled moments of the linear response with analytical expectations using the numerical limits stated above. It does not test a physical response model. No measured benchmark dataset or field comparison is provided by these tests.</p>
+<p>The accompanying report tests check the deterministic anchor values by hand calculation, compare every retained sample with a fresh module call, independently check standardized coefficients, rank correlations and interpolated percentiles, and rebuild the report. The independent normal/uniform convolution gives P10/P50/P90 = 10.910/13.500/16.090; the seeded sample comparison uses a 0.10 dimensionless absolute tolerance. These are response percentiles, not confidence limits. Evidence locations and the rebuild command are provided in the references.</p>
+</section>
+<section id="section-8"><h2>8. Findings, Limits and Recommendations</h2>
+<p>The numerical example meets its moment-comparison criteria. Application acceptance remains not evaluated because no physical model, measured input distributions or engineering acceptance limit is supplied.</p>
+<h3>8.1 Limits of use</h3>
+<p>UncertaintyStudy and load_study validate and load configuration; they do not resolve a configured evaluator or execute a screening decision. That orchestration remains the caller's responsibility. Normal priors are unbounded and can generate physically inadmissible inputs. Units are not enforced by this module.</p>
+<p>Constant columns are rejected by regression standardization. Rank-deficient or nearly dependent inputs can make regression rankings misleading; the returned ranking contains no conditioning diagnostic. Response mappings with missing keys can produce missing values across rows. Prefixing an output can also collide with an existing prefixed input name. Inputs and output schemas require separate checks before application use.</p>
+<p>No joint dependence model, adaptive convergence study, uncertainty on estimated tail probabilities, or physical acceptance assessment is established here. A single seeded design does not establish tail accuracy. Sampling algorithm and dependency changes can change the individual draws.</p>
+<h3>8.2 Recommendations and not covered</h3>
+<p>Before application use, supply a unit-aware response definition, measured or justified priors, dependence assumptions and an acceptance criterion. Check complete, consistent and noncolliding output names before response summarization. For a response near its application limit, repeat the analysis across sample counts and seeds until a stated precision target is met; no target is assumed here. These recommendations address the interface limits and the scope of the available numerical evidence.</p>
+<p>Not covered: lognormal and triangular worked examples, naive random-sampling comparisons, stepwise percentile bands from fan, configured evaluator resolution and automatic screening. Their interfaces exist, but their application-specific numerical performance is not assessed in this report.</p>
+</section>
+<section id="section-9"><h2>9. References</h2>
+<p>The calculation basis is drawn from versioned public mathematical references and the repository's public verification example. Source locations are consolidated below.</p>
+<h3>9.1 Source interpretation</h3>
+<p>The distribution and numerical-library references define the mathematics and algorithm semantics. The repository test defines the illustrative inputs and numerical tolerances. Neither source supplies an engineering operating limit.</p>
+<h3>9.2 Source locations</h3>
+<ul>
+<li><a href="https://www.bipm.org/documents/20126/2071204/JCGM_100_2008_E.pdf">JCGM 100:2008, first edition, clauses 5.1.2 and 5.2.2</a> — uncorrelated and correlated input propagation; applied here to a dimensionless linear example, without measurement qualification.</li>
+<li><a href="https://docs.scipy.org/doc/scipy-1.15.3/reference/generated/scipy.stats.uniform.html">SciPy 1.15.3, uniform: description and methods</a> — uniform density and inverse distribution.</li>
+<li><a href="https://docs.scipy.org/doc/scipy-1.15.3/reference/generated/scipy.stats.norm.html">SciPy 1.15.3, norm: description and notes</a> — normal density, location and scale.</li>
+<li><a href="https://docs.scipy.org/doc/scipy-1.15.3/reference/generated/scipy.stats.qmc.LatinHypercube.html">SciPy 1.15.3, LatinHypercube: description</a> — marginal stratification.</li>
+<li><a href="https://numpy.org/doc/1.26/reference/generated/numpy.percentile.html">NumPy 1.26, percentile: notes</a> — linear percentile interpolation.</li>
+<li><a href="https://numpy.org/doc/1.26/reference/generated/numpy.linalg.lstsq.html">NumPy 1.26, linalg.lstsq: description</a> — residual minimization.</li>
+<li><a href="https://docs.scipy.org/doc/scipy-1.15.3/reference/generated/scipy.stats.spearmanr.html">SciPy 1.15.3, spearmanr: description</a> — rank correlation interpretation.</li>
+<li><a href="../../../../tests/uncertainty/test_roundtrip.py">Public linear example and moment criteria</a>: test_linear_model_recovers_analytic_mean_and_variance.</li>
+<li><a href="../../../../src/digitalmodel/uncertainty/__init__.py">Public module exports</a>; <a href="../../../../src/digitalmodel/uncertainty/config.py">configuration</a>; <a href="../../../../src/digitalmodel/uncertainty/evaluator.py">evaluator</a>; <a href="../../../../src/digitalmodel/uncertainty/analytics.py">analytics</a>; <a href="../../../../src/digitalmodel/uncertainty/distributions.py">distributions</a>; <a href="../../../../src/digitalmodel/uncertainty/doe.py">sampling</a>.</li>
+<li><a href="../../../../tests/uncertainty/test_doe.py">Sampling tests</a>; <a href="../../../../tests/uncertainty/test_config.py">configuration tests</a>; <a href="../../../../tests/uncertainty/test_evaluator.py">evaluator tests</a>; <a href="../../../../tests/uncertainty/test_analytics.py">analytics tests</a>; <a href="../../../../tests/uncertainty/test_module_report.py">report tests</a>.</li>
+<li><a href="../../pipeline-ffs-assessment.html">Layout exemplar</a>; its stylesheet is retained in the report template so rebuilds do not read the exemplar.</li>
+<li>Rebuild: <code>python docs/reports/modules/uncertainty/build_report.py</code>. The public entry points are called in <a href="build_report.py">the report generator</a>. Dependencies used for the numerical reference are NumPy 1.26.4 and SciPy 1.15.3.</li>
+</ul>
+</section>
+<section id="section-10"><h2>10. Appendix: Data Register and Review Notes</h2>
+<p>Data readiness and checking scope are recorded below. The mathematical example is suitable for numerical demonstration only.</p>
+<h3>10.1 Data register and quality checks</h3>
+<table><caption>Table 2. Data register and quality-check scope.</caption><thead><tr><th>Item</th><th>Basis and readiness</th><th>Disposition</th></tr></thead><tbody>
+<tr><td>Linear response and distribution parameters</td><td>Public example inputs; dimensionless</td><td>Used for numerical demonstration</td></tr>
+<tr><td>Independent slope and offset</td><td>ASSUMED - to be confirmed for any application</td><td>Required by the analytical variance comparison</td></tr>
+<tr><td>Physical distributions and operating limit</td><td>NOT_EVALUATED; no application supplied</td><td>Required inputs before an engineering decision</td></tr>
+<tr><td>Numerical moment comparison</td><td>Existing test tolerances</td><td>Applied only to this example</td></tr>
+<tr><td>Arithmetic anchors</td><td>Hand calculations compared with evaluator calls</td><td>Checked by the report test</td></tr>
+<tr><td>Sample and display consistency</td><td>All sample rows and summaries compared with module calls; displayed values rounded</td><td>Checked by the report test</td></tr>
+<tr><td>Report integrity</td><td>Regeneration, internal links and prohibited wording</td><td>Regeneration, displayed values and retained source digests are checked by <code>test_rebuild_and_displayed_numbers</code>. Real-browser comment saving remains not evaluated.</td></tr>
+</tbody></table>
+<p>The mathematical symbols are defined in the inputs and basis sections. E denotes expectation; Var denotes variance; μ denotes the normal mean; σ denotes its standard deviation; L and H denote uniform bounds; n denotes sample count; p denotes cumulative probability.</p>
+<h3>10.2 Engineering changes and comments</h3>
+<details><summary>Engineering changes</summary><ul id="change-list"></ul></details>
+<label for="comment-section">Comment section</label><select id="comment-section"></select>
+<p><label for="comment">Review comment</label><br><textarea id="comment" rows="5" cols="55"></textarea></p>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load saved comments <input id="load-comments" type="file" accept="application/json"></label>
+<p id="comment-status" aria-live="polite">Comments remain in this page until saved. Select the report folder to save beside the report. If folder access is unavailable, save the downloaded comments file beside the report manually.</p>
+<ol id="comments"></ol>
+</section></main></div>
+<script id="evidence" type="application/json">@@EVIDENCE@@</script>
+<script id="changes" type="application/json">@@CHANGES@@</script>
+<script>
+const evidence = JSON.parse(document.getElementById('evidence').textContent);
+const svg = document.getElementById('chart');
+function drawChart() {
+  const metric = document.getElementById('metric').value;
+  const demand = Math.abs(evidence[metric + '_difference_pct']);
+  const limit = evidence[metric + '_limit_pct'];
+  const ymax = Math.max(limit, demand) * 1.25;
+  const y = value => 220 - 180 * value / ymax;
+  const differenceText = demand > 0 && demand < 0.05 ? demand.toExponential(1) : demand.toFixed(1);
+  const description = `Linear example; response ${metric}; absolute difference ${differenceText} %; limit ${limit.toFixed(1)} %.`;
+  svg.innerHTML = `<path d="M80 30V220H660" fill="none" stroke="#183449"/>
+    <text x="85" y="20">Absolute difference (%)</text><text x="290" y="260">Response ${metric}</text>
+    <path d="M80 ${y(limit)}H660" stroke="#137e8a" stroke-dasharray="8 4"/>
+    <text x="440" y="${y(limit)-8}">Limit ${limit.toFixed(3)} %</text>
+    <text x="30" y="224">0</text>
+    <circle tabindex="0" role="img" aria-label="${description}" cx="350" cy="${y(demand)}" r="7" fill="#183449"><title>${description}</title></circle>`;
+  document.getElementById('chart-detail').textContent = description;
+}
+document.getElementById('metric').addEventListener('change', drawChart);
+drawChart();
+for (const text of JSON.parse(document.getElementById('changes').textContent).changes) {
+  const li = document.createElement('li'); li.textContent = text;
+  document.getElementById('change-list').append(li);
+}
+for (const heading of document.querySelectorAll('section > h2')) {
+  const option = document.createElement('option'); option.textContent = heading.textContent;
+  document.getElementById('comment-section').append(option);
+}
+let comments = [];
+function renderComments() {
+  document.getElementById('comments').replaceChildren();
+  for (const item of comments) {
+    const li = document.createElement('li'); li.textContent = item.section + ': ' + item.text;
+    document.getElementById('comments').append(li);
+  }
+}
+document.getElementById('add-comment').onclick = () => {
+  const field = document.getElementById('comment');
+  if (!field.value.trim()) return;
+  comments.push({section: document.getElementById('comment-section').value, text: field.value.trim()});
+  field.value = ''; renderComments();
+};
+document.getElementById('save-comments').onclick = async () => {
+  const content = JSON.stringify({revision: 'Initial', comments}, null, 2) + '\n';
+  const status = document.getElementById('comment-status');
+  try {
+    if ('showDirectoryPicker' in window) {
+      const directory = await window.showDirectoryPicker({mode: 'readwrite'});
+      const file = await directory.getFileHandle('uncertainty.comments.json', {create: true});
+      const writer = await file.createWritable(); await writer.write(content); await writer.close();
+      status.textContent = 'Comments saved in the selected folder.';
+    } else {
+      const url = URL.createObjectURL(new Blob([content], {type: 'application/json'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'uncertainty.comments.json';
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = 'Download requested. Place the comments file beside the report.';
+    }
+  } catch (error) { status.textContent = 'Comments were not saved: ' + error.message; }
+};
+document.getElementById('load-comments').onchange = async event => {
+  try {
+    if (!event.target.files.length) return;
+    const data = JSON.parse(await event.target.files[0].text());
+    if (data.revision !== 'Initial' || !Array.isArray(data.comments) ||
+        !data.comments.every(item => typeof item.section === 'string' && typeof item.text === 'string')) {
+      throw new Error('The comment file format is invalid.');
+    }
+    comments = data.comments; renderComments();
+    document.getElementById('comment-status').textContent = 'Saved comments loaded.';
+  } catch (error) { document.getElementById('comment-status').textContent = 'Comments were not loaded: ' + error.message; }
+};
+</script></body></html>

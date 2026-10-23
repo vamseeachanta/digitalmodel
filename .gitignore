@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Keep module directories traversable; each report opts in its retained files.
+!docs/reports/modules/
+docs/reports/modules/*/*
+
+# Retain the uncertainty module report and its reproducible source only.
+!docs/reports/modules/uncertainty/
+!docs/reports/modules/uncertainty/build_report.py
+!docs/reports/modules/uncertainty/report.html.in
+!docs/reports/modules/uncertainty/index.html
+!docs/reports/modules/uncertainty/changes.json

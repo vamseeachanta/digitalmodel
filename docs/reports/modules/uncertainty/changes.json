@@ -1,0 +1,10 @@
+{
+  "revision": "1",
+  "changes": [
+    "Distribution assumptions and numerical verification limits are stated.",
+    "The linear example is evaluated and compared with analytical moments.",
+    "Physical validation and application acceptance remain not evaluated.",
+    "Independent numerical checks, covariance context and nonzero evidence precision are added.",
+    "Report styling is retained locally and the rebuild evidence is corrected."
+  ]
+}
