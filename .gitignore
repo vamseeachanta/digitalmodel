@@ -461,6 +461,7 @@ docs/reports/abstracted-hulls/*
 # Retain the synthetic worked pipeline assessment.
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
+!docs/reports/padeye-lift-point-analysis.html
 
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
