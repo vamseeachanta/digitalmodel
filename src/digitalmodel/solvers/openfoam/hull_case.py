@@ -83,6 +83,7 @@ from .hull_case_regions import (
 )
 from .hull_field_patches import add_appendage_patchfields
 from .hull_manifest import HullManifest, load_hull_manifest
+from .hull_layers import AbsoluteLayerSpec
 
 __all__ = [
     "GRAVITY",
@@ -171,6 +172,8 @@ class HullCaseConfig:
     inner_margin_x_lpp: float = INNER_MARGIN_X_LPP
     inner_margin_y_beam: float = INNER_MARGIN_Y_BEAM
     inner_margin_z_lpp: float = INNER_MARGIN_Z_LPP
+    #: Optional absolute layer lengths; per-surface layer counts are preserved.
+    absolute_layers: Optional[AbsoluteLayerSpec] = None
 
     def __post_init__(self) -> None:
         if self.velocity <= 0:

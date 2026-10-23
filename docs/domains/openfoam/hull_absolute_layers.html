@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Absolute hull layer sizing</title>
+<style>
+body {font-family: system-ui, sans-serif; max-width: 54rem; margin: auto; padding: 2rem; line-height: 1.6}
+code, pre {background: #f2f4f7} pre {padding: 1rem; overflow: auto}
+table {border-collapse: collapse} td, th {border: 1px solid #bbb; padding: .5rem; text-align: left}
+</style>
+<h1>Absolute hull layer sizing</h1>
+<p>The case builders accept an explicit absolute first-layer thickness, expansion
+ratio and minimum overall stack thickness. Requested lengths are recorded per
+patch. Achieved coverage and y+ remain <code>NOT_EVALUATED</code> until native
+mesh and flow output is available. These inputs do not establish a remedy for
+layer collapse.</p>
+
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>Initial</td><td>2026-10-19</td><td>Explicit layer sizing and provenance are added so a requested stack can be examined before meshing.</td></tr>
+</table>
+<p>Table 1. Document revisions.</p>
+
+<h2>Inputs and equations</h2>
+<p>The source is the <a href="https://doc.openfoam.com/2312/tools/pre-processing/mesh/generation/snappyhexmesh/layers/">OpenFOAM
+v2312 (2023) snappyHexMesh layer guide</a>, keyword sections
+<code>relativeSizes</code>, <code>expansionRatio</code>,
+<code>firstLayerThickness</code>, <code>minThickness</code> and
+<code>nSurfaceLayers</code>, accessed 2026-10-19.</p>
+<p>For first thickness h, expansion ratio r and layer count n, layer k has
+thickness h r<sup>k</sup>, starting at k = 0. Summing gives
+H = h(r<sup>n</sup> &minus; 1)/(r &minus; 1); for r = 1, H = nh.
+These equations follow directly from the guide's adjacent-layer expansion
+definition. No empirical coefficient is used. Zero requested layers give a
+zero stack and undefined first and final thicknesses.</p>
+<p><code>minThickness</code> denotes the minimum <em>overall</em> stack. A request
+below that minimum is flagged in provenance. It is not compared against the
+first layer alone. Inputs are positive finite scalars; layer counts are
+nonnegative integers. A stack outside the supported floating-point range is
+refused before case files are created.</p>
+
+<h2>Case construction</h2>
+<pre><code>from digitalmodel.solvers.openfoam.hull_layers import AbsoluteLayerSpec
+
+spec = AbsoluteLayerSpec(
+    first_layer_thickness_m=first_layer_m,
+    expansion_ratio=adjacent_layer_ratio,
+    min_thickness_m=minimum_overall_stack_m,
+)
+configured = config.replace(absolute_layers=spec)
+# Pass configured to build_hull_case or build_double_body_case.
+diagnostic = spec.sizing(layer_count, outside_cell_size_m=measured_normal_cell_m)
+</code></pre>
+<p>The configuration sets <code>relativeSizes false</code> and emits
+<code>firstLayerThickness</code> with no <code>finalLayerThickness</code>.
+Existing per-patch counts are retained. Omitting <code>absolute_layers</code>
+retains the inherited relative dictionary settings. Both builders record
+<code>mesh.layers</code> in <code>case_provenance.json</code>.</p>
+<p>The optional diagnostic cell length is the local undistorted cell size normal
+to the patch. Cell/first-layer and cell/stack ratios are reported only when that
+length is supplied. The case builders do not substitute an estimated in-plane
+cell length for a measured normal length. No universal ratio cutoff is established.</p>
+
+<h2>Verification and remaining qualification</h2>
+<p>Tests use synthetic hand calculations. For h = 0.002 m, r = 2 and n = 3,
+the expanded stack is 0.002 + 0.004 + 0.008 = 0.014 m. A caller-supplied cell
+length of 0.028 m gives cell/first = 14.0 and cell/stack = 2.0. These are
+arithmetic examples, not mesh acceptance limits. Emission tests read back both
+dictionaries and provenance without running a solver.</p>
+<p>Native coverage above the stated criterion, achieved y+, and the cause of
+stack collapse are not established. The existing background refinement
+sequence and surface refinement levels are retained. Additional background
+refinement or replacement with snappyHexMesh-managed refinement will require
+separate native comparisons on qualified inputs. Increasing an absolute
+first-layer thickness will also require a justified wall-treatment criterion.</p>
+</html>
