@@ -56,7 +56,7 @@ class Archive:
     def text_fact(self, relative, pointer, value, unit="1", transformation=None):
         _, digest = self.read(relative)
         fact = {"value": value, "unit": unit, "provenance": {
-            "path": "dm1528/" + relative, "pointer": pointer, "sha256": digest}}
+            "path": "archived-cfd-campaign-2026-07/" + relative, "pointer": pointer, "sha256": digest}}
         if transformation:
             fact["transformation"] = transformation
         validate_public(fact)

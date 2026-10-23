@@ -38,7 +38,7 @@ def test_every_fact_has_relative_provenance():
     for fact in records(data):
         source = fact["provenance"]
         path = Path(source["path"])
-        assert path.parts[0] == "dm1528"
+        assert path.parts[0] == "archived-cfd-campaign-2026-07"
         assert not path.is_absolute() and ".." not in path.parts
         assert "\\" not in str(path)
         assert source["pointer"]
@@ -55,7 +55,7 @@ def test_extractor_reads_selected_fields_and_rejects_disclosures(tmp_path):
     fact = archive.fact("analytical/example.json", "/amplitude", "m³")
     assert fact["value"] == 1.25
     assert "private" not in json.dumps(fact)
-    assert fact["provenance"]["path"] == "dm1528/analytical/example.json"
+    assert fact["provenance"]["path"] == "archived-cfd-campaign-2026-07/analytical/example.json"
     for bad in ("../escape.json", str(tmp_path / "escape.json")):
         with pytest.raises(ValueError):
             archive.fact(bad, "/amplitude", "m³")

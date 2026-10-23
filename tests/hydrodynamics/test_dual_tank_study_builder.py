@@ -183,6 +183,33 @@ def test_output_structure_links_and_privacy(builder):
     assert_references_resolve(text, PAGE)
 
 
+def test_public_study_files_have_no_private_identifiers():
+    paths = (
+        PAGE,
+        PAGE.parent / "data/dual_tank_cfd_evidence.json",
+        BUILDER,
+        ROOT / "scripts/capabilities/extract_dual_tank_cfd_evidence.py",
+        Path(__file__),
+        Path(__file__).with_name("test_dual_tank_cfd_evidence.py"),
+    )
+    patterns = (
+        "d" + "m" + "1528",
+        "/" + "mnt" + "/",
+        "/" + "home" + "/",
+        "B" + "15" + r"\d{2}",
+        "gpu" + "-claw",
+        "ace" + "-linux",
+        "spa" + "rk",
+        "rds" + "02",
+    )
+    counts = []
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        counts.append([len(re.findall(pattern, text, re.I)) for pattern in patterns])
+    if any(any(row) for row in counts):
+        pytest.fail(f"Prohibited identifier counts: {counts}", pytrace=False)
+
+
 def assert_public_wording(text):
     process_words = (
         r"\b(?:own" r"er|la" r"ne|ag" r"ent|jobs?|runs?|pr|sha|"
