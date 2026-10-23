@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "currency": "TEST",
+  "revision": "1",
+  "data_kind": "synthetic",
+  "rates": [
+    {
+      "component": "riser_joints",
+      "unit": "joint",
+      "value": "2",
+      "citation": {
+        "code_id": "SYNTHETIC-BOM",
+        "publisher": "Synthetic fixture",
+        "revision": "1",
+        "section": "Invented arithmetic",
+        "source_sibling": "generic",
+        "wiki_path": "wikis/engineering/concepts/synthetic-bom.md"
+      }
+    },
+    {
+      "component": "coating",
+      "unit": "m",
+      "value": "3",
+      "citation": {
+        "code_id": "SYNTHETIC-BOM",
+        "publisher": "Synthetic fixture",
+        "revision": "1",
+        "section": "Invented arithmetic",
+        "source_sibling": "generic",
+        "wiki_path": "wikis/engineering/concepts/synthetic-bom.md"
+      }
+    },
+    {
+      "component": "buoyancy_modules",
+      "unit": "module",
+      "value": "5",
+      "citation": {
+        "code_id": "SYNTHETIC-BOM",
+        "publisher": "Synthetic fixture",
+        "revision": "1",
+        "section": "Invented arithmetic",
+        "source_sibling": "generic",
+        "wiki_path": "wikis/engineering/concepts/synthetic-bom.md"
+      }
+    },
+    {
+      "component": "ancillaries",
+      "unit": "item",
+      "value": "7",
+      "citation": {
+        "code_id": "SYNTHETIC-BOM",
+        "publisher": "Synthetic fixture",
+        "revision": "1",
+        "section": "Invented arithmetic",
+        "source_sibling": "generic",
+        "wiki_path": "wikis/engineering/concepts/synthetic-bom.md"
+      }
+    },
+    {
+      "component": "installation_spread",
+      "unit": "day",
+      "value": "11",
+      "citation": {
+        "code_id": "SYNTHETIC-BOM",
+        "publisher": "Synthetic fixture",
+        "revision": "1",
+        "section": "Invented arithmetic",
+        "source_sibling": "generic",
+        "wiki_path": "wikis/engineering/concepts/synthetic-bom.md"
+      }
+    }
+  ]
+}
