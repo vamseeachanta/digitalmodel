@@ -1,0 +1,233 @@
+{
+  "elapsed_seconds": 0.8,
+  "case_count": 4,
+  "numerical_threads": 1,
+  "architecture": "aarch64",
+  "logical_processors": 20,
+  "memory_gib": 119.7,
+  "example_digest": "ab6fbdcd36cfa631c64b27b25b0fbf57d570ab687df2d825629310545231a68a",
+  "date": "2026-10-22",
+  "scope": "Numerical imports, input extraction, coefficient calculations and comparator curves; rendering excluded",
+  "example": {
+    "basis": {
+      "added_mass_target_percent": 0.5,
+      "damping_target_percent": 0.1,
+      "density": 1025.0,
+      "frequencies": [
+        1.0,
+        2.0
+      ],
+      "geometry": {
+        "draft": 2.0,
+        "radius": 1.0,
+        "water_depth": 10.0
+      },
+      "gravity": 9.80665,
+      "mode_counts": [
+        40,
+        120
+      ]
+    },
+    "coefficients": [
+      {
+        "added_mass": 2131.750247403907,
+        "added_mass_t": 2.131750247403907,
+        "damping": 302.3985122222212,
+        "modes": 40,
+        "omega": 1.0,
+        "period": 6.283185307179586,
+        "residual": 1.6327428835771922e-16
+      },
+      {
+        "added_mass": 2136.594104836222,
+        "added_mass_t": 2.136594104836222,
+        "damping": 302.3233343181489,
+        "modes": 120,
+        "omega": 1.0,
+        "period": 6.283185307179586,
+        "residual": 2.3660843120488465e-16
+      },
+      {
+        "added_mass": 1843.7068012505047,
+        "added_mass_t": 1.8437068012505047,
+        "damping": 431.644613059981,
+        "modes": 40,
+        "omega": 2.0,
+        "period": 3.141592653589793,
+        "residual": 3.0274128343391964e-16
+      },
+      {
+        "added_mass": 1848.7551321743008,
+        "added_mass_t": 1.8487551321743008,
+        "damping": 431.1746552712829,
+        "modes": 120,
+        "omega": 2.0,
+        "period": 3.141592653589793,
+        "residual": 3.4945257749798423e-16
+      }
+    ],
+    "displaced_mass_t": 6.440264939859076,
+    "displaced_volume": 6.283185307179586,
+    "gap": 8.0,
+    "long_wave": {
+      "heave": [
+        {
+          "display_value": 1.0,
+          "heading": 0.0,
+          "value": 1.0
+        },
+        {
+          "display_value": 1.0,
+          "heading": 45.0,
+          "value": 1.0
+        },
+        {
+          "display_value": 1.0,
+          "heading": 90.0,
+          "value": 1.0
+        },
+        {
+          "display_value": 1.0,
+          "heading": 180.0,
+          "value": 1.0
+        }
+      ],
+      "pitch": [
+        {
+          "display_value": 0.04180140022039219,
+          "heading": 0.0,
+          "value": 0.000729572065789727
+        },
+        {
+          "display_value": 0.029558053558932165,
+          "heading": 45.0,
+          "value": 0.000515885355084194
+        },
+        {
+          "display_value": 0.0,
+          "heading": 90.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 0.04180140022039219,
+          "heading": 180.0,
+          "value": 0.000729572065789727
+        }
+      ],
+      "roll": [
+        {
+          "display_value": 0.0,
+          "heading": 0.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 0.02955805355893216,
+          "heading": 45.0,
+          "value": 0.0005158853550841939
+        },
+        {
+          "display_value": 0.04180140022039219,
+          "heading": 90.0,
+          "value": 0.000729572065789727
+        },
+        {
+          "display_value": 0.0,
+          "heading": 180.0,
+          "value": 0.0
+        }
+      ],
+      "surge": [
+        {
+          "display_value": 2.86186315959073,
+          "heading": 0.0,
+          "value": 2.86186315959073
+        },
+        {
+          "display_value": 2.023642846974564,
+          "heading": 45.0,
+          "value": 2.023642846974564
+        },
+        {
+          "display_value": 0.0,
+          "heading": 90.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 2.86186315959073,
+          "heading": 180.0,
+          "value": 2.86186315959073
+        }
+      ],
+      "sway": [
+        {
+          "display_value": 0.0,
+          "heading": 0.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 2.0236428469745635,
+          "heading": 45.0,
+          "value": 2.0236428469745635
+        },
+        {
+          "display_value": 2.86186315959073,
+          "heading": 90.0,
+          "value": 2.86186315959073
+        },
+        {
+          "display_value": 0.0,
+          "heading": 180.0,
+          "value": 0.0
+        }
+      ],
+      "yaw": [
+        {
+          "display_value": 0.0,
+          "heading": 0.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 0.059814943655024114,
+          "heading": 45.0,
+          "value": 0.001043967708675062
+        },
+        {
+          "display_value": 0.0,
+          "heading": 90.0,
+          "value": 0.0
+        },
+        {
+          "display_value": 0.0,
+          "heading": 180.0,
+          "value": 0.0
+        }
+      ]
+    },
+    "long_wave_basis": {
+      "depth": 500.0,
+      "headings": [
+        0.0,
+        45.0,
+        90.0,
+        180.0
+      ],
+      "omega": 0.05
+    },
+    "max_added_mass_difference": 0.2730664995022268,
+    "max_damping_difference": 0.10899476185639848,
+    "pass_percent": 75.0,
+    "refinement": [
+      {
+        "added_mass_difference_percent": 0.22670929501072748,
+        "damping_difference_percent": 0.024866722326228927,
+        "omega": 1.0
+      },
+      {
+        "added_mass_difference_percent": 0.2730664995022268,
+        "damping_difference_percent": 0.10899476185639848,
+        "omega": 2.0
+      }
+    ]
+  },
+  "numerical_source_digest": "e28f7e6cddeb01cb7393d39df09d9d597bc907146e1d45430a50cd662841daae"
+}

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-evidence="8d20a5525a0bc537d472db5d8783282de257403a3ef031730626dc2072a8a376">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Diffraction module analysis</title>
+<style>
+/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head>
+<body class="hs-doc"><main class="wrap">
+<header><div class="kicker">Hydrodynamics</div><h1>Diffraction module analysis</h1>
+<p class="sub">Draft for maintainer review</p></header>
+<nav aria-label="Report contents"><p>Contents: <a href="#summary">Summary</a> · <a href="#introduction">Introduction</a> · <a href="#results">Results</a> · <a href="#basis">Design data</a> · <a href="#method">Method</a> · <a href="#detail">Detailed results</a> · <a href="#findings">Findings</a> · <a href="#limits">Limits</a> · <a href="#recommendations">Recommendations</a> · <a href="#references">References and appendices</a></p></nav>
+
+<h2 id="summary">1. Executive Summary</h2>
+<p>The diffraction module is a preparation, conversion and assessment toolkit for frequency-domain hydrodynamics. Analysis is performed to determine the reproducibility of its public cylinder radiation example and the evidence available for wider use; key results are summarized below. <a href="#M">[M]</a> <a href="#W">[W]</a></p>
+<ul><li>The cylinder example is available as a reproducible radiation reference.
+<ul><li><span data-value-key="pass_percent" data-format=".1f">75.0</span> % of the sampled non-zero refinement comparisons meet the repository target benchmarks: added-mass change below <span data-value-key="basis.added_mass_target_percent" data-format=".1f">0.5</span> % and damping change below <span data-value-key="basis.damping_target_percent" data-format=".1f">0.1</span> %, against the finer expansion. <a href="#C">[C]</a></li>
+<li>The damping refinement target is not met at <span data-value-key="refinement.1.omega" data-format=".1f">2.0</span> rad/s; further mode refinement is required before that coefficient is adopted as a converged reference. <a href="#C">[C]</a></li>
+<li>The computed mass and damping coefficients are tabulated in <a href="#detail">Section 6</a>; these describe forced heave radiation, not a freely responding body. <a href="#M">[M]</a></li></ul></li>
+<li>A wider diffraction design is assessed only after its model basis is supplied.
+<ul><li>Independent program agreement, preferred program, panel size relative to body length and comparative runtime are NOT_EVALUATED. No paired independent program result is computed here. <a href="#E">[E]</a></li>
+<li>Surge, sway, heave, roll, pitch and yaw long-wave comparators are shown, with no observed motion arrays. Long-wave agreement is NOT_EVALUATED for every mode. <a href="#L">[L]</a></li></ul></li></ul>
+
+<h3 id="revision">Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>1</td><td>2026-10-22</td><td>Initial module analysis; calculated cylinder evidence is distinguished from unassessed design behaviour.</td></tr><tr><td>2</td><td>2026-10-22</td><td>Unsupported source-retrieval wording is removed so the source register matches retained evidence. Text is read as UTF-8 and written with LF endings; new measurements use portable memory information and the current UTC date. Comment identity follows displayed numerical precision, while cached calculations retain full-precision integrity checks. Refinement uses the lowest and highest mode counts; rebuilt-report checks detect stale narrative and the draft is addressed to maintainers.</td></tr></tbody></table>
+
+<h2 id="introduction">2. Introduction</h2>
+<p>A common model description is converted into hydrodynamic inputs, and completed results are organized for engineering assessment and motion-data transfer. The main workflow is explained from preparation to interpretation; the executable example is restricted to the independent numerical cylinder reference. <a href="#W">[W]</a> <a href="#M">[M]</a></p>
+<p>Geometry and mass properties are first described in a canonical specification. Frequency and heading axes, environment, solver options and output selections are supplied explicitly. Preparation is followed by an external diffraction solution, result extraction, unit and convention checks, physical screening and export. Native solver execution remains outside the evidence demonstrated by this report. <a href="#W">[W]</a> <a href="#I">[I]</a> <a href="#O">[O]</a></p>
+<p>A motion response amplitude operator, abbreviated RAO, relates complex displacement to incident wave amplitude. Radiation added mass and damping instead describe forces generated by prescribed body motion. Radiation coefficients alone do not provide excitation forces or a motion RAO. <a href="#T">[T]</a> <a href="#M">[M]</a></p>
+
+<h2 id="results">3. Summary of Results</h2>
+<p>Computed radiation coefficients are presented against angular frequency. The plotted points are the documented frequencies; joining lines are visual guides and carry no interpolation accuracy claim. <a href="#C">[C]</a></p>
+<figure id="added_mass_t"><figcaption>Heave added mass (t). No general added-mass acceptance limit is assigned.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="Heave added mass">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Angular frequency (rad/s)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">t</text>
+<text x="75.0" y="275" text-anchor="middle">1.0</text>
+<text x="695.0" y="275" text-anchor="middle">2.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">1.2</text>
+<text x="68" y="40.0" text-anchor="end">2.5</text>
+<g data-series="added_mass_t-0"><polyline points="75.0,67.8 695.0,92.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="67.8" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, 40 modes; component: Heave added mass; Angular frequency (rad/s): 1.0; demand: 2.1 t; limit: not assigned t"><title>Case: Cylinder, 40 modes; component: Heave added mass; Angular frequency (rad/s): 1.0; demand: 2.1 t; limit: not assigned t</title></circle>
+<circle cx="695.0" cy="92.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, 40 modes; component: Heave added mass; Angular frequency (rad/s): 2.0; demand: 1.8 t; limit: not assigned t"><title>Case: Cylinder, 40 modes; component: Heave added mass; Angular frequency (rad/s): 2.0; demand: 1.8 t; limit: not assigned t</title></circle>
+</g>
+<g data-series="added_mass_t-1"><polyline points="75.0,67.4 695.0,92.0" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="75.0" cy="67.4" r="5" fill="var(--accent)" tabindex="0" data-tip="Case: Cylinder, 120 modes; component: Heave added mass; Angular frequency (rad/s): 1.0; demand: 2.1 t; limit: not assigned t"><title>Case: Cylinder, 120 modes; component: Heave added mass; Angular frequency (rad/s): 1.0; demand: 2.1 t; limit: not assigned t</title></circle>
+<circle cx="695.0" cy="92.0" r="5" fill="var(--accent)" tabindex="0" data-tip="Case: Cylinder, 120 modes; component: Heave added mass; Angular frequency (rad/s): 2.0; demand: 1.8 t; limit: not assigned t"><title>Case: Cylinder, 120 modes; component: Heave added mass; Angular frequency (rad/s): 2.0; demand: 1.8 t; limit: not assigned t</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="added_mass_t-0"> Cylinder, 40 modes</label>
+<label><input type="checkbox" checked data-toggle="added_mass_t-1"> Cylinder, 120 modes</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="damping"><figcaption>Heave radiation damping (N s/m). Nonnegative radiation damping.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="Heave radiation damping">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Angular frequency (rad/s)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">N s/m</text>
+<text x="75.0" y="275" text-anchor="middle">1.0</text>
+<text x="695.0" y="275" text-anchor="middle">2.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">248.2</text>
+<text x="68" y="40.0" text-anchor="end">496.4</text>
+<path d="M75 250.0H700" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="700" y="244.0" text-anchor="end">Limit 0.0 N s/m</text>
+<g data-series="damping-0"><polyline points="75.0,122.1 695.0,67.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="122.1" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, 40 modes; component: Heave radiation damping; Angular frequency (rad/s): 1.0; demand: 302.4 N s/m; limit: 0.0 N s/m"><title>Case: Cylinder, 40 modes; component: Heave radiation damping; Angular frequency (rad/s): 1.0; demand: 302.4 N s/m; limit: 0.0 N s/m</title></circle>
+<circle cx="695.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, 40 modes; component: Heave radiation damping; Angular frequency (rad/s): 2.0; demand: 431.6 N s/m; limit: 0.0 N s/m"><title>Case: Cylinder, 40 modes; component: Heave radiation damping; Angular frequency (rad/s): 2.0; demand: 431.6 N s/m; limit: 0.0 N s/m</title></circle>
+</g>
+<g data-series="damping-1"><polyline points="75.0,122.1 695.0,67.6" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="75.0" cy="122.1" r="5" fill="var(--accent)" tabindex="0" data-tip="Case: Cylinder, 120 modes; component: Heave radiation damping; Angular frequency (rad/s): 1.0; demand: 302.3 N s/m; limit: 0.0 N s/m"><title>Case: Cylinder, 120 modes; component: Heave radiation damping; Angular frequency (rad/s): 1.0; demand: 302.3 N s/m; limit: 0.0 N s/m</title></circle>
+<circle cx="695.0" cy="67.6" r="5" fill="var(--accent)" tabindex="0" data-tip="Case: Cylinder, 120 modes; component: Heave radiation damping; Angular frequency (rad/s): 2.0; demand: 431.2 N s/m; limit: 0.0 N s/m"><title>Case: Cylinder, 120 modes; component: Heave radiation damping; Angular frequency (rad/s): 2.0; demand: 431.2 N s/m; limit: 0.0 N s/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="damping-0"> Cylinder, 40 modes</label>
+<label><input type="checkbox" checked data-toggle="damping-1"> Cylinder, 120 modes</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure>
+<p>Positive heave damping is returned at each sampled frequency. A nonnegative damping baseline is drawn because radiation removes energy from this prescribed heave motion; it is not a numerical accuracy tolerance. The meaning and applicable geometry are bounded by the cylinder physics tests. <a href="#C">[C]</a> <a href="#T">[T]</a></p>
+<h3 id="long-wave">3.1 Long-wave comparators for all motion modes</h3>
+<p>The small-body comparator example uses ω = <span data-value-key="long_wave_basis.omega" data-format=".2f">0.05</span> rad/s and depth <span data-value-key="long_wave_basis.depth" data-format=".1f">500.0</span> m from its separate public test case. The body follows the surface excursion or slope under the stated idealisation; these curves are expected magnitudes, not computed diffraction motion results. <a href="#L">[L]</a></p>
+<figure id="long-wave-surge"><figcaption>surge (m/m). Comparator only; no observed motion or acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="surge">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">m/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">1.6</text>
+<text x="68" y="40.0" text-anchor="end">3.3</text>
+<g data-series="long-wave-surge-0"><polyline points="75.0,67.4 230.0,120.9 385.0,250.0 695.0,67.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: surge; Wave travel heading (degrees): 0.0; demand: 2.9 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: surge; Wave travel heading (degrees): 0.0; demand: 2.9 m/m; limit: not assigned m/m</title></circle>
+<circle cx="230.0" cy="120.9" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: surge; Wave travel heading (degrees): 45.0; demand: 2.0 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: surge; Wave travel heading (degrees): 45.0; demand: 2.0 m/m; limit: not assigned m/m</title></circle>
+<circle cx="385.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: surge; Wave travel heading (degrees): 90.0; demand: 0.0 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: surge; Wave travel heading (degrees): 90.0; demand: 0.0 m/m; limit: not assigned m/m</title></circle>
+<circle cx="695.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: surge; Wave travel heading (degrees): 180.0; demand: 2.9 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: surge; Wave travel heading (degrees): 180.0; demand: 2.9 m/m; limit: not assigned m/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-surge-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="long-wave-sway"><figcaption>sway (m/m). Comparator only; no observed motion or acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="sway">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">m/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">1.6</text>
+<text x="68" y="40.0" text-anchor="end">3.3</text>
+<g data-series="long-wave-sway-0"><polyline points="75.0,250.0 230.0,120.9 385.0,67.4 695.0,250.0" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: sway; Wave travel heading (degrees): 0.0; demand: 0.0 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: sway; Wave travel heading (degrees): 0.0; demand: 0.0 m/m; limit: not assigned m/m</title></circle>
+<circle cx="230.0" cy="120.9" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: sway; Wave travel heading (degrees): 45.0; demand: 2.0 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: sway; Wave travel heading (degrees): 45.0; demand: 2.0 m/m; limit: not assigned m/m</title></circle>
+<circle cx="385.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: sway; Wave travel heading (degrees): 90.0; demand: 2.9 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: sway; Wave travel heading (degrees): 90.0; demand: 2.9 m/m; limit: not assigned m/m</title></circle>
+<circle cx="695.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: sway; Wave travel heading (degrees): 180.0; demand: 0.0 m/m; limit: not assigned m/m"><title>Case: Small-body comparator; component: sway; Wave travel heading (degrees): 180.0; demand: 0.0 m/m; limit: not assigned m/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-sway-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="long-wave-heave"><figcaption>heave (m/m). Heave surface-following asymptote; not an acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="heave">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">m/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">0.6</text>
+<text x="68" y="40.0" text-anchor="end">1.1</text>
+<path d="M75 67.4H700" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="700" y="61.4" text-anchor="end">Limit 1.0 m/m</text>
+<g data-series="long-wave-heave-0"><polyline points="75.0,67.4 230.0,67.4 385.0,67.4 695.0,67.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: heave; Wave travel heading (degrees): 0.0; demand: 1.0 m/m; limit: 1.0 m/m"><title>Case: Small-body comparator; component: heave; Wave travel heading (degrees): 0.0; demand: 1.0 m/m; limit: 1.0 m/m</title></circle>
+<circle cx="230.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: heave; Wave travel heading (degrees): 45.0; demand: 1.0 m/m; limit: 1.0 m/m"><title>Case: Small-body comparator; component: heave; Wave travel heading (degrees): 45.0; demand: 1.0 m/m; limit: 1.0 m/m</title></circle>
+<circle cx="385.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: heave; Wave travel heading (degrees): 90.0; demand: 1.0 m/m; limit: 1.0 m/m"><title>Case: Small-body comparator; component: heave; Wave travel heading (degrees): 90.0; demand: 1.0 m/m; limit: 1.0 m/m</title></circle>
+<circle cx="695.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: heave; Wave travel heading (degrees): 180.0; demand: 1.0 m/m; limit: 1.0 m/m"><title>Case: Small-body comparator; component: heave; Wave travel heading (degrees): 180.0; demand: 1.0 m/m; limit: 1.0 m/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-heave-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="long-wave-roll"><figcaption>roll (degrees/m). Comparator only; no observed motion or acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="roll">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">degrees/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">2.4e−02</text>
+<text x="68" y="40.0" text-anchor="end">4.8e−02</text>
+<g data-series="long-wave-roll-0"><polyline points="75.0,250.0 230.0,120.9 385.0,67.4 695.0,250.0" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: roll; Wave travel heading (degrees): 0.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: roll; Wave travel heading (degrees): 0.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="230.0" cy="120.9" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: roll; Wave travel heading (degrees): 45.0; demand: 3.0e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: roll; Wave travel heading (degrees): 45.0; demand: 3.0e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="385.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: roll; Wave travel heading (degrees): 90.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: roll; Wave travel heading (degrees): 90.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="695.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: roll; Wave travel heading (degrees): 180.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: roll; Wave travel heading (degrees): 180.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-roll-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="long-wave-pitch"><figcaption>pitch (degrees/m). Comparator only; no observed motion or acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="pitch">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">degrees/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">2.4e−02</text>
+<text x="68" y="40.0" text-anchor="end">4.8e−02</text>
+<g data-series="long-wave-pitch-0"><polyline points="75.0,67.4 230.0,120.9 385.0,250.0 695.0,67.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 0.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 0.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="230.0" cy="120.9" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 45.0; demand: 3.0e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 45.0; demand: 3.0e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="385.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 90.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 90.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="695.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 180.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: pitch; Wave travel heading (degrees): 180.0; demand: 4.2e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-pitch-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="long-wave-yaw"><figcaption>yaw (degrees/m). Comparator only; no observed motion or acceptance band.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="yaw">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Wave travel heading (degrees)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">degrees/m</text>
+<text x="75.0" y="275" text-anchor="middle">0.0</text>
+<text x="230.0" y="275" text-anchor="middle">45.0</text>
+<text x="385.0" y="275" text-anchor="middle">90.0</text>
+<text x="695.0" y="275" text-anchor="middle">180.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">3.4e−02</text>
+<text x="68" y="40.0" text-anchor="end">6.9e−02</text>
+<g data-series="long-wave-yaw-0"><polyline points="75.0,250.0 230.0,67.4 385.0,250.0 695.0,250.0" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 0.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 0.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="230.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 45.0; demand: 6.0e−02 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 45.0; demand: 6.0e−02 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="385.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 90.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 90.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+<circle cx="695.0" cy="250.0" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 180.0; demand: 0.0 degrees/m; limit: not assigned degrees/m"><title>Case: Small-body comparator; component: yaw; Wave travel heading (degrees): 180.0; demand: 0.0 degrees/m; limit: not assigned degrees/m</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="long-wave-yaw-0"> Small-body comparator</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure>
+<p>Surge and sway use finite-depth surface particle excursions, heave uses the surface elevation, and roll and pitch use the wave slope without dynamic amplification. Yaw uses the module’s slender-body approximation; an irrotational excursion field gives a different result for a body symmetric in plan. No yaw acceptance claim is made. <a href="#L">[L]</a></p>
+
+<h2 id="basis">4. Design Data</h2>
+<p>A surface-piercing vertical circular cylinder is prescribed to heave in finite-depth water. The dimensions and fluid inputs are taken from the public repository example; they are not attributed to a physical installation or a published experimental cylinder. <a href="#C">[C]</a></p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Basis</th><th>Source</th></tr></thead><tbody><tr><td>Radius, a</td><td><span data-value-key="basis.geometry.radius" data-format=".1f">1.0</span> m</td><td>Public source-test geometry</td><td><a href="#C">[C]</a></td></tr><tr><td>Draft, d</td><td><span data-value-key="basis.geometry.draft" data-format=".1f">2.0</span> m</td><td>Public source-test geometry</td><td><a href="#C">[C]</a></td></tr><tr><td>Water depth, h</td><td><span data-value-key="basis.geometry.water_depth" data-format=".1f">10.0</span> m</td><td>Flat bed, quiescent water</td><td><a href="#C">[C]</a></td></tr><tr><td>Water density, ρ</td><td><span data-value-key="basis.density" data-format=".1f">1025.0</span> kg/m³</td><td>Source-test fluid input; not site metocean</td><td><a href="#C">[C]</a></td></tr><tr><td>Gravity, g</td><td><span data-value-key="basis.gravity" data-format=".5f">9.80665</span> m/s²</td><td>Implementation default, used explicitly</td><td><a href="#M">[M]</a></td></tr><tr><td>Angular frequencies, ω</td><td><span data-value-key="basis.frequencies.0" data-format=".1f">1.0</span>, <span data-value-key="basis.frequencies.1" data-format=".1f">2.0</span> rad/s</td><td>Source-test regression frequencies</td><td><a href="#C">[C]</a></td></tr><tr><td>Retained modes, N</td><td><span data-value-key="basis.mode_counts.0" data-format=".0f">40</span>, <span data-value-key="basis.mode_counts.1" data-format=".0f">120</span></td><td>Source-test refinement pair</td><td><a href="#C">[C]</a></td></tr></tbody></table>
+<figure><svg viewBox="0 0 760 330" role="img" aria-label="Cylinder section, matched interface and boundary conditions">
+<path d="M45 65H715M45 285H715" stroke="var(--brand)" fill="none"/>
+<path d="M280 65V190H480V65" stroke="currentColor" stroke-width="3" fill="var(--soft)"/>
+<path d="M280 190V285M480 190V285" stroke="var(--accent)" stroke-dasharray="5 4"/>
+<path d="M380 25V240M373 36L380 25L387 36M373 230L380 240L387 230" stroke="currentColor" fill="none"/>
+<text x="395" y="32">Prescribed heave velocity</text><text x="50" y="52">Free surface z = 0; g ∂φ/∂z = ω²φ</text>
+<text x="290" y="110">Cylinder</text><text x="290" y="140">Radius a = 1.0 m</text>
+<text x="495" y="150">Draft d = 2.0 m</text><text x="495" y="177">Side: ∂φ/∂r = 0</text>
+<text x="295" y="213">Base z = −d</text><text x="295" y="235">Unit heave velocity</text>
+<text x="50" y="245">Exterior expansion</text><text x="50" y="265">Outgoing radiation</text>
+<text x="490" y="220">Dashed: matching interfaces</text><text x="490" y="245">Gap h − d = 8.0 m</text>
+<text x="50" y="310">Flat bed z = −h; h = 10.0 m; ∂φ/∂z = 0</text>
+</svg><figcaption>Figure 4.1. Cylinder cross-section and boundary conditions; not to scale. The inner and outer eigenfunction expansions are matched below the cylinder, without a panel mesh. <a href="#M">[M]</a></figcaption></figure>
+<figure><svg viewBox="0 0 760 210" role="img" aria-label="Plan view and wave travel heading convention">
+<ellipse cx="350" cy="105" rx="75" ry="75" fill="var(--soft)" stroke="currentColor"/>
+<path d="M350 105H595L585 100M595 105L585 110M350 105V15L345 25M350 15L355 25M180 180L290 70L278 75M290 70L285 83" fill="none" stroke="var(--brand)"/>
+<path d="M470 105A120 120 0 0 0 435 20" fill="none" stroke="var(--accent)"/>
+<text x="605" y="110">+x</text><text x="365" y="25">+y</text><text x="470" y="55">β, wave travel heading</text><text x="40" y="195">Incident wave travels toward the body</text><text x="340" y="110">a</text>
+</svg><figcaption>Figure 4.2. Plan of the circular waterplane and the positive heading measured from +x toward +y. Heading does not affect the axisymmetric heave radiation case. <a href="#L">[L]</a> <a href="#M">[M]</a></figcaption></figure>
+<h3 id="criteria">4.1 Acceptance basis and rationale</h3>
+<p>Target benchmarks are engineering screens defined by the repository, not limits from a classification standard. For this example the expansion-refinement targets are applied only to the sampled heave coefficients; the broader program-comparison targets below remain NOT_EVALUATED. <a href="#A">[A]</a> <a href="#C">[C]</a></p>
+<table><thead><tr><th>Quantity</th><th>Target benchmark</th><th>Denominator</th><th>Rationale</th><th>Source</th></tr></thead><tbody><tr><td>Hydrostatics</td><td>0.5 %</td><td>Reference term</td><td>Detect differing geometry or conventions</td><td><a href="#A">[A]</a></td></tr><tr><td>Excitation</td><td>5.0 %</td><td>Reference mode peak</td><td>Compare diffraction forcing after convergence</td><td><a href="#A">[A]</a></td></tr><tr><td>Added mass</td><td>5.0 %</td><td>Reference mode peak</td><td>Compare radiation inertia after convergence</td><td><a href="#A">[A]</a></td></tr><tr><td>Radiation damping</td><td>10.0 %</td><td>Reference mode peak</td><td>Allow the implemented radiation sensitivity band</td><td><a href="#A">[A]</a></td></tr><tr><td>Motion rao</td><td>5.0 %</td><td>Reference mode peak</td><td>Compare motion after matching excitation and restoring</td><td><a href="#A">[A]</a></td></tr><tr><td>Resonant roll rao</td><td>10.0 %</td><td>Reference mode peak</td><td>Screen damping-sensitive motion; not a design limit</td><td><a href="#A">[A]</a></td></tr></tbody></table>
+<p>Inside-band program differences require comparable self-convergence evidence before an unconditional acceptance is returned by the tiered evaluator. The benchmark runner has a separate comparison route, so a report badge alone does not establish that this criterion was applied. <a href="#A">[A]</a> <a href="#B">[B]</a></p>
+<p>For the public cylinder, the strict refinement targets are added mass below <span data-value-key="basis.added_mass_target_percent" data-format=".1f">0.5</span> % and damping below <span data-value-key="basis.damping_target_percent" data-format=".1f">0.1</span> %, relative to the fine expansion. The repository tests impose these targets at the lower regression frequency; the same targets are also applied here at the higher frequency as an additional screen. They are not transferable design tolerances. <a href="#C">[C]</a></p>
+
+<h2 id="method">5. Analysis Methodology</h2>
+<p>Linear inviscid, incompressible and irrotational flow is assumed in the frequency domain. A flat impermeable bed, a linear free surface and small body motion are imposed. <a href="#T">[T]</a></p>
+<div class="eq">∇²φ = 0; Φ(r,z,t) = Re[φ(r,z) exp(−iωt)]<br>g ∂φ/∂z = ω²φ at z = 0; ∂φ/∂z = 0 at z = −h<br>ω² = g k tanh(kh); T = 2π/ω</div>
+<p>The complex potential is φ, the physical potential is Φ, time is t, angular frequency is ω, wavenumber is k, water depth is h and period is T. The imaginary unit satisfies i² = −1 and defines the stated time convention. The cylindrical coordinates are radius r and vertical elevation z, positive upward. Gravity is g. The equations follow the open theory manual’s linear boundary-value problem and the module’s dispersion implementation. <a href="#T">[T]</a> <a href="#M">[M]</a></p>
+<p>For the cylinder, the water below the base and the water outside the radius are expanded separately and matched in potential and radial velocity. The body-base condition is unit heave velocity, the cylindrical wall is impermeable and the exterior wave is outgoing. The expansion is truncated at N modes, with the same count used in both regions. A sharp lower edge produces slow local velocity convergence; an algebraic residual alone is not a force-error bound. <a href="#M">[M]</a> <a href="#C">[C]</a></p>
+<div class="eq">A₃₃ = ρ Re[∫<sub>base</sub> φ dS]; B₃₃ = ρω Im[∫<sub>base</sub> φ dS]<br>ΔQ = 100 |Q<sub>coarse</sub> − Q<sub>fine</sub>| / |Q<sub>fine</sub>|</div>
+<p>The subscript 33 denotes heave–heave coupling. Added mass is A₃₃, radiation damping is B₃₃, water density is ρ and dS is the horizontal base area element. The force integral and signs are those of the implemented unit-velocity convention. The refinement quantity Q is either added mass or damping. The finer expansion supplies the reference denominator, which is nonzero in every reported comparison. <a href="#M">[M]</a> <a href="#C">[C]</a></p>
+<div class="eq">[−ω²(M + A) − iω(B + B<sub>ext</sub>) + C] ξ = F<sub>exc</sub>; RAO = ξ / a<sub>w</sub></div>
+<p>For interpretation of a full motion analysis, M is structural mass and inertia, A is radiation added mass, B is radiation damping, B<sub>ext</sub> is externally supplied damping, C is restoring stiffness, ξ is complex motion, F<sub>exc</sub> is complex wave excitation and a<sub>w</sub> is incident wave amplitude. This is the stationary linear motion balance with the stated negative-exponential convention; no such motion system is solved in the cylinder example. <a href="#T">[T]</a> <a href="#D">[D]</a></p>
+<p>In the main workflow, a canonical specification is checked before mesh packaging and deck conversion. Frequency units, heading direction, reference point, density and rotational units are reconciled before completed results are compared or exported. Missing coefficient tables are distinguished from measured zeros because a spreadsheet bridge can supply placeholder matrices. <a href="#W">[W]</a> <a href="#I">[I]</a> <a href="#O">[O]</a> <a href="#B">[B]</a></p>
+<p>Preparation returns solver input files and associated meshes, not solved coefficients. Completed motion arrays are held by frequency and heading for each motion component; added-mass and damping matrices are held by frequency with per-block unit labels. Optional hydrostatics retain displacement, centres and stiffness. Export produces motion-data configuration, comma-separated coefficient tables, a workbook and a summary; each recipient convention is checked before those files are used. <a href="#W">[W]</a> <a href="#O">[O]</a></p>
+
+<h2 id="detail">6. Detailed Results</h2>
+<p>The public cylinder example is calculated by calling the numerical module at each documented frequency and expansion count. All displayed coefficients, periods, differences and chart points are taken from those returned values; the generator contains no typed result pins. <a href="#M">[M]</a> <a href="#C">[C]</a></p>
+<table><thead><tr><th>ω (rad/s)</th><th>T (s)</th><th>Modes</th><th>A₃₃ (t)</th><th>B₃₃ (N s/m)</th><th>Source</th></tr></thead><tbody><tr><td><span data-value-key="coefficients.0.omega" data-format=".1f">1.0</span></td><td><span data-value-key="coefficients.0.period" data-format=".1f">6.3</span></td><td><span data-value-key="coefficients.0.modes" data-format=".0f">40</span></td><td><span data-value-key="coefficients.0.added_mass_t" data-format=".3f">2.132</span></td><td><span data-value-key="coefficients.0.damping" data-format=".1f">302.4</span></td><td><a href="#M">[M]</a></td></tr><tr><td><span data-value-key="coefficients.1.omega" data-format=".1f">1.0</span></td><td><span data-value-key="coefficients.1.period" data-format=".1f">6.3</span></td><td><span data-value-key="coefficients.1.modes" data-format=".0f">120</span></td><td><span data-value-key="coefficients.1.added_mass_t" data-format=".3f">2.137</span></td><td><span data-value-key="coefficients.1.damping" data-format=".1f">302.3</span></td><td><a href="#M">[M]</a></td></tr><tr><td><span data-value-key="coefficients.2.omega" data-format=".1f">2.0</span></td><td><span data-value-key="coefficients.2.period" data-format=".1f">3.1</span></td><td><span data-value-key="coefficients.2.modes" data-format=".0f">40</span></td><td><span data-value-key="coefficients.2.added_mass_t" data-format=".3f">1.844</span></td><td><span data-value-key="coefficients.2.damping" data-format=".1f">431.6</span></td><td><a href="#M">[M]</a></td></tr><tr><td><span data-value-key="coefficients.3.omega" data-format=".1f">2.0</span></td><td><span data-value-key="coefficients.3.period" data-format=".1f">3.1</span></td><td><span data-value-key="coefficients.3.modes" data-format=".0f">120</span></td><td><span data-value-key="coefficients.3.added_mass_t" data-format=".3f">1.849</span></td><td><span data-value-key="coefficients.3.damping" data-format=".1f">431.2</span></td><td><a href="#M">[M]</a></td></tr></tbody></table>
+<p>The algebraic residual is the returned relative norm of the solved matching system, retained in the numerical evidence. It describes the linear solve, while the refinement study addresses sensitivity to retained modes. Neither establishes an experimental validation error. <a href="#M">[M]</a> <a href="#C">[C]</a></p>
+<figure id="added_mass-refinement"><figcaption>Added-mass refinement difference (%). Repository target benchmark; strictly below the line.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="Added-mass refinement difference">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Angular frequency (rad/s)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">%</text>
+<text x="75.0" y="275" text-anchor="middle">1.0</text>
+<text x="695.0" y="275" text-anchor="middle">2.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">0.3</text>
+<text x="68" y="40.0" text-anchor="end">0.6</text>
+<path d="M75 67.4H700" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="700" y="61.4" text-anchor="end">Limit 0.5 %</text>
+<g data-series="added_mass-refinement-0"><polyline points="75.0,167.2 695.0,150.3" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="167.2" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, coarse against fine; component: Added-mass refinement difference; Angular frequency (rad/s): 1.0; demand: 0.2 %; limit: 0.5 %"><title>Case: Cylinder, coarse against fine; component: Added-mass refinement difference; Angular frequency (rad/s): 1.0; demand: 0.2 %; limit: 0.5 %</title></circle>
+<circle cx="695.0" cy="150.3" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, coarse against fine; component: Added-mass refinement difference; Angular frequency (rad/s): 2.0; demand: 0.3 %; limit: 0.5 %"><title>Case: Cylinder, coarse against fine; component: Added-mass refinement difference; Angular frequency (rad/s): 2.0; demand: 0.3 %; limit: 0.5 %</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="added_mass-refinement-0"> Cylinder, coarse against fine</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure><figure id="damping-refinement"><figcaption>Damping refinement difference (%). Repository target benchmark; strictly below the line.</figcaption>
+<svg viewBox="0 0 760 310" role="img" aria-label="Damping refinement difference">
+<path d="M75 35V250H700" fill="none" stroke="currentColor"/>
+<text x="385" y="300" text-anchor="middle">Angular frequency (rad/s)</text>
+<text x="18" y="150" transform="rotate(-90 18 150)" text-anchor="middle">%</text>
+<text x="75.0" y="275" text-anchor="middle">1.0</text>
+<text x="695.0" y="275" text-anchor="middle">2.0</text>
+<text x="68" y="250.0" text-anchor="end">0.0</text>
+<text x="68" y="145.0" text-anchor="end">6.3e−02</text>
+<text x="68" y="40.0" text-anchor="end">0.1</text>
+<path d="M75 82.5H700" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="700" y="76.5" text-anchor="end">Limit 0.1 %</text>
+<g data-series="damping-refinement-0"><polyline points="75.0,208.3 695.0,67.4" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<circle cx="75.0" cy="208.3" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, coarse against fine; component: Damping refinement difference; Angular frequency (rad/s): 1.0; demand: 2.5e−02 %; limit: 0.1 %"><title>Case: Cylinder, coarse against fine; component: Damping refinement difference; Angular frequency (rad/s): 1.0; demand: 2.5e−02 %; limit: 0.1 %</title></circle>
+<circle cx="695.0" cy="67.4" r="5" fill="var(--brand)" tabindex="0" data-tip="Case: Cylinder, coarse against fine; component: Damping refinement difference; Angular frequency (rad/s): 2.0; demand: 0.1 %; limit: 0.1 %"><title>Case: Cylinder, coarse against fine; component: Damping refinement difference; Angular frequency (rad/s): 2.0; demand: 0.1 %; limit: 0.1 %</title></circle>
+</g>
+</svg><div>
+<label><input type="checkbox" checked data-toggle="damping-refinement-0"> Cylinder, coarse against fine</label>
+</div><output aria-live="polite">Focus or hover over a point for its case, component, demand, limit and units.</output></figure>
+<p>The damping refinement target is not met at <span data-value-key="refinement.1.omega" data-format=".1f">2.0</span> rad/s; further mode refinement is required before that coefficient is adopted as a converged reference. The verdict uses unrounded coefficient differences, including where a displayed difference rounds to the target value. Full-frequency convergence, other geometries, excitation and all motion amplitudes remain NOT_EVALUATED. <a href="#C">[C]</a></p>
+<h3 id="evidence">6.1 Existing evidence and its meaning</h3>
+<p>The analytical reference tests inspect dispersion roots, density scaling, damping behaviour, boundary conditions, matching continuity, truncation sensitivity and regression values. The continuity test deliberately zeroes solved coefficients to show that a trivial solution fails; free-surface and bed conditions alone are weaker evidence because the basis satisfies them by construction. <a href="#C">[C]</a></p>
+<p>The long-wave tests exercise all motion comparators, including finite-depth dispersion and zero-reference handling. Roll-damping and equilibrium tests inspect their separate arithmetic contracts. Schema, unit and canonical-example tests support software behaviour, while synthetic comparison fixtures exercise decision logic without proving physical agreement between programs. <a href="#E">[E]</a> <a href="#L">[L]</a> <a href="#D">[D]</a></p>
+<p>The published unit-box report is a synthetic report-pipeline example: its coefficient series are generated with seeded perturbations rather than native diffraction solutions. The canonical unit-box preparation example demonstrates specification parsing and portable mesh packaging in its source tests. Both are useful software evidence and neither establishes a motion-accuracy bound. <a href="#P">[P]</a></p>
+<p>The stored example reports under the solver validation tree are not treated as independent reference-program outputs. The module source explicitly records this evidence limitation. Historical solver-proximity statements in its docstring are not recalculated or promoted to an error bound here. <a href="#M">[M]</a></p>
+<h3 id="runtime">6.2 Runtime and computation</h3>
+<p>The recorded first reference computation takes 0.8 s for 4 coefficient cases and the comparator curves, with one numerical thread. The measured environment is aarch64 with 20 logical processors and 119.7 GiB total memory. Imports and input extraction are included; rendering and test execution are excluded. This measurement is specific to these small reference systems. Native program runtime and comparative speed are NOT_EVALUATED. <a href="#R">[R]</a></p>
+
+<h2 id="findings">7. Key Findings</h2>
+<p>A reusable heave radiation reference is provided for the stated circular cylinder, with explicit expansion sensitivity. The evidence supports a reference-case check, while the complete diffraction workflow remains dependent on supplied geometry, inertia, conventions and independent result evidence. <a href="#M">[M]</a> <a href="#W">[W]</a></p>
+<p>Coefficient units are mixed by matrix block: translation, rotation and their coupling have distinct dimensions. Translational RAOs use m/m, while unified rotational RAOs use degrees/m. The long-wave functions return rotational slopes in rad/m, which are converted to degrees/m in this report. Native solver units and phase signs require explicit reconciliation; a common schema does not prove that reconciliation. <a href="#O">[O]</a> <a href="#L">[L]</a></p>
+<p>The calculated displaced-water mass is <span data-value-key="displaced_mass_t" data-format=".3f">6.440</span> t, based on volume <span data-value-key="displaced_volume" data-format=".3f">6.283</span> m³. This is a geometric reference only: structural mass, centre of gravity and stability are not supplied for this prescribed-motion case. Weight–buoyancy equilibrium and stability are therefore NOT_EVALUATED. <a href="#M">[M]</a> <a href="#Q">[Q]</a></p>
+
+<h2 id="limits">8. Limitations</h2>
+<p>Use is bounded by the linear potential-flow idealisation and by the evidence actually calculated. Viscous separation, breaking waves, large motion, impact and nonlinear roll response are absent from the cylinder reference. <a href="#T">[T]</a> <a href="#D">[D]</a></p>
+<p>No physical panel mesh is used by the matched-eigenfunction cylinder, so no mesh-size recommendation follows from its mode count. A panel-refinement sequence, wave coverage and independent reference evidence are required for a body-specific diffraction design. Regional sea-state periods and natural periods are NOT_EVALUATED because no metocean analysis or mass/restoring basis is supplied. No regional period values are assumed. <a href="#M">[M]</a> <a href="#I">[I]</a></p>
+<h3 id="not-covered">8.1 Not covered</h3>
+<p>Native solver installation and execution, multibody interaction, control surfaces, quadratic transfer functions, mean drift, mooring coupling, pressure fields, detailed mesh generation and downstream dynamics are not evaluated. The module contains interfaces for several of these areas, but the unified output schema does not contain every native excitation or second-order result. <a href="#I">[I]</a> <a href="#O">[O]</a> <a href="#B">[B]</a></p>
+
+<h2 id="recommendations">9. Recommendations and Way Forward</h2>
+<p>The cylinder reference is retained as a small, reproducible radiation check. Wider application is advanced through a complete input basis and independently sourced comparisons with stated acceptance criteria. <a href="#C">[C]</a> <a href="#A">[A]</a></p>
+<ul><li>Use the cylinder refinement check when changes affect dispersion, eigenfunction matching or force integration. Recalculate the reported cases when those implementations change. <a href="#C">[C]</a></li>
+<li>Increase the retained expansion count where a refinement target is not met, then repeat the coefficient comparison at the same frequency against a finer expansion. Accept that reference coefficient only after its stated target is met. <a href="#C">[C]</a></li>
+<li>Complete the model basis before assessing body motion: geometry, mass, centre of gravity, inertia, environment, external damping and operating wave range. The missing-data register identifies the outstanding quantities. <a href="#I">[I]</a> <a href="#Q">[Q]</a></li>
+<li>Define a body-specific panel-refinement sequence and target benchmarks before comparing programs. Preserve unit, origin, phase and heading evidence with the result arrays. No universal panel-length ratio is inferred from this reference. <a href="#A">[A]</a> <a href="#O">[O]</a></li>
+<li>Establish roll damping from an explicit frequency-dependent inertia and restoring basis. If resonance lies in the operating range, obtain damping evidence from decay or forced-motion tests before assigning a design roll limit. <a href="#D">[D]</a> <a href="#T">[T]</a></li>
+<li>Extend the reference evidence in sequence.<ul><li>Add a cited public excitation and motion benchmark with the original result arrays.</li><li>Compare converged panel results with the present cylinder radiation reference.</li><li>Complete all motion-mode long-wave checks, mesh quality, equilibrium and operating-range damping sensitivity before accepting a body-specific design.</li></ul> <a href="#A">[A]</a> <a href="#C">[C]</a> <a href="#L">[L]</a> <a href="#Q">[Q]</a></li></ul>
+
+<h3 id="reproduction">9.1 Reproduction and interpretation</h3>
+<p>The generator reads the public source-test inputs, calls the numerical files directly and builds this page. The accompanying test rebuilds the page and checks every bound numerical field and chart dataset against fresh module returns. Completed calculation cases are retained in an optional external scratch directory with input and result digests; changed inputs produce distinct records. The fixed execution record describes the measured first computation. <a href="#R">[R]</a></p>
+<p>Chart series are selected with the checkboxes; point details are available by keyboard focus and hover. Comments are entered by section and saved beside the report through a selected folder. Where folder access is unavailable, the comment file is exported and placed beside the report, then imported when it is reopened. Changes are listed relative to the selected earlier revision.</p>
+<h3 id="source-register">9.2 Source register and reproduction locators</h3>
+<p>Repository locators and source editions are collected here. Source-test inputs are public repository examples, not values recovered from the cited historical paper. No numeric value from a licensed standard is used.</p>
+<ul class="refs">
+<li id="T">[T] Open potential-flow theory manual, stable web edition: <a href="https://capytaine.org/stable/theory_manual/theory.html#linear-boundary-value-problem">Linear boundary value problem</a>, <a href="https://capytaine.org/stable/theory_manual/theory.html#forces-on-body-surfaces">Forces on body surfaces</a> and <a href="https://capytaine.org/stable/theory_manual/theory.html#dynamic-coupling-and-impedance">Dynamic coupling and impedance</a>. The physical assumptions, negative-exponential convention, free-surface condition and motion balance are used.</li>
+<li id="M">[M] Numerical implementation, repository edition read for this analysis: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py">analytical_cylinder.py</a>, geometry, wavenumbers, matching and heave force integration. Its historical citation is “Added mass and damping of a vertical cylinder in finite-depth waters”, Applied Ocean Research, volume 3, issue 3, 1981. The full historical text is not used as a numerical source.</li>
+<li id="C">[C] Public cylinder example and target benchmarks: <a href="../../../../tests/hydrodynamics/diffraction/test_analytical_cylinder.py">test_analytical_cylinder.py</a>, geometry and density declarations, reference-geometry regression, mode-convergence and boundary-condition tests.</li>
+<li id="L">[L] Long-wave comparator definition and public example: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/long_wave_limits.py">long_wave_limits.py</a>, expected_rao; <a href="../../../../tests/hydrodynamics/diffraction/test_long_wave_limits.py">test_long_wave_limits.py</a>, TestExpectedRao. Heading is wave travel direction from +x.</li>
+<li id="W">[W] Main preparation and external-solution workflow: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/workflow.py">workflow.py</a> and <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/spec_converter.py">spec_converter.py</a>. Canonical preparation example: <a href="../../../../examples/workflows/aqwa-diffraction-deck-prep/input.yml">deck preparation input</a>.</li>
+<li id="I">[I] Input contract: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/input_schemas.py">input_schemas.py</a>, geometry, inertia, environment, wave axes, solver and output fields.</li>
+<li id="O">[O] Output and units: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/output_schemas.py">output_schemas.py</a>, result and matrix containers; <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/diffraction_units.py">diffraction_units.py</a>, unit conversion definitions, including SI prefixes; <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/orcaflex_exporter.py">orcaflex_exporter.py</a>, tabular and motion-data exports.</li>
+<li id="A">[A] Engineering comparison policy, repository edition: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/cross_solver_acceptance.py">cross_solver_acceptance.py</a>, DEFAULT_CRITERIA and convergence qualifier. Values are repository targets, not published standard limits.</li>
+<li id="B">[B] Evidence cautions: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md">module evidence inventory</a>; <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py">spreadsheet bridge</a>, placeholder coefficient provenance; <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py">benchmark runner</a>, comparison route.</li>
+<li id="D">[D] Uncoupled roll damping basis and frequency-dependent critical damping: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/roll_damping.py">roll_damping.py</a> and <a href="../../../../tests/hydrodynamics/diffraction/test_roll_damping.py">its source tests</a>.</li>
+<li id="Q">[Q] Equilibrium arithmetic and required input tolerances: <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/equilibrium_checks.py">equilibrium_checks.py</a>. No stability acceptance is inferred.</li>
+<li id="E">[E] Existing source-test inventory: <a href="../../../../tests/hydrodynamics/diffraction/">diffraction tests</a>. The appendix counts test function definitions in the selected files, not collected or passed cases.</li>
+<li id="P">[P] Published repository examples: <a href="../../../benchmarks/unit_box/benchmark_report.html">synthetic unit-box report</a> and <a href="../../../../tests/hydrodynamics/diffraction/test_unit_box_benchmark.py">its construction and provenance tests</a>; <a href="../../../../examples/hydrodynamics/diffraction/unit_box_rao/README.md">canonical unit-box preparation example</a> and <a href="../../../../tests/hydrodynamics/diffraction/test_canonical_example.py">its packaging source tests</a>. No native result is inferred from a preparation-only or synthetic example.</li>
+<li id="R">[R] Reproduction: <a href="generate_report.py">generator</a>, <a href="execution.json">execution record</a>, <a href="../../../../tests/docs/test_diffraction_module_report.py">report contract tests</a> and <a href="changes.json">change register</a>. Run the generator with NumPy and SciPy, one numerical thread and an external scratch directory; use its help for arguments. A fresh execution record is written only with the explicit measurement option. The original numerical outputs are retained with their digest; floating-point round-off can vary across numerical libraries without changing the reported engineering precision.</li>
+</ul>
+
+<h2 id="references">10. References, Acronyms and Appendices</h2>
+<p>References are registered in <a href="#source-register">Section 9.2</a>. Detailed tables and unassessed design inputs are retained here so the body conclusions remain bound to the computed case.</p>
+<h3 id="acronyms">10.1 Acronyms and status legend</h3>
+<p>RAO means response amplitude operator; SI means International System of Units; QA means quality assurance. PASS means the stated numerical criterion is met. NOT_EVALUATED means the evidence or inputs required for the stated assessment are absent. “ASSUMED - to be confirmed” identifies an adopted assumption requiring confirmation before application.</p>
+<h3 id="comparison-table">10.2 Refinement and long-wave tables</h3>
+<p>Refinement differences use the finer coefficient as reference. A displayed value below the reporting resolution is bounded explicitly rather than printed as zero. <a href="#C">[C]</a></p>
+<table><thead><tr><th>ω (rad/s)</th><th>Added-mass difference (%)</th><th>Damping difference (%)</th><th>Unrounded assessment</th><th>Source</th></tr></thead><tbody><tr><td><span data-value-key="refinement.0.omega" data-format=".1f">1.0</span></td><td><span data-value-key="refinement.0.added_mass_difference_percent" data-format=".1f">0.2</span></td><td><span data-value-key="refinement.0.damping_difference_percent" data-format=".1f"><0.1</span></td><td>Added mass: target is met; Damping: target is met</td><td><a href="#C">[C]</a></td></tr><tr><td><span data-value-key="refinement.1.omega" data-format=".1f">2.0</span></td><td><span data-value-key="refinement.1.added_mass_difference_percent" data-format=".1f">0.3</span></td><td><span data-value-key="refinement.1.damping_difference_percent" data-format=".1f">0.1</span></td><td>Added mass: target is met; Damping: target is not met</td><td><a href="#C">[C]</a></td></tr></tbody></table>
+<table><thead><tr><th>Mode</th><th>Heading (degrees)</th><th>Comparator magnitude</th><th>Units</th><th>Source</th></tr></thead><tbody><tr><td>Surge</td><td><span data-value-key="long_wave.surge.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.surge.0.display_value" data-format=".3f">2.862</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Surge</td><td><span data-value-key="long_wave.surge.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.surge.1.display_value" data-format=".3f">2.024</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Surge</td><td><span data-value-key="long_wave.surge.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.surge.2.display_value" data-format=".3f">0.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Surge</td><td><span data-value-key="long_wave.surge.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.surge.3.display_value" data-format=".3f">2.862</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Sway</td><td><span data-value-key="long_wave.sway.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.sway.0.display_value" data-format=".3f">0.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Sway</td><td><span data-value-key="long_wave.sway.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.sway.1.display_value" data-format=".3f">2.024</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Sway</td><td><span data-value-key="long_wave.sway.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.sway.2.display_value" data-format=".3f">2.862</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Sway</td><td><span data-value-key="long_wave.sway.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.sway.3.display_value" data-format=".3f">0.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Heave</td><td><span data-value-key="long_wave.heave.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.heave.0.display_value" data-format=".3f">1.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Heave</td><td><span data-value-key="long_wave.heave.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.heave.1.display_value" data-format=".3f">1.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Heave</td><td><span data-value-key="long_wave.heave.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.heave.2.display_value" data-format=".3f">1.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Heave</td><td><span data-value-key="long_wave.heave.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.heave.3.display_value" data-format=".3f">1.000</span></td><td>m/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Roll</td><td><span data-value-key="long_wave.roll.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.roll.0.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Roll</td><td><span data-value-key="long_wave.roll.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.roll.1.display_value" data-format=".3f">0.030</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Roll</td><td><span data-value-key="long_wave.roll.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.roll.2.display_value" data-format=".3f">0.042</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Roll</td><td><span data-value-key="long_wave.roll.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.roll.3.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Pitch</td><td><span data-value-key="long_wave.pitch.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.pitch.0.display_value" data-format=".3f">0.042</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Pitch</td><td><span data-value-key="long_wave.pitch.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.pitch.1.display_value" data-format=".3f">0.030</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Pitch</td><td><span data-value-key="long_wave.pitch.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.pitch.2.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Pitch</td><td><span data-value-key="long_wave.pitch.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.pitch.3.display_value" data-format=".3f">0.042</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Yaw</td><td><span data-value-key="long_wave.yaw.0.heading" data-format=".1f">0.0</span></td><td><span data-value-key="long_wave.yaw.0.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Yaw</td><td><span data-value-key="long_wave.yaw.1.heading" data-format=".1f">45.0</span></td><td><span data-value-key="long_wave.yaw.1.display_value" data-format=".3f">0.060</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Yaw</td><td><span data-value-key="long_wave.yaw.2.heading" data-format=".1f">90.0</span></td><td><span data-value-key="long_wave.yaw.2.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr><tr><td>Yaw</td><td><span data-value-key="long_wave.yaw.3.heading" data-format=".1f">180.0</span></td><td><span data-value-key="long_wave.yaw.3.display_value" data-format=".3f">0.000</span></td><td>degrees/m</td><td><a href="#L">[L]</a></td></tr></tbody></table>
+<h3 id="damping-appendix">10.3 Roll resolution and damping sensitivity</h3>
+<p>A resonant roll grid and damping-sensitivity curve are NOT_EVALUATED. Roll restoring stiffness, structural and added inertia, natural period and operating frequency range are not supplied. An arbitrary grid or damping value is not substituted. The required grid resolves the eventual resonance peak and is refined until the selected motion target is stable. <a href="#D">[D]</a> <a href="#A">[A]</a></p>
+<div class="eq">B<sub>crit</sub> = 2√[C<sub>roll</sub>(I<sub>roll</sub> + A<sub>roll</sub>(ω<sub>n</sub>))]; ζ = B<sub>total</sub>/B<sub>crit</sub><br>ω<sub>n</sub>² = C<sub>roll</sub>/(I<sub>roll</sub> + A<sub>roll</sub>(ω<sub>n</sub>))</div>
+<p>Critical roll damping is B<sub>crit</sub>, roll restoring stiffness is C<sub>roll</sub>, structural roll inertia is I<sub>roll</sub>, added roll inertia is A<sub>roll</sub>, natural angular frequency is ω<sub>n</sub> and the damping ratio is ζ. Total damping is B<sub>total</sub>. The relations apply to an uncoupled mode, and the inertia is evaluated at the same frequency as the damping basis. An undamped resonance has no finite linear motion amplitude; it is not an operating prediction. Damping percentages and warning limits remain required design inputs until their source and application basis are recorded. <a href="#D">[D]</a></p>
+<h3 id="qa">10.4 QA pre-flight evidence</h3>
+<table><thead><tr><th>Check</th><th>Evidence / status</th><th>Source</th></tr></thead><tbody><tr><td>Source inputs</td><td>Read from public cylinder source tests; no result coefficient is typed into the generator.</td><td><a href="#C">[C]</a></td></tr><tr><td>Single-frequency calculation</td><td>Each coefficient case is calculated separately before the report is assembled.</td><td><a href="#M">[M]</a></td></tr><tr><td>Boundary conditions and truncation</td><td>Existing source tests inspect these; this report recomputes coefficients and refinement only.</td><td><a href="#C">[C]</a></td></tr><tr><td>Numerical reproduction</td><td>The accompanying report test compares returned values, chart datasets and the rebuilt HTML.</td><td><a href="#R">[R]</a></td></tr><tr><td>Weight and buoyancy</td><td>NOT_EVALUATED: structural mass is absent; displaced mass alone is reported.</td><td><a href="#Q">[Q]</a></td></tr><tr><td>Centres of gravity and buoyancy</td><td>NOT_EVALUATED: no mass distribution or free-equilibrium assessment is supplied.</td><td><a href="#Q">[Q]</a></td></tr><tr><td>Panel mesh quality</td><td>NOT_EVALUATED: no panel mesh is used by this numerical reference.</td><td><a href="#M">[M]</a></td></tr><tr><td>Independent program agreement</td><td>NOT_EVALUATED: no independently produced paired native result arrays are assessed.</td><td><a href="#B">[B]</a></td></tr></tbody></table>
+<h3 id="data-register">10.5 Missing-data and assumption register</h3>
+<table><thead><tr><th>Data</th><th>Status</th><th>Consequence / required action</th><th>Source</th></tr></thead><tbody><tr><td>Linear idealisation</td><td>ASSUMED - to be confirmed</td><td>Confirm small waves and motions, a flat bed and acceptable potential-flow applicability for the intended use.</td><td><a href="#T">[T]</a></td></tr><tr><td>Structural mass, centres and inertia</td><td>NOT_EVALUATED</td><td>Supply these before equilibrium, stability or free-motion assessment.</td><td><a href="#I">[I]</a></td></tr><tr><td>Metocean and operating range</td><td>NOT_EVALUATED</td><td>Supply a metocean analysis before regional period coverage or operability assessment.</td><td><a href="#I">[I]</a></td></tr><tr><td>External damping and roll limits</td><td>NOT_EVALUATED</td><td>Supply sourced damping targets, warning limits and test evidence before design roll interpretation.</td><td><a href="#D">[D]</a></td></tr><tr><td>Panel length and convergence</td><td>NOT_EVALUATED</td><td>Establish a body-specific refinement sequence before mesh acceptance.</td><td><a href="#A">[A]</a></td></tr><tr><td>Independent reference arrays</td><td>NOT_EVALUATED</td><td>Retain the original published coefficients and conventions before program acceptance.</td><td><a href="#B">[B]</a></td></tr></tbody></table>
+<h3 id="test-inventory">10.6 Existing test inventory</h3>
+<p>These source definitions are present in the repository and were inspected to identify evidence scope. Parameterised cases are not expanded, and these counts are not presented as passed tests. The report contract checks are recorded separately in the delivery validation record. <a href="#E">[E]</a></p>
+<table><thead><tr><th>Evidence topic</th><th>Test definitions</th><th>Meaning</th><th>Source</th></tr></thead><tbody><tr><td>Cylinder physics and regression</td><td>23</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Long-wave comparators</td><td>33</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Roll damping arithmetic</td><td>26</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Equilibrium arithmetic</td><td>7</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Input contracts</td><td>40</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Unit conversions</td><td>35</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Output contracts</td><td>44</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Program-comparison policy</td><td>18</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Canonical preparation example</td><td>8</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Comparison provenance</td><td>15</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr><tr><td>Synthetic unit-box reporting example</td><td>28</td><td>Source inspected; not an execution count</td><td><a href="#E">[E]</a></td></tr></tbody></table>
+<h3 id="change-panel">10.7 Engineering changes</h3>
+<label>Show changes since <select id="change-since"><option value="0">Before initial issue</option><option value="1">Revision 1</option><option value="2">Revision 2</option></select></label>
+<ul id="change-list"><li>The public cylinder radiation example is calculated with explicit expansion-refinement targets.</li><li>All motion-mode long-wave comparators are shown separately from observed diffraction results.</li><li>Missing mass, metocean, damping and independent reference evidence is registered before wider design use.</li><li>Unsupported source-retrieval wording is removed so the source register matches retained evidence.</li><li>Text is read as UTF-8 and written with LF endings; new measurements use portable memory information and the current UTC date.</li><li>Comment identity follows displayed numerical precision, while cached calculations retain full-precision integrity checks.</li><li>Refinement uses the lowest and highest mode counts; rebuilt-report checks detect stale narrative and the draft is addressed to maintainers.</li></ul>
+<h3 id="comments">10.8 Section comments</h3>
+<p>Comments are stored in a separate file beside this report. They do not alter its numerical evidence.</p>
+<p><label>Section <select id="comment-section"></select></label></p>
+<p><label>Comment <textarea id="comment-text" rows="4" cols="65"></textarea></label></p>
+<p><button id="add-comment">Add comment</button> <button id="choose-folder">Choose report folder</button> <button id="save-comments">Save comments</button> <button id="export-comments">Export comments</button></p>
+<p><label>Import saved comments <input id="import-comments" type="file" accept="application/json"></label></p>
+<p id="comment-status" role="status">Comments remain in the open page until saved or exported.</p><ul id="comment-list"></ul>
+<footer>Diffraction module analysis. The numerical scope and limitations stated in this report apply to every displayed result.</footer>
+</main>
+<script type="application/json" id="example-data">{"basis": {"added_mass_target_percent": 0.5, "damping_target_percent": 0.1, "density": 1025.0, "frequencies": [1.0, 2.0], "geometry": {"draft": 2.0, "radius": 1.0, "water_depth": 10.0}, "gravity": 9.80665, "mode_counts": [40, 120]}, "coefficients": [{"added_mass": 2131.750247403907, "added_mass_t": 2.131750247403907, "damping": 302.39851222222126, "modes": 40, "omega": 1.0, "period": 6.283185307179586, "residual": 1.6693289318864225e-16}, {"added_mass": 2136.5941048362224, "added_mass_t": 2.1365941048362225, "damping": 302.32333431814897, "modes": 120, "omega": 1.0, "period": 6.283185307179586, "residual": 5.101345071691527e-16}, {"added_mass": 1843.7068012505047, "added_mass_t": 1.8437068012505047, "damping": 431.6446130599809, "modes": 40, "omega": 2.0, "period": 3.141592653589793, "residual": 1.7417025576379316e-16}, {"added_mass": 1848.7551321743008, "added_mass_t": 1.8487551321743008, "damping": 431.1746552712827, "modes": 120, "omega": 2.0, "period": 3.141592653589793, "residual": 3.612809114422255e-16}], "displaced_mass_t": 6.440264939859076, "displaced_volume": 6.283185307179586, "gap": 8.0, "long_wave": {"heave": [{"display_value": 1.0, "heading": 0.0, "value": 1.0}, {"display_value": 1.0, "heading": 45.0, "value": 1.0}, {"display_value": 1.0, "heading": 90.0, "value": 1.0}, {"display_value": 1.0, "heading": 180.0, "value": 1.0}], "pitch": [{"display_value": 0.04180140022039219, "heading": 0.0, "value": 0.000729572065789727}, {"display_value": 0.029558053558932165, "heading": 45.0, "value": 0.000515885355084194}, {"display_value": 0.0, "heading": 90.0, "value": 0.0}, {"display_value": 0.04180140022039219, "heading": 180.0, "value": 0.000729572065789727}], "roll": [{"display_value": 0.0, "heading": 0.0, "value": 0.0}, {"display_value": 0.02955805355893216, "heading": 45.0, "value": 0.0005158853550841939}, {"display_value": 0.04180140022039219, "heading": 90.0, "value": 0.000729572065789727}, {"display_value": 0.0, "heading": 180.0, "value": 0.0}], "surge": [{"display_value": 2.86186315959073, "heading": 0.0, "value": 2.86186315959073}, {"display_value": 2.023642846974564, "heading": 45.0, "value": 2.023642846974564}, {"display_value": 0.0, "heading": 90.0, "value": 0.0}, {"display_value": 2.86186315959073, "heading": 180.0, "value": 2.86186315959073}], "sway": [{"display_value": 0.0, "heading": 0.0, "value": 0.0}, {"display_value": 2.0236428469745635, "heading": 45.0, "value": 2.0236428469745635}, {"display_value": 2.86186315959073, "heading": 90.0, "value": 2.86186315959073}, {"display_value": 0.0, "heading": 180.0, "value": 0.0}], "yaw": [{"display_value": 0.0, "heading": 0.0, "value": 0.0}, {"display_value": 0.059814943655024114, "heading": 45.0, "value": 0.001043967708675062}, {"display_value": 0.0, "heading": 90.0, "value": 0.0}, {"display_value": 0.0, "heading": 180.0, "value": 0.0}]}, "long_wave_basis": {"depth": 500.0, "headings": [0.0, 45.0, 90.0, 180.0], "omega": 0.05}, "max_added_mass_difference": 0.2730664995022268, "max_damping_difference": 0.1089947618564249, "pass_percent": 75.0, "refinement": [{"added_mass_difference_percent": 0.2267092950107487, "damping_difference_percent": 0.024866722326228923, "omega": 1.0}, {"added_mass_difference_percent": 0.2730664995022268, "damping_difference_percent": 0.1089947618564249, "omega": 2.0}]}</script>
+<script type="application/json" id="chart-data">[{"component": "Heave added mass", "id": "added_mass_t", "limit": null, "limit_label": "No general added-mass acceptance limit is assigned", "series": [{"name": "Cylinder, 40 modes", "points": [[1.0, 2.131750247403907], [2.0, 1.8437068012505047]]}, {"name": "Cylinder, 120 modes", "points": [[1.0, 2.1365941048362225], [2.0, 1.8487551321743008]]}], "units": "t", "x_label": "Angular frequency (rad/s)"}, {"component": "Heave radiation damping", "id": "damping", "limit": 0.0, "limit_label": "Nonnegative radiation damping", "series": [{"name": "Cylinder, 40 modes", "points": [[1.0, 302.39851222222126], [2.0, 431.6446130599809]]}, {"name": "Cylinder, 120 modes", "points": [[1.0, 302.32333431814897], [2.0, 431.1746552712827]]}], "units": "N s/m", "x_label": "Angular frequency (rad/s)"}, {"component": "Added-mass refinement difference", "id": "added_mass-refinement", "limit": 0.5, "limit_label": "Repository target benchmark; strictly below the line", "series": [{"name": "Cylinder, coarse against fine", "points": [[1.0, 0.2267092950107487], [2.0, 0.2730664995022268]]}], "units": "%", "x_label": "Angular frequency (rad/s)"}, {"component": "Damping refinement difference", "id": "damping-refinement", "limit": 0.1, "limit_label": "Repository target benchmark; strictly below the line", "series": [{"name": "Cylinder, coarse against fine", "points": [[1.0, 0.024866722326228923], [2.0, 0.1089947618564249]]}], "units": "%", "x_label": "Angular frequency (rad/s)"}, {"component": "surge", "id": "long-wave-surge", "limit": null, "limit_label": "Comparator only; no observed motion or acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 2.86186315959073], [45.0, 2.023642846974564], [90.0, 0.0], [180.0, 2.86186315959073]]}], "units": "m/m", "x_label": "Wave travel heading (degrees)"}, {"component": "sway", "id": "long-wave-sway", "limit": null, "limit_label": "Comparator only; no observed motion or acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 0.0], [45.0, 2.0236428469745635], [90.0, 2.86186315959073], [180.0, 0.0]]}], "units": "m/m", "x_label": "Wave travel heading (degrees)"}, {"component": "heave", "id": "long-wave-heave", "limit": 1.0, "limit_label": "Heave surface-following asymptote; not an acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 1.0], [45.0, 1.0], [90.0, 1.0], [180.0, 1.0]]}], "units": "m/m", "x_label": "Wave travel heading (degrees)"}, {"component": "roll", "id": "long-wave-roll", "limit": null, "limit_label": "Comparator only; no observed motion or acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 0.0], [45.0, 0.02955805355893216], [90.0, 0.04180140022039219], [180.0, 0.0]]}], "units": "degrees/m", "x_label": "Wave travel heading (degrees)"}, {"component": "pitch", "id": "long-wave-pitch", "limit": null, "limit_label": "Comparator only; no observed motion or acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 0.04180140022039219], [45.0, 0.029558053558932165], [90.0, 0.0], [180.0, 0.04180140022039219]]}], "units": "degrees/m", "x_label": "Wave travel heading (degrees)"}, {"component": "yaw", "id": "long-wave-yaw", "limit": null, "limit_label": "Comparator only; no observed motion or acceptance band", "series": [{"name": "Small-body comparator", "points": [[0.0, 0.0], [45.0, 0.059814943655024114], [90.0, 0.0], [180.0, 0.0]]}], "units": "degrees/m", "x_label": "Wave travel heading (degrees)"}]</script>
+<script type="application/json" id="changes-data">{"report": "Diffraction module analysis", "revisions": [{"changes": ["The public cylinder radiation example is calculated with explicit expansion-refinement targets.", "All motion-mode long-wave comparators are shown separately from observed diffraction results.", "Missing mass, metocean, damping and independent reference evidence is registered before wider design use."], "date": "2026-10-22", "revision": 1}, {"changes": ["Unsupported source-retrieval wording is removed so the source register matches retained evidence.", "Text is read as UTF-8 and written with LF endings; new measurements use portable memory information and the current UTC date.", "Comment identity follows displayed numerical precision, while cached calculations retain full-precision integrity checks.", "Refinement uses the lowest and highest mode counts; rebuilt-report checks detect stale narrative and the draft is addressed to maintainers."], "date": "2026-10-22", "revision": 2}], "schema_version": 1}</script>
+<script id="report-interactions">
+const changes = JSON.parse(document.getElementById('changes-data').textContent);
+const sectionSelect = document.getElementById('comment-section');
+document.querySelectorAll('h2[id],h3[id]').forEach(h => {
+  const option = document.createElement('option');
+  option.value = h.id; option.textContent = h.textContent;
+  sectionSelect.appendChild(option);
+});
+document.querySelectorAll('[data-tip]').forEach(point => {
+  const show = () => { point.closest('figure').querySelector('output').textContent = point.dataset.tip; };
+  point.addEventListener('focus', show); point.addEventListener('pointerenter', show);
+});
+document.querySelectorAll('[data-toggle]').forEach(input => {
+  input.addEventListener('change', () => {
+    document.querySelector('[data-series="' + input.dataset.toggle + '"]').style.display = input.checked ? '' : 'none';
+  });
+});
+const changeList = document.getElementById('change-list');
+document.getElementById('change-since').addEventListener('change', event => {
+  changeList.replaceChildren();
+  changes.revisions.filter(r => r.revision > Number(event.target.value)).forEach(r => {
+    r.changes.forEach(change => {
+      const li = document.createElement('li'); li.textContent = change; changeList.appendChild(li);
+    });
+  });
+});
+let directory = null;
+let comments = [];
+const status = document.getElementById('comment-status');
+const digest = document.documentElement.dataset.evidence;
+function renderComments() {
+  const list = document.getElementById('comment-list'); list.replaceChildren();
+  comments.forEach(comment => {
+    const li = document.createElement('li');
+    li.textContent = comment.section + ': ' + comment.text;
+    list.appendChild(li);
+  });
+}
+function validComments(value) {
+  return value && value.evidence === digest && Array.isArray(value.comments) &&
+    value.comments.every(c => c && typeof c.text === 'string' && typeof c.section === 'string');
+}
+document.getElementById('choose-folder').addEventListener('click', async () => {
+  try {
+    if (!window.showDirectoryPicker) {
+      status.textContent = 'Folder saving is unavailable. Export comments and place the downloaded file beside this report.';
+      return;
+    }
+    const selected = await window.showDirectoryPicker({mode: 'readwrite'});
+    let loaded = null;
+    try {
+      const file = await selected.getFileHandle('comments.json');
+      loaded = JSON.parse(await (await file.getFile()).text());
+      if (!validComments(loaded)) throw new Error('Comments belong to different numerical evidence or have an invalid format.');
+    } catch (error) {
+      if (error.name !== 'NotFoundError') throw error;
+    }
+    directory = selected;
+    if (loaded) comments = loaded.comments;
+    renderComments();
+    status.textContent = 'The selected report folder is available. Save comments writes comments.json beside the report.';
+  } catch (error) { status.textContent = 'Folder access was not completed. ' + error.message; }
+});
+document.getElementById('add-comment').addEventListener('click', () => {
+  const field = document.getElementById('comment-text');
+  if (!field.value.trim()) { status.textContent = 'Enter a comment before adding it.'; return; }
+  comments.push({section: sectionSelect.value, text: field.value.trim()});
+  field.value = ''; renderComments();
+  status.textContent = 'The comment is held in this open page. Save or export comments before closing it.';
+});
+document.getElementById('save-comments').addEventListener('click', async () => {
+  try {
+    if (!directory) { status.textContent = 'Choose the folder containing the report before saving comments.'; return; }
+    const file = await directory.getFileHandle('comments.json', {create: true});
+    const writable = await file.createWritable();
+    await writable.write(JSON.stringify({evidence: digest, comments}, null, 2) + '\n');
+    await writable.close(); status.textContent = 'Comments are saved beside the report.';
+  } catch (error) { status.textContent = 'Comments were not saved. ' + error.message; }
+});
+document.getElementById('export-comments').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify({evidence: digest, comments}, null, 2) + '\n'], {type:'application/json'}));
+  const link = document.createElement('a'); link.href = url; link.download = 'comments.json'; link.click();
+  URL.revokeObjectURL(url); status.textContent = 'Place the exported comments.json beside the report.';
+});
+document.getElementById('import-comments').addEventListener('change', async event => {
+  try {
+    const value = JSON.parse(await event.target.files[0].text());
+    if (!validComments(value)) throw new Error('The comment evidence or format does not match this report.');
+    comments = value.comments; renderComments(); status.textContent = 'Comments are loaded.';
+  } catch (error) { status.textContent = 'Comments were not loaded. ' + error.message; }
+});
+</script>
+</body></html>

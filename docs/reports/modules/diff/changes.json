@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "report": "Diffraction module analysis",
+  "revisions": [
+    {
+      "revision": 1,
+      "date": "2026-10-22",
+      "changes": [
+        "The public cylinder radiation example is calculated with explicit expansion-refinement targets.",
+        "All motion-mode long-wave comparators are shown separately from observed diffraction results.",
+        "Missing mass, metocean, damping and independent reference evidence is registered before wider design use."
+      ]
+    },
+    {
+      "revision": 2,
+      "date": "2026-10-22",
+      "changes": [
+        "Unsupported source-retrieval wording is removed so the source register matches retained evidence.",
+        "Text is read as UTF-8 and written with LF endings; new measurements use portable memory information and the current UTC date.",
+        "Comment identity follows displayed numerical precision, while cached calculations retain full-precision integrity checks.",
+        "Refinement uses the lowest and highest mode counts; rebuilt-report checks detect stale narrative and the draft is addressed to maintainers."
+      ]
+    }
+  ]
+}
