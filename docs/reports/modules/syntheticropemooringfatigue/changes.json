@@ -1,0 +1,23 @@
+{
+  "document": "Synthetic rope mooring fatigue analysis",
+  "revisions": [
+    {
+      "revision": "Initial",
+      "date": "2026-10-21",
+      "changes": [
+        "The public two-line screening example is calculated through the module.",
+        "Fatigue, creep and minimum-tension margins are separated from material qualification.",
+        "Input provenance, limits of use and actions for the creep shortfall are recorded."
+      ]
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "changes": [
+        "Model inputs and their unqualified source basis are exposed so the calculation can be checked.",
+        "Verdicts follow the calculated mechanism, zero margins are plotted explicitly and boundary precision preserves failures.",
+        "Independent fatigue arithmetic and the current workflow and atlas checks extend the evidence."
+      ]
+    }
+  ]
+}
