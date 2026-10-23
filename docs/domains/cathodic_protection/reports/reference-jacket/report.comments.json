@@ -1,0 +1,66 @@
+{
+  "comments": [],
+  "decision_conflicts": [],
+  "prior_rounds": [],
+  "report_id": "REFERENCE-JACKET",
+  "report_sha256": "1ee09be7117e1e8758257ec6399e7799978975c8e619a10bc55e84e112340057",
+  "results": [
+    {
+      "decision": "pending",
+      "id": "analysis-1"
+    },
+    {
+      "decision": "pending",
+      "id": "revision-history"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-2"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-3"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-4"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-5"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-6"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-7"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-8"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-9"
+    },
+    {
+      "decision": "pending",
+      "id": "analysis-10"
+    },
+    {
+      "decision": "pending",
+      "id": "structural-evidence"
+    },
+    {
+      "decision": "pending",
+      "id": "reproduction"
+    }
+  ],
+  "reviewer_assignment": "pending",
+  "revision": "01",
+  "schema_version": 1,
+  "standard_revision": "c955b86159acc4f9e9f5964690c24dd1411e5b48",
+  "visual_review": "not evaluated"
+}

@@ -1,6 +1,11 @@
 {
+  "comparison_basis": "saved results.json",
+  "data_basis": "synthetic data",
   "input_fixture": "manifold.yml",
   "input_sha256": "098ddcee3041607917d356af7a6c8ba470dbb864d73e034dc27120eb2906a673",
   "private_benchmark_data": false,
+  "report": "report.html",
+  "results_comparison": "unchanged",
+  "results_sha256": "113b6acd425198ff9937327f2f47dd2d080a87c2f3524e3936c40c6987317517",
   "source_class": "repository_regression"
 }

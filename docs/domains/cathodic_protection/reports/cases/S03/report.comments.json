@@ -3,47 +3,51 @@
   "decision_conflicts": [],
   "prior_rounds": [],
   "report_id": "S03",
-  "report_sha256": "7ae72047c05ae300ac6963962a95a58ad6b5d56c4dc450b55d5151eb432f0b65",
+  "report_sha256": "d668da0f764c49bcd3a2f08d88ff76e8f19191a2a645711bb337c73db52cd8a3",
   "results": [
     {
       "decision": "pending",
-      "id": "review-1"
+      "id": "example-1"
     },
     {
       "decision": "pending",
-      "id": "review-2"
+      "id": "revision-history"
     },
     {
       "decision": "pending",
-      "id": "review-3"
+      "id": "example-2"
     },
     {
       "decision": "pending",
-      "id": "review-4"
+      "id": "example-3"
     },
     {
       "decision": "pending",
-      "id": "review-5"
+      "id": "example-4"
     },
     {
       "decision": "pending",
-      "id": "review-6"
+      "id": "example-5"
     },
     {
       "decision": "pending",
-      "id": "review-7"
+      "id": "example-6"
     },
     {
       "decision": "pending",
-      "id": "review-8"
+      "id": "example-7"
     },
     {
       "decision": "pending",
-      "id": "review-9"
+      "id": "example-8"
     },
     {
       "decision": "pending",
-      "id": "review-10"
+      "id": "example-9"
+    },
+    {
+      "decision": "pending",
+      "id": "example-10"
     },
     {
       "decision": "pending",
@@ -59,20 +63,12 @@
     },
     {
       "decision": "pending",
-      "id": "adequacy"
-    },
-    {
-      "decision": "pending",
-      "id": "references"
-    },
-    {
-      "decision": "pending",
-      "id": "result-adequacy-1"
+      "id": "output-data"
     }
   ],
   "reviewer_assignment": "pending",
-  "revision": "00",
+  "revision": "01",
   "schema_version": 1,
   "standard_revision": "c955b86159acc4f9e9f5964690c24dd1411e5b48",
-  "visual_review": "deferred by the owner"
+  "visual_review": "not evaluated"
 }

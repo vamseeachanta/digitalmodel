@@ -1,0 +1,11 @@
+{
+  "artifacts": {
+    "citations": "cathodic-protection-analysis.citations.json",
+    "html": "cathodic-protection-analysis.html",
+    "pdf": null,
+    "results": "results.json"
+  },
+  "input_sha256": "8e9f9eb9bcec7564b19950385a18e2c7e58ac872b65a5a35c79221eeb29bfb39",
+  "pdf": "not generated",
+  "source_class": "published geometry"
+}

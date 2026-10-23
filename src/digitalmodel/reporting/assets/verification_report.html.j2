@@ -1,15 +1,27 @@
+{%- set worked_example = doc.project in ['Worked example on published geometry', 'Worked example on synthetic data'] -%}
+{%- set report_status = ('Revision ' ~ doc.revision ~ ' — Issued for information') if worked_example else 'Draft for review' -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ doc.title }} — Draft for review</title>
+<title>{{ doc.title }} — {{ report_status }}</title>
 {%- if plotlyjs %}
 <script type="text/javascript">{{ plotlyjs|safe }}</script>
 {%- endif %}
 {{ house_css|safe }}
 <style>
 {{ engine_css|safe }}
+{%- if worked_example %}
+body.doc{min-width:0;width:100%}
+.wrap,main,section{min-width:0;max-width:100%;box-sizing:border-box}
+.tbl-wrap{max-width:100%;overflow-x:auto}
+#cp-review-ui{padding:24px;overflow-wrap:anywhere}
+#cp-review-ui label{display:block;margin:10px 0}
+#cp-review-ui pre{white-space:pre-wrap}
+#cp-review-ui input,#cp-review-ui select,#cp-review-ui textarea{max-width:100%}
+@media print { #cp-review-ui{display:none} }
+{%- endif %}
 @media print {
 .doc .toc{display:none}
 .doc .shell{display:block}
@@ -22,8 +34,12 @@
 </style>
 </head>
 <body class="doc">
-<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
-<div class="hero"><div class="wrap"><h1>{{ doc.title }}</h1><p>Draft for review</p>
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>{{ report_status }}</span></div></header>
+<div class="hero"><div class="wrap"><h1>{{ doc.title }}</h1>
+{%- if worked_example %}
+<p class="example-basis">{{ doc.project }}. No installation is represented.</p>
+{%- endif -%}
+<p>{{ report_status }}</p>
 {%- for std in standards %}
 <p>{{ std.code_id }} — {{ std.edition }}</p>
 {%- endfor %}
@@ -114,6 +130,6 @@
 </section>
 {%- endfor %}
 </main></div>
-<footer><div class="wrap">Draft for review</div></footer>
+<footer><div class="wrap">{{ report_status }}</div></footer>
 </body>
 </html>

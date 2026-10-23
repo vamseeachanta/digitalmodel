@@ -5,13 +5,13 @@
     "manifest": "report_manifest.json",
     "pdf": null
   },
-  "citations_count": 5,
+  "citations_count": 8,
   "document": {
-    "client": "Internal module review - no client issuance",
-    "number": "R2281-CP-002-00",
-    "project": "Digitalmodel CP regression portfolio",
-    "revision": "00",
-    "title": "CP module review: Monopile"
+    "client": "Not applicable",
+    "number": "R2281-CP-002-01",
+    "project": "Worked example on synthetic data",
+    "revision": "01",
+    "title": "Cathodic protection analysis: monopile worked example"
   },
   "execution_tool": "digitalmodel.reporting.engine",
   "pdf": {
@@ -27,5 +27,5 @@
       "provenance": "verified-2021-tables"
     }
   ],
-  "tool_version": "0.0.9"
+  "tool_version": "2.1.0"
 }

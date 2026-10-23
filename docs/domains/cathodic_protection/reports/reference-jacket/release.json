@@ -1,0 +1,8 @@
+{
+  "comparison_basis": "all numerical trees in the saved citation sidecar",
+  "data_basis": "published geometry with synthetic CP inputs",
+  "report": "cathodic-protection-analysis.html",
+  "results_comparison": "unchanged",
+  "results_sha256": "3108c4e71ac131aff884c1be4ecab2be6cc01147fdbf85d60549fbcc37515f6c",
+  "source_class": "published geometry with synthetic CP inputs"
+}

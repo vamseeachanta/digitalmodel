@@ -1,6 +1,11 @@
 {
+  "comparison_basis": "saved results.json",
+  "data_basis": "synthetic data",
   "input_fixture": "pipeline.yml",
   "input_sha256": "d51b3798999dac9d18c7151cd97281a9dea395dfcdc5085618c06cc5e6e326d7",
   "private_benchmark_data": false,
+  "report": "report.html",
+  "results_comparison": "unchanged",
+  "results_sha256": "a38c7099789ede9ba656836367d6cf6931c452d038afa12c0d5110442a78df2d",
   "source_class": "repository_regression"
 }
