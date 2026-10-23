@@ -51,6 +51,81 @@ def test_roundtrip_survives_json_serialization(dense_diffraction_results):
     _assert_results_equal(rebuilt, dense_diffraction_results)
 
 
+@pytest.mark.parametrize(
+    "density, gravity, transverse, longitudinal",
+    [(1000.0, 10.0, "2.0000", "6.0000"),
+     (1250.0, 10.0, "1.6000", "4.8000"),
+     (1000.0, 8.0, "2.5000", "7.5000")],
+)
+def test_bundle_report_gm_uses_environment(
+    tmp_path, mock_diffraction_results, density, gravity, transverse, longitudinal
+):
+    """Hand calculation with synthetic SI inputs, equivalent to native test.
+
+    OrcaWave help, Results: Hydrostatics, Hydrostatic stiffness matrix
+    (accessed 2026-10-22): C44=rho*g*V*GM_T. Choose V=10 m^3,
+    C44=200000 N m/rad, C55=600000 N m/rad. rho=1000 kg/m^3 and g=10
+    give denominator=100000 N, hence GM=2 and 6 m. rho=1250 alone gives
+    1.6 and 4.8 m; g=8 alone gives 2.5 and 7.5 m. pytest's default
+    approximate equality checks serialization; HTML uses its own formatting.
+    """
+    from digitalmodel.hydrodynamics.diffraction.output_schemas import HydrostaticResults
+    from digitalmodel.hydrodynamics.diffraction.postprocess import _build_html_report
+
+    results = mock_diffraction_results
+    results.water_density = density
+    results.gravity = gravity
+    stiffness = np.zeros((6, 6))  # Six rigid-body DOFs; all other terms unused.
+    stiffness[3, 3] = 200000.0
+    stiffness[4, 4] = 600000.0
+    results.hydrostatics = HydrostaticResults(
+        vessel_name=results.vessel_name,
+        displacement_volume=10.0,
+        mass=density * 10.0,
+        centre_of_gravity=[0.0, 0.0, 0.0],
+        centre_of_buoyancy=[0.0, 0.0, 0.0],
+        waterplane_area=0.0,
+        stiffness_matrix=stiffness,
+    )
+    (tmp_path / "diffraction_results.json").write_text(json.dumps(results.to_dict()))
+    loaded = load_results_bundle(tmp_path)
+    assert loaded.water_density == pytest.approx(density)
+    assert loaded.gravity == pytest.approx(gravity)
+    report = _build_html_report(loaded, tmp_path, {})
+    assert report is not None
+    html = report.read_text()
+    assert f"GM_T (transverse metacentric height)</td><td>{transverse} m" in html
+    assert f"GM_L (longitudinal metacentric height)</td><td>{longitudinal} m" in html
+    assert "using the input water density rho and gravity g" in html
+    assert "NOT_EVALUATED" in html  # Missing moments/inertia are not invented.
+
+    # An old bundle, or a partially recorded environment, cannot establish GM.
+    loaded.gravity = None
+    unknown = _build_html_report(loaded, tmp_path, {})
+    assert unknown is not None
+    assert "NOT_EVALUATED: GM requires positive input water density" in unknown.read_text()
+
+    loaded.gravity = gravity
+    loaded.unit_system = "orcaflex"
+    unsupported = _build_html_report(loaded, tmp_path, {})
+    assert unsupported is not None
+    assert "NOT_EVALUATED: GM requires positive input water density" in unsupported.read_text()
+
+
+def test_legacy_bundle_has_no_assumed_environment(mock_diffraction_results):
+    """Missing environment must remain unknown rather than inventing constants."""
+    from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
+        build_report_data_from_solver_results,
+    )
+
+    loaded = DiffractionResults.from_dict(mock_diffraction_results.to_dict())
+    assert loaded.water_density is None
+    assert loaded.gravity is None
+    data = build_report_data_from_solver_results({loaded.analysis_tool: loaded})
+    assert data.gm_transverse is None
+    assert data.gm_longitudinal is None
+
+
 def test_load_results_bundle_reads_named_json(tmp_path: Path, mock_diffraction_results):
     (tmp_path / "diffraction_results.json").write_text(
         json.dumps(mock_diffraction_results.to_dict())

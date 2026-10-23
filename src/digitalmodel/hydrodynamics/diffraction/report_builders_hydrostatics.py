@@ -39,7 +39,10 @@ def _build_stability_html(data: DiffractionReportData) -> str:
     # --- Hydrostatic properties table ---
     cob = ", ".join(f"{v:.4f}" for v in hs.centre_of_buoyancy)
     com = ", ".join(f"{v:.4f}" for v in hs.centre_of_mass)
-    cof = ", ".join(f"{v:.4f}" for v in hs.centre_of_floatation)
+    cof = (", ".join(f"{v:.4f}" for v in hs.centre_of_floatation)
+           if hs.centre_of_floatation is not None else "NOT_EVALUATED")
+    lxx = f"{hs.Lxx:.4f}" if hs.Lxx is not None else "NOT_EVALUATED"
+    lyy = f"{hs.Lyy:.4f}" if hs.Lyy is not None else "NOT_EVALUATED"
 
     props_html = f"""\
 <h3>Hydrostatic Properties</h3>
@@ -51,8 +54,8 @@ def _build_stability_html(data: DiffractionReportData) -> str:
     <tr><td>Centre of Buoyancy (x, y, z)</td><td>{cob}</td></tr>
     <tr><td>Centre of Mass (x, y, z)</td><td>{com}</td></tr>
     <tr><td>Waterplane Area (Awp)</td><td>{hs.waterplane_area:.4f} m2</td></tr>
-    <tr><td>Waterplane I_xx</td><td>{hs.Lxx:.4f}</td></tr>
-    <tr><td>Waterplane I_yy</td><td>{hs.Lyy:.4f}</td></tr>
+    <tr><td>Waterplane I_xx</td><td>{lxx}</td></tr>
+    <tr><td>Waterplane I_yy</td><td>{lyy}</td></tr>
     <tr><td>Centre of Floatation (x, y)</td><td>{cof}</td></tr>
   </tbody>
 </table>"""
@@ -160,7 +163,7 @@ def _build_stability_html(data: DiffractionReportData) -> str:
 
     # --- Inertia matrix ---
     inertia_rows = ""
-    for i in range(6):
+    for i in range(6) if I is not None else []:
         cells = "".join(
             f"<td class='{'highlight' if abs(I[i][j]) > 1e-6 else ''}'>"
             f"{I[i][j]:.4e}</td>"
@@ -174,6 +177,9 @@ def _build_stability_html(data: DiffractionReportData) -> str:
   <thead><tr><th></th>{matrix_header}</tr></thead>
   <tbody>{inertia_rows}</tbody>
 </table>"""
+
+    if I is None:
+        inertia_html = "<p>Inertia matrix: NOT_EVALUATED (not supplied).</p>"
 
     # Hull type note
     hull_note = _get_hull_type_note(data.hull_type, "stability")

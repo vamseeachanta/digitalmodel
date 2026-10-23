@@ -36,8 +36,8 @@ def _find_closest_idx(values: List[float], target: float) -> int:
 
 def compute_stability(
     hydrostatics: HydrostaticData,
-    rho: float = 1025.0,
-    g: float = 9.81,
+    rho: Optional[float] = 1025.0,
+    g: Optional[float] = 9.81,
 ) -> Dict[str, Optional[float]]:
     """Compute stability parameters from hydrostatic data.
 
@@ -46,6 +46,11 @@ def compute_stability(
     BM_T = I_xx / V
     BM_L = I_yy / V
     KB   = z_B (from CoB z-coordinate)
+
+    Basis: OrcaWave help, Results: Hydrostatics, Hydrostatic stiffness matrix
+    (online edition accessed 2026-10-22). Density must use the same mass basis
+    as C (kg with N, tonnes with kN). Explicit None leaves GM unevaluated;
+    omitted arguments retain the legacy direct-helper defaults.
     """
     C = hydrostatics.restoring_matrix
     V = hydrostatics.volume
@@ -61,11 +66,17 @@ def compute_stability(
     if V <= 0:
         return result
 
-    rho_g_v = rho * g * V
-    result["gm_transverse"] = C[3][3] / rho_g_v if rho_g_v > 0 else None
-    result["gm_longitudinal"] = C[4][4] / rho_g_v if rho_g_v > 0 else None
-    result["bm_transverse"] = hydrostatics.Lxx / V
-    result["bm_longitudinal"] = hydrostatics.Lyy / V
+    if (rho is not None and g is not None
+            and math.isfinite(rho) and math.isfinite(g) and rho > 0 and g > 0):
+        rho_g_v = rho * g * V
+        result["gm_transverse"] = C[3][3] / rho_g_v if rho_g_v > 0 else None
+        result["gm_longitudinal"] = C[4][4] / rho_g_v if rho_g_v > 0 else None
+    result["bm_transverse"] = (
+        hydrostatics.Lxx / V if hydrostatics.Lxx is not None else None
+    )
+    result["bm_longitudinal"] = (
+        hydrostatics.Lyy / V if hydrostatics.Lyy is not None else None
+    )
     result["kb"] = hydrostatics.centre_of_buoyancy[2]  # z-coordinate
 
     return result
@@ -84,7 +95,7 @@ def compute_radii_of_gyration(
     I = hydrostatics.inertia_matrix
     result: Dict[str, float] = {}
 
-    if M > 0:
+    if M > 0 and I is not None:
         for label, idx in [("r_xx", 3), ("r_yy", 4), ("r_zz", 5)]:
             val = I[idx][idx]
             result[label] = math.sqrt(val / M) if val > 0 else 0.0
@@ -113,6 +124,9 @@ def compute_natural_periods(
         "heave": None, "roll": None, "pitch": None,
         "yaw": None,
     }
+
+    if I is None:
+        return result
 
     # Only compute for DOFs with restoring stiffness
     for dof_name, dof_idx, key in [

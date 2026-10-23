@@ -384,6 +384,8 @@ class OrcaWaveRunner:
 
         # Retain water depth from the spec for the post-Calculate() adapter.
         self._water_depth = self._spec_water_depth(spec)
+        self._water_density = spec.environment.water_density
+        self._gravity = spec.environment.gravity
 
         self._result = RunResult(
             status=RunStatus.PREPARING,
@@ -817,6 +819,8 @@ class OrcaWaveRunner:
             notes="Built from OrcFxAPI.Diffraction object (#625)",
             phase_convention="orcina_lag",
             unit_system="SI",
+            water_density=getattr(self, "_water_density", None),
+            gravity=getattr(self, "_gravity", None),
         )
 
     @staticmethod
@@ -826,11 +830,14 @@ class OrcaWaveRunner:
         """Best-effort hydrostatics extraction; None if unavailable."""
         try:
             hs = diffraction.hydrostaticResults[0]
-            restoring = np.asarray(hs["restoringMatrix"], dtype=float)
+            # OrcaWave help, Data: Model / Units (online edition accessed
+            # 2026-10-22): native SI uses tonnes/kN. DiffractionResults uses
+            # kg/N (docs/UNITS.md), so mass and stiffness must both convert.
+            restoring = tonnes_to_kg(np.asarray(hs["restoringMatrix"], dtype=float))
             return HydrostaticResults(
                 vessel_name=vessel_name,
                 displacement_volume=float(hs["volume"]),
-                mass=float(hs["mass"]),
+                mass=float(tonnes_to_kg(hs["mass"])),
                 centre_of_gravity=list(np.asarray(hs["centreOfMass"], dtype=float)),
                 centre_of_buoyancy=list(
                     np.asarray(hs["centreOfBuoyancy"], dtype=float)

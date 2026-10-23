@@ -33,15 +33,15 @@ class HydrostaticData(ReportDataModel):
     centre_of_buoyancy: List[float] = Field(description="CoB [x, y, z]")
     centre_of_mass: List[float] = Field(description="CoM [x, y, z]")
     waterplane_area: float = Field(description="Waterplane area Awp (m^2)")
-    Lxx: float = Field(description="Waterplane moment of inertia Ixx")
-    Lyy: float = Field(description="Waterplane moment of inertia Iyy")
-    Lxy: float = Field(description="Waterplane product of inertia Ixy")
-    centre_of_floatation: List[float] = Field(description="CoF [x, y]")
+    Lxx: Optional[float] = Field(None, description="Waterplane moment of inertia Ixx")
+    Lyy: Optional[float] = Field(None, description="Waterplane moment of inertia Iyy")
+    Lxy: Optional[float] = Field(None, description="Waterplane product of inertia Ixy")
+    centre_of_floatation: Optional[List[float]] = Field(None, description="CoF [x, y]")
     restoring_matrix: List[List[float]] = Field(
         description="6x6 hydrostatic stiffness matrix C"
     )
-    inertia_matrix: List[List[float]] = Field(
-        description="6x6 inertia matrix"
+    inertia_matrix: Optional[List[List[float]]] = Field(
+        None, description="6x6 inertia matrix; absent from numeric hydrostatics bundles"
     )
 
     class Config:

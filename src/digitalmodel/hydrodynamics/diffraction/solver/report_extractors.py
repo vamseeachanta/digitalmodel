@@ -218,7 +218,12 @@ def extract_report_data_from_owr(owr_path: Path) -> DiffractionReportData:
         damping_diag[dof] = damping[:, i, i].tolist()
 
     # --- Stability ---
-    stability = compute_stability(hydrostatics)
+    # OrcaWave help, Data: Model / Units and Results: Hydrostatics
+    # (online edition accessed 2026-10-22): native SI uses tonnes and kN.
+    # Keep density in that same basis; do not mix kg/m^3 with kN stiffness.
+    stability = compute_stability(
+        hydrostatics, rho=float(d.WaterDensity), g=float(d.g)
+    )
     rog = compute_radii_of_gyration(hydrostatics)
 
     # --- Natural periods ---
@@ -277,8 +282,9 @@ def build_report_data_from_solver_results(
 
     If *owr_path* is provided, delegates to ``extract_report_data_from_owr``
     for full physics data (hydrostatics, load RAOs, roll damping, etc.).
-    Otherwise builds a minimal data model from the first solver's
-    ``DiffractionResults`` (frequencies, added-mass/damping diagonals only).
+    Otherwise builds from the first solver's ``DiffractionResults``:
+    frequencies, coefficient diagonals and any supplied hydrostatics. Missing
+    environment values leave GM unevaluated; missing geometry is not inferred.
 
     Args:
         solver_results: Mapping of solver name to DiffractionResults.
@@ -314,7 +320,7 @@ def build_report_data_from_solver_results(
             float(hm.matrix[i, i]) for hm in dr.damping.matrices
         ]
 
-    return DiffractionReportData(
+    data = DiffractionReportData(
         vessel_name=vessel_name or dr.vessel_name,
         solver_names=list(solver_results.keys()),
         frequencies_rad_s=freq_rad_s,
@@ -323,3 +329,28 @@ def build_report_data_from_solver_results(
         added_mass_diagonal=added_mass_diag,
         damping_diagonal=damping_diag,
     )
+    if dr.hydrostatics is not None:
+        hs = dr.hydrostatics
+        data.hydrostatics = HydrostaticData(
+            volume=hs.displacement_volume,
+            mass=hs.mass,
+            centre_of_buoyancy=hs.centre_of_buoyancy,
+            centre_of_mass=hs.centre_of_gravity,
+            waterplane_area=hs.waterplane_area,
+            restoring_matrix=hs.stiffness_matrix.tolist(),
+        )
+        # DiffractionResults environment is SI, matching its N-based stiffness.
+        stability = compute_stability(
+            data.hydrostatics,
+            rho=dr.water_density if dr.unit_system == "SI" else None,
+            g=dr.gravity if dr.unit_system == "SI" else None,
+        )
+        for key, value in stability.items():
+            setattr(data, key, value)
+        data.executive_warnings = generate_executive_warnings(data)
+        if data.gm_transverse is None:
+            data.executive_warnings.append(
+                "NOT_EVALUATED: GM requires positive input water density, "
+                "gravity and displaced volume in consistent units."
+            )
+    return data

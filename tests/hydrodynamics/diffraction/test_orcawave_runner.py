@@ -729,12 +729,43 @@ class TestOrcaWaveAdapterSuccess:
 
     def test_water_depth_retained_from_spec(self, ship_raos_spec_path, tmp_path):
         spec = _load_spec(ship_raos_spec_path)
+        # Synthetic environment inputs matching the report hand-calculation case.
+        spec.environment.water_density = 1000.0
+        spec.environment.gravity = 8.0
         runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
         runner.prepare(spec)
         result = _run_api(runner, _make_fake_diffraction())
         expected = float(spec.environment.water_depth) \
             if isinstance(spec.environment.water_depth, (int, float)) else 0.0
         assert result.diffraction_results.water_depth == expected
+        assert result.diffraction_results.water_density == spec.environment.water_density
+        assert result.diffraction_results.gravity == spec.environment.gravity
+
+
+    def test_hydrostatic_bundle_uses_si_stiffness(self, ship_raos_spec_path, tmp_path):
+        """Independent synthetic calculation: native GM=200/(1*10*10)=2 m.
+
+        OrcaWave help, Data: Model / Units (accessed 2026-10-22) defines
+        native SI as tonnes/kN; docs/UNITS.md requires N at internal seams.
+        Thus C44=200 kN m/rad becomes 200000 N m/rad; mass=10 t becomes
+        10000 kg. SI GM=200000/(1000*10*10)=2 m, without a hidden scale.
+        """
+        spec = _load_spec(ship_raos_spec_path)
+        spec.environment.water_density = 1000.0
+        spec.environment.gravity = 10.0
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        fake = _make_fake_diffraction()
+        stiffness = np.zeros((6, 6))
+        stiffness[3, 3] = 200.0
+        fake.hydrostaticResults = [{
+            "volume": 10.0, "mass": 10.0,
+            "centreOfMass": np.zeros(3), "centreOfBuoyancy": np.zeros(3),
+            "Awp": 0.0, "restoringMatrix": stiffness,
+        }]
+        result = _run_api(runner, fake).diffraction_results
+        assert result.hydrostatics.mass == pytest.approx(10000.0)
+        assert result.hydrostatics.stiffness_matrix[3, 3] == pytest.approx(200000.0)
 
 
 class TestOrcaWaveLoadResultsFallback:

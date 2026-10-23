@@ -148,8 +148,6 @@ def _build_html_report(
     try:
         from digitalmodel.hydrodynamics.diffraction.report_generator import (
             build_report_data_from_solver_results,
-            compute_natural_periods,
-            compute_stability,
             generate_diffraction_report,
         )
 
@@ -161,24 +159,6 @@ def _build_html_report(
         )
         # Deterministic label from the bundle itself.
         report_data.report_date = results.analysis_date or results.created_date or ""
-
-        # Enrich with stability + natural periods when hydrostatics travelled
-        # in the bundle (Optional on DiffractionResults). Clean field mapping;
-        # skipped silently when absent.
-        if results.hydrostatics is not None:
-            report_data.hydrostatics = results.hydrostatics
-            stability = compute_stability(results.hydrostatics)
-            report_data.gm_transverse = stability.get("gm_transverse")
-            report_data.gm_longitudinal = stability.get("gm_longitudinal")
-            report_data.bm_transverse = stability.get("bm_transverse")
-            report_data.bm_longitudinal = stability.get("bm_longitudinal")
-            report_data.kb = stability.get("kb")
-            if report_data.added_mass_diagonal:
-                report_data.natural_periods = compute_natural_periods(
-                    results.hydrostatics,
-                    report_data.added_mass_diagonal,
-                    report_data.frequencies_rad_s,
-                )
 
         report_path = out / f"{results.vessel_name}_diffraction_report.html"
         return generate_diffraction_report(
