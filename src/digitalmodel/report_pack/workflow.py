@@ -103,7 +103,9 @@ import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Optional, cast
+from urllib.parse import quote
 
+from digitalmodel._output_paths import relative_artifact_path, validate_output_paths
 from digitalmodel.citations.schema import Citation, CitationValidationError
 from digitalmodel.reporting.engine import render_html
 from digitalmodel.reporting.pdf import PDF_MODES, PdfMode, render_pdf
@@ -176,7 +178,6 @@ def router(cfg: dict) -> dict:
     spec = build_report_spec(pack)
 
     out_dir = pack.output_dir
-    out_dir.mkdir(parents=True, exist_ok=True)
     stem = pack.stem
 
     md_path = out_dir / f"{stem}_report.md"
@@ -186,9 +187,35 @@ def router(cfg: dict) -> dict:
     file_manifest_path = out_dir / f"{stem}_manifest.json"
     layer_manifest_path = out_dir / "report-layer-manifest.json"
 
-    markdown = render_markdown(
-        pack.document, pack.sections, pack.results, pack.appendices, pack.citations
+    destinations = [
+        md_path, html_path, citations_path, file_manifest_path, layer_manifest_path,
+    ]
+    if pack.pdf_mode != "off":
+        destinations.append(pdf_path)
+    validate_output_paths(*destinations)
+
+    file_manifest: dict[str, Any] = {
+        "markdown_report": relative_artifact_path(md_path, file_manifest_path),
+        "html_report": relative_artifact_path(html_path, file_manifest_path),
+        "citation_sidecar": relative_artifact_path(citations_path, file_manifest_path),
+        "report_layer_manifest": relative_artifact_path(
+            layer_manifest_path, file_manifest_path,
+        ),
+    }
+    layer_links = {
+        path: relative_artifact_path(path, layer_manifest_path)
+        for path in destinations
+    }
+    pdf_link = (
+        relative_artifact_path(pdf_path, file_manifest_path)
+        if pack.pdf_mode != "off" else None
     )
+
+    markdown = render_markdown(
+        pack.document, pack.sections, pack.results, pack.appendices, pack.citations,
+        output_path=md_path,
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
     md_path.write_text(markdown, encoding="utf-8", newline="\n")
     html_path.write_text(render_html(spec), encoding="utf-8", newline="\n")
 
@@ -201,24 +228,18 @@ def router(cfg: dict) -> dict:
     if pdf_written:
         emitted.append(pdf_path)
 
-    # Pack-relative names: the pack directory is the portable unit, so its
-    # internal manifests must not leak machine-specific absolute paths.
-    file_manifest = {
-        "markdown_report": md_path.name,
-        "html_report": html_path.name,
-        "pdf_report": pdf_path.name if pdf_written else None,
-        "pdf_status": pdf_status.message,
-        "citation_sidecar": citations_path.name,
-        "report_layer_manifest": layer_manifest_path.name,
-    }
+    file_manifest.update(
+        pdf_report=pdf_link if pdf_written else None,
+        pdf_status=pdf_status.message,
+    )
     _write_json(file_manifest_path, file_manifest)
     emitted.append(file_manifest_path)
 
     layer_manifest = build_report_layer_manifest(
         pack.manifest_inputs,
-        citation_evidence_manifest=citations_path.name,
-        generated_manifest=file_manifest_path.name,
-        files=sorted(p.name for p in emitted) + ["report-layer-manifest.json"],
+        citation_evidence_manifest=layer_links[citations_path],
+        generated_manifest=layer_links[file_manifest_path],
+        files=sorted(layer_links[p] for p in emitted + [layer_manifest_path]),
     )
     _write_json(layer_manifest_path, layer_manifest)
 
@@ -793,6 +814,8 @@ def render_markdown(
     results: dict[str, Any],
     appendices: list[dict[str, Any]],
     citations: list[Citation],
+    *,
+    output_path: Path | None = None,
 ) -> str:
     lines: list[str] = []
     lines.append(f"# {document['title']}")
@@ -838,7 +861,7 @@ def render_markdown(
         lines.append(section["content"])
         lines.append("")
         if _is_results_section(section["title"]):
-            lines.extend(_markdown_results(results))
+            lines.extend(_markdown_results(results, output_path))
     if citations:
         lines.append("## References cited")
         lines.append("")
@@ -862,7 +885,7 @@ def render_markdown(
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _markdown_results(results: dict[str, Any]) -> list[str]:
+def _markdown_results(results: dict[str, Any], output_path: Path | None = None) -> list[str]:
     lines: list[str] = []
     for table in results["tables"]:
         lines.append(f"### {table['title']}")
@@ -877,7 +900,12 @@ def _markdown_results(results: dict[str, Any]) -> list[str]:
         lines.append(f"Source: `{table['source']}`")
         lines.append("")
     for figure in results["figures"]:
-        lines.append(f"![{figure['title']}]({figure['path'].name})")
+        path = figure["path"]
+        link = (
+            relative_artifact_path(path, output_path)
+            if output_path is not None else path.name
+        )
+        lines.append(f"![{figure['title']}]({quote(link, safe='/')})")
         lines.append("")
     return lines
 
