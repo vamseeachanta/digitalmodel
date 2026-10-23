@@ -242,7 +242,7 @@ def evidence_table(headers, rows, caption):
     return f"<table><tr>{head}</tr>{body}</table><p class=\"sub\">{caption}</p>"
 
 
-def evidence_chart(identifier, title, labels, series, ylabel):
+def evidence_chart(identifier, title, labels, series, ylabel, tick_precision=1):
     """Use the study's SVG style with categorical cases and source-valued ticks.
 
     Axis ticks are selected from the observations; no interpolated data labels
@@ -269,7 +269,7 @@ def evidence_chart(identifier, title, labels, series, ylabel):
              f'<text x="84" y="22" fill="#16324f">{html.escape(title)}</text>']
     for tick in ticks:
         parts += [f'<path d="M 84 {y(tick):.1f} H 770" stroke="#e2e7eb"/>',
-                  f'<text x="76" y="{y(tick)+4:.1f}" text-anchor="end" font-size="12">{tick:.1f}</text>']
+                  f'<text x="76" y="{y(tick)+4:.1f}" text-anchor="end" font-size="12">{tick:.{tick_precision}f}</text>']
     for i, label in enumerate(labels):
         parts.append(f'<text x="{x(i):.1f}" y="322" text-anchor="middle" font-size="10">{html.escape(label)}</text>')
     parts.append('<text transform="translate(18 175) rotate(-90)" text-anchor="middle">'
@@ -364,7 +364,7 @@ def render_cfd_evidence():
                      [("CFD-derived", [val(r["measured_period"]) for r in fill]),
                       ("Predicted", [val(r["predicted_period"]) for r in fill])], "Natural period (s); fill (%)"))
     part.append(plot("cfd-fill-damping", "Equivalent damping against fill", fill_labels,
-                     [("Near predicted natural period; lower imposed roll", [val(c["measured"]) for c in chosen])], "Damping ratio; fill (%)"))
+                     [("Near predicted natural period; lower imposed roll", [val(c["measured"]) for c in chosen])], "Damping ratio; fill (%)", tick_precision=3))
     part.append(table(["Fill (%)", "Area (m²)", "Forcing period (s)", "Roll (°)", "Equivalent damping ratio"],
                       [[v(r["fill"], 0), v(r["area"]), v(c["period"]), v(c["roll"]), v(c["measured"], 3)] for r in fill for c in r["damping"]],
                       "Fill-dependent damping at the archived forcing conditions; period predictions and measurements appear above."))

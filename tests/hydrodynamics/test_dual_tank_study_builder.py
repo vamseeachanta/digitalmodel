@@ -82,6 +82,20 @@ def test_builder_does_not_require_generated_showcase(builder, monkeypatch, tmp_p
     assert builder.render() == expected
 
 
+def test_fill_damping_ticks_are_distinct_and_match_table(builder):
+    evidence = builder.render_cfd_evidence()
+    fill = evidence.split('id="cfd-fill"', 1)[1].split('id="cfd-loss"', 1)[0]
+    svg = ElementTree.fromstring(
+        re.search(r'<svg id="cfd-fill-damping".*?</svg>', fill, re.S).group()
+    )
+    ticks = [node.text for node in svg.findall("text[@text-anchor='end']")]
+    assert len(ticks) == len(set(ticks)) == 2
+    assert ticks == ["0.514", "0.536"]
+    table = ElementTree.fromstring(re.search(r"<table>.*?</table>", fill, re.S).group())
+    damping_values = {row.findall("td/data")[-1].text for row in table.findall("tr")[1:]}
+    assert set(ticks) <= damping_values
+
+
 def test_claims_are_read_from_published_sources(builder):
     claims = builder.published_claims()
     assert claims["moment_rms"] == 4.3
