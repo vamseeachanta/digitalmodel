@@ -401,6 +401,13 @@ coverage.wrk*.xml
 *.wrk*.xml
 outputs/
 specs/
+# Retain the scalar-result schema and its checks beside tracked manifests.
+!/src/digitalmodel/specs/
+/src/digitalmodel/specs/*
+!/src/digitalmodel/specs/engineering_result.py
+!/tests/specs/
+/tests/specs/*
+!/tests/specs/test_engineering_result.py
 
 # Agent worktrees (local-only, must not be tracked as gitlinks)
 .claude/worktrees/
@@ -581,3 +588,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Reproducible vessel seakeeping module documentation
+!/scripts/reports/
+/scripts/reports/*
+!/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/
+!/docs/reports/modules/
+/docs/reports/modules/*
+!/docs/reports/modules/vesselseakeeping/
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json

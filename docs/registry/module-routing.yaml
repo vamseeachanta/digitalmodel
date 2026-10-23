@@ -140,6 +140,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#fatigue
   - module: field_development
     entry_point: src/digitalmodel/field_development/
+    submodules:
+      schematics:
+        agent_pack: src/digitalmodel/field_development/schematics/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/field_development/]
@@ -185,6 +189,9 @@ modules:
       aqwa:
         agent_pack: src/digitalmodel/hydrodynamics/aqwa/docs/agent-pack.md
         qa_family: DF
+      planing_hull:
+        agent_pack: src/digitalmodel/hydrodynamics/planing_hull/docs/agent-pack.md
+        qa_family: EC
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
@@ -335,6 +342,9 @@ modules:
       microgrid:
         agent_pack: src/digitalmodel/power/microgrid/docs/agent-pack.md
         qa_family: EC
+      protocols:
+        agent_pack: src/digitalmodel/power/protocols/docs/agent-pack.md
+        qa_family: EC
   - module: process_diagrams
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
@@ -355,6 +365,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#production_engineering
   - module: reservoir
     entry_point: src/digitalmodel/reservoir/
+    submodules:
+      reservoir:
+        agent_pack: src/digitalmodel/reservoir/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/reservoir/
     key_tests: [tests/reservoir/]
@@ -388,6 +402,9 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      blender_automation:
+        agent_pack: src/digitalmodel/solvers/blender_automation/docs/agent-pack.md
+        qa_family: CF
       calculix:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
         qa_family: FE
@@ -559,6 +576,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
   - module: alt_fuel_ship_sizing
     entry_point: src/digitalmodel/alt_fuel_ship_sizing/
+    submodules:
+      alt_fuel_ship_sizing:
+        agent_pack: src/digitalmodel/alt_fuel_ship_sizing/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/ship-design/alt-fuel-lh2-sizing.md
     key_tests: [tests/naval_architecture/test_alt_fuel_ship_sizing.py, tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py]
@@ -642,6 +663,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+    submodules:
+      rao_spectral_fatigue:
+        agent_pack: src/digitalmodel/rao_spectral_fatigue/docs/agent-pack.md
+        qa_family: EC
   - module: riser_configuration_screen
     entry_point: src/digitalmodel/riser_configuration_screen/
     maturity: development
@@ -714,6 +739,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_stability_screening
   - module: viv_screening
     entry_point: src/digitalmodel/viv_screening/
+    submodules:
+      viv_screening:
+        agent_pack: src/digitalmodel/viv_screening/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: examples/workflows/riser-viv-screening/README.md
     key_tests: [tests/workflows/test_viv_screening_workflow.py, tests/workflows/test_durable_workflows.py]
@@ -730,6 +759,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#weather_window
   - module: well_access
     entry_point: src/digitalmodel/well_access/
+    submodules:
+      well_access:
+        agent_pack: src/digitalmodel/well_access/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well_access/]

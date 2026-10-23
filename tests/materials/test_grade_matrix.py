@@ -22,8 +22,13 @@ from digitalmodel.materials import (
     "name, smys, smts_psl2, smts_psl1",
     [
         ("A25", 175.0, None, 310.0),
+        ("A", 210.0, None, 335.0),
+        ("B", 245.0, 415.0, 415.0),
         ("X42", 290.0, 415.0, 415.0),
+        ("X46", 320.0, 435.0, 435.0),
         ("X52", 360.0, 460.0, 460.0),
+        ("X56", 390.0, 490.0, 490.0),
+        ("X60", 415.0, 520.0, 520.0),
         ("X65", 450.0, 535.0, 535.0),
         ("X70", 485.0, 570.0, 570.0),
         ("X80", 555.0, 625.0, None),
@@ -33,6 +38,14 @@ from digitalmodel.materials import (
     ],
 )
 def test_api_5l_published_values(name, smys, smts_psl2, smts_psl1):
+    """API 5L 46th ed. (2018), Tables 6/7, SI yield/tensile columns.
+
+    Independent published cross-check: UNIASEN, API 5L Pipe Specification,
+    Mechanical Requirement tables, https://uniasen.com/standards/api-5l/,
+    accessed 2026-10-21; its Specification section names the same edition.
+    These literal answers do not derive from the grade lookup under test.
+    Maintainer verification against the licensed standard remains pending.
+    """
     g = get(name)
     assert g.standard == "API 5L"
     assert g.smys_mpa == smys

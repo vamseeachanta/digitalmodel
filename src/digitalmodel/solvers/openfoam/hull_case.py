@@ -72,6 +72,7 @@ from .hull_free_surface import (
     free_surface_divisions,
     free_surface_resolution,
 )
+from .hull_wave_extent import WaveExtent, derive_wave_extent, write_wave_surfaces
 from .hull_case_dicts import (
     case_provenance,
     hull_case_tokens,
@@ -165,6 +166,10 @@ class HullCaseConfig:
     free_surface_cells_per_wavelength: Optional[float] = (
         DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH
     )
+    #: Required wake length aft of the actual stern, in deep-water wavelengths.
+    #: No universal minimum is assumed. None records extent as NOT_EVALUATED.
+    #: Geometry follows Ship wakes: Kelvin or Mach angle? (2013), pp. 1–2.
+    free_surface_wake_wavelengths: Optional[float] = None
     # Innermost refinement box margins around the hull bounding box. Geometry
     # scaled; a coarse member of a convergence triplet needs them widened so
     # snappy's transition never reaches the box face (see hull_domain._inner_box).
@@ -241,6 +246,7 @@ class HullCaseDerivation:
     decomposition: Sequence[int]
     first_cell_height: float
     free_surface: FreeSurfaceResolution
+    wave_extent: WaveExtent
 
 
 def _derive_geometry(
@@ -321,6 +327,9 @@ def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
     """Run every derivation. Raises before anything is written."""
     manifest = config.manifest
     domain, boxes, divisions, free_surface = _derive_geometry(config)
+    wave_extent = derive_wave_extent(
+        manifest, domain, boxes, config.velocity, config.free_surface_wake_wavelengths
+    )
 
     return HullCaseDerivation(
         config=config,
@@ -328,9 +337,10 @@ def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
         boxes=boxes,
         divisions=divisions,
         free_surface=free_surface,
+        wave_extent=wave_extent,
         budget=derive_cell_budget(
             domain,
-            boxes,
+            wave_extent.budget_boxes(boxes),
             divisions,
             ranks=config.ranks,
             safety_factor=config.cell_safety_factor,
@@ -387,6 +397,7 @@ def build_hull_case(
     # exist for the runner's own structural check to pass.
     (case / "0").mkdir(exist_ok=True)
     copy_region_surfaces(regions, case / "constant" / "triSurface")
+    write_wave_surfaces(case, derivation.wave_extent, derivation.boxes)
     add_appendage_patchfields(case, regions)  # else setFields aborts post-mesh
 
     (case / "case_provenance.json").write_text(

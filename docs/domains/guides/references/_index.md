@@ -28,3 +28,9 @@ When adding new content:
 Open repositories studied for ideas and cross-checks. Each page records the licence; a repository without a licence is reference only (no code copied).
 
 - [PointCloud Studio](external-tools/pointcloud-studio.md): survey point clouds for subsea cables, pipelines and foundations (free spans, scour, depth of burial, rock berms, sand waves); no licence stated.
+
+## Papers and posts
+
+Published papers, and the posts that pointed to them. Reports cite the paper, never the post.
+
+- [Clamp repair of cracked offshore tubular joints](external-sources/tubular-joint-clamp-repair.md): Fazel Mojtahedi, Aslani and Butt (2026), Marine Structures 110, 104124; joint mechanics, repair strategies and monitoring.

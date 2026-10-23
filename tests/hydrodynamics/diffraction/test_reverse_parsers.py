@@ -9,10 +9,8 @@ Strategy:
 - Compare the round-trip result to the original spec.
 """
 
-import math
 from pathlib import Path
 
-import numpy as np
 import pytest
 import yaml
 
@@ -1010,15 +1008,40 @@ class TestCrossConversion:
 class TestParseExistingOrcaWaveFile:
     """Test parsing a real OrcaWave .yml example file."""
 
-    def test_example_symmetry_refusal_and_full_mesh_properties(self, tmp_path):
-        """Refuse declared symmetry and retain full-mesh property coverage."""
+    @pytest.mark.parametrize("cwd_has_decoy", [False, True], ids=["empty", "decoy"])
+    def test_parse_l01_default_vessel(self, tmp_path, monkeypatch, cwd_has_decoy):
+        """Resolve the tracked example independently of the working directory.
+
+        Source: docs/domains/orcawave/examples/L01_default_vessel/
+        L01 Default vessel.yml (OrcaWave 11.5e, 2025), Environment and Bodies.
+        Expected depth is WaterDepth = 400 m. SI density and mass convert
+        tonnes to kilograms: 1.025 * 1000 = 1025 kg/m^3 and
+        9017.95 * 1000 = 9017950 kg. Counting the literal PeriodOrFrequency
+        and WaveHeading entries gives 24 periods and 9 headings.
+        Conversion source: BIPM, SI Brochure, ninth edition (2019),
+        version 4.01 (2026), Table 8, tonne: 1 t = 1000 kg.
+
+        The original xz symmetry is refused. Changing only its declaration
+        exercises property parsing; it does not validate the mesh geometry.
+        The decoy case places invalid input at the same relative path in the
+        working directory, so a working-directory lookup cannot pass.
+        """
         from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
 
-        example_path = Path(__file__).resolve().parents[3] / (
+        relative_path = Path(
             "docs/domains/orcawave/examples/L01_default_vessel/L01 Default vessel.yml"
         )
+        if cwd_has_decoy:
+            decoy_path = tmp_path / relative_path
+            decoy_path.parent.mkdir(parents=True)
+            decoy_path.write_text("{}\n", encoding="utf-8")
+
+        # An external working directory must not affect fixture discovery.
+        monkeypatch.chdir(tmp_path)
+        example_path = Path(__file__).resolve().parents[3] / relative_path
+        assert example_path.is_file(), "Tracked reference YAML must be present"
         with pytest.raises(ValueError, match="Unsupported OrcaWave mesh symmetry"):
             OrcaWaveInputParser().parse(example_path)
 
@@ -1032,6 +1055,15 @@ class TestParseExistingOrcaWaveFile:
         assert len(result.frequencies.to_frequencies_rad_s()) == 24
         assert len(result.wave_headings.to_heading_list()) == 9
         assert result.vessel.inertia.mass == pytest.approx(9017950.0)
+
+    def test_missing_reference_is_an_error(self, tmp_path):
+        """An absent reference must fail file reading rather than skip coverage."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        with pytest.raises(FileNotFoundError):
+            OrcaWaveInputParser().parse(tmp_path / "missing-reference.yml")
 
 
 @pytest.mark.parametrize("symmetry", ["xz plane", "yz plane", "xz and yz planes", "unknown"])

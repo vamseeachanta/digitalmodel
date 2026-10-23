@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/attestation_manifest.py": (
+        "writes a caller-selected attestation summary, not committed docs/api pages"
+    ),
     "scripts/capabilities/build_onepagers.py": (
         "writes JSON capability cards, not docs/api HTML"
     ),
@@ -40,6 +43,10 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/reporting/build_reference_jacket_analysis.py": (
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
+    ),
+    "scripts/reports/build_vessel_seakeeping_module_report.py": (
+        "renders the seakeeping analysis under docs/reports, not docs/api; "
+        "dedicated reporting tests verify byte reproduction and worked values"
     ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"

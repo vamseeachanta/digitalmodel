@@ -28,6 +28,16 @@ from digitalmodel.subsea.pipeline.pipeline_pressure import (
 )
 
 
+# DNV-ST-F101 (2021), System collapse: qualification remains unavailable.
+# These omissions apply even when the legacy numerical utilization passes.
+_COLLAPSE_NOT_EVALUATED = (
+    "fabrication_factor",
+    "strength_derating",
+    "ovality_and_thickness_basis",
+    "design_criterion_and_factors",
+)
+
+
 # ---------------------------------------------------------------------------
 # DNV-ST-F101: collapse pressure (characteristic)
 # ---------------------------------------------------------------------------
@@ -128,7 +138,13 @@ def dnv_external_collapse_check(
     nu: float = _NU_STEEL,
     rho_sw: float = _RHO_SW,
 ) -> dict[str, object]:
-    """Check external hydrostatic pressure against DNV-ST-F101 collapse resistance.
+    """Screen external hydrostatic pressure using the legacy collapse model.
+
+    ``pass`` reports the arithmetic criterion below only. Complete compliance
+    with DNV-ST-F101 (2021), System collapse, is NOT_EVALUATED: fabrication,
+    strength derating, geometry basis and design factors are not qualified.
+    Defaults are assumed, based on previous experience; no standard-qualified
+    ovality, elastic properties or seawater density is inferred from them.
 
     Criterion (DNV-ST-F101 Section 5.4.4)::
 
@@ -147,7 +163,7 @@ def dnv_external_collapse_check(
 
     Returns:
         Dict with keys: ``pass``, ``utilization``, ``p_water``, ``p_c``,
-        ``p_allowable``.
+        ``p_allowable``, ``standard_compliance`` and ``not_evaluated``.
     """
     _validate_safety_class(safety_class)
     gsc = GAMMA_SC[safety_class]
@@ -163,6 +179,8 @@ def dnv_external_collapse_check(
         "p_water": p_water,
         "p_c": p_c,
         "p_allowable": p_allowable,
+        "standard_compliance": "NOT_EVALUATED",
+        "not_evaluated": _COLLAPSE_NOT_EVALUATED,
     }
 
 
@@ -249,8 +267,17 @@ def dnv_combined_loading_check(
     p_e: float,
     safety_class: str = "normal",
     f_0: float = 0.005,
+    *,
+    E: float = _E_STEEL,
+    nu: float = _NU_STEEL,
 ) -> dict[str, object]:
-    """Combined loading utilization per DNV-ST-F101 Section 5.4.3.
+    """Screen combined loading using the legacy interaction criterion.
+
+    ``pass`` reports numerical utilization only. The interaction criterion and
+    factors have not been qualified against DNV-ST-F101 (2021), Local buckling.
+    Standard compliance is NOT_EVALUATED even for a passing screen. Collapse
+    defaults are assumed, based on previous experience; supply elastic properties
+    explicitly to use the same input basis as the external-collapse screen.
 
     Interaction equation::
 
@@ -273,10 +300,13 @@ def dnv_combined_loading_check(
         p_e:           External (hydrostatic) pressure [MPa].
         safety_class:  One of ``"low"``, ``"normal"``, ``"high"``.
         f_0:           Pipe ovality for collapse calculation. Default 0.005.
+        E:             Young's modulus [MPa]; legacy assumed default.
+        nu:            Poisson's ratio; legacy assumed default.
 
     Returns:
         Dict with keys: ``pass``, ``utilization``, ``M_p``, ``S_p``,
-        ``p_c``, ``pressure_ratio``.
+        ``p_c``, ``pressure_ratio``, ``standard_compliance`` and
+        ``not_evaluated``.
     """
     _validate_safety_class(safety_class)
     gsc = GAMMA_SC[safety_class]
@@ -285,7 +315,7 @@ def dnv_combined_loading_check(
     M_p = smys_pa * (D - t) ** 2 * t
     S_p = smys_pa * math.pi * (D - t) * t
 
-    p_c = dnv_collapse_pressure(D=D, t=t, mat=mat, f_0=f_0)
+    p_c = dnv_collapse_pressure(D=D, t=t, mat=mat, f_0=f_0, E=E, nu=nu)
     pressure_ratio = (p_li - p_e) / p_c if p_c > 0.0 else 0.0
 
     if M_p > 0.0 and S_p > 0.0:
@@ -303,4 +333,6 @@ def dnv_combined_loading_check(
         "S_p": S_p,
         "p_c": p_c,
         "pressure_ratio": pressure_ratio,
+        "standard_compliance": "NOT_EVALUATED",
+        "not_evaluated": _COLLAPSE_NOT_EVALUATED,
     }

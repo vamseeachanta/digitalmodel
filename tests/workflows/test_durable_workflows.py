@@ -1246,9 +1246,12 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert cfg["pile_capacity"]["design"]["status"] == "PASS"
     elif workflow["id"] == "scour-assessment":
         result = cfg["scour"]["results"]
-        assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
-        assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
-        assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+        assert result["pipeline"]["scour_depth_m"] is None
+        assert result["monopile"]["scour_depth_m"] is None
+        # Independent hand basis: 31.08*sqrt(.04)*64**(1/6)*.001**(1/3).
+        assert result["monopile"]["critical_velocity_ms"] == pytest.approx(1.2432)
+        assert result["rock_armour"]["thickness_m"] == pytest.approx(1.2)
+        assert result["rock_armour"]["stability_status"] == "FAIL"
     elif workflow["id"] == "mudmat-bearing-capacity":
         block = cfg["mudmat_bearing_capacity"]
         result = block["result"]
