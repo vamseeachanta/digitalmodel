@@ -457,3 +457,47 @@ The older vision-page counts are historical claims, not the test inventory for t
 | Broader plate-anchor/soil-profile and pile lateral-response coverage remains outside the implemented scope described here | Calculation maintainer | #147, #262 |
 
 Independent provider clearance and issue creation from the numbered drafts remain prerequisites for replacing draft markers with issue numbers; this document records a draft knowledge pack, not an engineering design acceptance.
+
+## Riprap residual scour addition (issues #266 and #148)
+
+`riprap_residual_scour_depth` adds a two-stage steady-current calculation:
+first estimate local armour shear from approach shear, then calculate residual
+scour using excess shear and dimensionless grain sizes. Inputs use SI units;
+water density, both grain densities and viscosity are explicit. The sediment
+`sediment_d90_m` roughness input is mandatory in both the physical calculation
+and `approach_bed_shear_stress`; no default d90/d50 ratio is sourced. Results
+record the supplied d90 and its source. The critical Shields parameter
+theta_c = 0.045 is an unverified screening assumption, recorded as
+`critical_shields` alongside `critical_shear_pa`; it is not qualified for design
+use. The threshold conversion uses `critical_sediment_motion` with explicit
+theta_c and gravity, retaining the screening gravity of 9.81 m/s². The optional
+`scour.riprap` workflow block writes the intermediate values to the summary.
+`riprap_scour_from_dimensionless` exposes the second stage separately for checking
+printed dimensionless tables.
+
+Reference: Yang X., Qin Y., Yang S., Zhang M., Yu G. (2026),
+“A semi-empirical prediction model for scour depth around riprap-protected
+monopiles under steady currents,” *Applied Ocean Research* **176**, 105302.
+[DOI: 10.1016/j.apor.2026.105302](https://doi.org/10.1016/j.apor.2026.105302).
+The article is CC BY-NC-ND 4.0. No article text, figures or downloaded dataset
+are included in this addition; the example inputs and current tests are synthetic.
+
+The fit covers excess shear 0.04–3.60, sediment D* 3.77–23.87, rock D*
+35.87–1339.64 and pile diameter/water depth 0.15–0.80. Outside these bounds,
+including below armour motion, both depth outputs are unavailable (`None` in
+Python, `null` in JSON). Results name every group outside its range. The physical
+setup assumes an intact armour layer of thickness 10 rock diameters and footprint
+diameter 5 pile diameters. The 24-hour laboratory tests do not establish an
+equilibrium prediction. Use the method for screening and inspection planning;
+it is not a design criterion and does not support prototype extrapolation.
+
+**Published benchmark pending:** 0 of the 73 measured scour cases and 0 of the
+18 shear cases have been transcribed or tested in this addition because the
+source tables were unavailable. Synthetic equation checks do not validate the
+fit against observations. The reported density/table inconsistency also needs
+checking against the original tables before claiming physical-input reproduction.
+Keep this addition in draft until the tables have been checked and a parametrised
+benchmark added. Use a fixed 20% relative tolerance on each measured hs/D;
+explicitly flag failures and report their identities and errors without increasing
+the tolerance. Preserve printed dimensionless inputs independently from any
+reconstructed density assumptions.

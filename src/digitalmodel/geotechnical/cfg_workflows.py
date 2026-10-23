@@ -174,12 +174,13 @@ class PileCapacityWorkflow:
 
 
 class ScourWorkflow:
-    """Run DNV-RP-F107 scour calculators from cfg."""
+    """Run scour calculators, including optional Yang et al. riprap screening."""
 
     def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
         from digitalmodel.geotechnical.scour import (
             monopile_scour_depth,
             pipeline_scour_depth,
+            riprap_residual_scour_depth,
             rock_armour_thickness,
         )
 
@@ -194,6 +195,10 @@ class ScourWorkflow:
         if "rock_armour" in workflow_cfg:
             armour = workflow_cfg["rock_armour"]
             results["rock_armour"] = asdict(rock_armour_thickness(**armour))
+        if "riprap" in workflow_cfg:
+            results["riprap"] = asdict(
+                riprap_residual_scour_depth(**workflow_cfg["riprap"])
+            )
 
         payload = {**workflow_cfg, "results": results}
         payload["summary_json"] = str(
