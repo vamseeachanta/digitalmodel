@@ -34,15 +34,15 @@ def _load_run_module():
 @pytest.fixture
 def input_yml(tmp_path):
     """Keep generated summaries outside the source tree."""
-    cfg = yaml.safe_load((EXAMPLE_DIR / "input.yml").read_text())
-    cfg["outputs"]["directory"] = str(tmp_path / "results")
+    cfg = yaml.safe_load((EXAMPLE_DIR / "input.yml").read_text(encoding="utf-8"))
+    cfg["outputs"]["directory"] = (tmp_path / "results").as_posix()
     path = tmp_path / "input.yml"
-    path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    path.write_text(yaml.safe_dump(cfg), encoding="utf-8", newline="\n")
     return path
 
 
 def test_example_dir_exists():
-    assert EXAMPLE_DIR.is_dir(), f"missing example dir: {EXAMPLE_DIR}"
+    assert EXAMPLE_DIR.is_dir(), "missing example directory"
     assert (EXAMPLE_DIR / "input.yml").is_file()
     assert (EXAMPLE_DIR / "run.py").is_file()
     assert (EXAMPLE_DIR / "data" / "block_maxima.csv").is_file()
@@ -89,7 +89,7 @@ def test_summary_json_written(input_yml):
     assert out.is_file()
     import json
 
-    data = json.loads(out.read_text())
+    data = json.loads(out.read_text(encoding="utf-8"))
     assert data["n_blocks"] >= 20
     assert "gumbel" in data["fits"] and "weibull" in data["fits"]
 
@@ -103,17 +103,19 @@ def test_main_adds_encounter_probability(input_yml, capsys, life, percentages):
     """Keep every original output line, appending risk to each return value."""
     import json
 
-    cfg = yaml.safe_load(input_yml.read_text())
+    cfg = yaml.safe_load(input_yml.read_text(encoding="utf-8"))
     if life is None:
         cfg["extreme_value_post"].pop("design_life", None)
     else:
         cfg["extreme_value_post"]["design_life"] = life
-    input_yml.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    input_yml.write_text(yaml.safe_dump(cfg), encoding="utf-8", newline="\n")
     run = _load_run_module()
     run.main(input_yml)
 
     summary = json.loads(
-        (input_yml.parent / "results" / "extreme_value_summary.json").read_text()
+        (input_yml.parent / "results" / "extreme_value_summary.json").read_text(
+            encoding="utf-8"
+        )
     )
     expected = [
         "Extreme-value post-processing (offline, license-free) — issue #961",
@@ -133,3 +135,35 @@ def test_main_adds_encounter_probability(input_yml, capsys, life, percentages):
                 f"  encounter probability ({life or 25}-yr life)={percentage}%"
             )
     assert capsys.readouterr().out.splitlines() == expected
+
+
+@pytest.mark.parametrize("periods, expected", [
+    ([1.25], [("1.25", "80.0%")]),
+    ([10.5], [("10.5", "9.5%")]),
+    ([1.6], [("1.6", "62.5%")]),
+    ([10.5, 1.25, 1.6], [("10.5", "9.5%"), ("1.25", "80.0%"), ("1.6", "62.5%")]),
+    ([10.25, 10.5], [("10.5", "9.5%")]),
+])
+def test_main_uses_configured_fractional_periods(input_yml, capsys, periods, expected):
+    """Rounded fitter keys must not change the period used for probability."""
+    # USACE, Hydrologic Statistics (May 2022), section I.C,
+    # "Pool-Probability and Release-Probability Relationships": annual risk is
+    # the reciprocal of the return period. One-year hand calculations:
+    # 1 / 1.25 = 0.8; 1 / 10.5 = 2 / 21; 1 / 1.6 = 0.625.
+    cfg = yaml.safe_load(input_yml.read_text(encoding="utf-8"))
+    cfg["extreme_value_post"].update(return_periods=periods, design_life=1)
+    input_yml.write_text(yaml.safe_dump(cfg), encoding="utf-8", newline="\n")
+
+    run = _load_run_module()
+    run.main(input_yml)
+
+    lines = [
+        line for line in capsys.readouterr().out.splitlines()
+        if "encounter probability (1-yr life)=" in line
+    ]
+    observed = [
+        (line.split("-yr :", 1)[0].strip(), line.rsplit("=", 1)[1])
+        for line in lines
+    ]
+    # Both distributions retain the last value when rounded keys coincide.
+    assert observed == expected * 2

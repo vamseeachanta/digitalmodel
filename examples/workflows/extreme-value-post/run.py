@@ -40,7 +40,7 @@ HERE = Path(__file__).resolve().parent
 def load_block_maxima(csv_path: Path, column: str) -> np.ndarray:
     """Load a single column of block maxima from a (comment-tolerant) CSV."""
     values: List[float] = []
-    with csv_path.open(newline="") as fh:
+    with csv_path.open(encoding="utf-8", newline="") as fh:
         rows = (line for line in fh if not line.lstrip().startswith("#"))
         reader = csv.DictReader(rows)
         for row in reader:
@@ -49,7 +49,7 @@ def load_block_maxima(csv_path: Path, column: str) -> np.ndarray:
                 continue
             values.append(float(raw))
     if not values:
-        raise ValueError(f"No values found in column '{column}' of {csv_path}")
+        raise ValueError(f"No values found in column '{column}' of {csv_path.as_posix()}")
     return np.asarray(values, dtype=float)
 
 
@@ -59,7 +59,7 @@ def run(input_yml: Path = HERE / "input.yml") -> Dict[str, ExtremeValueResult]:
     Returns a mapping of distribution name -> ExtremeValueResult and writes a
     JSON summary to the configured output directory.
     """
-    cfg = yaml.safe_load(input_yml.read_text())
+    cfg = yaml.safe_load(input_yml.read_text(encoding="utf-8"))
     spec = cfg["extreme_value_post"]
 
     data_cfg = spec["data"]
@@ -83,14 +83,19 @@ def run(input_yml: Path = HERE / "input.yml") -> Dict[str, ExtremeValueResult]:
         "return_periods": return_periods,
         "fits": {name: res.model_dump() for name, res in results.items()},
     }
-    out_path.write_text(json.dumps(summary, indent=2))
+    out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8", newline="\n")
 
     return results
 
 
 def main(input_yml: Path = HERE / "input.yml") -> None:
-    cfg = yaml.safe_load(input_yml.read_text())
+    cfg = yaml.safe_load(input_yml.read_text(encoding="utf-8"))
     design_life = cfg["extreme_value_post"].get("design_life", 25)
+    # Match the fitters' rounded keys and last-value behavior on collisions.
+    configured_periods = {
+        f"{float(t):.0f}": float(t)
+        for t in cfg["extreme_value_post"]["return_periods"]
+    }
     results = run(input_yml)
     print("Extreme-value post-processing (offline, license-free) — issue #961")
     print("=" * 66)
@@ -100,9 +105,11 @@ def main(input_yml: Path = HERE / "input.yml") -> None:
         print(f"  KS stat={res.ks_statistic}  p-value={res.ks_pvalue}")
         print("  return-period extremes:")
         for period, value in res.return_values.items():
-            probability = encounter_probability(float(period), design_life)
+            configured_period = configured_periods[period]
+            probability = encounter_probability(configured_period, design_life)
+            period_label = period if configured_period.is_integer() else str(configured_period)
             print(
-                f"    {period:>5}-yr : {value}"
+                f"    {period_label:>5}-yr : {value}"
                 f"  encounter probability ({design_life:g}-yr life)={probability:.1%}"
             )
 
