@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_provenance, region_tokens
+from .hull_wave_extent import wave_selection_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_case import HullCaseConfig, HullCaseDerivation
@@ -127,6 +128,11 @@ def _geometry_tokens(derivation: "HullCaseDerivation") -> Dict[str, str]:
     for i, (lo, hi) in enumerate(derivation.boxes, start=1):
         tokens[f"B{i}LO"] = _vec(lo)
         tokens[f"B{i}HI"] = _vec(hi)
+    tokens.update(
+        wave_selection_tokens(
+            derivation.wave_extent, domain, len(derivation.boxes), derivation.divisions
+        )
+    )
     return tokens
 
 
@@ -241,7 +247,10 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
     the near-wall requirement it does NOT enforce."""
     return {
         **derivation.budget.to_provenance(),
-        "free_surface": derivation.free_surface.to_provenance(),
+        "free_surface": {
+            **derivation.free_surface.to_provenance(),
+            "extent": derivation.wave_extent.to_provenance(),
+        },
         "block_divisions": dict(derivation.divisions),
         "refinement_boxes": [
             {"lo": list(lo), "hi": list(hi)} for lo, hi in derivation.boxes
