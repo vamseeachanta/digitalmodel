@@ -103,6 +103,10 @@ GENERATORS = (
                 "scripts/reporting/riser_pipe_comparison.revisions.json"),
     ),
     Generator(
+        "scripts/capabilities/build_air_gap_capability.py",
+        ("docs/api/structural/air-gap-analysis.html",),
+    ),
+    Generator(
         "scripts/capabilities/build_anchor_holding_explorer.py",
         ("docs/api/structural/anchor-holding-explorer.html",),
     ),

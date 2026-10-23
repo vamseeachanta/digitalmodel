@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixed-platform air-gap analysis</title>
+<link rel="stylesheet" href="../_assets/brand.css">
+<style>
+body{font-family:system-ui,sans-serif;max-width:1100px;margin:auto;padding:24px;
+color:var(--ink,#203040);background:var(--bg,#fff);line-height:1.5}
+section{margin:24px 0}table{border-collapse:collapse;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line,#ccd);padding:8px;text-align:left}
+th{background:var(--panel,#eef)}code{overflow-wrap:anywhere}
+</style></head><body>
+<h1>Fixed-platform air-gap analysis</h1>
+<section><h2>Summary</h2>
+<p>Subsidence reduces the underside clearance against a supplied design basis.
+The engine reports dated clearances, first daily breaches, horizontal wave-contact drag
+and three remediation routes. Results below are for an invented example platform;
+they do not establish structural acceptance or lifting feasibility.</p></section>
+<section><h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-23</td><td>Initial clearance and remediation example to expose subsidence screening.</td></tr></tbody></table></section>
+<section><h2>Design basis</h2>
+<p>All example values are invented and labelled assumed, based on previous experience.
+They are arithmetic inputs, not site data or values taken from a licensed standard.
+SI units and a common invented fixed datum apply. Original deck underside:
+16.0 m; HAT: 2.0 m;
+coincident surge: 1.0 m.
+Assessment route: API RP 2SIM,
+illustrative only; invented design basis; not code-qualified.</p>
+<table><thead><tr><th scope="col">Case</th><th scope="col">Return period (years)</th><th scope="col">Crest above still water (m)</th><th scope="col">Required clearance above crest (m)</th></tr></thead><tbody>
+<tr><td>operating</td><td>10.0</td><td>8.0</td><td>0.5</td></tr>
+<tr><td>design</td><td>100.0</td><td>10.0</td><td>1.5</td></tr>
+</tbody></table>
+<p>Crests are heights above HAT plus surge. Required clearance is above the crest.
+A current deck survey must be converted to the original zero-subsidence elevation
+before cumulative loss is deducted. Return periods, code edition and reference,
+clearance and coincident combinations must be supplied for an actual assessment.</p>
+<table><thead><tr><th scope="col">Survey date</th><th scope="col">Cumulative subsidence (m)</th></tr></thead><tbody>
+<tr><td>2016-01-01</td><td>0.0</td></tr>
+<tr><td>2020-01-01</td><td>1.0</td></tr>
+</tbody></table>
+<p>Survey values are linearly interpolated by days. Forecast rate after the last survey:
+0.25 m/year. A year is 365.25 days.
+Forecast water levels stay fixed; uplift, differential settlement and sea-level change
+are outside this model.</p></section>
+<section><h2>Clearance and wave contact</h2>
+<p>Deck elevation = original underside minus cumulative subsidence.
+Still-water air gap = deck elevation minus HAT minus surge.
+Crest clearance = still-water air gap minus crest height.
+Margin = crest clearance minus required clearance. Equality meets clearance;
+crest clearance at or below zero flags wave contact. Comparisons allow 1e-9 m
+numerical round-off, which is not an engineering clearance tolerance.</p>
+<table><thead><tr><th scope="col">Date</th><th scope="col">Case</th><th scope="col">Deck elevation (m)</th><th scope="col">Still-water air gap (m)</th><th scope="col">Crest clearance (m)</th><th scope="col">Margin (m)</th><th scope="col">Meets clearance</th><th scope="col">Wave contact</th><th scope="col">Horizontal drag (kN)</th></tr></thead><tbody>
+<tr><td>2020-01-01</td><td>operating</td><td>15.0</td><td>12.0</td><td>4.0</td><td>3.5</td><td>true</td><td>false</td><td>0.0</td></tr>
+<tr><td>2020-01-01</td><td>design</td><td>15.0</td><td>12.0</td><td>2.0</td><td>0.5</td><td>true</td><td>false</td><td>0.0</td></tr>
+<tr><td>2024-01-01</td><td>operating</td><td>14.0</td><td>11.0</td><td>3.0</td><td>2.5</td><td>true</td><td>false</td><td>0.0</td></tr>
+<tr><td>2024-01-01</td><td>design</td><td>14.0</td><td>11.0</td><td>1.0</td><td>-0.5</td><td>false</td><td>false</td><td>0.0</td></tr>
+<tr><td>2028-01-01</td><td>operating</td><td>13.0</td><td>10.0</td><td>2.0</td><td>1.5</td><td>true</td><td>false</td><td>0.0</td></tr>
+<tr><td>2028-01-01</td><td>design</td><td>13.0</td><td>10.0</td><td>0.0</td><td>-1.5</td><td>false</td><td>true</td><td>0.0</td></tr>
+<tr><td>2032-01-01</td><td>operating</td><td>12.0</td><td>9.0</td><td>1.0</td><td>0.5</td><td>true</td><td>false</td><td>0.0</td></tr>
+<tr><td>2032-01-01</td><td>design</td><td>12.0</td><td>9.0</td><td>-1.0</td><td>-2.5</td><td>false</td><td>true</td><td>164.0</td></tr>
+</tbody></table>
+<table><thead><tr><th scope="col">Case</th><th scope="col">First daily breach</th><th scope="col">Breach year</th><th scope="col">Horizon</th></tr></thead><tbody>
+<tr><td>operating</td><td>none in horizon</td><td>none</td><td>2032-01-01</td></tr>
+<tr><td>design</td><td>2022-01-01</td><td>2022</td><td>2032-01-01</td></tr>
+</tbody></table>
+<p>Breaches are the first calendar day below the requirement beyond numerical round-off, searched
+from the first survey to the reported horizon, including historical crossings.
+An already-breached first survey bounds the onset; it cannot identify an earlier date.
+No breach in the horizon is not an unlimited-life result.</p></section>
+<section><h2>Wave-in-deck screening</h2>
+<p>Status: <code>screening_only</code>. Wetted silhouette = width times immersed deck depth
+times solidity. Immersion is capped at the deck envelope depth.
+Horizontal force = 0.5 times density times drag coefficient times wetted area
+times coincident horizontal speed squared; N are converted to kN.</p>
+<p>Example width 20.0 m; envelope depth 3.0 m;
+solidity 0.5; speed 4.0 m/s;
+drag coefficient 2.0; density 1025.0 kg/m3.
+Coefficient basis: invented coefficient for hand calculation only.
+At 2032-01-01 the design crest immerses 1.0 m:
+area = 20.0 times 1.0 times 0.5 = 10.0 m2; horizontal drag = 164.0 kN.
+At first touch the drag is zero but contact still requires a full assessment.</p>
+<ul><li>Horizontal quasi-static drag only; no slamming, uplift or impulse.</li><li>Caller supplies coincident levels, crest kinematics, solidity and coefficient basis.</li><li>Code-specific method qualification and structural acceptance are not established.</li></ul></section>
+<section><h2>Remediation options</h2>
+<p>Target service end: 2032-01-01; governing case:
+design. Minimum lift restores all supplied target clearances;
+this example adds 0.2 m allowance. It is not a jack stroke or approval to lift.</p>
+<h3>live_with_it</h3><ol><li>Assess local/global wave-in-deck loads and residual structural capacity.</li><li>Define weather, manning and shut-in limits through a full risk assessment.</li><li>Monitor subsidence and revisit the design basis and operating limits.</li></ol><h3>raise_topside</h3><p>Geometric lift including allowance: 2.7 m.</p><ol><li>Assess jacket, foundations, topside and interface feasibility.</li><li>Design and install temporary supports and jacks at the legs.</li><li>Isolate and disconnect affected interfaces under an engineered plan.</li><li>Lift in engineered small increments with synchronized monitoring.</li><li>Install designed leg extensions and connections.</li><li>Transfer load to the permanent structure and inspect connections.</li><li>Reconnect interfaces and verify clearances, loads and commissioning.</li></ol><h3>decommission</h3><ol><li>Define cessation, isolation, removal and foundation/site obligations.</li><li>Develop structural removal and environmental assessment inputs.</li></ol>
+<h3>Engineering inputs for the business case</h3><ul><li>Survey datum, subsidence forecast uncertainty and target service end date.</li><li>Return-period levels, crest kinematics and site-specific wave-in-deck assessment.</li><li>Local and global load paths, jacket/leg/foundation reserve and fatigue life.</li><li>Topside weight and centre of gravity, jack reactions and temporary support capacity.</li><li>Riser, conductor, piping, cable, access and shutdown interface constraints.</li><li>Operating exposure, manning/shut-in criteria and decommissioning constraints.</li></ul>
+<p>Costs and NPV are outside the engine. Manning and shut-in limits need risk assessment;
+the checklist supplies no operating permission or numerical lift procedure.</p></section>
+<section><h2>Reproduction and limits</h2>
+<p>Engine: <code>src/digitalmodel/structural/jacket_topside/air_gap.py</code>.
+Builder: <code>scripts/capabilities/build_air_gap_capability.py</code>.
+Regenerate with <code>PYTHONPATH=src python scripts/capabilities/build_air_gap_capability.py</code>.
+The builder prints wall time; tests compare regenerated bytes and hand-worked literals.</p>
+<p>Left: Code-specific API RP 2A / API RP 2SIM / ISO 19902 qualification requires
+the applicable edition, method and site basis. A public source article was not retrieved;
+no source text, figures, code coefficients or licensed criteria are reproduced.
+Full wave-in-deck, structural response and temporary-works design remain required.</p></section>
+</body></html>

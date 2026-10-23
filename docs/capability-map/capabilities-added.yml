@@ -43,6 +43,7 @@ sections:
 # Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}
 engines:
   ffs:
+    air-gap: {status: engine, module: structural.jacket_topside.air_gap, issue: 3443}
     ffs-metal-loss: {status: live, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
     api579-legacy: {status: workflow, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
     corroded-pipe: {status: live, module: asset_integrity.corroded_pipe, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
