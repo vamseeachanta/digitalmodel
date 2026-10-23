@@ -44,7 +44,14 @@ def read_yaml(path):
         raise BhaDatabaseError(f'{path.name}: read exceeds 1 MiB')
     if any(isinstance(t, (AliasToken, AnchorToken)) for t in yaml.scan(raw)):
         raise BhaDatabaseError(f'{path.name}: YAML aliases/anchors refused')
-    return raw, yaml.load(raw, Loader=UniqueLoader)
+    # UniqueLoader retains SafeLoader's constructors and rejects duplicate keys.
+    # Use PyYAML 6.0.2 load's lifecycle explicitly; never use an unsafe loader.
+    # https://github.com/yaml/pyyaml/blob/6.0.2/lib/yaml/__init__.py#L74-L81
+    loader = UniqueLoader(raw)
+    try:
+        return raw, loader.get_single_data()
+    finally:
+        loader.dispose()
 
 
 def index_unique(rows, field):

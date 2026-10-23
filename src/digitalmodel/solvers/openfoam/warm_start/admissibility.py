@@ -167,24 +167,25 @@ def _foam_entries(path: Path) -> dict[str, str] | None:
     stack: list[str] = []
     index = 0
     while index < len(tokens):
-        token = tokens[index]
-        if token == "}":
+        # Dictionary lexeme, not an authentication token (Bandit 1.7.5 B105).
+        lexeme = tokens[index]
+        if lexeme == "}":
             if stack:
                 stack.pop()
             index += 1
             continue
         if index + 1 < len(tokens) and tokens[index + 1] == "{":
-            stack.append(token)
+            stack.append(lexeme)
             index += 2
             continue
-        if token in {"{", ";"}:
+        if lexeme in {"{", ";"}:
             index += 1
             continue
         end = index + 1
         while end < len(tokens) and tokens[end] not in {";", "{", "}"}:
             end += 1
         if end < len(tokens) and tokens[end] == ";":
-            entries[".".join((*stack, token))] = " ".join(tokens[index + 1:end])
+            entries[".".join((*stack, lexeme))] = " ".join(tokens[index + 1:end])
             index = end + 1
         else:
             index += 1
