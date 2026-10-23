@@ -207,7 +207,13 @@ class TestCLIDesign:
                 text=True
             )
 
-            assert result.returncode == 0
+            if material == 'polyester_140':
+                # The library's buoyant line is outside the downward-weight
+                # touchdown model; section 19.3 cited in catenary.py.
+                assert result.returncode != 0
+                assert 'positive submerged weight' in result.stdout + result.stderr
+            else:
+                assert result.returncode == 0
 
 
 class TestCLIListMaterials:
