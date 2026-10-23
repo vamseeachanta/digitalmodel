@@ -50,6 +50,9 @@ class RpmController:
     Gains have units RPM/N and RPM/(N s). The towing correction is a positive
     forward assistance, so error = resistance - towing - applied thrust.
     An update is made once per completed solver segment, not per corrector.
+    Gains and the 900 RPM cap are demonstration assumptions, based on previous
+    experience. The cap allows feedback above the 570 RPM reference; it is not
+    a mechanical limit or a validated operating bound.
     """
 
     kp: float = 1.0
@@ -253,6 +256,13 @@ regions
         box (-100 -100 -100) (100 100 0);
         fieldValues (volScalarFieldValue alpha.water 1);
     }
+    // v2312 cell assignment does not modify fixedValue patches.
+    // Select submerged inlet face centres explicitly; dry faces retain zero.
+    boxToFace
+    {
+        box (-7.500001 -2 -1) (-7.499999 2 0);
+        fieldValues (volScalarFieldValue alpha.water 1);
+    }
 );
 """)
     _write(case, "system/fvSchemes", header("fvSchemes") + """ddtSchemes { default Euler; }
@@ -296,6 +306,9 @@ PIMPLE
 """)
     _write(case, "constant/transportProperties", header("transportProperties") + """phases (water air);
 water { transportModel Newtonian; nu 1.139e-6; rho 999.1; }
+// Air rho [kg/m3], nu [m2/s] and sigma [N/m] are demonstration assumptions.
+// Basis: https://doc.cfd.direct/openfoam/user-guide-v11/dambreak
+// Tutorial temperature and pressure are unspecified, not matched test conditions.
 air { transportModel Newtonian; nu 1.48e-5; rho 1; }
 sigma 0.07;
 """)
@@ -415,6 +428,8 @@ def smoke(case: Path) -> dict:
     """
     case = Path(case).resolve()
     manifest = json.loads((case / "manifest.json").read_text())
+    if hashlib.sha256(REFERENCE.read_bytes()).hexdigest() != manifest.get("reference_sha256"):
+        raise ValueError("smoke reference digest mismatch")
     state_path = case / "smoke_state.json"
     binding = hashlib.sha256((case / "manifest.json").read_bytes()).hexdigest()
     if state_path.exists():

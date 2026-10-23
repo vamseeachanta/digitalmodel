@@ -6,6 +6,7 @@
 import importlib.util
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -155,7 +156,9 @@ def test_smoke_rejects_changed_case_input(built_case):
 def test_completed_smoke_rejects_changed_checkpoint(tmp_path):
     import hashlib
     manifest = tmp_path / "manifest.json"
-    manifest.write_text("{}")
+    manifest.write_text(json.dumps({
+        "reference_sha256": hashlib.sha256(disk.REFERENCE.read_bytes()).hexdigest()
+    }))
     checkpoint = tmp_path / "field"
     checkpoint.write_text("changed")
     (tmp_path / "smoke_state.json").write_text(json.dumps({
@@ -181,3 +184,75 @@ def test_script_readback_without_optional_package_dependencies(tmp_path):
     result = subprocess.run([sys.executable, str(ROOT / "scripts/cfd/kcs_self_propulsion.py"),
                              "check", str(history)], capture_output=True, text=True, check=True)
     assert json.loads(result.stdout)["quantities"]["rpm"]["reference"] == 570
+
+
+def test_inlet_initialization_distinguishes_submerged_and_dry_faces(built_case):
+    # v2312 cell assignments leave fixedValue patches unchanged; only an
+    # explicit face selection can turn the initial air into inlet water.
+    alpha = (built_case / "0/alpha.water").read_text()
+    inlet = re.search(r"inlet\s*\{([^}]+)\}", alpha)[1]
+    assert "type fixedValue;" in inlet
+    initial = float(re.search(r"value uniform ([0-9.]+);", inlet)[1])
+    selections = re.findall(
+        r"boxToFace\s*\{\s*box\s*\(([^)]+)\)\s*\(([^)]+)\);"
+        r"\s*fieldValues\s*\(volScalarFieldValue alpha.water ([0-9.]+)\);\s*\}",
+        (built_case / "system/setFieldsDict").read_text(),
+    )
+    assert selections, "fixed inlet requires explicit boundary-face initialization"
+
+    def initialized(face):
+        value = initial
+        for low, high, water in selections:
+            bounds = zip(map(float, low.split()), map(float, high.split()), face)
+            if all(lo <= coordinate <= hi for lo, hi, coordinate in bounds):
+                value = float(water)
+        return value
+
+    # Inlet spans z=-1..0.5; samples bracket z=0 and cover both lateral edges.
+    for y in (-1.9, 0, 1.9):
+        for z in (-0.95, -0.01):
+            assert initialized((-7.5, y, z)) == 1
+        for z in (0.01, 0.45):
+            assert initialized((-7.5, y, z)) == 0
+    assert initialized((12, 0, -0.5)) == initial  # outlet is not fixed
+
+
+@pytest.mark.parametrize("resume", [False, True], ids=["startup", "resume"])
+@pytest.mark.parametrize("changed_reference", [False, True], ids=["matching", "changed"])
+def test_smoke_binds_live_reference_before_tool_dispatch(
+    tmp_path, monkeypatch, resume, changed_reference
+):
+    import hashlib
+
+    reference = tmp_path / "reference.json"
+    reference.write_bytes(disk.REFERENCE.read_bytes())
+    monkeypatch.setattr(disk, "REFERENCE", reference)
+    case = disk.build_case(tmp_path / "case")
+    if resume:
+        (case / "smoke_state.json").write_text(json.dumps({
+            "manifest_sha256": hashlib.sha256((case / "manifest.json").read_bytes()).hexdigest(),
+            "prepared": [], "rows": [], "rpm": 570.0, "integral": 0.0, "tools": {}
+        }))
+    if changed_reference:
+        # Valid JSON with a different experimental basis, not a parse failure.
+        ref = json.loads(reference.read_text())
+        ref["efd"]["kt"] = 0.18
+        reference.write_text(json.dumps(ref))
+    calls = []
+
+    def intercept(*args, **kwargs):
+        calls.append(args)
+        raise RuntimeError("tool dispatch intercepted")
+
+    monkeypatch.setattr(disk, "_run_tool", intercept)
+    monkeypatch.setattr(disk.subprocess, "run", intercept)
+    if changed_reference:
+        with pytest.raises(ValueError, match="reference digest mismatch"):
+            disk.smoke(case)
+        assert calls == []
+        assert not list(case.glob("log.*"))
+        assert not (case / "controller.csv").exists()
+    else:
+        with pytest.raises(RuntimeError, match="tool dispatch intercepted"):
+            disk.smoke(case)
+        assert len(calls) == 1

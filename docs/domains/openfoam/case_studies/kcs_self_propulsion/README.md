@@ -10,6 +10,7 @@ not establish a self-propulsion point or agreement with experimental scatter.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-23 | Add a reproducible case, controller, reference readback and startup evidence before validation. |
+| 1 | 2026-10-23 | Initialize submerged inlet faces, reject changed reference data before startup or resume, and state the transport and controller assumptions. |
 
 ## Reproduce
 
@@ -33,7 +34,9 @@ startup or readback success; it is not a validation acceptance flag.
 Raw tool logs and solver fields remain in the case directory. The builder
 records generated-input digests in `manifest.json`. Completed preparation
 stages and feedback segments have digest-bound checkpoints; a completed stage
-is not rerun. A log without a completed checkpoint requires inspection and a
+is not rerun. Before startup or resume, the live reference digest must match
+`reference_sha256` in the case manifest; a changed reference requires a new
+case. A log without a completed checkpoint requires inspection and a
 new case directory. Existing cases and logs are never removed automatically.
 
 The layout follows the repository's [Wigley case study](../wigleHull_LTS/wigleHull_LTS.md)
@@ -52,6 +55,21 @@ that mismatch must be resolved before validation. Coordinates are centered at
 midship, positive x downstream and positive z upward. The hull remains fixed
 at even keel, without rudder. Both sides are meshed; forces need no symmetry
 multiplier. The waterline is z = 0.
+
+The inlet fixes water fraction to 1 below the waterline and 0 above it.
+`setFields` initializes the water cells and separately selects submerged inlet
+faces with `boxToFace`. This explicit face assignment is required because the
+[v2312 cell-field assignment](https://api.openfoam.com/2312/setFields_8C_source.html)
+does not change `fixedValue` patches. The face selection uses face centers in
+a narrow box around the inlet; the remaining inlet faces retain their initial
+zero water fraction.
+
+Air density 1 kg/m³, air kinematic viscosity 1.48 × 10⁻⁵ m²/s and surface
+tension 0.07 N/m are demonstration assumptions. Their basis is the
+[OpenFOAM v11 dam-break tutorial](https://doc.cfd.direct/openfoam/user-guide-v11/dambreak),
+sections 2.2.3 and 2.2.5. That tutorial specifies no temperature or pressure for
+these constants; matched experimental air and interface conditions are not
+established. Water density and viscosity retain the workshop reference basis.
 
 The disk center follows the public KCS particulars: x/L from the forward
 perpendicular is 0.9825 and depth/L is 0.02913. A cylindrical cell zone of
@@ -72,7 +90,10 @@ For each completed segment, error e = R − SFC − T. The incremental PI update
 is RPM_next = clamp(RPM + Kp e + Ki integral(e dt), 0, 900), with conditional
 integration to prevent windup at the bounds. Gains are Kp = 1 RPM/N and
 Ki = 0.1 RPM/(N s); these are demonstration settings, assumed, based on previous
-experience. Negative measured resistance during a transient remains signed.
+experience. The 900 RPM cap is also a demonstration assumption, based on
+previous experience: it permits feedback above the 570 RPM reference while
+bounding startup excursions. It is not a mechanical limit or a validated
+operating bound. Negative measured resistance during a transient remains signed.
 Setting the towing correction to zero in the controller gives T = R; the
 workshop ship point instead requires T = R − 30.3 N. The propeller source is
 held fixed within each solver segment and updated between restarts.
@@ -103,8 +124,10 @@ matched conditions or provenance of that input history.
 
 ## Smoke evidence
 
-The [portable evidence](smoke_evidence.json) records the mesh, actual advanced
-steps, RPM sequence and reference comparison. Its digests identify the raw
+The [portable evidence](smoke_evidence.json) records the original mesh, actual
+advanced steps, RPM sequence and reference comparison. It predates the corrected
+inlet initialization and has not been regenerated for the corrected case; it
+provides no runtime evidence for that case. Its digests identify the raw
 logs retained with the external case; raw logs and generated fields are not
 committed. The evidence is regenerated with the `smoke` command above.
 
