@@ -1,13 +1,21 @@
-"""RAO Analysis Module
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
 
-ABOUTME: Response Amplitude Operator analysis for hydrodynamic vessel data.
+"""RAO plotting and solver-free linear response analysis.
 
-Provides RAO reading, plotting, and comparison utilities for
-OrcaFlex displacement RAOs across multiple vessels and headings.
+The numerical functions use explicit frequency, phase and density conventions.
+The existing plotting class is loaded on demand with its plotting dependencies.
 """
 
-from .rao_analysis import RAOAnalysis
+from .response import SpectralResponse, regular_wave_response, spectral_response
 
-__all__ = [
-    "RAOAnalysis",
-]
+__all__ = ["RAOAnalysis", "SpectralResponse", "regular_wave_response", "spectral_response"]
+
+
+def __getattr__(name):
+    """Keep the legacy public plotting entry point available on demand."""
+    if name == "RAOAnalysis":
+        from .rao_analysis import RAOAnalysis
+
+        return RAOAnalysis
+    raise AttributeError(name)

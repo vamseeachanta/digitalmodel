@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 OrcaWave to OrcaFlex Converter
 Converts OrcaWave diffraction analysis results to OrcaFlex vessel type format
@@ -17,6 +20,8 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 import re
+
+from digitalmodel.solvers.orcawave.hydrostatics import HydrostaticProperties
 
 # Setup logging
 logging.basicConfig(
@@ -289,8 +294,17 @@ class OrcaFlexConverter:
             metacentric_height=vessel_props['gm']
         )
     
-    def convert_to_orcaflex(self, vessel_data: VesselData) -> Dict[str, Any]:
-        """Convert vessel data to OrcaFlex YAML format"""
+    def convert_to_orcaflex(
+        self, vessel_data: VesselData, *,
+        hydrostatics: Optional[HydrostaticProperties] = None,
+    ) -> Dict[str, Any]:
+        """Convert offline results; optionally attach explicit SI hydrostatics.
+
+        The Hydrostatics mapping is an adapter calculation record, not a native
+        solver input schema. It uses its own explicit density, gravity, centres
+        and equilibrium mass basis, independently of legacy vessel defaults.
+        Without those inputs restoring coefficients are NOT_EVALUATED.
+        """
         
         logger.info("Converting to OrcaFlex vessel type format...")
         
@@ -346,6 +360,12 @@ class OrcaFlexConverter:
             }
         }
         
+        vessel_type['VesselType']['Hydrostatics'] = (
+            hydrostatics.to_mapping() if hydrostatics is not None else {
+                'Status': 'NOT_EVALUATED',
+                'Reason': 'Explicit SI hydrostatic properties were not supplied',
+            }
+        )
         return vessel_type
     
     def _format_matrices(self, added_mass: np.ndarray, damping: np.ndarray) -> List[Dict]:
@@ -466,6 +486,7 @@ class OrcaFlexConverter:
         
         compact['HydrodynamicData']['AddedMass'] = added_mass_flat
         compact['HydrodynamicData']['Damping'] = damping_flat
+        compact['HydrodynamicData']['Hydrostatics'] = vessel_type['VesselType']['Hydrostatics']
         
         with open(output_file, 'w') as f:
             yaml.dump(compact, f, default_flow_style=False)
