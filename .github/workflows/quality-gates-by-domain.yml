@@ -438,6 +438,18 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
 
+      - name: Run synthetic rope report regressions
+        if: matrix.domain == 'contracts'
+        run: >-
+          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
+          python -m pytest
+          tests/docs/test_synthetic_rope_mooring_fatigue_report.py
+          'tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]'
+          tests/workflows/test_durable_workflows.py::test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3
+          tests/parametric/test_atlas.py::test_synthetic_rope_fatigue_atlas_is_log_log_exact
+          tests/parametric/test_atlas.py::test_fatigue_bins_handler_shared_by_both_ropes
+          -q -rA -p no:cacheprovider
+
       - name: Run geotechnical solver benchmarks
         if: matrix.domain == 'specialized'
         run: >-
