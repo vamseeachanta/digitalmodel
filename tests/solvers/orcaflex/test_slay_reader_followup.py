@@ -51,6 +51,8 @@ def test_d0_t0_shaped_reader_keeps_rejected_rows(last_force, failed):
         overbend_strain=reading["overbend_moment"] * 0.0025509 / 100,
         lift_off_arc=lift_off, departure_angle=reading["departure_angle"],
         reference={"lift_off_arc": 60, "departure_angle": math.degrees(math.atan2(3, 10))},
+        # case-table.yml (2026), basis pipeline dimensions and stinger radius.
+        diameter=0.762, radius=150,
     )
     assert result["rows"]["stinger_conformity"]["status"] == ("FAIL" if last_force else "PASS")
     assert result["rows"]["grounded_tension"]["status"] == "FAIL"
