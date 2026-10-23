@@ -32,6 +32,7 @@ class ValidationIssue:
     file: str = ""
     line: int | None = None
     property: str = ""
+    column: int | None = None
 
     def __str__(self) -> str:
         parts = [f"[{self.severity.value.upper()}]"]
@@ -58,8 +59,11 @@ class ValidationResult:
         return [i for i in self.issues if i.severity == Severity.WARNING]
 
     def add(self, severity: Severity, message: str, *,
-            file: str = "", line: int | None = None, prop: str = "") -> None:
-        self.issues.append(ValidationIssue(severity, message, file=file, line=line, property=prop))
+            file: str = "", line: int | None = None, prop: str = "",
+            column: int | None = None) -> None:
+        self.issues.append(ValidationIssue(
+            severity, message, file=file, line=line, property=prop, column=column,
+        ))
         if severity == Severity.ERROR:
             self.valid = False
 
@@ -146,13 +150,17 @@ KNOWN_ENVIRONMENT_PROPS = {
 
 def _add_source_issues(result, source_issues, filename):
     """Prefer source locations to legacy diagnostics without losing occurrences."""
-    for severity, message, prop, line in source_issues:
+    for severity, message, prop, line, column in source_issues:
         result.issues[:] = [i for i in result.issues if not (
-            i.line is None and i.property == prop and i.message == message
+            i.file == filename and i.line is None
+            and i.property == prop and i.message == message
         )]
-        if not any(i.property == prop and i.message == message and i.line == line
+        if not any(i.file == filename and i.severity == Severity(severity)
+                   and i.property == prop and i.message == message
+                   and i.line == line and i.column == column
                    for i in result.issues):
-            result.add(Severity(severity), message, file=filename, prop=prop, line=line)
+            result.add(Severity(severity), message, file=filename, prop=prop,
+                       line=line, column=column)
 
 
 class OrcaFlexYAMLValidator:
@@ -187,18 +195,29 @@ class OrcaFlexYAMLValidator:
             result.add(Severity.ERROR, "File is empty", file=filename)
             return result
 
-        source_issues = []
         try:
             source_issues, halt = inspect_source(
                 raw_text, VALID_TOP_LEVEL_SECTIONS, INVALID_PROPERTIES,
             )
-            if halt:
-                _add_source_issues(result, source_issues, filename)
-                return result
-            data = yaml.safe_load(raw_text)
         except (yaml.YAMLError, RecursionError) as exc:
             # The YAML composer can exhaust recursion before our graph check.
-            result.add(Severity.ERROR, f"YAML parse error: {exc}", file=filename)
+            result.add(Severity.ERROR, f"YAML composition error: {exc}", file=filename)
+            return result
+
+        if halt:
+            _add_source_issues(result, source_issues, filename)
+            return result
+
+        # PyYAML compose/safe_load documentation and YAML 1.2.2 (2021), 3.3:
+        # node inspection can succeed even when native construction fails.
+        try:
+            data = yaml.safe_load(raw_text)
+        except (yaml.YAMLError, RecursionError, ValueError, TypeError,
+                OverflowError, AttributeError) as exc:
+            # Standard scalar constructors can raise Python conversion errors
+            # (including AttributeError for an unmatched explicit timestamp).
+            # Keep this boundary confined to construction, outside validation.
+            result.add(Severity.ERROR, f"YAML construction error: {exc}", file=filename)
             _add_source_issues(result, source_issues, filename)
             return result
 

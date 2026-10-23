@@ -108,12 +108,19 @@ def _mapping_issues(node, placement, ambiguous):
         elif key == MAXIMUM:
             issue = _maximum_issue(value, method, mode, ambiguous, placement)
             if issue:
-                issues.append((*issue, MAXIMUM, key_node.start_mark.line + 1))
+                # PyYAML documentation, Mark/error-position example: convert
+                # zero-based marks to one-based diagnostic line and column.
+                issues.append((*issue, MAXIMUM, key_node.start_mark.line + 1,
+                               key_node.start_mark.column + 1))
     return issues
 
 
 def inspect_source(raw_text, sections, invalid_properties):
-    """Return (severity, message, property, line) diagnostics and halt flag."""
+    """Return (severity, message, property, line, column) issues and halt flag.
+
+    Locations identify written keys. Alias revisits share the anchored key's
+    location; this graph inspection does not recover alias-use locations.
+    """
     root = yaml.compose(raw_text, Loader=yaml.SafeLoader)
     # Large vessel tables are legitimate linear-size documents. Bound expansion
     # relative to source size, so compact alias fan-out cannot amplify work.
@@ -129,13 +136,15 @@ def inspect_source(raw_text, sections, invalid_properties):
             name = _key(key)
             if name in invalid_properties and (id(key), name) not in seen:
                 seen.add((id(key), name))
+                # PyYAML Mark uses zero-based positions; see conversion above.
                 issues.append(("error", f"Invalid property '{name}' — this property does not exist in OrcaFlex",
-                               name, key.start_mark.line + 1))
+                               name, key.start_mark.line + 1,
+                               key.start_mark.column + 1))
         placement = "general" if path == ("General",) else "unknown"
         if path and path[0] in sections and placement != "general":
             placement = "wrong"
         ambiguous = _ambiguous(node, counts) or duplicate_general
         issues.extend(_mapping_issues(node, placement, ambiguous))
     if failure:
-        issues.append(("error", failure, "", None))
+        issues.append(("error", failure, "", None, None))
     return issues, failure is not None
