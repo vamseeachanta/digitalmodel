@@ -37,6 +37,11 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # Report rebuilds depend on these inputs outside the source and test trees.
+    ("docs/api/_assets/brand.css", ("naval-architecture",)),
+    ("docs/api/cfd/turbulent-flat-plate-verification.html", ("naval-architecture",)),
+    ("examples/workflows/hull-girder-report-pack/", ("naval-architecture",)),
+    ("docs/reports/modules/hullgirderscreening/", ("naval-architecture",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),

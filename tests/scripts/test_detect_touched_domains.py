@@ -48,6 +48,22 @@ def load_detector_module():
     return module
 
 
+@pytest.mark.parametrize("path", [
+    "docs/api/_assets/brand.css",
+    "docs/api/cfd/turbulent-flat-plate-verification.html",
+    "examples/workflows/hull-girder-report-pack/screening_input.yml",
+    "examples/workflows/hull-girder-report-pack/allowable-basis.json",
+    "docs/reports/modules/hullgirderscreening/build_report.py",
+    "docs/reports/modules/hullgirderscreening/report.html",
+    "docs/reports/modules/hullgirderscreening/changes.json",
+])
+def test_hull_report_inputs_route_to_naval_architecture(path):
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert "naval-architecture" in selected
+
+
 @pytest.mark.parametrize(("path", "expected"), [
     ("src/digitalmodel/orcaflex/installation_analysis.py",
      {"orcaflex", "marine-ops-other", "workflows"}),

@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Shared module-report boundary; keep module exceptions below this header.
+!docs/reports/modules/
+docs/reports/modules/*
+
+# Hull-girder module report deliverables.
+!docs/reports/modules/hullgirderscreening/
+docs/reports/modules/hullgirderscreening/*
+!docs/reports/modules/hullgirderscreening/build_report.py
+!docs/reports/modules/hullgirderscreening/report.html
+!docs/reports/modules/hullgirderscreening/changes.json
