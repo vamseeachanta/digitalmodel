@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foam report-pack fixture comparison</title>
+</head>
+<body>
+<main>
+  <h1>Foam report-pack fixture comparison</h1>
+  <h2>Summary</h2>
+  <p>The sizing fixture produces CSV tables that are compared with the checked-in
+    tables before the report pack is rendered. CRLF pairs are converted to LF in
+    both byte strings for this comparison. All remaining bytes must match.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>Initial</td><td>2026-10-19</td><td>Document the newline comparison
+      contract to explain fixture regeneration on different checkouts.</td></tr></tbody>
+  </table>
+  <p>Table A. Revision history.</p>
+
+  <h2>Inputs and workflow</h2>
+  <p><a href="foam_system_sizing.yml">foam_system_sizing.yml</a> supplies the
+    sizing inputs. The sizing workflow writes the demand, hydraulic-run and
+    hydraulic-terminal tables into <code>data/</code>.
+    <a href="input.yml">input.yml</a> consumes these tables for the report pack.
+    The regression test redirects generated files to a temporary directory;
+    the checked-in tables remain unchanged.</p>
+
+  <h2>Method and source</h2>
+  <p>The comparison contract is the CRLF-to-LF alternative described in issue
+    #1626. It follows the existing
+    <a href="../../../tests/report_pack/test_hull_girder_report_pack_demo.py">hull-girder
+    demo comparison</a>. The
+    <a href="../../../src/digitalmodel/foam_system/workflow.py">foam CSV writer</a>
+    explicitly selects LF as its line terminator. Git checkout settings can
+    convert these terminators to CRLF.</p>
+  <p>Only <code>b"\r\n"</code> pairs are replaced with <code>b"\n"</code> before
+    equality is tested. No numeric tolerance, engineering equation, coefficient
+    or acceptance limit is introduced.</p>
+
+  <h2>Worked example: inputs, method and answer</h2>
+  <p>The following synthetic header and record have identical content and
+    different line terminators. Replacing the CRLF pairs produces the LF input
+    exactly, so the first result is <code>True</code>. Changing the record value
+    leaves different bytes after replacement, so the second result is
+    <code>False</code>. The expected answers follow by inspecting the literal
+    strings independently of the comparison helper.</p>
+  <pre><code id="worked-example">fresh = b"item,value\nsample,original\n"
+checkout = b"item,value\r\nsample,original\r\n"
+changed = b"item,value\r\nsample,changed\r\n"
+
+print(fresh.replace(b"\r\n", b"\n") == checkout.replace(b"\r\n", b"\n"))
+print(fresh.replace(b"\r\n", b"\n") == changed.replace(b"\r\n", b"\n"))
+</code></pre>
+  <p>Expected output:</p>
+  <pre>True
+False</pre>
+
+  <h2>Regression coverage</h2>
+  <p><a href="../../../tests/report_pack/test_foam_report_pack.py">The foam
+    report-pack tests</a> regenerate all demo CSVs against the actual checkout
+    and a temporary CRLF checkout. Literal cases exercise LF, CRLF on either
+    side, and mixed terminators. Negative cases retain rejection of changed
+    values, delimiters, spaces, row order, missing rows, bare CR and missing
+    final LF. The existing sizing, citation and report-rendering checks remain
+    part of the same test module.</p>
+  <p>From the repository root, run the module using an environment containing
+    the test and reporting dependencies. Select an unused external temporary
+    directory for <code>SCRATCH</code>:</p>
+  <pre>python -m pytest tests/report_pack/test_foam_report_pack.py -q -rA -p no:cacheprovider --basetemp="$SCRATCH"</pre>
+
+  <h2>Known limits</h2>
+  <p>The comparison normalizes CRLF pairs throughout the payload, including
+    quoted fields. Raw-file hashes can still differ between checkouts. Git
+    attributes, production CSV output and sizing results are unchanged. The
+    CRLF checkout is simulated with temporary files; native Windows execution
+    is not established by this test run.</p>
+</main>
+</body>
+</html>
