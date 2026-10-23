@@ -10,6 +10,7 @@ import copy
 from decimal import Decimal, localcontext
 from pathlib import Path
 
+from digitalmodel.ansys.analysis_criteria import qualify_response_criteria
 from digitalmodel.ansys.analysis_evidence import validate_package
 from digitalmodel.ansys.analysis_records import (
     canonical_bytes, decimal_text, digest_bytes, nonempty, require_fields,
@@ -180,7 +181,8 @@ def _qualify(package: dict, case: dict, response: dict, intended_use: str,
         context.prec = 512
         if tolerance < 0 or abs(Decimal(response["value"]) - expected) > tolerance:
             raise ValueError("independent comparison criterion failed")
-    return entry
+    results = qualify_response_criteria(entry, response, intended_use, resolver)
+    return {**entry, "acceptance_results": results}
 
 
 def _check_provenance(package: dict, case: dict, response: dict, authority: dict, resolver: dict) -> None:
@@ -218,6 +220,7 @@ def lookup(package: dict, query: dict, resolver: dict[str, Path], *,
               "qualified": False, "dataset_id": package["dataset_id"],
               "revision": package["revision"], "case_id": case["case_id"],
               "row_hash": case["row_hash"], "mode": "diagnostic"}
+    answer.pop("acceptance_results", None)
     if diagnostic:
         return answer
     _check_authority(package, authority, ledger, resolver)
@@ -228,5 +231,6 @@ def lookup(package: dict, query: dict, resolver: dict[str, Path], *,
             raise ValueError("withdrawn: " + event["reason"])
     entry = _qualify(package, case, response, query["intended_use"], authority, resolver)
     answer.update(qualified=True, mode="exact", criterion_id=entry["criterion_id"],
+                  acceptance_results=entry["acceptance_results"],
                   verification_reference=package["verification_reference"])
     return answer
