@@ -29,6 +29,7 @@ import yaml
 
 from digitalmodel.orcaflex.postprocessor import (
     ExtremeValueResult,
+    encounter_probability,
     fit_gumbel,
     fit_weibull,
 )
@@ -87,8 +88,10 @@ def run(input_yml: Path = HERE / "input.yml") -> Dict[str, ExtremeValueResult]:
     return results
 
 
-def main() -> None:
-    results = run()
+def main(input_yml: Path = HERE / "input.yml") -> None:
+    cfg = yaml.safe_load(input_yml.read_text())
+    design_life = cfg["extreme_value_post"].get("design_life", 25)
+    results = run(input_yml)
     print("Extreme-value post-processing (offline, license-free) — issue #961")
     print("=" * 66)
     for name, res in results.items():
@@ -97,7 +100,11 @@ def main() -> None:
         print(f"  KS stat={res.ks_statistic}  p-value={res.ks_pvalue}")
         print("  return-period extremes:")
         for period, value in res.return_values.items():
-            print(f"    {period:>5}-yr : {value}")
+            probability = encounter_probability(float(period), design_life)
+            print(
+                f"    {period:>5}-yr : {value}"
+                f"  encounter probability ({design_life:g}-yr life)={probability:.1%}"
+            )
 
 
 if __name__ == "__main__":

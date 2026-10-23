@@ -39,6 +39,8 @@ extreme_value_post:
   distributions: [gumbel, weibull]
   # Return periods in the same units as the block duration (here: years).
   return_periods: [10, 50, 100, 1000]
+  # Design life in years for independent annual exceedances.
+  design_life: 25
 
 outputs:
   directory: results/extreme_value_post

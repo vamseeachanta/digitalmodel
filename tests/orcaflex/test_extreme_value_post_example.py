@@ -9,6 +9,9 @@ import importlib.util
 import math
 from pathlib import Path
 
+import pytest
+import yaml
+
 from digitalmodel.orcaflex.postprocessor import ExtremeValueResult
 
 EXAMPLE_DIR = (
@@ -28,6 +31,16 @@ def _load_run_module():
     return module
 
 
+@pytest.fixture
+def input_yml(tmp_path):
+    """Keep generated summaries outside the source tree."""
+    cfg = yaml.safe_load((EXAMPLE_DIR / "input.yml").read_text())
+    cfg["outputs"]["directory"] = str(tmp_path / "results")
+    path = tmp_path / "input.yml"
+    path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    return path
+
+
 def test_example_dir_exists():
     assert EXAMPLE_DIR.is_dir(), f"missing example dir: {EXAMPLE_DIR}"
     assert (EXAMPLE_DIR / "input.yml").is_file()
@@ -45,9 +58,9 @@ def test_block_maxima_loads():
     assert (maxima > 0).all()
 
 
-def test_run_offline_produces_sane_extremes():
+def test_run_offline_produces_sane_extremes(input_yml):
     run = _load_run_module()
-    results = run.run()
+    results = run.run(input_yml)
 
     assert set(results) == {"gumbel", "weibull"}
 
@@ -69,13 +82,54 @@ def test_run_offline_produces_sane_extremes():
         assert rv["10"] > 0
 
 
-def test_summary_json_written():
+def test_summary_json_written(input_yml):
     run = _load_run_module()
-    run.run()
-    out = EXAMPLE_DIR / "results" / "extreme_value_post" / "extreme_value_summary.json"
+    run.run(input_yml)
+    out = input_yml.parent / "results" / "extreme_value_summary.json"
     assert out.is_file()
     import json
 
     data = json.loads(out.read_text())
     assert data["n_blocks"] >= 20
     assert "gumbel" in data["fits"] and "weibull" in data["fits"]
+
+
+@pytest.mark.parametrize("life, percentages", [
+    (None, ["92.8", "39.7", "22.2", "2.5"]),
+    (25, ["92.8", "39.7", "22.2", "2.5"]),
+    (1, ["10.0", "2.0", "1.0", "0.1"]),
+])
+def test_main_adds_encounter_probability(input_yml, capsys, life, percentages):
+    """Keep every original output line, appending risk to each return value."""
+    import json
+
+    cfg = yaml.safe_load(input_yml.read_text())
+    if life is None:
+        cfg["extreme_value_post"].pop("design_life", None)
+    else:
+        cfg["extreme_value_post"]["design_life"] = life
+    input_yml.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    run = _load_run_module()
+    run.main(input_yml)
+
+    summary = json.loads(
+        (input_yml.parent / "results" / "extreme_value_summary.json").read_text()
+    )
+    expected = [
+        "Extreme-value post-processing (offline, license-free) — issue #961",
+        "=" * 66,
+    ]
+    for res in summary["fits"].values():
+        expected.extend([
+            "",
+            f"{res['distribution']} fit:",
+            f"  location={res['location']}  scale={res['scale']}  shape={res['shape']}",
+            f"  KS stat={res['ks_statistic']}  p-value={res['ks_pvalue']}",
+            "  return-period extremes:",
+        ])
+        for (period, value), percentage in zip(res["return_values"].items(), percentages):
+            expected.append(
+                f"    {period:>5}-yr : {value}"
+                f"  encounter probability ({life or 25}-yr life)={percentage}%"
+            )
+    assert capsys.readouterr().out.splitlines() == expected

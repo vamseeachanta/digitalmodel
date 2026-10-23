@@ -11,11 +11,68 @@ from digitalmodel.orcaflex.postprocessor import (
     RangeGraphData,
     TimeSeriesStats,
     compute_time_series_stats,
+    encounter_probability,
+    return_period_for_probability,
     fit_gumbel,
     fit_weibull,
     generate_range_graph,
     process_multi_seed,
 )
+
+
+class TestEncounterProbability:
+    """Independent-year encounter probabilities and their inverse."""
+
+    @pytest.mark.parametrize("period, life, expected, tolerance", [
+        (100, 25, 0.222, 0.0005),
+        (10000, 25, 0.0025, 0.00005),
+        (1, 1, 1.0, 1e-15),
+        (2, 2, 0.75, 1e-15),
+        (100, 1, 0.01, 1e-15),
+        (1e20, 25, 2.5e-19, 1e-30),
+    ])
+    def test_hand_values(self, period, life, expected, tolerance):
+        assert encounter_probability(period, life) == pytest.approx(
+            expected, abs=tolerance
+        )
+
+    @pytest.mark.parametrize("probability, life, expected", [
+        (0.75, 2, 2.0),
+        (0.01, 1, 100.0),
+        (1.0, 1, 1.0),
+        (1.0, 25, 1.0),
+        (2.5e-19, 25, 1e20),
+    ])
+    def test_inverse_hand_values(self, probability, life, expected):
+        assert return_period_for_probability(probability, life) == pytest.approx(
+            expected, rel=1e-12
+        )
+
+    @pytest.mark.parametrize("life", [1e10, 1e100])
+    def test_inverse_beyond_float_range(self, life):
+        assert return_period_for_probability(1e-300, life) == math.inf
+
+    @pytest.mark.parametrize("period, life", [(100, 25), (10000, 25), (2, 0.5)])
+    def test_round_trip(self, period, life):
+        probability = encounter_probability(period, life)
+        assert return_period_for_probability(probability, life) == pytest.approx(period)
+
+    @pytest.mark.parametrize("period", [0, -1, 0.5, math.inf, -math.inf, math.nan])
+    def test_invalid_return_period(self, period):
+        with pytest.raises(ValueError, match="return_period"):
+            encounter_probability(period, 25)
+
+    @pytest.mark.parametrize("life", [0, -1, math.inf, -math.inf, math.nan])
+    def test_invalid_design_life(self, life):
+        with pytest.raises(ValueError, match="design_life"):
+            encounter_probability(100, life)
+        with pytest.raises(ValueError, match="design_life"):
+            return_period_for_probability(0.2, life)
+
+    @pytest.mark.parametrize("probability", [0, -0.1, 1.1, math.inf, -math.inf, math.nan])
+    def test_invalid_probability(self, probability):
+        with pytest.raises(ValueError, match="probability"):
+            return_period_for_probability(probability, 25)
 
 
 class TestTimeSeriesStats:

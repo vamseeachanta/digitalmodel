@@ -162,6 +162,60 @@ def generate_range_graph(
 # Extreme value analysis
 # ---------------------------------------------------------------------------
 
+def encounter_probability(return_period: float, design_life: float) -> float:
+    """Calculate the chance of at least one exceedance over a design life.
+
+    Years are independent, with annual exceedance probability ``1 / T``.
+    The lifetime probability is ``1 - (1 - 1 / T) ** N``; a return period
+    does not specify the time between successive events.
+
+    Args:
+        return_period: Finite return period T in years, at least 1.
+        design_life: Finite design life N in years, greater than 0.
+
+    Returns:
+        Probability of at least one exceedance, between 0 and 1.
+
+    Raises:
+        ValueError: If either input is outside its stated range.
+    """
+    if not math.isfinite(return_period) or return_period < 1:
+        raise ValueError("return_period must be finite and at least 1 year")
+    if not math.isfinite(design_life) or design_life <= 0:
+        raise ValueError("design_life must be finite and greater than 0 years")
+    if return_period == 1:
+        return 1.0
+    return -math.expm1(design_life * math.log1p(-1.0 / return_period))
+
+
+def return_period_for_probability(probability: float, design_life: float) -> float:
+    """Calculate the return period for a target lifetime encounter probability.
+
+    Assumes independent years and evaluates
+    ``T = 1 / (1 - (1 - probability) ** (1 / design_life))``.
+
+    Args:
+        probability: Finite target probability, greater than 0 and at most 1.
+            Zero is excluded because it requires an infinite return period.
+        design_life: Finite design life in years, greater than 0.
+
+    Returns:
+        Required return period in years, at least 1. Returns ``math.inf``
+        if the required period exceeds the floating-point range.
+
+    Raises:
+        ValueError: If either input is outside its stated range.
+    """
+    if not math.isfinite(probability) or not 0 < probability <= 1:
+        raise ValueError("probability must be finite, greater than 0 and at most 1")
+    if not math.isfinite(design_life) or design_life <= 0:
+        raise ValueError("design_life must be finite and greater than 0 years")
+    if probability == 1:
+        return 1.0
+    annual_probability = -math.expm1(math.log1p(-probability) / design_life)
+    return 1.0 / annual_probability if annual_probability > 0 else math.inf
+
+
 class ExtremeValueResult(BaseModel):
     """Result of extreme value analysis."""
     distribution: str = Field(..., description="Distribution fitted (Gumbel or Weibull)")
