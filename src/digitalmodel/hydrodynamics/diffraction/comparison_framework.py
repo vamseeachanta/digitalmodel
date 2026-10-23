@@ -23,15 +23,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 
-from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
-    AbscissaGapError,
-    AbscissaOrderError,
-    AbscissaOverlapError,
-    AlignedResponses,
-    InsufficientSampling,
-    align_responses,
-)
-
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
     DOF
@@ -66,6 +57,16 @@ class DeviationStatistics:
         "UNTRUSTED_SOURCE",
         "INVALID_ABSCISSA",
     ] = "COMPARED"
+
+    @property
+    def sample_count(self) -> Optional[int]:
+        """Actual aligned rows, including a statistic with zero variance.
+
+        A refused alignment has an empty axis and therefore an unknown count.
+        """
+        if not self.frequencies.size:
+            return None
+        return int(self.frequencies.size)
 
 
 @dataclass
@@ -103,8 +104,10 @@ class ComparisonReport:
     added_mass_comparison: Optional[MatrixComparison] = None
     damping_comparison: Optional[MatrixComparison] = None
 
-    overall_agreement: str = "UNKNOWN"  # EXCELLENT, GOOD, FAIR, POOR
+    overall_agreement: Optional[str] = None  # EXCELLENT, GOOD, FAIR, POOR
     notes: List[str] = field(default_factory=list)
+    comparison_status: str = "REFUSED"
+    refusal_reasons: List[str] = field(default_factory=list)
 
 
 class DiffractionComparator:
@@ -114,7 +117,9 @@ class DiffractionComparator:
         self,
         aqwa_results: DiffractionResults,
         orcawave_results: DiffractionResults,
-        tolerance: float = 0.05  # 5% tolerance
+        tolerance: Optional[float] = None,
+        *,
+        policy=None,
     ):
         """
         Initialize comparator
@@ -122,8 +127,12 @@ class DiffractionComparator:
         Args:
             aqwa_results: Results from AQWA converter
             orcawave_results: Results from OrcaWave converter
-            tolerance: Relative tolerance for agreement assessment (default: 5%)
+            tolerance: Retired scalar; explicit values raise ValueError.
+            policy: Explicit uncertainty and resolution criteria, or diagnostic only.
         """
+        if tolerance is not None:
+            raise ValueError("tolerance requires a comparison policy with justification")
+        self.policy = policy
         self.aqwa = aqwa_results
         self.orcawave = orcawave_results
         self.tolerance = tolerance
@@ -153,279 +162,55 @@ class DiffractionComparator:
         Returns:
             Deviation statistics
         """
-        if (
-            values1.size == 0
-            or values2.size == 0
-            or not np.all(np.isfinite(values1))
-            or not np.all(np.isfinite(values2))
-        ):
-            return DeviationStatistics(
-                mean_error=0.0,
-                max_error=0.0,
-                rms_error=0.0,
-                mean_abs_error=0.0,
-                correlation=None,
-                frequencies=frequencies,
-                errors=np.array([], dtype=float),
-                quality="INSUFFICIENT_DATA",
-            )
+        from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import MultiSolverComparator
+        return MultiSolverComparator._calculate_deviation_stats(values1, values2, frequencies)
 
-        # Calculate errors
-        errors = values2 - values1
-
-        # Statistics
-        mean_error = np.mean(errors)
-        max_error = np.max(np.abs(errors))
-        rms_error = np.sqrt(np.mean(errors**2))
-        mean_abs_error = np.mean(np.abs(errors))
-
-        flat1 = values1.flatten()
-        flat2 = values2.flatten()
-        # Zero variance first: r is undefined for a constant vector regardless
-        # of whether the two vectors are equal. See multi_solver_comparator for
-        # the measured consequence of the opposite ordering (#1633).
-        if not np.any(flat1) and not np.any(flat2):
-            # Structurally absent coupling, zero on both legs — an empty cell,
-            # not a failed comparison. See multi_solver_comparator (#1633).
-            correlation = None
-            quality = "NOT_APPLICABLE"
-        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
-            correlation = None
-            quality = "INSUFFICIENT_DATA"
-        elif np.array_equal(flat1, flat2):
-            correlation = 1.0
-            quality = "IDENTICAL"
-        else:
-            correlation = float(np.corrcoef(flat1, flat2)[0, 1])
-            quality = "COMPARED"
-
-        return DeviationStatistics(
-            mean_error=mean_error,
-            max_error=max_error,
-            rms_error=rms_error,
-            mean_abs_error=mean_abs_error,
-            correlation=correlation,
-            frequencies=frequencies,
-            errors=errors,
-            quality=quality,
-        )
+    def _canonical(self):
+        """Use the maintained comparator for acceptance and coefficient evidence."""
+        from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import MultiSolverComparator
+        return MultiSolverComparator({"AQWA": self.aqwa, "OrcaWave": self.orcawave}, policy=self.policy)
 
     def compare_raos(self) -> Dict[str, RAOComparison]:
-        """
-        Compare RAOs for all DOFs
-
-        Returns:
-            Dictionary of RAOComparison objects by DOF name
-        """
+        """Adapt the canonical RAO evidence without recomputing its quality."""
+        pair = next(iter(self._canonical().compare_raos().values()))
         comparisons = {}
-
-        for dof in DOF:
-            dof_name = dof.name.lower()
-
-            # Get RAO components
-            aqwa_rao = getattr(self.aqwa.raos, dof_name)
-            orcawave_rao = getattr(self.orcawave.raos, dof_name)
-
-            if aqwa_rao is None or orcawave_rao is None:
-                continue
-
-            try:
-                alignment = align_responses(
-                    aqwa_rao.frequencies.values,
-                    aqwa_rao.magnitude,
-                    aqwa_rao.phase,
-                    orcawave_rao.frequencies.values,
-                    orcawave_rao.magnitude,
-                    orcawave_rao.phase,
-                )
-            except (
-                AbscissaOrderError,
-                AbscissaOverlapError,
-                AbscissaGapError,
-            ) as exc:
-                stats = DeviationStatistics(
-                    mean_error=0.0,
-                    max_error=0.0,
-                    rms_error=0.0,
-                    mean_abs_error=0.0,
-                    correlation=None,
-                    frequencies=np.array([], dtype=float),
-                    errors=np.zeros_like(aqwa_rao.magnitude),
-                    quality="INVALID_ABSCISSA",
-                )
-                comparisons[dof_name] = RAOComparison(
-                    dof=dof,
-                    statistics=stats,
-                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
-                    phase_diff=np.zeros_like(aqwa_rao.phase),
-                    max_magnitude_diff_location=(0, 0),
-                    max_phase_diff_location=(0, 0),
-                    refusal_reason=f"{type(exc).__name__}: {exc}",
-                )
-                continue
-            if isinstance(alignment, InsufficientSampling):
-                stats = DeviationStatistics(
-                    mean_error=0.0,
-                    max_error=0.0,
-                    rms_error=0.0,
-                    mean_abs_error=0.0,
-                    correlation=None,
-                    frequencies=np.array([], dtype=float),
-                    errors=np.zeros_like(aqwa_rao.magnitude),
-                    quality="INSUFFICIENT_SAMPLING",
-                )
-                comparisons[dof_name] = RAOComparison(
-                    dof=dof,
-                    statistics=stats,
-                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
-                    phase_diff=np.zeros_like(aqwa_rao.phase),
-                    max_magnitude_diff_location=(0, 0),
-                    max_phase_diff_location=(0, 0),
-                )
-                continue
-            if not isinstance(alignment, AlignedResponses):
-                raise TypeError("unexpected abscissa alignment result")
-
-            aqwa_magnitude = alignment.first.magnitude
-            orcawave_magnitude = alignment.second.magnitude
-            aqwa_phase = alignment.first.phase_degrees
-            orcawave_phase = alignment.second.phase_degrees
-
-            # Magnitude comparison
-            mag_diff = orcawave_magnitude - aqwa_magnitude
-            max_mag_loc = np.unravel_index(
-                np.argmax(np.abs(mag_diff)),
-                mag_diff.shape
+        for name, comp in pair.items():
+            magnitude_diff = comp.magnitude_stats.errors
+            phase_diff = comp.phase_stats.errors
+            def location(values):
+                if not values.size:
+                    return (0, 0)
+                return tuple(int(i) for i in np.unravel_index(np.argmax(np.abs(values)), values.shape))
+            comparisons[name] = RAOComparison(
+                dof=comp.dof, statistics=comp.magnitude_stats,
+                magnitude_diff=magnitude_diff, phase_diff=phase_diff,
+                max_magnitude_diff_location=location(magnitude_diff),
+                max_phase_diff_location=location(phase_diff),
+                refusal_reason=comp.refusal_reason,
             )
-
-            # Phase comparison (handle wrap-around)
-            phase_diff = orcawave_phase - aqwa_phase
-            # Wrap to [-180, 180]
-            phase_diff = np.mod(phase_diff + 180, 360) - 180
-            max_phase_loc = np.unravel_index(
-                np.argmax(np.abs(phase_diff)),
-                phase_diff.shape
-            )
-
-            # Statistics for magnitude
-            stats = self._calculate_deviation_stats(
-                aqwa_magnitude,
-                orcawave_magnitude,
-                alignment.frequencies,
-            )
-
-            comparison = RAOComparison(
-                dof=dof,
-                statistics=stats,
-                magnitude_diff=mag_diff,
-                phase_diff=phase_diff,
-                max_magnitude_diff_location=max_mag_loc,
-                max_phase_diff_location=max_phase_loc
-            )
-
-            comparisons[dof_name] = comparison
-
         return comparisons
 
-    def compare_added_mass(self) -> MatrixComparison:
-        """
-        Compare added mass matrices
-
-        Returns:
-            MatrixComparison object
-        """
-        comparison = MatrixComparison(
-            matrix_type='added_mass',
-            frequencies=self.aqwa.added_mass.frequencies.values
-        )
-
-        # Ensure same number of frequencies
-        if len(self.aqwa.added_mass.matrices) != len(self.orcawave.added_mass.matrices):
-            raise ValueError("Frequency count mismatch in added mass matrices")
-
-        max_dev = 0.0
-        max_dev_freq = 0.0
-        max_dev_elem = (0, 0)
-
-        # Compare each matrix element across frequencies
-        for i in range(6):
-            for j in range(6):
-                aqwa_values = np.array([
-                    m.matrix[i, j] for m in self.aqwa.added_mass.matrices
-                ])
-                orcawave_values = np.array([
-                    m.matrix[i, j] for m in self.orcawave.added_mass.matrices
-                ])
-
-                stats = self._calculate_deviation_stats(
-                    aqwa_values,
-                    orcawave_values,
-                    comparison.frequencies
-                )
-
-                comparison.element_statistics[(i, j)] = stats
-
-                # Track maximum deviation
-                if stats.max_error > max_dev:
-                    max_dev = stats.max_error
-                    max_dev_freq = comparison.frequencies[np.argmax(np.abs(stats.errors))]
-                    max_dev_elem = (i, j)
-
-        comparison.max_deviation_value = max_dev
-        comparison.max_deviation_frequency = max_dev_freq
-        comparison.max_deviation_element = max_dev_elem
-
+    def _compare_matrices(self, matrix_type: str) -> MatrixComparison:
+        canonical = self._canonical()
+        comparisons = canonical._compare_matrix_set(matrix_type)
+        stats = next(iter(comparisons.values()))
+        elements = {(i - 1, j - 1): value for (i, j), value in stats.items()}
+        frequencies = next(iter(elements.values())).frequencies
+        comparison = MatrixComparison(matrix_type=matrix_type, frequencies=frequencies, element_statistics=elements)
+        for element, value in elements.items():
+            if value.max_error > comparison.max_deviation_value:
+                comparison.max_deviation_value = value.max_error
+                comparison.max_deviation_frequency = float(frequencies[np.argmax(np.abs(value.errors))])
+                comparison.max_deviation_element = element
         return comparison
+
+    def compare_added_mass(self) -> MatrixComparison:
+        """Compare signed, aligned coefficients through the canonical producer."""
+        return self._compare_matrices("added_mass")
 
     def compare_damping(self) -> MatrixComparison:
-        """
-        Compare damping matrices
-
-        Returns:
-            MatrixComparison object
-        """
-        comparison = MatrixComparison(
-            matrix_type='damping',
-            frequencies=self.aqwa.damping.frequencies.values
-        )
-
-        # Ensure same number of frequencies
-        if len(self.aqwa.damping.matrices) != len(self.orcawave.damping.matrices):
-            raise ValueError("Frequency count mismatch in damping matrices")
-
-        max_dev = 0.0
-        max_dev_freq = 0.0
-        max_dev_elem = (0, 0)
-
-        # Compare each matrix element across frequencies
-        for i in range(6):
-            for j in range(6):
-                aqwa_values = np.array([
-                    m.matrix[i, j] for m in self.aqwa.damping.matrices
-                ])
-                orcawave_values = np.array([
-                    m.matrix[i, j] for m in self.orcawave.damping.matrices
-                ])
-
-                stats = self._calculate_deviation_stats(
-                    aqwa_values,
-                    orcawave_values,
-                    comparison.frequencies
-                )
-
-                comparison.element_statistics[(i, j)] = stats
-
-                # Track maximum deviation
-                if stats.max_error > max_dev:
-                    max_dev = stats.max_error
-                    max_dev_freq = comparison.frequencies[np.argmax(np.abs(stats.errors))]
-                    max_dev_elem = (i, j)
-
-        comparison.max_deviation_value = max_dev
-        comparison.max_deviation_frequency = max_dev_freq
-        comparison.max_deviation_element = max_dev_elem
-
-        return comparison
+        """Compare signed, aligned coefficients through the canonical producer."""
+        return self._compare_matrices("damping")
 
     def generate_report(self) -> ComparisonReport:
         """
@@ -470,63 +255,18 @@ class DiffractionComparator:
 
         return report
 
-    def _assess_agreement(self, report: ComparisonReport) -> str:
-        """
-        Assess overall agreement between results
-
-        Returns:
-            Agreement level: EXCELLENT, GOOD, FAIR, POOR
-        """
-        # Check RAO correlations
-        rao_corrs = [
-            comp.statistics.correlation
-            for comp in report.rao_comparisons.values()
-            if comp.statistics.correlation is not None
-        ]
-
-        # Check matrix correlations (diagonal terms only for simplicity)
-        am_corrs = [
-            report.added_mass_comparison.element_statistics[(i, i)].correlation
-            for i in range(6)
-            if report.added_mass_comparison.element_statistics[(i, i)].correlation
-            is not None
-        ]
-        damp_corrs = [
-            report.damping_comparison.element_statistics[(i, i)].correlation
-            for i in range(6)
-            if report.damping_comparison.element_statistics[(i, i)].correlation
-            is not None
-        ]
-
-        all_corrs = rao_corrs + am_corrs + damp_corrs
-        if not all_corrs:
-            return "POOR"
-        min_corr = min(all_corrs)
-        mean_corr = np.mean(all_corrs)
-
-        # Classify agreement
-        if min_corr > 0.99 and mean_corr > 0.995:
-            return "EXCELLENT"
-        elif min_corr > 0.95 and mean_corr > 0.98:
-            return "GOOD"
-        elif min_corr > 0.90 and mean_corr > 0.95:
-            return "FAIR"
-        else:
-            return "POOR"
+    def _assess_agreement(self, report: ComparisonReport) -> Optional[str]:
+        """The canonical policy and evidence determine the legacy verdict."""
+        canonical = self._canonical().generate_report()
+        report.comparison_status = canonical.comparison_status
+        report.refusal_reasons = canonical.refusal_reasons
+        return next(iter(canonical.pairwise_results.values())).overall_agreement
 
     def _generate_notes(self, report: ComparisonReport) -> List[str]:
         """Generate summary notes about comparison"""
         notes = []
 
-        # RAO notes
-        for dof_name, comp in report.rao_comparisons.items():
-            if (
-                comp.statistics.correlation is not None
-                and comp.statistics.correlation < 0.95
-            ):
-                notes.append(
-                    f"Low correlation ({comp.statistics.correlation:.3f}) for {dof_name.upper()} RAO"
-                )
+        notes.extend(report.refusal_reasons)
 
         # Matrix notes
         if report.added_mass_comparison:
@@ -564,6 +304,8 @@ class DiffractionComparator:
             'comparison_date': report.comparison_date,
             'overall_agreement': report.overall_agreement,
             'notes': report.notes,
+            'comparison_status': report.comparison_status,
+            'refusal_reasons': report.refusal_reasons,
             'rao_comparisons': {},
             'added_mass_comparison': {},
             'damping_comparison': {}
@@ -578,6 +320,7 @@ class DiffractionComparator:
                     else None
                 ),
                 'quality': comp.statistics.quality,
+                'sample_count': comp.statistics.sample_count,
                 'mean_error': float(comp.statistics.mean_error),
                 'max_error': float(comp.statistics.max_error),
                 'rms_error': float(comp.statistics.rms_error),
@@ -590,6 +333,8 @@ class DiffractionComparator:
         if report.added_mass_comparison:
             am = report.added_mass_comparison
             report_dict['added_mass_comparison'] = {
+                'sample_counts': {f'{i},{j}': value.sample_count for (i, j), value in am.element_statistics.items()},
+                'quality': {f'{i},{j}': value.quality for (i, j), value in am.element_statistics.items()},
                 'max_deviation': float(am.max_deviation_value),
                 'max_deviation_frequency': float(am.max_deviation_frequency),
                 'max_deviation_element': am.max_deviation_element,
@@ -606,6 +351,8 @@ class DiffractionComparator:
         if report.damping_comparison:
             damp = report.damping_comparison
             report_dict['damping_comparison'] = {
+                'sample_counts': {f'{i},{j}': value.sample_count for (i, j), value in damp.element_statistics.items()},
+                'quality': {f'{i},{j}': value.quality for (i, j), value in damp.element_statistics.items()},
                 'max_deviation': float(damp.max_deviation_value),
                 'max_deviation_frequency': float(damp.max_deviation_frequency),
                 'max_deviation_element': damp.max_deviation_element,
@@ -621,7 +368,8 @@ class DiffractionComparator:
 
         # Export to JSON
         with open(output_file, 'w') as f:
-            json.dump(report_dict, f, indent=2)
+            json.dump(report_dict, f, indent=2, allow_nan=False,
+                      default=self._canonical()._json_default)
 
         print(f"\n[OK] Comparison report exported to: {output_file}")
 
@@ -630,7 +378,9 @@ def compare_diffraction_results(
     aqwa_results: DiffractionResults,
     orcawave_results: DiffractionResults,
     output_dir: Path,
-    tolerance: float = 0.05
+    tolerance: Optional[float] = None,
+    *,
+    policy=None,
 ) -> ComparisonReport:
     """
     Convenience function for comparing diffraction results
@@ -639,7 +389,8 @@ def compare_diffraction_results(
         aqwa_results: AQWA results
         orcawave_results: OrcaWave results
         output_dir: Output directory for reports
-        tolerance: Relative tolerance (default: 5%)
+        tolerance: Retired scalar; explicit values raise ValueError.
+        policy: Declared comparison criteria; omitted for diagnostics.
 
     Returns:
         ComparisonReport object
@@ -647,7 +398,7 @@ def compare_diffraction_results(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    comparator = DiffractionComparator(aqwa_results, orcawave_results, tolerance)
+    comparator = DiffractionComparator(aqwa_results, orcawave_results, tolerance, policy=policy)
 
     # Generate report
     report = comparator.generate_report()

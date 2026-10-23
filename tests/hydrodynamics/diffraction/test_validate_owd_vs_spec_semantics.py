@@ -96,3 +96,25 @@ def test_compare_orcawave_ymls_returns_taxonomy_counts(tmp_path: Path):
     assert result["taxonomy_counts"]["representation_normalization_only"] == 1
     assert result["taxonomy_counts"]["output_only"] == 1
     assert result["taxonomy_counts"]["gui_only"] == 1
+
+
+def test_coupling_wrapper_and_index_keep_refusal(tmp_path):
+    """Missing axes cannot yield correlation or a favourable coupling badge."""
+    import numpy as np
+    module = _load_validate_module()
+    values = np.ones((5, 6, 6))
+    correlations = module._compute_matrix_correlation(values, values)
+    assert all(value is None for row in correlations for value in row)
+    quality = [["INVALID_ABSCISSA"] * 6 for _ in range(6)]
+    evidence = {"quality": quality, "sample_count": None, "comparison_status": "REFUSED"}
+    coupling = {"(0, 1)": {
+        "added_mass_correlation": correlations, "damping_correlation": correlations,
+        "added_mass_evidence": evidence, "damping_evidence": evidence,
+    }}
+    page = module._build_multibody_index_html(
+        tmp_path, "synthetic", {"description": "synthetic diagnostic"}, [], {}, coupling,
+    )
+    text = page.read_text()
+    assert "REFUSED" in text
+    assert text.count('class="cell-refused"') == 72
+    assert "min r=" not in text
