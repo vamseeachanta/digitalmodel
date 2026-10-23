@@ -305,15 +305,16 @@ class LazyWaveSolver:
     """Multi-segment lazy-wave catenary solver.
 
     This solver implements the lazy-wave riser analysis from the legacy
-    catenaryMethods module, preserving all numerical calculations while
-    providing a modern type-safe interface.
+    catenaryMethods module, retaining its segment geometry and providing
+    a modern type-safe interface with corrected hang-off forces.
 
     The solver computes:
     1. Hang-off section using standard catenary with departure angle
     2. Sag-to-hog sections using weighted bend radii
     3. Force balance at hang-off point
 
-    Mathematical formulas are ported exactly from legacy implementation.
+    Geometry follows the legacy construction. Vertical force and total tension
+    follow equilibrium; the legacy vertical-force defect is not reproduced.
     """
 
     def solve(self, config: LazyWaveConfiguration) -> LazyWaveResults:
@@ -343,6 +344,14 @@ class LazyWaveSolver:
         identity S**2 = (a + d)**2 - a**2 gives total hang-off tension
         T = hypot(Fh, Fv) = w*(a + d). Fh = w*a is the horizontal component;
         adding it to w*S does not give the vertical component (issue #2044).
+
+        Source: NREL/TP-500-41958, Dynamics Modeling and Loads Analysis of an
+        Offshore Floating Wind Turbine (November 2007), section 2.5, equations
+        (2-41a,b), (2-43b) and (2-44). Set the vertex vertical force VA=0 and
+        take EA to infinity in the coordinate equation. This is a local
+        inextensible, uniform-weight segment derivation, not a validation of
+        the complete lazy-wave model. The worked example and independent hand
+        calculations are in docs/domains/catenary/lazy_wave_force_example.md.
         """
 
         # Step 1: Hang-off to Sag Section
@@ -621,7 +630,10 @@ class LazyWaveSolver:
         """
         Convert modern results to legacy dict format for backward compatibility.
 
-        Matches the output structure of lazyWaveCatenaryEquation.
+        Matches the output structure of lazyWaveCatenaryEquation. Summary Fv
+        remains the corrected vertical component w*S, and Summary T contains
+        total hang-off tension. Conversion does not restore the legacy force
+        defect described in issue #2044.
 
         Parameters:
             results (LazyWaveResults): Modern results

@@ -4,6 +4,18 @@
 
 Successfully ported the legacy lazy-wave multi-segment catenary solver from `digitalmodel.subsea.catenary.catenaryMethods` to the unified `marine_engineering.catenary` module with improved type safety, comprehensive testing, and modern Python patterns.
 
+The migration details and test counts below describe the original port.
+The current solver retains its geometry construction but corrects the vertical
+force as described in issue #2044. See the [worked force example](lazy_wave_force_example.md)
+for the current equation source, independent hand calculations and limits.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 0 | Undated | Recorded the original migration and its test results. |
+| 1 | 2026-10-20 | Corrected the force equation, current API example and result semantics to match equilibrium. |
+
 ## Implementation Details
 
 ### Files Created
@@ -11,7 +23,7 @@ Successfully ported the legacy lazy-wave multi-segment catenary solver from `dig
 1. **src/marine_engineering/catenary/lazy_wave.py**
    - Complete lazy-wave solver implementation
    - 85 lines of code, 100% test coverage
-   - Preserves all numerical formulas from legacy
+   - Retains legacy geometry; hang-off forces follow equilibrium
 
 2. **tests/test_lazy_wave_catenary.py**
    - 15 comprehensive unit tests
@@ -67,11 +79,22 @@ X = BendRadius * acosh(d/BendRadius + 1)
 S = BendRadius * sinh(X/BendRadius)
 ```
 
-#### Force Calculations (lines 164-165)
+#### Hang-off forces (current solver)
+
+NREL/TP-500-41958 (November 2007), section 2.5, equations (2-41a,b),
+(2-43b) and (2-44), with zero vertex vertical force and infinite axial
+stiffness, give the following components and magnitude:
+
 ```python
 Fh = BendRadius * w
-Fv = Fh + w * S_hangoff
+Fv = w * S_hangoff
+T = hypot(Fh, Fv)
 ```
+
+`Fv` is the vertical component; `T` is the total tension. The legacy solver's
+extra horizontal term is a recorded defect, excluded from force parity tests.
+The [worked example](lazy_wave_force_example.md) cites the inspected public
+source and derives expected values independently.
 
 ## Test Results
 
@@ -112,9 +135,10 @@ Failed tests are due to a bug in the legacy `catenaryEquation` function (line 49
 ### Modern API
 
 ```python
-from marine_engineering.catenary import LazyWaveSolver, LazyWaveConfiguration
+from digitalmodel.marine_ops.marine_analysis.catenary import LazyWaveSolver, LazyWaveConfiguration
 
-# Configure lazy-wave riser
+# Synthetic demonstration inputs; not recommended design values.
+# Omit the radius: the solver derives it from the span and angle.
 config = LazyWaveConfiguration(
     hangoff_angle=15.0,              # degrees
     hangoff_below_msl=50.0,          # m
@@ -123,7 +147,6 @@ config = LazyWaveConfiguration(
     weight_without_buoyancy=1000.0,  # N/m (bare riser)
     weight_with_buoyancy=-500.0,     # N/m (with buoyancy modules)
     vertical_distance=500.0,         # m
-    hangoff_bend_radius=2000.0       # m
 )
 
 # Solve
@@ -133,6 +156,7 @@ results = solver.solve(config)
 # Access results
 print(f"Horizontal force: {results.horizontal_force:.0f} N")
 print(f"Vertical force: {results.vertical_force:.0f} N")
+print(f"Total tension: {results.total_tension:.0f} N")
 print(f"Total arc length: {results.total_arc_length:.1f} m")
 print(f"Total horizontal distance: {results.total_horizontal_distance:.1f} m")
 
@@ -150,7 +174,8 @@ legacy_dict = solver.to_legacy_dict(results, config)
 # This matches the output structure of lazyWaveCatenaryEquation
 print(legacy_dict['Summary']['Fh'])
 print(legacy_dict['Summary']['Fv'])
-print(legacy_dict['HangOffToBuoyancy']['S'])
+print(legacy_dict['Summary']['T'])
+print(legacy_dict['Summary']['HangOffToBuoyancy']['S'])
 ```
 
 ## API Documentation
@@ -159,14 +184,14 @@ print(legacy_dict['HangOffToBuoyancy']['S'])
 
 Input parameters for lazy-wave analysis:
 
-- `hangoff_angle`: Departure angle from vessel [degrees]
+- `hangoff_angle`: Departure angle from vertical [degrees]
 - `hangoff_below_msl`: Hang-off depth below mean sea level [m]
 - `hog_bend_above_seabed`: Hog bend elevation above seabed [m]
 - `sag_bend_elevation`: Sag bend elevation above seabed [m]
 - `weight_without_buoyancy`: Bare riser weight per length [N/m]
-- `weight_with_buoyancy`: Effective weight with buoyancy modules [N/m] (typically negative)
-- `vertical_distance`: Total vertical span [m]
-- `hangoff_bend_radius`: Initial bend radius at hang-off [m]
+- `weight_with_buoyancy`: Net effective weight with buoyancy modules [N/m]; must be negative
+- `vertical_distance`: Hang-off to seabed vertical span [m]
+- `hangoff_bend_radius`: Optional consistency check [m]; derived from span and angle
 
 ### LazyWaveResults
 
@@ -180,9 +205,10 @@ Output from lazy-wave analysis:
 - `total_arc_length`: Total arc length [m]
 - `total_horizontal_distance`: Total horizontal distance [m]
 - `horizontal_force`: Horizontal force Fh [N]
-- `vertical_force`: Vertical force at hang-off Fv [N]
+- `vertical_force`: Vertical force at hang-off `Fv = w*S1` [N]
+- `total_tension`: Total tension at hang-off `T = hypot(Fh, Fv)` [N]
 - `segments`: List of all segments for plotting
-- `summary`: Summary dict matching legacy format
+- `summary`: Legacy dictionary structure with corrected `Fv` and added `T`
 
 ### LazyWaveSegment
 
