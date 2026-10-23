@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydrodynamics module analysis — spectral motion and operability</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+</style><style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+</head><body class="hs-doc"><div class="wrap">
+<header><h1>Hydrodynamics module analysis</h1><p>Spectral motion and operability</p>
+<p>Draft for review</p></header>
+<main>
+<section id="summary"><h2>1. Executive Summary</h2>
+<p>The hydrodynamics module is a collection of wave, motion and hydrodynamic loading calculations.
+Analysis is performed to determine the capabilities and limits of its spectral motion workflow;
+key results are summarized below.</p>
+<ul><li>Use the spectral workflow to calculate motion from a supplied response function.
+<ul><li>The public synthetic example returns <span data-value="operability">90.0</span> % weighted operability against
+an example significant single-amplitude limit of <span data-value="criterion">2.0</span> m.</li></ul></li>
+<li>Keep the demonstration separate from an operating decision.
+<ul><li>The example uses a unity response function and synthetic sea-state probabilities.
+Measured response data and an approved motion criterion are not established.</li></ul></li></ul>
+</section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-21</td><td>The spectral workflow is documented to distinguish implemented calculations from operational evidence.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Source hashes use canonical text and generated files use LF so checkout line endings do not change the report.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>The unity-response identity and spectrum normalization are qualified; variance display, decoding and automated coverage are corrected.</td></tr></tbody>
+<caption>Revision history.</caption></table></div>
+<section id="introduction"><h2>2. Introduction</h2>
+<p>The purpose, scope and status of the analysis are presented in this section.
+The main workflow is assessed from a wave spectrum and a response amplitude operator through
+motion variance, significant amplitude and weighted operability.</p>
+<p>A response amplitude operator is the motion amplitude per unit incident wave amplitude at a
+specified frequency and heading. The present example represents heave, the vertical translation
+of a floating body. Public callable functions and existing tests are present, so the module is
+reported as an implemented workflow rather than as a readiness proposal.</p>
+<h3>Not covered</h3><p>Coefficient storage and interpolation, environmental loading, diffraction adapters,
+hull geometry, passing-body interaction, propulsion, river currents, tank sloshing and response
+file conversion are outside the calculations assessed here. Resistance, effective power, trim
+sensitivity, appendage sensitivity and computational fluid dynamics are not evaluated.</p>
+</section>
+<section id="data"><h2>3. Design Data</h2>
+<p>The input basis is taken from the public synthetic operability example identified in
+<a href="#locators">References</a>. No hull dimensions, density, viscosity, draft or speed
+are supplied; no physical hull or mesh is inferred.</p>
+<p id="basis-example">The angular-frequency grid extends from <span data-value="minimum">0.1</span> to
+<span data-value="maximum">2.0</span> rad/s with <span data-value="points">100</span> equally spaced samples. The heave response
+amplitude ratio is <span data-value="rao">1.0</span> m/m throughout the band. The spectrum type is
+JONSWAP and its peakedness input is
+<span data-value="gamma">3.3</span>; both are taken from the operability_analysis defaults used by this call. The example criterion is
+<span data-value="criterion">2.0</span> m, taken from the existing example assertion setup; it is not a sourced operating limit.</p>
+<figure><svg viewBox="0 0 760 210" role="img" aria-label="Conceptual heave response model">
+<path d="M20 95Q50 70 80 95T140 95T200 95T260 95T320 95T380 95T440 95T500 95T560 95T620 95T680 95" fill="none" stroke="#137e8a"/>
+<path d="M270 65H460L435 130H295Z" fill="#e6eef3" stroke="#183449"/>
+<path d="M365 40V160M355 50L365 40L375 50M355 150L365 160L375 150" fill="none" stroke="#183449"/>
+<text x="30" y="40">Incident irregular waves</text><text x="490" y="155">Heave response</text>
+<text x="25" y="195">Conceptual model; no hull geometry, mooring or mesh is specified.</text>
+</svg><figcaption>Figure A. Spectral heave model and incident-wave boundary input.</figcaption></figure>
+<p>The input arrays use angular frequency in rad/s. Wave spectral density has units m²·s.
+The response function is real amplitude in m/m for this example. A rotational response requires
+its own angular units; angular and translational criteria are not interchangeable.</p>
+</section>
+<section id="method"><h2>4. Analysis Methodology</h2>
+<p>Linear response is calculated on a common frequency grid. The equations below describe the
+implemented methods identified in <a href="#locators">References</a>; no standard certification
+or measured-response validation is implied.</p>
+<p>Sᵣ(ω) = |R(ω)|² Sη(ω), where ω is angular frequency, R is the real response amplitude ratio,
+Sη is incident-wave spectral density and Sᵣ is response spectral density.
+The response function is squared point by point by the response-spectrum function.</p>
+<p>mₙ = ∫ ωⁿ Sᵣ(ω) dω, evaluated over the supplied band by trapezoidal integration.
+The symbol n is the moment order and m₀ is the response variance.
+The significant single amplitude is aₛ = 2√m₀. This is not the crest-to-trough significant height.</p>
+<p>For narrow-band Gaussian response with Rayleigh-distributed peaks,
+P(A &gt; a) = exp(−a²/(2m₀)), where A is peak amplitude and a is the threshold.
+This probability applies to a peak, not to exceedance during an exposure duration.</p>
+<p>The wave-spectrum generator normalizes the discrete spectral area to Hₛ²/16,
+where Hₛ is significant wave height. For JONSWAP this discrete band normalization
+replaces the approximate analytical normalizer Aγ: any overall spectral scale factor
+cancels on rescaling. Relative to the unrenormalized analytical spectrum, truncation and
+rescaling can change the ordinates; for the present grid and default peakedness it
+increases in-band ordinates. This is an implementation convention, not an unmodified
+published spectral normalization.</p>
+<p>With unity response, m₀ = Hₛ²/16 and aₛ = Hₛ/2, independent of peak period and peakedness
+when the discrete spectrum has positive area. Changing the band also leaves these
+identities unchanged after normalization. This example checks amplitude conversion and
+weighted threshold logic; it cannot validate spectral shape or frequency-dependent response.</p>
+<p>Operability is calculated as
+100 Σ pᵢ χ(aₛ,ᵢ ≤ aₗᵢₘ)/Σ pᵢ, where pᵢ is sea-state occurrence weight,
+χ is an indicator, the subscript identifies a sea state and aₗᵢₘ is the supplied criterion.</p>
+<h3>Basis and criteria</h3><p>The worked example is compared with its supplied amplitude criterion because
+that is the comparison performed by the public operability function. No external marine-operation
+criterion is substituted. Source-code equations and the analytical tests constitute the calculation
+basis; the test fixture constitutes the input basis. Published experimental validation for this
+specific example is NOT_EVALUATED.</p>
+<p>Model-to-full-scale resistance conversion and wall treatment are NOT_EVALUATED because this
+workflow evaluates supplied frequency-domain motion rather than a discretized viscous flow field.</p>
+</section>
+<section id="results"><h2>5. Detailed Results</h2>
+<p>The module is called directly with the documented synthetic inputs. The returned sea-state
+results are retained without replacing the calculation by an independent report formula.</p>
+<p>The significant single-amplitude demands are compared with the example criterion in Figure B.
+Hover over or focus a marker to read the case, component, demand, limit and units.</p>
+<figure><svg viewBox="0 0 700 350" role="img" aria-label="Heave demand and example limit"><path d="M70 50V290H650" fill="none" stroke="currentColor"/><text x="235" y="335">Significant wave height (m)</text><text x="12" y="30">Significant single amplitude (m)</text><path d="M70 148.46153846153845H650" stroke="#b45309" stroke-dasharray="6 4"/><text x="75" y="138.46153846153845">Example limit: 2.0 m</text><circle tabindex="0" cx="167.3913043478261" cy="254.6153846153846" r="7" fill="#137e8a" data-demand="0.5" data-limit="2.0"><title>Public synthetic case; heave; wave height 1.0 m; demand 0.5 m; limit 2.0 m</title></circle><text x="162.3913043478261" y="310">1.0</text><text x="177.3913043478261" y="246.6153846153846">0.5 m</text><circle tabindex="0" cx="264.7826086956522" cy="219.23076923076923" r="7" fill="#137e8a" data-demand="0.9999999999999999" data-limit="2.0"><title>Public synthetic case; heave; wave height 2.0 m; demand 1.0 m; limit 2.0 m</title></circle><text x="259.7826086956522" y="310">2.0</text><text x="274.7826086956522" y="211.23076923076923">1.0 m</text><circle tabindex="0" cx="362.17391304347825" cy="183.8461538461538" r="7" fill="#137e8a" data-demand="1.5000000000000002" data-limit="2.0"><title>Public synthetic case; heave; wave height 3.0 m; demand 1.5 m; limit 2.0 m</title></circle><text x="357.17391304347825" y="310">3.0</text><text x="372.17391304347825" y="175.8461538461538">1.5 m</text><circle tabindex="0" cx="556.9565217391305" cy="113.07692307692307" r="7" fill="#137e8a" data-demand="2.5" data-limit="2.0"><title>Public synthetic case; heave; wave height 5.0 m; demand 2.5 m; limit 2.0 m</title></circle><text x="551.9565217391305" y="310">5.0</text><text x="566.9565217391305" y="105.07692307692307">2.5 m</text></svg><figcaption>Figure B. Heave demand against significant wave height; the dashed line is the example criterion.</figcaption></figure>
+<p>The native sea-state results are listed in <a href="#worked-table">Table A in Appendix C</a>.</p>
+<p>The returned weighted operability is <span data-value="operability">90.0</span> % against the example criterion
+of <span data-value="criterion">2.0</span> m. The highest-wave-height case exceeds that criterion.
+This result follows from the unity-response identity and supplied sea-state weights;
+it provides no evidence of sensitivity to the frequency band or spectral shape.</p>
+<h3>Existing validation evidence</h3><p>The existing seakeeping tests check identity response, zero response,
+response-amplitude scaling, mismatched array lengths, integration of a flat spectrum,
+wave-height recovery, known significant amplitude, Rayleigh probability and operability extremes.
+These are analytical and software consistency checks. Wave-height recovery is fully enforced by
+discrete normalization and therefore is not independent evidence for spectral shape accuracy.</p>
+<p>Physical response accuracy, directional spreading, measured response amplitude operators,
+full-scale operability and time-domain extremes are NOT_EVALUATED in this report.</p>
+</section>
+<section id="findings"><h2>6. Key Findings</h2>
+<p>The calculation supports a limited software-use conclusion. The distinction between an example
+criterion and an operating limit governs interpretation.</p>
+<ul><li>The spectral workflow is callable without a flow solver.
+<ul><li>Arrays, motion variance and sea-state dispositions are returned for further assessment.</li></ul></li>
+<li>The example exceeds its criterion in the highest-wave-height case.
+<ul><li>The weighted percentage is conditional on synthetic weights and a unity response function.</li></ul></li></ul>
+</section>
+<section id="limits"><h2>7. Limitations</h2>
+<p>The applicability limits are determined from the implementation and the evidence basis.
+Uncertainty in physical response cannot be quantified from the present example.</p>
+<p>Only the first dictionary criterion is applied by the operability function.
+Simultaneous motion-component limits are not evaluated.</p>
+<p>The operability function creates a uniform spectrum grid from the endpoint frequencies and
+sample count. Nonuniform input response grids are therefore not matched point by point.</p>
+<p>The response-spectrum function squares real input amplitudes. Complex response functions are
+not converted to modulus squared by that function; supply real nonnegative amplitudes.</p>
+<p>Finite, increasing frequencies, consistent array shapes, positive periods, nonnegative spectral
+densities and meaningful motion criteria require caller checks. The functions do not comprehensively
+reject invalid inputs. Sea-state weights are normalized by their sum; empty or zero-total weights
+return zero operability without establishing a probability model.</p>
+<p>The Rayleigh approximation requires narrow-band Gaussian response. Its applicability to
+broad-band, nonlinear or impact-dominated motions is not established. Positive variance and a
+nonnegative amplitude threshold are required for physical interpretation.</p>
+</section>
+<section id="recommendations"><h2>8. Recommendations</h2>
+<p>The following actions are tied to the implementation limits and the missing engineering basis.
+The example is retained as a software demonstration.</p>
+<ul><li>Exclude the failing synthetic case from the example operating envelope at the present
+criterion. For an actual assessment, obtain a heading-specific response function and an approved
+motion limit before assigning an operating envelope.</li>
+<li>Validate finite ascending uniform frequencies, response units, array alignment and positive
+total sea-state weight before calling operability. Reject unsupported input rather than infer it.</li>
+<li>Evaluate each required motion component separately. Combine simultaneous criteria externally
+until the interface supports joint sea-state assessment.</li>
+<li>Establish grid and bandwidth convergence against an independent analytical or published
+response benchmark. Height recovery alone is insufficient because the spectrum is normalized.</li>
+<li>Obtain exposure duration and peak statistics before converting peak exceedance to an
+operation-duration probability. The implemented peak formula does not supply that conversion.</li></ul>
+</section>
+<section id="references"><h2>9. References</h2>
+<p>The calculation basis is restricted to the public repository records below.
+No numerical value from a licensed publication is reproduced.</p>
+<h3>9.1 Source basis</h3><p>The seakeeping implementation, public analytical tests and spectrum implementation
+form the source edition represented by this report. SHA-256 source digests are embedded in the report's
+numeric attachment with the format sha256-utf8-lf: UTF-8 text with CRLF and CR line endings
+normalized to LF before hashing. These bind source text independently of checkout line endings.
+The repository citation record (W2) identifies DNV-RP-C205 (2014), 3.5.5, JONSWAP spectrum,
+as the spectrum reference; the 3.5.2 locator in the spectrum implementation is not adopted.
+The edition itself was not consulted and its constants are not independently qualified here.
+The discrete rescaling described in Section 4 differs from the approximate analytical normalizer.
+Other literature citations in the implementation are not adopted as verified sources.</p>
+<h3 id="locators">9.2 Repository records</h3><ul><li><a href="../../../../tests/hydrodynamics/test_seakeeping.py">tests/hydrodynamics/test_seakeeping.py</a></li><li><a href="../../../../src/digitalmodel/hydrodynamics/seakeeping.py">src/digitalmodel/hydrodynamics/seakeeping.py</a></li><li><a href="../../../../src/digitalmodel/hydrodynamics/wave_spectra.py">src/digitalmodel/hydrodynamics/wave_spectra.py</a></li><li><a href="../../../../docs/api/_assets/brand.css">docs/api/_assets/brand.css</a></li><li><a href="../../../../docs/api/cfd/turbulent-flat-plate-verification.html">docs/api/cfd/turbulent-flat-plate-verification.html</a></li><li><a href="../../../../src/digitalmodel/orcawave/docs/engineering-citations.md">src/digitalmodel/orcawave/docs/engineering-citations.md</a></li></ul>
+<p>The public entry point is called with the documented arrays and criterion as follows.</p>
+<pre><code>from digitalmodel.hydrodynamics.seakeeping import operability_analysis
+result = operability_analysis(
+    rao_freqs=omega,
+    rao_amplitudes=heave_amplitudes,
+    scatter_diagram=sea_states,
+    criteria={"heave": significant_amplitude_limit},
+)</code></pre>
+<p>The return mapping contains operability_pct and sea_state_results. Each sea-state record
+contains hs, tp, probability, m0, significant_amplitude and operable. The array values and native
+return mapping used here are embedded in this single-file document.</p>
+</section>
+<section id="symbols"><h2>10. Acronyms and Symbols</h2>
+<p>The notation is defined for the spectral heave calculation. No response solver acronym is
+required to interpret the worked example.</p>
+<p>RAO means response amplitude operator. Hₛ denotes significant wave height; Tₚ denotes peak period;
+γ denotes spectral peakedness; ω denotes angular frequency; R denotes the response amplitude ratio;
+Sη and Sᵣ denote wave and response spectral densities; mₙ denotes a spectral moment; aₛ denotes
+significant single amplitude; aₗᵢₘ denotes its criterion; p denotes occurrence weight.</p>
+<h3>Appendix A. Data register</h3><table><thead><tr><th>Item</th><th>Basis</th><th>Intended use</th></tr></thead>
+<tbody><tr><td>Sea states, response ratio and criterion</td><td>ASSUMED - to be confirmed for any physical application; public synthetic example</td><td>Software demonstration only</td></tr>
+<tr><td>Spectrum coefficients</td><td>Existing implementation; independent source qualification is NOT_EVALUATED</td><td>Reproduction of implemented behaviour only</td></tr>
+<tr><td>Hull, heading and measured response</td><td>Not supplied</td><td>Required before operational use</td></tr></tbody>
+<caption>Table B. Data basis and unresolved inputs.</caption></table>
+<h3>Appendix B. Quality evidence</h3><p>The report rebuild checks compare the embedded native return values
+with direct public-function calls and compare every bound table and prose number with the calculation
+register. Source digests bind the report to its input records. The chart uses the same native demand
+and criterion values as the table. No flow mesh or licensed solver is used.</p>
+<p>Resistance coefficients, mesh evidence, trim investigations, appendage sensitivity, wall treatment
+and divergent cells are NOT_EVALUATED because no resistance or flow solution is produced.</p>
+<h3>Appendix C. Worked-example values</h3>
+<table id="worked-table"><thead><tr><th>Wave height (m)</th><th>Peak period (s)</th><th>Occurrence weight (1)</th>
+<th>Variance (m²)</th><th>Single amplitude (m)</th><th>Disposition</th><th>Source</th></tr></thead>
+<tbody><tr><td><span data-value="0-hs">1.0</span></td><td><span data-value="0-tp">6.0</span></td><td><span data-value="0-probability">0.3</span></td><td><span data-value="0-m0">0.0625</span></td><td><span data-value="0-significant_amplitude">0.5</span></td><td>The example limit is met.</td><td><a href="#basis-example">Example basis</a></td></tr><tr><td><span data-value="1-hs">2.0</span></td><td><span data-value="1-tp">8.0</span></td><td><span data-value="1-probability">0.4</span></td><td><span data-value="1-m0">0.2500</span></td><td><span data-value="1-significant_amplitude">1.0</span></td><td>The example limit is met.</td><td><a href="#basis-example">Example basis</a></td></tr><tr><td><span data-value="2-hs">3.0</span></td><td><span data-value="2-tp">10.0</span></td><td><span data-value="2-probability">0.2</span></td><td><span data-value="2-m0">0.5625</span></td><td><span data-value="2-significant_amplitude">1.5</span></td><td>The example limit is met.</td><td><a href="#basis-example">Example basis</a></td></tr><tr><td><span data-value="3-hs">5.0</span></td><td><span data-value="3-tp">12.0</span></td><td><span data-value="3-probability">0.1</span></td><td><span data-value="3-m0">1.5625</span></td><td><span data-value="3-significant_amplitude">2.5</span></td><td>The example limit is exceeded.</td><td><a href="#basis-example">Example basis</a></td></tr></tbody><caption>Table A. Native sea-state results from the public synthetic example.</caption></table>
+</section>
+<script id="example-data" type="application/json">{"inputs": {"criterion": 2.0, "gamma": 3.3, "omega": [0.1, 0.1191919191919192, 0.1383838383838384, 0.1575757575757576, 0.17676767676767677, 0.19595959595959594, 0.21515151515151515, 0.23434343434343433, 0.2535353535353535, 0.2727272727272727, 0.2919191919191919, 0.3111111111111111, 0.3303030303030303, 0.3494949494949495, 0.3686868686868686, 0.3878787878787878, 0.407070707070707, 0.42626262626262623, 0.44545454545454544, 0.46464646464646464, 0.48383838383838385, 0.503030303030303, 0.5222222222222221, 0.5414141414141413, 0.5606060606060606, 0.5797979797979798, 0.598989898989899, 0.6181818181818182, 0.6373737373737373, 0.6565656565656565, 0.6757575757575757, 0.6949494949494949, 0.7141414141414141, 0.7333333333333333, 0.7525252525252525, 0.7717171717171717, 0.7909090909090909, 0.81010101010101, 0.8292929292929292, 0.8484848484848484, 0.8676767676767676, 0.8868686868686868, 0.906060606060606, 0.9252525252525252, 0.9444444444444443, 0.9636363636363635, 0.9828282828282827, 1.002020202020202, 1.0212121212121212, 1.0404040404040404, 1.0595959595959596, 1.0787878787878789, 1.097979797979798, 1.1171717171717173, 1.1363636363636365, 1.1555555555555557, 1.1747474747474747, 1.1939393939393939, 1.213131313131313, 1.2323232323232323, 1.2515151515151515, 1.2707070707070707, 1.2898989898989899, 1.309090909090909, 1.3282828282828283, 1.3474747474747475, 1.3666666666666667, 1.385858585858586, 1.405050505050505, 1.4242424242424243, 1.4434343434343435, 1.4626262626262627, 1.481818181818182, 1.501010101010101, 1.52020202020202, 1.5393939393939393, 1.5585858585858585, 1.5777777777777777, 1.596969696969697, 1.6161616161616161, 1.6353535353535353, 1.6545454545454545, 1.6737373737373737, 1.692929292929293, 1.7121212121212122, 1.7313131313131314, 1.7505050505050506, 1.7696969696969698, 1.7888888888888888, 1.808080808080808, 1.8272727272727272, 1.8464646464646464, 1.8656565656565656, 1.8848484848484848, 1.904040404040404, 1.9232323232323232, 1.9424242424242424, 1.9616161616161616, 1.9808080808080808, 2.0], "rao": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "scatter": [{"hs": 1.0, "probability": 0.3, "tp": 6.0}, {"hs": 2.0, "probability": 0.4, "tp": 8.0}, {"hs": 3.0, "probability": 0.2, "tp": 10.0}, {"hs": 5.0, "probability": 0.1, "tp": 12.0}], "spectrum_type": "jonswap"}, "result": {"operability_pct": 90.0, "sea_state_results": [{"hs": 1.0, "m0": 0.0625, "operable": true, "probability": 0.3, "significant_amplitude": 0.5, "tp": 6.0}, {"hs": 2.0, "m0": 0.24999999999999997, "operable": true, "probability": 0.4, "significant_amplitude": 0.9999999999999999, "tp": 8.0}, {"hs": 3.0, "m0": 0.5625000000000001, "operable": true, "probability": 0.2, "significant_amplitude": 1.5000000000000002, "tp": 10.0}, {"hs": 5.0, "m0": 1.5625000000000002, "operable": false, "probability": 0.1, "significant_amplitude": 2.5, "tp": 12.0}]}, "source_digest_format": "sha256-utf8-lf", "sources": {"docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a", "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25", "src/digitalmodel/hydrodynamics/seakeeping.py": "56054b82043243015275ccfcfdf990cca0d816c705729d81a911663296bd0d92", "src/digitalmodel/hydrodynamics/wave_spectra.py": "5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290", "src/digitalmodel/orcawave/docs/engineering-citations.md": "5fc299ccfe918a95e4d17a18a88bb933009aa057f7d01a1601fc3fa69be8e188", "tests/hydrodynamics/test_seakeeping.py": "fed19fb73145ecd7f6b2cf74756b85eda11f4da2d04150c70bb4311b37aa46d5"}}</script>
+<script id="changes-data" type="application/json">[{"date": "2026-10-21", "description": "The spectral motion workflow and its example criterion are documented; physical operating qualification remains unevaluated.", "revision": "Initial"}, {"date": "2026-10-22", "description": "Source hashes use canonical UTF-8 text with LF line endings and generated files use LF so checkout line endings do not change the report.", "revision": "1"}, {"date": "2026-10-22", "description": "The unity-response identity and spectrum normalization are qualified; variance display, decoding and automated coverage are corrected.", "revision": "2"}]</script>
+
+<aside id="changes-panel"><h3>Changes since the previous revision</h3><p id="changes-text"></p></aside>
+<aside aria-label="Review comments"><h3>Review comments</h3>
+<p>Comments are retained in this browser. Save beside this report as comments.json;
+use Import comments to restore a saved copy. Where direct file saving is unavailable,
+the browser downloads a copy for placement beside the report.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Comment <textarea id="comment-text" rows="3"></textarea></label>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments</button>
+<label>Import comments <input id="import-comments" type="file" accept="application/json"></label>
+<p id="comment-status" role="status"></p><ol id="comment-list"></ol></aside>
+<script>
+(() => {
+  const key = 'hydrodynamics-module-comments-v1';
+  const byId = id => document.getElementById(id);
+  let comments = [];
+  const valid = rows => Array.isArray(rows) && rows.every(row =>
+    typeof row.section === 'string' && typeof row.text === 'string');
+  const status = text => { byId('comment-status').textContent = text; };
+  try { const saved = JSON.parse(localStorage.getItem(key) || '[]');
+    if (valid(saved)) comments = saved;
+  } catch (_) { status('Browser storage is unavailable; export comments before closing.'); }
+  const draw = () => {
+    byId('comment-list').replaceChildren();
+    comments.forEach(row => { const li = document.createElement('li');
+      li.textContent = row.section + ': ' + row.text; byId('comment-list').append(li); });
+    try { localStorage.setItem(key, JSON.stringify(comments)); }
+    catch (_) { status('Browser storage is unavailable; export comments before closing.'); }
+  };
+  document.querySelectorAll('h2').forEach(heading => {
+    const option = document.createElement('option'); option.textContent = heading.textContent;
+    byId('comment-section').append(option);
+  });
+  byId('add-comment').onclick = () => {
+    const text = byId('comment-text').value.trim(); if (!text) return;
+    comments.push({section: byId('comment-section').value, text});
+    byId('comment-text').value = ''; draw();
+  };
+  byId('save-comments').onclick = async () => {
+    const text = JSON.stringify(comments, null, 2);
+    try {
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({suggestedName:'comments.json'});
+        const stream = await handle.createWritable(); await stream.write(text); await stream.close();
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type:'application/json'}));
+        const a = document.createElement('a'); a.href = url; a.download = 'comments.json'; a.click();
+        URL.revokeObjectURL(url);
+      }
+      status('Comments exported. Retain the file beside the report.');
+    } catch (_) { status('Comments were not exported. Retry Save comments.'); }
+  };
+  byId('import-comments').onchange = async event => {
+    try { const rows = JSON.parse(await event.target.files[0].text());
+      if (!valid(rows)) throw new Error('Invalid comments'); comments = rows; draw();
+    } catch (_) { status('The selected file is not a comments array.'); }
+  };
+  const changes = JSON.parse(byId('changes-data').textContent);
+  byId('changes-text').textContent = changes[changes.length - 1].description;
+  draw();
+})();
+</script>
+
+</main></div></body></html>
