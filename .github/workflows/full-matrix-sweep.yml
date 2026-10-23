@@ -137,6 +137,18 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
         run: python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
 
+      - name: Set up Node for report interaction checks
+        if: matrix.domain == 'marine-ops-other'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run tug toolkit and report checks
+        if: matrix.domain == 'marine-ops-other'
+        run: >-
+          uv run --no-project --with pytest --with pyyaml
+          python -m pytest tests/tug/ -q -rA -p no:cacheprovider
+
       - name: Run domain gate
         id: domain-gate
         env:

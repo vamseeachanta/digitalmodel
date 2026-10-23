@@ -1,0 +1,9 @@
+{
+  "revision": "B",
+  "status": "Draft for maintainer review",
+  "changes": [
+    "Shared illustrative inputs, independent energy-share and duration checks, and corrected source and table locators.",
+    "Imported comments merge with existing notes to retain unsaved edits.",
+    "Battery rating, recharge and reserve remain not evaluated."
+  ]
+}
