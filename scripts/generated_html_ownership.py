@@ -44,6 +44,10 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reporting/build_nde_report.py": (
+        "renders the NDE analysis under docs/reports/modules, not docs/api; "
+        "tests/nde/test_module_report.py verifies byte reproduction"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),

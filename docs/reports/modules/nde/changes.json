@@ -1,0 +1,12 @@
+{
+  "document": "nde-module-analysis",
+  "revision": "A",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "s1",
+      "summary": "Initial analysis of sampled acoustic pulse timing, with a computed synthetic example and the evidence needed for inspection use.",
+      "reason": "Distinguish the demonstrated timing calculation from unestablished inspection accuracy and dataset compatibility."
+    }
+  ]
+}
