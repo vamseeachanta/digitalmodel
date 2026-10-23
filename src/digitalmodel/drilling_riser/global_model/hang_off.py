@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Literal
 
 from .build import CONN_KEY, HANG_OFF_SPRING as SPRING, SPRING_ANCHOR_HEIGHT_M  # noqa: F401  (re-exported)
-from .hand_checks import effective_tension_chain, ring_weight_n, submerged_length_m
+from .hand_checks import ring_weight_n, submerged_length_m
 from .spec import LineSection, RiserGlobalModelSpec
 
 G = 9.80665
@@ -48,9 +48,13 @@ def _hanging(spec: RiserGlobalModelSpec) -> list[LineSection]:
 def hung_weight_n(spec: RiserGlobalModelSpec) -> float:
     """Weight hung below the telescopic joint: the ring, the riser and (with the LMRP / payload) the stack bodies."""
     rho_w, rho_c = spec.environment.water_density_kg_m3, spec.contents.density_kg_m3
-    chain = effective_tension_chain(_hanging(spec), top_z_m=spec.tension_ring.z_static_m, top_tension_n=0.0,
-                                    rho_water=rho_w, rho_contents=rho_c)
-    return ring_weight_n(spec) - chain[-1]["te_bottom_n"]
+    weight, z = ring_weight_n(spec), spec.tension_ring.z_static_m
+    for i, section in enumerate(_hanging(spec)):
+        # Stack mass includes its fluid inventory, as in the generated model.
+        density = rho_c if i < len(spec.riser) else 0.0
+        weight += section_weight_n(section, top_z_m=z, rho_water=rho_w, rho_contents=density)
+        z -= section.length_m
+    return weight
 
 
 def _close(d: dict, stack: list[dict]) -> dict:
