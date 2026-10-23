@@ -17,6 +17,11 @@ Comprehensive mooring system design and analysis for offshore floating structure
 - **Turret Mooring** - Internal/external turret systems
 
 ### Catenary Analysis
+
+See the [vertical-span catenary worked example](../../../../docs/domains/mooring/vertical-span-catenary.md)
+for sourced geometry equations, independent hand calculations, and applicability
+limits of `CatenaryAnalyzer.solve_catenary`.
+
 - **Analytical catenary equations** - Suspended line geometry and tensions
 - **Horizontal/vertical stiffness** - Geometric and elastic stiffness calculation
 - **Touchdown point analysis** - Grounded length and tension distribution
