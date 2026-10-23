@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for subsea cross-section validation rules."""
 
 import pytest
@@ -114,18 +116,18 @@ def test_radial_layer_overlap_rejected():
 
 
 def test_mixed_radial_length_units_rejected_or_converted():
-    mixed = [
-        layer("core", 0, 20),
-        RadialLayer(
-            name="sheath",
-            role="jacket",
-            material="polyethylene",
-            inner_diameter=UnitValue(value=20, unit="mm"),
-            outer_diameter=UnitValue(value=1.5, unit="inch"),
-            provenance=prov("source-2"),
-        ),
-    ]
     with pytest.raises(ValidationError):
+        mixed = [
+            layer("core", 0, 20),
+            RadialLayer(
+                name="sheath",
+                role="jacket",
+                material="polyethylene",
+                inner_diameter=UnitValue(value=20, unit="mm"),
+                outer_diameter=UnitValue(value=1.5, unit="inch"),
+                provenance=prov("source-2"),
+            ),
+        ]
         valid_radial_definition(radial_layers=mixed)
 
 

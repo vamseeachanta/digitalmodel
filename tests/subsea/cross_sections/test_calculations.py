@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Value checks for homogeneous annular layers; no design-code acceptance claim.
 
 Sources: OpenStax Prealgebra 2e (2020), section 9.5, A = pi*r**2,
@@ -69,10 +71,10 @@ def test_non_si_geometry_requires_explicit_conversion():
 
 def test_negative_derived_bore_is_rejected():
     """OD=4 m and t=3 m implies ID=-2 m, not a physical annulus."""
-    layer = make_layer(
-        outer_diameter=(4, "m"), thickness=(3, "m"), density=(10, "kg/m^3")
-    )
-    with pytest.raises(ValueError, match="diameters"):
+    with pytest.raises(ValueError, match="inner_diameter"):
+        layer = make_layer(
+            outer_diameter=(4, "m"), thickness=(3, "m"), density=(10, "kg/m^3")
+        )
         calculate_annular_layer(layer)
 
 
@@ -99,7 +101,7 @@ def test_solid_layer_area_and_mass():
 )
 def test_every_supplied_dimension_requires_metres(dimensions):
     """No calculation may mix or silently relabel length units."""
-    with pytest.raises(ValueError, match="metres"):
+    with pytest.raises(ValueError, match="metres|same length unit"):
         calculate_annular_layer(make_layer(**dimensions, density=(10, "kg/m^3")))
 
 

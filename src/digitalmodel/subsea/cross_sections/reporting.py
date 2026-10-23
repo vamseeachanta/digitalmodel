@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Deterministic report model and renderers for subsea cross-section fixtures."""
 
 from __future__ import annotations
@@ -45,7 +47,7 @@ def fixture_paths() -> list[Path]:
 def build_report_model(paths: list[Path] | None = None) -> CrossSectionReport:
     """Load fixtures, validate them through the schema package, and build the report model."""
 
-    definitions = [load_cross_section_fixture(path) for path in (paths or fixture_paths())]
+    definitions = [load_cross_section_fixture(path) for path in (fixture_paths() if paths is None else paths)]
     definitions = sorted(definitions, key=lambda item: (_family_group(item.family), item.id))
     fixtures = tuple(
         ReportFixture(
@@ -276,6 +278,8 @@ def _overall_envelope(definition: CrossSectionDefinition) -> str:
         return _format_unit(outer) if outer else "not specified"
     diameters = [component.diameter for component in definition.packed_components if component.diameter]
     if diameters:
+        if len({value.unit for value in diameters}) > 1:
+            return "mixed component diameter units (bundle envelope not specified)"
         max_diameter = max(diameters, key=lambda value: value.value)
         return f"component max {_format_unit(max_diameter)} (bundle envelope not specified)"
     return "not specified"

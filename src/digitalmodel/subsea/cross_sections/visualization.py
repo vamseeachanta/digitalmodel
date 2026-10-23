@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Deterministic SVG renderers for subsea cross-section report fixtures."""
 
 from __future__ import annotations
@@ -5,7 +7,7 @@ from __future__ import annotations
 from html import escape
 import math
 
-from digitalmodel.subsea.cross_sections.schema import CrossSectionDefinition, PackedComponent, RadialLayer
+from digitalmodel.subsea.cross_sections.schema import CrossSectionDefinition, PackedComponent
 
 PALETTE = [
     "#4c78a8",
@@ -42,11 +44,17 @@ def _render_radial_svg(definition: CrossSectionDefinition) -> str:
     labels: list[str] = []
     for index, layer in reversed(list(enumerate(layers))):
         outer = layer.derived_outer_diameter
-        radius = max(2.0, (outer.value if outer else max_outer) * scale / 2)
+        radius = (outer.value if outer else max_outer) * scale / 2
         color = PALETTE[index % len(PALETTE)]
         circles.append(
             f'<circle cx="{center}" cy="{center}" r="{radius:.2f}" fill="{color}" '
             f'stroke="#243447" stroke-width="1"><title>{escape(layer.name)}</title></circle>'
+        )
+    inner = layers[0].derived_inner_diameter
+    if inner is not None and inner.value > 0:
+        circles.append(
+            f'<circle cx="{center}" cy="{center}" r="{inner.value * scale / 2:.2f}" '
+            'fill="white" stroke="#243447" stroke-width="1"><title>open bore</title></circle>'
         )
     for index, layer in enumerate(layers):
         y = 20 + index * 14

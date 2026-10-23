@@ -1,0 +1,12 @@
+{
+  "document": "cross-section-module-analysis",
+  "revision": 0,
+  "date": "2026-10-22",
+  "changes": [
+    "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
+    "Separate assumed example inputs from public material reference values.",
+    "Record fixture geometry and missing material data without assuming results.",
+    "Correct empty report selection and preserve the open bore in radial figures.",
+    "Avoid comparing packed-component diameter magnitudes in incompatible units."
+  ]
+}
