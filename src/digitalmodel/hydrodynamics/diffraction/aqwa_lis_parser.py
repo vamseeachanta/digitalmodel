@@ -20,6 +20,10 @@ import re
 import numpy as np
 from loguru import logger
 
+from digitalmodel.hydrodynamics.diffraction.grid_completeness import (
+    GridCompletenessError, deck_frequency_count, require_count, validate_parsed_grid,
+)
+
 
 class AQWALISParser:
     """
@@ -28,12 +32,17 @@ class AQWALISParser:
     Extracts hydrodynamic coefficients from AQWA diffraction analysis output.
     """
 
-    def __init__(self, lis_file_path: Path):
+    def __init__(self, lis_file_path: Path, *, deck_file_path=None,
+                 expected_frequency_count=None):
         """
         Initialize parser with .LIS file path.
 
         Args:
             lis_file_path: Path to AQWA .LIS file
+            deck_file_path: Explicit deck, or a unique matching sibling .dat.
+            expected_frequency_count: Independent positive count when available.
+                If neither source is available, parse_all marks the declaration
+                NOT_EVALUATED while still checking agreement between tables.
         """
         self.lis_file = Path(lis_file_path)
         if not self.lis_file.exists():
@@ -42,6 +51,30 @@ class AQWALISParser:
         # Read entire file content
         with open(self.lis_file, 'r', encoding='utf-8', errors='ignore') as f:
             self.content = f.read()
+
+        # Prefer an explicit deck; otherwise find a uniquely named sibling.
+        # A standalone listing has no independent declaration: expose that as
+        # NOT_EVALUATED metadata rather than inventing a frequency count.
+        if expected_frequency_count is not None and (
+                isinstance(expected_frequency_count, bool)
+                or not isinstance(expected_frequency_count, int)
+                or expected_frequency_count <= 0):
+            raise ValueError("expected_frequency_count must be a positive integer")
+        candidates = [p for p in self.lis_file.parent.iterdir()
+                      if p.stem.casefold() == self.lis_file.stem.casefold()
+                      and p.suffix.casefold() == ".dat"]
+        if deck_file_path is None and len(candidates) > 1:
+            raise GridCompletenessError("deck", "ambiguous_deck")
+        deck = Path(deck_file_path) if deck_file_path is not None else (
+            candidates[0] if candidates else None)
+        self.declared_frequency_count = expected_frequency_count
+        if deck is not None:
+            count = deck_frequency_count(deck.read_text(encoding="utf-8"))
+            require_count("deck", count, expected_frequency_count)
+            self.declared_frequency_count = count
+        elif expected_frequency_count is None and any(
+                line[6:10] == "HRTZ" for line in self.content.splitlines()):
+            self.declared_frequency_count = deck_frequency_count(self.content)
 
         logger.info(f"Loaded AQWA .LIS file: {self.lis_file.name} ({len(self.content)} characters)")
 
@@ -68,59 +101,9 @@ class AQWALISParser:
         Returns:
             Tuple of (frequencies in rad/s, periods in seconds)
         """
-        # Find the added mass table section
-        section_marker = "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
-
-        if pos is None:
-            raise ValueError("Could not find added mass frequency table")
-
-        # Walk the table row by row rather than reading a fixed-size window.
-        # A window sized for a typical grid truncates a longer one, and reports
-        # the result as a short grid rather than as a failure.
-        # AQWA format: " 22.00   0.286  2.33E+06  2.93E+07..." — period,
-        # frequency, then twelve values in scientific notation. Requiring six of
-        # those is what distinguishes a data row from a header.
-        pattern = r'^\s*([\d.]+)\s+([\d.]+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)'
-        row = re.compile(pattern)
-
-        periods = []
-        frequencies = []
-        seen_any = False
-        blanks_since_last_row = 0
-
-        for line in self.content[pos:].splitlines():
-            match = row.match(line)
-            if match is None:
-                if seen_any:
-                    blanks_since_last_row += 1
-                    # A handful of non-matching lines inside a table is normal
-                    # (blank separators, repeated headers). A long run of them
-                    # means the table has ended.
-                    if blanks_since_last_row > 12:
-                        break
-                continue
-            blanks_since_last_row = 0
-            seen_any = True
-
-            period = float(match.group(1))
-            freq = float(match.group(2))
-
-            # Keep a sanity filter, but one wide enough not to discard physical
-            # values. The previous bounds excluded exactly 0.100 rad/s, a common
-            # choice for the lowest frequency, and any period beyond 100 s.
-            if not (0.0 < freq <= 100.0 and 0.0 < period <= 100000.0):
-                continue
-            if freq not in frequencies:
-                periods.append(period)
-                frequencies.append(freq)
-
-        if not frequencies:
-            raise ValueError("No valid frequency data found in added mass table")
-
-        logger.info(f"Extracted {len(frequencies)} frequencies from {frequencies[0]:.3f} to {frequencies[-1]:.3f} rad/s")
-
-        return frequencies, periods
+        rows = self._coefficient_rows(
+            "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY")
+        return [row[1] for row in rows], [row[0] for row in rows]
 
     def extract_headings(self) -> List[float]:
         """
@@ -129,67 +112,70 @@ class AQWALISParser:
         Returns:
             List of headings in degrees
         """
-        # Find RAO section
-        section_marker = "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
+        return sorted({heading for _, heading in self.parse_rao_table()})
 
+    _TABLE_HEADER = re.compile(
+        r"^.*-VARIATION WITH WAVE PERIOD/FREQUENCY[^\n]*$", re.MULTILINE)
+    _TABLE_END_MARKERS = ("S T A B I L I T Y", "M O O R I N G")
+
+    def _table_span(self, marker: str, pos=None) -> str:
+        """Read through repeated page headers to the next different table.
+
+        EOF is not a terminator: a listing cut off during writing must refuse.
+        Header grammar follows the existing AQWA listing reader; no byte or
+        line-count limit determines the extent.
+        """
         if pos is None:
-            raise ValueError("Could not find RAO section")
-
-        # Extract RAO table
-        table_text = self.content[pos:pos + 10000]
-
-        # Find all direction values
-        # Format: "  62.83   0.100   -180.00    1.5204  -90.03..."
-        pattern = r'\s+[\d.]+\s+[\d.]+\s+([-\d.]+)\s+[\d.]+\s+'
-
-        headings = []
-
-        for match in re.finditer(pattern, table_text):
-            heading = float(match.group(1))
-
-            # Only add unique headings
-            if heading not in headings and -180 <= heading <= 180:
-                headings.append(heading)
-
-        # Sort headings
-        headings.sort()
-
-        if not headings:
-            raise ValueError("No valid heading data found in RAO table")
-
-        logger.info(f"Extracted {len(headings)} headings from {headings[0]:.1f}° to {headings[-1]:.1f}°")
-
-        return headings
-
-    #: A coefficient table ends where the next one begins. Bounding it that way
-    #: is structural; the previous 2,000-character window held about twelve
-    #: rows and silently dropped the rest, so a 43-frequency run returned ten
-    #: matrices and the converter padded the difference with zeros.
-    _TABLE_END_MARKERS = (
-        "-VARIATION WITH WAVE PERIOD/FREQUENCY",
-        "H Y D R O D Y N A M I C",
-        "S T A B I L I T Y",
-        "M O O R I N G",
-    )
-
-    def _table_span(self, marker: str) -> str:
-        """The listing text from one table's header to the next boundary."""
-        pos = self.find_section(marker)
+            pos = self.find_section(marker)
         if pos is None:
-            return ""
-        rest = self.content[pos:]
-        # Skip this table's own header before looking for the next boundary.
-        head = rest.find("\n")
-        if head < 0:
-            return rest
-        tail = rest[head:]
-        cut = len(tail)
-        for end in self._TABLE_END_MARKERS:
-            found = tail.find(end)
-            if 0 <= found < cut:
-                cut = found
-        return rest[:head + cut]
+            raise ValueError(f"Could not find table: {marker}")
+        head = self.content.find("\n", pos)
+        cuts = []
+        if head >= 0:
+            for match in self._TABLE_HEADER.finditer(self.content, head + 1):
+                title = match.group().strip().removeprefix("1").strip()
+                if title != marker:
+                    cuts.append(match.start())
+                    break
+            for end in self._TABLE_END_MARKERS:
+                found = self.content.find(end, head + 1)
+                if found >= 0:
+                    cuts.append(found)
+        if not cuts:
+            raise GridCompletenessError(marker, "missing_terminator")
+        return self.content[pos:min(cuts)]
+
+    def _coefficient_rows(self, marker):
+        """Parse complete rows once for both the grid and coefficient readers."""
+        rows = []
+        seen = set()
+        for line in self._table_span(marker).splitlines():
+            tokens = line.split()
+            # A data row starts with two numbers. Headers and page numbers do
+            # not; malformed numeric rows must not silently disappear.
+            try:
+                period, frequency = map(float, tokens[:2])
+            except ValueError:
+                continue
+            # Established listing grammar: period + frequency + twelve
+            # selected coefficients (the existing matrix mapping below).
+            if len(tokens) != 14:
+                raise GridCompletenessError(marker, "malformed_row")
+            try:
+                values = [float(v.replace("D", "E").replace("d", "e"))
+                          for v in tokens]
+            except ValueError as exc:
+                raise GridCompletenessError(marker, "malformed_row") from exc
+            if not np.all(np.isfinite(values)) or period <= 0 or frequency <= 0:
+                raise GridCompletenessError(marker, "invalid_row")
+            if frequency in seen:
+                raise GridCompletenessError(marker, "duplicate_frequency")
+            seen.add(frequency)
+            rows.append(values)
+        if not rows:
+            raise ValueError(f"No valid coefficient data found: {marker}")
+        require_count(marker, len(rows), getattr(self, "declared_frequency_count", None))
+        return rows
 
     def parse_added_mass_table(self) -> Dict[float, np.ndarray]:
         """
@@ -198,32 +184,11 @@ class AQWALISParser:
         Returns:
             Dictionary mapping frequency (rad/s) to 6x6 added mass matrix
         """
-        # Find the added mass table
-        section_marker = "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
-
-        if pos is None:
-            raise ValueError("Could not find added mass table")
-
-        table_text = self._table_span(section_marker)
-
-        # Pattern for data rows: period, freq, then 12 matrix values in scientific notation
-        # Format: " 62.83   0.100  1.95E+06  2.60E+07  1.80E+08..."
-        # Must contain 'E' to distinguish from divider lines
-        pattern = r'^\s+([\d.]+)\s+([\d.]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)'
-
         added_mass_dict = {}
-
-        for match in re.finditer(pattern, table_text, re.MULTILINE):
-            # Check if line contains scientific notation (E format)
-            line = match.group(0)
-            if 'E' not in line.upper():
-                continue
-
-            freq = float(match.group(2))
-
-            # Extract 12 coefficients: M11, M22, M33, M44, M55, M66, M13, M15, M24, M26, M35, M46
-            coeffs = [float(match.group(i)) for i in range(3, 15)]
+        marker = "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY"
+        for row in self._coefficient_rows(marker):
+            freq = row[1]
+            coeffs = row[2:]
 
             # Build 6x6 symmetric matrix
             matrix = np.zeros((6, 6))
@@ -260,30 +225,11 @@ class AQWALISParser:
         Returns:
             Dictionary mapping frequency (rad/s) to 6x6 damping matrix
         """
-        # Find the damping table
-        section_marker = "DAMPING-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
-
-        if pos is None:
-            raise ValueError("Could not find damping table")
-
-        table_text = self._table_span(section_marker)
-
-        # Same pattern as added mass - must contain scientific notation
-        pattern = r'^\s+([\d.]+)\s+([\d.]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)'
-
         damping_dict = {}
-
-        for match in re.finditer(pattern, table_text, re.MULTILINE):
-            # Check if line contains scientific notation (E format)
-            line = match.group(0)
-            if 'E' not in line.upper():
-                continue
-
-            freq = float(match.group(2))
-
-            # Extract 12 coefficients: C11, C22, C33, C44, C55, C66, C13, C15, C24, C26, C35, C46
-            coeffs = [float(match.group(i)) for i in range(3, 15)]
+        marker = "DAMPING-VARIATION WITH WAVE PERIOD/FREQUENCY"
+        for row in self._coefficient_rows(marker):
+            freq = row[1]
+            coeffs = row[2:]
 
             # Build 6x6 symmetric matrix
             matrix = np.zeros((6, 6))
@@ -339,14 +285,11 @@ class AQWALISParser:
             if pos == -1:
                 break
 
-            # Check character before marker (should be whitespace, not "VEL " or "ACC ")
-            if pos > 0:
-                before_text = self.content[max(0, pos-20):pos]  # Check more context
-                # Skip if preceded by "VEL" or "ACC"
-                if "VEL" in before_text or "ACC" in before_text:
-                    logger.debug(f"Skipping non-displacement RAO section (before_text: '{before_text[-10:]}')")
-                    search_pos = pos + len(section_marker)
-                    continue
+            line_start = self.content.rfind("\n", 0, pos) + 1
+            prefix = self.content[line_start:pos].strip().removeprefix("1").strip()
+            if prefix:
+                search_pos = pos + len(section_marker)
+                continue
 
             positions.append(pos)
             search_pos = pos + len(section_marker)
@@ -360,21 +303,8 @@ class AQWALISParser:
         # For each displacement RAO section, read until the next major section marker
         # (which could be VEL, ACC, or another displacement section)
         all_table_text = []
-        for i, pos in enumerate(positions):
-            # Find the next section marker (any type: displacement, VEL, or ACC)
-            next_marker = self.content.find("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY", pos + len(section_marker))
-
-            if next_marker != -1:
-                # Read until next RAO section (any type)
-                end_pos = next_marker
-            else:
-                # Last section - but still limit reading to avoid garbage
-                # Look for major section break (multiple newlines)
-                next_break = self.content.find("\n\n\n", pos + 1000)
-                end_pos = next_break if next_break != -1 else pos + 50000  # Max 50k chars
-
-            section_text = self.content[pos:end_pos]
-            all_table_text.append(section_text)
+        for pos in positions:
+            all_table_text.append(self._table_span(section_marker, pos))
 
         # Combine all sections
         table_text = "\n".join(all_table_text)
@@ -528,6 +458,9 @@ class AQWALISParser:
             headings = sorted(set(h for f, h in raos.keys()))
 
             result = {
+                'declared_frequency_count': self.declared_frequency_count,
+                'declaration_status': ('CHECKED' if self.declared_frequency_count is not None
+                                       else 'NOT_EVALUATED'),
                 'frequencies': frequencies,
                 'periods': periods,
                 'headings': headings,
@@ -536,7 +469,9 @@ class AQWALISParser:
                 'raos': raos
             }
 
-            logger.success(f"Successfully parsed AQWA .LIS file")
+            validate_parsed_grid(result)
+
+            logger.success("Successfully parsed AQWA .LIS file")
             logger.info(f"  - {len(frequencies)} frequencies")
             logger.info(f"  - {len(headings)} headings: {headings}")
             logger.info(f"  - {len(added_mass)} added mass matrices")
@@ -552,7 +487,7 @@ class AQWALISParser:
 
 # Standalone functions for convenience
 
-def parse_aqwa_lis_file(lis_file_path: Path) -> Dict:
+def parse_aqwa_lis_file(lis_file_path: Path, **kwargs) -> Dict:
     """
     Parse AQWA .LIS file and extract all hydrodynamic data.
 
@@ -562,7 +497,7 @@ def parse_aqwa_lis_file(lis_file_path: Path) -> Dict:
     Returns:
         Dictionary containing frequencies, headings, added_mass, damping, and RAOs
     """
-    parser = AQWALISParser(lis_file_path)
+    parser = AQWALISParser(lis_file_path, **kwargs)
     return parser.parse_all()
 
 

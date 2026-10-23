@@ -581,3 +581,11 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the separate synthetic diffraction listing completeness section.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/diff/
+docs/reports/modules/diff/*
+!docs/reports/modules/diff/lis-grid/
+!docs/reports/modules/diff/lis-grid/**

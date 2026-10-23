@@ -56,7 +56,7 @@ def _synthetic(tmp_path, rows: int):
         table("ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY", 1.0e5),
         "",
         table("DAMPING-VARIATION WITH WAVE PERIOD/FREQUENCY", 1.0e3),
-        "",
+        "S T A B I L I T Y",
     ])
     p = tmp_path / "synthetic.LIS"
     p.write_text(text, encoding="ascii")
