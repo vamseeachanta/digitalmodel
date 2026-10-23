@@ -831,6 +831,10 @@ def engine(
         from digitalmodel.asset_integrity.pipeline_defect_screen import router
 
         cfg_base = router(cfg_base)
+    elif basename == "flexible_pipe_integrity_screen":
+        from digitalmodel.asset_integrity.flexible_pipe_workflow import router
+
+        cfg_base = router(cfg_base)
     elif basename == "riser_joint_ffs":
         # #1292: drilling-riser joint FFS — Level-1 envelopes, placement, rollup.
         from digitalmodel.asset_integrity.riser_joint_ffs import (

@@ -1,0 +1,9 @@
+# Production defaults intentionally contain no assumed observations or limits.
+basename: flexible_pipe_integrity_screen
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+flexible_pipe_assessment:
+  evidence: {}

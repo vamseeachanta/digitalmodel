@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unbonded flexible pipe integrity screen</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:70rem;margin:2rem auto;padding:0 1rem;line-height:1.55;color:#172b38}
+h1,h2{color:#12445b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdcdd5;padding:.5rem;text-align:left}
+pre{background:#eff4f6;padding:1rem;overflow:auto}caption{caption-side:bottom;text-align:left;margin:.5rem 0 1rem}
+</style>
+</head>
+<body>
+<h1>Unbonded flexible pipe integrity screen</h1>
+<h2>Summary</h2>
+<p>The <code>flexible-pipe-integrity-screen</code> workflow records inspection evidence,
+groups it into five failure modes and returns <code>ESCALATE</code> pending qualified
+pipe-specific assessment. Remaining capacity and fatigue life are
+<code>NOT_EVALUATED</code>. Wire counts provide inventory statistics only.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Initial issue</td><td>2026-10-20</td><td>Evidence intake, count arithmetic and report routing are introduced to expose unqualified capacity and life checks.</td></tr>
+<caption>Revision history of this workflow guide.</caption></table>
+<h2>Method and sources</h2>
+<p>The <a href="https://www.hse.gov.uk/pipelines/resources/flexiblepipe.htm">HSE inspection guidance (2008), Recommendations</a>
+calls for failure-mode-based inspection and monitoring. Its Good practice guidance section
+lists API RP 17B, third edition (2002), <em>Recommended Practice for Flexible Pipe</em>.
+This workflow does not reproduce API acceptance limits or claim API compliance.</p>
+<p>The public regulator report
+<a href="https://www.havtil.no/contentassets/c2a5bd00e8214411ad5c4966009d6ade/un-bonded-flexible-risers--recent-field-experience-and-actions--for-increased-robustness.pdf">Un-bonded Flexible Risers – Recent Field Experience and Actions for Increased Robustness (2013), revision 5</a>
+provides the evidence grouping below. Section 5.5 requires damage and consequence assessment;
+section 5.4.1 identifies environment-specific fatigue data needs. These observations do not
+establish a generic count-to-capacity or flooded-life equation.</p>
+<table>
+<tr><th>Failure-mode group</th><th>Inputs recorded</th><th>Report sections</th></tr>
+<tr><td>Outer sheath damage / annulus flooding</td><td>Breach location, annulus test, vent condition</td><td>4.4, 5.6, 5.7</td></tr>
+<tr><td>Tensile armour corrosion / rupture</td><td>Total and broken wires, annulus condition</td><td>4.4, 4.6, 5.5</td></tr>
+<tr><td>End-fitting fatigue</td><td>Age in years, load-history availability</td><td>5.4.1</td></tr>
+<tr><td>Carcass collapse</td><td>Collapse indication</td><td>4.3, 4.6</td></tr>
+<tr><td>Pressure-sheath creep / rupture</td><td>Damage indication</td><td>4.3, 4.6, 5.4.1</td></tr>
+<caption>Grouped evidence taxonomy; locators refer to the public report, not API clauses.</caption>
+</table>
+<p>For every group, assessment status is <code>NOT_EVALUATED</code> and action is
+<code>ESCALATE</code>. This action is software evidence-gap policy. No automatic
+MONITOR, REPAIR or REPLACE criterion has been qualified.</p>
+<h2>Input contract</h2>
+<p>Evidence is supplied under <code>flexible_pipe_assessment.evidence</code>.
+Unknown keys, nonfinite numbers, boolean counts, negative counts and inconsistent
+counts are rejected. Counts are integers. Missing observations remain unknown;
+zero breaks and absence of indications do not establish fitness for service.</p>
+<ul>
+<li><code>outer_sheath_breach_location</code>: unknown, none, above_waterline or submerged.</li>
+<li><code>annulus_test</code>: unknown, dry, flooded, leak_indicated or inconclusive.</li>
+<li><code>vent_status</code>: unknown, clear or blocked.</li>
+<li><code>total_armour_wires</code> and <code>broken_armour_wires</code>: counts for the same assessed population and location.</li>
+<li><code>end_fitting_age_years</code>: nonnegative years; <code>load_history_available</code>: boolean or null.</li>
+<li><code>carcass_collapse_indicated</code> and <code>pressure_sheath_damage_indicated</code>: boolean or null.</li>
+<li><code>allowable_broken_fraction</code>: optional count criterion paired with <code>allowable_fraction_reference</code> (document and locator). It has no API default.</li>
+<li><code>design_fatigue_life_years</code>: positive years; optional <code>flooded_life_factor</code> paired with <code>flooded_factor_reference</code>. The factor is recorded but not applied.</li>
+</ul>
+<p>Fraction bounds are mathematical definitions: a count fraction lies in [0, 1],
+and a supplied life reduction multiplier lies in (0, 1]. These bounds are not
+engineering acceptance limits. Citation strings record the supplied basis; their
+accuracy and applicability are not automatically verified.</p>
+<h2>Worked example: inputs, method and answer</h2>
+<p>The following invented counts illustrate inventory arithmetic and are not measured
+engineering data. For total count N = 40 and broken count b = 2, the intact count
+is N − b = 38 and the broken fraction is b / N = 0.05 (5.0 %). These identities
+have no load-sharing assumption. No remaining-capacity fraction is calculated.</p>
+<pre id="worked-example"><code>from digitalmodel.workflow_api import run_workflow
+
+response = run_workflow("flexible-pipe-integrity-screen", params={
+    "flexible_pipe_assessment": {
+        "component_id": "FLEXIBLE-PIPE",
+        "evidence": {
+            "outer_sheath_breach_location": "above_waterline",
+            "annulus_test": "flooded",
+            "vent_status": "blocked",
+            "total_armour_wires": 40,
+            "broken_armour_wires": 2,
+        },
+    },
+})
+assert response.status == "ok", response.warnings
+answer = response.result["value"]
+assert answer["wire_inventory"]["intact_wire_count"] == 38
+assert answer["wire_inventory"]["broken_fraction"] == 0.05
+assert answer["decision"]["verdict"] == "ESCALATE"
+assert answer["remaining_capacity"] is None
+assert answer["remaining_fatigue_life_years"] is None
+</code></pre>
+<p>The response status <code>ok</code> means execution succeeded. The engineering action
+remains <code>ESCALATE</code>. The report is returned as <code>report_html</code> through
+<code>FFSReport.generate_screening_html</code>. An optional
+<code>flexible_pipe_assessment.output_dir</code> requests report persistence; a relative
+folder is resolved against the configuration root. Without it, the router writes no report.</p>
+<h2>Validation and remaining scope</h2>
+<p>Figure 3-7 of the public report records submerged sheath damage and a vacuum test
+indicating leakage. The test suite reproduces that evidence combination only;
+no published numerical capacity or life benchmark is established. A leak indication
+alone is not mapped to flooding, rupture capacity or repair/replacement criteria.</p>
+<p>Further qualification requires representative corrosion sizing, per-layer geometry,
+loads, load sharing and stress concentration, environment-specific fatigue data,
+accumulated damage and documented disposition criteria. A supplied count limit or
+life factor alone does not close these gaps. The offering catalogue remains planned.
+External service routing is deferred; the registered offline workflow is available.</p>
+</body>
+</html>
