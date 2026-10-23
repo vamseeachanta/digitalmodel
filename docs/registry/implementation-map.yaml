@@ -1,6 +1,16 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+agent_packs:
+  residual:
+    agent_pack: src/digitalmodel/residual/docs/agent-pack.md
+    qa_family: EC
+  seismic:
+    agent_pack: src/digitalmodel/seismic/docs/agent-pack.md
+    qa_family: EC
+  uncertainty:
+    agent_pack: src/digitalmodel/uncertainty/docs/agent-pack.md
+    qa_family: EC
 searched:
   tracked_files: 17815
   text_files_searched: 15629

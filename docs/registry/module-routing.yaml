@@ -375,12 +375,20 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
   - module: residual
     entry_point: src/digitalmodel/residual/
+    submodules:
+      residual:
+        agent_pack: src/digitalmodel/residual/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/residual/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#residual
   - module: seismic
     entry_point: src/digitalmodel/seismic/
+    submodules:
+      seismic:
+        agent_pack: src/digitalmodel/seismic/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/seismic/]
@@ -797,6 +805,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#tug
   - module: uncertainty
     entry_point: src/digitalmodel/uncertainty/
+    submodules:
+      uncertainty:
+        agent_pack: src/digitalmodel/uncertainty/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/uncertainty/]
