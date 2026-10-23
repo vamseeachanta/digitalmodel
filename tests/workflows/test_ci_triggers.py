@@ -4,11 +4,13 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import importlib.util
 import os
 import re
 import subprocess
 import shutil
 import shlex
+import sys
 from typing import Any
 
 import pytest
@@ -141,6 +143,61 @@ def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
 def test_required_check_names(filename: str, job_id: str, name: str) -> None:
     """Keep the check names consumed by branch protection stable."""
     assert load_workflow(filename)["jobs"][job_id]["name"] == name
+
+
+@pytest.mark.parametrize("path,full_matrix", (
+    ("docs/development/module-families.md", False),
+    ("src/digitalmodel/new_module.py", True),
+))
+def test_docs_and_code_keep_required_checks(path, full_matrix, monkeypatch):
+    """Dry-run real routing while retaining the harness and required aggregate."""
+    root = WORKFLOWS.parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "family_fixup_detector", root / "scripts/ci/detect_touched_domains.py"
+    )
+    detector = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, detector)
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains([path], domains)
+    assert selected == (domains if full_matrix else [])
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    for job_id in ("detect-domains", "ci-harness-tests"):
+        assert "if" not in workflow["jobs"][job_id]
+    aggregate = workflow["jobs"]["domain-tests-required"]
+    assert aggregate["if"] == "always()"
+    assert set(aggregate["needs"]) == {"detect-domains", "ci-harness-tests", "domain-tests"}
+    harness = "\n".join(step.get("run", "") for step in
+                        workflow["jobs"]["ci-harness-tests"]["steps"])
+    assert "tests/workflows/test_ci_triggers.py" in harness
+    # Snapshot freshness remains an advisory command, outside required checks.
+    assert "generate_module_families.py --check" not in (
+        WORKFLOWS / "quality-gates-by-domain.yml"
+    ).read_text()
+
+
+@pytest.mark.parametrize("has_domains,detect,harness,domain,expected", (
+    ("false", "success", "success", "skipped", 0),
+    ("false", "success", "failure", "skipped", 1),
+    ("false", "failure", "success", "skipped", 1),
+    ("true", "success", "success", "success", 0),
+    ("true", "success", "failure", "success", 1),
+    ("true", "success", "success", "failure", 1),
+    ("true", "success", "success", "skipped", 1),
+))
+def test_required_aggregate_executes_real_fail_closed_script(
+    tmp_path, has_domains, detect, harness, domain, expected,
+):
+    """Docs still require harness success; selected code shards cannot be skipped."""
+    job = load_workflow("quality-gates-by-domain.yml")["jobs"]["domain-tests-required"]
+    step = next(step for step in job["steps"]
+                if step.get("name") == "Enforce required domain result")
+    env = dict(os.environ, HAS_DOMAINS=has_domains, DETECT_RESULT=detect,
+               HARNESS_RESULT=harness, DOMAIN_RESULT=domain,
+               GITHUB_EVENT_NAME="push", CI_BASELINE_MODE="report")
+    result = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
+                            env=env, capture_output=True, text=True, timeout=10)
+    assert result.returncode == expected, (result.stdout, result.stderr)
 
 
 def test_meshing_path_filters_are_preserved() -> None:
