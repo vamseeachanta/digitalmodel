@@ -1,0 +1,12 @@
+{
+  "report": "Riser fatigue module analysis",
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "Report reproducibility and interpretation",
+      "change": "Portable UTF-8/LF output, normalized source digests, stable location labels, explicit criteria and exact input precision are presented.",
+      "reason": "Rebuilds and screening conclusions require consistent numeric and input evidence."
+    }
+  ]
+}
