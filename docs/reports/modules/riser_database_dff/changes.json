@@ -1,0 +1,10 @@
+{
+  "document": "Riser fatigue factor analysis",
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    "Require an explicit safety class and supplied class factor.",
+    "Compare synthetic damage with the supplied factor using production arithmetic.",
+    "Separate arithmetic results from unevaluated standards adequacy."
+  ]
+}

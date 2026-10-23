@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Suite 4 (#1245): material_sn_scf_dff references reconcile with the REAL
 riser S-N consumer — ``fatigue/sn_curves.get_sn_curve`` (plain detail-category
 letters + environment strings), used by riser_fatigue workflow.py/touchdown.py.
@@ -38,12 +40,12 @@ def test_every_getter_reference_names_a_real_getter():
             assert callable(getattr(getters, ref, None)), (row.ref_id, ref)
 
 
-def test_getter_values_match_live_riser_literals():
-    # Parity anchors: riser_fatigue/touchdown.py defaults dff=10.0, scf=1.0
-    # (and workflow.py wave scf default 1.0). #1246 wires calcs to these
-    # getters; identical values = day-one parity.
+def test_getter_values_retain_explicit_dff_and_neutral_scf():
+    """Synthetic DFF 8 is a caller input; SCF 1 is the neutral multiplier."""
     root = _fixture_repo_root()
-    assert getters.get_riser_dff(repo_root=root).value == 10.0
+    assert getters.get_riser_dff(
+        safety_class="high", class_dff=8.0, repo_root=root
+    ).value == 8.0
     assert getters.get_riser_scf(repo_root=root).value == 1.0
 
 

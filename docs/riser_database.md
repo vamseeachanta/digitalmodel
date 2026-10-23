@@ -49,23 +49,34 @@ from digitalmodel.riser_database import (
     get_tension_weight_factor, get_buoyancy_tension_factor, riser_citations,
 )
 
-get_riser_dff().value                  # 10.0 — DNV-OS-F201 (allowable damage = 1/DFF)
+# Synthetic caller factor for illustration; no standards class table is qualified.
+get_riser_dff(safety_class="normal", class_dff=4.0).value  # supplied factor
 get_riser_scf().value                  # 1.0  — DNV-RP-C203 methodology (neutral default)
 get_tension_weight_factor().value      # 1.05 — API RP 16Q (1st Ed. 1993) §3.3, f_wt
 get_buoyancy_tension_factor().value    # 0.96 — API RP 16Q (1st Ed. 1993) §3.3, f_bt
-get_riser_dff(override=3.0)            # user override wins; note records both values
-riser_citations()                      # {dff, scf, f_wt, f_bt}; {} + RuntimeWarning standalone
+get_riser_dff(safety_class="normal", class_dff=4.0, override=5.0)
+# The note retains the class, supplied class value and override.
+riser_citations(safety_class="normal", class_dff=4.0)
+# Five keys: dff, scf, f_wt, f_bt, von_mises_df; standalone warning unchanged.
 ```
 
 Direct getter calls are **fail-closed** (`CitationResolutionError` carrying the
 `code_id`); only the consumer helper degrades in standalone/`pip install` mode
-(one-shot `RuntimeWarning`) — same contract as the mooring pilot. Values match
-the riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`; `stackup.py`
-`F_WT_DEFAULT=1.05`, `F_BT_DEFAULT=0.96`) so the #1246 wiring has day-one
-parity. `riser_fatigue/workflow.py` resolves DFF through `resolve_dff()`:
-an explicit `dff` in settings wins; an absent `dff` resolves the cited
-DNV-OS-F201 default in-context and **raises** standalone (never a silent
-default on a pass/fail input).
+(one-shot `RuntimeWarning`) — same contract as the mooring pilot. DFF values retain
+the explicit caller criteria. The DNV-OS-F201 (2010) fixture contains
+metadata only: safety-class table values and the table locator remain
+`NOT_EVALUATED`. `get_riser_dff` requires `safety_class` (`low`, `normal`,
+`high`) and a finite positive `class_dff`; it does not label the supplied
+factor as a confirmed standard value. An override retains both inputs in the
+citation note. Missing or unknown classes and missing factors raise `ValueError`.
+
+`riser_fatigue/workflow.py::resolve_dff` preserves explicit `dff` input
+precedence. An absent `dff` now requires `safety_class` and `class_dff`, then
+validates citation metadata; missing wiki metadata raises rather than selecting
+a default. The low-level touchdown input retains its historical explicit-field
+default; it does not resolve a safety class. The separate
+[worked example](reports/modules/riser_database_dff/fatigue-factor-analysis.html)
+compares supplied damage with a supplied factor; standards adequacy is not evaluated.
 
 Getter provenance discipline: a getter only cites a standard the code actually
 sources the value from. #1246 adds the two API RP 16Q **1st Ed. 1993**

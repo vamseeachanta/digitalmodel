@@ -4,7 +4,7 @@
 |---|---|
 | Module / repository | `riser_database` / `digitalmodel` |
 | Package | `src/digitalmodel/riser_database` |
-| Pack revision | 2, 2026-10-19 |
+| Pack revision | 3, 2026-10-22 |
 | Code revision | `1dba289c5dc1bc8dc82d72e4bfe02f8dcfc22c23` |
 | Analysis family | Reference-data calculations supporting OrcaFlex riser and mooring; routing family `EC` |
 | Quality role | Engineering calculations quality manager; independent provider required |
@@ -29,6 +29,7 @@ No geometry applicability envelope, water-depth applicability envelope, solver v
 |---|---|---|
 | 1 | 2026-10-17 | Initial package inventory and gate evidence. |
 | 2 | 2026-10-19 | Route schema checks through loaded rows and replace G1 suite totals with asserted package output, addressing part of #2742. |
+| 3 | 2026-10-22 | Require explicit safety-class factors, add executable evidence checks and separate public outcomes from unrecorded private evidence. |
 
 The code pin above applies to the original inventory and line citations. Revision 2 names current test nodes explicitly; its inventory expectations use the public manifest at `6476218e`. Historical suite totals in section 10 do not qualify the revised G1 check or establish private-source reproducibility.
 
@@ -43,7 +44,7 @@ The code pin above applies to the original inventory and line citations. Revisio
 | Configuration numeric cells | `water_depth_m` in m; `od_mm`, `wt_mm` in mm | Empty cell becomes `None`; no positivity or finiteness constraint | [src/digitalmodel/riser_database/loader.py:L49-L70] [src/digitalmodel/riser_database/loader.py:L200-L209] |
 | Stack-up identifiers and envelope | `rsu_id`, topology, operation, coarse depth band; `riser_od_in` in inches | No guessed depth; rig reference may be empty; typed numeric cell may be `None` | [src/digitalmodel/riser_database/loader.py:L97-L111] [tests/riser_database/test_stackup_rig.py:L143-L155] |
 | Rig capability cells | counts; capacity in kips; strokes, moonpool and floor dimensions in ft; moment in kN·m; angle in degrees | Empty cell becomes `None`; rated moment/angle documented as initially empty | [src/digitalmodel/riser_database/loader.py:L114-L141] [src/digitalmodel/riser_database/loader.py:L144-L159] |
-| Getter `override`, `repo_root` | scalar in getter output units; optional wiki root | `override=None` selects named code constant; supplied override is converted by `float`, still citation-validated | [src/digitalmodel/riser_database/getters.py:L122-L141] [src/digitalmodel/riser_database/getters.py:L246-L276] |
+| Getter `override`, `repo_root` | scalar in getter output units; optional wiki root | DFF requires `safety_class` and `class_dff`; override retains both input values; other getters retain named constants | [src/digitalmodel/riser_database/getters.py:L122-L141] [src/digitalmodel/riser_database/getters.py:L246-L276] |
 | Flex-joint `kind` | categorical | `mean` or `max`; default `max`; other strings raise `ValueError` | [src/digitalmodel/riser_database/getters.py:L246-L276] |
 | Envelope `mode` and wiki criteria | category key; UTF-8 page with fenced YAML | Required mode and three value fields; no numeric-domain validation after conversion | [src/digitalmodel/riser_database/getters.py:L294-L359] |
 
@@ -57,7 +58,7 @@ The code pin above applies to the original inventory and line citations. Revisio
 | DFF, SCF, weight, buoyancy and equivalent-stress design factors | dimensionless | `CitedValue(value, citation, units)` | [src/digitalmodel/riser_database/getters.py:L122-L243] |
 | Flex-joint limits | degrees | One `CitedValue` per selected kind | [src/digitalmodel/riser_database/getters.py:L246-L276] |
 | Envelope criteria | dimensionless design factor; angles in degrees | Frozen object with criteria set, category and three cited quantities | [src/digitalmodel/riser_database/getters.py:L113-L119] [src/digitalmodel/riser_database/getters.py:L344-L359] |
-| `riser_citations()` | keyed cited values | Five keys on success; empty mapping on any caught resolution failure, with first warning only | [src/digitalmodel/riser_database/getters.py:L377-L395] |
+| `riser_citations(safety_class=..., class_dff=...)` | keyed cited values | Five keys on success; empty mapping on any caught resolution failure, with first warning only | [src/digitalmodel/riser_database/getters.py:L377-L395] |
 
 Vector axes and RAO phase are NOT_APPLICABLE to the scalar and identifier outputs; no vector, motion or complex response is returned. [src/digitalmodel/riser_database/loader.py:L60-L141] [src/digitalmodel/riser_database/getters.py:L113-L119]
 
@@ -71,7 +72,7 @@ The table generator, outside the package, extracts geometry from the unified exa
 
 | Method / reference named in source | Edition and locator as implemented | Implementation and citation sidecar |
 |---|---|---|
-| Riser design fatigue factor; allowable damage described as reciprocal DFF | DNV-OS-F201, Dynamic Risers, 2010, design fatigue factors | `get_riser_dff`, `CitedValue.citation`; clause text not checked against the licensed copy. [src/digitalmodel/riser_database/getters.py:L45-L50] [src/digitalmodel/riser_database/getters.py:L122-L141] |
+| Riser design fatigue factor; allowable damage described as reciprocal DFF | DNV-OS-F201, Dynamic Risers, 2010, design fatigue factors | `get_riser_dff`, `CitedValue.citation`; class table and locator NOT_EVALUATED; required caller input, never a confirmed code value. [src/digitalmodel/riser_database/getters.py:L45-L50] [src/digitalmodel/riser_database/getters.py:L122-L141] |
 | Stress concentration methodology; neutral default is a code convention | DNV-RP-C203, Fatigue Design of Offshore Steel Structures, 2021, stress concentration factors | `get_riser_scf`; clause text not checked against the licensed copy. [src/digitalmodel/riser_database/getters.py:L52-L59] [src/digitalmodel/riser_database/getters.py:L144-L169] [tests/citations/fixtures/knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-c203.md:L1-L18] |
 | Weight and buoyancy tension factors | API RP 16Q, Drilling Riser Systems (fixture title), first edition 1993, tension factors | `get_tension_weight_factor`, `get_buoyancy_tension_factor`; clause text not checked against the licensed copy. [src/digitalmodel/riser_database/getters.py:L61-L69] [src/digitalmodel/riser_database/getters.py:L172-L219] [tests/citations/fixtures/knowledge/wikis/engineering-standards/wiki/standards/api-rp-16q.md:L1-L18] |
 | Equivalent-stress design factor; allowable described as factor × SMYS | API STD 2RD, Dynamic Risers (fixture title), second edition 2013, dynamic riser design criteria | `get_von_mises_design_factor`; clause text not checked against the licensed copy. [src/digitalmodel/riser_database/getters.py:L71-L78] [src/digitalmodel/riser_database/getters.py:L222-L243] [tests/citations/fixtures/knowledge/wikis/engineering-standards/wiki/standards/api-std-2rd.md:L1-L18] |
@@ -92,7 +93,7 @@ Validated examples: 0; the selected cases below assert repository fixtures, cata
 
 | Case / class | Source and input | Expected result, unit and tolerance basis | Existing test node ID | Last offline result |
 |---|---|---|---|---|
-| Catalogue counts / regression | Pinned public tables and manifest | 27 configurations, 5 crosswalk rows, at least 2 material rows; exact counts (records), repository assertion | `tests/riser_database/test_loader.py::test_row_counts_pinned` | PASS, BASE and AFTER. [tests/riser_database/test_loader.py:L61-L66] |
+| Catalogue counts / regression | Pinned public tables and manifest | 28 configurations, 5 crosswalk rows, 3 material rows, 84 stack-ups and 10 rigs; independent CSV inventory, exact counts (records) | `tests/riser_database/test_schema.py::test_loaded_public_table_counts` | PASS on the public base and revision 3 |
 | Unified example / regression | `examples/riser_input/riser_scr.yml` → `data/riser_database/config_catalog.csv` | Water depth 1500.0 m; OD 273.100 mm; depth exact and OD `pytest.approx` defaults, test convention | `tests/riser_database/test_loader.py::test_config_row_values_scr` | PASS, BASE and AFTER. [tests/riser_database/test_loader.py:L69-L75] |
 | Pipe conversion / regression | `config/pipe/pipe_py_21OD_0875in_5000ft_upper_riser.yml` → catalogue | Depth 1524.0 m; OD 533.400 mm; wall 22.225 mm; `pytest.approx` defaults, test convention | `tests/riser_database/test_loader.py::test_config_row_pipe_filename_derivation` | PASS, BASE and AFTER. [tests/riser_database/test_loader.py:L78-L85] |
 | Missing depth / regression | `config/pipe/pipe_py_21OD_0875in_Drilling_Riser.yml` → catalogue; no depth token | Exactly 1 unknown depth (`None`), not zero m | `tests/riser_database/test_loader.py::test_config_row_drilling_variant_has_no_depth` | PASS, BASE and AFTER. [tests/riser_database/test_loader.py:L88-L91] |
@@ -114,7 +115,7 @@ AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the
 | G2 hand calculation | Applicable; PASS offline at the code pin on 2026-10-17 | RDB-09: compare `RiserDatabase.config` output with exact SI unit conversions |
 | G3 short dynamics | NOT_APPLICABLE under EC | No package time-domain solver or dynamic response output; consumer obligations are in section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | G4 diffraction | NOT_APPLICABLE to catalogue-only outputs; conditional when a consumer introduces newly computed vessel data | No vessel/mesh/RAO fields in these row types. [src/digitalmodel/riser_database/loader.py:L60-L141] |
-| G5 evidence appendix | Applicable; offline pack evidence only, downstream signed appendix absent | RDB-11: examples and failures must retain their outcomes; issue pending (4) for analysis appendix |
+| G5 evidence appendix | Applicable; offline pack evidence only, downstream signed appendix absent | RDB-11: executable report rebuild and skip-evidence checks retain outcomes; issue pending (4) for analysis appendix |
 
 | Check | Module-specific executable route | Numeric pass criterion and unit | Evidence / status / gate |
 |---|---|---|---|
@@ -128,11 +129,56 @@ AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the
 | RDB-08 | `tests/riser_database/test_schema.py::test_loaded_public_table_counts` calls `RiserDatabase.load()` and asserts every returned table count | Exact public inventory: configurations 28, crosswalk 5, materials 3, stack-ups 84, rigs 10; counts from `data/riser_database/manifest.yaml`, revision `6476218e`, `tables.*.rows` | Executable public regression; G1. No private reference is needed. Expected inventory is independent of the loader and recorded in the test docstring; private-context qualification remains separate. |
 | RDB-09 | Hand check `RiserDatabase.load().config("pipe_py_21OD_0875in_5000ft_upper_riser")`; existing node `tests/riser_database/test_loader.py::test_config_row_pipe_filename_derivation` asserts all three outputs | 5000 ft × 0.3048 = 1524.0 m; 21 in × 25.4 = 533.4 mm; 0.875 in × 25.4 = 22.225 mm. Require relative error ≤1e-6 for each output (dimensionless); the existing test also has an absolute floor of 1e-12 in each output unit | PASS: 1 passed, 0 failed, 0 skipped on 2026-10-17 at the code pin with Git-exact table bytes; G2. This checks returned converted data, not conversion arithmetic inside the loader; extraction is external. [tests/riser_database/test_loader.py:L78-L85] [src/digitalmodel/riser_database/loader.py:L267-L271] [scripts/riser_database/build_tables.py:L119-L145] |
 | RDB-10 | Package dynamics applicability audit | Dynamic response outputs 0; time-domain solve routes 0 (counts) | NOT_APPLICABLE under EC; consumer dynamics procedure moved to section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
-| RDB-11 | Hand audit: match section-4 node IDs and statuses to the offline log and retain named exclusions | Missing case outcomes 0; missing citations 0; unlabelled skipped cases 0 (counts) | Pack self-check; downstream appendix/signatures NOT_RUN; G5. AQG r0, section 9, QA appendix. |
+| RDB-11 | `tests/riser_database/test_dff_report.py::test_rebuild_matches_committed_artifacts` and `test_public_evidence.py::test_unknown_skip_and_teardown_failure_are_not_success` | Generated report and sidecar match byte for byte; unexpected skip, collection error and teardown failure stay visible | Executable G5 evidence boundary; downstream appendix/signatures NOT_RUN. |
+
+### Public and in-context evidence
+
+RDB-08-public combines the executable inventory assertion above and
+`tests/riser_database/test_citations.py::test_helper_returns_cited_values_in_context`.
+The latter uses committed metadata fixtures and asserts all five keys and their
+values; its supplied DFF is synthetic, not a licensed class-table value.
+Independent `csv.DictReader` counts at the clean public base are 28/5/3/84/10
+(configurations/crosswalk/materials/stack-ups/rigs), matching `RiserDatabase.load()`.
+The issue's historical configuration count of 27 is superseded by the committed
+lift reference row. The independent reader also cross-checks loaded schema rows.
+
+Measured on the clean `origin/main` checkout at
+`3554b14fde67f44b1c52b81b6c72106282eaff29` before edits:
+`pytest tests/riser_database -q -rA -p no:cacheprovider --basetemp=<scratch>`:
+81 passed, 0 failed, 12 skipped. These are measured public outcomes, not an
+in-context qualification. The revision-3 outcome is recorded in the pull request.
+
+Regenerate public evidence with one command (using an external evidence file
+and temporary directory):
+`PYTHONPATH=src python scripts/riser_database/check_public_tests.py --output <evidence.json> --basetemp=<scratch>`.
+The helper prints passed/failed/skipped totals, saves each skipped node and its
+complete reason, and returns failure for any undocumented reason. Collection and
+teardown failures remain failures. The expected baseline availability skips are:
+
+| Test module | Baseline skipped | Documented reason |
+|---|---|---|
+| `test_citations.py` | 1 | AMJIG criteria page unavailable |
+| `test_crosswalk.py` | 4 | Standards registry unavailable in standalone mode |
+| `test_leak_gate.py` | 1 | Private deny list unavailable in standalone mode |
+| `test_provenance_tripwire.py` | 4 | Private wiki unavailable in standalone mode |
+| `test_stackup_rig.py` | 2 | Private stack-up registry unavailable in standalone mode |
+
+Exact test names and reasons are maintained in `scripts/riser_database/check_public_tests.py::SKIP_REASONS`
+and exercised by `tests/riser_database/test_public_evidence.py`. A separately
+listed in-context reason is an empty private name-token set; it did not occur in
+the measured public run. A read, parse or assertion error is never an availability
+skip under this contract.
+
+RDB-08-context: NOT_RUN. Required source revision/digest: NOT_RECORDED for the
+historical 83-pass, zero-skip result. That evidence is withdrawn as a current
+qualification; the missing provenance cannot be reconstructed from this checkout.
+A future in-context run must record the revision or SHA-256 digest of each
+registry, deny list and criteria/source page actually used, plus exact outcomes,
+in restricted evidence. No private content or identifying metadata belongs here.
 
 Current public evidence (2026-10-19): the module suite passes with private-reference cases skipped; the G1 inventory assertion and every added-column rejection case pass. Private-context qualification remains NOT_RUN. The source for inventory counts is the public manifest, revision `6476218e`, `tables.*.rows`.
 
-RDB-08 defines a public package-output check rather than accepting a suite total. RDB-02 now exercises loader schema validation, including deliberate added-column failures. Executable G5 evidence, private-source provenance and the other #2742 audit items remain open. RDB-09 covers the conversion-output boundary; RDB-10 records EC dynamics non-applicability. Package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9; the proposed consumer procedures are retained in section 9.
+RDB-08 defines a public package-output check rather than accepting a suite total. RDB-02 now exercises loader schema validation, including deliberate added-column failures. Executable G5 evidence is now checked separately; private-source provenance and the remaining audit items stay unqualified. RDB-09 covers the conversion-output boundary; RDB-10 records EC dynamics non-applicability. Package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9; the proposed consumer procedures are retained in section 9.
 
 ## 6. Known failure modes and pitfalls
 
@@ -166,14 +212,14 @@ rg -n 'float\(|int\(|DEFAULT|FACTOR|LIMIT|\.get\(|units=|_m\b|_mm\b|_in\b|_ft\b|
 | S02 `loader.py:50–51` | Empty numeric field becomes `None`; unknown is distinct from true zero | RDB-03 missing-depth fixture | [src/digitalmodel/riser_database/loader.py:L49-L57] [tests/riser_database/test_loader.py:L88-L91] |
 | S03 `loader.py:53` | `float` of external CSV text accepts nonfinite strings; comma/group/decimal conventions are not normalized; malformed text raises | no detection check exists for nonfinite or locale input | issue pending (1); [src/digitalmodel/riser_database/loader.py:L49-L57] |
 | S04 `loader.py:200–214,246–256` | Empty table mapping can load a header-only file if its hash is authorized; declared row counts are ignored | RDB-01/RDB-02 cover committed table shapes, not tampered completeness with repaired hash; no detection check exists | issue pending (1); [src/digitalmodel/riser_database/loader.py:L193-L214] [src/digitalmodel/riser_database/loader.py:L246-L256] |
-| S05 `getters.py:93` | Named DFF default selected when no override is supplied; numerical default not reproduced here | RDB-05 parity only; no independent adequacy check exists | issue pending (2); [src/digitalmodel/riser_database/getters.py:L91-L99] [tests/riser_database/test_material_refs.py:L41-L47] |
+| S05 `get_riser_dff` | No safety class or standards class value is assumed; an unconfirmed class factor is a required input | `test_dff_safety_class.py`: low/normal/high synthetic inputs, missing/unknown class, missing factor, invalid domain and override provenance; standards table adequacy NOT_EVALUATED | DNV-OS-F201 (2010), design fatigue factors; exact table locator unavailable. |
 | S06 `getters.py:96` | Neutral SCF default is a convention, not a resolved structural concentration | RDB-05 parity only | [src/digitalmodel/riser_database/getters.py:L144-L169] [tests/riser_database/test_material_refs.py:L41-L47] |
 | S07 `getters.py:99` | Named weight-factor default enters a getter when override is absent | RDB-05/RDB-04 citation and parity, not independent standards correctness | issue pending (2); [src/digitalmodel/riser_database/getters.py:L172-L193] [tests/riser_database/test_citations.py:L139-L150] |
 | S08 `getters.py:102` | Named buoyancy-factor default is distinct from a rig tensioner reduction factor | RDB-05 parity only | issue pending (2); [src/digitalmodel/riser_database/getters.py:L196-L219] [tests/riser_database/test_citations.py:L139-L150] |
 | S09 `getters.py:106` | Named von-Mises design-factor default has a fixed operating basis | RDB-05 engine-default parity only | issue pending (2); [src/digitalmodel/riser_database/getters.py:L222-L243] [tests/riser_database/test_citations.py:L245-L250] |
 | S10 `getters.py:109` | Named mean-angle default is a fixed operating limit, not hardware capability | RDB-04 getter selection regression only | issue pending (2); [src/digitalmodel/riser_database/getters.py:L246-L276] [tests/riser_database/test_citations.py:L211-L217] |
 | S11 `getters.py:110` | Named maximum-angle default and default selector can be mistaken for a case-specific rating | RDB-04 selection and invalid-kind tests only | issue pending (2); [src/digitalmodel/riser_database/getters.py:L246-L276] [tests/riser_database/test_citations.py:L211-L222] |
-| S12 `getters.py:133` | DFF override converted by `float`, without positivity/finiteness validation | RDB-04 valid-override regression; no detection check exists for invalid-domain override | issue pending (1); [src/digitalmodel/riser_database/getters.py:L130-L141] [tests/riser_database/test_citations.py:L168-L172] |
+| S12 `get_riser_dff` | DFF class input and override must be finite and positive | `tests/riser_database/test_dff_safety_class.py::test_invalid_factor_refused` rejects nonpositive, NaN and infinite inputs | Input-domain checks do not qualify a standards table. |
 | S13 `getters.py:161` | SCF override has the same numeric-domain gap | no detection check exists for invalid-domain override | issue pending (1); [src/digitalmodel/riser_database/getters.py:L155-L169] |
 | S14 `getters.py:185` | Weight-factor override has the same numeric-domain gap | no detection check exists for invalid-domain override | issue pending (1); [src/digitalmodel/riser_database/getters.py:L182-L193] |
 | S15 `getters.py:211` | Buoyancy-factor override has the same numeric-domain gap | no detection check exists for invalid-domain override | issue pending (1); [src/digitalmodel/riser_database/getters.py:L208-L219] |
@@ -229,7 +275,7 @@ UNVERIFIED: a named deputy assignment and a prior clearance record are not estab
 | `drilling_riser.stackup`, `drilling_riser.envelope` | Weight/buoyancy getter consumers and envelope-criteria consumers named by the getters and docs. [src/digitalmodel/riser_database/getters.py:L172-L205] [src/digitalmodel/riser_database/getters.py:L222-L230] [docs/riser_database.md:L202-L216] |
 | `orcaflex.code_check_engine` | Both package mentions are default-parity references, at getter lines 105 and 229, not solver-interface imports. [src/digitalmodel/riser_database/getters.py:L103-L106] [src/digitalmodel/riser_database/getters.py:L225-L243] |
 | OrcaFlex references in module documentation | Citation-surface follow-up; downstream code-check and weather-window references; synthetic dynamic-tier stub and future licensed replacement. [docs/riser_database.md:L105-L110] [docs/riser_database.md:L202-L216] [docs/riser_database.md:L237-L268] |
-| Private stack-up registry | Handle reconciliation and provenance tests need external reference data; the private data repository was not read for this pack. [tests/riser_database/test_stackup_rig.py:L237-L260] [tests/riser_database/test_provenance_tripwire.py:L241-L284] |
+| Private stack-up registry | Handle reconciliation and provenance tests need external reference data; the historical zero-skip result necessarily used private reference files. Their source revision/digest is NOT_RECORDED; that result cannot qualify the current in-context gate. No private source was read to prepare revision 3. [tests/riser_database/test_stackup_rig.py:L237-L260] [tests/riser_database/test_provenance_tripwire.py:L241-L284] |
 
 
 ### Consuming-model obligations (outside package EC acceptance)

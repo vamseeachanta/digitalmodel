@@ -1,8 +1,10 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Citation-emitting getters for riser design factors (#1245 / #1199a).
 
 Pattern copied from the DNV-OS-E301 mooring pilot (``citations/registry.py``):
-scalar standards-derived design factors live here as code constants; each
-getter builds a :class:`Citation` from a template, validates it fail-closed,
+scalar factor getters retain their input basis; the DFF requires an explicit
+safety class and class factor. Each getter builds a :class:`Citation` from a template, validates it fail-closed,
 and returns a :class:`CitedValue`. Licensed table CONTENT never lives in this
 public repo — only these well-known scalar factors plus clause identifiers,
 with values resolving against the private llm-wiki.
@@ -27,6 +29,7 @@ Failure modes (plan D3):
 
 from __future__ import annotations
 
+import math
 import re
 import warnings
 from dataclasses import dataclass
@@ -88,9 +91,9 @@ _AMJIG_CITATION_TEMPLATE: Final = {
 _AMJIG_CRITERIA_BLOCK = "amjig_envelope_criteria_v1"
 _YAML_FENCE_RE = re.compile(r"```yaml\s*\n(.*?)\n```", re.DOTALL)
 
-#: Matches riser_fatigue/touchdown.py TouchdownFatigueInput.dff — the live
-#: riser literal these getters must stay in parity with (#1246 wires the calc).
-RISER_DFF_DEFAULT: Final[float] = 10.0
+# DNV-OS-F201 (2010), design fatigue factors: the citation fixture has no
+# table content or confirmed table locator. Class factors are required inputs;
+# standards adequacy remains NOT_EVALUATED. No safety class is assumed.
 #: Matches riser_fatigue touchdown.py scf default and workflow.py wave scf
 #: default: 1.0 = no stress concentration applied (neutral default).
 RISER_SCF_DEFAULT: Final[float] = 1.0
@@ -120,20 +123,39 @@ class AmjigEnvelopeCriteria:
 
 
 def get_riser_dff(
-    *, override: Optional[float] = None, repo_root: Optional[Path] = None
+    *, safety_class: Optional[str] = None, class_dff: Optional[float] = None,
+    override: Optional[float] = None, repo_root: Optional[Path] = None,
 ) -> CitedValue:
-    """Riser design fatigue factor (DNV-OS-F201): allowable damage = 1/DFF.
+    """Resolve an explicitly supplied safety-class DFF; allowable = 1/DFF.
 
-    ``override`` wins when provided (user-override-wins defense); the citation
-    note then records both the override and the standard value.
+    DNV-OS-F201 (2010), design fatigue factors: the available fixture verifies
+    metadata only. Its class table and locator are NOT_EVALUATED, so
+    ``class_dff`` is required and never represented as a confirmed code value.
+    An override wins, retaining both inputs and the class in the citation note.
     """
-    value = RISER_DFF_DEFAULT
-    note = "Design fatigue factor for riser fatigue verdicts (allowable damage = 1/DFF)"
+    if safety_class is None:
+        raise ValueError("safety_class is required; no class is assumed")
+    if safety_class not in ("low", "normal", "high"):
+        raise ValueError("safety_class must be one of low, normal, high")
+    if class_dff is None:
+        raise ValueError("NOT_EVALUATED: class_dff is required; class table unconfirmed")
+
+    def positive(value: float, name: str) -> float:
+        result = float(value)
+        if not math.isfinite(result) or result <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+        return result
+
+    class_value = positive(class_dff, "class_dff")
+    value = class_value if override is None else positive(override, "override")
+    note = (
+        f"safety class {safety_class}; user-supplied class value {class_value}; "
+        "NOT_EVALUATED: standard class value and table locator unconfirmed"
+    )
     if override is not None:
-        value = float(override)
-        note = f"user override; standard value {RISER_DFF_DEFAULT}"
+        note += f"; user override {value}"
     citation = Citation(
-        section="Sec.5 (design fatigue factors)",
+        section="design fatigue factors (table locator unconfirmed)",
         note=note,
         **_DNV_OS_F201_CITATION_TEMPLATE,
     )
@@ -362,9 +384,16 @@ def get_amjig_envelope_criteria(
 _CITATION_WARNED = False
 
 
-def riser_citations(repo_root: Optional[Path] = None) -> dict:
+def riser_citations(
+    repo_root: Optional[Path] = None, *, safety_class: Optional[str] = None,
+    class_dff: Optional[float] = None, dff_override: Optional[float] = None,
+) -> dict:
     """Return ``{"dff", "scf", "f_wt", "f_bt", "von_mises_df"}`` CitedValues for
     the riser design factors.
+
+    The DFF requires explicit ``safety_class`` and ``class_dff`` inputs; input
+    errors propagate even in standalone mode. ``dff_override`` retains the
+    supplied class factor in the DFF note.
 
     Consumer-wrapper degradation (template:
     ``mooring_resilience.screening.safety_factor_citations``): where the wiki
@@ -377,7 +406,10 @@ def riser_citations(repo_root: Optional[Path] = None) -> dict:
     global _CITATION_WARNED
     try:
         return {
-            "dff": get_riser_dff(repo_root=repo_root),
+            "dff": get_riser_dff(
+                safety_class=safety_class, class_dff=class_dff,
+                override=dff_override, repo_root=repo_root,
+            ),
             "scf": get_riser_scf(repo_root=repo_root),
             "f_wt": get_tension_weight_factor(repo_root=repo_root),
             "f_bt": get_buoyancy_tension_factor(repo_root=repo_root),
