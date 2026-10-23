@@ -67,6 +67,17 @@ def test_ci_gate_is_green_on_the_committed_state():
     assert refresh.main([]) == 0
 
 
+def test_fowt_cable_citation_metadata():
+    """Keep the refresh basis and manifest citations on the corrected edition."""
+    import yaml
+
+    expected = [{"id": "DNV-RP-0360", "edition": "2016-03 amended 2021-10"}]
+    assert refresh.STANDARDS["fowt_mooring"] == expected
+    for path in (refresh.DEFAULT_ATLAS_ROOT / "fowt_mooring").glob("*/manifest.yaml"):
+        manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert manifest["provenance"]["standards"] == expected, path
+
+
 def test_viv_atlas_tracks_c205_edition():
     assert {"id": "DNV-RP-C205", "edition": "2010-10"} in refresh.STANDARDS["viv_analysis"]
 

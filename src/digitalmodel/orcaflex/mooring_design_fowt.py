@@ -58,16 +58,15 @@ Assumptions / limitations
 
 Standards references
 --------------------
-* DNV-RP-0360 ("Subsea power cables in shallow water" / dynamic cable design):
-  the minimum bend radius (MBR) is a cable-supplier / standard-derived storage
-  and dynamic curvature limit. The numeric MBR is a **cable-specific input** to
-  this check (typically the manufacturer MBR with the RP-0360 design factor
-  applied); no universal numeric MBR is hard-coded here — the caller supplies
-  ``mbr_limit_m``. See issue #574 for the DNV-RP-0360 wiki page that backs the
-  citation emitted by this module. The title recorded here is "Subsea power
-  cables in shallow water"; the existing emission records edition 2016 and
-  clause title "Dynamic cable minimum bend radius (MBR)". These repository
-  labels are retained pending the authoritative standards page.
+* DNV-RP-0360, "Subsea power cables in shallow water", edition 2016-03
+  amended 2021-10: static service in shallow water. The identifier is retained
+  for the existing minimum-bend-radius (MBR) design-factor citation. The caller
+  supplies the cable-specific ``mbr_limit_m``; the citation does not establish
+  applicability to the dynamic cable screened here.
+* DNV-ST-0359, "Subsea power cables for wind power plants", edition 2025-12:
+  subsea power cable systems for offshore wind power plants. The public product
+  page does not specify static or dynamic service. This scope reference does
+  not supply an MBR value or establish dynamic-cable design compliance.
 
 Citation posture
 ----------------
@@ -142,7 +141,8 @@ class DynamicCableConfig(BaseModel):
         ...,
         gt=0.0,
         description=(
-            "Minimum bend radius limit (m), DNV-RP-0360 design-factored cable MBR"
+            "Caller-supplied MBR limit (m); DNV-RP-0360 design-factor reference "
+            "concerns static service in shallow water"
         ),
     )
     mooring_type: MooringType = MooringType.CATENARY
@@ -180,8 +180,8 @@ class WatchCircleConstraint(BaseModel):
 
     Couples a platform watch-circle radius (max horizontal offset under
     environmental loading) to a dynamic-cable configuration and verifies, in
-    closed form, that the cable's curvature stays within its DNV-RP-0360 MBR
-    limit across the watch circle.
+    closed form, that the cable's curvature stays within its caller-supplied
+    MBR limit across the watch circle.
 
     Example:
     >>> cfg = DynamicCableConfig(
@@ -282,11 +282,14 @@ class WatchCircleConstraint(BaseModel):
         citation = Citation(
             code_id="DNV-RP-0360",
             publisher="DNV",
-            revision="2016",
-            section="Dynamic cable minimum bend radius (MBR)",
+            revision="2016-03 amended 2021-10",
+            section="Minimum bend radius (MBR)",
             wiki_path=_DNV_RP_0360_WIKI_PATH,
             source_sibling="generic",
-            note="MBR limit is a cable-specific design input supplied by caller",
+            note=(
+                "MBR limit is a cable-specific design input supplied by caller; "
+                "RP-0360 concerns static service in shallow water"
+            ),
         )
         validate_citation(citation, repo_root=wiki_base)
         return [citation]

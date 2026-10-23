@@ -28,7 +28,7 @@ provenance:
   code_version: a9f09147
   standards:
   - id: DNV-RP-0360
-    edition: 2021-09
+    edition: 2016-03 amended 2021-10
   response_kwargs: {}
   workflow_id: fowt-mooring
   content_fingerprint: 15372d97a52f9de7dc23a6a87b9e468a148852b9ca3bd5a0c8e92fdba0a58864

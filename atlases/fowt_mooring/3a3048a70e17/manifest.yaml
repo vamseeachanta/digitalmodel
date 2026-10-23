@@ -1,0 +1,35 @@
+atlas_id: 3a3048a70e17
+basename: fowt_mooring
+physics: utilization_threshold
+response: mbr_utilisation
+axes:
+- name: watch_circle_radius
+  scale: linear
+  grid:
+  - 5.0
+  - 10.0
+  - 15.0
+  - 20.0
+  - 25.0
+  - 30.0
+- name: mbr_limit_m
+  scale: linear
+  grid:
+  - 4.0
+  - 5.0
+  - 6.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.0002379232358256374
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: fowt_mooring
+  code_version: bc48e6aac
+  standards:
+  - id: DNV-RP-0360
+    edition: 2016-03 amended 2021-10
+  response_kwargs: {}
+  workflow_id: fowt-mooring
+  content_fingerprint: 3a3048a70e17ec21b9621b0061ae70811a54066eb2062d89e5e727d6cc01ecea
+  input_template_sha256: bb9f6152575608cf42828167e1344a0bfca4355b69fd7b1d100462a78044d746

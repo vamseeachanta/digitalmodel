@@ -11,7 +11,7 @@
   - `dnv-rp-0286.md` — DNV, Coupled analysis of floating wind turbines (2019-05)
   - `dnv-st-0126.md` — DNV, Support structures for wind turbines (2021-07)
   - `dnv-st-0358.md` — DNV, Certification of offshore gangways (2024-02)
-  - `dnv-rp-0360.md` — DNV, Subsea power cables in shallow water (2024-03)
+  - `dnv-rp-0360.md` — DNV, Subsea power cables in shallow water (2016-03 amended 2021-10; static service in shallow water)
   - `api-rp-2sim.md` — API, Structural Integrity Management of Fixed Offshore Structures (2014, R2020)
 - **Why it matters.** `.claude/rules/calc-citation-contract.md` D2 forces fail-closed at calc time. Two of these (`DNV-ST-0126`, `API RP 2SIM`) are **already named in `src/digitalmodel/structural/offshore_resilience/structural_health.py` docstring** without a resolvable wiki page; the moment that module emits a `Citation` instance it raises `CitationResolutionError`. The other five unblock issues #575/#576/#577/#578.
 - **Dependencies on other issues.** This plan is the prerequisite for #575, #576, #577, #578. Sibling consumer is the planned cross-link entry in `knowledge/wikis/cross-links.md`.
@@ -28,7 +28,7 @@
 - `knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-0286.md` — DNV coupled-analysis RP
 - `knowledge/wikis/engineering-standards/wiki/standards/dnv-st-0126.md` — DNV support structures
 - `knowledge/wikis/engineering-standards/wiki/standards/dnv-st-0358.md` — DNV gangway certification
-- `knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-0360.md` — DNV dynamic subsea power cables
+- `knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-0360.md` — DNV subsea power cables in shallow water, static service
 - `knowledge/wikis/engineering-standards/wiki/standards/api-rp-2sim.md` — API SIM
 - `knowledge/wikis/cross-links.md` — append seven cross-link rows
 - `digitalmodel/tests/citations/test_fowt_resolvers.py` (new) — fixture-backed resolver test that confirms each new `code_id` resolves via `digitalmodel.citations.schema` to a real wiki path.

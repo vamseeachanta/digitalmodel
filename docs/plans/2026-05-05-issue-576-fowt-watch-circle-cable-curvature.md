@@ -5,7 +5,7 @@
 **Tier:** T2 (extension of an existing pilot module, well-scoped formula set)
 
 ## Context
-- **Standards / publisher / revision.** DNV-RP-0360 (2024-03) — dynamic subsea power cables. Adjacent codes already in repo: DNV-OS-E301 (position mooring), API RP 2SK (mooring). MBR / fatigue-bend tolerance is the FOWT-distinguishing constraint.
+- **Standards / publisher / revision.** DNV-RP-0360 (2016-03 amended 2021-10) — static service in shallow water; retained for the MBR design-factor reference. DNV-ST-0359 (2025-12) — subsea power cable systems for offshore wind power plants; the public product page makes no static or dynamic service claim. Adjacent codes already in repo: DNV-OS-E301 (position mooring), API RP 2SK (mooring). MBR / fatigue-bend tolerance is the FOWT-distinguishing constraint.
 - **Why it matters.** `src/digitalmodel/orcaflex/mooring_design.py` is the citation pilot and computes mooring offset / watch circle for O&G floaters. It does **not** check that the watch-circle envelope respects the dynamic export-cable Minimum Bend Radius (MBR) and fatigue-bend envelope, which is the primary FOWT mooring sizing driver. Without this check, a passing mooring design can still violate cable warranty.
 - **Dependencies on other issues.** Hard dependency on #574 (DNV-RP-0360 wiki page). Soft dependency on #575 (consumer for full coupled simulation), but this issue can be implemented standalone against the existing `mooring_design.py` since the cable check is a static-envelope calculation.
 
@@ -20,7 +20,7 @@
   - Taut mooring × semi-sub × extreme storm offset → MBR-governed fail.
   - Hybrid (chain-poly-chain) × TLP × intermediate → fatigue-envelope governed.
 - New fixture file `tests/orcaflex/fixtures/fowt_cable_profiles.yml` with three reference cable configs (one per mooring pattern).
-- **Non-goals.** No fatigue life calculation (the `fatigue_envelope_m` is **input** to this module — it comes from a separate DNV-RP-0360 §6 fatigue analysis that is out of scope for this PR). No bend-stiffener sizing. No cable installation analysis. No re-implementation of catenary equations (already in `mooring_design.py`).
+- **Non-goals.** No fatigue life calculation (the `fatigue_envelope_m` is **input** to this module — it comes from a separate cable-specific fatigue analysis that is out of scope for this PR). No bend-stiffener sizing. No cable installation analysis. No re-implementation of catenary equations (already in `mooring_design.py`).
 
 ## Deliverables
 - `src/digitalmodel/orcaflex/mooring_design.py` — extended with `WatchCircleConstraint`, `DynamicCableProfile`, `check_watch_circle_vs_cable`. Module docstring References block adds DNV-RP-0360.
@@ -32,13 +32,13 @@
 1. **Read the existing pilot.** `wc -l src/digitalmodel/orcaflex/mooring_design.py` and skim — confirm the citation-emission pattern already in place for `DNV-OS-E301` so the new DNV-RP-0360 emission follows it byte-for-byte. Smoke check: `grep -n "Citation" src/digitalmodel/orcaflex/mooring_design.py`.
 2. **Add models.** Append `WatchCircleConstraint` and `DynamicCableProfile` Pydantic classes. Smoke check: `cd digitalmodel && uv run python -c "from digitalmodel.orcaflex.mooring_design import WatchCircleConstraint, DynamicCableProfile; print('ok')"`.
 3. **Implement the check.** `check_watch_circle_vs_cable` computes slack vs all three constraints, returns the governing one. Smoke check: `cd digitalmodel && uv run pytest tests/orcaflex/test_mooring_design_fowt.py::test_catenary_spar_pass -q`.
-4. **Citation wiring.** Emit `Citation(code_id="dnv-rp-0360", clause="§5", revision="2024-03", ...)`. Smoke check: `cd digitalmodel && uv run pytest tests/orcaflex/test_mooring_design_fowt.py -q -k citation`.
+4. **Citation wiring.** Emit `Citation(code_id="dnv-rp-0360", section="Minimum bend radius (MBR)", revision="2016-03 amended 2021-10", ...)`. Smoke check: `cd digitalmodel && uv run pytest tests/orcaflex/test_mooring_design_fowt.py -q -k citation`.
 5. **Round-trip test.** Add a test that fails closed with `CitationResolutionError` if the wiki page is missing. Smoke check: `cd digitalmodel && uv run pytest tests/orcaflex/test_mooring_design_fowt.py::test_fail_closed_when_wiki_missing -q`.
 
 ## Open questions
 - **MBR source.** Should the manufacturer MBR ship as a hard-coded library entry (per cable type) or stay caller-supplied? Default: caller-supplied for v1 with a small reference-cable library in the fixture file; cable-property DB is a follow-up.
 - **Watch-circle envelope shape.** Is a circular envelope sufficient or do we need a polygon (offset varies with current heading)? Default: circular for v1; document polygon as follow-up.
-- **Fatigue envelope source.** This module accepts `fatigue_envelope_m` as input; does the user want a future PR to compute it from DNV-RP-0360 §6? Flag as out-of-scope follow-up.
+- **Fatigue envelope source.** This module accepts `fatigue_envelope_m` as input. Computing it requires a separately established cable-specific fatigue basis and remains a follow-up.
 
 ## Acceptance Criteria
 - [ ] `check_watch_circle_vs_cable` produces fail-closed result when offset > cable MBR-derived envelope, with `governing_constraint` correctly identifying MBR vs fatigue vs current.
