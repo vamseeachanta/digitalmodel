@@ -267,6 +267,8 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/modules/
+docs/reports/modules/*/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
@@ -461,6 +463,12 @@ docs/reports/abstracted-hulls/*
 # Retain the synthetic worked pipeline assessment.
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
+
+# Keep the reproducible lifting lug module report and its source.
+!docs/reports/modules/liftinglug/
+!docs/reports/modules/liftinglug/build_report.py
+!docs/reports/modules/liftinglug/changes.json
+!docs/reports/modules/liftinglug/lifting-lug-analysis.html
 
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
