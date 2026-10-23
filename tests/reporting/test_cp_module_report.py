@@ -8,6 +8,7 @@ import hashlib
 from html.parser import HTMLParser
 import importlib.util
 import json
+import math
 from pathlib import Path
 import re
 
@@ -132,6 +133,42 @@ def test_committed_rebuild_uses_numeric_tolerance(built, tmp_path, monkeypatch, 
             test_report_rebuild_is_deterministic_and_committed(built)
 
 
+@pytest.mark.parametrize("material_change", [False, True])
+def test_full_render_distinguishes_roundoff_from_material_change(monkeypatch, material_change):
+    """Recompute the complete report and its identity after a math perturbation."""
+    mod = builder()
+    expected_data = mod.calculate()
+    expected = mod.render(expected_data)
+    real_hypot = math.hypot
+
+    def perturbed_hypot(*args):
+        value = real_hypot(*args)
+        return value * 1.01 if material_change else math.nextafter(value, math.inf)
+
+    monkeypatch.setattr(mod.math, "hypot", perturbed_hypot)
+    actual_data = mod.calculate()
+    assert actual_data["section_periphery_m"] != expected_data["section_periphery_m"]
+    actual = mod.render(actual_data)
+    key_pattern = r'id="document-key"[^>]+content="([^"]+)"'
+    actual_key = re.search(key_pattern, actual)[1]
+    expected_key = re.search(key_pattern, expected)[1]
+    if material_change:
+        assert actual_key != expected_key
+        with pytest.raises(AssertionError, match="build_cp_module_report.py"):
+            assert_html_matches(actual, expected)
+    else:
+        assert_html_matches(actual, expected)
+        assert actual_key == expected_key
+
+
+def test_rebuild_rejects_an_isolated_document_key_change(built):
+    _, target = built
+    expected = (target / "index.html").read_text(encoding="utf-8")
+    actual = re.sub(r'(?<=name="document-key" content=")[^"]+', "stale-document", expected)
+    with pytest.raises(AssertionError, match="build_cp_module_report.py"):
+        assert_html_matches(actual, expected)
+
+
 def test_access_metadata_preserves_issued_input_digest():
     mod = builder()
     issued = ROOT / "docs/domains/cathodic_protection/reports/reference-jacket/cathodic-protection-analysis.citations.json"
@@ -215,7 +252,8 @@ def test_house_style_structure_sources_and_self_containment(built):
     assert "comments.json" in html and "textContent" in html
     assert 'id="changes-data"' in html
     changes = json.loads((target / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == 2
+    assert changes["revision"] == 3
+    assert changes["date"] == "2026-10-23"
     assert changes["changes"]
 
 

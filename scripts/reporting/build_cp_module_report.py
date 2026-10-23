@@ -34,7 +34,7 @@ SOURCE_ACCESS = ROOT / "scripts/reporting/cp_module_source_access.json"
 OUTPUT = ROOT / "docs/reports/modules/cp"
 PAPER = "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf"
 GEOMETRY_PAPER = "https://doi.org/10.5194/wes-8-807-2023"
-DATE = "2026-10-22"
+DATE = "2026-10-23"
 ZONES = {
     "coated-seawater": "Coated seawater steel",
     "upper-bare-seawater": "Upper bare seawater steel",
@@ -55,11 +55,11 @@ SECTIONS = (
 )
 CHANGES = {
     "document": "cathodic-protection-module-analysis",
-    "revision": 2,
+    "revision": 3,
     "date": DATE,
     "changes": [
-        {"section": "appendix", "description": "Source-access records are retained separately to preserve the issued input digests."},
-        {"section": "results", "description": "Rebuild checks allow checkout line endings and compare numerical evidence with tolerance."},
+        {"section": "appendix", "description": "The rebuild description distinguishes exact document checks from numerical tolerance."},
+        {"section": "results", "description": "Saved-comment identity canonicalizes floating evidence to tolerate numerical roundoff while retaining material-change rejection."},
     ],
 }
 
@@ -409,7 +409,7 @@ Analysis is performed to determine the aggregate anode requirement for a publish
 <li>Field protection remains NOT_EVALUATED by this calculation. A distributed potential survey and local allocation assessment are required before a retrofit is specified.</li></ul></li>
 <li>The scope of evidence is identified before use.<ul><li>Published phase demands and fresh individual output are reproduced to their printed precision; the assumed depletion model differs from the paper.</li>
 <li>Design life, net alloy interpretation and material assumptions require confirmation. The calculation is not an installed-design acceptance.</li></ul></li></ul>
-<h3>Revision history</h3>{table(['Revision', 'Date', 'Change and cause'], [['0', DATE, 'Initial module analysis; public arithmetic evidence and engineering limits are separated.'], ['1', DATE, 'Published-section resistance corrects the aggregate verdict; the increase is withdrawn and source access and rebuild evidence are recorded.'], ['2', DATE, 'Access records are separated from design inputs to preserve issued digests; rebuild checks allow checkout line endings.']])}'''
+<h3>Revision history</h3>{table(['Revision', 'Date', 'Change and cause'], [['0', '2026-10-22', 'Initial module analysis; public arithmetic evidence and engineering limits are separated.'], ['1', '2026-10-22', 'Published-section resistance corrects the aggregate verdict; the increase is withdrawn and source access and rebuild evidence are recorded.'], ['2', '2026-10-22', 'Access records are separated from design inputs to preserve issued digests; rebuild checks allow checkout line endings.'], ['3', DATE, 'Floating evidence is canonicalized for saved-comment identity so numerical roundoff does not invalidate a rebuilt report.']])}'''
     sections['scope'] = '''<p>The main offshore sacrificial-anode workflow is described from zone definition through a governing anode count.
 The calculation is bounded to an electrically connected structure with declared current demands and anode geometry.</p>
 <p>Seawater and buried-steel areas are grouped by exposure, coating and depth. Initial current is used to establish polarisation capacity;
@@ -568,7 +568,9 @@ also used by the <a href="../../../domains/cathodic_protection/reports/reference
 The stylesheet is inlined with the document body class required for report delivery.
 Rebuild with <code>PYTHONPATH=src python scripts/reporting/build_cp_module_report.py --output &lt;report-directory&gt;</code>.
 The <a href="../../../../tests/reporting/test_cp_module_report.py">report contract test</a> rebuilds into a temporary directory,
-checks every annotated value against a fresh production call, and compares the delivered files byte for byte.
+checks every annotated value against a fresh production call, and compares numerical evidence and annotations with tolerance.
+Document identity, visible text and the change register are compared exactly after checkout line-ending normalization.
+Saved-comment identity retains exact source text and integer counts; floating evidence is canonicalized to nine significant figures.
 The builder requires the module's Python dependencies and the repository fixtures; it makes no network request.</li></ol>'''
     sections['glossary'] = '''<p>The symbols used in the equations are defined with their units.
 Phase suffixes identify the demand and anode condition used in each calculation.</p>
@@ -590,9 +592,12 @@ NOT_EVALUATED means that the required evidence is absent. An assumption marked A
     if style_match is None:
         raise ValueError("The shared calculation-report stylesheet is missing")
     style = style_match[0]
+    # Keep source edits and integer counts exact without hashing floating roundoff.
+    identity_values = {key: float(format(value, ".9g")) if isinstance(value, float) else value
+                       for key, value in values.items()}
     material = ("".join(path.read_text(encoding="utf-8") for path in
                         (Path(__file__), STYLE, EXAMPLE, GEOMETRY, SOURCE_ACCESS)).encode("utf-8")
-                + json.dumps(values, sort_keys=True).encode("utf-8"))
+                + json.dumps(identity_values, sort_keys=True, allow_nan=False).encode("utf-8"))
     fingerprint = hashlib.sha256(material).hexdigest()
     toc = ' · '.join(f'<a href="#{key}">{title}</a>' for key, title in SECTIONS)
     body = ''.join(f'<section id="{key}"><h2>{title}</h2>{sections[key]}</section>' for key, title in SECTIONS)

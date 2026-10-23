@@ -1,15 +1,15 @@
 {
   "document": "cathodic-protection-module-analysis",
-  "revision": 2,
-  "date": "2026-10-22",
+  "revision": 3,
+  "date": "2026-10-23",
   "changes": [
     {
       "section": "appendix",
-      "description": "Source-access records are retained separately to preserve the issued input digests."
+      "description": "The rebuild description distinguishes exact document checks from numerical tolerance."
     },
     {
       "section": "results",
-      "description": "Rebuild checks allow checkout line endings and compare numerical evidence with tolerance."
+      "description": "Saved-comment identity canonicalizes floating evidence to tolerate numerical roundoff while retaining material-change rejection."
     }
   ]
 }
