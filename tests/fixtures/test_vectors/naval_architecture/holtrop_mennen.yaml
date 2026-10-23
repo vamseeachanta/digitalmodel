@@ -1,7 +1,17 @@
-source_type: journal_paper
-source_description: "Holtrop & Mennen (1982, 1984) statistical resistance prediction"
+source_type: unverified_legacy_fixture
+source_description: "Legacy resistance predictions without a traced worked example"
 extracted_date: "2026-03-20"
-legal_scan_passed: true
+# This metadata is not a source-access or accuracy certificate.
+qualification:
+  reference_status: unverified_approximate_fixture_values
+  reason: >-
+    The expected coefficients, form-factor bounds and tolerance have not been
+    traced to an accessible primary worked example with method version, scale
+    and rounding precision. Agreement cannot establish engineering accuracy.
+  input_basis: "assumed, based on previous experience"
+  required_sources:
+    - "An approximate power prediction method (1982), equations and worked example"
+    - "A statistical re-analysis of resistance and propulsion data (1984), revision equations"
 category: "naval_architecture"
 subcategory: "resistance_prediction"
 
