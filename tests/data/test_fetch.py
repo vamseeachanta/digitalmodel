@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import stat
 
 import pytest
 
@@ -113,7 +114,7 @@ def test_unset_cli_is_nonzero(monkeypatch):
         capture_output=True, text=True, env=os.environ.copy(),
     )
     assert result.returncode != 0
-    assert "ACE_DATA_ROOT" in result.stderr
+    assert "No manifest entry matches" in result.stderr
 
 
 def test_path_traversal_rejected(fetch_module, store_case):
@@ -235,3 +236,99 @@ def test_bare_store_marker_skip_reason(tmp_path, monkeypatch):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "store_data: <id> not available (store not reachable); run scripts/data/fetch.py <id>" in result.stdout
+
+
+@pytest.mark.parametrize("path", [".git/config", "data/.GIT/index", "data/.git. /config",
+                                  "../escape.dat", "/absolute.dat", "data/./sample.dat"])
+def test_direct_destination_rejects_invalid_paths(fetch_module, store_case, path):
+    root, _, _, _ = store_case
+    row = dict(fetch_module.read_manifest(root)[0], path=path)
+    with pytest.raises(ValueError):
+        fetch_module.destination(root, row)
+
+
+@pytest.mark.parametrize("path", [".git/config", "data/.GIT/index", "data/.git. /config"])
+def test_manifest_rejects_git_metadata(fetch_module, store_case, path):
+    root, _, _, _ = store_case
+    manifest = root / "data/MANIFEST.tsv"
+    manifest.write_text(manifest.read_text().replace("data/sample.dat", path))
+    with pytest.raises(ValueError):
+        fetch_module.read_manifest(root)
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX creation-mask semantics")
+@pytest.mark.parametrize("mask", [0o777, 0o477, 0o077])
+def test_restrictive_mask_preserves_creator_access(fetch_module, store_case, mask):
+    """Python 3.11 stat flags: creator read/write = S_IRUSR | S_IWUSR.
+
+    Group/other bits are removed by each supplied mask; no execute bits survive.
+    TemporaryDirectory is created first because a 0777 mask also blocks traversal.
+    """
+    root, _, _, payload = store_case
+    (root / "data/sample.dat").write_bytes(b"replace")
+    old_mask = os.umask(mask)
+    try:
+        target = fetch_module.fetch_row(root, fetch_module.read_manifest(root)[0])
+    finally:
+        os.umask(old_mask)
+    assert target.read_bytes() == payload
+    assert stat.S_IMODE(target.stat().st_mode) == stat.S_IRUSR | stat.S_IWUSR
+
+
+def test_verified_existing_file_needs_no_store(fetch_module, store_case, monkeypatch):
+    root, _, store_id, payload = store_case
+    target = root / "data/sample.dat"
+    target.write_bytes(payload)
+    before = target.stat().st_ino
+    monkeypatch.delenv("ACE_DATA_ROOT")
+    assert fetch_module.main([store_id], repo_root=root) == 0
+    assert target.stat().st_ino == before
+
+
+def test_transfer_timeout_is_not_a_connection_failure(fetch_module, store_case, monkeypatch):
+    root, _, _, _ = store_case
+    monkeypatch.delenv("ACE_DATA_ROOT")
+    monkeypatch.setenv("ACE_DATA_REMOTE", "store-role:archive")
+
+    def transfer(command, **kwargs):
+        raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+    monkeypatch.setattr(fetch_module.subprocess, "run", transfer)
+    with pytest.raises(TimeoutError, match="transfer duration"):
+        fetch_module.fetch_row(root, fetch_module.read_manifest(root)[0])
+
+
+def test_remote_diagnostics_force_c_locale(fetch_module, store_case, monkeypatch):
+    root, _, _, _ = store_case
+    monkeypatch.delenv("ACE_DATA_ROOT")
+    monkeypatch.setenv("ACE_DATA_REMOTE", "store-role:archive")
+    monkeypatch.setenv("LC_ALL", "unavailable-locale")
+
+    def transfer(command, **kwargs):
+        assert kwargs["env"]["LC_ALL"] == "C"
+        assert kwargs["env"]["LANG"] == "C"
+        raise subprocess.CalledProcessError(255, command, stderr=b"Connection refused")
+
+    monkeypatch.setattr(fetch_module.subprocess, "run", transfer)
+    with pytest.raises(fetch_module.StoreUnavailable):
+        fetch_module.fetch_row(root, fetch_module.read_manifest(root)[0])
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX creation-mask semantics")
+def test_restrictive_mask_creates_traversable_parent(fetch_module, store_case):
+    root, _, _, payload = store_case
+    row = dict(fetch_module.read_manifest(root)[0], path="new/nested/sample.dat")
+    old_mask = os.umask(0o777)
+    try:
+        target = fetch_module.fetch_row(root, row)
+    finally:
+        os.umask(old_mask)
+    assert target.read_bytes() == payload
+    assert stat.S_IMODE(target.parent.stat().st_mode) == stat.S_IRWXU
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "nan", "inf"])
+def test_invalid_transfer_limit_is_rejected(fetch_module, store_case, value, capsys):
+    root, _, store_id, _ = store_case
+    assert fetch_module.main([store_id, "--transfer-timeout", value], repo_root=root) != 0
+    assert "finite and positive" in capsys.readouterr().err

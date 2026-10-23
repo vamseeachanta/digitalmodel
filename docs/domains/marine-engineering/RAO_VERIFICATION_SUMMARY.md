@@ -20,7 +20,20 @@
 
 ---
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-10-22 | Clarifies historical input locations and manifest-based recovery without claiming a new reader run. |
+
 ## Detailed Results
+
+The results below are historical evidence. Input filenames identify the original
+test basis; the location placeholders are not current retrieval destinations.
+Archived inputs are recorded by repository-relative path, size and SHA-256 in
+`data/MANIFEST.tsv` and are restored with `scripts/data/fetch.py` when listed.
+An input absent from the manifest is not supplied by that helper. No fresh reader
+execution or recovery of an unlisted input is claimed here.
 
 ### Test 1: Ship RAOs (001_SHIP_RAOS_REV3.LIS)
 
