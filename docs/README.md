@@ -14,6 +14,7 @@ routing registries.
 | [docs/maps/digitalmodel-operator-map.md](maps/digitalmodel-operator-map.md) | Repo-wide code/tests/docs operator map |
 | [docs/registry/module-routing.yaml](registry/module-routing.yaml) | Canonical machine-readable module routing registry |
 | [Engineering analysis criteria](standards/analysis-parametric-lookup-criteria.html) | Required criteria for new or materially revised analysis deliverables, parametric studies and lookup datasets |
+| [Signed residual operators](standards/signed-residual-operators.html) | Explicit signed values, absolute residuals, relative errors and zero-reference handling |
 | [Engineering analysis workflow](standards/engineering-analysis-workflow.html) | Stage actions, evidence handoffs and exit conditions; [ANSYS](domains/ansys/analysis-workflow.html) and [AQWA](domains/aqwa/analysis-workflow.html) domain mappings |
 
 ## Route By Issue Type
