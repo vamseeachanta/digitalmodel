@@ -581,3 +581,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the reproducible public field-development module report only.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/fielddevelopment/
+docs/reports/modules/fielddevelopment/*
+!docs/reports/modules/fielddevelopment/build_report.py
+!docs/reports/modules/fielddevelopment/report_body.html.in
+!docs/reports/modules/fielddevelopment/interaction.js
+!docs/reports/modules/fielddevelopment/report.html
+!docs/reports/modules/fielddevelopment/changes.json

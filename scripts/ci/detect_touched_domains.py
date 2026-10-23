@@ -45,6 +45,12 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
+    # Rebuild checks bind the report, shared styling and cited catalogue edition.
+    ("docs/reports/modules/fielddevelopment/", ("field-development",)),
+    ("docs/api/cfd/", ("field-development",)),
+    ("docs/api/_assets/", ("field-development",)),
+    ("docs/domains/references/field_development/catalog/README.md",
+     ("contracts", "field-development")),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
