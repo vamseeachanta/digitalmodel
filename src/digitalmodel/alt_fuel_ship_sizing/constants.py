@@ -1,8 +1,10 @@
-# ABOUTME: Published physical constants for the alternative-fuel ship-design
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+# ABOUTME: Configured physical constants for the alternative-fuel ship-design
 # ABOUTME: sizing toolkit (LH2, NH3, methanol), with source citations per value.
-"""Published constants for alternative-fuel ship sizing (LH2, NH3, methanol).
+"""Configured constants for alternative-fuel ship sizing (LH2, NH3, methanol).
 
-All values are public, published data. Sources:
+Sources and qualifications of the configured approximations:
 
 - **Liquid parahydrogen at the normal boiling point (NBP, 20.28 K,
   101.325 kPa)**: McCarty, R. D., Hord, J., and Roder, H. M., *Selected
@@ -12,9 +14,12 @@ All values are public, published data. Sources:
   Equations of State for Parahydrogen, Normal Hydrogen, and Orthohydrogen",
   *J. Phys. Chem. Ref. Data* 38(3), 2009):
 
-  - saturated liquid density ~70.85 kg/m3
-  - latent heat of vaporization ~446 kJ/kg
-  - NBP temperature 20.28 K
+  The retained sizing defaults are approximations, not exact transcriptions
+  of either source: density 70.85 kg/m3, latent heat 446 kJ/kg and storage
+  temperature 20.28 K. NBS Monograph 168 section 1.2.15 (Fixed Points)
+  instead gives 70.78 kg/m3 at 20.268 K; section 1.2.25 (Heat of
+  Vaporization) gives 445.5 J/g for parahydrogen at its boiling point.
+  These configured defaults have not been re-fitted to a published table.
 
 - **Hydrogen lower heating value** 119.96 MJ/kg: U.S. DOE Hydrogen Program
   *Hydrogen Analysis Resource Center* / NIST-based lower heating value of
@@ -68,15 +73,15 @@ All values are public, published data. Sources:
 from __future__ import annotations
 
 # --- Liquid hydrogen (parahydrogen) at NBP -------------------------------
-# NBS Monograph 168 (1981); NIST Chemistry WebBook (Leachman et al. 2009).
+# Configured approximations; see the NBS comparison in the module docstring.
 LH2_DENSITY_KG_PER_M3 = 70.85
-"""Saturated liquid parahydrogen density at NBP (20.28 K, 101.325 kPa)."""
+"""Configured liquid parahydrogen density near NBP; not an exact NBS value."""
 
 LH2_HEAT_OF_VAPORIZATION_KJ_PER_KG = 446.0
-"""Latent heat of vaporization of parahydrogen at NBP."""
+"""Configured latent heat near NBP; NBS section 1.2.25 gives 445.5 kJ/kg."""
 
 LH2_NBP_K = 20.28
-"""Normal boiling point of parahydrogen at 101.325 kPa."""
+"""Configured NBP approximation; NBS section 1.2.15 gives 20.268 K."""
 
 H2_LOWER_HEATING_VALUE_MJ_PER_KG = 119.96
 """Hydrogen lower heating value (DOE Hydrogen Analysis Resource Center)."""

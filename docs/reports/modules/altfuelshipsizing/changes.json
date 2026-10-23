@@ -1,0 +1,30 @@
+{
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "validation",
+      "text": "Hand-worked headline checks and explicit UTF-8 and LF output distinguish arithmetic evidence from API consistency."
+    },
+    {
+      "section": "references",
+      "text": "Configured property precision and open-reference differences are quantified without changing the sizing defaults."
+    },
+    {
+      "section": "results",
+      "text": "Each route leg supplies its own speed and the thermal summary includes both tank sizes and the consumption boundary."
+    },
+    {
+      "section": "summary",
+      "text": "Sea-passage and port-dwell inventories are compared to expose the additional boil-off allowance."
+    },
+    {
+      "section": "basis",
+      "text": "Supplied powering, insulation and reserve inputs are distinguished from fuel properties and acceptance criteria."
+    },
+    {
+      "section": "results",
+      "text": "The sea-leg boil-off absorption boundary is shown with the action required above it."
+    }
+  ]
+}

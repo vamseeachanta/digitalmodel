@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alternative fuel ship sizing analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}</style>
+<style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+<style>
+svg{width:100%;height:auto} svg text{font:13px sans-serif;fill:var(--ink)}
+textarea{display:block;width:100%;font:inherit} button,input,select{font:inherit;margin:6px}
+details{border:1px solid var(--line);padding:12px;margin:16px 0} td{vertical-align:top}
+dt{margin-top:14px} dd{margin-left:0} a{color:var(--brand)}
+</style></head><body class="hs-doc"><div class="wrap">
+<header><div class="kicker">Marine engineering · concept design</div>
+<h1>Alternative fuel ship sizing analysis</h1>
+<p class="sub">Liquid-hydrogen inventory, cylindrical tank volume and voyage boil-off</p>
+<p>Draft for maintainer review</p></header>
+<nav aria-label="Report sections"><a href="#summary">Summary</a> · <a href="#basis">Design data</a> ·
+<a href="#results">Results</a> · <a href="#validation">Validation</a> · <a href="#references">References</a> · <a href="#appendix">Appendix</a></nav>
+
+<section id="executive"><h2>1. Executive Summary</h2>
+<p>Alternative fuel ship sizing is a concept-design calculation of fuel inventory and storage volume.
+Analysis is performed to determine the effect of supplied propulsion demand and voyage dwell on liquid-hydrogen storage;
+key results are summarized below.</p>
+<ul><li>A preliminary storage allowance can be selected for the documented synthetic example.
+<ul><li>The sea-only inventory requires <span data-number="single.gross_tank_volume_m3">1,856.3</span> m³ gross tank volume;
+the example with <span data-number="profile.port_dwell_h">240.0</span> h in port requires <span data-number="profile.gross_tank_volume_m3">1,903.9</span> m³ under the constant heat-leak model.</li></ul></li>
+<li>The consumed-vapor assumption can be screened against the sea fuel draw.
+<ul><li>At the example heat flux, generation is <span data-number="single.boil_off.bog_kg_per_day">304.7</span> kg/day for the sea-only tank
+and <span data-number="profile.boil_off.bog_kg_per_day">309.9</span> kg/day for the port-dwell tank. Sea fuel draw is <span data-number="chart.limit">7,920.0</span> kg/day.
+The sea-only tank reaches that draw at <span data-number="chart.boundary.x">39.0</span> W/m² in Figure B; above that boundary,
+venting or reliquefaction is required and the reported inventory is optimistic.</li></ul></li>
+<li>A detailed design cannot be released from these calculations.
+<ul><li>Tank pressure, structural adequacy, route powering accuracy and physical validation remain NOT_EVALUATED.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-22</td><td>Initial issue: fuel-chain scope, port-dwell inventory and the vapor-absorption criterion are documented for concept screening.</td></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Arithmetic evidence, portable reconstruction, property comparison and leg-specific reporting are corrected to make the calculation basis reviewable.</td></tr></tbody></table>
+</section>
+
+<section id="introduction"><h2>2. Introduction</h2>
+<p>The fuel-chain workflow is used to translate supplied shaft demand into fuel mass and gross storage volume.
+The electrical drivetrain and fuel-cell plant are represented by fixed efficiencies on a lower-heating-value basis.</p>
+<p>Liquid hydrogen is represented by constant liquid density and latent heat. Hydrogen vapor generated by heat ingress is
+either credited to the plant at sea or treated as a loss. Port dwell is represented by zero fuel burn with continuous vapor generation.
+This report uses a public repository example with synthetic inputs; it is not a measured ship or an externally published operating trial.
+The calculation and example records are identified in <a href="#source-example">the source register</a>.</p>
+</section>
+
+<section id="summary"><h2>3. Summary and operating controls</h2>
+<p>Inventory allowances are determined by the burn reserve and by the periods in which vapor cannot be absorbed.
+The available calculation boundary is an average sea-leg vapor balance; an operating approval envelope is not established.</p>
+<p>The port-dwell case carries <span data-number="profile.bog_lost_kg">3,098.6</span> kg of additional boil-off allowance.
+Port hotel demand is not represented, even though hotel demand is included at sea. Shore power and vapor handling therefore require a separate balance.</p>
+<p>For the consumed mode, compare heat-leak generation with consumption for each sea leg. A value above the boundary in Figure B requires
+a vapor-disposal or reliquefaction design and a revised inventory calculation. An empty warning list does not establish pressure control.
+The governing warning and port-loss semantics are documented in <a href="#source-api">the calculation record</a>.</p>
+</section>
+
+<section id="basis"><h2>4. Design data and acceptance basis</h2>
+<p>The documented public example is adopted as a synthetic calculation basis. Powering, efficiencies, reserve and insulation
+are marked ASSUMED - to be confirmed for application to an actual design.</p>
+<p>The supplied sea shaft demand is <span data-number="input.powering.shaft_power_kw">4,750.0</span> kW and the hotel electrical demand is
+<span data-number="input.powering.hotel_load_kw">500.0</span> kW. The drivetrain and fuel-cell efficiencies are held constant.
+The complete numerical input and property registers are provided in the appendix; the source of each value is stated there.</p>
+<figure>
+<svg viewBox="0 0 760 280" role="img" aria-label="Longitudinal cutaway of a flat-ended cylindrical tank with liquid, ullage, heat ingress and vapor outlet">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="currentColor"/></marker></defs>
+<rect x="80" y="70" width="520" height="115" rx="8" fill="var(--panel-2)" stroke="var(--ink)"/>
+<path d="M90 102 H590 V175 H90 Z" fill="var(--ground)" stroke="var(--brand)"/>
+<path d="M90 100 H590 M90 80 V175 M590 80 V175" fill="none" stroke="var(--ink)"/>
+<path d="M220 30 V67 M370 30 V67 M520 30 V67 M570 80 V45 H690" fill="none" stroke="var(--ink)" marker-end="url(#arrow)"/>
+<text x="270" y="23">Uniform insulation heat ingress</text><text x="610" y="68">Vapor outlet</text>
+<text x="280" y="95">Ullage</text><text x="250" y="140">Liquid hydrogen</text>
+<path d="M80 215 H600 M80 205 V225 M600 205 V225 M40 70 V185 M30 70 H50 M30 185 H50" fill="none" stroke="var(--ink)"/>
+<text x="240" y="240">Length L</text><text x="10" y="260">Diameter D</text>
+</svg>
+<figcaption>Figure A. Cylinder idealisation at the port-dwell inventory: length <span data-number="profile.tank.length_m">39.3</span> m,
+diameter <span data-number="profile.tank.diameter_m">7.9</span> m. The liquid surface is illustrative; the thermal calculation uses the full cylinder surface.
+End closures are flat in the calculation. Insulation thickness, supports, piping and pressure containment are not dimensioned.</figcaption></figure>
+<h3>Criteria and rationale</h3>
+<p>The sea consumed-vapor criterion is generation no greater than fuel draw, because surplus vapor has no sink in that model.
+Equality is the balance boundary; generation greater than draw sets the module warning. All port vapor is added as lost inventory.
+These are software accounting criteria, not class-rule acceptance criteria. Available arrangement volume, maximum pressure,
+minimum reserve endurance and relief capacity are required design inputs and remain NOT_EVALUATED.</p>
+<p>The numerical stopping criterion is the change in required fuel mass between successive tank estimates.
+The API defaults and the exhaustion exception are recorded in the source register. That tolerance controls iteration closure only;
+it provides no measure of physical accuracy.</p>
+</section>
+
+<section id="method"><h2>5. Methodology and theory</h2>
+<p>Energy conservation and cylindrical geometry are applied with the units defined below.
+The equations reproduce the <a href="#source-api">documented library method</a> rather than a resistance or pressure-vessel calculation.</p>
+<h3>Energy and inventory balance</h3>
+<div class="eq">t = s / v; Pₑ = Pₛ / ηₑ + Pₕ; P𝒇 = Pₑ / η𝒇; ṁ = cₕ P𝒇 / H</div>
+<p>The route distance s is in nautical miles, speed v in knots and sea duration t in hours. Shaft demand Pₛ,
+hotel demand Pₕ, electrical demand Pₑ and fuel power P𝒇 are in kW. The dimensionless efficiencies ηₑ and η𝒇 represent
+the drivetrain and the lower-heating-value plant efficiency. H is lower heating value in MJ/kg and ṁ is fuel flow in kg/h.
+The unit conversion cₕ is the seconds-per-hour to kilojoules-per-megajoule ratio; it is defined in <a href="#source-api">the unit implementation</a>.</p>
+<div class="eq">Mᵥ = (1 + r) Σ(ṁᵢ tᵢ); M = Mᵥ + Mₗ; Vₙ = M / ρ; V𝓰 = Vₙ / (1 − u)</div>
+<p>The subscript ᵢ identifies each sea burn period. Reserve fraction r is applied to sea burn only.
+Voyage fuel including reserve Mᵥ, lost vapor Mₗ and required inventory M are in kg. Liquid density ρ is in kg/m³,
+ullage fraction u is dimensionless, and net liquid volume Vₙ and gross tank volume V𝓰 are in m³.
+Lost vapor is added without a further reserve multiplier, as implemented in <a href="#source-api">the voyage balance</a>.</p>
+<h3>Heat leak and vapor generation</h3>
+<div class="eq">λ = L / D; V𝓰 = πD²L / 4; A = πDL + πD² / 2; Q = qA; ṁᵥ = Q / hᵥ</div>
+<p>Tank length L and diameter D are in m; slenderness λ is dimensionless. Surface area A is in m².
+Uniform heat flux q is in W/m², heat ingress Q is in W, latent heat hᵥ is expressed in J/kg for this equation,
+and vapor generation ṁᵥ is in kg/s. The reported vapor rate is converted to kg/day; its percentage rate is referenced to the full-load liquid mass.
+The alternative heat-flux input is q = U(Tₐ − Tₛ), with thermal transmittance U in W/(m² K) and ambient and storage temperatures Tₐ and Tₛ in K.</p>
+<p>The heat balance uses constant saturation properties, uniform heat flux and the entire cylinder area throughout the voyage.
+The public monograph defines latent heat as the saturated vapor–liquid enthalpy difference; the repository property approximations are retained,
+with their external qualification limits stated in <a href="#source-properties">the property source register</a>.</p>
+<p>Inventory is iterated when lost vapor increases tank size and hence surface area. In consumed mode, sea vapor is credited without adding inventory;
+surplus generation is flagged rather than removed from the credit. Port vapor is always added as a loss. Leg sequence does not change heat leak,
+because no depletion-dependent liquid level or pressure state is solved.</p>
+</section>
+
+<section id="results"><h2>6. Detailed results and worked example</h2><div id="worked-example">
+<p>The documented example is calculated by calling the public fuel-chain and voyage functions.
+The sea-only comparison uses the aggregate distance and the configured comparison service speed while omitting port dwell.</p>
+<p>The ordered route comprises: sea passage of <span data-number="input.route.legs.0.distance_nm">2,000.0</span> nautical miles at <span data-number="input.route.legs.0.speed_kn">12.0</span> knots; port dwell of <span data-number="input.route.legs.1.dwell_h">240.0</span> h; sea passage of <span data-number="input.route.legs.2.distance_nm">2,000.0</span> nautical miles at <span data-number="input.route.legs.2.speed_kn">12.0</span> knots. At the sea-only comparison point, electrical demand is <span data-number="single.electrical_power_kw">5,500.0</span> kW,
+fuel power is <span data-number="single.fuel_lhv_power_kw">11,000.0</span> kW and fuel flow is <span data-number="single.fuel_mass_flow_kg_per_h">330.0</span> kg/h.</p>
+<table><thead><tr><th>Quantity</th><th>Unit</th><th>Sea only</th><th>With port dwell</th><th>Source</th></tr></thead><tbody>
+<tr><td>Fuel inventory</td><td>kg</td><td><span data-number="single.required_fuel_mass_kg">121,000.0</span></td><td><span data-number="profile.required_fuel_mass_kg">124,098.6</span></td><td><a href="#source-api">Calculation</a></td></tr>
+<tr><td>Gross tank volume</td><td>m³</td><td><span data-number="single.gross_tank_volume_m3">1,856.3</span></td><td><span data-number="profile.gross_tank_volume_m3">1,903.9</span></td><td><a href="#source-api">Calculation</a></td></tr>
+<tr><td>Lost vapor allowance</td><td>kg</td><td><span data-number="single.bog_lost_kg">0.0</span></td><td><span data-number="profile.bog_lost_kg">3,098.6</span></td><td><a href="#source-api">Calculation</a></td></tr>
+<tr><td>Vapor generation</td><td>kg/day</td><td><span data-number="single.boil_off.bog_kg_per_day">304.7</span></td><td><span data-number="profile.boil_off.bog_kg_per_day">309.9</span></td><td><a href="#source-api">Calculation</a></td></tr>
+</tbody></table>
+<p>The inventory change follows from port vapor losses and the resulting increase in tank heat leak.
+Inventory increases by <span data-number="comparison.inventory_change_percent">2.6</span> % and gross volume by <span data-number="comparison.volume_change_percent">2.6</span> % relative to the sea-only reference.
+The complete output records, including geometry and each leg balance, are tabulated in the appendix. Available hold volume remains NOT_EVALUATED.</p>
+</div></section>
+
+<section id="validation"><h2>7. Validation evidence and sensitivity</h2>
+<p>Repository evidence is separated into arithmetic regression, export consistency and physical validation.
+The existing tests exercise the first two categories; comparison with measured fuel or tank data is not established by those records.</p>
+<table><thead><tr><th>Existing evidence group</th><th>Defined test functions</th></tr></thead><tbody><tr><td><a href="#source-tests">Library calculation checks</a></td><td>38</td></tr><tr><td><a href="#source-tests">Configuration and export checks</a></td><td>14</td></tr><tr><td><a href="#source-tests">Report example checks</a></td><td>3</td></tr></tbody></table>
+<p>The library tests cover the energy chain, flat-ended tank geometry, heat leak, consumed and lost vapor,
+port dwell, leg power overrides, fuel presets, wind interpolation, speed sweeps and tonnage provisos.
+Configuration tests exercise parsing and comma-separated-value exports. The example tests compare checked-in tables with a fresh calculation
+and exercise the separate report renderer. Counts denote test definitions, not independent physical experiments.</p>
+<figure><svg id="thermal-chart" viewBox="0 0 760 340" role="img" aria-label="Boil-off generation against insulation heat flux with the sea fuel consumption boundary"></svg>
+<label for="heat-case">Select heat-flux case</label> <input id="heat-case" type="range" min="0" max="40" value="0" step="1">
+<p id="chart-readout" role="status" aria-live="polite"></p>
+<figcaption>Figure B. Sea-only consumed-mode thermal sensitivity at fixed inventory. Hover or focus a point to read heat flux,
+generation demand and absorption limit. The dashed line is the module's average sea fuel draw, not a relief-system rating.</figcaption></figure>
+<p>The legend is read as follows. Green indicates generation below the absorption boundary. Amber indicates the balance boundary.
+Red indicates generation above the boundary, requiring venting or reliquefaction and a revised inventory model.
+The increased heat flux is a sensitivity variable; it is not a proposed insulation specification.</p>
+<p>External calibration, transient tank pressure, fuel-cell turndown and measured route weather remain NOT_EVALUATED.
+The published property monograph supports thermodynamic definitions; it does not validate this ship-sizing implementation.</p>
+</section>
+
+<section id="limits"><h2>8. Key findings, limitations and recommendations</h2>
+<p>The principal inventory effect is the loss of vapor during periods without fuel consumption.
+The reported volumes are conditional on the supplied powering and on the constant heat-leak approximation.</p>
+<p>A separate vapor-handling balance is required whenever a sea leg exceeds the Figure B boundary or any port dwell is present.
+Venting or reliquefaction, pressure protection and port energy supply are to be resolved before the consumed-mode assumption is used for design.
+This action follows the module warning and zero-port-burn treatment identified in <a href="#source-api">the calculation record</a>.</p>
+<p>Replace the synthetic shaft-demand, efficiency and insulation inputs with qualified route and supplier data before selecting storage capacity.
+Obtain arrangement space, tank closure geometry, supports and relief design before treating the calculated cylinder as an installable tank.
+Comparison with a measured heat-leak test and a route energy balance is required to establish physical accuracy for the intended storage condition.</p>
+<h3>Not covered</h3>
+<p>Wind-assist thrust integration, fuel-price comparisons, alternative-fuel property selection and tonnage are available sub-areas but are not engineering
+assessments in this report. Supplied wind polars and a route wind distribution are required for a wind assessment. The speed sweep uses an aggregate
+sea passage and excludes dwell; it is not a schedule calculation. Explicit leg shaft powers bypass the default wind reduction, so the enriched summary
+is not a substitute for checking each leg. These behaviors are identified in <a href="#source-workflow">the workflow source</a>.</p>
+<p>Refrigerated ammonia and ambient methanol require separate property and plant bases. The methanol preset does not establish an ambient boil-off model.
+Resistance, sea-state limits, heading limits, crane rigging, structural stress and stability are not represented; installation envelopes and forecast controls
+are therefore not assigned. General numerical finiteness is not comprehensively checked by the module, so nonfinite inputs require rejection before use.</p>
+</section>
+
+<section id="references"><h2>9. References and source register</h2>
+<p>The calculation basis is identified by the public repository records and an open government reference.
+Quoted example values originate in those records or in direct function returns; no operating limit is inferred from an uncited handbook value.</p>
+<h3>9.1. Reading basis</h3>
+<p>The documented example is used to demonstrate calculation behavior. The property constants are treated as configured approximations;
+the monograph's definition of saturation latent heat is used as the physical basis. No licensed standard values are reproduced.</p>
+<h3>9.2. Source locators and editions</h3>
+<dl class="refs">
+<dt id="source-example">Documented public example</dt><dd>Repository edition accompanying this report:
+<code>examples/workflows/alt-fuel-report-pack/sizing_input.yml</code>. Synthetic sea–port–sea route, fuel-chain inputs, speed sweep and illustrative price.
+The reserve, ullage, heat flux, efficiencies and powering are example assumptions, not prescribed design coefficients.</dd>
+<dt id="source-api">Calculation and unit implementation</dt><dd>Repository edition accompanying this report:
+<code>src/digitalmodel/alt_fuel_ship_sizing/lh2_fuel_chain.py</code>,
+<code>size_fuel_chain</code>, <code>size_fuel_chain_voyage</code>, <code>boil_off</code>,
+<code>cylindrical_tank_geometry</code>, <code>electrical_power_kw</code> and <code>fuel_mass_flow_kg_per_h</code>.
+<code>constants.py</code> defines time conversions. The voyage API defaults to fifty iterations and a mass-change tolerance of one milligram;
+exhaustion raises an exception. Efficiency is positive and no greater than unity; ullage is nonnegative and less than unity;
+distance, speed, property values and the supplied heat-flux magnitude are positive. These are implementation domains.</dd>
+<dt id="source-properties">Configured fuel properties</dt><dd>Repository edition accompanying this report:
+<code>src/digitalmodel/alt_fuel_ship_sizing/constants.py</code> and the documented example's lower-heating-value override.
+The hydrogen density, latent heat and storage temperature in the appendix are retained from the module, not re-fitted to an external table.
+The configured density <span data-number="fuel.density_kg_per_m3">70.85</span> kg/m³ and latent heat <span data-number="fuel.heat_of_vaporization_kj_per_kg">446.0</span> kJ/kg
+are higher than the monograph's normal-boiling entries by <span data-number="comparison.density_change_percent">0.1</span> % and
+<span data-number="comparison.latent_heat_change_percent">0.1</span> %, respectively. Using both reference properties gives
+<span data-number="comparison.reference_gross_volume_m3">1,905.8</span> m³ rather than <span data-number="profile.gross_tank_volume_m3">1,903.9</span> m³ for the port-dwell tank,
+with all other inputs retained. This is a property sensitivity, not physical validation.</dd>
+<dt id="source-monograph">Open thermodynamic reference</dt><dd><a href="https://nvlpubs.nist.gov/nistpubs/Legacy/MONO/nbsmonograph168.pdf">Selected Properties of Hydrogen (Engineering Design Data),
+National Bureau of Standards Monograph 168, 1981</a>, section 1.2.15, Fixed Points, and section 1.2.25, Heat of Vaporization.
+The parahydrogen normal-boiling entries are 70.78 kg/m³ at 20.268 K and 445.5 J/g (equivalently kJ/kg).
+These published entries are compared directly with the configured approximations; the configured storage temperature is <span data-number="fuel.storage_temperature_k">20.28</span> K.
+The open government copy was accessible on the report issue date. The latent-heat definition uses saturated vapor and liquid at the same temperature and pressure.</dd>
+<dt id="source-tests">Existing test evidence</dt><dd>Repository edition accompanying this report:
+<code>tests/naval_architecture/test_alt_fuel_ship_sizing.py</code>,
+<code>tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py</code> and
+<code>tests/report_pack/test_alt_fuel_report_pack_demo.py</code>. The first contains hand-arithmetic comparisons;
+the last also compares the retained example tables with fresh exports. Test-definition counts are extracted from these files.</dd>
+<dt id="source-workflow">Workflow and published usage</dt><dd>Repository edition accompanying this report:
+<code>src/digitalmodel/alt_fuel_ship_sizing/workflow.py</code> and
+<code>docs/domains/ship-design/alt-fuel-lh2-sizing.md</code>. The documented callable interface is
+<code>digitalmodel.alt_fuel_ship_sizing</code>; <code>workflow.router</code> accepts the configuration mapping and writes the summary,
+voyage-leg, optional wind-bin, speed-study and tonnage tables under the supplied output directory.
+The returned mapping contains the same result records. File names are derived from the configuration stem.</dd>
+<dt id="source-rebuild">Report reconstruction</dt><dd>Repository edition accompanying this report:
+<code>docs/reports/modules/altfuelshipsizing/generate.py</code> and
+<code>tests/docs/test_altfuelshipsizing_report.py</code>. From the repository root, set the source import path and execute
+<code>python docs/reports/modules/altfuelshipsizing/generate.py --output-dir &lt;report directory&gt;</code>.
+The output directory receives the HTML and change panel data only. Intermediate exports are not needed.
+The layout and inlined styles are reused from <code>docs/api/cfd/turbulent-flat-plate-verification.html</code> and <code>docs/api/_assets/brand.css</code>.
+The document body uses <code>hs-doc</code>.</dd>
+</dl></section>
+
+<section id="appendix"><h2>10. Appendix: data register and quality evidence</h2>
+<p>The complete input and numerical output records are retained below to permit an independent review of the example.
+Values are calculated afresh; display rounding does not change the inputs used by the module.
+Nonzero magnitudes below unity are printed in scientific notation to retain significant digits.</p>
+<h3>Data register</h3>
+<p>ASSUMED - to be confirmed: route, powering, efficiencies, reserve, ullage, slenderness, insulation flux and fuel price are copied from the synthetic example.
+The lower heating value is its deliberate round-number override. The price and speed-sweep inputs are recorded for completeness but are not used in the reported inventory comparison.
+Storage properties are configured approximations with the source limits stated above. Actual arrangement volume, pressure limits, supplier guarantees,
+port loads and measured validation data are missing; the affected design decisions remain NOT_EVALUATED.</p>
+<table><thead><tr><th>Quantity</th><th>Unit</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Service speed</td><td>knots</td><td><span data-number="input.route.service_speed_kn">12.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Leg 1: sea distance</td><td>nautical miles</td><td><span data-number="input.route.legs.0.distance_nm">2,000.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Leg 1: sea speed</td><td>knots</td><td><span data-number="input.route.legs.0.speed_kn">12.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Leg 2: port dwell</td><td>h</td><td><span data-number="input.route.legs.1.dwell_h">240.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Leg 3: sea distance</td><td>nautical miles</td><td><span data-number="input.route.legs.2.distance_nm">2,000.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Leg 3: sea speed</td><td>knots</td><td><span data-number="input.route.legs.2.speed_kn">12.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Shaft demand</td><td>kW</td><td><span data-number="input.powering.shaft_power_kw">4,750.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Hotel electrical demand</td><td>kW</td><td><span data-number="input.powering.hotel_load_kw">500.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Fuel-cell efficiency on a lower-heating-value basis</td><td>fraction</td><td><span data-number="input.efficiency.fuel_cell_lhv">5.0e−01</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Electric drivetrain efficiency</td><td>fraction</td><td><span data-number="input.efficiency.electric_drivetrain">9.5e−01</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Sea fuel reserve</td><td>fraction</td><td><span data-number="input.fuel.margin_fraction">1.0e−01</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Lower heating value</td><td>MJ/kg</td><td><span data-number="input.fuel.lhv_mj_per_kg">120.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Ullage</td><td>fraction</td><td><span data-number="input.tank.ullage_fraction">8.0e−02</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Length divided by diameter</td><td>dimensionless</td><td><span data-number="input.tank.length_to_diameter">5.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Insulation heat flux</td><td>W/m²</td><td><span data-number="input.tank.insulation_heat_flux_w_per_m2">1.5</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Trade-study service speed</td><td>knots</td><td><span data-number="input.trade_study.speeds_kn.0">10.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Trade-study service speed</td><td>knots</td><td><span data-number="input.trade_study.speeds_kn.1">12.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Trade-study service speed</td><td>knots</td><td><span data-number="input.trade_study.speeds_kn.2">14.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr><tr><td>Illustrative fuel price</td><td>currency/kg</td><td><span data-number="input.economics.fuel_price_per_kg">6.0</span></td><td><a href="#source-example">Documented example; assumed</a></td></tr></tbody></table><p class="sub">Table A. All numerical example inputs; source and assumption status are retained.</p>
+<table><thead><tr><th>Quantity</th><th>Unit</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Liquid density</td><td>kg/m³</td><td><span data-number="fuel.density_kg_per_m3">70.85</span></td><td><a href="#source-properties">Configured properties</a></td></tr><tr><td>Lower heating value</td><td>MJ/kg</td><td><span data-number="fuel.lhv_mj_per_kg">120.0</span></td><td><a href="#source-properties">Configured properties</a></td></tr><tr><td>Latent heat of vaporization</td><td>kJ/kg</td><td><span data-number="fuel.heat_of_vaporization_kj_per_kg">446.0</span></td><td><a href="#source-properties">Configured properties</a></td></tr><tr><td>Fuel storage temperature</td><td>K</td><td><span data-number="fuel.storage_temperature_k">20.28</span></td><td><a href="#source-properties">Configured properties</a></td></tr></tbody></table><p class="sub">Table B. Effective fuel properties used by the calculation, including the example override.</p>
+<h3>Complete calculation records</h3>
+<table><thead><tr><th>Quantity</th><th>Unit</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Sea-passage duration</td><td>h</td><td><span data-number="single.endurance_hours">333.3</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Electrical demand</td><td>kW</td><td><span data-number="single.electrical_power_kw">5,500.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Fuel power on a lower-heating-value basis</td><td>kW</td><td><span data-number="single.fuel_lhv_power_kw">11,000.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Sea fuel consumption</td><td>kg/h</td><td><span data-number="single.fuel_mass_flow_kg_per_h">330.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Sea fuel including reserve</td><td>kg</td><td><span data-number="single.voyage_fuel_kg">121,000.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Boil-off loss allowance</td><td>kg</td><td><span data-number="single.bog_lost_kg">0.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Required fuel inventory</td><td>kg</td><td><span data-number="single.required_fuel_mass_kg">121,000.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Net liquid volume</td><td>m³</td><td><span data-number="single.net_tank_volume_m3">1,707.8</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Gross tank volume</td><td>m³</td><td><span data-number="single.gross_tank_volume_m3">1,856.3</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Cylinder gross volume</td><td>m³</td><td><span data-number="single.tank.gross_volume_m3">1,856.3</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Cylinder diameter</td><td>m</td><td><span data-number="single.tank.diameter_m">7.8</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Cylinder length</td><td>m</td><td><span data-number="single.tank.length_m">38.9</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Cylinder surface area</td><td>m²</td><td><span data-number="single.tank.surface_area_m2">1,048.5</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Tank heat leak</td><td>W</td><td><span data-number="single.boil_off.heat_leak_w">1,572.8</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Boil-off generation</td><td>kg/day</td><td><span data-number="single.boil_off.bog_kg_per_day">304.7</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Boil-off rate relative to full-load liquid mass</td><td>%/day</td><td><span data-number="single.boil_off.bog_rate_percent_per_day">2.5e−01</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr><tr><td>Full-load liquid mass</td><td>kg</td><td><span data-number="single.boil_off.full_load_liquid_mass_kg">121,000.0</span></td><td><a href="#source-api">Fuel-chain calculation</a></td></tr></tbody></table><p class="sub">Table C. Sea-only comparison, including geometry and full-load-reference vapor rate.</p>
+<table><thead><tr><th>Quantity</th><th>Unit</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td>Total voyage duration</td><td>h</td><td><span data-number="profile.total_voyage_hours">573.3</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Time at sea</td><td>h</td><td><span data-number="profile.sea_hours">333.3</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Port dwell</td><td>h</td><td><span data-number="profile.port_dwell_h">240.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Total sea distance</td><td>nautical miles</td><td><span data-number="profile.total_distance_nm">4,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Sea fuel including reserve</td><td>kg</td><td><span data-number="profile.voyage_fuel_kg">121,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Boil-off loss allowance</td><td>kg</td><td><span data-number="profile.bog_lost_kg">3,098.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Required fuel inventory</td><td>kg</td><td><span data-number="profile.required_fuel_mass_kg">124,098.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Net liquid volume</td><td>m³</td><td><span data-number="profile.net_tank_volume_m3">1,751.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Gross tank volume</td><td>m³</td><td><span data-number="profile.gross_tank_volume_m3">1,903.9</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Cylinder gross volume</td><td>m³</td><td><span data-number="profile.tank.gross_volume_m3">1,903.9</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Cylinder diameter</td><td>m</td><td><span data-number="profile.tank.diameter_m">7.9</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Cylinder length</td><td>m</td><td><span data-number="profile.tank.length_m">39.3</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Cylinder surface area</td><td>m²</td><td><span data-number="profile.tank.surface_area_m2">1,066.3</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Tank heat leak</td><td>W</td><td><span data-number="profile.boil_off.heat_leak_w">1,599.5</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Boil-off generation</td><td>kg/day</td><td><span data-number="profile.boil_off.bog_kg_per_day">309.9</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Boil-off rate relative to full-load liquid mass</td><td>%/day</td><td><span data-number="profile.boil_off.bog_rate_percent_per_day">2.5e−01</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Full-load liquid mass</td><td>kg</td><td><span data-number="profile.boil_off.full_load_liquid_mass_kg">124,098.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: leg index</td><td>dimensionless</td><td><span data-number="profile.legs.0.index">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: leg duration</td><td>h</td><td><span data-number="profile.legs.0.duration_h">166.7</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: sea distance</td><td>nautical miles</td><td><span data-number="profile.legs.0.distance_nm">2,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: sea speed</td><td>knots</td><td><span data-number="profile.legs.0.speed_kn">12.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: fuel burned before reserve</td><td>kg</td><td><span data-number="profile.legs.0.fuel_burned_kg">55,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: boil-off generated</td><td>kg</td><td><span data-number="profile.legs.0.bog_generated_kg">2,151.8</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: boil-off credited as consumed</td><td>kg</td><td><span data-number="profile.legs.0.bog_consumed_kg">2,151.8</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 1: boil-off loss allowance</td><td>kg</td><td><span data-number="profile.legs.0.bog_lost_kg">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: leg index</td><td>dimensionless</td><td><span data-number="profile.legs.1.index">1.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: leg duration</td><td>h</td><td><span data-number="profile.legs.1.duration_h">240.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: sea distance</td><td>nautical miles</td><td><span data-number="profile.legs.1.distance_nm">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: sea speed</td><td>knots</td><td><span data-number="profile.legs.1.speed_kn">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: fuel burned before reserve</td><td>kg</td><td><span data-number="profile.legs.1.fuel_burned_kg">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: boil-off generated</td><td>kg</td><td><span data-number="profile.legs.1.bog_generated_kg">3,098.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: boil-off credited as consumed</td><td>kg</td><td><span data-number="profile.legs.1.bog_consumed_kg">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 2: boil-off loss allowance</td><td>kg</td><td><span data-number="profile.legs.1.bog_lost_kg">3,098.6</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: leg index</td><td>dimensionless</td><td><span data-number="profile.legs.2.index">2.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: leg duration</td><td>h</td><td><span data-number="profile.legs.2.duration_h">166.7</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: sea distance</td><td>nautical miles</td><td><span data-number="profile.legs.2.distance_nm">2,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: sea speed</td><td>knots</td><td><span data-number="profile.legs.2.speed_kn">12.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: fuel burned before reserve</td><td>kg</td><td><span data-number="profile.legs.2.fuel_burned_kg">55,000.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: boil-off generated</td><td>kg</td><td><span data-number="profile.legs.2.bog_generated_kg">2,151.8</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: boil-off credited as consumed</td><td>kg</td><td><span data-number="profile.legs.2.bog_consumed_kg">2,151.8</span></td><td><a href="#source-api">Voyage calculation</a></td></tr><tr><td>Leg 3: boil-off loss allowance</td><td>kg</td><td><span data-number="profile.legs.2.bog_lost_kg">0.0</span></td><td><a href="#source-api">Voyage calculation</a></td></tr></tbody></table><p class="sub">Table D. Documented voyage, including each leg's duration, burn and vapor allocation.</p>
+<p>The consumed mode is used in both cases. The example sea legs do not set the excess-generation flag; the port leg is treated as lost vapor.
+Sea-only loss is a true zero. A port-leg zero burn is the model definition, not a missing datum.</p>
+<h3>Quality pre-flight evidence</h3>
+<p>The reconstruction check compares both delivered files byte for byte with a fresh build. Each displayed example number carries a source key;
+the API consistency test calls the same public functions as the builder and compares every key and displayed value, including all numeric result fields and leg records.
+Separate hand-worked literal assertions check the sea flow, reserve inventory, port-dwell inventory, gross volume,
+lost vapor, inventory increase and heat-flux boundary without using the sizing functions as the expected-value oracle.
+The export check also compares the configuration workflow with the voyage calculation in a temporary output directory.</p>
+<p>The chart check compares every plotted generation value with the module heat-leak function and checks that the absorption boundary is crossed.
+Document checks cover section count, reference targets, inlined house styles, public wording, precision and local comment controls.
+These checks establish reconstruction consistency; physical validation and browser interaction testing remain NOT_EVALUATED.</p>
+<details id="changes"><summary>Engineering changes since the previous revision</summary><div id="change-list"></div></details>
+<details id="comments"><summary>Section comments</summary>
+<p>Comments are kept in this browser until saved. Select Save comments and place the comments file beside this report.
+Load comments restores a saved file. Browsers without direct file saving download the file; select the report folder as the destination.</p>
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-status" role="status" aria-live="polite"></p><ol id="comment-list"></ol></details>
+</section>
+<footer>Concept-design screening. Numerical consistency does not establish physical accuracy or design approval.</footer>
+</div>
+<script id="chart-data" type="application/json">{"points": [{"x": 1.5, "y": 304.6827780726473}, {"x": 1.9495686751890162, "y": 396.0}, {"x": 3.8991373503780324, "y": 792.0}, {"x": 5.848706025567049, "y": 1188.0}, {"x": 7.798274700756065, "y": 1584.0}, {"x": 9.74784337594508, "y": 1979.9999999999998}, {"x": 11.697412051134098, "y": 2376.0}, {"x": 13.646980726323113, "y": 2771.999999999999}, {"x": 15.59654940151213, "y": 3168.0}, {"x": 17.546118076701145, "y": 3563.9999999999995}, {"x": 19.49568675189016, "y": 3959.9999999999995}, {"x": 21.44525542707918, "y": 4356.0}, {"x": 23.394824102268196, "y": 4752.0}, {"x": 25.34439277745721, "y": 5147.999999999999}, {"x": 27.293961452646226, "y": 5543.999999999998}, {"x": 29.243530127835243, "y": 5939.999999999999}, {"x": 31.19309880302426, "y": 6336.0}, {"x": 33.142667478213276, "y": 6732.0}, {"x": 35.09223615340229, "y": 7127.999999999999}, {"x": 37.04180482859131, "y": 7524.0}, {"x": 38.99137350378032, "y": 7919.999999999999}, {"x": 40.94094217896934, "y": 8315.999999999998}, {"x": 42.89051085415836, "y": 8712.0}, {"x": 44.84007952934737, "y": 9108.0}, {"x": 46.78964820453639, "y": 9504.0}, {"x": 48.739216879725404, "y": 9899.999999999998}, {"x": 50.68878555491442, "y": 10295.999999999998}, {"x": 52.63835423010344, "y": 10691.999999999998}, {"x": 54.58792290529245, "y": 11087.999999999996}, {"x": 56.53749158048147, "y": 11483.999999999998}, {"x": 58.487060255670485, "y": 11879.999999999998}, {"x": 60.4366289308595, "y": 12275.999999999998}, {"x": 62.38619760604852, "y": 12672.0}, {"x": 64.33576628123754, "y": 13068.0}, {"x": 66.28533495642655, "y": 13464.0}, {"x": 68.23490363161557, "y": 13859.999999999998}, {"x": 70.18447230680458, "y": 14255.999999999998}, {"x": 72.13404098199359, "y": 14651.999999999998}, {"x": 74.08360965718262, "y": 15048.0}, {"x": 76.03317833237163, "y": 15444.0}, {"x": 77.98274700756065, "y": 15839.999999999998}], "limit": 7920.0, "boundary": {"x": 38.99137350378032, "y": 7919.999999999999}}</script>
+<script id="changes-data" type="application/json">{"revision": "1", "date": "2026-10-22", "changes": [{"section": "validation", "text": "Hand-worked headline checks and explicit UTF-8 and LF output distinguish arithmetic evidence from API consistency."}, {"section": "references", "text": "Configured property precision and open-reference differences are quantified without changing the sizing defaults."}, {"section": "results", "text": "Each route leg supplies its own speed and the thermal summary includes both tank sizes and the consumption boundary."}, {"section": "summary", "text": "Sea-passage and port-dwell inventories are compared to expose the additional boil-off allowance."}, {"section": "basis", "text": "Supplied powering, insulation and reserve inputs are distinguished from fuel properties and acceptance criteria."}, {"section": "results", "text": "The sea-leg boil-off absorption boundary is shown with the action required above it."}]}</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('chart-data').textContent);
+  const chart = document.getElementById('thermal-chart');
+  const ns = 'http://www.w3.org/2000/svg';
+  function element(tag, attrs, text) {
+    const node = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    if (text !== undefined) node.textContent = text;
+    chart.appendChild(node); return node;
+  }
+  const xmax = Math.max(...data.points.map(point => point.x));
+  const ymax = Math.max(...data.points.map(point => point.y));
+  const x = value => 90 + value / xmax * 620;
+  const y = value => 280 - value / ymax * 240;
+  const fmt = value => value.toLocaleString('en', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+  element('path', {d: 'M90 40 V280 H710', fill: 'none', stroke: 'var(--ink)'});
+  element('text', {x: 260, y: 330}, 'Insulation heat flux (W/m²)');
+  element('text', {x: 90, y: 22}, 'Boil-off generation (kg/day)');
+  [0, 0.5, 1].forEach(fraction => {
+    element('text', {x: x(xmax * fraction), y: 300, 'text-anchor': 'middle'}, fmt(xmax * fraction));
+    element('text', {x: 80, y: y(ymax * fraction), 'text-anchor': 'end'}, fmt(ymax * fraction));
+  });
+  element('line', {x1: 90, x2: 710, y1: y(data.limit), y2: y(data.limit),
+    stroke: 'var(--caution)', 'stroke-width': 2, 'stroke-dasharray': '6 4'});
+  element('text', {x: 100, y: y(data.limit) - 10}, 'Sea draw boundary: ' + fmt(data.limit) + ' kg/day');
+  const readout = document.getElementById('chart-readout');
+  const circles = [];
+  function describe(point) {
+    return 'Sea-only case; tank vapor; heat flux ' + fmt(point.x) + ' W/m²; generation demand ' +
+      fmt(point.y) + ' kg/day; absorption limit ' + fmt(data.limit) + ' kg/day.';
+  }
+  function show(index) {
+    circles.forEach((circle, i) => circle.setAttribute('r', i === index ? 7 : 4));
+    readout.textContent = describe(data.points[index]);
+    document.getElementById('heat-case').value = index;
+  }
+  data.points.forEach((point, index) => {
+    const boundary = Math.abs(point.y - data.limit) < data.limit * Number.EPSILON * 8;
+    const color = boundary ? 'var(--caution)' : point.y < data.limit ? 'var(--go)' : 'var(--nogo)';
+    const circle = element('circle', {cx: x(point.x), cy: y(point.y), r: 4, fill: color,
+      tabindex: 0, role: 'img', 'aria-label': describe(point)});
+    const title = document.createElementNS(ns, 'title'); title.textContent = describe(point); circle.appendChild(title);
+    circle.addEventListener('mouseenter', () => show(index));
+    circle.addEventListener('focus', () => show(index)); circles.push(circle);
+  });
+  document.getElementById('heat-case').addEventListener('input', event => show(Number(event.target.value)));
+  show(0);
+
+  const changes = JSON.parse(document.getElementById('changes-data').textContent);
+  const panel = document.getElementById('change-list');
+  changes.changes.forEach(change => {
+    const paragraph = document.createElement('p');
+    const link = document.createElement('a'); link.href = '#' + change.section;
+    link.textContent = change.text; paragraph.appendChild(link); panel.appendChild(paragraph);
+  });
+  const key = 'alternative-fuel-sizing-comments';
+  let comments = [], fileHandle;
+  const status = document.getElementById('comment-status');
+  try { comments = JSON.parse(localStorage.getItem(key) || '[]'); } catch (_) { comments = []; }
+  const sections = [...document.querySelectorAll('section[id]')];
+  const select = document.getElementById('comment-section');
+  sections.forEach(section => {
+    const option = document.createElement('option'); option.value = section.id;
+    option.textContent = section.querySelector('h2').textContent; select.appendChild(option);
+  });
+  function valid(items) {
+    return Array.isArray(items) && items.every(item => item && typeof item.text === 'string' &&
+      sections.some(section => section.id === item.section));
+  }
+  if (!valid(comments)) comments = [];
+  function display() {
+    const list = document.getElementById('comment-list'); list.replaceChildren();
+    comments.forEach(comment => {
+      const row = document.createElement('li');
+      const heading = sections.find(section => section.id === comment.section).querySelector('h2').textContent;
+      row.textContent = heading + ': ' + comment.text; list.appendChild(row);
+    });
+    try { localStorage.setItem(key, JSON.stringify(comments)); }
+    catch (_) { status.textContent = 'Browser storage is unavailable. Save comments to retain them.'; }
+  }
+  document.getElementById('add-comment').addEventListener('click', () => {
+    const text = document.getElementById('comment-text').value.trim();
+    if (!text) return;
+    comments.push({section: select.value, text}); display();
+    document.getElementById('comment-text').value = '';
+    status.textContent = 'Comment added. Save comments to retain a file beside the report.';
+  });
+  document.getElementById('save-comments').addEventListener('click', async () => {
+    const payload = JSON.stringify({revision: changes.revision, comments}, null, 2) + '\n';
+    try {
+      if (window.showSaveFilePicker) {
+        fileHandle = fileHandle || await window.showSaveFilePicker({suggestedName: 'alternative-fuel-sizing.comments.json',
+          types: [{description: 'Section comments', accept: {'application/json': ['.json']}}]});
+        const stream = await fileHandle.createWritable(); await stream.write(payload); await stream.close();
+        status.textContent = 'Comments saved to the selected file.';
+      } else {
+        const url = URL.createObjectURL(new Blob([payload], {type: 'application/json'}));
+        const link = document.createElement('a'); link.href = url; link.download = 'alternative-fuel-sizing.comments.json';
+        link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        status.textContent = 'Comments downloaded. Save the file beside the report.';
+      }
+    } catch (error) {
+      status.textContent = error.name === 'AbortError' ? 'Save cancelled; comments remain in the browser.' :
+        'Comments were not saved. Check browser file permissions and retry.';
+    }
+  });
+  document.getElementById('load-comments').addEventListener('change', async event => {
+    const file = event.target.files[0]; if (!file) return;
+    try {
+      const saved = JSON.parse(await file.text());
+      if (!valid(saved.comments)) throw new Error('Invalid comment file');
+      comments = saved.comments; display();
+      status.textContent = saved.revision === changes.revision ? 'Comments loaded.' :
+        'Comments loaded from another revision. Recheck their section context.';
+    } catch (_) { status.textContent = 'The selected file is not a supported comment file.'; }
+  });
+  display();
+})();
+</script>
+</body></html>

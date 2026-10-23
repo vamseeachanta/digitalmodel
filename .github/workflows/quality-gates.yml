@@ -138,6 +138,13 @@ jobs:
       - name: Create reports directory
         run: mkdir -p reports
 
+      - name: Run sizing report regression tests
+        run: |
+          python -m pytest tests/docs/test_altfuelshipsizing_report.py \
+            tests/naval_architecture/test_alt_fuel_ship_sizing.py \
+            tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py \
+            tests/report_pack/test_alt_fuel_report_pack_demo.py -q -rA
+
       - name: Run Quality Gates
         run: |
           python -m digitalmodel.workflows.automation.quality_gates_cli check --json
