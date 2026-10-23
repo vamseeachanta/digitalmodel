@@ -5,7 +5,7 @@
 | Module | solvers/orcawave |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/solvers/orcawave` |
-| Pack revision | 3; 2026-10-19 |
+| Pack revision | 5; 2026-10-20 |
 | Code revision | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Analysis family | Diffraction; registry code DF |
 | Quality role | Diffraction quality manager; deputy: diffraction quality manager on another provider |
@@ -24,6 +24,8 @@ regressions use synthetic inputs only and establish no solver qualification.
 | 1 | 2026-10-18 | Added solver-free gates and empty-CSV refusal to expose missing-data failures. |
 | 2 | 2026-10-18 | Required CSV grids and a supported coefficient file; tightened evidence checks and retained unresolved limitations. |
 | 3 | 2026-10-19 | Rejected absent requested regular geometry files before worker creation; retained partial-input, parser and topology limitations. |
+| 4 | 2026-10-20 | Recorded complete requested-input refusal, atomic parser results, edge-closure and QA-state repairs; retained the historical audit pin and unresolved engineering qualifications. |
+| 5 | 2026-10-20 | Bound the 100-test result to revision 64f5380d, which includes the submission-failure regressions. |
 
 ## 1. Purpose and scope
 
@@ -132,26 +134,36 @@ Committed checks (run with `python -m pytest tests/solvers/orcawave/diffraction/
 | Gate / lint | Executable assertion | Disposition |
 | --- | --- | --- |
 | G0-SYNTAX | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_syntax` parses every package Python output into an AST | Required pass |
-| G0-GEOMETRY | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_geometry_rejects_empty_directory` calls `GeometryValidator.validate_all` | Required pass for missing input; partial-input completeness remains deferred under #2738 |
+| G0-GEOMETRY | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_geometry_rejects_empty_directory` calls `GeometryValidator.validate_all`; populated-input cases exercise partial discovery and sequential/parallel parser failures | Required pass: every requested regular file is required and results are published only after all parsers succeed |
 | G0-COMPONENTS | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_components_phase3_refuses_empty_output` asserts converter CLI and `_phase3_results_processing` refusal with 0 output files | Required pass; `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_components_properties_only_csv_rejected` and `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g0_components_missing_sources_rejected_before_allocation` cover incomplete sources |
 | G0-CONTROL | `tests/solvers/orcawave/diffraction/test_pack_lint.py::test_g0_control_dispositions` asserts every package mechanism has a disposition | Required pass; omission and stale-reason negative controls |
 | Source selection | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_format_selection_preserved` checks HDF5 before CSV and Excel, populated CSV before Excel, and Excel when neither higher-priority source exists | Required pass; source-reader stubs isolate routing from format parsing |
-| Gate preconditions | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g4_open_triangle_preconditions` checks three boundary edges and volume of one sixth; `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g5_incomplete_results_precondition` checks incomplete inputs | Required pass, outside the strict expected-failure tests |
-| G4-CLOSURE | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g4_closure_rejects_open_triangle` asserts `_compute_mesh_statistics().is_watertight` is false | Strict xfail; #2738 |
-| G5-STATE | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g5_state_refuses_incomplete_results` asserts `_phase4_quality_assurance` return and state flag are false | Strict xfail; #2738 |
+| Gate preconditions | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g4_open_triangle_preconditions` checks three boundary edges and volume of one sixth; `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g5_incomplete_results_precondition` checks incomplete inputs | Required pass; independent fixture preconditions |
+| G4-CLOSURE | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g4_closure_rejects_open_triangle` asserts `_compute_mesh_statistics().is_watertight` is false | Required pass; edge incidence replaces the volume proxy, with duplicate and zero-area faces refused |
+| G5-STATE | `tests/solvers/orcawave/diffraction/test_pack_gates.py::test_g5_state_refuses_incomplete_results` asserts `_phase4_quality_assurance` return and state flag are false | Required pass; stale success is cleared and uncomputed physics and visualization checks return false |
 | Dependency citation | `tests/solvers/orcawave/diffraction/test_pack_lint.py::test_dependency_citation_content` asserts cited text contains the Python requirement and exact runtime requirements used by the helpers | Required pass; metadata-only negative control; `tests/solvers/orcawave/diffraction/test_pack_lint.py::test_reproduction_citation_content` checks the test-extra and pytest-setting tokens; `tests/solvers/orcawave/diffraction/test_pack_lint.py::test_all_citation_ranges_at_pins` bounds-checks every ranged citation at its stated revision |
 
-Table. Solver-free gate tests; expected failures are unresolved defects, not engineering acceptance. Other qualified-data gates remain NOT_RUN.
+Table. Solver-free gate tests; no strict expected failures remain. Software assertions do not establish engineering acceptance. Other qualified-data gates remain NOT_RUN.
 
-Revision 3 binds the missing-input part of G0-GEOMETRY to
-`GeometryValidator.validate_all`: no requested regular file raises
-`FileNotFoundError` before parsing or worker creation, including when a prior
-result mapping exists. The presence tests cover sequential and parallel requests,
-missing directories, unrelated files and matching directory names. Sentinel
-tests preserve dispatch of a present requested file and sequential fallback when
-the process pool cannot start; they do not qualify parsing or mesh statistics.
-Partial requested sets and parse failures still log and omit records, so the
-full populated-input G0-GEOMETRY criterion remains deferred under #2738.
+Revision 4 binds G0-GEOMETRY to `GeometryValidator.validate_all`: absent or partial
+requested regular-file sets raise `FileNotFoundError` before parsing or worker
+creation, including when a prior result mapping exists. Parser failures propagate
+and leave no partial or stale result mapping in sequential or parallel mode.
+The presence tests cover missing directories, unrelated files, matching directory
+names and complete requested sets. Process-pool construction or submission
+`OSError` triggers sequential validation after pool shutdown; worker/parser errors
+remain fatal. Submission can start workers lazily, so successful construction
+alone does not establish pool availability. Repeated reads after a partial
+submission are permitted because these parsers only read geometry files.
+The two geometry-discovery log messages are retained for diagnostics.
+
+The historical diagnostics and section-6 catalogue remain bound to the code pin
+above; their repaired contracts are identified in
+[the issue-2738 qualification note](issue-2738-qualification.html). The suite
+passed 100 tests at `64f5380d` in the second-provider review (Python 3.12.3,
+NumPy 1.26.4). Closure is an edge-incidence criterion, not hydrostatic or native
+solver qualification. The small-area heuristic, numerical physics, units,
+caller bypasses, partial CSV/Excel channels, packaging and provenance remain open.
 
 ## 6. Known failure modes and pitfalls
 
