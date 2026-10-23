@@ -6,7 +6,12 @@ JONSWAP, Pierson-Moskowitz, Bretschneider, and ISSC spectra.
 
 import numpy as np
 from typing import Tuple, Optional, Dict
-from .models import WaveParameters, WaveSpectrumType
+from .models import (
+    DEFAULT_FREQUENCY_POINTS,
+    WaveParameters,
+    WaveSpectrumType,
+    wave_frequency_grid,
+)
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
@@ -51,8 +56,8 @@ class WaveSpectra:
         tp: float,
         gamma: float = 3.3,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: int = DEFAULT_FREQUENCY_POINTS
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate JONSWAP wave spectrum
@@ -64,8 +69,8 @@ class WaveSpectra:
             tp: Peak period (s)
             gamma: Peakedness parameter (typically 1-7, default 3.3)
             freq_min: Minimum frequency (rad/s)
-            freq_max: Maximum frequency (rad/s)
-            n_points: Number of frequency points
+            freq_max: Maximum frequency (rad/s); None uses 20 times the peak
+            n_points: Number of uniformly spaced frequency points
 
         Returns:
             (frequencies, spectral_densities) in rad/s and m²·s
@@ -73,8 +78,13 @@ class WaveSpectra:
         Reference:
             DNV-RP-C205 Section 3.5.2
         """
-        # Frequency array
-        omega = np.linspace(freq_min, freq_max, n_points)
+        # Grid error budget: docs/domains/hydrodynamics/wave-spectra.md.
+        if not np.isfinite(hs) or hs < 0:
+            raise ValueError("Significant height must be finite and non-negative")
+        omega = wave_frequency_grid(tp, freq_min, freq_max, n_points)
+
+        if not np.isfinite(gamma) or gamma <= 0:
+            raise ValueError("Gamma must be finite and positive")
 
         # Peak frequency
         omega_p = 2 * np.pi / tp
@@ -82,6 +92,9 @@ class WaveSpectra:
         # Calculate alpha (DNV-RP-C205)
         alpha = 5.0 / 16.0 * hs**2 * omega_p**4 / self.g**2
 
+        # Orcina online help (accessed 2026), Environment: Data for JONSWAP
+        # and ISSC spectra, "Spectral width parameters sigma1 and sigma2".
+        # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Environment,DataforJONSWAPandISSCspectra.htm
         # Sigma parameter (spectral width)
         sigma = np.where(omega <= omega_p, 0.07, 0.09)
 
@@ -102,8 +115,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: int = DEFAULT_FREQUENCY_POINTS
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate Pierson-Moskowitz wave spectrum (fully developed seas)
@@ -114,8 +127,8 @@ class WaveSpectra:
             hs: Significant wave height (m)
             tp: Peak period (s)
             freq_min: Minimum frequency (rad/s)
-            freq_max: Maximum frequency (rad/s)
-            n_points: Number of frequency points
+            freq_max: Maximum frequency (rad/s); None uses 20 times the peak
+            n_points: Number of uniformly spaced frequency points
 
         Returns:
             (frequencies, spectral_densities) in rad/s and m²·s
@@ -123,8 +136,10 @@ class WaveSpectra:
         Reference:
             DNV-RP-C205 Section 3.5.1
         """
-        # Frequency array
-        omega = np.linspace(freq_min, freq_max, n_points)
+        # Grid error budget: docs/domains/hydrodynamics/wave-spectra.md.
+        if not np.isfinite(hs) or hs < 0:
+            raise ValueError("Significant height must be finite and non-negative")
+        omega = wave_frequency_grid(tp, freq_min, freq_max, n_points)
 
         # Peak frequency
         omega_p = 2 * np.pi / tp
@@ -143,8 +158,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: int = DEFAULT_FREQUENCY_POINTS
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate Bretschneider two-parameter wave spectrum
@@ -155,14 +170,16 @@ class WaveSpectra:
             hs: Significant wave height (m)
             tp: Peak period (s)
             freq_min: Minimum frequency (rad/s)
-            freq_max: Maximum frequency (rad/s)
-            n_points: Number of frequency points
+            freq_max: Maximum frequency (rad/s); None uses 20 times the peak
+            n_points: Number of uniformly spaced frequency points
 
         Returns:
             (frequencies, spectral_densities) in rad/s and m²·s
         """
-        # Frequency array
-        omega = np.linspace(freq_min, freq_max, n_points)
+        # Grid error budget: docs/domains/hydrodynamics/wave-spectra.md.
+        if not np.isfinite(hs) or hs < 0:
+            raise ValueError("Significant height must be finite and non-negative")
+        omega = wave_frequency_grid(tp, freq_min, freq_max, n_points)
 
         # Peak frequency
         omega_p = 2 * np.pi / tp
@@ -180,8 +197,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: int = DEFAULT_FREQUENCY_POINTS
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate ISSC modified Pierson-Moskowitz spectrum
@@ -193,14 +210,16 @@ class WaveSpectra:
             hs: Significant wave height (m)
             tp: Peak period (s)
             freq_min: Minimum frequency (rad/s)
-            freq_max: Maximum frequency (rad/s)
-            n_points: Number of frequency points
+            freq_max: Maximum frequency (rad/s); None uses 20 times the peak
+            n_points: Number of uniformly spaced frequency points
 
         Returns:
             (frequencies, spectral_densities) in rad/s and m²·s
         """
-        # Frequency array
-        omega = np.linspace(freq_min, freq_max, n_points)
+        # Grid error budget: docs/domains/hydrodynamics/wave-spectra.md.
+        if not np.isfinite(hs) or hs < 0:
+            raise ValueError("Significant height must be finite and non-negative")
+        omega = wave_frequency_grid(tp, freq_min, freq_max, n_points)
         f = omega / (2 * np.pi)  # Convert to Hz
 
         # Average period
@@ -327,6 +346,48 @@ class WaveSpectra:
 
         return 2 * np.pi * np.sqrt(m0 / m2)
 
+    def energy_period_from_spectrum(
+        self,
+        frequencies: np.ndarray,
+        spectrum: np.ndarray,
+    ) -> float:
+        """Return Te = 2*pi*m(-1)/m0 in seconds; NaN for a calm spectrum.
+
+        Angular-frequency moments require the factor 2*pi. This is the
+        energy-weighted mean period, derived by weighting T=2*pi/omega
+        with S(omega)domega. See WEC-Sim Theory (accessed 2026), Irregular
+        Waves: spectral moments, and the derivation in wave-spectra.md.
+        """
+        m0 = self.spectral_moment(frequencies, spectrum, n=0)
+        if m0 == 0:
+            return float("nan")
+        return 2 * np.pi * self.spectral_moment(frequencies, spectrum, n=-1) / m0
+
+    def deep_water_wave_power(
+        self,
+        frequencies: np.ndarray,
+        spectrum: np.ndarray,
+        *,
+        water_density: float,
+        gravity: float,
+    ) -> float:
+        """Return incident deep-water flux per crest width in W/m.
+
+        Density (kg/m^3) and gravity (m/s^2) are required physical inputs.
+        WEC-Sim Theory (accessed 2026), Irregular Wave Power gives
+        P=rho*g*integral(S*cg); deep-water cg=g/(2*omega) gives
+        P=rho*g**2*m(-1)/2. No finite-depth or directional correction is
+        applied. This is available incident power, not extracted power.
+        https://wec-sim.github.io/WEC-Sim/main/theory/theory.html#irregular-wave-power
+        """
+        if not np.isfinite(water_density) or water_density <= 0:
+            raise ValueError("water_density must be finite and positive")
+        if not np.isfinite(gravity) or gravity <= 0:
+            raise ValueError("gravity must be finite and positive")
+        return water_density * gravity**2 / 2 * self.spectral_moment(
+            frequencies, spectrum, n=-1
+        )
+
     def peak_frequency_from_spectrum(
         self,
         frequencies: np.ndarray,
@@ -358,8 +419,12 @@ class WaveSpectra:
             spectrum: Spectral density array (m²·s)
 
         Returns:
-            Dictionary with spectrum statistics
+            Dictionary with angular-frequency moments, Hs, Tz, Te and peak.
+            The fourth moment and spectral width depend on the finite cutoff:
+            an ideal Pierson-Moskowitz/JONSWAP omega^-5 tail has a divergent
+            fourth moment.
         """
+        m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
         m0 = self.spectral_moment(frequencies, spectrum, n=0)
         m1 = self.spectral_moment(frequencies, spectrum, n=1)
         m2 = self.spectral_moment(frequencies, spectrum, n=2)
@@ -374,6 +439,8 @@ class WaveSpectra:
         epsilon = np.sqrt(1 - m2**2 / (m0 * m4))
 
         return {
+            'm_minus1': m_minus1,
+            'Te_s': self.energy_period_from_spectrum(frequencies, spectrum),
             'm0': m0,
             'm1': m1,
             'm2': m2,
