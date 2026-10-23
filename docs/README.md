@@ -43,6 +43,7 @@ reviewed, and intended for repeat use:
 - [Common analysis workflow](standards/engineering-analysis-workflow.html)
 - [ANSYS analysis workflow](domains/ansys/analysis-workflow.html)
 - [AQWA analysis workflow](domains/aqwa/analysis-workflow.html)
+- [Welded-padeye parametric demand analysis](domains/lifting/welded-padeye.html) — offline demands, exact lookup and worked example; historical reproduction remains unverified
 - focused tests that validate these surfaces
 
 The criteria and workflow definitions are documentation surfaces; the module routing registry remains unchanged. The existing documentation-routing tests remain applicable to their original contracts and do not establish criteria adoption or automated workflow enforcement.
