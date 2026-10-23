@@ -79,30 +79,11 @@ def create_test_context(
     )
 
 
-# The original +pi/4 phase adds elastic displacement amplitude to the
-# surface motion and exceeds its measured range. The additional -pi/8 phase
-# reverses that cosine component while preserving the sine component/card area.
+# Both phases are retained. Elastic overtravel is permitted now that the
+# coupled wave equation replaces the empirical stroke scaling (#1857).
 STROKE_CASES = pytest.mark.parametrize(
-    "load_phase, rejects_stroke",
-    [(np.pi / 4, True), (-np.pi / 8, False)],
-    ids=["oversized-rejected", "admissible"],
+    "load_phase", [np.pi / 4, -np.pi / 8], ids=["positive-phase", "negative-phase"],
 )
-
-
-def solve_or_assert_stroke_rejection(solver, rejects_stroke):
-    """Reject the original oversized card before it can populate results."""
-    if not rejects_stroke:
-        return solver.solve_wave_equation()
-    with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke") as caught:
-        solver.solve_wave_equation()
-    assert caught.value.solver == "gibbs"
-    assert caught.value.details["surface_stroke"] == float(np.ptp(solver.ctx.surface_card.position))
-    assert caught.value.details["downhole_stroke"] > caught.value.details["surface_stroke"]
-    assert solver.results.downhole_card is None
-    assert solver.detect_buckling() is False
-    with pytest.raises(PhysicsError, match="requires a downhole card"):
-        solver.calculate_fillage()
-    return None
 
 
 class TestDynacardPhysicsSolverInit:
@@ -129,78 +110,66 @@ class TestSolveWaveEquation:
     """Tests for the solve_wave_equation method."""
 
     @STROKE_CASES
-    def test_returns_results(self, load_phase, rejects_stroke):
+    def test_returns_results(self, load_phase):
         """Should return AnalysisResults object."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         assert results is not None
         assert results is solver.results
 
     @STROKE_CASES
-    def test_generates_downhole_card(self, load_phase, rejects_stroke):
+    def test_generates_downhole_card(self, load_phase):
         """Should generate a downhole card."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         assert results.downhole_card is not None
         assert len(results.downhole_card.position) > 0
         assert len(results.downhole_card.load) > 0
 
     @STROKE_CASES
-    def test_downhole_card_same_length_as_surface(self, load_phase, rejects_stroke):
+    def test_downhole_card_same_length_as_surface(self, load_phase):
         """Downhole card should have same number of points as surface card."""
         ctx = create_test_context(num_points=150, load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         assert len(results.downhole_card.position) == 150
         assert len(results.downhole_card.load) == 150
 
     @STROKE_CASES
-    def test_calculates_polished_rod_loads(self, load_phase, rejects_stroke):
+    def test_calculates_polished_rod_loads(self, load_phase):
         """Should calculate peak and minimum polished rod loads."""
         peak = 18000.0
         min_load = 6000.0
         ctx = create_test_context(peak_load=peak, min_load=min_load, load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         # Peak and min should be close to input values
         assert abs(results.peak_polished_rod_load - peak) < 1000
         assert abs(results.minimum_polished_rod_load - min_load) < 1000
 
     @STROKE_CASES
-    def test_downhole_position_starts_at_zero(self, load_phase, rejects_stroke):
+    def test_downhole_position_starts_at_zero(self, load_phase):
         """Downhole position should start at zero after synchronization."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         # Minimum position should be close to zero
         min_pos = min(results.downhole_card.position)
         assert abs(min_pos) < 1.0
 
     @STROKE_CASES
-    def test_preserves_context_in_results(self, load_phase, rejects_stroke):
+    def test_preserves_context_in_results(self, load_phase):
         """Results should contain the original context."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         assert results.ctx is ctx
 
@@ -239,14 +208,12 @@ class TestDetectBuckling:
     """Tests for the detect_buckling method."""
 
     @STROKE_CASES
-    def test_no_buckling_with_high_loads(self, load_phase, rejects_stroke):
+    def test_no_buckling_with_high_loads(self, load_phase):
         """Should not detect buckling when downhole loads stay above threshold."""
         # Use higher loads to ensure downhole loads stay positive after attenuation
         ctx = create_test_context(min_load=15000.0, peak_load=25000.0, load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        solver.solve_wave_equation()
 
         # Verify downhole loads are above threshold
         min_dh_load = min(solver.results.downhole_card.load)
@@ -256,13 +223,11 @@ class TestDetectBuckling:
             assert solver.results.buckling_detected is False
 
     @STROKE_CASES
-    def test_detects_buckling_with_negative_loads(self, load_phase, rejects_stroke):
+    def test_detects_buckling_with_negative_loads(self, load_phase):
         """Should detect buckling when loads go below threshold."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        solver.solve_wave_equation()
 
         # Manually set a very negative load to trigger buckling
         solver.results.downhole_card.load[0] = BUCKLING_DETECTION_LOAD_THRESHOLD_LBS - 100
@@ -293,31 +258,27 @@ class TestCalculateFillage:
     """
 
     @STROKE_CASES
-    def test_delegates_to_the_real_fillage_calculation(self, load_phase, rejects_stroke):
+    def test_delegates_to_the_real_fillage_calculation(self, load_phase):
         """Should return exactly what calculations.calculate_pump_fillage gives."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         expected = calculate_pump_fillage(results.downhole_card).fillage
 
         assert solver.calculate_fillage() == pytest.approx(expected)
 
     @STROKE_CASES
-    def test_does_not_return_the_default_constant(self, load_phase, rejects_stroke):
+    def test_does_not_return_the_default_constant(self, load_phase):
         """Should not hand back the fabricated placeholder value."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        solver.solve_wave_equation()
 
         assert solver.calculate_fillage() != pytest.approx(DEFAULT_PUMP_FILLAGE)
 
     @STROKE_CASES
-    def test_fillage_depends_on_the_card(self, load_phase, rejects_stroke):
+    def test_fillage_depends_on_the_card(self, load_phase):
         """Different cards must produce different fillage values."""
         fillages = []
         for kwargs in (
@@ -326,39 +287,31 @@ class TestCalculateFillage:
             {"stroke_length": 64.0, "rod_length": 3000.0},
         ):
             solver = DynacardPhysicsSolver(create_test_context(**kwargs, load_phase=load_phase))
-            solve_or_assert_stroke_rejection(solver, rejects_stroke)
-            if rejects_stroke:
-                continue
+            solver.solve_wave_equation()
             fillages.append(solver.calculate_fillage())
 
-        if rejects_stroke:
-            return
 
         assert len(set(fillages)) == len(fillages), (
             f"fillage must vary with the card, got {fillages}"
         )
 
     @STROKE_CASES
-    def test_reports_percentage_scale(self, load_phase, rejects_stroke):
+    def test_reports_percentage_scale(self, load_phase):
         """Should use the 0-100 percentage scale of results.pump_fillage."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        solver.solve_wave_equation()
 
         fillage = solver.calculate_fillage()
 
         assert 1.0 < fillage <= 100.0
 
     @STROKE_CASES
-    def test_sets_fillage_in_results(self, load_phase, rejects_stroke):
+    def test_sets_fillage_in_results(self, load_phase):
         """Should set the computed fillage in results."""
         ctx = create_test_context(load_phase=load_phase)
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         returned = solver.calculate_fillage()
         expected = calculate_pump_fillage(results.downhole_card).fillage
@@ -379,10 +332,10 @@ class TestPhysicsWithRealWorldValues:
     """Integration tests with more realistic well parameters."""
 
     @pytest.mark.parametrize(
-        "load_phase, rejects_stroke", [(0.0, True), (-np.pi / 8, False)],
-        ids=["oversized-rejected", "admissible"],
+        "load_phase", [0.0, -np.pi / 8],
+        ids=["overtravel", "shorter-stroke"],
     )
-    def test_typical_well_analysis(self, load_phase, rejects_stroke):
+    def test_typical_well_analysis(self, load_phase):
         """Test with typical real-world well parameters."""
         # Realistic surface card data (simplified)
         num_points = 200
@@ -420,9 +373,7 @@ class TestPhysicsWithRealWorldValues:
         )
 
         solver = DynacardPhysicsSolver(ctx)
-        results = solve_or_assert_stroke_rejection(solver, rejects_stroke)
-        if rejects_stroke:
-            return
+        results = solver.solve_wave_equation()
 
         # Verify results are reasonable
         assert results.downhole_card is not None
