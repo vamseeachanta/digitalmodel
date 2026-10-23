@@ -1,0 +1,736 @@
+{
+  "cases": [
+    {
+      "name": "case_1_w0_c0",
+      "speed_m_s": 1,
+      "separation_m": 100,
+      "wind": false,
+      "current": false,
+      "model": "case_1_w0_c0.yml",
+      "history": "case_1_w0_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 145.9537600303083,
+        "sway_n": 380.59301486997407
+      },
+      "peak_yaw_nm": 3842.337980131664
+    },
+    {
+      "name": "case_1_w0_c1",
+      "speed_m_s": 1,
+      "separation_m": 100,
+      "wind": false,
+      "current": true,
+      "model": "case_1_w0_c1.yml",
+      "history": "case_1_w0_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 145.9537600303083,
+        "sway_n": 100380.59301486997
+      },
+      "peak_yaw_nm": 1003842.3379801316
+    },
+    {
+      "name": "case_1_w1_c0",
+      "speed_m_s": 1,
+      "separation_m": 100,
+      "wind": true,
+      "current": false,
+      "model": "case_1_w1_c0.yml",
+      "history": "case_1_w1_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 145.9537600303083,
+        "sway_n": 60380.59301486998
+      },
+      "peak_yaw_nm": 603842.3379801316
+    },
+    {
+      "name": "case_1_w1_c1",
+      "speed_m_s": 1,
+      "separation_m": 100,
+      "wind": true,
+      "current": true,
+      "model": "case_1_w1_c1.yml",
+      "history": "case_1_w1_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 145.9537600303083,
+        "sway_n": 160380.59301486998
+      },
+      "peak_yaw_nm": 1603842.3379801316
+    },
+    {
+      "name": "case_2_w0_c0",
+      "speed_m_s": 2,
+      "separation_m": 100,
+      "wind": false,
+      "current": false,
+      "model": "case_2_w0_c0.yml",
+      "history": "case_2_w0_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 583.8150401212332,
+        "sway_n": 1522.372059479896
+      },
+      "peak_yaw_nm": 15369.351920526657
+    },
+    {
+      "name": "case_2_w0_c1",
+      "speed_m_s": 2,
+      "separation_m": 100,
+      "wind": false,
+      "current": true,
+      "model": "case_2_w0_c1.yml",
+      "history": "case_2_w0_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 583.8150401212332,
+        "sway_n": 101522.3720594799
+      },
+      "peak_yaw_nm": 1015369.3519205267
+    },
+    {
+      "name": "case_2_w1_c0",
+      "speed_m_s": 2,
+      "separation_m": 100,
+      "wind": true,
+      "current": false,
+      "model": "case_2_w1_c0.yml",
+      "history": "case_2_w1_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 583.8150401212332,
+        "sway_n": 61522.372059479894
+      },
+      "peak_yaw_nm": 615369.3519205267
+    },
+    {
+      "name": "case_2_w1_c1",
+      "speed_m_s": 2,
+      "separation_m": 100,
+      "wind": true,
+      "current": true,
+      "model": "case_2_w1_c1.yml",
+      "history": "case_2_w1_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 583.8150401212332,
+        "sway_n": 161522.3720594799
+      },
+      "peak_yaw_nm": 1615369.3519205267
+    },
+    {
+      "name": "case_3_w0_c0",
+      "speed_m_s": 2,
+      "separation_m": 150,
+      "wind": false,
+      "current": false,
+      "model": "case_3_w0_c0.yml",
+      "history": "case_3_w0_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 212.08196869721485,
+        "sway_n": 565.6800491577281
+      },
+      "peak_yaw_nm": 4103.823008209938
+    },
+    {
+      "name": "case_3_w0_c1",
+      "speed_m_s": 2,
+      "separation_m": 150,
+      "wind": false,
+      "current": true,
+      "model": "case_3_w0_c1.yml",
+      "history": "case_3_w0_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 212.08196869721485,
+        "sway_n": 100565.68004915773
+      },
+      "peak_yaw_nm": 1004103.8230082099
+    },
+    {
+      "name": "case_3_w1_c0",
+      "speed_m_s": 2,
+      "separation_m": 150,
+      "wind": true,
+      "current": false,
+      "model": "case_3_w1_c0.yml",
+      "history": "case_3_w1_c0.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 212.08196869721485,
+        "sway_n": 60565.68004915773
+      },
+      "peak_yaw_nm": 604103.8230082099
+    },
+    {
+      "name": "case_3_w1_c1",
+      "speed_m_s": 2,
+      "separation_m": 150,
+      "wind": true,
+      "current": true,
+      "model": "case_3_w1_c1.yml",
+      "history": "case_3_w1_c1.csv",
+      "coupled_response": "NOT_EVALUATED",
+      "applied_load_wiring": "NOT_EVALUATED",
+      "peak_force_n": {
+        "surge_n": 212.08196869721485,
+        "sway_n": 160565.68004915773
+      },
+      "peak_yaw_nm": 1604103.82300821
+    }
+  ],
+  "sources": {
+    "drag": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/drag-equation/",
+    "links": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Links,Data.htm",
+    "passing": "docs/domains/hydrodynamics/wang-passing-ship-forces.md"
+  },
+  "basis": {
+    "moored": "assumed, based on previous experience",
+    "passing": "assumed, based on previous experience",
+    "depth_m": "assumed, based on previous experience",
+    "water_density_kg_m3": "assumed, based on previous experience",
+    "wind": "assumed, based on previous experience",
+    "current": "assumed, based on previous experience",
+    "lines": "assumed, based on previous experience",
+    "fenders": "assumed, based on previous experience",
+    "passages": "assumed, based on previous experience",
+    "sampling": "assumed, based on previous experience; sampling convergence not established",
+    "numerics": "inherited numerical settings, docs/domains/hydrodynamics/wang-passing-ship-forces.md"
+  },
+  "numerical_runtime": {
+    "python": "3.11.14",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pyyaml": "6.0.3",
+    "pydantic": "2.14.1",
+    "pandas": "3.0.6",
+    "plotly": "7.1.0",
+    "jinja2": "3.1.6"
+  },
+  "input_sha256": "1bf5f30dccf49a40f4b5707f814df5d87526f8065229950beb7c841ab745cd70",
+  "artifacts": {
+    "case_1_w0_c0.yml": "12622d08ce9b1644209dc0adb2dcc337e5425a31c98628ac6a635764ba5a263c",
+    "case_1_w0_c0.csv": "69a38b6cb642878be3755a790d61eb0732cd13a043cc2f6d271cd1d7ca4e8c27",
+    "case_1_w0_c1.yml": "367c2c694e4b59ed9ac3408214dfe495807ce068c3186e1754a612500347d331",
+    "case_1_w0_c1.csv": "001b111ab628c0446cde296787736e16f4cc31fff873071f0966ff186e7d44ee",
+    "case_1_w1_c0.yml": "24b1679ce4b929f429126265070c884ada205500621c3da61209900ec10cbb97",
+    "case_1_w1_c0.csv": "525abae73b1f5ef6eeaf8411665eeb24694efcff425043cffb07067fd2faed3c",
+    "case_1_w1_c1.yml": "1768854040a4533b86643a28c18f1a36dd63a4b6ab2fd3279b137331a299f379",
+    "case_1_w1_c1.csv": "c240f296bb730fc12e35aa1c6e6bf6162ed98983990166d4f62838751013deac",
+    "case_2_w0_c0.yml": "a593ee421ec6b8ed26ee3760893bc0ab244fafbb76ac0a946cf637b232a19fe8",
+    "case_2_w0_c0.csv": "12248f01540a5aa5ddeb3fbe5ce8193b58e179ec805d822deffb254d65ac4aa1",
+    "case_2_w0_c1.yml": "69ceaa8e4a254c6fa2d9095a08b9b7694f747b4b042be43b6699fe12fa8d97e5",
+    "case_2_w0_c1.csv": "57a84ff4db5e5b90eed0a47a4a950b536e83eb4f036eab30145cbc7fd5cab696",
+    "case_2_w1_c0.yml": "810e9899ab08fbce7655396233bf1b0f693365adf6196e31cda086e2967783b8",
+    "case_2_w1_c0.csv": "e220dab615c39a9fbe157ba7d13ec728b2a9c19ed3e777cf9ad8cc7a7892a8b2",
+    "case_2_w1_c1.yml": "a20418191bbc25397c571fae98e5be638b17afa9c2bfa07fbc7198bcda60e011",
+    "case_2_w1_c1.csv": "96c98b680021a854fb9859eb5529655eec6c4ce93fcbfc5305de1b0f3871a1f5",
+    "case_3_w0_c0.yml": "fda1f73b946ece7b6cb33c28a5c010dc7970b1f01e6df79a5e8f9bb95efb5fd3",
+    "case_3_w0_c0.csv": "cb1f51c4113e6eb3e9308a77df831e1222dbf91e70836336973ef61a89c63431",
+    "case_3_w0_c1.yml": "ec4043442944b7dbda11419f289ea47679ef04bef6458795117c88085b2c7314",
+    "case_3_w0_c1.csv": "30cf4e8d2112c4339b99148130fac061585740df88d5c1820d19da7c474e9344",
+    "case_3_w1_c0.yml": "639b7965928c9762514cfbfab0de5d5c0d54c0310d7719565533cdcfa0627b5a",
+    "case_3_w1_c0.csv": "117f876054a248a9b472c4366dbc2ca5dd0b2b51a49d3df6f7f425af8f702e47",
+    "case_3_w1_c1.yml": "c4b015566c54658cd16ffed96774d23a19ab0ed817d65d45bb277002bcec3880",
+    "case_3_w1_c1.csv": "e070b82f37615bb8338deb665b050b6d4d416d08264d4d466f776d482173c33a",
+    "report.html": "96428807d0d11b2a6a1ce0322a332fb63983ab1b0cfe6e6984737c8723915c59",
+    "case-table.csv": "06ae723f5b765e09be7278a1f0b2557806f306d37b95653f4b23b33430716847"
+  },
+  "solver_version": null,
+  "response": [
+    {
+      "case": "case_1_w0_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w0_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_1_w1_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w0_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_2_w1_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w0_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c0",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c0",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c0",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c0",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c1",
+      "object": "line_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c1",
+      "object": "line_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c1",
+      "object": "fender_a",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    },
+    {
+      "case": "case_3_w1_c1",
+      "object": "fender_b",
+      "peak_kn": null,
+      "allowable_kn": null,
+      "utilisation": null,
+      "status": "NOT_EVALUATED",
+      "criterion_source": null,
+      "solver_version": null
+    }
+  ]
+}
