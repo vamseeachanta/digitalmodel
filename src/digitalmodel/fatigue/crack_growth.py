@@ -12,8 +12,12 @@ Provides functions for:
 Reference: BS 7910:2019, Section 8 — Assessment of flaws by fracture mechanics.
 """
 
+import math
+
 import numpy as np
 import pandas as pd
+
+from .threshold_growth import GrowthLaw, integrate_growth, validate_scalar
 
 
 def stress_intensity_factor(stress_range, crack_size, geometry="through_thickness", Y=1.12):
@@ -39,7 +43,15 @@ def stress_intensity_factor(stress_range, crack_size, geometry="through_thicknes
     float or ndarray
         Stress intensity factor range DeltaK (MPa*sqrt(m)).
     """
-    crack_size = np.asarray(crack_size, dtype=float)
+    stress_range = validate_scalar(stress_range, "stress_range")
+    Y = validate_scalar(Y, "Y")
+    raw_sizes = np.asarray(crack_size, dtype=object)
+    crack_size = np.asarray(
+        [validate_scalar(value, "crack_size") for value in raw_sizes.flat],
+        dtype=float,
+    ).reshape(raw_sizes.shape)
+    if stress_range < 0 or Y <= 0 or np.any(crack_size <= 0):
+        raise ValueError("stress_range must be non-negative; crack_size and Y positive")
 
     if geometry == "through_thickness":
         y_factor = Y  # user-supplied or default 1.12
@@ -53,8 +65,33 @@ def stress_intensity_factor(stress_range, crack_size, geometry="through_thicknes
             "Supported: 'through_thickness', 'surface', 'embedded'."
         )
 
-    delta_k = y_factor * stress_range * np.sqrt(np.pi * crack_size)
+    with np.errstate(over="raise", invalid="raise"):
+        try:
+            delta_k = y_factor * stress_range * np.sqrt(np.pi * crack_size)
+        except FloatingPointError as exc:
+            raise ValueError("stress intensity factor exceeds finite range") from exc
     return float(delta_k) if delta_k.ndim == 0 else delta_k
+
+
+def _paris_inputs(C, m, delta_K, a_initial, a_critical, da_step):
+    law = GrowthLaw(C, m, 0, 0, 1, "Caller-supplied legacy Paris parameters")
+    initial = validate_scalar(a_initial, "a_initial")
+    critical = validate_scalar(a_critical, "a_critical")
+    increment = None if da_step is None else validate_scalar(da_step, "da_step")
+    if not callable(delta_K):
+        delta_K = validate_scalar(delta_K, "delta_K")
+        if delta_K < 0:
+            raise ValueError("delta_K must be non-negative")
+    if initial <= 0:
+        raise ValueError("a_initial must be positive.")
+    if initial >= critical:
+        raise ValueError("a_initial must be less than a_critical.")
+    if increment is not None and increment <= 0:
+        raise ValueError("da_step must be positive")
+    count = 1000.0 if increment is None else (critical - initial) / increment
+    if not math.isfinite(count):
+        raise ValueError("da_step implies a nonfinite panel count")
+    return law, delta_K, initial, critical, max(1, math.ceil(count))
 
 
 def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None):
@@ -88,50 +125,26 @@ def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None):
         Total cycles N from a_initial to a_critical.
     history : pd.DataFrame
         Columns: crack_size (m), cycles (cumulative N), da_dN (m/cycle).
+
+    Notes
+    -----
+    The shared adaptive Simpson kernel refines the initial ``da_step`` mesh
+    to its default error tolerances. On sampled zero DeltaK, propagation is
+    arrested: scalar life is infinity and history contains only reached
+    points, with no fabricated critical-depth endpoint. Negative/nonfinite
+    DeltaK is invalid. The callable smoothness limitations of
+    :func:`integrate_growth` apply.
     """
-    if a_initial >= a_critical:
-        raise ValueError("a_initial must be less than a_critical.")
-    if a_initial <= 0:
-        raise ValueError("a_initial must be positive.")
-
-    if da_step is None:
-        da_step = (a_critical - a_initial) / 1000.0
-
-    # Make delta_K callable if scalar
-    if callable(delta_K):
-        _dk_func = delta_K
-    else:
-        _dk_val = float(delta_K)
-        def _dk_func(a):
-            return _dk_val
-
-    a = a_initial
-    N = 0.0
-    records = []
-
-    while a < a_critical:
-        dk = _dk_func(a)
-        if dk <= 0:
-            break
-        da_dN = C * dk ** m
-        if da_dN <= 0:
-            break
-
-        # cycles for this step
-        step = min(da_step, a_critical - a)
-        dN = step / da_dN
-        records.append({"crack_size": a, "cycles": N, "da_dN": da_dN})
-
-        N += dN
-        a += step
-
-    # Final point at critical size
-    dk_final = _dk_func(a_critical)
-    da_dN_final = C * dk_final ** m if dk_final > 0 else np.inf
-    records.append({"crack_size": a_critical, "cycles": N, "da_dN": da_dN_final})
-
-    history = pd.DataFrame(records)
-    return N, history
+    law, dk, initial, critical, steps = _paris_inputs(
+        C, m, delta_K, a_initial, a_critical, da_step,
+    )
+    result = integrate_growth(law, dk, initial_m=initial, limit_m=critical, steps=steps)
+    records = [
+        {"crack_size": point.depth_m, "cycles": point.cycles,
+         "da_dN": law.rate(dk(point.depth_m) if callable(dk) else dk)}
+        for point in result.history
+    ]
+    return (math.inf if result.life_cycles is None else result.life_cycles), pd.DataFrame(records)
 
 
 def inspection_interval(
@@ -172,7 +185,18 @@ def inspection_interval(
         - inspection_interval: detectable_life / safety_factor
         - total_history: DataFrame of full crack growth history
         - detectable_history: DataFrame from a_detectable onward
+
+    Notes
+    -----
+    Arrested propagation returns infinite life/interval with only the
+    reached history points.
     """
+    a_initial = validate_scalar(a_initial, "a_initial")
+    a_critical = validate_scalar(a_critical, "a_critical")
+    a_detectable = validate_scalar(a_detectable, "a_detectable")
+    safety_factor = validate_scalar(safety_factor, "safety_factor")
+    if safety_factor <= 0:
+        raise ValueError("safety_factor must be positive")
     if a_detectable < a_initial:
         raise ValueError("a_detectable must be >= a_initial.")
     if a_detectable >= a_critical:
