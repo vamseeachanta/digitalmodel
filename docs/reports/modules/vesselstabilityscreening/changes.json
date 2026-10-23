@@ -1,0 +1,8 @@
+{
+  "revision": "A",
+  "date": "2026-10-22",
+  "changes": [
+    "Initial issue: the intact screening method, public cross-curve example and synthetic loading case are documented.",
+    "The effects of free surface and the limits of table-based acceptance are distinguished from operational approval."
+  ]
+}
