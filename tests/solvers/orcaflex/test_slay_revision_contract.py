@@ -12,6 +12,7 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder impo
 
 ROOT = Path(__file__).resolve().parents[3]
 CAMPAIGN = ROOT / "docs/domains/pipeline-installation/slay-campaign"
+TABLE = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text(encoding="utf-8"))
 KEY = "ConnectionxBendingStiffness, ConnectionyBendingStiffness"
 
 
@@ -97,7 +98,9 @@ def test_conformity_is_separate_from_design_acceptance():
     criteria = json.loads((CAMPAIGN / "criteria.json").read_text())["criteria"]
     s1 = criteria["stinger_conformity"]
     assert s1["status"] == "defined"
-    assert s1["numeric_limit"] == pytest.approx(1.10 * 0.762 / (2 * 150))
+    dimensions = qa_dimensions()
+    assert s1["numeric_limit"] == pytest.approx(
+        1.10 * dimensions["diameter"] / (2 * dimensions["radius"]))
     assert s1["last_support_force_kn"] == 0
     assert criteria["overbend_strain_limit"]["status"] == "not established"
     assert "DNV-ST-F101" in str(criteria["overbend_strain_limit"])
@@ -121,7 +124,8 @@ def test_static_qa_table_rejects_each_bad_reading(field, bad):
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
     reference = dict(lift_off_arc=55, departure_angle=21)
     readings = dict(wire_length=10, end_a_reaction=11, last_support_force=0,
-                    grounded_tension=[0, 1], overbend_strain=0.00267, **reference)
+                    grounded_tension=[0, 1], overbend_strain=0.00267,
+                    **qa_dimensions(), **reference)
     assert_static_acceptance(reference=reference, **readings)
     readings[field] = bad
     with pytest.raises(ValueError):
@@ -132,9 +136,17 @@ def test_static_qa_table_rejects_each_bad_reading(field, bad):
 def test_static_qa_accepts_wire_band_edges(wire):
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
     reference = dict(lift_off_arc=55, departure_angle=21)
+    dimensions = qa_dimensions()
     assert_static_acceptance(reference=reference, wire_length=wire, end_a_reaction=1,
                              last_support_force=0, grounded_tension=[0],
-                             overbend_strain=1.10 * 0.762 / 300, **reference)
+                             overbend_strain=1.10 * dimensions["diameter"] / (2 * dimensions["radius"]),
+                             **dimensions, **reference)
+
+
+def qa_dimensions():
+    basis = TABLE["basis"]
+    return dict(diameter=basis["pipeline"]["dimensions"]["outer_diameter"],
+                radius=basis["equipment"]["stinger"]["radius"])
 
 
 def qa_readings():
@@ -142,7 +154,42 @@ def qa_readings():
                 grounded_tension=[0, 1], overbend_strain=0.00267,
                 lift_off_arc=55, departure_angle=21,
                 touchdown_x=None, sag_bend_strain=None,
-                reference=dict(lift_off_arc=55, departure_angle=21))
+                reference=dict(lift_off_arc=55, departure_angle=21),
+                **qa_dimensions())
+
+
+@pytest.mark.parametrize("missing", [("diameter", "radius"), ("diameter",), ("radius",)])
+def test_static_qa_requires_campaign_dimensions(missing):
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import evaluate_static_acceptance
+    readings = qa_readings()
+    for name in missing:
+        readings.pop(name)
+    with pytest.raises(TypeError, match="required keyword-only argument"):
+        evaluate_static_acceptance(**readings)
+
+
+def test_static_qa_records_campaign_dimensions_and_limit():
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import evaluate_static_acceptance
+    readings = qa_readings()
+    result = evaluate_static_acceptance(**readings)
+    assert result["diameter"] == readings["diameter"]
+    assert result["radius"] == readings["radius"]
+    assert result["s1_limit"] == 1.10 * readings["diameter"] / (2 * readings["radius"])
+    assert result["rows"]["stinger_conformity"]["status"] == "PASS"
+
+
+def test_static_qa_uses_supplied_dimensions_for_s1_limit():
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import evaluate_static_acceptance
+    readings = qa_readings()
+    readings.update(diameter=0.508, radius=120, overbend_strain=0.0026)
+    result = evaluate_static_acceptance(**readings)
+    assert result["diameter"] == readings["diameter"]
+    assert result["radius"] == readings["radius"]
+    assert result["s1_limit"] == 1.10 * readings["diameter"] / (2 * readings["radius"])
+    assert round(result["s1_limit"], 6) == 0.002328
+    assert result["rows"]["stinger_conformity"]["status"] == "FAIL"
+    assert result["status"] == "rejected"
+    assert result["counts"] == {"passed": 5, "failed": 1, "not_evaluated": 3}
 
 
 @pytest.mark.parametrize("row", ["touchdown_x", "sag_bend_strain", "stiff_closure"])

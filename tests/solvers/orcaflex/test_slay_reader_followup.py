@@ -2,12 +2,17 @@
 
 import json
 import math
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator import slay_readback as reader
 from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import evaluate_static_acceptance
+
+CAMPAIGN = Path(__file__).resolve().parents[3] / "docs/domains/pipeline-installation/slay-campaign"
+TABLE = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text(encoding="utf-8"))
 
 
 def vessel_double(forces, contacts):
@@ -45,6 +50,8 @@ def test_d0_t0_shaped_reader_keeps_rejected_rows(last_force, failed):
     )
     assert min(reading["grounded_tension"]) == -4494.19
     result = evaluate_static_acceptance(
+        diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+        radius=TABLE["basis"]["equipment"]["stinger"]["radius"],
         wire_length=10, end_a_reaction=forces[0], last_support_force=forces[-1],
         grounded_tension=reading["grounded_tension"],
         # Synthetic stiffness scaling keeps overbend below the existing S1 screen.
