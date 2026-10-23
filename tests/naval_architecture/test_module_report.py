@@ -9,10 +9,13 @@ import json
 import os
 import re
 import shutil
+import subprocess
+import tomllib
 from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
+from packaging.requirements import Requirement
 from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -324,3 +327,35 @@ def chromium_executable(runtime):
     if not Path(executable).is_file():
         pytest.skip("Chromium executable unavailable; install Chromium or set PLAYWRIGHT_CHROMIUM_EXECUTABLE")
     return executable
+
+
+@pytest.mark.parametrize("package", ["pandas", "pillow"])
+def test_retained_receipt_uses_declared_dependency_bounds(package):
+    record = json.loads((REPORT / "checks.json").read_text(encoding="utf-8"))
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    requirements = [Requirement(item) for item in project["project"]["dependencies"]]
+    requirement = next(item for item in requirements if item.name == package)
+    assert record["environment"]["packages"][package] in requirement.specifier
+
+
+def test_module_ignore_rules_preserve_earlier_sibling_allowlist(tmp_path):
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    marker = "# Retain the reproducible naval architecture module report and its source basis."
+    sibling = "docs/reports/modules/sibling/"
+    rules = rules.replace(marker, f"!{sibling}\n{sibling}*\n!{sibling}report.html\n\n{marker}")
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8")
+    git_dir = subprocess.run(
+        ["git", "rev-parse", "--absolute-git-dir"], cwd=ROOT,
+        check=True, capture_output=True, text=True).stdout.strip()
+    retained = [f"docs/reports/modules/navalarchitecture/{name}" for name in
+                ("report.html", "report.template.html", "example.json", "checks.json", "changes.json")]
+    retained.append(f"{sibling}report.html")
+    ignored = ["docs/reports/modules/navalarchitecture/report.comments.json",
+               f"{sibling}report.comments.json", "docs/reports/modules/unlisted/report.html"]
+    result = subprocess.run(
+        ["git", f"--git-dir={git_dir}", f"--work-tree={tmp_path}",
+         "check-ignore", "--no-index", "--stdin"], cwd=tmp_path,
+        input="\n".join(retained + ignored) + "\n", check=True,
+        capture_output=True, text=True)
+    assert set(result.stdout.splitlines()) == set(ignored)
+    assert rules.splitlines().count("docs/reports/modules/*") == 1

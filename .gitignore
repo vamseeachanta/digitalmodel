@@ -267,6 +267,10 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+
+# Shared module report rules precede every module-specific exception.
+!docs/reports/modules/
+docs/reports/modules/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
@@ -583,8 +587,6 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/*
 
 # Retain the reproducible naval architecture module report and its source basis.
-!docs/reports/modules/
-docs/reports/modules/*
 !docs/reports/modules/navalarchitecture/
 docs/reports/modules/navalarchitecture/*
 !docs/reports/modules/navalarchitecture/report.html

@@ -1,19 +1,19 @@
 {
   "document": "navalarchitecture-module-report",
-  "revision": "02",
+  "revision": "03",
   "date": "2026-10-22",
   "changes": [
     {
       "section": "summary",
-      "description": "Revision history preserves earlier issues and records the report input manifest and receipt provenance."
+      "description": "Revision history preserves earlier issues and records replacement software-check evidence within declared dependency bounds."
     },
     {
       "section": "example",
-      "description": "Independent hand calculations check both stability outputs and the percentage reduction."
+      "description": "The calculation and its independent hand checks are unchanged."
     },
     {
       "section": "validation",
-      "description": "An explicit report input manifest uses POSIX ordering and normalized line endings; suite counts retain their command and environment as historical evidence."
+      "description": "The software-check receipt uses declared pandas and Pillow versions; ignore rules preserve earlier module exceptions and keep saved comments untracked."
     }
   ]
 }

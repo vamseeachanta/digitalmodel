@@ -1,7 +1,7 @@
 {
   "date": "2026-10-22",
   "scope": "Historical naval architecture suite outcomes; report input manifest",
-  "command": "PYTHONPATH=src python -m pytest tests/naval_architecture -q -rA -p no:cacheprovider --basetemp=\"$TMPDIR/bt-naval-final\" --junitxml=\"$TMPDIR/naval-final.xml\"",
+  "command": "PYTHONPATH=src uv run --no-project --no-build --with 'pytest<9' --with pytest-asyncio==0.21.1 --with 'beautifulsoup4>=4.13,<5' --with 'numpy>=1.24,<2' --with 'pandas>=2,<3' --with pillow==10.1.0 --with 'matplotlib>=3.7,<4' --with 'scipy>=1.10,<2' --with plotly==5.17.0 --with 'pydantic>=2.7,<3' --with 'pyyaml>=6,<7' --with 'pint>=0.25.3,<1' --with 'shapely>=2.1,<3' --with 'openpyxl>=3.1,<4' --with pyarrow==14.0.1 --with 'loguru>=0.7,<1' --with playwright --with build --with setuptools --with wheel --with 'rhino3dm>=8,<9' --with 'cadquery-ocp>=7.7,<8' --with 'pytest-xdist>=3.6.1,<4' --with 'jinja2>=3.1,<4' --with 'seaborn>=0.13,<1' python -m pytest tests/naval_architecture -q -rA -p no:cacheprovider --basetemp=\"$TMPDIR/bt-naval-final\" --junitxml=\"$TMPDIR/naval-final.xml\"",
   "environment": {
     "python": "3.11.17",
     "implementation": "CPython",
@@ -11,6 +11,7 @@
     "packages": {
       "annotated-types": "0.8.0",
       "beautifulsoup4": "4.15.0",
+      "build": "1.6.1",
       "cadquery-ocp": "7.9.3.1.1",
       "cadquery-ocp-proxy": "7.9.3.1.1",
       "contourpy": "1.3.3",
@@ -31,8 +32,8 @@
       "numpy": "1.26.4",
       "openpyxl": "3.1.5",
       "packaging": "26.3",
-      "pandas": "3.0.6",
-      "pillow": "13.0.0",
+      "pandas": "2.3.3",
+      "pillow": "10.1.0",
       "pint": "0.25.3",
       "platformdirs": "4.13.5",
       "playwright": "1.64.1",
@@ -44,14 +45,17 @@
       "pyee": "13.0.1",
       "pygments": "2.21.0",
       "pyparsing": "3.3.3",
+      "pyproject_hooks": "1.3.3",
       "pytest": "8.4.2",
       "pytest-asyncio": "0.21.1",
       "pytest-xdist": "3.8.0",
       "python-dateutil": "3.0.0",
+      "pytz": "2026.5",
       "pyyaml": "6.0.3",
       "rhino3dm": "8.35.0",
       "scipy": "1.17.1",
       "seaborn": "0.13.2",
+      "setuptools": "84.2.1",
       "shapely": "2.2.0",
       "six": "1.17.0",
       "soupsieve": "3.0.4",
@@ -59,7 +63,8 @@
       "typing-inspection": "0.4.4",
       "typing_extensions": "4.16.0",
       "tzdata": "2026.5",
-      "vtk": "9.6.2"
+      "vtk": "9.6.2",
+      "wheel": "0.48.0"
     }
   },
   "source_files": [
@@ -71,9 +76,9 @@
     "src/digitalmodel/naval_architecture/stability.py",
     "tests/naval_architecture/test_module_report.py"
   ],
-  "source_digest": "5298f25d15b97ddd6ab97b7cd28209e71871449be53dd0fd172028d4ed3201c2",
-  "tests": 1309,
-  "passed": 1297,
+  "source_digest": "22e61d557b3663cb000bf45c67e57da002c914b7b3796e0b87912cf6dbaebaf9",
+  "tests": 1312,
+  "passed": 1300,
   "failed": 0,
   "skipped": 11,
   "expected_failures": 1,
