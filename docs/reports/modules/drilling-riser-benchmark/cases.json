@@ -1,0 +1,799 @@
+{
+  "schema_version": 1,
+  "template_sha256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629",
+  "status": "PROPOSED_INPUTS",
+  "cases": [
+    {
+      "id": "o0-c0",
+      "offset_pct": {
+        "value": 0,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o0-c1",
+      "offset_pct": {
+        "value": 0,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o0-c2",
+      "offset_pct": {
+        "value": 0,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o0-c3",
+      "offset_pct": {
+        "value": 0,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o1-c0",
+      "offset_pct": {
+        "value": 1,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o1-c1",
+      "offset_pct": {
+        "value": 1,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o1-c2",
+      "offset_pct": {
+        "value": 1,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o1-c3",
+      "offset_pct": {
+        "value": 1,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o2-c0",
+      "offset_pct": {
+        "value": 2,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o2-c1",
+      "offset_pct": {
+        "value": 2,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o2-c2",
+      "offset_pct": {
+        "value": 2,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o2-c3",
+      "offset_pct": {
+        "value": 2,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o3-c0",
+      "offset_pct": {
+        "value": 3,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o3-c1",
+      "offset_pct": {
+        "value": 3,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o3-c2",
+      "offset_pct": {
+        "value": 3,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o3-c3",
+      "offset_pct": {
+        "value": 3,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o4-c0",
+      "offset_pct": {
+        "value": 4,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o4-c1",
+      "offset_pct": {
+        "value": 4,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o4-c2",
+      "offset_pct": {
+        "value": 4,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o4-c3",
+      "offset_pct": {
+        "value": 4,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o5-c0",
+      "offset_pct": {
+        "value": 5,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o5-c1",
+      "offset_pct": {
+        "value": 5,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 0.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o5-c2",
+      "offset_pct": {
+        "value": 5,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.0,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    },
+    {
+      "id": "o5-c3",
+      "offset_pct": {
+        "value": 5,
+        "unit": "%",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_mps": {
+        "value": 1.5,
+        "unit": "m/s",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      },
+      "current_profile": {
+        "value": [
+          [
+            0,
+            1
+          ],
+          [
+            1020,
+            1
+          ]
+        ],
+        "unit": "m, 1",
+        "source": "src/digitalmodel/drilling_riser/generic_campaign.py::case_table; proposed assumption only; reference to be selected: candidates must be public",
+        "required_input": true,
+        "qualification": "reference to be selected: candidates must be public"
+      }
+    }
+  ]
+}
