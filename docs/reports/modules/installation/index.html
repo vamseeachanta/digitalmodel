@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation module analysis: foundation splash-zone screening</title>
+<style>:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style>
+<style>
+.table-scroll{overflow-x:auto} svg{max-width:100%;height:auto}
+label{display:block;margin:12px 0} select,button,textarea,input{font:inherit;max-width:100%;padding:6px}
+textarea{display:block;width:100%;min-height:90px} .chart-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+#comment-list{white-space:pre-wrap;overflow-wrap:anywhere} .below{color:var(--go)} .exceeds{color:var(--nogo)} .unknown{color:var(--caution)}
+@media print{.comment-controls{display:none} .wrap{box-shadow:none}}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><div class="kicker">Marine installation · module analysis</div>
+<h1>Foundation splash-zone screening</h1><p>Draft for client review</p></header>
+
+<section id="executive"><h2>1. Executive Summary</h2>
+<p>The installation module is a collection of screening calculations for offshore lifting and pipe laying.
+Analysis is performed to determine the foundation splash-zone wave-height limits under the illustrative catalog basis; key results are summarized below.</p>
+<ul><li>The foundation screen is available for all catalog sizes.
+<ul><li>Calculated wave-height limits span 1.76 m to 5.70 m across the supplied period grid, with the catalog inputs retained. <a href="#results">Calculated results</a>.</li>
+<li>Slamming is the largest individual hydrodynamic term in this example. The sum of the terms is compared with the reduced submerged weight. <a href="#method">Calculation basis</a>.</li></ul></li>
+<li>Installation acceptance is NOT_EVALUATED.
+<ul><li>Vessel orientation, crane capacity at radius, sling tensions, station-keeping tolerance and the combined sea-state limit require a qualified vessel basis.</li>
+<li>Vessel motions, local forecasts and lowering dynamics remain required before an installation decision is made.</li></ul></li></ul>
+<h3>Revision history</h3>
+<div class="table-scroll"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and cause</th></tr></thead><tbody><tr><td>0</td><td>2026-10-21</td><td>Initial analysis; the public foundation example and missing installation acceptance basis are documented.</td></tr></tbody></table></div>
+<figure><div id="overview-chart"></div><figcaption>Foundation-only splash-zone limits against peak period. The plotted limit is the module's rounded result; connecting lines guide the eye between calculated period points. A vessel operating limit is NOT_EVALUATED.</figcaption></figure>
+</section>
+
+<section id="introduction"><h2>2. Introduction</h2>
+<p>The foundation splash-zone calculation is examined as the main workflow in this analysis. The public installation example is reproduced through the existing calculation interface, without a dynamic installation simulation.</p>
+<p>The module also contains a rigid-jumper screening workflow and scalar pipe-laying checks. Their functions, input contracts and test evidence are identified below; numerical reproduction is limited to the foundation workflow. <a href="#module-source">Module scope</a>.</p>
+</section>
+
+<section id="summary"><h2>3. Summary</h2>
+<p>The installation controls are separated into calculated foundation demands and required vessel information. A combined envelope is not assigned while any governing system remains unevaluated.</p>
+<p>Vessel motions, crane capacity, rigging capacity, station keeping and deeper lowering are NOT_EVALUATED. The foundation curve is therefore retained as a screening result only; no heading-specific operating envelope is issued.</p>
+<p>Live forecast support is offered after the vessel-specific operating threshold is established. The trigger wave height and a two-minute forecast acceptance basis remain NOT_EVALUATED. No forecast data is supplied. <a href="#forecast-source">Forecast scope</a>.</p>
+<div class="chart-pair"><figure><div id="combined-chart"></div><figcaption>Combined installation envelope: NOT_EVALUATED. The foundation-only calculated limit is shown for context; every other system requires input.</figcaption></figure>
+<figure><div id="component-chart"></div><figcaption>Hydrodynamic components and their total against the available force reserve. Individual components are not independently accepted systems.</figcaption></figure></div>
+<p class="below">Green means that the calculated total is below the illustrative force limit.</p>
+<p class="exceeds">Red means that the calculated total exceeds the illustrative force limit.</p>
+<p class="unknown">Amber means that installation acceptance is NOT_EVALUATED.</p>
+<label>Foundation <select id="case-select"><option value="0">Small foundation</option><option value="1">Medium foundation</option><option value="2">Large foundation</option></select></label>
+<label>Peak period <select id="period-select"><option value="6.0">6.0 s</option><option value="8.0">8.0 s</option><option value="10.0">10.0 s</option><option value="12.0">12.0 s</option><option value="14.0">14.0 s</option><option value="16.0">16.0 s</option></select></label>
+<p id="selected-case" aria-live="polite"></p>
+<p>A stricter lower tension reserve is represented by a larger reserve divisor in the calculation input. The corresponding dimensionless reserve is one minus the inverse divisor. This is a static force reserve, not a prediction of minimum dynamic sling tension.</p>
+</section>
+
+<section id="design"><h2>4. Design Data</h2>
+<p>The physical basis is taken from the public foundation catalog. Every inherited engineering input is marked ASSUMED - to be confirmed; a sourced input is not treated as a qualified installation value.</p>
+<h3>4.1 Vessel, crane and rigging</h3>
+<p>Vessel particulars, crane radius and capacity, hoist stiffness, reeving, lift-point locations and allowable sling capacities are required inputs. Vessel orientation and station-keeping tolerance are NOT_EVALUATED.</p>
+<p>The catalog describes sling counts, nominal sling lengths, nominal angles and hook elevation. Attachment and spreader coordinates are absent, so a dimensionally consistent rigging arrangement and a checked three-dimensional rigging view are NOT_EVALUATED. No sling-load distribution is calculated. <a href="#catalog-source">Catalog basis</a>.</p>
+<h3>4.2 Structures</h3>
+<p>The open-frame foundation envelope, bottom plate and skirt are shown for each catalog size. These drawings represent supplied envelope dimensions; member layouts and approved fabrication drawings are unavailable.</p>
+<figure><svg viewBox="0 0 460 340" role="img" aria-label="Small foundation catalog geometry">
+<title>Small foundation: bottom plate, perimeter skirt and open-frame envelope; attachment locations unavailable</title>
+<g stroke="var(--brand)" fill="var(--panel-2)" stroke-width="2">
+<polygon points="230.0,178.6 374.0,229.0 230.0,279.4 86.0,229.0"/><polygon points="230.0,169.6 374.0,220.0 230.0,270.4 86.0,220.0"/>
+<polygon points="230.0,124.6 374.0,175.0 230.0,225.4 86.0,175.0" fill="none"/><line x1="230.0" y1="169.6" x2="230.0" y2="124.6"/><line x1="374.0" y1="220.0" x2="374.0" y2="175.0"/><line x1="230.0" y1="270.4" x2="230.0" y2="225.4"/><line x1="86.0" y1="220.0" x2="86.0" y2="175.0"/></g>
+<text x="20" y="24" fill="var(--ink)">Small foundation</text>
+<text x="20" y="48" fill="var(--ink)">Length 6.0 m; width 6.0 m; height 1.5 m</text>
+<text x="20" y="295" fill="var(--ink)">Plate 20.0 mm; skirt 0.3 m</text>
+<text x="20" y="320" fill="var(--ink)">Envelope geometry only; structural members unavailable</text>
+</svg><figcaption>Catalog geometry, drawn to a common projection. Member sizes and fabrication drawings are unavailable. <a href="#catalog-source">Catalog basis</a>.</figcaption></figure><figure><svg viewBox="0 0 460 340" role="img" aria-label="Medium foundation catalog geometry">
+<title>Medium foundation: bottom plate, perimeter skirt and open-frame envelope; attachment locations unavailable</title>
+<g stroke="var(--brand)" fill="var(--panel-2)" stroke-width="2">
+<polygon points="244.4,181.8 359.6,222.2 215.6,272.6 100.4,232.2"/><polygon points="244.4,174.6 359.6,215.0 215.6,265.4 100.4,225.0"/>
+<polygon points="244.4,138.6 359.6,179.0 215.6,229.4 100.4,189.0" fill="none"/><line x1="244.4" y1="174.6" x2="244.4" y2="138.6"/><line x1="359.6" y1="215.0" x2="359.6" y2="179.0"/><line x1="215.6" y1="265.4" x2="215.6" y2="229.4"/><line x1="100.4" y1="225.0" x2="100.4" y2="189.0"/></g>
+<text x="20" y="24" fill="var(--ink)">Medium foundation</text>
+<text x="20" y="48" fill="var(--ink)">Length 8.0 m; width 10.0 m; height 2.0 m</text>
+<text x="20" y="295" fill="var(--ink)">Plate 25.0 mm; skirt 0.4 m</text>
+<text x="20" y="320" fill="var(--ink)">Envelope geometry only; structural members unavailable</text>
+</svg><figcaption>Catalog geometry, drawn to a common projection. Member sizes and fabrication drawings are unavailable. <a href="#catalog-source">Catalog basis</a>.</figcaption></figure><figure><svg viewBox="0 0 460 340" role="img" aria-label="Large foundation catalog geometry">
+<title>Large foundation: bottom plate, perimeter skirt and open-frame envelope; attachment locations unavailable</title>
+<g stroke="var(--brand)" fill="var(--panel-2)" stroke-width="2">
+<polygon points="240.3,179.6 363.7,222.8 219.7,273.2 96.3,230.0"/><polygon points="240.3,173.2 363.7,216.4 219.7,266.8 96.3,223.6"/>
+<polygon points="240.3,141.1 363.7,184.3 219.7,234.7 96.3,191.5" fill="none"/><line x1="240.3" y1="173.2" x2="240.3" y2="141.1"/><line x1="363.7" y1="216.4" x2="363.7" y2="184.3"/><line x1="219.7" y1="266.8" x2="219.7" y2="234.7"/><line x1="96.3" y1="223.6" x2="96.3" y2="191.5"/></g>
+<text x="20" y="24" fill="var(--ink)">Large foundation</text>
+<text x="20" y="48" fill="var(--ink)">Length 12.0 m; width 14.0 m; height 2.5 m</text>
+<text x="20" y="295" fill="var(--ink)">Plate 30.0 mm; skirt 0.5 m</text>
+<text x="20" y="320" fill="var(--ink)">Envelope geometry only; structural members unavailable</text>
+</svg><figcaption>Catalog geometry, drawn to a common projection. Member sizes and fabrication drawings are unavailable. <a href="#catalog-source">Catalog basis</a>.</figcaption></figure>
+<h3>4.3 Environment, stages and criteria</h3>
+<p>Peak periods from 6.0 s to 16.0 s are supplied by the calculation's default grid. Water depth, directional wave scatter, wave steepness checks, currents and vessel response amplitude operators are not supplied; a response amplitude operator is the vessel response per unit incident-wave amplitude. No regional wave climate is inferred. <a href="#calculation-source">Calculation basis</a>.</p>
+<p>Lift-off and in-air handling precede splash-zone crossing; submerged lowering and landing follow it. Only the splash-zone force balance is calculated here. Static submerged weight is reduced by the inherited reserve divisor before comparison with the sum of slamming, drag and inertia.</p>
+<p>The criterion is an illustrative module force balance. The reserve divisor is a caller input, not a substantiated dynamic amplification or minimum sling-tension criterion. Standard-attributed coefficients are inherited from the public catalog as assumptions; the licensed clauses have not been checked. <a href="#standard-source">Standards basis</a>.</p>
+</section>
+
+<section id="method"><h2>5. Methodology</h2>
+<p>The calculation is performed for every foundation and every supplied peak period. The surface wave velocity and acceleration are inserted into a quadratic force balance, from which the nonnegative significant wave-height root is returned.</p>
+<h3>5.1 Theory and equations</h3>
+<p>Hₛ is significant wave height in m, Tₚ is peak period in s, vₗ is lowering speed in m/s, ρ is water density in kg/m³, A is bottom projected area in m², V is displaced volume in m³ and W is submerged weight in N. Cₛ, Cᵈ and Cₐ are dimensionless slamming, drag and added-mass coefficients; D is the dimensionless reserve divisor.</p>
+<div class="eq">v = πHₛ/Tₚ + vₗ; a = 2π²Hₛ/Tₚ²<br>
+Fₛ = ρCₛAv²/2; Fᵈ = ρCᵈAv²/2; Fᵢ = ρ(1 + Cₐ)Va<br>
+Fₛ + Fᵈ + Fᵢ ≤ W/D</div>
+<p>Fₛ, Fᵈ and Fᵢ are upward slamming, drag and inertia forces in N. The integer coefficients arise from the linear-wave harmonic relations and the force definitions implemented in the cited calculation. Hₛ is used as twice the representative wave amplitude; this substitution does not describe an extreme irregular-wave crest distribution. <a href="#calculation-source">Implemented equations</a>.</p>
+<figure><svg viewBox="0 0 720 340" role="img" aria-label="Foundation splash-zone force model and excluded boundary conditions">
+<title>Foundation splash-zone force model: upward hydrodynamic demand, downward submerged weight and prescribed lowering speed</title>
+<defs><marker id="force-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--ink)"/></marker></defs>
+<path d="M30 145 Q65 125 100 145 T170 145 T240 145 T310 145 T380 145 T450 145 T520 145 T590 145 T660 145" fill="none" stroke="var(--brand)" stroke-width="2"/>
+<path d="M280 125 L440 125 L440 150 L280 150 Z M280 150 V178 M440 150 V178" fill="var(--panel-2)" stroke="var(--ink)" stroke-width="3"/>
+<path d="M330 240 V165 M390 180 V260 M245 55 V110" fill="none" stroke="var(--ink)" stroke-width="2" marker-end="url(#force-arrow)"/>
+<g fill="var(--ink)"><text x="270" y="110">Foundation bottom plate</text><text x="40" y="185">Representative water surface</text>
+<text x="170" y="45">Prescribed speed vₗ</text><text x="145" y="240">Fₛ + Fᵈ + Fᵢ upward</text>
+<text x="410" y="265">Submerged weight W</text><text x="40" y="305">Vessel-hook motion and line elasticity are excluded; immersion geometry is schematic.</text></g>
+</svg><figcaption>Analytical splash-zone force model. Forces are evaluated from the catalog bottom area and displacement; changing buoyancy during immersion is excluded. <a href="#calculation-source">Calculation basis</a>.</figcaption></figure>
+<div class="eq">K = ρ(Cₛ + Cᵈ)A/2; J = ρ(1 + Cₐ)V<br>
+α = K(π/Tₚ)²; β = 2K(π/Tₚ)vₗ + 2Jπ²/Tₚ²; γ = Kvₗ² − W/D<br>
+Hₛ = max[0, (−β + √(β² − 4αγ))/(2α)]</div>
+<p>K and J collect the quadratic-drag and inertia coefficients; α, β and γ are the quadratic coefficients. A zero result also occurs when the implemented quadratic or discriminant is invalid. Zero therefore requires input review before it is interpreted as a calm-water operating limit.</p>
+<h3>5.2 Public interfaces and outputs</h3>
+<p>The foundation function accepts a structure record, a period list, a lowering speed and a reserve divisor. It returns the limiting wave height and governing individual force term at each period, plus submerged weight, bottom area, speed and divisor. Returned wave heights are rounded to hundredths of a metre.</p>
+<p>The set interface selects lift records with hydrodynamic data. When a vessel heavy-lift envelope is supplied, the smaller vessel or foundation limit is returned at each period; missing vessel points remain unavailable. The full configuration interface resolves catalogs and a vessel basis, calculates lifts and envelopes, and writes HTML and structured results. No missing-vessel substitute is introduced here. <a href="#api-source">Interface definitions</a>.</p>
+</section>
+
+<section id="results"><h2>6. Detailed Results</h2>
+<p>The returned foundation limits are summarized below in catalog order. The corresponding periods, units, full numerical coverage and governing terms are given in the appendix result table.</p>
+<p>Small foundation: the returned splash-zone limit is <span data-result="case-0.hs.6.0" data-value="2.11">2.11</span> m at the shortest supplied period and <span data-result="case-0.hs.16.0" data-value="5.7">5.70</span> m at the longest supplied period. These are foundation-only limits under the inherited catalog assumptions. <a href="#calculation-source">Calculation basis</a>.</p><p>Medium foundation: the returned splash-zone limit is <span data-result="case-1.hs.6.0" data-value="1.89">1.89</span> m at the shortest supplied period and <span data-result="case-1.hs.16.0" data-value="5.13">5.13</span> m at the longest supplied period. These are foundation-only limits under the inherited catalog assumptions. <a href="#calculation-source">Calculation basis</a>.</p><p>Large foundation: the returned splash-zone limit is <span data-result="case-2.hs.6.0" data-value="1.76">1.76</span> m at the shortest supplied period and <span data-result="case-2.hs.16.0" data-value="4.8">4.80</span> m at the longest supplied period. These are foundation-only limits under the inherited catalog assumptions. <a href="#calculation-source">Calculation basis</a>.</p>
+<p>Slamming governs the individual-force ranking for each foundation at each period. Acceptance of the complete installation remains NOT_EVALUATED.</p>
+</section>
+
+<section id="validation"><h2>7. Validation</h2>
+<p>Existing numerical evidence is distinguished from physical validation. The public example is supported by regression assertions and analytical consistency checks; field correlation is not supplied.</p>
+<p>The foundation example contains 3 structures and 18 foundation-period results. Existing splash-zone tests check a small-foundation numerical reference, monotonic period response, weight-to-area sensitivity, combination with the supplied vessel envelope and omission of records lacking hydrodynamic data. Envelope tests also retain unavailable vessel points. <a href="#test-source">Existing test evidence</a>.</p>
+<p>The existing pamphlet test file contains 39 test definitions. Adjacent pipe-laying integrity and stress files contain 20 and 14 definitions respectively. These are source-inventory counts, not a count of passed engineering cases. The integrity file includes a strict expected failure for the unresolved weld-repair interpretation. <a href="#test-source">Test inventory</a>.</p>
+<p>The accompanying rebuild check compares every displayed result with a fresh module call and brackets the force-balance root within the module's rounding interval. Force contributions in the chart are independently reconstructed from the documented equations; they are not additional return fields of the module.</p>
+<p>Validation against field measurements is planned using synchronized incident waves, vessel and hook motions, line tension, lowering speed and structure immersion. Acceptance tolerances and a representative validation case remain required before installation use. No field-calibrated accuracy is claimed.</p>
+</section>
+
+<section id="findings"><h2>8. Key Findings, Limitations and Recommendations</h2>
+<p>The calculated foundation-only limits are available for comparative screening under the inherited assumptions. Complete installation acceptance remains dependent on vessel motions, rigging behaviour and site conditions.</p>
+<h3>8.1 Limits and operating recommendations</h3>
+<p>For a red force-balance result, reduce incident wave height or change lowering speed and recalculate before proceeding with the lift assessment. A reduction in lowering speed reduces the quadratic hydrodynamic demand in the implemented equation; the speed change also changes exposure duration, which is not modelled. <a href="#calculation-source">Force-balance basis</a>.</p>
+<p>Before an operating limit is issued, replace the illustrative hydrodynamic inputs with a reviewed structure basis, establish crane capacity at the working radius, resolve sling geometry and allowable loads, supply directional vessel responses and assess the complete lowering sequence. A screen limit that exceeds the qualified environmental or vessel-motion coverage is referred for engineering review and is not extrapolated. <a href="#api-source">Envelope boundary</a>.</p>
+<p>The scalar force balance excludes vessel-hook motion, irregular-wave extremes, buoyancy variation during immersion, sling elasticity, line resonance, current-induced offset and landing interference. No time integration, mesh or time-step convergence is performed. A larger static reserve does not establish a minimum dynamic line tension.</p>
+<h3>8.2 Not covered</h3>
+<p>The rigid-jumper workflow screens lift-off, in-air bending, splash crossing, lowering and tie-in, then exports case and summary records. Its configured empirical inputs require separate qualification. The pipe-laying package provides scalar buoyancy, tension, route-radius, coating-strain, weld-repair and signed longitudinal-stress checks; combined pressure effects and full contact dynamics are outside those checks. Neither workflow is numerically assessed in this foundation example. <a href="#module-source">Other module areas</a>.</p>
+<p>The wider installation module's generic weather and risk-reference features are not adopted as site forecasts or measured failure probabilities. A sample forecast is not substituted for missing live observations.</p>
+</section>
+
+<section id="references"><h2>9. References</h2>
+<p>The source basis is identified below. Numerical assumptions are inherited from public records rather than taken from a licensed publication.</p>
+<h3>9.1 Source qualifications</h3>
+<p id="standard-source">DNV-RP-H103, Modelling and Analysis of Marine Operations, 2011, “Lifting through wave zone” and “snap forces”, and DNV-RP-C205, Environmental Conditions and Environmental Loads, 2010, are cited by the implementation and catalog. The catalog also names DNV-ST-N001, Marine Operations and Marine Warranty, 2021. These are unverified implementation attributions; clause text and coefficient applicability have not been checked. No standards compliance is claimed.</p>
+<p>The foundation catalog is a public illustrative example, version 1.0. Its geometry, mass properties and coefficients are ASSUMED - to be confirmed. The regression values establish continuity of arithmetic rather than independent published benchmark or measured-installation agreement.</p>
+<h3>9.2 Source locators and reproduction</h3>
+<ul class="refs">
+<li id="catalog-source">Public example: <code>examples/demos/gtm/data/mudmat_structures.json</code>, version 1.0, geometry, mass properties, hydrodynamic coefficients, projected areas and rigging for every structure. <code>load_mudmats</code> is used without editing its numerical inputs.</li>
+<li id="calculation-source">Equations and numerical conventions: <code>src/digitalmodel/installation/installation_pamphlet/calculations.py</code>, <code>compute_splashzone_envelope</code>, <code>DEFAULT_TP_GRID_S</code>, <code>SEAWATER_DENSITY</code>, <code>SPLASH_V_LOWERING_MS</code> and <code>SPLASH_SNAP_DAF</code>. The displayed limits are obtained by calling this function.</li>
+<li id="api-source">Composition and configuration: <code>compute_splashzone_set</code>, <code>compute_envelopes</code> and <code>assemble_result</code> in the same calculation file; <code>src/digitalmodel/installation/installation_pamphlet/workflow.py</code>, <code>router</code>; public entry-point declaration in the package initializer.</li>
+<li id="test-source">Existing evidence: <code>tests/installation/test_installation_pamphlet.py</code>, splash-zone tests; <code>tests/installation/test_pipelay_integrity.py</code> and <code>tests/installation/test_pipelay_stress.py</code>, elementary hand-calculation tests and the unresolved weld-repair diagnostic.</li>
+<li id="module-source">Other interfaces: <code>src/digitalmodel/installation/jumper_installation/__init__.py</code>, <code>calculations.py</code>, <code>workflow.py</code>; <code>src/digitalmodel/installation/pipelay/__init__.py</code>, <code>integrity.py</code>, <code>stress.py</code>. The public routers and scalar exports define their respective boundaries.</li>
+<li id="forecast-source">Forecast scope: <code>docs/domains/installation/short-horizon-installation-decision-support.html</code>, short-horizon support and missing-evidence boundary. No forecast payload is consumed by this analysis.</li>
+<li id="style-source">House-style exemplar: <code>docs/api/cfd/turbulent-flat-plate-verification.html</code>; brand stylesheet: <code>docs/api/_assets/brand.css</code>. Their styles are inlined, and the document body uses <code>hs-doc</code>.</li>
+<li>Reproduction: <code>PYTHONPATH=src uv run --no-project python scripts/reporting/build_installation_module_report.py</code>. An optional <code>--snap-daf</code> argument selects a reserve at least as strict as the module default; its engineering basis requires review. An optional <code>--output-dir</code> redirects the deliverables. Rebuild test: <code>tests/installation/test_installation_module_report.py</code>.</li>
+</ul>
+<p>The same public example is calculated directly with this interface:</p>
+<pre><code>from pathlib import Path
+from digitalmodel.installation.installation_pamphlet import calculations as calc
+
+structures = calc.load_mudmats(Path("examples/demos/gtm/data/mudmat_structures.json"))
+results = [
+    calc.compute_splashzone_envelope(structure, calc.DEFAULT_TP_GRID_S)
+    for structure in structures.values()
+]</code></pre>
+</section>
+
+<section id="appendix"><h2>10. Appendices</h2>
+<p>The input register, numerical coverage and quality evidence are retained here. Unknown system criteria remain separate from the computed foundation screen.</p>
+<h3>10.1 Data register, coverage and per-case results</h3>
+<p>Every inherited engineering input below is ASSUMED - to be confirmed. Water density is 1025.0 kg/m³; the lowering speed is 0.50 m/s and the selected reserve divisor is 1.30. The default divisor comes from the calculation source; any explicit change is a supplied scenario input. <a href="#calculation-source">Calculation constants</a>.</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">Foundation</th><th scope="col">Air mass (t)</th><th scope="col">Displacement (m³)</th><th scope="col">Slamming coefficient</th><th scope="col">Drag coefficient</th><th scope="col">Added-mass coefficient</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Small foundation</td><td>50.0</td><td>4.5</td><td>5.0</td><td>2.0</td><td>1.0</td><td><a href="#catalog-source">Catalog basis; assumed</a></td></tr><tr><td>Medium foundation</td><td>100.0</td><td>12.0</td><td>5.0</td><td>2.0</td><td>1.0</td><td><a href="#catalog-source">Catalog basis; assumed</a></td></tr><tr><td>Large foundation</td><td>200.0</td><td>30.0</td><td>5.0</td><td>2.0</td><td>1.0</td><td><a href="#catalog-source">Catalog basis; assumed</a></td></tr></tbody></table></div>
+<p>Submerged weights, bottom areas, selected divisor, speed and foundation-period results are echoed below. The total coverage is 18 foundation-period cells, with no heading dimension. No acceptance of a vessel or rigging system is implied.</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">Foundation</th><th scope="col">Peak period (s)</th><th scope="col">Wave-height limit (m)</th><th scope="col">Largest individual force</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Small foundation</td><td>6.0</td><td><span data-result="case-0.hs.6.0" data-value="2.11">2.11</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>8.0</td><td><span data-result="case-0.hs.8.0" data-value="2.82">2.82</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>10.0</td><td><span data-result="case-0.hs.10.0" data-value="3.54">3.54</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>12.0</td><td><span data-result="case-0.hs.12.0" data-value="4.26">4.26</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>14.0</td><td><span data-result="case-0.hs.14.0" data-value="4.98">4.98</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>16.0</td><td><span data-result="case-0.hs.16.0" data-value="5.7">5.70</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>6.0</td><td><span data-result="case-1.hs.6.0" data-value="1.89">1.89</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>8.0</td><td><span data-result="case-1.hs.8.0" data-value="2.54">2.54</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>10.0</td><td><span data-result="case-1.hs.10.0" data-value="3.18">3.18</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>12.0</td><td><span data-result="case-1.hs.12.0" data-value="3.83">3.83</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>14.0</td><td><span data-result="case-1.hs.14.0" data-value="4.48">4.48</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>16.0</td><td><span data-result="case-1.hs.16.0" data-value="5.13">5.13</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>6.0</td><td><span data-result="case-2.hs.6.0" data-value="1.76">1.76</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>8.0</td><td><span data-result="case-2.hs.8.0" data-value="2.37">2.37</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>10.0</td><td><span data-result="case-2.hs.10.0" data-value="2.98">2.98</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>12.0</td><td><span data-result="case-2.hs.12.0" data-value="3.58">3.58</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>14.0</td><td><span data-result="case-2.hs.14.0" data-value="4.19">4.19</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>16.0</td><td><span data-result="case-2.hs.16.0" data-value="4.8">4.80</span></td><td>Slamming</td><td><a href="#calculation-source">Calculation basis</a></td></tr></tbody></table></div>
+<div class="table-scroll"><table><thead><tr><th scope="col">Foundation</th><th scope="col">Returned quantity</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Small foundation</td><td>Submerged weight</td><td><span data-result="case-0.submerged_weight_kn" data-value="445.09">445.09</span></td><td>kN</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>Bottom area</td><td><span data-result="case-0.bottom_area_m2" data-value="36.0">36.00</span></td><td>m²</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>Reserve divisor</td><td><span data-result="case-0.daf" data-value="1.3">1.30</span></td><td>dimensionless</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Small foundation</td><td>Lowering speed</td><td><span data-result="case-0.v_lowering_ms" data-value="0.5">0.50</span></td><td>m/s</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>Submerged weight</td><td><span data-result="case-1.submerged_weight_kn" data-value="859.99">859.99</span></td><td>kN</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>Bottom area</td><td><span data-result="case-1.bottom_area_m2" data-value="80.0">80.00</span></td><td>m²</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>Reserve divisor</td><td><span data-result="case-1.daf" data-value="1.3">1.30</span></td><td>dimensionless</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Medium foundation</td><td>Lowering speed</td><td><span data-result="case-1.v_lowering_ms" data-value="0.5">0.50</span></td><td>m/s</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>Submerged weight</td><td><span data-result="case-2.submerged_weight_kn" data-value="1659.74">1659.74</span></td><td>kN</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>Bottom area</td><td><span data-result="case-2.bottom_area_m2" data-value="168.0">168.00</span></td><td>m²</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>Reserve divisor</td><td><span data-result="case-2.daf" data-value="1.3">1.30</span></td><td>dimensionless</td><td><a href="#calculation-source">Calculation basis</a></td></tr><tr><td>Large foundation</td><td>Lowering speed</td><td><span data-result="case-2.v_lowering_ms" data-value="0.5">0.50</span></td><td>m/s</td><td><a href="#calculation-source">Calculation basis</a></td></tr></tbody></table></div>
+<div class="table-scroll"><table><thead><tr><th scope="col">Required evidence</th><th scope="col">State</th><th scope="col">Engineering disposition</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Directional vessel responses and working crane curve</td><td>NOT_EVALUATED</td><td>Supply qualified vessel and lifting basis before combining limits</td><td>Vessel input required</td></tr><tr><td>Rigging attachment geometry, spreader layout and capacities</td><td>NOT_EVALUATED</td><td>Resolve geometry and sling tensions before producing a checked rigging view</td><td>Catalog geometry incomplete</td></tr><tr><td>Field measurements and acceptance tolerance</td><td>NOT_EVALUATED</td><td>Define a comparison basis before physical validation</td><td>Measurement input required</td></tr><tr><td>Live forecast and support trigger</td><td>NOT_EVALUATED</td><td>Supply forecast and qualified operating envelope</td><td>Forecast input required</td></tr><tr><td>Time-step sensitivity and extreme-only dynamic failures</td><td>NOT_EVALUATED</td><td>Assess with the complete dynamic installation model</td><td>Algebraic screen only</td></tr></tbody></table></div>
+<p>The catalog rigging lengths, nominal angles and hook elevations do not define attachment coordinates or an approved spreader arrangement. Attachment geometry and fabrication drawings remain required for a checked rigging illustration.</p>
+<h3>10.2 Quality evidence, changes and comments</h3>
+<p>Calculation reproduction is checked by direct function comparison, an independent quadratic-root bracket and exact HTML regeneration. Every catalog size and supplied period is included. Input and result data are embedded for offline inspection; no licensed analysis application is accessed.</p>
+<p>The physical drawings are limited to catalog envelope geometry. Fabrication-drawing comparison, interactive visual inspection and comment-file saving in a browser remain pending. The report is a draft until these checks and the engineering basis review are completed.</p>
+<details><summary>Engineering changes since the initial issue</summary><div id="change-panel"></div>
+<p>The accompanying changes.json contains the same engineering change descriptions. This initial revision has no earlier issue for comparison.</p></details>
+<details class="comment-controls"><summary>Section comments</summary>
+<p>Comments are held in memory until saved. Choose the folder containing this HTML to save report.comments.json beside it. Where folder access is unavailable, download the comments and place that file beside the HTML. Reload saved comments to continue; report regeneration preserves existing comment files.</p>
+<label>Section <select id="comment-section"></select></label>
+<label>Comment <textarea id="comment-text" maxlength="10000"></textarea></label>
+<button type="button" id="comment-add">Add comment</button>
+<button type="button" id="comment-folder">Save beside report</button>
+<button type="button" id="comment-download">Download comments</button>
+<label>Load saved comments <input type="file" id="comment-load" accept=".json"></label>
+<p id="comment-status" role="status"></p><pre id="comment-list"></pre>
+</details>
+</section>
+<script id="report-data" type="application/json">{"periods_s":[6.0,8.0,10.0,12.0,14.0,16.0],"snap_daf":1.3,"density_kg_m3":1025.0,"cases":[{"label":"Small foundation","catalog_id":"MUD-S","input":{"id":"MUD-S","name":"Mudmat-S-50te","description":"Small mudmat foundation for manifold protection structure or single well template","geometry":{"length_m":6.0,"width_m":6.0,"height_m":1.5,"bottom_plate_thickness_mm":20,"skirt_depth_m":0.3,"skirt_thickness_mm":12},"mass_properties":{"mass_air_kg":50000,"mass_air_te":50.0,"displaced_volume_m3":4.5,"buoyancy_force_kn":45.24,"submerged_weight_kn":445.09,"_note":"Displaced volume estimated as 10% of bounding box (open frame structure)"},"centre_of_gravity":{"x_m":0.0,"y_m":0.0,"z_m":0.75,"_note":"Relative to geometric centre of bottom plate"},"hydrodynamic_coefficients":{"slamming_coefficient_Cs":5.0,"drag_coefficient_Cd":2.0,"added_mass_coefficient_Ca":1.0,"_note":"Cs=5.0 for flat bottom slamming per DNV-RP-H103 Table 4-1. Cd for sharp-edged flat plate. Ca=1.0 for flat plate (added mass = rho * volume * Ca)."},"projected_areas":{"bottom_m2":36.0,"side_long_m2":9.0,"side_short_m2":9.0,"_note":"Bottom area = L x W = 6 x 6. Side areas are net projected areas accounting for open frame."},"rigging":{"number_of_slings":4,"sling_angle_deg":60,"sling_length_m":8.0,"hook_height_above_cog_m":7.7,"_note":"4-point lift with spreader beam typical"}},"module":{"id":"MUD-S","name":"Mudmat-S-50te","submerged_weight_kn":445.09,"bottom_area_m2":36.0,"daf":1.3,"v_lowering_ms":0.5,"hs_by_tp":{"6.0":2.11,"8.0":2.82,"10.0":3.54,"12.0":4.26,"14.0":4.98,"16.0":5.7},"gov_by_tp":{"6.0":"slam","8.0":"slam","10.0":"slam","12.0":"slam","14.0":"slam","16.0":"slam"}}},{"label":"Medium foundation","catalog_id":"MUD-M","input":{"id":"MUD-M","name":"Mudmat-M-100te","description":"Medium mudmat foundation for production manifold or PLET cluster","geometry":{"length_m":8.0,"width_m":10.0,"height_m":2.0,"bottom_plate_thickness_mm":25,"skirt_depth_m":0.4,"skirt_thickness_mm":14},"mass_properties":{"mass_air_kg":100000,"mass_air_te":100.0,"displaced_volume_m3":12.0,"buoyancy_force_kn":120.64,"submerged_weight_kn":859.99,"_note":"Displaced volume ~7.5% of bounding box"},"centre_of_gravity":{"x_m":0.0,"y_m":0.0,"z_m":1.0,"_note":"Relative to geometric centre of bottom plate"},"hydrodynamic_coefficients":{"slamming_coefficient_Cs":5.0,"drag_coefficient_Cd":2.0,"added_mass_coefficient_Ca":1.0,"_note":"Same coefficients as small mudmat - similar flat-bottom geometry"},"projected_areas":{"bottom_m2":80.0,"side_long_m2":20.0,"side_short_m2":16.0,"_note":"Bottom = 8 x 10 = 80 m2"},"rigging":{"number_of_slings":4,"sling_angle_deg":60,"sling_length_m":12.0,"hook_height_above_cog_m":11.4,"_note":"4-point lift with spreader frame"}},"module":{"id":"MUD-M","name":"Mudmat-M-100te","submerged_weight_kn":859.99,"bottom_area_m2":80.0,"daf":1.3,"v_lowering_ms":0.5,"hs_by_tp":{"6.0":1.89,"8.0":2.54,"10.0":3.18,"12.0":3.83,"14.0":4.48,"16.0":5.13},"gov_by_tp":{"6.0":"slam","8.0":"slam","10.0":"slam","12.0":"slam","14.0":"slam","16.0":"slam"}}},{"label":"Large foundation","catalog_id":"MUD-L","input":{"id":"MUD-L","name":"Mudmat-L-200te","description":"Large mudmat foundation for major manifold or multi-well template","geometry":{"length_m":12.0,"width_m":14.0,"height_m":2.5,"bottom_plate_thickness_mm":30,"skirt_depth_m":0.5,"skirt_thickness_mm":16},"mass_properties":{"mass_air_kg":200000,"mass_air_te":200.0,"displaced_volume_m3":30.0,"buoyancy_force_kn":301.59,"submerged_weight_kn":1659.74,"_note":"Displaced volume ~7.1% of bounding box"},"centre_of_gravity":{"x_m":0.0,"y_m":0.0,"z_m":1.25,"_note":"Relative to geometric centre of bottom plate"},"hydrodynamic_coefficients":{"slamming_coefficient_Cs":5.0,"drag_coefficient_Cd":2.0,"added_mass_coefficient_Ca":1.0,"_note":"Same coefficients - flat bottom geometry dominates"},"projected_areas":{"bottom_m2":168.0,"side_long_m2":35.0,"side_short_m2":30.0,"_note":"Bottom = 12 x 14 = 168 m2"},"rigging":{"number_of_slings":4,"sling_angle_deg":60,"sling_length_m":16.0,"hook_height_above_cog_m":15.1,"_note":"4-point lift with heavy spreader frame. May require custom rigging design."}},"module":{"id":"MUD-L","name":"Mudmat-L-200te","submerged_weight_kn":1659.74,"bottom_area_m2":168.0,"daf":1.3,"v_lowering_ms":0.5,"hs_by_tp":{"6.0":1.76,"8.0":2.37,"10.0":2.98,"12.0":3.58,"14.0":4.19,"16.0":4.8},"gov_by_tp":{"6.0":"slam","8.0":"slam","10.0":"slam","12.0":"slam","14.0":"slam","16.0":"slam"}}}],"test_definitions":{"test_installation_pamphlet.py":39,"test_pipelay_integrity.py":20,"test_pipelay_stress.py":14},"source_sha256":{"examples/demos/gtm/data/mudmat_structures.json":"f0db706ea79fdc25c5eaff9ea12ede870b321615a9e37a858a96a4d1d8ef5dff","src/digitalmodel/installation/installation_pamphlet/calculations.py":"0e914f8d05a72b05069840c0ef706b843bd56a241cd73327a7e03048dabb6708","docs/api/cfd/turbulent-flat-plate-verification.html":"bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25","docs/api/_assets/brand.css":"a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a","scripts/reporting/build_installation_module_report.py":"6d5163feefcbf82eb56ea20e561284bbe48906ff0f82586bd72afe7c10155660"},"changes":{"revision":"0","date":"2026-10-21","changes":["Foundation splash-zone limits are calculated for every size in the public example.","Force contributions and the submerged-weight reserve are displayed together.","Vessel installability remains unevaluated until the vessel and site basis is supplied."]}}</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('report-data').textContent);
+  const el = id => document.getElementById(id);
+  const componentName = key => ({slam:'Slamming',drag:'Drag',inertia:'Inertia'}[key]);
+  const ns = 'http:' + '//www.w3.org/2000/svg';
+  const create = (tag, attrs = {}, text = '') => {
+    const node = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    node.textContent = text; return node;
+  };
+  function frame(id, title, xLabel, yLabel) {
+    const svg = create('svg', {viewBox:'0 0 520 300', role:'img', 'aria-label':title});
+    svg.append(create('title', {}, title));
+    svg.append(create('path', {d:'M60 30 V250 H500', fill:'none', stroke:'var(--ink)'}));
+    svg.append(create('text', {x:200, y:292, fill:'var(--ink)'}, xLabel));
+    svg.append(create('text', {x:5, y:18, fill:'var(--ink)'}, yLabel));
+    el(id).replaceChildren(svg); return svg;
+  }
+  const forces = (record, tp, hs) => {
+    const hc=record.input.hydrodynamic_coefficients, mp=record.input.mass_properties;
+    const area=record.module.bottom_area_m2, rho=data.density_kg_m3;
+    const v=Math.PI*hs/tp+record.module.v_lowering_ms;
+    return [rho*hc.slamming_coefficient_Cs*area*v*v/2/1000,
+      rho*hc.drag_coefficient_Cd*area*v*v/2/1000,
+      rho*(1+hc.added_mass_coefficient_Ca)*mp.displaced_volume_m3*2*Math.PI**2*hs/tp**2/1000];
+  };
+  function envelope(id, selectedOnly) {
+    const svg=frame(id, 'Foundation-only splash-zone limit; vessel acceptance unevaluated', 'Peak period (s)', 'Screen limit Hs (m)');
+    const p=data.periods_s, ymin=0;
+    const ymax=Math.max(...data.cases.flatMap(c=>Object.values(c.module.hs_by_tp)))*1.15;
+    const x=t=>60+(t-p[0])/(p[p.length-1]-p[0])*430;
+    const y=h=>250-(h-ymin)/ymax*210;
+    const cases=selectedOnly?[data.cases[+el('case-select').value]]:data.cases;
+    const colors=['var(--brand)','var(--go)','var(--caution)'];
+    p.forEach(t=>svg.append(create('text',{x:x(t)-10,y:273,fill:'var(--ink)'},t.toFixed(1))));
+    [0,ymax/2,ymax].forEach(h=>{
+      svg.append(create('text',{x:14,y:y(h)+4,fill:'var(--ink)'},h.toFixed(1)));
+      svg.append(create('line',{x1:58,x2:500,y1:y(h),y2:y(h),stroke:'var(--grid)'}));
+    });
+    cases.forEach((c,i)=>{
+      const vals=p.map(t=>c.module.hs_by_tp[t.toFixed(1)]);
+      svg.append(create('polyline',{points:p.map((t,j)=>`${x(t)},${y(vals[j])}`).join(' '),fill:'none',stroke:colors[i], 'stroke-width':2}));
+      p.forEach((t,j)=>{
+        const dot=create('circle',{cx:x(t),cy:y(vals[j]),r:5,fill:colors[i],tabindex:0});
+        const f=forces(c,t,vals[j]), demand=f.reduce((a,b)=>a+b,0), limit=c.module.submerged_weight_kn/c.module.daf;
+        dot.append(create('title',{},`${c.label}; splash crossing; Tp ${t.toFixed(1)} s; calculated Hs limit ${vals[j].toFixed(2)} m; governing individual component ${componentName(c.module.gov_by_tp[t.toFixed(1)])}; total demand ${demand.toFixed(1)} kN; force limit ${limit.toFixed(1)} kN; vessel acceptance NOT_EVALUATED`));
+        svg.append(dot);
+      });
+      svg.append(create('text',{x:65,y:35+i*19,fill:colors[i]},c.label));
+    });
+  }
+  function breakdown() {
+    const c=data.cases[+el('case-select').value], tp=+el('period-select').value;
+    const root=c.module.hs_by_tp[tp.toFixed(1)], maxHs=Math.ceil(root/.25+1)*.25;
+    const limit=c.module.submerged_weight_kn/c.module.daf;
+    const svg=frame('component-chart','Hydrodynamic demand against the force reserve','Significant wave height (m)','Upward force (kN)');
+    const x=h=>60+h/maxHs*430, y=f=>250-f/(limit*1.5)*210;
+    [0,limit/2,limit].forEach(f=>svg.append(create('text',{x:7,y:y(f)+4,fill:'var(--ink)'},f.toFixed(1))));
+    svg.append(create('line',{x1:60,x2:490,y1:y(limit),y2:y(limit),stroke:'var(--nogo)','stroke-dasharray':'6 4'}));
+    svg.append(create('text',{x:65,y:y(limit)-7,fill:'var(--nogo)'},`Force limit ${limit.toFixed(1)} kN`));
+    const samples=Array.from({length:Math.round(maxHs/.25)+1},(_,i)=>i*.25);
+    ['Slamming','Drag','Inertia','Total'].forEach((component,j)=>{
+      const color=['var(--brand)','var(--faint)','var(--muted)','var(--ink)'][j];
+      const points=samples.map(h=>{const f=forces(c,tp,h);return [h,j===3?f.reduce((a,b)=>a+b,0):f[j]];});
+      svg.append(create('polyline',{points:points.map(([h,f])=>`${x(h)},${y(f)}`).join(' '),fill:'none',stroke:color,'stroke-width':j===3?3:1.5}));
+      points.forEach(([h,f])=>{
+        const dot=create('circle',{cx:x(h),cy:y(f),r:3,fill:j===3?(f>limit?'var(--nogo)':'var(--go)'):color,tabindex:0});
+        dot.append(create('title',{},`${c.label}; splash crossing; Tp ${tp.toFixed(1)} s; Hs ${h.toFixed(2)} m; ${component}; demand ${f.toFixed(1)} kN; total force limit ${limit.toFixed(1)} kN; largest individual term ${componentName(c.module.gov_by_tp[tp.toFixed(1)])}; other components ${['slam','drag','inertia'].filter(k=>k!==c.module.gov_by_tp[tp.toFixed(1)]).map(componentName).join(' and ')}; installation NOT_EVALUATED`));
+        svg.append(dot);
+      });
+      svg.append(create('text',{x:65+j*105,y:38,fill:color},component));
+    });
+    [0,maxHs/2,maxHs].forEach(h=>svg.append(create('text',{x:x(h)-10,y:273,fill:'var(--ink)'},h.toFixed(2))));
+    el('selected-case').textContent=`${c.label}; peak period ${tp.toFixed(1)} s; returned foundation limit ${root.toFixed(2)} m; installation NOT_EVALUATED. Force samples are spaced at 0.25 m.`;
+  }
+  function redraw(){envelope('overview-chart',false);envelope('combined-chart',true);breakdown();}
+  el('case-select').addEventListener('change',redraw);
+  el('period-select').addEventListener('change',redraw);
+  redraw();
+  data.changes.changes.forEach(change=>{const p=document.createElement('p');p.textContent=change;el('change-panel').append(p);});
+  const sections=[...document.querySelectorAll('main > section')];
+  sections.forEach(section=>{const option=document.createElement('option');option.value=section.id;option.textContent=section.querySelector('h2').textContent;el('comment-section').append(option);});
+  let comments=[];
+  const identity=JSON.stringify(data.source_sha256)+JSON.stringify(data.cases.map(c=>c.module));
+  const show=()=>{el('comment-list').textContent=comments.map(c=>`${c.section}: ${c.text}`).join('\n\n');};
+  const payload=()=>JSON.stringify({report:'installation-module-analysis',revision:data.changes.revision,identity,comments},null,2)+'\n';
+  el('comment-add').onclick=()=>{
+    const text=el('comment-text').value.trim();
+    if(!text)return;
+    comments.push({section:el('comment-section').value,text});
+    el('comment-text').value='';show();el('comment-status').textContent='Comment added in memory. Save to retain it.';
+  };
+  el('comment-load').onchange=async()=>{
+    try{
+      const file=el('comment-load').files[0];if(!file)return;
+      if(file.size>5000000)throw new Error('Comment file exceeds the supported size.');
+      const incoming=JSON.parse(await file.text());
+      if(incoming.report!=='installation-module-analysis'||incoming.revision!==data.changes.revision||incoming.identity!==identity||!Array.isArray(incoming.comments)||incoming.comments.some(c=>typeof c.text!=='string'||!sections.some(s=>s.id===c.section)))throw new Error('Comments do not match this calculation basis and revision.');
+      comments.push(...incoming.comments);show();el('comment-status').textContent='Matching comments loaded; existing in-memory comments retained.';
+    }catch(error){el('comment-status').textContent=error.message;}
+  };
+  el('comment-folder').onclick=async()=>{
+    try{
+      if(!window.showDirectoryPicker)throw new Error('Folder access is unavailable. Use Download comments and place the file beside this HTML.');
+      const folder=await window.showDirectoryPicker({mode:'readwrite'});
+      // Avoid overwriting prior comments: load and merge them first.
+      let exists=false;
+      try{await folder.getFileHandle('report.comments.json');exists=true;}catch(error){if(error.name!=='NotFoundError')throw error;}
+      if(exists)throw new Error('A comments file already exists. Download a new copy and retain or merge the earlier file.');
+      const handle=await folder.getFileHandle('report.comments.json',{create:true});
+      const content=payload(), writable=await handle.createWritable();
+      await writable.write(content);await writable.close();
+      if(await(await handle.getFile()).text()!==content)throw new Error('Saved comments differ on read-back.');
+      el('comment-status').textContent='Comments saved beside the report and read back.';
+    }catch(error){el('comment-status').textContent=error.message;}
+  };
+  el('comment-download').onclick=()=>{
+    const url=URL.createObjectURL(new Blob([payload()],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='report.comments.json';link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    el('comment-status').textContent='Download requested. Place the saved file beside the HTML and reload it to check.';
+  };
+})();
+</script>
+</main></body></html>
