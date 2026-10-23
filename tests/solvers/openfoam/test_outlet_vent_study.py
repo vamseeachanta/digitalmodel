@@ -226,3 +226,113 @@ def test_parser_defaults_the_tolerance_so_it_is_not_typed_at_run_time(study):
         ["--work-root", "/tmp/wr", "--output", "/tmp/out.json"]
     )
     assert args.tolerance_pct == 0.1
+
+
+def test_resonant_build_preserves_motion_and_zero_flow(study, tmp_path):
+    """Two requested cycles last 2*T; T is the selected sweep input.
+
+    Existing synthetic geometry and motion inputs are specified in the static
+    study's _coupling_spec; no new empirical coefficient is introduced here.
+    """
+    row = study._select_sweep_case("worst-fill-resonant")
+    case_dir, _ = study._build_case(
+        tmp_path, study.VARIANT_VENT_TOP, 0.0, 2 * row.roll_period_s, 1,
+        sweep_case=row, motion="resonant",
+    )
+    dynamic = (case_dir / "constant" / "dynamicMeshDict").read_text()
+    assert "oscillatingRotatingMotion" in dynamic
+    import re
+
+    assert re.search(r"volumetricFlowRate\s+constant 0;", (case_dir / "0" / "U").read_text())
+
+
+def test_static_build_still_removes_motion(study, tmp_path):
+    case_dir, _ = study._build_case(tmp_path, study.VARIANT_VENT_TOP, 0, 10, 1)
+    assert not (case_dir / "constant" / "dynamicMeshDict").exists()
+
+
+def test_resonant_dry_run_records_inputs_without_claiming_solver_result(study, tmp_path):
+    import json
+
+    output = tmp_path / "manifest.json"
+    assert study.main([
+        "--work-root", str(tmp_path / "cases"), "--output", str(output),
+        "--motion", "resonant", "--sweep-case", "worst-fill-resonant",
+        "--cycles", "2", "--max-sample-gap-s", "0.1", "--ranks", "1",
+        "--variants", "vent_top", "--dry-run",
+    ]) == 0
+    manifest = json.loads(output.read_text())
+    assert manifest["motion"] == "resonant"
+    assert manifest["selected_case"]["fill_fraction"] == 0.8
+    assert manifest["selected_case"]["period_ratio"] == 1.0
+    assert manifest["end_time_s"] == pytest.approx(
+        2 * manifest["selected_case"]["roll_period_s"]
+    )
+    assert manifest["variants"]["vent_top"]["assessment"]["case_status"] == "NOT_EVALUATED"
+    assert manifest["verdict"] is None
+
+
+@pytest.mark.parametrize("options", [
+    [], ["--cycles", "0", "--max-sample-gap-s", "0.1"],
+    ["--cycles", "2"],
+    ["--cycles", "2", "--max-sample-gap-s", "0.1", "--flow-rate", "1"],
+    ["--cycles", "2", "--max-sample-gap-s", "nan"],
+])
+def test_resonant_mode_requires_explicit_run_plan(study, tmp_path, options):
+    with pytest.raises(ValueError):
+        study.main([
+            "--work-root", str(tmp_path), "--output", str(tmp_path / "out.json"),
+            "--motion", "resonant", "--dry-run", *options,
+        ])
+
+
+@pytest.mark.parametrize("with_runup", [False, True])
+def test_completed_history_gate_and_offline_reduction(study, tmp_path, monkeypatch, with_runup):
+    """Synthetic 20*6*10*.8=960 m3 hold; solver calls replaced by test doubles.
+
+    Five samples span the requested duration; no elevation evidence exists.
+    """
+    import json
+
+    row = study._select_sweep_case("worst-fill-resonant")
+    duration = 2 * row.roll_period_s
+    monkeypatch.setattr(study, "_require_openfoam_environment", lambda: None)
+    monkeypatch.setattr(study, "_run_case", lambda *args: None)
+    monkeypatch.setattr(study, "_volume_series", lambda *args: [
+        (i * duration / 4, 960.0) for i in range(5)
+    ])
+    output = tmp_path / "manifest.json"
+    args = [
+        "--work-root", str(tmp_path / "cases"), "--output", str(output),
+        "--motion", "resonant", "--sweep-case", "worst-fill-resonant",
+        "--cycles", "2", "--max-sample-gap-s", str(duration / 2),
+        "--ranks", "1", "--variants", "vent_top",
+    ]
+    result = study.main(args)
+    assert result == 2
+    manifest = json.loads(output.read_text())
+    assert manifest["variants"]["vent_top"]["assessment"]["case_status"] == "NOT_EVALUATED"
+    assert manifest["matrix_status"] == "NOT_EVALUATED"
+    assert manifest["verdict"] is None
+    if with_runup:
+        evidence = tmp_path / "runup.json"
+        evidence.write_text(json.dumps(dict(
+            case_id=row.case_id, variant="vent_top", frame="tank",
+            start_time_s=0, end_time_s=duration, peak_elevation_m=9.5,
+            source="Synthetic spatial maximum from the independent geometry example",
+        )))
+        args += ["--runup-evidence", str(evidence)]
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Offline reduction must not rebuild or run a solver")
+
+    monkeypatch.setattr(study, "_build_case", forbidden)
+    monkeypatch.setattr(study, "_run_case", forbidden)
+    monkeypatch.setattr(study, "_require_openfoam_environment", forbidden)
+    assert study.main([*args, "--reduce-only"]) == (0 if with_runup else 2)
+
+    # A changed input must invalidate reuse, even if its old history still exists.
+    case_dir = Path(manifest["variants"]["vent_top"]["case_directory"])
+    (case_dir / "constant" / "dynamicMeshDict").write_text("changed input\n")
+    with pytest.raises(ValueError, match="digest"):
+        study.main([*args, "--reduce-only"])
