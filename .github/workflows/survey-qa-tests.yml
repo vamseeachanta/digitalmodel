@@ -1,0 +1,39 @@
+name: Synthetic survey QA tests
+
+on:
+  pull_request:
+    paths:
+      - "src/digitalmodel/subsea/survey_qa/**"
+      - "tests/subsea/survey_qa/**"
+      - "examples/workflows/survey-qa-report-pack/**"
+      - "docs/domains/subsea/survey-qa-patch-test.*"
+      - ".github/workflows/survey-qa-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  survey-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+      - name: Test synthetic geometry, estimators and house report
+        run: >-
+          uv run --no-project --with pytest --with pydantic --with jinja2 --with plotly
+          python -m pytest tests/subsea/survey_qa -q -rA -p no:cacheprovider
+      - name: Lint module, tests and report wrapper
+        run: >-
+          uv run --no-project --with ruff ruff check
+          src/digitalmodel/subsea/survey_qa tests/subsea/survey_qa
+          examples/workflows/survey-qa-report-pack/build_report.py
