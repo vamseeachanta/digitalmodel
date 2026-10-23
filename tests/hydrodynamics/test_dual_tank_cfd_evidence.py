@@ -5,6 +5,7 @@ import importlib.util
 import json
 import re
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -100,6 +101,9 @@ def test_new_sections_numbers_come_from_json():
             allowed.update(f"{value:.{precision}f}" for precision in range(7))
         elif isinstance(value, str):
             allowed.update(re.findall(r"(?<![\w])\d+(?:\.\d+)?", value))
+            # Percentage prose may display evidence rounded to 0.1 %.
+            for percentage in re.findall(r"(\d+(?:\.\d+)?(?:[-–]\d+(?:\.\d+)?)?)\s*%", value):
+                allowed.update(f"{float(n):.1f}" for n in re.split("[-–]", percentage))
     visible = re.sub(r"<[^>]+>", " ", evidence)
     for number in re.findall(r"(?<![\w])\d+(?:\.\d+)?", visible):
         assert number in allowed, number
@@ -107,6 +111,47 @@ def test_new_sections_numbers_come_from_json():
     assert "not CFD solves" in evidence
     assert "phase and anti-roll benefit remain withheld" in evidence
     assert "not shown" in evidence
+
+
+def test_comparison_percentages_keep_raw_values_and_one_decimal():
+    builder = module("build_dual_tank_sloshing_study")
+    data = json.loads(DATA.read_text())
+    root = ElementTree.fromstring(builder.render_cfd_evidence())
+    cells = {node.attrib["data-provenance"]: node for node in root.iter("data")}
+    loss, mesh, frequency = data["loss"], data["mesh"], data["frequency"]
+    comparisons = [loss[key] for key in ("rms", "linear_rms", "small_area_rms", "large_area_rms")]
+    comparisons += [loss["third"][key] for key in ("independent_rms", "rms")]
+    comparisons += [mesh[key] for key in ("exchange_error", "moment_error")]
+    comparisons += [frequency[key] for key in ("minimum_error", "maximum_error", "gci")]
+    for fact in comparisons:
+        source = fact["provenance"]
+        node = cells[source["path"] + "#" + source["pointer"]]
+        assert node.attrib["value"] == str(fact["value"])
+        assert node.text == f"{fact['value']:.1f}"
+    for row in data["evidence_classes"]:
+        for key in ("key_finding", "limitation"):
+            fact = row[key]
+            source = fact["provenance"]
+            node = cells[source["path"] + "#" + source["pointer"]]
+            assert node.attrib["value"] == fact["value"]
+            assert not re.search(r"\d\.\d{2,}\s*%", node.text)
+    frequency_text = " ".join(root.itertext())
+    assert "0.755580-0.755807 Hz vs 0.758054 Hz analytical; 0.3-0.3 % error" in frequency_text
+    assert "0.8 % exchange and 1.5 % roll moment" in frequency_text
+
+
+@pytest.mark.parametrize(("source", "expected"), [
+    ("error -0.2964–0.3264%; GCI 0.1239%", "error -0.3–0.3 %; GCI 0.1 %"),
+    ("error +1.4598 %; 7/7 cases", "error 1.5 %; 7/7 cases"),
+    ("0.755580-0.755807 Hz; 0.682764 s", "0.755580-0.755807 Hz; 0.682764 s"),
+])
+def test_status_percentage_rounding_preserves_other_evidence(source, expected):
+    builder = module("build_dual_tank_sloshing_study")
+    fact = {"value": source, "provenance": {"path": "evidence.json", "pointer": "/finding"}}
+    node = ElementTree.fromstring(builder.evidence_value(fact))
+    assert node.attrib["value"] == source
+    assert node.attrib["data-provenance"] == "evidence.json#/finding"
+    assert node.text == expected
 
 
 def test_evidence_json_is_registered_and_public():

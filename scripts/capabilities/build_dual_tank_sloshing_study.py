@@ -225,10 +225,25 @@ def chart(identifier, title, xs, series, xlabel, ylabel, supported_from=None):
     return "\n".join(parts) + "\n</svg>"
 
 
+def format_percentage_text(value):
+    """Round percentage prose, preserving other measurements and integer counts."""
+    def rounded(match):
+        display = f"{float(match[1]):.1f}"
+        if match[3] is not None:
+            display += f"{match[2]}{float(match[3]):.1f}"
+        return display + " %"
+
+    return re.sub(
+        r"(?<![\w.])([+-]?\d+(?:\.\d+)?)(?:\s*([-–])\s*([+-]?\d+(?:\.\d+)?))?\s*%",
+        rounded, value,
+    )
+
+
 def evidence_value(fact, precision=1):
     """Bind a visible scalar to its raw evidence value and source pointer."""
     value = fact["value"]
-    display = f"{value:.{precision}f}" if isinstance(value, (int, float)) else str(value)
+    display = (f"{value:.{precision}f}" if isinstance(value, (int, float))
+               else format_percentage_text(str(value)))
     source = fact["provenance"]
     locator = source["path"] + "#" + source["pointer"]
     return (f'<data value="{html.escape(str(value), quote=True)}" '
@@ -381,14 +396,15 @@ def render_cfd_evidence():
     near = [min(r["damping"], key=lambda c: abs(val(c["period"]) - val(r["predicted_period"]))) for r in loss_checks]
     part.append(plot("cfd-loss-area", "Equivalent damping against conduit area", [f'{val(r["area"]):.1f}' for r in loss_checks],
                      [("CFD-derived, near predicted natural period", [val(c["measured"]) for c in near]),
-                      ("Original inverse-area prediction", [val(c["linear_prediction"]) for c in near])], "Damping ratio; area (m²)"))
+                      ("Original inverse-area prediction", [val(c["linear_prediction"]) for c in near])], "Damping ratio; area (m²)", tick_precision=3))
     part.append(table(["Area (m²)", "Fill (%)", "Forcing period (s)", "Roll (°)", "CFD-derived damping", "Original inverse-area damping"],
                       [[v(r["area"]), v(r["fill"], 0), v(c["period"]), v(c["roll"]), v(c["measured"], 3), v(c["linear_prediction"], 3)] for r, c in zip(loss_checks, near)],
                       "Conditions near each predicted natural period. The original inverse-area prediction uses the reference calibration, not the separate all-data coefficient refit."))
     part += [f'<p>At the independent intermediate area, the existing law evaluated without refitting gives '
-             f'{v(third["independent_rms"], 2)} % RMS. Including that area in the fit gives '
-             f'n = {v(third["exponent"], 6)} and {v(third["rms"], 4)} % RMS over '
-             f'{v(third["cases"], 0)} cases, at the precision recorded in the archive report. '
+             f'{v(third["independent_rms"])} % RMS. Including that area in the fit gives '
+             f'n = {v(third["exponent"], 3)} and {v(third["rms"])} % RMS over '
+             f'{v(third["cases"], 0)} cases. Percentages are rounded to one decimal place; '
+             'the evidence record retains the source precision. '
              'The independent prediction and all-data refit are separate checks.</p>',
              '<h3 id="cfd-forced">Forced-roll period sweep and numerical checks</h3>',
              '<p>The medium-mesh forced-roll cases are accepted for screening after cycle convergence. '
@@ -403,12 +419,12 @@ def render_cfd_evidence():
     mesh, frequency = d["mesh"], d["frequency"]
     part.append(table(["Numerical check", "Result"], [
         ["Fine confirmation period (s)", v(mesh["period"], 0)],
-        ["Exchange change (%)", v(mesh["exchange_error"], 3)],
-        ["Moment change (%)", v(mesh["moment_error"], 3)],
+        ["Exchange change (%)", v(mesh["exchange_error"])],
+        ["Moment change (%)", v(mesh["moment_error"])],
         ["Fine transient maximum Courant / nominal target", v(mesh["max_courant"], 3) + " / " + v(mesh["courant_target"])],
-        ["Free-decay frequency error (%)", v(frequency["minimum_error"], 4) + "–" + v(frequency["maximum_error"], 4)],
+        ["Free-decay frequency error (%)", v(frequency["minimum_error"]) + "–" + v(frequency["maximum_error"])],
         ["Observed Richardson order", v(frequency["richardson_order"], 3)],
-        ["Indicative fine-grid GCI (%)", v(frequency["gci"], 4)],
+        ["Indicative fine-grid GCI (%)", v(frequency["gci"])],
     ], "Fine-mesh Courant exceeds the nominal target. Free-decay convergence is non-asymptotic; the GCI is indicative. Free-decay validates frequency in its own case family, not twin-tank anti-roll response."))
     part += ['<h3 id="cfd-classes">Evidence classes and withheld conclusions</h3>',
              '<p>Analytical screening cases are not CFD solves. Failed wrappers and open transfer are rejected. '
@@ -488,6 +504,7 @@ do not establish a design ranking.</p>
 <p>Draft for maintainer review.</p>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Display precision</td><td>2026-10-23</td><td>Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.</td></tr>
 <tr><td>Evidence</td><td>2026-10-23</td><td>Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.</td></tr>
 <tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>
 <tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>

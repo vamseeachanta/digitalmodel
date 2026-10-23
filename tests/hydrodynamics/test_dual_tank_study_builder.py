@@ -96,6 +96,22 @@ def test_fill_damping_ticks_are_distinct_and_match_table(builder):
     assert set(ticks) <= damping_values
 
 
+def test_area_damping_ticks_are_distinct_and_match_table(builder):
+    evidence = builder.render_cfd_evidence()
+    loss = evidence.split('id="cfd-loss"', 1)[1].split('id="cfd-forced"', 1)[0]
+    svg = ElementTree.fromstring(
+        re.search(r'<svg id="cfd-loss-area".*?</svg>', loss, re.S).group()
+    )
+    ticks = [node.text for node in svg.findall("text[@text-anchor='end']")]
+    table = ElementTree.fromstring(re.search(r"<table>.*?</table>", loss, re.S).group())
+    damping = [cell for row in table.findall("tr")[1:]
+               for cell in row.findall("td/data")[-2:]]
+    expected = sorted({f"{float(cell.attrib['value']):.3f}" for cell in damping})
+    assert len(ticks) == len(set(ticks)) == len(expected)
+    assert ticks == expected
+    assert set(ticks) == {cell.text for cell in damping}
+
+
 def test_claims_are_read_from_published_sources(builder):
     claims = builder.published_claims()
     assert claims["moment_rms"] == 4.3
