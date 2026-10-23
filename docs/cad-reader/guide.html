@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAD reader package guide</title>
+<style>
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #163042; background: #edf2f4; }
+body { max-width: 70rem; margin: auto; padding: 2rem; }
+main { background: white; padding: 2rem; border-radius: .6rem; }
+h2, h3, .title { color: #123c54; font-weight: 600; }
+.title { font-size: 2rem; }
+h2 { border-bottom: 1px solid #c9d9e2; padding-bottom: .4rem; }
+p, li { line-height: 1.65; }
+a { color: #12607d; }
+code, pre { background: #f2f5f7; border-radius: .25rem; }
+pre { padding: 1rem; overflow: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #d5dfe4; padding: .5rem; }
+label { display: block; margin-top: .8rem; }
+select, textarea, button, input { font: inherit; padding: .5rem; max-width: 100%; }
+textarea { box-sizing: border-box; width: 100%; }
+button { background: #123c54; color: white; border: 0; border-radius: .3rem; margin: .5rem .4rem .5rem 0; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid #cc8822; }
+svg { max-width: 100%; height: auto; background: #f5f9fa; }
+.status { color: #654b08; }
+.comment { border-left: 3px solid #16738e; padding-left: .8rem; white-space: pre-wrap; }
+@media print { body, main { padding: 0; } button, input, textarea, select { display: none; } }
+</style>
+</head>
+<body>
+<header>
+<p class="title">CAD reader package guide</p>
+<p class="status">Draft for client review</p>
+</header>
+<main>
+<section id="summary">
+<h2>1. Summary</h2>
+<p>The CAD reader package is a geometry ingestion interface. Analysis is performed
+to determine whether coordinates have an explicit unit basis; key results are
+summarized below. Computer-aided design is abbreviated as CAD.</p>
+<ul>
+<li>Geometry ingestion is available for downstream analysis.
+<ul><li>Straight drawing primitives and mesh faces are returned in metres.</li></ul></li>
+<li>Unit evidence is required before coordinates are accepted.
+<ul><li>Missing source units are supplied explicitly; contradictory declarations are refused.</li></ul></li>
+</ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr></tbody></table>
+</section>
+<section id="scope">
+<h2>2. Scope</h2>
+<p>Geometry is read from Drawing Exchange Format (DXF) modelspace,
+stereolithography (STL) meshes and Wavefront object (OBJ) meshes.
+Drawing (DWG) input is accepted through an external DXF converter interface.</p>
+<p>STEP solids and IGES surfaces are deferred. ISO 10303 exchange files are referred
+to as STEP; Initial Graphics Exchange Specification files are referred to as IGES.
+No geometry kernel or licensed solver is used.</p>
+</section>
+<section id="basis">
+<h2>3. Basis and criteria</h2>
+<p>Unit consistency is evaluated before a geometry result is returned.
+File declarations and caller declarations are required to agree because
+contradictions change the physical interpretation of a coordinate.</p>
+<p>The relation x_m = x_s × f is used, where x_m is a coordinate in metres,
+x_s is a source coordinate and f is metres per source unit. Metre identity,
+SI milli and centi prefixes, international inches and international feet
+are supported. The corresponding symbols are m, mm, cm, in and ft.</p>
+<p>No geometric acceptance limit is assigned. Size plausibility, closure,
+structural suitability and converter fidelity are NOT_EVALUATED.</p>
+</section>
+<section id="geometry">
+<h2>4. Geometry model</h2>
+<p>World coordinates are returned as indexed point, line, polyline, triangle
+or polygon entities. Coordinate-system transforms precede length conversion.
+A closed polyline repeats its first index.</p>
+<figure>
+<svg viewBox="0 0 680 350" role="img" aria-labelledby="shape-title shape-desc">
+<title id="shape-title">Synthetic triangle geometry and unit basis</title>
+<desc id="shape-desc">A flat triangular surface in the world xy plane, with vertices at the origin,
+1000 millimetres along x, and 2000 millimetres along y. Output coordinates are in metres.
+No load or boundary condition is assigned.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M 0 0 L 6 3 L 0 6" fill="#123c54"/></marker></defs>
+<path d="M 110 265 L 230 265 L 110 25 Z" fill="#a5d7e4" stroke="#16738e" stroke-width="3"/>
+<path d="M 110 265 L 460 265 M 110 265 L 110 10" fill="none" stroke="#123c54" stroke-width="2" marker-end="url(#arrow)"/>
+<g fill="#123c54" font-size="16">
+<text x="470" y="270">x</text><text x="95" y="24">y</text>
+<text x="16" y="295">A: (0, 0, 0)</text>
+<text x="200" y="295">B: (1000, 0, 0) mm</text>
+<text x="133" y="65">C: (0, 2000, 0) mm</text>
+<text x="405" y="110">Output B: (1, 0, 0) m</text>
+<text x="405" y="145">Output C: (0, 2, 0) m</text>
+<text x="405" y="190">z = 0; no loads</text>
+<text x="405" y="225">No restraints assigned</text>
+<text x="60" y="332">Synthetic mesh fixture; topology A → B → C is retained.</text>
+</g>
+</svg>
+<figcaption>The independent hand conversion uses the SI milli prefix: source coordinates are divided by 1000.</figcaption>
+</figure>
+<p>DXF layer and handle metadata are retained. Mesh appearance, normals,
+materials and groups are omitted. The source-unit decision records whether the
+basis is the file, the caller or both. No healing, welding or triangulation is performed.</p>
+</section>
+<section id="formats">
+<h2>5. Supported formats</h2>
+<p>Supported primitives are bounded explicitly. Unlisted DXF modelspace entities
+cause the read to fail without returning a partial drawing.</p>
+<ul>
+<li>DXF: points, lines, straight lightweight and legacy polylines, and triangular or quadrilateral faces.</li>
+<li>DXF exclusions: arcs, bulges, width, thickness, fitted curves, polygon meshes,
+polyfaces, blocks, annotations and other unlisted entities. Paperspace is outside scope.</li>
+<li>STL: ASCII and binary triangle geometry. Header names do not establish units.</li>
+<li>OBJ: polygon faces with positive or relative negative position indices.
+Appearance is discarded. Line, point, freeform, continuation and unlisted records are refused.</li>
+<li>DWG: explicit converter configuration and the ordinary DXF unit gate.</li>
+</ul>
+</section>
+<section id="use">
+<h2>6. Use</h2>
+<p>Optional reader dependencies are loaded when their formats are requested.
+The drawings extra supplies ezdxf; the mesh extra supplies meshio, with the
+repository dependency constraint numpy&lt;2.</p>
+<pre><code>from digitalmodel.cad import read_cad
+
+drawing = read_cad("geometry.dxf")
+mesh = read_cad("surface.stl", units="mm")
+assert mesh.units == "m"</code></pre>
+<p>The converter is configured with separate literal arguments containing
+{input} and {output}, a caller-selected positive timeout, and an existing writable
+scratch directory. Each attempt retains converted.dxf and converter.log in a
+fresh subdirectory. The converter runs without a shell and is trusted to respect
+its input. A DXF output that is missing, a symlink or a directory is refused.</p>
+</section>
+<section id="validation">
+<h2>7. Validation</h2>
+<p>Expected coordinates are established by independent hand calculations in
+synthetic fixture docstrings. Face indices and world-coordinate transforms are
+checked against the fixture definitions.</p>
+<p>Unit failures, malformed input, non-finite coordinates, optional dependency
+failures and converter errors are covered. A fake converter copies a synthetic
+DXF. No real drawing or real converter output is represented as validated.</p>
+</section>
+<section id="failures">
+<h2>8. Failure handling</h2>
+<p>Input failures are reported with CadReadError, and unit failures with its
+UnitsError subtype. Missing optional dependencies name the required extra.</p>
+<p>An absent unit basis is obtained from authoritative drawing information and
+supplied explicitly. Conflicting declarations are corrected at source. Unsupported
+geometry is exported to a supported representation with a documented conversion
+basis. Converter diagnostics are inspected after a failed conversion. Independent
+fidelity review remains necessary after a successful conversion.</p>
+</section>
+<section id="appendix">
+<h2>9. Appendix</h2>
+<p>The source basis and quality evidence are recorded below. No physical drawing
+unit is inferred from an object name, comment or bounding box.</p>
+<h3>9.1 Data register and pre-flight evidence</h3>
+<p>All geometry fixtures are synthetic. No physical dimension is assumed.
+Geometry quality, source authenticity, design suitability and conversion fidelity
+are NOT_EVALUATED. The retained unit basis and explicit format exclusions define
+the scope of each result.</p>
+<ul>
+<li>Unit definitions are sourced; expected coordinate products are independently calculated.</li>
+<li>Unsupported geometry and conflicting units are refused.</li>
+<li>No real drawing, converter or solver is used in the synthetic examples.</li>
+<li>Deferred kernel formats and downstream geometric criteria are stated.</li>
+</ul>
+<details><summary>Change panel</summary><ul id="changes"></ul>
+<noscript>The initial revision adds explicit units, straight drawing and mesh readers, and the converter interface.</noscript></details>
+<h3>9.2 Sources and companion artifacts</h3>
+<ul>
+<li>NIST SP 811 (2008), Appendix B.8, foot and inch entries:
+<a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">exact conversion factors</a>.</li>
+<li>NIST SI Prefixes, table updated 2025-08-13:
+<a href="https://www.nist.gov/pml/owm/metric-si-prefixes">milli and centi definitions</a>.</li>
+<li>ezdxf 1.4.5, DXF Units:
+<a href="https://ezdxf.readthedocs.io/en/stable/concepts/units.html">unit declarations</a>.</li>
+<li>ezdxf 1.4.5, LWPOLYLINE:
+<a href="https://ezdxf.readthedocs.io/en/stable/dxfentities/lwpolyline.html">world-coordinate vertices and bulge semantics</a>.</li>
+<li>Library of Congress OBJ description, 2025-02-18, Description and Notes:
+<a href="https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml">OBJ geometry and indexing</a>.</li>
+<li>meshio 5.3.5:
+<a href="https://pypi.org/project/meshio/5.3.5/">reader interface and published implementations</a>.</li>
+<li><a href="../../src/digitalmodel/cad/README.md">Package interface guide</a>;
+<a href="changes.json">change panel data</a>; synthetic fixtures: tests/cad/.</li>
+</ul>
+</section>
+<section id="further">
+<h2>10. Further development</h2>
+<p>Kernel-backed STEP solids and IGES surfaces are required before those formats
+are accepted. Independent reference shapes and unit tests are required for each adapter.</p>
+<p>Curved drawing entities, block expansion, assembly metadata and converter
+fidelity checks remain separate extensions. Analysis-specific geometric criteria
+are supplied by downstream consumers.</p>
+<details open><summary>Document comments</summary>
+<p>Comments are kept in this browser when local storage is available. Save
+comments.json beside the guide for sharing; choose the guide’s folder when saving.
+A downloaded file is moved to that folder manually if a folder picker is unavailable.</p>
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="3"></textarea>
+<button type="button" id="add-comment">Add comment</button>
+<button type="button" id="save-comments">Save comments.json</button>
+<label for="load-comments">Load saved comments</label><input type="file" id="load-comments" accept="application/json,.json">
+<p role="status" id="comment-status" aria-live="polite"></p>
+<div id="comment-list"></div>
+<noscript>JavaScript is required for comment controls. The guide remains readable without it.</noscript>
+</details>
+</section>
+</main>
+<script type="application/json" id="change-data">
+{
+  "revision": "0",
+  "date": "2026-10-19",
+  "changes": [
+    {"section": "Unit basis", "change": "Require declared or explicitly supplied source length units.", "reason": "Prevent silent coordinate scale assumptions."},
+    {"section": "Readers", "change": "Add straight DXF primitives, STL triangles and OBJ faces.", "reason": "Provide typed geometry in metres without repair."},
+    {"section": "Converter", "change": "Add an explicit DWG-to-DXF argument interface.", "reason": "Separate external conversion from geometry and unit checks."}
+  ]
+}
+</script>
+<script>
+"use strict";
+const byId = (id) => document.getElementById(id);
+const data = JSON.parse(byId("change-data").textContent);
+for (const change of data.changes) {
+  const item = document.createElement("li");
+  item.textContent = `${change.section}: ${change.change} ${change.reason}`;
+  byId("changes").append(item);
+}
+const sections = [...document.querySelectorAll("main > section")];
+for (const section of sections) {
+  const option = document.createElement("option");
+  option.value = section.id;
+  option.textContent = section.querySelector("h2").textContent;
+  byId("comment-section").append(option);
+}
+const storageKey = "cad-reader-guide-comments";
+const validComments = (value) => Array.isArray(value) && value.every((item) =>
+  item && typeof item.text === "string" && typeof item.section === "string" &&
+  sections.some((section) => section.id === item.section));
+let comments = [];
+try {
+  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+  if (validComments(saved)) comments = saved;
+} catch { /* File readers may deny browser storage; saving remains available. */ }
+function renderComments() {
+  byId("comment-list").replaceChildren();
+  for (const comment of comments) {
+    const entry = document.createElement("p");
+    entry.className = "comment";
+    const link = document.createElement("a");
+    link.href = `#${comment.section}`;
+    link.textContent = sections.find((section) => section.id === comment.section).querySelector("h2").textContent;
+    entry.append(link, document.createTextNode(`: ${comment.text}`));
+    byId("comment-list").append(entry);
+  }
+  try { localStorage.setItem(storageKey, JSON.stringify(comments)); } catch { /* Optional storage. */ }
+}
+byId("add-comment").addEventListener("click", () => {
+  const text = byId("comment-text").value.trim();
+  if (!text) { byId("comment-status").textContent = "Enter a comment first."; return; }
+  comments.push({ section: byId("comment-section").value, text });
+  byId("comment-text").value = "";
+  renderComments();
+  byId("comment-status").textContent = "Comment added. Save comments.json to share it.";
+});
+byId("save-comments").addEventListener("click", async () => {
+  const content = JSON.stringify(comments, null, 2) + "\n";
+  try {
+    if ("showSaveFilePicker" in window) {
+      const handle = await window.showSaveFilePicker({ suggestedName: "comments.json", types: [{ description: "JSON comments", accept: { "application/json": [".json"] } }] });
+      const stream = await handle.createWritable();
+      await stream.write(content);
+      await stream.close();
+    } else {
+      const url = URL.createObjectURL(new Blob([content], { type: "application/json" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "comments.json";
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    byId("comment-status").textContent = "Comments saved; keep comments.json beside the guide.";
+  } catch { byId("comment-status").textContent = "Comments were not saved. Existing comments remain in the page."; }
+});
+byId("load-comments").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const loaded = JSON.parse(await file.text());
+    if (!validComments(loaded)) throw new Error("Invalid comments");
+    comments = loaded;
+    renderComments();
+    byId("comment-status").textContent = "Saved comments loaded.";
+  } catch { byId("comment-status").textContent = "The file is not a valid comments file; existing comments remain."; }
+});
+renderComments();
+</script>
+</body>
+</html>
