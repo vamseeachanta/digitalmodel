@@ -101,8 +101,8 @@ def test_claims_are_read_from_published_sources(builder):
     assert "CAUSE IS NOT ESTABLISHED" in text
     assert "An earlier explanation was withdrawn." in text
     assert "residual also depends on roll amplitude" in text
-    assert "±3" not in text
-    assert "not stated in the specified public sources" in text
+    assert "±" in text and "exception" in text
+    assert "does not qualify the invented illustrative geometry" in text
 
 
 def test_curves_call_library_and_reduction(builder, monkeypatch):
@@ -159,9 +159,9 @@ def test_illustrative_geometry_is_independent(builder, monkeypatch):
 def test_output_structure_links_and_privacy(builder):
     text = builder.render()
     parsed = assert_references_resolve(text, PAGE)
-    assert parsed.svgs == 6
+    assert parsed.svgs == 14
     svgs = re.findall(r"<svg\b.*?</svg>", text, re.S)
-    assert len(svgs) == 6
+    assert len(svgs) == 14
     for svg in svgs:
         root = ElementTree.fromstring(svg)
         assert root.find("title").text

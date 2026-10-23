@@ -1,0 +1,2008 @@
+{
+  "area_sweep": [
+    {
+      "area": {
+        "value": 3.4,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/A_c_m2",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "historical_period": {
+        "value": 27.024,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/exchange_period_s",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_amplitude": {
+        "value": 7.9046,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/cfd_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_amplitude": {
+        "value": 5.918,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/analytical_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_ratio": {
+        "value": 1.0,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/cfd_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_ratio": {
+        "value": 1.0,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/0/analytical_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      }
+    },
+    {
+      "area": {
+        "value": 6.8,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/A_c_m2",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "historical_period": {
+        "value": 19.37,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/exchange_period_s",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_amplitude": {
+        "value": 16.297,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/cfd_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_amplitude": {
+        "value": 12.169,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/analytical_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_ratio": {
+        "value": 2.062,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/cfd_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_ratio": {
+        "value": 2.056,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/1/analytical_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      }
+    },
+    {
+      "area": {
+        "value": 13.5,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/A_c_m2",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "historical_period": {
+        "value": 14.106,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/exchange_period_s",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_amplitude": {
+        "value": 34.5993,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/cfd_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_amplitude": {
+        "value": 25.58,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/analytical_exchange_amp_m3",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "cfd_ratio": {
+        "value": 4.377,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/cfd_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      },
+      "analytical_ratio": {
+        "value": 4.322,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/analytical/ac_validation.json",
+          "pointer": "/rows/2/analytical_ratio_to_first",
+          "sha256": "56b46e428421cc7d8c2e119d0c9d797e9d0fe7fea63bde28ebaa6a575b088560"
+        }
+      }
+    }
+  ],
+  "area_conditions": {
+    "period": {
+      "value": 6.25,
+      "unit": "s",
+      "provenance": {
+        "path": "dm1528/analytical/ac_scan_results.json",
+        "pointer": "/forcing_period_s",
+        "sha256": "58bc98fdf42aed97911759c263b4328294c319ec862db8a168b4b0247708058a"
+      }
+    },
+    "roll": {
+      "value": 5.0,
+      "unit": "°",
+      "provenance": {
+        "path": "dm1528/analytical/ac_scan_results.json",
+        "pointer": "/cases/0/roll_amplitude_deg",
+        "sha256": "58bc98fdf42aed97911759c263b4328294c319ec862db8a168b4b0247708058a"
+      }
+    }
+  },
+  "period_checks": [
+    {
+      "area": {
+        "value": 3.4,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/0/conduit_area_m2",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "predicted_period": {
+        "value": 19.73,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/0/predicted_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "measured_period": {
+        "value": 19.268922461900345,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/0/measured_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "error": {
+        "value": 2.392855848640861,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/0/Tn_error_pct",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "fill": {
+        "value": 50.0,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/model/both_fitted_at",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        },
+        "transformation": "parse calibration fill percentage"
+      },
+      "damping": [
+        {
+          "period": {
+            "value": 17.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/0/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/0/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.7831207983026744,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/0/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.3500179090692121,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/0/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 19.73,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/1/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/1/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.7749776216358943,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/1/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.3580498587200399,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/1/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 23.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/2/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/2/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.7990669605243121,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/2/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.36324955970141243,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/0/cases/2/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "area": {
+        "value": 13.5,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/1/conduit_area_m2",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "predicted_period": {
+        "value": 10.64,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/1/predicted_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "measured_period": {
+        "value": 10.965178234534955,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/1/measured_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "error": {
+        "value": -2.965553569487833,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/1/Tn_error_pct",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "fill": {
+        "value": 50.0,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/model/both_fitted_at",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        },
+        "transformation": "parse calibration fill percentage"
+      },
+      "damping": [
+        {
+          "period": {
+            "value": 9.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/0/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/0/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.2861310742829604,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/0/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5968341898856426,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/0/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 10.64,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/1/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/1/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.3377416118990953,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/1/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.67226390222717,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/1/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 13.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/2/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/2/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.2801130692674867,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/2/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.6270130091150916,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/1/cases/2/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "area": {
+        "value": 6.8,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/2/conduit_area_m2",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "predicted_period": {
+        "value": 13.954,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/2/predicted_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "measured_period": {
+        "value": 13.453723723246052,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/2/measured_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "error": {
+        "value": 3.7184967303107714,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/2/Tn_error_pct",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "fill": {
+        "value": 25,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/2/group",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        },
+        "transformation": "parse group fill percentage"
+      },
+      "damping": [
+        {
+          "period": {
+            "value": 12.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/0/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/0/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.5091311809747175,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/0/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5387323896886405,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/0/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 13.95,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/1/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/1/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.513754283356724,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/1/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5458859913267555,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/1/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 16.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/2/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/2/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.46940211842708807,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/2/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5237963268518979,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/2/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 13.95,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/3/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 10.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/3/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.7305938636023039,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/3/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.7657720751650722,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/2/cases/3/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "area": {
+        "value": 6.8,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/3/conduit_area_m2",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "predicted_period": {
+        "value": 14.589,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/3/predicted_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "measured_period": {
+        "value": 14.384289572307821,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/3/measured_Tn_s",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "error": {
+        "value": 1.4231528548082137,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/3/Tn_error_pct",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        }
+      },
+      "fill": {
+        "value": 70,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/prediction_checks.json",
+          "pointer": "/groups/3/group",
+          "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+        },
+        "transformation": "parse group fill percentage"
+      },
+      "damping": [
+        {
+          "period": {
+            "value": 13.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/0/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/0/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.5399455624971615,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/0/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.4578337427225788,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/0/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 14.59,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/1/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/1/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.5363096043068284,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/1/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.4688247133327982,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/1/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 17.0,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/2/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/2/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.5534765795912506,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/2/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.4793639520505866,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/2/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 14.59,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/3/period_s",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "roll": {
+            "value": 10.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/3/roll_amplitude_deg",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "measured": {
+            "value": 0.7199917623866987,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/3/zeta_measured",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.6958898396053825,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/prediction_checks.json",
+              "pointer": "/groups/3/cases/3/zeta_predicted",
+              "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "area": {
+        "value": 9.5,
+        "unit": "m²",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+          "pointer": "/groups/0/conduit_area_m2",
+          "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+        }
+      },
+      "predicted_period": {
+        "value": 12.340919105094,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+          "pointer": "/groups/0/predicted_Tn_s",
+          "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+        }
+      },
+      "measured_period": {
+        "value": 12.439292694859308,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+          "pointer": "/groups/0/measured_Tn_s",
+          "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+        }
+      },
+      "error": {
+        "value": -0.7908294480920238,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+          "pointer": "/groups/0/Tn_error_pct",
+          "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+        }
+      },
+      "fill": {
+        "value": 50.0,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+          "pointer": "/model/both_fitted_at",
+          "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+        },
+        "transformation": "parse calibration fill percentage"
+      },
+      "damping": [
+        {
+          "period": {
+            "value": 10.5,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/0/period_s",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/0/roll_amplitude_deg",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "measured": {
+            "value": 0.39108172250621515,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/0/zeta_measured",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5342900970405666,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/0/zeta_predicted",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 12.340919105094,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/1/period_s",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/1/roll_amplitude_deg",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "measured": {
+            "value": 0.44052579501441663,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/1/zeta_measured",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5585758503285864,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/1/zeta_predicted",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          }
+        },
+        {
+          "period": {
+            "value": 14.5,
+            "unit": "s",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/2/period_s",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "roll": {
+            "value": 5.0,
+            "unit": "°",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/2/roll_amplitude_deg",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "measured": {
+            "value": 0.40961136509064194,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/2/zeta_measured",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          },
+          "linear_prediction": {
+            "value": 0.5624463592727447,
+            "unit": "1",
+            "provenance": {
+              "path": "dm1528/review_output/damping/third_area_prediction_check.json",
+              "pointer": "/groups/0/cases/2/zeta_predicted",
+              "sha256": "48d6ec4670d33e75ed9d1f36e975596f1c74e153e5ec38c0dda8e6757e07a52f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "calibration": {
+    "area": {
+      "value": 6.8,
+      "unit": "m²",
+      "provenance": {
+        "path": "dm1528/analytical/utube_damped.json",
+        "pointer": "/assumptions/C7_Ac_ref/value",
+        "sha256": "801799bffcb65135329142dd8800fd93a92534ccf4f19d37000b7bb7069979be"
+      }
+    },
+    "fill": {
+      "value": 50.0,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/damping/prediction_checks.json",
+        "pointer": "/model/both_fitted_at",
+        "sha256": "79cdf7f6857c98d488491e96c876a8c49c0059e0a41fe52ab9a1b6e4401b0f18"
+      },
+      "transformation": "parse calibration fill percentage"
+    },
+    "predicted_period": {
+      "value": 14.31,
+      "unit": "s",
+      "provenance": {
+        "path": "dm1528/analytical/utube_damped.json",
+        "pointer": "/assumptions/C6_Tn_meas/value",
+        "sha256": "801799bffcb65135329142dd8800fd93a92534ccf4f19d37000b7bb7069979be"
+      }
+    },
+    "measured_period": {
+      "value": 14.312140020754908,
+      "unit": "s",
+      "provenance": {
+        "path": "dm1528/review_output/damping/exchange_damping_v2.json",
+        "pointer": "/natural_period_s",
+        "sha256": "f5e14b6c16b92d923cbda868c8caac51403ec68227f2a03febd71d30c5e06450"
+      }
+    }
+  },
+  "published_band": {
+    "value": 3.0,
+    "unit": "%",
+    "provenance": {
+      "path": "dm1528/analytical/design_sweep.json",
+      "pointer": "/chain/0",
+      "sha256": "1e26a7b6b6b318093495416e35296c78af6717a8a6649329e0135c6005328ec1"
+    },
+    "transformation": "parse archived +/- band; not a new acceptance verdict"
+  },
+  "loss": {
+    "exponent": {
+      "value": 2.13770809375,
+      "unit": "1",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/fitted/exponent_n",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "rms": {
+      "value": 8.646076997968008,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/fitted/rms_error_pct",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "cases": {
+      "value": 35,
+      "unit": "1",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/cases_used",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "linear_rms": {
+      "value": 36.51877829351811,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/variants/v0.3_area_exponent_1/rms_error_pct",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "small_area_rms": {
+      "value": 55.13491094548867,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/variants/v0.3_area_exponent_1/rms_by_group_pct/conduit_area_3.4",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "large_area_rms": {
+      "value": 108.26057482142355,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/analytical/loss_scaling.json",
+        "pointer": "/variants/v0.3_area_exponent_1/rms_by_group_pct/conduit_area_13.5",
+        "sha256": "a457dcea93560b742e2f7c7f10a20d2edb49008189b71051cb5f56c3c8ad1e3a"
+      }
+    },
+    "third": {
+      "exponent": {
+        "value": 2.1122952125000003,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/damping/loss_scaling_third_area.json",
+          "pointer": "/fitted/exponent_n",
+          "sha256": "7f0295d91b340dc40f3a98e0eddf2ceae5b31312fc00612444d360fc853eab20"
+        }
+      },
+      "rms": {
+        "value": 8.664072204477522,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/loss_scaling_third_area.json",
+          "pointer": "/fitted/rms_error_pct",
+          "sha256": "7f0295d91b340dc40f3a98e0eddf2ceae5b31312fc00612444d360fc853eab20"
+        }
+      },
+      "cases": {
+        "value": 38,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/damping/loss_scaling_third_area.json",
+          "pointer": "/cases_used",
+          "sha256": "7f0295d91b340dc40f3a98e0eddf2ceae5b31312fc00612444d360fc853eab20"
+        }
+      },
+      "independent_rms": {
+        "value": 8.68,
+        "unit": "%",
+        "provenance": {
+          "path": "dm1528/review_output/damping/third_area_report.md",
+          "pointer": "text:independent-law RMS",
+          "sha256": "4398cbcfd758794d6b635091bdbb0aea77132ee35c4be91e75d775952119804c"
+        },
+        "transformation": "parse independent-law RMS; no refit"
+      }
+    }
+  },
+  "forced_sweep": [
+    {
+      "period": {
+        "value": 16.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:2:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 114.19274877340551,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:2:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 7473614.612878951,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:2:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    },
+    {
+      "period": {
+        "value": 18.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:3:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 123.29286353861576,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:3:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 8433125.44360373,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:3:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    },
+    {
+      "period": {
+        "value": 20.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:4:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 129.6009233244718,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:4:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 9103025.081552314,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:4:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    },
+    {
+      "period": {
+        "value": 22.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:5:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 132.42513982808813,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:5:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 9497852.487491699,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:5:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    },
+    {
+      "period": {
+        "value": 24.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:6:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 132.4460458435521,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:6:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 9673479.63235931,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:6:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    },
+    {
+      "period": {
+        "value": 26.0,
+        "unit": "s",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:7:period_s",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "exchange": {
+        "value": 130.21853714273797,
+        "unit": "m³",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:7:exchange_amplitude_m3",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      },
+      "moment": {
+        "value": 9683196.279803189,
+        "unit": "N m",
+        "provenance": {
+          "path": "dm1528/review_output/period_refinement.csv",
+          "pointer": "csv:7:roll_moment_amplitude_Nm",
+          "sha256": "3119ab679149f62467b9769ec088a3de7ae77a0fb4a4131f096e3db1d8c050da"
+        }
+      }
+    }
+  ],
+  "mesh": {
+    "period": {
+      "value": 24,
+      "unit": "s",
+      "provenance": {
+        "path": "dm1528/review_output/mesh_confirmation.json",
+        "pointer": "/period_s",
+        "sha256": "10d2b0b93d6868a1a916683b2eebc749ec425ef09aed62bcaad85433994b0eaa"
+      }
+    },
+    "exchange_error": {
+      "value": 0.7838621871697927,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/mesh_confirmation.json",
+        "pointer": "/exchange_change_pct",
+        "sha256": "10d2b0b93d6868a1a916683b2eebc749ec425ef09aed62bcaad85433994b0eaa"
+      }
+    },
+    "moment_error": {
+      "value": 1.4597829249889962,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/mesh_confirmation.json",
+        "pointer": "/roll_moment_change_pct",
+        "sha256": "10d2b0b93d6868a1a916683b2eebc749ec425ef09aed62bcaad85433994b0eaa"
+      }
+    },
+    "max_courant": {
+      "value": 0.54890593,
+      "unit": "1",
+      "provenance": {
+        "path": "dm1528/review_output/fine_T24.json",
+        "pointer": "/max_courant",
+        "sha256": "38eec090aca469b00f6d8615ad5e7157acdf92637baf05781ce8e4ff2636aade"
+      }
+    },
+    "exchange": {
+      "value": 133.48424031532127,
+      "unit": "m³",
+      "provenance": {
+        "path": "dm1528/review_output/fine_T24.json",
+        "pointer": "/exchange_amplitude_m3",
+        "sha256": "38eec090aca469b00f6d8615ad5e7157acdf92637baf05781ce8e4ff2636aade"
+      }
+    },
+    "moment": {
+      "value": 9814691.436284779,
+      "unit": "N m",
+      "provenance": {
+        "path": "dm1528/review_output/fine_T24.json",
+        "pointer": "/roll_moment_amplitude_Nm",
+        "sha256": "38eec090aca469b00f6d8615ad5e7157acdf92637baf05781ce8e4ff2636aade"
+      }
+    },
+    "courant_target": {
+      "value": 0.5,
+      "unit": "1",
+      "provenance": {
+        "path": "dm1528/review_output/README.md",
+        "pointer": "text:nominal Courant target",
+        "sha256": "e67f99a249403fc472ec81b3612ffe4ffef5b5db3b4eb4d4792b28acfa7d07fa"
+      },
+      "transformation": "parse nominal target"
+    }
+  },
+  "frequency": {
+    "minimum_error": {
+      "value": 0.2964,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/README.md",
+        "pointer": "text:minimum_error",
+        "sha256": "e67f99a249403fc472ec81b3612ffe4ffef5b5db3b4eb4d4792b28acfa7d07fa"
+      },
+      "transformation": "parse reviewed free-decay metric"
+    },
+    "maximum_error": {
+      "value": 0.3264,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/README.md",
+        "pointer": "text:maximum_error",
+        "sha256": "e67f99a249403fc472ec81b3612ffe4ffef5b5db3b4eb4d4792b28acfa7d07fa"
+      },
+      "transformation": "parse reviewed free-decay metric"
+    },
+    "richardson_order": {
+      "value": 0.191,
+      "unit": "1",
+      "provenance": {
+        "path": "dm1528/review_output/README.md",
+        "pointer": "text:richardson_order",
+        "sha256": "e67f99a249403fc472ec81b3612ffe4ffef5b5db3b4eb4d4792b28acfa7d07fa"
+      },
+      "transformation": "parse reviewed free-decay metric"
+    },
+    "gci": {
+      "value": 0.1239,
+      "unit": "%",
+      "provenance": {
+        "path": "dm1528/review_output/README.md",
+        "pointer": "text:gci",
+        "sha256": "e67f99a249403fc472ec81b3612ffe4ffef5b5db3b4eb4d4792b28acfa7d07fa"
+      },
+      "transformation": "parse reviewed free-decay metric"
+    }
+  },
+  "evidence_classes": [
+    {
+      "evidence_class": {
+        "value": "CFD no roll",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:2:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "free decay convergence",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:2:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "accepted for frequency validation",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:2:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "7/7 completed; measured 0.755580-0.755807 Hz vs 0.758054 Hz analytical; 0.2964-0.3264% error",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:2:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Observed Richardson order 0.191; GCI 0.1239% is indicative because convergence is non-asymptotic",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:2:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "CFD forced roll",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:3:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "period refinement",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:3:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "accepted for screening",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:3:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "6/6 medium ten-cycle cases completed and cycle-converged; broad exchange plateau at 22-24 s",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:3:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Source-neutral twin-tank idealization; not a full vessel/tank structural-load model",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:3:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "CFD forced roll",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:4:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "fine confirmation",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:4:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "accepted for screening",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:4:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "24 s fine case completed; medium-to-fine change 0.784% exchange and 1.460% roll moment",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:4:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Fine transient max Courant 0.549 exceeded nominal 0.5 target",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:4:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "CFD transfer",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:5:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "closed and coupled verification",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:5:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "verification only",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:5:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "Closed-outlet and coupled-roll checks completed",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:5:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Short-duration checks are not periodic-response evidence",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:5:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "CFD transfer",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:6:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "open transfer",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:6:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "rejected",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:6:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "Stopped at 0.682764 s without End marker",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:6:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Unphysical boundary-flux growth; exclude from conclusions",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:6:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "CFD matrix",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "nine selected cases",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "rejected",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "0/9 wrapper cases succeeded",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Generated inputs are not CFD results",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "case_count": {
+        "value": 9,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:7:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "parse denominator as attempted case count"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "Analytical screening",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "screening manifest",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "methodology only",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "144/144 analytical cases valid with zero reported mass residual",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Not 144 CFD solutions",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "case_count": {
+        "value": 144,
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:8:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "parse denominator as attempted case count"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "Reduced order",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:9:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "normalization and response algorithms",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:9:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "methodology only",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:9:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "Useful trend screening and normalization collapse",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:9:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Not direct validation of the resolved twin-tank CFD",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:9:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    },
+    {
+      "evidence_class": {
+        "value": "Reduced order",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:10:evidence_class",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "result_family": {
+        "value": "anti roll phase assessment",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:10:result_family",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "status": {
+        "value": "withheld",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:10:status",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "key_finding": {
+        "value": "Kinematic magnitudes may be individually consistent",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:10:key_finding",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      },
+      "limitation": {
+        "value": "Inertia-free model cannot establish trustworthy phase or anti-roll benefit",
+        "unit": "1",
+        "provenance": {
+          "path": "dm1528/review_output/algorithm_status.csv",
+          "pointer": "csv:10:limitation",
+          "sha256": "97c5bf67e984cebd72332ae0fbfbad600b8606a7872ecdad44778cc6061f260c"
+        },
+        "transformation": "replace underscores and use cases for attempts"
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 # ABOUTME: Build a source-neutral connected-tank analysis from public models.
-"""Regenerate the connected-tank page using only committed analytical sources.
+"""Regenerate the connected-tank page using committed analytical sources and sanitized CFD evidence.
 
 Run: python scripts/capabilities/build_dual_tank_sloshing_study.py
 No solver, network access or third-party package is required. The model module
@@ -25,6 +25,7 @@ SHOWCASE_PATH = ROOT / "scripts/capabilities/build_sloshing_cfd_showcase.py"
 JSON_PATH = ROOT / "docs/api/structural/sloshing-tld-twopeak.json"
 EXISTING = ROOT / "docs/api/cfd/sloshing-cfd-study.html"
 OUTPUT = EXISTING.with_name("dual-tank-sloshing-cfd-study.html")
+EVIDENCE_PATH = ROOT / "docs/api/cfd/data/dual_tank_cfd_evidence.json"
 
 # Independent round inputs; transfer of the reference calibration is assumed.
 ILLUSTRATIVE_LEG_LENGTH = 30.0
@@ -224,6 +225,206 @@ def chart(identifier, title, xs, series, xlabel, ylabel, supported_from=None):
     return "\n".join(parts) + "\n</svg>"
 
 
+def evidence_value(fact, precision=1):
+    """Bind a visible scalar to its raw evidence value and source pointer."""
+    value = fact["value"]
+    display = f"{value:.{precision}f}" if isinstance(value, (int, float)) else str(value)
+    source = fact["provenance"]
+    locator = source["path"] + "#" + source["pointer"]
+    return (f'<data value="{html.escape(str(value), quote=True)}" '
+            f'data-provenance="{html.escape(locator, quote=True)}">'
+            f'{html.escape(display)}</data>')
+
+
+def evidence_table(headers, rows, caption):
+    head = "".join(f"<th>{html.escape(label)}</th>" for label in headers)
+    body = "".join("<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>" for row in rows)
+    return f"<table><tr>{head}</tr>{body}</table><p class=\"sub\">{caption}</p>"
+
+
+def evidence_chart(identifier, title, labels, series, ylabel):
+    """Use the study's SVG style with categorical cases and source-valued ticks.
+
+    Axis ticks are selected from the observations; no interpolated data labels
+    or inferred intermediate validation points are introduced.
+    """
+    colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78")
+    values = [v for _, ys in series for v in ys]
+    low, high = min(values), max(values)
+    if high == low:
+        high = low + 1
+    ticks = sorted(set(values))
+    if len(ticks) > 6:
+        ticks = [ticks[round(i * (len(ticks) - 1) / 5)] for i in range(6)]
+    def x(i):
+        return 90 + i * 660 / max(1, len(labels) - 1)
+    def y(v):
+        return 300 - (v - low) * 245 / (high - low)
+    parts = [f'<svg id="{identifier}" viewBox="0 0 820 440" role="img" '
+             f'aria-labelledby="{identifier}-title {identifier}-desc" style="width:100%;height:auto">',
+             f'<title id="{identifier}-title">{html.escape(title)}</title>',
+             f'<desc id="{identifier}-desc">{html.escape(ylabel)}. '
+             'Discrete archived cases; connecting lines guide the eye.</desc>',
+             '<rect width="820" height="440" fill="white"/>',
+             f'<text x="84" y="22" fill="#16324f">{html.escape(title)}</text>']
+    for tick in ticks:
+        parts += [f'<path d="M 84 {y(tick):.1f} H 770" stroke="#e2e7eb"/>',
+                  f'<text x="76" y="{y(tick)+4:.1f}" text-anchor="end" font-size="12">{tick:.1f}</text>']
+    for i, label in enumerate(labels):
+        parts.append(f'<text x="{x(i):.1f}" y="322" text-anchor="middle" font-size="10">{html.escape(label)}</text>')
+    parts.append('<text transform="translate(18 175) rotate(-90)" text-anchor="middle">'
+                 f'{html.escape(ylabel)}</text>')
+    for i, (label, ys) in enumerate(series):
+        color = colors[i % len(colors)]
+        points = " ".join(f"{x(j):.1f},{y(v):.1f}" for j, v in enumerate(ys))
+        parts += [f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2"/>',
+                  f'<text x="84" y="{355+i*18}" fill="{color}" font-size="12">{html.escape(label)}</text>']
+    return "\n".join(parts) + "\n</svg>"
+
+
+def area_period_pairs(data):
+    """Join independent reductions by physical area, never by row position."""
+    calibration = data["calibration"]
+    checks = {r["area"]["value"]: r for r in data["period_checks"]
+              if r["fill"]["value"] == calibration["fill"]["value"]}
+    pairs = []
+    for row in data["area_sweep"]:
+        area = row["area"]["value"]
+        period = calibration if area == calibration["area"]["value"] else checks[area]
+        pairs.append((row, period["measured_period"], period["predicted_period"]))
+    return pairs
+
+
+def render_cfd_evidence():
+    """Render the archive projection using only the committed evidence JSON."""
+    d = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))
+    v = evidence_value
+    def val(fact):
+        return fact["value"]
+    plot = evidence_chart
+    table = evidence_table
+    rows = d["area_sweep"]
+    conditions = d["area_conditions"]
+    checks = d["period_checks"]
+    calibration = d["calibration"]
+    areas = [str(val(r["area"])) for r in rows]
+    part = ['<section id="cfd-evidence"><h2>CFD evidence</h2>',
+            '<p>The CFD cases belong to an earlier, archived campaign on a twin-tank geometry that is not shown. '
+            'That geometry is separate from the invented illustrative geometry above. These CFD results were not '
+            'produced for this page. The <a href="data/dual_tank_cfd_evidence.json">evidence record</a> '
+            'identifies the source reduction, field and digest for each value. '
+            'Raw fields and geometry are excluded.</p>',
+            '<h3 id="cfd-area">Conduit-area sweep</h3>',
+            f'<p>Exchange amplitudes are compared at forcing period {v(conditions["period"], 2)} s '
+            f'and imposed roll {v(conditions["roll"])}°. Ratios are normalized to the smallest area. '
+            'The historical analytical amplitude uses geometric conduit length; it is not the later calibrated model.</p>']
+    part.append(plot("cfd-amplitude", "Exchange amplitude against conduit area", areas,
+                     [("CFD", [val(r["cfd_amplitude"]) for r in rows]),
+                      ("Historical analytical", [val(r["analytical_amplitude"]) for r in rows])],
+                     "Exchange amplitude (m³); conduit area (m²)"))
+    part.append(table(["Area (m²)", "CFD amplitude (m³)", "Analytical amplitude (m³)", "CFD ratio", "Analytical ratio"],
+                      [[v(r["area"]), v(r["cfd_amplitude"]), v(r["analytical_amplitude"]),
+                        v(r["cfd_ratio"], 3), v(r["analytical_ratio"], 3)] for r in rows],
+                      "Exchange-amplitude comparison; ratios retain the archived precision."))
+    pairs = area_period_pairs(d)
+    measured = [m for _, m, _ in pairs]
+    predicted = [p for _, _, p in pairs]
+    part.append(plot("cfd-area-period", "Exchange natural period against conduit area", areas,
+                     [("CFD-derived natural period", list(map(val, measured))),
+                      ("Calibrated inertia model", list(map(val, predicted)))], "Natural period (s); area (m²)"))
+    part.append(table(["Area (m²)", "CFD-derived natural period (s)", "Calibrated prediction (s)", "Historical geometric-length prediction (s)"],
+                      [[v(r["area"]), v(m), v(p), v(r["historical_period"])] for r, m, p in pairs],
+                      "Period bases differ: the historical period is analytical, not a CFD measurement. The middle area is the calibration reference."))
+    band = d["published_band"]
+    part += ['<h3 id="cfd-inertia">Inertia and natural period</h3>',
+             f'<p>The archive publishes a ±{v(band, 0)} % band for the inertia law using one calibrated effective conduit length. '
+             'The reductions below include an exception: the low-fill check exceeds that band. '
+             'The error is prediction minus CFD-derived period, divided by CFD-derived period. '
+             'This checks exchange-mode inertia through natural period; it does not validate frozen-fluid roll inertia. '
+             f'The calibration period is {v(calibration["predicted_period"], 2)} s against '
+             f'{v(calibration["measured_period"], 2)} s from the reduction; it is not an independent check.</p>']
+    labels = [f'{val(r["area"]):.1f} / {val(r["fill"]):.0f}' for r in checks]
+    part.append(plot("cfd-period-error", "Period prediction error: area / fill", labels,
+                     [("Prediction error", [val(r["error"]) for r in checks]),
+                      ("Published upper band", [val(band)] * len(checks)),
+                      ("Published lower band", [-val(band)] * len(checks))], "Period error (%); area (m²) / fill (%)"))
+    part.append(table(["Area (m²)", "Fill (%)", "Prediction (s)", "CFD-derived (s)", "Error (%)", "Band comparison"],
+                      [[v(r["area"]), v(r["fill"], 0), v(r["predicted_period"]), v(r["measured_period"]),
+                        v(r["error"]), "Outside: exception" if abs(val(r["error"])) > val(band) else "Inside"] for r in checks],
+                      "All archived off-calibration period checks; the independent intermediate-area check is included."))
+    fill = sorted([r for r in checks if val(r["fill"]) != val(calibration["fill"])
+                   and val(r["area"]) == val(calibration["area"])], key=lambda r: val(r["fill"]))
+    part += ['<h3 id="cfd-fill">Fill sweep</h3>',
+             '<p>Discrete low and high fill checks bracket the calibration fill; continuous fill coverage is not established. '
+             'Equivalent damping depends on forcing period and imposed roll. The table retains each available condition; '
+             'the damping chart selects the lower-roll case nearest each predicted natural period.</p>']
+    chosen = [min(r["damping"], key=lambda c: (val(c["roll"]), abs(val(c["period"]) - val(r["predicted_period"])))) for r in fill]
+    fill_labels = [f'{val(r["fill"]):.0f}' for r in fill]
+    part.append(plot("cfd-fill-period", "Natural period against fill", fill_labels,
+                     [("CFD-derived", [val(r["measured_period"]) for r in fill]),
+                      ("Predicted", [val(r["predicted_period"]) for r in fill])], "Natural period (s); fill (%)"))
+    part.append(plot("cfd-fill-damping", "Equivalent damping against fill", fill_labels,
+                     [("Near predicted natural period; lower imposed roll", [val(c["measured"]) for c in chosen])], "Damping ratio; fill (%)"))
+    part.append(table(["Fill (%)", "Area (m²)", "Forcing period (s)", "Roll (°)", "Equivalent damping ratio"],
+                      [[v(r["fill"], 0), v(r["area"]), v(c["period"]), v(c["roll"]), v(c["measured"], 3)] for r in fill for c in r["damping"]],
+                      "Fill-dependent damping at the archived forcing conditions; period predictions and measurements appear above."))
+    loss = d["loss"]
+    third = loss["third"]
+    part += ['<h3 id="cfd-loss">Loss scaling and independent area check</h3>',
+             f'<p>The fitted area exponent is n = {v(loss["exponent"], 3)}, with {v(loss["rms"])} % RMS '
+             f'over {v(loss["cases"], 0)} cases. The naive inverse-area form has '
+             f'{v(loss["linear_rms"])} % RMS after its own coefficient refit: it underpredicts damping at the smallest area '
+             f'(group RMS {v(loss["small_area_rms"])} %) and overpredicts at the largest '
+             f'(group RMS {v(loss["large_area_rms"])} %). These group RMS magnitudes are distinct from signed individual errors.</p>']
+    # Use matched near-natural-period conditions, not an unqualified average of the loss-fit surface.
+    loss_checks = sorted([r for r in checks if val(r["fill"]) == val(calibration["fill"])], key=lambda r: val(r["area"]))
+    near = [min(r["damping"], key=lambda c: abs(val(c["period"]) - val(r["predicted_period"]))) for r in loss_checks]
+    part.append(plot("cfd-loss-area", "Equivalent damping against conduit area", [f'{val(r["area"]):.1f}' for r in loss_checks],
+                     [("CFD-derived, near predicted natural period", [val(c["measured"]) for c in near]),
+                      ("Original inverse-area prediction", [val(c["linear_prediction"]) for c in near])], "Damping ratio; area (m²)"))
+    part.append(table(["Area (m²)", "Fill (%)", "Forcing period (s)", "Roll (°)", "CFD-derived damping", "Original inverse-area damping"],
+                      [[v(r["area"]), v(r["fill"], 0), v(c["period"]), v(c["roll"]), v(c["measured"], 3), v(c["linear_prediction"], 3)] for r, c in zip(loss_checks, near)],
+                      "Conditions near each predicted natural period. The original inverse-area prediction uses the reference calibration, not the separate all-data coefficient refit."))
+    part += [f'<p>At the independent intermediate area, the existing law evaluated without refitting gives '
+             f'{v(third["independent_rms"], 2)} % RMS. Including that area in the fit gives '
+             f'n = {v(third["exponent"], 6)} and {v(third["rms"], 4)} % RMS over '
+             f'{v(third["cases"], 0)} cases, at the precision recorded in the archive report. '
+             'The independent prediction and all-data refit are separate checks.</p>',
+             '<h3 id="cfd-forced">Forced-roll period sweep and numerical checks</h3>',
+             '<p>The medium-mesh forced-roll cases are accepted for screening after cycle convergence. '
+             'The exchange plateau is separate from the exchange natural period. Fine-mesh confirmation applies at the selected period only; '
+             'it does not establish convergence throughout the sweep.</p>']
+    sweep = d["forced_sweep"]
+    part.append(plot("cfd-forced-exchange", "Medium-mesh forced exchange", [f'{val(r["period"]):.0f}' for r in sweep],
+                     [("Exchange amplitude", [val(r["exchange"]) for r in sweep])], "Exchange amplitude (m³); forcing period (s)"))
+    part.append(table(["Forcing period (s)", "Exchange amplitude (m³)", "Roll-moment amplitude (N m)"],
+                      [[v(r["period"], 0), v(r["exchange"]), v(r["moment"])] for r in sweep],
+                      "Completed, cycle-converged medium-mesh sweep."))
+    mesh, frequency = d["mesh"], d["frequency"]
+    part.append(table(["Numerical check", "Result"], [
+        ["Fine confirmation period (s)", v(mesh["period"], 0)],
+        ["Exchange change (%)", v(mesh["exchange_error"], 3)],
+        ["Moment change (%)", v(mesh["moment_error"], 3)],
+        ["Fine transient maximum Courant / nominal target", v(mesh["max_courant"], 3) + " / " + v(mesh["courant_target"])],
+        ["Free-decay frequency error (%)", v(frequency["minimum_error"], 4) + "–" + v(frequency["maximum_error"], 4)],
+        ["Observed Richardson order", v(frequency["richardson_order"], 3)],
+        ["Indicative fine-grid GCI (%)", v(frequency["gci"], 4)],
+    ], "Fine-mesh Courant exceeds the nominal target. Free-decay convergence is non-asymptotic; the GCI is indicative. Free-decay validates frequency in its own case family, not twin-tank anti-roll response."))
+    part += ['<h3 id="cfd-classes">Evidence classes and withheld conclusions</h3>',
+             '<p>Analytical screening cases are not CFD solves. Failed wrappers and open transfer are rejected. '
+             'Short transfer checks are verification only. Trustworthy phase and anti-roll benefit remain withheld.</p>']
+    classes = d["evidence_classes"]
+    # Counts are explicitly read from the review finding rather than inferred from generated inputs.
+    screening = next(r for r in classes if val(r["result_family"]) == "screening manifest")
+    rejected = next(r for r in classes if val(r["result_family"]) == "nine selected cases")
+    part.append(plot("cfd-class-counts", "Analytical cases and failed wrappers: separate evidence classes", ["Analytical screening", "Rejected wrappers"],
+                     [("Reviewed case counts; not completed CFD totals", [val(screening["case_count"]), val(rejected["case_count"])])], "Case count"))
+    part.append(table(["Evidence class", "Result family", "Disposition", "Finding", "Limitation"],
+                      [[v(r[key]) for key in ("evidence_class", "result_family", "status", "key_finding", "limitation")] for r in classes],
+                      "The source-neutral review controls the evidence classification; methodology and validation are not interchangeable."))
+    return "\n".join(part) + "\n</section>"
+
+
 def render():
     d = compute()
     c = published_claims()
@@ -278,8 +479,8 @@ performed to determine the connected-tank response and compare it with a single-
 The geometry represents no particular vessel or client. The results are summarized below.</p>
 <p>Analytical predictions are evaluated using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>
 and the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>, with
-<a href="#validation">published aggregate calibration results</a>. No new computational fluid dynamics
-(CFD) results are included. The predictions support screening; design qualification is not established.</p>
+<a href="#validation">published aggregate calibration results</a>. Archived computational fluid dynamics
+(CFD) evidence is presented separately from the illustrative predictions. The predictions support screening; design qualification is not established.</p>
 <p>The <a href="#limits">published moment-fit band</a> limits the use of the aggregate error statistic.
 Transfer to the invented geometry remains an assumption, including inside that band. The
 <a href="#comparison">single-tank comparison</a> illustrates peak splitting and merging; its amplitudes
@@ -287,12 +488,13 @@ do not establish a design ranking.</p>
 <p>Draft for maintainer review.</p>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Evidence</td><td>2026-10-23</td><td>Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.</td></tr>
 <tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>
 <tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>
 <tr><td>Initial</td><td>Not assigned</td><td>Public-source analysis added to document model scope and remaining work.</td></tr></table>
 <nav><a href="#geometry">Geometry</a> · <a href="#validation">Published validation</a> ·
 <a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
-<a href="#limits">Validity band</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
+<a href="#limits">Validity band</a> · <a href="#cfd-evidence">CFD evidence</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
 <h2 id="geometry">Illustrative geometry</h2>
 <p>Invented round dimensions are selected independently of the
 <a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference geometry</a>.
@@ -358,6 +560,7 @@ An earlier explanation was withdrawn. The residual also depends on roll amplitud
 <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">published calibration</a>.
 Intermediate periods are not qualified by that aggregate statistic. Even inside the band, transfer
 to the invented geometry is an assumption. No new physical mechanism is proposed.</p>
+{render_cfd_evidence()}
 <h2 id="forward">Way forward</h2>
 <p>Further assessment is required before the illustrative response is applied to a design. The
 <a href="#geometry">geometry assumptions</a>, <a href="#comparison">comparison limits</a> and
@@ -368,9 +571,10 @@ to the invented geometry is an assumption. No new physical mechanism is proposed
 <li>Not done: The residual cause requires resolution before the empirical validity band is widened.</li>
 <li>Not done: Operating fill, freeboard, structural loads and dimensional vessel coupling require assessment.</li></ul>
 <h2 id="left">Left</h2>
-<p>A numerical inertia-error bound and a fill-percentage validation range are not stated in the specified public sources.
-Those claims are omitted pending public evidence. New CFD fields, individual CFD measurement plots,
-and matched single-tank versus connected-tank performance are also omitted.</p>
+<p>The archived period checks do not establish a direct frozen-fluid roll-inertia error bound.
+Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted. Continuous fill
+coverage, matched single-tank versus connected-tank performance, and anti-roll phase or benefit remain
+unestablished. The earlier campaign does not qualify the invented illustrative geometry.</p>
 <h2 id="method">Analysis basis</h2>
 <p>The analytical scope is described in the <a href="sloshing-cfd-study.html">sloshing study</a>.
 The connected-tank calculations and aggregate calibration statistics are defined in the
@@ -379,7 +583,7 @@ The connected-tank calculations and aggregate calibration statistics are defined
 The single-tank comparison is defined in the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>
 and <a href="../structural/sloshing-tld-twopeak.json">response record</a>.</p>
 <footer><a href="../../../scripts/capabilities/build_dual_tank_sloshing_study.py">Calculation basis for this study</a>.
-Analytical predictions and published aggregate fit statistics only.</footer></div></body></html>
+Illustrative analytical predictions and separate archived CFD evidence; transfer remains unqualified.</footer></div></body></html>
 '''
 
 
