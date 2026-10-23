@@ -63,7 +63,12 @@ def decimal_text(value: str) -> str:
     if not number.is_finite() or abs(number.adjusted()) > 100:
         raise ValueError("nonfinite or excessive decimal")
     result = format(number, "f")
-    return "0" if number == 0 else result.rstrip("0").rstrip(".") if "." in result else result
+    result = "0" if number == 0 else result.rstrip("0").rstrip(".") if "." in result else result
+    # Source: this function's 128-character input contract (revision 6476218e).
+    # Canonical output must satisfy that same bound when read back.
+    if len(result) > 128:
+        raise ValueError("canonical numeric values require bounded decimal strings")
+    return result
 
 
 def require_fields(record: dict, fields: set[str], label: str) -> None:
