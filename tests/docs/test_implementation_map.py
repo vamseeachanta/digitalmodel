@@ -3,6 +3,7 @@
 
 """Validate live references and test reproducible snapshot diagnostics."""
 
+import ast
 import copy
 import hashlib
 import importlib.util
@@ -349,3 +350,92 @@ def test_registry_generator_has_a_reasoned_non_html_classification():
         assert not any(path in problem for problem in checker.validate_registry(ROOT))
     finally:
         sys.path.remove(str(ROOT / "scripts"))
+
+
+@pytest.fixture(scope="module")
+def reel_lay_family(map_document):
+    """Select the scoped reel inventory required by the reconciliation issue."""
+    family = next((f for f in map_document["families"]
+                   if f["id"] == "reel-lay-residual-curvature"), None)
+    assert family is not None, "Missing reel-lay residual-curvature family"
+    return family
+
+
+def test_reel_lay_inventory_has_exact_scoped_members(reel_lay_family):
+    """Expected names come from inspection of the workflow's reel branch."""
+    path = "src/digitalmodel/pipelay/workflow.py"
+    identities = [(row["path"], row["symbol"])
+                  for row in reel_lay_family["implementations"]]
+    assert sorted(identities) == sorted([
+        (path, "run_reel_lay"), (path, "_reel_result"),
+    ])
+
+
+@pytest.mark.parametrize("symbol,relation", [
+    ("run_reel_lay", "caller"), ("_reel_result", "independent"),
+])
+def test_reel_lay_recorded_symbols_resolve(reel_lay_family, symbol, relation):
+    """Resolve exact lexical definitions with AST, without importing a solver."""
+    row = next(r for r in reel_lay_family["implementations"] if r["symbol"] == symbol)
+    assert row["relation"] == relation
+    for reference, _ in _MODULE.records(row):
+        definitions = _MODULE.definitions((ROOT / reference["path"]).read_text())
+        assert isinstance(definitions[reference["symbol"]], ast.FunctionDef)
+
+
+def test_reel_lay_delegation_matches_source(reel_lay_family):
+    """The reviewed wrapper directly calls the separately recorded calculation."""
+    rows = {row["symbol"]: row for row in reel_lay_family["implementations"]}
+    caller, calculation = rows["run_reel_lay"], rows["_reel_result"]
+    assert caller["delegates_to"] == [{
+        "path": calculation["path"], "symbol": calculation["symbol"],
+    }]
+    definitions = _MODULE.definitions((ROOT / caller["path"]).read_text())
+    calls = {node.func.id for node in ast.walk(definitions[caller["symbol"]])
+             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    assert calculation["symbol"] in calls
+    assert not calculation.get("delegates_to")
+
+
+def test_reel_lay_inventory_does_not_claim_qualification(reel_lay_family):
+    """Classification cannot substitute for numerical or native qualification."""
+    assert reel_lay_family["classification_scope"] == "reel_workflow_only"
+    assert reel_lay_family["qualification"] == "classification_only"
+    assert reel_lay_family["numerical_qualification"] == "NOT_EVALUATED"
+    assert reel_lay_family["native_solver_qualification"] == "NOT_EVALUATED"
+    assert reel_lay_family["source_revision"]
+    for deferred in ("operability", "stinger", "J-lay"):
+        assert deferred in reel_lay_family["classification_limits"]
+
+
+def test_reel_lay_limits_survive_regeneration(reel_lay_family):
+    """Name reconciliation must retain the inspected classification boundary."""
+    path = "src/digitalmodel/pipelay/workflow.py"
+    doc = {"families": [reel_lay_family], "rejected_candidates": [],
+           "seed_verification": [], "searched": {}}
+    before = copy.deepcopy(doc)
+    result = generator().regenerate(doc, ROOT, tracked_paths=[path], revision="b" * 40)
+    family = result["families"][0]
+    assert family["reconciliation"] == {
+        "matched_definitions": 2, "unresolved_definitions": 0,
+    }
+    assert family["coverage"] == "reconciled_names"
+    assert family["coverage_reason"] != reel_lay_family["coverage_reason"]
+    assert family["classification_limits"] == reel_lay_family["classification_limits"]
+    for key in ("classification_scope", "qualification", "numerical_qualification",
+                "native_solver_qualification", "source_revision", "notes"):
+        assert family[key] == reel_lay_family[key]
+    rendered = generator().render_map(yaml.safe_dump(before), result)
+    assert yaml.safe_load(rendered) == result
+    assert doc == before
+
+
+@pytest.mark.parametrize("empty", [False, True], ids=["missing", "empty"])
+def test_reel_lay_family_is_required(sample, empty):
+    """Reference validation must reject a dropped or emptied reel family."""
+    doc, root = sample
+    family_id = "reel-lay-residual-curvature"
+    doc["families"] = [f for f in doc["families"] if f["id"] != family_id]
+    if empty:
+        doc["families"].append({"id": family_id, "implementations": []})
+    assert f"missing or empty family: {family_id}" in check_map(doc, root)

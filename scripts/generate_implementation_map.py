@@ -38,6 +38,7 @@ FAMILY_IDS = (
     "sn-curves-and-miner-damage", "cathodic-protection-calculations",
     "api-5ct-5l-grade-tables", "external-solver-batch-run-stacks",
     "dnv-rp-e305-on-bottom-stability", "linear-wave-kinematics",
+    "reel-lay-residual-curvature",
 )
 REQUIRED_KEYS = {
     "schema_version", "repository", "revision", "searched", "families",

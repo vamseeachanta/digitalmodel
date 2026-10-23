@@ -184,6 +184,18 @@ The live analytical dependencies are `JLayConfig`, `PipelayPipeProperties`,
 `digitalmodel.orcaflex.pipelay_analysis`; the workflow tests also exercise
 `digitalmodel.engine`. No commercial solver is needed by these calculations.
 
+### Scoped reel-lay classification
+
+The canonical [implementation map](../../../../docs/registry/implementation-map.md),
+revision 4, adds the `reel-lay-residual-curvature` family for the inspected
+`run_reel_lay` wrapper and its `_reel_result` calculation. The YAML family's
+`source_revision` pins that inspection separately from the historical search
+snapshot. AST reference tests resolve both definitions and check the direct
+delegation without importing a solver. The rows establish source classification;
+numerical and native solver qualification remain `NOT_EVALUATED`.
+Operability, stinger and J-lay classification remain later slices of issue #2766.
+The historical inventory below is retained unchanged.
+
 ### Historical implementation-map inventory
 
 The following inventory is retained at map revision
