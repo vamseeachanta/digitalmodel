@@ -16,6 +16,7 @@ from typing import Any
 
 import yaml
 
+from .starting_shape_validation import StartingShapeFinding, validate_starting_shapes
 from .yaml_timestep_validation import inspect_source
 
 
@@ -48,6 +49,8 @@ class ValidationResult:
     valid: bool
     issues: list[ValidationIssue] = field(default_factory=list)
     format_detected: str = ""  # "flat" or "include-based" or "hybrid" or "unknown"
+
+    starting_shapes: list[StartingShapeFinding] = field(default_factory=list)
 
     @property
     def errors(self) -> list[ValidationIssue]:
@@ -261,6 +264,7 @@ class OrcaFlexYAMLValidator:
         for yml_file in yml_files:
             file_result = self.validate_file(yml_file)
             result.issues.extend(file_result.issues)
+            result.starting_shapes.extend(file_result.starting_shapes)
             if not file_result.valid:
                 result.valid = False
 
@@ -332,6 +336,16 @@ class OrcaFlexYAMLValidator:
 
         if "Lines" in data:
             self._validate_lines(data, result, filename)
+
+        for finding in validate_starting_shapes(data):
+            result.starting_shapes.append(finding)
+            if finding.status != "PASS":
+                result.add(
+                    Severity.ERROR if finding.status == "FAIL" else Severity.WARNING,
+                    f"Starting shape [{finding.line}] {finding.check}: "
+                    f"{finding.status}: {finding.message}",
+                    file=filename, prop="StartingShape",
+                )
 
         # Check for common singular-key mistakes
         self._check_singular_section_keys(data, result, filename)

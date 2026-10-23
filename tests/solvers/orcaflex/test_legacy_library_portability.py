@@ -50,7 +50,8 @@ def test_git_checkout_preserves_all_hash_bound_bytes(tmp_path, autocrlf):
     git("config", "core.autocrlf", "false")
     (tmp_path / ".gitattributes").write_bytes((ROOT / ".gitattributes").read_bytes())
     sources = ["src/digitalmodel/solvers/orcaflex/" + name for name in (
-        "yaml_validator.py", "yaml_timestep_validation.py")]
+        "yaml_validator.py", "yaml_timestep_validation.py",
+        "starting_shape_validation.py")]
     sources += ["scripts/orcaflex/check_legacy_library_sanitisation.py",
                 "scripts/legal/check_identifiers.py", ".legal-deny-list.yaml"]
     sources += ["docs/domains/orcaflex/library/legacy-round-trip/" + name for name in (

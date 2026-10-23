@@ -117,7 +117,8 @@ def cli_fixture(tmp_path, monkeypatch):
     module = implementation()
     root = tmp_path / 'source'
     write(root, GENERIC + '/model.yml')
-    for name in ('yaml_validator.py', 'yaml_timestep_validation.py'):
+    for name in ('yaml_validator.py', 'yaml_timestep_validation.py',
+                 'starting_shape_validation.py'):
         relative = 'src/digitalmodel/solvers/orcaflex/' + name
         write(root, relative, (ROOT / relative).read_text(encoding='utf-8'))
     criterion = tmp_path / 'criterion.json'
