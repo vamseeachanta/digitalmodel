@@ -581,3 +581,11 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain the floating wind module analysis and its change-panel sidecar.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/floatingwind/
+docs/reports/modules/floatingwind/*
+!docs/reports/modules/floatingwind/report.html
+!docs/reports/modules/floatingwind/changes.json

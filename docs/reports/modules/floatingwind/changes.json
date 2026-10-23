@@ -1,0 +1,14 @@
+{
+  "report": "Floating wind concept screening analysis",
+  "revisions": [
+    {
+      "revision": "0",
+      "date": "2026-10-22",
+      "changes": [
+        "First issue: document concept screening with the public sizing example.",
+        "Separate proxy acceptance from physical validation and installation limits.",
+        "Expose assumed inputs, per-component limits and unresolved engineering data."
+      ]
+    }
+  ]
+}
