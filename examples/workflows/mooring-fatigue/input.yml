@@ -10,6 +10,13 @@ mooring_fatigue:
   lines:
     - id: chain-01
       material: CHAIN
+      sn_curve_basis:
+        material: CHAIN
+        curve: D
+        environment: seawater_cp
+        detail: Nominal stress screening assumption
+        reference: Assumed, based on previous experience; illustrative only
+        protection_basis: Effective cathodic protection assumed
       area_mm2: 8000.0
       tension_range_bins:
         - tension_range_kN: 220.0
@@ -20,6 +27,13 @@ mooring_fatigue:
           n_cycles: 10000
     - id: wire-01
       material: STEEL-WIRE
+      sn_curve_basis:
+        material: STEEL-WIRE
+        curve: D
+        environment: seawater_cp
+        detail: Nominal stress screening assumption
+        reference: Assumed, based on previous experience; illustrative only
+        protection_basis: Effective cathodic protection assumed
       area_mm2: 5200.0
       tension_range_bins:
         - tension_range_kN: 180.0
