@@ -1,0 +1,10 @@
+{
+  "revision": "01",
+  "changes": [
+    "Distribution assumptions and numerical verification limits are stated.",
+    "The linear example is evaluated and compared with analytical moments.",
+    "Physical validation and application acceptance remain not evaluated.",
+    "Independent statistical checks, sampled dependence and precise evidence are documented.",
+    "Report styles are retained in the template and rebuild evidence is corrected."
+  ]
+}
