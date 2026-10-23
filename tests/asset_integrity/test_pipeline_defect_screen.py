@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline pipeline comparison against the existing validation records."""
 
 import pytest
@@ -157,7 +160,7 @@ def test_through_wall_and_intact_grids_are_explicit(reference, thickness):
     if thickness == 0:
         assert result["decision"]["verdict"] == "ESCALATE"
     else:
-        assert result["decision"]["verdict"] == "ACCEPT"
+        assert result["decision"]["verdict"] == "ESCALATE"  # A14
 
 
 def test_ratio_screen_has_no_rsf_or_replacement_verdict(reference):
@@ -165,7 +168,7 @@ def test_ratio_screen_has_no_rsf_or_replacement_verdict(reference):
 
     result = assess(reference)
     assert result["governing_method"] == "RSTRENG"
-    assert result["decision"]["verdict"] == "ACCEPT"
+    assert result["decision"]["verdict"] == "ESCALATE"  # A14
     assert "RSF" not in result["decision"]["governing_criterion"]
     assert "rsf" not in result["decision"]
     reference["axial_stress_psi"] = 100000

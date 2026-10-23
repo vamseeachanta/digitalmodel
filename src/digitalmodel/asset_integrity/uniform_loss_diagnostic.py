@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Bounded synthetic characterization of existing FFS L1/L2 implementation.
 # ABOUTME: Returns no allowable wall; source qualification and width physics are unresolved.
 """Run with python -m digitalmodel.asset_integrity.uniform_loss_diagnostic --output PATH.
@@ -56,10 +59,12 @@ def diagnose_case(*, od_in: float, nominal_wall_in: float,
         component_id='synthetic-uniform-loss-diagnostic', design_code='B31.8',
         nominal_od_in=od_in, nominal_wt_in=nominal_wall_in,
         design_pressure_psi=pressure, smys_psi=smys,
-        fca_in=0.0, corrosion_rate_in_per_yr=0.0, rsf_a=0.9)
+        fca_in=0.0, corrosion_rate_in_per_yr=None, rsf_a=0.9)
     result = assess_component(component, grid, force_type='LML')
     raw_l2 = dict(result.level2)
     raw_l2['applicability'] = raw_l2['applicability'].to_dict()
+    raw_l1 = dict(result.level1)
+    raw_l1['applicability'] = raw_l1['applicability'].to_dict()
     limitations = ['WIDTH_NOT_ASSESSED', 'PART5_LEVEL1_INCOMPLETE',
                    'REFERENCE_WALL_IS_CODE_MINIMUM', 'FOLIAS_SOURCE_UNVERIFIED',
                    'FULL_PART5_APPLICABILITY_UNVERIFIED',
@@ -91,7 +96,7 @@ def diagnose_case(*, od_in: float, nominal_wall_in: float,
                        sound_wall_normalized_length=axial_length_in / math.sqrt(
                            (od_in - 2 * nominal_wall_in) * nominal_wall_in),
                        coordinate_convention='cell centers; edge extent = N * spacing'),
-        'raw_level1': result.level1, 'raw_level2': raw_l2,
+        'raw_level1': raw_l1, 'raw_level2': raw_l2,
         'limitations': limitations,
     }
 

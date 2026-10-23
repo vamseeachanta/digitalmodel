@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Field measurement-sufficiency engine for FFS — tells an inspector
 # ABOUTME: whether thickness data is adequate (sufficient / take more / escalate).
 """Measurement-sufficiency engine (FFS Phase 1).
@@ -38,6 +41,8 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
 
 # RSF below which the component is in repair/replace territory — more field
 # readings will not change the need for an engineering (Level 3) assessment.
@@ -99,6 +104,16 @@ class MeasurementSufficiency:
         self.max_cov_gml = max_cov_gml
         self.ut_tolerance_in = ut_tolerance_in
         self.min_lml_profile_cells = min_lml_profile_cells
+        self._validate_configuration()
+
+    def _validate_configuration(self):
+        """Check public configurable thresholds before every assessment."""
+        for name, value in (("min_readings", self.min_readings),
+                            ("min_lml_profile_cells", self.min_lml_profile_cells)):
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+        finite_number(self.max_cov_gml, "max_cov_gml")
+        finite_number(self.ut_tolerance_in, "ut_tolerance_in")
 
     # ------------------------------------------------------------------
     def evaluate(
@@ -121,7 +136,19 @@ class MeasurementSufficiency:
             level2_result: dict from ``Level2Engine.evaluate`` (needs ``rsf``,
                 ``rsf_a``, ``t_mm_in``).
         """
+        self._validate_configuration()
+        measured_grid(grid_df)
+        finite_number(nominal_wt_in, "nominal_wt_in")
+        margin = level1_result.get("margin_in")
+        if not isinstance(margin, (int, float)) or not np.isfinite(margin):
+            raise ValueError("Level 1 margin_in must be supplied and finite")
+        finite_number(level2_result.get("rsf"), "rsf", positive=False)
+        finite_number(level2_result.get("rsf_a"), "rsf_a")
+        if level2_result["rsf_a"] > 1:
+            raise ValueError("rsf_a must be in (0, 1]")
         atype = assessment_type.upper().strip()
+        if atype not in {"GML", "LML", "PITTING"}:
+            raise ValueError("Unsupported assessment_type for measurement sufficiency")
         metrics = self._metrics(grid_df, nominal_wt_in, level1_result, level2_result)
 
         rsf = float(level2_result["rsf"])
@@ -227,8 +254,7 @@ class MeasurementSufficiency:
 
         # --- Precedence 3: data adequate → sufficient or escalate by verdict ---
         if l1_pass and rsf >= rsf_a:
-            comfortable = (metrics["t_margin_in"] is None
-                           or metrics["t_margin_in"] >= 2.0 * self.ut_tolerance_in)
+            comfortable = metrics["t_margin_in"] >= 2.0 * self.ut_tolerance_in
             reasons.append(
                 "Grid coverage and scatter are adequate and Level 1 passes with margin "
                 "— the field measurements are sufficient to support the verdict."
