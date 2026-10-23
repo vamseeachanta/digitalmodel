@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Hull-structure wastage analysis workflow</title>
+<body><h1>Hull-structure wastage analysis workflow</h1>
+<h2>Summary</h2>
+<p>The <code>hull-wastage-screen</code> workflow screens representative item thicknesses,
+recomputes measured hull-girder properties, and optionally evaluates a uniformly thinned
+unstiffened plate with the existing metal-loss FFS solver. Missing checks remain
+<code>NOT_EVALUATED</code>; a missing pitting basis prevents overall acceptance.
+This is engineering decision support. Class survey acceptance is not established.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>0</td><td>2026-10-20</td><td>Initial workflow and synthetic arithmetic validation basis.</td></tr></table>
+<h2>Inputs and method</h2>
+<p>All thicknesses are in mm; section geometry is in m; plate stresses are in MPa.
+Each element requires a unique ID, as-built thickness, representative measured thickness,
+and nonnegative measurement uncertainty. The lower bound is measured thickness less
+uncertainty, bounded below by zero. Representative item values, survey coverage, zone
+membership and uncertainty require an external survey basis; raw TM report parsing
+and representative averaging are not performed.</p>
+<p>CSR mode requires corrosion and voluntary additions. Renewal thickness equals
+as-built thickness minus these additions, following CSR BC&amp;OT July 2025,
+Part 1 Chapter 13 Section 2, Local corrosion. Below renewal the local disposition
+is RENEW. At renewal and below renewal plus the selected reserve it is MONITOR;
+at the upper boundary it is ACCEPT. MONITOR denotes follow-up, not approval of an
+alternative solution. Percentage mode requires an explicit renewal thickness and
+substantial-corrosion fraction; strict excess of that fraction of the allowable
+margin follows IACS UR Z7 Rev.21 (2014), Substantial Corrosion.</p>
+<p>There are no numeric rule defaults. <code>limits.source</code> records the selected
+basis and edition; <code>reserve_mm</code> or <code>substantial_fraction</code> is mandatory.
+These values are supplied engineering inputs, not internally resolved code constants.
+The result retains method references and the supplied source alongside the numeric record.
+Changing a limit does not establish applicability to a particular hull.</p>
+<p>The optional <code>global</code> block requires <code>complete_section: true</code>,
+<code>depth_m</code>, <code>modulus_fraction</code>, <code>na_corrosion_fraction</code>,
+a source, and contributing <code>members</code>. Each member references a measured
+<code>element_id</code> and defines <code>gross_offered_mm</code>, <code>orientation</code>
+(horizontal or vertical), <code>span_m</code>, <code>z_m</code>, and <code>zone</code>
+(deck, bottom, neutral_axis or other). Every required zone must be represented.
+Zone membership is supplied from the applicable approved section definition.</p>
+<p>Gross and measured area, centroid, inertia and extreme-fibre section moduli are
+recomputed by <code>naval_architecture.hull_girder_screening.section_properties</code>.
+Both measured moduli are compared with the selected fraction of gross offered moduli.
+The neutral-axis-zone area is separately compared with area calculated at gross offered
+thickness less the selected fraction of corrosion addition. Basis: CSR BC&amp;OT
+July 2025, Part 1 Chapter 13 Section 2, Global corrosion. The alternate deck/bottom
+zone-area route and the item-loss shortcut are not implemented.</p>
+<p>An optional <code>buckling</code> block references one element and requires
+<code>length_mm</code>, <code>width_mm</code>, <code>sigma_x_mpa</code>,
+<code>sigma_y_mpa</code>, <code>tau_mpa</code>, <code>gamma_m</code>, a source and
+<code>material</code> values matching <code>MaterialProperties</code>. Material fields
+are yield_strength, ultimate_strength and youngs_modulus (MPa), poissons_ratio
+(dimensionless) and density (kg/m³). Loads are nonnegative compression/shear
+magnitudes at the reduced section; the adapter does not redistribute loads.</p>
+<p>The existing <code>assess_plate_uniform_loss</code> method is called at the lower-bound
+thickness. Its utilization criterion is retained. Transverse compression is explicitly
+NOT_EVALUATED because the existing plate solver does not evaluate that component.
+Pitting, stiffener wastage, stiffened-panel capacity, nonuniform loss and full CSR
+buckling qualification are not established by this adapter. A failed optional plate
+check produces RENEW as a screening action requiring strength/repair assessment;
+it does not establish that renewal is the only possible engineering solution.</p>
+<h2>Worked example</h2>
+<p><code>examples/workflows/hull-wastage-screen/input.yml</code> contains synthetic
+values selected solely to demonstrate arithmetic. Renewal is 12.000 − 3.000 − 1.000
+= 8.000 mm. The uncertainty-adjusted value is 8.400 − 0.100 = 8.300 mm.
+The selected reserve is 0.500 mm, so the local result is MONITOR. The overall result
+is NOT_EVALUATED because the example supplies no global, buckling or pitting basis.</p>
+<pre>from pathlib import Path
+import yaml
+from digitalmodel.hull_wastage_screen.workflow import router
+cfg = yaml.safe_load(Path("examples/workflows/hull-wastage-screen/input.yml").read_text())
+cfg["hull_wastage_screen"]["output_dir"] = "results/hull-wastage-initial"
+router(cfg)</pre>
+<p>The workflow is registered for the engine and registry consumers, including Deckhand,
+as <code>hull-wastage-screen</code>, basename <code>hull_wastage_screen</code>.
+The direct router above avoids importing unrelated workflow adapters.
+It writes <code>hull-wastage.json</code> and <code>hull-wastage.html</code>.
+Existing analyses are never overwritten; re-issues require a fresh output directory.</p>
+<h2>Validation record</h2>
+<p><code>tests/hull_wastage_screen/</code> contains independent arithmetic and boundary
+tests. Expected values are derived in test docstrings; no comparator calls the implementation
+under test. Local reserve and percentage boundaries, fully consumed material,
+uncertainty, invalid inputs, missing data, duplicate IDs, global modulus and neutral-axis
+failures, report readback, escaping and retained-output preservation are covered.</p>
+<p>The symmetric section benchmark uses synthetic horizontal strips at elevations
+0.0, 1.0 and 2.0 m. At 10.000 mm measured thickness and 1.0 m breadth,
+the neutral axis is 1.0 m and inertia is the sum of two parallel-axis terms and
+three strip own-inertia terms. The exact independent expression is retained in the test.</p>
+<p>The elastic plate benchmark uses the simply-supported compression coefficient
+from NACA TN 3781 (1957), equation (20), with the half-wave length equal to plate width.
+The elastic plate stress expression and a hand-derived utilization are evaluated
+independently in the test. This checks orchestration and elastic arithmetic;
+it does not qualify the inherited inelastic or combined-load model.</p>
+<h2>Disposition and later slices</h2>
+<p>Priority is RENEW, then NOT_EVALUATED, then MONITOR, then ACCEPT. The shared FFS
+<code>Verdict</code> vocabulary and hull <code>action_for</code> mapping are reused:
+REPAIR for renewal, ESCALATE for missing checks, MONITOR for follow-up. Pressure
+heuristics and pressure derating are not used. In this revision pitting always remains
+NOT_EVALUATED, so overall ACCEPT is deliberately unavailable.</p>
+<p>Later slices require an opened primary hull-survey pitting criterion with confirmed
+Rec.84 applicability, a pitting-intensity classifier, stiffened-panel wastage inputs and
+benchmarks, raw TM-report ingestion, and approved survey applicability/zone definitions.
+No API 579 pressure-equipment pitting verdict is substituted for hull renewal criteria.</p>
+<h2>Sources</h2><ul>
+<li><a href="https://rulesexplorer-docs.bureauveritas.com/documents/nr606/jan2025/606-NR_2025-01.pdf">IACS Common Structural Rules for Bulk Carriers and Oil Tankers, July 2025</a>,
+Part 1 Chapter 13 Section 2: Acceptance criteria (local and global corrosion).</li>
+<li><a href="https://www.turkloydu.org/pdf-files/iacs-karar-ve-csr-degisimleri/iacs-es-gereklilikleri/UR_Z7.pdf">IACS UR Z7 Rev.21, 2014</a>, Hull Classification Surveys, Substantial Corrosion.
+This historical opened edition supplies the definition only; current applicability is a required input basis.</li>
+<li><a href="https://ntrs.nasa.gov/api/citations/19930084505/downloads/19930084505.pdf">NACA TN 3781, 1957, Handbook of Structural Stability, Part I: Buckling of Flat Plates</a>,
+Boundary Conditions, equation (20). Sources accessed 2026-10-20.</li>
+</ul></body></html>
