@@ -134,7 +134,7 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event_name == 'workflow_dispatch' && format('{0}^', github.sha) || github.event.before }}
         run: |
           set -euo pipefail
           base="${REGISTER_BASE:-}"
