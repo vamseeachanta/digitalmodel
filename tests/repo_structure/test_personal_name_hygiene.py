@@ -17,8 +17,6 @@ PERSONAL_NAME_DIGEST = (
     "229198ac50189365a5dd6412995ab24b4126c777fd69673153f92a0b1ba46882"
 )
 RULE = "personal-name-hygiene"
-# Named exception, removed together with the file by the follow-up change that moves this 8 MB example out of the tree.
-NAMED_EXCEPTIONS = frozenset({"docs/domains/wind/uswtdbApiMapVizExamples.ipynb"})
 
 
 def contains_personal_name(data, forbidden_digest=PERSONAL_NAME_DIGEST):
@@ -81,8 +79,6 @@ def test_tracked_text_contains_no_personal_name():
         if not entry:
             continue
         relative = os.fsdecode(entry)
-        if relative in NAMED_EXCEPTIONS:
-            continue
         display = redacted_path(relative)
         path = ROOT / relative
         try:
