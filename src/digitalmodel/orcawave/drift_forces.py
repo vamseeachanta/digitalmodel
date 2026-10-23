@@ -9,6 +9,14 @@ from typing import Dict, List, Literal, Optional, Tuple
 import numpy as np
 from pydantic import BaseModel, Field
 
+from digitalmodel.orcawave.slow_drift_response import (
+    SurgeKernel as SurgeKernel,
+    SurgeResponse as SurgeResponse,
+    full_qtf_force_spectrum as full_qtf_force_spectrum,
+    low_frequency_surge_response as low_frequency_surge_response,
+    surge_response_kernel as surge_response_kernel,
+)
+
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 

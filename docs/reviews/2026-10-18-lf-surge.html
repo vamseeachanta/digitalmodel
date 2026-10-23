@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Low-frequency surge: artifact review and validation</title>
+<h1>Low-frequency surge: artifact review and validation</h1>
+<p>2026-10-18. The experimental extreme does not meet the three-hour maximum
+criterion and is not qualified for design use.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-18</td><td>Recorded synthetic checks and unresolved extreme accuracy.</td></tr>
+<tr><td>1</td><td>2026-10-18</td><td>Isolated the experimental API, tightened identity checks and clarified model compatibility.</td></tr></table>
+<h2>Unresolved findings</h2>
+<p>MAJOR: the three-hour maximum criterion in test_slow_drift_monte_carlo.py
+is unmet. The estimate is 6.8 m versus 8.5 m from 256 synthetic
+random-phase records, 19.6% low against a 10% criterion. A strict expected
+failure preserves the criterion. The asymptotic approximation and its
+quadrature normalization require further primary-source review before design use.</p>
+<p>The published Table 4 extremes are not reproduced: the complete complex
+QTF and calibrated model inputs are unverified for reuse. Table 1 damping
+and frequency pairs are tested as inputs to synthetic resonance cases only.</p>
+<h2>Checks and resolved findings</h2>
+<p>The test-first resonance check covers mass conversion, damping and mean offset.
+Pair counting, DC exclusion and full endpoint weights are checked against
+closed-form complex two-wave forcing and the existing Newman calculation.
+Signed receptance and phase invariance are checked independently. Kernel
+variance agrees with the force-filtered spectrum in an identity check.
+Malformed imaginary arrays previously broadcast silently during development; both matrix parts now have
+explicit shape checks, verified by a refusal test.</p>
+<p>Drift tests: 69 passed and 1 strict expected failure initially; 73 passed
+and 1 strict expected failure after the API correction and added refusal cases.
+Structure and implementation-map tests: 94 passed before and after. Repository
+structure check and engineering register: PASS. Ruff: PASS for all four changed
+Python files. Bandit: no findings in the two calculation modules.</p>
+<p>The catalogue freshness test fails at test_model_catalogue.py:365. The test,
+renderer and catalogue inputs are unchanged by these corrections. This existing
+failure is separate from the drift calculations.</p>
+<p>The extreme is no longer re-exported from drift_forces. A regression test
+pins this boundary; experimental use requires importing slow_drift_response.
+Direct force-spectrum refusal cases cover nonuniform grids, malformed imaginary
+arrays and negative spectra. Identity checks use a relative tolerance of 1e-10.
+The implementation map labels QTFData as a related model that these functions
+do not accept; their input is QTFMatrix.</p>
+<table><tr><th>Reviewed artifact</th><th>SHA-256</th></tr><tr><td>docs/plans/2026-10-18-issue-1154-lf-surge.html</td><td><code>2fd5b967da3a5afdd51181a596fb2272885d36de43638e1c45511fc20d56b653</code></td></tr>
+<tr><td>docs/registry/implementation-map.md</td><td><code>bb634b227332d0e0d87f7d1982a01baa8865d9f2b8078d85d2c9080df9e22e98</code></td></tr>
+<tr><td>docs/registry/implementation-map.yaml</td><td><code>a739e1d0848f820ecc18090897e219d077e78ca399b66ebd5dfc7c4350629057</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/docs/agent-pack.md</td><td><code>3bcd4ab3a685eba91303b1a3b872fe50b4e4904b099e92921430730dbd6a62be</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/docs/slow-drift-surge.md</td><td><code>e766bffedc77421e6a608366b1875c27b5fb743e46ddc72e819d74603b416fb8</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/drift_forces.py</td><td><code>08a427edb0b371a5d38ded2ba0afd838ec19708216b26b817f1efc5d4d44f5d7</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/slow_drift_response.py</td><td><code>5d748158140e1429146cd3f36b5ea94d357f62681f9e1d09f5cd543c1ca687e5</code></td></tr>
+<tr><td>tests/orcawave/test_slow_drift_monte_carlo.py</td><td><code>a63a3a357d8087995916dc1030ea0f4ffb9b9a9369ce997be78c336d701a064a</code></td></tr>
+<tr><td>tests/orcawave/test_slow_drift_response.py</td><td><code>dc3af58679317a3ba1338c0f3bbe0c84207d2910f30ac1f9cf0caaa3d3f80902</code></td></tr>
+</table><p>Table 1. Artifact snapshot, excluding this review record itself.</p>
+</html>

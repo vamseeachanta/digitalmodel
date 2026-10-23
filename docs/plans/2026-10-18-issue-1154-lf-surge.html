@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Low-frequency surge and Naess extreme: implementation plan</title>
+<h1>Low-frequency surge and Naess extreme</h1>
+<p>Scope: an offline analytical increment toward
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/1154">the second-order motions workflow</a>.
+</p>
+<h2>Resource intelligence and proposed work</h2>
+<p>The implementation will retain the existing unordered-pair variance convention
+in drift_forces.py and the full-bin Newman spectrum convention tested by
+test_drift_force_variance.py. It will add a validated full-QTF force spectrum,
+a damped scalar receptance, separate static offset, and a centered Hermitian
+quadratic-response kernel. Computation will use kN, m, s and mass supplied in kg.</p>
+<p>The Naess expression will be implemented with explicit eigenvalue normalization,
+duration and observed upcrossing rate. Both response tails will be available.
+The light-damping and large-duration assumptions will be recorded. No solver,
+conditioned waves, aerodynamic model, multi-DOF model or Weibull fit will be added.</p>
+<h2>TDD and acceptance</h2>
+<p>Closed-form bichromatic resonance, static offset, finite-bin endpoint weights,
+complex Hermitian QTFs and invalid inputs will be tested before implementation.
+Kernel moments will be checked against independently summed response variance.
+Seeded random-phase ensembles will check force and surge variance and 3-hour
+maxima. Approximation discrepancies will be reported against the requested 5%
+standard-deviation and 10% extreme criteria, without changing those criteria.</p>
+<p>Published numerical values will only be claimed reproduced when their input
+data can be verified. Otherwise the missing inputs and unreproduced comparisons
+will be stated. The module pack will link a short method note; the implementation
+map will register the new family and the existing QTF data model.</p>
+<h2>Adversarial plan review</h2>
+<p>Defect checks will target pair double-counting, diagonal mean contamination,
+Hz/rad/s conversion, mass units, response amplitude versus height, random-phase
+versus Gaussian quadrature normalization, asymptotic validity, incomplete QTFs,
+and accidental interpolation outside source support. These checks will govern
+the implementation. The final artifact review will repeat them against tests.</p>
+<h2>Sources</h2>
+<p>D.R. Lande-Sudall and P.K. Stansby (2026), Applied Ocean Research 176, 105292,
+<a href="https://doi.org/10.1016/j.apor.2026.105292">doi:10.1016/j.apor.2026.105292</a>,
+equations 14, 20–21 and Tables 1, 4. A. Naess (1985), Journal of Ship Research
+29(4), 270–284,
+<a href="https://doi.org/10.5957/jsr.1985.29.4.270">doi:10.5957/jsr.1985.29.4.270</a>.
+The former will supply the inspected formulation; direct inspection of the latter
+will not be claimed.</p>
+</html>
