@@ -77,7 +77,9 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     assert differences["difference_count"] == len(differences["differences"])
     assert differences["difference_count"] > 0
     assert differences["reference_compatible"] is False
-    assert differences["schema_version"] == 2
+    assert differences["schema_version"] == 3
+    assert differences["blocking_difference_count"] == differences["difference_count"]
+    assert sum(differences["category_counts"].values()) == differences["difference_count"]
     assert differences["missing_member_hash_rule"] == packaging._missing_member_hash_rule()
     absent = packaging._value_hash(None, present=False)
     for item in differences["differences"]:
@@ -85,6 +87,11 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
             assert (item["reference_value_sha256"] == absent) is not item["reference_present"]
             assert (item["candidate_value_sha256"] == absent) is not item["candidate_present"]
     assert all("path" in item for item in differences["differences"])
+    # Golden output binds the observed source/input digests and every strict
+    # row. This checks reproducibility, not an independent physical benchmark;
+    # arithmetic and classification expectations are tested separately below.
+    recorded = SCRIPT.parents[1] / "docs/benchmarks/mooring_buoy/reference-classification.json"
+    assert differences == json.loads(recorded.read_text(encoding="utf-8"))
 
 
 def test_existing_file_is_rejected(packaging, tmp_path):
@@ -168,6 +175,7 @@ def test_missing_mapping_container_and_present_empty_mapping_share_disclosed_lea
     assert absent_container == present_empty_mapping
     assert absent_container == [{
         "path": "/Section/Value", "kind": "missing_key",
+        "category": "missing_data",
         "reference_present": True, "candidate_present": False,
         "reference_value_sha256": packaging._value_hash(1),
         "candidate_value_sha256": packaging._value_hash(None, present=False),
@@ -207,6 +215,7 @@ def test_missing_mapping_key_with_list_hashes_whole_value(packaging):
     difference, = list(packaging._differences({"Lines": [{"Name": "A"}]}, {}))
     assert difference == {
         "path": "/Lines", "kind": "missing_key",
+        "category": "missing_data",
         "reference_present": True, "candidate_present": False,
         "reference_value_sha256": packaging._value_hash([{"Name": "A"}]),
         "candidate_value_sha256": packaging._value_hash(None, present=False),
@@ -248,3 +257,120 @@ def test_generated_sections_refuse_ambiguous_includes(packaging, tmp_path, maste
     bundle = _bundle(tmp_path, master, includes)
     with pytest.raises(ValueError):
         packaging._generated_sections(bundle)
+
+
+@pytest.mark.parametrize("reference,candidate,category", [
+    (4, 4.0, "equal_decimal_numeric"),
+    (4.0, 4, "equal_decimal_numeric"),
+    (0, -0.0, "equal_decimal_numeric"),
+    (10**20, 1e20, "equal_decimal_numeric"),
+    (10**20 + 1, 1e20, "value_or_type"),
+    (4, 5.0, "value_or_type"),
+    (4.0, 4.000000000000001, "value_or_type"),
+    (True, 1, "value_or_type"),
+    (False, 0.0, "value_or_type"),
+    (4, "4", "value_or_type"),
+    (float("inf"), 4, "value_or_type"),
+    (float("nan"), 4, "value_or_type"),
+    (float("inf"), float("-inf"), "value_or_type"),
+    (float("nan"), float("nan"), "value_or_type"),
+    (True, "Yes", "boolean_spelling"),
+    ("Yes", True, "boolean_spelling"),
+    (False, "No", "boolean_spelling"),
+    ("No", False, "boolean_spelling"),
+    (True, "No", "value_or_type"),
+    (False, "Yes", "value_or_type"),
+    (True, "yes", "value_or_type"),
+    (1, "Yes", "value_or_type"),
+    (None, "", "null_empty_string"),
+    ("", None, "null_empty_string"),
+    (None, "~", "value_or_type"),
+])
+def test_scalar_diagnostics_preserve_strict_differences(
+        packaging, reference, candidate, category):
+    """Independent checks: 40/10 = 4; 0 = -0; 10**20 = 1e20;
+    10**20 + 1 differs by one; 5 - 4 = 1; the decimal spellings
+    4.000000000000001 and 4.0 differ by 0.000000000000001.
+    These are diagnostic equalities, with no acceptance tolerance.
+    Booleans and nulls follow YAML 1.1 type definitions (2005-01-18),
+    https://yaml.org/type/bool.html and https://yaml.org/type/null.html;
+    only matching, case-sensitive Yes/No pairs are diagnostic candidates.
+    YAML float (same edition, https://yaml.org/type/float.html) defines
+    infinities and NaN; neither supplies finite decimal equality evidence.
+    """
+    difference, = list(packaging._differences(reference, candidate))
+    assert difference["kind"] == "value_or_type"
+    assert difference["category"] == category
+    assert difference["reference_value_sha256"] == packaging._value_hash(reference)
+    assert difference["candidate_value_sha256"] == packaging._value_hash(candidate)
+
+
+@pytest.mark.parametrize("reference,candidate,expected", [
+    ({"General": {"DefaultViewAzimuth": 4}}, {"General": {}},
+     "presentation_key_candidate"),
+    ({"General": {}}, {"General": {"DefaultViewCentre": [0, 0, 0]}},
+     "presentation_key_candidate"),
+    ({"Lines": [{"ContactPen": [1, "Solid", "Blue"]}]}, {"Lines": [{}]},
+     "presentation_key_candidate"),
+    ({"Environment": {"VerticalWindVariationFactor": None}}, {"Environment": {}},
+     "missing_data"),
+    ({"Other": {"DefaultViewAzimuth": 4}}, {"Other": {}}, "missing_data"),
+    ({"General": {"DefaultViewAzimuthExtra": 4}}, {"General": {}}, "missing_data"),
+    ({"Lines": [{"Mass": 4}]}, {"Lines": []}, "missing_data"),
+    ({"a/b~c": None}, {}, "missing_data"),
+])
+def test_missing_categories_are_narrow_and_presence_is_retained(
+        packaging, reference, candidate, expected):
+    """Synthetic key inventory from #2104; no physical values or waivers.
+    Wind variation is a model control, with no evidence of display-only use.
+    The remaining numbers are arbitrary structural fixtures.
+    """
+    difference, = list(packaging._differences(reference, candidate))
+    assert difference["category"] == expected
+    assert difference["reference_present"] is not difference["candidate_present"]
+
+
+def test_presentation_value_change_is_not_a_missing_key_candidate(packaging):
+    """Independent hand calculation: azimuth 5 - 4 = 1, a value change."""
+    difference, = list(packaging._differences(
+        {"General": {"DefaultViewAzimuth": 4}},
+        {"General": {"DefaultViewAzimuth": 5}},
+    ))
+    assert difference["category"] == "value_or_type"
+
+
+@pytest.mark.parametrize("reference,candidate", [(4, 4), (4.0, 4.0), ("Yes", "Yes")])
+def test_identical_scalars_do_not_create_diagnostics(packaging, reference, candidate):
+    """Reflexive equality of literal fixtures needs no normalization."""
+    assert list(packaging._differences(reference, candidate)) == []
+
+
+def test_diagnostic_report_does_not_waive_representation_candidates(
+        packaging, tmp_path, monkeypatch):
+    """Hand count: one numeric pair + one bool pair + one null pair +
+    one absent view key + one changed value + one absent wind key = six
+    blocking rows. 4 = 40/10 and 5 - 4 = 1; no native equivalence follows.
+    """
+    reference = {"General": {"DefaultViewAzimuth": 4}, "number": 4,
+                 "flag": True, "script": None, "changed": 4,
+                 "Environment": {"VerticalWindVariationFactor": None}}
+    candidate = {"General": {}, "number": 4.0, "flag": "Yes", "script": "",
+                 "changed": 5, "Environment": {}}
+    monkeypatch.setattr(packaging, "read_yaml", lambda path: reference)
+    monkeypatch.setattr(packaging, "_generated_sections", lambda path: candidate)
+    packaging._reference_report(tmp_path, {"source": {"sha256": "synthetic"}, "files": []})
+    report = json.loads((tmp_path / "reference-differences.json").read_text())
+    assert report["schema_version"] == 3
+    assert report["difference_count"] == report["blocking_difference_count"] == 6
+    assert report["category_counts"] == {
+        "equal_decimal_numeric": 1, "boolean_spelling": 1, "null_empty_string": 1,
+        "presentation_key_candidate": 1, "value_or_type": 1, "missing_data": 1,
+    }
+    assert report["reference_compatible"] is False
+    assert report["native_verified"] is False
+    assert report["engineering_parity"] is False
+    for decision in report["category_decisions"].values():
+        assert decision["semantic_status"] == "NOT_EVALUATED"
+        assert decision["blocking"] is True
+        assert decision["basis"]
+        assert decision["required_evidence"]
