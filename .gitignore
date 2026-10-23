@@ -401,6 +401,13 @@ coverage.wrk*.xml
 *.wrk*.xml
 outputs/
 specs/
+# Retain the scalar-result schema and its checks beside tracked manifests.
+!/src/digitalmodel/specs/
+/src/digitalmodel/specs/*
+!/src/digitalmodel/specs/engineering_result.py
+!/tests/specs/
+/tests/specs/*
+!/tests/specs/test_engineering_result.py
 
 # Agent worktrees (local-only, must not be tracked as gitlinks)
 .claude/worktrees/
