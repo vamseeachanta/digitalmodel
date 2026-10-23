@@ -11,7 +11,6 @@ Covers:
 - DNV/API standard references
 """
 
-import math
 import pytest
 
 
@@ -171,9 +170,9 @@ class TestOnBottomStability:
 
 
 class TestScour:
-    """Test scour depth calculations (DNV-RP-F107)."""
+    """Test guarded scour calculations with missing design basis."""
 
-    def test_pipeline_scour_positive(self):
+    def test_pipeline_scour_not_evaluated(self):
         from digitalmodel.geotechnical.scour import pipeline_scour_depth
         result = pipeline_scour_depth(
             pipe_od_m=0.5,
@@ -181,14 +180,14 @@ class TestScour:
             wave_orbital_velocity_ms=0.5,
             sediment_d50_mm=0.2,
         )
-        assert result.scour_depth_m > 0
+        assert result.scour_depth_m is None
         assert result.pipe_od_m == 0.5
-        assert result.standard == "DNV-RP-F107"
+        assert result.standard == "NOT_ESTABLISHED"
 
-    def test_monopile_scour_positive(self):
+    def test_monopile_scour_not_evaluated(self):
         from digitalmodel.geotechnical.scour import monopile_scour_depth
         result = monopile_scour_depth(
             pile_diameter_m=6.0, current_velocity_ms=1.0, water_depth_m=20.0
         )
-        assert result.scour_depth_m > 0
+        assert result.scour_depth_m is None
         assert result.pile_diameter_m == 6.0
