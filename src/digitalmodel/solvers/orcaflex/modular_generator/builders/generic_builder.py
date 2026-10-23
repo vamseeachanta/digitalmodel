@@ -144,7 +144,7 @@ _SKIP_GENERAL_KEYS: set[str] = {
     # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
     "TemperatureUnits",
     # Variable time-step max — only settable when ImplicitUseVariableTimeStep
-    # is True; dormant otherwise, causing "Change not allowed" errors.
+    # is True or "Yes" in implicit mode; dormant otherwise.
     # NOT skipped when general_properties re-enables variable time stepping
     # (see build()) — stripping it then would silently revert the model to
     # OrcaFlex's default max step and change dynamics results.
@@ -249,32 +249,34 @@ class GenericModelBuilder(BaseBuilder):
         # Merge general_properties into "General", filtering out dormant
         # view/display properties that cause "Change not allowed" errors.
         if generic.general_properties:
-            skip_keys = _SKIP_GENERAL_KEYS
-            if generic.general_properties.get("ImplicitUseVariableTimeStep") is True:
-                # Variable time stepping is re-enabled in this same General
-                # section, so ImplicitVariableMaxTimeStep is settable (not
-                # dormant) and must be preserved — stripping it would run the
-                # model with OrcaFlex's default max step instead of the
-                # source model's value.
-                skip_keys = _SKIP_GENERAL_KEYS - {"ImplicitVariableMaxTimeStep"}
+            properties = generic.general_properties
+            skip_keys = set(_SKIP_GENERAL_KEYS)
+            # Orcina, OrcaFlex online help (unversioned, accessed 2026-10-19),
+            # General data: Dynamics; General data: Implicit integration,
+            # "Use variable time step" and "Time step / maximum time step".
+            # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Implicitintegration.htm
+            # The earlier GeneralBuilder include establishes fixed implicit
+            # mode when these source properties are absent.
+            method = properties.get("DynamicsSolutionMethod", "Implicit time domain")
+            variable = properties.get("ImplicitUseVariableTimeStep")
+            if method in {"Explicit time domain", "Frequency domain"}:
+                skip_keys.update({
+                    "ImplicitUseVariableTimeStep", "ImplicitConstantTimeStep",
+                })
+            elif variable is True or variable == "Yes":
+                skip_keys.discard("ImplicitVariableMaxTimeStep")
+                skip_keys.add("ImplicitConstantTimeStep")
+            # YAML is applied sequentially: set method, then mode, then the
+            # active timestep. Do not mutate the source mapping or its values.
+            priority = ("DynamicsSolutionMethod", "ImplicitUseVariableTimeStep")
             filtered = {
-                k: v
-                for k, v in generic.general_properties.items()
-                if k not in skip_keys
+                key: properties[key] for key in priority
+                if key in properties and key not in skip_keys
             }
-            # OrcaFlex applies YAML sequentially: the mode switch must precede
-            # its dependent property for the latter to be settable.
-            if (
-                "ImplicitVariableMaxTimeStep" in filtered
-                and "ImplicitUseVariableTimeStep" in filtered
-            ):
-                max_step = filtered.pop("ImplicitVariableMaxTimeStep")
-                reordered: dict[str, Any] = {}
-                for k, v in filtered.items():
-                    reordered[k] = v
-                    if k == "ImplicitUseVariableTimeStep":
-                        reordered["ImplicitVariableMaxTimeStep"] = max_step
-                filtered = reordered
+            filtered.update({
+                key: value for key, value in properties.items()
+                if key not in skip_keys and key not in priority
+            })
             if filtered:
                 result["General"] = filtered
 
