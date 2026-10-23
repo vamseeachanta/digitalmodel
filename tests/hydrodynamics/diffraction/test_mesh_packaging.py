@@ -88,7 +88,7 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
     lines[2] = "0 0" if partial else "1 1"
     (case / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
     data = _spec_data("meshes/hull.gdf")
-    data["vessel"]["geometry"]["symmetry"] = "xz"
+    data["vessel"]["geometry"]["symmetry"] = "yz" if partial else "none"
     spec_path = case / "spec.yml"
     spec_path.write_text(yaml.safe_dump(data), encoding="utf-8")
     output = tmp_path / "out"
@@ -107,20 +107,17 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
         assert spec._source_dir is None
         return OrcaWaveBackend().generate_single(packaged, output)
 
-    if partial:
-        with pytest.raises(ValueError, match="Partial GDF mesh"):
-            generate()
-    else:
-        emitted = yaml.safe_load(generate().read_text(encoding="utf-8"))
-        assert emitted["Bodies"][0]["BodyMeshSymmetry"] == "None"
-        assert emitted["Bodies"][0]["BodyMeshFileName"] == "hull.gdf"
+    emitted = yaml.safe_load(generate().read_text(encoding="utf-8"))
+    assert emitted["Bodies"][0]["BodyMeshSymmetry"] == ("yz plane" if partial else "None")
+    assert emitted["Bodies"][0]["BodyMeshFileName"] == "hull.gdf"
 
 
 class TestCsfControlSurfacePassthrough:
     def test_csf_control_surface_packages_unchanged(self, tmp_path: Path):
         """A .csf control surface is a valid native OrcaWave input and must
         package (previously hard-rejected with 'Unsupported mesh format')."""
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.csf").write_text("csf data")
         data = _spec_data()
         data["vessel"]["control_surface"] = {
@@ -162,7 +159,8 @@ class TestControlSurfaceFormatRewrite:
         """Packaging a .gdf control surface must record mesh_format='gdf' on
         the packaged spec (previously left None, so the backend emitted
         'Wamit csf' for GDF content)."""
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.gdf").write_text("cs")
         data = _spec_data()
         data["vessel"]["control_surface"] = {
@@ -191,7 +189,8 @@ class TestControlSurfaceFormatRewrite:
             OrcaWaveBackend,
         )
 
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.gdf").write_text("cs")
         data = _spec_data()
         data["vessel"]["control_surface"] = {

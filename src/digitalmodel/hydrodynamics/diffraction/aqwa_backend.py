@@ -32,6 +32,10 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     VesselInertia,
 )
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, expand_sector, parse_symmetry_flags, validate_symmetry,
+)
+
 
 # ---------------------------------------------------------------------------
 # Mesh data container
@@ -45,6 +49,7 @@ class ParsedMesh:
     vertices: np.ndarray  # (N, 3) array of node coordinates
     panels: np.ndarray  # (M, 4) array of panel vertex indices
     name: str = ""
+    symmetry_flags: tuple[int, int] = (0, 0)  # WAMIT v7.4, section 6.1.
 
     @property
     def n_vertices(self) -> int:
@@ -200,8 +205,9 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         all_cards = self._assemble_all_decks(spec)
         file_name = self._make_filename(spec)
@@ -240,8 +246,9 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         deck_builders = self._ordered_deck_builders(spec)
         header = self._workbench_header()
@@ -338,13 +345,25 @@ class AQWABackend:
         return mesh
 
     def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
-        """Verify a full xz body before emitting its compact nonnegative half.
+        """Validate the declared sector and prepare AQWA body panels.
+
+        Xz cuts emit the nonnegative-y half with SYMX. Other declared cuts
+        are reflected to a full body before emission.
 
         Classification, mirror matching and centreline snapping use the same
         tolerance: max(1e-8 m, 2e-6 times the longitudinal mesh extent).
         The cached source coordinates remain unchanged.
         """
         mesh = self._load_mesh(geometry.mesh_file)
+        if mesh is None and Path(geometry.mesh_file).suffix.lower() == ".gdf":
+            raise ValueError(
+                f"GDF symmetry for spec symmetry {geometry.symmetry!r} "
+                "requires a loaded and verified GDF mesh"
+            )
+        if mesh is not None:
+            validate_symmetry(mesh.symmetry_flags, geometry.symmetry, mesh.vertices)
+            expanded = expand_sector(mesh)
+            mesh = ParsedMesh(expanded.vertices, expanded.panels, name=mesh.name)
         if geometry.symmetry != "xz":
             return mesh
         if mesh is None:
@@ -449,6 +468,7 @@ class AQWABackend:
         # Read ULEN/GRAV and symmetry lines.
         if line_idx + 2 >= len(lines):
             raise ValueError(f"{file_path}: incomplete GDF header")
+        symmetry_flags = parse_symmetry_flags(lines[line_idx + 1])
         line_idx += 2
 
         # Read number of panels (NPAN).
@@ -527,6 +547,7 @@ class AQWABackend:
             vertices=np.array(vertices, dtype=np.float64),
             panels=np.array(panels, dtype=np.int32),
             name=file_path.stem,
+            symmetry_flags=symmetry_flags,
         )
 
     # -----------------------------------------------------------------

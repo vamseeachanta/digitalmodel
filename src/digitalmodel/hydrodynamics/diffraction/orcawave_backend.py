@@ -37,8 +37,11 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     FrequencyInputType,
     LoadRAOMethod,
-    SymmetryType,
     IrregularFrequencyMethod,
+)
+
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, parse_symmetry_flags, validate_symmetry,
 )
 
 
@@ -267,9 +270,7 @@ def _zero_6x6() -> list[list[float]]:
 
 
 def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
-    """Reject partial or unreadable GDFs for declared body symmetry."""
-    if geom.symmetry == SymmetryType.NONE:
-        return
+    """Fail closed for every GDF declaration, including symmetry none."""
     path = Path(geom.mesh_file)
     if geom.mesh_format.value != "gdf" and path.suffix.lower() != ".gdf":
         return
@@ -279,17 +280,21 @@ def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
         with path.open(encoding="utf-8", errors="replace") as stream:
             stream.readline()  # title
             stream.readline()  # length unit and gravity
-            flags = stream.readline().split()
-        isx, isy = int(flags[0]), int(flags[1])
-    except (OSError, ValueError, IndexError) as exc:
+            flags = parse_symmetry_flags(stream.readline())
+            validate_symmetry(flags, geom.symmetry)
+            # Header flags describe a sector, not a full mesh to expand twice.
+            if any(flags):
+                import numpy as np
+
+                stream.readline()  # panel count
+                rows = [line.split()[:3] for line in stream if line.strip()]
+                vertices = np.asarray(rows, dtype=float)
+                if vertices.size:
+                    validate_symmetry(flags, geom.symmetry, vertices)
+    except OSError as exc:
         raise ValueError(
             f"Cannot verify GDF symmetry for mesh {Path(geom.mesh_file).name!r}"
         ) from exc
-    if isx != 0 or isy != 0:
-        raise ValueError(
-            f"Partial GDF mesh {Path(geom.mesh_file).name!r} has symmetry flags; "
-            "provide a full mesh with ISX and ISY zero"
-        )
 
 
 def _build_body_dict(
@@ -306,8 +311,9 @@ def _build_body_dict(
         geom.mesh_format.value, geom.mesh_file, context=f"body {vessel.name!r}"
     )
     _check_full_gdf(geom, spec)
-    # Full meshes must not be expanded a second time.
-    mesh_sym = "None"
+    # OrcaWave web help, Data: Bodies, Body mesh: explicit stored-sector symmetry.
+    mesh_sym = {"none": "None", "xz": "xz plane", "yz": "yz plane",
+                "xz+yz": "xz and yz planes"}[geom.symmetry]
 
     body: dict[str, Any] = {}
     body["BodyName"] = vessel.name
@@ -802,6 +808,7 @@ class OrcaWaveBackend:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         _check_supported_solver_options(spec)
+        self.preflight_reports = buoyancy_preflight(spec)
 
         # Build the complete YAML document by merging all sections
         data: dict[str, Any] = {}
@@ -861,6 +868,7 @@ class OrcaWaveBackend:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         _check_supported_solver_options(spec)
+        self.preflight_reports = buoyancy_preflight(spec)
 
         sections = [
             ("01_general.yml", _build_general_section(spec)),
