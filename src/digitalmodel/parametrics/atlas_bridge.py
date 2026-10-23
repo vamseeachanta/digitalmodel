@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+import numpy as np
+
 from digitalmodel.orcaflex.batch_parametric import (
     ParametricResultsSummary,
     ParametricStudy,
@@ -37,11 +39,17 @@ def atlas_from_summary(
     hole.
     """
     df = summary.to_dataframe()
+    if df.empty:
+        raise ValueError("atlas grid is not full-factorial: no completed cases")
     df = df[df["status"] == "completed"]
 
     axis_names = [p.name for p in study.parameters]
     if not axis_names:
         raise ValueError("study has no parameters to build axes from")
+    if len(set(axis_names)) != len(axis_names):
+        raise ValueError("atlas axis names must be unique")
+    if not set(axis_names).issubset(df.columns):
+        raise ValueError("atlas grid is not full-factorial: missing axis columns")
     if response not in df.columns:
         raise ValueError(
             f"response {response!r} not in result columns {sorted(df.columns)}"
@@ -52,6 +60,8 @@ def atlas_from_summary(
     scales = scales or {}
     for param in study.parameters:
         values = sorted(param.get_values())
+        if not values or not np.isfinite(values).all() or len(set(values)) != len(values):
+            raise ValueError(f"axis {param.name!r} must have finite unique nonempty values")
         expected *= len(values)
         axes.append(
             Axis(name=param.name, scale=scales.get(param.name, "linear"), grid=values)
@@ -62,10 +72,15 @@ def atlas_from_summary(
             f"atlas grid is not full-factorial: {len(df)} completed cases vs "
             f"{expected} expected ({' x '.join(str(len(a.grid)) for a in axes)})"
         )
-    if df[response].isna().any():
-        raise ValueError(
-            f"response {response!r} has missing values; cannot build atlas"
-        )
+    # Full-factorial membership (atlas-spec.md Decision 2; issue 2118):
+    # N unique tuples in the declared product of cardinality N cover every node.
+    if df.duplicated(axis_names).any() or any(
+        not df[axis.name].isin(axis.grid).all() for axis in axes
+    ):
+        raise ValueError("atlas grid is not full-factorial: duplicate or undeclared node")
+    # Membership in the finite declared axes already establishes axis finiteness.
+    if not np.isfinite(df[response].to_numpy(dtype=float)).all():
+        raise ValueError("atlas response must contain only finite values")
 
     grid = df[axis_names + [response]].reset_index(drop=True)
     return Atlas(
@@ -75,6 +90,6 @@ def atlas_from_summary(
         response=response,
         axes=axes,
         grid=grid,
-        validation={"max_rel_error": 0.0},
+        validation={"status": "unavailable", "reason": "no holdout evaluation"},
         provenance={"source": "parametrics_sweep", "study": study.name},
     )

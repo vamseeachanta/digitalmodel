@@ -264,7 +264,19 @@ def test_stroke_and_moonpool_populate_with_rig_data():
 # -- #1346 solver-tier dynamic path (stub library) -----------------------------
 
 
-def test_dynamic_amplifies_von_mises_and_carries_stub_provenance():
+@pytest.fixture
+def validated_dynamic_atlas(monkeypatch):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    # Synthetic measured error tests the gate, not the stub's physical accuracy.
+    atlas.validation = {"max_rel_error": 0.0}
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
+    return atlas
+
+
+def test_dynamic_amplifies_von_mises_and_carries_stub_provenance(validated_dynamic_atlas):
     common = dict(
         offsets_pct=[2.0], current_speeds_mps=[1.0], seastates=[SeaState(3.0, 12.0)]
     )
@@ -295,7 +307,7 @@ def test_dynamic_false_is_a_noop():
     )
 
 
-def test_dynamic_out_of_coverage_escalates_von_mises():
+def test_dynamic_out_of_coverage_escalates_von_mises(validated_dynamic_atlas):
     # offset 99% WD is outside the atlas grid -> von Mises escalates (NaN), counted
     dyn = compute_operating_envelope(
         **_BASE,
@@ -366,3 +378,21 @@ def test_flexjoint_governing_min_uses_hardware_rating():
         with_rating.per_limit_utilisation["flexjoint_angle"][0, 0, 0]
         > no_rating.per_limit_utilisation["flexjoint_angle"][0, 0, 0]
     )
+
+
+@pytest.mark.parametrize("validation", [None, {}, {
+    "status": "unavailable", "max_rel_error": 0.0,
+}])
+def test_dynamic_unavailable_validation_escalates_every_point(monkeypatch, validation):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    if validation is not None:
+        atlas.validation = validation
+    assert not atlas.validation_available
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
+    dyn = _env([2.0, 4.0], [0.5, 1.0],
+               [SeaState(3.0, 12.0), SeaState(5.0, 12.0)], dynamic=True)
+    assert np.isnan(dyn.per_limit_utilisation["von_mises"]).all()
+    assert dyn.dynamic_provenance["escalated_points"] == 8

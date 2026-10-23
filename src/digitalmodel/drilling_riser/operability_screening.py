@@ -65,6 +65,11 @@ def screen_operability(
         "tier": atlas.provenance.get("tier"),
         "disclaimer": _DISCLAIMER,
     }
+    if not atlas.validation_available:
+        return OperabilityScreen(
+            config, offset_pct, current_speed_mps, None, False, ESCALATE,
+            "validation unavailable", provenance,
+        )
     point = {"config": config, "offset_pct": offset_pct, "current_speed_mps": current_speed_mps}
     prediction = atlas.predict(point)
     if not prediction.in_range:

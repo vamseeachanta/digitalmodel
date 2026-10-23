@@ -68,11 +68,15 @@ def test_covered_case_interpolates_within():
 
 def test_uncovered_case_escalates():
     atlas = _library()
-    result = _handle_value(atlas, {"case": "drillship-transit",
-                                   "frequency_rad_s": 0.6, "heading_deg": 90.0})
+    point = {"case": "uncovered-case", "frequency_rad_s": 0.6, "heading_deg": 90.0}
+    prediction = atlas.predict(point)
+    assert prediction.in_range is False
+    assert "uncovered-case" in prediction.reason
+    assert "not in atlas" in prediction.reason
+    result = _handle_value(atlas, point)
     assert result["in_range"] is False
     assert result["action"] == "escalate"
-    assert "drillship-transit" in result["reason"]
+    assert result["reason"] == "validation unavailable"
 
 
 def test_out_of_solved_range_escalates():
@@ -134,9 +138,16 @@ def test_orcaflex_library_is_current_and_enforces_coverage():
         "operating-hs2", "storm-hs5", "extreme-hs8"]
     # covered load case interpolates heading within
     covered = _handle_value(atlas, {"case": "storm-hs5", "heading_deg": 60.0})
-    assert covered["in_range"] is True
-    assert covered["value"] > 0.0
+    assert covered["in_range"] is False
+    assert covered["reason"] == "validation unavailable"
+    assert covered["value"] is None
+    assert "confidence" not in covered
     # an uncovered load case escalates
-    uncovered = _handle_value(atlas, {"case": "survival-hs12", "heading_deg": 60.0})
+    point = {"case": "uncovered-case", "heading_deg": 60.0}
+    prediction = atlas.predict(point)
+    assert prediction.in_range is False
+    assert "uncovered-case" in prediction.reason
+    assert "not in atlas" in prediction.reason
+    uncovered = _handle_value(atlas, point)
     assert uncovered["in_range"] is False
-    assert "survival-hs12" in uncovered["reason"]
+    assert uncovered["reason"] == "validation unavailable"

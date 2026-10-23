@@ -1,27 +1,34 @@
 """Serve a sweep-built atlas via the parametric_query workflow (parametrics #975).
 
-End-to-end, offline: parametrics FOWT sweep -> atlas_from_summary -> Atlas.save
--> parametric_query router serves an interpolated utilisation answer, and gates
-out-of-range points to escalation.
+End-to-end, offline: a synthetic Cartesian summary -> atlas_from_summary ->
+Atlas.save -> parametric_query. Range and validation gates are tested without
+requiring a pilot's external citation data. No physical response is qualified.
 """
 
 from __future__ import annotations
 
+from itertools import product
 from pathlib import Path
 
+from digitalmodel.parametric.atlas import Atlas
 from digitalmodel.parametric.query import router as parametric_query
-from digitalmodel.parametrics import ParameterSweep, ParametricStudy
+from digitalmodel.parametrics import (
+    CaseResult, ParameterSweep, ParametricResultsSummary, ParametricStudy,
+)
 from digitalmodel.parametrics.atlas_bridge import atlas_from_summary
-from digitalmodel.parametrics.pilots import orcaflex_fowt_watch_circle_sweep
 
 RADII = (15.0, 25.0, 35.0)
 MBR = (4.0, 5.0, 6.0)
 
 
 def _save_fowt_atlas(atlas_root: Path) -> None:
-    summary = orcaflex_fowt_watch_circle_sweep(
-        watch_circle_radii_m=RADII, mbr_limits_m=MBR
-    )
+    # Synthetic x+y responses exercise serving independently of a solver pilot.
+    summary = ParametricResultsSummary(results=[
+        CaseResult(case_id=str(i),
+                   parameters={"watch_circle_radius": radius, "mbr_limit_m": mbr},
+                   max_utilisation=radius + mbr, status="completed")
+        for i, (radius, mbr) in enumerate(product(RADII, MBR))
+    ])
     study = ParametricStudy(
         name="orcaflex-fowt-watch-circle",
         parameters=[
@@ -53,25 +60,35 @@ def _query(atlas_root: Path, point: dict, out_dir: Path) -> dict:
     return parametric_query(cfg)["parametric_query"]["result"]
 
 
-def test_in_range_query_serves_utilisation(tmp_path: Path):
+def test_in_range_query_without_holdout_escalates(tmp_path: Path):
     _save_fowt_atlas(tmp_path / "atlases")
     result = _query(
         tmp_path / "atlases",
         {"watch_circle_radius": 20.0, "mbr_limit_m": 4.5},  # interpolated interior
         tmp_path / "out",
     )
-    assert result["in_range"] is True
-    assert result["response"] == "utilisation"
-    assert result["screening_status"] == "pass"  # UC ~0.03 << 1.0
-    assert result["value"] > 0.0
+    assert result["in_range"] is False
+    assert result["action"] == "escalate"
+    assert result["reason"] == "validation unavailable"
+    assert result["value"] is None
+    assert "confidence" not in result
 
 
 def test_out_of_range_query_escalates(tmp_path: Path):
     _save_fowt_atlas(tmp_path / "atlases")
+    atlas = Atlas.load(tmp_path / "atlases", "fowt_mooring")
+    prediction = atlas.predict({"watch_circle_radius": 80.0, "mbr_limit_m": 5.0})
+    assert prediction.in_range is False
+    assert "watch_circle_radius=80" in prediction.reason
+    assert "outside" in prediction.reason
+    # Supply synthetic measured validation so the query's range gate is reached.
+    atlas.validation = {"max_rel_error": 0.0}
+    atlas.save(tmp_path / "atlases")
     result = _query(
         tmp_path / "atlases",
         {"watch_circle_radius": 80.0, "mbr_limit_m": 5.0},  # beyond [15, 35]
         tmp_path / "out",
     )
     assert result["in_range"] is False
-    assert "watch_circle_radius" in str(result.get("reason", ""))
+    assert "watch_circle_radius=80" in result["reason"]
+    assert "outside" in result["reason"]
