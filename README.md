@@ -88,28 +88,30 @@ Requires Python 3.10+. See [pyproject.toml](pyproject.toml) for full dependency 
 
 ### Post-clone skill pointers
 
-With a `workspace-hub` sibling containing the internal skills, inspect the
-relative pointer recipe from the repository root:
+After cloning, run this one-time setup from the repository root. It requires
+Bash, Python 3.10+ and a `workspace-hub` sibling with the
+`.claude/skills/_internal/{guidelines,meta,workflows}` directories:
 
 ```bash
 bash scripts/setup-claude-skills.sh
 ```
 
-For a different checkout layout, pass `--workspace-hub <checkout>`.
-The command checks all three skill directories, then prints an idempotent JSON
-recipe for the three symlinks and the dated propagation marker. A missing
-sibling fails with a clone instruction before any file is written.
+The command creates three relative symlinks under `.claude/skills/` and writes
+`.ecosystem-propagated` with today's local date in `YYYYMMDD` format. All four
+artifacts stay ignored by Git. Reruns retain matching links, repair stale links
+and refresh the marker. Existing real files or directories at pointer paths
+require manual review; setup checks for conflicts before writing any artifact.
 
-The default command plans files only. After inspecting the recipe, run
-`bash scripts/setup-claude-skills.sh --apply` as the one-time installation step.
-Existing matching symlinks are retained; conflicting entries fail before any
-pointer is written. Worktree installation remains unverified under #2009;
-the regression tests exercise creation in isolated fixtures.
-The existing tracked `.codex/skills` and `.gemini/skills` symlinks address the
-shared skill root, whereas the ignored Claude pointers address three internal
-subdirectories. The asymmetry is retained deliberately because rebuilding ignored local
-pointers does not require changing the existing tracked links. Regeneration
-does not change their tracking policy or establish cross-platform link behaviour.
+For a different checkout layout, pass `--workspace-hub <checkout>`. Preview
+without writing with `--dry-run`; the older `--apply` option remains supported.
+If the shared skills are absent, setup exits with a clone instruction and leaves
+existing artifacts unchanged. No shared checkout is cloned automatically.
+
+The tracked `.codex/skills` and `.gemini/skills` symlinks deliberately address
+the shared skill root. The ignored Claude links address its three internal
+subdirectories and are regenerated locally; their different tracking policies
+are retained. See the [setup guide and worked example](docs/skills/post-clone-setup.md)
+for expected targets, conflict handling and platform limits.
 
 ## Quick Start
 
