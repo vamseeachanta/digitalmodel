@@ -18,8 +18,9 @@ import json
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 from typing import Any
 
 import yaml
@@ -300,35 +301,43 @@ def _swap_atlas(staged: Path, destination: Path, temporary: Path) -> None:
     else:
         replacement.mkdir()
     shutil.copytree(staged, replacement, dirs_exist_ok=True)
-    if destination.exists():
-        destination.rename(previous)
     try:
+        if destination.exists():
+            destination.rename(previous)
         replacement.rename(destination)
     except BaseException:
-        if previous.exists():
+        if previous.exists() and not destination.exists():
             previous.rename(destination)
         raise
 
 
-def _rebuild_atlas(workflow_id: str) -> bool:
-    """Keep the live atlas untouched until a temporary build passes validation."""
+def _rebuild_atlas(workflow_id: str) -> str | None:
+    """Return a validation failure reason, or install a validated temporary build."""
     from digitalmodel.parametric.build import build_atlas_from_registry
 
     DEFAULT_ATLAS_ROOT.mkdir(parents=True, exist_ok=True)
-    with TemporaryDirectory(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-") as name:
-        temporary = Path(name)
+    temporary = Path(mkdtemp(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-"))
+    destination = None
+    try:
         atlas = build_atlas_from_registry(workflow_id, atlas_root=temporary / "build")
+        if not isinstance(atlas.validation, Mapping):
+            return "validation record is not a mapping; failed validation gate"
         if "passes" not in atlas.validation:
-            result = Path(atlas.basename) / atlas.atlas_id / "validation.json"
-            print(f"  WARNING: {workflow_id} {result.as_posix()} "
-                  "missing key 'passes'; failed validation gate")
-            return False
+            return "missing key 'passes'; failed validation gate"
         if not atlas.validation["passes"]:
-            print(f"  WARNING: {workflow_id} regenerated but failed validation gate")
-            return False
-        _swap_atlas(temporary / "build" / atlas.basename,
-                    DEFAULT_ATLAS_ROOT / atlas.basename, temporary)
-    return True
+            return "regenerated but failed validation gate"
+        destination = DEFAULT_ATLAS_ROOT / atlas.basename
+        _swap_atlas(temporary / "build" / atlas.basename, destination, temporary)
+    finally:
+        if (temporary / "previous").exists() and (
+            destination is None or not destination.exists()
+        ):
+            # Retain the only previous copy if rollback itself cannot rename it.
+            print(f"WARNING: refresh recovery directory {temporary.name}; "
+                  "previous atlas retained; restore before retrying")
+        else:
+            shutil.rmtree(temporary)
+    return None
 
 
 def main(argv: list[str]) -> int:
@@ -340,7 +349,12 @@ def main(argv: list[str]) -> int:
     for enforced staleness or 0 for success."""
     apply = "--apply" in argv
     strict_libraries = "--strict-libraries" in argv
-    validation_failures = 0
+    validation_failures = []
+
+    for leftover in sorted(DEFAULT_ATLAS_ROOT.glob(".refresh-*")):
+        if leftover.is_dir():
+            print(f"WARNING: leftover refresh directory {leftover.name}; "
+                  "inspect before removal")
 
     stale_ids = []
     for wid in parametric_workflow_ids():
@@ -363,8 +377,9 @@ def main(argv: list[str]) -> int:
     if apply and stale_ids:
         for wid in stale_ids:
             print(f"refreshing {wid} ...")
-            if not _rebuild_atlas(wid):
-                validation_failures += 1
+            reason = _rebuild_atlas(wid)
+            if reason is not None:
+                validation_failures.append((wid, reason))
         stale_ids = []  # attempted; validation failures take precedence
 
     if not stale_ids and not stale_libs and not validation_failures:
@@ -373,7 +388,9 @@ def main(argv: list[str]) -> int:
     if stale_ids and not apply:
         print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
     if validation_failures:
-        print(f"{validation_failures} rebuilt computed atlas(es) failed validation; "
+        for wid, reason in validation_failures:
+            print(f"  WARNING: {wid} {reason}")
+        print(f"{len(validation_failures)} rebuilt computed atlas(es) failed validation; "
               "previous version of each kept; exit status 2")
         return 2
     return 1 if fail else 0

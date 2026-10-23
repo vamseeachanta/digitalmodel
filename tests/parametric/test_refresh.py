@@ -231,7 +231,7 @@ def test_apply_no_stale_atlas_status_pin(stub_refresh_builds, capsys):
     assert "all atlases current" in capsys.readouterr().out
 
 
-def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
+def test_apply_missing_passes_key_preserves_previous_atlas(stub_refresh_builds, tmp_path, capsys):
     """A missing passes key fails validation and preserves the previous atlas."""
     ids, built = stub_refresh_builds([{}])
     previous = tmp_path / f"atlas-{ids[0]}"
@@ -242,7 +242,8 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
     assert refresh.main(["--apply"]) == 2
     assert built == ids
     output = capsys.readouterr().out
-    assert "atlas-workflow-0/rebuilt/validation.json missing key 'passes'" in output
+    assert "WARNING: workflow-0 missing key 'passes'; failed validation gate" in output
+    assert "validation.json" not in output
     assert _file_digests(previous) == before
 
 
@@ -368,7 +369,7 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert refresh.main(["--apply"]) == 2
     lines = capsys.readouterr().out.splitlines()
     assert lines[-2] == (
-        "  WARNING: workflow-0 workflow-0/new/validation.json "
+        "  WARNING: workflow-0 "
         "missing key 'passes'; failed validation gate")
     assert lines[-1] == (
         "1 rebuilt computed atlas(es) failed validation; "
@@ -377,3 +378,122 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert roots[0] != root
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+@pytest.mark.parametrize("move", ["previous", "replacement"])
+@pytest.mark.parametrize("after_move", [False, True], ids=["before-rename", "after-rename"])
+def test_install_failure_preserves_an_atlas(tmp_path, monkeypatch, move, after_move):
+    """Issue 2451: a failed swap shall leave a complete atlas at the destination.
+
+    Independent oracle: the seeded previous bytes must survive when the
+    destination is absent; an already installed replacement must remain intact.
+    No engineering calculation or acceptance tolerance is involved.
+    """
+    from pathlib import Path
+
+    destination = tmp_path / "live"
+    staged = tmp_path / "staged"
+    temporary = tmp_path / "temporary"
+    for path in (destination, staged, temporary):
+        path.mkdir()
+    (destination / "default.txt").write_text("previous")
+    (staged / "default.txt").write_text("replacement")
+    original_rename = Path.rename
+
+    def failing_rename(source, target):
+        selected = (source == destination if move == "previous"
+                    else source == temporary / "replacement")
+        if selected:
+            if after_move:
+                original_rename(source, target)
+            raise OSError("install interrupted")
+        return original_rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(OSError, match="install interrupted"):
+        refresh._swap_atlas(staged, destination, temporary)
+    expected = "replacement" if move == "replacement" and after_move else "previous"
+    assert (destination / "default.txt").read_text() == expected
+
+
+@pytest.mark.parametrize("record", [None, False, 7, [], ["passes"], "passes"])
+def test_non_mapping_validation_preserves_previous_atlas(
+    stub_refresh_builds, tmp_path, capsys, record,
+):
+    """Issue 2451: malformed records yield status 2, with seeded bytes unchanged."""
+    ids, _ = stub_refresh_builds([record])
+    previous = tmp_path / f"atlas-{ids[0]}"
+    previous.mkdir()
+    (previous / "default.txt").write_text("previous")
+    before = _file_digests(previous)
+    assert refresh.main(["--apply"]) == 2
+    assert _file_digests(previous) == before
+    assert not list(tmp_path.glob(".refresh-*"))
+    assert "WARNING: workflow-0 validation record is not a mapping" in capsys.readouterr().out
+
+
+def test_two_failures_are_named_in_the_closing_block(stub_refresh_builds, capsys):
+    """Issue 2451: two failed inputs require two closing diagnostics, after all builds."""
+    ids, built = stub_refresh_builds([{}, {"passes": False}])
+    assert refresh.main(["--apply"]) == 2
+    lines = capsys.readouterr().out.splitlines()
+    closing = lines[lines.index(f"refreshing {ids[-1]} ...") + 1:]
+    assert built == ids
+    assert closing[:-1] == [
+        "  WARNING: workflow-0 missing key 'passes'; failed validation gate",
+        "  WARNING: workflow-1 regenerated but failed validation gate",
+    ]
+    assert "validation.json" not in "\n".join(closing)
+
+
+def test_leftover_refresh_directory_is_reported_before_status(
+    disk_refresh_builds, capsys,
+):
+    """Issue 2451: an interrupted run's evidence is reported and never removed."""
+    root, _, _, _, _ = disk_refresh_builds([])
+    leftover = root / ".refresh-interrupted"
+    leftover.mkdir(parents=True)
+    (leftover / "evidence.txt").write_text("retained")
+    before = _file_digests(leftover)
+    assert refresh.main([]) == 0
+    assert capsys.readouterr().out.splitlines()[0] == (
+        "WARNING: leftover refresh directory .refresh-interrupted; inspect before removal")
+    assert _file_digests(leftover) == before
+
+
+def test_refresh_scratch_is_ignored():
+    """Issue 2451: only temporary refresh trees under the default atlas root are ignored."""
+    import os
+    import subprocess
+
+    environment = {k: v for k, v in os.environ.items()
+                   if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"],
+        cwd=refresh.REPO_ROOT, env=environment, text=True, capture_output=True,
+        input="atlases/.refresh-interrupted/evidence.txt\natlases/real_atlas/default.txt\n",
+        check=False,
+    )
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == ["atlases/.refresh-interrupted/evidence.txt"]
+
+
+def test_failed_rollback_retains_previous_tree(disk_refresh_builds, monkeypatch, capsys):
+    """Issue 2451: if both install and rollback fail, the original bytes remain recoverable."""
+    from pathlib import Path
+
+    root, ids, originals, _, _ = disk_refresh_builds([{"passes": True}])
+    original_rename = Path.rename
+
+    def failing_rename(source, target):
+        if source.name in {"replacement", "previous"}:
+            raise OSError("rename unavailable")
+        return original_rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(OSError, match="rename unavailable"):
+        refresh.main(["--apply"])
+    retained = list(root.glob(".refresh-*/previous"))
+    assert len(retained) == 1
+    assert _file_digests(retained[0]) == originals[ids[0]]
+    assert "WARNING: refresh recovery directory" in capsys.readouterr().out
