@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ABOUTME: Build a source-neutral connected-tank analysis from public models.
 """Regenerate the connected-tank page using only committed analytical sources.
 
@@ -22,9 +21,18 @@ ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = ROOT / "src/digitalmodel/hydrodynamics/utube_tank.py"
 TEST_PATH = ROOT / "tests/hydrodynamics/test_utube_tank.py"
 REDUCTION_PATH = ROOT / "scripts/cfd/reduce_tld_two_peak.py"
+SHOWCASE_PATH = ROOT / "scripts/capabilities/build_sloshing_cfd_showcase.py"
 JSON_PATH = ROOT / "docs/api/structural/sloshing-tld-twopeak.json"
 EXISTING = ROOT / "docs/api/cfd/sloshing-cfd-study.html"
 OUTPUT = EXISTING.with_name("dual-tank-sloshing-cfd-study.html")
+
+# Independent round inputs; transfer of the reference calibration is assumed.
+ILLUSTRATIVE_LEG_LENGTH = 30.0
+ILLUSTRATIVE_LEG_WIDTH = 8.0
+ILLUSTRATIVE_FILL_DEPTH = 4.0
+ILLUSTRATIVE_CENTROID_OFFSET = 10.0
+ILLUSTRATIVE_CONDUIT_AREA = 8.0
+FROZEN_VOLUME_INERTIA_INDEX = 2  # _prismatic_properties returns volume inertia here.
 
 
 def load_module(name, path):
@@ -37,6 +45,7 @@ def load_module(name, path):
 
 MODEL = load_module("_dual_tank_public_model", MODEL_PATH)
 REDUCTION = load_module("_dual_tank_public_reduction", REDUCTION_PATH)
+SHOWCASE = load_module("_dual_tank_public_showcase", SHOWCASE_PATH)
 
 
 def published_claims():
@@ -110,17 +119,15 @@ def grid(low, high, count):
 
 def compute():
     inputs = test_inputs()
-    constants = inputs["constants"]
     manifest = json.loads(JSON_PATH.read_text(encoding="utf-8"))
     claims = published_claims()
-    # Illustrative recombination of round public inputs, not the reference tank.
     geometry = MODEL.UTubeGeometry(
-        leg_length=constants["LEG_LENGTH"],
-        leg_width=constants["CENTROID_OFFSET"],
-        fill_depth=constants["FILL_DEPTH"],
-        centroid_offset=constants["LEG_WIDTH"],
+        leg_length=ILLUSTRATIVE_LEG_LENGTH,
+        leg_width=ILLUSTRATIVE_LEG_WIDTH,
+        fill_depth=ILLUSTRATIVE_FILL_DEPTH,
+        centroid_offset=ILLUSTRATIVE_CENTROID_OFFSET,
     )
-    area = constants["FILL_DEPTH"]  # illustrative section area in square metres
+    area = ILLUSTRATIVE_CONDUIT_AREA
     count = len(manifest["frequency_ratio_grid"])
     areas = grid(min(inputs["areas"]), max(inputs["areas"]), count)
     periods = grid(claims["degrades_below"], inputs["max_period"], count)
@@ -128,8 +135,11 @@ def compute():
         leg_area=geometry.leg_area, conduit_area=a, fill_depth=geometry.fill_depth,
         effective_conduit_length=geometry.effective_conduit_length,
     ) for a in areas]
-    inertia = [MODEL.DEFAULT_DENSITY * MODEL._prismatic_properties(geometry, a)[2]
-               for a in areas]
+    inertia = [
+        MODEL.DEFAULT_DENSITY
+        * MODEL._prismatic_properties(geometry, a)[FROZEN_VOLUME_INERTIA_INDEX]
+        for a in areas
+    ]
     damping = [[MODEL.equivalent_damping(
         geometry=geometry, conduit_area=a, forcing_period=inputs["damping_period"],
         level_difference_amplitude=level,
@@ -218,7 +228,7 @@ def render():
     d = compute()
     c = published_claims()
     p, geometry = d["inputs"], d["geometry"]
-    style = re.search(r"<style>(.*?)</style>", EXISTING.read_text(encoding="utf-8"), re.S)[1]
+    style = SHOWCASE._CSS
     claims = (
         ("Quadratic conduit loss: calibrated area exponent", c["area_exponent"]),
         ('Calibration cases (aggregate results only)', c["cases"]),
@@ -277,21 +287,23 @@ do not establish a design ranking.</p>
 <p>Draft for maintainer review.</p>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>
 <tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>
 <tr><td>Initial</td><td>Not assigned</td><td>Public-source analysis added to document model scope and remaining work.</td></tr></table>
 <nav><a href="#geometry">Geometry</a> · <a href="#validation">Published validation</a> ·
 <a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
 <a href="#limits">Validity band</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
 <h2 id="geometry">Illustrative geometry</h2>
-<p>Round dimensions are recombined from the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference inputs</a>;
-the reference geometry is not reproduced. Fill depth is an input; a validated fill-percentage range is
-not established.</p>
+<p>Invented round dimensions are selected independently of the
+<a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference geometry</a>.
+Validation of the illustrative plan areas and centroid offset is not established. Fill depth is an
+input; a validated fill-percentage range is not established.</p>
 <table><tr><th>Input</th><th>Illustrative value</th><th>Source and assumption</th></tr>
-<tr><td>Each leg length × width</td><td>{geometry.leg_length:.1f} × {geometry.leg_width:.1f} m</td><td>Reference leg length and centroid offset, reassigned as illustrative dimensions</td></tr>
+<tr><td>Each leg length × width</td><td>{geometry.leg_length:.1f} × {geometry.leg_width:.1f} m</td><td>Independent invented round dimensions</td></tr>
 <tr><td>Each leg plan area</td><td>{geometry.leg_area:.1f} m²</td><td>Product of the illustrative leg length and width</td></tr>
-<tr><td>Leg centroid offset from centreline</td><td>{geometry.centroid_offset:.1f} m</td><td>Reference leg width, reassigned as the illustrative offset</td></tr>
-<tr><td>Fill depth</td><td>{geometry.fill_depth:.1f} m</td><td>Reference fill-depth input</td></tr>
-<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Reference fill-depth value, assigned area units for illustration</td></tr>
+<tr><td>Leg centroid offset from centreline</td><td>{geometry.centroid_offset:.1f} m</td><td>Independent invented round offset</td></tr>
+<tr><td>Fill depth</td><td>{geometry.fill_depth:.1f} m</td><td>Independent invented round depth</td></tr>
+<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Independent invented area within the published conduit-area input range</td></tr>
 <tr><td>Effective conduit length</td><td>{geometry.effective_conduit_length:.1f} m</td><td>Calibrated reference value from the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>; transfer is assumed</td></tr>
 <tr><td>Published conduit-area input range</td><td>{min(d["areas"]):.1f}–{max(d["areas"]):.1f} m²</td><td>Reference period inputs; individual CFD measurements are not reproduced</td></tr></table>
 <p>The illustrative conduit area lies inside the published input range in the table. The calibrated

@@ -73,6 +73,15 @@ def test_builder_reproduces_utf8_html(builder, tmp_path):
     ).group(1)
 
 
+def test_builder_does_not_require_generated_showcase(builder, monkeypatch, tmp_path):
+    expected = builder.render()
+    showcase = tmp_path / "showcase.html"
+    monkeypatch.setattr(builder, "EXISTING", showcase)
+    assert builder.render() == expected
+    showcase.write_text("<html><style>", encoding="utf-8")
+    assert builder.render() == expected
+
+
 def test_claims_are_read_from_published_sources(builder):
     claims = builder.published_claims()
     assert claims["moment_rms"] == 4.3
@@ -113,7 +122,38 @@ def test_curves_call_library_and_reduction(builder, monkeypatch):
     assert [curve["peaks"] for curve in data["absorbers"]] == [2, 2, 2, 1, 1]
     for curve in data["absorbers"]:
         assert curve["ys"] == pytest.approx(curve["published"], abs=0.000051)
+    previous, highest = data["absorbers"][-2:]
+    assert highest["zeta"] == max(curve["zeta"] for curve in data["absorbers"])
+    assert highest["zeta"] > previous["zeta"]
+    assert max(highest["ys"]) > max(previous["ys"])
+    assert min(data["areas"]) <= data["area"] <= max(data["areas"])
+    assert builder.FROZEN_VOLUME_INERTIA_INDEX == 2
+    _, _, volume_inertia, _ = builder.MODEL._prismatic_properties(
+        data["geometry"], data["areas"][0]
+    )
+    assert data["inertia"][0] == pytest.approx(
+        builder.MODEL.DEFAULT_DENSITY * volume_inertia
+    )
     assert all(value >= 0 for value in data["periods"])
+
+
+def test_illustrative_geometry_is_independent(builder, monkeypatch):
+    reference = builder.test_inputs()
+    data = builder.compute()
+    geometry = data["geometry"]
+    assert (geometry.leg_length, geometry.leg_width, geometry.fill_depth,
+            geometry.centroid_offset, data["area"]) == (30.0, 8.0, 4.0, 10.0, 8.0)
+    constants = reference["constants"]
+    assert geometry.leg_area != constants["LEG_LENGTH"] * constants["LEG_WIDTH"]
+    assert {geometry.leg_length, geometry.leg_width, geometry.centroid_offset}.isdisjoint(
+        {constants["LEG_LENGTH"], constants["LEG_WIDTH"], constants["CENTROID_OFFSET"]}
+    )
+    assert data["area"] != geometry.fill_depth
+    changed = {**reference, "constants": {key: value + 100 for key, value in constants.items()}}
+    monkeypatch.setattr(builder, "test_inputs", lambda: changed)
+    recomputed = builder.compute()
+    for key in ("geometry", "area", "natural", "inertia", "damping", "moments", "responses"):
+        assert recomputed[key] == data[key]
 
 
 def test_output_structure_links_and_privacy(builder):
