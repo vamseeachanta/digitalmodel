@@ -281,6 +281,7 @@ jobs:
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
             tests/scripts/test_reporting_ci_registration.py \
+            tests/reporting/test_weatherwindow_module_report.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \

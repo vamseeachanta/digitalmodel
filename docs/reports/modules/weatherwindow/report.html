@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather-window module analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+</style>
+<style>
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style>
+<style>
+svg{width:100%;height:auto} svg text{font-family:inherit;fill:var(--ink)}
+svg .demand{fill:var(--brand)} svg .limit{stroke:var(--nogo);stroke-width:2;stroke-dasharray:7 4}
+svg .fail{fill:var(--nogo)} svg .pass{fill:var(--go)}
+button,select,textarea{font:inherit;padding:.4em;max-width:100%}
+textarea{display:block;width:100%;min-height:6em} .controls{display:flex;gap:1em;flex-wrap:wrap}
+.chart-readout{min-height:3em} .review-note{white-space:pre-wrap;border-bottom:1px solid var(--line);padding:1em 0}
+@media print{.review-controls{display:none}}
+</style></head>
+<body class="hs-doc"><main class="wrap">
+<header><p class="kicker">Marine operations · Module analysis</p>
+<h1>Weather-window screening</h1><p class="sub">Draft for maintainer review</p>
+<p>A fixed-interval significant-wave-height record is assessed for available continuous operating time.</p></header>
+
+<section id="executive"><h2>1. Executive summary</h2>
+<p>The weather-window module is a record-based screening tool for marine operations.
+Analysis is performed to determine whether a supplied wave-height record contains sufficient continuous operating time;
+key results are summarized below.</p>
+<ul><li>The illustrative record fails the duration screen.
+<ul><li>The longest accepted spell is <span data-value="result.longest_window_hours">36</span> h against a required <span data-value="result.required_duration_hours">48</span> h.
+An operation start is not supported by this record under the supplied duration criterion.</li></ul></li>
+<li>Accepted exposure alone does not establish a usable weather window.
+<ul><li>Accepted exposure is <span data-value="result.workability_pct">73.2</span>% against an input threshold of <span data-value="result.required_workability_pct">50</span>%,
+but <span data-value="result.num_viable_windows">0</span> spells meet the required duration.</li></ul></li></ul>
+<p>These are results for a synthetic public repository example, not a forecast or a location-specific installation envelope.
+Heading, wave period, structural response and a live-support trigger are NOT_EVALUATED.</p>
+<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>The fixed-interval weather-window screen is documented using the existing public illustrative record. The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated. Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance.</td></tr><tr><td>1</td><td>2026-10-22</td><td>R7 is identified as the handbook&#x27;s alternative percentile method, and the illustrative start decision is described for a generic operation. Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale. The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence.</td></tr></tbody></table>
+</section>
+
+<section id="introduction"><h2>2. Introduction</h2>
+<p>The main screening workflow is described from supplied environmental samples to the returned decision.
+The result is intended for preliminary planning by an engineer who supplies the operational limits.</p>
+<p>Significant wave height, denoted Hs, is accepted in metres. A fixed interval is assigned to every sample.
+No wave transformation, response analysis or environmental data retrieval is performed by this workflow.
+The public example is used unchanged for calculation; its descriptive case identifier and output directory do not affect the calculation. <a href="#ref-E">[E]</a></p>
+<p>The Python entry point is <code>assess_weather_window</code>; <code>window_lengths_hours</code> returns the continuous spells,
+and <code>router</code> accepts a configuration mapping and writes a summary. Their exact locators are provided in Section 9.2.</p>
+</section>
+
+<section id="summary"><h2>3. Operating summary</h2>
+<p>The wave-height and duration criteria are displayed separately so that the governing restriction is visible.
+The duration restriction governs this illustrative assessment.</p>
+<p>Input wave-height limit: <span data-value="result.hs_limit_m">2</span> m. Required continuous duration: <span data-value="result.required_duration_hours">48</span> h.
+The screen returns <span data-value="result.screening_status">fail</span>.
+The longest accepted spell is <span data-value="result.longest_window_hours">36</span> h; accepted exposure is <span data-value="result.workability_pct">73.2</span>%.</p>
+<figure><svg id="height-chart" viewBox="0 0 860 320" role="img" tabindex="0" aria-labelledby="height-caption"></svg>
+<figcaption id="height-caption">Significant wave height against elapsed time. The dashed line is the supplied wave-height limit.
+Each step represents an interval, not an interpolated measurement. Hover or focus a step for its demand, limit and status.</figcaption></figure>
+<p id="height-readout" class="chart-readout" aria-live="polite">Select a wave-height interval for details.</p>
+<figure><svg id="window-chart" viewBox="0 0 860 320" role="img" tabindex="0" aria-labelledby="window-caption"></svg>
+<figcaption id="window-caption">Accepted spell duration against spell index. The dashed line is the required continuous duration.
+Hover or focus a bar for the duration criterion. Period-dependent and heading-dependent envelopes are NOT_EVALUATED.</figcaption></figure>
+<p id="window-readout" class="chart-readout" aria-live="polite">Select a spell for details.</p>
+<p>Legend: Green means the plotted criterion is met. Red means the plotted criterion is not met.
+Amber means an assessment is not available; no amber data series is computed here.
+A green wave-height interval does not establish that the complete operation fits.</p>
+<p>The record is rejected for a continuous operation requiring <span data-value="result.required_duration_hours">48</span> h.
+Use a separately qualified forecast and a demonstrated continuous window before an operation start is accepted.
+The response, heading tolerance and forecast-support trigger remain required engineering inputs. <a href="#ref-E">[E]</a></p>
+</section>
+
+<section id="basis"><h2>4. Design data and criteria</h2>
+<p>The supplied example is treated as illustrative design data. Its limits are input choices rather than values derived from a standard.</p>
+<h3>Input contract</h3>
+<p>The required inputs are a nonempty list of Hs samples in metres, a positive Hs limit in metres and a positive operation duration in hours.
+A positive time step in hours and an optional required workability in percent are also accepted.
+The default interval is overridden explicitly here by <span data-value="result.time_step_hours">3</span> h, as supplied by the example. <a href="#ref-E">[E]</a></p>
+<p>The example contains <span data-value="sample_count">56</span> samples representing <span data-value="result.record_hours">168</span> h.
+Its Hs limit is <span data-value="result.hs_limit_m">2</span> m and its workability threshold is <span data-value="result.required_workability_pct">50</span>%.
+All sample values and their elapsed-time coordinates are provided in the appendix. <a href="#ref-E">[E]</a></p>
+<h3>Criteria and rationale</h3>
+<p>A sample is accepted when Hs is less than or equal to the input limit. A spell is viable when its unrounded duration is at least the required duration.
+The overall screen requires a duration fit and, when supplied, the workability threshold.
+The separate duration criterion prevents a fragmented calm record from being accepted solely on its exposure percentage. <a href="#ref-E">[E]</a></p>
+<p>ASSUMED - to be confirmed: each sample describes its complete following interval and all intervals are equally spaced.
+No interpolation across a threshold is applied. A physical Hs limit, direction tolerance, wave-period limit, wind limit,
+current limit and forecast uncertainty allowance require an operation-specific basis; none is inferred here.</p>
+<h3>System boundary</h3>
+<p>The represented system is the environmental screening calculation. Geometry, crane capacity, rigging, structural response,
+hydrodynamic response functions and installation stages are outside its inputs, so installation acceptance is NOT_EVALUATED.</p>
+<figure><svg viewBox="0 0 860 180" role="img" aria-labelledby="system-caption">
+<path d="M20 55 Q40 20 60 55 T100 55 T140 55 T180 55" fill="none" stroke="var(--brand)" stroke-width="3"/>
+<path d="M195 55 H245 M235 45 L245 55 L235 65 M410 55 H460 M450 45 L460 55 L450 65 M650 55 H700 M690 45 L700 55 L690 65" fill="none" stroke="var(--ink)"/>
+<text x="20" y="105">Hs record</text><text x="20" y="132">Fixed-interval samples</text>
+<text x="255" y="50">Hs threshold</text><text x="255" y="78">Inclusive comparison</text>
+<text x="470" y="50">Contiguous spells</text><text x="470" y="78">Interval counting</text>
+<text x="710" y="50">Duration fit</text><text x="710" y="78">Exposure check</text>
+</svg><figcaption id="system-caption">Environmental screening boundary. A time record is reduced to threshold decisions and continuous spells;
+no physical load path or structural mesh is represented.</figcaption></figure>
+</section>
+
+<section id="method"><h2>5. Theory and methodology</h2>
+<p>Accepted exposure is calculated by relative frequency, and persistence is calculated by counting consecutive accepted samples.
+The elementary statistical definitions are sourced below; the acceptance inequalities are supplied screening conventions. <a href="#ref-S1">[S1]</a> <a href="#ref-S2">[S2]</a></p>
+<h3>Discrete exposure and persistence</h3>
+<p>Let N be the sample count, Δt the input interval in hours, Hs(n) the wave height at sample index n in metres and L the input wave-height limit in metres.
+The indicator b(n) is unity when Hs(n) ≤ L and zero otherwise. Define T as represented exposure in hours and W as accepted exposure in percent.</p>
+<div class="eq">T = N Δt; W = 100 Σ b(n) / N.</div>
+<p>The relative-frequency definition is given in the cited statistics textbook; multiplication by 100 expresses a fraction as percent.
+Assigning Δt to each sample is the declared interval convention, not an estimate of the measured transition time. <a href="#ref-S1">[S1]</a></p>
+<p>A run is a consecutive sequence of identical classifications. Let k(j) be the number of accepted samples in run j,
+d(j) its duration in hours and M the number of accepted runs. Run terminology follows the cited handbook. <a href="#ref-S2">[S2]</a></p>
+<div class="eq">d(j) = k(j) Δt; mean duration = Σ d(j) / M; longest duration = max d(j).</div>
+<p>The mean is the arithmetic mean defined in the statistics textbook. The longest duration is the largest observed run, not a prediction of future availability.
+For an all-rejected record the implementation returns no runs and zero duration statistics. <a href="#ref-S3">[S3]</a> <a href="#ref-E">[E]</a></p>
+<h3>Percentiles and the returned decision</h3>
+<p>For ordered durations y, the linear percentile convention uses rank r = 1 + p(M − 1), k = floor(r), f = r − k,
+and Q(p) = y(k) + f[y(k+1) − y(k)]. Here p is the requested fractional percentile and Q is in hours;
+at the last rank the largest duration is used. This is the R7 alternative listed in the handbook;
+the handbook's default method is R6. <a href="#ref-S4">[S4]</a></p>
+<p>The reported lower and upper percentiles use p = 0.1 and p = 0.9 respectively.
+They describe the sampled spells; neither is a confidence bound nor a forecast exceedance probability. <a href="#ref-S4">[S4]</a> <a href="#ref-E">[E]</a></p>
+<p>Let D be required duration in hours and Wmin the optional input workability threshold in percent.
+The intended duration decision is max d(j) ≥ D; viability is counted separately with d(j) ≥ D.
+The screen passes only when duration fits and W ≥ Wmin, with the exposure test omitted when Wmin is absent. <a href="#ref-E">[E]</a></p>
+<p>The implementation rounds persistence statistics and total accepted hours to a decimal place before calculating fit and exposure.
+The viable count instead uses unrounded durations. This distinction matters near a decision boundary and is demonstrated in the appendix. <a href="#ref-E">[E]</a></p>
+<p>No standards-derived coefficient is used in this calculation. The software's standards label lacks an edition and clause-qualified criterion;
+standards compliance is NOT_EVALUATED. A cited statistical definition does not qualify a marine operating limit.</p>
+</section>
+
+<section id="results"><h2>6. Worked example and outputs</h2>
+<p>The existing public example is calculated by calling the documented function with its supplied values.
+The example is synthetic and provides arithmetic demonstration rather than site or field validation. <a href="#ref-E">[E]</a></p>
+<p>The accepted spell durations are <span data-value="windows_hours.0">36</span>, <span data-value="windows_hours.1">30</span>, <span data-value="windows_hours.2">24</span>, <span data-value="windows_hours.3">33</span> h. The longest is <span data-value="result.longest_window_hours">36</span> h,
+so an operation requiring <span data-value="result.required_duration_hours">48</span> h has <span data-value="result.num_viable_windows">0</span> viable windows.
+Accepted exposure is <span data-value="result.workability_pct">73.2</span>%, which exceeds its supplied <span data-value="result.required_workability_pct">50</span>% threshold;
+the failed duration criterion still gives the overall result <span data-value="result.screening_status">fail</span>.</p>
+<table><thead><tr><th scope="col">Output</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Record exposure</td><td><span data-value="result.record_hours">168</span></td><td>h</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Accepted exposure</td><td><span data-value="result.workability_pct">73.2</span></td><td>%</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Longest spell</td><td><span data-value="result.longest_window_hours">36</span></td><td>h</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Mean spell</td><td><span data-value="result.mean_window_hours">30.8</span></td><td>h</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Lower spell percentile</td><td><span data-value="result.p10_window_hours">25.8</span></td><td>h</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Upper spell percentile</td><td><span data-value="result.p90_window_hours">35.1</span></td><td>h</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Accepted spells</td><td><span data-value="result.num_windows">4</span></td><td>count</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Spells meeting duration</td><td><span data-value="result.num_viable_windows">0</span></td><td>count</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Duration fit</td><td><span data-value="result.operation_fits_window">No</span></td><td>Yes / No</td><td><a href="#ref-E">[E]</a></td></tr><tr><td>Screening status</td><td><span data-value="result.screening_status">fail</span></td><td>pass / fail</td><td><a href="#ref-E">[E]</a></td></tr></tbody></table>
+<p>The public function returns a dictionary with these results and the input echoes, plus a descriptive standards string.
+The configuration router adds the result and screening status to the configuration, writes a UTF-8 JSON summary and returns its location.
+The location is added after the file is written, so it is present in the returned mapping rather than inside the saved summary. <a href="#ref-E">[E]</a></p>
+<p>To use the interface, import <code>assess_weather_window</code> from the screening workflow and pass
+<code>hs_timeseries</code>, <code>hs_limit</code>, <code>required_duration_hours</code>, <code>time_step_hours</code>
+and, when required, <code>required_workability_pct</code>. No solver invocation is needed for this calculation.</p>
+</section>
+
+<section id="validation"><h2>7. Validation evidence</h2>
+<p>The available evidence is composed of executable arithmetic tests and illustrative examples.
+Agreement with measured operations or an independently published marine benchmark is NOT_EVALUATED.</p>
+<p>The dependency test file contains <span data-value="upstream_test_count">17</span> test definitions covering synthetic scatter normalization,
+monotonic operability, all-accepted and all-rejected persistence, alternating spells, accepted exposure,
+seasonal summaries and waiting-on-weather arithmetic. Only persistence is used by the main workflow described here. <a href="#ref-E">[E]</a></p>
+<p>The existing direct calculation test checks separated accepted runs, workability, fit and rejection for a longer duration.
+The configured-example test checks the public illustrative input and its failed duration screen.
+These executable records are identified in Section 9.2; their presence is not an execution claim. <a href="#ref-E">[E]</a></p>
+<p>The report is accompanied by <span data-value="report_test_count">10</span> test definitions.
+Hand-worked literal anchors check record exposure, accepted exposure, longest spell, mean and percentiles.
+Consistency checks compare the result dictionary, every displayed numeric binding and the chart inputs with a fresh function call.
+The rebuild comparison checks the complete artifact byte for byte, including all full-precision audit metadata.</p>
+<p>The report tests also check the configured router and its saved summary, local reference targets, the inlined exemplar stylesheet,
+comment controls and the rounding diagnostic.
+No field dataset, metocean timestamp quality check, forecast skill test or structural installation validation is supplied by these checks.</p>
+</section>
+
+<section id="findings"><h2>8. Findings, limitations and recommendations</h2>
+<p>The demonstrated calculation returns the duration rejection for the supplied illustrative record.
+Engineering acceptance remains dependent on qualified data and unrounded decision quantities.</p>
+<h3>Limits of use</h3>
+<p>Negative and non-finite wave samples are not explicitly rejected. The workability threshold is not constrained to a physical percentage range.
+No timestamps are supplied, so gaps, irregular sampling and duplicate observations are undetected.
+Record-edge spells are counted in full even though their continuation outside the record is unknown. <a href="#ref-E">[E]</a></p>
+<p>Rounded persistence maxima and accepted exposure can disagree with unrounded viability or exceed a physical percentage for short intervals.
+The diagnostic in the appendix demonstrates that a passing status is not sufficient at such boundaries. <a href="#ref-E">[E]</a></p>
+<p>The example represents a short illustrative record. Its exposure fraction is not annual operability, a start-time distribution,
+a waiting-time estimate or a probability of completing an operation. Forecast uncertainty, safe suspension,
+contingency duration and recovery criteria are not represented.</p>
+<h3>Recommendations</h3>
+<p>For the failed illustrative duration screen, retain the input Hs limit and require a qualified continuous forecast interval meeting the required duration before a start decision.
+A revised operation duration requires a separately justified execution and recovery sequence; accepted exposure alone does not remove the duration restriction. <a href="#ref-E">[E]</a></p>
+<p>Before operational use, calculate decisions from unrounded durations and exposure, and add boundary tests requiring fit to agree with viable count.
+Reject non-finite and negative samples, require consistent timestamps and constrain any percentage threshold to its defined range.
+These actions address the observed input and rounding limitations. <a href="#ref-E">[E]</a> <a href="#ref-S1">[S1]</a></p>
+<p>Supply approved limits for heading, wave period, wind, current and structural response before installation acceptance is assessed.
+Define the forecast validity interval, uncertainty allowance, suspension criteria and forecast-support trigger from the approved operation basis.
+No numerical installation envelope is assigned in their absence.</p>
+</section>
+
+<section id="references"><h2>9. References and calculation records</h2>
+<p>The statistical definitions are supported by open textbook and handbook sources.
+Repository calculation records provide the input values and implemented conventions.</p>
+<h3>9.1 Open sources</h3>
+<ul class="refs">
+<li id="ref-S1">[S1] OpenStax, Introductory Statistics, second edition, 2023,
+<a href="https://openstax.org/books/introductory-statistics-2e/pages/1-3-frequency-frequency-tables-and-levels-of-measurement">Section 1.3, Frequency, Frequency Tables, and Levels of Measurement</a>.
+Relative frequency and percent representation; no environmental limit is taken from this source.</li>
+<li id="ref-S2">[S2] NIST/SEMATECH e-Handbook of Statistical Methods, online edition accessed 22 October 2026,
+<a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda35d.htm">Section 1.3.5.13, Runs Test for Detecting Non-randomness</a>.
+Only the definition of a run is used; no randomness test is performed.</li>
+<li id="ref-S3">[S3] OpenStax, Introductory Statistics, second edition, 2023,
+<a href="https://openstax.org/books/introductory-statistics-2e/pages/2-5-measures-of-the-center-of-the-data">Section 2.5, Measures of the Center of the Data</a>.
+Arithmetic mean.</li>
+<li id="ref-S4">[S4] NIST/SEMATECH e-Handbook of Statistical Methods, online edition accessed 22 October 2026,
+<a href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm">Section 7.2.6.2, Percentiles</a>.
+Alternative percentile methods, R7 interpolation.</li>
+</ul>
+<h3>9.2 Repository locators</h3>
+<p id="ref-E">[E] The input example, calculation sources and tests below form the repository evidence for this report.
+They establish implemented behaviour rather than a standard-qualified installation criterion.</p>
+<table><thead><tr><th scope="col">Item</th><th scope="col">Repository locator</th></tr></thead><tbody><tr><td>Public illustrative input</td><td><code>examples/workflows/weather-window/input.yml</code></td></tr><tr><td>Public screening functions and router</td><td><code>src/digitalmodel/weather_window/workflow.py</code></td></tr><tr><td>Persistence dependency</td><td><code>src/digitalmodel/orcaflex/weather_window.py</code></td></tr><tr><td>Existing direct calculation test</td><td><code>tests/workflows/test_durable_workflows.py::test_weather_window_persistence_and_fit_closed_form</code></td></tr><tr><td>Existing configured example test</td><td><code>tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]</code></td></tr><tr><td>Dependency tests</td><td><code>tests/orcaflex/test_weather_window.py</code></td></tr><tr><td>Known input and rounding gaps</td><td><code>src/digitalmodel/weather_window/docs/agent-pack.md</code>, input contract and decision-boundary discussion</td></tr><tr><td>Report checks</td><td><code>tests/reporting/test_weatherwindow_module_report.py</code></td></tr><tr><td>Report rebuild</td><td><code>PYTHONPATH=src python docs/reports/modules/weatherwindow/build_report.py</code></td></tr><tr><td>Layout exemplar</td><td><code>docs/api/cfd/turbulent-flat-plate-verification.html</code>; <code>docs/api/_assets/brand.css</code></td></tr></tbody></table>
+</section>
+
+<section id="appendix"><h2>10. Appendices</h2>
+<p>The complete illustrative record, missing-data register and decision-boundary evidence are provided below.
+Coverage is bounded to the main fixed-interval screening workflow.</p>
+<h3>Input record and data register</h3>
+<p>Every row below is a sample from the public illustrative example. The final row represents a complete following interval under the declared convention. <a href="#ref-E">[E]</a></p>
+<table><thead><tr><th scope="col">Sample start (h)</th><th scope="col">Significant wave height (m)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="sample_start_hours.0">0</span></td><td><span data-value="hs_m.0">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.1">3</span></td><td><span data-value="hs_m.1">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.2">6</span></td><td><span data-value="hs_m.2">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.3">9</span></td><td><span data-value="hs_m.3">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.4">12</span></td><td><span data-value="hs_m.4">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.5">15</span></td><td><span data-value="hs_m.5">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.6">18</span></td><td><span data-value="hs_m.6">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.7">21</span></td><td><span data-value="hs_m.7">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.8">24</span></td><td><span data-value="hs_m.8">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.9">27</span></td><td><span data-value="hs_m.9">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.10">30</span></td><td><span data-value="hs_m.10">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.11">33</span></td><td><span data-value="hs_m.11">1.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.12">36</span></td><td><span data-value="hs_m.12">2.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.13">39</span></td><td><span data-value="hs_m.13">2.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.14">42</span></td><td><span data-value="hs_m.14">2.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.15">45</span></td><td><span data-value="hs_m.15">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.16">48</span></td><td><span data-value="hs_m.16">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.17">51</span></td><td><span data-value="hs_m.17">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.18">54</span></td><td><span data-value="hs_m.18">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.19">57</span></td><td><span data-value="hs_m.19">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.20">60</span></td><td><span data-value="hs_m.20">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.21">63</span></td><td><span data-value="hs_m.21">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.22">66</span></td><td><span data-value="hs_m.22">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.23">69</span></td><td><span data-value="hs_m.23">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.24">72</span></td><td><span data-value="hs_m.24">1.8</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.25">75</span></td><td><span data-value="hs_m.25">3</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.26">78</span></td><td><span data-value="hs_m.26">3</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.27">81</span></td><td><span data-value="hs_m.27">3</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.28">84</span></td><td><span data-value="hs_m.28">3</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.29">87</span></td><td><span data-value="hs_m.29">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.30">90</span></td><td><span data-value="hs_m.30">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.31">93</span></td><td><span data-value="hs_m.31">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.32">96</span></td><td><span data-value="hs_m.32">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.33">99</span></td><td><span data-value="hs_m.33">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.34">102</span></td><td><span data-value="hs_m.34">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.35">105</span></td><td><span data-value="hs_m.35">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.36">108</span></td><td><span data-value="hs_m.36">1.6</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.37">111</span></td><td><span data-value="hs_m.37">2.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.38">114</span></td><td><span data-value="hs_m.38">2.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.39">117</span></td><td><span data-value="hs_m.39">2.5</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.40">120</span></td><td><span data-value="hs_m.40">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.41">123</span></td><td><span data-value="hs_m.41">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.42">126</span></td><td><span data-value="hs_m.42">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.43">129</span></td><td><span data-value="hs_m.43">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.44">132</span></td><td><span data-value="hs_m.44">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.45">135</span></td><td><span data-value="hs_m.45">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.46">138</span></td><td><span data-value="hs_m.46">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.47">141</span></td><td><span data-value="hs_m.47">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.48">144</span></td><td><span data-value="hs_m.48">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.49">147</span></td><td><span data-value="hs_m.49">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.50">150</span></td><td><span data-value="hs_m.50">1.9</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.51">153</span></td><td><span data-value="hs_m.51">3.2</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.52">156</span></td><td><span data-value="hs_m.52">3.2</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.53">159</span></td><td><span data-value="hs_m.53">3.2</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.54">162</span></td><td><span data-value="hs_m.54">3.2</span></td><td><a href="#ref-E">[E]</a></td></tr><tr><td><span data-value="sample_start_hours.55">165</span></td><td><span data-value="hs_m.55">3.2</span></td><td><a href="#ref-E">[E]</a></td></tr></tbody></table>
+<table><thead><tr><th scope="col">Data item</th><th scope="col">Basis and disposition</th></tr></thead><tbody><tr><td>Hs samples, interval, wave-height limit, required duration and workability threshold</td><td>Public repository example; illustrative inputs, not measured data or approved operating limits. [E]</td></tr><tr><td>Sample interpretation</td><td>ASSUMED - to be confirmed: equally spaced, complete following intervals; no interpolation.</td></tr><tr><td>Site, timestamps, datum and measurement quality</td><td>Required inputs for operational assessment; NOT_EVALUATED.</td></tr><tr><td>Heading, period, wind, current, response limits and uncertainty allowance</td><td>Required operation-specific inputs; NOT_EVALUATED.</td></tr><tr><td>Structure, crane, rigging and recovery sequence</td><td>Required for installation acceptance; NOT_EVALUATED.</td></tr><tr><td>Live forecast and support trigger</td><td>Required operation-specific inputs; NOT_EVALUATED.</td></tr><tr><td>Rounding diagnostic</td><td>Constructed diagnostic already documented with the module; not an environmental observation. [E]</td></tr></tbody></table>
+<h3>Decision-boundary diagnostic</h3>
+<p>The existing rounding diagnostic uses a single Hs sample of <span data-value="diagnostic.hs_m">1</span> m, a limit of <span data-value="diagnostic.hs_limit_m">2</span> m,
+an interval of <span data-value="diagnostic.interval_hours">0.96</span> h and a required duration of <span data-value="diagnostic.required_hours">1</span> h.
+The raw spell is <span data-value="diagnostic.raw_longest_hours">0.96</span> h, but the rounded longest spell is <span data-value="diagnostic.result.longest_window_hours">1</span> h.
+The returned fit is <span data-value="diagnostic.result.operation_fits_window">Yes</span>, the viable count is <span data-value="diagnostic.result.num_viable_windows">0</span>,
+and accepted exposure is <span data-value="diagnostic.result.workability_pct">104.2</span>%. The returned status is <span data-value="diagnostic.result.screening_status">pass</span>.
+This inconsistent result is rejected as an operating basis; decisions require unrounded quantities and consistent counts. <a href="#ref-E">[E]</a></p>
+<h3>Coverage and not covered</h3>
+<p>Covered: the public assessment function, continuous-spell extraction, the imported persistence statistics,
+the illustrative input and the router's documented output contract.
+Not covered: scatter-based operability, seasonal statistics, waiting-on-weather estimates,
+atlas interpolation, multi-parameter operating envelopes and any licensed simulation interface.</p>
+<h3>Quality pre-flight evidence</h3>
+<p>Arithmetic anchors, module consistency, displayed-input recomputation, reference resolution,
+portable UTF-8 rebuilding and self-contained resources are checked by the accompanying report tests.
+The source metadata is embedded below the page as calculation data; visible statistics and chart arrays use displayed precision.
+Chart acceptance flags are computed from unrounded wave heights, durations and limits before display rounding.
+Source-page retrieval records are separate from engineering acceptance evidence.</p>
+<p>Comment storage is provided below. In compatible browsers, selecting the report folder enables adjacent saving;
+otherwise the comment file is downloaded and placed beside this HTML. Comments are local review annotations and do not change calculation results.</p>
+</section>
+
+<aside class="review-controls" aria-label="Report review">
+<h3>Engineering changes</h3><label for="last-revision">Last revision read</label>
+<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option><option value="1">Revision 1</option></select>
+<p id="change-list"></p>
+<h3>Comments</h3><label for="comment-section">Report section</label><select id="comment-section"></select>
+<label for="comment-text">Comment text</label><textarea id="comment-text"></textarea>
+<div class="controls"><button id="add-comment" type="button">Add comment</button>
+<button id="open-folder" type="button">Open report folder</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label>Load comments <input id="load-comments" type="file" accept="application/json,.json"></label></div>
+<p id="comment-status" aria-live="polite">Comments are unsaved until the comment file is saved.</p><div id="comment-list"></div>
+</aside>
+<footer>Weather-window module analysis · Illustrative fixed-interval screening · Draft for maintainer review</footer>
+</main>
+<script id="calculation" type="application/json">{"hs_m": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "sample_count": 56, "sample_start_hours": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "windows_hours": [36.0, 30.0, 24.0, 33.0], "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2.0, "required_duration_hours": 48.0, "time_step_hours": 3.0, "record_hours": 168.0, "workability_pct": 73.21428571428571, "required_workability_pct": 50.0, "longest_window_hours": 36.0, "mean_window_hours": 30.8, "p10_window_hours": 25.8, "p90_window_hours": 35.1, "num_windows": 4, "num_viable_windows": 0, "operation_fits_window": false, "screening_status": "fail"}, "diagnostic": {"hs_m": 1, "hs_limit_m": 2, "required_hours": 1, "interval_hours": 0.96, "raw_longest_hours": 0.96, "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2, "required_duration_hours": 1, "time_step_hours": 0.96, "record_hours": 0.96, "workability_pct": 104.16666666666667, "required_workability_pct": null, "longest_window_hours": 1.0, "mean_window_hours": 1.0, "p10_window_hours": 1.0, "p90_window_hours": 1.0, "num_windows": 1, "num_viable_windows": 0, "operation_fits_window": true, "screening_status": "pass"}}, "upstream_test_count": 17, "report_test_count": 10}</script>
+<script id="chart-data" type="application/json">{"heights": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "times": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "interval": 3.0, "heightLimit": 2.0, "required": 48.0, "windows": [36.0, 30.0, 24.0, 33.0], "heightAccepted": [true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false], "windowAccepted": [false, false, false, false]}</script>
+<script id="engineering-changes" type="application/json">{"report": "weather-window-module", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["The fixed-interval weather-window screen is documented using the existing public illustrative record.", "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.", "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."]}, {"revision": "1", "date": "2026-10-22", "changes": ["R7 is identified as the handbook's alternative percentile method, and the illustrative start decision is described for a generic operation.", "Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale.", "The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence."]}]}</script>
+<script>
+"use strict";
+const chart = JSON.parse(document.getElementById("chart-data").textContent);
+const ns = "http://www.w3.org/2000/svg";
+function element(parent, tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text !== undefined) node.textContent = text;
+  parent.appendChild(node); return node;
+}
+function axes(svg, xmax, ymax, xlabel, ylabel, indexed=false) {
+  element(svg, "path", {d:"M65 25 V260 H825", fill:"none", stroke:"var(--ink)"});
+  element(svg, "text", {x:340,y:310}, xlabel);
+  element(svg, "text", {x:65,y:18}, ylabel);
+  for (let i=0;i<=4;i++) {
+    if (!indexed) element(svg,"text",{x:65+i*190,y:280},String(Math.round(xmax*i/4*10)/10));
+    element(svg,"text",{x:15,y:265-i*55},String(Math.round(ymax*i/4*10)/10));
+  }
+}
+function hover(node, message, readout) {
+  node.setAttribute("tabindex","0"); node.setAttribute("aria-label",message);
+  element(node,"title",{},message);
+  for (const event of ["mouseenter","focus","click"]) node.addEventListener(event,()=>{
+    document.getElementById(readout).textContent=message;
+  });
+}
+function waveChart() {
+  const svg = document.getElementById("height-chart");
+  const xmax = chart.times.at(-1)+chart.interval;
+  // Multiples of 2 m give quarter-axis ticks on exact 0.5 m increments.
+  const ymax = Math.ceil(Math.max(chart.heightLimit,...chart.heights)*1.2/2)*2;
+  axes(svg,xmax,ymax,"Elapsed time (h)","Significant wave height (m)");
+  const y = v=>260-v/ymax*220, x = v=>65+v/xmax*760;
+  chart.heights.forEach((height,i)=>{
+    const start=chart.times[i], end=start+chart.interval;
+    const accepted = chart.heightAccepted[i];
+    const line=element(svg,"path",{d:`M${x(start)} ${y(height)} H${x(end)}`,
+      fill:"none",stroke:accepted?"var(--go)":"var(--nogo)","stroke-width":5});
+    hover(line,`Public illustrative case; interval ${i+1}; wave-height criterion; time ${start}–${end} h; demand ${height} m; limit ${chart.heightLimit} m; ${accepted?"Criterion is met.":"Criterion is not met."}`,"height-readout");
+  });
+  element(svg,"line",{x1:65,x2:825,y1:y(chart.heightLimit),y2:y(chart.heightLimit),class:"limit","data-limit":chart.heightLimit});
+  element(svg,"text",{x:620,y:y(chart.heightLimit)-9},`Hs limit ${chart.heightLimit} m`);
+}
+function windowChart() {
+  const svg = document.getElementById("window-chart");
+  const ymax = Math.max(chart.required,...chart.windows)*1.2;
+  axes(svg,chart.windows.length,ymax,"Accepted spell index (count)","Continuous duration (h)",true);
+  const y=v=>260-v/ymax*220, spacing=760/chart.windows.length;
+  chart.windows.forEach((duration,i)=>{
+    const accepted=chart.windowAccepted[i];
+    element(svg,"text",{x:65+(i+.5)*spacing,y:280},String(i+1));
+    const bar=element(svg,"rect",{x:65+i*spacing+spacing*.2,y:y(duration),width:spacing*.6,
+      height:260-y(duration),class:accepted?"pass":"fail"});
+    hover(bar,`Public illustrative case; spell ${i+1}; duration criterion; demand ${chart.required} h; available duration ${duration} h; required limit ${chart.required} h; ${accepted?"Criterion is met.":"Criterion is not met."}`,"window-readout");
+  });
+  element(svg,"line",{x1:65,x2:825,y1:y(chart.required),y2:y(chart.required),class:"limit","data-limit":chart.required});
+  element(svg,"text",{x:540,y:y(chart.required)-9},`Required duration ${chart.required} h`);
+}
+waveChart(); windowChart();
+const changes=JSON.parse(document.getElementById("engineering-changes").textContent);
+function showChanges() {
+  const last=document.getElementById("last-revision").value;
+  const selected=changes.history.findIndex(row=>row.revision===last);
+  const later=changes.history.slice(selected+1).flatMap(row=>row.changes);
+  document.getElementById("change-list").textContent = later.length
+    ? later.join(" ") : "No engineering changes since the selected revision.";
+}
+document.getElementById("last-revision").addEventListener("change",showChanges); showChanges();
+const sections = [...document.querySelectorAll("section[id]")];
+const select = document.getElementById("comment-section");
+for (const section of sections) {
+  const option=document.createElement("option"); option.value=section.id;
+  option.textContent=section.querySelector("h2").textContent; select.appendChild(option);
+}
+let comments=[], directory=null, savedText="[]";
+const status=document.getElementById("comment-status");
+function validComments(payload) {
+  if (payload.report!=="weather-window-module" || payload.revision!=="0" || !Array.isArray(payload.comments)) throw new Error("Comment file does not match this report revision.");
+  if (!payload.comments.every(c=>typeof c.text==="string" && c.text.trim() && sections.some(s=>s.id===c.section))) throw new Error("Comment data is invalid.");
+  return payload.comments.map(c=>({section:c.section,text:c.text}));
+}
+function showComments() {
+  const list=document.getElementById("comment-list"); list.replaceChildren();
+  for (const comment of comments) {
+    const p=document.createElement("p"); p.className="review-note";
+    p.textContent=`${document.getElementById(comment.section).querySelector("h2").textContent}: ${comment.text}`;
+    list.appendChild(p);
+  }
+}
+document.getElementById("add-comment").addEventListener("click",()=>{
+  const input=document.getElementById("comment-text"); if (!input.value.trim()) return;
+  comments.push({section:select.value,text:input.value.trim()}); input.value="";
+  showComments(); status.textContent="Comments have unsaved changes.";
+});
+document.getElementById("load-comments").addEventListener("change",async event=>{
+  try {
+    if (!event.target.files.length) return;
+    const loaded=validComments(JSON.parse(await event.target.files[0].text()));
+    if (JSON.stringify(comments)!==savedText) throw new Error("Save current comments before loading another file.");
+    comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Comment file loaded.";
+  } catch(error) {status.textContent=error.message;}
+});
+document.getElementById("open-folder").addEventListener("click",async()=>{
+  try {
+    if (!window.showDirectoryPicker) throw new Error("Folder access is unavailable. Save downloads the comment file; place it beside this HTML.");
+    const chosen=await window.showDirectoryPicker({mode:"readwrite"});
+    const report=await (await chosen.getFileHandle("report.html")).getFile();
+    if (!(await report.text()).includes("<title>Weather-window module analysis</title>")) throw new Error("Select the folder containing this report.html.");
+    if (JSON.stringify(comments)!==savedText) throw new Error("Save current comments before opening a folder.");
+    let loaded=[];
+    try {loaded=validComments(JSON.parse(await (await (await chosen.getFileHandle("report.comments.json")).getFile()).text()));}
+    catch(error) {if(error.name!=="NotFoundError") throw error;}
+    directory=chosen; comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Report folder opened; adjacent saving is enabled.";
+  } catch(error) {status.textContent=error.message;}
+});
+document.getElementById("save-comments").addEventListener("click",async()=>{
+  try {
+    const payload=JSON.stringify({report:"weather-window-module",revision:"0",comments},null,2)+"\n";
+    if(directory) {
+      const handle=await directory.getFileHandle("report.comments.json",{create:true});
+      const writable=await handle.createWritable(); await writable.write(payload); await writable.close();
+      savedText=JSON.stringify(comments); status.textContent="Comments saved beside report.html.";
+    } else {
+      const url=URL.createObjectURL(new Blob([payload],{type:"application/json"}));
+      const link=document.createElement("a"); link.href=url; link.download="report.comments.json"; link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000); savedText=JSON.stringify(comments);
+      status.textContent="Comment file downloaded. Place report.comments.json beside this HTML and load it when reopening.";
+    }
+  } catch(error) {status.textContent=error.message;}
+});
+window.addEventListener("beforeunload",event=>{
+  if(JSON.stringify(comments)!==savedText) {event.preventDefault(); event.returnValue="";}
+});
+</script>
+</body></html>

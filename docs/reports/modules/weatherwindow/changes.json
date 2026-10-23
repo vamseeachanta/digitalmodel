@@ -1,0 +1,23 @@
+{
+  "report": "weather-window-module",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-22",
+      "changes": [
+        "The fixed-interval weather-window screen is documented using the existing public illustrative record.",
+        "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.",
+        "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."
+      ]
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-22",
+      "changes": [
+        "R7 is identified as the handbook's alternative percentile method, and the illustrative start decision is described for a generic operation.",
+        "Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale.",
+        "The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence."
+      ]
+    }
+  ]
+}

@@ -65,3 +65,4 @@ def test_registration_guard_runs_in_the_independent_hosted_harness():
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
     assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])
+    assert "tests/reporting/test_weatherwindow_module_report.py" in shlex.split(step["run"])
