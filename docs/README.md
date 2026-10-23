@@ -69,3 +69,7 @@ small curated docs, operator maps, and routing registries in the repo. Put large
 generated, binary, cache, raw crawl, or fast-growing artifacts in a bulk artifact
 store instead. `/mnt/ace/data` is the current workspace-hub implementation example
 for that bulk store, not a path that should be hard-coded into portable repo logic.
+
+## Operational runbooks
+
+- [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
