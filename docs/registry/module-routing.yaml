@@ -592,6 +592,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#fatg_spectral_fatigue
   - module: passing_ship_forces
     entry_point: src/digitalmodel/passing_ship_forces/
+    submodules:
+      passing_ship_forces:
+        agent_pack: src/digitalmodel/passing_ship_forces/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/hydrodynamics/wang-passing-ship-forces.md
     key_tests: [tests/hydrodynamics/test_wang_passing_ship.py, tests/hydrodynamics/test_passing_ship_forces_workflow.py]
@@ -723,6 +727,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#usecase_registry
   - module: vessel_seakeeping
     entry_point: src/digitalmodel/vessel_seakeeping/
+    submodules:
+      vessel_seakeeping:
+        agent_pack: src/digitalmodel/vessel_seakeeping/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
@@ -791,6 +799,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
   - module: tug
     entry_point: src/digitalmodel/tug/
+    submodules:
+      tug:
+        agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]
