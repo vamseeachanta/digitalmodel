@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date as calendar_date
 from pathlib import Path
 
-from ..card_generators import ALL_GENERATORS
+from ..card_generators import ALL_GENERATORS, SYNTHETIC_LABEL_EXCLUSIONS
 from ..models import CardData
 
 _HOLDOUT_SEED_FLOOR = 1000
@@ -152,6 +152,10 @@ def build_hold_out_test_set(
 ) -> list[LabelledCard]:
     """Generate balanced synthetic pump cards with explicit generator labels.
 
+    PLUNGER_UNDERTRAVEL and TUBING_MOVEMENT defaults lack a distinguishing
+    signature above NORMAL's configured noise scale. See
+    SYNTHETIC_LABEL_EXCLUSIONS for the conditions for restoring these labels.
+
     The seed floor preserves the original builder convention, not a proof of
     independence from an arbitrary training run. The caller must compare the
     seeds with that run's recorded training seeds before claiming a hold-out.
@@ -167,5 +171,6 @@ def build_hold_out_test_set(
     return [
         LabelledCard(generator(seed=seed), mode, provenance, seed=seed)
         for mode, generator in ALL_GENERATORS.items()
+        if mode not in SYNTHETIC_LABEL_EXCLUSIONS
         for seed in range(base_seed, base_seed + samples_per_mode)
     ]
