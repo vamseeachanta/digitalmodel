@@ -1,0 +1,12 @@
+{
+  "revision": "2",
+  "date": "2026-10-22",
+  "changes": [
+    "Screening verdicts and chart colours follow unrounded demands and the router status.",
+    "Display precision, minimum-radius rounding and portable report hashes are corrected.",
+    "Static J-lay geometry and strain screening are documented against the public example.",
+    "Reel strain and straightener assumptions are distinguished from material qualification.",
+    "Supplied sea-state cutoffs are distinguished from a qualified installation envelope.",
+    "Input assumptions, evidence gaps and recommendations are recorded for engineering review."
+  ]
+}
