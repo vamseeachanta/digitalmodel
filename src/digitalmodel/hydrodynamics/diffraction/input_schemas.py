@@ -22,6 +22,7 @@ Example usage:
 from __future__ import annotations
 
 from enum import Enum
+import math
 from pathlib import Path
 import warnings
 from typing import Any, Literal, Optional
@@ -280,12 +281,20 @@ class VesselSpec(BaseModel):
     inertia: VesselInertia
     external_stiffness: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external stiffness matrix",
+        description="Symmetric 6x6 external stiffness; SI force N, length m, angle rad",
     )
     external_damping: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external damping matrix",
+        description="Symmetric 6x6 external damping; SI force N, length m, time s, angle rad",
     )
+    external_stiffness_units: Optional[Literal["SI"]] = None
+    external_damping_units: Optional[Literal["SI"]] = None
+    external_stiffness_reference_point: Optional[
+        Literal["body_origin", "centre_of_mass"]
+    ] = None
+    external_damping_reference_point: Optional[
+        Literal["body_origin", "centre_of_mass"]
+    ] = None
     fixed_dofs: Optional[list[str]] = Field(
         None,
         description=(
@@ -296,6 +305,29 @@ class VesselSpec(BaseModel):
         None,
         description="Control surface mesh for mean drift loads",
     )
+
+    @model_validator(mode="after")
+    def check_external_matrix_contract(self) -> VesselSpec:
+        """Require complete metadata; do not infer units or a matrix origin."""
+        for kind in ("stiffness", "damping"):
+            matrix = getattr(self, f"external_{kind}")
+            units = getattr(self, f"external_{kind}_units")
+            point = getattr(self, f"external_{kind}_reference_point")
+            if matrix is not None and (units is None or point is None):
+                raise ValueError(
+                    f"external_{kind} requires units and reference_point"
+                )
+            if matrix is None and (units is not None or point is not None):
+                raise ValueError(f"external_{kind} metadata requires a matrix")
+            if matrix is not None:
+                if len(matrix) != 6 or any(len(row) != 6 for row in matrix):
+                    raise ValueError(f"external_{kind} must be 6x6")
+                if not all(math.isfinite(x) for row in matrix for x in row):
+                    raise ValueError(f"external_{kind} must contain finite values")
+                if any(matrix[i][j] != matrix[j][i]
+                       for i in range(6) for j in range(i)):
+                    raise ValueError(f"external_{kind} must be symmetric")
+        return self
 
 
 class EnvironmentSpec(BaseModel):
