@@ -12,6 +12,7 @@ All acceptance bounds are declared geometric inputs. Solver qualification remain
 | --- | --- | --- |
 | 1 | 2026-10-19 | Define reusable quad diagnostics and independent fixtures to expose angular skew, concavity and invalid maps. |
 | 2 | 2026-10-20 | Preserve corner determinant signs at collinearity so normalization cannot qualify a degenerate map. |
+| 3 | 2026-10-22 | Add per-check mesh summaries, complete JSON snapshots and an executable example so saved reports retain qualification gaps and affected panel indices. |
 
 ## Sources
 
@@ -130,6 +131,20 @@ so reports can be serialized with `dataclasses.asdict` and strict JSON without
 nonfinite sentinels. The aggregate `status` properties are computed at access;
 `asdict` contains the individual check statuses, not the computed properties.
 
+`report.check_summaries` groups panel indices for each geometric check into
+`passed_panels`, `failed_panels` and `not_evaluated_panels`. Each summary has a
+computed `status` with the same failure precedence. An empty mesh produces an
+unevaluated summary for every check. These summaries preserve the difference
+between a rejected map and a warped map whose surface validity is unknown.
+
+Use `report.to_dict()` when saving a complete report. In addition to all fields
+available through `asdict`, this detached snapshot includes the mesh `status`,
+each panel's `status`, and `check_summaries` including their statuses. It retains
+the separate `solver_qualification` result even when the geometric status is
+`PASS`. `json.dumps(report.to_dict(), allow_nan=False)` saves a strict JSON
+representation; unknown diagnostics remain `None` and become JSON `null`.
+Diagnostic precision is retained; display rounding is separate from evaluation.
+
 Panels outside the declared tolerance fail the planarity criterion. Their edge ratio, plane
 distance and minimum projected Jacobian remain diagnostics; their corner-angle,
 convexity and surface mapping checks remain `NOT_EVALUATED`. If the centre is
@@ -164,6 +179,69 @@ meshes, check strict JSON serialization, and reject malformed coordinates,
 connectivity and criteria. Numerical fixtures test quadratic scaling at
 representable extremes and explicit rejection when the dimensional Jacobian
 cannot be represented. Hydrostatic volume is not used as a quality oracle.
+
+## Executable worked example
+
+Run the example from the repository root with its numerical dependencies installed:
+
+```bash
+PYTHONPATH=src python examples/domains/hydrodynamics/quad_mesh_quality.py
+```
+
+The script emits a complete JSON report to standard output. `case_names` follows
+the same order as `panels`, and each panel retains its zero-based `panel_index`.
+No solver is needed. The following coordinates are synthetic inputs in a
+consistent arbitrary length unit; connectivity follows each row's perimeter.
+
+| Case | Ordered vertices `(x,y,z)` |
+| --- | --- |
+| rectangle | `(0,0,0), (2,0,0), (2,1,0), (0,1,0)` |
+| skew_rhombus | `(0,0,0), (1,0,0), (1.6,0.8,0), (0.6,0.8,0)` |
+| flat_triangle | `(0,0,0), (2,0,0), (4,0,0), (0,1,0)` |
+| folded_quad | `(0,0,0), (2,0,0), (0,1,0), (1,1,0)` |
+| warped_quad | `(0,0,0), (1,0,0), (1,1,1), (0,1,0)` |
+
+The demonstration declares exact planarity, edge ratio at most 5, angles from
+60 to 120 degrees inclusive and strictly positive mapping Jacobian. These are
+synthetic caller inputs chosen to separate failure modes; no solver recommends
+these limits. The zero boundary for the Jacobian follows the nonsingularity
+criterion derived from S2 above. All five edge ratios pass the declared bound.
+
+Substitution into the S2-derived map gives independent answers:
+
+- Rectangle: `x=2u,y=v`, hence `J=2` and every angle is a right angle.
+- Rhombus: `x=u+3v/5,y=4v/5`, hence `J=4/5`; unit edges have dot product
+  `3/5`, so the angles alternate `acos(3/5)` and its supplement. Edge ratio
+  passes while the angular bound fails.
+- Flat triangle: `x=2u+2uv,y=v-uv`, hence `J=2-2u+2v`. Its minimum is zero
+  at `(1,0)`, and the collinear corner has an angle of 180 degrees.
+- Fold: `x=2u+v-3uv,y=v`, hence `J=2-3v`. The centre value is positive,
+  but the corner minimum is negative. Two corner turns are negative. The
+  edge lengths are `2,sqrt(5),1,sqrt(2)`. The unsigned angles are 45 degrees
+  and `atan(1/2)`; the negative turns select their reflex complements.
+- Warp: `x=u,y=v,z=uv`, hence the centre normal is `(-1,-1,2)/sqrt(6)`.
+  The projected Jacobian is `(2+u+v)/sqrt(6)`, and the maximum vertex distance
+  from the reference plane through the origin is `1/sqrt(6)`. Positive
+  projection does not qualify the surface mapping.
+
+Displayed results are rounded to one decimal place; assertions use the exact
+expressions above with floating-point comparison where needed.
+
+| Panel | Edge ratio | Angle range (degrees) | Minimum projected J | Geometry status |
+| --- | ---: | --- | ---: | --- |
+| rectangle | 2.0 | 90.0 to 90.0 | 2.0 | PASS |
+| skew_rhombus | 1.0 | 53.1 to 126.9 | 0.8 | FAIL |
+| flat_triangle | 4.1 | 14.0 to 180.0 | 0.0 | FAIL |
+| folded_quad | 2.2 | 26.6 to 333.4 | -1.0 | FAIL |
+| warped_quad | 1.4 | unevaluated | 0.8 | FAIL |
+
+The mesh status is `FAIL`. Mapping failures are panels `(2,3)`; panel `(4)` has
+an unevaluated mapping and fails exact planarity. Its plane distance is about
+0.4 length units. The edge-ratio summary passes every panel; angular failures
+are `(1,2,3)`. Solver qualification remains `NOT_EVALUATED`, including for the
+passing rectangle. The way forward is to repair the degenerate and folded
+connectivity, improve the skewed panel's angles, and subdivide or explicitly
+qualify the warped surface before applying accessible solver criteria.
 
 ## Scope and later slices
 
