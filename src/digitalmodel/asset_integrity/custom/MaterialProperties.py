@@ -4,6 +4,7 @@ import logging
 
 from digitalmodel.units import Q_
 from ..common.update_deep import update_deep_dictionary
+from ..common.validation import finite_number
 
 
 class MaterialProperties():
@@ -27,7 +28,17 @@ class MaterialProperties():
                     0, len(self.cfg['Design'][load_condition_index]['Code'])):
                 specification_code = self.cfg['Design'][load_condition_index][
                     'Code'][code_index][pipe_flag]
-                result = self.temperatureDerating({"Code": specification_code})
+                design = self.cfg['Design'][load_condition_index]
+                supplied = design.get('Material', {}).get('temperature_derating', {}).get(
+                    pipe_flag, {}).get(specification_code)
+                basis = design.get('Material', {}).get('temperature_derating_basis', {}).get(
+                    pipe_flag, {}).get(specification_code)
+                result = self.temperatureDerating({
+                    'Code': specification_code,
+                    'temperature': design.get('Temperature', {}).get('Operating', {}).get(pipe_flag),
+                    'temperature_derating': supplied,
+                    'temperature_derating_basis': basis,
+                })
                 update_deep_dictionary(
                     self.cfg['Design'][load_condition_index], {
                         'Material': {
@@ -45,46 +56,15 @@ class MaterialProperties():
                     .format(pipe_flag, specification_code))
 
     def temperatureDerating(self, data):
-        if data['Code'] == "Other":
-            if data['temperature'] > 50 and data['temperature'] <= 100:
-                data['S'] = data['S'] - (25 - 0) / (100 - 50) * (
-                    data['temperature'] - 50) * Q_(1, 'MPa').to('psi').magnitude
-                data['U'] = data['U'] - (25 - 0) / (100 - 50) * (
-                    data['temperature'] - 50) * Q_(1, 'MPa').to('psi').magnitude
-            elif data['temperature'] > 100:
-                data['S'] = data['S'] - (25 + (68 - 25) / (200 - 100) *
-                                         (data['temperature'] - 100)) * Q_(1, 'MPa').to('psi').magnitude
-                data['U'] = data['U'] - (25 + (68 - 25) / (200 - 100) *
-                                         (data['temperature'] - 100)) * Q_(1, 'MPa').to('psi').magnitude
-
-            return data
-        if "ASME" in data['Code']:
-            data['temperature_derating'] = 1
-            return data
-
-        if data['Code'] == "ASME B31.8":
-            data['temperature_derating'] = 1
-            return data
-
-        if 'API STD 2RD-2013' in data['Code']:
-            data['temperature_derating'] = 1
-            return data
-
-        if 'API RP 1111-2009' in data['Code']:
-            data['temperature_derating'] = 1
-            return data
-
-        if 'API RP 16Q' in data['Code']:
-            data['temperature_derating'] = 1
-            return data
-
-        if 'API TR 5C3' in data['Code']:
-            data['temperature_derating'] = 1
-            return data
-
-        if '30 CFR Part 250' in data['Code']:
-            data['temperature_derating'] = 1
-            return data
+        # Code-specific temperature domains are not qualified in this implementation.
+        # Capacity requires an explicitly supplied factor on the current design basis.
+        factor = data.get('temperature_derating')
+        finite_number(factor, 'qualified temperature derating factor', positive=True, maximum=1)
+        finite_number(data.get('temperature'), 'qualified temperature', minimum=-float('inf'))
+        basis = data.get('temperature_derating_basis')
+        if not isinstance(basis, str) or not basis.strip():
+            raise ValueError('qualified temperature factor requires an explicit temperature and basis')
+        return dict(data, temperature_derating=factor)
 
     def get_material_properties(self, pipe_flag):
         pass

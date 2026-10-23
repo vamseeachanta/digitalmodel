@@ -18,6 +18,7 @@ from .math_solvers import Scipy_Interpolation
 from .parallel_process_components import \
     ParallelProcessComponents
 from .yml_utilities import WorkingWithYAML
+from .validation import finite_number
 
 ww_yaml = WorkingWithYAML()
 
@@ -125,14 +126,7 @@ class BS7910_2013():
                     self.flaw.location, self.flaw.theta, a, c, self.K_r,
                     self.L_r, self.K_r_allowable
                 ]
-            for df_index in range(0, len(self.fad_properties_df) - 1):
-                if self.fad_properties_df.K_r[
-                        df_index] > self.fad_properties_df.K_r_allowable[
-                            df_index]:
-                    if df_index > 0:
-                        a_end = self.fad_properties_df.flaw_depth[df_index - 1]
-                        a_nsteps = int((a_end - a_start) / a_step + 1)
-                    break
+            allowable = BS7910_2013._last_passing_fad_row(self.fad_properties_df)
 
             if self.cfg.default['settings']['save_detailed_results']:
                 file_name = self.cfg['Analysis']['result_folder'] + self.cfg[
@@ -140,8 +134,22 @@ class BS7910_2013():
                 self.fad_properties_df.to_csv(file_name.format(c))
 
             self.critical_allowable_flaw_df.loc[len(
-                self.critical_allowable_flaw_df)] = self.fad_properties_df.iloc[
-                    df_index - 1]
+                self.critical_allowable_flaw_df)] = allowable
+
+    @staticmethod
+    def _last_passing_fad_row(frame):
+        if frame.empty:
+            raise ValueError('no finite passing FAD row was evaluated')
+        values = frame[['K_r', 'L_r', 'K_r_allowable']].to_numpy(dtype=float)
+        if not np.isfinite(values).all() or (values < 0).any():
+            raise ValueError('every FAD comparison must be finite and nonnegative')
+        # Allowable means Kr < Kr_allowable; the failure boundary is excluded.
+        passing = frame.K_r < frame.K_r_allowable
+        failed = np.flatnonzero(~passing.to_numpy())
+        stop = int(failed[0]) if len(failed) else len(frame)
+        if stop == 0:
+            raise ValueError('no passing initial FAD row; no allowable flaw')
+        return frame.iloc[stop - 1]
 
     def get_flaw_fad_properties(self):
 
@@ -150,17 +158,40 @@ class BS7910_2013():
         self.a = self.flaw.dimensions['a']
         self.c = self.flaw.dimensions['c']
         self.get_reference_annexes()
+        if hasattr(self, 'stress_intensity'):
+            del self.stress_intensity
         self.get_stress_intensity_factor_solution_by_annex(
             self.stress_intensity_annex)
         self.get_stress_intensity_factor_at_discontinuities()
-        self.get_stress_intensity_factor_solution(stress_intensity_key='deep')
-
         K_mat = self.get_critical_stress_intensity_factor()
+        finite_number(K_mat, 'fracture toughness', positive=True)
         self.get_reference_stress_by_annex(self.reference_stress_annex)
         self.L_r = self.reference_stress / (
             self.material_grade_properties['SMYS'])
-        self.get_plasticity_correction()
-        self.K_r = self.K_I / K_mat + self.plasticity_correction
+        table_solution = hasattr(self, 'stress_intensity')
+        points = ('deep', 'free_surface')
+        if table_solution and not all(point in self.stress_intensity for point in points):
+            raise ValueError('every required crack-front point must have a valid solution')
+        front = []
+        for point in points:
+            if not table_solution:
+                original_theta = self.flaw.theta
+                try:
+                    self.flaw.theta = 90 if point == 'deep' else 0
+                    self.get_stress_intensity_factor_solution_by_annex(self.stress_intensity_annex)
+                    self.get_stress_intensity_factor_at_discontinuities()
+                finally:
+                    self.flaw.theta = original_theta
+            self.get_stress_intensity_factor_solution(stress_intensity_key=point)
+            self.get_plasticity_correction()
+            kr = self.K_I / K_mat + self.plasticity_correction
+            for name, value in (('K_r', kr), ('L_r', self.L_r), ('delta_K_I', self.delta_K_I)):
+                finite_number(value, name)
+            front.append((kr, self.K_I, self.delta_K_I, self.plasticity_correction, point))
+        # Largest Kr governs fracture; largest range independently governs growth.
+        self.K_r, self.K_I, _, self.plasticity_correction, self.governing_crack_front = max(front)
+        self.delta_K_I = max(row[2] for row in front)
+        self.crack_front_results = {row[4]: {'K_r': row[0], 'delta_K_I': row[2]} for row in front}
 
         logging.info("Flaw properties  ... COMPLETED")
 
@@ -262,6 +293,8 @@ class BS7910_2013():
             math.pi * self.flaw.dimensions['a'])
 
     def get_finite_width_correction_factor(self):
+        for key in ('a', 'c', 'W', 'B'):
+            finite_number(getattr(self, key), key, positive=True)
         if self.stress_intensity_annex in [
                 'Annex_M_7_2_2', 'Annex_M_7_2_4', 'Annex_M_7_3_2'
         ]:
@@ -269,21 +302,18 @@ class BS7910_2013():
         elif self.stress_intensity_annex in ['Annex_M_7_3_4', 'Annex_M_4_1']:
             sec_of_value = math.sqrt(math.pi * self.c / self.W *
                                      math.sqrt(2 * self.a / self.B))
-            try:
-                fw = math.sqrt(1 / (math.cos(sec_of_value)))
-            except:
-                fw = 1
-                print("secant of value error: {}".format(sec_of_value))
+            if not 0 <= sec_of_value < math.pi / 2:
+                raise ValueError('finite width geometry exceeds the supported secant domain')
+            fw = math.sqrt(1 / math.cos(sec_of_value))
         elif self.stress_intensity_annex in ['Annex_M_7_3_6', 'Annex_M_4_3']:
+            finite_number(self.B_dash, 'embedded reference wall', positive=True)
             sec_of_value = math.sqrt(math.pi * self.c / self.W *
                                      math.sqrt(2 * self.a / self.B_dash))
-            try:
-                fw = math.sqrt(1 / (math.cos(sec_of_value)))
-            except:
-                fw = 1
-                print("secant of value error: {}".format(sec_of_value))
+            if not 0 <= sec_of_value < math.pi / 2:
+                raise ValueError('finite width geometry exceeds the supported secant domain')
+            fw = math.sqrt(1 / math.cos(sec_of_value))
         else:
-            print("No reference found for fw calculation")
+            raise ValueError('unsupported finite width correction geometry')
 
         self.fw = fw
 
@@ -393,75 +423,19 @@ class BS7910_2013():
         self.get_finite_width_correction_factor()
         stress_intensity_solution_table = 'Table_M_2'
 
-        if (not self.cfg.default['settings'].__contains__(
-                'stress_intensity_factor_solution')) or (
-                    self.cfg.default['settings']
-                    ['stress_intensity_factor_solution'] == 'constant_values'):
-            self.stress_intensity = {
-                'deep': {
-                    'M_m': 0.932,
-                    'M_b': 0.698,
-                    'M_km': 1.0,
-                    'M_kb': self.cfg.default['settings']['scf_bending']
-                },
-                'free_surface': {
-                    'M_m': 0.676,
-                    'M_b': 0.632,
-                    'M_km': 1.0,
-                    'M_kb': self.cfg.default['settings']['scf_bending']
-                }
-            }
-        else:
-            self.stress_intensity = self.get_stress_intensity_solution_by_table_data(
-                stress_intensity_solution_table)
+        selection = self.cfg.default['settings'].get('stress_intensity_factor_solution')
+        if selection != 'table':
+            raise ValueError('an explicit qualified table solution is required; constant coefficients are nonqualifying')
+        self.stress_intensity = self.get_stress_intensity_solution_by_table_data(
+            stress_intensity_solution_table)
 
     def get_stress_intensity_factor_solution_Annex_M_7_2_4(self):
 
-        self.assign_key_flaw_dimensions_for_calculations()
-        self.perform_flaw_dimension_acceptance_check()
-
-        self.M = 1
-        self.get_finite_width_correction_factor()
-        # TODO Convert Table M.4 into a xlsx
-        self.stress_intensity = {
-            'deep': {
-                'M_m': 0.953,
-                'M_b': 0.716,
-                'M_km': 1.0,
-                'M_kb': self.cfg.default['settings']['scf_bending']
-            },
-            'free_surface': {
-                'M_m': 0.685,
-                'M_b': 0.641,
-                'M_km': 1.0,
-                'M_kb': self.cfg.default['settings']['scf_bending']
-            }
-        }
+        raise ValueError('external axial constant-coefficient solution is not qualified')
 
     def get_stress_intensity_factor_solution_Annex_M_7_3_2(self):
 
-        self.assign_key_flaw_dimensions_for_calculations()
-        self.perform_flaw_dimension_acceptance_check()
-
-        self.M = 1
-        self.fw = 1
-        # TODO Add contribution to global bending moment on cylinder at later date
-
-        # TODO Convert Table M.7 into a xlsx
-        self.stress_intensity = {
-            'deep': {
-                'M_m': 0.999,
-                'M_b': 0.731,
-                'M_km': 1.0,
-                'M_kb': self.cfg.default['settings']['scf_bending']
-            },
-            'free_surface': {
-                'M_m': 0.731,
-                'M_b': 0.628,
-                'M_km': 1.0,
-                'M_kb': self.cfg.default['settings']['scf_bending']
-            }
-        }
+        raise ValueError('internal circumferential constant-coefficient solution is not qualified')
 
     def get_stress_intensity_factor_solution_Annex_M_7_3_4(self):
         self.get_stress_intensity_factor_solution_Annex_M_4_1()
@@ -479,6 +453,9 @@ class BS7910_2013():
             B_over_ri = self.B / self.ri
             df = self.stress_intensity_solution_tables[
                 stress_intensity_solution_table]
+            for key, value in (('a_over_B', a_over_B), ('a_over_c', a_over_c), ('B_over_ri', B_over_ri)):
+                if df.empty or not np.isfinite(df[key]).all() or not df[key].min() <= value <= df[key].max():
+                    raise ValueError('qualified table solution requires geometry within finite table coverage')
             theta = 90
             theta_location = 'Depth'
             M_m_deep, M_b_deep = self.dataframe_manual_interpolation_using_filters(
@@ -623,6 +600,10 @@ class BS7910_2013():
         return M_m, M_b
 
     def perform_flaw_dimension_acceptance_check(self):
+        for key in ('a', 'B', 'ri', 'c', 'W'):
+            finite_number(getattr(self, key), key, positive=True)
+        if self.flaw.location == 'embedded':
+            finite_number(self.B_dash, 'embedded reference wall', positive=True)
         a_over_B_flag = False
         a_over_c_flag = False
         B_over_ri_flag = False
@@ -647,7 +628,7 @@ class BS7910_2013():
             B_over_ri_flag = True
             B_over_ri_range = [0.1, 0.20]
 
-        if self.stress_intensity_annex in ['Annex_M_4_3']:
+        if self.stress_intensity_annex in ['Annex_M_4_3', 'Annex_M_7_3_6']:
             a_over_c_flag = True
             a_over_c_range = [0.0, 2.0]
             c_x_2_over_w_flag = True
@@ -666,7 +647,7 @@ class BS7910_2013():
                                                     a_over_B_range[1]):
                 logging.info("a/B check acceptable")
             else:
-                logging.info(
+                raise ValueError(
                     "flaw a/B, {} beyond code limits. Can not proceed further.".
                     format(a_over_B))
 
@@ -675,7 +656,7 @@ class BS7910_2013():
                                                     a_over_c_range[1]):
                 logging.info("a/c check acceptable")
             else:
-                logging.info(
+                raise ValueError(
                     "flaw a/c, {} beyond code limits. Can not proceed further.".
                     format(a_over_c))
 
@@ -684,23 +665,23 @@ class BS7910_2013():
                     1]:
                 logging.info("B/ri check acceptable")
             else:
-                logging.info(
+                raise ValueError(
                     "flaw B/ri, {} beyond code limits. Can not proceed further."
                     .format(B_over_ri))
         if c_x_2_over_w_flag:
             if (c_x_2_over_w <= c_x_2_over_w_range[1]):
                 logging.info("2c/W check acceptable")
             else:
-                logging.info(
+                raise ValueError(
                     "flaw 2c/W, {} beyond code limits. Can not proceed further."
                     .format(c_x_2_over_w))
 
         if a_over_B_dash_flag:
-            if self.stress_intensity_annex in ['Annex_M_4_3']:
+            if self.stress_intensity_annex in ['Annex_M_4_3', 'Annex_M_7_3_6']:
                 if a_over_B_dash <= (0.625 * (a_over_c) + 0.6):
                     logging.info("2c/B_dash check acceptable")
                 else:
-                    logging.info(
+                    raise ValueError(
                         "flaw 2c/B_dash, {} beyond code limits. Can not proceed further."
                         .format(a_over_B_dash))
 
@@ -896,69 +877,26 @@ class BS7910_2013():
     # TODO combine approximate and actual flaw growth functions (get_approximate_flaw_growth_due_to_histograms, get_flaw_growth_due_to_histograms)
     def get_approximate_flaw_growth_due_to_histograms(self, histograms,
                                                       bending_factor):
-        self.cfg.default['settings'][
-            'stress_intensity_factor_solution'] = 'constant_values'
+        raise ValueError('approximate constant-coefficient growth is nonqualifying; use an explicit qualified solution')
 
-        if self.cfg.default['settings']['multi_process']:
-            pp = ParallelProcessComponents(cfg=None)
-            number_of_workers = pp.get_number_of_workers(50)
-
-        self.approximate_flaw_growth_df = pd.DataFrame(
-            columns=self.cfg.default['settings']
-            ['flaw_growth_properties_columns'])
-        f_o_s = self.cfg.default['settings']['factor_of_safety']
-        service_life = max(
-            self.cfg.default['settings']['service_life']['values'])
-        for component_index in self.cfg.loading['histograms']['from_xlsx'][0][
-                'component_index']:
-            component_name = histograms.columns[component_index]
-            print("Performing approximate initial flaw analysis for {0} ...".
-                  format(component_name))
-
-            if self.cfg.default['settings']['multi_process']:
-                pool = Pool(number_of_workers)
-                print("Performing Multi-process python using Pool workers {}".
-                      format(number_of_workers))
-                function_args = ((bending_factor, component_index, f_o_s,
-                                  histograms, location_item, service_life,
-                                  flaw_orientation)
-                                 for location_item in
-                                 self.cfg.default['settings']['location_array']
-                                 for flaw_orientation in self.cfg.
-                                 default['settings']['orientation_array'])
-                flaw_growth_for_single_flaw_location_df_array = pool.starmap(
-                    self.
-                    get_approximate_flaw_growth_solution_for_single_flaw_location,
-                    function_args)
-                pool.close()
-                for df in flaw_growth_for_single_flaw_location_df_array:
-                    if not (len(df) == 0):
-                        self.approximate_flaw_growth_df = pd.concat(
-                            [self.approximate_flaw_growth_df, df], sort=True)
-            else:
-                for location_item in self.cfg.default['settings'][
-                        'location_array']:
-                    for flaw_orientation in self.cfg.default['settings'][
-                            'orientation_array']:
-                        allowable_initial_flaw_for_single_flaw_location_df = self.get_approximate_flaw_growth_solution_for_single_flaw_location(
-                            bending_factor, component_index, f_o_s, histograms,
-                            location_item, service_life, flaw_orientation)
-                        if not (len(
-                                allowable_initial_flaw_for_single_flaw_location_df
-                        ) == 0):
-                            self.approximate_flaw_growth_df = pd.concat([
-                                self.approximate_flaw_growth_df,
-                                allowable_initial_flaw_for_single_flaw_location_df
-                            ],
-                                                                        sort=True
-                                                                       )
-
-            print("...... for {0} ... COMPLETE \n".format(component_name))
 
     def get_flaw_growth_due_to_histograms(self, histograms, bending_factor):
+        components = self.cfg.loading['histograms']['from_xlsx'][0]['component_index']
+        lives = self.cfg.default['settings']['service_life']['values']
+        if not components or not lives:
+            raise ValueError('histogram assessment requires components and service life')
+        for life in lives:
+            finite_number(life, 'service life', positive=True)
+        self.fatigue_demand_validation = {
+            histograms.columns[index]: BS7910_2013._validate_histogram(
+                histograms, index, self.cfg.default['settings']['factor_of_safety'],
+                max(lives), bending_factor)
+            for index in components
+        }
+        self.cfg.setdefault('Result', {})['fatigue_demand'] = self.fatigue_demand_validation
 
-        self.cfg.default['settings'][
-            'stress_intensity_factor_solution'] = 'table'
+        if self.cfg.default['settings'].get('stress_intensity_factor_solution') != 'table':
+            raise ValueError('growth requires an explicit qualified table solution')
         if self.cfg.default['settings']['multi_process']:
             pp = ParallelProcessComponents(cfg=None)
             number_of_workers = pp.get_number_of_workers(50)
@@ -1013,6 +951,10 @@ class BS7910_2013():
                                                  component_index, f_o_s,
                                                  histograms, location_item,
                                                  flaw_orientation):
+        self.fatigue_demand_validation = BS7910_2013._validate_histogram(histograms, component_index, f_o_s,
+            max(self.cfg.default['settings']['service_life']['values']), bending_factor)
+        finite_number(self.cfg.default['settings']['service_life']['solution_step'],
+                      'service life solution step', positive=True)
         self.flaw_growth_for_single_flaw_location_df = pd.DataFrame(
             columns=self.cfg.default['settings']
             ['flaw_growth_properties_columns'])
@@ -1049,6 +991,10 @@ class BS7910_2013():
             life_nsteps = int((solution_end_life * 4) / solution_step)
             self.get_flaw_fad_properties()
             self.get_K_r_allowable()
+            for key in ('K_r', 'L_r', 'K_r_allowable'):
+                finite_number(getattr(self, key), key)
+            if self.K_r >= self.K_r_allowable:
+                raise ValueError('no passing initial FAD row for growth')
             self.flaw_growth_for_single_flaw_location_df.loc[len(
                 self.flaw_growth_for_single_flaw_location_df)] = [
                     histograms.columns[component_index], service_life,
@@ -1090,6 +1036,8 @@ class BS7910_2013():
                 self.get_flaw_fad_properties()
                 self.get_K_r_allowable()
 
+                for key in ('K_r', 'L_r', 'K_r_allowable'):
+                    finite_number(getattr(self, key), key)
                 if self.K_r >= self.K_r_allowable:
                     break
                 else:
@@ -1107,6 +1055,29 @@ class BS7910_2013():
             "            ..... for component flaw location: {1}, flaw orientation: {2} ... COMPLETE"
             .format(component_name, location_item, flaw_orientation))
         return self.flaw_growth_for_single_flaw_location_df
+
+    @staticmethod
+    def _validate_histogram(histograms, component_index, factor, life, bending):
+        finite_number(factor, 'fatigue safety factor', positive=True)
+        finite_number(life, 'service life', positive=True)
+        finite_number(bending, 'histogram bending factor', positive=True)
+        if (len(histograms) < 2 or 'bins' not in histograms
+                or type(component_index) is not int
+                or not 0 <= component_index < len(histograms.columns)
+                or histograms.columns[component_index] == 'bins'):
+            raise ValueError('histogram requires bin coverage and a cycle-count component')
+        edges = histograms['bins'].to_numpy()
+        cycles = histograms.iloc[:, component_index].to_numpy()
+        for value in edges:
+            finite_number(value, 'histogram bin edge')
+        for value in cycles:
+            finite_number(value, 'histogram cycles')
+        if not (np.diff(edges) > 0).all():
+            raise ValueError('histogram bin edges must be strictly increasing')
+        if cycles[-1] != 0:
+            raise ValueError('histogram terminal edge must not contain unassigned cycles')
+        return {'status': 'CONFIRMED_ZERO_DEMAND' if not cycles.any() else 'DEMAND_VALIDATED',
+                'criterion': 'complete ordered bins, finite nonnegative cycles and positive life factors'}
 
     def get_flaw_growth_from_one_cycle(self):
         self.get_flaw_fad_properties()
@@ -1163,6 +1134,7 @@ class BS7910_2013():
     def get_approximate_flaw_growth_solution_for_single_flaw_location(
             self, bending_factor, component_index, f_o_s, histograms,
             location_item, service_life, flaw_orientation):
+        self.fatigue_demand_validation = BS7910_2013._validate_histogram(histograms, component_index, f_o_s, service_life, bending_factor)
         self.approximate_allowable_initial_flaw_analysis_single_flaw_location_df = pd.DataFrame(
             columns=self.cfg.default['settings']
             ['approximate_initial_flaw_properties_columns'])
@@ -1202,6 +1174,7 @@ class BS7910_2013():
                             'a'] = self.flaw.dimensions['a'] + delta_a_per_bin
                         self.flaw.dimensions['c'] = self.flaw.dimensions['c']
 
+                self.get_flaw_fad_properties()
                 self.get_K_r_allowable()
                 self.approximate_flaw_growth_for_single_flaw_location_and_length_df.loc[
                     len(self.
@@ -1214,31 +1187,15 @@ class BS7910_2013():
                            self.K_r, self.L_r, self.K_r_allowable
                        ]
 
-            for df_index in range(
-                    0,
-                    len(self.
-                        approximate_flaw_growth_for_single_flaw_location_and_length_df
-                       ) - 1):
-                if self.approximate_flaw_growth_for_single_flaw_location_and_length_df.K_r[
-                        df_index] > self.approximate_flaw_growth_for_single_flaw_location_and_length_df.K_r_allowable[
-                            df_index]:
-                    a_end = self.approximate_flaw_growth_for_single_flaw_location_and_length_df.initial_flaw_depth[
-                        df_index]
-                    # a_nsteps = int((a_end - a_start) / a_step + 1)
-                    break
+            allowable = BS7910_2013._last_passing_fad_row(
+                self.approximate_flaw_growth_for_single_flaw_location_and_length_df)
 
             if self.cfg.default['settings']['save_detailed_results']:
                 self.approximate_flaw_growth_for_single_flaw_location_and_length_df.to_csv(
                     'results/len_{}.csv'.format(c))
 
-            try:
-                self.approximate_allowable_initial_flaw_analysis_single_flaw_location_df.loc[
-                    len(self.approximate_allowable_initial_flaw_analysis_single_flaw_location_df)] = \
-                self.approximate_flaw_growth_for_single_flaw_location_and_length_df.iloc[df_index-1]
-            except:
-                print(
-                    "IndexError: single positional indexer is out-of-bounds for df_index: {}"
-                    .format(df_index))
+            self.approximate_allowable_initial_flaw_analysis_single_flaw_location_df.loc[
+                len(self.approximate_allowable_initial_flaw_analysis_single_flaw_location_df)] = allowable
 
         print(
             "            ..... for component flaw location: {1}, flaw orientation: {2} ... COMPLETE"

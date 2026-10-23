@@ -134,15 +134,13 @@ class TestFlawDimensionAcceptanceCheck:
 
     def test_a_over_c_above_range_is_rejected(self, caplog):
         # a/c = 6/4 = 1.5 exceeds the upper bound 1.0
-        with caplog.at_level(logging.INFO):
+        with pytest.raises(ValueError, match="flaw a/c, 1.5 beyond code limits"):
             BS7910_2013.perform_flaw_dimension_acceptance_check(self._stub(6.0, 4.0))
-        assert "flaw a/c, 1.5 beyond code limits" in caplog.text
 
     def test_a_over_c_below_range_is_rejected(self, caplog):
         # a/c = 0.1/4 = 0.025 is below the lower bound 0.05
-        with caplog.at_level(logging.INFO):
+        with pytest.raises(ValueError, match="flaw a/c, 0.025 beyond code limits"):
             BS7910_2013.perform_flaw_dimension_acceptance_check(self._stub(0.1, 4.0))
-        assert "flaw a/c, 0.025 beyond code limits" in caplog.text
 
 
 class TestMakeInitialFlawMonotonous:

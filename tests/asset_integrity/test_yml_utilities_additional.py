@@ -99,7 +99,7 @@ def test_yml_read_stream_raises_stopping_program_on_bad_source(
         yu.yml_read_stream("bad.yml")
 
 
-def test_ymlinput_ignores_bad_update_file_and_keeps_defaults(
+def test_ymlinput_rejects_bad_update_file(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     default_yml = tmp_path / "default.yml"
@@ -108,13 +108,8 @@ def test_ymlinput_ignores_bad_update_file_and_keeps_defaults(
     update_yml.write_text(":\n  - bad-yaml")
 
     caplog.set_level(logging.WARNING, logger=_YU_LOGGER)
-    cfg = yu.ymlInput(str(default_yml), str(update_yml))
-    assert cfg["keep"] == 1
-    assert cfg["nested"]["x"] == 2
-    assert any(
-        "Update Input file could not be loaded successfully" in r.message
-        for r in caplog.records
-    )
+    with pytest.raises(ValueError, match="requested configuration overlay"):
+        yu.ymlInput(str(default_yml), str(update_yml))
 
 
 def test_analyze_yaml_keys_prints_root_keys(

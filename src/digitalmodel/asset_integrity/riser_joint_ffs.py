@@ -325,7 +325,7 @@ def place_joint(
     placement = JointPlacement(
         joint_id=joint_id,
         min_life_years=min_life_years,
-        acceptable_depth_ft=round(depth_ok_ft, 1),
+        acceptable_depth_ft=depth_ok_ft,
         eligible_zones=zones,
     )
     if zones:
@@ -373,9 +373,26 @@ def fleet_rollup(
     N campaigns, HIGH-FATIGUE-QUALIFIED if it covers ``high_fatigue_margin``
     times that, else REPAIR (reason: fatigue/corrosion life).
     """
+    from .common.validation import finite_number
+
+    finite_number(campaign_years, "campaign_years", positive=True)
+    finite_number(high_fatigue_margin, "high_fatigue_margin", minimum=1)
+    for name, value, minimum in (("n_campaigns", n_campaigns, 1),
+                                  ("min_high_fatigue_joints", min_high_fatigue_joints, 0)):
+        if type(value) is not int or value < minimum:
+            raise ValueError(f"{name} must be an integer >= {minimum}")
+    required = {"component", "joint_id", "min_life_years"}
+    if not required.issubset(register.columns):
+        raise ValueError("register requires component, joint identity and life for every row")
+    for key in ("component", "joint_id"):
+        if register[key].isna().any() or not register[key].map(
+                lambda value: isinstance(value, str) and bool(value.strip())).all():
+            raise ValueError("register requires a valid inventory identity for every row")
     comp = register[register["component"] == component]
     if comp.empty:
         raise ValueError(f"no rows for component '{component}'.")
+    for value in comp["min_life_years"]:
+        finite_number(value, "life for every row")
     life = comp.groupby("joint_id")["min_life_years"].min()
 
     campaigns = []

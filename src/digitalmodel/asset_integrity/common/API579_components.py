@@ -13,6 +13,7 @@ from .DataFrame_To_Image import DataFrame_To_Image
 from ..custom.API579.plotCustom import plotCustom
 from ..custom.API579.saveData import saveDataYaml
 from .DataFrame_To_xlsx import DataFrameArray_To_xlsx_openpyxl
+from .validation import bracketed_interpolate, finite_number
 
 
 class API579_components():
@@ -39,6 +40,8 @@ class API579_components():
     def _inline_grid_to_dataframe(self, data):
         grid = data["grid"]
         values = grid["values"]
+        if not values or not all(len(row) for row in values):
+            raise ValueError('GML/LML reading set requires a nonempty measured grid')
         index = grid.get("index", list(range(len(values))))
         columns = grid.get("columns", list(range(len(values[0]))))
         return pd.DataFrame(values, index=index, columns=columns)
@@ -53,6 +56,11 @@ class API579_components():
         self.cfg['Result']['GML_Acceptable_FCA'] = []
 
         self.read_gml_grids()
+        if not self.gml_wt_grids:
+            raise ValueError("GML requires at least one assessed reading set")
+        for index, grid in enumerate(self.gml_wt_grids):
+            if grid.empty or not np.isfinite(grid.to_numpy()).all():
+                raise ValueError(f"GML reading set {index} requires a complete finite grid")
 
         for fileIndex in range(0, len(self.gml_wt_grids)):
             df = self.gml_wt_grids[fileIndex]
@@ -69,7 +77,7 @@ class API579_components():
             FileName = self.cfg['Analysis']['result_folder'] + self.cfg[
                 'Analysis']['file_name'] + 'Summary_GML_' + str(fileIndex)
             print(FileName)
-            Acceptable_FCA = np.interp(
+            Acceptable_FCA = bracketed_interpolate(
                 self.cfg['Design'][0]['InternalPressure']['Outer_Pipe'],
                 GMLMAWPResultsDF['MAWP'].iloc[::-1].values,
                 GMLMAWPResultsDF['FCA'].iloc[::-1].values)
@@ -252,6 +260,16 @@ class API579_components():
             LMLResults = self.API579LML(df, self.cfg, fileIndex)
             LMLSummaryDF = pd.DataFrame.from_dict(LMLResults)
             self.cfg['Result']['LML'].append(self._to_builtin(LMLResults))
+            # No overall disposition until both axes and the pressure basis qualify.
+            if any(row.get('Overall qualification') != 'QUALIFIED'
+                   or row.get('Level 2 qualification') != 'QUALIFIED'
+                   for row in LMLResults):
+                self.cfg['Result'].setdefault('LML_Acceptable_FCA', []).append({
+                    'status': 'NOT_EVALUATED',
+                    'reason': 'Qualified pressure basis and independent circumferential extent checks required',
+                    'criterion': 'both axes and pressure equations qualified',
+                })
+                continue
             FileName = self.cfg['Analysis']['result_folder'] + self.cfg[
                 'Analysis']['file_name'] + 'Summary_LML_' + str(fileIndex)
             LMLFileNameArray.append('LML_' + str(fileIndex) + '_')
@@ -270,11 +288,11 @@ class API579_components():
             no_of_design_conditions = len(self.cfg['Design'])
             for design_condition_index in range(0, no_of_design_conditions):
                 print(FileName)
-                Acceptable_FCA = np.interp(
+                Acceptable_FCA = bracketed_interpolate(
                     self.cfg['Design'][design_condition_index]
                     ['InternalPressure']['Outer_Pipe'],
-                    LMLSummaryDF['MAWPr, L2'].iloc[::-1].values,
-                    LMLSummaryDF['FCA'].iloc[::-1].values)
+                    pd.DataFrame(LMLResults)['MAWPr, L2'].iloc[::-1].values,
+                    pd.DataFrame(LMLResults)['FCA'].iloc[::-1].values)
                 print("Acceptable LML FCA is : {0}".format(Acceptable_FCA))
 
                 customdata = {
@@ -504,18 +522,23 @@ class API579_components():
     def read_gml_grids_from_inline(self):
         self.gml_wt_grids = []
         for fileIndex in range(0, len(self.cfg['ReadingSets'])):
-            df = self._inline_grid_to_dataframe(self.cfg['ReadingSets'][fileIndex])
+            try:
+                df = self._inline_grid_to_dataframe(self.cfg['ReadingSets'][fileIndex])
+            except ValueError as exc:
+                raise ValueError(f"GML reading set {fileIndex} is invalid; original identity retained") from exc
             df = df * self.cfg['ReadingSets'][fileIndex]['DataCorrectionFactor']
-            if len(df) > 0:
-                self.gml_wt_grids.append(df)
+            if df.empty:
+                raise ValueError(f"GML reading set {fileIndex} is empty; original identity retained")
+            self.gml_wt_grids.append(df)
 
     def read_gml_grids_from_simulations(self):
         self.gml_wt_grids = []
         for fileIndex in range(0, len(self.cfg['gml_simulated_grid'])):
             custom_data = self.cfg['gml_simulated_grid'][fileIndex]
             df = self.simulate_wt_grid(custom_data)
-            if len(df) > 0:
-                self.gml_wt_grids.append(df)
+            if df.empty:
+                raise ValueError(f"GML reading set {fileIndex} is empty; original identity retained")
+            self.gml_wt_grids.append(df)
 
     def simulate_wt_grid(self, data):
         import math
@@ -555,12 +578,15 @@ class API579_components():
             }
             df = ExcelRead(customdata)
             df = df * self.cfg['ReadingSets'][fileIndex]['DataCorrectionFactor']
-            if len(df) > 0:
-                self.gml_wt_grids.append(df)
+            if df.empty:
+                raise ValueError(f"GML reading set {fileIndex} is empty; original identity retained")
+            self.gml_wt_grids.append(df)
 
     def API579GML(self, df, fileIndex):
         import math
 
+        if df.empty or not np.isfinite(df.to_numpy()).all():
+            raise ValueError(f"GML reading set {fileIndex} requires a complete finite grid")
         cfg = self.cfg
         customdata = {
             "tmin":
@@ -584,6 +610,7 @@ class API579_components():
         data = self.GMLAssessmentLengthEvaluation(df.min(), customdata)
         # AssessmentLength determination
         if cfg['default']['Analysis']['GML']['Circumference']:
+            local_wall_ratios = []
             RemainingLife_df = df.copy()
             FutureCorrosionRate_df = df.copy()
             HistoricalCorrosionRate_df = df.copy()
@@ -678,6 +705,7 @@ class API579_components():
 
                     customdata.update(data)
                     data = self.GMLAcceptability(customdata)
+                    local_wall_ratios.append(data['WTAcceptabilityRatio'])
                     customdata.update(data)
 
                     RemainingLife_df.iloc[
@@ -750,6 +778,10 @@ class API579_components():
                     AveragingLength_df.min(axis=0, skipna=True).min()
             }
 
+            # Every mandatory local wall ratio must pass before pressure or life clearance.
+            if not local_wall_ratios or not np.isfinite(local_wall_ratios).all() or min(local_wall_ratios) < 1:
+                raise ValueError("GML local wall criterion requires every ratio >= 1")
+            summary['Min WT Acceptability Ratio'] = float(min(local_wall_ratios))
             GMLMAWPResults = []
             for FCAIndex in range(
                     0, len(self.cfg.default['Analysis']['GML']['FCA'])):
@@ -767,13 +799,23 @@ class API579_components():
 
         import numpy as np
 
+        if len(DataArray) == 0:
+            raise ValueError("GML requires a complete finite profile")
+        for value in DataArray:
+            finite_number(value, "complete profile wall", positive=True)
+        for key in ('tmin', 'NominalID', 'RSFa'):
+            finite_number(data[key], key, positive=True)
+        if data['RSFa'] > 1:
+            raise ValueError("RSFa must be <= 1")
         tmm = min(DataArray)
-        tam = np.nanmean(DataArray)
+        tam = np.mean(DataArray)
         tmax = max(DataArray)
 
         FCAml = tam - data['tmin']
         nominalWTml = data['tmin'] - FCAml
         IDml = (data['NominalID']) + 2 * FCAml
+        finite_number(nominalWTml, "reference wall", positive=True)
+        finite_number(IDml, "reference diameter", positive=True)
         Rt = (tmm - FCAml) / nominalWTml
 
         if (Rt < data['RSFa']):
@@ -795,10 +837,15 @@ class API579_components():
         return AssessmentLengthResult
 
     def GMLAcceptability(self, data):
+        for key in ('tmm', 'tmin', 'NominalWT', 'tam', 'Age'):
+            finite_number(data[key], key, positive=True)
+        finite_number(data['FCAml'], 'FCAml', minimum=-float('inf'))
         LHS = data['tmm'] - data['FCAml']
         RHS = max(0.5 * data['tmin'], max(0.2 * data['NominalWT'], 0.1))
         WTAcceptabilityRatio = LHS / RHS
-        # >1 acceptable else unacceptable
+        # Clearance requires a finite local wall ratio >= 1, independently of average wall.
+        if not np.isfinite(WTAcceptabilityRatio) or WTAcceptabilityRatio < 1:
+            raise ValueError("GML local wall criterion failed: ratio must be >= 1")
 
         # Remaining Life Calculation
         HistoricalCorrosionRate = (data['NominalWT'] -
@@ -811,6 +858,7 @@ class API579_components():
         else:
             futureCorrosionRate = data['FutureCorrosionRate']
 
+        finite_number(futureCorrosionRate, 'future corrosion rate', positive=True)
         remainingLife = (data['tam'] - data['tmin']) / futureCorrosionRate
 
         result = {
@@ -839,6 +887,12 @@ class API579_components():
 
     def API579LML(self, df, cfg, fileIndex):
         LMLResults = self.LMLAcceptability(df, cfg, fileIndex)
+        for row in LMLResults:
+            row.update({
+                'Overall qualification': 'NOT_EVALUATED',
+                'Overall limitation': 'Independent circumferential extent and axis applicability checks are not implemented',
+                'Overall criterion': 'both axial and circumferential extent checks must qualify',
+            })
         return LMLResults
 
     def LMLAcceptability(self, df, cfg, fileIndex):

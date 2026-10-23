@@ -103,12 +103,13 @@ def _scan_result(scan, spec, grid, register):
     row = rows.iloc[0]
     rate = float(row["corrosion_rate_mm_per_year"]) / MM_PER_IN
     scan_life = float(row["min_life_years"])
-    life = float(
-        register[
+    joint_lives = register[
             (register["component"] == "Main")
             & (register["joint_id"] == scan["joint_id"])
-        ]["min_life_years"].min()
-    )
+        ]["min_life_years"]
+    if not np.isfinite(joint_lives).all() or (joint_lives < 0).any():
+        raise ValueError("every contributing scan requires finite nonnegative life")
+    life = float(joint_lives.min())
     if not np.isfinite([rate, scan_life]).all() or rate < 0 or scan_life < 0:
         raise ValueError(
             "register life and corrosion rate must be finite and nonnegative"
@@ -128,7 +129,7 @@ def _scan_result(scan, spec, grid, register):
         )
     )
     placement["scan"] = Path(scan["grid_csv"]).name
-    return {
+    result = {
         "joint_id": scan["joint_id"],
         "scan": placement["scan"],
         "measured_min_wt_in": minimum,
@@ -136,7 +137,14 @@ def _scan_result(scan, spec, grid, register):
         "joint_governing_life_years": life,
         "unmeasured_cells": int(grid.isna().sum().sum()),
         "envelopes": envelopes,
-    }, placement
+    }
+    if grid.isna().any().any():
+        result["measured_stations_placement"] = dict(placement)
+        placement.update(
+            verdict="NOT_EVALUATED", eligible_zones=[],
+            reason="Complete grid coverage required; unmeasured cells remain",
+        )
+    return result, placement
 
 
 def _table(headers, rows):
@@ -208,7 +216,7 @@ def _placement_sections(placements, title):
                 (
                     p["scan"],
                     p["min_life_years"],
-                    p["acceptable_depth_ft"],
+                    f"{p['acceptable_depth_ft']:.1f}",
                     ", ".join(p["eligible_zones"]),
                     p["verdict"],
                     p["reason"] or "Life covers zone margin; depth covers campaign",
@@ -348,8 +356,8 @@ def run_report(spec, analysis):
     result["report_html"] = str(output / "riser-joint-ffs.html")
     result["result_json"] = str(output / "riser-joint-ffs.json")
     encoded = json.dumps(result, indent=2, allow_nan=False)
-    Path(result["report_html"]).write_text(report, encoding="utf-8")
-    Path(result["result_json"]).write_text(encoded, encoding="utf-8")
+    Path(result["report_html"]).write_text(report, encoding="utf-8", newline="\n")
+    Path(result["result_json"]).write_text(encoded, encoding="utf-8", newline="\n")
     return result
 
 
@@ -371,11 +379,15 @@ def _validate_register(register):
 
 def _governing_placements(placements):
     governing = {}
+    severity = {"ACCEPT": 0, "RESTRICTED": 1, "REPAIR": 2, "NOT_EVALUATED": 3}
     for placement in placements:
         key = placement["joint_id"]
+        if placement["verdict"] not in severity:
+            raise ValueError("unknown placement verdict")
         if (
             key not in governing
-            or placement["acceptable_depth_ft"] < governing[key]["acceptable_depth_ft"]
+            or (severity[placement["verdict"]], -placement["acceptable_depth_ft"])
+            > (severity[governing[key]["verdict"]], -governing[key]["acceptable_depth_ft"])
         ):
             governing[key] = placement
     return list(governing.values())

@@ -36,7 +36,10 @@ def test_disabled_check_warns_without_initializing_components(components):
         result = fracture_mechanics(cfg)
 
     assert result is cfg
-    assert cfg == original
+    assert cfg["default"] == original["default"]
+    status = cfg["Result"]["assessment_status"]["flaw_limits"]
+    assert status["status"] == "NOT_EVALUATED"
+    assert status["reason"] == "flaw_limits is disabled"
     components.assert_not_called()
 
 

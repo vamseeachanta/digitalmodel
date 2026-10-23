@@ -53,6 +53,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from ..common.validation import finite_number
 
 
 class ALARPRegion(str, Enum):
@@ -86,6 +87,8 @@ class ALARPThresholds:
     lower_broadly_acceptable: float = 1e-6
 
     def __post_init__(self) -> None:
+        finite_number(self.upper_intolerable, "upper threshold", positive=True, maximum=1)
+        finite_number(self.lower_broadly_acceptable, "lower threshold", positive=True, maximum=1)
         if self.upper_intolerable <= 0 or self.lower_broadly_acceptable <= 0:
             raise ValueError("Threshold risks must be positive (per-annum probabilities).")
         if self.lower_broadly_acceptable >= self.upper_intolerable:
@@ -148,9 +151,10 @@ def classify_risk(
     Parameters
     ----------
     risk:
-        Individual risk per annum (IRPA). May be supplied directly, or computed
-        upstream as ``likelihood * consequence`` (see
-        :func:`risk_from_likelihood_consequence`).
+        Individual annual fatality probability in [0, 1]. A rate returned by
+        :func:`risk_from_likelihood_consequence` requires an independently
+        established individual-probability basis before classification;
+        population expected fatalities are not an individual probability.
     thresholds:
         Threshold lines. Defaults to the R2P2 worker values (1e-3 / 1e-6 /yr).
 
@@ -167,6 +171,8 @@ def classify_risk(
     """
     if thresholds is None:
         thresholds = ALARPThresholds()
+    thresholds.__post_init__()
+    finite_number(risk, "risk", maximum=1)
     if risk < 0:
         raise ValueError("risk must be non-negative.")
 
@@ -214,13 +220,20 @@ def risk_from_likelihood_consequence(likelihood: float, consequence: float) -> f
         Event frequency or probability per annum (>= 0).
     consequence:
         Consequence measure, e.g. probability of fatality given the event, or
-        fatalities per event. For an IRPA the product yields fatalities/yr.
+        expected fatalities per event.
 
     Returns
     -------
     float
-        ``likelihood * consequence``.
+        ``likelihood * consequence`` in the units of the supplied measures.
+        Event frequency and expected fatalities may exceed one. The product
+        alone does not establish an individual annual fatality probability
+        suitable for :func:`classify_risk`; probability inputs require their
+        own probability bounds at the call site.
     """
+    finite_number(likelihood, "likelihood")
+    finite_number(consequence, "consequence")
+    finite_number(likelihood * consequence, "risk")
     if likelihood < 0 or consequence < 0:
         raise ValueError("likelihood and consequence must be non-negative.")
     return likelihood * consequence
@@ -261,6 +274,10 @@ def gross_disproportion_check(
     Raise cost to ``4.0e6`` and the measure becomes grossly disproportionate
     (ratio 4.0 >= 3) -- it may be ruled out.
     """
+    finite_number(cost, "cost")
+    finite_number(benefit, "benefit")
+    finite_number(gdf, "gdf", minimum=1)
+    finite_number(gdf * benefit, "economic threshold")
     if gdf < 1:
         raise ValueError("gdf (gross-disproportion factor) must be >= 1.")
     if cost < 0 or benefit < 0:
@@ -274,6 +291,7 @@ def gross_disproportion_check(
         disproportion_ratio = float("inf") if cost > 0 else 0.0
     else:
         disproportion_ratio = cost / benefit
+        finite_number(disproportion_ratio, 'economic ratio')
 
     if measure_required:
         rationale = (
