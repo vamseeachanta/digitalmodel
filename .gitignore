@@ -268,6 +268,12 @@ reports/
 !docs/reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
+!docs/reports/modules/
+docs/reports/modules/*/*
+!docs/reports/modules/altfuelshipsizing/
+!docs/reports/modules/altfuelshipsizing/index.html
+!docs/reports/modules/altfuelshipsizing/changes.json
+!docs/reports/modules/altfuelshipsizing/generate.py
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 

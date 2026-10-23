@@ -1,0 +1,18 @@
+{
+  "revision": "1",
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "summary",
+      "text": "Both tank vapor rates are stated beside sea consumption and its heat-flux boundary."
+    },
+    {
+      "section": "references",
+      "text": "Configured property precision and the open-reference differences are reported explicitly."
+    },
+    {
+      "section": "appendix",
+      "text": "Hand-worked headline checks are distinguished from API consistency checks; input labels and reconstruction are portable."
+    }
+  ]
+}
