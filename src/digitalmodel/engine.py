@@ -823,6 +823,10 @@ def engine(
         from digitalmodel.asset_integrity.assessment.pitting import router
 
         cfg_base = router(cfg_base)
+    elif basename == "api579_coverage_screen":
+        from digitalmodel.asset_integrity.api579_coverage import router
+
+        cfg_base = router(cfg_base)
     elif basename == "api579_dent_screen":
         from digitalmodel.asset_integrity.dent_assessment import router
 
