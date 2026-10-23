@@ -267,6 +267,21 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+# Keep all module report sources and deliverables; exclude local build products.
+!docs/reports/modules/
+!docs/reports/modules/**
+docs/reports/modules/**/__pycache__/
+docs/reports/modules/**/*.py[cod]
+docs/reports/modules/**/.pytest_cache/
+docs/reports/modules/**/build/
+docs/reports/modules/**/dist/
+docs/reports/modules/**/_build/
+# Preserve local environment and secret exclusions within the opened tree.
+docs/reports/modules/**/.venv/
+docs/reports/modules/**/node_modules/
+docs/reports/modules/**/.env
+docs/reports/modules/**/.env.*
+!docs/reports/modules/**/.env.template
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
