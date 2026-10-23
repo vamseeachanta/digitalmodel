@@ -99,3 +99,15 @@ Both implementations use a parabolic distribution:
 | +yaw (CW) | +Rz (CW) | +Rz (CCW) | **AQWA FLIPPED** |
 
 When applying forces to AQWA: negate Fy and Mz.
+
+## Quasi-static response
+
+The response API uses the same surge, sway and bow-to-starboard yaw signs.
+Motions are metres and radians; line and fender histories are N. Existing schema
+pretensions in kN are converted once at the response boundary. Wind direction
+is a body-relative meteorological **from** direction, clockwise from the bow.
+The caller must transform global bearings first. The model solves independent
+static equilibria; timestamps do not imply dynamic time integration.
+
+See [response method and worked example](../../../../docs/domains/hydrodynamics/passing-ship-response.md)
+for required stiffnesses, validity bounds, equations, sources and limitations.
