@@ -242,8 +242,3 @@ inputs:
     count: 569
 report:
   kind: cathodic_protection.anode_design
-source_access:
-  url: "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf"
-  accessed_utc: "2026-10-22T21:35:46Z"
-  http_status: 200
-  response_sha256: "023e625bf0c0a91256550e8cb93db8c5ee903a89e8dd1c99a0bfd28de9c3fd01"

@@ -1,19 +1,15 @@
 {
   "document": "cathodic-protection-module-analysis",
-  "revision": 1,
+  "revision": 2,
   "date": "2026-10-22",
   "changes": [
     {
-      "section": "basis",
-      "description": "Fresh resistance uses the published section perimeter; net alloy mass remains an assumption."
+      "section": "appendix",
+      "description": "Source-access records are retained separately to preserve the issued input digests."
     },
     {
       "section": "results",
-      "description": "The installed arrangement passes aggregate checks; mass governs the required count."
-    },
-    {
-      "section": "recommendations",
-      "description": "The aggregate increase is withdrawn; field retrofit sizing remains unevaluated."
+      "description": "Rebuild checks allow checkout line endings and compare numerical evidence with tolerance."
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "source_access": [
+    {
+      "input": "published_jacket_84m.yml",
+      "url": "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf",
+      "accessed_utc": "2026-10-22T21:35:46Z",
+      "http_status": 200,
+      "response_sha256": "023e625bf0c0a91256550e8cb93db8c5ee903a89e8dd1c99a0bfd28de9c3fd01"
+    },
+    {
+      "input": "reference_jacket_60m_members.yml",
+      "url": "https://wes.copernicus.org/articles/8/807/2023/wes-8-807-2023.pdf",
+      "accessed_utc": "2026-10-22T21:35:54Z",
+      "http_status": 200,
+      "response_sha256": "92b334b62946042896735047b53a33cbc3d63d50e0a442fda372961d45882cab"
+    }
+  ]
+}

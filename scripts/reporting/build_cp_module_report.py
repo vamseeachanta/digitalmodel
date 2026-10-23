@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 from copy import deepcopy
+from datetime import datetime
 import hashlib
 from html import escape
 import json
@@ -29,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE = ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/published_jacket_84m.yml"
 GEOMETRY = ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/reference_jacket_60m_members.yml"
 STYLE = ROOT / "src/digitalmodel/reporting/assets/calc_report_format.html"
+SOURCE_ACCESS = ROOT / "scripts/reporting/cp_module_source_access.json"
 OUTPUT = ROOT / "docs/reports/modules/cp"
 PAPER = "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf"
 GEOMETRY_PAPER = "https://doi.org/10.5194/wes-8-807-2023"
@@ -53,14 +55,37 @@ SECTIONS = (
 )
 CHANGES = {
     "document": "cathodic-protection-module-analysis",
-    "revision": 1,
+    "revision": 2,
     "date": DATE,
     "changes": [
-        {"section": "basis", "description": "Fresh resistance uses the published section perimeter; net alloy mass remains an assumption."},
-        {"section": "results", "description": "The installed arrangement passes aggregate checks; mass governs the required count."},
-        {"section": "recommendations", "description": "The aggregate increase is withdrawn; field retrofit sizing remains unevaluated."},
+        {"section": "appendix", "description": "Source-access records are retained separately to preserve the issued input digests."},
+        {"section": "results", "description": "Rebuild checks allow checkout line endings and compare numerical evidence with tolerance."},
     ],
 }
+
+
+def source_access() -> list[dict[str, Any]]:
+    """Require complete source-access evidence independent of design inputs."""
+    payload = json.loads(SOURCE_ACCESS.read_text(encoding="utf-8"))
+    records = payload.get("source_access") if isinstance(payload, dict) else None
+    if not isinstance(records, list) or len(records) != 2:
+        raise ValueError("The source-access records are missing or invalid")
+    for record, fixture in zip(records, (EXAMPLE, GEOMETRY)):
+        if (not isinstance(record, dict)
+                or record.get("input") != fixture.name
+                or record.get("http_status") != 200
+                or not isinstance(record.get("url"), str)
+                or not record["url"].startswith("https://")
+                or not isinstance(record.get("response_sha256"), str)
+                or re.fullmatch(r"[0-9a-f]{64}", record["response_sha256"]) is None
+                or not isinstance(record.get("accessed_utc"), str)
+                or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", record["accessed_utc"]) is None):
+            raise ValueError("The source-access record is incomplete or invalid")
+        try:
+            datetime.strptime(record["accessed_utc"], "%Y-%m-%dT%H:%M:%SZ")
+        except ValueError as exc:
+            raise ValueError("The source-access timestamp is invalid") from exc
+    return records
 
 
 def calculate() -> dict[str, Any]:
@@ -112,10 +137,9 @@ def calculate() -> dict[str, Any]:
             or assumed["utilisation"] != req["utilization_factor"]
             or assumed["density"] != kernel.ANODE_DENSITY_ALZNI):
         raise ValueError("The module material defaults differ from the declared assumptions")
-    geometry = yaml.safe_load(GEOMETRY.read_text(encoding="utf-8"))
     return {"inputs": original, "results": results, "rechecked": rechecked,
             "assumed": assumed, "section_periphery_m": periphery,
-            "source_access": [cfg["source_access"], geometry["source_access"]]}
+            "source_access": source_access()}
 
 
 def quantities(data: dict[str, Any]) -> dict[str, int | float]:
@@ -385,7 +409,7 @@ Analysis is performed to determine the aggregate anode requirement for a publish
 <li>Field protection remains NOT_EVALUATED by this calculation. A distributed potential survey and local allocation assessment are required before a retrofit is specified.</li></ul></li>
 <li>The scope of evidence is identified before use.<ul><li>Published phase demands and fresh individual output are reproduced to their printed precision; the assumed depletion model differs from the paper.</li>
 <li>Design life, net alloy interpretation and material assumptions require confirmation. The calculation is not an installed-design acceptance.</li></ul></li></ul>
-<h3>Revision history</h3>{table(['Revision', 'Date', 'Change and cause'], [['0', DATE, 'Initial module analysis; public arithmetic evidence and engineering limits are separated.'], ['1', DATE, 'Published-section resistance corrects the aggregate verdict; the increase is withdrawn and source access and rebuild evidence are recorded.']])}'''
+<h3>Revision history</h3>{table(['Revision', 'Date', 'Change and cause'], [['0', DATE, 'Initial module analysis; public arithmetic evidence and engineering limits are separated.'], ['1', DATE, 'Published-section resistance corrects the aggregate verdict; the increase is withdrawn and source access and rebuild evidence are recorded.'], ['2', DATE, 'Access records are separated from design inputs to preserve issued digests; rebuild checks allow checkout line endings.']])}'''
     sections['scope'] = '''<p>The main offshore sacrificial-anode workflow is described from zone definition through a governing anode count.
 The calculation is bounded to an electrically connected structure with declared current demands and anode geometry.</p>
 <p>Seawater and buried-steel areas are grouped by exposure, coating and depth. Initial current is used to establish polarisation capacity;
@@ -504,10 +528,11 @@ The anode length is held fixed. The hour conversion is the library constant, not
 ['Acceptance logic', 'The supplied aggregate arrangement passes all three criteria. The required arrangement is calculated again and its aggregate pass is required.'],
 ['Evidence independence', 'Source transcription and independent hand arithmetic are distinct from agreement among shared-kernel functions.'],
 ['Report text', 'Built-page headings, links, number annotations, terminology, local assets and count-limit annotations are checked. Comment save, load and stale-file rejection are tested at script level; browser visual review and native file-dialog behaviour are not recorded.'],
-['Source access', 'Timestamped HTTP response records and response digests are retained with each input fixture and listed below. Access dates are independent of the report revision date. Licensed standards were not accessed for this analysis.'],
+['Source access', 'Timestamped HTTP response records and response digests are retained in a separate source-access record and listed below. Access dates are independent of the report revision date. Licensed standards were not accessed for this analysis.'],
 ['Comments and changes', 'The change register is embedded. Comments are retained locally and exported to a matching document file; no hosted comment service is used.'],
 ])}
 <h3 id="sources">9.2 Sources and reproduction locators</h3>
+<p>The <a href="../../../../scripts/reporting/cp_module_source_access.json">source-access record</a> retains the retrieval evidence separately from the calculation inputs.</p>
 {table(['Source URL', 'Access time (UTC)', 'HTTP status'], [[escape(row['url']), escape(row['accessed_utc']), str(row['http_status'])] for row in data['source_access']])}
 <ol><li><a href="{PAPER}">Study on Implementation and Optimization of Cathodic Protection for Offshore Oil Platform Jacket</a>,
 Engineering Advances, 2023, volume 3, issue 2, pages 241–245, DOI 10.26855/ea.2023.06.017.
@@ -566,7 +591,7 @@ NOT_EVALUATED means that the required evidence is absent. An assumption marked A
         raise ValueError("The shared calculation-report stylesheet is missing")
     style = style_match[0]
     material = ("".join(path.read_text(encoding="utf-8") for path in
-                        (Path(__file__), STYLE, EXAMPLE, GEOMETRY)).encode("utf-8")
+                        (Path(__file__), STYLE, EXAMPLE, GEOMETRY, SOURCE_ACCESS)).encode("utf-8")
                 + json.dumps(values, sort_keys=True).encode("utf-8"))
     fingerprint = hashlib.sha256(material).hexdigest()
     toc = ' · '.join(f'<a href="#{key}">{title}</a>' for key, title in SECTIONS)
@@ -584,7 +609,7 @@ NOT_EVALUATED means that the required evidence is absent. An assumption marked A
 .hs-doc .limit{{pointer-events:none}} .hs-doc figure{{margin:1.5em 0}} .hs-doc figcaption{{color:var(--ink-2)}}
 @media print{{.review-controls,nav{{display:none}} .hs-doc section{{break-before:auto}}}}
 </style></head><body class="doc hs-doc">
-<header class="hero"><div class="wrap"><p class="eyebrow">Cathodic protection</p><h1>Cathodic protection module analysis</h1><p>Draft for review</p></div></header>
+<header class="hero"><div class="wrap"><p class="eyebrow">Cathodic protection</p><h1>Cathodic protection module analysis</h1><p>Draft for maintainer review</p></div></header>
 <div class="wrap"><nav aria-label="Contents">{toc}</nav><main>{body[:body.index('<section id="theory">')]}{geometry_figure(values)}{body[body.index('<section id="theory">'):]}</main>
 <aside class="card review-controls" aria-label="Changes and comments"><details><summary>Engineering changes</summary><ul id="change-list"></ul></details>
 <h3>Report comments</h3><p>Select report text and add a comment. The section and selected quotation are retained with the note.

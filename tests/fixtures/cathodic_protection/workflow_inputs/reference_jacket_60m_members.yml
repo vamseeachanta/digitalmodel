@@ -1585,8 +1585,3 @@ cp_limitations:
 
 report:
   presentation: reference_analysis
-source_access:
-  url: "https://wes.copernicus.org/articles/8/807/2023/wes-8-807-2023.pdf"
-  accessed_utc: "2026-10-22T21:35:54Z"
-  http_status: 200
-  response_sha256: "92b334b62946042896735047b53a33cbc3d63d50e0a442fda372961d45882cab"

@@ -4,6 +4,7 @@
 """Rebuild the module analysis and check the numerical and reader contracts."""
 
 from copy import deepcopy
+import hashlib
 from html.parser import HTMLParser
 import importlib.util
 import json
@@ -76,10 +77,72 @@ def built(tmp_path_factory):
     return mod, target
 
 
+def assert_html_matches(actual, expected):
+    """Compare numerical evidence with tolerance and retain text checks."""
+    command = "PYTHONPATH=src uv run --no-sources python scripts/reporting/build_cp_module_report.py"
+    pattern = r'(<script id="calculation-data" type="application/json">)(.*?)(</script>)'
+    actual_values = json.loads(re.search(pattern, actual, re.S)[2])
+    expected_values = json.loads(re.search(pattern, expected, re.S)[2])
+    assert actual_values == pytest.approx(expected_values, rel=1e-9, abs=1e-9), command
+    annotations = r'data-value="([^"]+)"'
+    assert [float(v) for v in re.findall(annotations, actual)] == pytest.approx(
+        [float(v) for v in re.findall(annotations, expected)], rel=1e-9, abs=1e-9
+    ), command
+    actual = re.sub(pattern, r'\1\3', actual, flags=re.S)
+    expected = re.sub(pattern, r'\1\3', expected, flags=re.S)
+    assert re.sub(annotations, 'data-value=""', actual) == re.sub(
+        annotations, 'data-value=""', expected
+    ), command
+
+
 def test_report_rebuild_is_deterministic_and_committed(built):
     _, target = built
+    command = "PYTHONPATH=src uv run --no-sources python scripts/reporting/build_cp_module_report.py"
+    assert_html_matches((target / "index.html").read_text(encoding="utf-8"),
+                        (REPORT / "index.html").read_text(encoding="utf-8"))
+    assert json.loads((target / "changes.json").read_text(encoding="utf-8")) == json.loads(
+        (REPORT / "changes.json").read_text(encoding="utf-8")
+    ), command
+
+
+def test_committed_rebuild_accepts_crlf_checkout(built, tmp_path, monkeypatch):
     for name in ("index.html", "changes.json"):
-        assert (target / name).read_bytes() == (REPORT / name).read_bytes()
+        text = (REPORT / name).read_text(encoding="utf-8")
+        (tmp_path / name).write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    monkeypatch.setitem(globals(), "REPORT", tmp_path)
+    test_report_rebuild_is_deterministic_and_committed(built)
+
+
+@pytest.mark.parametrize("delta", [1e-11, 1.0])
+def test_committed_rebuild_uses_numeric_tolerance(built, tmp_path, monkeypatch, delta):
+    for name in ("index.html", "changes.json"):
+        text = (REPORT / name).read_text(encoding="utf-8")
+        if name == "index.html":
+            pattern = r'(<script id="calculation-data" type="application/json">)(.*?)(</script>)'
+            match = re.search(pattern, text, re.S)
+            payload = json.loads(match[2])
+            payload["results.current_demand_A.total_initial_A"] += delta
+            text = text[:match.start(2)] + json.dumps(payload, sort_keys=True) + text[match.end(2):]
+        (tmp_path / name).write_text(text, encoding="utf-8", newline="\n")
+    monkeypatch.setitem(globals(), "REPORT", tmp_path)
+    if delta < 1e-9:
+        test_report_rebuild_is_deterministic_and_committed(built)
+    else:
+        with pytest.raises(AssertionError, match="build_cp_module_report.py"):
+            test_report_rebuild_is_deterministic_and_committed(built)
+
+
+def test_access_metadata_preserves_issued_input_digest():
+    mod = builder()
+    issued = ROOT / "docs/domains/cathodic_protection/reports/reference-jacket/cathodic-protection-analysis.citations.json"
+    retained = json.loads(issued.read_text(encoding="utf-8"))
+    canonical_input = mod.GEOMETRY.read_text(encoding="utf-8").encode("utf-8")
+    assert hashlib.sha256(canonical_input).hexdigest() == retained["input_sha256"], (
+        "Restore the issued input before rebuilding with PYTHONPATH=src uv run "
+        "--no-sources python scripts/reporting/build_reference_jacket_analysis.py"
+    )
+    for fixture in (EXAMPLE, mod.GEOMETRY):
+        assert "source_access" not in yaml.safe_load(fixture.read_text(encoding="utf-8"))
 
 
 def test_every_worked_quantity_matches_the_actual_module(built):
@@ -142,7 +205,7 @@ def test_house_style_structure_sources_and_self_containment(built):
         elif not href.startswith("https:"):
             assert (REPORT / href).resolve().is_file()
     text = " ".join(reader.visible)
-    assert "Draft for review" in text
+    assert "Draft for maintainer review" in text
     assert "ASSUMED - to be confirmed" in text
     assert "NOT_EVALUATED" in text
     assert "supplied member schedule" in text
@@ -152,7 +215,7 @@ def test_house_style_structure_sources_and_self_containment(built):
     assert "comments.json" in html and "textContent" in html
     assert 'id="changes-data"' in html
     changes = json.loads((target / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == 1
+    assert changes["revision"] == 2
     assert changes["changes"]
 
 
@@ -318,11 +381,16 @@ def test_fingerprint_and_rebuild_ignore_checkout_line_endings(tmp_path, monkeypa
     mod = builder()
     expected = mod.render(mod.calculate())
     for name, original in (("__file__", BUILDER), ("STYLE", mod.STYLE),
-                           ("EXAMPLE", mod.EXAMPLE), ("GEOMETRY", mod.GEOMETRY)):
+                           ("EXAMPLE", mod.EXAMPLE), ("GEOMETRY", mod.GEOMETRY),
+                           ("SOURCE_ACCESS", mod.SOURCE_ACCESS)):
         path = tmp_path / original.name
         path.write_bytes(original.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
         monkeypatch.setattr(mod, name, path)
-    assert mod.render(mod.calculate()) == expected
+    actual = mod.render(mod.calculate())
+    assert_html_matches(actual, expected)
+    assert re.search(r'id="document-key"[^>]+content="([^"]+)"', actual)[1] == re.search(
+        r'id="document-key"[^>]+content="([^"]+)"', expected
+    )[1], "PYTHONPATH=src uv run --no-sources python scripts/reporting/build_cp_module_report.py"
     # A substantive edit must still invalidate saved comments.
     source = Path(mod.__file__)
     source.write_bytes(source.read_bytes() + b"# Content change\r\n")
@@ -363,14 +431,37 @@ def test_comparison_precision_labels_and_signed_differences(built):
     assert "−1.4" in visible
 
 
-def test_source_access_is_recorded_with_each_fixture(built):
+def test_source_access_is_recorded_separately_from_calculation_inputs(built):
     mod, target = built
     html = (target / "index.html").read_text(encoding="utf-8")
-    for fixture in (EXAMPLE, mod.GEOMETRY):
-        access = yaml.safe_load(fixture.read_text(encoding="utf-8"))["source_access"]
+    records = json.loads(mod.SOURCE_ACCESS.read_text(encoding="utf-8"))["source_access"]
+    assert {row["input"] for row in records} == {EXAMPLE.name, mod.GEOMETRY.name}
+    assert mod.calculate()["source_access"] == records
+    for access in records:
         assert access["url"].startswith("https://")
         assert access["http_status"] == 200
         assert re.fullmatch(r"[0-9a-f]{64}", access["response_sha256"])
         assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", access["accessed_utc"])
         assert access["accessed_utc"] in html
     assert "Both open papers were read on" not in html
+
+
+@pytest.mark.parametrize("bad_record", [
+    None, {}, {"http_status": 404}, {"http_status": None},
+    {"accessed_utc": "2026-99-99T00:00:00Z"},
+    {"response_sha256": "invalid"}, {"url": ""}, {"input": "other.yml"},
+])
+def test_source_access_rejects_incomplete_evidence(tmp_path, monkeypatch, bad_record):
+    mod = builder()
+    records = deepcopy(mod.calculate()["source_access"])
+    for record, fixture in zip(records, (EXAMPLE, mod.GEOMETRY)):
+        record["input"] = fixture.name
+    if bad_record is None or bad_record == {}:
+        records[0] = bad_record
+    else:
+        records[0].update(bad_record)
+    path = tmp_path / "source_access.json"
+    path.write_text(json.dumps({"source_access": records}), encoding="utf-8", newline="\n")
+    monkeypatch.setattr(mod, "SOURCE_ACCESS", path, raising=False)
+    with pytest.raises(ValueError, match="source-access"):
+        mod.calculate()

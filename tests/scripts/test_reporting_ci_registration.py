@@ -39,6 +39,10 @@ def test_reporting_gate_is_enabled_and_collects_the_folder():
     "tests/reporting/golden/standard_report_plain.html",
     "src/digitalmodel/reporting/calc_report.py",
     "src/digitalmodel/reporting/assets/calc_report_format.html",
+    "scripts/reporting/build_cp_module_report.py",
+    "scripts/reporting/cp_module_source_access.json",
+    "docs/reports/modules/cp/index.html",
+    "docs/reports/modules/cp/changes.json",
 ])
 def test_reporting_changes_select_the_collecting_domain(changed_path, monkeypatch):
     spec = importlib.util.spec_from_file_location(

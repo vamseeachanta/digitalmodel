@@ -37,6 +37,9 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("scripts/reporting/build_cp_module_report.py", ("infrastructure-other",)),
+    ("scripts/reporting/cp_module_source_access.json", ("infrastructure-other",)),
+    ("docs/reports/modules/cp/", ("infrastructure-other",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
@@ -107,7 +110,7 @@ def normalize_root(root: str) -> str:
 def parse_domains(domains_file: Path) -> list[Domain]:
     """Read shard roots from the ownership table."""
     domains: list[Domain] = []
-    for raw_line in domains_file.read_text().splitlines():
+    for raw_line in domains_file.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line.startswith("|") or "`tests/" not in line:
             continue
@@ -124,7 +127,7 @@ def parse_domains(domains_file: Path) -> list[Domain]:
 
     if not domains:
         raise ValueError(
-            f"No domains with backtick-wrapped tests/... roots found in {domains_file}"
+            f"No domains with backtick-wrapped tests/... roots found in {domains_file.as_posix()}"
         )
     return domains
 
