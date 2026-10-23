@@ -13,6 +13,8 @@ committed page, and the regenerated page — not the committed one — is what m
 be free of hard-coded core brand tokens.
 """
 
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -55,14 +57,47 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
         'from pathlib import Path\n'
         'FORMAT = "HTML"\n'
         'output = Path("docs") / "api" / f"example.{FORMAT.lower()}"\n'
-        'with open(output, "w", encoding="utf-8") as stream:\n'
+        'with open(output, "w", encoding="utf-8", newline="\\n") as stream:\n'
         '    stream.write("<html></html>")\n',
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
 
     assert checker.discover_candidate_generators(tmp_path) == {
         "scripts/build_page.py"
     }
+
+
+def test_load_explorer_registers_its_fetched_sidecar() -> None:
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+
+    assert "docs/api/structural/wall-thickness-3d-explorer.json" in entry.outputs
+
+
+@pytest.mark.parametrize("fault", ["changed", "missing", "uncommitted"])
+def test_load_explorer_sidecar_drift_is_detected(tmp_path, monkeypatch, fault):
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    relative = "docs/api/structural/wall-thickness-3d-explorer.json"
+    repo, shadow = tmp_path / "repo", tmp_path / "shadow"
+    for root in (repo, shadow):
+        for output in {*entry.outputs, relative}:
+            path = root / output
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}", encoding="utf-8", newline="\n")
+    assert checker.compare_outputs(repo, shadow) == []
+    if fault == "changed":
+        (shadow / relative).write_text('{"changed": true}', encoding="utf-8", newline="\n")
+    else:
+        root = shadow if fault == "missing" else repo
+        (root / relative).unlink()
+
+    assert [path for path, _ in checker.compare_outputs(repo, shadow)] == [relative]
 
 
 def test_shadow_copies_inputs_instead_of_linking_live_checkout(
@@ -82,13 +117,13 @@ def test_shadow_copies_inputs_instead_of_linking_live_checkout(
     ):
         directory = repo / relative
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "sentinel.txt").write_text("original", encoding="utf-8")
+        (directory / "sentinel.txt").write_text("original", encoding="utf-8", newline="\n")
 
     checker.prepare_shadow(repo, shadow)
 
     copied_inputs = ("assets", "atlases", "data", "src", "tests")
     assert all(not (shadow / name).is_symlink() for name in copied_inputs)
-    (shadow / "src" / "sentinel.txt").write_text("shadow", encoding="utf-8")
+    (shadow / "src" / "sentinel.txt").write_text("shadow", encoding="utf-8", newline="\n")
     assert (repo / "src" / "sentinel.txt").read_text(encoding="utf-8") == "original"
 
 
@@ -97,7 +132,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
 
     assert checker.validate_registry(checker.REPO) == []
     assert len(checker.GENERATORS) == 25
-    assert len(outputs) == 29  # includes both corrosion report outputs
+    assert len(outputs) == 30  # includes the load sidecar and corrosion outputs
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -133,6 +168,58 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
 
 
+def test_corrosion_registry_tracks_only_render_inputs():
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/corrosion/build_module_report.py"
+    )
+    assert entry.inputs == (
+        "src/digitalmodel/reporting/assets/calc_report_format.html",
+    )
+
+
+def test_module_report_ignore_preserves_earlier_sibling_exceptions(tmp_path):
+    marker = "# Retained corrosion module report and engineering change panel."
+    sibling_rules = (
+        "!docs/reports/modules/example/\n"
+        "docs/reports/modules/example/*\n"
+        "!docs/reports/modules/example/report.html\n\n"
+    )
+    rules = (checker.REPO / ".gitignore").read_text(encoding="utf-8")
+    assert rules.count(marker) == 1
+    assert rules.splitlines().count("docs/reports/modules/*") == 1
+    assert rules.index("docs/reports/modules/*") < rules.index(marker)
+    (tmp_path / ".gitignore").write_text(
+        rules.replace(marker, sibling_rules + marker),
+        encoding="utf-8", newline="\n",
+    )
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+        env.pop(key, None)
+    subprocess.run(
+        ["git", "init", "-q"], cwd=tmp_path, env=env,
+        check=True, capture_output=True,
+    )
+    ignored = {
+        "docs/reports/modules/corrosion/scratch.json",
+        "docs/reports/modules/example/scratch.json",
+        "docs/reports/modules/unlisted/report.html",
+    }
+    retained = {
+        "docs/reports/modules/example/report.html",
+        "docs/reports/modules/corrosion/report.html",
+        "docs/reports/modules/corrosion/changes.json",
+    }
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"],
+        input="\n".join(sorted(ignored | retained)) + "\n",
+        cwd=tmp_path, env=env, capture_output=True,
+        text=True, encoding="utf-8", check=False,
+    )
+    assert result.returncode == 0
+    assert set(result.stdout.splitlines()) == ignored
+
+
 def test_page_census_rejects_unclassified_html(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(checker, "build_output_pages", lambda repo: set())
     pages = (
@@ -141,7 +228,7 @@ def test_page_census_rejects_unclassified_html(tmp_path: Path, monkeypatch) -> N
     )
     for page in pages:
         page.parent.mkdir(parents=True, exist_ok=True)
-        page.write_text("<html></html>", encoding="utf-8")
+        page.write_text("<html></html>", encoding="utf-8", newline="\n")
 
     errors = checker.validate_page_census(tmp_path)
     message = "\n".join(errors)
@@ -277,7 +364,7 @@ def test_real_build_output_pages_match_specifications():
 
 def test_registry_reports_unsupported_specs(build_output_registry, monkeypatch):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     monkeypatch.setattr(
         checker, "discover_candidate_generators",
@@ -292,7 +379,7 @@ def test_check_reports_unsupported_specs_without_traceback(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     assert checker.check(repo) == 1
     assert capsys.readouterr().out == (
@@ -311,7 +398,7 @@ def test_build_output_enumeration_accepts_repository_root(tmp_path, monkeypatch)
     })
     script = tmp_path / "scripts/capabilities/build_onepagers.py"
     script.parent.mkdir(parents=True)
-    script.write_text('SPECS: list = [dict(id="temporary-root")]\n', encoding="utf-8")
+    script.write_text('SPECS: list = [dict(id="temporary-root")]\n', encoding="utf-8", newline="\n")
     assert ownership.build_output_pages(tmp_path) == {
         "docs/api/capabilities/pdf/temporary-root.html"
     }
@@ -325,7 +412,7 @@ def test_build_output_enumeration_accepts_repository_root(tmp_path, monkeypatch)
 def test_build_output_rejects_invalid_id_forms(build_output_registry, identifier):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8",
+        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -340,7 +427,7 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
         'SPECS: list = [dict(id="repeat"), dict(id="other"), dict(id="repeat")]\n',
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -359,7 +446,7 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
 def test_build_output_rejects_hyphen_edges(build_output_registry, identifier):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8",
+        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -373,7 +460,7 @@ def test_build_output_accepts_single_internal_hyphens(build_output_registry):
     """Regression pin: single internal hyphens remain accepted."""
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        'SPECS: list = [dict(id="part-2-example")]\n', encoding="utf-8",
+        'SPECS: list = [dict(id="part-2-example")]\n', encoding="utf-8", newline="\n",
     )
     assert ownership.build_output_pages(repo) == {
         "docs/api/capabilities/pdf/part-2-example.html"
@@ -384,10 +471,10 @@ def test_failed_enumeration_withholds_unclassified_pages(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     page = repo / "docs/api/capabilities/pdf/example.html"
     page.parent.mkdir(parents=True)
-    page.write_text("<title>Example</title>", encoding="utf-8")
+    page.write_text("<title>Example</title>", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     checker.MANUAL_PAGES["docs/api/missing.html"] = "synthetic manual page"
     assert checker.check(repo) == 1
@@ -406,7 +493,7 @@ def test_working_enumeration_reports_unclassified_page(
     repo, _script, _entries, ownership = build_output_registry
     page = repo / "docs/api/capabilities/pdf/unknown.html"
     page.parent.mkdir(parents=True)
-    page.write_text("<title>Unknown</title>", encoding="utf-8")
+    page.write_text("<title>Unknown</title>", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     assert checker.check(repo) == 1
     assert "unclassified docs/api HTML page(s): docs/api/capabilities/pdf/unknown.html" in capsys.readouterr().out
@@ -416,7 +503,7 @@ def test_registry_reports_registered_script_syntax_error(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = [\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = [\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     errors = checker.validate_registry(repo)
     assert len(errors) == 1

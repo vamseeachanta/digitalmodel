@@ -119,6 +119,32 @@ _SHAPE_BY_LABEL = {
 _TEMPERATURE_OF_ROW = {"≤30": 30.0, "60": 60.0, "80": 80.0, "> 30 to 50": 50.0}
 
 
+def _verify_b401(result, value, units, edition, number, note):
+    """Bind existing CSV values to an independent edition/table/quantity contract.
+
+    Sources: DNVGL-RP-B401 June 2017, Appendix A; DNV-RP-B401 May 2021,
+    Section 8, as recorded in the dataset PROVENANCE.md. No values or source
+    metadata are taken from the production source map or the actual result.
+    Earlier editions have no repository identity fixture and are not routed
+    through this resolving check.
+    """
+    revision, filename, standard, prefix = {
+        "2017": ("2017-06", "dnv-rp-b401-2017.md", "DNVGL-RP-B401 (June 2017)", "Table A-"),
+        "2021": ("2021-05", "dnv-rp-b401-2021.md", "DNV-RP-B401 (May 2021)", "Table 8-"),
+    }[edition]
+    expected = CitedValue(
+        value=value,
+        units=units,
+        citation=Citation(
+            code_id="dnv-rp-b401", publisher="DNV", revision=revision,
+            section=f"{prefix}{number}",
+            wiki_path="wikis/engineering-standards/wiki/standards/" + filename,
+            note=f"{note}; edition={edition} ({standard}); provenance=verified-{edition}-tables",
+        ),
+    )
+    verify_table_value(result, expected, repo_root=CITATION_FIXTURES)
+
+
 # ---------------------------------------------------------------------------
 # CSV parsing helpers
 # ---------------------------------------------------------------------------
@@ -327,6 +353,11 @@ def test_tables_identical_across_editions(edition):
 @pytest.mark.parametrize("phase", [DesignPhase.INITIAL, DesignPhase.FINAL])
 def test_design_current_density_matches_table_1(edition, climate, band, phase):
     result = tbl.design_current_density(climate, band, phase, edition=edition)
+    if edition in ("2017", "2021"):
+        _verify_b401(
+            result, table_1(edition)[(climate, band, phase)], "A/m2", edition, 1,
+            f"{phase.value} design current density, {climate.value}, {band.value} m, seawater-exposed bare metal",
+        )
     assert result.value == table_1(edition)[(climate, band, phase)]
     assert result.units == "A/m2"
     assert result.citation.section == EDITION_FIXTURES[edition][3] + "1"
@@ -337,6 +368,11 @@ def test_design_current_density_matches_table_1(edition, climate, band, phase):
 @pytest.mark.parametrize("band", list(DepthBand))
 def test_design_current_density_mean_matches_table_2(edition, climate, band):
     result = tbl.design_current_density(climate, band, DesignPhase.MEAN, edition=edition)
+    if edition in ("2017", "2021"):
+        _verify_b401(
+            result, single_value_table(edition, 2)[(climate, band.value)], "A/m2", edition, 2,
+            f"mean design current density, {climate.value}, {band.value} m, seawater-exposed bare metal",
+        )
     assert result.value == single_value_table(edition, 2)[(climate, band.value)]
     assert result.citation.section == EDITION_FIXTURES[edition][3] + "2"
 
@@ -373,6 +409,11 @@ def test_reinforcement_current_density_matches_table_3(edition, climate, band):
         DepthBand.M100_300: ">100",
         DepthBand.M300_PLUS: ">100",
     }[band]
+    if edition in ("2017", "2021"):
+        _verify_b401(
+            result, single_value_table(edition, 3)[(climate, row)], "A/m2", edition, 3,
+            f"mean design current density for reinforcing steel, {climate.value}, row {row} m (steel surface area)",
+        )
     assert result.value == single_value_table(edition, 3)[(climate, row)]
     assert result.citation.section == EDITION_FIXTURES[edition][3] + "3"
     assert f"row {row} m" in result.citation.note
@@ -394,6 +435,11 @@ def test_coating_breakdown_constants_match_table_4(edition, category, band):
     a_values, b_values = table_4(edition)
     a, b = tbl.coating_breakdown_constants(category, band, edition=edition)
     row = "0-30" if band is DepthBand.M0_30 else ">30"
+    if edition in ("2017", "2021"):
+        _verify_b401(a, a_values[category], "dimensionless", edition, 4,
+                      f"coating breakdown constant a, paint category {category.value}")
+        _verify_b401(b, b_values[(category, row)], "1/yr", edition, 4,
+                      f"coating breakdown constant b, paint category {category.value}, row {row} m")
     assert a.value == a_values[category]
     assert b.value == b_values[(category, row)]
     assert a.units == "dimensionless"
@@ -434,6 +480,13 @@ def test_anode_capacity_and_potential_match_ambient_table_6(edition, material, e
     capacity, potential = table_6_ambient(edition)[(material, environment)]
     cap = tbl.anode_capacity(material, environment, edition=edition)
     pot = tbl.anode_closed_circuit_potential(material, environment, edition=edition)
+    if edition == "2017":
+        # DNVGL-RP-B401 June 2017, Table A-6: ambient-temperature basis.
+        basis = "seawater ambient temperature (<= 30 °C)"
+        _verify_b401(cap, capacity, "Ah/kg", edition, 6,
+                      f"design electrochemical capacity, {material.value}, {environment.value}, {basis}")
+        _verify_b401(pot, potential, "V (Ag/AgCl/seawater)", edition, 6,
+                      f"design closed circuit potential, {material.value}, {environment.value}, {basis}")
     assert cap.value == capacity
     assert pot.value == potential
     assert cap.units == "Ah/kg"
@@ -475,6 +528,11 @@ def test_anode_values_2021_match_table_8_6(material, environment, row):
     temperature = _TEMPERATURE_OF_ROW[row]
     cap = tbl.anode_capacity(material, environment, "2021", temperature)
     pot = tbl.anode_closed_circuit_potential(material, environment, "2021", temperature)
+    basis = f"anode surface temperature row {row} °C (requested {temperature:g} °C)"
+    _verify_b401(cap, capacity, "Ah/kg", "2021", 6,
+                  f"design electrochemical capacity, {material.value}, {environment.value}, {basis}")
+    _verify_b401(pot, potential, "V (Ag/AgCl/seawater)", "2021", 6,
+                  f"design closed circuit potential, {material.value}, {environment.value}, {basis}")
     assert cap.value == capacity
     assert pot.value == potential
     assert cap.citation.section == "Table 8-6"
