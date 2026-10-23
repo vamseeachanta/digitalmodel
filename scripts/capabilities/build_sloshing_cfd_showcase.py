@@ -701,6 +701,7 @@ def _tld_section(tld):
     bz = summ.get("best_fill_zeta")
     return f"""
 <h2>Coupled anti-roll response — the two-peak split &amp; the optimum</h2>
+<p>See the <a href="dual-tank-sloshing-cfd-study.html">connected-tank sloshing analysis</a>.</p>
 <p>All the sweeps above characterise the tank alone. Its <b>purpose</b> is to damp a <b>vessel's</b> roll: a
 partially filled tank tuned near the roll frequency is a <b>tuned-liquid damper</b>. Coupling it to the vessel
 roll (the Den Hartog tuned-absorber equations; Moaleji&nbsp;&amp;&nbsp;Greig&nbsp;2007) shows the design
@@ -1122,7 +1123,7 @@ manifests. Part of the digitalmodel OpenFOAM verification suite — computed on 
            "\n<link rel=\"stylesheet\" href=\"../_assets/brand.css\">"
            f"<style>{_CSS}</style></head><body><div class=\"wrap\">{body}</div></body></html>")
     _OUT.parent.mkdir(parents=True, exist_ok=True)
-    _OUT.write_text(doc, encoding="utf-8")
+    _OUT.write_text(doc, encoding="utf-8", newline="\n")
     print(f"wrote {_OUT.relative_to(_REPO)} ({n_cases} cases; "
           f"research={'yes' if research else 'no'})")
 

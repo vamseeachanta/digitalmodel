@@ -1,0 +1,143 @@
+# ABOUTME: Reproducibility and provenance checks for the connected-tank study.
+"""Check the public study against its committed analytical sources."""
+
+import importlib.util
+import re
+from html.parser import HTMLParser
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
+from xml.etree import ElementTree
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+BUILDER = ROOT / "scripts/capabilities/build_dual_tank_sloshing_study.py"
+PAGE = ROOT / "docs/api/cfd/dual-tank-sloshing-cfd-study.html"
+EXISTING = PAGE.with_name("sloshing-cfd-study.html")
+
+
+class References(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.refs = []
+        self.ids = []
+        self.svgs = 0
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        self.refs.extend(attrs[key] for key in ("href", "src") if key in attrs)
+        if "id" in attrs:
+            self.ids.append(attrs["id"])
+        self.svgs += tag == "svg"
+
+
+def assert_references_resolve(text, page):
+    parsed = References()
+    parsed.feed(text)
+    assert len(parsed.ids) == len(set(parsed.ids))
+    for ref in parsed.refs:
+        url = urlsplit(ref)
+        if url.scheme or url.netloc:
+            continue
+        target = page.parent / unquote(url.path) if url.path else page
+        assert target.is_file(), ref
+        if url.fragment:
+            other = References()
+            other.feed(text if target == page else target.read_text(encoding="utf-8"))
+            assert unquote(url.fragment) in other.ids, ref
+    return parsed
+
+
+@pytest.fixture(scope="module")
+def builder():
+    spec = importlib.util.spec_from_file_location("dual_study", BUILDER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_builder_reproduces_utf8_html(builder, tmp_path):
+    target = tmp_path / PAGE.name
+    elapsed = builder.build(target)
+    raw = target.read_bytes()
+    text = raw.decode("utf-8", errors="strict")
+    assert b"\r" not in raw
+    assert text.startswith("<!DOCTYPE html>")
+    assert text.endswith("</html>\n")
+    assert elapsed < 60
+    assert raw == PAGE.read_bytes()
+    assert builder.render() == text
+    style = re.search(r"<style>(.*?)</style>", text, re.S).group(1)
+    assert style == re.search(
+        r"<style>(.*?)</style>", EXISTING.read_text(encoding="utf-8"), re.S
+    ).group(1)
+
+
+def test_claims_are_read_from_published_sources(builder):
+    claims = builder.published_claims()
+    assert claims["moment_rms"] == 4.3
+    assert claims["moment_min_period"] == 20
+    assert claims["degrades_below"] == 16
+    assert claims["length_inflation"] == 2.76
+    assert claims["cases"] == 35
+    assert claims["area_exponent"] == builder.MODEL.DEFAULT_AREA_EXPONENT
+    assert claims["loss_rms"] == builder.MODEL.CALIBRATED_AREA_EXPONENT_RMS_PERCENT
+    assert claims["linear_rms"] == builder.MODEL.LINEAR_AREA_EXPONENT_RMS_PERCENT
+    source = (ROOT / "tests/hydrodynamics/test_utube_tank.py").read_text()
+    for key in ("area_exponent", "loss_rms", "linear_rms"):
+        assert str(claims[key]) in source
+    text = builder.render()
+    for value in claims.values():
+        assert str(value) in text
+    assert "CAUSE IS NOT ESTABLISHED" in text
+    assert "An earlier explanation was withdrawn." in text
+    assert "residual also depends on roll amplitude" in text
+    assert "±3" not in text
+    assert "not stated in the specified public sources" in text
+
+
+def test_curves_call_library_and_reduction(builder, monkeypatch):
+    calls = {}
+    for name in ("natural_period", "equivalent_damping", "tank_moment",
+                 "coupled_roll_response", "_prismatic_properties"):
+        original = getattr(builder.MODEL, name)
+
+        def counted(*args, _name=name, _original=original, **kwargs):
+            calls[_name] = calls.get(_name, 0) + 1
+            return _original(*args, **kwargs)
+
+        monkeypatch.setattr(builder.MODEL, name, counted)
+    data = builder.compute()
+    assert all(calls.values()) and len(calls) == 5
+    assert data["mu"] == 0.05
+    assert [curve["peaks"] for curve in data["absorbers"]] == [2, 2, 2, 1, 1]
+    for curve in data["absorbers"]:
+        assert curve["ys"] == pytest.approx(curve["published"], abs=0.000051)
+    assert all(value >= 0 for value in data["periods"])
+
+
+def test_output_structure_links_and_privacy(builder):
+    text = builder.render()
+    parsed = assert_references_resolve(text, PAGE)
+    assert parsed.svgs == 6
+    svgs = re.findall(r"<svg\b.*?</svg>", text, re.S)
+    assert len(svgs) == 6
+    for svg in svgs:
+        root = ElementTree.fromstring(svg)
+        assert root.find("title").text
+        assert root.find("desc").text
+        assert root.findall("polyline")
+    assert text.count("Shaded periods are outside") == 2
+    assert "<script" not in text
+    assert "<img" not in text
+    assert "Way forward" in text and "Not done" in text
+    assert "Revision history" in text
+    assert text.index("Summary") < text.index("Revision history") < text.index("Illustrative geometry")
+    forbidden = ["/" + part + "/" for part in ("home", "mnt")]
+    assert all(value not in text for value in forbidden)
+    assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
+    assert not re.search(r"[A-Za-z]:\\Users\\", text, re.I)
+    existing = EXISTING.read_text(encoding="utf-8")
+    section = existing.split("Coupled anti-roll response", 1)[1].split("<h2>", 1)[0]
+    assert f'href="{PAGE.name}"' in section
+    assert_references_resolve(text, PAGE)
