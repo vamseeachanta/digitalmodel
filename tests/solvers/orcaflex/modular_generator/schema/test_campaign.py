@@ -54,7 +54,7 @@ def _make_base_spec_data(s_lay: bool = False) -> dict:
         data["metadata"]["operation"] = "installation/s-lay"
         data["equipment"] = {
             "vessel": {
-                "name": "Eclipse",
+                "name": "VesselA",
                 "properties": {
                     "loa": 130, "beam": 28, "draft": 4.0, "gmt": 2.5,
                     "cog": [0, 0, 3], "gyration_radii": [10, 30, 30],
