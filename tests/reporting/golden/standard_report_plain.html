@@ -337,6 +337,8 @@
 /* title block */
 .titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:760px){.titleblock{grid-template-columns:1fr}}
+.titleblock .kv{min-width:0}
+.kv>.tbl-wrap{margin-top:0;border:0;border-radius:0}
 .titleblock .kv table{min-width:0}
 .titleblock .kv td:first-child{width:38%;white-space:normal}
 .revhist{margin-top:18px}
@@ -344,6 +346,10 @@
 .revhist th,.revhist td{text-align:left;white-space:normal}
 
 /* tables */
+/* Issue 1625: constrain each table to its containing block (100%);
+   W3C CSS Overflow Level 3, 7 October 2025 draft, section 3.1 defines auto.
+   Keep table content reachable through local scrolling, without page clipping. */
+.tbl-wrap{overflow-x:auto;max-width:100%}
 .tbl{margin-top:22px}
 .tbl .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px}
 .tbl thead tr.units th{font-family:var(--mono);font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--ink-muted);
@@ -424,6 +430,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <div class="titleblock">
       <div class="kv">
         <div class="cap">Document</div>
+        <div class="tbl-wrap">
         <table>
           <tr><td>Document number</td><td>B0000-RPT-001-00</td></tr>
           <tr><td>Revision</td><td>00</td></tr>
@@ -431,25 +438,30 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           <tr><td>Client</td><td>Client &amp; Co</td></tr>
           <tr><td>Date</td><td>2026-09-25</td></tr>
         </table>
+        </div>
       </div>
       <div class="kv">
         <div class="cap">Sign-off</div>
+        <div class="tbl-wrap">
         <table>
           <tr><td>Prepared by</td><td>AP</td></tr>
           <tr><td>Checked by</td><td>CP</td></tr>
           <tr><td>Approved by</td><td>XP</td></tr>
           <tr><td>Standards</td><td>DNV-RP-B401 (2021)</td></tr>
         </table>
+        </div>
       </div>
     </div>
     <div class="kv revhist">
       <div class="cap">Revision history</div>
+      <div class="tbl-wrap">
       <table>
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
           <tr><td>00</td><td>2026-09-25</td><td>Issued</td><td>AP</td><td>CP</td><td>XP</td></tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 </div>
