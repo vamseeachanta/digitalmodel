@@ -1,0 +1,121 @@
+{
+  "input_sha256": "80b8f99d01b7d8fdca956444c4afa2823551633dbbe07b6b0bfd74af767454a5",
+  "input_locator": "surface-crack-calculix-results.json",
+  "reference_implementation": {
+    "path": "src/digitalmodel/asset_integrity/assessment/crack_fad.py",
+    "sha256": "9dd1c9d5ea9778b1966ea8f387cd58d60fd16ca274dbe27d0e0ed0f528a16f74"
+  },
+  "sources": [
+    {
+      "title": "NASA TM-83200: surface-flaw tension equations",
+      "edition": "1981, pp. 4, 7, 12, Eqs. (2a), (10)-(11), (16)-(21)",
+      "url": "https://ntrs.nasa.gov/api/citations/19810023035/downloads/19810023035.pdf",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-20T09:28:56Z",
+      "sha256": "9f1705c0814ef4ae7208194034b7f70ccd188aa361276f09897035eacac6d528",
+      "bytes": 1224104,
+      "reuse": "US government work; public-use status is recorded in the existing source note."
+    },
+    {
+      "title": "CalculiX CrunchiX manual",
+      "edition": "2.21, section 6.9.27 and *CRACK PROPAGATION",
+      "url": "https://www.dhondt.de/ccx_2.21.pdf",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-20T09:29:40Z",
+      "sha256": "16b6bab5a3f1a40a21fff62379f95c804a58d93758ab2e9a489b18d911dc20c8",
+      "bytes": 5306787,
+      "reuse": "Manual-specific reuse terms not established; capability summary only."
+    },
+    {
+      "title": "DocAster CALC_G purpose",
+      "edition": "v18, U4.82.03 section 1",
+      "url": "https://codeaster.gitlab.io/doc/docaster/manuals/man_u/u4/u4.82.03/But.html",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-20T09:28:55Z",
+      "sha256": "5b26c57418b07b7d1bbd5b3cb7deb495ee5960b3863ec39c8edddbdd7060eb3d",
+      "bytes": 16179,
+      "reuse": "Capability summary only; no source text or figures redistributed."
+    },
+    {
+      "title": "DocAster CALC_G operands",
+      "edition": "v18, U4.82.03 section 3, integration domains and smoothing",
+      "url": "https://codeaster.gitlab.io/doc/docaster/manuals/man_u/u4/u4.82.03/Op_randes.html",
+      "http_status": 200,
+      "retrieved_utc": "2026-10-20T09:29:37Z",
+      "sha256": "d9577482ecd0050291c3747f3e6cca42e78a79019e1ff1ef67892a987d392d57",
+      "bytes": 58994,
+      "reuse": "Capability summary only; no source text or figures redistributed."
+    }
+  ],
+  "assessment": {
+    "scope": "historical receipt arithmetic; no native files revalidated",
+    "benchmark": {
+      "a_mm": 5.0,
+      "c_mm": 5.0,
+      "t_mm": 10.0,
+      "sigma_m_mpa": 100.0,
+      "width_mm": 25.0
+    },
+    "relative_limit": 0.05,
+    "limit_basis": "caller-supplied research comparator; not code acceptance",
+    "recorded_runs": 3,
+    "runs_with_front_comparison": 3,
+    "qualified_results": 0,
+    "solver_selection": "NOT_EVALUATED",
+    "code_aster": {
+      "comparison": "NOT_EVALUATED",
+      "reason": "no native benchmark receipt supplied"
+    },
+    "licensed_comparison": "NOT_EVALUATED",
+    "runs": [
+      {
+        "refinement": 6,
+        "nodes": 679,
+        "elements": 504,
+        "wall_seconds": 2.36,
+        "peak_rss_kib": 19384,
+        "native_outputs": "NOT_REVALIDATED",
+        "native_j": "NOT_EVALUATED",
+        "contour_independence": "NOT_EVALUATED",
+        "comparison": "EXCEEDS_RESEARCH_COMPARATOR",
+        "deepest_difference": -0.16017447536957077,
+        "surface_difference": -0.055629739406905764,
+        "max_abs_front_difference": 0.16017447536957077,
+        "deepest_k_mpa_sqrt_m": 7.358266199726361,
+        "front_points": 8
+      },
+      {
+        "refinement": 12,
+        "nodes": 4381,
+        "elements": 3744,
+        "wall_seconds": 6.76,
+        "peak_rss_kib": 123868,
+        "native_outputs": "NOT_REVALIDATED",
+        "native_j": "NOT_EVALUATED",
+        "contour_independence": "NOT_EVALUATED",
+        "comparison": "EXCEEDS_RESEARCH_COMPARATOR",
+        "deepest_difference": -0.13101631530612018,
+        "surface_difference": -0.0872354597670724,
+        "max_abs_front_difference": 0.13101631530612018,
+        "deepest_k_mpa_sqrt_m": 7.613740101565098,
+        "front_points": 14
+      },
+      {
+        "refinement": 24,
+        "nodes": 31225,
+        "elements": 28800,
+        "wall_seconds": 54.7,
+        "peak_rss_kib": 1546644,
+        "native_outputs": "NOT_REVALIDATED",
+        "native_j": "NOT_EVALUATED",
+        "contour_independence": "NOT_EVALUATED",
+        "comparison": "EXCEEDS_RESEARCH_COMPARATOR",
+        "deepest_difference": -0.11906564565923079,
+        "surface_difference": -0.06690602379042865,
+        "max_abs_front_difference": 0.11906564565923079,
+        "deepest_k_mpa_sqrt_m": 7.718447812807262,
+        "front_points": 26
+      }
+    ]
+  }
+}

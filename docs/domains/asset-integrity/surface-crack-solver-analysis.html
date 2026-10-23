@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<title>Surface-crack solver program benchmarking analysis</title>
+<style>body{font:16px system-ui;max-width:1100px;margin:2em auto;padding:1em}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5em}
+pre{white-space:pre-wrap}p{line-height:1.5}th{text-align:left}</style>
+<h1>Surface-crack solver program benchmarking analysis</h1>
+<h2>Summary</h2>
+<p>3 historical CalculiX benchmark runs are recorded; 3 have front
+comparisons and 0 are qualified Level 3 results. No new benchmark solve is started
+by this audit. Solver selection is NOT_EVALUATED: native Code_Aster results,
+contour sensitivity and the licensed comparison are absent. Of the evaluated
+front comparisons, 3 exceed the 5.0% research comparator and 0
+meet it. That comparator is a study choice, not an API 579 limit.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Receipt audit and sourced solver recommendation
+added to distinguish reference agreement from native qualification.</td></tr></table>
+<p>Table 1. Issue history for this benchmarking analysis.</p>
+<h2>Worked example: inputs, method and answer</h2>
+<p>The existing synthetic plate has a = c = 5 mm, thickness = 10.000 mm, half-width =
+25 mm, half-length = 25 mm and tensile membrane stress = 100 MPa. These are
+research inputs from surface_crack_post.py, not measured data. The recorded
+material inputs are E = 210000 MPa and Poisson ratio = 0.3; K for this prescribed
+traction reference does not use those elastic constants. Bending is zero.</p>
+<p>NASA TM-83200 (1981), pp. 4, 7, 12, Eqs. (2a), (10)-(11), (16)-(21), supplies
+the finite-plate surface-flaw tension solution. With a/c = 1 and a/t = 0.5,
+Q = 2.464, M1 = 1.04, M2 = -0.54 + 0.89/1.2, M3 = 0.5 - 1/1.65.
+The finite-width factor is sqrt(sec(pi*sqrt(0.5)/10)). The deepest-point K is
+100*(M1 + M2/4 + M3/16)*fw*sqrt(pi*0.005/Q), giving 8.8 MPa sqrt(m).
+The surface multiplier g is 1 + 0.1 + 0.35*(0.5)^2, giving 10.4 MPa sqrt(m).
+The test docstring records the independent arithmetic with unrounded values.</p>
+<p>The finest recorded deepest K is 7.7 MPa sqrt(m). Signed relative difference
+is defined as 100*(candidate-reference)/reference and is computed before rounding:
+-11.9%. The surface difference is -6.7%. Every front station is recomputed
+against the existing reference implementation; cached differences and reference
+columns in the old receipt are not trusted.</p>
+<h2>Recorded mesh cost and reference comparison</h2>
+<table><tr><th>Refinement</th><th>Elements</th><th>Nodes</th><th>Time (s)</th>
+<th>Peak RSS (KiB)</th><th>Deepest difference (%)</th>
+<th>Surface difference (%)</th><th>Max absolute front difference (%)</th></tr>
+<tr><td>6</td><td>504</td><td>679</td><td>2.4</td><td>19384.0</td><td>-16.0</td><td>-5.6</td><td>16.0</td></tr>
+<tr><td>12</td><td>3744</td><td>4381</td><td>6.8</td><td>123868.0</td><td>-13.1</td><td>-8.7</td><td>13.1</td></tr>
+<tr><td>24</td><td>28800</td><td>31225</td><td>54.7</td><td>1546644.0</td><td>-11.9</td><td>-6.7</td><td>11.9</td></tr></table>
+<p>Table 2. Historical costs from the 2026-10-11 receipt; these are not measurements
+of the current environment. Differences are calculated from unrounded K values.</p>
+<p>The original campaign uses linear C3D8/C3D6 elements and nodal-stress
+extrapolation, not a native J-integral. Its three meshes are retained as recorded;
+no added refinement or singular-element result is implied. The finest maximum
+front difference is 11.9%; its comparison status is EXCEEDS_RESEARCH_COMPARATOR. A trend
+alone does not establish convergence. The historical surface trend is nonmonotonic.
+The previously reported reaction balance cannot independently establish a correct
+crack-driving force. Original native files have not been revalidated in this audit.</p>
+<h2>CalculiX versus Code_Aster</h2>
+<table><tr><th>Route</th><th>Evidence and disposition</th></tr>
+<tr><td>CalculiX 2.21</td><td>The public manual section 6.9.27 and
+*CRACK PROPAGATION describe an empirical propagation route using uncracked
+stresses and shape factors. The existing cracked-body stress extrapolation
+misses its research comparator. A validated native contour-integral route has
+not been established here; this is not a claim about all solver versions.</td></tr>
+<tr><td>Code_Aster, DocAster v18</td><td>U4.82.03 sections 1 and 3 document CALC_G
+energy release by the theta method, local three-dimensional calculations, and
+integration domains controlled by R_INF/R_SUP. The documentation advises comparing
+integration domains and smoothing choices. Documented capability supports a next
+investigation; no installation, native benchmark result, mesh cost or accuracy
+comparison is established here.</td></tr></table>
+<p>Table 3. Capability documentation and the limits of the available execution evidence.</p>
+<h2>Recommendation and way forward</h2>
+<p>The present CalculiX extrapolation route should remain research-only. Code_Aster
+CALC_G should be investigated next using the identical geometry, loading, material
+and front-angle convention. Solver choice remains NOT_EVALUATED until native
+readback establishes front coverage, mesh refinement and integration-domain
+sensitivity against a predeclared research comparator. The free-surface endpoint
+requires separate interpretation from interior front points. J inferred from K
+would only be an elastic identity, not an independent contour check.</p>
+<p>No API 579 qualification, plastic-J accuracy, mixed-mode validity, toughness
+margin, weld applicability or licensed-solver agreement is established. The linked
+licensed comparison is not a matching plate benchmark and requires a common case
+and input basis before comparison. No go verdict or follow-on issue is issued.</p>
+<h2>Reproduction and traceability</h2>
+<pre>python scripts/studies/surface_crack_verdict.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --relative-limit 0.05 --sources &lt;source-receipts.json&gt; --output-json &lt;audit.json&gt; --output-html &lt;analysis.html&gt;</pre>
+<p>The relative limit repeats the historical research input only. The source
+receipts can be recovered from the sources field of the committed audit JSON.
+The command reads historical evidence and starts no solver or network request.
+Tests also cover invalid values, missing endpoints, failed runs and exact
+synthetic agreement that still cannot qualify a solver.</p>
+<p>Input SHA-256: <code>80b8f99d01b7d8fdca956444c4afa2823551633dbbe07b6b0bfd74af767454a5</code>. Source and receipt digests are in the
+companion JSON. Retrieval responses remain external working evidence; local
+retention is not backup or publication. No dataset is reallocated. The existing
+catalog and domain index were unavailable in the inspected checkout; no replacement
+registry is created. The report and code still require independent review.</p>
+<h2>Sources</h2><ul><li><a href="https://ntrs.nasa.gov/api/citations/19810023035/downloads/19810023035.pdf">NASA TM-83200: surface-flaw tension equations</a>; 1981, pp. 4, 7, 12, Eqs. (2a), (10)-(11), (16)-(21); retrieved 2026-10-20T09:28:56Z; HTTP 200. US government work; public-use status is recorded in the existing source note.</li><li><a href="https://www.dhondt.de/ccx_2.21.pdf">CalculiX CrunchiX manual</a>; 2.21, section 6.9.27 and *CRACK PROPAGATION; retrieved 2026-10-20T09:29:40Z; HTTP 200. Manual-specific reuse terms not established; capability summary only.</li><li><a href="https://codeaster.gitlab.io/doc/docaster/manuals/man_u/u4/u4.82.03/But.html">DocAster CALC_G purpose</a>; v18, U4.82.03 section 1; retrieved 2026-10-20T09:28:55Z; HTTP 200. Capability summary only; no source text or figures redistributed.</li><li><a href="https://codeaster.gitlab.io/doc/docaster/manuals/man_u/u4/u4.82.03/Op_randes.html">DocAster CALC_G operands</a>; v18, U4.82.03 section 3, integration domains and smoothing; retrieved 2026-10-20T09:29:37Z; HTTP 200. Capability summary only; no source text or figures redistributed.</li></ul>
+<p>Only equations, derived arithmetic and capability summaries are used; no source
+prose, figures, licensed standards or raw native solver files are republished.
+The first attempted legacy Code_Aster documentation addresses returned HTTP 404;
+the current DocAster addresses below returned HTTP 200 on the recorded date.</p>
+</html>
