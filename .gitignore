@@ -461,6 +461,13 @@ docs/reports/abstracted-hulls/*
 # Retain the synthetic worked pipeline assessment.
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/spectralfatigue/
+docs/reports/modules/spectralfatigue/*
+!docs/reports/modules/spectralfatigue/build_report.py
+!docs/reports/modules/spectralfatigue/changes.json
+!docs/reports/modules/spectralfatigue/report.html
 
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
