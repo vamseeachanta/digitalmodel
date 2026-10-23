@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural module analysis: elastic stress recovery</title>
+<style>{{STYLE}}</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Structural module analysis: elastic stress recovery</h1>
+<p>Draft for client review</p>
+<p>Revision 1 | 22 October 2026</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction</a></li>
+<li><a href="#section-3">Design Data and Criteria</a></li>
+<li><a href="#section-4">Methodology</a></li>
+<li><a href="#section-5">Detailed Results</a></li>
+<li><a href="#section-6">Validation</a></li>
+<li><a href="#section-7">Limits of Use and Not Covered</a></li>
+<li><a href="#section-8">Recommendations</a></li>
+<li><a href="#section-9">References</a></li>
+<li><a href="#section-10">Appendices</a></li>
+</ol><p><a href="#reader-comments">Comments and changes</a></p></nav>
+<main>
+<section id="section-1">
+<h2>1. Executive Summary</h2>
+<p>The structural module is a collection of analytical stress, stability, strength and fatigue calculations. Analysis is performed to determine the membrane stresses in a documented closed-end cylinder example; key results are summarized below.</p>
+<ul>
+<li>The membrane stress calculation can be reproduced for the public cylinder.
+<ul><li>With the source diameter interpreted as the internal diameter, the hoop stress is {{number:results.hoop_mpa:1}} MPa and the equivalent stress is {{number:results.equivalent_mpa:1}} MPa at {{number:inputs.pressure_mpa:1}} MPa internal pressure. The diameter convention is ASSUMED - to be confirmed. <a href="#section-5">Detailed results</a>.</li></ul></li>
+<li>A pressure rating cannot be assigned from this example.
+<ul><li>Material strength and the governing allowable-stress criterion are required inputs. Strength acceptance is NOT_EVALUATED. <a href="#section-3">Design criteria</a>.</li></ul></li>
+</ul>
+<div id="revision-history" class="table-wrap"><table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>22 October 2026</td><td>The first issue establishes an example of membrane stress recovery and identifies the evidence needed for a pressure assessment.</td></tr></tbody>
+<caption>Revision history. The current issue introduces the calculation basis.</caption>
+</table></div>
+</section>
+<section id="section-2">
+<h2>2. Introduction</h2>
+<p>The structural module is used to calculate stresses and selected structural resistances from supplied geometry, materials and loads. Its public stress interface is assessed here through the documented calculation classes and their existing unit tests. <a href="#record-api">Calculation records</a>.</p>
+<p>Stress recovery is the main workflow covered. Pressure, internal radius and wall thickness are supplied; hoop and longitudinal stresses are returned. The resulting stress tensor is then used to obtain equivalent stress, principal stresses and maximum shear stress. The calculation does not determine the pressure or the structural boundary conditions. <a href="#record-api">Interface records</a>.</p>
+<p>The published cylinder problem provides an open calculation basis without a project-specific component. Its radial displacement question is outside the worked example because elastic constants are not supplied. Separate strength, buckling and fatigue assessments remain necessary for a component design. <a href="#ref-pressure">Public example</a>.</p>
+</section>
+<section id="section-3">
+<h2>3. Design Data and Criteria</h2>
+<p>A uniform cylinder with closed ends is assessed under internal pressure. The source dimensions and pressure are retained in the appendix, and the diameter is interpreted as the internal diameter for this calculation. <a href="#ref-pressure">Source basis</a>.</p>
+<figure>
+<svg viewBox="0 0 840 370" role="img" aria-label="Closed-end cylindrical shell with internal pressure, axial stress and hoop stress; schematic, not to scale">
+<defs>
+<linearGradient id="shell-shading" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3dfe4"/><stop offset="0.5" stop-color="#f2f7f8"/><stop offset="1" stop-color="#a8bbc4"/></linearGradient>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#137e8a"/></marker>
+</defs>
+<path d="M180 90L620 90A36 76 0 0 1 620 242L180 242Z" fill="url(#shell-shading)" stroke="#183449" stroke-width="2"/>
+<ellipse cx="180" cy="166" rx="36" ry="76" fill="#d3dfe4" stroke="#183449" stroke-width="2"/>
+<ellipse cx="180" cy="166" rx="29" ry="66" fill="#e1f0f3" stroke="#137e8a"/>
+<path d="M620 90A36 76 0 0 0 620 242" fill="none" stroke="#183449" stroke-dasharray="5 4"/>
+<path d="M220 166H581M385 165V106M385 165V226" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="265" y="155" font-size="16">Internal pressure p</text>
+<path d="M655 165H726M143 165H94" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="672" y="145" font-size="16">Axial stress</text>
+<text x="672" y="188" font-size="16">Closed end</text>
+<path d="M390 85C440 45 491 48 504 81" fill="none" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="376" y="34" font-size="16">Hoop stress</text>
+<path d="M180 276H620M180 258V290M620 258V290" stroke="#183449" fill="none"/>
+<text x="267" y="310" font-size="16">Length {{svg-number:inputs.length_mm:1}} mm</text>
+<path d="M115 100V232M102 100H130M102 232H130" stroke="#183449" fill="none"/>
+<text x="14" y="75" font-size="15">Internal diameter</text>
+<text x="17" y="97" font-size="15">{{svg-number:inputs.diameter_mm:1}} mm</text>
+<path d="M156 116L88 326" stroke="#183449" fill="none"/>
+<text x="32" y="352" font-size="15">Wall {{svg-number:inputs.thickness_mm:3}} mm</text>
+<text x="520" y="338" font-size="14">Uniform shell; end details excluded</text>
+</svg>
+<figcaption>Figure 1. Closed-cylinder membrane idealisation. End closures transmit the pressure thrust; supports and local end stresses are excluded. Dimensions are converted from the public problem. The diameter convention is ASSUMED - to be confirmed. <a href="#ref-pressure">Geometry source</a>; <a href="#ref-units">unit basis</a>.</figcaption>
+</figure>
+<h3>3.1 Inputs and outputs</h3>
+<p>Pressure is supplied in megapascals and both radius and thickness in metres. Membrane stresses are returned in megapascals. The tensor interface accepts and returns stresses in the same units; megapascals are retained throughout this example. Other structural interfaces use different unit conventions, so their input definitions remain controlling. <a href="#record-api">Interface records</a>.</p>
+<p>The material object required by the stress calculator is stored by the constructor but is not read by the selected membrane stress methods. The supplied material preset therefore contributes no strength value to this example. Material acceptance is assessed separately from stress recovery. <a href="#record-api">Implementation record</a>.</p>
+<h3>3.2 Criteria and rationale</h3>
+<p>The calculation criterion is equilibrium of a thin, uniform cylindrical shell under differential internal pressure. The pressure is treated as internal pressure relative to the exterior, with tensile normal stress positive. The closed ends transmit pressure thrust to the shell. These conditions are required for the longitudinal membrane equation. <a href="#ref-pressure">Pressure Vessels, Stresses</a>.</p>
+<p>The wall-to-radius ratio is {{number:metrics.wall_radius_percent:1}} %. The source requires a radius large relative to thickness but does not specify a numerical acceptance ratio. This reported ratio is a geometry descriptor, not a pass criterion. Material allowable stress, its temperature basis and the governing design rules are missing; strength acceptance is NOT_EVALUATED. <a href="#ref-pressure">Thin-wall basis</a>.</p>
+</section>
+<section id="section-4">
+<h2>4. Methodology</h2>
+<p>Membrane stresses are calculated from force equilibrium, and stress invariants are calculated from the assembled symmetric stress tensor. The public equations are applied through the module rather than reimplemented as reported results. <a href="#ref-pressure">Membrane basis</a>; <a href="#ref-yield">equivalent-stress basis</a>.</p>
+<h3>4.1 Membrane equilibrium</h3>
+<p>The hoop and axial stresses are σ<sub>θ</sub> = pr/t and σ<sub>a</sub> = pr/(2t), respectively. Here p is differential internal pressure, r is the internal radius and t is the uniform wall thickness. The coefficient in the axial equation follows from closed-end force equilibrium. <a href="#ref-pressure">Pressure Vessels, equations (2) and (3), 2001 edition</a>.</p>
+<p>The local axes are axial x, circumferential y and radial z. Normal stresses σ<sub>x</sub> and σ<sub>y</sub> are assigned the axial and hoop results. Radial stress and all shear components are set to zero in the membrane idealisation. The source identifies the neglected radial stress as the reason that the thin-wall condition is required. <a href="#ref-pressure">Thin-wall discussion</a>.</p>
+<h3>4.2 Stress tensor reduction</h3>
+<p>The equivalent stress is σ<sub>e</sub> = √{[(σ<sub>x</sub> − σ<sub>y</sub>)² + (σ<sub>y</sub> − σ<sub>z</sub>)² + (σ<sub>z</sub> − σ<sub>x</sub>)² + 6(τ<sub>xy</sub>² + τ<sub>xz</sub>² + τ<sub>yz</sub>²)]/2}. The symbols τ denote the shear components on the named planes. This is a stress measure; a yield criterion also requires material strength. <a href="#ref-yield">Yield and Plastic Flow, Multiaxial stress states, 2001 edition</a>.</p>
+<p>Principal stresses σ<sub>1</sub> ≥ σ<sub>2</sub> ≥ σ<sub>3</sub> are the eigenvalues of the symmetric stress tensor. Maximum shear stress is (σ<sub>1</sub> − σ<sub>3</sub>)/2. The radial principal stress is retained when finding the maximum shear; restricting the comparison to the tangential plane omits the governing shear plane for this loading. <a href="#ref-tensor">Tensor basis</a>; <a href="#ref-yield">closed-cylinder shear example</a>.</p>
+</section>
+<section id="section-5">
+<h2>5. Detailed Results</h2>
+<p>With the source diameter interpreted as the internal diameter, the hoop stress is {{number:results.hoop_mpa:1}} MPa and the equivalent stress is {{number:results.equivalent_mpa:1}} MPa at {{number:inputs.pressure_mpa:1}} MPa internal pressure. The diameter convention is ASSUMED - to be confirmed. Strength acceptance is NOT_EVALUATED. <a href="#ref-pressure">Public input basis</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Output</th><th>Stress (MPa)</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Hoop normal stress</td><td>{{number:results.hoop_mpa:1}}</td><td>Membrane calculation; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Axial normal stress</td><td>{{number:results.axial_mpa:1}}</td><td>Membrane calculation; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Equivalent stress</td><td>{{number:results.equivalent_mpa:1}}</td><td>Tensor reduction; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Maximum principal stress</td><td>{{number:results.principals_mpa.0:1}}</td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Intermediate principal stress</td><td>{{number:results.principals_mpa.1:1}}</td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Minimum principal stress, membrane idealisation</td><td>{{number:results.principals_mpa.2:1}}</td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Maximum shear stress, all planes</td><td>{{number:results.max_shear_mpa:1}}</td><td>Principal-stress difference; <a href="#record-api">calculation record</a></td></tr>
+</tbody><caption>Calculated stresses for the public cylinder. The zero minimum principal stress is the membrane model value; it is not the inner-surface radial stress.</caption>
+</table></div>
+<figure>{{CHART}}
+<figcaption>Stress response from zero pressure to the source pressure. Hover over or focus a point to read the component, pressure, demand and strength-limit disposition. The strength limit is NOT_EVALUATED because allowable stress is missing; no operating envelope is established.</figcaption>
+</figure>
+<label for="pressure-sample">Inspect a calculated pressure sample</label>
+<input id="pressure-sample" type="range" min="0" max="20" value="20" step="1">
+<p id="sample-readout" aria-live="polite">The source-pressure results are tabulated above. Interactive values require scripting.</p>
+<p>Hoop stress governs the normal-stress components in this load case. The equivalent stress remains below the hoop stress because both tangential normal stresses are tensile. This ordering describes the calculated demand and does not establish a margin to material strength. <a href="#ref-yield">Stress-state basis</a>.</p>
+</section>
+<section id="section-6">
+<h2>6. Validation</h2>
+<p>The repository evidence consists of analytical unit tests, documented examples and the rebuilt public example. This evidence checks numerical behaviour; no measured cylinder response or independent pressure-rating benchmark is supplied for the worked example. <a href="#record-tests">Evidence records</a>.</p>
+<p>The existing unit tests cover uniaxial stress, pure shear, principal-stress ordering, maximum shear and hoop and longitudinal stress equations. They also exercise the separate plate, column and member-capacity calculations. Those broader tests do not establish the suitability of this cylinder for service. <a href="#record-tests">Existing test record</a>.</p>
+<p>The accompanying example test compares every reported tensor output and every pressure sample with a fresh module call. Independent equilibrium expressions and a closed-form equivalent-stress expression provide additional numerical comparators. The hoop-stress difference relative to the equilibrium reference is {{number:metrics.hoop_difference_percent:1}} %. This is an equation comparison, not a measured validation uncertainty. <a href="#record-rebuild">Rebuild evidence</a>.</p>
+<p>The legacy command-line tests require the installed command-line entry point. That executable is absent from the calculation environment used for this issue; those tests did not reach the calculations. The worked example uses the documented Python interface. <a href="#record-tests">Command-line evidence</a>.</p>
+</section>
+<section id="section-7">
+<h2>7. Limits of Use and Not Covered</h2>
+<p>The membrane equations are restricted to a thin, uniform cylinder away from geometric discontinuities. Local bending, through-wall stress variation, openings, weld details and end-closure stresses are outside this idealisation. <a href="#ref-pressure">Membrane assumptions</a>.</p>
+<p>The selected stress functions do not reject zero or negative wall thickness, negative radius or non-finite pressure. Dimensional consistency and finite, physically meaningful inputs are therefore required before use. No equivalent-stress limit or material acceptance flag is returned by these stress functions. <a href="#record-api">Implementation record</a>.</p>
+<h3>7.1 Not covered</h3>
+<p>The module also contains plate and stiffened-panel buckling, column and member capacity, pressure and wall-thickness strategies, pipe cross-section weight and buoyancy, fatigue counting and damage, spectral fatigue, nonlinear stress response, finite-element adapters, connection checks, parachute frames, offshore containers and lifecycle screening. These sub-areas have distinct assumptions and interfaces; their engineering qualification is not established by this stress example. <a href="#record-scope">Scope records</a>.</p>
+<p>Installation dynamics, rigging, environmental response and sea-state limits are outside this calculation. No installation decision is issued. Radial displacement is not calculated because the elastic constants required by the public problem are missing. <a href="#ref-pressure">Displacement basis</a>.</p>
+</section>
+<section id="section-8">
+<h2>8. Recommendations</h2>
+<p>The stress result is suitable for reviewing the stated membrane equations and interface units. Design use requires the missing material and geometric evidence to be resolved before a pressure limit is assigned. <a href="#ref-pressure">Applicability basis</a>; <a href="#ref-yield">strength basis</a>.</p>
+<p>Confirmation of the diameter convention is recommended as the first engineering action. A component drawing or dimensional record is required to identify the inner radius and effective wall thickness. The present result remains conditional on that convention. <a href="#ref-pressure">Radius definition</a>.</p>
+<p>Selection of an applicable design code, edition, allowable stress at temperature, corrosion allowance, weld basis and load combinations is recommended before pressure-rating assessment. Material yield alone does not cover all pressure-component failure modes. No numerical pressure limit is issued until that criterion is supplied. <a href="#ref-yield">Material-strength dependency</a>.</p>
+<p>An independent analytical benchmark with fully specified geometry, material and acceptance criteria is recommended for each additional sub-area selected for use. Guarding the stress interface against non-finite and non-physical inputs is recommended before automated assessment of externally supplied data. The maintainer can use the existing tests and the public example as the initial regression basis. <a href="#record-api">Input behaviour</a>; <a href="#record-rebuild">example checks</a>.</p>
+</section>
+<section id="section-9">
+<h2>9. References</h2>
+<p>Open teaching documents provide the worked-example theory, and repository records identify the implementation and its checks. No licensed standard supplies a numerical value to this report.</p>
+<h3>9.1 Public calculation basis</h3>
+<p id="ref-pressure"><a href="https://ocw.mit.edu/courses/3-91-mechanical-behavior-of-plastics-spring-2007/0be49aef0263a94601f18b28c64af705_06_pv.pdf">MIT OpenCourseWare, Pressure Vessels</a>, edition dated 23 August 2001. Stresses, equations (2) and (3), printed page 3; thin-wall discussion, printed page 3; Problems, Problem 1, printed page 9; deformation discussion for the displacement dependency.</p>
+<p id="ref-yield"><a href="https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/913c0305981479e7474e1a229f53d2d9_MIT3_11F99_yield.pdf">MIT OpenCourseWare, Yield and Plastic Flow</a>, edition dated 15 October 2001. Multiaxial stress states; closed-cylinder shear example, printed page 3; equivalent-stress definitions, printed page 5.</p>
+<p id="ref-tensor"><a href="https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/0d670d6da74323e2d82562b0c1289635_MIT3_11F99_trans.pdf">MIT OpenCourseWare, Tensor Transformations</a>, course edition Fall 1999. Principal stresses and the stress-tensor eigenvalue problem.</p>
+<p id="ref-units"><a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">National Institute of Standards and Technology, Special Publication 811, Guide for the Use of the International System of Units</a>, 2008 edition, Appendix B.8, inch and pound-force per square inch entries; section 4.3, prefixes. The pressure conversion uses the published rounded factor. Conversion precision is retained in the input record; displayed stresses are rounded only after calculation.</p>
+<h3>9.2 Calculation and evidence locators</h3>
+<p id="record-api">The public Python interface is documented in <a href="../../../../src/digitalmodel/structural/structural_analysis/README.md">the structural-analysis guide</a> and exported by <a href="../../../../src/digitalmodel/structural/structural_analysis/__init__.py">the public package</a>. The selected methods are <code>StressCalculator.hoop_stress</code> and <code>StressCalculator.longitudinal_stress</code> in <a href="../../../../src/digitalmodel/structural/structural_analysis/stress_calculator.py">the stress calculator</a>; tensor methods are <code>StressState.von_mises</code>, <code>principal_stresses</code> and <code>max_shear</code> in <a href="../../../../src/digitalmodel/structural/structural_analysis/models.py">the stress models</a>.</p>
+<p id="record-tests">Existing evidence: <a href="../../../../tests/structural/structural_analysis/test_structural_analysis_unit.py">analytical unit tests</a>, <a href="../../../../tests/structural/structural_analysis/test_structural_analysis_cli.py">command-line tests</a>, and the <a href="../../../../pyproject.toml">command-line entry-point definition</a>. Additional stress and nonlinear tests exist in <a href="../../../../tests/structural/stress/">the stress test directory</a>; they are outside the numerical example.</p>
+<p id="record-scope">Module boundaries are identified by <a href="../../../../src/digitalmodel/structural/">the structural source tree</a> and <a href="../../../registry/module-routing.yaml">the routing registry</a>. These are implementation inventories rather than evidence of compliance with any design standard.</p>
+<p id="record-rebuild">The retained input record is <a href="public-cylinder.json">public-cylinder.json</a>. The <a href="../../../../scripts/reporting/build_structural_module_report.py">report generator</a> calls the public module and embeds the exact calculation data; <a href="../../../../tests/structural/test_structural_module_report.py">the report test</a> rebuilds the HTML and checks numerical equality. The <a href="../../pipeline-ffs-assessment.html">existing assessment report</a> supplies the inlined stylesheet and page layout.</p>
+<pre><code>from digitalmodel.structural.structural_analysis import (
+    StressCalculator, StressState, STEEL_S355,
+)
+
+# p, r and t are read from the documented input record and converted.
+calculator = StressCalculator(STEEL_S355)
+hoop = calculator.hoop_stress(p, r, t)
+axial = calculator.longitudinal_stress(p, r, t)
+state = StressState(sigma_x=axial, sigma_y=hoop)
+equivalent = state.von_mises()
+principals = state.principal_stresses()
+maximum_shear = state.max_shear()</code></pre>
+</section>
+<section id="section-10">
+<h2>10. Appendices</h2>
+<p>The source inputs, missing data and numerical checks are retained below. A true zero is distinguished from a quantity that is not evaluated.</p>
+<h3>10.1 Input and data register</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Source cylinder diameter</td><td>{{number:source_inputs.diameter_in:3}}</td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source wall thickness</td><td>{{number:source_inputs.thickness_in:3}}</td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source cylinder length</td><td>{{number:source_inputs.length_in:3}}</td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source internal pressure</td><td>{{number:source_inputs.pressure_psi:3}}</td><td>psi</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+</tbody><caption>Table 1. Public problem inputs. Length is documented but does not enter the membrane stress equations.</caption>
+</table></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Data item</th><th>Disposition</th><th>Consequence and next action</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Diameter convention</td><td>ASSUMED - to be confirmed</td><td>The source diameter is treated as the internal diameter. Confirm against a dimensional definition before component use.</td><td><a href="#ref-pressure">Source problem and inner-radius equation</a></td></tr>
+<tr><td>Material strength and allowable stress at temperature</td><td>NOT_EVALUATED</td><td>Supply the material record and governing criterion before calculating utilization or pressure rating.</td><td><a href="#ref-yield">Yield criterion dependency</a></td></tr>
+<tr><td>Elastic constants</td><td>NOT_EVALUATED</td><td>Radial displacement cannot be calculated from the supplied data. Supply the elastic constants before assessing displacement.</td><td><a href="#ref-pressure">Deformation equations</a></td></tr>
+<tr><td>End details, supports, local loads and damage</td><td>NOT_EVALUATED</td><td>Define these details before applying the membrane result to a component.</td><td><a href="#ref-pressure">Thin-shell idealisation</a></td></tr>
+<tr><td>Source catalog membership</td><td>Not established</td><td>The shared source catalog is not present in the inspected checkout. The public source, edition, units and input digest are retained in the calculation record.</td><td><a href="#record-rebuild">Input provenance</a></td></tr>
+</tbody><caption>Table 2. Data register. No missing property is replaced by a material preset.</caption>
+</table></div>
+<h3>10.2 Symbols and status legend</h3>
+<p>p denotes differential internal pressure; r, internal radius; t, wall thickness; σ, normal stress; τ, shear stress. Subscripts θ and a denote circumferential and axial directions; x, y and z denote the local axial, circumferential and radial axes. Subscript e denotes equivalent stress; ordered subscripts 1, 2 and 3 denote principal stresses. MPa denotes megapascal; m denotes metre; mm denotes millimetre; in denotes inch; psi denotes pound-force per square inch.</p>
+<p>Strength acceptance is NOT_EVALUATED when the material criterion is missing. The diameter convention is ASSUMED - to be confirmed. Zero radial stress is a membrane idealisation. These statements apply to the figure, table and interactive readout.</p>
+<h3>10.3 Calculation quality checks</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Check</th><th>Evidence and criterion</th></tr></thead>
+<tbody>
+<tr><td>Public input basis</td><td>Problem inputs, source edition, units and diameter assumption are retained. <a href="#record-rebuild">Input record</a>.</td></tr>
+<tr><td>Numerical correspondence</td><td>Every reported example value and every plotted point is compared with a fresh public-interface call by the rebuild test. <a href="#record-rebuild">Equality checks</a>.</td></tr>
+<tr><td>Independent equation comparison</td><td>Membrane equilibrium, diagonal principal stresses, equivalent stress and maximum shear are compared with separate closed-form expressions. Numerical relative tolerance is 10⁻¹²; this is a calculation-test tolerance, not a physical uncertainty bound. <a href="#record-rebuild">Numerical criterion</a>.</td></tr>
+<tr><td>Reproduction</td><td>The rebuilt HTML and changes record are compared byte for byte with the retained report. No remote asset is required for reading, charts or comment editing. <a href="#record-rebuild">Rebuild contract</a>.</td></tr>
+<tr><td>Engineering disposition</td><td>Pressure acceptance, displacement and unassessed failure modes remain not evaluated. The numerical example is not a component qualification.</td></tr>
+</tbody><caption>Table 3. Quality-check basis. Accompanying tests establish software correspondence; missing physical validation remains explicit.</caption>
+</table></div>
+</section>
+<aside id="reader-comments" aria-label="Comments and changes">
+<h2>Comments and changes</h2>
+<details><summary>Engineering changes since an earlier revision</summary>
+<div id="change-panel"></div></details>
+<p>Comments are retained as a browser draft. Select the report folder to save a comments file beside the HTML. Where folder access is unavailable, download the comments file and place it beside the report. Saved comments are loaded with the file selector.</p>
+<form id="comment-form">
+<label for="comment-section">Report section</label>
+<select id="comment-section"></select>
+<label for="comment-text">Comment</label>
+<textarea id="comment-text" rows="4" required maxlength="4000"></textarea>
+<button type="submit">Add comment</button>
+</form>
+<button id="save-comments" type="button">Save beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load saved comments</label>
+<input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-status" role="status">No comments have been saved by this page.</p>
+<ol id="comment-list"></ol>
+</aside>
+</main></div>
+<script id="calculation-data" type="application/json">{{DATA}}</script>
+<script id="change-data" type="application/json">{{CHANGES}}</script>
+<script>{{UI}}</script>
+</body></html>

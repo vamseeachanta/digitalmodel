@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural module analysis: elastic stress recovery</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Structural module analysis: elastic stress recovery</h1>
+<p>Draft for client review</p>
+<p>Revision 1 | 22 October 2026</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction</a></li>
+<li><a href="#section-3">Design Data and Criteria</a></li>
+<li><a href="#section-4">Methodology</a></li>
+<li><a href="#section-5">Detailed Results</a></li>
+<li><a href="#section-6">Validation</a></li>
+<li><a href="#section-7">Limits of Use and Not Covered</a></li>
+<li><a href="#section-8">Recommendations</a></li>
+<li><a href="#section-9">References</a></li>
+<li><a href="#section-10">Appendices</a></li>
+</ol><p><a href="#reader-comments">Comments and changes</a></p></nav>
+<main>
+<section id="section-1">
+<h2>1. Executive Summary</h2>
+<p>The structural module is a collection of analytical stress, stability, strength and fatigue calculations. Analysis is performed to determine the membrane stresses in a documented closed-end cylinder example; key results are summarized below.</p>
+<ul>
+<li>The membrane stress calculation can be reproduced for the public cylinder.
+<ul><li>With the source diameter interpreted as the internal diameter, the hoop stress is <span data-number="results.hoop_mpa" data-decimals="1">413.7</span> MPa and the equivalent stress is <span data-number="results.equivalent_mpa" data-decimals="1">358.3</span> MPa at <span data-number="inputs.pressure_mpa" data-decimals="1">10.3</span> MPa internal pressure. The diameter convention is ASSUMED - to be confirmed. <a href="#section-5">Detailed results</a>.</li></ul></li>
+<li>A pressure rating cannot be assigned from this example.
+<ul><li>Material strength and the governing allowable-stress criterion are required inputs. Strength acceptance is NOT_EVALUATED. <a href="#section-3">Design criteria</a>.</li></ul></li>
+</ul>
+<div id="revision-history" class="table-wrap"><table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>22 October 2026</td><td>The first issue establishes an example of membrane stress recovery and identifies the evidence needed for a pressure assessment.</td></tr></tbody>
+<caption>Revision history. The current issue introduces the calculation basis.</caption>
+</table></div>
+</section>
+<section id="section-2">
+<h2>2. Introduction</h2>
+<p>The structural module is used to calculate stresses and selected structural resistances from supplied geometry, materials and loads. Its public stress interface is assessed here through the documented calculation classes and their existing unit tests. <a href="#record-api">Calculation records</a>.</p>
+<p>Stress recovery is the main workflow covered. Pressure, internal radius and wall thickness are supplied; hoop and longitudinal stresses are returned. The resulting stress tensor is then used to obtain equivalent stress, principal stresses and maximum shear stress. The calculation does not determine the pressure or the structural boundary conditions. <a href="#record-api">Interface records</a>.</p>
+<p>The published cylinder problem provides an open calculation basis without a project-specific component. Its radial displacement question is outside the worked example because elastic constants are not supplied. Separate strength, buckling and fatigue assessments remain necessary for a component design. <a href="#ref-pressure">Public example</a>.</p>
+</section>
+<section id="section-3">
+<h2>3. Design Data and Criteria</h2>
+<p>A uniform cylinder with closed ends is assessed under internal pressure. The source dimensions and pressure are retained in the appendix, and the diameter is interpreted as the internal diameter for this calculation. <a href="#ref-pressure">Source basis</a>.</p>
+<figure>
+<svg viewBox="0 0 840 370" role="img" aria-label="Closed-end cylindrical shell with internal pressure, axial stress and hoop stress; schematic, not to scale">
+<defs>
+<linearGradient id="shell-shading" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3dfe4"/><stop offset="0.5" stop-color="#f2f7f8"/><stop offset="1" stop-color="#a8bbc4"/></linearGradient>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#137e8a"/></marker>
+</defs>
+<path d="M180 90L620 90A36 76 0 0 1 620 242L180 242Z" fill="url(#shell-shading)" stroke="#183449" stroke-width="2"/>
+<ellipse cx="180" cy="166" rx="36" ry="76" fill="#d3dfe4" stroke="#183449" stroke-width="2"/>
+<ellipse cx="180" cy="166" rx="29" ry="66" fill="#e1f0f3" stroke="#137e8a"/>
+<path d="M620 90A36 76 0 0 0 620 242" fill="none" stroke="#183449" stroke-dasharray="5 4"/>
+<path d="M220 166H581M385 165V106M385 165V226" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="265" y="155" font-size="16">Internal pressure p</text>
+<path d="M655 165H726M143 165H94" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="672" y="145" font-size="16">Axial stress</text>
+<text x="672" y="188" font-size="16">Closed end</text>
+<path d="M390 85C440 45 491 48 504 81" fill="none" stroke="#137e8a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="376" y="34" font-size="16">Hoop stress</text>
+<path d="M180 276H620M180 258V290M620 258V290" stroke="#183449" fill="none"/>
+<text x="267" y="310" font-size="16">Length <tspan data-number="inputs.length_mm" data-decimals="1">762.0</tspan> mm</text>
+<path d="M115 100V232M102 100H130M102 232H130" stroke="#183449" fill="none"/>
+<text x="14" y="75" font-size="15">Internal diameter</text>
+<text x="17" y="97" font-size="15"><tspan data-number="inputs.diameter_mm" data-decimals="1">152.4</tspan> mm</text>
+<path d="M156 116L88 326" stroke="#183449" fill="none"/>
+<text x="32" y="352" font-size="15">Wall <tspan data-number="inputs.thickness_mm" data-decimals="3">1.905</tspan> mm</text>
+<text x="520" y="338" font-size="14">Uniform shell; end details excluded</text>
+</svg>
+<figcaption>Figure 1. Closed-cylinder membrane idealisation. End closures transmit the pressure thrust; supports and local end stresses are excluded. Dimensions are converted from the public problem. The diameter convention is ASSUMED - to be confirmed. <a href="#ref-pressure">Geometry source</a>; <a href="#ref-units">unit basis</a>.</figcaption>
+</figure>
+<h3>3.1 Inputs and outputs</h3>
+<p>Pressure is supplied in megapascals and both radius and thickness in metres. Membrane stresses are returned in megapascals. The tensor interface accepts and returns stresses in the same units; megapascals are retained throughout this example. Other structural interfaces use different unit conventions, so their input definitions remain controlling. <a href="#record-api">Interface records</a>.</p>
+<p>The material object required by the stress calculator is stored by the constructor but is not read by the selected membrane stress methods. The supplied material preset therefore contributes no strength value to this example. Material acceptance is assessed separately from stress recovery. <a href="#record-api">Implementation record</a>.</p>
+<h3>3.2 Criteria and rationale</h3>
+<p>The calculation criterion is equilibrium of a thin, uniform cylindrical shell under differential internal pressure. The pressure is treated as internal pressure relative to the exterior, with tensile normal stress positive. The closed ends transmit pressure thrust to the shell. These conditions are required for the longitudinal membrane equation. <a href="#ref-pressure">Pressure Vessels, Stresses</a>.</p>
+<p>The wall-to-radius ratio is <span data-number="metrics.wall_radius_percent" data-decimals="1">2.5</span> %. The source requires a radius large relative to thickness but does not specify a numerical acceptance ratio. This reported ratio is a geometry descriptor, not a pass criterion. Material allowable stress, its temperature basis and the governing design rules are missing; strength acceptance is NOT_EVALUATED. <a href="#ref-pressure">Thin-wall basis</a>.</p>
+</section>
+<section id="section-4">
+<h2>4. Methodology</h2>
+<p>Membrane stresses are calculated from force equilibrium, and stress invariants are calculated from the assembled symmetric stress tensor. The public equations are applied through the module rather than reimplemented as reported results. <a href="#ref-pressure">Membrane basis</a>; <a href="#ref-yield">equivalent-stress basis</a>.</p>
+<h3>4.1 Membrane equilibrium</h3>
+<p>The hoop and axial stresses are σ<sub>θ</sub> = pr/t and σ<sub>a</sub> = pr/(2t), respectively. Here p is differential internal pressure, r is the internal radius and t is the uniform wall thickness. The coefficient in the axial equation follows from closed-end force equilibrium. <a href="#ref-pressure">Pressure Vessels, equations (2) and (3), 2001 edition</a>.</p>
+<p>The local axes are axial x, circumferential y and radial z. Normal stresses σ<sub>x</sub> and σ<sub>y</sub> are assigned the axial and hoop results. Radial stress and all shear components are set to zero in the membrane idealisation. The source identifies the neglected radial stress as the reason that the thin-wall condition is required. <a href="#ref-pressure">Thin-wall discussion</a>.</p>
+<h3>4.2 Stress tensor reduction</h3>
+<p>The equivalent stress is σ<sub>e</sub> = √{[(σ<sub>x</sub> − σ<sub>y</sub>)² + (σ<sub>y</sub> − σ<sub>z</sub>)² + (σ<sub>z</sub> − σ<sub>x</sub>)² + 6(τ<sub>xy</sub>² + τ<sub>xz</sub>² + τ<sub>yz</sub>²)]/2}. The symbols τ denote the shear components on the named planes. This is a stress measure; a yield criterion also requires material strength. <a href="#ref-yield">Yield and Plastic Flow, Multiaxial stress states, 2001 edition</a>.</p>
+<p>Principal stresses σ<sub>1</sub> ≥ σ<sub>2</sub> ≥ σ<sub>3</sub> are the eigenvalues of the symmetric stress tensor. Maximum shear stress is (σ<sub>1</sub> − σ<sub>3</sub>)/2. The radial principal stress is retained when finding the maximum shear; restricting the comparison to the tangential plane omits the governing shear plane for this loading. <a href="#ref-tensor">Tensor basis</a>; <a href="#ref-yield">closed-cylinder shear example</a>.</p>
+</section>
+<section id="section-5">
+<h2>5. Detailed Results</h2>
+<p>With the source diameter interpreted as the internal diameter, the hoop stress is <span data-number="results.hoop_mpa" data-decimals="1">413.7</span> MPa and the equivalent stress is <span data-number="results.equivalent_mpa" data-decimals="1">358.3</span> MPa at <span data-number="inputs.pressure_mpa" data-decimals="1">10.3</span> MPa internal pressure. The diameter convention is ASSUMED - to be confirmed. Strength acceptance is NOT_EVALUATED. <a href="#ref-pressure">Public input basis</a>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Output</th><th>Stress (MPa)</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Hoop normal stress</td><td><span data-number="results.hoop_mpa" data-decimals="1">413.7</span></td><td>Membrane calculation; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Axial normal stress</td><td><span data-number="results.axial_mpa" data-decimals="1">206.8</span></td><td>Membrane calculation; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Equivalent stress</td><td><span data-number="results.equivalent_mpa" data-decimals="1">358.3</span></td><td>Tensor reduction; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Maximum principal stress</td><td><span data-number="results.principals_mpa.0" data-decimals="1">413.7</span></td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Intermediate principal stress</td><td><span data-number="results.principals_mpa.1" data-decimals="1">206.8</span></td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Minimum principal stress, membrane idealisation</td><td><span data-number="results.principals_mpa.2" data-decimals="1">0.0</span></td><td>Tensor eigenvalues; <a href="#record-api">calculation record</a></td></tr>
+<tr><td>Maximum shear stress, all planes</td><td><span data-number="results.max_shear_mpa" data-decimals="1">206.8</span></td><td>Principal-stress difference; <a href="#record-api">calculation record</a></td></tr>
+</tbody><caption>Calculated stresses for the public cylinder. The zero minimum principal stress is the membrane model value; it is not the inner-surface radial stress.</caption>
+</table></div>
+<figure><svg viewBox="0 0 820 440" role="img" aria-label="Membrane stress against internal pressure">
+<path d="M85 60V360H710" fill="none" stroke="#183449"/>
+<text x="85.00" y="386" text-anchor="middle" font-size="13"><tspan data-number="series.0.pressure_mpa" data-decimals="1">0.0</tspan></text>
+<text x="240.00" y="386" text-anchor="middle" font-size="13"><tspan data-number="series.5.pressure_mpa" data-decimals="1">2.6</tspan></text>
+<text x="395.00" y="386" text-anchor="middle" font-size="13"><tspan data-number="series.10.pressure_mpa" data-decimals="1">5.2</tspan></text>
+<text x="550.00" y="386" text-anchor="middle" font-size="13"><tspan data-number="series.15.pressure_mpa" data-decimals="1">7.8</tspan></text>
+<text x="705.00" y="386" text-anchor="middle" font-size="13"><tspan data-number="series.20.pressure_mpa" data-decimals="1">10.3</tspan></text>
+<text x="75" y="364.00" text-anchor="end" font-size="13">0.0</text>
+<text x="75" y="219.00" text-anchor="end" font-size="13">206.8</text>
+<text x="75" y="74.00" text-anchor="end" font-size="13">413.7</text>
+<polyline points="85.00,360.00 116.00,345.50 147.00,331.00 178.00,316.50 209.00,302.00 240.00,287.50 271.00,273.00 302.00,258.50 333.00,244.00 364.00,229.50 395.00,215.00 426.00,200.50 457.00,186.00 488.00,171.50 519.00,157.00 550.00,142.50 581.00,128.00 612.00,113.50 643.00,99.00 674.00,84.50 705.00,70.00" fill="none" stroke="#137e8a" stroke-width="2"/>
+<text x="100" y="32" fill="#137e8a" font-size="14">Hoop stress</text>
+<circle tabindex="0" cx="85.00" cy="360.00" r="4" fill="#137e8a" data-point="0" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="116.00" cy="345.50" r="4" fill="#137e8a" data-point="1" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 0.5 MPa; demand 20.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 0.5 MPa; demand 20.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="147.00" cy="331.00" r="4" fill="#137e8a" data-point="2" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 1.0 MPa; demand 41.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 1.0 MPa; demand 41.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="178.00" cy="316.50" r="4" fill="#137e8a" data-point="3" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 1.6 MPa; demand 62.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 1.6 MPa; demand 62.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="209.00" cy="302.00" r="4" fill="#137e8a" data-point="4" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 2.1 MPa; demand 82.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 2.1 MPa; demand 82.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="240.00" cy="287.50" r="4" fill="#137e8a" data-point="5" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 2.6 MPa; demand 103.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 2.6 MPa; demand 103.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="271.00" cy="273.00" r="4" fill="#137e8a" data-point="6" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 3.1 MPa; demand 124.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 3.1 MPa; demand 124.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="302.00" cy="258.50" r="4" fill="#137e8a" data-point="7" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 3.6 MPa; demand 144.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 3.6 MPa; demand 144.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="333.00" cy="244.00" r="4" fill="#137e8a" data-point="8" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 4.1 MPa; demand 165.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 4.1 MPa; demand 165.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="364.00" cy="229.50" r="4" fill="#137e8a" data-point="9" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 4.7 MPa; demand 186.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 4.7 MPa; demand 186.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="395.00" cy="215.00" r="4" fill="#137e8a" data-point="10" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 5.2 MPa; demand 206.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 5.2 MPa; demand 206.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="426.00" cy="200.50" r="4" fill="#137e8a" data-point="11" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 5.7 MPa; demand 227.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 5.7 MPa; demand 227.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="457.00" cy="186.00" r="4" fill="#137e8a" data-point="12" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 6.2 MPa; demand 248.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 6.2 MPa; demand 248.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="488.00" cy="171.50" r="4" fill="#137e8a" data-point="13" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 6.7 MPa; demand 268.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 6.7 MPa; demand 268.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="519.00" cy="157.00" r="4" fill="#137e8a" data-point="14" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 7.2 MPa; demand 289.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 7.2 MPa; demand 289.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="550.00" cy="142.50" r="4" fill="#137e8a" data-point="15" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 7.8 MPa; demand 310.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 7.8 MPa; demand 310.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="581.00" cy="128.00" r="4" fill="#137e8a" data-point="16" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 8.3 MPa; demand 330.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 8.3 MPa; demand 330.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="612.00" cy="113.50" r="4" fill="#137e8a" data-point="17" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 8.8 MPa; demand 351.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 8.8 MPa; demand 351.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="643.00" cy="99.00" r="4" fill="#137e8a" data-point="18" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 9.3 MPa; demand 372.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 9.3 MPa; demand 372.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="674.00" cy="84.50" r="4" fill="#137e8a" data-point="19" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 9.8 MPa; demand 393.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 9.8 MPa; demand 393.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="705.00" cy="70.00" r="4" fill="#137e8a" data-point="20" data-component="hoop_mpa" aria-label="Public cylinder; hoop membrane stress; pressure 10.3 MPa; demand 413.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; hoop membrane stress; pressure 10.3 MPa; demand 413.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<polyline points="85.00,360.00 116.00,352.75 147.00,345.50 178.00,338.25 209.00,331.00 240.00,323.75 271.00,316.50 302.00,309.25 333.00,302.00 364.00,294.75 395.00,287.50 426.00,280.25 457.00,273.00 488.00,265.75 519.00,258.50 550.00,251.25 581.00,244.00 612.00,236.75 643.00,229.50 674.00,222.25 705.00,215.00" fill="none" stroke="#516573" stroke-width="2"/>
+<text x="300" y="32" fill="#516573" font-size="14">Axial stress</text>
+<circle tabindex="0" cx="85.00" cy="360.00" r="4" fill="#516573" data-point="0" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="116.00" cy="352.75" r="4" fill="#516573" data-point="1" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 0.5 MPa; demand 10.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 0.5 MPa; demand 10.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="147.00" cy="345.50" r="4" fill="#516573" data-point="2" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 1.0 MPa; demand 20.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 1.0 MPa; demand 20.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="178.00" cy="338.25" r="4" fill="#516573" data-point="3" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 1.6 MPa; demand 31.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 1.6 MPa; demand 31.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="209.00" cy="331.00" r="4" fill="#516573" data-point="4" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 2.1 MPa; demand 41.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 2.1 MPa; demand 41.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="240.00" cy="323.75" r="4" fill="#516573" data-point="5" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 2.6 MPa; demand 51.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 2.6 MPa; demand 51.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="271.00" cy="316.50" r="4" fill="#516573" data-point="6" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 3.1 MPa; demand 62.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 3.1 MPa; demand 62.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="302.00" cy="309.25" r="4" fill="#516573" data-point="7" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 3.6 MPa; demand 72.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 3.6 MPa; demand 72.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="333.00" cy="302.00" r="4" fill="#516573" data-point="8" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 4.1 MPa; demand 82.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 4.1 MPa; demand 82.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="364.00" cy="294.75" r="4" fill="#516573" data-point="9" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 4.7 MPa; demand 93.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 4.7 MPa; demand 93.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="395.00" cy="287.50" r="4" fill="#516573" data-point="10" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 5.2 MPa; demand 103.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 5.2 MPa; demand 103.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="426.00" cy="280.25" r="4" fill="#516573" data-point="11" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 5.7 MPa; demand 113.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 5.7 MPa; demand 113.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="457.00" cy="273.00" r="4" fill="#516573" data-point="12" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 6.2 MPa; demand 124.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 6.2 MPa; demand 124.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="488.00" cy="265.75" r="4" fill="#516573" data-point="13" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 6.7 MPa; demand 134.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 6.7 MPa; demand 134.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="519.00" cy="258.50" r="4" fill="#516573" data-point="14" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 7.2 MPa; demand 144.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 7.2 MPa; demand 144.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="550.00" cy="251.25" r="4" fill="#516573" data-point="15" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 7.8 MPa; demand 155.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 7.8 MPa; demand 155.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="581.00" cy="244.00" r="4" fill="#516573" data-point="16" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 8.3 MPa; demand 165.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 8.3 MPa; demand 165.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="612.00" cy="236.75" r="4" fill="#516573" data-point="17" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 8.8 MPa; demand 175.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 8.8 MPa; demand 175.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="643.00" cy="229.50" r="4" fill="#516573" data-point="18" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 9.3 MPa; demand 186.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 9.3 MPa; demand 186.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="674.00" cy="222.25" r="4" fill="#516573" data-point="19" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 9.8 MPa; demand 196.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 9.8 MPa; demand 196.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="705.00" cy="215.00" r="4" fill="#516573" data-point="20" data-component="axial_mpa" aria-label="Public cylinder; axial membrane stress; pressure 10.3 MPa; demand 206.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; axial membrane stress; pressure 10.3 MPa; demand 206.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<polyline points="85.00,360.00 116.00,347.44 147.00,334.89 178.00,322.33 209.00,309.77 240.00,297.21 271.00,284.66 302.00,272.10 333.00,259.54 364.00,246.98 395.00,234.43 426.00,221.87 457.00,209.31 488.00,196.75 519.00,184.20 550.00,171.64 581.00,159.08 612.00,146.52 643.00,133.97 674.00,121.41 705.00,108.85" fill="none" stroke="#9b6100" stroke-width="2"/>
+<text x="500" y="32" fill="#9b6100" font-size="14">Equivalent stress</text>
+<circle tabindex="0" cx="85.00" cy="360.00" r="4" fill="#9b6100" data-point="0" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 0.0 MPa; demand 0.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="116.00" cy="347.44" r="4" fill="#9b6100" data-point="1" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 0.5 MPa; demand 17.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 0.5 MPa; demand 17.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="147.00" cy="334.89" r="4" fill="#9b6100" data-point="2" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 1.0 MPa; demand 35.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 1.0 MPa; demand 35.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="178.00" cy="322.33" r="4" fill="#9b6100" data-point="3" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 1.6 MPa; demand 53.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 1.6 MPa; demand 53.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="209.00" cy="309.77" r="4" fill="#9b6100" data-point="4" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 2.1 MPa; demand 71.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 2.1 MPa; demand 71.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="240.00" cy="297.21" r="4" fill="#9b6100" data-point="5" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 2.6 MPa; demand 89.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 2.6 MPa; demand 89.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="271.00" cy="284.66" r="4" fill="#9b6100" data-point="6" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 3.1 MPa; demand 107.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 3.1 MPa; demand 107.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="302.00" cy="272.10" r="4" fill="#9b6100" data-point="7" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 3.6 MPa; demand 125.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 3.6 MPa; demand 125.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="333.00" cy="259.54" r="4" fill="#9b6100" data-point="8" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 4.1 MPa; demand 143.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 4.1 MPa; demand 143.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="364.00" cy="246.98" r="4" fill="#9b6100" data-point="9" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 4.7 MPa; demand 161.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 4.7 MPa; demand 161.2 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="395.00" cy="234.43" r="4" fill="#9b6100" data-point="10" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 5.2 MPa; demand 179.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 5.2 MPa; demand 179.1 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="426.00" cy="221.87" r="4" fill="#9b6100" data-point="11" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 5.7 MPa; demand 197.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 5.7 MPa; demand 197.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="457.00" cy="209.31" r="4" fill="#9b6100" data-point="12" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 6.2 MPa; demand 215.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 6.2 MPa; demand 215.0 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="488.00" cy="196.75" r="4" fill="#9b6100" data-point="13" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 6.7 MPa; demand 232.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 6.7 MPa; demand 232.9 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="519.00" cy="184.20" r="4" fill="#9b6100" data-point="14" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 7.2 MPa; demand 250.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 7.2 MPa; demand 250.8 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="550.00" cy="171.64" r="4" fill="#9b6100" data-point="15" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 7.8 MPa; demand 268.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 7.8 MPa; demand 268.7 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="581.00" cy="159.08" r="4" fill="#9b6100" data-point="16" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 8.3 MPa; demand 286.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 8.3 MPa; demand 286.6 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="612.00" cy="146.52" r="4" fill="#9b6100" data-point="17" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 8.8 MPa; demand 304.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 8.8 MPa; demand 304.5 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="643.00" cy="133.97" r="4" fill="#9b6100" data-point="18" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 9.3 MPa; demand 322.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 9.3 MPa; demand 322.4 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="674.00" cy="121.41" r="4" fill="#9b6100" data-point="19" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 9.8 MPa; demand 340.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 9.8 MPa; demand 340.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<circle tabindex="0" cx="705.00" cy="108.85" r="4" fill="#9b6100" data-point="20" data-component="equivalent_mpa" aria-label="Public cylinder; equivalent membrane stress; pressure 10.3 MPa; demand 358.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated."><title>Public cylinder; equivalent membrane stress; pressure 10.3 MPa; demand 358.3 MPa; strength limit NOT_EVALUATED; strength is not evaluated.</title></circle>
+<text x="390" y="420" text-anchor="middle">Internal pressure (MPa)</text>
+<text transform="translate(20 220) rotate(-90)" text-anchor="middle">Stress (MPa)</text>
+</svg>
+<figcaption>Stress response from zero pressure to the source pressure. Hover over or focus a point to read the component, pressure, demand and strength-limit disposition. The strength limit is NOT_EVALUATED because allowable stress is missing; no operating envelope is established.</figcaption>
+</figure>
+<label for="pressure-sample">Inspect a calculated pressure sample</label>
+<input id="pressure-sample" type="range" min="0" max="20" value="20" step="1">
+<p id="sample-readout" aria-live="polite">The source-pressure results are tabulated above. Interactive values require scripting.</p>
+<p>Hoop stress governs the normal-stress components in this load case. The equivalent stress remains below the hoop stress because both tangential normal stresses are tensile. This ordering describes the calculated demand and does not establish a margin to material strength. <a href="#ref-yield">Stress-state basis</a>.</p>
+</section>
+<section id="section-6">
+<h2>6. Validation</h2>
+<p>The repository evidence consists of analytical unit tests, documented examples and the rebuilt public example. This evidence checks numerical behaviour; no measured cylinder response or independent pressure-rating benchmark is supplied for the worked example. <a href="#record-tests">Evidence records</a>.</p>
+<p>The existing unit tests cover uniaxial stress, pure shear, principal-stress ordering, maximum shear and hoop and longitudinal stress equations. They also exercise the separate plate, column and member-capacity calculations. Those broader tests do not establish the suitability of this cylinder for service. <a href="#record-tests">Existing test record</a>.</p>
+<p>The accompanying example test compares every reported tensor output and every pressure sample with a fresh module call. Independent equilibrium expressions and a closed-form equivalent-stress expression provide additional numerical comparators. The hoop-stress difference relative to the equilibrium reference is <span data-number="metrics.hoop_difference_percent" data-decimals="1">0.0</span> %. This is an equation comparison, not a measured validation uncertainty. <a href="#record-rebuild">Rebuild evidence</a>.</p>
+<p>The legacy command-line tests require the installed command-line entry point. That executable is absent from the calculation environment used for this issue; those tests did not reach the calculations. The worked example uses the documented Python interface. <a href="#record-tests">Command-line evidence</a>.</p>
+</section>
+<section id="section-7">
+<h2>7. Limits of Use and Not Covered</h2>
+<p>The membrane equations are restricted to a thin, uniform cylinder away from geometric discontinuities. Local bending, through-wall stress variation, openings, weld details and end-closure stresses are outside this idealisation. <a href="#ref-pressure">Membrane assumptions</a>.</p>
+<p>The selected stress functions do not reject zero or negative wall thickness, negative radius or non-finite pressure. Dimensional consistency and finite, physically meaningful inputs are therefore required before use. No equivalent-stress limit or material acceptance flag is returned by these stress functions. <a href="#record-api">Implementation record</a>.</p>
+<h3>7.1 Not covered</h3>
+<p>The module also contains plate and stiffened-panel buckling, column and member capacity, pressure and wall-thickness strategies, pipe cross-section weight and buoyancy, fatigue counting and damage, spectral fatigue, nonlinear stress response, finite-element adapters, connection checks, parachute frames, offshore containers and lifecycle screening. These sub-areas have distinct assumptions and interfaces; their engineering qualification is not established by this stress example. <a href="#record-scope">Scope records</a>.</p>
+<p>Installation dynamics, rigging, environmental response and sea-state limits are outside this calculation. No installation decision is issued. Radial displacement is not calculated because the elastic constants required by the public problem are missing. <a href="#ref-pressure">Displacement basis</a>.</p>
+</section>
+<section id="section-8">
+<h2>8. Recommendations</h2>
+<p>The stress result is suitable for reviewing the stated membrane equations and interface units. Design use requires the missing material and geometric evidence to be resolved before a pressure limit is assigned. <a href="#ref-pressure">Applicability basis</a>; <a href="#ref-yield">strength basis</a>.</p>
+<p>Confirmation of the diameter convention is recommended as the first engineering action. A component drawing or dimensional record is required to identify the inner radius and effective wall thickness. The present result remains conditional on that convention. <a href="#ref-pressure">Radius definition</a>.</p>
+<p>Selection of an applicable design code, edition, allowable stress at temperature, corrosion allowance, weld basis and load combinations is recommended before pressure-rating assessment. Material yield alone does not cover all pressure-component failure modes. No numerical pressure limit is issued until that criterion is supplied. <a href="#ref-yield">Material-strength dependency</a>.</p>
+<p>An independent analytical benchmark with fully specified geometry, material and acceptance criteria is recommended for each additional sub-area selected for use. Guarding the stress interface against non-finite and non-physical inputs is recommended before automated assessment of externally supplied data. The maintainer can use the existing tests and the public example as the initial regression basis. <a href="#record-api">Input behaviour</a>; <a href="#record-rebuild">example checks</a>.</p>
+</section>
+<section id="section-9">
+<h2>9. References</h2>
+<p>Open teaching documents provide the worked-example theory, and repository records identify the implementation and its checks. No licensed standard supplies a numerical value to this report.</p>
+<h3>9.1 Public calculation basis</h3>
+<p id="ref-pressure"><a href="https://ocw.mit.edu/courses/3-91-mechanical-behavior-of-plastics-spring-2007/0be49aef0263a94601f18b28c64af705_06_pv.pdf">MIT OpenCourseWare, Pressure Vessels</a>, edition dated 23 August 2001. Stresses, equations (2) and (3), printed page 3; thin-wall discussion, printed page 3; Problems, Problem 1, printed page 9; deformation discussion for the displacement dependency.</p>
+<p id="ref-yield"><a href="https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/913c0305981479e7474e1a229f53d2d9_MIT3_11F99_yield.pdf">MIT OpenCourseWare, Yield and Plastic Flow</a>, edition dated 15 October 2001. Multiaxial stress states; closed-cylinder shear example, printed page 3; equivalent-stress definitions, printed page 5.</p>
+<p id="ref-tensor"><a href="https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/0d670d6da74323e2d82562b0c1289635_MIT3_11F99_trans.pdf">MIT OpenCourseWare, Tensor Transformations</a>, course edition Fall 1999. Principal stresses and the stress-tensor eigenvalue problem.</p>
+<p id="ref-units"><a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">National Institute of Standards and Technology, Special Publication 811, Guide for the Use of the International System of Units</a>, 2008 edition, Appendix B.8, inch and pound-force per square inch entries; section 4.3, prefixes. The pressure conversion uses the published rounded factor. Conversion precision is retained in the input record; displayed stresses are rounded only after calculation.</p>
+<h3>9.2 Calculation and evidence locators</h3>
+<p id="record-api">The public Python interface is documented in <a href="../../../../src/digitalmodel/structural/structural_analysis/README.md">the structural-analysis guide</a> and exported by <a href="../../../../src/digitalmodel/structural/structural_analysis/__init__.py">the public package</a>. The selected methods are <code>StressCalculator.hoop_stress</code> and <code>StressCalculator.longitudinal_stress</code> in <a href="../../../../src/digitalmodel/structural/structural_analysis/stress_calculator.py">the stress calculator</a>; tensor methods are <code>StressState.von_mises</code>, <code>principal_stresses</code> and <code>max_shear</code> in <a href="../../../../src/digitalmodel/structural/structural_analysis/models.py">the stress models</a>.</p>
+<p id="record-tests">Existing evidence: <a href="../../../../tests/structural/structural_analysis/test_structural_analysis_unit.py">analytical unit tests</a>, <a href="../../../../tests/structural/structural_analysis/test_structural_analysis_cli.py">command-line tests</a>, and the <a href="../../../../pyproject.toml">command-line entry-point definition</a>. Additional stress and nonlinear tests exist in <a href="../../../../tests/structural/stress/">the stress test directory</a>; they are outside the numerical example.</p>
+<p id="record-scope">Module boundaries are identified by <a href="../../../../src/digitalmodel/structural/">the structural source tree</a> and <a href="../../../registry/module-routing.yaml">the routing registry</a>. These are implementation inventories rather than evidence of compliance with any design standard.</p>
+<p id="record-rebuild">The retained input record is <a href="public-cylinder.json">public-cylinder.json</a>. The <a href="../../../../scripts/reporting/build_structural_module_report.py">report generator</a> calls the public module and embeds the exact calculation data; <a href="../../../../tests/structural/test_structural_module_report.py">the report test</a> rebuilds the HTML and checks numerical equality. The <a href="../../pipeline-ffs-assessment.html">existing assessment report</a> supplies the inlined stylesheet and page layout.</p>
+<pre><code>from digitalmodel.structural.structural_analysis import (
+    StressCalculator, StressState, STEEL_S355,
+)
+
+# p, r and t are read from the documented input record and converted.
+calculator = StressCalculator(STEEL_S355)
+hoop = calculator.hoop_stress(p, r, t)
+axial = calculator.longitudinal_stress(p, r, t)
+state = StressState(sigma_x=axial, sigma_y=hoop)
+equivalent = state.von_mises()
+principals = state.principal_stresses()
+maximum_shear = state.max_shear()</code></pre>
+</section>
+<section id="section-10">
+<h2>10. Appendices</h2>
+<p>The source inputs, missing data and numerical checks are retained below. A true zero is distinguished from a quantity that is not evaluated.</p>
+<h3>10.1 Input and data register</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Source cylinder diameter</td><td><span data-number="source_inputs.diameter_in" data-decimals="3">6.000</span></td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source wall thickness</td><td><span data-number="source_inputs.thickness_in" data-decimals="3">0.075</span></td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source cylinder length</td><td><span data-number="source_inputs.length_in" data-decimals="3">30.000</span></td><td>in</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+<tr><td>Source internal pressure</td><td><span data-number="source_inputs.pressure_psi" data-decimals="3">1,500.000</span></td><td>psi</td><td><a href="#ref-pressure">Problem 1</a></td></tr>
+</tbody><caption>Table 1. Public problem inputs. Length is documented but does not enter the membrane stress equations.</caption>
+</table></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Data item</th><th>Disposition</th><th>Consequence and next action</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Diameter convention</td><td>ASSUMED - to be confirmed</td><td>The source diameter is treated as the internal diameter. Confirm against a dimensional definition before component use.</td><td><a href="#ref-pressure">Source problem and inner-radius equation</a></td></tr>
+<tr><td>Material strength and allowable stress at temperature</td><td>NOT_EVALUATED</td><td>Supply the material record and governing criterion before calculating utilization or pressure rating.</td><td><a href="#ref-yield">Yield criterion dependency</a></td></tr>
+<tr><td>Elastic constants</td><td>NOT_EVALUATED</td><td>Radial displacement cannot be calculated from the supplied data. Supply the elastic constants before assessing displacement.</td><td><a href="#ref-pressure">Deformation equations</a></td></tr>
+<tr><td>End details, supports, local loads and damage</td><td>NOT_EVALUATED</td><td>Define these details before applying the membrane result to a component.</td><td><a href="#ref-pressure">Thin-shell idealisation</a></td></tr>
+<tr><td>Source catalog membership</td><td>Not established</td><td>The shared source catalog is not present in the inspected checkout. The public source, edition, units and input digest are retained in the calculation record.</td><td><a href="#record-rebuild">Input provenance</a></td></tr>
+</tbody><caption>Table 2. Data register. No missing property is replaced by a material preset.</caption>
+</table></div>
+<h3>10.2 Symbols and status legend</h3>
+<p>p denotes differential internal pressure; r, internal radius; t, wall thickness; σ, normal stress; τ, shear stress. Subscripts θ and a denote circumferential and axial directions; x, y and z denote the local axial, circumferential and radial axes. Subscript e denotes equivalent stress; ordered subscripts 1, 2 and 3 denote principal stresses. MPa denotes megapascal; m denotes metre; mm denotes millimetre; in denotes inch; psi denotes pound-force per square inch.</p>
+<p>Strength acceptance is NOT_EVALUATED when the material criterion is missing. The diameter convention is ASSUMED - to be confirmed. Zero radial stress is a membrane idealisation. These statements apply to the figure, table and interactive readout.</p>
+<h3>10.3 Calculation quality checks</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Check</th><th>Evidence and criterion</th></tr></thead>
+<tbody>
+<tr><td>Public input basis</td><td>Problem inputs, source edition, units and diameter assumption are retained. <a href="#record-rebuild">Input record</a>.</td></tr>
+<tr><td>Numerical correspondence</td><td>Every reported example value and every plotted point is compared with a fresh public-interface call by the rebuild test. <a href="#record-rebuild">Equality checks</a>.</td></tr>
+<tr><td>Independent equation comparison</td><td>Membrane equilibrium, diagonal principal stresses, equivalent stress and maximum shear are compared with separate closed-form expressions. Numerical relative tolerance is 10⁻¹²; this is a calculation-test tolerance, not a physical uncertainty bound. <a href="#record-rebuild">Numerical criterion</a>.</td></tr>
+<tr><td>Reproduction</td><td>The rebuilt HTML and changes record are compared byte for byte with the retained report. No remote asset is required for reading, charts or comment editing. <a href="#record-rebuild">Rebuild contract</a>.</td></tr>
+<tr><td>Engineering disposition</td><td>Pressure acceptance, displacement and unassessed failure modes remain not evaluated. The numerical example is not a component qualification.</td></tr>
+</tbody><caption>Table 3. Quality-check basis. Accompanying tests establish software correspondence; missing physical validation remains explicit.</caption>
+</table></div>
+</section>
+<aside id="reader-comments" aria-label="Comments and changes">
+<h2>Comments and changes</h2>
+<details><summary>Engineering changes since an earlier revision</summary>
+<div id="change-panel"></div></details>
+<p>Comments are retained as a browser draft. Select the report folder to save a comments file beside the HTML. Where folder access is unavailable, download the comments file and place it beside the report. Saved comments are loaded with the file selector.</p>
+<form id="comment-form">
+<label for="comment-section">Report section</label>
+<select id="comment-section"></select>
+<label for="comment-text">Comment</label>
+<textarea id="comment-text" rows="4" required maxlength="4000"></textarea>
+<button type="submit">Add comment</button>
+</form>
+<button id="save-comments" type="button">Save beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load saved comments</label>
+<input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-status" role="status">No comments have been saved by this page.</p>
+<ol id="comment-list"></ol>
+</aside>
+</main></div>
+<script id="calculation-data" type="application/json">{"source_inputs": {"diameter_in": 6, "thickness_in": 0.075, "length_in": 30, "pressure_psi": 1500}, "inputs": {"pressure_mpa": 10.3421355, "radius_m": 0.07619999999999999, "thickness_m": 0.0019049999999999998, "length_m": 0.762, "diameter_mm": 152.39999999999998, "thickness_mm": 1.9049999999999998, "length_mm": 762.0}, "results": {"pressure_mpa": 10.3421355, "hoop_mpa": 413.68541999999997, "axial_mpa": 206.84270999999998, "equivalent_mpa": 358.26208289523504, "principals_mpa": [413.68541999999997, 206.84270999999998, 0.0], "max_shear_mpa": 206.84270999999998}, "series": [{"pressure_mpa": 0.0, "hoop_mpa": 0.0, "axial_mpa": 0.0, "equivalent_mpa": 0.0, "principals_mpa": [0.0, 0.0, 0.0], "max_shear_mpa": 0.0}, {"pressure_mpa": 0.517106775, "hoop_mpa": 20.684271, "axial_mpa": 10.3421355, "equivalent_mpa": 17.913104144761753, "principals_mpa": [20.684271, 10.3421355, 0.0], "max_shear_mpa": 10.3421355}, {"pressure_mpa": 1.03421355, "hoop_mpa": 41.368542, "axial_mpa": 20.684271, "equivalent_mpa": 35.82620828952351, "principals_mpa": [41.368542, 20.684271, 0.0], "max_shear_mpa": 20.684271}, {"pressure_mpa": 1.551320325, "hoop_mpa": 62.052813, "axial_mpa": 31.0264065, "equivalent_mpa": 53.73931243428527, "principals_mpa": [62.052813, 31.0264065, 0.0], "max_shear_mpa": 31.0264065}, {"pressure_mpa": 2.0684271, "hoop_mpa": 82.737084, "axial_mpa": 41.368542, "equivalent_mpa": 71.65241657904701, "principals_mpa": [82.737084, 41.368542, 0.0], "max_shear_mpa": 41.368542}, {"pressure_mpa": 2.585533875, "hoop_mpa": 103.42135499999999, "axial_mpa": 51.710677499999996, "equivalent_mpa": 89.56552072380876, "principals_mpa": [103.42135499999999, 51.710677499999996, 0.0], "max_shear_mpa": 51.710677499999996}, {"pressure_mpa": 3.10264065, "hoop_mpa": 124.105626, "axial_mpa": 62.052813, "equivalent_mpa": 107.47862486857053, "principals_mpa": [124.105626, 62.052813, 0.0], "max_shear_mpa": 62.052813}, {"pressure_mpa": 3.619747425, "hoop_mpa": 144.78989699999997, "axial_mpa": 72.39494849999998, "equivalent_mpa": 125.39172901333225, "principals_mpa": [144.78989699999997, 72.39494849999998, 0.0], "max_shear_mpa": 72.39494849999998}, {"pressure_mpa": 4.1368542, "hoop_mpa": 165.474168, "axial_mpa": 82.737084, "equivalent_mpa": 143.30483315809403, "principals_mpa": [165.474168, 82.737084, 0.0], "max_shear_mpa": 82.737084}, {"pressure_mpa": 4.6539609749999995, "hoop_mpa": 186.15843899999996, "axial_mpa": 93.07921949999998, "equivalent_mpa": 161.21793730285574, "principals_mpa": [186.15843899999996, 93.07921949999998, 0.0], "max_shear_mpa": 93.07921949999998}, {"pressure_mpa": 5.17106775, "hoop_mpa": 206.84270999999998, "axial_mpa": 103.42135499999999, "equivalent_mpa": 179.13104144761752, "principals_mpa": [206.84270999999998, 103.42135499999999, 0.0], "max_shear_mpa": 103.42135499999999}, {"pressure_mpa": 5.688174524999999, "hoop_mpa": 227.52698099999995, "axial_mpa": 113.76349049999997, "equivalent_mpa": 197.04414559237924, "principals_mpa": [227.52698099999995, 113.76349049999997, 0.0], "max_shear_mpa": 113.76349049999997}, {"pressure_mpa": 6.2052813, "hoop_mpa": 248.211252, "axial_mpa": 124.105626, "equivalent_mpa": 214.95724973714107, "principals_mpa": [248.211252, 124.105626, 0.0], "max_shear_mpa": 124.105626}, {"pressure_mpa": 6.722388075, "hoop_mpa": 268.89552299999997, "axial_mpa": 134.44776149999998, "equivalent_mpa": 232.8703538819028, "principals_mpa": [268.89552299999997, 134.44776149999998, 0.0], "max_shear_mpa": 134.44776149999998}, {"pressure_mpa": 7.23949485, "hoop_mpa": 289.57979399999994, "axial_mpa": 144.78989699999997, "equivalent_mpa": 250.7834580266645, "principals_mpa": [289.57979399999994, 144.78989699999997, 0.0], "max_shear_mpa": 144.78989699999997}, {"pressure_mpa": 7.756601624999999, "hoop_mpa": 310.26406499999996, "axial_mpa": 155.13203249999998, "equivalent_mpa": 268.6965621714263, "principals_mpa": [310.26406499999996, 155.13203249999998, 0.0], "max_shear_mpa": 155.13203249999998}, {"pressure_mpa": 8.2737084, "hoop_mpa": 330.948336, "axial_mpa": 165.474168, "equivalent_mpa": 286.60966631618805, "principals_mpa": [330.948336, 165.474168, 0.0], "max_shear_mpa": 165.474168}, {"pressure_mpa": 8.790815175, "hoop_mpa": 351.632607, "axial_mpa": 175.8163035, "equivalent_mpa": 304.5227704609498, "principals_mpa": [351.632607, 175.8163035, 0.0], "max_shear_mpa": 175.8163035}, {"pressure_mpa": 9.307921949999999, "hoop_mpa": 372.3168779999999, "axial_mpa": 186.15843899999996, "equivalent_mpa": 322.4358746057115, "principals_mpa": [372.3168779999999, 186.15843899999996, 0.0], "max_shear_mpa": 186.15843899999996}, {"pressure_mpa": 9.825028725, "hoop_mpa": 393.00114899999994, "axial_mpa": 196.50057449999997, "equivalent_mpa": 340.3489787504733, "principals_mpa": [393.00114899999994, 196.50057449999997, 0.0], "max_shear_mpa": 196.50057449999997}, {"pressure_mpa": 10.3421355, "hoop_mpa": 413.68541999999997, "axial_mpa": 206.84270999999998, "equivalent_mpa": 358.26208289523504, "principals_mpa": [413.68541999999997, 206.84270999999998, 0.0], "max_shear_mpa": 206.84270999999998}], "metrics": {"wall_radius_percent": 2.5, "hoop_difference_percent": 0.0}, "strength_limit_mpa": null, "source_input_digest": "e9d7455c4b04ffd33e4c16764c8e0db34aba90ccaade2c48a9bb4dbf1f71502e", "sources": {"pressure": {"title": "Pressure Vessels", "publisher": "MIT OpenCourseWare", "edition": "2001-08-23", "locator": "Problems, Problem 1, printed page 9; equations (2) and (3), printed page 3", "url": "https://ocw.mit.edu/courses/3-91-mechanical-behavior-of-plastics-spring-2007/0be49aef0263a94601f18b28c64af705_06_pv.pdf", "accessed_on": "2026-10-22", "retention": "Public source is referenced; no source publication is copied."}, "conversions": {"inch_to_m": 0.0254, "psi_to_pa": 6894.757, "pa_to_mpa": 1e-06, "m_to_mm": 1000, "source_title": "NIST Special Publication 811, Guide for the Use of the International System of Units, 2008 edition", "locator": "Appendix B.8, inch and pound-force per square inch entries; section 4.3, SI prefixes", "url": "https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8", "precision": "Pressure conversion uses the published rounded factor, not an exact factor."}}}</script>
+<script id="change-data" type="application/json">{"document": "structural-module-report", "revision": "1", "revisions": [{"revision": "1", "date": "2026-10-22", "changes": ["First issue establishes the closed-cylinder membrane stress example and its diameter assumption.", "Material strength, pressure acceptance and radial displacement remain not evaluated."]}]}</script>
+<script>/* Offline calculation readout and comments; no remote service is used. */
+(() => {
+  "use strict";
+  const data = JSON.parse(document.getElementById("calculation-data").textContent);
+  const changes = JSON.parse(document.getElementById("change-data").textContent);
+  const slider = document.getElementById("pressure-sample");
+  const readout = document.getElementById("sample-readout");
+  const format = (value) => value.toFixed(1).replace("-", "−");
+  const describe = (row) =>
+    `Public cylinder; pressure ${format(row.pressure_mpa)} MPa; ` +
+    `hoop demand ${format(row.hoop_mpa)} MPa; ` +
+    `axial demand ${format(row.axial_mpa)} MPa; ` +
+    `equivalent demand ${format(row.equivalent_mpa)} MPa. ` +
+    "Strength limit NOT_EVALUATED; strength acceptance is not evaluated. " +
+    "The diameter convention is ASSUMED - to be confirmed.";
+  const showSample = () => { readout.textContent = describe(data.series[Number(slider.value)]); };
+  slider.addEventListener("input", showSample);
+  showSample();
+
+  const panel = document.getElementById("change-panel");
+  for (const revision of changes.revisions) {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = `Revision ${revision.revision}, ${revision.date}: ${revision.changes.join(" ")}`;
+    panel.append(paragraph);
+  }
+  const filename = "structural-module-report.comments.json";
+  const storageKey = "structural-module-report-comments-r1";
+  const section = document.getElementById("comment-section");
+  const status = document.getElementById("comment-status");
+  const list = document.getElementById("comment-list");
+  const headings = [...document.querySelectorAll("main > section > h2")];
+  const sectionIds = headings.map((heading) => heading.parentElement.id);
+  for (const heading of headings) {
+    const option = document.createElement("option");
+    option.value = heading.parentElement.id;
+    option.textContent = heading.textContent;
+    section.append(option);
+  }
+  const empty = () => ({document: "structural-module-report", revision: "1", comments: []});
+  function validate(value) {
+    if (!value || value.document !== "structural-module-report" || value.revision !== "1" ||
+        !Array.isArray(value.comments) || value.comments.length > 1000) {
+      throw new Error("The comments file does not match this report revision.");
+    }
+    for (const comment of value.comments) {
+      if (!comment || typeof comment.text !== "string" || !comment.text.trim() ||
+          comment.text.length > 4000 || !sectionIds.includes(comment.section) ||
+          typeof comment.created !== "string" || !Number.isFinite(Date.parse(comment.created))) {
+        throw new Error("The comments file contains an invalid comment.");
+      }
+    }
+    return value;
+  }
+  let comments = empty();
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      comments = validate(JSON.parse(saved));
+      status.textContent = "A browser draft was restored; a file save is still required.";
+    }
+  } catch (_) { status.textContent = "The browser draft is unavailable; file saving remains available."; }
+
+  function draw() {
+    list.replaceChildren();
+    for (const comment of comments.comments) {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${comment.section}`;
+      link.textContent = headings[sectionIds.indexOf(comment.section)].textContent;
+      const text = document.createElement("p");
+      text.textContent = `${comment.created}: ${comment.text}`;
+      item.append(link, text);
+      list.append(item);
+    }
+  }
+  function draft() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(comments));
+      status.textContent = "Browser draft updated; save a comments file to retain it beside the report.";
+    } catch (_) { status.textContent = "Browser storage is unavailable; save a comments file now."; }
+    draw();
+  }
+  document.getElementById("comment-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = document.getElementById("comment-text");
+    if (!text.value.trim() || text.value.length > 4000 || comments.comments.length >= 1000) return;
+    comments.comments.push({section: section.value, text: text.value.trim(), created: new Date().toISOString()});
+    text.value = "";
+    draft();
+  });
+  document.getElementById("save-comments").addEventListener("click", async () => {
+    if (!("showDirectoryPicker" in window)) {
+      status.textContent = "Folder access is unavailable. Download the comments file and place it beside the report.";
+      return;
+    }
+    try {
+      const directory = await window.showDirectoryPicker({mode: "readwrite"});
+      const report = await directory.getFileHandle("structural-module-report.html");
+      const content = await (await report.getFile()).text();
+      if (!content.includes('id="calculation-data"') ||
+          !content.includes(data.source_input_digest)) {
+        throw new Error("The selected folder does not contain the matching report.");
+      }
+      const file = await directory.getFileHandle(filename, {create: true});
+      const writable = await file.createWritable();
+      await writable.write(JSON.stringify(comments, null, 2));
+      await writable.close();
+      status.textContent = "Comments saved beside the matching report in the selected folder.";
+    } catch (error) {
+      status.textContent = error.name === "AbortError" ? "File save cancelled; the browser draft remains available." :
+        `Comments were not saved: ${error.message}`;
+    }
+  });
+  document.getElementById("download-comments").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(comments, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = "Comments download requested. Confirm the file is saved beside the report.";
+  });
+  document.getElementById("load-comments").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 5_000_000) throw new Error("The comments file exceeds the size limit.");
+      const loaded = validate(JSON.parse(await file.text()));
+      if (comments.comments.length && !window.confirm("Replace the current browser draft with the selected comments?")) return;
+      comments = loaded;
+      draft();
+      status.textContent = "Saved comments loaded into the browser draft.";
+    } catch (error) { status.textContent = `Comments were not loaded: ${error.message}`; }
+    event.target.value = "";
+  });
+  draw();
+})();
+</script>
+</body></html>
