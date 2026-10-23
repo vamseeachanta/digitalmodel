@@ -29,11 +29,11 @@ References
 """
 
 import math
-from typing import Optional, Tuple, Union
+from typing import Union
 
 import numpy as np
 from scipy import special
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
@@ -179,7 +179,6 @@ def narrow_band_damage(
     """
     m = sn_slope
     A = 10.0 ** sn_intercept
-    rms = moments.rms
     nu0 = moments.nu_0
 
     # E[S^m] for Rayleigh distribution with scale √(2·m0)
@@ -187,7 +186,6 @@ def narrow_band_damage(
     E_Sm = (2.0 * math.sqrt(2.0 * moments.m0)) ** m * gamma_m
 
     damage_rate = nu0 * E_Sm / A
-    damage = damage_rate * duration
 
     # Equivalent stress range
     s_eq = (E_Sm) ** (1.0 / m) if E_Sm > 0 else 0.0
@@ -344,54 +342,79 @@ def benasciutti_tovo_damage(
     sn_intercept: float,
     duration: float = 1.0,
 ) -> SpectralFatigueResult:
-    """Benasciutti-Tovo two-boundary spectral fatigue method (2005).
+    """Benasciutti-Tovo correction using the fitted BT2 weight (2005).
 
-    Interpolates between narrow-band and wide-band damage bounds
-    using the bandwidth parameter.
+    Metals 11 (2021), 1333, Eqs. (11), (13),
+    https://doi.org/10.3390/met11091333, gives
+    ``lambda = w + (1-w)*alpha2**(m-1)``. The method assumes a stationary
+    Gaussian stress process and a single-slope S-N curve without a fatigue
+    limit. Finite positive moments must satisfy
+    ``0 < alpha2 <= alpha1 <= 1``; slopes below unity are rejected because
+    the reduction bound then no longer follows from Eq. (11).
+
+    Moment and rate conventions are inherited from ``narrow_band_damage``.
+    This correction does not qualify their absolute frequency units.
 
     Parameters
     ----------
     moments : SpectralMoments
     sn_slope : float
+        Finite S-N slope, at least unity (algebraic reduction domain).
     sn_intercept : float
+        Finite log10 of the range-based S-N intercept.
     duration : float
+        Retained for API compatibility; returned damage is a rate.
 
     Returns
     -------
     SpectralFatigueResult
     """
-    nb_result = narrow_band_damage(moments, sn_slope, sn_intercept, duration)
-    nb_damage = nb_result.damage_rate
+    if not all(math.isfinite(v) and v > 0 for v in (
+        moments.m0, moments.m1, moments.m2, moments.m4,
+    )):
+        raise ValueError("moments must be finite and positive")
+    if not math.isfinite(sn_slope) or sn_slope < 1.0:
+        raise ValueError("sn_slope must be finite and at least unity")
+    if not math.isfinite(sn_intercept):
+        raise ValueError("sn_intercept must be finite")
 
-    alpha2 = moments.irregularity_factor
-    m = sn_slope
+    # Metals (2021), Eq. (2): dimensionless moment ratios. Separate square
+    # roots avoid overflowing products of otherwise representable moments.
+    alpha1 = moments.m1 / math.sqrt(moments.m0) / math.sqrt(moments.m2)
+    alpha2 = moments.m2 / math.sqrt(moments.m0) / math.sqrt(moments.m4)
+    # One representable unit at unity accommodates floating-point roundoff;
+    # it is not an empirical bandwidth or engineering acceptance limit.
+    roundoff = math.ulp(1.0)
+    if not (0 < alpha2 <= 1.0 + roundoff
+            and alpha2 - roundoff <= alpha1 <= 1.0 + roundoff):
+        raise ValueError("moments must satisfy 0 < alpha2 <= alpha1 <= 1")
+    alpha2 = min(alpha2, 1.0)
+    alpha1 = min(max(alpha1, alpha2), 1.0)
 
-    # Wide-band (range-counting) correction factor
-    # Benasciutti-Tovo Eq. (13)
-    b_bt = (alpha2 - 1.0) ** 2
-    lam_wb = alpha2 ** (2.0 - m)
-
-    # Interpolation weight
-    # BT Eq. (14): ρ = min((α₁ − α₂)/(1 − α₁), 1) where α₁ = m1/√(m0·m2)
-    alpha1 = moments.m1 / math.sqrt(moments.m0 * moments.m2)
-    if alpha1 < 1.0:
-        rho = min((alpha1 - alpha2) / max(1.0 - alpha1, 1e-12), 1.0)
+    if alpha2 == 1.0:
+        # Eq. (11) gives lambda=1 for a spectral line; Eq. (13) is 0/0.
+        weight = 1.0
     else:
-        rho = 1.0
-    rho = max(rho, 0.0)
+        # Eq. (13), factored using 1+a1*a2-a1-a2=(1-a1)*(1-a2).
+        # Both fitted coefficients, 1.112 and 2.11, are from that equation.
+        ratio = (alpha1 - alpha2) / (1.0 - alpha2)
+        weight = ratio * (
+            ratio + 1.112 * (1.0 - alpha1) * math.exp(2.11 * alpha2)
+        )
 
-    # Combined correction
-    lam = rho * 1.0 + (1.0 - rho) * lam_wb  # 1.0 = narrow-band (no correction)
-    lam = max(lam, lam_wb)  # never below wide-band
-
-    damage_rate = nb_damage * lam
-    s_eq = nb_result.equivalent_stress_range * lam ** (1.0 / m)
+    # Eq. (11): the convex mixture gives alpha2**(m-1) <= lambda <= 1.
+    lam = weight + (1.0 - weight) * alpha2 ** (sn_slope - 1.0)
+    nb_result = narrow_band_damage(moments, sn_slope, sn_intercept, duration)
+    damage_rate = nb_result.damage_rate * lam
+    # Eq. (4), N(range)=A/range**m: match damage at the reported peak rate.
+    # Use unrounded damage rather than scaling an already rounded range.
+    s_eq = (damage_rate * 10.0 ** sn_intercept / moments.nu_p) ** (1.0 / sn_slope)
 
     return SpectralFatigueResult(
         damage_rate=damage_rate,
         damage_per_year=damage_rate * 365.25 * 24 * 3600,
         equivalent_stress_range=round(s_eq, 3),
-        method=f"Benasciutti-Tovo (rho={rho:.3f})",
+        method=f"Benasciutti-Tovo (BT2, rho={weight:.3f})",
         bandwidth_parameter=moments.bandwidth_parameter,
         peak_rate=moments.nu_p,
     )
