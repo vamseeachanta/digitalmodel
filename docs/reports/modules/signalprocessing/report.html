@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="document-binding" content="9de52e089b2045d7cd2ea8a3b89be30128e61fb9c62421a6e44c2c32c004ff1c">
+<title>Signal processing module analysis</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+<style>
+.hs-doc .panel{background:#f2f7f8;border:1px solid var(--line);padding:18px;margin:20px 0}
+.hs-doc svg{width:100%;height:auto;color:var(--ink)}
+.hs-doc svg text{fill:currentColor;font:14px sans-serif}
+.hs-doc .chart-line{fill:none;stroke:var(--ink);stroke-width:2}
+.hs-doc .reference-line{stroke:var(--report-accent);stroke-width:2;stroke-dasharray:7 4}
+.hs-doc .limit-line{stroke:#a54236;stroke-width:2;stroke-dasharray:5 4}
+.hs-doc .axis-line{stroke:var(--ink);stroke-width:1}
+.hs-doc label{display:block;margin:12px 0 5px;font:14px sans-serif}
+.hs-doc textarea,.hs-doc select,.hs-doc input[type=range]{width:100%}
+.hs-doc textarea,.hs-doc select{font:16px/1.5 sans-serif;padding:8px;border:1px solid var(--line)}
+.hs-doc button{background:var(--ink);color:white;border:0;padding:10px 14px;cursor:pointer;margin:8px 8px 8px 0}
+.hs-doc button:focus-visible,.hs-doc a:focus-visible{outline:3px solid var(--report-accent);outline-offset:3px}
+.hs-doc pre{overflow-x:auto;padding:12px;background:#f2f7f8;font:13px/1.6 monospace}
+.hs-doc .note{white-space:pre-wrap;overflow-wrap:anywhere}
+.hs-doc .table-wrap td{overflow-wrap:anywhere}
+@media print{.hs-doc .review-controls,.hs-doc .chart-controls{display:none}}
+</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Signal processing module analysis</h1>
+<p>Frequency content of uniformly sampled signals</p>
+<p>Revision 01 | 2026-10-22</p>
+<p>Draft for maintainer review</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction and scope</a></li>
+<li><a href="#section-3">Analysis basis and criteria</a></li>
+<li><a href="#section-4">Inputs and outputs</a></li>
+<li><a href="#section-5">Theory and method</a></li>
+<li><a href="#section-6">Worked example</a></li>
+<li><a href="#section-7">Validation evidence</a></li>
+<li><a href="#section-8">Limitations and recommendations</a></li>
+<li><a href="#section-9">References</a></li>
+<li><a href="#section-10">Appendices</a></li>
+</ol></nav>
+<main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The signal processing module is a set of numerical tools for scalar time histories. Analysis is performed to determine the frequency content of a uniformly sampled voltage signal; key results are summarized below.</p>
+<ul>
+<li>The dominant tone is resolved at <span data-metric="peak_hz">1,230.469</span> Hz against the published <span data-metric="sine_frequency_hz">1,234</span> Hz input.
+<ul><li>The frequency error is <span data-metric="peak_error_hz">3.531</span> Hz, below the half-bin comparison limit of <span data-metric="peak_limit_hz">4.883</span> Hz. This result supports dominant-tone identification for this synthetic example.</li></ul></li>
+<li>The estimated high-frequency noise density is <span data-metric="noise_density_estimate_v2_per_hz">1.003e-03</span> V²/Hz against the published <span data-metric="noise_density_v2_per_hz">1.000e-03</span> V²/Hz input.
+<ul><li>The estimate is within <span data-metric="noise_error_percent">0.4</span> % of the input. This observed difference is reported without a noise acceptance criterion or confidence interval; no equipment acceptance is established.</li></ul></li>
+<li>Measured-signal use requires a documented acquisition basis.
+<ul><li>Frequency content above the <span data-metric="nyquist_hz">5,000.0</span> Hz sampling boundary is unresolved at the example's sampling rate. Instrument bandwidth, calibration and anti-alias filtering remain required inputs for measured data.</li></ul></li>
+</ul>
+<p>Input values and the synthetic signal definition are taken from <a href="#ref-public">the published example</a>. Comparison criteria are defined in <a href="#section-3">Section 3</a>; calculated results are developed in <a href="#section-6">Section 6</a>.</p>
+</section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><caption>Revision history. Each issue records its numerical basis or subsequent correction.</caption>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>The spectral-density workflow is documented on a reproducible public example to distinguish numerical evidence from measured-signal qualification.</td></tr>
+<tr><td>01</td><td>2026-10-22</td><td>Numerical checks are separated from pinned byte checks so compatible library versions can run; the unsupported noise acceptance band is removed and the observed difference is retained.</td></tr></tbody></table></div>
+
+<section id="section-2"><h2>2. Introduction and scope</h2>
+<p>A signal is represented as ordered scalar values with a known sample interval. Frequency analysis is performed to identify repeating components and to distribute mean-square signal content across frequency.</p>
+<p>The module exposes spectral analysis, time-history processing and cycle counting through documented classes. Spectral density estimation and peak identification are covered here from signal definition through returned arrays and numerical comparison. The calculation is performed on a synthetic voltage source; no asset response or field measurement is represented. The public interfaces and existing evidence are identified in <a href="#repository-records">Section 9.2</a>.</p>
+<h3>2.1 Not covered</h3>
+<p>Rainflow cycle counting, stress-life curves, fatigue damage, digital filter design, adaptive filtering, legacy configuration workflows, file readers and batch export are outside the worked example. Their presence does not establish their suitability for a particular engineering decision. Recorded rainflow discrepancies and the separate fatigue regression evidence are identified in <a href="#section-7">Section 7</a>; licensed-solver interfaces are not used.</p>
+</section>
+
+<section id="section-3"><h2>3. Analysis basis and criteria</h2>
+<p>The calculation basis is defined by the published voltage-signal example and the module's documented spectral interface. Numerical comparison criteria are selected for this demonstration; operating limits are not assigned.</p>
+<h3>3.1 Signal and comparison basis</h3>
+<p>The sine amplitude, tone frequency, sampling rate, record length, white-noise density and segment length follow <a href="#ref-public">the SciPy reference manual, edition 1.14.1, Examples</a>. A fixed random seed is introduced as an analysis choice because the published realization is unseeded. Its displayed sample values are therefore not comparison targets.</p>
+<p>The dominant peak is compared with the input tone using half the returned frequency spacing. This grid-based criterion applies to this isolated dominant tone and is not a general bound on the resolution of neighbouring tones. The mean density in the upper half of the spectrum is compared with the input noise density as an observed relative difference. The band excludes the tone for this example. No noise acceptance criterion or confidence interval is assigned; the cited example supplies the averaging recipe without an acceptance band.</p>
+<h3>3.2 Sampling boundary and numerical agreement</h3>
+<p>The Nyquist boundary is the sample frequency divided by two, following the <a href="#ref-fourier">NumPy Fourier convention</a>. A measured acquisition requires suppression of frequencies at and above that boundary before sampling. A spectral plot of sampled values cannot establish that suppression.</p>
+<p>Each returned density bin is also compared with an independently assembled periodic-window Fourier calculation. Relative tolerance is 10<sup>−12</sup> with absolute tolerance 10<sup>−15</sup> V²/Hz, as specified by the <a href="#ref-report-tests">report test</a>. These tolerances check numerical agreement, not sensor accuracy. Every comparison is performed on unrounded values.</p>
+</section>
+
+<section id="section-4"><h2>4. Inputs and outputs</h2>
+<p>The spectral calculation is supplied with a real, finite, uniformly sampled scalar array and a positive sampling rate. Frequency and density arrays are returned in a tabular object with one row per frequency bin.</p>
+<p>The public SpectralAnalyzer class is initialized with the sampling rate and the Welch method. Its compute_spectrum operation is supplied with the signal, segment length, overlap length and Hann window explicitly. Constant detrending is applied within each segment by the underlying density calculation. TimeSeriesProcessor.calculate_statistics supplies the record length, root mean square and variance. Peak identification is performed by SpectralAnalyzer.find_peaks on the returned density. Interface locators and a complete invocation are given in <a href="#repository-records">Section 9.2</a>.</p>
+<p>Frequency is returned in Hz. For a voltage input, the power column is a power spectral density in V²/Hz, and the magnitude column is its square root in V/√Hz. Magnitude is therefore an amplitude density, not the sine amplitude. The phase column contains zero placeholders; a phase relationship is not measured by this route. The output column contract is confirmed by <a href="#ref-spectrum-code">the implementation</a>.</p>
+<p>The spectral interface does not accept timestamps or unit metadata. Sample regularity, channel units, finite values, acquisition gaps, stationarity and instrument calibration require checks before the array is submitted. For other scalar quantities the squared input unit replaces V².</p>
+</section>
+
+<section id="section-5"><h2>5. Theory and method</h2>
+<p>The density estimate is calculated by averaging windowed segment periodograms. The numerical model is a synthetic voltage source followed by ideal uniform sampling; no structural geometry or spatial boundary condition is introduced.</p>
+<figure>
+<svg viewBox="0 0 900 220" role="img" aria-labelledby="schematic-title schematic-description">
+<title id="schematic-title">Synthetic voltage acquisition and analysis model</title>
+<desc id="schematic-description">A sinusoidal voltage source and a white-noise source are summed. Ideal uniform samples are grouped into overlapping windowed segments and converted into spectral density. The sampling boundary limits represented frequency; no physical sensor or anti-alias filter is modelled.</desc>
+<g fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="70" cy="65" r="30"/><path d="M48 65 Q59 38 70 65 T92 65"/>
+<circle cx="70" cy="155" r="30"/><path d="M48 155 l7 -8 6 18 6 -24 6 21 6 -16 8 9"/>
+<path d="M100 65 H165 V110 H197 M100 155 H165 V110"/>
+<circle cx="215" cy="110" r="18"/><path d="M205 110 H225 M215 100 V120 M233 110 H290"/>
+<path d="M300 140 V120 M315 140 V92 M330 140 V80 M345 140 V120 M360 140 V145 M375 140 V108 M390 140 V85"/>
+<path d="M400 110 H460 M475 135 Q495 42 515 135 M505 135 Q525 42 545 135 M555 110 H625"/>
+<path d="M650 65 V150 H840 M650 140 L690 138 710 130 730 78 750 137 810 140"/>
+</g>
+<g><text x="15" y="20">Sine voltage</text><text x="15" y="210">White noise</text>
+<text x="285" y="35">Uniform samples</text><text x="280" y="185">Known interval</text>
+<text x="450" y="35">Overlapping segments</text><text x="458" y="185">Periodic Hann window</text>
+<text x="645" y="35">Mean spectral density</text><text x="645" y="185">Frequency ≤ sampling boundary</text></g>
+</svg>
+<figcaption>Figure 1. Ideal signal model defined by the public example. The drawing represents the calculation sequence, with no physical acquisition equipment or measured filter response implied.</figcaption>
+</figure>
+<h3>5.1 Signal definition and frequency grid</h3>
+<p>The public signal is x<sub>n</sub> = √2 a<sub>rms</sub> sin(2π f<sub>0</sub> n / f<sub>s</sub>) + e<sub>n</sub>, where x<sub>n</sub> is voltage, a<sub>rms</sub> is sine root mean square voltage, f<sub>0</sub> is tone frequency, f<sub>s</sub> is sampling rate, n is sample index and e<sub>n</sub> is zero-mean Gaussian white noise. For the one-sided noise-density input q, noise variance is q f<sub>s</sub>/2 (<a href="#ref-public">SciPy, Examples</a>).</p>
+<p>For segment length L, the frequency spacing is Δf = f<sub>s</sub>/L and frequency f<sub>k</sub> = k Δf. The index k runs from the zero-frequency term through the even-length Nyquist term (<a href="#ref-fourier">NumPy, Implementation details and Real and Hermitian transforms</a>).</p>
+<h3>5.2 Windowed density and peak selection</h3>
+<p>For segment j, the sample mean x̄<sub>j</sub> is removed and X<sub>j,k</sub> = Σ<sub>n=0…L−1</sub> w<sub>n</sub>(x<sub>j,n</sub> − x̄<sub>j</sub>) exp(−2π i k n/L). Here i is the imaginary unit, x<sub>j,n</sub> is the segment voltage and w<sub>n</sub> is the dimensionless periodic Hann window. The window is w<sub>n</sub> = (1 − cos(2π n/L))/2, obtained from the <a href="#ref-hann">Hann definition</a> with the <a href="#ref-window">periodic spectral-window convention</a>.</p>
+<p>With J complete segments, the two-sided density is P<sub>k</sub> = Σ<sub>j=1…J</sub> |X<sub>j,k</sub>|² / (J f<sub>s</sub> Σ<sub>n=0…L−1</sub> w<sub>n</sub>²). The one-sided density doubles interior positive-frequency terms and retains the zero-frequency and Nyquist terms without doubling. This normalization follows <a href="#ref-theory">the spectral-analysis guide, Spectral Analysis and Welch's Method</a>. Summing the returned density multiplied by Δf gives the detrended, window-weighted mean-square estimate.</p>
+<p>The module identifies local maxima and ranks them by density. Its minimum-distance option is forwarded directly to a sample-index distance argument, although the module description calls it a frequency distance. A requested spacing in Hz requires conversion to bins before that option is used (<a href="#ref-peaks">peak-finding parameter definition</a>; <a href="#ref-spectrum-code">module implementation</a>). The worked example requests only the strongest peak and does not use a distance threshold.</p>
+</section>
+
+<section id="section-6"><h2>6. Worked example</h2>
+<p>The published sine-plus-noise signal is reproduced by calling the module's public spectral and statistical interfaces. The realization is fixed by the declared seed; all reported values and plotted bins are obtained from those calls or calculated directly from their returned values.</p>
+<p>The input is sampled at <span data-metric="sampling_rate_hz">10,000</span> Hz for <span data-metric="samples">100,000</span> samples, giving a record duration of <span data-metric="duration_s">10.0</span> s. The sine root mean square is <span data-metric="sine_rms_v">2</span> V. The estimated signal root mean square is <span data-metric="rms_v">3.0</span> V and variance is <span data-metric="variance_v2">9.0</span> V²; these include the added noise. Input values are from the <a href="#ref-public">public example</a>.</p>
+<p>Segments contain <span data-metric="segment_samples">1,024</span> samples with <span data-metric="overlap_samples">512</span> overlapping samples. The calculation averages <span data-metric="segments">194</span> complete segments and returns <span data-metric="bins">513</span> frequency bins at <span data-metric="spacing_hz">9.766</span> Hz spacing. The integrated spectral density is <span data-metric="integrated_density_v2">9.01</span> V². This estimate uses segment detrending and window weights, so equality with full-record variance is not an acceptance criterion.</p>
+<figure id="spectrum-figure">
+<div class="chart-controls"><label for="spectrum-view">Frequency view</label>
+<select id="spectrum-view"><option value="full">Full sampled band</option><option value="tone">Dominant-tone neighbourhood</option></select>
+<label for="frequency-cursor">Frequency cursor: move to inspect a returned bin</label><input id="frequency-cursor" type="range" min="0" max="1" step="1" value="0"></div>
+<svg id="spectrum-chart" viewBox="0 0 900 420" role="img" aria-label="Interactive spectral density against frequency, including the Nyquist sampling boundary"></svg>
+<p id="spectrum-readout" class="panel" aria-live="polite"></p>
+<figcaption>Figure 2. Returned spectral density against frequency. The vertical dashed line marks the Nyquist sampling boundary; it is not a density limit. The horizontal reference marks the input noise density and is not a limit on the tone. Hover or use the frequency cursor to inspect individual bins.</figcaption>
+</figure>
+<p>The peak density is <span data-metric="peak_density_v2_per_hz">0.232</span> V²/Hz. Peak density depends on segment length, window and tone position between bins; it is not a direct measurement of sine amplitude.</p>
+<p>The upper-band mean is calculated from <span data-metric="noise_band_start_hz">2,500.0</span> Hz through the sampling boundary. The mean and input reference are displayed below as an observed comparison without a noise acceptance limit.</p>
+<figure id="noise-figure">
+<svg id="noise-chart" viewBox="0 0 900 260" role="img" aria-label="Estimated mean noise density and input reference without an acceptance limit"></svg>
+<p id="noise-readout" class="panel" aria-live="polite"></p>
+<figcaption>Figure 3. Upper-band mean noise density compared with the input reference. Hover or focus the mean marker for the estimate, reference, observed relative difference and units. Axis extents are visual padding and carry no acceptance meaning.</figcaption>
+</figure>
+</section>
+
+<section id="section-7"><h2>7. Validation evidence</h2>
+<p>Numerical evidence is established for the selected synthetic spectral workflow. Existing analytical tests and narrower regression checks are distinguished from field qualification.</p>
+<p>The existing spectral tests cover isolated tones, multiple tones, frequency spacing, detrending, alternative windows, density output, peak selection, spectral masking and several edge cases. An existing integration test exercises spectral computation, peak selection and masking together. The retained execution record contains 103 passing cases with no failures in the selected evidence set (<a href="#ref-evidence">execution evidence</a>). The distribution is given in the <a href="#qa-evidence">appendix</a>.</p>
+<p>The new example comparison evaluates every returned density bin against a separate windowed Fourier calculation, using the tolerances defined in <a href="#section-3">Section 3</a>. It checks the wrapper's numerical result for this input, with NumPy used for the independent transform. Shared numerical infrastructure remains a limitation of that comparison.</p>
+<p>The repository also holds a cycle-table export readback test and a user-defined single-slope damage calculation. These checks establish output preservation and a limited closed-form damage result; they do not qualify the cycle-counting algorithm or built-in standards curves. The recorded rainflow verdict matrix retains non-conforming results for this module's cycle-counting path. A passing matrix regression preserves that finding rather than resolving it (<a href="#ref-existing-tests">existing evidence records</a>).</p>
+<p>The legacy inverse-transform tests check returned type and allow a shortened reconstruction. Their success does not establish exact sample count or waveform recovery. No measured signal, instrument certificate, field benchmark or independent equipment acceptance is established by this report.</p>
+</section>
+
+<section id="section-8"><h2>8. Limitations and recommendations</h2>
+<p>The demonstrated result is limited to a finite, real, uniformly sampled synthetic signal with stationary white noise and an isolated tone. Additional evidence is required before measured-signal or fatigue conclusions are issued.</p>
+<h3>8.1 Limits of use</h3>
+<p>Sampling regularity and physical units are supplied by the caller and are not verified by the scalar-array interface. Out-of-band content can alias into the returned band. Segment averaging reduces random variation but discards time localization; a transient or changing speed requires a separate analysis basis. A single seeded realization does not establish uncertainty or a confidence interval.</p>
+<p>The Fourier route uses a different power normalization from the density route, omits the even-length Nyquist coefficient and doubles the zero-frequency magnitude. Its inverse reconstruction shortens the record. Treat its power column and the window-averaged Fourier power as separately scaled quantities, rather than integrating them as V²/Hz. A density column added by a convenience method does not correct that scaling. These behaviours follow <a href="#ref-spectrum-code">the implementation and existing inverse tests</a>.</p>
+<p>Cycle-counting discrepancies remain unresolved. Built-in fatigue curves require their own edition, clause, material and environmental basis; that basis is not established here. The legacy configuration workflow and command interface are not qualified by this example. No equipment operating limit, remaining life or structural acceptance is calculated.</p>
+<h3>8.2 Recommendations</h3>
+<p>Use the demonstrated density route for scalar frequency-content screening only after finite-value, timestamp, unit and acquisition checks. Record instrument calibration, sample-clock accuracy, sensor bandwidth and anti-alias response beside each measured dataset. If acquisition evidence is missing, retain the analysis as a numerical illustration and obtain the missing evidence before accepting an engineering result (<a href="#ref-fourier">sampling convention</a>; <a href="#ref-peaks">finite-value warning</a>).</p>
+<p>For closely spaced tones, compare results at multiple segment lengths and document the effect of window broadening. For nonstationary signals, define time-resolved acceptance criteria before applying an averaged spectrum (<a href="#ref-theory">spectral-analysis guide</a>). Do not infer a phase relation from the placeholder phase column.</p>
+<p>Before Fourier reconstruction is used, correct the frequency-grid endpoints and demonstrate exact length and amplitude recovery against independent signals. Before fatigue decisions are issued, resolve the recorded counting discrepancies and qualify the applicable curve basis. These actions follow the <a href="#ref-existing-tests">recorded regression findings</a>; no repair is included in this analysis.</p>
+</section>
+
+<section id="section-9"><h2>9. References</h2>
+<p>Public numerical definitions and repository evidence are identified below. Editions are specified for reproducibility; no licensed-standard values are reproduced.</p>
+<h3>9.1 Public definitions</h3>
+<ol>
+<li id="ref-public"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.welch.html">SciPy reference manual, edition 1.14.1, scipy.signal.welch</a>, Examples for signal parameters and noise-band averaging; Parameters for segment overlap, density units and detrending.</li>
+<li id="ref-theory"><a href="https://docs.scipy.org/doc/scipy-1.14.1/tutorial/signal.html#spectral-analysis">SciPy user guide, edition 1.14.1, Spectral Analysis</a>, normalization and Welch's Method.</li>
+<li id="ref-fourier"><a href="https://numpy.org/doc/1.26/reference/routines.fft.html">NumPy reference manual, edition 1.26, Discrete Fourier Transform</a>, Implementation details and Real and Hermitian transforms for transform sign, frequency ordering and the Nyquist term.</li>
+<li id="ref-hann"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.windows.hann.html">SciPy reference manual, edition 1.14.1, Hann window</a>, Notes for the raised-cosine equation and periodic versus symmetric windows.</li>
+<li id="ref-window"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.get_window.html">SciPy reference manual, edition 1.14.1, get_window</a>, Parameters for the periodic spectral-window convention.</li>
+<li id="ref-peaks"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.find_peaks.html">SciPy reference manual, edition 1.14.1, find_peaks</a>, Parameters for index distance and Warning for nonfinite data.</li>
+</ol>
+<h3 id="repository-records">9.2 Repository evidence and reproducibility</h3>
+<ul>
+<li><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/README.md">Documented public interfaces</a> and <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/__init__.py">package exports</a>.</li>
+<li id="ref-spectrum-code"><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/spectral.py">Spectral implementation</a>, compute_spectrum, _compute_welch, find_peaks, compute_psd and inverse_transform; <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/timeseries.py">statistical implementation</a>, calculate_statistics.</li>
+<li id="ref-existing-tests"><a href="../../../../tests/signal_processing/signal_analysis/core/test_spectral.py">Existing spectral tests</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_signal_integration.py">spectral integration and imports</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_pack_acceptance.py">export and closed-form damage checks</a>; <a href="../../../../tests/fatigue/test_rainflow_invariants.py">recorded counting verdict matrix</a>.</li>
+<li id="ref-report-tests"><a href="../../../../tests/signal_processing/signal_analysis/test_module_report.py">Report rebuild and numerical comparisons</a>; <a href="../../../../tests/signal_processing/signal_analysis/report-requirements.txt">pinned report environment</a>; <a href="../../../../.github/workflows/signalprocessing-report.yml">byte-exact continuous-integration job</a>; <a href="public-example.json">public input recipe and criterion</a>; <a href="build_report.py">report generator</a>; <a href="results.json">full-precision results and plotted arrays</a>.</li>
+<li id="ref-evidence"><a href="validation.json">Selected test execution record</a>, with counts and source-content digests; <a href="changes.json">revision change record</a>.</li>
+<li>Numerical environment: NumPy 1.26.4, Pandas 2.2.3 and SciPy 1.14.1, recorded from the installed distributions. The broader evidence set uses PyLife 2.1.0 for import compatibility; the project declares a newer minimum. A complete installation with the declared dependency set is not established.</li>
+</ul>
+<p>The worked calculation is called as follows, using the input recipe and seed defined above. The rebuild command is run from the repository root with the source directory on the Python import path.</p>
+<pre>import json
+from pathlib import Path
+import numpy as np
+from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer
+from digitalmodel.signal_processing.signal_analysis import TimeSeriesProcessor
+
+basis = json.loads(Path(
+    "docs/reports/modules/signalprocessing/public-example.json").read_text(encoding="utf-8"))
+data = basis["inputs"]
+fs = data["sampling_rate_hz"]
+time = np.arange(data["samples"]) / fs
+rng = np.random.Generator(np.random.PCG64(basis["adaptation"]["random_seed"]))
+x = data["sine_rms_v"] * np.sqrt(2) * np.sin(
+    2 * np.pi * data["sine_frequency_hz"] * time)
+x += rng.normal(scale=np.sqrt(data["noise_density_v2_per_hz"] * fs / 2),
+                size=time.shape)
+analyzer = SpectralAnalyzer(data["sampling_rate_hz"], method="welch")
+spectrum = analyzer.compute_spectrum(
+    x, nperseg=data["segment_samples"],
+    noverlap=data["segment_samples"] // 2, window="hann")
+peak = analyzer.find_peaks(spectrum, n_peaks=1)
+statistics = TimeSeriesProcessor().calculate_statistics(x)</pre>
+<pre>PYTHONPATH=src uv run --no-project --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt python docs/reports/modules/signalprocessing/build_report.py --check
+PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_module_report.py</pre>
+<p>The input recipe, generated signal digest and full plotted arrays are retained. Exact retained-byte comparison is performed in the pinned environment by the separate continuous-integration job. Normal report tests compare every retained metric and spectral bin using numerical tolerances and record the installed versions; a temporary rebuild is checked for exact repeatability and tamper detection within that environment. Once dependencies are installed, calculation requires no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
+</section>
+
+<section id="section-10"><h2>10. Appendices</h2>
+<p>Input readiness, execution evidence and document comments are retained below. Missing acquisition evidence is distinguished from synthetic numerical inputs.</p>
+<h3 id="data-register">10.1 Data register and retained evidence</h3>
+<div class="table-wrap"><table>
+<caption>Table 1. Input definitions and intended-use readiness.</caption>
+<thead><tr><th>Quantity</th><th>Value</th><th>Basis and readiness</th></tr></thead>
+<tbody>
+<tr><td>Sampling rate (Hz), record length (samples)</td><td><span data-metric="sampling_rate_hz">10,000</span>; <span data-metric="samples">100,000</span></td><td>Public example, reference 1, Examples; synthetic numerical use only.</td></tr>
+<tr><td>Sine root mean square (V), frequency (Hz)</td><td><span data-metric="sine_rms_v">2</span>; <span data-metric="sine_frequency_hz">1,234</span></td><td>Public example, reference 1, Examples.</td></tr>
+<tr><td>White-noise density (V²/Hz)</td><td><span data-metric="noise_density_v2_per_hz">1.000e-03</span></td><td>Public example, reference 1, Examples; prescribed one-sided density.</td></tr>
+<tr><td>Segment length (samples), overlap (samples)</td><td><span data-metric="segment_samples">1,024</span>; <span data-metric="overlap_samples">512</span></td><td>Segment length from reference 1, Examples; half-segment overlap from Parameters and module implementation.</td></tr>
+<tr><td>Random seed (dimensionless)</td><td><span data-metric="random_seed">0</span></td><td>Analysis-defined PCG64 realization; public example leaves the seed unspecified.</td></tr>
+<tr><td>Noise-mean acceptance criterion</td><td>NOT_EVALUATED</td><td>The observed relative difference is reported without an acceptance threshold; the source provides no comparison band.</td></tr>
+<tr><td>Acquisition idealization</td><td>ASSUMED - to be confirmed</td><td>Exact uniform timing and an ideal sampled synthetic source are adopted for demonstration. Measured-data use requires a separate acquisition basis.</td></tr>
+<tr><td>Calibration, acquisition filter response, sample-clock accuracy, field comparison</td><td>NOT_EVALUATED</td><td>No measurement evidence is supplied; equipment acceptance cannot be calculated.</td></tr>
+</tbody></table></div>
+<p>No catalogue-backed measured dataset is consumed. The shared source catalogue is unavailable in the inspected checkout, so no catalogue identity or wider discovery coverage is claimed. This repository retains the computational example, its public-source relationship, units, library versions, digests and numerical criteria; the recipe is not a measured record.</p>
+<h3 id="qa-evidence">10.2 Numerical evidence and pre-flight</h3>
+<div class="table-wrap"><table>
+<caption>Table 2. Existing selected test evidence, before the report tests are added. Counts represent checks, not field-qualified cases.</caption>
+<thead><tr><th>Evidence group</th><th>Passing checks</th><th>Qualification boundary</th></tr></thead>
+<tbody><tr><td>Spectral analytical and interface checks</td><td>71</td><td>Synthetic tones, grids, windows and edge cases; exact inverse recovery is not established.</td></tr><tr><td>Spectral workflow and package imports</td><td>2</td><td>Integration and import regression only.</td></tr><tr><td>Cycle export and single-slope damage</td><td>2</td><td>Readback and a user-defined closed form; no counting or built-in curve qualification.</td></tr><tr><td>Recorded cycle-counting verdict matrix</td><td>28</td><td>Recorded non-conforming results remain non-conforming.</td></tr></tbody></table></div>
+<p>The pre-flight confirms that the public entry point is documented and callable, that plotted arrays are obtained from the returned density, that each quoted worked value is checked against the calculation and that the retained input is synthetic. A rebuild checks the selected source digests and compares the generated document bytes. Local links, heading structure, inlined styling and public wording are also checked by the report test. Browser controls are checked separately; print layout and assistive-technology behaviour require final document review by the maintainer.</p>
+<p>The interpretation legend is expressed as sentences: the frequency comparison is met when the stated error is within its half-bin limit; that comparison is not met when the limit is exceeded. Noise density is reported only as an observed difference from the prescribed input. An engineering result is not evaluated when its required measurement basis is absent. The numerical example does not confer a field acceptance status.</p>
+<h3>10.3 Engineering changes</h3>
+<details id="change-panel"><summary>Changes since the preceding issue</summary><ul><li>The documented spectral-density calculation is demonstrated on a published synthetic voltage signal, with the sampling boundary and the numerical comparison limits shown.</li><li>The meaning of spectral density, amplitude density and placeholder phase is distinguished from the separately scaled Fourier outputs.</li><li>Existing analytical and regression evidence is separated from field qualification, and the information required before analysing measured signals is identified.</li><li>Numerical checks run with compatible library versions, while a separate continuous-integration job uses declared pins to check retained report bytes.</li><li>The unsupported noise acceptance band is removed; the estimated density and its observed difference from the input reference are reported without a noise verdict.</li><li>Hand-calculated grid quantities and browser checks cover the revised comparison, and text access specifies UTF-8 with LF output.</li></ul></details>
+<h3>10.4 Comments</h3>
+<p>Comments are associated with a report section and this document revision. Save the comments beside the HTML and retain both files when transferring the document. Loading comments for a different document is rejected.</p>
+<div class="panel review-controls">
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" maxlength="10000"></textarea>
+<button id="add-comment" type="button">Record comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-status" aria-live="polite">Comments remain in this page until saved. Choose the HTML folder in the save dialog; downloaded comments require placement beside the report.</p>
+</div><ol id="comment-list"></ol>
+</section>
+</main></div>
+<script id="calculation-data" type="application/json">{"basis_sha256": "a63e4d0272328ddfab315eee0669d4be7e3b33abbc0ed2361e09efcdd79e3ce3", "criteria_met": {"peak": true}, "metrics": {"bins": 513, "duration_s": 10.0, "integrated_density_v2": 9.005654074487651, "noise_band_start_hz": 2500.0, "noise_density_estimate_v2_per_hz": 0.0010031222530346557, "noise_density_v2_per_hz": 0.001, "noise_error_percent": 0.3122253034655742, "nyquist_hz": 5000.0, "overlap_samples": 512, "peak_density_v2_per_hz": 0.23180458245584917, "peak_error_hz": 3.53125, "peak_hz": 1230.46875, "peak_limit_hz": 4.8828125, "random_seed": 0, "rms_v": 3.000572652813608, "samples": 100000, "sampling_rate_hz": 10000, "segment_samples": 1024, "segments": 194, "sine_frequency_hz": 1234, "sine_rms_v": 2, "spacing_hz": 9.765625, "variance_v2": 9.003432120215557}, "signal_sha256": "d45ca5e788ff20ef0dc788b866aa53045b404d9a0adc741951eeae484686b7e1", "spectrum": {"density_v2_per_hz": [0.00016992815583998593, 0.0008289291292544479, 0.0010922641260840023, 0.0010861519615639904, 0.0011364019517050789, 0.0010466732183529582, 0.0009179982001443743, 0.0008296820383448863, 0.000939520933242512, 0.0011216288982303947, 0.0010408442669978797, 0.0009635883493285634, 0.0009470023050820001, 0.001006836762115752, 0.0009951996803832083, 0.0011187229349856132, 0.0009645588517228962, 0.0009878949116123293, 0.0009627366826328206, 0.0009043220848948121, 0.0009464951676838382, 0.0009018478387733808, 0.0009000140844957602, 0.0010726135476760714, 0.0009677839194139168, 0.0009553754685081327, 0.0009662512296742436, 0.0010848372961125114, 0.0010005219401105412, 0.0009401327703788838, 0.0008026203430519694, 0.0008543417901894202, 0.0009847651742687714, 0.0010258243371891727, 0.0010278453342663254, 0.0011284387873286446, 0.001055590407990616, 0.0009203901417650978, 0.0009100711236486248, 0.000931083124642339, 0.0009037834001943556, 0.0010090912622213886, 0.0009459535214409525, 0.0009598088261946971, 0.0010897694940509581, 0.00108031047602138, 0.0009728276760750693, 0.001074713319753139, 0.0011413438445716545, 0.0010336970249739887, 0.0008804848043065457, 0.000950786239999907, 0.0010432536763549133, 0.001001747846495719, 0.0009762960315164737, 0.0009761891316928538, 0.0009644073257033468, 0.0009260700515999771, 0.0009820298738597486, 0.0009848236998357073, 0.0010381095500513174, 0.0010655449714502422, 0.001062177116049979, 0.0010333660084138315, 0.0009876978148667115, 0.0011318454751036019, 0.0010794961658055547, 0.0010548026425813712, 0.0011070877754139502, 0.0010869499407043825, 0.001056599176363134, 0.0009759091421778892, 0.0010032971762332762, 0.0009726508613044742, 0.0008371798093684751, 0.000981953858147955, 0.0010640180227527397, 0.000878580454492452, 0.0008209832595584812, 0.0008385324113849466, 0.0009321892695816366, 0.0010518577529644488, 0.0009654998011902898, 0.0009309298293946211, 0.0009895826518223835, 0.0011941333130123903, 0.001068561796743853, 0.0010865506949190881, 0.0010961288881494314, 0.0008696792319499737, 0.0008601502440312652, 0.0009519968966995038, 0.0009170769732822718, 0.0008510592134981488, 0.0008658685757277064, 0.0008200204521508045, 0.0009846333677166355, 0.0009953320987530522, 0.0011005412856085362, 0.001230698402057912, 0.0010772536468816644, 0.0010674031170176475, 0.0009431269889456909, 0.0008379249640593639, 0.0009015554695798868, 0.0010710725272984126, 0.0009613240894217039, 0.0009238283813723419, 0.0009547632684491245, 0.0009659787691360983, 0.0010746618450055694, 0.00109920059104286, 0.0011364837680034666, 0.0011771900971724513, 0.0011301614291130263, 0.0009827204990201454, 0.0008764288182155275, 0.0010188227378164787, 0.0010646555787380838, 0.001020881361017094, 0.00109917667448789, 0.001048908436276451, 0.0009845886652393896, 0.001080974340845335, 0.0012462042564299442, 0.017977063703190257, 0.23180458245584917, 0.1611447487127057, 0.004441334185960942, 0.001104508954547711, 0.0009367463906159834, 0.0009610912258105432, 0.0009978240738128272, 0.0010555521864741189, 0.0009919431603773975, 0.0009639577489115635, 0.0010123844267116036, 0.0009720831742744712, 0.0009042919433145915, 0.00089076008193117, 0.001001449121389618, 0.0011110485925048977, 0.0011309422802147078, 0.0010525668610003804, 0.000990721730165832, 0.0009167243046946669, 0.0009099423297479394, 0.000936560129035301, 0.0009677528746696759, 0.0009432775987411947, 0.0010877289631720604, 0.0011118294886924853, 0.0010563010521877905, 0.001053998820052929, 0.0010246863952677202, 0.0009106065703612502, 0.00098647483469911, 0.0011147944134816874, 0.001031533355569405, 0.001075121250207609, 0.0010283964264829087, 0.0009598398632482678, 0.0009296118596418653, 0.0010058382017397519, 0.0010086351500563544, 0.0009328499693990475, 0.0010489797175829785, 0.0010209343390261674, 0.0009882649160773225, 0.0008521614180517795, 0.0010023833124253772, 0.00108626415318467, 0.001051631664358324, 0.0009592746286750819, 0.0009976936501733698, 0.0009597480139115294, 0.0010469301993314974, 0.0010900150646216125, 0.0010146375680708546, 0.0008781305098697972, 0.0009315956976858811, 0.0010143626071004179, 0.0009784500507110986, 0.0009206531450876593, 0.0011138552645922992, 0.0010799737559409152, 0.0010187255871918024, 0.0009663410507016186, 0.0009821691271838593, 0.0008717182251262413, 0.000994113889087354, 0.0009848886181777485, 0.0010474695627271974, 0.001124306608999653, 0.0010519069073638481, 0.0010427421766608356, 0.0009610397019932936, 0.0009655183125307668, 0.0010474804065874266, 0.00109359262045808, 0.001142192801710503, 0.0009189759342765503, 0.0009505833184608812, 0.0010286639384186594, 0.0009944531287336329, 0.0008546816860222193, 0.000948952505584878, 0.0009870208171692976, 0.0009955017627108645, 0.0009123518156507626, 0.000916932251004729, 0.0008004030879476761, 0.000979970656298771, 0.0010072228871701057, 0.0009510419239965515, 0.0009251854261246574, 0.0009465807587293359, 0.0009091402507028912, 0.0009216141098628423, 0.00098517216809049, 0.0010014648773855573, 0.00089559902159731, 0.0009679312659243457, 0.0009362369019820284, 0.0010068078545251032, 0.0010577841635138854, 0.0011518349160731473, 0.0009567930784933089, 0.000939035369424963, 0.0010205707287521577, 0.001023328166659044, 0.000994136771685709, 0.000849989869153496, 0.0009078408457687474, 0.000927458353056877, 0.0009227078686872927, 0.0008478491080913585, 0.0008513747851649398, 0.000999293308664216, 0.0010273597801355257, 0.0009648426258050405, 0.0009591834518402793, 0.0009563977762950238, 0.0009339723049167064, 0.0009299023268561143, 0.0010309249931427706, 0.0008900594409784047, 0.001023486361948766, 0.001098407231069719, 0.0008975836056472422, 0.0009074013613607856, 0.0009605579849436323, 0.0009730881543693359, 0.0010631674453238443, 0.0009534360197154569, 0.0009263720292157786, 0.0009399227664721684, 0.0009212903353850391, 0.0009946346868306847, 0.0009773722249297396, 0.0009179952484947569, 0.0010349919590363142, 0.0010517823769147301, 0.0009448822836628043, 0.0009285074246999938, 0.0010142188818359666, 0.00108043936126746, 0.0009764998848522316, 0.0008506152782339681, 0.0009586807677911803, 0.0010587522229369751, 0.00105550357734234, 0.0011296632112663347, 0.0011635545697631954, 0.0010488896485147327, 0.0009855464296289827, 0.0010234846109467434, 0.0009147833538190348, 0.0009494644075486152, 0.0009644502915932252, 0.0010048369425299463, 0.000869581487276327, 0.0010017552875976716, 0.0010770085727151767, 0.00095307943907582, 0.0009575773290544492, 0.001108611025156638, 0.0010314110333434787, 0.0010223654315859654, 0.001007314652796441, 0.000976888653904569, 0.0010447370534353365, 0.0011556185043107782, 0.0011300231239105792, 0.0010745305733328664, 0.0009974561640535146, 0.0010314218699390028, 0.0009920034632118124, 0.0008879635186727984, 0.0009554019965965956, 0.0009127446055776245, 0.0008139919870667638, 0.0009921543400296595, 0.0009411923150719697, 0.0009111179949339653, 0.0009111746624530491, 0.0008110658942084305, 0.0009253121319916371, 0.00093817506822864, 0.0010186768688441072, 0.0011166912847935236, 0.0010668264920107844, 0.0010758660311266832, 0.001042162786163257, 0.0009838797916992778, 0.0010693720980261235, 0.0010744338546505427, 0.0009639308760936511, 0.0009297074626782912, 0.0010802603959574014, 0.0010748004761271864, 0.0009693216845025816, 0.0009497704410466525, 0.0009535859376156895, 0.0009449191437900248, 0.0008734446316906775, 0.0010686177098584552, 0.0011160800222793932, 0.0010374087721340647, 0.0011042828870376296, 0.001023620444169779, 0.0008690873145341786, 0.0009539210377481662, 0.0008756126266617987, 0.0009311905292017157, 0.001086071614379519, 0.00105331851023052, 0.0009940676232339746, 0.0008836115843327395, 0.0008778701253877482, 0.0009155958415275539, 0.0009536513106646324, 0.0009574645186808173, 0.0010365957656219733, 0.0010151920319201703, 0.001046858385219282, 0.000983896486902919, 0.0011022404824964107, 0.0012057345107142463, 0.001031292694531954, 0.0009242116824681122, 0.00087862317339302, 0.001002616365991605, 0.0009941940734317961, 0.0009488000518433958, 0.000999990112907464, 0.0011350288243005767, 0.0009672514049551285, 0.0009753151582018353, 0.0010641313790786216, 0.00101982035966347, 0.001094151849799478, 0.0011277641806801202, 0.0011192865342086052, 0.001055663513014039, 0.001109405500901141, 0.0011151346233307072, 0.0012077448565676093, 0.0010412605308373882, 0.0010566566742068, 0.0008937842942547444, 0.0008408966059475093, 0.0009539642130196733, 0.0009983248555403448, 0.0010599637815776955, 0.0010151642458510856, 0.0008905711789918155, 0.000862934727012438, 0.0009736240193693484, 0.0010247238448183663, 0.0010005209371541303, 0.0009226558542275013, 0.0009414061590184529, 0.0009770884425101883, 0.0009384334946410452, 0.0008931976694957686, 0.0008912151541260841, 0.0009928083861224049, 0.001069940122269595, 0.0010861383177671194, 0.0009779357420998396, 0.0009554635753464741, 0.001003575045087394, 0.0011687690628923366, 0.0011479324657106063, 0.0010372380767932493, 0.0009580655367808827, 0.0010593315839250903, 0.0010024377634424231, 0.0009746970198837476, 0.0008435367588357878, 0.0008945682993726259, 0.0009718015179469821, 0.0010772346151279382, 0.0010639419961368556, 0.0010860685431361935, 0.0010506828662279735, 0.0009021631691564305, 0.0009934749874898653, 0.0010681634985403052, 0.0010919485417984563, 0.0009415926543127501, 0.0009830368860566255, 0.0010536785041099196, 0.0010577827358677226, 0.0010017165107748993, 0.0010396602461400734, 0.0009945515921709585, 0.0009153135585569212, 0.0010027029825547824, 0.0009769997719401942, 0.001116915112203734, 0.0010995624955049022, 0.0010111636402109672, 0.0010463816147139949, 0.0010947854482465608, 0.0009575125569990392, 0.0008738406887829755, 0.0009209374205581374, 0.001006633588634776, 0.0010164830562876565, 0.0009315220380324656, 0.0008619818221956351, 0.0009829618312928187, 0.0010284289812375858, 0.0009576666919060329, 0.000952880228634621, 0.0010359403099796107, 0.0010497949067604817, 0.0010717688104876525, 0.00101734619375264, 0.001078392383392067, 0.0009760183655871372, 0.0010521996124807848, 0.0010316427551933774, 0.001035860219476093, 0.0009967871841293499, 0.0009781771608695924, 0.00102344536715716, 0.0009752540860971753, 0.0008846020551282979, 0.0008235686878177248, 0.0009255377210568599, 0.0009952416920634272, 0.0009808671882614332, 0.0008851497065710028, 0.0008926056843724383, 0.0010147549729702784, 0.0009903499282542187, 0.0010139015267492538, 0.0010507110357652306, 0.001146152956915468, 0.0009862688352676617, 0.0009369623497892514, 0.0011387143198064097, 0.0011539169970526649, 0.0010133607043045826, 0.0010601607142180925, 0.0011220559649238189, 0.0009959544173144502, 0.0011092105151844914, 0.0011791548456378277, 0.0010899212901906488, 0.0010735030425539354, 0.0010112707929940403, 0.000887059915785897, 0.0008806321812515756, 0.0009815684770674619, 0.0010315134755830933, 0.001030227919018832, 0.0010213095353264717, 0.0009851060514697216, 0.0010190318902539401, 0.0009815446084476417, 0.001124007232921566, 0.0010939502493868235, 0.0009187304806931733, 0.0008447438727927623, 0.0009842405274825574, 0.0010132200998774718, 0.0009433122489291838, 0.000991939179115311, 0.0010110983685904691, 0.0009943570000955702, 0.0009326710618293883, 0.0009875306812700975, 0.0011052644257381736, 0.0011221482003309705, 0.001125874104169984, 0.001091128030440672, 0.001117781227498707, 0.0010478088463886745, 0.0010504142627396687, 0.0009442429382272938, 0.0010417776506259086, 0.0010975700542190019, 0.0010417479605384864, 0.0010555366799630823, 0.0010340548237818326, 0.0010123855688337806, 0.0010311653493471251, 0.001092531128182618, 0.0004831629318956268], "frequency_hz": [0.0, 9.765625, 19.53125, 29.296875, 39.0625, 48.828125, 58.59375, 68.359375, 78.125, 87.890625, 97.65625, 107.421875, 117.1875, 126.953125, 136.71875, 146.484375, 156.25, 166.015625, 175.78125, 185.546875, 195.3125, 205.078125, 214.84375, 224.609375, 234.375, 244.140625, 253.90625, 263.671875, 273.4375, 283.203125, 292.96875, 302.734375, 312.5, 322.265625, 332.03125, 341.796875, 351.5625, 361.328125, 371.09375, 380.859375, 390.625, 400.390625, 410.15625, 419.921875, 429.6875, 439.453125, 449.21875, 458.984375, 468.75, 478.515625, 488.28125, 498.046875, 507.8125, 517.578125, 527.34375, 537.109375, 546.875, 556.640625, 566.40625, 576.171875, 585.9375, 595.703125, 605.46875, 615.234375, 625.0, 634.765625, 644.53125, 654.296875, 664.0625, 673.828125, 683.59375, 693.359375, 703.125, 712.890625, 722.65625, 732.421875, 742.1875, 751.953125, 761.71875, 771.484375, 781.25, 791.015625, 800.78125, 810.546875, 820.3125, 830.078125, 839.84375, 849.609375, 859.375, 869.140625, 878.90625, 888.671875, 898.4375, 908.203125, 917.96875, 927.734375, 937.5, 947.265625, 957.03125, 966.796875, 976.5625, 986.328125, 996.09375, 1005.859375, 1015.625, 1025.390625, 1035.15625, 1044.921875, 1054.6875, 1064.453125, 1074.21875, 1083.984375, 1093.75, 1103.515625, 1113.28125, 1123.046875, 1132.8125, 1142.578125, 1152.34375, 1162.109375, 1171.875, 1181.640625, 1191.40625, 1201.171875, 1210.9375, 1220.703125, 1230.46875, 1240.234375, 1250.0, 1259.765625, 1269.53125, 1279.296875, 1289.0625, 1298.828125, 1308.59375, 1318.359375, 1328.125, 1337.890625, 1347.65625, 1357.421875, 1367.1875, 1376.953125, 1386.71875, 1396.484375, 1406.25, 1416.015625, 1425.78125, 1435.546875, 1445.3125, 1455.078125, 1464.84375, 1474.609375, 1484.375, 1494.140625, 1503.90625, 1513.671875, 1523.4375, 1533.203125, 1542.96875, 1552.734375, 1562.5, 1572.265625, 1582.03125, 1591.796875, 1601.5625, 1611.328125, 1621.09375, 1630.859375, 1640.625, 1650.390625, 1660.15625, 1669.921875, 1679.6875, 1689.453125, 1699.21875, 1708.984375, 1718.75, 1728.515625, 1738.28125, 1748.046875, 1757.8125, 1767.578125, 1777.34375, 1787.109375, 1796.875, 1806.640625, 1816.40625, 1826.171875, 1835.9375, 1845.703125, 1855.46875, 1865.234375, 1875.0, 1884.765625, 1894.53125, 1904.296875, 1914.0625, 1923.828125, 1933.59375, 1943.359375, 1953.125, 1962.890625, 1972.65625, 1982.421875, 1992.1875, 2001.953125, 2011.71875, 2021.484375, 2031.25, 2041.015625, 2050.78125, 2060.546875, 2070.3125, 2080.078125, 2089.84375, 2099.609375, 2109.375, 2119.140625, 2128.90625, 2138.671875, 2148.4375, 2158.203125, 2167.96875, 2177.734375, 2187.5, 2197.265625, 2207.03125, 2216.796875, 2226.5625, 2236.328125, 2246.09375, 2255.859375, 2265.625, 2275.390625, 2285.15625, 2294.921875, 2304.6875, 2314.453125, 2324.21875, 2333.984375, 2343.75, 2353.515625, 2363.28125, 2373.046875, 2382.8125, 2392.578125, 2402.34375, 2412.109375, 2421.875, 2431.640625, 2441.40625, 2451.171875, 2460.9375, 2470.703125, 2480.46875, 2490.234375, 2500.0, 2509.765625, 2519.53125, 2529.296875, 2539.0625, 2548.828125, 2558.59375, 2568.359375, 2578.125, 2587.890625, 2597.65625, 2607.421875, 2617.1875, 2626.953125, 2636.71875, 2646.484375, 2656.25, 2666.015625, 2675.78125, 2685.546875, 2695.3125, 2705.078125, 2714.84375, 2724.609375, 2734.375, 2744.140625, 2753.90625, 2763.671875, 2773.4375, 2783.203125, 2792.96875, 2802.734375, 2812.5, 2822.265625, 2832.03125, 2841.796875, 2851.5625, 2861.328125, 2871.09375, 2880.859375, 2890.625, 2900.390625, 2910.15625, 2919.921875, 2929.6875, 2939.453125, 2949.21875, 2958.984375, 2968.75, 2978.515625, 2988.28125, 2998.046875, 3007.8125, 3017.578125, 3027.34375, 3037.109375, 3046.875, 3056.640625, 3066.40625, 3076.171875, 3085.9375, 3095.703125, 3105.46875, 3115.234375, 3125.0, 3134.765625, 3144.53125, 3154.296875, 3164.0625, 3173.828125, 3183.59375, 3193.359375, 3203.125, 3212.890625, 3222.65625, 3232.421875, 3242.1875, 3251.953125, 3261.71875, 3271.484375, 3281.25, 3291.015625, 3300.78125, 3310.546875, 3320.3125, 3330.078125, 3339.84375, 3349.609375, 3359.375, 3369.140625, 3378.90625, 3388.671875, 3398.4375, 3408.203125, 3417.96875, 3427.734375, 3437.5, 3447.265625, 3457.03125, 3466.796875, 3476.5625, 3486.328125, 3496.09375, 3505.859375, 3515.625, 3525.390625, 3535.15625, 3544.921875, 3554.6875, 3564.453125, 3574.21875, 3583.984375, 3593.75, 3603.515625, 3613.28125, 3623.046875, 3632.8125, 3642.578125, 3652.34375, 3662.109375, 3671.875, 3681.640625, 3691.40625, 3701.171875, 3710.9375, 3720.703125, 3730.46875, 3740.234375, 3750.0, 3759.765625, 3769.53125, 3779.296875, 3789.0625, 3798.828125, 3808.59375, 3818.359375, 3828.125, 3837.890625, 3847.65625, 3857.421875, 3867.1875, 3876.953125, 3886.71875, 3896.484375, 3906.25, 3916.015625, 3925.78125, 3935.546875, 3945.3125, 3955.078125, 3964.84375, 3974.609375, 3984.375, 3994.140625, 4003.90625, 4013.671875, 4023.4375, 4033.203125, 4042.96875, 4052.734375, 4062.5, 4072.265625, 4082.03125, 4091.796875, 4101.5625, 4111.328125, 4121.09375, 4130.859375, 4140.625, 4150.390625, 4160.15625, 4169.921875, 4179.6875, 4189.453125, 4199.21875, 4208.984375, 4218.75, 4228.515625, 4238.28125, 4248.046875, 4257.8125, 4267.578125, 4277.34375, 4287.109375, 4296.875, 4306.640625, 4316.40625, 4326.171875, 4335.9375, 4345.703125, 4355.46875, 4365.234375, 4375.0, 4384.765625, 4394.53125, 4404.296875, 4414.0625, 4423.828125, 4433.59375, 4443.359375, 4453.125, 4462.890625, 4472.65625, 4482.421875, 4492.1875, 4501.953125, 4511.71875, 4521.484375, 4531.25, 4541.015625, 4550.78125, 4560.546875, 4570.3125, 4580.078125, 4589.84375, 4599.609375, 4609.375, 4619.140625, 4628.90625, 4638.671875, 4648.4375, 4658.203125, 4667.96875, 4677.734375, 4687.5, 4697.265625, 4707.03125, 4716.796875, 4726.5625, 4736.328125, 4746.09375, 4755.859375, 4765.625, 4775.390625, 4785.15625, 4794.921875, 4804.6875, 4814.453125, 4824.21875, 4833.984375, 4843.75, 4853.515625, 4863.28125, 4873.046875, 4882.8125, 4892.578125, 4902.34375, 4912.109375, 4921.875, 4931.640625, 4941.40625, 4951.171875, 4960.9375, 4970.703125, 4980.46875, 4990.234375, 5000.0]}, "versions": {"numpy": "1.26.4", "pandas": "2.2.3", "scipy": "1.14.1"}}</script>
+<script>/* Self-contained chart and comment controls; no remote requests or storage. */
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('calculation-data').textContent);
+  const metrics = data.metrics;
+  const freq = data.spectrum.frequency_hz;
+  const power = data.spectrum.density_v2_per_hz;
+  const byId = id => document.getElementById(id);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const density = value => value.toExponential(3);
+  const hz = value => value.toFixed(1);
+  const make = (name, attributes, text) => {
+    const node = document.createElementNS(svgNS, name);
+    for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const append = (svg, name, attrs, text) => svg.appendChild(make(name, attrs, text));
+  let minimum = 0, maximum = metrics.nyquist_hz;
+  const left = 95, right = 840, top = 30, bottom = 340;
+  const yMin = Math.min(...power.filter(value => value > 0)) / 2;
+  const yMax = Math.max(...power) * 2;
+  const x = f => left + (f - minimum) / (maximum - minimum) * (right - left);
+  const y = p => bottom - (Math.log10(p) - Math.log10(yMin)) /
+    (Math.log10(yMax) - Math.log10(yMin)) * (bottom - top);
+  const chart = byId('spectrum-chart');
+  const slider = byId('frequency-cursor');
+  slider.max = freq.length - 1;
+
+  function inspect(index) {
+    index = Math.max(0, Math.min(freq.length - 1, Math.round(index)));
+    slider.value = index;
+    byId('spectrum-readout').textContent =
+      `Public synthetic voltage; spectral density at ${hz(freq[index])} Hz: ` +
+      `${density(power[index])} V²/Hz. Noise reference: ` +
+      `${density(metrics.noise_density_v2_per_hz)} V²/Hz. ` +
+      `Frequency limit: ${hz(metrics.nyquist_hz)} Hz (Nyquist sampling boundary). ` +
+      'A density operating limit is not evaluated.';
+    const marker = byId('spectrum-marker');
+    if (marker) {
+      marker.setAttribute('cx', x(freq[index]));
+      marker.setAttribute('cy', y(power[index]));
+      marker.setAttribute('visibility', freq[index] >= minimum && freq[index] <= maximum ? 'visible' : 'hidden');
+    }
+  }
+
+  function drawSpectrum() {
+    chart.replaceChildren();
+    const indices = freq.map((_, i) => i).filter(i => freq[i] >= minimum && freq[i] <= maximum);
+    const path = indices.map((i, n) => `${n ? 'L' : 'M'}${x(freq[i])},${y(power[i])}`).join(' ');
+    append(chart, 'path', {d: `M${left} ${top} V${bottom} H${right}`, fill: 'none', stroke: 'currentColor'});
+    for (let n = 0; n <= 5; n++) {
+      const f = minimum + n / 5 * (maximum - minimum);
+      append(chart, 'text', {x: x(f), y: bottom + 25, 'text-anchor': 'middle'}, hz(f));
+    }
+    for (let exponent = Math.ceil(Math.log10(yMin)); exponent <= Math.floor(Math.log10(yMax)); exponent++) {
+      const p = 10 ** exponent;
+      append(chart, 'text', {x: left - 12, y: y(p) + 5, 'text-anchor': 'end'}, density(p));
+    }
+    append(chart, 'path', {d: path, class: 'chart-line'});
+    append(chart, 'line', {x1: left, x2: right, y1: y(metrics.noise_density_v2_per_hz),
+      y2: y(metrics.noise_density_v2_per_hz), class: 'reference-line'});
+    if (maximum === metrics.nyquist_hz) {
+      append(chart, 'line', {x1: right, x2: right, y1: top, y2: bottom, class: 'limit-line'});
+      append(chart, 'text', {x: right - 8, y: top + 12, 'text-anchor': 'end'}, 'Nyquist sampling boundary');
+    }
+    append(chart, 'text', {x: (left + right) / 2, y: 402, 'text-anchor': 'middle'}, 'Frequency (Hz)');
+    append(chart, 'text', {x: 22, y: 190, transform: 'rotate(-90 22 190)', 'text-anchor': 'middle'},
+      'Spectral density (V²/Hz, logarithmic scale)');
+    append(chart, 'circle', {id: 'spectrum-marker', r: 5, fill: 'var(--report-accent)'});
+    inspect(Number(slider.value));
+  }
+
+  slider.addEventListener('input', () => inspect(Number(slider.value)));
+  chart.addEventListener('pointermove', event => {
+    const point = chart.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const local = point.matrixTransform(chart.getScreenCTM().inverse());
+    const frequency = minimum + (local.x - left) / (right - left) * (maximum - minimum);
+    inspect(frequency / metrics.spacing_hz);
+  });
+  byId('spectrum-view').addEventListener('change', event => {
+    if (event.target.value === 'tone') {
+      minimum = Math.max(0, metrics.peak_hz - 5 * metrics.spacing_hz);
+      maximum = Math.min(metrics.nyquist_hz, metrics.peak_hz + 5 * metrics.spacing_hz);
+      slider.value = Math.round(metrics.peak_hz / metrics.spacing_hz);
+    } else {
+      minimum = 0;
+      maximum = metrics.nyquist_hz;
+    }
+    drawSpectrum();
+  });
+  drawSpectrum();
+
+  const noiseChart = byId('noise-chart');
+  const reference = metrics.noise_density_v2_per_hz;
+  const estimate = metrics.noise_density_estimate_v2_per_hz;
+  // Axis padding is visual only; no acceptance band is assigned.
+  const lower = Math.min(reference, estimate) * 0.9;
+  const upper = Math.max(reference, estimate) * 1.1;
+  const nx = value => 120 + (value - lower) / (upper - lower) * 680;
+  append(noiseChart, 'path', {d: 'M120 175 H800', stroke: 'currentColor'});
+  for (const [value, label, style] of [
+    [lower, 'Axis lower extent', 'axis-line'],
+    [reference, 'Input noise reference', 'reference-line'],
+    [upper, 'Axis upper extent', 'axis-line'],
+  ]) {
+    const line = append(noiseChart, 'line', {x1: nx(value), x2: nx(value), y1: 65, y2: 175, class: style});
+    line.appendChild(make('title', {}, `${label}: ${density(value)} V²/Hz; public synthetic voltage`));
+    append(noiseChart, 'text', {x: nx(value), y: 200, 'text-anchor': 'middle'}, density(value));
+  }
+  append(noiseChart, 'text', {x: 460, y: 244, 'text-anchor': 'middle'}, 'Mean noise density (V²/Hz)');
+  append(noiseChart, 'text', {x: 460, y: 30, 'text-anchor': 'middle'},
+    'The dashed line is the input reference; no noise acceptance criterion is assigned.');
+  const dot = append(noiseChart, 'circle', {cx: nx(metrics.noise_density_estimate_v2_per_hz), cy: 120,
+    r: 8, fill: 'var(--ink)', tabindex: 0, role: 'img', 'aria-label': 'Inspect upper-band mean density'});
+  const noiseText = `Public synthetic voltage; upper-band mean: ` +
+    `${density(metrics.noise_density_estimate_v2_per_hz)} V²/Hz; reference: ${density(reference)} V²/Hz; ` +
+    `absolute relative difference: ${metrics.noise_error_percent.toFixed(1)} %. ` +
+    'No noise acceptance criterion or confidence interval is assigned.';
+  dot.appendChild(make('title', {}, noiseText));
+  const showNoise = () => { byId('noise-readout').textContent = noiseText; };
+  dot.addEventListener('pointerenter', showNoise);
+  dot.addEventListener('focus', showNoise);
+  showNoise();
+
+  const sections = Array.from(document.querySelectorAll('section[id^="section-"]'));
+  const binding = document.querySelector('meta[name="document-binding"]').content;
+  const comments = [];
+  for (const section of sections) {
+    const option = document.createElement('option');
+    option.value = section.id;
+    option.textContent = section.querySelector('h2').textContent;
+    byId('comment-section').appendChild(option);
+  }
+  const status = text => { byId('comment-status').textContent = text; };
+  const packet = () => ({document: 'Signal processing module analysis', revision: '01', binding, comments});
+
+  function mergeComments(incoming) {
+    if (incoming.binding !== binding || incoming.revision !== '01' ||
+        incoming.document !== 'Signal processing module analysis' || !Array.isArray(incoming.comments) ||
+        incoming.comments.length > 1000 || incoming.comments.some(comment =>
+          !comment || typeof comment.id !== 'string' || typeof comment.text !== 'string' ||
+          !comment.text.trim() || comment.text.length > 10000 ||
+          !sections.some(section => section.id === comment.section))) {
+      throw new Error('The comments do not match this document or have invalid fields.');
+    }
+    const existing = new Set(comments.map(comment => comment.id));
+    for (const comment of incoming.comments) {
+      if (!existing.has(comment.id)) {
+        comments.push({id: comment.id, section: comment.section, text: comment.text});
+        existing.add(comment.id);
+      }
+    }
+    renderComments();
+  }
+
+  function renderComments() {
+    byId('comment-list').replaceChildren();
+    for (const comment of comments) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = `#${comment.section}`;
+      link.textContent = sections.find(section => section.id === comment.section).querySelector('h2').textContent;
+      item.appendChild(link);
+      const text = document.createElement('p');
+      text.className = 'note';
+      text.textContent = comment.text;
+      item.appendChild(text);
+      byId('comment-list').appendChild(item);
+    }
+  }
+
+  byId('add-comment').addEventListener('click', () => {
+    const text = byId('comment-text').value.trim();
+    if (!text) return status('Enter comment text before recording it.');
+    comments.push({id: crypto.randomUUID(), section: byId('comment-section').value, text});
+    byId('comment-text').value = '';
+    renderComments();
+    status('Comment recorded in the page; save the comments to retain it.');
+  });
+  byId('save-comments').addEventListener('click', async () => {
+    if (!window.showSaveFilePicker) return status('Direct file saving is unavailable. Download comments and place the file beside the HTML.');
+    try {
+      const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+        types: [{description: 'Report comments', accept: {'application/json': ['.json']}}]});
+      const existing = await handle.getFile();
+      if (existing.size) mergeComments(JSON.parse(await existing.text()));
+      const writable = await handle.createWritable();
+      await writable.write(JSON.stringify(packet(), null, 2));
+      await writable.close();
+      status('Comments saved to the selected file. Retain it beside the HTML.');
+    } catch (error) {
+      status(error.name === 'AbortError' ? 'Save cancelled; comments remain in the page.' : `Comments were not saved: ${error.message}`);
+    }
+  });
+  byId('download-comments').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(packet(), null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'report.comments.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status('Comments downloaded. Place the file beside the HTML before transferring it.');
+  });
+  byId('load-comments').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 2000000) return status('The comments file is too large.');
+    try {
+      mergeComments(JSON.parse(await file.text()));
+      status('Matching comments loaded and merged; save to retain the combined comments.');
+    } catch (error) { status(error.message); }
+    event.target.value = '';
+  });
+})();
+</script>
+</body></html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="document-binding" content="@@document_binding@@">
+<title>Signal processing module analysis</title>
+@@house_style@@
+<style>
+.hs-doc .panel{background:#f2f7f8;border:1px solid var(--line);padding:18px;margin:20px 0}
+.hs-doc svg{width:100%;height:auto;color:var(--ink)}
+.hs-doc svg text{fill:currentColor;font:14px sans-serif}
+.hs-doc .chart-line{fill:none;stroke:var(--ink);stroke-width:2}
+.hs-doc .reference-line{stroke:var(--report-accent);stroke-width:2;stroke-dasharray:7 4}
+.hs-doc .limit-line{stroke:#a54236;stroke-width:2;stroke-dasharray:5 4}
+.hs-doc .axis-line{stroke:var(--ink);stroke-width:1}
+.hs-doc label{display:block;margin:12px 0 5px;font:14px sans-serif}
+.hs-doc textarea,.hs-doc select,.hs-doc input[type=range]{width:100%}
+.hs-doc textarea,.hs-doc select{font:16px/1.5 sans-serif;padding:8px;border:1px solid var(--line)}
+.hs-doc button{background:var(--ink);color:white;border:0;padding:10px 14px;cursor:pointer;margin:8px 8px 8px 0}
+.hs-doc button:focus-visible,.hs-doc a:focus-visible{outline:3px solid var(--report-accent);outline-offset:3px}
+.hs-doc pre{overflow-x:auto;padding:12px;background:#f2f7f8;font:13px/1.6 monospace}
+.hs-doc .note{white-space:pre-wrap;overflow-wrap:anywhere}
+.hs-doc .table-wrap td{overflow-wrap:anywhere}
+@media print{.hs-doc .review-controls,.hs-doc .chart-controls{display:none}}
+</style>
+</head>
+<body class="hs-doc">
+<header>
+<h1>Signal processing module analysis</h1>
+<p>Frequency content of uniformly sampled signals</p>
+<p>Revision 01 | 2026-10-22</p>
+<p>Draft for maintainer review</p>
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+<li><a href="#section-1">Executive Summary</a></li>
+<li><a href="#section-2">Introduction and scope</a></li>
+<li><a href="#section-3">Analysis basis and criteria</a></li>
+<li><a href="#section-4">Inputs and outputs</a></li>
+<li><a href="#section-5">Theory and method</a></li>
+<li><a href="#section-6">Worked example</a></li>
+<li><a href="#section-7">Validation evidence</a></li>
+<li><a href="#section-8">Limitations and recommendations</a></li>
+<li><a href="#section-9">References</a></li>
+<li><a href="#section-10">Appendices</a></li>
+</ol></nav>
+<main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The signal processing module is a set of numerical tools for scalar time histories. Analysis is performed to determine the frequency content of a uniformly sampled voltage signal; key results are summarized below.</p>
+<ul>
+<li>The dominant tone is resolved at @@peak_hz@@ Hz against the published @@sine_frequency_hz@@ Hz input.
+<ul><li>The frequency error is @@peak_error_hz@@ Hz, below the half-bin comparison limit of @@peak_limit_hz@@ Hz. This result supports dominant-tone identification for this synthetic example.</li></ul></li>
+<li>The estimated high-frequency noise density is @@noise_density_estimate_v2_per_hz@@ V²/Hz against the published @@noise_density_v2_per_hz@@ V²/Hz input.
+<ul><li>The estimate is within @@noise_error_percent@@ % of the input. This observed difference is reported without a noise acceptance criterion or confidence interval; no equipment acceptance is established.</li></ul></li>
+<li>Measured-signal use requires a documented acquisition basis.
+<ul><li>Frequency content above the @@nyquist_hz@@ Hz sampling boundary is unresolved at the example's sampling rate. Instrument bandwidth, calibration and anti-alias filtering remain required inputs for measured data.</li></ul></li>
+</ul>
+<p>Input values and the synthetic signal definition are taken from <a href="#ref-public">the published example</a>. Comparison criteria are defined in <a href="#section-3">Section 3</a>; calculated results are developed in <a href="#section-6">Section 6</a>.</p>
+</section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><caption>Revision history. Each issue records its numerical basis or subsequent correction.</caption>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>00</td><td>2026-10-21</td><td>The spectral-density workflow is documented on a reproducible public example to distinguish numerical evidence from measured-signal qualification.</td></tr>
+<tr><td>01</td><td>2026-10-22</td><td>Numerical checks are separated from pinned byte checks so compatible library versions can run; the unsupported noise acceptance band is removed and the observed difference is retained.</td></tr></tbody></table></div>
+
+<section id="section-2"><h2>2. Introduction and scope</h2>
+<p>A signal is represented as ordered scalar values with a known sample interval. Frequency analysis is performed to identify repeating components and to distribute mean-square signal content across frequency.</p>
+<p>The module exposes spectral analysis, time-history processing and cycle counting through documented classes. Spectral density estimation and peak identification are covered here from signal definition through returned arrays and numerical comparison. The calculation is performed on a synthetic voltage source; no asset response or field measurement is represented. The public interfaces and existing evidence are identified in <a href="#repository-records">Section 9.2</a>.</p>
+<h3>2.1 Not covered</h3>
+<p>Rainflow cycle counting, stress-life curves, fatigue damage, digital filter design, adaptive filtering, legacy configuration workflows, file readers and batch export are outside the worked example. Their presence does not establish their suitability for a particular engineering decision. Recorded rainflow discrepancies and the separate fatigue regression evidence are identified in <a href="#section-7">Section 7</a>; licensed-solver interfaces are not used.</p>
+</section>
+
+<section id="section-3"><h2>3. Analysis basis and criteria</h2>
+<p>The calculation basis is defined by the published voltage-signal example and the module's documented spectral interface. Numerical comparison criteria are selected for this demonstration; operating limits are not assigned.</p>
+<h3>3.1 Signal and comparison basis</h3>
+<p>The sine amplitude, tone frequency, sampling rate, record length, white-noise density and segment length follow <a href="#ref-public">the SciPy reference manual, edition 1.14.1, Examples</a>. A fixed random seed is introduced as an analysis choice because the published realization is unseeded. Its displayed sample values are therefore not comparison targets.</p>
+<p>The dominant peak is compared with the input tone using half the returned frequency spacing. This grid-based criterion applies to this isolated dominant tone and is not a general bound on the resolution of neighbouring tones. The mean density in the upper half of the spectrum is compared with the input noise density as an observed relative difference. The band excludes the tone for this example. No noise acceptance criterion or confidence interval is assigned; the cited example supplies the averaging recipe without an acceptance band.</p>
+<h3>3.2 Sampling boundary and numerical agreement</h3>
+<p>The Nyquist boundary is the sample frequency divided by two, following the <a href="#ref-fourier">NumPy Fourier convention</a>. A measured acquisition requires suppression of frequencies at and above that boundary before sampling. A spectral plot of sampled values cannot establish that suppression.</p>
+<p>Each returned density bin is also compared with an independently assembled periodic-window Fourier calculation. Relative tolerance is 10<sup>−12</sup> with absolute tolerance 10<sup>−15</sup> V²/Hz, as specified by the <a href="#ref-report-tests">report test</a>. These tolerances check numerical agreement, not sensor accuracy. Every comparison is performed on unrounded values.</p>
+</section>
+
+<section id="section-4"><h2>4. Inputs and outputs</h2>
+<p>The spectral calculation is supplied with a real, finite, uniformly sampled scalar array and a positive sampling rate. Frequency and density arrays are returned in a tabular object with one row per frequency bin.</p>
+<p>The public SpectralAnalyzer class is initialized with the sampling rate and the Welch method. Its compute_spectrum operation is supplied with the signal, segment length, overlap length and Hann window explicitly. Constant detrending is applied within each segment by the underlying density calculation. TimeSeriesProcessor.calculate_statistics supplies the record length, root mean square and variance. Peak identification is performed by SpectralAnalyzer.find_peaks on the returned density. Interface locators and a complete invocation are given in <a href="#repository-records">Section 9.2</a>.</p>
+<p>Frequency is returned in Hz. For a voltage input, the power column is a power spectral density in V²/Hz, and the magnitude column is its square root in V/√Hz. Magnitude is therefore an amplitude density, not the sine amplitude. The phase column contains zero placeholders; a phase relationship is not measured by this route. The output column contract is confirmed by <a href="#ref-spectrum-code">the implementation</a>.</p>
+<p>The spectral interface does not accept timestamps or unit metadata. Sample regularity, channel units, finite values, acquisition gaps, stationarity and instrument calibration require checks before the array is submitted. For other scalar quantities the squared input unit replaces V².</p>
+</section>
+
+<section id="section-5"><h2>5. Theory and method</h2>
+<p>The density estimate is calculated by averaging windowed segment periodograms. The numerical model is a synthetic voltage source followed by ideal uniform sampling; no structural geometry or spatial boundary condition is introduced.</p>
+<figure>
+<svg viewBox="0 0 900 220" role="img" aria-labelledby="schematic-title schematic-description">
+<title id="schematic-title">Synthetic voltage acquisition and analysis model</title>
+<desc id="schematic-description">A sinusoidal voltage source and a white-noise source are summed. Ideal uniform samples are grouped into overlapping windowed segments and converted into spectral density. The sampling boundary limits represented frequency; no physical sensor or anti-alias filter is modelled.</desc>
+<g fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="70" cy="65" r="30"/><path d="M48 65 Q59 38 70 65 T92 65"/>
+<circle cx="70" cy="155" r="30"/><path d="M48 155 l7 -8 6 18 6 -24 6 21 6 -16 8 9"/>
+<path d="M100 65 H165 V110 H197 M100 155 H165 V110"/>
+<circle cx="215" cy="110" r="18"/><path d="M205 110 H225 M215 100 V120 M233 110 H290"/>
+<path d="M300 140 V120 M315 140 V92 M330 140 V80 M345 140 V120 M360 140 V145 M375 140 V108 M390 140 V85"/>
+<path d="M400 110 H460 M475 135 Q495 42 515 135 M505 135 Q525 42 545 135 M555 110 H625"/>
+<path d="M650 65 V150 H840 M650 140 L690 138 710 130 730 78 750 137 810 140"/>
+</g>
+<g><text x="15" y="20">Sine voltage</text><text x="15" y="210">White noise</text>
+<text x="285" y="35">Uniform samples</text><text x="280" y="185">Known interval</text>
+<text x="450" y="35">Overlapping segments</text><text x="458" y="185">Periodic Hann window</text>
+<text x="645" y="35">Mean spectral density</text><text x="645" y="185">Frequency ≤ sampling boundary</text></g>
+</svg>
+<figcaption>Figure 1. Ideal signal model defined by the public example. The drawing represents the calculation sequence, with no physical acquisition equipment or measured filter response implied.</figcaption>
+</figure>
+<h3>5.1 Signal definition and frequency grid</h3>
+<p>The public signal is x<sub>n</sub> = √2 a<sub>rms</sub> sin(2π f<sub>0</sub> n / f<sub>s</sub>) + e<sub>n</sub>, where x<sub>n</sub> is voltage, a<sub>rms</sub> is sine root mean square voltage, f<sub>0</sub> is tone frequency, f<sub>s</sub> is sampling rate, n is sample index and e<sub>n</sub> is zero-mean Gaussian white noise. For the one-sided noise-density input q, noise variance is q f<sub>s</sub>/2 (<a href="#ref-public">SciPy, Examples</a>).</p>
+<p>For segment length L, the frequency spacing is Δf = f<sub>s</sub>/L and frequency f<sub>k</sub> = k Δf. The index k runs from the zero-frequency term through the even-length Nyquist term (<a href="#ref-fourier">NumPy, Implementation details and Real and Hermitian transforms</a>).</p>
+<h3>5.2 Windowed density and peak selection</h3>
+<p>For segment j, the sample mean x̄<sub>j</sub> is removed and X<sub>j,k</sub> = Σ<sub>n=0…L−1</sub> w<sub>n</sub>(x<sub>j,n</sub> − x̄<sub>j</sub>) exp(−2π i k n/L). Here i is the imaginary unit, x<sub>j,n</sub> is the segment voltage and w<sub>n</sub> is the dimensionless periodic Hann window. The window is w<sub>n</sub> = (1 − cos(2π n/L))/2, obtained from the <a href="#ref-hann">Hann definition</a> with the <a href="#ref-window">periodic spectral-window convention</a>.</p>
+<p>With J complete segments, the two-sided density is P<sub>k</sub> = Σ<sub>j=1…J</sub> |X<sub>j,k</sub>|² / (J f<sub>s</sub> Σ<sub>n=0…L−1</sub> w<sub>n</sub>²). The one-sided density doubles interior positive-frequency terms and retains the zero-frequency and Nyquist terms without doubling. This normalization follows <a href="#ref-theory">the spectral-analysis guide, Spectral Analysis and Welch's Method</a>. Summing the returned density multiplied by Δf gives the detrended, window-weighted mean-square estimate.</p>
+<p>The module identifies local maxima and ranks them by density. Its minimum-distance option is forwarded directly to a sample-index distance argument, although the module description calls it a frequency distance. A requested spacing in Hz requires conversion to bins before that option is used (<a href="#ref-peaks">peak-finding parameter definition</a>; <a href="#ref-spectrum-code">module implementation</a>). The worked example requests only the strongest peak and does not use a distance threshold.</p>
+</section>
+
+<section id="section-6"><h2>6. Worked example</h2>
+<p>The published sine-plus-noise signal is reproduced by calling the module's public spectral and statistical interfaces. The realization is fixed by the declared seed; all reported values and plotted bins are obtained from those calls or calculated directly from their returned values.</p>
+<p>The input is sampled at @@sampling_rate_hz@@ Hz for @@samples@@ samples, giving a record duration of @@duration_s@@ s. The sine root mean square is @@sine_rms_v@@ V. The estimated signal root mean square is @@rms_v@@ V and variance is @@variance_v2@@ V²; these include the added noise. Input values are from the <a href="#ref-public">public example</a>.</p>
+<p>Segments contain @@segment_samples@@ samples with @@overlap_samples@@ overlapping samples. The calculation averages @@segments@@ complete segments and returns @@bins@@ frequency bins at @@spacing_hz@@ Hz spacing. The integrated spectral density is @@integrated_density_v2@@ V². This estimate uses segment detrending and window weights, so equality with full-record variance is not an acceptance criterion.</p>
+<figure id="spectrum-figure">
+<div class="chart-controls"><label for="spectrum-view">Frequency view</label>
+<select id="spectrum-view"><option value="full">Full sampled band</option><option value="tone">Dominant-tone neighbourhood</option></select>
+<label for="frequency-cursor">Frequency cursor: move to inspect a returned bin</label><input id="frequency-cursor" type="range" min="0" max="1" step="1" value="0"></div>
+<svg id="spectrum-chart" viewBox="0 0 900 420" role="img" aria-label="Interactive spectral density against frequency, including the Nyquist sampling boundary"></svg>
+<p id="spectrum-readout" class="panel" aria-live="polite"></p>
+<figcaption>Figure 2. Returned spectral density against frequency. The vertical dashed line marks the Nyquist sampling boundary; it is not a density limit. The horizontal reference marks the input noise density and is not a limit on the tone. Hover or use the frequency cursor to inspect individual bins.</figcaption>
+</figure>
+<p>The peak density is @@peak_density_v2_per_hz@@ V²/Hz. Peak density depends on segment length, window and tone position between bins; it is not a direct measurement of sine amplitude.</p>
+<p>The upper-band mean is calculated from @@noise_band_start_hz@@ Hz through the sampling boundary. The mean and input reference are displayed below as an observed comparison without a noise acceptance limit.</p>
+<figure id="noise-figure">
+<svg id="noise-chart" viewBox="0 0 900 260" role="img" aria-label="Estimated mean noise density and input reference without an acceptance limit"></svg>
+<p id="noise-readout" class="panel" aria-live="polite"></p>
+<figcaption>Figure 3. Upper-band mean noise density compared with the input reference. Hover or focus the mean marker for the estimate, reference, observed relative difference and units. Axis extents are visual padding and carry no acceptance meaning.</figcaption>
+</figure>
+</section>
+
+<section id="section-7"><h2>7. Validation evidence</h2>
+<p>Numerical evidence is established for the selected synthetic spectral workflow. Existing analytical tests and narrower regression checks are distinguished from field qualification.</p>
+<p>The existing spectral tests cover isolated tones, multiple tones, frequency spacing, detrending, alternative windows, density output, peak selection, spectral masking and several edge cases. An existing integration test exercises spectral computation, peak selection and masking together. The retained execution record contains @@validation_passed@@ passing cases with no failures in the selected evidence set (<a href="#ref-evidence">execution evidence</a>). The distribution is given in the <a href="#qa-evidence">appendix</a>.</p>
+<p>The new example comparison evaluates every returned density bin against a separate windowed Fourier calculation, using the tolerances defined in <a href="#section-3">Section 3</a>. It checks the wrapper's numerical result for this input, with NumPy used for the independent transform. Shared numerical infrastructure remains a limitation of that comparison.</p>
+<p>The repository also holds a cycle-table export readback test and a user-defined single-slope damage calculation. These checks establish output preservation and a limited closed-form damage result; they do not qualify the cycle-counting algorithm or built-in standards curves. The recorded rainflow verdict matrix retains non-conforming results for this module's cycle-counting path. A passing matrix regression preserves that finding rather than resolving it (<a href="#ref-existing-tests">existing evidence records</a>).</p>
+<p>The legacy inverse-transform tests check returned type and allow a shortened reconstruction. Their success does not establish exact sample count or waveform recovery. No measured signal, instrument certificate, field benchmark or independent equipment acceptance is established by this report.</p>
+</section>
+
+<section id="section-8"><h2>8. Limitations and recommendations</h2>
+<p>The demonstrated result is limited to a finite, real, uniformly sampled synthetic signal with stationary white noise and an isolated tone. Additional evidence is required before measured-signal or fatigue conclusions are issued.</p>
+<h3>8.1 Limits of use</h3>
+<p>Sampling regularity and physical units are supplied by the caller and are not verified by the scalar-array interface. Out-of-band content can alias into the returned band. Segment averaging reduces random variation but discards time localization; a transient or changing speed requires a separate analysis basis. A single seeded realization does not establish uncertainty or a confidence interval.</p>
+<p>The Fourier route uses a different power normalization from the density route, omits the even-length Nyquist coefficient and doubles the zero-frequency magnitude. Its inverse reconstruction shortens the record. Treat its power column and the window-averaged Fourier power as separately scaled quantities, rather than integrating them as V²/Hz. A density column added by a convenience method does not correct that scaling. These behaviours follow <a href="#ref-spectrum-code">the implementation and existing inverse tests</a>.</p>
+<p>Cycle-counting discrepancies remain unresolved. Built-in fatigue curves require their own edition, clause, material and environmental basis; that basis is not established here. The legacy configuration workflow and command interface are not qualified by this example. No equipment operating limit, remaining life or structural acceptance is calculated.</p>
+<h3>8.2 Recommendations</h3>
+<p>Use the demonstrated density route for scalar frequency-content screening only after finite-value, timestamp, unit and acquisition checks. Record instrument calibration, sample-clock accuracy, sensor bandwidth and anti-alias response beside each measured dataset. If acquisition evidence is missing, retain the analysis as a numerical illustration and obtain the missing evidence before accepting an engineering result (<a href="#ref-fourier">sampling convention</a>; <a href="#ref-peaks">finite-value warning</a>).</p>
+<p>For closely spaced tones, compare results at multiple segment lengths and document the effect of window broadening. For nonstationary signals, define time-resolved acceptance criteria before applying an averaged spectrum (<a href="#ref-theory">spectral-analysis guide</a>). Do not infer a phase relation from the placeholder phase column.</p>
+<p>Before Fourier reconstruction is used, correct the frequency-grid endpoints and demonstrate exact length and amplitude recovery against independent signals. Before fatigue decisions are issued, resolve the recorded counting discrepancies and qualify the applicable curve basis. These actions follow the <a href="#ref-existing-tests">recorded regression findings</a>; no repair is included in this analysis.</p>
+</section>
+
+<section id="section-9"><h2>9. References</h2>
+<p>Public numerical definitions and repository evidence are identified below. Editions are specified for reproducibility; no licensed-standard values are reproduced.</p>
+<h3>9.1 Public definitions</h3>
+<ol>
+<li id="ref-public"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.welch.html">SciPy reference manual, edition 1.14.1, scipy.signal.welch</a>, Examples for signal parameters and noise-band averaging; Parameters for segment overlap, density units and detrending.</li>
+<li id="ref-theory"><a href="https://docs.scipy.org/doc/scipy-1.14.1/tutorial/signal.html#spectral-analysis">SciPy user guide, edition 1.14.1, Spectral Analysis</a>, normalization and Welch's Method.</li>
+<li id="ref-fourier"><a href="https://numpy.org/doc/1.26/reference/routines.fft.html">NumPy reference manual, edition 1.26, Discrete Fourier Transform</a>, Implementation details and Real and Hermitian transforms for transform sign, frequency ordering and the Nyquist term.</li>
+<li id="ref-hann"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.windows.hann.html">SciPy reference manual, edition 1.14.1, Hann window</a>, Notes for the raised-cosine equation and periodic versus symmetric windows.</li>
+<li id="ref-window"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.get_window.html">SciPy reference manual, edition 1.14.1, get_window</a>, Parameters for the periodic spectral-window convention.</li>
+<li id="ref-peaks"><a href="https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.find_peaks.html">SciPy reference manual, edition 1.14.1, find_peaks</a>, Parameters for index distance and Warning for nonfinite data.</li>
+</ol>
+<h3 id="repository-records">9.2 Repository evidence and reproducibility</h3>
+<ul>
+<li><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/README.md">Documented public interfaces</a> and <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/__init__.py">package exports</a>.</li>
+<li id="ref-spectrum-code"><a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/spectral.py">Spectral implementation</a>, compute_spectrum, _compute_welch, find_peaks, compute_psd and inverse_transform; <a href="../../../../src/digitalmodel/signal_processing/signal_analysis/core/timeseries.py">statistical implementation</a>, calculate_statistics.</li>
+<li id="ref-existing-tests"><a href="../../../../tests/signal_processing/signal_analysis/core/test_spectral.py">Existing spectral tests</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_signal_integration.py">spectral integration and imports</a>; <a href="../../../../tests/signal_processing/signal_analysis/test_pack_acceptance.py">export and closed-form damage checks</a>; <a href="../../../../tests/fatigue/test_rainflow_invariants.py">recorded counting verdict matrix</a>.</li>
+<li id="ref-report-tests"><a href="../../../../tests/signal_processing/signal_analysis/test_module_report.py">Report rebuild and numerical comparisons</a>; <a href="../../../../tests/signal_processing/signal_analysis/report-requirements.txt">pinned report environment</a>; <a href="../../../../.github/workflows/signalprocessing-report.yml">byte-exact continuous-integration job</a>; <a href="public-example.json">public input recipe and criterion</a>; <a href="build_report.py">report generator</a>; <a href="results.json">full-precision results and plotted arrays</a>.</li>
+<li id="ref-evidence"><a href="validation.json">Selected test execution record</a>, with counts and source-content digests; <a href="changes.json">revision change record</a>.</li>
+<li>Numerical environment: NumPy 1.26.4, Pandas 2.2.3 and SciPy 1.14.1, recorded from the installed distributions. The broader evidence set uses PyLife 2.1.0 for import compatibility; the project declares a newer minimum. A complete installation with the declared dependency set is not established.</li>
+</ul>
+<p>The worked calculation is called as follows, using the input recipe and seed defined above. The rebuild command is run from the repository root with the source directory on the Python import path.</p>
+<pre>import json
+from pathlib import Path
+import numpy as np
+from digitalmodel.signal_processing.signal_analysis import SpectralAnalyzer
+from digitalmodel.signal_processing.signal_analysis import TimeSeriesProcessor
+
+basis = json.loads(Path(
+    "docs/reports/modules/signalprocessing/public-example.json").read_text(encoding="utf-8"))
+data = basis["inputs"]
+fs = data["sampling_rate_hz"]
+time = np.arange(data["samples"]) / fs
+rng = np.random.Generator(np.random.PCG64(basis["adaptation"]["random_seed"]))
+x = data["sine_rms_v"] * np.sqrt(2) * np.sin(
+    2 * np.pi * data["sine_frequency_hz"] * time)
+x += rng.normal(scale=np.sqrt(data["noise_density_v2_per_hz"] * fs / 2),
+                size=time.shape)
+analyzer = SpectralAnalyzer(data["sampling_rate_hz"], method="welch")
+spectrum = analyzer.compute_spectrum(
+    x, nperseg=data["segment_samples"],
+    noverlap=data["segment_samples"] // 2, window="hann")
+peak = analyzer.find_peaks(spectrum, n_peaks=1)
+statistics = TimeSeriesProcessor().calculate_statistics(x)</pre>
+<pre>PYTHONPATH=src uv run --no-project --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt python docs/reports/modules/signalprocessing/build_report.py --check
+PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_module_report.py</pre>
+<p>The input recipe, generated signal digest and full plotted arrays are retained. Exact retained-byte comparison is performed in the pinned environment by the separate continuous-integration job. Normal report tests compare every retained metric and spectral bin using numerical tolerances and record the installed versions; a temporary rebuild is checked for exact repeatability and tamper detection within that environment. Once dependencies are installed, calculation requires no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
+</section>
+
+<section id="section-10"><h2>10. Appendices</h2>
+<p>Input readiness, execution evidence and document comments are retained below. Missing acquisition evidence is distinguished from synthetic numerical inputs.</p>
+<h3 id="data-register">10.1 Data register and retained evidence</h3>
+<div class="table-wrap"><table>
+<caption>Table 1. Input definitions and intended-use readiness.</caption>
+<thead><tr><th>Quantity</th><th>Value</th><th>Basis and readiness</th></tr></thead>
+<tbody>
+<tr><td>Sampling rate (Hz), record length (samples)</td><td>@@sampling_rate_hz@@; @@samples@@</td><td>Public example, reference 1, Examples; synthetic numerical use only.</td></tr>
+<tr><td>Sine root mean square (V), frequency (Hz)</td><td>@@sine_rms_v@@; @@sine_frequency_hz@@</td><td>Public example, reference 1, Examples.</td></tr>
+<tr><td>White-noise density (V²/Hz)</td><td>@@noise_density_v2_per_hz@@</td><td>Public example, reference 1, Examples; prescribed one-sided density.</td></tr>
+<tr><td>Segment length (samples), overlap (samples)</td><td>@@segment_samples@@; @@overlap_samples@@</td><td>Segment length from reference 1, Examples; half-segment overlap from Parameters and module implementation.</td></tr>
+<tr><td>Random seed (dimensionless)</td><td>@@random_seed@@</td><td>Analysis-defined PCG64 realization; public example leaves the seed unspecified.</td></tr>
+<tr><td>Noise-mean acceptance criterion</td><td>NOT_EVALUATED</td><td>The observed relative difference is reported without an acceptance threshold; the source provides no comparison band.</td></tr>
+<tr><td>Acquisition idealization</td><td>ASSUMED - to be confirmed</td><td>Exact uniform timing and an ideal sampled synthetic source are adopted for demonstration. Measured-data use requires a separate acquisition basis.</td></tr>
+<tr><td>Calibration, acquisition filter response, sample-clock accuracy, field comparison</td><td>NOT_EVALUATED</td><td>No measurement evidence is supplied; equipment acceptance cannot be calculated.</td></tr>
+</tbody></table></div>
+<p>No catalogue-backed measured dataset is consumed. The shared source catalogue is unavailable in the inspected checkout, so no catalogue identity or wider discovery coverage is claimed. This repository retains the computational example, its public-source relationship, units, library versions, digests and numerical criteria; the recipe is not a measured record.</p>
+<h3 id="qa-evidence">10.2 Numerical evidence and pre-flight</h3>
+<div class="table-wrap"><table>
+<caption>Table 2. Existing selected test evidence, before the report tests are added. Counts represent checks, not field-qualified cases.</caption>
+<thead><tr><th>Evidence group</th><th>Passing checks</th><th>Qualification boundary</th></tr></thead>
+<tbody>@@validation_groups@@</tbody></table></div>
+<p>The pre-flight confirms that the public entry point is documented and callable, that plotted arrays are obtained from the returned density, that each quoted worked value is checked against the calculation and that the retained input is synthetic. A rebuild checks the selected source digests and compares the generated document bytes. Local links, heading structure, inlined styling and public wording are also checked by the report test. Browser controls are checked separately; print layout and assistive-technology behaviour require final document review by the maintainer.</p>
+<p>The interpretation legend is expressed as sentences: the frequency comparison is met when the stated error is within its half-bin limit; that comparison is not met when the limit is exceeded. Noise density is reported only as an observed difference from the prescribed input. An engineering result is not evaluated when its required measurement basis is absent. The numerical example does not confer a field acceptance status.</p>
+<h3>10.3 Engineering changes</h3>
+<details id="change-panel"><summary>Changes since the preceding issue</summary><ul>@@change_panel@@</ul></details>
+<h3>10.4 Comments</h3>
+<p>Comments are associated with a report section and this document revision. Save the comments beside the HTML and retain both files when transferring the document. Loading comments for a different document is rejected.</p>
+<div class="panel review-controls">
+<label for="comment-section">Section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4" maxlength="10000"></textarea>
+<button id="add-comment" type="button">Record comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<button id="download-comments" type="button">Download comments</button>
+<label for="load-comments">Load comments</label><input id="load-comments" type="file" accept="application/json,.json">
+<p id="comment-status" aria-live="polite">Comments remain in this page until saved. Choose the HTML folder in the save dialog; downloaded comments require placement beside the report.</p>
+</div><ol id="comment-list"></ol>
+</section>
+</main></div>
+<script id="calculation-data" type="application/json">@@calculation_data@@</script>
+<script>@@ui_script@@</script>
+</body></html>

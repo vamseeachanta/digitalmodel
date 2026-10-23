@@ -1,0 +1,29 @@
+{
+  "source": {
+    "title": "SciPy reference manual: scipy.signal.welch",
+    "edition": "SciPy 1.14.1",
+    "section": "welch: Examples",
+    "url": "https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.signal.welch.html#examples"
+  },
+  "inputs": {
+    "sampling_rate_hz": 10000,
+    "samples": 100000,
+    "sine_rms_v": 2,
+    "sine_frequency_hz": 1234,
+    "noise_density_v2_per_hz": 0.001,
+    "segment_samples": 1024
+  },
+  "adaptation": {
+    "random_seed": 0,
+    "reference": "This analysis fixes the seed, using NumPy PCG64, so a synthetic realization is reproducible; the published example leaves the seed unspecified.",
+    "overlap": "Half the segment length, following the module implementation and the cited manual's noverlap parameter.",
+    "window": "hann",
+    "noise_band": "The last half of the one-sided density, starting at segment_samples // 4, follows the cited example."
+  },
+  "criteria": {
+    "peak_frequency": "Absolute error no larger than half the returned frequency spacing; this is a demonstration criterion for this isolated dominant tone.",
+    "reference": "The frequency criterion follows the returned grid spacing. Noise density is reported as an observed difference from the input reference, without an acceptance criterion or confidence interval."
+  },
+  "readiness": "Synthetic numerical example only; no measured engineering input or equipment acceptance is established.",
+  "retention": "The generation recipe, seed, library versions, array digests, full plotted frequency and density arrays, and compact metrics are retained. Raw measured data are not used."
+}
