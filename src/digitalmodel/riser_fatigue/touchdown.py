@@ -26,6 +26,7 @@ thickness_correction) — no S-N math is reimplemented here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Optional, Sequence
 
 import numpy as np
@@ -37,6 +38,10 @@ from digitalmodel.fatigue import (
     thickness_correction,
 )
 from digitalmodel.fatigue import c203_sn_tables as _c203
+from digitalmodel.fatigue.damage import validate_histogram
+from digitalmodel.riser_fatigue.validation import (
+    evidence_text, finite_number, histogram_basis, positive_damage,
+)
 
 __all__ = [
     "RiserSection",
@@ -55,7 +60,7 @@ class RiserSection:
     Parameters
     ----------
     outer_diameter_mm : float
-        Pipe outer diameter (mm).
+        Pipe outer diameter (mm), informational for this stress-based assessment.
     wall_thickness_mm : float
         Pipe wall thickness (mm) — used for the DNV thickness correction.
     material : str
@@ -85,34 +90,41 @@ class TouchdownFatigueInput:
         S-N environment: 'air', 'seawater_cp', or 'free_corrosion'.
     scf : float
         Stress concentration factor applied to every nominal stress range
-        (girth-weld misalignment etc.).  Default 1.0 (already in histogram).
+        (girth-weld misalignment etc.). Must be supplied; unity requires
+        ``scf_basis`` to explain why concentration is already included or absent.
     design_life_years : float
         Required service design life (years).
     dff : float
         Design Fatigue Factor (DNV-OS-F201).  Allowable damage = 1 / DFF.
     histogram_period_years : float
-        Real-time duration represented by the supplied histogram (default 1.0,
-        i.e. an annual histogram).
+        Real-time duration represented by the supplied histogram. Required,
+        with ``histogram_basis`` identifying the observation and cycle-count basis.
     thickness_ref_mm : float
         Reference thickness for the thickness correction (default 25 mm).
     thickness_exponent : float, optional
         Thickness exponent k. ``None`` (default) takes k for ``sn_class`` from
         DNV-RP-C203 (2011) Tables 2-1 to 2-3 via
         :mod:`digitalmodel.fatigue.c203_sn_tables` (#2165); an explicit value
-        overrides it.
+        overrides it only with ``thickness_exponent_basis`` and without
+        reducing the selected class penalty. ``sn_basis`` records detail and
+        environment evidence; ``histogram_basis`` records the duration basis.
     """
 
     section: RiserSection
     stress_ranges_mpa: Sequence[float]
     cycles: Sequence[float]
-    sn_class: str = "F1"
-    environment: str = "seawater_cp"
-    scf: float = 1.0
-    design_life_years: float = 25.0
-    dff: float = 10.0
-    histogram_period_years: float = 1.0
+    sn_class: Optional[str] = None
+    environment: Optional[str] = None
+    scf: Optional[float] = None
+    design_life_years: Optional[float] = None
+    dff: Optional[float] = None
+    histogram_period_years: Optional[float] = None
     thickness_ref_mm: float = 25.0
     thickness_exponent: Optional[float] = None
+    scf_basis: Optional[str] = None
+    sn_basis: Optional[str] = None
+    histogram_basis: Optional[dict] = None
+    thickness_exponent_basis: Optional[str] = None
 
 
 def _class_thickness_exponent(sn_class: str, environment: str) -> float:
@@ -162,34 +174,44 @@ def assess_touchdown_fatigue(
     Returns a :class:`TouchdownFatigueResult` with per-bin damage, the
     design-life damage, the D=1 fatigue life, and a DFF-based PASS/FAIL.
     """
-    stress = np.asarray(inp.stress_ranges_mpa, dtype=float)
-    cycles = np.asarray(inp.cycles, dtype=float)
-    if stress.shape != cycles.shape:
-        raise ValueError(
-            "stress_ranges_mpa and cycles must have the same length "
-            f"({stress.shape} vs {cycles.shape})"
-        )
-    if inp.histogram_period_years <= 0:
-        raise ValueError("histogram_period_years must be > 0")
-    if inp.dff <= 0:
-        raise ValueError("dff must be > 0")
+    stress, cycles = validate_histogram(inp.stress_ranges_mpa, inp.cycles)
+    period = finite_number(inp.histogram_period_years, "histogram_period_years")
+    life = finite_number(inp.design_life_years, "design_life_years")
+    dff = finite_number(inp.dff, "dff")
+    finite_number(life * dff, "required_life_years")
+    scf = finite_number(inp.scf, "scf")
+    if scf == 1:
+        evidence_text(inp.scf_basis, "scf_basis for unity")
+    histogram_basis(inp.histogram_basis, period)
+    sn_class = evidence_text(inp.sn_class, "sn_class").upper()
+    environment = evidence_text(inp.environment, "environment")
+    evidence_text(inp.sn_basis, "sn_basis")
+    diameter = finite_number(inp.section.outer_diameter_mm, "outer_diameter_mm")
+    thickness = finite_number(inp.section.wall_thickness_mm, "wall_thickness_mm")
+    reference = finite_number(inp.thickness_ref_mm, "thickness_ref_mm")
+    if 2 * thickness >= diameter:
+        raise ValueError("section geometry requires outer diameter > twice wall thickness")
 
     # 3) S-N curve first: it validates the class and environment. The class
     # is normalised once, as get_sn_curve() does, for both lookups.
-    sn_class = inp.sn_class.upper()
-    sn_curve = get_sn_curve(sn_class, inp.environment)
-    k = (
-        float(inp.thickness_exponent)
-        if inp.thickness_exponent is not None
-        else _class_thickness_exponent(sn_class, inp.environment)
-    )
+    sn_curve = get_sn_curve(sn_class, environment)
+    class_k = _class_thickness_exponent(sn_class, environment)
+    k = class_k
+    if inp.thickness_exponent is not None:
+        k = finite_number(inp.thickness_exponent, "thickness_exponent", positive=False)
+        if k < class_k:
+            raise ValueError("thickness_exponent must not reduce the selected class penalty")
+        evidence_text(inp.thickness_exponent_basis, "thickness_exponent_basis")
+    # A larger reference thickness could suppress the selected method's penalty.
+    if reference > 25:
+        raise ValueError("thickness_ref_mm must not exceed the selected method reference")
 
     # 1) SCF on nominal stress ranges, then 2) DNV thickness correction.
-    stress_scf = stress * float(inp.scf)
+    stress_scf = stress * scf
     stress_corr = thickness_correction(
         stress_scf,
-        t_actual=inp.section.wall_thickness_mm,
-        t_ref=inp.thickness_ref_mm,
+        t_actual=thickness,
+        t_ref=reference,
         k=k,
     )
 
@@ -198,7 +220,7 @@ def assess_touchdown_fatigue(
         {"stress_range": stress_corr, "cycles": cycles}
     )
     damaged = miner_damage(histogram, sn_curve)
-    period_damage = float(damaged.attrs["total_damage"])
+    period_damage = positive_damage(damaged.attrs["total_damage"], "period_damage")
 
     bins: list[BinResult] = []
     for s_nom, s_corr, row in zip(
@@ -214,19 +236,13 @@ def assess_touchdown_fatigue(
             )
         )
 
-    annual_damage = period_damage / inp.histogram_period_years
-    design_life_damage = annual_damage * inp.design_life_years
-    fatigue_life_years = (
-        float("inf") if annual_damage <= 0 else 1.0 / annual_damage
-    )
+    annual_damage = positive_damage(period_damage / period, "annual_damage")
+    design_life_damage = positive_damage(annual_damage * life, "design_life_damage")
+    fatigue_life_years = finite_number(1.0 / annual_damage, "fatigue_life_years")
 
     # 5) DFF check: design-life damage must not exceed the allowable 1/DFF.
-    allowable_damage = 1.0 / inp.dff
-    usage_factor = (
-        float("inf")
-        if allowable_damage <= 0
-        else design_life_damage / allowable_damage
-    )
+    allowable_damage = finite_number(1.0 / dff, "allowable_damage")
+    usage_factor = positive_damage(design_life_damage / allowable_damage, "usage_factor")
     pass_fail = "PASS" if usage_factor <= 1.0 else "FAIL"
 
     return TouchdownFatigueResult(
@@ -239,11 +255,11 @@ def assess_touchdown_fatigue(
         usage_factor=usage_factor,
         pass_fail=pass_fail,
         sn_class=sn_class,
-        environment=inp.environment,
+        environment=environment,
         thickness_exponent=k,
-        scf=float(inp.scf),
-        dff=float(inp.dff),
-        design_life_years=float(inp.design_life_years),
+        scf=scf,
+        dff=dff,
+        design_life_years=life,
     )
 
 
@@ -260,15 +276,29 @@ def report_markdown(
     lines.append(f"**Standard:** {result.standard}")
     lines.append(f"**Critical location:** {location}")
     lines.append("")
+    lines.append("## Summary")
+    lines.append("")
+    lines.append(f"Verdict: {result.pass_fail}; PASS requires design-life damage × DFF ≤ 1.")
+    lines.append("Outer diameter is informational; supplied stresses drive this assessment.")
+    lines.append("")
+    lines.append("## Revision history")
+    lines.append("")
+    lines.append("| Revision | Date | What changed and why |")
+    lines.append("|---|---|---|")
+    lines.append(f"| 1 | {date.today().isoformat()} | Initial stress-based assessment with validated input evidence |")
+    lines.append("")
     lines.append("## Inputs")
     lines.append("")
     lines.append("| Parameter | Value |")
     lines.append("|---|---|")
-    lines.append(f"| Outer diameter | {sec.outer_diameter_mm:.1f} mm |")
+    lines.append(f"| Outer diameter (informational) | {sec.outer_diameter_mm:.1f} mm |")
     lines.append(f"| Wall thickness | {sec.wall_thickness_mm:.1f} mm |")
     lines.append(f"| Material | {sec.material} |")
     lines.append(f"| S-N detail category | {result.sn_class} ({result.environment}) |")
     lines.append(f"| SCF | {result.scf:.2f} |")
+    lines.append(f"| SCF basis | {inp.scf_basis or 'Applied concentration factor'} |")
+    lines.append(f"| S-N selection basis | {inp.sn_basis} |")
+    lines.append(f"| Histogram duration and cycle-count basis | {inp.histogram_basis['evidence']} |")
     lines.append(
         f"| Thickness correction | t_ref={inp.thickness_ref_mm:.0f} mm, "
         f"k={result.thickness_exponent:.2f} |"

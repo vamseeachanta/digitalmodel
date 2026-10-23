@@ -5,6 +5,8 @@ Provides cumulative damage calculation, design-life checking,
 and DNV thickness correction for stress ranges.
 """
 
+from numbers import Real
+
 import numpy as np
 import pandas as pd
 from pylife.materiallaws.woehlercurve import WoehlerCurve
@@ -31,12 +33,48 @@ def miner_damage(
         The returned DataFrame has a `total_damage` attribute.
     """
     result = stress_histogram.copy()
-    stress_ranges = result["stress_range"].values.astype(float)
+    stress_ranges, applied_cycles = validate_histogram(
+        result["stress_range"], result["cycles"]
+    )
     allowable = sn_curve.cycles(stress_ranges)
     result["allowable_cycles"] = allowable
-    result["damage"] = result["cycles"].values / allowable
-    result.attrs["total_damage"] = float(result["damage"].sum())
+    allowable = np.asarray(allowable, dtype=float)
+    if (np.any(np.isnan(allowable)) or np.any(allowable <= 0)
+            or np.any(~np.isfinite(allowable) & (stress_ranges > 0) & (applied_cycles > 0))):
+        raise ValueError("allowable cycles must be positive and known")
+    result["damage"] = applied_cycles / allowable
+    damages = result["damage"].to_numpy()
+    if not np.all(np.isfinite(damages)) or np.any(damages < 0):
+        raise ValueError("Miner bin damage must be finite and non-negative")
+    total = float(damages.sum())
+    if not np.isfinite(total) or total <= 0:
+        raise ValueError("Miner total damage must be finite and positive; zero loading is unqualified")
+    result.attrs["total_damage"] = total
     return result
+
+
+def validate_histogram(stress_ranges, cycles):
+    """Require known non-negative bins and at least one loaded cycle bin."""
+    try:
+        for values in (stress_ranges, cycles):
+            raw = np.asarray(values, dtype=object)
+            if any(isinstance(value, (bool, np.bool_, complex)) for value in raw.flat):
+                raise ValueError("histogram entries must be real numbers, not booleans or complex values")
+        stress = np.asarray(stress_ranges, dtype=float)
+        counts = np.asarray(cycles, dtype=float)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("histogram stress and cycles must be finite numbers") from exc
+    if stress.ndim != 1 or counts.ndim != 1 or not stress.size or not counts.size:
+        raise ValueError("histogram must contain non-empty one-dimensional bins")
+    if stress.shape != counts.shape:
+        raise ValueError("stress_ranges_mpa and cycles must have the same length")
+    if not np.all(np.isfinite(stress)) or not np.all(np.isfinite(counts)):
+        raise ValueError("histogram stress and cycles must be finite")
+    if np.any(stress < 0) or np.any(counts < 0):
+        raise ValueError("histogram stress and cycles must be non-negative")
+    if not np.any((stress > 0) & (counts > 0)):
+        raise ValueError("histogram contains no loaded cycles; zero loading is unqualified")
+    return stress, counts
 
 
 def design_life_check(
@@ -118,8 +156,17 @@ def thickness_correction(
     np.ndarray
         Corrected stress ranges.
     """
+    for name, value in (("t_actual", t_actual), ("t_ref", t_ref), ("k", k)):
+        if (isinstance(value, bool) or not isinstance(value, Real)
+                or not np.isfinite(value) or value < 0 or (name != "k" and value == 0)):
+            raise ValueError(f"{name} must be finite and {'non-negative' if name == 'k' else 'positive'}")
     stress_range = np.asarray(stress_range, dtype=float)
+    if not np.all(np.isfinite(stress_range)) or np.any(stress_range < 0):
+        raise ValueError("stress_range must be finite and non-negative")
     if t_actual <= t_ref:
         return stress_range.copy()
     factor = (t_actual / t_ref) ** k
-    return stress_range * factor
+    corrected = stress_range * factor
+    if not np.all(np.isfinite(corrected)):
+        raise ValueError("thickness-corrected stress must be finite")
+    return corrected
