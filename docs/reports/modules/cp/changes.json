@@ -1,0 +1,15 @@
+{
+  "document": "cathodic-protection-module-analysis",
+  "revision": 3,
+  "date": "2026-10-23",
+  "changes": [
+    {
+      "section": "appendix",
+      "description": "The rebuild description distinguishes exact document checks from numerical tolerance."
+    },
+    {
+      "section": "results",
+      "description": "Saved-comment identity canonicalizes floating evidence to tolerate numerical roundoff while retaining material-change rejection."
+    }
+  ]
+}
