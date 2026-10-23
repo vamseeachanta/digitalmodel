@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Naval architecture calculations, a public tank example and evidence for preliminary engineering use.">
-<meta name="report-revision" content="03">
-<meta name="report-content-digest" content="44fd5e328c2bb4924e3df711d53000c64f519955cefdc20010fe44b3ef2cb2c5">
+<meta name="report-revision" content="04">
+<meta name="report-content-digest" content="d86e6577ff2b86e34bd4f76d9d17f3afe8e03b8cf9860d9d65c684b87260f21a">
 <title>Naval architecture module analysis</title>
 <style data-source="docs/api/_assets/brand.css">/* ===========================================================================
    digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
@@ -155,7 +155,7 @@ caption{caption-side:bottom;text-align:left}th,td{vertical-align:top;overflow-wr
 <p class="kicker">Engineering calculation module</p>
 <h1>Naval architecture module analysis</h1>
 <p class="sub">Draft for review</p>
-<p>Revision 03 · 2026-10-22</p>
+<p>Revision 04 · 2026-10-23</p>
 <nav aria-label="Contents"><a href="#summary">Summary</a> · <a href="#basis">Design basis</a> ·
 <a href="#example">Worked example</a> · <a href="#validation">Validation</a> ·
 <a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendix</a></nav>
@@ -183,7 +183,8 @@ an operational loading decision is made. <a href="#limits">Section 8</a> defines
 <tbody><tr><td>00</td><td>2026-10-21</td><td>First issue: the calculation basis, public tank example and evidence limits are presented to support preliminary module selection.</td></tr>
 <tr><td>01</td><td>2026-10-22</td><td>The source digest includes test fixtures, packaged data and calculation dependencies; independent hand calculations check both stability outputs throughout the sensitivity; isolated regeneration checks both generated outputs to detect stale evidence.</td></tr>
 <tr><td>02</td><td>2026-10-22</td><td>The digest is limited to explicit report inputs and normalized across checkouts; suite counts retain their command and environment as historical evidence. Input controls and draft status are clarified.</td></tr>
-<tr><td>03</td><td>2026-10-22</td><td>Software-check evidence is replaced with a run within the declared pandas and Pillow bounds; regression checks protect those bounds and preserve earlier module ignore exceptions.</td></tr></tbody>
+<tr><td>03</td><td>2026-10-22</td><td>Software-check evidence is replaced with a run within the declared pandas and Pillow bounds; regression checks protect those bounds and preserve earlier module ignore exceptions.</td></tr>
+<tr><td>04</td><td>2026-10-23</td><td>The remaining draft wording is made consistent throughout the document; regression checks cover the template and generated report.</td></tr></tbody>
 <caption>Revision record. The first issue is preserved and the evidence corrections are recorded.</caption></table>
 </section>
 <section id="introduction">
@@ -413,7 +414,7 @@ brand stylesheet. The stylesheet and interactive components are embedded in this
 <section id="appendix">
 <h2>10 Appendices</h2>
 <p>The missing-data register and quality pre-flight record are retained with the calculation basis.
-The document remains a draft for client review while operational evidence is absent.</p>
+The document remains a draft for review while operational evidence is absent.</p>
 <h3>10.1 Data register</h3>
 <table><thead><tr><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Basis</th></tr></thead><tbody><tr><td>Upright loading condition and unchanged liquid mass</td><td>ASSUMED - to be confirmed</td><td>The source loading condition is held fixed while free-surface geometry is compared; displacement and gravity height are not recomputed.</td></tr><tr><td>Unrestricted rectangular slack surface</td><td>ASSUMED - to be confirmed</td><td>The textbook rectangular-surface equation is applied at initial heel; fill level and pocketing are not supplied.</td></tr><tr><td>Required operational stability margin, downflooding and complete righting-arm curve</td><td>NOT_EVALUATED</td><td>These inputs are not supplied by the public problem and cannot be inferred from positive initial metacentric height.</td></tr></tbody><caption>Table B. Missing-data and assumption register.</caption></table>
 <p>The assumptions define the demonstration; none is inferred from a previous vessel, field or client
@@ -454,10 +455,10 @@ only in this open document.</p>
 </div>
 </section>
 </main>
-<footer>Naval architecture module analysis · Revision 03 · Draft for review</footer>
+<footer>Naval architecture module analysis · Revision 04 · Draft for review</footer>
 </div>
 <script id="example-data" type="application/json">{"constants": {"g_ft_s2": 32.17, "lb_per_long_ton": 2240.0}, "derived": {"neutral_gm_ft": 0.0, "reduction_pct": 2.4659760170006075}, "geometry": {"off_center_distance_ft": 10.0, "tank_center_above_keel_ft": 15.0, "tank_depth_ft": 15.0}, "inputs": {"displacement_lt": 12200.0, "kg_ft": 22.6, "km_ft": 37.0, "rho_fluid": 1.616, "tank_breadth_ft": 40.0, "tank_length_ft": 35.0}, "results": {"correction_ft": 0.3551005464480875, "effective_gm_ft": 14.044899453551912, "solid_gm_ft": 14.399999999999999}, "source": {"accessed": "2026-10-21", "clause": "Chapter 4, problem 26, printed page 4-49; sections 4.8.3 and 4.8.3.1", "edition": "Summer 2020", "pdf_page": 188, "publisher": "United States Naval Academy", "sha256": "f8f4807492bffcc61cfe1b03bc7a0f457d7ab5209bb0404bba44a4e363be7cec", "title": "Principles of Ship Performance", "url": "https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes%2C_Summer_2020.pdf", "use": "Public educational example; preliminary static calculation only"}, "sweep": [{"breadth_ft": 10.0, "correction_ft": 0.005548446038251367, "effective_gm_ft": 14.394451553961748}, {"breadth_ft": 11.0, "correction_ft": 0.00738498167691257, "effective_gm_ft": 14.392615018323086}, {"breadth_ft": 12.0, "correction_ft": 0.009587714754098363, "effective_gm_ft": 14.390412285245901}, {"breadth_ft": 13.0, "correction_ft": 0.012189935946038252, "effective_gm_ft": 14.38781006405396}, {"breadth_ft": 14.0, "correction_ft": 0.01522493592896175, "effective_gm_ft": 14.384775064071038}, {"breadth_ft": 15.0, "correction_ft": 0.018726005379098364, "effective_gm_ft": 14.3812739946209}, {"breadth_ft": 16.0, "correction_ft": 0.0227264349726776, "effective_gm_ft": 14.377273565027322}, {"breadth_ft": 17.0, "correction_ft": 0.027259515385928964, "effective_gm_ft": 14.37274048461407}, {"breadth_ft": 18.0, "correction_ft": 0.03235853729508197, "effective_gm_ft": 14.367641462704917}, {"breadth_ft": 19.0, "correction_ft": 0.038056791376366125, "effective_gm_ft": 14.361943208623632}, {"breadth_ft": 20.0, "correction_ft": 0.044387568306010934, "effective_gm_ft": 14.355612431693988}, {"breadth_ft": 20.999999999999996, "correction_ft": 0.05138415876024588, "effective_gm_ft": 14.348615841239752}, {"breadth_ft": 22.0, "correction_ft": 0.05907985341530056, "effective_gm_ft": 14.340920146584699}, {"breadth_ft": 23.0, "correction_ft": 0.06750794294740438, "effective_gm_ft": 14.332492057052594}, {"breadth_ft": 24.0, "correction_ft": 0.0767017180327869, "effective_gm_ft": 14.323298281967212}, {"breadth_ft": 25.0, "correction_ft": 0.0866944693476776, "effective_gm_ft": 14.313305530652322}, {"breadth_ft": 26.0, "correction_ft": 0.09751948756830602, "effective_gm_ft": 14.302480512431693}, {"breadth_ft": 27.0, "correction_ft": 0.10921006337090165, "effective_gm_ft": 14.290789936629096}, {"breadth_ft": 28.0, "correction_ft": 0.121799487431694, "effective_gm_ft": 14.278200512568304}, {"breadth_ft": 29.0, "correction_ft": 0.13532105042691256, "effective_gm_ft": 14.264678949573087}, {"breadth_ft": 30.0, "correction_ft": 0.14980804303278691, "effective_gm_ft": 14.250191956967212}, {"breadth_ft": 30.999999999999996, "correction_ft": 0.1652937559255464, "effective_gm_ft": 14.234706244074452}, {"breadth_ft": 31.999999999999996, "correction_ft": 0.1818114797814207, "effective_gm_ft": 14.218188520218577}, {"breadth_ft": 33.0, "correction_ft": 0.19939450527663938, "effective_gm_ft": 14.200605494723359}, {"breadth_ft": 34.0, "correction_ft": 0.2180761230874317, "effective_gm_ft": 14.181923876912567}, {"breadth_ft": 35.0, "correction_ft": 0.23788962389002735, "effective_gm_ft": 14.162110376109972}, {"breadth_ft": 36.0, "correction_ft": 0.2588682983606558, "effective_gm_ft": 14.141131701639344}, {"breadth_ft": 37.0, "correction_ft": 0.2810454371755464, "effective_gm_ft": 14.118954562824452}, {"breadth_ft": 38.0, "correction_ft": 0.304454331010929, "effective_gm_ft": 14.09554566898907}, {"breadth_ft": 39.0, "correction_ft": 0.32912827054303284, "effective_gm_ft": 14.070871729456966}, {"breadth_ft": 40.0, "correction_ft": 0.3551005464480875, "effective_gm_ft": 14.044899453551912}]}</script>
-<script id="changes-data" type="application/json">{"changes": [{"description": "Revision history preserves earlier issues and records replacement software-check evidence within declared dependency bounds.", "section": "summary"}, {"description": "The calculation and its independent hand checks are unchanged.", "section": "example"}, {"description": "The software-check receipt uses declared pandas and Pillow versions; ignore rules preserve earlier module exceptions and keep saved comments untracked.", "section": "validation"}], "date": "2026-10-22", "document": "navalarchitecture-module-report", "revision": "03"}</script>
+<script id="changes-data" type="application/json">{"changes": [{"description": "Revision history preserves earlier issues and records consistent draft wording throughout the document.", "section": "summary"}, {"description": "The calculation and its independent hand checks are unchanged.", "section": "example"}, {"description": "Regression checks cover draft wording in the template and generated report; software-check counts remain historical and operational acceptance is not evaluated.", "section": "validation"}], "date": "2026-10-23", "document": "navalarchitecture-module-report", "revision": "04"}</script>
 <script>
 (() => {
   'use strict';

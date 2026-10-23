@@ -76,7 +76,7 @@
     "src/digitalmodel/naval_architecture/stability.py",
     "tests/naval_architecture/test_module_report.py"
   ],
-  "source_digest": "22e61d557b3663cb000bf45c67e57da002c914b7b3796e0b87912cf6dbaebaf9",
+  "source_digest": "c745f95e693dbe1e730c51262bc80b7c08ac06bfc9a51c540da22bf9bfb104e4",
   "tests": 1312,
   "passed": 1300,
   "failed": 0,

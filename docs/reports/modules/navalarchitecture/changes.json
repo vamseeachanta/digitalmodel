@@ -1,11 +1,11 @@
 {
   "document": "navalarchitecture-module-report",
-  "revision": "03",
-  "date": "2026-10-22",
+  "revision": "04",
+  "date": "2026-10-23",
   "changes": [
     {
       "section": "summary",
-      "description": "Revision history preserves earlier issues and records replacement software-check evidence within declared dependency bounds."
+      "description": "Revision history preserves earlier issues and records consistent draft wording throughout the document."
     },
     {
       "section": "example",
@@ -13,7 +13,7 @@
     },
     {
       "section": "validation",
-      "description": "The software-check receipt uses declared pandas and Pillow versions; ignore rules preserve earlier module exceptions and keep saved comments untracked."
+      "description": "Regression checks cover draft wording in the template and generated report; software-check counts remain historical and operational acceptance is not evaluated."
     }
   ]
 }

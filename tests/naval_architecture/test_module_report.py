@@ -152,6 +152,12 @@ def test_report_structure_sources_and_offline_delivery():
         (REPORT / "changes.json").read_text(encoding="utf-8"))
 
 
+@pytest.mark.parametrize("name", ["report.template.html", "report.html"])
+def test_draft_wording_is_consistent_throughout_report(name):
+    source = (REPORT / name).read_text(encoding="utf-8")
+    assert "draft for client review" not in source.lower()
+
+
 def test_check_detects_stale_output_without_writing(tmp_path):
     module = builder()
     module.build_report(tmp_path)

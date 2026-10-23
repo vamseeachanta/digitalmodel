@@ -26,8 +26,8 @@ from digitalmodel.naval_architecture.stability import G, LT_TO_LB, free_surface_
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/navalarchitecture"
 STYLE_EXEMPLAR = ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html"
-REVISION = "03"
-DATE = "2026-10-22"
+REVISION = "04"
+DATE = "2026-10-23"
 
 
 # Suite counts are a historical receipt, not a freshness gate for unrelated code.
@@ -223,9 +223,9 @@ def report_files() -> dict[str, str]:
     replacements["example_data"] = json.dumps(data, sort_keys=True).replace("<", "\\u003c")
     changes = {"document": "navalarchitecture-module-report", "revision": REVISION,
                "date": DATE, "changes": [
-                   {"section": "summary", "description": "Revision history preserves earlier issues and records replacement software-check evidence within declared dependency bounds."},
+                   {"section": "summary", "description": "Revision history preserves earlier issues and records consistent draft wording throughout the document."},
                    {"section": "example", "description": "The calculation and its independent hand checks are unchanged."},
-                   {"section": "validation", "description": "The software-check receipt uses declared pandas and Pillow versions; ignore rules preserve earlier module exceptions and keep saved comments untracked."}]}
+                   {"section": "validation", "description": "Regression checks cover draft wording in the template and generated report; software-check counts remain historical and operational acceptance is not evaluated."}]}
     replacements["changes_data"] = json.dumps(changes, sort_keys=True)
     replacements["revision"] = REVISION
     replacements["date"] = DATE
