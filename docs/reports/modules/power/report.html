@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Power module analysis</title>
+<style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head><body class="hs-doc"><div class="wrap">
+<header><div class="kicker">Power systems analysis</div><h1>Power module analysis</h1>
+<p class="sub">Steady-state alternating-current load flow</p><p>Draft for maintainer review</p></header>
+<section id="s1"><h2>1. Executive summary</h2>
+<p>The power module is a set of electrical-network calculation tools. Analysis is performed to determine bus voltages and power transfers for specified loads and generation; key results are summarized below.</p>
+<ul><li>A converged electrical state is calculated for the public four-bus example.
+<ul><li>Voltage magnitudes lie inside the supplied case limits; the plotted limits are input data rather than a general operating standard.</li></ul></li>
+<li>Both specified generator operating points exceed their supplied reactive-power limits.
+<ul><li>Bus four reactive generation is <span data-value="public.qg4_mvar" data-digits="1">181.4</span> Mvar against an upper limit of <span data-value="input.generators.0.q_max_mvar" data-digits="0">100</span> Mvar. Reference-bus reactive generation is <span data-value="public.qg1_mvar" data-digits="1">114.5</span> Mvar against an upper limit of <span data-value="input.generators.1.q_max_mvar" data-digits="0">100</span> Mvar. Exclusion of the fixed-voltage operating point is conditional on the supplied case limits, pending a generator-limit study.</li></ul></li></ul>
+<p>The application limits and required next analysis are stated in Sections 7 and 8. The case basis is cited in <a href="#ref-case">Reference 2</a>.</p></section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>1</td><td>2026-10-21</td><td>The public circuit and hand-derived example are calculated to document the numerical workflow and its operating limits.</td></tr><tr><td>2</td><td>2026-10-22</td><td>Embedded zeros, operating-check bindings, iteration terminology and citations are corrected, and independent four-bus solution anchors are added.</td></tr></tbody></table></div>
+<section id="s2"><h2>2. Introduction</h2>
+<p>The alternating-current load-flow workflow is described for an engineer specifying a balanced steady-state network. The calculated state is separated from equipment acceptance.</p>
+<p>Bus and branch objects are assembled into a network and passed to the documented solver. Bus voltages, angles, injections, branch flows, losses, convergence and iteration count are returned. No external engineering program is required for this workflow.</p>
+<h3>Not covered</h3><p>Data-center power-path redundancy, microgrid energy management, battery dispatch, governor and voltage droop, island detection, relay coordination, communication configuration and commissioning sequences are present elsewhere in the power package. Their input models and tests are distinct; numerical conclusions in this report apply to load flow only. Fault levels, contingencies and dynamic stability are not implemented by the load-flow entry point.</p></section>
+<section id="s3"><h2>3. Design data and criteria</h2>
+<p>The public four-bus case is used as the numerical basis. Input values are taken from the open case tables rather than estimated from an installation.</p>
+<p>The common power base is <span data-value="base_mva" data-digits="0">100</span> MVA. Active and reactive powers are divided by this base before entry; positive net injection means generation minus demand. The generator voltage setpoint takes precedence over the bus starting magnitude. Angles enter in radians and are returned in degrees. The supplied case input tables and their source are reproduced in Appendix 10.1.</p>
+<p>At the reference bus, voltage magnitude and angle are fixed and net powers are solved. At the generator bus, active injection and voltage magnitude are fixed and reactive injection is solved. At demand buses, both net powers are fixed and voltage magnitude and angle are solved (<a href="#ref-manual">Reference 1, Section 4.1</a>).</p>
+<p>The mismatch tolerance is <span data-value="tol" data-digits="12">1.0e−12</span> pu and the iteration cap is <span data-value="max_iter" data-digits="0">50</span>. These explicit calculation settings are numerical controls; the tolerance is selected to support the hand-reference assertions and is not a plant acceptance criterion. Voltage bounds and generator reactive bounds come from the case tables. Branch ratings are compared at both ends outside the solver. The reactive bounds of ±100 Mvar, voltage interval of 0.9–1.1 pu and branch ratings of 250 MVA are entries in the open case; a textbook basis for these limits is not established. Exclusion is conditional on the supplied case limits. A converged state is not an acceptance decision.</p>
+<figure><svg viewBox="0 0 760 320" role="img" aria-label="Electrical single-line model with reference supply, generator, four buses, line impedances and constant-power demands">
+<g fill="none" stroke="var(--ink)" stroke-width="3"><path d="M140 80H560V220H140Z"/><path d="M140 58V102M560 58V102M140 198V242M560 198V242" stroke-width="7"/>
+<circle cx="70" cy="80" r="23"/><path d="M93 80H140M560 220H620"/><circle cx="644" cy="220" r="23"/>
+<path d="M140 102V136M560 102V136M140 242V276M560 242V276"/></g>
+<g fill="var(--ink)" font-size="15"><text x="30" y="35">Reference supply</text><text x="615" y="180">Generator</text><text x="124" y="52">Bus 1</text><text x="542" y="52">Bus 2</text><text x="124" y="192">Bus 3</text><text x="542" y="192">Bus 4</text>
+<text x="294" y="67">Line 1 → 2</text><text x="294" y="210">Line 3 → 4</text><text x="150" y="162">Line 1 → 3</text><text x="456" y="162">Line 2 → 4</text><text x="105" y="152">↓</text><text x="570" y="152">↓</text><text x="110" y="300">Fixed demand</text><text x="530" y="300">Fixed demand</text></g></svg>
+<figcaption>Figure 1. Electrical connectivity and boundary conditions. Every bus carries a constant-power demand; the reference supply and fixed-voltage generator also supply their local demand. Branches use the pi equivalent in Section 4. Physical line lengths and conductor geometry are not specified by this case.</figcaption></figure></section>
+<section id="s4"><h2>4. Methodology and theory</h2>
+<p>The nodal admittance matrix is assembled from pi-equivalent branches. Power-balance equations are solved by Newton iteration in voltage magnitude and angle.</p>
+<p>The reciprocal-impedance and nodal-assembly basis is given in <a href="#ref-text">Reference 3, Chapter 5, Section 3</a>. For a real sending-end tap, the branch equations are taken from <a href="#ref-manual">Reference 1, Section 3.2, equations (3.1)–(3.2)</a> with zero phase shift:</p>
+<div class="eq">y = 1/(r + jx), h = jb/2; Yff = (y + h)/t²; Yft = Ytf = −y/t; Ytt = y + h.</div>
+<p>Here r is series resistance, x is series reactance, b is total charging susceptance, t is real tap ratio and j is the imaginary unit. Subscripts f and t denote the sending and receiving terminals. Half the charging is placed at each pi-section end; the ideal tap precedes the entire pi section. The public case encodes a nominal tap as zero; unity is passed to the module (<a href="#ref-manual">Reference 1, Appendix B, branch data</a>).</p>
+<p>The complex-voltage vector V, injected-current vector I and complex injected-power vector S satisfy <a href="#ref-text">Reference 3, Chapter 5, equations (1), (6) and (8)</a>, also expressed in <a href="#ref-manual">Reference 1, Section 3.6, equations (3.8)–(3.17)</a>:</p>
+<div class="eq">I = YV; S = diag(V) conjugate(YV); S = P + jQ.</div>
+<p>Y is the assembled admittance matrix; P and Q denote active and reactive injection. For terminal flows, Sf = Vf conjugate(If) and St = Vt conjugate(It); the branch complex loss is Sf + St. These are terminal power definitions in the same source. Charging can make net branch reactive loss negative without implying active generation.</p>
+<p>The unknown vector u contains non-reference angles and demand-bus magnitudes. With scheduled-minus-calculated mismatch Δs, the update is J Δu = Δs, followed by u ← u + Δu (<a href="#ref-newton">Reference 4, Section 4.5.2, equations (4.5.8)–(4.5.10)</a>). J contains the derivatives of calculated active and reactive injections. Only active equations at non-reference buses and reactive equations at demand buses enter the solve (<a href="#ref-manual">Reference 1, Section 4.1, equations (4.2)–(4.5) and Newton-method paragraph</a>).</p>
+<p>A result is marked converged when the maximum absolute scheduled-power mismatch is strictly less than the supplied tolerance. Voltage and equipment bounds are not part of that stopping test. The system base is stored by the module; dimensional conversion is performed explicitly in this report.</p></section>
+<section id="s5"><h2>5. Detailed results and worked example</h2>
+<p>The documented public circuit is calculated by calling the module with the input mapping in Section 9.2. Numerical outputs are reported below; generator and branch checks are calculated separately from those outputs.</p>
+<p>The public example converges after <span data-value="public.newton_updates" data-digits="0">4</span> Newton updates and <span data-value="public.iterations" data-digits="0">5</span> mismatch evaluations. The module iteration count includes the final converged mismatch evaluation, which performs no update. Total active branch loss is <span data-value="public.total_loss_mw" data-digits="1">4.8</span> MW. Bus injection results include local demand; generator reactive output is recovered by adding that demand to net injection.</p>
+<figure><svg viewBox="0 0 720 300" role="img" aria-label="Voltage magnitude by bus with public-case limits"><path d="M65 30V245H680" fill="none" stroke="currentColor"/><g class="limit"><path d="M65 205.000H680" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="70" y="199.000">0.9 pu limit</text></g><g class="limit"><path d="M65 45.000H680" stroke="var(--caution)" stroke-dasharray="6 4"/><text x="70" y="39.000">1.1 pu limit</text></g><circle tabindex="0" data-case="Public four-bus case; bus 1; voltage magnitude 1.000000 pu; limits 0.9–1.1 pu" cx="105" cy="125.000" r="7" fill="var(--accent)"><title>Public four-bus case; bus 1; voltage magnitude 1.000000 pu; limits 0.9–1.1 pu</title></circle><circle tabindex="0" data-case="Public four-bus case; bus 2; voltage magnitude 0.982421 pu; limits 0.9–1.1 pu" cx="280" cy="139.063" r="7" fill="var(--accent)"><title>Public four-bus case; bus 2; voltage magnitude 0.982421 pu; limits 0.9–1.1 pu</title></circle><circle tabindex="0" data-case="Public four-bus case; bus 3; voltage magnitude 0.969005 pu; limits 0.9–1.1 pu" cx="455" cy="149.796" r="7" fill="var(--accent)"><title>Public four-bus case; bus 3; voltage magnitude 0.969005 pu; limits 0.9–1.1 pu</title></circle><circle tabindex="0" data-case="Public four-bus case; bus 4; voltage magnitude 1.020000 pu; limits 0.9–1.1 pu" cx="630" cy="109.000" r="7" fill="var(--accent)"><title>Public four-bus case; bus 4; voltage magnitude 1.020000 pu; limits 0.9–1.1 pu</title></circle><text x="105" y="269">1</text><text x="280" y="269">2</text><text x="455" y="269">3</text><text x="630" y="269">4</text><text x="330" y="292">Bus identifier</text><text x="5" y="22">Voltage (pu)</text></svg><figcaption>Figure 2. Voltage versus bus identifier. Points are selected by pointer or keyboard focus; dashed lines show the case voltage bounds. The plotted bounds are satisfied. Engineering acceptance remains blocked by the reactive-generation result.</figcaption></figure>
+<button type="button" id="limits">Toggle voltage limits</button><p id="chart-detail" role="status">Select a voltage point for case, component, voltage magnitude, limit and units.</p>
+<table><thead><tr><th scope="col">Bus</th><th scope="col">Voltage (pu)</th><th scope="col">Angle (degrees)</th><th scope="col">Net active (pu)</th><th scope="col">Net reactive (pu)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="public.bus.0.bus_id" data-digits="0">1</span></td><td><span data-value="public.bus.0.v_pu" data-digits="6">1.000000</span></td><td><span data-value="public.bus.0.angle_deg" data-digits="4">0.0000</span></td><td><span data-value="public.bus.0.p_net_pu" data-digits="6">1.368091</span></td><td><span data-value="public.bus.0.q_net_pu" data-digits="6">0.835108</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.bus.1.bus_id" data-digits="0">2</span></td><td><span data-value="public.bus.1.v_pu" data-digits="6">0.982421</span></td><td><span data-value="public.bus.1.angle_deg" data-digits="4">−0.9761</span></td><td><span data-value="public.bus.1.p_net_pu" data-digits="6">−1.700000</span></td><td><span data-value="public.bus.1.q_net_pu" data-digits="6">−1.053500</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.bus.2.bus_id" data-digits="0">3</span></td><td><span data-value="public.bus.2.v_pu" data-digits="6">0.969005</span></td><td><span data-value="public.bus.2.angle_deg" data-digits="4">−1.8722</span></td><td><span data-value="public.bus.2.p_net_pu" data-digits="6">−2.000000</span></td><td><span data-value="public.bus.2.q_net_pu" data-digits="6">−1.239400</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.bus.3.bus_id" data-digits="0">4</span></td><td><span data-value="public.bus.3.v_pu" data-digits="6">1.020000</span></td><td><span data-value="public.bus.3.angle_deg" data-digits="4">1.5231</span></td><td><span data-value="public.bus.3.p_net_pu" data-digits="6">2.380000</span></td><td><span data-value="public.bus.3.q_net_pu" data-digits="6">1.318496</span></td><td><a href="#ref-code">Module calculation</a></td></tr></tbody></table><p>Table 1. Module bus results, with positive powers injected into the network.</p>
+<table><thead><tr><th scope="col">From → to</th><th scope="col">Sending active (pu)</th><th scope="col">Sending reactive (pu)</th><th scope="col">Active loss (pu)</th><th scope="col">Reactive loss (pu)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="public.branch.0.from_bus" data-digits="0">1</span> → <span data-value="public.branch.0.to_bus" data-digits="0">2</span></td><td><span data-value="public.branch.0.p_flow_pu" data-digits="6">0.386915</span></td><td><span data-value="public.branch.0.q_flow_pu" data-digits="6">0.222985</span></td><td><span data-value="public.branch.0.p_loss_pu" data-digits="6">0.002267</span></td><td><span data-value="public.branch.0.q_loss_pu" data-digits="6">−0.089379</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.branch.1.from_bus" data-digits="0">1</span> → <span data-value="public.branch.1.to_bus" data-digits="0">3</span></td><td><span data-value="public.branch.1.p_flow_pu" data-digits="6">0.981175</span></td><td><span data-value="public.branch.1.q_flow_pu" data-digits="6">0.612124</span></td><td><span data-value="public.branch.1.p_loss_pu" data-digits="6">0.010314</span></td><td><span data-value="public.branch.1.q_loss_pu" data-digits="6">−0.023563</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.branch.2.from_bus" data-digits="0">2</span> → <span data-value="public.branch.2.to_bus" data-digits="0">4</span></td><td><span data-value="public.branch.2.p_flow_pu" data-digits="6">−1.315352</span></td><td><span data-value="public.branch.2.q_flow_pu" data-digits="6">−0.741137</span></td><td><span data-value="public.branch.2.p_loss_pu" data-digits="6">0.017155</span></td><td><span data-value="public.branch.2.q_loss_pu" data-digits="6">0.008059</span></td><td><a href="#ref-code">Module calculation</a></td></tr><tr><td><span data-value="public.branch.3.from_bus" data-digits="0">3</span> → <span data-value="public.branch.3.to_bus" data-digits="0">4</span></td><td><span data-value="public.branch.3.p_flow_pu" data-digits="6">−1.029139</span></td><td><span data-value="public.branch.3.q_flow_pu" data-digits="6">−0.603713</span></td><td><span data-value="public.branch.3.p_loss_pu" data-digits="6">0.018355</span></td><td><span data-value="public.branch.3.q_loss_pu" data-digits="6">−0.034412</span></td><td><a href="#ref-code">Module calculation</a></td></tr></tbody></table><p>Table 2. Module branch outputs in sending-end orientation; losses sum both terminal powers.</p>
+<p>At bus four, Qg = Qnet × Sbase + Qd = <span data-value="public.bus.3.q_net_pu" data-digits="6">1.318496</span> × <span data-value="base_mva" data-digits="0">100</span> + <span data-value="input.buses.3.q_mvar" data-digits="2">49.58</span> = <span data-value="public.qg4_mvar" data-digits="1">181.4</span> Mvar. The supplied upper limit is <span data-value="input.generators.0.q_max_mvar" data-digits="0">100</span> Mvar; excess is <span data-value="public.q_excess_mvar" data-digits="1">81.4</span> Mvar, or <span data-value="public.q_excess_pct" data-digits="1">81.4</span> % relative to that limit. Exclusion of the fixed-voltage operating point is conditional on the supplied case limits, pending a generator-limit study.</p>
+<table><thead><tr><th scope="col">From → to</th><th scope="col">Sending (MVA)</th><th scope="col">Receiving (MVA)</th><th scope="col">Rating (MVA)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="public.branch.0.from_bus" data-digits="0">1</span> → <span data-value="public.branch.0.to_bus" data-digits="0">2</span></td><td><span data-value="public.branch.0.sending_mva" data-digits="1">44.7</span></td><td><span data-value="public.branch.0.receiving_mva" data-digits="1">49.6</span></td><td><span data-value="input.branches.0.rating_mva" data-digits="0">250</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="public.branch.1.from_bus" data-digits="0">1</span> → <span data-value="public.branch.1.to_bus" data-digits="0">3</span></td><td><span data-value="public.branch.1.sending_mva" data-digits="1">115.6</span></td><td><span data-value="public.branch.1.receiving_mva" data-digits="1">116.0</span></td><td><span data-value="input.branches.1.rating_mva" data-digits="0">250</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="public.branch.2.from_bus" data-digits="0">2</span> → <span data-value="public.branch.2.to_bus" data-digits="0">4</span></td><td><span data-value="public.branch.2.sending_mva" data-digits="1">151.0</span></td><td><span data-value="public.branch.2.receiving_mva" data-digits="1">152.9</span></td><td><span data-value="input.branches.2.rating_mva" data-digits="0">250</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="public.branch.3.from_bus" data-digits="0">3</span> → <span data-value="public.branch.3.to_bus" data-digits="0">4</span></td><td><span data-value="public.branch.3.sending_mva" data-digits="1">119.3</span></td><td><span data-value="public.branch.3.receiving_mva" data-digits="1">119.2</span></td><td><span data-value="input.branches.3.rating_mva" data-digits="0">250</span></td><td><a href="#ref-case">Public case</a></td></tr></tbody></table><p>Table 3. Apparent terminal power magnitude compared with the public-case branch rating. These circuit values are below the supplied ratings. Rating duration and equipment temperature basis are not supplied.</p>
+<table><thead><tr><th scope="col">Bus</th><th scope="col">Reactive output (Mvar)</th><th scope="col">Lower limit (Mvar)</th><th scope="col">Upper limit (Mvar)</th><th scope="col">Excess above upper limit (%)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="input.generators.0.bus" data-digits="0">4</span></td><td><span data-value="public.qg4_mvar" data-digits="1">181.4</span></td><td><span data-value="input.generators.0.q_min_mvar" data-digits="0">−100</span></td><td><span data-value="input.generators.0.q_max_mvar" data-digits="0">100</span></td><td><span data-value="public.q_excess_pct" data-digits="1">81.4</span></td><td><a href="#ref-case">Public case limits</a>; module outputs</td></tr><tr><td><span data-value="input.generators.1.bus" data-digits="0">1</span></td><td><span data-value="public.qg1_mvar" data-digits="1">114.5</span></td><td><span data-value="input.generators.1.q_min_mvar" data-digits="0">−100</span></td><td><span data-value="input.generators.1.q_max_mvar" data-digits="0">100</span></td><td><span data-value="public.q_excess1_pct" data-digits="1">14.5</span></td><td><a href="#ref-case">Public case limits</a>; module outputs</td></tr></tbody></table><p>Table 4. Both generator reactive outputs exceed their supplied upper limits. The reference-bus excess is <span data-value="public.q_excess1_mvar" data-digits="1">14.5</span> Mvar. The percentage difference is calculated against each generator’s upper limit.</p>
+<p>At the reference bus, Qg = Qnet × Sbase + Qd = <span data-value="public.bus.0.q_net_pu" data-digits="6">0.835108</span> × <span data-value="base_mva" data-digits="0">100</span> + <span data-value="input.buses.0.q_mvar" data-digits="2">30.99</span> = <span data-value="public.qg1_mvar" data-digits="1">114.5</span> Mvar. Both regulated sources are above their reactive bounds; an acceptable revised operating state is not calculated.</p></section>
+<section id="s6"><h2>6. Validation evidence</h2>
+<p>Numerical evidence is provided by the existing admittance and solved-circuit tests. The public example is also compared with independently calculated pi-model Newton and Gauss-Seidel reference values in the report test; agreement with a separate execution of the source program is not assessed.</p>
+<p>The existing tests exercise bus and branch construction, input rejection, admittance assembly, convergence flags, output fields, power balance and nonconvergence. The hand-reference tests additionally compare a solved state against prescribed rectangular phasors, reject a deliberately incomplete iteration, and check terminal powers for tapped branches with charging. Test locations are listed in Section 9.2.</p>
+<p>For the documented hand case, V1 = 1 + j0, V2 = 0.96 + j0.28 and V3 = 0.90 − j0.12 pu. Series reactances are 0.5 and 0.25 pu, with zero resistance and charging and unity taps. The scheduled injections are obtained from S = V conjugate(I), giving generator-bus active injection 2.0288 pu and demand-bus consumption 1.4688 + j0.024 pu. These are constructed circuit data, not an installation assumption (<a href="#ref-hand">Reference 5</a>).</p>
+<p>The module returns reference-bus reactive injection <span data-value="hand.bus.0.q_net_pu" data-digits="4">0.0800</span> pu, generator-bus reactive injection <span data-value="hand.bus.1.q_net_pu" data-digits="4">0.7584</span> pu and final demand-bus voltage <span data-value="hand.bus.2.v_pu" data-digits="6">0.907965</span> pu. Hand arithmetic gives the same values within the absolute numerical criterion of 10⁻⁸ pu. The arithmetic and literal assertions are provided in the report test; the theory is cited in Section 4.</p>
+<p>The report consistency checks compare every displayed numerical binding with fresh module outputs or the cited inputs. Those consistency checks do not replace the hand-worked literals or the independent four-bus voltage, angle, generator-power, loss and terminal-loading anchors. Field measurements, certified equipment results, a separate program solution and a published solved-output comparison are not evaluated.</p></section>
+<section id="s7"><h2>7. Key findings and limits of use</h2>
+<p>For the documented case, the supplied operating point is limited by reactive generation at both sources. Voltage and branch acceptance are determined by the separate checks above. Numerical convergence is established only for the stated inputs.</p>
+<p>Both source voltage setpoints are held even after their supplied reactive bounds are exceeded. Reactive-limit enforcement, conversion of generator buses to demand buses, tap control, voltage-dependent loads, phase-shifting transformers, explicit bus shunts and unbalanced circuits are outside the implemented load-flow model. The case has no unsupported bus shunts or phase shifts.</p>
+<p>Exactly one reference bus and unique bus identifiers are required. Constructor checks reject zero branch impedance, nonpositive tap and inverted voltage bounds. The caller also needs to check finite numbers, existing branch endpoints, positive power base, a connected network, sensible starting voltages and valid iteration settings; comprehensive checks are absent. A singular linear solve can raise an exception. An iteration-limit result still contains numerical values and requires rejection when convergence is false.</p>
+<p>The dense admittance and Jacobian matrices are used. Large-network performance and ill-conditioned operating points are not evaluated. Voltage bounds stored on buses do not reject a solved voltage violation. The reported branch flows omit explicit receiving-end records; receiving powers in Table 3 are reconstructed from sending powers and reported losses.</p></section>
+<section id="s8"><h2>8. Recommendations</h2>
+<p>A constrained operating study is required before the public example is used as an accepted generator operating point. The recommendations follow the exceeded case limit and the method boundary in <a href="#ref-manual">Reference 1, Section 4.1</a>.</p>
+<p>Apply both supplied reactive bounds in a limit-aware analysis with an explicit reference-control arrangement. Release an affected voltage setpoint and solve the resulting demand-bus equations, as described in the cited source. Both regulated sources exceed their bounds in this circuit; conversion of both to fixed-demand buses leaves no voltage reference. A feasible reference-control arrangement and reactive-support or redispatch study are required before that conversion is used. Report the revised source powers, voltage deviations and both terminal branch loading checks before accepting operation. No reactive-support rating or acceptable revised operating point is inferred from this unconstrained state.</p>
+<p>For an engineering network, supply the actual equipment ratings, voltage criteria and applicable operating duration. Reject a nonconverged result and any exceeded supplied limit before use. Add finite-input and connectivity validation, followed by a published solved-state comparison and field-data comparison when measured data are available.</p></section>
+<section id="s9"><h2>9. References and calculation records</h2>
+<p>The open textbooks, manual and circuit tables are used as the external basis. Repository records are identified separately so numerical regression evidence is not confused with an external acceptance standard.</p>
+<h3>9.1 Public sources</h3><ol class="refs">
+<li id="ref-manual"><a href="https://matpower.org/docs/MATPOWER-manual-8.1.pdf">MATPOWER User’s Manual, version 8.1, July 2025</a>: Section 3.2, Branches; Section 3.6, Network Equations; Section 4.1, AC Power Flow; Appendix B, case format. Branch equations, complex power definitions, Newton method and generator-limit sequence are used. No value from a licensed standard is adopted.</li>
+<li id="ref-case"><a href="https://raw.githubusercontent.com/MATPOWER/matpower/8.1/data/case4gs.m">MATPOWER 8.1 public four-bus case tables</a>: system power base, bus, generator and branch tables. The source identifies Power System Analysis by John Grainger and William Stevenson, McGraw-Hill, 1994, pages 337–338; that textbook is not consulted. The open case is the input authority used here. Only supported fields are mapped; no source-program execution is used.</li>
+<li id="ref-text"><a href="https://ocw.mit.edu/courses/6-061-introduction-to-electric-power-systems-spring-2011/resources/mit6_061s11_ch5/">Introduction to Electric Power Systems, open textbook, Chapter 5: Introduction to Load Flow</a>, 2003 chapter in the Spring 2011 collection; Section 2, Power Flow, equation (1), and Section 3, Bus Admittance, equations (2)–(8). These provide the electrical power definitions and network-assembly basis.</li>
+<li id="ref-newton"><a href="https://fncbook.com/newtonsys/">Fundamentals of Numerical Computation, online Julia edition</a>, accessed 21 October 2026; Section 4.5.2, The multidimensional Newton iteration, equations (4.5.8)–(4.5.10). This provides the Jacobian linearization and update, with mismatch sign expressed in scheduled-minus-calculated form here.</li></ol>
+<h3>9.2 Repository evidence and rebuild</h3><ul>
+<li id="ref-code">Calculation entry: <code>src/digitalmodel/power/analysis/load_flow.py</code>, documented classes <code>Bus</code>, <code>Branch</code>, <code>Network</code> and function <code>solve_power_flow</code>.</li>
+<li id="ref-hand">Reference 5: <code>src/digitalmodel/power/analysis/docs/reference-cases.md</code>, “Solved three-bus reference” and “Tap and charging convention”. Exact rectangular phasors and circuit inputs are recorded there.</li>
+<li>Existing numerical tests: <code>tests/power/analysis/test_load_flow.py</code> and <code>tests/power/analysis/test_reference_cases.py</code>. Report tests: <code>tests/power/analysis/test_module_report.py</code>.</li>
+<li>Input transcription: <code>docs/reports/modules/power/public_case.json</code>. All source tables used for the solve are presented in Appendix 10.1. Generator limits and branch ratings are postprocessing inputs.</li>
+</ul><pre>from digitalmodel.power.analysis.load_flow import solve_power_flow
+# public_network maps the cited input tables into documented module objects.
+network = public_network(read_case())
+result = solve_power_flow(network, tol=TOL, max_iter=MAX_ITER)
+assert result.converged</pre>
+<pre>PYTHONPATH=src uv run --frozen python docs/reports/modules/power/build_report.py
+PYTHONPATH=src uv run --no-project --with pytest --with numpy python -m pytest tests/power/analysis -q -p no:cacheprovider</pre>
+<p>The generator and tests use explicit UTF-8 text encoding and line-feed output. The report test compares embedded JSON numerically and checks the remaining text exactly; a stale report names the rebuild command.</p></section>
+<section id="s10"><h2>10. Appendices</h2>
+<p>The input and quality records are provided for detailed review. Data absent from the public case is identified without assigning an operating value.</p>
+<h3>10.1 Input and data register</h3><table><thead><tr><th scope="col">Bus</th><th scope="col">Type</th><th scope="col">Demand (MW)</th><th scope="col">Demand (Mvar)</th><th scope="col">Start/set voltage (pu)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="input.buses.0.id" data-digits="0">1</span></td><td>Reference</td><td><span data-value="input.buses.0.p_mw" data-digits="0">50</span></td><td><span data-value="input.buses.0.q_mvar" data-digits="2">30.99</span></td><td><span data-value="input.generators.1.v_set" data-digits="2">1.00</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.buses.1.id" data-digits="0">2</span></td><td>Fixed demand</td><td><span data-value="input.buses.1.p_mw" data-digits="0">170</span></td><td><span data-value="input.buses.1.q_mvar" data-digits="2">105.35</span></td><td><span data-value="input.buses.1.v_initial" data-digits="2">1.00</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.buses.2.id" data-digits="0">3</span></td><td>Fixed demand</td><td><span data-value="input.buses.2.p_mw" data-digits="0">200</span></td><td><span data-value="input.buses.2.q_mvar" data-digits="2">123.94</span></td><td><span data-value="input.buses.2.v_initial" data-digits="2">1.00</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.buses.3.id" data-digits="0">4</span></td><td>Fixed active power and voltage</td><td><span data-value="input.buses.3.p_mw" data-digits="0">80</span></td><td><span data-value="input.buses.3.q_mvar" data-digits="2">49.58</span></td><td><span data-value="input.generators.0.v_set" data-digits="2">1.02</span></td><td><a href="#ref-case">Public case</a></td></tr></tbody></table><table><thead><tr><th scope="col">From → to</th><th scope="col">Resistance (pu)</th><th scope="col">Reactance (pu)</th><th scope="col">Charging (pu)</th><th scope="col">Source</th></tr></thead><tbody><tr><td><span data-value="input.branches.0.from" data-digits="0">1</span> → <span data-value="input.branches.0.to" data-digits="0">2</span></td><td><span data-value="input.branches.0.r_pu" data-digits="5">0.01008</span></td><td><span data-value="input.branches.0.x_pu" data-digits="4">0.0504</span></td><td><span data-value="input.branches.0.b_pu" data-digits="4">0.1025</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.branches.1.from" data-digits="0">1</span> → <span data-value="input.branches.1.to" data-digits="0">3</span></td><td><span data-value="input.branches.1.r_pu" data-digits="5">0.00744</span></td><td><span data-value="input.branches.1.x_pu" data-digits="4">0.0372</span></td><td><span data-value="input.branches.1.b_pu" data-digits="4">0.0775</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.branches.2.from" data-digits="0">2</span> → <span data-value="input.branches.2.to" data-digits="0">4</span></td><td><span data-value="input.branches.2.r_pu" data-digits="5">0.00744</span></td><td><span data-value="input.branches.2.x_pu" data-digits="4">0.0372</span></td><td><span data-value="input.branches.2.b_pu" data-digits="4">0.0775</span></td><td><a href="#ref-case">Public case</a></td></tr><tr><td><span data-value="input.branches.3.from" data-digits="0">3</span> → <span data-value="input.branches.3.to" data-digits="0">4</span></td><td><span data-value="input.branches.3.r_pu" data-digits="5">0.01272</span></td><td><span data-value="input.branches.3.x_pu" data-digits="4">0.0636</span></td><td><span data-value="input.branches.3.b_pu" data-digits="4">0.1275</span></td><td><a href="#ref-case">Public case</a></td></tr></tbody></table>
+<p>Generator active power at bus four is <span data-value="input.generators.0.p_mw" data-digits="0">318</span> MW and its fixed voltage is <span data-value="input.generators.0.v_set" data-digits="2">1.02</span> pu. Its reactive interval is <span data-value="input.generators.0.q_min_mvar" data-digits="0">−100</span> to <span data-value="input.generators.0.q_max_mvar" data-digits="0">100</span> Mvar. Bus-one generator active and reactive starting values are zero; reference voltage is <span data-value="input.generators.1.v_set" data-digits="2">1.00</span> pu. Initial angles are zero. Branch charging is total charging, with unity taps and no phase shift. Source: <a href="#ref-case">public case tables</a>.</p>
+<table><thead><tr><th scope="col">Item</th><th scope="col">Basis or status</th><th scope="col">Use</th></tr></thead><tbody><tr><td>Electrical inputs and equipment bounds</td><td>Public case tables, Reference 2</td><td>Applied only to this circuit</td></tr><tr><td>Hand-reference phasors and inputs</td><td>Constructed exact circuit, Reference 5</td><td>Numerical anchor only</td></tr><tr><td>Mismatch tolerance and iteration cap</td><td>Explicit numerical settings, Section 3</td><td>Calculation control only</td></tr><tr><td>Physical conductor geometry and thermal duration</td><td>NOT_EVALUATED: not supplied</td><td>Equipment approval excluded</td></tr><tr><td>Applicable installation voltage criterion</td><td>NOT_EVALUATED: required input</td><td>No general voltage limit inferred</td></tr><tr><td>Field data and protection settings</td><td>NOT_EVALUATED: not supplied</td><td>Field acceptance and protection excluded</td></tr><tr><td>Assumptions</td><td>No estimated installation data is used</td><td>Public and constructed circuits only</td></tr></tbody></table>
+<h3>10.2 Symbols and units</h3><p>Per unit (pu) denotes a quantity divided by its consistent system base. MW is megawatt, Mvar is megavolt-ampere reactive and MVA is megavolt-ampere. Alternating current is the sinusoidal steady-state basis. A reference bus fixes voltage and angle; a fixed-active-power-and-voltage bus is conventionally called PV; a fixed-active-and-reactive-power bus is called PQ. V is complex voltage; I is complex current; Y is complex admittance; S is complex power; P is active power; Q is reactive power; Qg is generator reactive power; Qd is local reactive demand; Sbase is the power base. J is the Jacobian, u is the unknown vector and Δ is an increment. Remaining branch symbols are defined immediately after their equation.</p>
+<h3>10.3 Quality pre-flight</h3><p>The report checks cover numerical bindings, hand literals, displayed-input reconstruction of generator reactive output, offline resources, source links, section count, public wording, UTF-8 and line-feed output, and fresh-build equality at displayed precision. The existing numerical tests provide broader circuit evidence. Test outcomes are recorded with the submitted change; a checklist is not a substitute for those executions.</p>
+<h3>10.4 Engineering changes</h3><p>Revision 1 establishes the initial engineering basis; revision 2 corrects reproducibility, operating checks and source precision. Select the preceding revision to display subsequent changes.</p>
+<label>Last read revision <select id="prior-revision"><option value="0">Before initial issue</option><option value="1">1</option><option value="2">2</option></select></label><ul id="change-list"></ul>
+<h3>10.5 Report comments</h3><p>Comments are saved beside this HTML by choosing its folder in the save dialog. Where a folder picker is unavailable, select the same folder in Save As; the download fallback uses the browser destination. Load the sidecar before adding to an existing review. No comments are sent to a server.</p>
+<label>Section <select id="comment-section"><option value="s1">Section 1</option><option value="s2">Section 2</option><option value="s3">Section 3</option><option value="s4">Section 4</option><option value="s5">Section 5</option><option value="s6">Section 6</option><option value="s7">Section 7</option><option value="s8">Section 8</option><option value="s9">Section 9</option><option value="s10">Section 10</option></select></label>
+<label>Comment <textarea id="comment-text" rows="3"></textarea></label>
+<button type="button" id="add-comment">Add comment</button><button type="button" id="save-comments">Save comments beside report</button>
+<label>Load comments <input id="load-comments" type="file" accept="application/json"></label><p id="comment-status" role="status">No unsaved comments.</p><ol id="comment-list"></ol>
+</section>
+</div>
+<script id="calculation-data" type="application/json">{"base_mva": 100.0, "hand.branch.0.from_bus": 1, "hand.branch.0.p_flow_pu": -0.56, "hand.branch.0.p_loss_pu": 0.0, "hand.branch.0.q_flow_pu": 0.08, "hand.branch.0.q_loss_pu": 0.16, "hand.branch.0.to_bus": 2, "hand.branch.1.from_bus": 2, "hand.branch.1.p_flow_pu": 1.4688, "hand.branch.1.p_loss_pu": 0.0, "hand.branch.1.q_flow_pu": 0.6784, "hand.branch.1.q_loss_pu": 0.6544, "hand.branch.1.to_bus": 3, "hand.bus.0.angle_deg": 0.0, "hand.bus.0.bus_id": 1, "hand.bus.0.p_net_pu": -0.56, "hand.bus.0.q_net_pu": 0.08, "hand.bus.0.v_pu": 1.0, "hand.bus.1.angle_deg": 16.260205, "hand.bus.1.bus_id": 2, "hand.bus.1.p_net_pu": 2.0288, "hand.bus.1.q_net_pu": 0.7584, "hand.bus.1.v_pu": 1.0, "hand.bus.2.angle_deg": -7.594643, "hand.bus.2.bus_id": 3, "hand.bus.2.p_net_pu": -1.4688, "hand.bus.2.q_net_pu": -0.024, "hand.bus.2.v_pu": 0.907965, "hand.converged": true, "hand.iterations": 6, "input.branches.0.b_pu": 0.1025, "input.branches.0.from": 1, "input.branches.0.r_pu": 0.01008, "input.branches.0.rating_mva": 250.0, "input.branches.0.tap_raw": 0.0, "input.branches.0.to": 2, "input.branches.0.x_pu": 0.0504, "input.branches.1.b_pu": 0.0775, "input.branches.1.from": 1, "input.branches.1.r_pu": 0.00744, "input.branches.1.rating_mva": 250.0, "input.branches.1.tap_raw": 0.0, "input.branches.1.to": 3, "input.branches.1.x_pu": 0.0372, "input.branches.2.b_pu": 0.0775, "input.branches.2.from": 2, "input.branches.2.r_pu": 0.00744, "input.branches.2.rating_mva": 250.0, "input.branches.2.tap_raw": 0.0, "input.branches.2.to": 4, "input.branches.2.x_pu": 0.0372, "input.branches.3.b_pu": 0.1275, "input.branches.3.from": 3, "input.branches.3.r_pu": 0.01272, "input.branches.3.rating_mva": 250.0, "input.branches.3.tap_raw": 0.0, "input.branches.3.to": 4, "input.branches.3.x_pu": 0.0636, "input.buses.0.angle_deg": 0.0, "input.buses.0.id": 1, "input.buses.0.p_mw": 50.0, "input.buses.0.q_mvar": 30.99, "input.buses.0.type": 3, "input.buses.0.v_initial": 1.0, "input.buses.0.v_max": 1.1, "input.buses.0.v_min": 0.9, "input.buses.1.angle_deg": 0.0, "input.buses.1.id": 2, "input.buses.1.p_mw": 170.0, "input.buses.1.q_mvar": 105.35, "input.buses.1.type": 1, "input.buses.1.v_initial": 1.0, "input.buses.1.v_max": 1.1, "input.buses.1.v_min": 0.9, "input.buses.2.angle_deg": 0.0, "input.buses.2.id": 3, "input.buses.2.p_mw": 200.0, "input.buses.2.q_mvar": 123.94, "input.buses.2.type": 1, "input.buses.2.v_initial": 1.0, "input.buses.2.v_max": 1.1, "input.buses.2.v_min": 0.9, "input.buses.3.angle_deg": 0.0, "input.buses.3.id": 4, "input.buses.3.p_mw": 80.0, "input.buses.3.q_mvar": 49.58, "input.buses.3.type": 2, "input.buses.3.v_initial": 1.0, "input.buses.3.v_max": 1.1, "input.buses.3.v_min": 0.9, "input.generators.0.bus": 4, "input.generators.0.p_mw": 318.0, "input.generators.0.q_initial_mvar": 0.0, "input.generators.0.q_max_mvar": 100.0, "input.generators.0.q_min_mvar": -100.0, "input.generators.0.v_set": 1.02, "input.generators.1.bus": 1, "input.generators.1.p_mw": 0.0, "input.generators.1.q_initial_mvar": 0.0, "input.generators.1.q_max_mvar": 100.0, "input.generators.1.q_min_mvar": -100.0, "input.generators.1.v_set": 1.0, "max_iter": 50, "public.branch.0.from_bus": 1, "public.branch.0.p_flow_pu": 0.386915, "public.branch.0.p_loss_pu": 0.002267, "public.branch.0.q_flow_pu": 0.222985, "public.branch.0.q_loss_pu": -0.089379, "public.branch.0.receiving_mva": 49.550483, "public.branch.0.sending_mva": 44.657091, "public.branch.0.to_bus": 2, "public.branch.1.from_bus": 1, "public.branch.1.p_flow_pu": 0.981175, "public.branch.1.p_loss_pu": 0.010314, "public.branch.1.q_flow_pu": 0.612124, "public.branch.1.q_loss_pu": -0.023563, "public.branch.1.receiving_mva": 116.046078, "public.branch.1.sending_mva": 115.64605, "public.branch.1.to_bus": 3, "public.branch.2.from_bus": 2, "public.branch.2.p_flow_pu": -1.315352, "public.branch.2.p_loss_pu": 0.017155, "public.branch.2.q_flow_pu": -0.741137, "public.branch.2.q_loss_pu": 0.008059, "public.branch.2.receiving_mva": 152.868167, "public.branch.2.sending_mva": 150.977946, "public.branch.2.to_bus": 4, "public.branch.3.from_bus": 3, "public.branch.3.p_flow_pu": -1.029139, "public.branch.3.p_loss_pu": 0.018355, "public.branch.3.q_flow_pu": -0.603713, "public.branch.3.q_loss_pu": -0.034412, "public.branch.3.receiving_mva": 119.220218, "public.branch.3.sending_mva": 119.314555, "public.branch.3.to_bus": 4, "public.branch_ratings_satisfied": true, "public.bus.0.angle_deg": 0.0, "public.bus.0.bus_id": 1, "public.bus.0.p_net_pu": 1.368091, "public.bus.0.q_net_pu": 0.835108, "public.bus.0.v_pu": 1.0, "public.bus.1.angle_deg": -0.976122, "public.bus.1.bus_id": 2, "public.bus.1.p_net_pu": -1.7, "public.bus.1.q_net_pu": -1.0535, "public.bus.1.v_pu": 0.982421, "public.bus.2.angle_deg": -1.872177, "public.bus.2.bus_id": 3, "public.bus.2.p_net_pu": -2.0, "public.bus.2.q_net_pu": -1.2394, "public.bus.2.v_pu": 0.969005, "public.bus.3.angle_deg": 1.523055, "public.bus.3.bus_id": 4, "public.bus.3.p_net_pu": 2.38, "public.bus.3.q_net_pu": 1.318496, "public.bus.3.v_pu": 1.02, "public.converged": true, "public.iterations": 5, "public.newton_updates": 4, "public.q_excess1_mvar": 14.500841, "public.q_excess1_pct": 14.500841, "public.q_excess_mvar": 81.429643, "public.q_excess_pct": 81.429643, "public.qg1_mvar": 114.500841, "public.qg4_mvar": 181.429643, "public.total_loss_mw": 4.809078, "public.voltage_bounds_satisfied": true, "tol": 1e-12}</script>
+<script id="changes-data" type="application/json">{"revision": "2", "date": "2026-10-22", "changes": ["Embedded rounded zeros are normalized and rebuilds use the locked project environment.", "Independent four-bus solution anchors, voltage and terminal-rating checks, setpoint bindings and rejection paths are tested.", "Newton update counts, limit provenance and public-source citations are clarified."]}</script>
+<script>
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  for (const point of document.querySelectorAll('[data-case]')) {
+    const show = () => { byId('chart-detail').textContent = point.dataset.case; };
+    point.addEventListener('pointerenter', show);
+    point.addEventListener('focus', show);
+  }
+  let limitsVisible = true;
+  byId('limits').addEventListener('click', () => {
+    limitsVisible = !limitsVisible;
+    document.querySelectorAll('.limit').forEach(x => { x.style.display = limitsVisible ? '' : 'none'; });
+  });
+  const changes = JSON.parse(byId('changes-data').textContent);
+  const showChanges = () => {
+    byId('change-list').replaceChildren();
+    const items = Number(byId('prior-revision').value) < Number(changes.revision) ? changes.changes : ['No later engineering changes.'];
+    items.forEach(text => { const li = document.createElement('li'); li.textContent = text; byId('change-list').append(li); });
+  };
+  byId('prior-revision').addEventListener('change', showChanges);
+  showChanges();
+  let state = {report: 'power', revision: changes.revision, comments: []};
+  const showComments = () => {
+    byId('comment-list').replaceChildren();
+    state.comments.forEach(c => { const li = document.createElement('li'); li.textContent = `${c.section}: ${c.text}`; byId('comment-list').append(li); });
+  };
+  byId('add-comment').addEventListener('click', () => {
+    const text = byId('comment-text').value.trim();
+    if (!text) return;
+    state.comments.push({section: byId('comment-section').value, text});
+    byId('comment-text').value = '';
+    byId('comment-status').textContent = 'Unsaved comments. Save beside the report.';
+    showComments();
+  });
+  byId('load-comments').addEventListener('change', async event => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      const incoming = JSON.parse(await file.text());
+      if (incoming.report !== 'power' || incoming.revision !== changes.revision || !Array.isArray(incoming.comments) ||
+          incoming.comments.some(c => !/^s(?:[1-9]|10)$/.test(c.section) || typeof c.text !== 'string')) throw new Error('Invalid sidecar or revision.');
+      if (state.comments.length) throw new Error('Save current comments before loading another sidecar.');
+      state = incoming;
+      showComments();
+      byId('comment-status').textContent = 'Sidecar loaded. New comments require saving.';
+    } catch (error) { byId('comment-status').textContent = error.message; }
+  });
+  byId('save-comments').addEventListener('click', async () => {
+    const text = JSON.stringify(state, null, 2) + '\n';
+    try {
+      if (window.showDirectoryPicker) {
+        const directory = await window.showDirectoryPicker({mode: 'readwrite'});
+        const handle = await directory.getFileHandle('power.comments.json', {create: true});
+        const writable = await handle.createWritable();
+        await writable.write(text); await writable.close();
+        byId('comment-status').textContent = 'Comments saved in the selected report folder.';
+      } else if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({suggestedName: 'power.comments.json'});
+        const writable = await handle.createWritable();
+        await writable.write(text); await writable.close();
+        byId('comment-status').textContent = 'Comments saved to the selected file.';
+      } else {
+        const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+        const link = document.createElement('a'); link.href = url; link.download = 'power.comments.json'; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        byId('comment-status').textContent = 'Download requested; place the sidecar beside the report and reload it to check the saved copy.';
+      }
+    } catch (error) { byId('comment-status').textContent = 'Comments remain unsaved: ' + error.message; }
+  });
+})();
+</script></body></html>
