@@ -10,6 +10,9 @@ stokesII tutorial.
 
 Source / citation
 -----------------
+- Absorption range: Higuera (2018), "Enhancing active wave absorption in
+  RANS models", arXiv:1810.03492v2, section 3, equation (1), Table 1.
+  The builder refuses shallow-water absorption outside ``kh < pi/10``.
 - OpenFOAM tutorial: $FOAM_TUTORIALS/multiphase/interFoam/laminar/waves/stokesII
   (ESI v2312) — waveVelocity/waveAlpha StokesII inlet, shallowWaterAbsorption
   outlet, activeAbsorption at the inlet.
@@ -56,6 +59,15 @@ FAST_WAVE_HEIGHT_TOLERANCE = 0.08
 FAST_DISPERSION_TOLERANCE = 0.05
 FAST_REFLECTION_TOLERANCE = 0.10
 
+# Higuera (2018), "Enhancing active wave absorption in RANS models",
+# arXiv:1810.03492v2, section 3, Table 1: shallow waters require kh < pi/10.
+# https://arxiv.org/pdf/1810.03492v2
+SHALLOW_WATER_KH_LIMIT = math.pi / 10.0
+ABSORPTION_REFERENCE = (
+    "Higuera (2018), Enhancing active wave absorption in RANS models, "
+    "section 3, equation (1), Table 1; https://arxiv.org/abs/1810.03492v2"
+)
+
 
 # ---------------------------------------------------------------------------
 # Pure wave-theory helpers (no OpenFOAM dependency)
@@ -75,12 +87,12 @@ def dispersion_wavenumber(period: float, depth: float) -> float:
         Wavenumber k (rad/m).
 
     Raises:
-        ValueError: If period or depth is not positive.
+        ValueError: If period or depth is not finite and positive.
     """
-    if period <= 0.0:
-        raise ValueError(f"period must be positive, got {period}")
-    if depth <= 0.0:
-        raise ValueError(f"depth must be positive, got {depth}")
+    if not math.isfinite(period) or period <= 0.0:
+        raise ValueError(f"period must be finite and positive, got {period}")
+    if not math.isfinite(depth) or depth <= 0.0:
+        raise ValueError(f"depth must be finite and positive, got {depth}")
     om = 2.0 * math.pi / period
     # Newton on f(k) = g k tanh(kd) - omega^2 (converges from shallow to
     # deep water; the naive fixed-point iteration diverges for kd << 1).
@@ -96,6 +108,27 @@ def dispersion_wavenumber(period: float, depth: float) -> float:
         if abs(step) < 1e-15 * max(k, 1.0):
             break
     return k
+
+
+def shallow_water_absorption_status(period: float, depth: float) -> Dict[str, Any]:
+    """Describe absorption applicability without refusing historical results.
+
+    Higuera (2018), section 3, equation (1) assumes shallow-water celerity
+    and a depth-uniform velocity correction. Table 1 restricts that regime
+    to ``kh < pi/10``. The dimensionless depth uses the full dispersion
+    relation (equation (2)), rather than assuming shallow water to test it.
+    This check does not qualify the inlet wave theory or guarantee reflection.
+    """
+    kh = dispersion_wavenumber(period, depth) * depth
+    valid = math.isfinite(kh) and 0.0 < kh < SHALLOW_WATER_KH_LIMIT
+    return {
+        "model": "shallowWaterAbsorption",
+        "kh": kh,
+        "kh_limit": SHALLOW_WATER_KH_LIMIT,
+        "regime": "shallow" if valid else "outside_shallow_water",
+        "valid": valid,
+        "reference": ABSORPTION_REFERENCE,
+    }
 
 
 def wavelength(period: float, depth: float) -> float:
@@ -153,6 +186,11 @@ class WaveTankConfig:
     water absorption outlet. The default mesh/duration is the *fast*
     regression variant (~2.5 min solve); the verified reference report uses
     ``nx=500, nz=55, end_time=30``.
+
+    The historical default is retained as a reference configuration, but
+    its relative depth exceeds the absorption range in Higuera (2018),
+    Table 1. Building it now raises ValueError. Select a physically suitable
+    shallow-water configuration explicitly; no replacement solve is implied.
 
     Attributes:
         wave_height: Input regular wave height H (m).
@@ -408,8 +446,22 @@ def build_wave_tank_case(
 
     Returns:
         Path to the generated case directory.
+
+    Raises:
+        ValueError: For invalid period/depth or relative depth outside
+            ``kh < pi/10`` (Higuera 2018, Table 1), before any case writes.
+            No automatic deep-water alternative is implemented.
     """
     config = config or WaveTankConfig()
+    absorption = shallow_water_absorption_status(config.wave_period, config.depth)
+    if not absorption["valid"]:
+        raise ValueError(
+            f"shallowWaterAbsorption requires kh < pi/10; got kh={absorption['kh']:.6g}. "
+            "Use an explicitly qualified absorption treatment outside shallow water; "
+            "a custom fvOptions codedSource damping zone is a route requiring "
+            "separate design and validation, not an automatic fallback. "
+            + ABSORPTION_REFERENCE
+        )
     case_dir = Path(parent_dir) / config.name
     for sub in ("system", "constant", "0"):
         (case_dir / sub).mkdir(parents=True, exist_ok=True)
@@ -478,7 +530,11 @@ def extract_wave_quality(
     concatenated), extracts per-gauge height/complex amplitude over
     ``window``, and returns height errors (established region), the
     phase-fit wavenumber vs dispersion, and the multi-gauge reflection
-    coefficient.
+    coefficient. The ``absorption`` mapping records relative depth and
+    applicability (Higuera 2018, Table 1), including for historical runs
+    outside the shallow-water range. Extraction does not refuse those runs;
+    their reflection estimates need to be read against this configuration
+    limitation, rather than attributed solely to mesh or scheme quality.
     """
     import numpy as np
 
@@ -552,6 +608,7 @@ def extract_wave_quality(
         "reflection_kr": kr,
         "incident_amplitude": a_i,
         "window": list(window),
+        "absorption": shallow_water_absorption_status(config.wave_period, config.depth),
     }
 
 
@@ -561,6 +618,7 @@ def _provenance(config: WaveTankConfig) -> Dict[str, Any]:
         "validation_case": "wave_tank_stokes2",
         "issue": "#1170",
         "reference": "linear dispersion omega^2 = g k tanh(k d); input StokesII wave",
+        "absorption": shallow_water_absorption_status(config.wave_period, config.depth),
         "citations": [
             "$FOAM_TUTORIALS/multiphase/interFoam/laminar/waves/stokesII (ESI v2312)",
             "Larsen, Fuhrman & Roenby (2019), arXiv:1804.01158 — interFoam "
