@@ -31,13 +31,12 @@ def _summarize(atlas: Atlas) -> dict[str, Any]:
     kind = prov.get("kind", "computed")
     if kind == "library":
         solver = prov.get("solver", {})
-        err = "library"
+        err = "library" if atlas.validation_available else "unavailable"
         provenance = f"{solver.get('name', '?')} {solver.get('version', '?')}"
         if solver.get("licensed") is False:
             provenance += " (STUB)"
     else:
-        max_err = atlas.validation.get("max_rel_error")
-        err = f"{max_err:.3f}" if max_err is not None else "n/a"
+        err = f"{atlas.max_rel_error:.3f}" if atlas.validation_available else "unavailable"
         standards = ",".join(s.get("id", "") for s in prov.get("standards", [])) or "—"
         provenance = f"{prov.get('code_version', '?')} · {standards}"
     return {

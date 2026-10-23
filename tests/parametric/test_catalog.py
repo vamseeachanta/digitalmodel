@@ -21,7 +21,7 @@ def test_library_is_flagged_distinctly():
     by_name = {r["atlas"]: r for r in build_catalog()}
     lib = by_name["diffraction_library"]
     assert lib["kind"] == "library"
-    assert lib["max_err"] == "library"
+    assert lib["max_err"] == "unavailable"
     assert "STUB" in lib["provenance"]
 
 
