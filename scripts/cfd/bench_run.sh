@@ -36,25 +36,12 @@ while IFS= read -r row; do
   printf '%s variant=%s RUNNING\n' "$(date -u +%FT%TZ)" "$name" | tee -a "$dest/BENCH_STATUS"
   (cd "$v" && mpirun -np "$ranks" $flags "$solver" -parallel > "log.$solver" 2>&1)
   log="$v/log.$solver"
-  metrics=$(awk '
-    /^Time = / {n++; t[n]=$3}
-    /^ExecutionTime = / {e[n]=$3}
-    /Solving for p_rgh/ {if (match($0,/Initial residual = [^,]+/)) pr=substr($0,RSTART+19,RLENGTH-19)}
-    END { if (!n) exit 2; total=e[n]/n; first=(n>=50?(e[50]-e[1])/49:total); k=(n>50?n-50:1); last=(e[n]-e[k])/(n-k?n-k:1); printf "%d\t%.6g\t%.6g\t%.6g\t%s",n,total,first,last,pr }
-  ' "$log") || die "$name produced no iterations"
-  IFS=$'\t' read -r its spi first50 last50 pr <<< "$metrics"
-  cells=$(find "$v" -path '*/constant/polyMesh/owner' -type f -print0 2>/dev/null \
-    | xargs -0 grep -aho 'nCells:[0-9]*' 2>/dev/null | awk -F: '{s+=$2} END{print s+0}' || true)
-  cells=${cells:-0}
-  us=$(awk -v s="$spi" -v c="$cells" 'BEGIN{if(c) printf "%.6g",s*1e6/c; else print "nan"}')
-  force=$(find "$v/postProcessing" -path '*/force.dat' -type f 2>/dev/null | head -1 || true)
-  read -r force_mean pshare vshare < <(awk '
-    !/^#/ && NF {n++; p[n]=$5+0; v[n]=$8+0}
-    END {start=int(n*0.75)+1; for(i=start;i<=n;i++){ps+=p[i];vs+=v[i];k++}; total=ps+vs; if(!k||total==0) print "nan nan nan"; else printf "%.6g %.6g %.6g\n",total/k,100*ps/total,100*vs/total}
-  ' "$force" 2>/dev/null || echo 'nan nan nan')
-  coeff=$(find "$v/postProcessing" -path '*/coefficient.dat' -type f 2>/dev/null | head -1 || true)
-  cd=$(awk '!/^#/ && NF {n++; x[n]=$2+0} END{s=int(n*.75)+1; for(i=s;i<=n;i++){a+=x[i];k++}; if(k) printf "%.6g",a/k; else print "nan"}' "$coeff" 2>/dev/null || echo nan)
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$ranks" "$its" "$spi" "$us" "$first50" "$last50" "$cd" "$pshare" "$vshare" "$pr" >> "$dest/bench_results.tsv"
+  # Source: bench_run.sh metrics section, repository revision 6476218e.
+  # Preserve the 50-step window and last-quarter sample selection policy.
+  metrics=$(python3 "$SCRIPT_DIR/lib/bench_metrics.py" --case "$v" --log "$log" \
+    --ranks "$ranks" --window 50 --tail-fraction 0.25) \
+    || die "$name produced invalid or incomplete benchmark timing data"
+  printf '%s\t%s\t%s\n' "$name" "$ranks" "$metrics" >> "$dest/bench_results.tsv"
   find "$v" -maxdepth 1 -type d -regextype posix-extended -regex '.*/[0-9]+([.][0-9]+)?' ! -name 0 -exec rm -rf {} +
   for proc in "$v"/processor*/; do
     [ -d "$proc" ] || continue
