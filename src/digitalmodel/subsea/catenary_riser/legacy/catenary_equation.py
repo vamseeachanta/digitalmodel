@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Module for calculating catenary curve properties."""
 
 import math
@@ -22,10 +25,10 @@ class CatenaryCalculator:
             and data.get("d") is not None
         ):
             return self._calculate_from_force(data)
-        elif data.get("X") is not None:
-            return self._calculate_from_x(data)
         elif data.get("q") is not None and data.get("d") is not None:
             return self._calculate_from_angle(data)
+        elif data.get("X") is not None:
+            return self._calculate_from_x(data)
         else:
             raise ValueError(
                 "Insufficient or invalid input parameters for calculation."
@@ -46,7 +49,8 @@ class CatenaryCalculator:
             raise ValueError("F must exceed w*d for a suspended catenary")
         length = math.sqrt(distance * (2 * force / weight - distance))
         a = t_horizontal / weight
-        horiz_dist = a * math.acosh(1 + distance / a)
+        # E1 half-angle identity avoids loss of a small distance/a.
+        horiz_dist = 2 * a * math.asinh(math.sqrt(distance / a / 2))
         data.update({"S": length, "X": horiz_dist,
                      "THorizontal": t_horizontal, "b": weight / t_horizontal})
         return data
@@ -60,17 +64,16 @@ class CatenaryCalculator:
         angle = data["q"]
         distance = data["d"]
 
-        angle_comp = 90 - angle
-        tan_q = math.tan(math.radians(angle_comp))
-        cos_q = math.cos(math.radians(angle_comp))
-        one_minus_cosq = 1 - cos_q
-
-        if abs(one_minus_cosq) < 1e-12:
-            raise ValueError("Invalid input: denominator too small in calculation.")
-
-        bend_radius = distance * cos_q / one_minus_cosq
-        length = bend_radius * tan_q
-        horiz_dist = bend_radius * math.asinh(tan_q)
+        if not math.isfinite(angle) or not 0 < angle < 90:
+            raise ValueError("q must be finite and between 0 and 90 degrees from vertical")
+        if not math.isfinite(distance) or distance <= 0:
+            raise ValueError("d must be finite and positive")
+        # E1-E3: sin(q)=a/(a+d). The half-angle identity avoids cancellation
+        # in 1-sin(q) near a horizontal hang-off. No physical cutoff is inferred.
+        q = math.radians(angle)
+        bend_radius = distance * math.sin(q) / (2 * math.sin(math.radians(90 - angle) / 2)**2)
+        length = math.sqrt(distance * (distance + 2 * bend_radius))
+        horiz_dist = 2 * bend_radius * math.asinh(math.sqrt(distance / bend_radius / 2))
 
         data.update({"S": length, "X": horiz_dist, "BendRadius": bend_radius})
         return data
