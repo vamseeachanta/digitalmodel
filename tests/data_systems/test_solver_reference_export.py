@@ -247,3 +247,250 @@ def test_mixed_condition_states_survive_same_export():
     assert [item["condition_id"] for item in result] == states
     assert [item["export_value_state"] for item in result] == states
     assert all(item["value"] == 0 for item in result)
+
+
+def source_text(records, format):
+    """Independently encode literal source records using the documented wire format."""
+    if format == "json":
+        return json.dumps(records)
+    fields = list(dict.fromkeys(key for record in records for key in record))
+    if not fields:
+        return ""
+    stream = io.StringIO(newline="")
+    writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+    writer.writeheader()
+    for record in records:
+        writer.writerow({key: json.dumps(value) for key, value in record.items()})
+    return stream.getvalue()
+
+
+def load_text(text, format, units=UNITS):
+    """Load a text representation through the public reader under test."""
+    reader = getattr(SolverReferenceExporter, f"from_{format}")
+    return reader(text, supported_units=units)
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+def test_readers_preserve_literal_condition_evidence(format):
+    """By inspection: each zero keeps its declared state and each source field.
+
+    This is an identity calculation: output[source key] = input[source key].
+    Null or missing value gives absent; text gives invalid; a vendor state gives
+    unknown. These are protocol outcomes, with no physical acceptance limit.
+    """
+    missing = row(condition_id="missing", value=None)
+    missing.pop("warnings")
+    records = [
+        row(
+            condition_id="cached",
+            value_state="cached_unqualified",
+            warnings=["Outside applicability range", 'Warning, quoted: "x"\nnext'],
+            status={"applicability": "unknown"},
+            execution={
+                "exit_code": 0,
+                "instance_handle": "opaque",
+                "fresh_output": False,
+            },
+        ),
+        row(condition_id="pending", value_state="uncomputed", warnings=None),
+        row(condition_id="vendor", value_state="vendor-opaque", warnings=[]),
+        row(condition_id="invalid", value="NaN"),
+        missing,
+    ]
+    result = json.loads(load_text(source_text(records, format), format).to_json())
+    for original, actual in zip(records, result):
+        assert {key: actual[key] for key in original} == original
+        assert actual["export_evaluation"] == "NOT_EVALUATED"
+    assert [item["export_value_state"] for item in result] == [
+        "cached_unqualified",
+        "uncomputed",
+        "unknown",
+        "invalid",
+        "absent",
+    ]
+    assert "warnings" not in result[-1]
+
+
+@pytest.mark.parametrize("first", ["json", "csv"])
+@pytest.mark.parametrize("second", ["json", "csv"])
+def test_export_readback_across_formats_preserves_annotations(first, second):
+    """The independently enumerated answer is the original evidence plus annotations."""
+    record = row(value_state="cached_unqualified", warnings=["Unqualified"])
+    expected = [
+        {
+            **record,
+            "export_value_state": "cached_unqualified",
+            "export_evaluation": "NOT_EVALUATED",
+        }
+    ]
+    initial = SolverReferenceExporter([record], supported_units=UNITS)
+    loaded = load_text(getattr(initial, f"to_{first}")(), first)
+    reloaded = load_text(getattr(loaded, f"to_{second}")(), second)
+    assert json.loads(reloaded.to_json()) == expected
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"export_value_state": "computed", "export_evaluation": "NOT_EVALUATED"},
+        {"export_value_state": "cached_unqualified", "export_evaluation": "PASS"},
+        {"export_evaluation": "NOT_EVALUATED"},
+        {"export_value_state": "cached_unqualified"},
+    ],
+)
+def test_readers_reject_inconsistent_or_incomplete_annotations(format, change):
+    record = row(value_state="cached_unqualified", **change)
+    with pytest.raises(ValueError, match="annotations"):
+        load_text(source_text([record], format), format)
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+def test_readers_revalidate_units_in_existing_exports(format):
+    record = row(
+        source_unit="kN",
+        export_value_state="computed",
+        export_evaluation="NOT_EVALUATED",
+    )
+    with pytest.raises(ValueError, match="unit"):
+        load_text(source_text([record], format), format)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '[{"warnings": ["Lost warning"], "warnings": []}]',
+        '[{"execution": {"fresh_output": false, "fresh_output": true}}]',
+    ],
+)
+def test_json_reader_rejects_duplicate_keys_before_evidence_is_lost(text):
+    # RFC 8259 (2017), section 4: duplicate names have unpredictable behavior.
+    with pytest.raises(ValueError, match="Duplicate JSON"):
+        load_text(text, "json")
+
+
+@pytest.mark.parametrize("text", ["null", "{}", '"text"', "[null]", "[[]]", "["])
+def test_json_reader_requires_an_array_of_records(text):
+    with pytest.raises(ValueError):
+        load_text(text, "json")
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity", "1e9999"])
+def test_readers_reject_nonfinite_numeric_tokens_anywhere(format, token):
+    # RFC 8259 (2017), section 6; overflow is also outside finite storage.
+    if format == "json":
+        text = source_text([row(details="TOKEN")], format).replace('"TOKEN"', token)
+    else:
+        # A plain cell is an independent JSON document under the export contract.
+        text = source_text([row(details="TOKEN")], format).replace('"""TOKEN"""', token)
+    with pytest.raises(ValueError, match="finite"):
+        load_text(text, format)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "condition_id,quantity,source_unit,warnings,warnings\n",
+        "condition_id,quantity\n",
+        'condition_id,quantity,source_unit\n"unterminated',
+        "condition_id,quantity,source_unit\n\n",
+        "condition_id,quantity,source_unit\nnull,null\n",
+        "condition_id,quantity,source_unit\nnull,null,null,null\n",
+        "condition_id,quantity,source_unit\nplain,plain,plain\n",
+    ],
+)
+def test_csv_reader_rejects_ambiguous_or_malformed_tables(text):
+    with pytest.raises(ValueError):
+        load_text(text, "csv")
+
+
+def test_csv_reader_rejects_duplicate_json_keys_inside_cells():
+    text = source_text([row(details={"status": "unknown"})], "csv")
+    text = text.replace(
+        '{""status"": ""unknown""}', '{""status"": ""unknown"", ""status"": ""ready""}'
+    )
+    with pytest.raises(ValueError, match="Duplicate JSON"):
+        load_text(text, "csv")
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+def test_empty_export_readback(format):
+    initial = SolverReferenceExporter([], supported_units=UNITS)
+    loaded = load_text(getattr(initial, f"to_{format}")(), format)
+    assert loaded.to_json() == "[]\n"
+    assert loaded.to_csv() == ""
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize("text", [None, [], b"[]"])
+def test_readers_require_text(format, text):
+    with pytest.raises(ValueError, match="text"):
+        load_text(text, format)
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+def test_readback_keeps_missing_null_and_empty_warning_evidence_distinct(format):
+    """Absence is no key, null is None, and an observed empty list is []."""
+    missing = row()
+    missing.pop("warnings")
+    records = [missing, row(warnings=None), row(warnings=[])]
+    loaded = load_text(source_text(records, format), format)
+    for next_format in ("json", "csv"):
+        actual = json.loads(
+            load_text(getattr(loaded, f"to_{next_format}")(), next_format).to_json()
+        )
+        assert "warnings" not in actual[0]
+        assert actual[1]["warnings"] is None
+        assert actual[2]["warnings"] == []
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+def test_claimed_computation_does_not_establish_a_fresh_qualified_run(format):
+    """An exit token and a numeric value have no run-specific output proof."""
+    source = row(
+        execution={"exit_code": 0, "instance_handle": "opaque"},
+        status="unknown",
+        warnings=["Fresh output not established"],
+    )
+    actual = json.loads(load_text(source_text([source], format), format).to_json())[0]
+    assert actual["execution"] == source["execution"]
+    assert actual["status"] == "unknown"
+    assert actual["export_value_state"] == "computed"  # Source claim only.
+    assert actual["export_evaluation"] == "NOT_EVALUATED"
+
+
+def test_documented_worked_example_has_the_enumerated_answer(capsys):
+    """Expected states follow literal input tokens, independent of any solver.
+
+    The same raw zero occurs in computed, uncomputed and cached rows. Missing
+    output maps to absent; source text maps to invalid; no state maps to unknown.
+    CSV -> JSON readback must leave the literal warning and unit spellings intact.
+    """
+    import runpy
+    from pathlib import Path
+
+    path = (
+        Path(__file__).resolve().parents[2]
+        / "examples"
+        / "domains"
+        / "data_systems"
+        / "solver_reference_roundtrip.py"
+    )
+    runpy.run_path(str(path), run_name="__main__")
+    actual = json.loads(capsys.readouterr().out)
+    assert [record["export_value_state"] for record in actual] == [
+        "computed",
+        "uncomputed",
+        "cached_unqualified",
+        "absent",
+        "invalid",
+        "unknown",
+    ]
+    assert [record.get("value") for record in actual] == [0, 0, 0, None, "NaN", 0]
+    assert [record["source_unit"] for record in actual] == ["N"] * len(actual)
+    assert actual[2]["warnings"] == ["Applicability unknown, cached output"]
+    assert "warnings" not in actual[-1]
+    assert "value_state" not in actual[-1]
+    assert actual[3]["execution"] == {"exit_code": 0, "instance_handle": "opaque"}
+    assert all(record["export_evaluation"] == "NOT_EVALUATED" for record in actual)
