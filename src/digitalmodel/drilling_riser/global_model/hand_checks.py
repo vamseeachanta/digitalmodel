@@ -8,6 +8,12 @@
 
 These use only the spec data, never the OrcaFlex solver, so they can serve as the
 reference side of a model-versus-hand comparison. SI units throughout.
+
+These are mechanics implementations, not verified API RP 16Q or ISO 13624-1
+requirements. ``hand_check_provenance()`` supplies the separate method inventory
+and missing standards evidence; numerical agreement alone establishes no
+standards compliance. Derivations and independent examples are recorded in
+``docs/domains/drilling_riser/hand-check-methods.html``.
 """
 
 from __future__ import annotations
@@ -19,8 +25,11 @@ from typing import Iterable, Sequence
 import numpy as np
 from scipy.linalg import eigh
 
+from .method_provenance import hand_check_provenance as hand_check_provenance
 from .spec import LineSection, RiserGlobalModelSpec
 
+# NIST, 2022 CODATA, "standard acceleration of gravity" (exact convention):
+# https://physics.nist.gov/cgi-bin/cuu/Value?gn ; not site-specific gravity.
 G = 9.80665
 
 
