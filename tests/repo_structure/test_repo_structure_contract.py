@@ -133,3 +133,89 @@ def test_structure_tests_run_in_contracts_domain():
                      if root in row.get("test_roots", [])
                      or root in shlex.split(row.get("command", ""))]
     assert registrations == ["tests-contracts"]
+
+
+@pytest.mark.parametrize("version", [True, 1.0, "1", None])
+def test_schema_version_requires_an_integer(version):
+    rules = config()
+    rules["version"] = version
+    assert checker().validate_config(rules) == ["config: schema-version"]
+
+
+@pytest.mark.parametrize("value", [[{}], [[]], [None], ["maintainer", "maintainer"]])
+def test_required_metadata_is_a_unique_list_of_field_names(value):
+    rules = config()
+    rules["required_metadata_for_exceptions"] = value
+    assert checker().validate_config(rules) == ["config: exception-required-fields"]
+
+
+def test_required_metadata_cannot_repeat_an_otherwise_complete_field():
+    rules = config()
+    rules["required_metadata_for_exceptions"].append("maintainer")
+    assert checker().validate_config(rules) == ["config: exception-required-fields"]
+
+
+@pytest.mark.parametrize("value", ["none", "N/A", "not applicable", "-", "?"])
+@pytest.mark.parametrize("field", ["maintainer", "reason"])
+def test_exception_metadata_rejects_empty_meaning(field, value):
+    rules = config()
+    row = exception()
+    row[field] = value
+    rules["durable_exceptions"] = [row]
+    assert f"exception[1]: {field}" in checker().validate_config(rules)
+
+
+def test_permanent_justification_length_excludes_padding():
+    rules = config()
+    row = exception()
+    row["category"] = "permanent_durable_generated_evidence"
+    row["follow_up_issue_or_permanent_justification"] = "permanent: fixture" + " " * 80
+    rules["durable_exceptions"] = [row]
+    assert "exception[1]: permanent-justification" in checker().validate_config(rules)
+
+
+@pytest.mark.parametrize("path", ["C:/escape", "src/", "src/file\nname.py", "src/file\x00.py"])
+def test_paths_are_normalized_and_portable(path):
+    assert checker().check_paths([path], config()) == ["<invalid-path>: relative-path"]
+
+
+@pytest.mark.parametrize("case", ["top-level", "nested", "merged", "unhashable"])
+def test_cli_rejects_duplicate_yaml_keys(tmp_path, case):
+    """A second key must not replace either a rule list or a nested allowlist."""
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    contract = tmp_path / "contract.yml"
+    text = yaml.safe_dump(config())
+    if case == "top-level":
+        text += "\ngenerated_patterns: []\n"
+    elif case == "nested":
+        text = text.replace("root_allowlist:\n", "root_allowlist:\n  files: []\n")
+    elif case == "merged":
+        text = text.replace("root_allowlist:\n", "root_allowlist:\n  <<: {files: []}\n")
+    else:
+        text += "\n? [invalid]\n: value\n"
+    contract.write_text(text)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--repo", str(tmp_path), "--config", str(contract)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 2
+    assert result.stderr == "structure: cannot read repository paths or contract\n"
+    assert "Traceback" not in result.stderr
+
+
+def test_worked_path_classification_example():
+    """Hand evaluation of the approved plan's Classification Rules (2026-05-07).
+
+    README.md is root-allowlisted; the maintenance script is under scripts/.
+    coverage.xml is generated and absent from the root allowlist: two rules.
+    src/tests/example.py matches src/**/tests/**, including zero intervening
+    directories: one rule. Thus four inputs produce exactly three violations.
+    The expected list is derived here by rule membership, without the checker.
+    """
+    paths = ["README.md", "scripts/maintenance/example.py", "coverage.xml",
+             "src/tests/example.py"]
+    assert checker().check_paths(paths, config()) == [
+        "coverage.xml: generated-tracked-path",
+        "coverage.xml: root-allowlist",
+        "src/tests/example.py: forbidden-path",
+    ]
