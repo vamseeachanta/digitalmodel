@@ -9,11 +9,11 @@ HAT + surge is the supplied coincident still-water level; crest heights are
 relative to it (never absolute crest elevations). Return periods, clearance,
 kinematics and coefficients come from the platform's assessment basis.
 
-The horizontal silhouette estimate F = rho * Cd * A * U**2 / 2 is generic drag,
-not a qualified API/ISO wave-in-deck procedure or a SIM acceptance verdict.
-No licensed thresholds or coefficients are supplied. Slamming, uplift,
-impulse, trapped air, shielding and global/local structural response require
-a full assessment under the identified code and edition.
+Wave/current deck force follows API RP 2A-WSD, 21st edition (December 2000),
+C17.6.2 and Table C17.6.2-1, with a rectangular, uniformly weighted silhouette.
+Public text: https://studylib.net/doc/26212677/api-2a-wsd (accessed 2026-10-23).
+This historical method is a screening calculation, not structural acceptance.
+Slamming, uplift, impulse and local/global response need full assessment.
 """
 
 from __future__ import annotations
@@ -28,8 +28,8 @@ DAYS_PER_YEAR = 365.25
 GEOMETRY_ROUNDOFF_M = 1e-9
 SCREENING_LIMITS = (
     "Horizontal quasi-static drag only; no slamming, uplift or impulse.",
-    "Caller supplies coincident levels, crest kinematics, solidity and coefficient basis.",
-    "Code-specific method qualification and structural acceptance are not established.",
+    "Caller supplies coincident levels, crest kinematics and weighted silhouette geometry.",
+    "Code-specific site applicability and structural acceptance are not established.",
 )
 
 
@@ -270,13 +270,52 @@ def assess_air_gap(basis: DesignBasis, history: SubsidenceHistory, as_of: date,
 
 
 @dataclass(frozen=True)
-class Silhouette:
-    """User-supplied horizontal drag inputs in SI units.
+class Citation:
+    """Public method reference carried with each screening output."""
 
-    Width is normal to flow; deck_depth is the vertical height of the exposed
-    deck envelope. Solidity scales its immersed rectangular area. Velocity is
-    the nonnegative coincident horizontal wave/current speed at the deck.
-    No coefficient or kinematic value is inferred from the code identifier.
+    standard: str = "API RP 2A-WSD"
+    edition: str = "21st edition, December 2000; Supplement 1, December 2002"
+    clause: str = "C17.6.2; Table C17.6.2-1"
+    source: str = "https://studylib.net/doc/26212677/api-2a-wsd"
+
+
+API_METHOD = Citation()
+# Table columns: end-on/broadside, diagonal; no angle interpolation is supplied.
+API_DECK_COEFFICIENTS = {
+    "heavily_equipped": (2.5, 1.9),
+    "moderately_equipped": (2.0, 1.5),
+    "bare": (1.6, 1.2),
+}
+API_WAVE_FACTORS = {"hurricane": 0.88, "winter_storm": 1.0}
+ZERO_CURRENT_BASIS = "invented input: zero current; blockage 1.0 has no effect"
+
+
+@dataclass(frozen=True)
+class CoefficientProvenance:
+    """Value, source and use of a dimensionless calculation factor."""
+
+    name: str
+    value: float
+    source: str
+    used_in: str
+
+
+@dataclass(frozen=True)
+class Silhouette:
+    """API rectangular silhouette screen inputs, SI units.
+
+    width_m and orthogonal_width_m define the two projected face widths.
+    The original deck underside must be the lowest silhouette elevation;
+    deck_depth_m reaches the top of solid equipment. Solidity is the caller's
+    uniformly distributed weighted area ratio, not an arbitrary porosity:
+    C17.6.2(a) counts solid portions fully and empty light framing at half area.
+    Vertically nonuniform decks require separate area integration outside this
+    rectangular screen. Legs/bracing above cellar deck belong in the silhouette.
+    velocity_m_s is unmodified maximum horizontal wave speed at the lower of
+    crest and silhouette top, not combined wave/current speed. Current is
+    nonnegative and in-line; opposing/oblique currents are outside this screen.
+    Caller basis strings identify geometry and current inputs, including any
+    invented input. Cd must match the cited table for deck type and heading.
     """
 
     width_m: float
@@ -286,6 +325,13 @@ class Silhouette:
     drag_coefficient: float
     density_kg_m3: float
     coefficient_basis: str
+    storm_type: str = "hurricane"
+    deck_type: str = "moderately_equipped"
+    heading_deg: float = 0.0
+    orthogonal_width_m: float = 0.0
+    current_m_s: float = 0.0
+    current_blockage_factor: float = 1.0
+    current_basis: str = ZERO_CURRENT_BASIS
 
     def __post_init__(self) -> None:
         for name in ("width_m", "deck_depth_m", "drag_coefficient", "density_kg_m3"):
@@ -293,36 +339,83 @@ class Silhouette:
             _number(name, value, 0)
             if value == 0:
                 raise ValueError(f"{name} must be positive")
-        _number("solidity", self.solidity, 0)
+        _number("solidity", self.solidity, 0.5)
         if self.solidity > 1:
             raise ValueError("solidity cannot exceed one")
-        _number("velocity_m_s", self.velocity_m_s, 0)
-        _text("coefficient_basis", self.coefficient_basis)
+        for name in ("velocity_m_s", "current_m_s", "orthogonal_width_m", "heading_deg"):
+            _number(name, getattr(self, name), 0)
+        for name in ("coefficient_basis", "current_basis"):
+            _text(name, getattr(self, name))
+        if self.current_m_s and self.current_basis == ZERO_CURRENT_BASIS:
+            raise ValueError("nonzero current requires an explicit current/blockage basis")
+        if self.storm_type not in API_WAVE_FACTORS:
+            raise ValueError("identify hurricane or winter_storm")
+        if self.deck_type not in API_DECK_COEFFICIENTS:
+            raise ValueError("identify heavily_equipped, moderately_equipped or bare")
+        if self.heading_deg not in (0, 45, 90):
+            raise ValueError("only end-on, diagonal and broadside headings are supported")
+        if self.heading_deg and not self.orthogonal_width_m:
+            raise ValueError("nonzero heading requires orthogonal_width_m")
+        expected = API_DECK_COEFFICIENTS[self.deck_type][self.heading_deg == 45]
+        if self.drag_coefficient != expected:
+            raise ValueError("drag_coefficient must match API Table C17.6.2-1")
+        _number("current_blockage_factor", self.current_blockage_factor, 0)
+        if not 0 < self.current_blockage_factor <= 1:
+            raise ValueError("current blockage factor must be in (0, 1]")
 
 
 @dataclass(frozen=True)
 class WaveInDeckScreen:
-    """Horizontal drag estimate; a zero estimate does not exclude impact loads."""
+    """API horizontal deck-force screen; zero force does not exclude impacts."""
 
     wetted_silhouette_m2: float
     horizontal_force_kn: float
     requires_full_assessment: bool
     assessment_basis: AssessmentBasis
     coefficient_basis: str
+    effective_velocity_m_s: float
+    force_elevation_m: float | None
+    coefficients: tuple[CoefficientProvenance, ...]
+    method_basis: Citation = API_METHOD
     status: str = "screening_only"
     limits: tuple[str, ...] = SCREENING_LIMITS
 
 
 def screen_wave_in_deck(snapshot: AirGapSnapshot, silhouette: Silhouette) -> WaveInDeckScreen:
-    """Estimate horizontal silhouette drag with immersion capped at deck depth."""
+    """Apply C17.6.2(a-d): F=0.5*rho*Cd*A*(aw*V+ab*U)^2.
+
+    Force elevation uses half the wetted envelope height above its bottom.
+    This implements the cited historical method, not site/code qualification.
+    """
     clearance = snapshot.crest_clearance_m
     immersion = (0.0 if abs(clearance) <= GEOMETRY_ROUNDOFF_M
                  else min(silhouette.deck_depth_m, max(0.0, -clearance)))
-    area = silhouette.width_m * immersion * silhouette.solidity
+    angle = math.radians(silhouette.heading_deg)
+    area = immersion * silhouette.solidity * (
+        silhouette.width_m * math.cos(angle)
+        + silhouette.orthogonal_width_m * math.sin(angle))
+    wave_factor = API_WAVE_FACTORS[silhouette.storm_type]
+    speed = (wave_factor * silhouette.velocity_m_s
+             + silhouette.current_blockage_factor * silhouette.current_m_s)
     force_kn = (0.5 * silhouette.density_kg_m3 * silhouette.drag_coefficient
-                * area * silhouette.velocity_m_s**2 / 1000)
+                * area * speed**2 / 1000)
+    provenance = (
+        CoefficientProvenance("Cd", silhouette.drag_coefficient,
+                              "API Table C17.6.2-1: " + silhouette.deck_type,
+                              "force multiplier"),
+        CoefficientProvenance("wave kinematics", wave_factor,
+                              "API C17.6.2(c): " + silhouette.storm_type, "wave speed"),
+        CoefficientProvenance("current blockage", silhouette.current_blockage_factor,
+                              silhouette.current_basis, "current speed"),
+        CoefficientProvenance("weighted area ratio", silhouette.solidity,
+                              silhouette.coefficient_basis, "projected area"),
+        CoefficientProvenance("force prefactor", 0.5, "API C17.6.2(c)", "force"),
+        CoefficientProvenance("elevation fraction", 0.5, "API C17.6.2(d)", "load elevation"),
+    )
+    elevation = snapshot.deck_elevation_m + 0.5 * immersion if immersion else None
     return WaveInDeckScreen(area, force_kn, snapshot.wave_contact,
-                           snapshot.assessment_basis, silhouette.coefficient_basis)
+                           snapshot.assessment_basis, silhouette.coefficient_basis,
+                           speed, elevation, provenance)
 
 
 @dataclass(frozen=True)

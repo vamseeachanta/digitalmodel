@@ -139,15 +139,15 @@ def test_silhouette_hand_calculation_and_depth_cap(basis, history, silhouette):
     # At 2028: settlement 3 m, deck 12 m, total crest 13 m, immersion 1 m.
     snap = assess_air_gap(basis, history, date(2028, 1, 1)).snapshots[0]
     load = screen_wave_in_deck(snap, silhouette)
-    # A = 20*1*0.5 = 10 m2; F = 0.5*1025*2*10*4^2 = 164000 N.
+    # API C17.6.2 hurricane factor: A=10; F=0.5*1025*2*10*(0.88*4)^2.
     assert load.wetted_silhouette_m2 == pytest.approx(10.0)
-    assert load.horizontal_force_kn == pytest.approx(164.0)
+    assert load.horizontal_force_kn == pytest.approx(127.0016)
     assert load.requires_full_assessment
     assert load.assessment_basis == basis.assessment_basis
     assert load.coefficient_basis == "invented coefficient"
     assert load.status == "screening_only"
     deep = replace(snap, crest_clearance_m=-10)
-    assert screen_wave_in_deck(deep, silhouette).horizontal_force_kn == pytest.approx(492)
+    assert screen_wave_in_deck(deep, silhouette).horizontal_force_kn == pytest.approx(381.0048)
 
 
 @pytest.mark.parametrize("clearance,contact", [(1.0, False), (0.0, True)])
@@ -252,3 +252,50 @@ def test_catalog_registers_air_gap():
             if "subsidence" in row.mechanism]
     assert len(rows) == 1
     assert "air-gap" in rows[0].engines and rows[0].status == "engine"
+
+
+def test_api_reference_calculation_with_current_and_diagonal(basis, history, silhouette):
+    # API RP 2A-WSD, 21st ed., December 2000, C17.6.2 steps a-d,
+    # Table C17.6.2-1: https://studylib.net/doc/26212677/api-2a-wsd
+    # Invented geometry/kinematics: immersion=2 m, widths=20 and 10 m,
+    # solid area ratio=1, V=4 m/s, U=1 m/s, blockage=0.8, rho=1025.
+    # Heavily equipped, diagonal Cd=1.9; hurricane wave factor=0.88.
+    # A=(20*2+10*2)/sqrt(2)=42.4264068712 m2; speed=.88*4+.8*1=4.32.
+    # F=.5*1025*1.9*42.4264068712*4.32^2/1000=770.994387984 kN.
+    # Load elevation = deck elevation + 0.5*2 = deck elevation + 1 m.
+    snap = assess_air_gap(basis, history, date(2028, 1, 1)).snapshots[0]
+    snap = replace(snap, crest_clearance_m=-2)
+    inputs = replace(silhouette, solidity=1, orthogonal_width_m=10,
+                     heading_deg=45, deck_type="heavily_equipped",
+                     drag_coefficient=1.9, current_m_s=1, current_blockage_factor=0.8,
+                     current_basis="invented input", coefficient_basis="API table")
+    result = screen_wave_in_deck(snap, inputs)
+    assert result.wetted_silhouette_m2 == pytest.approx(42.4264068712)
+    assert result.effective_velocity_m_s == pytest.approx(4.32)
+    assert result.horizontal_force_kn == pytest.approx(0.5 * 1025 * 1.9 * (60 / math.sqrt(2)) * 4.32**2 / 1000)
+    assert result.force_elevation_m == pytest.approx(snap.deck_elevation_m + 1)
+    assert result.method_basis.clause == "C17.6.2; Table C17.6.2-1"
+    assert result.method_basis.standard == "API RP 2A-WSD"
+    assert all(item.source and item.used_in for item in result.coefficients)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("storm_type", "unknown"), ("heading_deg", 30), ("deck_type", "unknown"),
+    ("current_blockage_factor", 0), ("current_blockage_factor", 1.1),
+    ("current_m_s", -1), ("current_basis", ""), ("drag_coefficient", 2.5),
+    ("current_m_s", 1), ("solidity", 0.4),
+])
+def test_api_rejects_unsupported_or_uncited_inputs(silhouette, field, value):
+    with pytest.raises(ValueError):
+        replace(silhouette, **{field: value})
+
+
+def test_api_winter_storm_and_broadside(basis, history, silhouette):
+    snap = assess_air_gap(basis, history, date(2028, 1, 1)).snapshots[0]
+    inputs = replace(silhouette, storm_type="winter_storm", heading_deg=90,
+                     orthogonal_width_m=30)
+    result = screen_wave_in_deck(snap, inputs)
+    assert result.wetted_silhouette_m2 == pytest.approx(15)
+    assert result.horizontal_force_kn == pytest.approx(246)
+    with pytest.raises(ValueError):
+        replace(silhouette, heading_deg=45)

@@ -20,8 +20,8 @@ they do not establish structural acceptance or lifting feasibility.</p></section
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-23</td><td>Initial clearance and remediation example to expose subsidence screening.</td></tr></tbody></table></section>
 <section><h2>Design basis</h2>
-<p>All example values are invented and labelled assumed, based on previous experience.
-They are arithmetic inputs, not site data or values taken from a licensed standard.
+<p>Example geometry, density and kinematics are invented inputs, labelled assumed, based on previous experience.
+Method coefficients are attributed separately below; the example is not site data.
 SI units and a common invented fixed datum apply. Original deck underside:
 16.0 m; HAT: 2.0 m;
 coincident surge: 1.0 m.
@@ -58,7 +58,7 @@ numerical round-off, which is not an engineering clearance tolerance.</p>
 <tr><td>2028-01-01</td><td>operating</td><td>13.0</td><td>10.0</td><td>2.0</td><td>1.5</td><td>true</td><td>false</td><td>0.0</td></tr>
 <tr><td>2028-01-01</td><td>design</td><td>13.0</td><td>10.0</td><td>0.0</td><td>-1.5</td><td>false</td><td>true</td><td>0.0</td></tr>
 <tr><td>2032-01-01</td><td>operating</td><td>12.0</td><td>9.0</td><td>1.0</td><td>0.5</td><td>true</td><td>false</td><td>0.0</td></tr>
-<tr><td>2032-01-01</td><td>design</td><td>12.0</td><td>9.0</td><td>-1.0</td><td>-2.5</td><td>false</td><td>true</td><td>164.0</td></tr>
+<tr><td>2032-01-01</td><td>design</td><td>12.0</td><td>9.0</td><td>-1.0</td><td>-2.5</td><td>false</td><td>true</td><td>127.0</td></tr>
 </tbody></table>
 <table><thead><tr><th scope="col">Case</th><th scope="col">First daily breach</th><th scope="col">Breach year</th><th scope="col">Horizon</th></tr></thead><tbody>
 <tr><td>operating</td><td>none in horizon</td><td>none</td><td>2032-01-01</td></tr>
@@ -69,18 +69,42 @@ from the first survey to the reported horizon, including historical crossings.
 An already-breached first survey bounds the onset; it cannot identify an earlier date.
 No breach in the horizon is not an unlimited-life result.</p></section>
 <section><h2>Wave-in-deck screening</h2>
-<p>Status: <code>screening_only</code>. Wetted silhouette = width times immersed deck depth
-times solidity. Immersion is capped at the deck envelope depth.
-Horizontal force = 0.5 times density times drag coefficient times wetted area
-times coincident horizontal speed squared; N are converted to kN.</p>
-<p>Example width 20.0 m; envelope depth 3.0 m;
-solidity 0.5; speed 4.0 m/s;
-drag coefficient 2.0; density 1025.0 kg/m3.
-Coefficient basis: invented coefficient for hand calculation only.
-At 2032-01-01 the design crest immerses 1.0 m:
-area = 20.0 times 1.0 times 0.5 = 10.0 m2; horizontal drag = 164.0 kN.
-At first touch the drag is zero but contact still requires a full assessment.</p>
-<ul><li>Horizontal quasi-static drag only; no slamming, uplift or impulse.</li><li>Caller supplies coincident levels, crest kinematics, solidity and coefficient basis.</li><li>Code-specific method qualification and structural acceptance are not established.</li></ul></section>
+<p>Status: <code>screening_only</code>. Method:
+<a href="https://studylib.net/doc/26212677/api-2a-wsd">API RP 2A-WSD,
+21st edition, December 2000; Supplement 1, December 2002, C17.6.2; Table C17.6.2-1</a>.
+The historical edition is identified; applicability to an actual assessment needs confirmation.</p>
+<p>For this rectangular screen, A = immersion times weighted area ratio times
+(width cos heading + orthogonal width sin heading). Immersion is capped at the
+silhouette depth. Nonuniform framing requires separate area integration.
+F = 0.5 rho Cd A (aw V + ab U)^2; division by 1000 converts N to kN.
+V is the unmodified maximum horizontal wave speed at the lower of crest and
+silhouette top. U is in-line current; opposing/oblique currents are unsupported.
+Force acts halfway up the immersed envelope. Original underside must coincide
+with the lowest silhouette elevation; depth includes the solid equipment envelope.</p>
+<p>Invented input geometry: width 20.0 m;
+envelope depth 3.0 m;
+orthogonal width 0.0 m;
+heading 0.0 degrees; weighted area ratio 0.5.
+Invented input wave speed 4.0 m/s;
+current 0.0 m/s; density 1025.0 kg/m3.
+Deck classification: moderately_equipped; storm: hurricane.
+The empty light-framing portion is represented by the uniform half-area ratio;
+the deck classification is an independent invented assumption for the overall deck.</p>
+<table><thead><tr><th scope="col">Factor</th><th scope="col">Value (-)</th><th scope="col">Source</th><th scope="col">Where used</th></tr></thead><tbody>
+<tr><td>Cd</td><td>2.0</td><td>API Table C17.6.2-1: moderately_equipped</td><td>force multiplier</td></tr>
+<tr><td>wave kinematics</td><td>0.88</td><td>API C17.6.2(c): hurricane</td><td>wave speed</td></tr>
+<tr><td>current blockage</td><td>1.0</td><td>invented input: zero current; blockage 1.0 has no effect</td><td>current speed</td></tr>
+<tr><td>weighted area ratio</td><td>0.5</td><td>invented input: uniform empty light framing, area ratio 0.5; API C17.6.2(a)</td><td>projected area</td></tr>
+<tr><td>force prefactor</td><td>0.5</td><td>API C17.6.2(c)</td><td>force</td></tr>
+<tr><td>elevation fraction</td><td>0.5</td><td>API C17.6.2(d)</td><td>load elevation</td></tr>
+</tbody></table>
+<p>At 2032-01-01 the design crest immerses 1.0 m:
+area = 10.0 m2;
+effective speed = 3.52 m/s;
+horizontal force = 127.0 kN;
+force elevation = 12.5 m in the common datum.
+At first touch the force is zero but contact still requires a full assessment.</p>
+<ul><li>Horizontal quasi-static drag only; no slamming, uplift or impulse.</li><li>Caller supplies coincident levels, crest kinematics and weighted silhouette geometry.</li><li>Code-specific site applicability and structural acceptance are not established.</li></ul></section>
 <section><h2>Remediation options</h2>
 <p>Target service end: 2032-01-01; governing case:
 design. Minimum lift restores all supplied target clearances;
@@ -95,7 +119,7 @@ Builder: <code>scripts/capabilities/build_air_gap_capability.py</code>.
 Regenerate with <code>PYTHONPATH=src python scripts/capabilities/build_air_gap_capability.py</code>.
 The builder prints wall time; tests compare regenerated bytes and hand-worked literals.</p>
 <p>Left: Code-specific API RP 2A / API RP 2SIM / ISO 19902 qualification requires
-the applicable edition, method and site basis. A public source article was not retrieved;
-no source text, figures, code coefficients or licensed criteria are reproduced.
+the applicable edition and site basis. The cited public API text supplies the
+silhouette method; no site validation or structural acceptance is established.
 Full wave-in-deck, structural response and temporary-works design remain required.</p></section>
 </body></html>

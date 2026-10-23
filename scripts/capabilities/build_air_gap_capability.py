@@ -54,7 +54,7 @@ def build_example() -> dict:
         basis, history, as_of, (date(2024, 1, 1), date(2028, 1, 1), target),
     )
     silhouette = Silhouette(20.0, 3.0, 0.5, 4.0, 2.0, 1025.0,
-                            "invented coefficient for hand calculation only")
+                            "invented input: uniform empty light framing, area ratio 0.5; API C17.6.2(a)")
     return {
         "label": "invented example platform",
         "basis": basis, "history": history, "assessment": assessment,
@@ -106,6 +106,12 @@ def render_page(example: dict) -> str:
         options.append(f"<h3>{escape(option.name)}</h3>{lift}<ol>{steps}</ol>")
     needed = "".join(f"<li>{escape(item)}</li>" for item in remediation.engineering_inputs_needed)
     limits = "".join(f"<li>{escape(item)}</li>" for item in example["loads"][0].limits)
+    load = example["loads"][-1]
+    citation = load.method_basis
+    coefficients = _table(("Factor", "Value (-)", "Source", "Where used"), [
+        (item.name, str(item.value), item.source, item.used_in)
+        for item in load.coefficients
+    ])
     return f"""<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -128,8 +134,8 @@ they do not establish structural acceptance or lifting feasibility.</p></section
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-23</td><td>Initial clearance and remediation example to expose subsidence screening.</td></tr></tbody></table></section>
 <section><h2>Design basis</h2>
-<p>All example values are invented and labelled assumed, based on previous experience.
-They are arithmetic inputs, not site data or values taken from a licensed standard.
+<p>Example geometry, density and kinematics are invented inputs, labelled assumed, based on previous experience.
+Method coefficients are attributed separately below; the example is not site data.
 SI units and a common {escape(basis.vertical_datum)} apply. Original deck underside:
 {basis.deck_underside_elevation_m:.1f} m; HAT: {basis.hat_elevation_m:.1f} m;
 coincident surge: {basis.surge_m:.1f} m.
@@ -159,17 +165,34 @@ from the first survey to the reported horizon, including historical crossings.
 An already-breached first survey bounds the onset; it cannot identify an earlier date.
 No breach in the horizon is not an unlimited-life result.</p></section>
 <section><h2>Wave-in-deck screening</h2>
-<p>Status: <code>screening_only</code>. Wetted silhouette = width times immersed deck depth
-times solidity. Immersion is capped at the deck envelope depth.
-Horizontal force = 0.5 times density times drag coefficient times wetted area
-times coincident horizontal speed squared; N are converted to kN.</p>
-<p>Example width {silhouette.width_m:.1f} m; envelope depth {silhouette.deck_depth_m:.1f} m;
-solidity {silhouette.solidity:.1f}; speed {silhouette.velocity_m_s:.1f} m/s;
-drag coefficient {silhouette.drag_coefficient:.1f}; density {silhouette.density_kg_m3:.1f} kg/m3.
-Coefficient basis: {escape(silhouette.coefficient_basis)}.
-At 2032-01-01 the design crest immerses 1.0 m:
-area = 20.0 times 1.0 times 0.5 = 10.0 m2; horizontal drag = 164.0 kN.
-At first touch the drag is zero but contact still requires a full assessment.</p>
+<p>Status: <code>{escape(load.status)}</code>. Method:
+<a href="{escape(citation.source)}">{escape(citation.standard)},
+{escape(citation.edition)}, {escape(citation.clause)}</a>.
+The historical edition is identified; applicability to an actual assessment needs confirmation.</p>
+<p>For this rectangular screen, A = immersion times weighted area ratio times
+(width cos heading + orthogonal width sin heading). Immersion is capped at the
+silhouette depth. Nonuniform framing requires separate area integration.
+F = 0.5 rho Cd A (aw V + ab U)^2; division by 1000 converts N to kN.
+V is the unmodified maximum horizontal wave speed at the lower of crest and
+silhouette top. U is in-line current; opposing/oblique currents are unsupported.
+Force acts halfway up the immersed envelope. Original underside must coincide
+with the lowest silhouette elevation; depth includes the solid equipment envelope.</p>
+<p>Invented input geometry: width {silhouette.width_m:.1f} m;
+envelope depth {silhouette.deck_depth_m:.1f} m;
+orthogonal width {silhouette.orthogonal_width_m:.1f} m;
+heading {silhouette.heading_deg:.1f} degrees; weighted area ratio {silhouette.solidity:.1f}.
+Invented input wave speed {silhouette.velocity_m_s:.1f} m/s;
+current {silhouette.current_m_s:.1f} m/s; density {silhouette.density_kg_m3:.1f} kg/m3.
+Deck classification: {escape(silhouette.deck_type)}; storm: {escape(silhouette.storm_type)}.
+The empty light-framing portion is represented by the uniform half-area ratio;
+the deck classification is an independent invented assumption for the overall deck.</p>
+{coefficients}
+<p>At 2032-01-01 the design crest immerses 1.0 m:
+area = {load.wetted_silhouette_m2:.1f} m2;
+effective speed = {load.effective_velocity_m_s:.2f} m/s;
+horizontal force = {load.horizontal_force_kn:.1f} kN;
+force elevation = {load.force_elevation_m:.1f} m in the common datum.
+At first touch the force is zero but contact still requires a full assessment.</p>
 <ul>{limits}</ul></section>
 <section><h2>Remediation options</h2>
 <p>Target service end: {remediation.target_date.isoformat()}; governing case:
@@ -185,8 +208,8 @@ Builder: <code>scripts/capabilities/build_air_gap_capability.py</code>.
 Regenerate with <code>PYTHONPATH=src python scripts/capabilities/build_air_gap_capability.py</code>.
 The builder prints wall time; tests compare regenerated bytes and hand-worked literals.</p>
 <p>Left: Code-specific API RP 2A / API RP 2SIM / ISO 19902 qualification requires
-the applicable edition, method and site basis. A public source article was not retrieved;
-no source text, figures, code coefficients or licensed criteria are reproduced.
+the applicable edition and site basis. The cited public API text supplies the
+silhouette method; no site validation or structural acceptance is established.
 Full wave-in-deck, structural response and temporary-works design remain required.</p></section>
 </body></html>
 """
