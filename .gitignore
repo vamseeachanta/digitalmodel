@@ -268,6 +268,10 @@ reports/
 !docs/reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
+
+# Shared module report boundary; module exceptions belong below this rule.
+!docs/reports/modules/
+docs/reports/modules/*
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
@@ -581,3 +585,9 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retained corrosion module report and engineering change panel.
+!docs/reports/modules/corrosion/
+docs/reports/modules/corrosion/*
+!docs/reports/modules/corrosion/report.html
+!docs/reports/modules/corrosion/changes.json

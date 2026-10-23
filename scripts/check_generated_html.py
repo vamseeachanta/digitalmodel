@@ -161,6 +161,14 @@ GENERATORS = (
         ("docs/api/structural/wall-thickness-explorer.html",),
     ),
     Generator(
+        "scripts/corrosion/build_module_report.py",
+        ("docs/reports/modules/corrosion/report.html",
+         "docs/reports/modules/corrosion/changes.json"),
+        inputs=(
+            "src/digitalmodel/reporting/assets/calc_report_format.html",
+        ),
+    ),
+    Generator(
         "scripts/corrosion/build_galvanic_explorer.py",
         ("docs/api/corrosion/galvanic-compatibility-explorer.html",),
     ),

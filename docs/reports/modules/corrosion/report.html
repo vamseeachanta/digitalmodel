@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corrosion module analysis</title>
+<style>
+  /* ============================ TOKENS ============================ */
+  :root{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+    --maxw:1080px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+      --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+      --sea:#081419; --sea-ink:#eaf2f2;
+      --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+      --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+      --good:#37c08a; --pend:#e0a13a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+    --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+    --sea:#081419; --sea-ink:#eaf2f2;
+    --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+    --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+    --good:#37c08a; --pend:#e0a13a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  /* ============================ BASE ============================ */
+  *{box-sizing:border-box}
+  .doc{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"kern" 1;overflow-x:hidden}
+  .doc :where(p,li){color:var(--ink-2)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,5vw,40px)}
+  h1,h2,h3{color:var(--ink);text-wrap:balance;line-height:1.15;letter-spacing:-.02em;margin:0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-muted);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+  var{font-style:italic;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  a{color:var(--cfd);text-underline-offset:2px}
+
+  /* ============================ MASTHEAD ============================ */
+  .masthead{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--hairline)}
+  .masthead .wrap{display:flex;align-items:center;gap:16px;height:56px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:-.01em;font-size:14px;color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--cfd)}
+  .mh-legend{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;color:var(--ink-muted);letter-spacing:.02em}
+  .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  /* ============================ HERO ============================ */
+  .hero{position:relative;background:
+      radial-gradient(120% 80% at 82% -10%, var(--cfd-soft), transparent 60%),
+      radial-gradient(90% 70% at 10% 0%, var(--ro-soft), transparent 55%);
+    border-bottom:1px solid var(--hairline)}
+  .hero .wrap{padding-top:clamp(40px,7vw,76px);padding-bottom:clamp(30px,5vw,48px)}
+  .kicker{display:inline-flex;gap:9px;align-items:center;padding:5px 12px;border:1px solid var(--hairline);
+    border-radius:999px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:22px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--cfd);box-shadow:0 0 0 4px var(--cfd-soft)}
+  .kicker span{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
+  h1{font-size:clamp(30px,5.4vw,52px);font-weight:800}
+  .lede{font-size:clamp(17px,2.2vw,21px);max-width:60ch;margin-top:18px;color:var(--ink-2)}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:38px;
+    background:var(--hairline);border:1px solid var(--hairline);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi{background:var(--surface);padding:18px 20px}
+  .kpi .v{font-family:var(--mono);font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.05}
+  .kpi .v .u{font-size:.5em;color:var(--ink-muted);font-weight:500;margin-left:2px}
+  .kpi .k{font-size:12.5px;color:var(--ink-muted);margin-top:8px;line-height:1.35}
+  .kpi.teal .v{color:var(--cfd)} .kpi.amber .v{color:var(--proj)}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+  /* ============================ SECTIONS ============================ */
+  section{padding:clamp(40px,6vw,68px) 0;border-bottom:1px solid var(--hairline)}
+  .sec-head{display:flex;gap:16px;align-items:baseline;margin-bottom:26px}
+  .sec-no{font-family:var(--mono);font-size:13px;color:var(--cfd);font-weight:700;letter-spacing:.05em;flex:none}
+  h2{font-size:clamp(22px,3.4vw,32px);font-weight:750}
+  .sec-head p{margin:8px 0 0;max-width:64ch}
+  .prose{max-width:68ch}
+  .prose p{margin:0 0 16px}
+  .prose p:last-child{margin-bottom:0}
+
+  /* device layout */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,48px);align-items:center}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .steps{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:14px}
+  .steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+  .steps .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cfd);background:var(--cfd-soft);
+    width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .steps b{color:var(--ink)}
+
+  /* formula */
+  .formula{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--hairline);border-radius:10px;
+    padding:14px 16px;font-size:15px;color:var(--ink);overflow-x:auto;letter-spacing:.01em}
+  .formula .lbl{color:var(--ink-muted);font-size:12px}
+  .def{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-family:var(--mono);font-size:12.5px;color:var(--ink-muted)}
+  .def b{color:var(--ink-2);font-weight:600}
+
+  /* figure / card */
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;box-shadow:var(--shadow);
+    padding:clamp(16px,2.4vw,26px)}
+  .fig-cap{font-size:13.5px;color:var(--ink-muted);margin-top:14px;padding-top:14px;border-top:1px solid var(--hairline);
+    display:flex;gap:10px}
+  .fig-cap .tag{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:6px;flex:none;height:fit-content}
+  .tag.cfd{background:var(--cfd-soft);color:var(--cfd)} .tag.proj{background:var(--proj-soft);color:var(--proj)}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px;justify-content:flex-end}
+  .chart-legend .lg{font-size:12px;color:var(--ink-2)}
+  .chart-title{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+  svg .grid{stroke:var(--hairline);stroke-width:1}
+  svg .axis{stroke:var(--ink-muted);stroke-width:1}
+  svg text{fill:var(--ink-muted);font-family:var(--mono);font-size:11px}
+  svg .axtitle{fill:var(--ink-2);font-size:12.5px;font-weight:600}
+
+  /* stat callouts row */
+  .callrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+  @media(max-width:760px){.callrow{grid-template-columns:1fr}}
+  .call{background:var(--surface);border:1px solid var(--hairline);border-radius:13px;padding:18px 18px;box-shadow:var(--shadow)}
+  .call .v{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--cfd);letter-spacing:-.02em}
+  .call .k{font-size:13px;color:var(--ink-2);margin-top:6px} .call .s{font-size:12px;color:var(--ink-muted);margin-top:4px}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--hairline);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:440px}
+  th,td{padding:11px 15px;text-align:right;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.hl{color:var(--ink);font-weight:600}
+  tbody tr:hover{background:var(--surface-2)}
+
+  /* status list */
+  .status{display:grid;gap:12px;margin-top:8px}
+  .st{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--surface);
+    border:1px solid var(--hairline);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .st .icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;font-family:var(--mono);font-weight:700;font-size:15px}
+  .st.ok .icon{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .icon{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .icon{background:var(--surface-2);color:var(--ink-muted);border:1px dashed var(--hairline)}
+  .st .lab{color:var(--ink);font-weight:600;font-size:15px}
+  .st .sub{color:var(--ink-muted);font-size:13px;margin-top:2px}
+  .st .pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:999px;flex:none}
+  .st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .pill{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .pill{background:var(--surface-2);color:var(--ink-muted)}
+
+  .note{background:var(--proj-soft);border:1px solid color-mix(in srgb,var(--proj) 35%,transparent);border-radius:12px;
+    padding:16px 18px;margin-top:22px;font-size:14.5px;color:var(--ink-2);display:flex;gap:12px}
+  .note .b{font-family:var(--mono);color:var(--proj);font-weight:700;font-size:12px;letter-spacing:.05em;flex:none;padding-top:1px}
+
+  /* footer */
+  footer{background:var(--sea);color:var(--sea-ink);border-bottom:none}
+  footer .wrap{padding:44px clamp(18px,5vw,40px)}
+  footer h3{color:var(--sea-ink);font-size:16px;margin-bottom:14px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  .foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr;gap:24px}}
+  footer p,footer li{color:color-mix(in srgb,var(--sea-ink) 72%,transparent);font-size:13.5px;line-height:1.6}
+  footer ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+  footer .k{font-family:var(--mono);color:color-mix(in srgb,var(--sea-ink) 55%,transparent);font-size:11px}
+  .foot-bar{border-top:1px solid rgba(255,255,255,.1);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:color-mix(in srgb,var(--sea-ink) 55%,transparent)}
+
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;z-index:60;background:var(--ink);color:var(--paper);font-family:var(--mono);
+    font-size:12px;padding:8px 11px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(4px);
+    transition:opacity .1s;max-width:240px;line-height:1.5}
+  #tip.on{opacity:1;transform:none}
+  #tip .t{color:#fff;font-weight:700}
+  .hit{cursor:crosshair}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--cfd);outline-offset:2px;border-radius:4px}
+
+  /* ============================ STANDARD-REPORT SHELL ============================ */
+  html{scroll-behavior:smooth}
+  .shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;align-items:start}
+  .toc{position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto;
+    padding:26px 20px 40px 0;border-right:1px solid var(--hairline)}
+  .toc .tt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px 4px}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:l1}
+  .toc>ol>li{counter-increment:l1;margin:2px 0}
+  .toc a{display:block;text-decoration:none;color:var(--ink-2);font-size:13.5px;padding:5px 10px;border-radius:7px;border-left:2px solid transparent;line-height:1.3}
+  .toc>ol>li>a::before{content:counter(l1) ".  ";color:var(--ink-muted);font-family:var(--mono);font-size:12px}
+  .toc a:hover{background:var(--surface-2);color:var(--ink)}
+  .toc a.active{color:var(--cfd);border-left-color:var(--cfd);background:var(--cfd-soft);font-weight:600}
+  .toc .sub{list-style:none;margin:0 0 6px;padding:0;counter-reset:l2}
+  .toc .sub li{counter-increment:l2}
+  .toc .sub a{font-size:12.5px;color:var(--ink-muted);padding:3px 10px 3px 22px}
+  .toc .sub a::before{content:counter(l1) "." counter(l2) "  ";font-family:var(--mono);font-size:11px;opacity:.8}
+  .main{min-width:0;padding:8px 0 0 clamp(20px,3vw,44px)}
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr}
+    .toc{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--hairline);padding:18px 0 22px}
+    .toc ol{columns:2;column-gap:20px} .toc .sub{columns:1}
+    .main{padding-left:0}
+  }
+
+  /* numbered L1 / L2 sections */
+  .main>section{counter-increment:sec;border-bottom:1px solid var(--hairline);padding:38px 0 40px;scroll-margin-top:72px}
+  .main{counter-reset:sec}
+  .main>section:last-child{border-bottom:none}
+  .l1head{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+  .l1head .secnum{font-family:var(--mono);font-weight:700;color:var(--cfd);font-size:15px;flex:none}
+  .l1head .secnum::after{content:counter(sec)}
+  .main>section>h2{font-size:clamp(21px,3vw,30px);font-weight:750}
+  .l1sub{color:var(--ink-muted);font-size:15px;max-width:66ch;margin:2px 0 0}
+  .l2{counter-increment:sub;padding-top:26px;scroll-margin-top:72px}
+  section{counter-reset:sub}
+  .l2head{display:flex;gap:11px;align-items:baseline;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--hairline)}
+  .l2head .n{font-family:var(--mono);font-size:12.5px;color:var(--cfd);font-weight:700;flex:none}
+  .l2head .n::after{content:counter(sec) "." counter(sub)}
+  .l2head h3{font-size:clamp(16px,2vw,20px);font-weight:700}
+
+  /* objective callout */
+  .objective{background:var(--cfd-soft);border:1px solid color-mix(in srgb,var(--cfd) 30%,transparent);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+  .objective .oh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--cfd);font-weight:700}
+  .objective p{color:var(--ink);margin:0;font-size:16px}
+  .objective .scope{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
+
+  /* data / definition tables */
+  .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
+  .kv{border:1px solid var(--hairline);border-radius:12px;overflow-x:auto;background:var(--surface);box-shadow:var(--shadow)}
+  .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+    padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
+  .kv td{border-bottom:1px solid var(--hairline)}
+  .kv tr:last-child td{border-bottom:none}
+  /* Label sized to its own content, value takes the remaining measure, so a
+     row reads as one line across the page instead of a stub with dead space
+     beside it -- and a long value wraps rather than being clipped. */
+  .kv td:first-child{color:var(--ink-2);width:1%;white-space:nowrap;padding-right:30px}
+  .kv td:last-child{width:99%;white-space:normal;overflow-wrap:break-word}
+  .kv td:last-child{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
+  .kv td .un{color:var(--ink-muted);font-weight:400;font-size:11px}
+
+  /* equation cards */
+  .eq{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;background:var(--surface);
+    border:1px solid var(--hairline);border-left:3px solid var(--cfd);border-radius:11px;padding:16px 20px;margin:14px 0;box-shadow:var(--shadow)}
+  .eq .m{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;color:var(--ink);
+    overflow-x:auto;line-height:2;letter-spacing:.01em}
+  .eq .m var{font-size:1em}
+  .eq .eno{font-family:var(--mono);font-size:13px;color:var(--ink-muted);flex:none}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;font-size:.86em}
+  .frac>.n{border-bottom:1.6px solid currentColor;padding:0 .4em 1px}
+  .frac>.d{padding:1px .4em 0}
+  .rad{white-space:nowrap}
+  .rad>.rc{border-top:1.6px solid currentColor;padding:0 .18em;margin-left:-.08em}
+  .op{color:var(--ink-muted);margin:0 .12em}
+  .defs{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 22px}
+  .defs .d{display:flex;gap:9px;font-size:13.5px;color:var(--ink-2);align-items:baseline}
+  .defs .d var{color:var(--ink);font-weight:600;min-width:2.4em;font-family:"Iowan Old Style",Palatino,Georgia,serif}
+  .defs .d .u{color:var(--ink-muted);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap}
+
+  /* flowchart */
+  .flow{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
+  .flow svg{display:block;min-width:560px;margin:0 auto}
+  .flow .fb{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:1.5}
+  .flow .fb.cfd{fill:var(--cfd-soft);stroke:var(--cfd)}
+  .flow .fb.ro{fill:var(--ro-soft);stroke:var(--ro)}
+  .flow .fb.proj{fill:var(--proj-soft);stroke:var(--proj);stroke-dasharray:5 3}
+  .flow .fl{fill:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600}
+  .flow .fs{fill:var(--ink-muted);font-family:var(--mono);font-size:10.5px}
+  .flow .fa{stroke:var(--ink-muted);stroke-width:1.6;fill:none}
+  .flow .fd{fill:var(--ink-muted)}
+
+  .refs{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:10px}
+  .refs li{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:14px;color:var(--ink-2);align-items:baseline}
+  .refs .rn{font-family:var(--mono);font-size:12px;color:var(--cfd);font-weight:700}
+  .backtop{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-muted);text-decoration:none}
+  .backtop:hover{color:var(--cfd)}
+</style>
+</head><body class="hs-doc doc">
+
+<header class="hero"><div class="wrap"><h1>Corrosion module analysis</h1>
+<p class="lede">Galvanic compatibility screening: calculated categories and evidence limits</p>
+<p>Draft for review</p></div></header>
+<div class="shell"><nav class="toc" aria-label="Contents"><ol><li><a href="#section-1">Executive summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Design data and basis</a></li><li><a href="#section-4">Analysis methodology</a></li><li><a href="#section-5">Detailed results</a></li><li><a href="#section-6">Key findings</a></li><li><a href="#section-7">Limits of use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendices and symbols</a></li></ol></nav>
+<main class="main">
+<section><div class="l1head"><h2 id="section-1">1. Executive summary</h2></div>
+<p>The corrosion module is a dissimilar-metal compatibility screening tool. Analysis is performed to determine the potential difference and protection category of a zinc–steel couple; key results are summarized below.</p>
+<ul><li>Screen material pairs before detailed corrosion assessment.
+<ul><li>The zinc–steel difference is <span data-number="cases.0.delta_v">0.40</span> V against the harsh-marine software allowable of <span data-number="cases.0.allowable_delta_v">0.15</span> V. The difference exceeds the software marginal band; protection is requested.</li></ul></li>
+<li>Retain the distinction between software screening and engineering acceptance.
+<ul><li>Independent applicability of the numerical defaults is NOT_EVALUATED. No corrosion rate, coating life or structural acceptance is established.</li></ul></li></ul>
+<p>Numerical values are taken from the <a href="#repository-basis">repository calculation basis</a>. The result for intentional zinc protection does not establish rejection of a galvanized component.</p>
+<div id="revision-history"><h3>Revision history</h3><div class="tbl-wrap"><table><caption style="caption-side:bottom;text-align:left">Report issue history; newest issue first.</caption><thead><tr><th scope="col" style="white-space:normal;text-align:left">Revision</th><th scope="col" style="white-space:normal;text-align:left">Date</th><th scope="col" style="white-space:normal;text-align:left">What changed and why</th></tr></thead><tbody><tr><td style="white-space:normal;text-align:left">1</td><td style="white-space:normal;text-align:left">2026-10-22</td><td style="white-space:normal;text-align:left">Report dispositions follow returned categories and material roles; figures, material-group wording and deterministic output are corrected.</td></tr><tr><td style="white-space:normal;text-align:left">0</td><td style="white-space:normal;text-align:left">2026-10-22</td><td style="white-space:normal;text-align:left">Galvanic screening results and evidence gaps are documented to separate software categories from engineering acceptance.</td></tr></tbody></table></div></div>
+</section>
+<section><div class="l1head"><h2 id="section-2">2. Introduction</h2></div>
+<p>Compatibility is screened from material-group indices and an environment category. The main workflow is evaluated through the public pair-screening interface and its matrix companion.</p>
+<h3>Purpose and scope</h3>
+<p>The report is used to identify pairs requiring engineering attention, reproduce the public zinc–steel example and locate the evidence needed before design use. Repository tests and the published explorer provide software evidence; an independent exposure experiment is not supplied by those records.</p>
+<h3>Not covered</h3>
+<p>Corrosion-rate models in the adjacent cathodic protection package, anode sizing, impressed-current design, stray-current assessment, inspection-based remaining life, pitting and stress-corrosion cracking are outside this module and this analysis.</p>
+</section>
+<section><div class="l1head"><h2 id="section-3">3. Design data and basis</h2></div>
+<p>The public regression example is represented as a zinc coating electrically connected to a steel substrate. The physical arrangement is used to explain the screening result; dimensions and exposure history are absent from the example.</p>
+<h3>Physical arrangement and boundary conditions</h3>
+<figure><svg viewBox="0 0 760 300" role="img" aria-labelledby="joint-title joint-description" style="width:100%">
+<title id="joint-title">Section through a wetted zinc-coated steel surface</title>
+<desc id="joint-description">A surface defect exposes steel through a zinc coating. A conductive wet film bridges zinc and steel; the substrate provides electrical continuity. No dimensions or mesh are specified.</desc>
+<path id="wet-film" d="M60 55 H700 V110 H420 V125 H320 V110 H60 Z" fill="var(--cfd-soft)" stroke="var(--cfd)"/>
+<rect x="60" y="110" width="260" height="30" fill="var(--surface-2)" stroke="currentColor"/>
+<rect x="420" y="110" width="280" height="30" fill="var(--surface-2)" stroke="currentColor"/>
+<path d="M60 140 H320 V125 H420 V140 H700 V235 H60 Z" fill="var(--ro-soft)" stroke="currentColor"/>
+<text x="75" y="87" fill="currentColor">Conductive wet film: ionic path</text>
+<text x="75" y="132" fill="currentColor">Zinc coating</text>
+<text x="450" y="132" fill="currentColor">Zinc coating</text>
+<text x="75" y="210" fill="currentColor">Steel substrate: electrical continuity</text>
+<path d="M245 175 H480 M470 169 L480 175 L470 181" fill="none" stroke="currentColor"/>
+<text x="250" y="165" fill="currentColor">Electron path towards exposed steel</text>
+<path d="M370 30 V120" stroke="currentColor"/>
+<text x="365" y="23" text-anchor="middle" fill="currentColor">Surface defect exposes steel</text>
+<text x="60" y="275" fill="currentColor">Not to scale. Coating thickness, exposed areas and wet-film chemistry are unspecified.</text>
+</svg><figcaption>Figure A. Zinc–steel coating cross-section with the assumed conductive paths. The algebraic screen has no mesh or field boundary solution.</figcaption></figure>
+<h3>Inputs and acceptance basis</h3>
+<p>Material keys, environment key, an optional environment-to-voltage mapping and an optional marginal-band width are accepted. The shipped catalogue contains <span data-number="metals_count">16</span> material groups and <span data-number="environments_count">3</span> environment classes, counted directly from the <a href="#repository-basis">repository tables</a>.</p>
+<p>The example uses the zinc wrought / die-cast / plated group, as named by the implementation; it does not represent a separately qualified hot-dip galvanizing group. The input indices are <span data-number="indices.zinc">1.25</span> V for zinc and <span data-number="indices.carbon_steel">0.85</span> V for carbon steel, relative to the module's gold reference. The marginal band is <span data-number="marginal_band_v">0.05</span> V. These are implementation data, not independently established electrochemical properties or approved criteria. Their external edition and table provenance are NOT_EVALUATED.</p>
+<p>ASSUMED - to be confirmed: the wetted coating and substrate remain electrically connected. Area ratio, alloy condition, water chemistry, temperature, coating thickness and design life are required for a physical corrosion assessment and remain NOT_EVALUATED here. No numerical substitute is introduced.</p>
+<p>The software limit is retained to reproduce existing behaviour, not to set a design acceptance criterion. A qualified environment limit is required before an engineering disposition is made. The <a href="#faa-basis">public physical guidance</a> supports considering electrical contact, electrolyte and relative surface areas.</p>
+</section>
+<section><div class="l1head"><h2 id="section-4">4. Analysis methodology</h2></div>
+<p>An absolute index difference is calculated and compared with an environment-dependent allowable. The returned category is symmetric in material order; the anodic designation follows the larger index.</p>
+<h3>Equations and category definitions</h3>
+<div class="eq"><span class="m">ΔV = | I<sub>a</sub> − I<sub>b</sub> |</span></div>
+<p>ΔV is potential difference in volts; I<sub>a</sub> and I<sub>b</sub> are the material-group anodic indices in volts. L is the environment allowable in volts and B is the marginal-band width in volts. The index definition and category equations are the <a href="#repository-basis">repository screening algorithm</a>; they are not a mixed-potential or current-balance solution.</p>
+<ul><li>The difference is within the software allowable when ΔV ≤ L; the returned category is “OK”.</li>
+<li>The difference exceeds the software allowable within its marginal band when L &lt; ΔV ≤ L + B; the returned category is “MARGINAL”.</li>
+<li>The difference exceeds the software marginal band when ΔV &gt; L + B; protection is requested and the returned category is “PROTECT”.</li></ul>
+<p>A floating-point comparison allowance and output rounding are applied by the implementation. They are numerical conventions, not physical uncertainty bounds; their exact definitions are recorded in the repository algorithm reference.</p>
+<h3>Outputs and use sequence</h3>
+<p>A result record contains both material keys, environment key, potential difference, allowable difference, category, anodic and cathodic members, and explanatory notes. A square table of categories is returned by the matrix interface. The fastener and coating notes are qualitative and are not an area-ratio calculation.</p>
+<p>The documented material keys are selected, an environment basis is qualified, the pair is screened and the returned difference is compared with the returned limit. Unknown material or environment keys raise an error. Custom threshold mappings are supported; numerical input validation for negative or non-finite custom values is not established by the existing tests.</p>
+</section>
+<section><div class="l1head"><h2 id="section-5">5. Detailed results</h2></div>
+<p>The zinc–steel public regression case is calculated by calling the module. Environment variation is then calculated with the same material pair; no measured corrosion behaviour is inferred.</p>
+<article id="worked-example"><h3>Worked example: zinc coating and carbon steel</h3>
+<p>The source is the <a href="#public-example">public regression example</a>. The supplied indices give |<span data-number="indices.zinc">1.25</span> − <span data-number="indices.carbon_steel">0.85</span>| = <span data-number="cases.0.delta_v">0.40</span> V. The returned harsh-marine allowable is <span data-number="cases.0.allowable_delta_v">0.15</span> V and the marginal-band width is <span data-number="marginal_band_v">0.05</span> V.</p>
+<p>The difference minus allowable is <span data-number="cases.0.excess_v">0.25</span> V; the upper marginal boundary is <span data-number="cases.0.marginal_upper_v">0.20</span> V. The difference exceeds the software marginal band; protection is requested. Zinc is returned as anodic and carbon steel as cathodic.</p>
+<p>The returned request is a generic dissimilar-metal category. For an intentional sacrificial zinc coating, zinc consumption is part of the protection mechanism; the example uses the wrought / die-cast / plated material group and does not qualify hot-dip galvanizing; coating adequacy is NOT_EVALUATED by this screen. For an unintended conductive joint, electrical isolation is the recommended next design action, supported by the <a href="#faa-basis">public physical guidance</a>.</p></article>
+<figure id="environment-chart"><svg viewBox="0 0 770 390" role="img" aria-labelledby="chart-title chart-description" style="width:100%">
+<title id="chart-title">Zinc–steel potential difference by environment</title>
+<desc id="chart-description">Separate markers show potential difference, software allowable and upper marginal boundary; environment classes are discrete. Focus or hover a point for values in volts.</desc>
+<path d="M80 40 V300 H700" fill="none" stroke="currentColor"/>
+<text x="25" y="180" transform="rotate(-90 25 180)" text-anchor="middle" fill="currentColor">Potential difference (V)</text>
+<text x="385" y="365" text-anchor="middle" fill="currentColor">Environment class</text>
+<g data-y-tick="0.0"><path d="M75 300.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="305.00" text-anchor="end" fill="currentColor">0.0</text></g><g data-y-tick="0.1"><path d="M75 260.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="265.00" text-anchor="end" fill="currentColor">0.1</text></g><g data-y-tick="0.2"><path d="M75 220.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="225.00" text-anchor="end" fill="currentColor">0.2</text></g><g data-y-tick="0.3"><path d="M75 180.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="185.00" text-anchor="end" fill="currentColor">0.3</text></g><g data-y-tick="0.4"><path d="M75 140.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="145.00" text-anchor="end" fill="currentColor">0.4</text></g><g data-y-tick="0.5"><path d="M75 100.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="105.00" text-anchor="end" fill="currentColor">0.5</text></g><g data-y-tick="0.6"><path d="M75 60.00 H700" stroke="currentColor" opacity="0.2"/><text x="68" y="65.00" text-anchor="end" fill="currentColor">0.6</text></g><g data-limit="delta_v"><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Potential difference: 0.40 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Potential difference: 0.40 V." cx="150" cy="140.00" r="7" fill="var(--ro)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Potential difference: 0.40 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Potential difference: 0.40 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Potential difference: 0.40 V." cx="385" cy="140.00" r="7" fill="var(--ro)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Potential difference: 0.40 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Potential difference: 0.40 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Potential difference: 0.40 V." cx="620" cy="140.00" r="7" fill="var(--ro)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Potential difference: 0.40 V.</title></circle></g><g data-limit="allowable_delta_v"><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Software allowable: 0.15 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Software allowable: 0.15 V." cx="150" cy="240.00" r="7" fill="var(--cfd)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Software allowable: 0.15 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Software allowable: 0.25 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Software allowable: 0.25 V." cx="385" cy="200.00" r="7" fill="var(--cfd)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Software allowable: 0.25 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Software allowable: 0.50 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Software allowable: 0.50 V." cx="620" cy="100.00" r="7" fill="var(--cfd)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Software allowable: 0.50 V.</title></circle></g><g data-limit="marginal_upper_v"><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Upper marginal boundary: 0.20 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Upper marginal boundary: 0.20 V." cx="150" cy="220.00" r="7" fill="var(--proj)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Harsh marine; demand: 0.40 V; limit: 0.15 V; upper marginal boundary: 0.20 V; Upper marginal boundary: 0.20 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Upper marginal boundary: 0.30 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Upper marginal boundary: 0.30 V." cx="385" cy="180.00" r="7" fill="var(--proj)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Normal industrial; demand: 0.40 V; limit: 0.25 V; upper marginal boundary: 0.30 V; Upper marginal boundary: 0.30 V.</title></circle><circle tabindex="0" role="img" aria-label="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Upper marginal boundary: 0.55 V." data-chart-note="Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Upper marginal boundary: 0.55 V." cx="620" cy="80.00" r="7" fill="var(--proj)"><title>Zinc–steel case; component: zinc coating and steel substrate; environment: Controlled indoor; demand: 0.40 V; limit: 0.50 V; upper marginal boundary: 0.55 V; Upper marginal boundary: 0.55 V.</title></circle></g><text x="150" y="330" text-anchor="middle" fill="currentColor">Harsh marine</text><text x="385" y="330" text-anchor="middle" fill="currentColor">Normal industrial</text><text x="620" y="330" text-anchor="middle" fill="currentColor">Controlled indoor</text></svg>
+<figcaption>Figure B. Potential difference and the repository screening boundaries. Blue markers: demand. Green markers: allowable. Orange markers: upper marginal boundary. Markers are not joined between environment classes. Values are also tabulated below.</figcaption>
+<p id="chart-readout" aria-live="polite">Focus or hover a plotted point to read the case, component, demand, limit and units.</p></figure>
+<div class="tbl-wrap"><table><caption style="caption-side:bottom;text-align:left">Table A. Zinc–steel screen. A negative difference minus allowable is below the software limit; no physical safety margin is established.</caption><thead><tr><th scope="col" style="white-space:normal;text-align:left">Environment</th><th scope="col" style="white-space:normal;text-align:left">Difference (V)</th><th scope="col" style="white-space:normal;text-align:left">Allowable (V)</th><th scope="col" style="white-space:normal;text-align:left">Difference minus allowable (V)</th><th scope="col" style="white-space:normal;text-align:left">Screening result</th><th scope="col" style="white-space:normal;text-align:left">Source</th></tr></thead><tbody><tr><td style="white-space:normal;text-align:left">Harsh marine</td><td style="white-space:normal;text-align:left"><span data-number="cases.0.delta_v">0.40</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.0.allowable_delta_v">0.15</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.0.excess_v">0.25</span></td><td style="white-space:normal;text-align:left">The difference exceeds the software marginal band; protection is requested.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr><tr><td style="white-space:normal;text-align:left">Normal industrial</td><td style="white-space:normal;text-align:left"><span data-number="cases.1.delta_v">0.40</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.1.allowable_delta_v">0.25</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.1.excess_v">0.15</span></td><td style="white-space:normal;text-align:left">The difference exceeds the software marginal band; protection is requested.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr><tr><td style="white-space:normal;text-align:left">Controlled indoor</td><td style="white-space:normal;text-align:left"><span data-number="cases.2.delta_v">0.40</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.2.allowable_delta_v">0.50</span></td><td style="white-space:normal;text-align:left"><span data-number="cases.2.excess_v">−0.10</span></td><td style="white-space:normal;text-align:left">The difference is within the software allowable.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr></tbody></table></div>
+<p>The potential difference remains fixed while the environment limit changes. Controlled indoor: The difference is within the software allowable. This category establishes no coating life or field performance.</p>
+<h3>Existing validation evidence</h3>
+<p>The existing tests exercise index anchors, thresholds, material-order symmetry, identical-metal cases, boundary examples, ordering with potential difference, anodic designation, unknown keys, custom thresholds and matrix consistency. Anchor tests repeat repository values and are not independent evidence for their physical accuracy.</p>
+<div class="tbl-wrap"><table><caption style="caption-side:bottom;text-align:left">Table B. Recomputed software consistency evidence across the complete current material catalogue and environment set.</caption><thead><tr><th scope="col" style="white-space:normal;text-align:left">Evidence comparison</th><th scope="col" style="white-space:normal;text-align:left">Result</th><th scope="col" style="white-space:normal;text-align:left">Source</th></tr></thead><tbody><tr><td style="white-space:normal;text-align:left">Matrix symmetry</td><td style="white-space:normal;text-align:left">The evidence agrees.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr><tr><td style="white-space:normal;text-align:left">Same-material diagonal within the software allowable</td><td style="white-space:normal;text-align:left">The evidence agrees.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr><tr><td style="white-space:normal;text-align:left">Matrix cells match public pair calls</td><td style="white-space:normal;text-align:left">The evidence agrees.</td><td style="white-space:normal;text-align:left"><a href="#repository-basis">Repository calculation basis</a></td></tr></tbody></table></div>
+<p>The published explorer is a second presentation of the same module calculations. Agreement with it is regression evidence, not independent validation. No measured-rate dataset or independently qualified physical benchmark is supplied by these cited screening records.</p>
+</section>
+<section><div class="l1head"><h2 id="section-6">6. Key findings</h2></div>
+<p>Harsh marine: The difference exceeds the software marginal band; protection is requested. The anodic direction is reproduced across material order and matrix presentation.</p>
+<p>The example establishes deterministic software behaviour against repository data. External provenance for numerical acceptance criteria, coating adequacy and physical rate prediction remain NOT_EVALUATED. The harsher environment label changes the threshold rather than predicting the effects of salinity, wetting time or temperature.</p>
+</section>
+<section><div class="l1head"><h2 id="section-7">7. Limits of use</h2></div>
+<p>Use is restricted to material-pair screening with explicit qualification of the inputs and criteria. No structural, coating-life or maintenance interval decision is established.</p>
+<p>Passivation, local chemistry, polarization, electrical resistance, current distribution and exposed area are not model inputs. The <a href="#faa-basis">public physical guidance</a> notes that service conditions can alter potential differences and even relative ordering. Material-group indices therefore do not establish a site-specific galvanic driving voltage.</p>
+<p>The source description attributes the defaults to a dissimilar-metals standard without an edition or clause. That attribution is retained as an unresolved source claim; no numerical value is asserted as a requirement of that standard. The marginal category is a software convention and supplies no physical safe-use band.</p>
+<p>Changing the optional marginal width does not update the fixed-width wording in the module's marginal note. Use the returned category and numeric fields when custom settings are applied, and obtain a corrected explanatory note before relying on that text.</p>
+</section>
+<section><div class="l1head"><h2 id="section-8">8. Recommendations</h2></div>
+<p>Engineering acceptance is deferred until the material condition, exposure and governing criterion are established. Actions are assigned to the evidence gaps and to the calculated protection request.</p>
+<ul><li>For an unintended zinc–steel conductive joint, introduce electrical isolation and confirm separation of the conductive path at detailed design. This action addresses the protection request and is based on elimination of electrical contact in the <a href="#faa-basis">public physical guidance</a>.</li>
+<li>For an intentional sacrificial zinc coating, retain the coating intent and assess coating thickness, exposed steel area, environment and depletion before defining an inspection interval. This recommendation follows the missing physical inputs and the area effect described by the <a href="#faa-basis">public physical guidance</a>; no unsupported service date or depletion rate is assigned.</li>
+<li>Before adopting a numerical default as an acceptance criterion, obtain its public edition and table or replace it with an approved required input. This action resolves the missing external provenance recorded in the <a href="#data-register">data register</a>.</li>
+<li>As the first extension, add sourced criterion metadata, finite non-negative custom-input checks and notes derived from the selected marginal width. Preserve the existing public examples as regression checks and add tests at the selected boundaries. The scope follows the interface limitations and existing <a href="#repository-basis">repository evidence</a>.</li></ul>
+</section>
+<section><div class="l1head"><h2 id="section-9">9. References</h2></div>
+<p>The physical guidance and repository records are separated by their evidential role. Numerical defaults are cited to the implementation snapshot accompanying this report; their external provenance remains unresolved.</p>
+<h3>9.1 Public physical guidance</h3>
+<p id="faa-basis"><a href="https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_43-4B.pdf">Federal Aviation Administration, Advisory Circular 43-4B, Corrosion Control for Aircraft, issued 2018</a>: “Background”, paragraphs 2.2.1–2.2.2; “Galvanic Corrosion”, paragraph 2.5.3; “Corrosion Control in Design”, paragraph 4.12.2.5. The public file was read successfully on 2026-10-22. It supports the qualitative mechanism and recommendations, not the numerical index catalogue or environment limits in this report.</p>
+<p>The implementation cites MIL-STD-889, Dissimilar Metals, without identifying an edition or table. A supporting edition and table were not read; the numerical attribution is NOT_EVALUATED and is not used as evidence of compliance.</p>
+<h3>9.2 Repository records and public example</h3>
+<ul><li id="repository-basis">Implementation snapshot accompanying this report: <code>src/digitalmodel/corrosion/galvanic_screening.py</code>, tables <code>ANODIC_INDEX_V</code> and <code>ENVIRONMENTS</code>, constant <code>MARGINAL_BAND_V</code>, functions <code>screen_couple</code>, <code>verdict_for_delta</code> and <code>compatibility_matrix</code>. The category comparison adds a numerical allowance of <code>1e−12</code> V and returns the difference rounded to <code>6</code> decimal places; these are implementation conventions, not engineering coefficients.</li>
+<li>Public entry points: <code>src/digitalmodel/corrosion/__init__.py</code> exports the screening function, matrix function and result class. The function docstrings specify input keys and returned fields. The example is reproduced with this call:</li>
+</ul><pre><code>from digitalmodel.corrosion import screen_couple
+result = screen_couple("zinc", "carbon_steel", "harsh_marine")
+print(result.delta_v, result.allowable_delta_v, result.verdict)</code></pre><ul>
+<li id="public-example">Public regression example: <code>tests/corrosion/test_galvanic_screening.py</code>, <code>TestScreenCouple.test_zinc_carbon_steel_harsh_marine</code>. The same file supplies boundary and matrix evidence.</li>
+<li>Published example presentation: <code>docs/api/corrosion/galvanic-compatibility-explorer.html</code> and its adjacent JSON data; generator <code>scripts/corrosion/build_galvanic_explorer.py</code>. These records reuse the same model and do not constitute an independent benchmark.</li>
+<li>House report layout: <code>src/digitalmodel/reporting/assets/calc_report_format.html</code>, also rendered in <code>docs/domains/cathodic_protection/reports/cases/S01/report.html</code>. Its stylesheet is inlined without redesign; the requested report body class is applied.</li>
+<li>Report reproduction: <code>scripts/corrosion/build_module_report.py</code>; rebuild and numerical binding checks: <code>tests/corrosion/test_module_report.py</code>. Run with the source tree on the Python import path.</li></ul>
+</section>
+<section><div class="l1head"><h2 id="section-10">10. Appendices and symbols</h2></div>
+<p>The data register distinguishes assumed physical conditions from missing evidence. Calculation checks establish numerical consistency within the stated software basis.</p>
+<h3 id="data-register">10.1 Data register</h3>
+<div class="tbl-wrap"><table><caption style="caption-side:bottom;text-align:left">Table C. Assumptions, missing data and required resolution.</caption><thead><tr><th scope="col" style="white-space:normal;text-align:left">Item</th><th scope="col" style="white-space:normal;text-align:left">Basis and status</th><th scope="col" style="white-space:normal;text-align:left">Required resolution</th><th scope="col" style="white-space:normal;text-align:left">Source</th></tr></thead><tbody><tr><td style="white-space:normal;text-align:left">Wet film and electrical contact</td><td style="white-space:normal;text-align:left">ASSUMED - to be confirmed</td><td style="white-space:normal;text-align:left">Confirm the actual conductive paths before applying the pair screen.</td><td style="white-space:normal;text-align:left">Figure A and public physical guidance</td></tr><tr><td style="white-space:normal;text-align:left">Material indices and default thresholds</td><td style="white-space:normal;text-align:left">Repository values; external provenance is NOT_EVALUATED.</td><td style="white-space:normal;text-align:left">Provide an edition and table or approved replacement inputs.</td><td style="white-space:normal;text-align:left">Repository calculation basis</td></tr><tr><td style="white-space:normal;text-align:left">Marginal-band width</td><td style="white-space:normal;text-align:left">Repository convention; physical qualification is NOT_EVALUATED.</td><td style="white-space:normal;text-align:left">Qualify a decision rule before engineering acceptance.</td><td style="white-space:normal;text-align:left">Repository calculation basis</td></tr><tr><td style="white-space:normal;text-align:left">Alloy condition, exposed areas and chemistry</td><td style="white-space:normal;text-align:left">NOT_EVALUATED; required physical inputs.</td><td style="white-space:normal;text-align:left">Supply material and exposure records for a physical assessment.</td><td style="white-space:normal;text-align:left">Model input limitations</td></tr><tr><td style="white-space:normal;text-align:left">Thickness, design life and inspection interval</td><td style="white-space:normal;text-align:left">NOT_EVALUATED; no numerical assumption is made.</td><td style="white-space:normal;text-align:left">Supply the protection design and service basis.</td><td style="white-space:normal;text-align:left">Model output limitations</td></tr></tbody></table></div>
+<h3>10.2 Quality checks</h3>
+<p>All worked-example values are inserted from public module calls and embedded with their calculation record. Displayed potential values use a consistent decimal precision; comparisons use unrounded module results. The rebuild test compares the complete generated file with the retained report and binds every displayed example number to a returned or derived value. A separate test compares all published explorer cells with public pair calls. The generator does not read the explorer data while it may be regenerated concurrently. Rendering is refused when matrix cells disagree with pair calls.</p>
+<p>Source claims are limited to the cited records. Geometry is explanatory and dimensionless; no design drawing or exposure experiment is represented. Offline chart points support pointer and keyboard focus. Comment persistence requires the explicit save action; a browser without file-picker support downloads the sidecar for placement beside the report. Browser execution and print layout require separate review.</p>
+<h3>10.3 Symbols and status legend</h3>
+<p>V denotes volt. ΔV denotes the absolute difference of the material-group indices. I<sub>a</sub> and I<sub>b</sub> denote those indices; L denotes the environment allowable and B the marginal-band width. Anodic denotes the member assigned the larger index by the software. Cathodic denotes the other member. NOT_EVALUATED means that a physical conclusion or its evidence is absent.</p>
+<p>The difference is within the software allowable for “OK”. The difference exceeds the software allowable within its marginal band for “MARGINAL”. The difference exceeds the software marginal band and protection is requested for “PROTECT”. These sentences describe software categories, not engineering acceptance.</p>
+<details><summary>Engineering changes since the previous issue</summary><p>The current issue corrects presentation and reproducibility. Its engineering content is listed below.</p><ul id="changes-list"></ul></details>
+<details><summary>Report comments</summary>
+<p>Comments are retained in a separate file. Save the comments beside this HTML as <code>report.comments.json</code>; load that file when reopening the report. File-picker support depends on the browser. Without it, the download requires manual placement beside the report. No automatic save is performed.</p>
+<form id="comment-form"><p><label for="comment-section">Section</label> <select id="comment-section" name="section"><option value="section-1">Executive summary</option><option value="section-2">Introduction</option><option value="section-3">Design data and basis</option><option value="section-4">Analysis methodology</option><option value="section-5">Detailed results</option><option value="section-6">Key findings</option><option value="section-7">Limits of use</option><option value="section-8">Recommendations</option><option value="section-9">References</option><option value="section-10">Appendices and symbols</option></select></p>
+<p><label for="comment-text">Comment</label><br><textarea id="comment-text" name="comment" rows="5" cols="40" required></textarea></p><button type="submit">Add comment</button></form>
+<p><button id="save-comments" type="button">Save comments</button></p>
+<p><label for="load-comments">Load comments</label> <input id="load-comments" type="file" accept=".json"></p>
+<p id="comment-message" aria-live="polite">No comments are saved until Save comments is selected.</p><pre id="comments-preview">[]</pre></details>
+</section></main></div>
+<script id="calculation-data" type="application/json">{"cases": [{"allowable_delta_v": 0.15, "anodic": "zinc", "cathodic": "carbon_steel", "delta_v": 0.4, "environment": "harsh_marine", "excess_v": 0.25, "marginal_upper_v": 0.2, "metal_a": "zinc", "metal_b": "carbon_steel", "notes": ["zinc is the anodic (sacrificial) member; carbon_steel is cathodic (protected).", "Avoid a small anode with a large cathode (e.g. anodic fasteners in a cathodic structure): anodic penetration rate scales with the cathode/anode area ratio. Make the fastener/small part the cathodic member, or isolate.", "Protect: electrically isolate the joint, coat the cathode (not only the anode), or apply cathodic protection."], "verdict": "PROTECT"}, {"allowable_delta_v": 0.25, "anodic": "zinc", "cathodic": "carbon_steel", "delta_v": 0.4, "environment": "normal_industrial", "excess_v": 0.15, "marginal_upper_v": 0.3, "metal_a": "zinc", "metal_b": "carbon_steel", "notes": ["zinc is the anodic (sacrificial) member; carbon_steel is cathodic (protected).", "Avoid a small anode with a large cathode (e.g. anodic fasteners in a cathodic structure): anodic penetration rate scales with the cathode/anode area ratio. Make the fastener/small part the cathodic member, or isolate.", "Protect: electrically isolate the joint, coat the cathode (not only the anode), or apply cathodic protection."], "verdict": "PROTECT"}, {"allowable_delta_v": 0.5, "anodic": "zinc", "cathodic": "carbon_steel", "delta_v": 0.4, "environment": "controlled_indoor", "excess_v": -0.1, "marginal_upper_v": 0.55, "metal_a": "zinc", "metal_b": "carbon_steel", "notes": ["zinc is the anodic (sacrificial) member; carbon_steel is cathodic (protected).", "Avoid a small anode with a large cathode (e.g. anodic fasteners in a cathodic structure): anodic penetration rate scales with the cathode/anode area ratio. Make the fastener/small part the cathodic member, or isolate."], "verdict": "OK"}], "environments_count": 3, "indices": {"carbon_steel": 0.85, "zinc": 1.25}, "marginal_band_v": 0.05, "matrix_diagonal_ok": true, "matrix_matches_pairs": true, "matrix_symmetric": true, "metals_count": 16}</script>
+<script id="change-data" type="application/json">{"changes": ["Potential differences and environment limits are reported for the public zinc\u2013steel regression case.", "Default numerical criteria are separated from independently supported physical principles.", "Dispositions and material roles follow calculation records; chart scales and the conductive-film sketch are corrected.", "A protection category for a sacrificial coating is distinguished from rejection of that coating."], "history": [{"change": "Report dispositions follow returned categories and material roles; figures, material-group wording and deterministic output are corrected.", "date": "2026-10-22", "revision": "1"}, {"change": "Galvanic screening results and evidence gaps are documented to separate software categories from engineering acceptance.", "date": "2026-10-22", "revision": "0"}], "revision": "1"}</script>
+<script>
+(() => {
+  'use strict';
+  const data = JSON.parse(document.getElementById('calculation-data').textContent);
+  const changes = JSON.parse(document.getElementById('change-data').textContent);
+  const list = document.getElementById('changes-list');
+  for (const text of changes.changes) {
+    const item = document.createElement('li'); item.textContent = text; list.appendChild(item);
+  }
+  for (const point of document.querySelectorAll('[data-chart-note]')) {
+    const show = () => {document.getElementById('chart-readout').textContent = point.dataset.chartNote;};
+    point.addEventListener('focus', show); point.addEventListener('pointerenter', show);
+  }
+  const message = document.getElementById('comment-message');
+  let comments = [];
+  let handle = null;
+  const evidence = JSON.stringify(data);
+  const show = () => {document.getElementById('comments-preview').textContent = JSON.stringify(comments, null, 2);};
+  document.getElementById('comment-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const form = event.target;
+    comments.push({section: form.elements.section.value, text: form.elements.comment.value});
+    form.elements.comment.value = ''; show();
+    message.textContent = 'Comment recorded in this page. Save comments to retain it.';
+  });
+  document.getElementById('load-comments').addEventListener('change', async event => {
+    try {
+      const file = event.target.files[0]; if (!file) return;
+      const incoming = JSON.parse(await file.text());
+      if (incoming.report !== 'Corrosion module analysis' || incoming.revision !== changes.revision ||
+          incoming.evidence !== evidence || !Array.isArray(incoming.comments) ||
+          incoming.comments.some(c => typeof c.text !== 'string' ||
+            !Array.from(document.getElementById('comment-section').options).some(o => o.value === c.section)))
+        throw new Error('The comments belong to different report evidence or have invalid fields.');
+      comments = comments.concat(incoming.comments); show();
+      message.textContent = 'Matching comments loaded. Save to retain the combined comments.';
+    } catch (error) {message.textContent = error.message;}
+    event.target.value = '';
+  });
+  document.getElementById('save-comments').addEventListener('click', async () => {
+    const payload = JSON.stringify({report: 'Corrosion module analysis', revision: changes.revision,
+      evidence, comments}, null, 2) + '\n';
+    try {
+      if (typeof window.showSaveFilePicker === 'function') {
+        if (!handle) handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
+          types: [{description: 'Report comments', accept: {'application/json': ['.json']}}]});
+        const writable = await handle.createWritable(); await writable.write(payload); await writable.close();
+        if (await (await handle.getFile()).text() !== payload) throw new Error('Saved comments differ from the page.');
+        message.textContent = 'Comments saved and read back. Keep this file beside the report.';
+      } else {
+        const url = URL.createObjectURL(new Blob([payload], {type: 'application/json'}));
+        const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'report.comments.json';
+        anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message.textContent = 'Comments download requested. Move the file beside the report and load it to check the saved copy.';
+      }
+    } catch (error) {message.textContent = error.message;}
+  });
+})();
+</script>
+</body></html>
