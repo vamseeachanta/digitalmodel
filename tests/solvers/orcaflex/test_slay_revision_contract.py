@@ -12,6 +12,10 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder impo
 
 ROOT = Path(__file__).resolve().parents[3]
 CAMPAIGN = ROOT / "docs/domains/pipeline-installation/slay-campaign"
+# Geometry source: case-table.yml (2026), basis pipeline and stinger inputs.
+_BASIS = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text())["basis"]
+QA_GEOMETRY = dict(diameter=_BASIS["pipeline"]["dimensions"]["outer_diameter"],
+                   radius=_BASIS["equipment"]["stinger"]["radius"])
 KEY = "ConnectionxBendingStiffness, ConnectionyBendingStiffness"
 
 
@@ -121,7 +125,8 @@ def test_static_qa_table_rejects_each_bad_reading(field, bad):
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
     reference = dict(lift_off_arc=55, departure_angle=21)
     readings = dict(wire_length=10, end_a_reaction=11, last_support_force=0,
-                    grounded_tension=[0, 1], overbend_strain=0.00267, **reference)
+                    grounded_tension=[0, 1], overbend_strain=0.00267,
+                    **QA_GEOMETRY, **reference)
     assert_static_acceptance(reference=reference, **readings)
     readings[field] = bad
     with pytest.raises(ValueError):
@@ -134,7 +139,8 @@ def test_static_qa_accepts_wire_band_edges(wire):
     reference = dict(lift_off_arc=55, departure_angle=21)
     assert_static_acceptance(reference=reference, wire_length=wire, end_a_reaction=1,
                              last_support_force=0, grounded_tension=[0],
-                             overbend_strain=1.10 * 0.762 / 300, **reference)
+                             overbend_strain=1.10 * 0.762 / 300,
+                             **QA_GEOMETRY, **reference)
 
 
 def qa_readings():
@@ -142,7 +148,7 @@ def qa_readings():
                 grounded_tension=[0, 1], overbend_strain=0.00267,
                 lift_off_arc=55, departure_angle=21,
                 touchdown_x=None, sag_bend_strain=None,
-                reference=dict(lift_off_arc=55, departure_angle=21))
+                reference=dict(lift_off_arc=55, departure_angle=21), **QA_GEOMETRY)
 
 
 @pytest.mark.parametrize("row", ["touchdown_x", "sag_bend_strain", "stiff_closure"])

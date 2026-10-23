@@ -16,6 +16,9 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder impo
 ROOT = Path(__file__).resolve().parents[3]
 CAMPAIGN = ROOT / "docs/domains/pipeline-installation/slay-campaign"
 TABLE = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text())
+# Geometry source: case-table.yml (2026), basis pipeline and stinger inputs.
+QA_GEOMETRY = dict(diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+                   radius=TABLE["basis"]["equipment"]["stinger"]["radius"])
 
 
 def preparation_driver():
@@ -39,7 +42,7 @@ def test_end_a_contact_uses_support_nearest_measured_position(end_x, forces, acc
         wire_length=10, end_a_reaction=reaction, last_support_force=0,
         grounded_tension=[0, 1], overbend_strain=0.00267,
         lift_off_arc=55, departure_angle=21,
-        reference={"lift_off_arc": 55, "departure_angle": 21})
+        reference={"lift_off_arc": 55, "departure_angle": 21}, **QA_GEOMETRY)
     assert result["rows"]["end_a_reaction"]["status"] == ("PASS" if accepted else "FAIL")
     assert result["counts"]["failed"] == (0 if accepted else 1)
 
@@ -50,7 +53,7 @@ def test_zero_end_a_resultant_cannot_pass_acceptance():
             wire_length=10, end_a_reaction=0, last_support_force=0,
             grounded_tension=[0], overbend_strain=0.00267,
             lift_off_arc=55, departure_angle=21,
-            reference={"lift_off_arc": 55, "departure_angle": 21})
+            reference={"lift_off_arc": 55, "departure_angle": 21}, **QA_GEOMETRY)
 
 
 @pytest.mark.parametrize("end_x,support_x,forces", [
