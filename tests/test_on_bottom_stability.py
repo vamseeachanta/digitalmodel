@@ -46,6 +46,7 @@ class TestHydrodynamicLoads:
             rho_seawater=1025.0,
             cd=0.7,
             cm=3.29,
+            cl=0.5,  # Synthetic assumed lift coefficient; no table calibration.
         )
         assert result.drag_n_per_m > 0
         assert result.inertia_n_per_m > 0

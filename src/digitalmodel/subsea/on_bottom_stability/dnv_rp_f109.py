@@ -8,11 +8,21 @@ Implements pipeline on-bottom stability checks including:
 - Generalized lateral stability with passive soil resistance (S4.3.2)
 
 Reference: DNV-RP-F109, Edition October 2021.
+
+Qualification: edition, clauses and coefficient defaults above are legacy
+attributions, not independently verified standard requirements. See
+docs/validation-claims.md. Use assessment.py with explicit supplied factors for
+auditable arithmetic. Coefficients and safety factors are required inputs;
+legacy constants remain exported only for compatibility and are unqualified.
+The generalized ratio is a static force balance; it does not compute a standard
+generalised displacement envelope or a time history.
 """
 from __future__ import annotations
 
 import math
 from typing import NamedTuple
+
+from ._validation import _geometry, _loads, _stability
 
 
 class StabilityResult(NamedTuple):
@@ -55,8 +65,8 @@ def hydrodynamic_force_per_meter(
     D_outer_m: float,
     U_m_s: float,
     a_m_s2: float,
-    C_D: float = C_D_SMOOTH,
-    C_M: float = C_M_SMOOTH,
+    C_D: float,
+    C_M: float,
 ) -> float:
     """Inline hydrodynamic force per unit length (DNV-RP-F109 S3.2.1, Eq 3.1).
 
@@ -73,15 +83,16 @@ def hydrodynamic_force_per_meter(
     a_m_s2 : float
         Combined current + wave acceleration at pipe centreline [m/s2].
     C_D : float
-        Drag coefficient (default: smooth pipe, Table 3-3).
+        Required drag coefficient; legacy table attribution is unverified.
     C_M : float
-        Inertia coefficient (default: smooth pipe, Table 3-3).
+        Required inertia coefficient; legacy table attribution is unverified.
 
     Returns
     -------
     float
         Horizontal hydrodynamic force per meter [N/m].
     """
+    _loads(rho_w_kg_m3, D_outer_m, U_m_s, a_m_s2, C_D, C_M, 0)
     drag = 0.5 * rho_w_kg_m3 * C_D * D_outer_m * abs(U_m_s) * U_m_s
     inertia = rho_w_kg_m3 * C_M * (math.pi / 4) * D_outer_m**2 * a_m_s2
     return drag + inertia
@@ -91,7 +102,7 @@ def lift_force_per_meter(
     rho_w_kg_m3: float,
     D_outer_m: float,
     U_m_s: float,
-    C_L: float = C_L_SMOOTH,
+    C_L: float,
 ) -> float:
     """Lift force per unit length (DNV-RP-F109 S3.2.1, Eq 3.2).
 
@@ -106,13 +117,14 @@ def lift_force_per_meter(
     U_m_s : float
         Combined current + wave velocity at pipe centreline [m/s].
     C_L : float
-        Lift coefficient (default: smooth pipe, Table 3-3).
+        Required lift coefficient; legacy table attribution is unverified.
 
     Returns
     -------
     float
         Vertical lift force per meter [N/m]. Always non-negative.
     """
+    _loads(rho_w_kg_m3, D_outer_m, U_m_s, 0, 0, 0, C_L)
     return 0.5 * rho_w_kg_m3 * C_L * D_outer_m * U_m_s**2
 
 
@@ -154,6 +166,8 @@ def submerged_weight_per_meter(
     float
         Submerged weight per meter [N/m]. Positive = sinks, negative = buoyant.
     """
+    _geometry(D_outer_m, t_wall_m, t_coat_m, rho_steel_kg_m3,
+              rho_coat_kg_m3, rho_contents_kg_m3, rho_w_kg_m3)
     g = 9.80665  # m/s2
 
     # Inner diameter
@@ -189,7 +203,7 @@ def absolute_stability_check(
     F_H_N_m: float,
     F_L_N_m: float,
     mu_soil: float,
-    gamma_SC: float = GAMMA_SC_NORMAL,
+    gamma_SC: float,
 ) -> StabilityResult:
     """Absolute lateral stability check (DNV-RP-F109 S4.3.1, Eq 4.1).
 
@@ -208,13 +222,17 @@ def absolute_stability_check(
     mu_soil : float
         Lateral soil friction coefficient [-].
     gamma_SC : float
-        Safety class factor (default: 1.1 for normal safety class, Table 4-1).
+        Required safety factor; safety-class table attribution is unverified.
 
     Returns
     -------
     StabilityResult
         Utilisation ratio, stability flag, and intermediate values.
     """
+    _stability(W_s_N_m, F_H_N_m, F_L_N_m, mu_soil, 0, gamma_SC)
+    # Scalar stability uses lateral magnitude in either direction; Morison
+    # outputs retain their sign. See validation analysis, force balance.
+    F_H_N_m = abs(F_H_N_m)
     details = {
         "W_s_N_m": W_s_N_m,
         "F_H_N_m": F_H_N_m,
@@ -223,8 +241,8 @@ def absolute_stability_check(
         "gamma_SC": gamma_SC,
     }
 
-    # Edge cases: zero or negative submerged weight
-    if W_s_N_m <= 0.0:
+    # Contact condition W > FL (analysis A4) also excludes buoyant pipe.
+    if W_s_N_m <= F_L_N_m:
         details["capacity"] = 0.0
         details["demand"] = gamma_SC * (F_H_N_m + mu_soil * F_L_N_m)
         return StabilityResult(
@@ -257,7 +275,7 @@ def generalized_stability_check(
     F_L_N_m: float,
     mu_soil: float,
     F_R_N_m: float,
-    gamma_SC: float = GAMMA_SC_NORMAL,
+    gamma_SC: float,
 ) -> StabilityResult:
     """Generalized lateral stability with soil resistance (DNV-RP-F109 S4.3.2, Eq 4.5).
 
@@ -279,13 +297,15 @@ def generalized_stability_check(
     F_R_N_m : float
         Passive soil resistance per meter [N/m].
     gamma_SC : float
-        Safety class factor (default: 1.1 for normal safety class, Table 4-1).
+        Required safety factor; safety-class table attribution is unverified.
 
     Returns
     -------
     StabilityResult
         Utilisation ratio, stability flag, and intermediate values.
     """
+    _stability(W_s_N_m, F_H_N_m, F_L_N_m, mu_soil, F_R_N_m, gamma_SC)
+    F_H_N_m = abs(F_H_N_m)
     details = {
         "W_s_N_m": W_s_N_m,
         "F_H_N_m": F_H_N_m,
@@ -301,7 +321,9 @@ def generalized_stability_check(
     details["capacity"] = capacity
     details["demand"] = demand
 
-    if capacity <= 0.0:
+    # No unrestrained lateral-soil model is valid after loss of bed contact.
+    # See validation analysis, contact condition W > FL.
+    if W_s_N_m <= F_L_N_m or capacity <= 0.0:
         return StabilityResult(
             utilisation=float("inf"),
             is_stable=False,
