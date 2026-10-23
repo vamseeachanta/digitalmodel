@@ -432,6 +432,9 @@ class AnalysisResults(BaseModel):
     """Output results from the dynacard analysis."""
     ctx: Optional[DynacardAnalysisContext] = None
     downhole_card: Optional[CardData] = None
+    # Unsmoothed solver strain card for the raw-card-trained classifier.
+    # downhole_card remains the existing smoothed calculation input.
+    diagnostic_card: Optional[CardData] = None
     peak_polished_rod_load: float = 0.0
     minimum_polished_rod_load: float = 0.0
 

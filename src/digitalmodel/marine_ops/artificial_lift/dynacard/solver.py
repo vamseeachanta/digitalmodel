@@ -200,7 +200,7 @@ class DynacardWorkflow:
         report_path = result_folder / f'{file_base}_diagnostic_report.html'
 
         svg = DiagnosticAnnotator().render(
-            results.downhole_card,
+            results.diagnostic_card or results.downhole_card,
             diag.classification,
             diag.confidence,
             diag.differential,
