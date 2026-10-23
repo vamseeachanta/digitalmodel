@@ -9,17 +9,14 @@ Author: Marine Engineering Team
 Date: 2025-10-03
 """
 
-import sys
-from pathlib import Path
+import argparse
+import logging
 from dataclasses import dataclass
-from typing import Dict
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import logging
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +31,7 @@ class WECDevice:
     num_mooring_lines: int = 4
 
 
-def analyze_wec_mooring(wec: WECDevice, wave_height: float) -> Dict:
+def analyze_wec_mooring(wec: WECDevice, wave_height: float) -> dict:
     """Analyze WEC mooring loads."""
 
     # Wave force (simplified - Morrison equation)
@@ -67,8 +64,9 @@ def analyze_wec_mooring(wec: WECDevice, wave_height: float) -> Dict:
     }
 
 
-def main():
-    """Main execution."""
+def main(output_dir: Path | None = None) -> None:
+    """Write the illustrative sweep to a workbook in the requested directory."""
+    logging.basicConfig(level=logging.INFO)
     logger.info("WAVE ENERGY CONVERTER MOORING ANALYSIS")
 
     wec = WECDevice()
@@ -77,7 +75,8 @@ def main():
     wave_heights = np.linspace(1, 10, 10)
     results = [analyze_wec_mooring(wec, hs) for hs in wave_heights]
 
-    output_dir = Path(__file__).parent / "outputs" / "07_wec"
+    if output_dir is None:
+        output_dir = Path(__file__).parent / "outputs" / "07_wec"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     df = pd.DataFrame(results)
@@ -87,4 +86,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Workbook directory (default: outputs/07_wec beside this script).",
+    )
+    main(output_dir=parser.parse_args().output_dir)
