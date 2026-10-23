@@ -1,0 +1,9 @@
+{
+  "revision": "0",
+  "date": "2026-10-21",
+  "changes": [
+    "Uniform-span current screening and the synthetic fatigue example are documented.",
+    "In-line fatigue and physical qualification of response coefficients are identified as not evaluated.",
+    "Calculation anchors, source coverage and the input data register are included."
+  ]
+}
