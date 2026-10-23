@@ -39,16 +39,27 @@ This prints the fitted parameters and return-period extremes for each
 distribution and writes `results/extreme_value_post/extreme_value_summary.json`.
 
 Each return-value line also gives the probability of at least one exceedance
-over `design_life` years (25 by default in `input.yml`). Assuming independent
-years, `encounter_probability(T, N)` evaluates `1 - (1 - 1/T)^N`: the annual
-exceedance probability is `1/T`. A 100-year return period gives a 22.2 % chance
+over `design_life` years. The 25-year default in `input.yml` is an illustrative
+assumption, not a site-specific design input or a prescribed design life.
+The model basis is [USACE EM 1110-2-1415, *Hydrologic Frequency Analysis*,
+5 March 1993 edition, paragraph 3-5, "Risk"](https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1415.pdf).
+With independent years and constant annual exceedance probability `q = 1/T`,
+the probability of no exceedance in `N` years is `(1 - q)^N`. Its complement,
+`1 - (1 - 1/T)^N`, is evaluated by `encounter_probability(T, N)`.
+For noninteger `N`, the same survival power is an interpolation assumption.
+Applicability of independence and constant annual probability requires a
+separate assessment for a particular design.
+A 100-year return period gives a 22.2 % chance
 over 25 years; a 10,000-year return period gives about 0.25 % over that life.
 A return period does not schedule events. Design extremes come from the fitted
 statistics rather than elapsed calendar time.
 
 The helpers are available from `digitalmodel.orcaflex.postprocessor`.
 `return_period_for_probability(p, N)` calculates the required return period for
-a target lifetime probability. Inputs must be finite: `T >= 1`, `N > 0` and
+a target lifetime probability. Rearranging the same cited model gives
+`1 - p = (1 - 1/T)^N`, then `(1 - p)^(1/N) = 1 - 1/T`, and hence
+`T = 1 / (1 - (1 - p)^(1/N))`.
+Inputs must be finite: `T >= 1`, `N > 0` and
 `0 < p <= 1`. A zero target probability requires an infinite return period
 and is rejected. Both helpers raise `ValueError` for values outside these ranges.
 The inverse returns infinity when the required period exceeds floating-point range.

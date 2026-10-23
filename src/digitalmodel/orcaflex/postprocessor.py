@@ -165,9 +165,17 @@ def generate_range_graph(
 def encounter_probability(return_period: float, design_life: float) -> float:
     """Calculate the chance of at least one exceedance over a design life.
 
-    Years are independent, with annual exceedance probability ``1 / T``.
-    The lifetime probability is ``1 - (1 - 1 / T) ** N``; a return period
-    does not specify the time between successive events.
+    Basis: USACE EM 1110-2-1415, Hydrologic Frequency Analysis,
+    5 March 1993 edition, paragraph 3-5, "Risk" (binomial model):
+    https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1415.pdf
+
+    Independent years have constant annual exceedance probability ``q = 1 / T``.
+    The probability of no exceedance in N years is ``(1 - q) ** N``;
+    its complement gives ``p = 1 - (1 - 1 / T) ** N``. For noninteger N,
+    the same survival power is an interpolation assumption. Applicability
+    of independence and constant annual probability requires a separate
+    assessment for a particular design. A return period does not specify
+    the time between successive events.
 
     Args:
         return_period: Finite return period T in years, at least 1.
@@ -191,8 +199,12 @@ def encounter_probability(return_period: float, design_life: float) -> float:
 def return_period_for_probability(probability: float, design_life: float) -> float:
     """Calculate the return period for a target lifetime encounter probability.
 
-    Assumes independent years and evaluates
-    ``T = 1 / (1 - (1 - probability) ** (1 / design_life))``.
+    Basis: USACE EM 1110-2-1415, Hydrologic Frequency Analysis,
+    5 March 1993 edition, paragraph 3-5, "Risk"; the retrievable reference
+    and model assumptions are given in :func:`encounter_probability`.
+    Algebraic rearrangement of that model gives ``1 - p = (1 - 1 / T) ** N``,
+    then ``(1 - p) ** (1 / N) = 1 - 1 / T``, and hence
+    ``T = 1 / (1 - (1 - p) ** (1 / N))``.
 
     Args:
         probability: Finite target probability, greater than 0 and at most 1.

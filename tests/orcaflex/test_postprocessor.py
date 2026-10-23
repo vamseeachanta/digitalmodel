@@ -23,6 +23,13 @@ from digitalmodel.orcaflex.postprocessor import (
 class TestEncounterProbability:
     """Independent-year encounter probabilities and their inverse."""
 
+    # USACE EM 1110-2-1415, Hydrologic Frequency Analysis, 5 March 1993,
+    # paragraph 3-5, "Risk": complement of zero exceedances in N years.
+    # Independent hand calculations, without calling the production helpers:
+    # 1 - (99/100)^25 = 0.22218 (rounded); 1 - (9999/10000)^25 = 0.002497
+    # (rounded). The literals below retain their stated absolute tolerances.
+    # T=1 gives certainty; 1 - (1/2)^2 = 3/4; N=1 gives 1/100.
+    # For T=1e20: 25/T - 300/T^2 + ... = 2.5e-19 - 3e-38 + ... .
     @pytest.mark.parametrize("period, life, expected, tolerance", [
         (100, 25, 0.222, 0.0005),
         (10000, 25, 0.0025, 0.00005),
@@ -36,6 +43,11 @@ class TestEncounterProbability:
             expected, abs=tolerance
         )
 
+    # Algebraic inverse of the same cited model: T = 1/[1 - (1-p)^(1/N)].
+    # p=3/4, N=2: T=1/[1-sqrt(1/4)]=2; p=1/100, N=1: T=100.
+    # p=1 makes (1-p)^(1/N)=0, hence T=1 for either positive life.
+    # p=2.5e-19, N=25: 1-(1-p)^(1/25) = p/25 + 12*p^2/625 + ...;
+    # T is approximately 1e20, within the relative tolerance of 1e-12.
     @pytest.mark.parametrize("probability, life, expected", [
         (0.75, 2, 2.0),
         (0.01, 1, 100.0),
