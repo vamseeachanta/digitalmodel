@@ -145,7 +145,8 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_dual_tank_sloshing_study.py",
         ("docs/api/cfd/dual-tank-sloshing-cfd-study.html",),
-        inputs=("tests/hydrodynamics/test_utube_tank.py",),
+        inputs=("tests/hydrodynamics/test_utube_tank.py",
+                "docs/api/cfd/data/dual_tank_cfd_evidence.json"),
     ),
     Generator(
         "scripts/capabilities/build_sloshing_explorer.py",

@@ -82,6 +82,36 @@ def test_builder_does_not_require_generated_showcase(builder, monkeypatch, tmp_p
     assert builder.render() == expected
 
 
+def test_fill_damping_ticks_are_distinct_and_match_table(builder):
+    evidence = builder.render_cfd_evidence()
+    fill = evidence.split('id="cfd-fill"', 1)[1].split('id="cfd-loss"', 1)[0]
+    svg = ElementTree.fromstring(
+        re.search(r'<svg id="cfd-fill-damping".*?</svg>', fill, re.S).group()
+    )
+    ticks = [node.text for node in svg.findall("text[@text-anchor='end']")]
+    assert len(ticks) == len(set(ticks)) == 2
+    assert ticks == ["0.514", "0.536"]
+    table = ElementTree.fromstring(re.search(r"<table>.*?</table>", fill, re.S).group())
+    damping_values = {row.findall("td/data")[-1].text for row in table.findall("tr")[1:]}
+    assert set(ticks) <= damping_values
+
+
+def test_area_damping_ticks_are_distinct_and_match_table(builder):
+    evidence = builder.render_cfd_evidence()
+    loss = evidence.split('id="cfd-loss"', 1)[1].split('id="cfd-forced"', 1)[0]
+    svg = ElementTree.fromstring(
+        re.search(r'<svg id="cfd-loss-area".*?</svg>', loss, re.S).group()
+    )
+    ticks = [node.text for node in svg.findall("text[@text-anchor='end']")]
+    table = ElementTree.fromstring(re.search(r"<table>.*?</table>", loss, re.S).group())
+    damping = [cell for row in table.findall("tr")[1:]
+               for cell in row.findall("td/data")[-2:]]
+    expected = sorted({f"{float(cell.attrib['value']):.3f}" for cell in damping})
+    assert len(ticks) == len(set(ticks)) == len(expected)
+    assert ticks == expected
+    assert set(ticks) == {cell.text for cell in damping}
+
+
 def test_claims_are_read_from_published_sources(builder):
     claims = builder.published_claims()
     assert claims["moment_rms"] == 4.3
@@ -101,8 +131,8 @@ def test_claims_are_read_from_published_sources(builder):
     assert "CAUSE IS NOT ESTABLISHED" in text
     assert "An earlier explanation was withdrawn." in text
     assert "residual also depends on roll amplitude" in text
-    assert "±3" not in text
-    assert "not stated in the specified public sources" in text
+    assert "±" in text and "exception" in text
+    assert "does not qualify the invented illustrative geometry" in text
 
 
 def test_curves_call_library_and_reduction(builder, monkeypatch):
@@ -159,9 +189,9 @@ def test_illustrative_geometry_is_independent(builder, monkeypatch):
 def test_output_structure_links_and_privacy(builder):
     text = builder.render()
     parsed = assert_references_resolve(text, PAGE)
-    assert parsed.svgs == 6
+    assert parsed.svgs == 14
     svgs = re.findall(r"<svg\b.*?</svg>", text, re.S)
-    assert len(svgs) == 6
+    assert len(svgs) == 14
     for svg in svgs:
         root = ElementTree.fromstring(svg)
         assert root.find("title").text
@@ -181,6 +211,33 @@ def test_output_structure_links_and_privacy(builder):
     section = existing.split("Coupled anti-roll response", 1)[1].split("<h2>", 1)[0]
     assert f'href="{PAGE.name}"' in section
     assert_references_resolve(text, PAGE)
+
+
+def test_public_study_files_have_no_private_identifiers():
+    paths = (
+        PAGE,
+        PAGE.parent / "data/dual_tank_cfd_evidence.json",
+        BUILDER,
+        ROOT / "scripts/capabilities/extract_dual_tank_cfd_evidence.py",
+        Path(__file__),
+        Path(__file__).with_name("test_dual_tank_cfd_evidence.py"),
+    )
+    patterns = (
+        "d" + "m" + "1528",
+        "/" + "mnt" + "/",
+        "/" + "home" + "/",
+        "B" + "15" + r"\d{2}",
+        "gpu" + "-claw",
+        "ace" + "-linux",
+        "spa" + "rk",
+        "rds" + "02",
+    )
+    counts = []
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        counts.append([len(re.findall(pattern, text, re.I)) for pattern in patterns])
+    if any(any(row) for row in counts):
+        pytest.fail(f"Prohibited identifier counts: {counts}", pytrace=False)
 
 
 def assert_public_wording(text):
