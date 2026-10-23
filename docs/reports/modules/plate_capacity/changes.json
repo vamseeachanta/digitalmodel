@@ -1,0 +1,19 @@
+{
+  "document": "plate-capacity-module-analysis",
+  "revision": 0,
+  "date": "2026-10-22",
+  "changes": [
+    {
+      "section": "plate",
+      "description": "Add sourced elastic rectangular plate arithmetic and worked inputs."
+    },
+    {
+      "section": "bar",
+      "description": "Add one- and two-element axial verification without an external solver."
+    },
+    {
+      "section": "limits",
+      "description": "Inventory calculations and distinguish elastic screening from code resistance."
+    }
+  ]
+}
