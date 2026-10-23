@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lifting lug screening analysis</title>
+<style>:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style>
+<style>
+svg{max-width:100%;height:auto;color:var(--ink)}svg text{font:14px sans-serif;fill:var(--ink)}
+input[type=range],textarea{width:100%}label{display:block;margin-top:12px}
+button,select,textarea,input[type=file]{font:inherit;margin:6px 6px 6px 0;padding:6px}
+details{margin:18px 0;padding:12px;border:1px solid var(--line);border-radius:6px}
+summary{cursor:pointer}.chart-point:focus{outline:2px solid var(--accent)}
+@media print{details{display:block}button,input,textarea,select{display:none}}
+</style></head><body class="hs-doc"><main class="wrap">
+
+<header><div class="kicker">Lifting attachments · strength screening</div>
+<h1>Lifting lug screening analysis</h1>
+<p class="sub">Draft for maintainer review</p></header>
+<nav aria-label="Report navigation"><a href="#summary">Executive summary</a> ·
+<a href="#basis">Design data</a> · <a href="#example">Worked example</a> ·
+<a href="#recommendations">Recommendations</a> · <a href="#appendix">Appendices</a></nav>
+
+<section aria-labelledby="summary"><h2 id="summary">1 Executive Summary</h2>
+<p>The lifting lug module is an analytical screen for a circular plate loaded through a pin.
+Analysis is performed to determine the governing bearing, net-tension and shear tear-out demand;
+key results are summarized below. The <a href="#source-example">public example</a> is assessed using the
+<a href="#source-code">implemented strength factors</a>, whose design-code applicability remains NOT_EVALUATED.</p>
+<ul><li>The example is held from design acceptance.
+<ul><li>The shear tear-out utilization is <span data-number="governing_percent">116.2</span> % against the
+<span data-number="limit_percent">100.0</span> % screening limit; the exceedance is <span data-number="exceedance_percent">16.2</span> % of the limit.</li>
+<li>The bearing and net-tension screens pass; that outcome excludes welds, bending, fatigue and rigging adequacy.</li></ul></li>
+<li>A restriction for the unchanged example geometry is available for engineering review.
+<ul><li>The most-loaded leg static tension is restricted to <span data-number="static_cap_kN">361.4</span> kN for the same dynamic and skew factors.
+This rounded-down value passes only the implemented screens.</li>
+<li>Material certification, load basis, connection resistance and code applicability are required before design release.</li></ul></li></ul>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-21</td><td>The public example and load restriction are documented to expose the failed shear screen and unresolved design basis.</td></tr>
+<tr><td>B</td><td>2026-10-22</td><td>Explicit text output, hand-calculation tests, conceptual geometry and field precision address reproducibility and interpretation.</td></tr></tbody></table>
+</section>
+
+<section aria-labelledby="introduction"><h2 id="introduction">2 Introduction</h2>
+<p>A circular lifting lug is assessed under an already resolved in-plane sling tension.
+The main workflow is covered from load entry to the governing strength result and summary output.</p>
+<p>The public functions accept numerical geometry and material inputs; the configuration interface also handles
+the skew-factor floor and writes a summary. The workflow is intended for preliminary screening.
+The published example is repository-authored; it is not an independent textbook benchmark or a field measurement
+(<a href="#source-guide">example guide</a>).</p>
+<h3>Not covered</h3>
+<p>The interpolated lug atlas, whole-rigging statics, crane motion, splash-zone loads and finite-element
+padeye studies are outside this workflow. Vessel heading, a sea-state envelope and live forecast support are
+NOT_EVALUATED because the module has no hydrodynamic response or weather inputs. No installability statement is made.</p>
+</section>
+
+<section aria-labelledby="controls"><h2 id="controls">3 Load Sensitivity</h2>
+<p>The most-loaded leg tension is supplied after the sling-angle and centre-of-gravity effects are resolved.
+Separate dynamic amplification and skew allowances are then applied, as described in the
+<a href="#source-guide">example guide</a>.</p>
+<p>The governing demand is shown against the module limit below. All geometry, material and load factors are held
+at the public example values while static leg tension is varied. The chart is a strength-screen sensitivity,
+not a sea-state or installation operating envelope.</p>
+<figure><div id="load-chart"></div>
+<p id="chart-readout" role="status" aria-live="polite"></p>
+<label for="case-slider">Select static leg tension for component demands</label>
+<input id="case-slider" type="range" min="0" max="25" value="19">
+<figcaption>Utilization versus static leg tension. Hover or focus a point for case, component, demand, limit and units.
+The dashed line is the <span data-number="limit_percent">100.0</span> % implementation limit. The example is selected initially.
+The screen passes when all strengths pass and the entered skew factor satisfies its floor; otherwise the screen fails.</figcaption></figure>
+<p>The same selected case is broken down below. Each bar represents one failure mode and the vertical line marks its screening limit.</p>
+<div id="component-chart"></div>
+</section>
+
+<section aria-labelledby="basis"><h2 id="basis">4 Design Data and Basis</h2>
+<p>The lug and pin are idealised as a concentric, in-plane connection with equal resistance on the ligaments.
+The data are taken from the <a href="#source-example">public example input</a>; no material or fabrication record accompanies it.</p>
+<figure id="geometry">
+<svg viewBox="0 0 820 390" role="img" aria-labelledby="geometry-title geometry-desc">
+<title id="geometry-title">Circular lifting lug with axial in-plane pin loading and a side view</title>
+<desc id="geometry-desc">The hole and pin are concentric. The loaded ligament extends from the hole to the round head.
+The base reaction is illustrative; weld and parent plate resistance are outside the calculation.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
+<pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M0 10 L10 0" stroke="currentColor"/></pattern></defs>
+<path d="M120 305 L120 160 A110 110 0 0 1 340 160 L340 305 Z" fill="var(--soft)" stroke="var(--ink)" stroke-width="2"/>
+<circle cx="230" cy="160" r="40.00" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>
+<circle cx="230" cy="160" r="37.50" fill="var(--line)" stroke="var(--ink)"/>
+<path d="M230 160 L230 15" stroke="var(--brand)" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="244" y="29">Factored sling load P</text>
+<path d="M230 160 L327 105" stroke="var(--ink)" marker-end="url(#arrow)"/>
+<text x="333" y="104">Outer radius R</text>
+<path d="M190 58 L190 160 M270 58 L270 160" stroke="var(--nogo)" stroke-dasharray="5 3"/>
+<text x="45" y="66">Tear-out planes</text><path d="M160 68 L188 85" stroke="var(--nogo)"/>
+<text x="50" y="218">Pin diameter d</text><path d="M177 210 L210 183" stroke="var(--ink)"/>
+<text x="273" y="239">Hole diameter D</text><path d="M295 222 L259 188" stroke="var(--ink)"/>
+<path d="M90 307 L370 307 L370 328 L90 328 Z" fill="url(#hatch)" stroke="var(--ink)"/>
+<text x="92" y="357">Illustrative base restraint and reaction</text>
+<rect x="565" y="50" width="40" height="255" fill="var(--soft)" stroke="var(--ink)" stroke-width="2"/>
+<rect x="537" y="142" width="96" height="36" rx="3" fill="var(--line)" stroke="var(--ink)"/>
+<path d="M565 330 L605 330" stroke="var(--ink)" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="520" y="354">Total thickness t</text><text x="652" y="161">Pin</text>
+<text x="528" y="26">Plate stack, side view</text>
+</svg>
+<figcaption>The public example geometry is represented by a round head of radius
+<span data-number="lug.outer_radius_mm">110.0</span> mm, a hole of diameter <span data-number="lug.hole_diameter_mm">80.0</span> mm,
+a pin of diameter <span data-number="lug.pin_diameter_mm">75.0</span> mm and a main plate
+<span data-number="lug.plate_thickness_mm">40.000</span> mm thick. Cheek thickness per side is
+<span data-number="lug.cheek_plate_thickness_mm">0.000</span> mm; total thickness is <span data-number="total_thickness_mm">40.000</span> mm.
+Dimensions come from the <a href="#source-example">example input</a>.
+The lower plate length, pin length and restraint depiction are illustrative; no fabrication drawing is available.
+The dashed tear-out planes are conceptual, not to scale; the
+calculation uses a loaded ligament of <span data-number="ligament_mm">70.0</span> mm from the hole to the loaded edge.
+The sling direction is an assumed axial in-plane load. Contact offset, welds and base flexibility are not modelled.</figcaption></figure>
+<h3>Criteria and rationale</h3>
+<p>The implemented bearing, tension and shear factors are respectively <span data-number="bearing_factor">0.90</span>,
+<span data-number="tension_factor">0.60</span> and <span data-number="shear_factor">0.40</span> times the supplied yield strength
+(<a href="#source-code">implementation</a>). They are reproduced to explain the software result.
+The repository calls them allowable-stress factors but identifies no edition, clause or table
+of the American Institute of Steel Construction (AISC) design provisions for them.
+Their suitability as design allowables is NOT_EVALUATED; no standard-compliance conclusion is drawn.</p>
+<p>A utilization at or below <span data-number="limit_percent">100.0</span> % passes a strength screen by the module's comparison.
+The entered skew factor is <span data-number="load.skew_load_factor">1.1</span>; the returned minimum is
+<span data-number="skew_load_factor_minimum">1.1</span>, and the governing factor is <span data-number="skew_load_factor">1.1</span>
+(<a href="#source-code">router output</a>). The repository attributes the leg-count floor to
+<cite>Portable offshore units</cite>, April 2016, “Lift points – in-plane loads”, identified in the source register.
+The clause text has not been independently examined for this analysis. The
+<a href="#source-guide">example guide</a> records applicability restrictions and directs marine-operation
+lifts to an independently assessed skew factor. Applying a numerical floor does not establish that scope is satisfied.</p>
+<p>The assumed basis is axial in-plane loading with full participating plate thickness.
+The dynamic amplification and yield strength are ASSUMED - to be confirmed.
+The appendix data register identifies each evidence gap.</p>
+</section>
+
+<section aria-labelledby="method"><h2 id="method">5 Methodology and Equations</h2>
+<p>The factored load is formed by multiplication, and nominal stresses are obtained from idealised resisting areas.
+The following equations reproduce the <a href="#source-code">public module implementation</a>, rather than a complete padeye design method.</p>
+<div class="eq">P = P<sub>s</sub> A<sub>d</sub> K; &nbsp; t = t<sub>p</sub> + 2t<sub>c</sub>;
+&nbsp; r = D/2; &nbsp; ℓ = R − r</div>
+<p>P is the factored sling load and P<sub>s</sub> is static tension in the most-loaded leg, both in kN.
+A<sub>d</sub> is the dimensionless dynamic amplification factor. K is the larger of the entered skew factor
+and the implemented leg-count minimum. The plate thickness t<sub>p</sub>, each cheek thickness t<sub>c</sub>,
+total thickness t, hole diameter D, hole radius r, outer radius R and loaded ligament ℓ are in mm.
+The multiplier on cheek thickness represents the cheek on each side of the main plate.</p>
+<div class="eq">σ<sub>b</sub> = 1000P/(dt); &nbsp;
+σ<sub>t</sub> = 1000P/(2tℓ); &nbsp; τ = 1000P/(2tℓ)</div>
+<p>The pin diameter d is in mm. Bearing stress σ<sub>b</sub>, net-tension stress σ<sub>t</sub> and shear stress τ
+are in MPa. The unit conversion is from kN to N; force in N divided by area in mm² gives MPa.
+The net and tear-out expressions use the same idealised area, so their demands are equal in this implementation.</p>
+<div class="eq">S<sub>b</sub> = a<sub>b</sub>F<sub>y</sub>; &nbsp;
+S<sub>t</sub> = a<sub>t</sub>F<sub>y</sub>; &nbsp; S<sub>s</sub> = a<sub>s</sub>F<sub>y</sub>;
+&nbsp; u = demand/allowable</div>
+<p>F<sub>y</sub> is the entered yield strength in MPa; a<sub>b</sub>, a<sub>t</sub> and a<sub>s</sub> are the
+implementation factors stated in the basis section. S<sub>b</sub>, S<sub>t</sub> and S<sub>s</sub> are
+the resulting nominal stress limits in MPa. Utilization u is dimensionless and is displayed as a percentage.
+The largest utilization governs. A below-minimum entered skew factor fails the overall screen even after
+the governing floor has been used for the load.</p>
+</section>
+
+<section aria-labelledby="example"><h2 id="example">6 Worked Example and Results</h2>
+<p>The documented public configuration is evaluated by calling the module's public configuration interface.
+No example input or calculated stress is transcribed into the report.</p>
+<p>The input static tension is <span data-number="load.static_load_kN">420.0</span> kN and the dynamic factor is
+<span data-number="load.dynamic_amplification_factor">2.0</span>; with the governing skew factor of <span data-number="skew_load_factor">1.1</span>,
+the returned design load is <span data-number="design_load_kN">924.0</span> kN. The calculated total thickness is
+<span data-number="total_thickness_mm">40.000</span> mm and the loaded ligament is <span data-number="ligament_mm">70.0</span> mm.
+The geometry, yield input and factors are listed with their sources in the appendix.</p>
+<table><thead><tr><th>Component</th><th>Demand (MPa)</th><th>Limit (MPa)</th><th>Utilization (%)</th><th>Result</th><th>Source</th></tr></thead>
+<tbody><tr><td>Pin-hole bearing</td><td><span data-number="pin_bearing.demand_mpa">308.0</span></td><td><span data-number="pin_bearing.allowable_mpa">319.5</span></td><td><span data-number="pin_bearing.utilization">96.4</span></td><td>The screen passes.</td><td><a href="#source-code">Module output</a></td></tr>
+<tr><td>Net-section tension</td><td><span data-number="net_tension.demand_mpa">165.0</span></td><td><span data-number="net_tension.allowable_mpa">213.0</span></td><td><span data-number="net_tension.utilization">77.5</span></td><td>The screen passes.</td><td><a href="#source-code">Module output</a></td></tr>
+<tr><td>Shear tear-out</td><td><span data-number="shear_tearout.demand_mpa">165.0</span></td><td><span data-number="shear_tearout.allowable_mpa">142.0</span></td><td><span data-number="shear_tearout.utilization">116.2</span></td><td>The screen fails.</td><td><a href="#source-code">Module output</a></td></tr></tbody></table>
+<p>The shear tear-out screen fails at <span data-number="governing_percent">116.2</span> % utilization against the
+<span data-number="limit_percent">100.0</span> % limit. Its exceedance is <span data-number="exceedance_percent">16.2</span> % of the limit.
+The summary reports a failed screen, governed by shear tear-out. The outcome is a rejection of the example
+under the implemented criteria, not a prediction of physical rupture or a complete design rejection.</p>
+<p>With geometry and factors unchanged, the limiting static tension is calculated by dividing the example static
+tension by the unrounded governing utilization and rounding down to the displayed precision.
+At <span data-number="static_cap_kN">361.4</span> kN the public interface returns a passing screen. This restriction is conditional on the
+implementation basis; attachment and operating acceptance remain NOT_EVALUATED.</p>
+</section>
+
+<section aria-labelledby="validation"><h2 id="validation">7 Validation Evidence</h2>
+<p>Arithmetic and configuration behaviour are checked by the existing repository tests.
+Physical validation of this circular-lug screen is not established by those checks.</p>
+<p>The <a href="#source-tests">existing workflow tests</a> compare the example load, governing utilization
+and nominal stresses with hand-calculated expressions. They also exercise missing and invalid skew factors,
+unsupported sling counts, and below-minimum factors with otherwise passing strength results.
+Those tests demonstrate agreement with the coded formulas and the intended input guards.</p>
+<p>The <a href="#source-rebuild">report rebuild tests</a> compare displayed example fields with independent
+hand-calculated literals and all plotted cases with hand arithmetic and fresh public-interface results.
+The rounded-down restriction and the next load increment are checked for passing and failing screens respectively.
+The committed page is rebuilt byte for byte with its change data, including a simulated CRLF platform.
+No field-load measurements or destructive-test
+results are supplied with the workflow example. The wider repository contains finite-element padeye material,
+but no matched comparison to this example is established here; no numerical agreement with it is claimed.</p>
+</section>
+
+<section aria-labelledby="recommendations"><h2 id="recommendations">8 Key Findings, Limits and Recommendations</h2>
+<p>The example is governed by the implemented shear tear-out limit, while evidence for design acceptance remains incomplete.
+The following actions are tied to the <a href="#source-code">calculation</a> and the limitations in the
+<a href="#source-guide">example guide</a>.</p>
+<ul><li>Hold the example from release. Restrict the most-loaded leg static tension to
+<span data-number="static_cap_kN">361.4</span> kN at the unchanged dynamic and skew factors for preliminary screening only.
+Obtain a complete connection assessment before treating any passing screen as an operating permission.</li>
+<li>If the entered tension is retained, assess an increased participating thickness or loaded ligament,
+then repeat the strength, pin, weld and parent-plate checks. Cheek participation requires a load-transfer assessment.</li>
+<li>Confirm the material, tolerances, effective thickness, extreme-centre-of-gravity tension and amplification basis.
+Confirm the governing standard and edition, including skew scope, before selecting design criteria.</li>
+<li>Provide separate checks for out-of-plane bending, pin bending and clearance effects, welds, parent structure,
+fatigue and fracture. These resistances are not returned by the current module.</li>
+<li>Validate positive finite geometry, force and material inputs before direct function use. The current low-level
+functions do not comprehensively reject non-finite values, non-positive pin diameter or negative design force.</li></ul>
+<p>A proposed next development slice is a single documented finite-input contract shared by the public functions
+and configuration interface, followed by an independent circular-lug benchmark with an explicit design-code basis.
+Until that evidence is available, design-code applicability and physical validation remain NOT_EVALUATED.</p>
+</section>
+
+<section aria-labelledby="references"><h2 id="references">9 References and Use</h2>
+<p>The calculation basis is bounded by publicly inspectable repository records.
+An implementation citation establishes what is computed; it does not establish an external standard's requirements.</p>
+<h3>9.1 Inputs, outputs and interpretation</h3>
+<p>The documented numerical load helper accepts static leg force, dynamic amplification and skew factor.
+The numerical strength helper accepts design force, total thickness, pin and hole diameters, outer radius
+and yield strength, and returns named demand, allowable, utilization and pass fields.
+The configuration interface accepts main and cheek thicknesses separately, requires an explicit skew factor,
+optionally enforces a sling-count floor, and returns the governing result and overall screening status.</p>
+<p>The configuration interface writes a JavaScript Object Notation summary to the requested directory.
+Its payload includes input and governing skew factors, the minimum and source, the below-minimum flag,
+design load, total thickness, component checks and the governing utilization.
+The returned summary path is added after writing, so that path is absent from the file itself.
+The text label naming standards in the payload is not evidence of design compliance.</p>
+<h3>9.2 Source register and reproducibility locators</h3>
+<ul class="refs">
+<li id="source-example">Public example input: <a href="../../../../examples/workflows/lifting-lug-design/input.yml">examples/workflows/lifting-lug-design/input.yml</a>.
+This is the sole numerical example source; no external edition applies to this configuration.</li>
+<li id="source-guide">Public example guide: <a href="../../../../examples/workflows/lifting-lug-design/README.md">examples/workflows/lifting-lug-design/README.md</a>,
+“Lifting Lug / Padeye Strength Screening”, including its most-loaded-leg and skew-scope notes.</li>
+<li id="source-code">Calculation implementation: <a href="../../../../src/digitalmodel/lifting_lug/workflow.py">src/digitalmodel/lifting_lug/workflow.py</a>,
+functions <code>design_load_kn</code>, <code>lug_checks</code>, <code>router</code> and <code>_check</code>.
+The strength factors are implementation constants; the AISC edition and clause are not established.</li>
+<li id="source-skew">Shared skew basis: <a href="../../../../src/digitalmodel/orcaflex/installation_analysis.py">src/digitalmodel/orcaflex/installation_analysis.py</a>,
+<code>_SKL_BY_LEG_COUNT</code> and <code>_SKL_REFERENCE</code>.
+The repository cites DNVGL-ST-E273, <cite>Portable offshore units</cite>, April 2016, §3.5.5,
+“Lift points – in-plane loads”, with scope notes at §1.4.3 and skew effects at §3.5.4.
+The <a href="https://www.dnv.com/rules-standards/">publisher's rules and standards catalogue</a> was accessible
+on 22 October 2026; this catalogue does not confirm the numerical clause content.</li>
+<li id="source-tests">Existing arithmetic and guard evidence:
+<a href="../../../../tests/workflows/test_lifting_lug_design.py">tests/workflows/test_lifting_lug_design.py</a>.
+The atlas query in that file concerns interpolation and is not an independent strength validation.</li>
+<li id="source-rebuild">Rebuild and numerical comparison:
+<a href="../../../../tests/reporting/test_lifting_lug_module_report.py">tests/reporting/test_lifting_lug_module_report.py</a> and
+<a href="build_report.py">build_report.py</a>. Rebuild with
+<code>PYTHONPATH=src python docs/reports/modules/liftinglug/build_report.py --output-dir REPORT_DIRECTORY --work-dir CALCULATION_DIRECTORY</code>.
+The calculation directory receives module summaries; neither directory is inferred from a user profile.</li>
+<li id="source-style">Layout exemplar:
+<a href="../../../api/cfd/turbulent-flat-plate-verification.html">docs/api/cfd/turbulent-flat-plate-verification.html</a>;
+brand stylesheet: <a href="../../../api/_assets/brand.css">docs/api/_assets/brand.css</a>.
+Both stylesheets are inlined for offline reading.</li></ul>
+</section>
+
+<section aria-labelledby="appendix"><h2 id="appendix">10 Appendices</h2>
+<p>The numerical input record and unresolved assumptions are retained below.
+The quality checks distinguish reproducible software evidence from missing design evidence.</p>
+<h3>Numerical input record</h3>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Main plate thickness</td><td><span data-number="lug.plate_thickness_mm">40.000</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Cheek thickness per side</td><td><span data-number="lug.cheek_plate_thickness_mm">0.000</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Pin diameter</td><td><span data-number="lug.pin_diameter_mm">75.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Hole diameter</td><td><span data-number="lug.hole_diameter_mm">80.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Outer radius from hole centre</td><td><span data-number="lug.outer_radius_mm">110.0</span></td><td>mm</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Yield strength</td><td><span data-number="lug.yield_strength_mpa">355.0</span></td><td>MPa</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Most-loaded leg static tension</td><td><span data-number="load.static_load_kN">420.0</span></td><td>kN</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Dynamic amplification factor</td><td><span data-number="load.dynamic_amplification_factor">2.0</span></td><td>dimensionless</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Entered skew factor</td><td><span data-number="load.skew_load_factor">1.1</span></td><td>dimensionless</td><td><a href="#source-example">Example input</a></td></tr>
+<tr><td>Sling count</td><td><span data-number="load.num_slings">2</span></td><td>legs</td><td><a href="#source-example">Example input</a></td></tr></tbody></table>
+<h3>Data register</h3>
+<table><thead><tr><th>Data or assumption</th><th>Status and consequence</th><th>Required evidence</th></tr></thead><tbody>
+<tr><td>Example geometry, force, amplification and material</td><td>ASSUMED - to be confirmed. Published configuration values are used as supplied.</td><td>Approved geometry, material certificate and resolved lift-load basis.</td></tr>
+<tr><td>Axial in-plane loading and participating plate stack</td><td>ASSUMED - to be confirmed. Nominal stress formulas omit eccentricity and load-transfer flexibility.</td><td>Connection arrangement and cheek/weld load-transfer calculation.</td></tr>
+<tr><td>Strength-factor design basis</td><td>NOT_EVALUATED. The factors explain software behaviour only.</td><td>Governing standard, edition, clause and engineer-selected design criteria.</td></tr>
+<tr><td>Skew-factor scope</td><td>NOT_EVALUATED. The numerical floor is applied; applicability is not established.</td><td>Rigging arrangement, tolerances, angle, load distribution and governing lifting-standard scope.</td></tr>
+<tr><td>Pin, weld, parent structure, bending, fatigue and fracture</td><td>NOT_EVALUATED. A passing strength screen is insufficient for design acceptance.</td><td>Complete connection calculations and applicable acceptance criteria.</td></tr>
+<tr><td>Field or independent benchmark evidence</td><td>NOT_EVALUATED. Arithmetic tests do not establish physical accuracy.</td><td>Matched published benchmark or controlled test with geometry, load and failure mode.</td></tr>
+</tbody></table>
+<h3>Quality pre-flight evidence</h3>
+<p>The rebuild tests check numerical fields, every plotted load case, the rounded-down restriction, local source links,
+the inline stylesheet, offline resource independence and embedded review controls.
+Existing workflow tests cover formula agreement and skew input handling.
+Engineering acceptance remains unevaluated for the data-register items above.</p>
+<details id="change-panel"><summary>Engineering changes</summary><div id="change-content"></div></details>
+<details id="comments"><summary>Comments</summary>
+<p>Comments are kept in this page until saved. Select a report section, enter a comment and add it to the list.
+Save the comments file beside this report. Where direct file saving is unavailable, move the downloaded file beside
+the report. Import that file to continue reviewing. Unsaved comments are lost when the page is closed.</p>
+<label for="comment-section">Report section</label><select id="comment-section"></select>
+<label for="comment-text">Comment</label><textarea id="comment-text" rows="4"></textarea>
+<button id="add-comment" type="button">Add comment</button>
+<button id="save-comments" type="button">Save comments beside report</button>
+<label for="import-comments">Import saved comments</label><input id="import-comments" type="file" accept=".json,application/json">
+<p id="comment-status" role="status" aria-live="polite">No comments have been added.</p><ol id="comment-list"></ol>
+</details>
+</section>
+</main>
+<script id="chart-data" type="application/json">{"limit_percent":100.0,"cases":[{"static_load_kN":105.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":77.0,"allowable_mpa":319.5,"utilization_percent":24.1},{"component":"net_tension","demand_mpa":41.3,"allowable_mpa":213.0,"utilization_percent":19.4},{"component":"shear_tearout","demand_mpa":41.3,"allowable_mpa":142.0,"utilization_percent":29.0}]},{"static_load_kN":122.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":89.8,"allowable_mpa":319.5,"utilization_percent":28.1},{"component":"net_tension","demand_mpa":48.1,"allowable_mpa":213.0,"utilization_percent":22.6},{"component":"shear_tearout","demand_mpa":48.1,"allowable_mpa":142.0,"utilization_percent":33.9}]},{"static_load_kN":140.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":102.7,"allowable_mpa":319.5,"utilization_percent":32.1},{"component":"net_tension","demand_mpa":55.0,"allowable_mpa":213.0,"utilization_percent":25.8},{"component":"shear_tearout","demand_mpa":55.0,"allowable_mpa":142.0,"utilization_percent":38.7}]},{"static_load_kN":157.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":115.5,"allowable_mpa":319.5,"utilization_percent":36.2},{"component":"net_tension","demand_mpa":61.9,"allowable_mpa":213.0,"utilization_percent":29.0},{"component":"shear_tearout","demand_mpa":61.9,"allowable_mpa":142.0,"utilization_percent":43.6}]},{"static_load_kN":175.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":128.3,"allowable_mpa":319.5,"utilization_percent":40.2},{"component":"net_tension","demand_mpa":68.8,"allowable_mpa":213.0,"utilization_percent":32.3},{"component":"shear_tearout","demand_mpa":68.8,"allowable_mpa":142.0,"utilization_percent":48.4}]},{"static_load_kN":192.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":141.2,"allowable_mpa":319.5,"utilization_percent":44.2},{"component":"net_tension","demand_mpa":75.6,"allowable_mpa":213.0,"utilization_percent":35.5},{"component":"shear_tearout","demand_mpa":75.6,"allowable_mpa":142.0,"utilization_percent":53.3}]},{"static_load_kN":210.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":154.0,"allowable_mpa":319.5,"utilization_percent":48.2},{"component":"net_tension","demand_mpa":82.5,"allowable_mpa":213.0,"utilization_percent":38.7},{"component":"shear_tearout","demand_mpa":82.5,"allowable_mpa":142.0,"utilization_percent":58.1}]},{"static_load_kN":227.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":166.8,"allowable_mpa":319.5,"utilization_percent":52.2},{"component":"net_tension","demand_mpa":89.4,"allowable_mpa":213.0,"utilization_percent":42.0},{"component":"shear_tearout","demand_mpa":89.4,"allowable_mpa":142.0,"utilization_percent":62.9}]},{"static_load_kN":245.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":179.7,"allowable_mpa":319.5,"utilization_percent":56.2},{"component":"net_tension","demand_mpa":96.2,"allowable_mpa":213.0,"utilization_percent":45.2},{"component":"shear_tearout","demand_mpa":96.2,"allowable_mpa":142.0,"utilization_percent":67.8}]},{"static_load_kN":262.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":192.5,"allowable_mpa":319.5,"utilization_percent":60.3},{"component":"net_tension","demand_mpa":103.1,"allowable_mpa":213.0,"utilization_percent":48.4},{"component":"shear_tearout","demand_mpa":103.1,"allowable_mpa":142.0,"utilization_percent":72.6}]},{"static_load_kN":280.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":205.3,"allowable_mpa":319.5,"utilization_percent":64.3},{"component":"net_tension","demand_mpa":110.0,"allowable_mpa":213.0,"utilization_percent":51.6},{"component":"shear_tearout","demand_mpa":110.0,"allowable_mpa":142.0,"utilization_percent":77.5}]},{"static_load_kN":297.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":218.2,"allowable_mpa":319.5,"utilization_percent":68.3},{"component":"net_tension","demand_mpa":116.9,"allowable_mpa":213.0,"utilization_percent":54.9},{"component":"shear_tearout","demand_mpa":116.9,"allowable_mpa":142.0,"utilization_percent":82.3}]},{"static_load_kN":315.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":231.0,"allowable_mpa":319.5,"utilization_percent":72.3},{"component":"net_tension","demand_mpa":123.8,"allowable_mpa":213.0,"utilization_percent":58.1},{"component":"shear_tearout","demand_mpa":123.8,"allowable_mpa":142.0,"utilization_percent":87.1}]},{"static_load_kN":332.5,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":243.8,"allowable_mpa":319.5,"utilization_percent":76.3},{"component":"net_tension","demand_mpa":130.6,"allowable_mpa":213.0,"utilization_percent":61.3},{"component":"shear_tearout","demand_mpa":130.6,"allowable_mpa":142.0,"utilization_percent":92.0}]},{"static_load_kN":350.0,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":256.7,"allowable_mpa":319.5,"utilization_percent":80.3},{"component":"net_tension","demand_mpa":137.5,"allowable_mpa":213.0,"utilization_percent":64.6},{"component":"shear_tearout","demand_mpa":137.5,"allowable_mpa":142.0,"utilization_percent":96.8}]},{"static_load_kN":361.4,"status":"pass","checks":[{"component":"pin_bearing","demand_mpa":265.0,"allowable_mpa":319.5,"utilization_percent":83.0},{"component":"net_tension","demand_mpa":142.0,"allowable_mpa":213.0,"utilization_percent":66.7},{"component":"shear_tearout","demand_mpa":142.0,"allowable_mpa":142.0,"utilization_percent":100.0}]},{"static_load_kN":367.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":269.5,"allowable_mpa":319.5,"utilization_percent":84.4},{"component":"net_tension","demand_mpa":144.4,"allowable_mpa":213.0,"utilization_percent":67.8},{"component":"shear_tearout","demand_mpa":144.4,"allowable_mpa":142.0,"utilization_percent":101.7}]},{"static_load_kN":385.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":282.3,"allowable_mpa":319.5,"utilization_percent":88.4},{"component":"net_tension","demand_mpa":151.3,"allowable_mpa":213.0,"utilization_percent":71.0},{"component":"shear_tearout","demand_mpa":151.3,"allowable_mpa":142.0,"utilization_percent":106.5}]},{"static_load_kN":402.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":295.2,"allowable_mpa":319.5,"utilization_percent":92.4},{"component":"net_tension","demand_mpa":158.1,"allowable_mpa":213.0,"utilization_percent":74.2},{"component":"shear_tearout","demand_mpa":158.1,"allowable_mpa":142.0,"utilization_percent":111.4}]},{"static_load_kN":420.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":308.0,"allowable_mpa":319.5,"utilization_percent":96.4},{"component":"net_tension","demand_mpa":165.0,"allowable_mpa":213.0,"utilization_percent":77.5},{"component":"shear_tearout","demand_mpa":165.0,"allowable_mpa":142.0,"utilization_percent":116.2}]},{"static_load_kN":437.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":320.8,"allowable_mpa":319.5,"utilization_percent":100.4},{"component":"net_tension","demand_mpa":171.9,"allowable_mpa":213.0,"utilization_percent":80.7},{"component":"shear_tearout","demand_mpa":171.9,"allowable_mpa":142.0,"utilization_percent":121.0}]},{"static_load_kN":455.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":333.7,"allowable_mpa":319.5,"utilization_percent":104.4},{"component":"net_tension","demand_mpa":178.8,"allowable_mpa":213.0,"utilization_percent":83.9},{"component":"shear_tearout","demand_mpa":178.8,"allowable_mpa":142.0,"utilization_percent":125.9}]},{"static_load_kN":472.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":346.5,"allowable_mpa":319.5,"utilization_percent":108.5},{"component":"net_tension","demand_mpa":185.6,"allowable_mpa":213.0,"utilization_percent":87.1},{"component":"shear_tearout","demand_mpa":185.6,"allowable_mpa":142.0,"utilization_percent":130.7}]},{"static_load_kN":490.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":359.3,"allowable_mpa":319.5,"utilization_percent":112.5},{"component":"net_tension","demand_mpa":192.5,"allowable_mpa":213.0,"utilization_percent":90.4},{"component":"shear_tearout","demand_mpa":192.5,"allowable_mpa":142.0,"utilization_percent":135.6}]},{"static_load_kN":507.5,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":372.2,"allowable_mpa":319.5,"utilization_percent":116.5},{"component":"net_tension","demand_mpa":199.4,"allowable_mpa":213.0,"utilization_percent":93.6},{"component":"shear_tearout","demand_mpa":199.4,"allowable_mpa":142.0,"utilization_percent":140.4}]},{"static_load_kN":525.0,"status":"fail","checks":[{"component":"pin_bearing","demand_mpa":385.0,"allowable_mpa":319.5,"utilization_percent":120.5},{"component":"net_tension","demand_mpa":206.2,"allowable_mpa":213.0,"utilization_percent":96.8},{"component":"shear_tearout","demand_mpa":206.2,"allowable_mpa":142.0,"utilization_percent":145.2}]}],"names":{"pin_bearing":"Pin-hole bearing","net_tension":"Net-section tension","shear_tearout":"Shear tear-out"}}</script>
+<script id="changes-data" type="application/json">{"document":"Lifting lug screening analysis","revisions":[{"revision":"A","date":"2026-10-21","changes":["The published example is evaluated for bearing, net tension and shear tear-out.","A load restriction is calculated for the failed shear screen; design acceptance remains unevaluated.","Unconfirmed material, loading and strength-factor bases are registered for engineering review."]},{"revision":"B","date":"2026-10-22","changes":["UTF-8 and LF output are explicit so the report rebuilds across platforms.","Independent hand calculations check reported stresses, utilization, exceedance and load restriction.","Conceptual tear-out planes, field precision and the load sensitivity heading are clarified for maintainer review."]}]}</script>
+<script>
+"use strict";
+const data = JSON.parse(document.getElementById("chart-data").textContent);
+const slider = document.getElementById("case-slider");
+const svgNS = "http://www.w3.org/2000/svg";
+function element(name, attrs, text) {
+  const node = document.createElementNS(svgNS, name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+const maxLoad = Math.max(...data.cases.map(c => c.static_load_kN));
+const maxUse = Math.max(data.limit_percent, ...data.cases.flatMap(c => c.checks.map(k => k.utilization_percent))) * 1.1;
+const colors = ["var(--brand)", "var(--accent)", "var(--nogo)"];
+const x = load => 65 + load / maxLoad * 680;
+const y = use => 315 - use / maxUse * 260;
+const chart = element("svg", {viewBox: "0 0 820 400", role: "img", "aria-label": "Component utilization against static leg tension"});
+chart.append(element("path", {d: "M65 45 V315 H755", fill: "none", stroke: "currentColor"}));
+chart.append(element("line", {x1: 65, x2: 755, y1: y(data.limit_percent), y2: y(data.limit_percent), stroke: "var(--ink)", "stroke-dasharray": "6 4"}));
+chart.append(element("text", {x: 66, y: 26}, "Utilization (%)"));
+chart.append(element("text", {x: 530, y: 350}, "Static leg tension (kN)"));
+for (const fraction of [0, 0.5, 1]) {
+  chart.append(element("text", {x: x(maxLoad * fraction), y: 335}, (maxLoad * fraction).toFixed(1)));
+}
+for (const use of [0, data.limit_percent]) {
+  chart.append(element("text", {x: 8, y: y(use) + 5}, use.toFixed(1)));
+}
+function tooltip(c, k) {
+  return "Case: static leg tension " + c.static_load_kN.toFixed(1) + " kN; component: " + data.names[k.component] +
+    "; demand: " + k.demand_mpa.toFixed(1) + " MPa; limit: " + k.allowable_mpa.toFixed(1) +
+    " MPa; utilization: " + k.utilization_percent.toFixed(1) + " %; screening limit: " + data.limit_percent.toFixed(1) + " %.";
+}
+data.cases[0].checks.forEach((check, component) => {
+  const points = data.cases.map(c => x(c.static_load_kN) + "," + y(c.checks[component].utilization_percent)).join(" ");
+  chart.append(element("polyline", {points, fill: "none", stroke: colors[component], "stroke-width": 2}));
+  chart.append(element("text", {x: 65 + component * 240, y: 382, style: "fill:" + colors[component]}, data.names[check.component]));
+  data.cases.forEach((c, index) => {
+    const k = c.checks[component];
+    const point = element("circle", {cx: x(c.static_load_kN), cy: y(k.utilization_percent), r: 4,
+      fill: colors[component], tabindex: 0, class: "chart-point", "aria-label": tooltip(c, k)});
+    point.append(element("title", {}, tooltip(c, k)));
+    const select = () => { slider.value = index; showCase(); };
+    point.addEventListener("mouseenter", select);
+    point.addEventListener("focus", select);
+    point.addEventListener("click", select);
+    chart.append(point);
+  });
+});
+document.getElementById("load-chart").append(chart);
+function showCase() {
+  const c = data.cases[Number(slider.value)];
+  const governing = c.checks.reduce((a, b) => a.utilization_percent >= b.utilization_percent ? a : b);
+  document.getElementById("chart-readout").textContent = tooltip(c, governing) +
+    (c.status === "pass" ? " The screen passes." : " The screen fails.");
+  const plot = element("svg", {viewBox: "0 0 820 210", role: "img", "aria-label": "Selected case component utilization"});
+  const bx = use => 210 + use / maxUse * 500;
+  plot.append(element("line", {x1: bx(data.limit_percent), x2: bx(data.limit_percent), y1: 10, y2: 165,
+    stroke: "currentColor", "stroke-dasharray": "6 4"}));
+  c.checks.forEach((k, i) => {
+    plot.append(element("text", {x: 8, y: 40 + i * 50}, data.names[k.component]));
+    const rect = element("rect", {x: 210, y: 22 + i * 50, width: bx(k.utilization_percent) - 210,
+      height: 24, fill: colors[i], tabindex: 0, "aria-label": tooltip(c, k)});
+    rect.append(element("title", {}, tooltip(c, k))); plot.append(rect);
+    plot.append(element("text", {x: bx(k.utilization_percent) + 8, y: 40 + i * 50}, k.utilization_percent.toFixed(1) + " %"));
+  });
+  plot.append(element("text", {x: 210, y: 195}, "Utilization (%); dashed line = " + data.limit_percent.toFixed(1) + " % limit"));
+  document.getElementById("component-chart").replaceChildren(plot);
+}
+slider.addEventListener("input", showCase); showCase();
+
+const changes = JSON.parse(document.getElementById("changes-data").textContent);
+for (const revision of changes.revisions) {
+  const p = document.createElement("p");
+  p.textContent = "Revision " + revision.revision + " · " + revision.date + ": " + revision.changes.join(" ");
+  document.getElementById("change-content").append(p);
+}
+const sections = [...document.querySelectorAll("h2[id]")];
+const sectionSelect = document.getElementById("comment-section");
+for (const section of sections) {
+  const option = document.createElement("option"); option.value = section.id; option.textContent = section.textContent;
+  sectionSelect.append(option);
+}
+let comments = [];
+const status = document.getElementById("comment-status");
+function renderComments() {
+  const list = document.getElementById("comment-list"); list.replaceChildren();
+  for (const comment of comments) {
+    const item = document.createElement("li");
+    item.textContent = document.getElementById(comment.section).textContent + ": " + comment.text;
+    list.append(item);
+  }
+}
+document.getElementById("add-comment").addEventListener("click", () => {
+  const field = document.getElementById("comment-text");
+  if (!field.value.trim()) { status.textContent = "Enter a comment before adding it."; return; }
+  comments.push({section: sectionSelect.value, text: field.value.trim()});
+  renderComments(); field.value = ""; status.textContent = "Comments have changed. Save the comments file before closing.";
+});
+document.getElementById("save-comments").addEventListener("click", async () => {
+  const payload = JSON.stringify({document: changes.document, revision: changes.revisions.at(-1).revision, comments}, null, 2) + "\n";
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({suggestedName: "lifting-lug-analysis.comments.json",
+        types: [{description: "Report comments", accept: {"application/json": [".json"]}}]});
+      const writable = await handle.createWritable(); await writable.write(payload); await writable.close();
+      status.textContent = "Comments have been saved to the selected file.";
+    } else {
+      const url = URL.createObjectURL(new Blob([payload], {type: "application/json"}));
+      const link = document.createElement("a"); link.href = url; link.download = "lifting-lug-analysis.comments.json";
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = "Comments have been downloaded. Keep the file beside the report.";
+    }
+  } catch (error) { status.textContent = "Comments were not saved. The file selection was cancelled or access was unavailable."; }
+});
+document.getElementById("import-comments").addEventListener("change", async event => {
+  const file = event.target.files[0]; if (!file) return;
+  try {
+    const loaded = JSON.parse(await file.text());
+    const valid = loaded.document === changes.document && loaded.revision === changes.revisions.at(-1).revision &&
+      Array.isArray(loaded.comments) && loaded.comments.every(c =>
+        c && typeof c.text === "string" && sections.some(s => s.id === c.section));
+    if (!valid) throw new Error("Invalid comments file");
+    if (comments.length && !window.confirm("Replace the current comments with the imported file?")) return;
+    comments = loaded.comments; renderComments(); status.textContent = "Saved comments have been imported.";
+  } catch (error) { status.textContent = "The selected file is not a comments file for this report revision."; }
+});
+</script>
+</body></html>

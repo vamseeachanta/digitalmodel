@@ -20,9 +20,8 @@ DOMAIN = "infrastructure-other"
 
 
 def test_reporting_gate_is_enabled_and_collects_the_folder():
-    gates = yaml.safe_load(
-        (ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
-    )["gates"]
+    with (ROOT / ".claude/quality-gates.yaml").open(encoding="utf-8", newline="\n") as source:
+        gates = yaml.safe_load(source)["gates"]
     gate = gates[f"tests-{DOMAIN}"]
     assert gate["enabled"] is True
     assert gate["domain"] == DOMAIN
@@ -39,6 +38,7 @@ def test_reporting_gate_is_enabled_and_collects_the_folder():
     "tests/reporting/golden/standard_report_plain.html",
     "src/digitalmodel/reporting/calc_report.py",
     "src/digitalmodel/reporting/assets/calc_report_format.html",
+    "tests/reporting/test_lifting_lug_module_report.py",
 ])
 def test_reporting_changes_select_the_collecting_domain(changed_path, monkeypatch):
     spec = importlib.util.spec_from_file_location(
@@ -55,13 +55,14 @@ def test_reporting_changes_select_the_collecting_domain(changed_path, monkeypatc
 
 
 def test_registration_guard_runs_in_the_independent_hosted_harness():
-    workflow = yaml.safe_load(
-        (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(
-            encoding="utf-8"
-        )
-    )
+    with (ROOT / ".github/workflows/quality-gates-by-domain.yml").open(
+        encoding="utf-8", newline="\n"
+    ) as source:
+        workflow = yaml.safe_load(source)
     harness = workflow["jobs"]["ci-harness-tests"]
     assert "if" not in harness
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
     assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])
+    # The report also runs for generator-only edits outside the source tree.
+    assert "tests/reporting/test_lifting_lug_module_report.py" in shlex.split(step["run"])
