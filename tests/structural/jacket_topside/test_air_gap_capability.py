@@ -33,7 +33,7 @@ def test_invented_example_uses_engine_values_and_exposes_limits():
     module = builder()
     example = module.build_example()
     assert example["assessment"].snapshots[-1].crest_clearance_m == pytest.approx(-1.0)
-    assert example["loads"][-1].horizontal_force_kn == pytest.approx(164.0)
+    assert example["loads"][-1].horizontal_force_kn == pytest.approx(127.0016)
     assert example["remediation"].options[1].required_lift_m == pytest.approx(2.7)
     page = module.render_page(example)
     assert "invented" in page
@@ -56,3 +56,11 @@ def test_page_escapes_text_from_data():
     page = module.render_page(example)
     assert "<script>unsafe</script>" not in page
     assert "&lt;script&gt;unsafe&lt;/script&gt;" in page
+
+
+def test_page_reports_api_method_and_coefficient_provenance():
+    page = builder().render_page(builder().build_example())
+    for text in ("API RP 2A-WSD", "21st", "C17.6.2", "0.88",
+                 "current blockage", "invented input", "studylib.net", "127.0"):
+        assert text in page
+    assert "generic drag" not in page
