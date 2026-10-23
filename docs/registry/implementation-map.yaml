@@ -1,6 +1,16 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+knowledge_packs:
+  subsea/connectors:
+    agent_pack: src/digitalmodel/subsea/connectors/docs/agent-pack.md
+    qa_family: EC
+  subsea/rov:
+    agent_pack: src/digitalmodel/subsea/rov/docs/agent-pack.md
+    qa_family: EC
+  subsea/trees:
+    agent_pack: src/digitalmodel/subsea/trees/docs/agent-pack.md
+    qa_family: EC
 searched:
   tracked_files: 17815
   text_files_searched: 15629
