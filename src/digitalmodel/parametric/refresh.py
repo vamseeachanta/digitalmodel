@@ -183,16 +183,20 @@ def parametric_workflow_ids() -> list[str]:
 
 
 def _sha_files(paths: list[str], repo_root: Path) -> str:
+    from digitalmodel.parametric.text_basis import normalized_text_bytes
+
     h = hashlib.sha256()
     for rel in paths:
         h.update(rel.encode())
-        h.update((repo_root / rel).read_bytes())
+        h.update(normalized_text_bytes(repo_root / rel))
     return h.hexdigest()
 
 
 def content_fingerprint(workflow_id: str, repo_root: Path = REPO_ROOT) -> str:
     """Hash of everything an atlas's correctness depends on. Stable across
     unrelated commits; changes iff spec / template / source / standard move."""
+    from digitalmodel.parametric.text_basis import normalized_text_bytes
+
     row = _row(workflow_id)
     block = row["parametric"]
     basename = row["basename"]
@@ -205,7 +209,7 @@ def content_fingerprint(workflow_id: str, repo_root: Path = REPO_ROOT) -> str:
         "response_kwargs": block.get("response_kwargs", {}),
         "standards": STANDARDS.get(basename, []),
         "input_sha256": hashlib.sha256(
-            (repo_root / row["input"]).read_bytes()
+            normalized_text_bytes(repo_root / row["input"])
         ).hexdigest(),
         "source_sha256": _sha_files(SOURCE_FILES.get(basename, []), repo_root),
     }

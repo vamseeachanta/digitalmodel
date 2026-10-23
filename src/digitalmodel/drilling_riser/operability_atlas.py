@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +34,6 @@ import pandas as pd
 import yaml
 
 from digitalmodel.drilling_riser.envelope import (
-    DEFAULT_MOONPOOL_CLEARANCE_MARGIN_M,
     EnvelopeCriteria,
     OperatingMode,
     RigEnvelopeLimits,
@@ -45,6 +43,7 @@ from digitalmodel.drilling_riser.envelope import (
 )
 from digitalmodel.parametric.atlas import Atlas, Axis
 from digitalmodel.parametric.generate import _holdout_points
+from digitalmodel.parametric.text_basis import normalized_text_bytes
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BASENAME = "drilling_riser_operability"
@@ -95,6 +94,7 @@ SOURCE_FILES = (
     "src/digitalmodel/orcaflex/code_check_engine.py",
     "src/digitalmodel/drilling_riser/envelope_modes.yml",
     "src/digitalmodel/drilling_riser/operability_atlas.py",
+    "src/digitalmodel/parametric/text_basis.py",
 )
 
 
@@ -149,16 +149,33 @@ def governing_utilisation(point: dict[str, Any], *, cfg: dict[str, Any]) -> floa
         return float(min(np.nanmax(cell), UTILISATION_CEILING))
 
 
+class SourceBasisUnavailable(FileNotFoundError):
+    """Required fingerprint inputs are absent, including in binary installs."""
+
+    def __init__(self, missing_files: tuple[str, ...]):
+        self.missing_files = missing_files
+        super().__init__("source basis unavailable: " + ", ".join(missing_files))
+
+
 def content_fingerprint(cfg_path: Path = CONFIG_PATH, repo_root: Path = REPO_ROOT) -> str:
-    """Hash of everything the atlas depends on: config YAML + response source +
-    standard editions. A change to any flips the fingerprint (a determinism test
-    asserts the committed atlas matches)."""
-    cfg = load_config(cfg_path)
+    """Hash canonical UTF-8 config, declared sources and standard editions.
+
+    Missing source trees raise SourceBasisUnavailable. LF text keeps its byte
+    identity; CRLF and CR are normalized before hashing. Rebuild tests compare
+    numerical artifacts separately from this self-hashed source identity.
+    """
+    missing = tuple(rel for rel in SOURCE_FILES if not (repo_root / rel).is_file())
+    if not Path(cfg_path).is_file():
+        missing += ("config_yaml",)
+    if missing:
+        raise SourceBasisUnavailable(missing)
+    config_text = normalized_text_bytes(cfg_path).decode("utf-8")
+    cfg = yaml.safe_load(config_text)
     basis = {
-        "config_yaml": Path(cfg_path).read_bytes().decode(),
+        "config_yaml": config_text,
         "standards": cfg["provenance"]["standards"],
         "source_sha256": {
-            rel: hashlib.sha256((repo_root / rel).read_bytes()).hexdigest()
+            rel: hashlib.sha256(normalized_text_bytes(repo_root / rel)).hexdigest()
             for rel in SOURCE_FILES
         },
         "spec": {"basename": BASENAME, "response": RESPONSE, "physics": PHYSICS},
