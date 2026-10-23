@@ -2,7 +2,9 @@
 # ABOUTME: Known-value checks tied to the tug service one-pager's numbers (epic #1193)
 """Tests for digitalmodel.tug."""
 
+import json
 import math
+from pathlib import Path
 
 import pytest
 
@@ -256,11 +258,9 @@ class TestTowline:
 # emissions / hybrid (#1198)
 # ---------------------------------------------------------------------------
 class TestEmissions:
-    PROFILE = [
-        OperatingPhase("transit", 0.40, 5.0),
-        OperatingPhase("assist", 0.90, 1.0),
-        OperatingPhase("standby", 0.10, 4.0),
-    ]
+    EXAMPLE = json.loads(Path(__file__).with_name("duty_cycle.json").read_text(
+        encoding="utf-8"))
+    PROFILE = [OperatingPhase(**phase) for phase in EXAMPLE["profile"]]
 
     def test_tier_iii_limit_by_rpm(self):
         assert imo_tier_iii_nox_limit(120) == 3.4
@@ -268,10 +268,12 @@ class TestEmissions:
         assert imo_tier_iii_nox_limit(1600) == pytest.approx(9.0 * 1600**-0.2, rel=1e-9)
 
     def test_cycle_energy(self):
-        assert cycle_energy(4000, self.PROFILE) == pytest.approx(13200.0, rel=1e-9)
+        energy = cycle_energy(self.EXAMPLE["installed_power_kw"], self.PROFILE)
+        assert energy == pytest.approx(13200.0, rel=1e-9)
 
     def test_hybrid_sizing_shaves_assist_peak(self):
-        r = size_hybrid(4000, self.PROFILE, baseline_fraction=0.5)
+        r = size_hybrid(self.EXAMPLE["installed_power_kw"], self.PROFILE,
+                        baseline_fraction=self.EXAMPLE["baseline_fraction"])
         assert r.peak_power_kw == pytest.approx(3600.0)
         assert r.baseline_engine_kw == pytest.approx(2000.0)
         assert r.battery_power_kw == pytest.approx(1600.0)

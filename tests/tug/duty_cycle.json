@@ -1,0 +1,9 @@
+{
+  "installed_power_kw": 4000,
+  "baseline_fraction": 0.5,
+  "profile": [
+    {"name": "transit", "power_fraction": 0.4, "duration_h": 5.0},
+    {"name": "assist", "power_fraction": 0.9, "duration_h": 1.0},
+    {"name": "standby", "power_fraction": 0.1, "duration_h": 4.0}
+  ]
+}
