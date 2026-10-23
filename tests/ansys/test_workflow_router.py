@@ -75,3 +75,15 @@ def test_silent_dry_run_fallback_raises(tmp_path: Path):
     ):
         with pytest.raises(RuntimeError, match="fell back to dry-run"):
             AnsysWorkflow().router(_cfg(tmp_path, dry_run=False))
+
+
+def test_workflow_forwards_explicit_distributed_mode(tmp_path):
+    """Distributed execution is opt-in through the workflow as well as Python."""
+    cfg = _cfg(tmp_path, dry_run=False)
+    cfg["ansys"]["extra_args"] = ["-dis"]
+    with patch(
+        "digitalmodel.ansys.runner.run_ansys",
+        return_value=_fake_result(ANSYSRunStatus.COMPLETED, tmp_path),
+    ) as launch:
+        AnsysWorkflow().router(cfg)
+    assert launch.call_args.kwargs["extra_args"] == ["-dis"]
