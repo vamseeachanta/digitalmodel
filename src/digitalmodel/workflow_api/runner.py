@@ -18,14 +18,17 @@ assetutilities. Two digitalmodel-specific bindings:
 * it stamps ``code_version("digitalmodel")`` and lifts any DNV/API ``citations``
   sidecar from an ``in_memory`` payload into ``provenance.standard_revisions``.
 
-Side-effect-freeness comes entirely from the embed path: all result + log writes
-land under a throwaway ``tempfile.mkdtemp()`` root which is ``rmtree``'d after the
-content hash is taken, leaving the repo/example dirs byte-for-byte untouched.
+All result + log writes land under a ``tempfile.mkdtemp()`` root. Successful
+runs remove it after hashing; failed runs retain inputs and partial outputs for
+diagnosis, with the location included in exception notes and error warnings.
+Repository and example directories remain untouched.
 """
 
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import tempfile
 import shutil
 from pathlib import Path
@@ -39,6 +42,7 @@ from assetutilities.workflow_api import (
     extract_result,
 )
 from assetutilities.workflow_api.envelope import (
+    canonical_input,
     compute_reproducible,
     input_hash,
     make_provenance,
@@ -138,12 +142,37 @@ def _standard_revisions_from_payload(payload: dict) -> list:
     return revisions
 
 
+def _retain_failure(root: str, cfg: dict, phase: str, exc: BaseException) -> None:
+    """Record failure metadata without masking the original exception.
+
+    The shared canonical input excludes volatile top-level configuration keys.
+    Metadata is separate from engine output and is created only after failure,
+    so it cannot enter successful file-result discovery or hashing.
+    """
+    exc.add_note(f"Workflow evidence retained at {root}")
+    try:
+        metadata = Path(root) / ".workflow-evidence"
+        metadata.mkdir()
+        raw_input = canonical_input(cfg).encode("utf-8")
+        (metadata / "input.json").write_bytes(raw_input)
+        record = {
+            "status": "failed", "phase": phase,
+            "input_hash": hashlib.sha256(raw_input).hexdigest(),
+        }
+        (metadata / "failure.json").write_text(
+            json.dumps(record, sort_keys=True), encoding="utf-8"
+        )
+    except Exception as error:
+        exc.add_note(f"Failure metadata could not be recorded ({type(error).__name__})")
+
+
 def _run_once(cfg: dict, locator: ResultLocator):
-    """One side-effect-free embed run. Returns ``(payload, warnings, result_hash)``."""
+    """Run once; clean successful outputs and retain failed evidence."""
     # Imported lazily -- the digitalmodel engine import is heavy.
     from digitalmodel.engine import engine
 
     root = tempfile.mkdtemp(prefix="dmwf_")
+    phase = "engine"
     try:
         cfg_base = engine(
             cfg=copy.deepcopy(cfg),
@@ -151,10 +180,16 @@ def _run_once(cfg: dict, locator: ResultLocator):
             root_folder=root,
             log_to_file=False,
         )
+        phase = "extraction"
         payload, warns = extract_result(cfg_base, locator, root)
-        return payload, warns, result_hash(payload)
-    finally:
+        phase = "hashing"
+        rhash = result_hash(payload)
+    except BaseException as exc:
+        _retain_failure(root, cfg, phase, exc)
+        raise
+    else:
         shutil.rmtree(root, ignore_errors=True)
+        return payload, warns, rhash
 
 
 def run_workflow(
@@ -169,6 +204,7 @@ def run_workflow(
     ``status="error"`` envelope, never raised.
     """
     wid = workflow_id or "(inline-cfg)"
+    ihash = None
     try:
         if cfg is None:
             row = resolve_registry_row(workflow_id)
@@ -207,8 +243,8 @@ def run_workflow(
             workflow_id=wid,
             status="error",
             result={},
-            provenance=make_provenance(None, package_name=PACKAGE_NAME),
+            provenance=make_provenance(ihash, package_name=PACKAGE_NAME),
             determinism={"result_hash": None, "reproducible": None},
             confidence=None,
-            warnings=[str(exc)],
+            warnings=[str(exc), *getattr(exc, "__notes__", [])],
         )

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<title>Workflow failure evidence coverage</title>
+<style>body{font:16px system-ui;margin:2rem;max-width:100rem}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:.4rem;text-align:left}code{overflow-wrap:anywhere}</style>
+<h1>Workflow failure evidence coverage</h1>
+<h2>Summary</h2>
+<p>The shared workflow API retains failed execution, extraction and hashing evidence.
+Successful-run cleanup remains unchanged. Coverage is established by synthetic failure
+injection, not native execution or engineering qualification. The matrix regression
+preserves mixed historical response states while a diagnostic result is published.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-19</td><td>Initial failure-retention scope and live registry inventory, to bound coverage claims.</td></tr></table>
+<p>Table 1. Revision history.</p>
+<h2>Basis and acceptance criteria</h2>
+<p>Issue 2124
+requires preservation of failed inputs, partial outputs and original exceptions.
+Linked issue 2093
+and issue 2119
+establish the preparation and diagnostic-lookup precedents. No equations, engineering
+constants or licensed source values are added.</p>
+<p>The shared canonical input contract in <code>assetutilities.workflow_api.envelope</code>
+is used: <code>Analysis</code>, <code>default</code> and <code>cfg_array</code> are excluded.
+Retained <code>.workflow-evidence/input.json</code> bytes are bound to
+<code>failure.json</code> by their SHA-256 digest; the failure record identifies the stage
+and failed state. Existing files are retained rather than overwritten when the metadata
+name collides. Exception notes expose the retained directory; error envelopes keep the
+input digest and notes. Metadata recording is best effort and cannot mask the primary
+exception. Retention limits and disposal remain separate decisions.</p>
+<h2>Verification</h2>
+<p>The combined offline suite passes 135 tests across the workflow API, preparation,
+observed evidence and replay/publication modules. The failure-retention regressions first
+reproduced evidence deletion, then passed with the corrections. Shared API result goldens
+and successful preparation output checks remain unchanged.</p>
+<p>Repository structure, whitespace and absolute-path checks pass. Ruff reports only two
+baseline E402 findings at unchanged imports in <code>scripts/prepare_mooring_qualification.py</code>,
+lines 18 and 19; the same statements are present on the baseline. No LFS-tracked file changes.</p>
+<h2>Inspected failure paths</h2>
+<table><tr><th>Path</th><th>Evidence and disposition</th></tr>
+<tr><td>src/digitalmodel/workflow_api/runner.py</td><td>Unconditional cleanup removed partial outputs after failure. Cleanup is now success-only. Synthetic tests cover engine, extraction, hashing, interruption, metadata collision and failed reproducibility rerun.</td></tr>
+<tr><td>scripts/prepare_mooring_qualification.py</td><td>The issue-described correction is absent from the inspected baseline: cleanup deleted failed preparation. The correction retains copied source and partial generated files, records source digest and failure phase, and re-raises the original exception. No native execution is included.</td></tr>
+<tr><td>src/digitalmodel/workflows/installation_variant_study.py</td><td>Exception cleanup deletes the partial directory and staging master. A separate tested correction is deferred; shared API coverage does not correct this path.</td></tr>
+<tr><td>src/digitalmodel/solvers/smoke/workflow.py</td><td>Scratch cleanup can remove failed probe evidence when keep_scratch is false. Runtime testing is deferred because native solver access is excluded.</td></tr>
+<tr><td>src/digitalmodel/ansys/analysis_replay.py and analysis_matrix_publish.py</td><td>Existing aggregation and publication preserve mixed historical states in the new synthetic regression; no production change is needed.</td></tr></table>
+<p>Table 2. Bounded source inspection; these paths are not a complete preparation-workflow audit.</p>
+<h2>Registry enumeration</h2>
+<p>Source: <code>docs/registry/workflows.yaml</code> at the task baseline.
+SHA-256: <code>7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896</code>. The enumeration visits 124 rows and
+123 distinct identifiers, including repeated version rows.
+Runtime declarations: {&#x27;standalone&#x27;: 1, &#x27;offline&#x27;: 120, &#x27;requires-license&#x27;: 3}.</p>
+<p>Every row below is enumerated only. Its individual router, input preparation and
+native behavior are NOT_EVALUATED by this change. Synthetic shared-runner tests do not
+establish qualification for these individual workflows. Standalone invocations and
+workflows absent from this registry are outside the shared API coverage claim.</p>
+<table><tr><th>Workflow identifier</th><th>Version</th><th>Basename</th><th>Declared runtime</th><th>Declared input</th></tr>
+<tr><td>four-point-skew</td><td>1</td><td>four_point_skew</td><td>standalone</td><td>examples/workflows/four-point-skew/input.yml</td></tr>
+<tr><td>catenary</td><td>implicit</td><td>catenary</td><td>offline</td><td>examples/workflows/catenary/input.yml</td></tr>
+<tr><td>pipe-capacity</td><td>implicit</td><td>pipe_capacity</td><td>offline</td><td>examples/workflows/pipe-capacity/input.yml</td></tr>
+<tr><td>fatigue-analysis</td><td>implicit</td><td>fatigue_analysis</td><td>offline</td><td>examples/workflows/fatigue-analysis/input.yml</td></tr>
+<tr><td>jumper-installation</td><td>implicit</td><td>jumper_installation</td><td>offline</td><td>examples/workflows/jumper-installation/input.yml</td></tr>
+<tr><td>riser-fatigue</td><td>implicit</td><td>riser_fatigue</td><td>offline</td><td>examples/workflows/riser-fatigue/input.yml</td></tr>
+<tr><td>riser-fatigue-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/riser-fatigue-atlas-query/input.yml</td></tr>
+<tr><td>mooring-fatigue</td><td>1</td><td>mooring_fatigue</td><td>offline</td><td>examples/workflows/mooring-fatigue/input.yml</td></tr>
+<tr><td>mooring-fatigue</td><td>2</td><td>mooring_fatigue</td><td>offline</td><td>examples/workflows/mooring-fatigue-v2/input.yml</td></tr>
+<tr><td>mooring-fatigue-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/mooring-fatigue-atlas-query/input.yml</td></tr>
+<tr><td>synthetic-rope-mooring-fatigue</td><td>implicit</td><td>synthetic_rope_mooring_fatigue</td><td>offline</td><td>examples/workflows/synthetic-rope-mooring-fatigue/input.yml</td></tr>
+<tr><td>synthetic-rope-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/synthetic-rope-atlas-query/input.yml</td></tr>
+<tr><td>spectral-fatigue</td><td>implicit</td><td>spectral_fatigue</td><td>offline</td><td>examples/workflows/spectral-fatigue/input.yml</td></tr>
+<tr><td>spectral-fatigue-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/spectral-fatigue-atlas-query/input.yml</td></tr>
+<tr><td>rao-spectral-fatigue</td><td>implicit</td><td>rao_spectral_fatigue</td><td>offline</td><td>examples/workflows/rao-spectral-fatigue/input.yml</td></tr>
+<tr><td>vessel-seakeeping</td><td>implicit</td><td>vessel_seakeeping</td><td>offline</td><td>examples/workflows/vessel-seakeeping/input.yml</td></tr>
+<tr><td>time-series</td><td>implicit</td><td>time_series</td><td>offline</td><td>examples/workflows/time-series/input.yml</td></tr>
+<tr><td>viv-analysis</td><td>implicit</td><td>viv_analysis</td><td>offline</td><td>examples/workflows/viv-analysis/input.yml</td></tr>
+<tr><td>viv-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/viv-atlas-query/input.yml</td></tr>
+<tr><td>viv-parametric</td><td>implicit</td><td>parametric_run</td><td>offline</td><td>examples/workflows/viv-parametric/input.yml</td></tr>
+<tr><td>stress-strain</td><td>implicit</td><td>stress_strain</td><td>offline</td><td>examples/workflows/stress-strain/input.yml</td></tr>
+<tr><td>compare-tool</td><td>implicit</td><td>compare_tool</td><td>offline</td><td>examples/workflows/compare-tool/input.yml</td></tr>
+<tr><td>api-rp-2rd-riser</td><td>implicit</td><td>code_check</td><td>offline</td><td>examples/workflows/api-rp-2rd-riser/input.yml</td></tr>
+<tr><td>code-check-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/code-check-atlas-query/input.yml</td></tr>
+<tr><td>dnv-os-f201-riser</td><td>implicit</td><td>code_check</td><td>offline</td><td>examples/workflows/dnv-os-f201-riser/input.yml</td></tr>
+<tr><td>api-2sk-mooring</td><td>implicit</td><td>code_check</td><td>offline</td><td>examples/workflows/api-2sk-mooring/input.yml</td></tr>
+<tr><td>pipe-ovality</td><td>implicit</td><td>pipe_ovality</td><td>offline</td><td>examples/workflows/pipe-ovality/input.yml</td></tr>
+<tr><td>wave-spectrum</td><td>implicit</td><td>wave_spectrum</td><td>offline</td><td>examples/workflows/wave-spectrum/input.yml</td></tr>
+<tr><td>response-spectrum</td><td>implicit</td><td>response_spectrum</td><td>offline</td><td>examples/workflows/response-spectrum/input.yml</td></tr>
+<tr><td>rao-tabulation</td><td>implicit</td><td>rao_tabulation</td><td>offline</td><td>examples/workflows/rao-tabulation/input.yml</td></tr>
+<tr><td>rao-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/rao-atlas-query/input.yml</td></tr>
+<tr><td>von-mises</td><td>implicit</td><td>von_mises</td><td>offline</td><td>examples/workflows/von-mises/input.yml</td></tr>
+<tr><td>elastic-buckling</td><td>implicit</td><td>elastic_buckling</td><td>offline</td><td>examples/workflows/elastic-buckling/input.yml</td></tr>
+<tr><td>orcaflex-strength-post</td><td>implicit</td><td>orcaflex_post_process</td><td>requires-license</td><td>examples/workflows/orcaflex-strength-post/input.yml</td></tr>
+<tr><td>orcaflex-run-batch</td><td>implicit</td><td>orcaflex_run_batch</td><td>requires-license</td><td>examples/workflows/orcaflex-run-batch/input.yml</td></tr>
+<tr><td>stress-strain-parametric</td><td>implicit</td><td>parametric_run</td><td>offline</td><td>examples/workflows/stress-strain-parametric/input.yml</td></tr>
+<tr><td>riser-stackup</td><td>implicit</td><td>riser_stackup</td><td>offline</td><td>examples/workflows/riser-stackup/input.yml</td></tr>
+<tr><td>tsj-sizing</td><td>implicit</td><td>tsj_sizing</td><td>offline</td><td>examples/workflows/tsj-sizing/input.yml</td></tr>
+<tr><td>riser-stackup-drawing</td><td>implicit</td><td>riser_stackup_drawing</td><td>offline</td><td>examples/workflows/riser-stackup-drawing/input.yml</td></tr>
+<tr><td>riser-stackup-parametric</td><td>implicit</td><td>parametric_run</td><td>offline</td><td>examples/workflows/riser-stackup-parametric/input.yml</td></tr>
+<tr><td>riser-viv-screening</td><td>implicit</td><td>viv_screening</td><td>offline</td><td>examples/workflows/riser-viv-screening/input.yml</td></tr>
+<tr><td>sn-curve</td><td>implicit</td><td>sn_curve</td><td>offline</td><td>examples/workflows/sn-curve/input.yml</td></tr>
+<tr><td>sn-curve-comparison</td><td>implicit</td><td>sn_curve</td><td>offline</td><td>examples/workflows/sn-curve-comparison/input.yml</td></tr>
+<tr><td>plate-buckling</td><td>implicit</td><td>plate_buckling</td><td>offline</td><td>examples/workflows/plate-buckling/input.yml</td></tr>
+<tr><td>on-bottom-stability-f109</td><td>implicit</td><td>on_bottom_stability</td><td>offline</td><td>examples/workflows/on-bottom-stability-f109/input.yml</td></tr>
+<tr><td>free-span-f105</td><td>implicit</td><td>free_span</td><td>offline</td><td>examples/workflows/free-span-f105/input.yml</td></tr>
+<tr><td>free-span-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/free-span-atlas-query/input.yml</td></tr>
+<tr><td>fowt-mooring</td><td>implicit</td><td>fowt_mooring</td><td>offline</td><td>examples/workflows/fowt-mooring/input.yml</td></tr>
+<tr><td>fowt-mooring-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/fowt-mooring-atlas-query/input.yml</td></tr>
+<tr><td>pipeline-lateral-buckling</td><td>implicit</td><td>lateral_buckling</td><td>offline</td><td>examples/workflows/pipeline-lateral-buckling/input.yml</td></tr>
+<tr><td>pipeline-upheaval-buckling</td><td>implicit</td><td>upheaval_buckling</td><td>offline</td><td>examples/workflows/pipeline-upheaval-buckling/input.yml</td></tr>
+<tr><td>span-rectification</td><td>implicit</td><td>span_rectification</td><td>offline</td><td>examples/workflows/span-rectification/input.yml</td></tr>
+<tr><td>span-rectification-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/span-rectification-atlas-query/input.yml</td></tr>
+<tr><td>orcawave-input-prep</td><td>implicit</td><td>diffraction</td><td>offline</td><td>examples/workflows/orcawave-input-prep/input.yml</td></tr>
+<tr><td>orcawave-diffraction-solve</td><td>implicit</td><td>diffraction</td><td>requires-license</td><td>examples/workflows/orcawave-diffraction-solve/input.yml</td></tr>
+<tr><td>aqwa-diffraction-deck-prep</td><td>implicit</td><td>diffraction</td><td>offline</td><td>examples/workflows/aqwa-diffraction-deck-prep/input.yml</td></tr>
+<tr><td>diffraction-library-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/diffraction-library-query/input.yml</td></tr>
+<tr><td>orcaflex-library-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/orcaflex-library-query/input.yml</td></tr>
+<tr><td>drilling-riser-envelope-library-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/drilling-riser-envelope-library-query/input.yml</td></tr>
+<tr><td>drilling-riser-operability-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/drilling-riser-operability-query/input.yml</td></tr>
+<tr><td>dynacard-diagnostics</td><td>implicit</td><td>artificial_lift</td><td>offline</td><td>examples/workflows/dynacard-diagnostics/input.yml</td></tr>
+<tr><td>artificial-lift-field-health</td><td>implicit</td><td>artificial_lift_field_health</td><td>offline</td><td>examples/workflows/artificial-lift-field-health/input.yml</td></tr>
+<tr><td>orcaflex-6dbuoy-dnvrph103</td><td>implicit</td><td>code_dnvrph103</td><td>offline</td><td>examples/workflows/orcaflex-6dbuoy-dnvrph103/input.yml</td></tr>
+<tr><td>fpso-spread-mooring</td><td>implicit</td><td>fpso_mooring</td><td>offline</td><td>examples/workflows/fpso-spread-mooring/input.yml</td></tr>
+<tr><td>fpso-mooring-full</td><td>implicit</td><td>fpso_mooring_full</td><td>offline</td><td>examples/workflows/fpso-mooring-full/input.yml</td></tr>
+<tr><td>fpso-mooring-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/fpso-mooring-atlas-query/input.yml</td></tr>
+<tr><td>wall-thickness-quickcheck</td><td>implicit</td><td>wall_thickness</td><td>offline</td><td>examples/workflows/wall-thickness-quickcheck/input.yml</td></tr>
+<tr><td>api579-pipe-ffs-b314</td><td>implicit</td><td>API579</td><td>offline</td><td>examples/workflows/api579-pipe-ffs-b314/input.yml</td></tr>
+<tr><td>api579-pipe-ffs-b318</td><td>implicit</td><td>API579</td><td>offline</td><td>examples/workflows/api579-pipe-ffs-b318/input.yml</td></tr>
+<tr><td>inspection-planning</td><td>implicit</td><td>inspection_planning</td><td>offline</td><td>examples/workflows/inspection-planning/input.yml</td></tr>
+<tr><td>inspection-planning-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/inspection-planning-atlas-query/input.yml</td></tr>
+<tr><td>jacket-member-joint-checks</td><td>implicit</td><td>jacket_checks</td><td>offline</td><td>examples/workflows/jacket-member-joint-checks/input.yml</td></tr>
+<tr><td>ocimf-tanker-loads</td><td>implicit</td><td>ocimf</td><td>offline</td><td>examples/workflows/ocimf-tanker-loads/input.yml</td></tr>
+<tr><td>naval-arch-yaw-moment</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/naval-arch-yaw-moment/input.yml</td></tr>
+<tr><td>rudder-stock-torque</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/rudder-stock-torque/input.yml</td></tr>
+<tr><td>naval-arch-maneuvering-envelope</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/naval-arch-maneuvering-envelope/input.yml</td></tr>
+<tr><td>pile-axial-capacity</td><td>implicit</td><td>geotechnical</td><td>offline</td><td>examples/workflows/pile-axial-capacity/input.yml</td></tr>
+<tr><td>drag-anchor-holding</td><td>implicit</td><td>geotechnical</td><td>offline</td><td>examples/workflows/drag-anchor-holding/input.yml</td></tr>
+<tr><td>nodal-analysis-ipr-vlp</td><td>implicit</td><td>production</td><td>offline</td><td>examples/workflows/nodal-analysis-ipr-vlp/input.yml</td></tr>
+<tr><td>anchor-capacity</td><td>implicit</td><td>anchor_capacity</td><td>offline</td><td>examples/workflows/anchor-capacity/input.yml</td></tr>
+<tr><td>anchor-capacity-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/anchor-capacity-atlas-query/input.yml</td></tr>
+<tr><td>pile-capacity</td><td>implicit</td><td>pile_capacity</td><td>offline</td><td>examples/workflows/pile-capacity/input.yml</td></tr>
+<tr><td>pile-capacity-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/pile-capacity-atlas-query/input.yml</td></tr>
+<tr><td>scour-assessment</td><td>implicit</td><td>scour</td><td>offline</td><td>examples/workflows/scour-assessment/input.yml</td></tr>
+<tr><td>mudmat-bearing-capacity</td><td>implicit</td><td>mudmat_bearing_capacity</td><td>offline</td><td>examples/workflows/mudmat-bearing-capacity/input.yml</td></tr>
+<tr><td>mudmat-bearing-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/mudmat-bearing-atlas-query/input.yml</td></tr>
+<tr><td>liquefaction-triggering</td><td>implicit</td><td>liquefaction</td><td>offline</td><td>examples/workflows/liquefaction/input.yml</td></tr>
+<tr><td>casing-design</td><td>implicit</td><td>casing_design</td><td>offline</td><td>examples/workflows/casing-design/input.yml</td></tr>
+<tr><td>well-bore-design</td><td>implicit</td><td>well_bore_design</td><td>offline</td><td>examples/workflows/well-bore-design/input.yml</td></tr>
+<tr><td>well-hydraulics</td><td>implicit</td><td>well_hydraulics</td><td>offline</td><td>examples/workflows/well-hydraulics/input.yml</td></tr>
+<tr><td>wellpath</td><td>implicit</td><td>wellpath</td><td>offline</td><td>examples/workflows/wellpath/input.yml</td></tr>
+<tr><td>rop-analysis</td><td>implicit</td><td>rop_analysis</td><td>offline</td><td>examples/workflows/rop-analysis/input.yml</td></tr>
+<tr><td>tubular-design-envelope</td><td>implicit</td><td>tubular_design</td><td>offline</td><td>examples/workflows/tubular-design-envelope/input.yml</td></tr>
+<tr><td>capex-estimate</td><td>implicit</td><td>capex_estimate</td><td>offline</td><td>examples/workflows/capex-estimate/input.yml</td></tr>
+<tr><td>opex-estimate</td><td>implicit</td><td>opex_estimate</td><td>offline</td><td>examples/workflows/opex-estimate/input.yml</td></tr>
+<tr><td>concept-selection</td><td>implicit</td><td>concept_selection</td><td>offline</td><td>examples/workflows/concept-selection/input.yml</td></tr>
+<tr><td>concept-screening</td><td>implicit</td><td>concept_screening</td><td>offline</td><td>examples/workflows/concept-screening/input.yml</td></tr>
+<tr><td>nodal-analysis</td><td>implicit</td><td>nodal_analysis</td><td>offline</td><td>examples/workflows/nodal-analysis/input.yml</td></tr>
+<tr><td>vlp-correlations</td><td>implicit</td><td>vlp_correlations</td><td>offline</td><td>examples/workflows/vlp-correlations/input.yml</td></tr>
+<tr><td>damage-stability</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/damage-stability/input.yml</td></tr>
+<tr><td>platform-stability</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/platform-stability/input.yml</td></tr>
+<tr><td>hull-resistance</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/hull-resistance/input.yml</td></tr>
+<tr><td>hull-seakeeping</td><td>implicit</td><td>naval_arch</td><td>offline</td><td>examples/workflows/hull-seakeeping/input.yml</td></tr>
+<tr><td>hydro-coefficients</td><td>implicit</td><td>hydro_coefficients</td><td>offline</td><td>examples/workflows/hydro-coefficients/input.yml</td></tr>
+<tr><td>wave-spectra</td><td>implicit</td><td>wave_spectra</td><td>offline</td><td>examples/workflows/wave-spectra/input.yml</td></tr>
+<tr><td>passing-ship</td><td>implicit</td><td>passing_ship</td><td>offline</td><td>examples/workflows/passing-ship/input.yml</td></tr>
+<tr><td>propeller-rudder-interaction</td><td>implicit</td><td>propeller_rudder</td><td>offline</td><td>examples/workflows/propeller-rudder-interaction/input.yml</td></tr>
+<tr><td>ct-hydraulics</td><td>implicit</td><td>ct_hydraulics</td><td>offline</td><td>examples/workflows/ct-hydraulics/input.yml</td></tr>
+<tr><td>esp-pump-hydraulics</td><td>implicit</td><td>esp_pump_hydraulics</td><td>offline</td><td>examples/workflows/esp-pump-hydraulics/input.yml</td></tr>
+<tr><td>esp-pump-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/esp-pump-atlas-query/input.yml</td></tr>
+<tr><td>rigging</td><td>implicit</td><td>rigging</td><td>offline</td><td>examples/workflows/rigging/input.yml</td></tr>
+<tr><td>lifting-lug-design</td><td>implicit</td><td>lifting_lug</td><td>offline</td><td>examples/workflows/lifting-lug-design/input.yml</td></tr>
+<tr><td>lifting-lug-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/lifting-lug-atlas-query/input.yml</td></tr>
+<tr><td>weather-window</td><td>implicit</td><td>weather_window</td><td>offline</td><td>examples/workflows/weather-window/input.yml</td></tr>
+<tr><td>weather-window-atlas-query</td><td>implicit</td><td>parametric_query</td><td>offline</td><td>examples/workflows/weather-window-atlas-query/input.yml</td></tr>
+<tr><td>ffs-metal-loss</td><td>implicit</td><td>ffs</td><td>offline</td><td>examples/workflows/ffs-metal-loss/input.yml</td></tr>
+<tr><td>buckling-parametric</td><td>implicit</td><td>buckling_parametric</td><td>offline</td><td>examples/workflows/buckling-parametric/input.yml</td></tr>
+<tr><td>viv-parametric-screening</td><td>implicit</td><td>viv_parametric_screening</td><td>offline</td><td>examples/workflows/viv-parametric-screening/input.yml</td></tr>
+<tr><td>mooring-design-mbl</td><td>implicit</td><td>mooring_mbl</td><td>offline</td><td>examples/workflows/mooring-design-mbl/input.yml</td></tr>
+<tr><td>api579-pitting-screen</td><td>implicit</td><td>api579_pitting_screen</td><td>offline</td><td>examples/workflows/api579-pitting-screen/input.yml</td></tr>
+<tr><td>api579-dent-screen</td><td>implicit</td><td>api579_dent_screen</td><td>offline</td><td>examples/workflows/api579-dent-screen/input.yml</td></tr>
+<tr><td>riser-joint-ffs</td><td>implicit</td><td>riser_joint_ffs</td><td>offline</td><td>examples/workflows/riser-joint-ffs/input.yml</td></tr>
+<tr><td>pipeline-corroded-defect-screen</td><td>implicit</td><td>pipeline_defect_screen</td><td>offline</td><td>examples/workflows/pipeline-corroded-defect-screen/input.yml</td></tr>
+<tr><td>on-bottom-stability-e305</td><td>1</td><td>on_bottom_stability_e305</td><td>offline</td><td>examples/workflows/on-bottom-stability-e305/input.yml</td></tr>
+</table><p>Table 3. Complete row enumeration from the cited registry bytes; individual failure paths remain untested.</p>
+<h2>Known limits and later slices</h2>
+<p>Failed evidence remains in the configured temporary storage until explicitly managed;
+a temporary location is not durable backup. Raw source files are retained only when the
+workflow copies them into its execution directory. The canonical configuration digest
+does not attest uncopied external files or volatile runtime configuration. Metadata-write
+failure retains partial evidence and the original exception but may leave an incomplete
+metadata record. A manifest retained after post-generation failure does not establish preparation completion or engineering acceptance. Failures before creation of an execution directory have no retained
+execution files. Second-provider review remains pending.</p>
+<p>Later work will test variant preparation and smoke-probe exception cleanup without
+licensed execution, then inspect additional registered router failure paths individually.
+No claim of universal preparation coverage or new native qualification is made.</p>
+</html>
