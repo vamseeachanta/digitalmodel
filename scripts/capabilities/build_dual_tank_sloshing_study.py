@@ -221,7 +221,7 @@ def render():
     style = re.search(r"<style>(.*?)</style>", EXISTING.read_text(encoding="utf-8"), re.S)[1]
     claims = (
         ("Quadratic conduit loss: calibrated area exponent", c["area_exponent"]),
-        ('Published fit cases (aggregate outputs only)', c["cases"]),
+        ('Calibration cases (aggregate results only)', c["cases"]),
         ("Calibrated loss-law RMS (%)", c["loss_rms"]),
         ("Refitted linear-in-area law RMS (%)", c["linear_rms"]),
         ("Closed-form moment RMS (%)", c["moment_rms"]),
@@ -235,9 +235,9 @@ def render():
         f'<td>{max(a["ys"]):.1f}</td></tr>' for a in d["absorbers"]
     )
     svg_period = chart("natural", "Rigid-column natural period", d["areas"],
-                       [("Library natural_period", d["natural"])], "Conduit area (m²)", "Period (s)")
+                       [("Rigid-column model", d["natural"])], "Conduit area (m²)", "Period (s)")
     svg_inertia = chart("inertia", "Frozen-fluid roll inertia", d["areas"],
-                        [("Library prismatic properties", [v / 1e6 for v in d["inertia"]])],
+                        [("Frozen-fluid prismatic model", [v / 1e6 for v in d["inertia"]])],
                         "Conduit area (m²)", "Inertia (million kg m²)")
     svg_damping = chart("damping", "Quadratic-loss equivalent damping", d["areas"],
                         [(f"Level-difference amplitude {level:.1f} m", [v * 100 for v in ys])
@@ -263,81 +263,110 @@ def render():
 <h1>Connected-tank sloshing analysis</h1>
 <p class="sub">Illustrative U-tube anti-roll response and a single-tank tuned-absorber comparison.</p></header>
 <h2 id="summary">Summary</h2>
-<p>This invented geometry illustrates a connected pair of tank legs. It has no connection to any vessel
-or client. Curves are analytical predictions from the committed library and reduction, using published
-aggregate validation outputs. No new CFD was run. This is a screening analysis, not a design qualification.</p>
+<p>An invented, illustrative U-tube system comprises two tank legs connected by a conduit. Analysis is
+performed to determine the connected-tank response and compare it with a single-tank tuned absorber.
+The geometry represents no particular vessel or client. The results are summarized below.</p>
+<p>Analytical predictions are evaluated using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>
+and the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>, with
+<a href="#validation">published aggregate calibration results</a>. No new computational fluid dynamics
+(CFD) results are included. The predictions support screening; design qualification is not established.</p>
+<p>The <a href="#limits">published moment-fit band</a> limits the use of the aggregate error statistic.
+Transfer to the invented geometry remains an assumption, including inside that band. The
+<a href="#comparison">single-tank comparison</a> illustrates peak splitting and merging; its amplitudes
+do not establish a design ranking.</p>
+<p>Draft for maintainer review.</p>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>
 <tr><td>Initial</td><td>Not assigned</td><td>Public-source analysis added to document model scope and remaining work.</td></tr></table>
 <nav><a href="#geometry">Geometry</a> · <a href="#validation">Published validation</a> ·
 <a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
 <a href="#limits">Validity band</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
 <h2 id="geometry">Illustrative geometry</h2>
-<p>Round dimensions are recombined from the public test input constants; they do not reproduce the
-reference geometry. Fill depth is an input, with no claim of a validated fill percentage.</p>
-<table><tr><th>Input</th><th>Illustrative value</th><th>Public input basis</th></tr>
-<tr><td>Each leg length × width</td><td>{geometry.leg_length:.1f} × {geometry.leg_width:.1f} m</td><td>LEG_LENGTH, CENTROID_OFFSET</td></tr>
-<tr><td>Each leg plan area</td><td>{geometry.leg_area:.1f} m²</td><td>UTubeGeometry.leg_area</td></tr>
-<tr><td>Leg centroid offset from centreline</td><td>{geometry.centroid_offset:.1f} m</td><td>LEG_WIDTH</td></tr>
-<tr><td>Fill depth</td><td>{geometry.fill_depth:.1f} m</td><td>FILL_DEPTH</td></tr>
-<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Round value from FILL_DEPTH, assigned area units</td></tr>
-<tr><td>Effective conduit length</td><td>{geometry.effective_conduit_length:.1f} m</td><td>Library calibrated default, illustrative transfer only</td></tr>
-<tr><td>Conduit input range in public period tests</td><td>{min(d["areas"]):.1f}–{max(d["areas"]):.1f} m²</td><td>Parameter inputs only; individual CFD measurements are not reproduced</td></tr></table>
-<p>The illustrative conduit lies inside that public input range. The calibrated effective length is
-borrowed for illustration; a new geometry requires a measured natural period before predictive use.</p>
+<p>Round dimensions are recombined from the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference inputs</a>;
+the reference geometry is not reproduced. Fill depth is an input; a validated fill-percentage range is
+not established.</p>
+<table><tr><th>Input</th><th>Illustrative value</th><th>Source and assumption</th></tr>
+<tr><td>Each leg length × width</td><td>{geometry.leg_length:.1f} × {geometry.leg_width:.1f} m</td><td>Reference leg length and centroid offset, reassigned as illustrative dimensions</td></tr>
+<tr><td>Each leg plan area</td><td>{geometry.leg_area:.1f} m²</td><td>Product of the illustrative leg length and width</td></tr>
+<tr><td>Leg centroid offset from centreline</td><td>{geometry.centroid_offset:.1f} m</td><td>Reference leg width, reassigned as the illustrative offset</td></tr>
+<tr><td>Fill depth</td><td>{geometry.fill_depth:.1f} m</td><td>Reference fill-depth input</td></tr>
+<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Reference fill-depth value, assigned area units for illustration</td></tr>
+<tr><td>Effective conduit length</td><td>{geometry.effective_conduit_length:.1f} m</td><td>Calibrated reference value from the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>; transfer is assumed</td></tr>
+<tr><td>Published conduit-area input range</td><td>{min(d["areas"]):.1f}–{max(d["areas"]):.1f} m²</td><td>Reference period inputs; individual CFD measurements are not reproduced</td></tr></table>
+<p>The illustrative conduit area lies inside the published input range in the table. The calibrated
+effective length is transferred as an assumption; a measured natural period for the new geometry is
+required before predictive use, as described in the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">model calibration basis</a>.</p>
 <h2 id="validation">Published validation</h2>
-<p>Quoted from the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">model docstring and constants</a>
-and <a href="../../../tests/hydrodynamics/test_utube_tank.py">public test fit outputs</a>.</p>
+<p>The calibration quantities below are reported in the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">model calibration summary</a>
+and <a href="../../../tests/hydrodynamics/test_utube_tank.py">published calibration checks</a>.
+RMS denotes root mean square error; each percentage applies to the corresponding reference fit.</p>
 <table><tr><th>Published quantity</th><th>Value</th></tr>{claim_rows}</table>
-<p>The loss comparison uses refits of each area law, not substitution of an exponent at a fixed
-coefficient. Anchor effective conduit length to a measured natural period, never the forced-sweep peak:
-that peak is loss-controlled and moves with roll amplitude.</p>
+<p>The loss comparison is based on a separate refit of each area law, as documented in the
+<a href="../../../tests/hydrodynamics/test_utube_tank.py">calibration checks</a>. A fixed-coefficient
+exponent substitution is excluded. Effective conduit length is calibrated against a measured natural
+period, as specified in the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">calibration basis</a>;
+the forced-sweep peak is loss-controlled and varies with roll amplitude.</p>
 <h2 id="curves">Computed curves</h2>
-<p>Every curve calls the library functions directly. The inertia curve uses the library's frozen-fluid
-prismatic roll inertia; it is distinct from a validation error for rigid-column conduit inertia.</p>
+<p>The connected-tank curves are evaluated using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">analytical model</a>
+at the illustrative inputs listed above. Frozen-fluid prismatic roll inertia is calculated in the inertia
+curve; a validation error for rigid-column conduit inertia is not established by that curve.</p>
 {svg_period}{svg_inertia}
 <p>Damping is evaluated at forcing period {p["damping_period"]:.1f} s with imposed level-difference amplitudes
-from the public damping test. It is amplitude-dependent, not a fixed tank property.</p>{svg_damping}
-<p>The moment calculation imposes {p["roll_degrees"]:.1f}° roll at the illustrative conduit area.</p>{svg_moment}
-<p>Coupled calculation inputs from the public response test: vessel roll period {p["vessel_period"]:.1f} s,
-hull damping {p["hull_damping"]*100:.1f} %, tank authority {p["authority"]*100:.1f} %.
-Authority is a normalized stiffness scale, not a mass ratio. The library fixes its forcing reference
-through the bare-roll amplitude; the returned response is roll per unit wave moment at that finite
-reference. Quadratic loss prevents an amplitude-independent RAO. Shading marks periods outside the
-published moment-fit band. No wave-spectrum or dimensional vessel calibration is implied.</p>{svg_roll}
+from the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published damping inputs</a>.
+The calculated damping depends on amplitude; it is not a fixed tank property.</p>{svg_damping}
+<p>The moment is calculated at {p["roll_degrees"]:.1f}° imposed roll and the illustrative conduit area,
+using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">tank-moment model</a>.</p>{svg_moment}
+<p>The coupled response is evaluated with the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published response inputs</a>:
+vessel roll period {p["vessel_period"]:.1f} s, hull damping {p["hull_damping"]*100:.1f} % and
+tank authority {p["authority"]*100:.1f} %. Tank authority denotes a normalized stiffness scale, distinct
+from a mass ratio. In the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">coupled-response model</a>,
+the forcing reference is fixed by the bare-vessel roll amplitude. The calculated response is roll per
+unit wave moment at that finite reference; quadratic loss makes it amplitude-dependent. Shading marks
+periods outside the published moment-fit band. Wave-spectrum and dimensional vessel calibration are
+not established.</p>{svg_roll}
 <h2 id="comparison">Single-tank comparison: split and merging</h2>
-<p>The <a href="../../../scripts/cfd/reduce_tld_two_peak.py">committed tuned-absorber reduction</a> is evaluated
-on the frequency grid and damping ladder in <a href="../structural/sloshing-tld-twopeak.json">the published JSON</a>.
-Mass ratio μ = {d["mu"]}, frequency tuning ratio = {d["tuning"]:.1f}. This is a single equivalent tank on an
-undamped primary vessel, not an isolated tank and not a matched geometry comparison with the U-tube.
-The models use different normalizations and hull damping; their amplitudes cannot be used to rank designs.</p>
+<p>The <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a> is evaluated at the
+frequency grid and damping values in the <a href="../structural/sloshing-tld-twopeak.json">published response record</a>.
+The mass ratio, denoted by μ, is {d["mu"]}; the frequency tuning ratio is {d["tuning"]:.1f}.
+A single equivalent tank is coupled to an undamped primary vessel. The tank is not isolated, and its
+geometry is not matched to the U-tube system. Different normalizations and hull damping are used in
+the two models; their response amplitudes do not establish a design ranking.</p>
 {svg_split}<table><tr><th>Tank damping (%)</th><th>Resolved peaks</th><th>Peak normalized roll</th></tr>{absorber_rows}</table>
-<p>The light-damping curves split into adverse peaks; increasing damping merges them, and the heaviest
-case raises the peak again. The ladder comes from the published single-tank reduction, not from new
-connected-tank CFD. The connected geometry curves above are shown separately because no matched
-single-tank and connected-tank campaign is published here.</p>
+<p>Two peaks are resolved in the light-damping curves; they merge as damping increases, and the peak
+rises again at the highest damping shown in the table. These curves are evaluated using the
+<a href="../../../scripts/cfd/reduce_tld_two_peak.py">single-tank model</a> and the
+<a href="../structural/sloshing-tld-twopeak.json">published response record</a>. New connected-tank CFD
+results are not included. The connected-tank curves are presented separately; a matched single-tank
+and connected-tank comparison is not established.</p>
 <h2 id="limits">Validity band</h2>
 <p class="callout">The moment model degrades below about {c["degrades_below"]} s and the CAUSE IS NOT ESTABLISHED.
 An earlier explanation was withdrawn. The residual also depends on roll amplitude.</p>
 <p>The reported moment RMS applies at forcing periods of {c["moment_min_period"]} s or longer for the
-published calibration. Intermediate periods are not qualified by that aggregate statistic. Even inside
-the band, transfer to the invented geometry is an assumption. No new physical mechanism is proposed.</p>
-<h2 id="forward">Way forward</h2><ul class="fw">
-<li><b>Not done:</b> Measure the new geometry's natural period and recalibrate effective conduit length.</li>
-<li><b>Not done:</b> Validate moment and loss across roll amplitudes and the short-period band.</li>
-<li><b>Not done:</b> Compare single and connected tanks with matched mass, tuning, hull damping and forcing.</li>
-<li><b>Not done:</b> Resolve the residual cause before widening the empirical validity band.</li>
-<li><b>Not done:</b> Check operating fill, freeboard, structural loads and dimensional vessel coupling.</li></ul>
+<a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">published calibration</a>.
+Intermediate periods are not qualified by that aggregate statistic. Even inside the band, transfer
+to the invented geometry is an assumption. No new physical mechanism is proposed.</p>
+<h2 id="forward">Way forward</h2>
+<p>Further assessment is required before the illustrative response is applied to a design. The
+<a href="#geometry">geometry assumptions</a>, <a href="#comparison">comparison limits</a> and
+<a href="#limits">calibration limits</a> define the outstanding work below.</p><ul class="fw">
+<li>Not done: The new geometry's natural period requires measurement before effective conduit length is recalibrated.</li>
+<li>Not done: Moment and loss require validation across roll amplitudes and the short-period band.</li>
+<li>Not done: Single and connected tanks require comparison at matched mass, tuning, hull damping and forcing.</li>
+<li>Not done: The residual cause requires resolution before the empirical validity band is widened.</li>
+<li>Not done: Operating fill, freeboard, structural loads and dimensional vessel coupling require assessment.</li></ul>
 <h2 id="left">Left</h2>
 <p>A numerical inertia-error bound and a fill-percentage validation range are not stated in the specified public sources.
 Those claims are omitted pending public evidence. New CFD fields, individual CFD measurement plots,
 and matched single-tank versus connected-tank performance are also omitted.</p>
-<h2 id="method">Method and reproducibility</h2>
-<p><code>python scripts/capabilities/build_dual_tank_sloshing_study.py</code> regenerates this page and prints
-elapsed wall time. The builder reads the existing <a href="sloshing-cfd-study.html">sloshing study</a>'s style
-block and shared brand stylesheet. It reads test inputs without executing tests; fit claims are read
-from the model and test sources. SVGs are inline, with no external scripts, network or binary assets.</p>
-<footer>Generated by <a href="../../../scripts/capabilities/build_dual_tank_sloshing_study.py">the committed builder</a>.
+<h2 id="method">Analysis basis</h2>
+<p>The analytical scope is described in the <a href="sloshing-cfd-study.html">sloshing study</a>.
+The connected-tank calculations and aggregate calibration statistics are defined in the
+<a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">analytical model</a> and
+<a href="../../../tests/hydrodynamics/test_utube_tank.py">published calibration checks</a>.
+The single-tank comparison is defined in the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>
+and <a href="../structural/sloshing-tld-twopeak.json">response record</a>.</p>
+<footer><a href="../../../scripts/capabilities/build_dual_tank_sloshing_study.py">Calculation basis for this study</a>.
 Analytical predictions and published aggregate fit statistics only.</footer></div></body></html>
 '''
 

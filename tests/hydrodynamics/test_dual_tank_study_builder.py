@@ -141,3 +141,37 @@ def test_output_structure_links_and_privacy(builder):
     section = existing.split("Coupled anti-roll response", 1)[1].split("<h2>", 1)[0]
     assert f'href="{PAGE.name}"' in section
     assert_references_resolve(text, PAGE)
+
+
+def assert_public_wording(text):
+    process_words = (
+        r"\b(?:own" r"er|la" r"ne|ag" r"ent|jobs?|runs?|pr|sha|"
+        r"peer[- ]review|dispatch" r"er|fle" r"et|committed|builder|"
+        r"regenerates|reproducibility)\b"
+    )
+    forbidden = ["/" + part + "/" for part in ("home", "mnt")]
+    assert all(value not in text for value in forbidden)
+    assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
+    assert not re.search(r"[A-Za-z]:\\Users\\", text, re.I)
+    assert not re.search(process_words, text, re.I)
+    assert not re.search(r"</?(?:b|strong)\b", text, re.I)
+    assert not re.search(r"\b(?:could|should|would)\b", text, re.I)
+
+
+def test_built_html_uses_public_engineering_wording(builder, tmp_path):
+    target = tmp_path / PAGE.name
+    builder.build(target)
+    assert_public_wording(target.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("location", ["<p>{}</p>", '<meta content="{}">',
+                                     "<svg><title>{}</title></svg>"])
+@pytest.mark.parametrize("forbidden", [
+    "own" + "er", "la" + "ne", "ag" + "ent", "job", "run", "PR", "sha",
+    "peer-review", "committed", "builder", "regenerates", "reproducibility",
+    "/" + "home" + "/example", "/" + "mnt" + "/example",
+    "example" + "@" + "example.invalid", "C:" + "\\Users\\example",
+])
+def test_public_wording_scan_rejects_disclosure_and_process_text(location, forbidden):
+    with pytest.raises(AssertionError):
+        assert_public_wording(location.format(forbidden))
