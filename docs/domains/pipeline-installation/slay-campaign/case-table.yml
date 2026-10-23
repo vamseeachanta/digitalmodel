@@ -283,9 +283,10 @@ static_equilibrium_screen:
     S1 strain <= 1.10*D/(2R) with zero last-stinger-support force, lift-off arc
     within 5 m, departure within 3 degrees, and nonnegative grounded tension.
     Touchdown x, sag-bend strain and stiff closure are NOT_EVALUATED:
-    published reference pending, #2608. Their future comparison bands are
-    touchdown x within 10 m, sag-bend strain within 20 percent of Table B,
-    and stiff excess between 0 m and the 10 m lead; no reference is substituted.
+    published reference pending, #2608. No comparison tolerance is established for these rows.
+    Each row requires a published method and comparison basis with edition and
+    clause or table, matched inputs and reference values before evaluation.
+    The weight-only bound cannot supply a stiff-model reference.
     This QA screen does not establish installation design acceptance.
   additional_static_suspects: Native bending/contact residuals require fresh
     readback. Anchored End B is one coated radius above the seabed. Torsion is

@@ -21,6 +21,7 @@ a timed canary and independent comparison before the remaining cases.</p>
 <tr><td>0</td><td>2026-10-14</td><td>Initial generic campaign, analytical comparator and unfilled native evidence sections; distinguish preparation from solved results.</td></tr>
 <tr><td>1</td><td>2026-10-14</td><td>Correct builder topology, regenerate models, define sourced criteria and the timed canary, and prepare digest-gated queue inputs without native execution.</td></tr>
 <tr><td>2</td><td>2026-10-16</td><td>Apply depth-specific geometry, separate S1 conformity from design acceptance and explicitly defer three Table B rows until published references are available.</td></tr>
+<tr><td>3</td><td>2026-10-19</td><td>Remove unsourced comparison bands for the pending Table B rows and state the evidence needed before evaluation.</td></tr>
 <caption>Table 1. Revision history.</caption></table>
 <h2>Basis and scope</h2>
 <p><a href="case-table.yml">Case table</a> holds every explicit input, its basis and six cases.
@@ -90,19 +91,28 @@ a qualified concrete-crushing strength and support contact-pressure basis.</p>
 <tr><td>Native timing and convergence</td><td>Not Evaluated</td><td>First case d0-t0 shall retain native state, convergence evidence and measured wall time.</td></tr>
 <tr><td>Installation acceptance</td><td>Not Evaluated</td><td>Versioned allowables, comparator tolerances, mesh convergence and all applicable cases are required.</td></tr>
 <caption>Table 3. Preparation status against the evidence needed for native acceptance.</caption></table>
-<table><tr><th>Table B row</th><th>Status</th><th>Reason</th></tr>
-<tr><td>Touchdown x</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
-<tr><td>Sag-bend strain</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
-<tr><td>Stiff closure</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
+<table><tr><th>Table B row</th><th>Status</th><th>Reason and required evidence</th></tr>
+<tr><td>Touchdown x</td><td>NOT_EVALUATED</td><td>published reference pending, #2608.
+A published coordinate definition and reference frame, matched seabed and pipe geometry,
+reference value and comparison tolerance, identified by edition and clause or table, are required.</td></tr>
+<tr><td>Sag-bend strain</td><td>NOT_EVALUATED</td><td>published reference pending, #2608.
+A published strain measure and bending stiffness model, matched loading and geometry,
+reference value and comparison tolerance, identified by edition and clause or table, are required.</td></tr>
+<tr><td>Stiff closure</td><td>NOT_EVALUATED</td><td>published reference pending, #2608.
+A published length closure method including bending stiffness and end conditions, matched inputs,
+reference value and comparison tolerance, identified by edition and clause or table, are required.</td></tr>
 <caption>Table 4. Pending published references; these rows count as neither passed nor failed.</caption></table>
 <p>The static QA helper evaluates wire length from 5.0 to 15.0 m, positive contact-presence at the support nearest measured End A X, S1, lift-off arc within 5.0 m and departure within 3.0 degrees of Table B,
 and nonnegative grounded effective tension. It reports passed, failed and not-evaluated
 counts separately. If all six evaluable rows pass, the status is
 &quot;accepted with 3 rows not evaluated&quot;: 6 passed, 0 failed and 3 not evaluated, out of 9 rows.
 This is partial static QA, with no full acceptance. No native results are available here.
-The three deferred rows cannot change an evaluated row's disposition. Their future bands
-are touchdown x within 10.0 m, sag-bend strain within 20.0 % of Table B, and stiff excess
-from 0.0 m to the 10.0 m lead; no reference value is substituted.</p>
+The three deferred rows cannot change an evaluated row's disposition.
+No comparison tolerance is established for these rows; no reference value is substituted.
+The evidence requirements above implement the deferral in #2608 and address the
+unsourced-band finding in #2625. Neither issue supplies a published engineering reference.
+The weight-only bound cannot supply a stiff-model reference. A published method alone
+does not establish a comparison tolerance or installation design acceptance.</p>
 <p>The earlier preparation identified coincident endpoint horizontal coordinates, rigid end bending
 restraints, missing discrete stinger contacts and later-stage tension. The corrected builders use
 a free upper end ahead of the firing line, a separated seabed anchor, released end moments, attached
