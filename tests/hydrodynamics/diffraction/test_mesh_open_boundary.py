@@ -156,7 +156,5 @@ class TestCommittedFixturesStillPass:
         repo = Path(__file__).resolve().parents[3]
         box = (repo / "examples" / "hydrodynamics" / "diffraction"
                / "unit_box_rao" / "unit_box.gdf")
-        if not box.exists():
-            pytest.skip("committed unit box absent")
         out, flipped = repair_gdf_text(box.read_text(), strict=True)
         assert flipped == ()

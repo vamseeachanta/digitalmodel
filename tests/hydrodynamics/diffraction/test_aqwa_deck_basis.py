@@ -24,10 +24,7 @@ DAMPAD = (REPO / "docs" / "domains" / "aqwa" / "scripts"
 DAMPNO = (REPO / "docs" / "domains" / "aqwa" / "scripts"
           / "wlng_diffraction_analysis" / "raos" / "F_FST1_L00_DAMPNO.dat")
 
-ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship deck absent")
 
-
-@ship_only
 def test_ship_mass_and_inertia():
     b = read_aqwa_basis(SHIP)
     assert b.mass == pytest.approx(45184268.0)
@@ -39,7 +36,6 @@ def test_ship_mass_and_inertia():
     assert (ixy, ixz, iyz) == (0.0, 0.0, 0.0)
 
 
-@ship_only
 def test_ship_centre_of_gravity():
     b = read_aqwa_basis(SHIP)
     assert b.cog_node == 98000
@@ -50,7 +46,6 @@ def test_ship_centre_of_gravity():
     assert z == pytest.approx(8.5)
 
 
-@ship_only
 def test_ship_environment():
     b = read_aqwa_basis(SHIP)
     assert b.water_depth == pytest.approx(500.0)
@@ -59,7 +54,6 @@ def test_ship_environment():
     assert b.waterline_z == pytest.approx(0.0)
 
 
-@ship_only
 def test_ship_frequency_grid_converted_from_hz():
     """The deck carries HRTZ cards in Hz; the basis reports rad/s."""
     b = read_aqwa_basis(SHIP)
@@ -71,14 +65,12 @@ def test_ship_frequency_grid_converted_from_hz():
         2 * math.pi * 1.5915e-2, rel=1e-6)
 
 
-@ship_only
 def test_ship_headings():
     b = read_aqwa_basis(SHIP)
     assert b.headings_deg == pytest.approx(
         (-180.0, -135.0, -90.0, -45.0, 0.0, 45.0, 90.0, 135.0, 180.0))
 
 
-@ship_only
 def test_ship_has_no_additional_damping():
     """Deck 7 is empty in this example; it is pure potential flow."""
     b = read_aqwa_basis(SHIP)
@@ -86,7 +78,6 @@ def test_ship_has_no_additional_damping():
     assert b.additional_damping is None
 
 
-@ship_only
 def test_ship_derived_quantities():
     b = read_aqwa_basis(SHIP)
     rx, ry, rz = b.radii_of_gyration
@@ -97,7 +88,6 @@ def test_ship_derived_quantities():
     assert b.displaced_volume_if_balanced == pytest.approx(44082.21, abs=0.02)
 
 
-@ship_only
 def test_ship_panels_and_options():
     b = read_aqwa_basis(SHIP)
     assert b.panel_count > 5000
@@ -105,7 +95,6 @@ def test_ship_panels_and_options():
     assert b.unit_system is not None and "kg" in b.unit_system
 
 
-@ship_only
 def test_volume_as_mass_is_the_trap_this_guards():
     """The L01 OrcaWave companion used 44082.20 as a mass in tonnes.
 
@@ -121,8 +110,6 @@ def test_volume_as_mass_is_the_trap_this_guards():
     assert mass_tonnes / volume == pytest.approx(1.025, rel=1e-4)
 
 
-@pytest.mark.skipif(not (DAMPAD.exists() and DAMPNO.exists()),
-                    reason="LNGC damping pair absent")
 def test_additional_damping_is_read_when_present():
     """The pair differs in FIDP on roll and pitch; both are read."""
     added = read_aqwa_basis(DAMPAD)

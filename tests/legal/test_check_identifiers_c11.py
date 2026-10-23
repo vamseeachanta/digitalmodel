@@ -30,9 +30,6 @@ RULES = REPO / ".legal-deny-list.yaml"
 TOKEN = "zzsynthetictestvessel"
 BS = "\\"
 
-pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not RULES.exists(), reason="identifier gate not installed"
-)
 
 _GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
 

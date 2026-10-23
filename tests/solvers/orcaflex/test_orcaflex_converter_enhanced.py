@@ -157,8 +157,6 @@ class TestOrcaFlexConverterEnhanced:
 
     def test_batch_conversion_with_pattern(self, temp_output_dir):
         """Test batch conversion using file pattern."""
-        if not TEST_EXAMPLES_DIR.exists():
-            pytest.skip("Example files not found")
 
         converter = OrcaFlexConverterEnhanced(
             input_dir=TEST_EXAMPLES_DIR,
@@ -381,8 +379,6 @@ class TestOrcaFlexConverterEnhanced:
 
     def test_find_files(self, temp_output_dir):
         """Test file discovery with different patterns."""
-        if not TEST_EXAMPLES_DIR.exists():
-            pytest.skip("Example files not found")
 
         converter = OrcaFlexConverterEnhanced(
             input_dir=TEST_EXAMPLES_DIR,
@@ -421,8 +417,6 @@ class TestPerformance:
 
     def test_large_batch_performance(self, temp_output_dir):
         """Test performance with large batch of files."""
-        if not TEST_EXAMPLES_DIR.exists():
-            pytest.skip("Example files not found")
 
         converter = OrcaFlexConverterEnhanced(
             input_dir=TEST_EXAMPLES_DIR,

@@ -267,8 +267,6 @@ def qa_output_dir(tmp_path_factory):
         ModularModelGenerator,
     )
 
-    if not SPEC_24IN_QA.exists():
-        pytest.skip(f"QA spec not found: {SPEC_24IN_QA}")
 
     output_dir = tmp_path_factory.mktemp("qa_24in")
     generator = ModularModelGenerator(SPEC_24IN_QA)
@@ -395,8 +393,6 @@ def a01_riser_model():
     """Load A01 Catenary Riser and run statics (<10 seconds)."""
     if not ORCAFLEX_AVAILABLE:
         pytest.skip("OrcFxAPI not available")
-    if not A01_RISER.exists():
-        pytest.skip(f"A01 riser not found: {A01_RISER}")
 
     model = OrcFxAPI.Model(str(A01_RISER))
     model.CalculateStatics()
@@ -465,8 +461,6 @@ def lazy_wave_model():
     """Load A01 Lazy Wave Riser and run statics (<15 seconds)."""
     if not ORCAFLEX_AVAILABLE:
         pytest.skip("OrcFxAPI not available")
-    if not A01_LAZY_WAVE.exists():
-        pytest.skip(f"A01 Lazy Wave not found: {A01_LAZY_WAVE}")
 
     model = OrcFxAPI.Model(str(A01_LAZY_WAVE))
     model.CalculateStatics()
@@ -478,8 +472,6 @@ def fender_model():
     """Load C09 Fenders model and run statics (<10 seconds)."""
     if not ORCAFLEX_AVAILABLE:
         pytest.skip("OrcFxAPI not available")
-    if not C09_FENDERS.exists():
-        pytest.skip(f"C09 Fenders not found: {C09_FENDERS}")
 
     model = OrcFxAPI.Model(str(C09_FENDERS))
     model.CalculateStatics()
@@ -491,8 +483,6 @@ def pull_in_model():
     """Load D02 Pull-in Analysis model and run statics (<10 seconds)."""
     if not ORCAFLEX_AVAILABLE:
         pytest.skip("OrcFxAPI not available")
-    if not D02_PULL_IN.exists():
-        pytest.skip(f"D02 Pull-in not found: {D02_PULL_IN}")
 
     try:
         model = OrcFxAPI.Model(str(D02_PULL_IN))
@@ -736,8 +726,6 @@ def monolithic_noload_model():
         return OrcFxAPI.Model(str(noload_sim))
 
     # Fall back to recomputing from YAML
-    if not MONOLITHIC_24IN_YML.exists():
-        pytest.skip(f"Monolithic YAML not found: {MONOLITHIC_24IN_YML}")
 
     model = OrcFxAPI.Model(str(MONOLITHIC_24IN_YML))
     _zero_environment(model)

@@ -14,7 +14,8 @@ from pathlib import Path
 
 
 # Test data paths
-TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = (Path(__file__).resolve().parents[3]
+                 / "docs/domains/aqwa/examples/03_dat/001_ship_raos")
 TEST_LIS_DIR = TEST_DATA_DIR
 
 # Skip all tests — AQWA CLI requires the AQWA solver binary which is not
@@ -52,10 +53,6 @@ class TestAQWACLIBasic:
 class TestAQWACLIRAOExtraction:
     """Test RAO extraction command"""
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_rao_method_with_folder(self, tmp_path):
         """Test RAO extraction with folder argument"""
         result = subprocess.run(
@@ -145,10 +142,6 @@ aqwa_analysis:
         config_file.write_text(config_content)
         return config_file
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_config_file_loading(self, sample_config_file):
         """Test loading configuration from file"""
         result = subprocess.run(
@@ -183,10 +176,6 @@ aqwa_analysis:
 class TestAQWACLIDampingAnalysis:
     """Test damping analysis command"""
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_damping_method(self, tmp_path):
         """Test damping analysis method"""
         result = subprocess.run(
@@ -208,10 +197,6 @@ class TestAQWACLIDampingAnalysis:
 class TestAQWACLIVerboseMode:
     """Test verbose output mode"""
 
-    @pytest.mark.skipif(
-        not TEST_LIS_DIR.exists(),
-        reason="Test data not available"
-    )
     def test_verbose_flag(self, tmp_path):
         """Test verbose output"""
         result = subprocess.run(

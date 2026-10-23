@@ -16,7 +16,8 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import (
 
 
 # Test data path
-TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = (Path(__file__).resolve().parents[3]
+                 / "docs/domains/aqwa/examples/03_dat/001_ship_raos")
 TEST_LIS_FILE = TEST_DATA_DIR / "001_SHIP_RAOS.LIS"
 
 
@@ -26,8 +27,6 @@ class TestAQWALISParser:
     @pytest.fixture
     def parser(self):
         """Create parser instance with test file"""
-        if not TEST_LIS_FILE.exists():
-            pytest.skip(f"Test data not available: {TEST_LIS_FILE}")
         return AQWALISParser(TEST_LIS_FILE)
 
     def test_parser_initialization(self, parser):
@@ -156,8 +155,6 @@ class TestAQWALISParser:
 
     def test_standalone_function(self):
         """Test standalone parse function"""
-        if not TEST_LIS_FILE.exists():
-            pytest.skip(f"Test data not available: {TEST_LIS_FILE}")
 
         data = parse_aqwa_lis_file(TEST_LIS_FILE)
 
@@ -202,8 +199,6 @@ class TestAQWAParserDataQuality:
     @pytest.fixture
     def parsed_data(self):
         """Parse test file once for all tests"""
-        if not TEST_LIS_FILE.exists():
-            pytest.skip(f"Test data not available: {TEST_LIS_FILE}")
         return parse_aqwa_lis_file(TEST_LIS_FILE)
 
     def test_frequency_range(self, parsed_data):

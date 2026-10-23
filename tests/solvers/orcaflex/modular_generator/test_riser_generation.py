@@ -153,10 +153,6 @@ class TestRiserSchemaValidation:
 class TestRiserSpecLoading:
     """Tests for loading riser spec files."""
 
-    @pytest.mark.skipif(
-        not A01_CATENARY_SPEC.exists(),
-        reason="A01 catenary riser spec not found",
-    )
     def test_load_a01_catenary_spec(self):
         """Test loading A01 catenary riser spec."""
         with open(A01_CATENARY_SPEC) as f:
@@ -171,10 +167,6 @@ class TestRiserSpecLoading:
         assert len(spec.riser.line_types) >= 1
         assert len(spec.riser.lines) >= 1
 
-    @pytest.mark.skipif(
-        not A01_CATENARY_SPEC.exists(),
-        reason="A01 catenary riser spec not found",
-    )
     def test_spec_model_type_methods(self):
         """Test model type detection methods."""
         with open(A01_CATENARY_SPEC) as f:
@@ -193,8 +185,6 @@ class TestRiserModularGeneration:
     @pytest.fixture
     def catenary_spec(self):
         """Load and validate A01 catenary riser spec."""
-        if not A01_CATENARY_SPEC.exists():
-            pytest.skip("A01 catenary riser spec not found")
 
         with open(A01_CATENARY_SPEC) as f:
             data = yaml.safe_load(f)
@@ -346,8 +336,6 @@ class TestRiserLinkBuilderGeneration:
     @pytest.fixture
     def pliant_spec(self):
         """Load and validate A01 pliant wave riser spec."""
-        if not A01_PLIANT_SPEC.exists():
-            pytest.skip("A01 pliant wave riser spec not found")
 
         with open(A01_PLIANT_SPEC) as f:
             data = yaml.safe_load(f)
@@ -403,8 +391,6 @@ class TestRiserLinkBuilderGeneration:
 
     def test_catenary_has_no_link_file(self, tmp_path):
         """Test that catenary (no links) does not generate link file."""
-        if not A01_CATENARY_SPEC.exists():
-            pytest.skip("A01 catenary riser spec not found")
 
         with open(A01_CATENARY_SPEC) as f:
             data = yaml.safe_load(f)
@@ -432,8 +418,6 @@ class TestRiserOrcaFlexLoad:
     @pytest.fixture
     def catenary_spec(self):
         """Load and validate A01 catenary riser spec."""
-        if not A01_CATENARY_SPEC.exists():
-            pytest.skip("A01 catenary riser spec not found")
 
         with open(A01_CATENARY_SPEC) as f:
             data = yaml.safe_load(f)
@@ -466,8 +450,6 @@ class TestPliantWaveOrcaFlexConvergence:
     @pytest.fixture
     def pliant_spec(self):
         """Load and validate A01 pliant wave riser spec."""
-        if not A01_PLIANT_SPEC.exists():
-            pytest.skip("A01 pliant wave riser spec not found")
 
         with open(A01_PLIANT_SPEC) as f:
             data = yaml.safe_load(f)

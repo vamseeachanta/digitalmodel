@@ -581,3 +581,15 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Retain only the reproducible diffraction fixture hygiene report.
+!docs/reports/
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/diffraction/
+docs/reports/modules/diffraction/*
+!docs/reports/modules/diffraction/fixture-paths/
+docs/reports/modules/diffraction/fixture-paths/*
+!docs/reports/modules/diffraction/fixture-paths/index.html
+!docs/reports/modules/diffraction/fixture-paths/evidence.json
+!docs/reports/modules/diffraction/fixture-paths/changes.json

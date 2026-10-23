@@ -32,8 +32,6 @@ REPO = Path(__file__).resolve().parents[3]
 SHIP_LIS = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
             / "001_ship_raos" / "001_SHIP_RAOS.LIS")
 
-pytestmark = pytest.mark.skipif(
-    not SHIP_LIS.exists(), reason="ship RAO example listing not present")
 
 
 def test_lowest_frequency_is_not_dropped():

@@ -27,7 +27,6 @@ ENV = "DIGITALMODEL_DENY_LIST"
 PATH = "docs/zzsynthetic-" + "labelsalt/summary.md"
 OTHER = "docs/zzsynthetic-" + "labelsalt/other.md"
 
-pytestmark = pytest.mark.skipif(not CHECKER.exists(), reason="gate not installed")
 
 _COUNTER = [0]
 

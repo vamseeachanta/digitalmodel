@@ -166,7 +166,6 @@ def test_load_datum_check_passes_a_consistent_card():
     assert load_datum_check(5_500.0, 6_863.0, 6_116.0) == []
 
 
-@pytest.mark.skipif(not CARD_CSV.exists(), reason="digitized card not present")
 def test_reed_card_metrics_from_digitized_card(reed):
     """Card metrics against the published digitization, and the datum warning."""
     positions, up, down = [], [], []

@@ -137,8 +137,6 @@ class TestHullCatalog:
         """Catalog loads all YAML profiles from a directory."""
         from digitalmodel.hydrodynamics.hull_library.catalog import HullCatalog
 
-        if not DATA_DIR.exists():
-            pytest.skip("Seed data directory not found")
         cat = HullCatalog(profiles_dir=DATA_DIR)
         hulls = cat.list_hulls()
         assert "unit_box" in hulls
@@ -151,8 +149,6 @@ class TestHullCatalog:
             MeshGeneratorConfig,
         )
 
-        if not DATA_DIR.exists():
-            pytest.skip("Seed data directory not found")
         cat = HullCatalog(profiles_dir=DATA_DIR)
         config = MeshGeneratorConfig(target_panels=100)
         mesh = cat.generate_mesh("unit_box", config)
@@ -164,8 +160,6 @@ class TestHullCatalog:
             SeaStateDefinition,
         )
 
-        if not DATA_DIR.exists():
-            pytest.skip("Seed data directory not found")
         cat = HullCatalog(profiles_dir=DATA_DIR)
         sea_state = SeaStateDefinition(significant_height=3.0, peak_period=10.0)
         rao_data = _make_simple_rao_data()
@@ -180,8 +174,6 @@ class TestHullCatalog:
             SeaStateDefinition,
         )
 
-        if not DATA_DIR.exists():
-            pytest.skip("Seed data directory not found")
         cat = HullCatalog(profiles_dir=DATA_DIR)
         sea_state = SeaStateDefinition(significant_height=3.0, peak_period=10.0)
         rao_data = _make_simple_rao_data()
@@ -205,8 +197,6 @@ class TestHullCatalog:
             SeaStateDefinition,
         )
 
-        if not DATA_DIR.exists():
-            pytest.skip("Seed data directory not found")
         cat = HullCatalog(profiles_dir=DATA_DIR)
         sea_state = SeaStateDefinition(significant_height=3.0, peak_period=10.0)
         rao_data = _make_simple_rao_data()

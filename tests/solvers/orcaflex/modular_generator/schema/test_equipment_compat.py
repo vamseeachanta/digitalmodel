@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 import yaml
 
 
@@ -113,8 +112,6 @@ class TestEquipmentRollerCompat:
             ProjectInputSpec,
         )
 
-        if not SLAY_SPEC.exists():
-            pytest.skip("S-lay spec not available")
         with open(SLAY_SPEC) as f:
             data = yaml.safe_load(f)
         spec = ProjectInputSpec(**data)

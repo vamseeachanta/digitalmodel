@@ -62,8 +62,6 @@ OC4_IZZ = 12.2542e9
 @pytest.fixture(scope="module")
 def oc4_result():
     """Run Capytaine on OC4 semi-sub mesh with a sparse frequency set."""
-    if not OC4_MESH_PATH.exists():
-        pytest.skip(f"OC4 mesh not found: {OC4_MESH_PATH}")
 
     # Sparse periods: 5, 8, 12, 18, 25 s (covers wave period range of interest)
     periods = np.array([5.0, 8.0, 12.0, 18.0, 25.0])

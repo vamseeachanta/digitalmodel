@@ -24,7 +24,7 @@ from digitalmodel.solvers.orcaflex.pipeline_schematic import (
 @pytest.fixture
 def sample_yaml_path():
     """Path to the sample pipeline installation model."""
-    return Path(
+    return Path(__file__).resolve().parents[3] / Path(
         "docs/domains/orcaflex/pipeline/installation/floating/"
         "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
     )
@@ -158,8 +158,6 @@ class TestPipelineSchematicGenerator:
 
     def test_init_with_valid_path(self, sample_yaml_path):
         """Test initialization with valid YAML path."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
 
@@ -168,8 +166,6 @@ class TestPipelineSchematicGenerator:
 
     def test_init_with_custom_output_dir(self, sample_yaml_path, temp_output_dir):
         """Test initialization with custom output directory."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(
             str(sample_yaml_path), str(temp_output_dir)
@@ -177,13 +173,6 @@ class TestPipelineSchematicGenerator:
 
         assert generator.output_dir == temp_output_dir
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_parse_model(self, sample_yaml_path):
         """Test parsing the model file."""
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
@@ -196,13 +185,6 @@ class TestPipelineSchematicGenerator:
         assert len(data.boundary_conditions) > 0
         assert data.model_name == "vessel_end_winch"
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_parse_model_extracts_end_a(self, sample_yaml_path):
         """Test that End A boundary condition is extracted."""
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
@@ -219,13 +201,6 @@ class TestPipelineSchematicGenerator:
         end_a = end_a_bcs[0]
         assert end_a.x == pytest.approx(-101, abs=1)
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_create_plan_view(self, sample_yaml_path):
         """Test creating plan view figure."""
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
@@ -239,13 +214,6 @@ class TestPipelineSchematicGenerator:
         assert fig.layout.xaxis.title.text == "Global X (m)"
         assert fig.layout.yaxis.title.text == "Global Y (m)"
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_create_elevation_view(self, sample_yaml_path):
         """Test creating elevation view figure."""
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
@@ -259,13 +227,6 @@ class TestPipelineSchematicGenerator:
         assert fig.layout.xaxis.title.text == "Global X (m)"
         assert fig.layout.yaxis.title.text == "Global Z (m)"
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_generate_html_report(self, sample_yaml_path, temp_output_dir):
         """Test generating HTML report."""
         generator = PipelineSchematicGenerator(
@@ -283,13 +244,6 @@ class TestPipelineSchematicGenerator:
         assert "Elevation View" in content
         assert "plotly" in content.lower()
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_save_individual_views(self, sample_yaml_path, temp_output_dir):
         """Test saving individual view files."""
         generator = PipelineSchematicGenerator(
@@ -304,8 +258,6 @@ class TestPipelineSchematicGenerator:
 
     def test_get_marker_symbol(self, sample_yaml_path):
         """Test marker symbol mapping."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
 
@@ -316,8 +268,6 @@ class TestPipelineSchematicGenerator:
 
     def test_get_marker_size(self, sample_yaml_path):
         """Test marker size mapping."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
 
@@ -327,8 +277,6 @@ class TestPipelineSchematicGenerator:
 
     def test_create_boundary_condition_legend(self, sample_yaml_path):
         """Test creating the BC legend figure."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
         legend_fig = generator.create_boundary_condition_legend()
@@ -342,8 +290,6 @@ class TestPipelineLengthCalculation:
 
     def test_simple_straight_line(self, sample_yaml_path):
         """Test length calculation for straight line."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
 
@@ -356,8 +302,6 @@ class TestPipelineLengthCalculation:
 
     def test_diagonal_line(self, sample_yaml_path):
         """Test length calculation for diagonal line."""
-        if not sample_yaml_path.exists():
-            pytest.skip("Sample YAML file not found")
 
         generator = PipelineSchematicGenerator(str(sample_yaml_path))
 
@@ -372,13 +316,6 @@ class TestPipelineLengthCalculation:
 class TestIntegration:
     """Integration tests with actual model file."""
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_full_workflow(self, sample_yaml_path, temp_output_dir):
         """Test complete workflow from parsing to report generation."""
         generator = PipelineSchematicGenerator(
@@ -402,13 +339,6 @@ class TestIntegration:
         assert "vessel_end_winch" in content
         assert "Pipeline Length" in content
 
-    @pytest.mark.skipif(
-        not Path(
-            "docs/domains/orcaflex/pipeline/installation/floating/"
-            "24in_pipeline/monolithic/basefile/vessel_end_winch.yml"
-        ).exists(),
-        reason="Sample YAML not available",
-    )
     def test_model_coordinates_accuracy(self, sample_yaml_path):
         """Verify extracted coordinates match expected values."""
         generator = PipelineSchematicGenerator(str(sample_yaml_path))

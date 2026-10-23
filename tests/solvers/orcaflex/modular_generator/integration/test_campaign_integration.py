@@ -505,10 +505,6 @@ class TestSlayCampaignGeneratesCorrectly:
 class TestBackwardCompatSingleRunFloating:
     """Existing floating spec generates correct output via ModularModelGenerator."""
 
-    @pytest.mark.skipif(
-        not FLOATING_SPEC.exists(),
-        reason=f"Floating spec not found: {FLOATING_SPEC}",
-    )
     def test_backward_compat_single_run_floating(self, tmp_path):
         from digitalmodel.solvers.orcaflex.modular_generator import (
             ModularModelGenerator,
@@ -547,10 +543,6 @@ class TestBackwardCompatSingleRunFloating:
 class TestBackwardCompatSingleRunSlay:
     """Existing S-lay spec generates correct output via ModularModelGenerator."""
 
-    @pytest.mark.skipif(
-        not SLAY_SPEC.exists(),
-        reason=f"S-lay spec not found: {SLAY_SPEC}",
-    )
     def test_backward_compat_single_run_slay(self, tmp_path):
         from digitalmodel.solvers.orcaflex.modular_generator import (
             ModularModelGenerator,

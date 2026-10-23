@@ -1,0 +1,4866 @@
+{
+  "base": "3554b14fde67f44b1c52b81b6c72106282eaff29",
+  "before": {
+    "counts": {
+      "passed": 2565,
+      "failed": 15,
+      "errors": 0,
+      "skipped": 17,
+      "xfailed": 2
+    },
+    "not_evaluated": [
+      {
+        "test": "tests.hydrodynamics.diffraction.test_deck_validation::test_parametric_fpso_mesh_is_physical",
+        "reason": "capytaine not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gdf_header_compat.TestFixtureMeshOrientation::test_heave_hydrostatic_stiffness_positive[acceptance_610]",
+        "reason": "could not import 'capytaine': No module named 'capytaine'"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gdf_header_compat.TestFixtureMeshOrientation::test_heave_hydrostatic_stiffness_positive[unit_box_rao]",
+        "reason": "could not import 'capytaine': No module named 'capytaine'"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_gdf",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_dat",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_msh",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_cylinder_gdf",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_multi_format",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_uses_custom_stem",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_panel_count_reasonable_for_barge",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_gmsh_not_available_raises_import_error",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_happy_path",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_multiple_formats",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_custom_stem",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_dry_run",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_invalid_spec_yaml",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_outputs_summary",
+        "reason": "GMSH not installed"
+      }
+    ],
+    "failed_tests": [
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_basic",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_validation",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_selective_formats",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIBatch::test_batch_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIBatch::test_batch_processing",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_version",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_invalid_command",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_missing_required_argument",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_invalid_water_depth",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_missing_analysis_folder",
+      "tests.hydrodynamics.diffraction.test_polars_exporter.TestRaosToPolars::test_row_count",
+      "tests.hydrodynamics.diffraction.test_polars_exporter.TestMatrixExport::test_added_mass_row_count",
+      "tests.hydrodynamics.diffraction.test_resolver::test_no_circular_import_when_hull_library_imported_first"
+    ],
+    "sha256": "ca07bcfc1c1d134d25007953ffa0afb0aa6fc5a84747b54d5068c663da863377"
+  },
+  "after": {
+    "counts": {
+      "passed": 2576,
+      "failed": 14,
+      "errors": 0,
+      "skipped": 17,
+      "xfailed": 2
+    },
+    "not_evaluated": [
+      {
+        "test": "tests.hydrodynamics.diffraction.test_deck_validation::test_parametric_fpso_mesh_is_physical",
+        "reason": "capytaine not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gdf_header_compat.TestFixtureMeshOrientation::test_heave_hydrostatic_stiffness_positive[acceptance_610]",
+        "reason": "could not import 'capytaine': No module named 'capytaine'"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gdf_header_compat.TestFixtureMeshOrientation::test_heave_hydrostatic_stiffness_positive[unit_box_rao]",
+        "reason": "could not import 'capytaine': No module named 'capytaine'"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_gdf",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_dat",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_box_barge_msh",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_cylinder_gdf",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_multi_format",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_build_uses_custom_stem",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_panel_count_reasonable_for_barge",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_gmsh_mesh_builder.TestGmshMeshBuilderWorkflow::test_gmsh_not_available_raises_import_error",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_happy_path",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_multiple_formats",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_custom_stem",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_dry_run",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_invalid_spec_yaml",
+        "reason": "GMSH not installed"
+      },
+      {
+        "test": "tests.hydrodynamics.diffraction.test_wrk5091_mesh_cli_exports.TestMeshBuildCliWorkflow::test_mesh_build_outputs_summary",
+        "reason": "GMSH not installed"
+      }
+    ],
+    "failed_tests": [
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_basic",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_validation",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIConvertAQWA::test_convert_aqwa_selective_formats",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIBatch::test_batch_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIBatch::test_batch_processing",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_version",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_help",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIGeneral::test_cli_invalid_command",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_missing_required_argument",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_invalid_water_depth",
+      "tests.hydrodynamics.diffraction.test_cli_integration.TestCLIErrorHandling::test_missing_analysis_folder",
+      "tests.hydrodynamics.diffraction.test_polars_exporter.TestRaosToPolars::test_row_count",
+      "tests.hydrodynamics.diffraction.test_polars_exporter.TestMatrixExport::test_added_mass_row_count"
+    ],
+    "sha256": "bc36e5103f2cd424ddc72ba006e0340b2bfa2b4e7d2e0b784b6e90a08ed27d5e"
+  },
+  "audit_before": {
+    "absolute_literals": [
+      {
+        "file": "tests/ansys/test_analysis_intake.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_analysis_replay_source_closure.py",
+        "line": 23,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 60,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 192,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 193,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 194,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 236,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 257,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 266,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 314,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_failure_serialization.py",
+        "line": 17,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 8,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 36,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 55,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_active_population.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 50,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 50,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 53,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 81,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 85,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 99,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 105,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 127,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 96,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 42,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 44,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 44,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 49,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 49,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 59,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 76,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 149,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 150,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 151,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 152,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 153,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 208,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 209,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 248,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 37,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 95,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 13,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 20,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 71,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_pressure_absence_integration.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 55,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 58,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 59,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 61,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 62,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 62,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 64,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 68,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 92,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 95,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 98,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 99,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 132,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 133,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 134,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 151,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 159,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 174,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 175,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 195,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 263,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 263,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 264,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 275,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 301,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 302,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 302,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 323,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 324,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 325,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 350,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 9,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 13,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 14,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 30,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 32,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 54,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 140,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 98,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 111,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 118,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 119,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 126,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 134,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 158,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 165,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 166,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 8,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 9,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 10,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 20,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 15,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 16,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 16,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 17,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 61,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 80,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 81,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 82,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 87,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 105,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/bha_database/test_database.py",
+        "line": 284,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/cathodic_protection/test_abs_ships_rebuild.py",
+        "line": 367,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/docs/test_digitalmodel_routing_contract.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_exceptions.py",
+        "line": 297,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_exceptions.py",
+        "line": 300,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_runner.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_runner.py",
+        "line": 83,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_runner.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_orcawave_runner.py",
+        "line": 158,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_orcawave_runner.py",
+        "line": 166,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/legal/test_published_pages_have_no_internal_paths.py",
+        "line": 170,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/legal/test_sanitize_s7_cli_r5.py",
+        "line": 140,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/marine_ops/marine_engineering/validation_script.py",
+        "line": 4,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/orcaflex/test_report_builder.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/reporting/test_pdf.py",
+        "line": 126,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/riser_database/test_citations.py",
+        "line": 40,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_citations.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_crosswalk.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_provenance_tripwire.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_stackup_rig.py",
+        "line": 232,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/scripts/test_verify_solver_evidence.py",
+        "line": 68,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/benchmark/test_report.py",
+        "line": 211,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 46,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 113,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 113,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 121,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 71,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 75,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 185,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 186,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/baseline_performance_test.py",
+        "line": 365,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_models_to_sim.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_test.py",
+        "line": 60,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_test.py",
+        "line": 129,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring_analysis/comprehensive_analysis/conftest.py",
+        "line": 142,
+        "path": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/collate/csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_pretension_analysis.csv",
+        "tracked": "yes",
+        "matches": 1,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring_analysis/comprehensive_analysis/conftest.py",
+        "line": 145,
+        "path": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/collate/csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_mooring_stiffness_analysis.csv",
+        "tracked": "yes",
+        "matches": 1,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring_analysis/comprehensive_analysis/conftest.py",
+        "line": 148,
+        "path": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/output/collate/csv/fsts_l015_hwl_125km3_l100_pb_vessel_statics_6dof_fender_force_analysis.csv",
+        "tracked": "yes",
+        "matches": 1,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reorganize_tests.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/snapshot_helpers.py",
+        "line": 10,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_integration.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_integration.py",
+        "line": 79,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_snapshot.py",
+        "line": 23,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/single_file_parallel_test.py",
+        "line": 315,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_production_optimization.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_production_optimization.py",
+        "line": 25,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/update_imports.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/smoke/test_model_manifest.py",
+        "line": 82,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/subsea/cross_sections/test_reporting.py",
+        "line": 83,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflow_api/test_viv_screening_publication.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflow_api/test_viv_screening_publication.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflows/test_installation_full_report.py",
+        "line": 145,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_installation_full_report.py",
+        "line": 165,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_openfoam_batch_results.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_openfoam_batch_results.py",
+        "line": 37,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      }
+    ],
+    "skip_guards": [
+      {
+        "file": "tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py",
+        "line": 56,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py",
+        "line": 149,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py",
+        "line": 187,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py",
+        "line": 212,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/capytaine/test_cylinder_benchmark.py",
+        "line": 92,
+        "path": "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/hydro_data.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/capytaine/test_cylinder_benchmark.py",
+        "line": 100,
+        "path": "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/spec_orcawave/val_cylinder_r1_t05.gdf",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/capytaine/test_oc4_semisub_benchmark.py",
+        "line": 65,
+        "path": "docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub mesh.gdf",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "line": 27,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_ship_raos.dat",
+        "reason": "ship deck absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "line": 124,
+        "path": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPAD.dat",
+        "reason": "LNGC damping pair absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "line": 124,
+        "path": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPNO.dat",
+        "reason": "LNGC damping pair absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis_multibody.py",
+        "line": 37,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_ship_raos.dat",
+        "reason": "ship deck absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_lis_coefficient_grid.py",
+        "line": 33,
+        "path": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/AL_FST2F_FST1F_HWL_ANS2019R1.LIS",
+        "reason": "multibody listing absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_lis_coefficient_grid.py",
+        "line": 34,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "reason": "ship listing absent",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_lis_frequency_extraction.py",
+        "line": 36,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "reason": "ship RAO example listing not present",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_parser.py",
+        "line": 29,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_parser.py",
+        "line": 159,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_parser.py",
+        "line": 205,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_cli_integration.py",
+        "line": 45,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_cli_integration.py",
+        "line": 74,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_cli_integration.py",
+        "line": 104,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_cli_integration.py",
+        "line": 140,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_cli_integration.py",
+        "line": 184,
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos",
+        "reason": "Test data not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_catalog.py",
+        "line": 140,
+        "path": "data/hull_library/profiles",
+        "reason": "Seed data directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_catalog.py",
+        "line": 154,
+        "path": "data/hull_library/profiles",
+        "reason": "Seed data directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_catalog.py",
+        "line": 167,
+        "path": "data/hull_library/profiles",
+        "reason": "Seed data directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_catalog.py",
+        "line": 183,
+        "path": "data/hull_library/profiles",
+        "reason": "Seed data directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_catalog.py",
+        "line": 208,
+        "path": "data/hull_library/profiles",
+        "reason": "Seed data directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_integration.py",
+        "line": 18,
+        "path": "data/hull_library/profiles",
+        "reason": "hull profile seed data not yet generated (data/hull_library/profiles/)",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_panel_integration.py",
+        "line": 29,
+        "path": "data/hull_library/catalog/hull_panel_catalog.yaml",
+        "reason": "hull panel catalog not yet generated (data/hull_library/catalog/)",
+        "tracked": "no"
+      },
+      {
+        "file": "tests/hydrodynamics/hull_library/test_seed_data.py",
+        "line": 9,
+        "path": "data/hull_library/profiles",
+        "reason": "hull profile seed data not yet generated (data/hull_library/profiles/)",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers.py",
+        "line": 28,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers.py",
+        "line": 28,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_c11.py",
+        "line": 34,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_c11.py",
+        "line": 34,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_c13.py",
+        "line": 32,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_c13.py",
+        "line": 32,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_fail_closed.py",
+        "line": 32,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_fail_closed.py",
+        "line": 32,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_label_salt.py",
+        "line": 30,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r3.py",
+        "line": 39,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r3.py",
+        "line": 39,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r4.py",
+        "line": 47,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r4.py",
+        "line": 47,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r5.py",
+        "line": 34,
+        "path": "scripts/legal/check_identifiers.py",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/legal/test_check_identifiers_r5.py",
+        "line": 34,
+        "path": ".legal-deny-list.yaml",
+        "reason": "identifier gate not installed",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/marine_ops/artificial_lift/dynacard/test_rod_pump.py",
+        "line": 169,
+        "path": "docs/collide_pe/dynacard-undulations/dynacard_digitized.csv",
+        "reason": "digitized card not present",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/naval_architecture/test_vessel_fleet_adapter.py",
+        "line": 664,
+        "path": "[path removed]",
+        "reason": "worldenergydata CSV not available (standalone digitalmodel checkout)",
+        "tracked": "no"
+      },
+      {
+        "file": "tests/naval_architecture/test_vessel_fleet_adapter.py",
+        "line": 836,
+        "path": "[path removed]",
+        "reason": "worldenergydata drilling-rigs CSV not available",
+        "tracked": "no"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py",
+        "line": 509,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py",
+        "line": 551,
+        "path": "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/schema/test_equipment_compat.py",
+        "line": 116,
+        "path": "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml",
+        "reason": "S-lay spec not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_jumper_plet_to_plem_semantic.py",
+        "line": 64,
+        "path": "docs/domains/orcaflex/jumper/plet_to_plem/spec.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 270,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/spec_qa.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 398,
+        "path": "docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 468,
+        "path": "docs/domains/orcaflex/examples/raw/A01/A01 Lazy wave riser.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 481,
+        "path": "docs/domains/orcaflex/examples/raw/C09/C09 Fenders.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 494,
+        "path": "docs/domains/orcaflex/examples/raw/D02/D02 Pull in analysis.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py",
+        "line": 739,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/D24inL4900mBuoy7kNSpacing1500mm.yml",
+        "reason": "Dynamic reason; see source",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 157,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml",
+        "reason": "A01 catenary riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 175,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml",
+        "reason": "A01 catenary riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 196,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml",
+        "reason": "A01 catenary riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 349,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_pliant_wave_riser/spec.yml",
+        "reason": "A01 pliant wave riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 406,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml",
+        "reason": "A01 catenary riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 435,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/spec.yml",
+        "reason": "A01 catenary riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_riser_generation.py",
+        "line": 469,
+        "path": "docs/domains/orcaflex/library/tier2_fast/a01_pliant_wave_riser/spec.yml",
+        "reason": "A01 pliant wave riser spec not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py",
+        "line": 176,
+        "path": "docs/domains/orcaflex/library/model_library/a01_catenary_riser/spec.yml",
+        "reason": "a01_catenary_riser spec.yml not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py",
+        "line": 268,
+        "path": "docs/domains/orcaflex/library/model_library/a01_catenary_riser/spec.yml",
+        "reason": "a01_catenary_riser spec.yml not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py",
+        "line": 322,
+        "path": "docs/domains/orcaflex/library/model_library/a01_catenary_riser/spec.yml",
+        "reason": "a01_catenary_riser spec.yml not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py",
+        "line": 360,
+        "path": "docs/domains/orcaflex/library/model_library/a01_catenary_riser/spec.yml",
+        "reason": "a01_catenary_riser spec.yml not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_orcaflex_converter_enhanced.py",
+        "line": 160,
+        "path": "docs/domains/orcaflex/examples/raw",
+        "reason": "Example files not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_orcaflex_converter_enhanced.py",
+        "line": 384,
+        "path": "docs/domains/orcaflex/examples/raw",
+        "reason": "Example files not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_orcaflex_converter_enhanced.py",
+        "line": 424,
+        "path": "docs/domains/orcaflex/examples/raw",
+        "reason": "Example files not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 181,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 200,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 223,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 243,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 263,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 287,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 376,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "line": 406,
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "reason": "Sample YAML not available",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 156,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 173,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 190,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 209,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 402,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_template_generator.py",
+        "line": 467,
+        "path": "docs/domains/orcaflex/templates",
+        "reason": "Templates directory not found",
+        "tracked": "yes"
+      }
+    ],
+    "syntax_errors": [
+      "tests/test_automation/core/domain_autofix_patterns.py"
+    ]
+  },
+  "audit_after": {
+    "absolute_literals": [
+      {
+        "file": "tests/ansys/test_analysis_intake.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_analysis_replay_source_closure.py",
+        "line": 23,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 60,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 192,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 193,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 194,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 236,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 257,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 266,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_collection.py",
+        "line": 314,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_failure_serialization.py",
+        "line": 17,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 8,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 36,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 55,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_absence_population_integration.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_active_population.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 50,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 50,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 51,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 53,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 81,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 85,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 99,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 105,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_cfd_owner_evidence.py",
+        "line": 127,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_console_branches.py",
+        "line": 96,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 27,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 28,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 42,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 43,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 44,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 44,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 49,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 49,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 59,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_controller_arguments.py",
+        "line": 76,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 149,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 150,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 151,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 152,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 153,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 208,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 209,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+        "line": 248,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 37,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_forwarder_resources.py",
+        "line": 95,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 13,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 20,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_parent_identity_capture.py",
+        "line": 71,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_pressure_absence_integration.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 55,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 56,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 58,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 59,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 61,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 62,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 62,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 64,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 68,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 92,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 94,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 95,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 98,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 99,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 132,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 133,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 134,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 151,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 159,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 174,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 175,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 195,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 263,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 263,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 264,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 275,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 301,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 302,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 302,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 323,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 324,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 325,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory.py",
+        "line": 350,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 9,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 13,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 14,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 30,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 31,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 32,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 54,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 66,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_process_inventory_v2.py",
+        "line": 140,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 98,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 111,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 118,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 119,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 126,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 134,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 158,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 165,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_resource_absence.py",
+        "line": 166,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 8,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 9,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 10,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 11,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 20,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 22,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
+        "line": 38,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 15,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 16,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 16,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 17,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 61,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 80,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 81,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 82,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 87,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/ansys/test_cylinder_wrapper_consoles.py",
+        "line": 105,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/bha_database/test_database.py",
+        "line": 284,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/cathodic_protection/test_abs_ships_rebuild.py",
+        "line": 367,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/docs/test_digitalmodel_routing_contract.py",
+        "line": 69,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_exceptions.py",
+        "line": 297,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_exceptions.py",
+        "line": 300,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/bemrosetta/test_runner.py",
+        "line": 29,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_runner.py",
+        "line": 83,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_aqwa_runner.py",
+        "line": 93,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_orcawave_runner.py",
+        "line": 158,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/hydrodynamics/diffraction/test_orcawave_runner.py",
+        "line": 166,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/legal/test_published_pages_have_no_internal_paths.py",
+        "line": 170,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/legal/test_sanitize_s7_cli_r5.py",
+        "line": 140,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/marine_ops/marine_engineering/validation_script.py",
+        "line": 4,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/orcaflex/test_report_builder.py",
+        "line": 45,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/reporting/test_pdf.py",
+        "line": 126,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/riser_database/test_citations.py",
+        "line": 40,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_citations.py",
+        "line": 41,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_crosswalk.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 33,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 34,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_leak_gate.py",
+        "line": 65,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_provenance_tripwire.py",
+        "line": 26,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/riser_database/test_stackup_rig.py",
+        "line": 232,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/scripts/test_verify_solver_evidence.py",
+        "line": 68,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/benchmark/test_report.py",
+        "line": 211,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 46,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 67,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 112,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 113,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 113,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 114,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_contracts.py",
+        "line": 121,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 71,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 72,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/ghs/test_qualification.py",
+        "line": 75,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 135,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 185,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/openfoam/test_report.py",
+        "line": 186,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/baseline_performance_test.py",
+        "line": 365,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_models_to_sim.py",
+        "line": 18,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_test.py",
+        "line": 60,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_test.py",
+        "line": 129,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reorganize_tests.py",
+        "line": 21,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/snapshot_helpers.py",
+        "line": 10,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_integration.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_integration.py",
+        "line": 79,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/reporting/test_fixture_snapshot.py",
+        "line": 23,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/solvers/orcaflex/single_file_parallel_test.py",
+        "line": 315,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_production_optimization.py",
+        "line": 24,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/test_production_optimization.py",
+        "line": 25,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/orcaflex/update_imports.py",
+        "line": 19,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/solvers/smoke/test_model_manifest.py",
+        "line": 82,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/subsea/cross_sections/test_reporting.py",
+        "line": 83,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflow_api/test_viv_screening_publication.py",
+        "line": 63,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflow_api/test_viv_screening_publication.py",
+        "line": 78,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "posix"
+      },
+      {
+        "file": "tests/workflows/test_installation_full_report.py",
+        "line": 145,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_installation_full_report.py",
+        "line": 165,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_openfoam_batch_results.py",
+        "line": 35,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      },
+      {
+        "file": "tests/workflows/test_openfoam_batch_results.py",
+        "line": 37,
+        "path": "[path removed]",
+        "tracked": "no",
+        "matches": 0,
+        "kind": "drive"
+      }
+    ],
+    "skip_guards": [
+      {
+        "file": "tests/hydrodynamics/hull_library/test_panel_integration.py",
+        "line": 29,
+        "path": "data/hull_library/catalog/hull_panel_catalog.yaml",
+        "reason": "hull panel catalog not yet generated (data/hull_library/catalog/)",
+        "tracked": "no"
+      },
+      {
+        "file": "tests/naval_architecture/test_vessel_fleet_adapter.py",
+        "line": 664,
+        "path": "[path removed]",
+        "reason": "worldenergydata CSV not available (standalone digitalmodel checkout)",
+        "tracked": "no"
+      },
+      {
+        "file": "tests/naval_architecture/test_vessel_fleet_adapter.py",
+        "line": 836,
+        "path": "[path removed]",
+        "reason": "worldenergydata drilling-rigs CSV not available",
+        "tracked": "no"
+      }
+    ],
+    "syntax_errors": [
+      "tests/test_automation/core/domain_autofix_patterns.py"
+    ]
+  },
+  "metrics": {
+    "remaining tracked fixture path mismatches": 0,
+    "remaining statically resolved tracked fixture skip guards": 0,
+    "diffraction missing-fixture skips": 0
+  }
+}

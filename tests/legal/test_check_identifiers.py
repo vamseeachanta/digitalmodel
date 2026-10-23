@@ -24,9 +24,6 @@ REPO = Path(__file__).resolve().parents[2]
 CHECKER = REPO / "scripts" / "legal" / "check_identifiers.py"
 RULES = REPO / ".legal-deny-list.yaml"
 
-pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not RULES.exists(),
-    reason="identifier gate not installed")
 
 
 def run(*args, env=None):
