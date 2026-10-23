@@ -215,6 +215,162 @@ def field_economics_rows(doc: dict | None = None) -> list[dict]:
     return rows
 
 
+def casing_profile_rows(doc: dict | None = None) -> list[dict]:
+    """Transpose build_casing_design_explorer.py::build_profiles without truncation."""
+    doc = _load("well/casing-design-explorer.json") if doc is None else doc
+    profiles = doc["profiles"]
+    if not profiles or "depth_ft" not in profiles:
+        raise ValueError("Casing profiles require a depth grid")
+    if len({len(values) for values in profiles.values()}) != 1:
+        raise ValueError("Casing profile length differs from depth grid")
+    return [
+        dict(zip(profiles, values, strict=True))
+        for values in zip(*profiles.values(), strict=True)
+    ]
+
+
+def casing_product_rows(doc: dict | None = None) -> list[dict]:
+    """Copy product geometry and ratings; units follow the generator's build_study."""
+    doc = _load("well/casing-design-explorer.json") if doc is None else doc
+    fields = (
+        "label",
+        "grade",
+        "od_in",
+        "weight_ppf",
+        "wall_in",
+        "id_in",
+        "d_over_t",
+        "passes_all",
+        "max_frac_surface_pressure_psi",
+    )
+    ratings = ("burst_psi", "collapse_psi", "body_yield_lbf", "collapse_regime")
+    return [
+        {
+            **{key: product[key] for key in fields},
+            **{key: product["ratings"][key] for key in ratings},
+        }
+        for product in doc["products"]
+    ]
+
+
+def casing_check_rows(doc: dict | None = None) -> list[dict]:
+    """Keep mode-specific units explicit; design factors and pass flags are copied."""
+    doc = _load("well/casing-design-explorer.json") if doc is None else doc
+    # Unit basis: casing_design.py::check_burst/check_collapse/check_tension/
+    # check_triaxial. The last compares yield stress with von Mises stress.
+    units = {"burst": "psi", "collapse": "psi", "tension": "lbf", "triaxial": "psi"}
+    fields = (
+        "mode",
+        "load_case",
+        "rating",
+        "max_load",
+        "min_design_factor",
+        "governing_depth_ft",
+        "required_design_factor",
+        "passes",
+    )
+    rows = []
+    for product in doc["products"]:
+        for mode, check in product["checks"].items():
+            if mode not in units or check["mode"] != mode:
+                raise ValueError("Casing check mode has no declared load unit")
+            rows.append(
+                {
+                    "product": product["label"],
+                    **{key: check[key] for key in fields},
+                    "load_unit": units[mode],
+                }
+            )
+    return rows
+
+
+def sloshing_curve_rows(doc: dict | None = None) -> list[dict]:
+    """Project analytical SHAPES/_norm_curve only; no CFD or SDOF observations."""
+    doc = _load("structural/sloshing-explorer.json") if doc is None else doc
+    return [
+        {
+            "shape": shape["key"],
+            "characteristic_length": shape["lc"],
+            "depth_over_characteristic_length": ratio,
+            "dimensionless_frequency": omega,
+        }
+        for shape in doc["shapes"]
+        for ratio, omega in shape["curve"]
+    ]
+
+
+def sloshing_lookup_rows(doc: dict | None = None) -> list[dict]:
+    """Keep each shape's dimensional span and depth-ratio definition.
+
+    _lookup_table in build_sloshing_explorer.py uses depth/length for the
+    rectangle, depth/diameter for both cylinders, and depth/height for the oval.
+    """
+    doc = _load("structural/sloshing-explorer.json") if doc is None else doc
+    definitions = {
+        "rectangular": "depth / length",
+        "upright-cylinder": "depth / diameter",
+        "horizontal-cylinder": "depth / diameter",
+        "elliptical": "depth / height",
+    }
+    return [
+        {
+            "shape": shape["key"],
+            "span_m": shape["default"]["span"],
+            "span_definition": shape["default"]["span_label"],
+            "depth_ratio": point["f"],
+            "depth_ratio_definition": definitions[shape["key"]],
+            "period_s": point["T"],
+        }
+        for shape in doc["shapes"]
+        for point in shape["lookup"]
+    ]
+
+
+def dynacard_case_rows(doc: dict | None = None) -> list[dict]:
+    """Synthetic build_cases summaries only; the field-card library is not copied."""
+    doc = _load("artificial-lift/dynacard-troubleshooting.json") if doc is None else doc
+    fields = (
+        "mode",
+        "seed",
+        "classification",
+        "confidence",
+        "severity",
+        "model_version",
+        "n_points",
+    )
+    # Unit basis: build_dynacard_troubleshooting.py::build_cases metrics.
+    metrics = {
+        "fluid_load_lbs": "fluid_load_lbf",
+        "peak_load_lbs": "peak_load_lbf",
+        "min_load_lbs": "min_load_lbf",
+        "card_area_inlb": "card_area_in_lbf",
+        "area_vs_healthy_pct": "area_vs_healthy_pct",
+    }
+    return [
+        {
+            **{key: case[key] for key in fields},
+            **{target: case["metrics"][source] for source, target in metrics.items()},
+        }
+        for case in doc["cases"]
+    ]
+
+
+def dynacard_differential_rows(doc: dict | None = None) -> list[dict]:
+    """Retain the source's ordered candidate diagnoses without renormalisation."""
+    doc = _load("artificial-lift/dynacard-troubleshooting.json") if doc is None else doc
+    # One-based ordinal records the source list order, not an acceptance limit.
+    return [
+        {
+            "case_mode": case["mode"],
+            "candidate_rank": rank,
+            "candidate_mode": candidate["mode"],
+            "probability": candidate["probability"],
+        }
+        for case in doc["cases"]
+        for rank, candidate in enumerate(case["differential"], start=1)
+    ]
+
+
 #: dataset id -> {table name: builder}. Grouped per the epic's decision 1 — one dataset
 #: per coherent projection, several capabilities to a dataset.
 DATASETS = {
@@ -226,13 +382,24 @@ DATASETS = {
         "cathodic_protection": cathodic_protection_rows,
         "galvanic_compatibility": galvanic_rows,
     },
-    "digitalmodel-artificial-lift": {"ipr": ipr_rows},
+    "digitalmodel-artificial-lift": {
+        "ipr": ipr_rows,
+        "dynacard_cases": dynacard_case_rows,
+        "dynacard_differential": dynacard_differential_rows,
+    },
     "digitalmodel-mooring": {"anchor_holding": anchor_holding_rows},
     "digitalmodel-hydro": {
         "ship_resistance": ship_resistance_rows,
         "viv": viv_rows,
+        "sloshing_curves": sloshing_curve_rows,
+        "sloshing_lookup": sloshing_lookup_rows,
     },
-    "digitalmodel-well": {"pore_pressure": pore_pressure_rows},
+    "digitalmodel-well": {
+        "pore_pressure": pore_pressure_rows,
+        "casing_profiles": casing_profile_rows,
+        "casing_products": casing_product_rows,
+        "casing_checks": casing_check_rows,
+    },
     "digitalmodel-field-development": {"field_economics": field_economics_rows},
 }
 
