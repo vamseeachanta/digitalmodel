@@ -1,0 +1,1437 @@
+{
+  "schema_version": 1,
+  "case": "2.10",
+  "source_type": "workshop_benchmark",
+  "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+  "conventions": {
+    "resistance": "Ct times 1000; static wetted area including rudder",
+    "heave": "z/a at centre of gravity; positive up",
+    "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+    "wave": "incident wave elevation at FP divided by Lpp",
+    "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+    "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+    "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+    "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+    "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+    "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+    "correction_page": "September 9, 10 and 14, 2015"
+  },
+  "reference_rows": [
+    {
+      "id": "C0",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 0,
+        "wave_height_m": 0,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C0",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_mean": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "sinkage_over_lpp_mean": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "trim_deg_mean": {
+          "value": null,
+          "units": "deg",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C0: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C0"
+      }
+    },
+    {
+      "id": "C1",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 3.949,
+        "wave_height_m": 0.062,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C1",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "wave_over_lpp_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C1: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C1"
+      }
+    },
+    {
+      "id": "C2",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 5.164,
+        "wave_height_m": 0.078,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C2",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "wave_over_lpp_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C2: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C2"
+      }
+    },
+    {
+      "id": "C3",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 6.979,
+        "wave_height_m": 0.123,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C3",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "wave_over_lpp_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C3: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C3"
+      }
+    },
+    {
+      "id": "C4",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 8.321,
+        "wave_height_m": 0.149,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C4",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "wave_over_lpp_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C4: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C4"
+      }
+    },
+    {
+      "id": "C5",
+      "conditions": {
+        "froude": 0.261,
+        "speed_m_s": 2.017,
+        "lpp_m": 6.0702,
+        "gravity_m_s2": 9.81,
+        "density_kg_m3": 998.63,
+        "nu_m2_s": 1.14e-06,
+        "reynolds": 10740000.0,
+        "wavelength_m": 11.84,
+        "wave_height_m": 0.196,
+        "heading": "head",
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder"
+      },
+      "conditions_source": {
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Conditions, C5",
+        "units": {
+          "froude": "1",
+          "speed_m_s": "m/s",
+          "lpp_m": "m",
+          "gravity_m_s2": "m/s^2",
+          "density_kg_m3": "kg/m^3",
+          "nu_m2_s": "m^2/s",
+          "reynolds": "1",
+          "wavelength_m": "m",
+          "wave_height_m": "m"
+        }
+      },
+      "conventions": {
+        "resistance": "Ct times 1000; static wetted area including rudder",
+        "heave": "z/a at centre of gravity; positive up",
+        "pitch": "theta/(k*a) at centre of gravity; theta in radians; positive bow up",
+        "wave": "incident wave elevation at FP divided by Lpp",
+        "fourier": "X0/2 + sum Xn*cos(2*pi*n*t/Te + phase_n)",
+        "phase": "atan2(-b_n,a_n) minus n times incident fundamental phase; crest at FP defines time zero",
+        "zero_harmonic": "twice mean for C1-C5; C0 uses means",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Fourier Series Instructions, equations (3)-(9); Symbols",
+        "correction_url": "https://t2015.nmri.go.jp/LatestNews.html",
+        "correction_page": "September 9, 10 and 14, 2015"
+      },
+      "responses": {
+        "ct_x1000_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "ct_x1000_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "heave_over_a_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a0": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a2": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a3": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_a4": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase1": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase2": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase3": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "pitch_over_ka_phase4": {
+          "value": null,
+          "units": "rad",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        },
+        "wave_over_lpp_a1": {
+          "value": null,
+          "units": "1",
+          "status": "NOT_EVALUATED",
+          "sheet": null,
+          "cell": null
+        }
+      },
+      "readback": {
+        "status": "NOT_EVALUATED",
+        "source_sha256": null,
+        "table_sha256": null
+      },
+      "required_inputs": [
+        "all experimental response values",
+        "workbook sheet and cell locators",
+        "source SHA-256 and response-table SHA-256",
+        "verified coefficient normalization and source readback"
+      ],
+      "response_provenance": {
+        "froude": 0.261,
+        "wave_conditions": "C5: see conditions",
+        "source_document": "Tokyo 2015 workshop Case 2.10 instructions",
+        "source_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.10/Case_2-10.html",
+        "page": "Requested computations, 2.10-1",
+        "published_data_file": "[Identifier]_6conditions_2-10_20150914.xlsx",
+        "licence_note": "No licence statement was found. Data is cited and read back, not redistributed. No source workbook, archive or copyrighted table text is included.",
+        "condition_id": "C5"
+      }
+    }
+  ],
+  "published_time_history_file": "Case2.10-2.zip",
+  "time_history_status": "Reconstructed Fourier histories, not raw signals; not downloaded",
+  "limitations": [
+    "No experimental response table has been read; every response is required and NOT_EVALUATED.",
+    "The published condition tuple differs from Case 2.1; no calm-water result is transferred.",
+    "C0 is recorded but excluded from the normalized wave reader."
+  ]
+}

@@ -292,13 +292,20 @@ def load_policy(path: Path) -> dict:
 
 def require_run_admission(next_mesh: str, reference_path: Path, criteria_path: Path,
                           coarse_history: Path | None = None,
-                          coarse_metadata: Path | None = None) -> dict:
+                          coarse_metadata: Path | None = None, *,
+                          case: str = "2.1", condition_id: str | None = None) -> dict:
     """Fail closed before requesting a step 1 run; never launch a solver.
 
     This validates supplied evidence, not the authenticity of external files.
     A future launcher must call this at its execution boundary. It does not
     retrofit the separate fixed-bare study or provide a run transaction.
     """
+    if case == "2.10":
+        from .kcs_step3 import require_run_admission as head_wave_admission
+        return head_wave_admission(next_mesh, reference_path, criteria_path,
+                                   coarse_history, coarse_metadata, condition_id=condition_id)
+    if case != "2.1" or condition_id is not None:
+        raise ValueError("unknown case or condition for step 1 admission")
     if next_mesh not in ("coarse", "medium", "fine"):
         raise ValueError("unknown requested mesh")
     row = load_reference(reference_path)

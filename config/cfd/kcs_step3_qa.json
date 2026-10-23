@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "criteria_id": "kcs-step3-v2",
+  "case": "2.10",
+  "tolerance_basis": "provisional; no basis recorded; retained provisional diagnostic thresholds, not experimental uncertainty. Maintainer selection of the new threshold groups is not recorded. No engineering qualification is granted.",
+  "tolerances": {
+    "ct_x1000_a0": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_a1": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_a2": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_a3": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_a4": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_phase1": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_phase2": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_phase3": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "ct_x1000_phase4": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "heave_over_a_a0": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "heave_over_a_a1": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "heave_over_a_a2": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "heave_over_a_a3": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "heave_over_a_a4": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "heave_over_a_phase1": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "heave_over_a_phase2": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "heave_over_a_phase3": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "heave_over_a_phase4": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "pitch_over_ka_a0": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "pitch_over_ka_a1": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "pitch_over_ka_a2": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "pitch_over_ka_a3": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "pitch_over_ka_a4": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.05,
+      "maximum_window_drift": 0.01
+    },
+    "pitch_over_ka_phase1": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "pitch_over_ka_phase2": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "pitch_over_ka_phase3": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "pitch_over_ka_phase4": {
+      "kind": "absolute_circular",
+      "units": "rad",
+      "limit": 0.1,
+      "maximum_window_drift": 0.02
+    },
+    "wave_over_lpp_a1": {
+      "kind": "absolute",
+      "units": "1",
+      "limit": 0.001,
+      "maximum_window_drift": 0.0002
+    }
+  },
+  "history": {
+    "discard_cycles": 5,
+    "window_cycles": 5,
+    "minimum_samples_per_cycle": 32,
+    "sampling_relative_tolerance": 1e-06,
+    "phase_amplitude_floor": 1e-08,
+    "maximum_fit_residual_rms": {
+      "ct_x1000": 0.02,
+      "heave_over_a": 0.01,
+      "pitch_over_ka": 0.01,
+      "wave_over_lpp": 0.0002
+    }
+  },
+  "residual_limits": {
+    "p_rgh": 0.0001,
+    "U": 1e-05
+  },
+  "mesh_limits": {
+    "maximum_y_plus": 2.0,
+    "maximum_dx_over_lpp": 0.01,
+    "maximum_dz_over_lpp": 0.001
+  },
+  "gci": {
+    "required_meshes": 3,
+    "maximum_fine_percent": 1.0,
+    "minimum_order": 0.5,
+    "maximum_order": 3.0,
+    "maximum_asymptotic_deviation": 0.05
+  },
+  "retention": "Inputs, native histories, diagnostics and heavy outputs go to the shared data store with a digest manifest; the repository retains the manifest only.",
+  "threshold_basis": {
+    "harmonic_comparison": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; the existing absolute limits for scaled resistance, normalized motions, phase and incident amplitude are retained. Their numerical values cannot be derived from the harmonic expansion or experimental uncertainty in the available evidence."
+    },
+    "window_drift": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; each maximum_window_drift equals one fifth of its comparison limit. The factor is a provisional diagnostic choice, not a derived uncertainty."
+    },
+    "sampling": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; 32 samples per encounter cycle provide 8 samples per period of the fourth retained harmonic, above the Nyquist minimum of 2. This arithmetic does not derive the choice of 32 or establish sampling adequacy for unretained content. The uniform-spacing relative tolerance is retained from config/cfd/kcs_step1_qa.json."
+    },
+    "windows": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; five discarded encounter cycles and two five-cycle comparison windows require at least fifteen complete cycles. This arithmetic does not establish that transients have decayed."
+    },
+    "phase_amplitude_floor": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; the retained dimensionless floor marks phase as undefined for a near-zero amplitude. Its magnitude is not derived from experimental uncertainty."
+    },
+    "fit_residual": {
+      "status": "assumed_pending_maintainer_decision",
+      "decision": null,
+      "basis": "provisional; no basis recorded; the retained RMS limits equal the corresponding non-phase window-drift limits. A fit residual diagnoses content outside the retained basis; this equality does not derive an uncertainty limit."
+    },
+    "residual_mesh_gci": {
+      "status": "inherited",
+      "source": "config/cfd/kcs_step1_qa.json",
+      "basis": "Residual, mesh and GCI limits are unchanged from the step-1 policy. The GCI procedure and its method references are inherited from three_grid_gci in src/digitalmodel/solvers/openfoam/validation/kcs_step1.py."
+    }
+  }
+}
