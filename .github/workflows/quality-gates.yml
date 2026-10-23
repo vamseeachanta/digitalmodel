@@ -2,8 +2,9 @@
 name: Quality Gates
 
 on:
+  workflow_dispatch:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
 
@@ -21,7 +22,7 @@ jobs:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
-    if: always()
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (always())
     runs-on: ubuntu-latest
     steps:
       - name: Verify matrix result
@@ -30,6 +31,7 @@ jobs:
         run: test "$QUALITY_GATES_RESULT" = success
 
   quality-gates:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Quality Gates (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
@@ -132,8 +134,19 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event_name == 'workflow_dispatch' && format('{0}^', github.sha) || github.event.before }}
+        run: |
+          set -euo pipefail
+          base="${REGISTER_BASE:-}"
+          if [ -z "$base" ] || [ "$base" = 0000000000000000000000000000000000000000 ]; then
+            if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+              echo "::error::Missing pull request base"
+              exit 1
+            fi
+            base="$(git merge-base origin/main HEAD)"
+          fi
+          git rev-parse --verify --end-of-options "${base}^{commit}" >/dev/null
+          python scripts/enforcement/check-engineering-register.py --diff "$base"
 
       - name: Create reports directory
         run: mkdir -p reports

@@ -1,0 +1,30 @@
+{
+  "docs.yml": {
+    "docs": "docs"
+  },
+  "gmsh-meshing-tests.yml": {
+    "focused-tests": "focused-tests"
+  },
+  "parametric-atlas-drift.yml": {
+    "atlas-drift": "Atlas staleness check"
+  },
+  "quality-gates-by-domain.yml": {
+    "ci-harness-tests": "CI harness and compliance tests",
+    "detect-domains": "Detect touched test domains",
+    "domain-tests": "tests-${{ matrix.domain }}",
+    "domain-tests-required": "Domain test aggregate"
+  },
+  "quality-gates.yml": {
+    "quality-gates": "Quality Gates (Python ${{ matrix.python-version }})",
+    "quality-gates-aggregate": "Run Quality Gates"
+  },
+  "repo-structure.yml": {
+    "repo-structure": "Repository structure contract"
+  },
+  "store-data-tests.yml": {
+    "content-store": "content-store"
+  },
+  "workflow-automation-tests.yml": {
+    "test": "test"
+  }
+}

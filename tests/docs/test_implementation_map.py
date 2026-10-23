@@ -216,7 +216,9 @@ def test_diverged_copy_warns_without_losing_symbol_validity(sample):
 def test_reference_check_runs_in_ci_harness():
     workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
     job = workflow["jobs"]["ci-harness-tests"]
-    assert "if" not in job
+    assert job["if"] == (
+        "github.event_name != 'pull_request' || github.event.pull_request.draft == false"
+    )
     assert any("tests/docs/test_implementation_map.py" in step.get("run", "") for step in job["steps"])
     assert any("tests/docs/test_implementation_map_search.py" in step.get("run", "") for step in job["steps"])
 
