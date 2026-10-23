@@ -185,7 +185,8 @@ def test_outside_source_scope_never_passes(inspection, changes):
     result = screen_dimensions(replace(inspection, **changes))
     assert not result.applicability.ok
     assert result.samples[0].status == "OUT_OF_SCOPE"
-    assert result.samples[0].area_ratio_range is None
+    # Retained geometry cannot establish clearance outside the method scope.
+    assert result.samples[0].area_ratio_range == pytest.approx((0.9409, 0.9409))
     missing_flags = {
         "uniform_loss_confirmed": "UNIFORM_LOSS_NOT_CONFIRMED",
         "perpendicular_readings_confirmed": "PERPENDICULAR_READINGS_NOT_CONFIRMED",
