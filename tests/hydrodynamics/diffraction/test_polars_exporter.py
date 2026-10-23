@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
@@ -37,12 +36,15 @@ class TestRaosToPolars:
         assert expected_cols == set(df.columns)
 
     def test_row_count(self, mock_diffraction_results: DiffractionResults) -> None:
+        """Count by hand: each DOF has frequency_count * heading_count rows."""
         exporter = PolarsExporter(mock_diffraction_results)
         if not POLARS_AVAILABLE:
             pytest.skip("polars not installed")
         df = exporter.raos_to_polars()
-        # 10 frequencies * 5 headings * 6 DOFs = 300
-        assert len(df) == 10 * 5 * 6
+        # Source: conftest.py::_make_rao_set and output_schemas.py::DOF.
+        frequency_count = mock_diffraction_results.raos.surge.frequencies.count
+        heading_count = mock_diffraction_results.raos.surge.headings.count
+        assert len(df) == frequency_count * heading_count * len(DOF)
 
     def test_dof_values(self, mock_diffraction_results: DiffractionResults) -> None:
         exporter = PolarsExporter(mock_diffraction_results)
@@ -78,13 +80,18 @@ class TestMatrixExport:
         expected = {"frequency", "period", "dof_i", "dof_j", "value", "unit"}
         assert expected == set(df.columns)
 
-    def test_added_mass_row_count(self, mock_diffraction_results: DiffractionResults) -> None:
+    @pytest.mark.parametrize("matrix_type", ["added_mass", "damping"])
+    def test_matrix_row_count(
+        self, mock_diffraction_results: DiffractionResults, matrix_type: str
+    ) -> None:
+        """Count by hand: each frequency has every row DOF * column DOF pair."""
         exporter = PolarsExporter(mock_diffraction_results)
         if not POLARS_AVAILABLE:
             pytest.skip("polars not installed")
-        df = exporter.added_mass_to_polars()
-        # 10 frequencies * 6 * 6 = 360
-        assert len(df) == 10 * 6 * 6
+        df = getattr(exporter, f"{matrix_type}_to_polars")()
+        # Source: conftest.py::_make_matrix_set and output_schemas.py::DOF.
+        matrix_set = getattr(mock_diffraction_results, matrix_type)
+        assert len(df) == matrix_set.frequencies.count * len(DOF) * len(DOF)
 
     def test_damping_columns(self, mock_diffraction_results: DiffractionResults) -> None:
         exporter = PolarsExporter(mock_diffraction_results)
