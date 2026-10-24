@@ -142,6 +142,22 @@ def test_documented_inputs_are_read_from_the_retained_public_example(rebuilt):
                                "raised_factor": given["secondary recovery factor"]}
 
 
+@pytest.mark.parametrize("key, expected", [
+    ("oil_in_place", 42_898_636.8),
+    ("primary", 9_437_700.096),
+    ("raised", 12_869_591.04),
+    ("increment", 3_431_890.944),
+])
+def test_report_results_match_independent_hand_calculation(rebuilt, key, expected):
+    """Pin STB results independently of the volumetrics implementation."""
+    # Inputs: docs/collide_pe/briefs/pe-2026-05-21.html, Given table.
+    # Hand calculation: N = 7758 * 1200 * 40 * 0.18 * 0.80 / 1.25 STB;
+    # primary = N * 0.22; raised = N * 0.30; increment = N * (0.30 - 0.22).
+    _, _, _, data = rebuilt
+    for section in ("results", "values"):
+        assert data[section][key] == pytest.approx(expected, rel=0, abs=1e-6)
+
+
 def test_every_example_number_and_chart_point_comes_from_module(rebuilt):
     _, _, soup, data = rebuilt
     inputs = volumetrics.VolumetricInputs(**data["inputs"])
