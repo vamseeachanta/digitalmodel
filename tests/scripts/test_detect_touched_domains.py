@@ -20,7 +20,10 @@ SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domain
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
-        ("docs/registry/module-routing.yaml", {"asset-integrity", "contracts", "workflows", "subsea"}),
+        (
+            "docs/registry/module-routing.yaml",
+            {"asset-integrity", "contracts", "marine-ops-other", "workflows", "subsea"},
+        ),
         ("docs/maps/example.md", {"contracts"}),
         ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
          {"contracts", "orcaflex-solver"}),
