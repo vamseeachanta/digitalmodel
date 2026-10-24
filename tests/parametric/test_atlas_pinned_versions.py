@@ -9,7 +9,7 @@ from digitalmodel.parametric.atlas import Atlas
 ROOT = Path(__file__).resolve().parents[2] / "atlases"
 
 
-@pytest.mark.parametrize("atlas_id", ["229487678a1a", "bcc370f46b9c"])
+@pytest.mark.parametrize("atlas_id", ["229487678a1a", "bcc370f46b9c", "4ccd156870c1"])
 def test_drilling_riser_operability_versions_load(atlas_id):
     atlas = Atlas.load(ROOT, "drilling_riser_operability", atlas_id)
     assert atlas.atlas_id == atlas_id

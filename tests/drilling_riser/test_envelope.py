@@ -303,6 +303,69 @@ def test_dynamic_without_validation_escalates_each_covered_point():
     )
     assert np.isnan(dyn.per_limit_utilisation["von_mises"]).all()
     assert dyn.dynamic_provenance["escalated_points"] == 4
+    assert not dyn.allowable_mask.any()
+
+
+@pytest.mark.parametrize("tension_n", [3.0e6, 30.0e6])
+def test_unavailable_dynamic_check_cannot_make_hang_off_allowable(monkeypatch, tension_n):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
+    common = dict(
+        **{**_BASE, "tension_n": tension_n}, dynamic=True,
+        offsets_pct=[2.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(3.0, 12.0)], mode=OperatingMode.HANG_OFF,
+        rig_limits=RigEnvelopeLimits(tj_stroke_m=18.0),
+    )
+    atlas.validation = {"max_rel_error": 0.0}
+    measured = compute_operating_envelope(**common)
+    measured_vm = measured.per_limit_utilisation["von_mises"][0, 0, 0]
+    assert (measured_vm > 1.0) == (tension_n == 30.0e6)
+    assert measured.allowable_mask.item() == (measured_vm <= 1.0)
+    assert measured.dynamic_provenance["escalated_points"] == 0
+
+    atlas.validation = {}
+    unavailable = compute_operating_envelope(**common)
+    assert unavailable.per_limit_utilisation["stroke"].item() < 1.0
+    assert np.isnan(unavailable.per_limit_utilisation["von_mises"]).all()
+    assert unavailable.dynamic_provenance["escalated_points"] == 1
+    assert not unavailable.allowable_mask.any()
+    assert unavailable.operable_fraction == 0.0
+
+
+def test_dynamic_coverage_escalation_rejects_only_affected_points(monkeypatch):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    atlas.validation = {"max_rel_error": 0.0}
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
+    result = compute_operating_envelope(
+        **_BASE, dynamic=True, offsets_pct=[1.0, 2.0],
+        current_speeds_mps=[1.0],
+        seastates=[SeaState(3.0, 12.0), SeaState(3.0, 99.0)],
+        mode=OperatingMode.HANG_OFF, rig_limits=RigEnvelopeLimits(tj_stroke_m=18.0),
+    )
+    assert (result.per_limit_utilisation["stroke"] < 1.0).all()
+    assert result.allowable_mask[:, :, 0].all()
+    assert not result.allowable_mask[:, :, 1].any()
+    assert result.dynamic_provenance["escalated_points"] == 2
+    assert result.operable_fraction == 0.5
+
+
+def test_unavailable_dynamic_check_does_not_gate_an_inactive_limit(monkeypatch):
+    from digitalmodel.drilling_riser import envelope
+
+    monkeypatch.setattr(envelope, "_mode_active_limits", lambda: {"hang_off": {"stroke"}})
+    result = compute_operating_envelope(
+        **_BASE, dynamic=True, offsets_pct=[2.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(3.0, 12.0)], mode=OperatingMode.HANG_OFF,
+        rig_limits=RigEnvelopeLimits(tj_stroke_m=18.0),
+    )
+    assert result.dynamic_provenance["escalated_points"] == 1
+    assert result.allowable_mask.all()
 
 
 def test_dynamic_false_is_a_noop():
@@ -336,6 +399,7 @@ def test_dynamic_out_of_coverage_escalates_von_mises(monkeypatch):
     )
     assert np.isnan(dyn.per_limit_utilisation["von_mises"][0, 0, 0])
     assert dyn.dynamic_provenance["escalated_points"] == 1
+    assert not dyn.allowable_mask.any()
 
 
 # -- #1345 wellhead/conductor moment + flex-joint hardware rating ---------------

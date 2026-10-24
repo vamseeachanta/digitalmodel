@@ -13,6 +13,7 @@ This is a metadata contract, not independent verification of the measurement.
 |---|---|---|
 | 1 | 2026-10-20 | Distinguish unavailable validation from measured zero and reject incomplete or nonfinite sweep grids. |
 | 2 | 2026-10-24 | Gate dynamic amplification on validation, align library manifests and preserve coverage diagnostics during escalation. |
+| 3 | 2026-10-24 | Reject envelope points with an escalated active dynamic check and reissue the static cache for the revised source fingerprint. |
 
 `Atlas.max_rel_error` and `local_error` return NaN when validation is unavailable.
 `save` writes a null manifest error and `status: unavailable`; loading preserves
@@ -76,11 +77,23 @@ behavior described in [issue 2118](https://github.com/vamseeachanta/digitalmodel
 
 The four library manifest validation blocks now match their unavailable
 `validation.json` evidence: `max_rel_error: null` and `status: unavailable`.
-Grid payloads and validation measurements are unchanged. Holdout evaluation for
+The four library grid payloads and validation measurements are unchanged. Holdout evaluation for
 bridge-built atlases remains outside this change; see issue 816.
 The static operability cache is reissued because its fingerprint includes the
 envelope source. Every grid value, axis and validation result matches the prior
-version exactly; prior versions remain loadable by their identifiers.
+version exactly; prior versions remain loadable by their identifiers. Encoded
+Parquet bytes can differ between Arrow versions; decoded numerical equality and
+byte-identical serialization are separate checks. The current cache is written
+with the repository's declared Arrow version, and both the preceding and current
+Parquet path/digest pairs are registered after decoded-content inspection.
+
+Dynamic escalation is retained per point through envelope aggregation. If
+von Mises is active, unavailable validation or failed atlas coverage makes that
+point non-allowable even when every other evaluated limit passes. Covered points
+with measured validation retain their numerical verdict. Optional missing rig
+limits and inactive mode limits remain excluded. The regression cases include
+synthetic low/high tensions and a mixed-coverage surface; they do not qualify
+the stub amplification values as engineering evidence.
 
 ## Caller audit
 
@@ -88,7 +101,7 @@ version exactly; prior versions remain loadable by their identifiers.
 |---|---|
 | `parametric/query.py` confidence handlers | Require measured validation; retain geometric range and coverage reasons on escalation. |
 | `drilling_riser/operability_screening.py:screen_operability` | Require measured validation before a verdict; report coverage and validation failures together. |
-| `drilling_riser/envelope.py:compute_operating_envelope` with `dynamic=True` | Unavailable validation or failed coverage makes von Mises NaN and increments `escalated_points`. |
+| `drilling_riser/envelope.py:compute_operating_envelope` with `dynamic=True` | Unavailable validation or failed coverage makes von Mises NaN, increments `escalated_points` and rejects the affected point when von Mises is active. |
 | `mooring_resilience/screening.py:intact_tension_kN`, `foundation_capacity_kN` | Direct `predict` callers check geometry only and return no confidence band. Validation availability and freshness are not checked; their downstream screening verdicts retain this limitation. |
 | `parametric/generate.py`, `drilling_riser/operability_atlas.py` | Direct interpolation supports held-out error evaluation before validation metadata exists. |
 | `parametric/catalog.py` | Displays unavailable validation explicitly. |

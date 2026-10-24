@@ -185,8 +185,9 @@ class EnvelopeResult:
 
     ``per_limit_utilisation`` maps a limit name to an array of shape
     ``(n_offset, n_current, n_seastate)``; NaN marks a limit with no data
-    (excluded from governing/allowable). ``allowable_mask`` is True where every
-    evaluated limit is within its allowable.
+    (excluded from the numerical governing calculation). ``allowable_mask`` is
+    True where every evaluated limit is within its allowable and no active
+    dynamic check is escalated. Missing optional rig limits remain excluded.
     """
 
     mode: OperatingMode
@@ -300,13 +301,13 @@ def compute_operating_envelope(
     ``drilling_riser_envelope`` library atlas (a STUB until a licensed OrcaFlex
     run populates it), and ``EnvelopeResult.dynamic_provenance`` is populated
     with the solver marker + disclaimer. Unavailable validation or a point
-    outside the atlas coverage ESCALATES (its von Mises → NaN), never
-    extrapolates. ``dynamic=False``
+    outside the atlas coverage ESCALATES (its von Mises → NaN and its point
+    cannot be allowable when von Mises is active), never extrapolates.
+    ``dynamic=False``
     (default) is the pure C1 static path, byte-for-byte unchanged.
     """
     rig_limits = rig_limits or RigEnvelopeLimits()
     dyn_atlas = None
-    dyn_escalated = 0
     if dynamic:
         from digitalmodel.parametric.atlas import Atlas
         from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
@@ -316,6 +317,7 @@ def compute_operating_envelope(
     currents = np.asarray(current_speeds_mps, dtype=float)
     seas = tuple(seastates)
     shape = (offsets.size, currents.size, len(seas))
+    dyn_escalated = np.zeros(shape, dtype=bool)
 
     util = {
         k: np.full(shape, np.nan)
@@ -389,7 +391,7 @@ def compute_operating_envelope(
                         util["von_mises"][
                             i, j, k
                         ] = np.nan  # escalate, never extrapolate
-                        dyn_escalated += 1
+                        dyn_escalated[i, j, k] = True
                 heave = rao_heave_m_per_m * sea.hs_m
                 stroke_avail = rig_limits.tj_stroke_m or rig_limits.tensioner_stroke_m
                 if stroke_avail:
@@ -418,6 +420,8 @@ def compute_operating_envelope(
         allowable = (
             np.nanmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1) <= 1.0
         )
+    if "von_mises" in active:
+        allowable &= ~dyn_escalated
 
     dynamic_provenance = None
     if dyn_atlas is not None:
@@ -429,7 +433,7 @@ def compute_operating_envelope(
             "atlas_id": dyn_atlas.atlas_id,
             "solver_licensed": solver.get("licensed"),
             "solver_version": solver.get("version"),
-            "escalated_points": dyn_escalated,
+            "escalated_points": int(np.count_nonzero(dyn_escalated)),
             "disclaimer": SCREENING_DISCLAIMER,
         }
 
