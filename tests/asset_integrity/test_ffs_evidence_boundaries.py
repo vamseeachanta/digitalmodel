@@ -203,6 +203,47 @@ def test_report_does_not_call_missing_life_unlimited(life):
     assert "no corrosion" not in summary
 
 
+@pytest.mark.parametrize("rsf_a", [float("nan"), float("inf"), float("-inf")])
+def test_legacy_nonfinite_allowable_renders_as_not_evaluated(rsf_a):
+    """A serialized absent comparator cannot establish a Level 2 finding."""
+    decision = FFSDecision.decide("ACCEPT", "ACCEPT", 1.0, rsf_a, 0.5, 0.3, None)
+    assert decision["verdict"] == "ESCALATE"
+    assert decision["rsf"] == 1.0
+    assert decision["rsf_a"] is None
+    _assert_report_allowable_and_comparison(decision, "Not evaluated", "NOT_EVALUATED")
+
+
+@pytest.mark.parametrize("rsf_a", [None, float("nan"), float("inf"), float("-inf")])
+def test_report_handles_absent_and_raw_nonfinite_allowable(rsf_a):
+    """Both report sections also handle payloads before finite normalization."""
+    decision = FFSDecision.decide(
+        "ACCEPT", "ACCEPT", 1.0, float("nan"), 0.5, 0.3, None)
+    decision["rsf_a"] = rsf_a
+    _assert_report_allowable_and_comparison(decision, "Not evaluated", "NOT_EVALUATED")
+
+
+@pytest.mark.parametrize("rsf,comparison", [(0.8, "FAIL"), (0.9, "ACCEPT"), (1.0, "ACCEPT")])
+def test_report_finite_allowable_preserves_format_and_comparison(rsf, comparison):
+    """Synthetic RSF below, at and above the supplied comparator keeps its status."""
+    decision = FFSDecision.decide("ACCEPT", "ACCEPT", rsf, 0.9, 0.5, 0.3, None)
+    _assert_report_allowable_and_comparison(decision, "0.90", comparison)
+
+
+def _assert_report_allowable_and_comparison(decision, allowable_text, comparison):
+    report = FFSReport.generate_html(
+        pd.DataFrame([[0.5, 0.5], [0.5, 0.5]]), decision, "SYNTHETIC",
+        16, 0.5, 0.3, "B31.8", 1000, assessment_date="2026-10-24")
+    summary = report.split("<h2>1. Executive Summary</h2>", 1)[1].split("</table>", 1)[0]
+    level2 = report.split("<h2>4. Level 2 Assessment", 1)[1].split("</table>", 1)[0]
+    allowable_row = f"<td>Allowable RSF (RSFa)</td><td>{allowable_text}</td>"
+    assert allowable_row in summary
+    assert allowable_row in level2
+    rsf_row = level2.split("<td>Remaining Strength Factor (RSF)</td>", 1)[1].split("</tr>", 1)[0]
+    assert f"<td>{decision['rsf']:.4f}</td>" in rsf_row
+    assert f"<strong>{comparison}</strong>" in rsf_row
+    assert report.endswith("</html>")
+
+
 def test_disposition_translation_contains_no_physical_tokens():
     from digitalmodel.asset_integrity.assessment.ffs_decision import from_screening
 

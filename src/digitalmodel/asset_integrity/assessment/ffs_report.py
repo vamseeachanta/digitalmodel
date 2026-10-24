@@ -350,13 +350,14 @@ class FFSReport:
         remaining_life: Optional[float],
         design_code: str,
         rsf: Optional[float],
-        rsf_a: float,
+        rsf_a: Optional[float],
         rerated_mawp_psi: float | None = None,
         verdict_label: str | None = None,
     ) -> str:
         label = verdict_label or verdict
         rl_str = FFSReport._life_text(remaining_life, "yr")
         rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
+        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) else "Not evaluated"
         return (
             "<div class='section'>\n"
             "<h2>1. Executive Summary</h2>\n"
@@ -370,7 +371,7 @@ class FFSReport:
             f"<tr><td>Governing Standard</td><td>API 579-1/ASME FFS-1 2021 Edition</td></tr>\n"
             f"<tr><td>Assessment Verdict</td><td><strong>{html.escape(label)}</strong></td></tr>\n"
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td></tr>\n"
-            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td></tr>\n"
+            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a_str}</td></tr>\n"
             f"<tr><td>Estimated Remaining Life</td><td>{rl_str}</td></tr>\n"
             + (
                 f"<tr><td>Re-rated MAWP (MAWP_r = MAWP &times; RSF/RSFa, "
@@ -441,13 +442,15 @@ class FFSReport:
     @staticmethod
     def _section_level2(
         rsf: Optional[float],
-        rsf_a: float,
+        rsf_a: Optional[float],
         t_am: float,
         t_mm: float,
         decision: dict,
     ) -> str:
         rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
-        comparable = rsf is not None and math.isfinite(rsf)
+        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) else "Not evaluated"
+        comparable = (rsf is not None and math.isfinite(rsf)
+                      and rsf_a is not None and math.isfinite(rsf_a))
         verdict = ("ACCEPT" if rsf >= rsf_a else "FAIL") if comparable else "NOT_EVALUATED"
         color = _VERDICT_COLORS.get(
             "ACCEPT" if comparable and rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
@@ -464,7 +467,7 @@ class FFSReport:
             f"<tr><td>Folias Bulging Factor (M_t)</td><td>{folias:.4f}</td><td>—</td></tr>\n"
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td>"
             f"<td style='color:{color}'><strong>{html.escape(verdict)}</strong></td></tr>\n"
-            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td><td>—</td></tr>\n"
+            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a_str}</td><td>—</td></tr>\n"
             f"<tr><td>Level 2 Verdict</td>"
             f"<td colspan='2'><strong>{html.escape(l2_verdict)}</strong></td></tr>\n"
             "</table>\n"
