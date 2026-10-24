@@ -319,3 +319,61 @@ def test_cylinder_uses_shared_settlement_policy():
 
     assert cylinder_runner._CLEANUP_SECONDS == runner_process._CLEANUP_SECONDS
     assert cylinder_runner._POLL_SECONDS == runner_process._POLL_SECONDS
+
+
+@pytest.mark.parametrize("unreadable", [("stdout",), ("stderr",), ("stdout", "stderr")])
+@pytest.mark.parametrize("cleanup_fails", [False, True])
+@pytest.mark.parametrize("cause", ["timeout", "wait"])
+def test_capture_failure_preserves_cause_and_cleanup(tmp_path, monkeypatch, unreadable,
+                                                    cleanup_fails, cause):
+    """Independent read failures cannot hide the invocation or its ownership handle."""
+    from digitalmodel.ansys import runner_process as module
+
+    original = (subprocess.TimeoutExpired("synthetic", 1) if cause == "timeout"
+                else OSError("synthetic wait failure"))
+    streams, read_attempts, retained = {}, [], {}
+    read = module._read
+
+    class Supervisor:
+        def start(self, argv, cwd, stdout, stderr):
+            streams.update(stdout=stdout, stderr=stderr)
+            stdout.write(b"partial stdout")
+            stderr.write(b"partial stderr")
+
+        def wait(self, timeout):
+            raise original
+
+        def terminate(self):
+            if cleanup_fails:
+                raise OSError("synthetic termination failure")
+
+        def active(self):
+            return 0
+
+        def close(self):
+            pass
+
+    def read_capture(stream):
+        name = next(name for name, value in streams.items() if value is stream)
+        read_attempts.append(name)
+        if name in unreadable:
+            raise OSError(f"synthetic {name} read failure")
+        return read(stream)
+
+    monkeypatch.setattr(module, "_read", read_capture)
+    monkeypatch.setattr(module, "_UNSETTLED", retained)
+    monkeypatch.setattr(module, "supervisor_factory", Supervisor)
+    with pytest.raises(ProcessCleanupError) as caught:
+        run_process(["synthetic"], cwd=tmp_path, timeout=1)
+    error = caught.value
+    assert error.__cause__ is original
+    assert ("timeout after 1 seconds" if cause == "timeout" else str(original)) in str(error)
+    assert read_attempts == ["stdout", "stderr"]
+    assert error.stdout == (b"" if "stdout" in unreadable else b"partial stdout")
+    assert error.stderr == (b"" if "stderr" in unreadable else b"partial stderr")
+    assert all(f"synthetic {name} read failure" in str(error) for name in unreadable)
+    assert (error.retained_supervisor_token in retained) == cleanup_fails
+    assert len(retained) == int(cleanup_fails)
+    if not cleanup_fails:
+        assert error.retained_supervisor_token is None
+    assert ("synthetic termination failure" in str(error)) == cleanup_fails

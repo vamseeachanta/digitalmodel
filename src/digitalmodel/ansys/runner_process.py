@@ -68,6 +68,18 @@ def _read(stream):
     return stream.read()
 
 
+def _read_captures(stdout, stderr):
+    """Read each capture independently so one I/O failure cannot hide the other."""
+    captures, errors = [], []
+    for name, stream in (("stdout", stdout), ("stderr", stderr)):
+        try:
+            captures.append(_read(stream))
+        except (OSError, ValueError) as exc:
+            captures.append(b"")
+            errors.append(f"{name} capture readback failed: {exc}")
+    return captures[0], captures[1], errors
+
+
 def run_process(argv, *, cwd, timeout):
     """Return decoded streams, or raise with partial bytes after bounded cleanup.
 
@@ -97,13 +109,17 @@ def run_process(argv, *, cwd, timeout):
         except BaseException as exc:
             cleanup_error, token = _cleanup(supervisor)
             if not isinstance(exc, Exception):
+                if cleanup_error:
+                    exc.add_note(cleanup_error)
+                    exc.retained_supervisor_token = token
                 raise
-            output, errors = _read(stdout), _read(stderr)
-            if cleanup_error:
+            output, errors, read_errors = _read_captures(stdout, stderr)
+            if cleanup_error or read_errors:
                 cause = (f"MAPDL timeout after {timeout} seconds"
                          if isinstance(exc, subprocess.TimeoutExpired) else str(exc))
+                details = [cause, *([cleanup_error] if cleanup_error else []), *read_errors]
                 raise ProcessCleanupError(
-                    f"{cause}; {cleanup_error}", output, errors,
+                    "; ".join(details), output, errors,
                     return_code=return_code, retained_supervisor_token=token,
                 ) from exc
             if isinstance(exc, ProcessSettlementError):

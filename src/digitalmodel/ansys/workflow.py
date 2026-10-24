@@ -62,6 +62,7 @@ class AnsysWorkflow:
             "log_file": str(getattr(result, "log_file", "") or ""),
             "result_files": [str(p) for p in getattr(result, "result_files", []) or []],
             "return_code": getattr(result, "return_code", None),
+            "retained_supervisor_token": getattr(result, "retained_supervisor_token", None),
         }
         if status == "failed":
             raise RuntimeError(

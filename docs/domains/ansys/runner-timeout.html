@@ -18,7 +18,9 @@ Explicit UTF-8 example reads and writers remain independent of a cp1252 default.
   <tbody><tr><td>1</td><td>2026-10-20</td><td>Document bounded execution and
   an offline example to regress fatal-process hangs and text decoding.</td></tr>
   <tr><td>2</td><td>2026-10-22</td><td>Bound post-exit settlement, expose cleanup
-  retry handles, validate arguments and produce deterministic deck newlines.</td></tr></tbody>
+  retry handles, validate arguments and produce deterministic deck newlines.</td></tr>
+  <tr><td>3</td><td>2026-10-24</td><td>Preserve cleanup recovery through capture
+  read failures, workflow errors and Windows startup cancellation.</td></tr></tbody>
 </table>
 <p>Table 1. Revision history.</p>
 <h2>Configuration and method</h2>
@@ -45,6 +47,13 @@ acceptance limits. If cleanup remains uncertain, the result carries a
 retry releases it, and a failed retry retains the same token. Tokens are local
 to the calling process. Cleanup errors preserve timeout context, and control
 exceptions propagate after cleanup.</p>
+<p>Capture streams are read independently after a failure. An unreadable stream
+is reported with its name; readable output, the original failure and any cleanup
+error and retry token remain available. Workflow errors retain the token in
+<code>cfg["ansys"]["outputs"]["retained_supervisor_token"]</code> before raising.
+Windows startup cancellation preserves the original control exception and chains
+any termination error. If runner cleanup remains uncertain, the exception carries
+the retry token and a cleanup diagnostic note.</p>
 <p>Completed streams are decoded as UTF-8 with replacement for invalid bytes.
 Timeout streams are retained as partial bytes and decoded by the runner using
 the same policy. Result completion still requires a fresh readable log, a
