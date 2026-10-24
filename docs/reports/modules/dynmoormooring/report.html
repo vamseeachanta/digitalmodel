@@ -144,7 +144,8 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <section id="revision-history"><h3>Revision history</h3>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
 <tr><td>Initial</td><td>2026-10-21</td><td>Initial issue — the static calculation basis, reproducible example and missing acceptance evidence are presented together.</td></tr>
-<tr><td>1</td><td>2026-10-22</td><td>Published equation sources, an independent catenary check and portable text output are added to qualify the numerical evidence and reproduction method.</td></tr></table>
+<tr><td>1</td><td>2026-10-22</td><td>Published equation sources, an independent catenary check and portable text output are added to qualify the numerical evidence and reproduction method.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Comment initialization includes the revision-history heading so engineering changes and add, save and load controls remain available.</td></tr></table>
 <p>Revision history table. Issued changes and their purpose.</p></section>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>A spread of chain lines connects fixed seabed anchors to moving hull fairleads. Static analysis is performed at prescribed surge, sway and yaw positions using load–distance tables and interpolated line forces.</p>
@@ -277,7 +278,7 @@ const byId = id => document.getElementById(id);
 let comments = [];
 document.querySelectorAll('main > section').forEach(section => {
   const option = document.createElement('option'); option.value = section.id;
-  option.textContent = section.querySelector('h2').textContent;
+  option.textContent = section.querySelector('h2, h3').textContent;
   byId('comment-section').append(option);
 });
 JSON.parse(byId('change-data').textContent).changes.forEach(change => {

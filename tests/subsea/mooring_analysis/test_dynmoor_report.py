@@ -6,6 +6,7 @@ import importlib.util
 import json
 import math
 import re
+import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
@@ -236,9 +237,9 @@ def test_generator_outputs_utf8_lf_with_non_utf8_defaults(tmp_path, monkeypatch)
     builder = load_builder()
     cfg = json.loads((REPORT / "example.json").read_text(encoding="utf-8"))
     cfg["description"] = "Synthetic chain — public fixture"
-    (tmp_path / "example.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+    (tmp_path / "example.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8", newline="\n")
     template = (REPORT / "report.template.html").read_text(encoding="utf-8")
-    (tmp_path / "report.template.html").write_text(template, encoding="utf-8")
+    (tmp_path / "report.template.html").write_text(template, encoding="utf-8", newline="\n")
     monkeypatch.setattr(builder, "HERE", tmp_path)
     monkeypatch.setattr(sys, "argv", ["generate.py", "--work-dir", str(tmp_path / "results")])
     original_open = Path.open
@@ -262,3 +263,111 @@ def test_source_locators_do_not_embed_unrelated_content_digests():
     sources = load_builder().source_table()
     assert "Normalized content digest" not in sources
     assert not re.search(r"\b[0-9a-f]{64}\b", sources)
+
+
+COMMENT_CONTROLS_SCRIPT = r"""
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
+const elements = new Map();
+let downloaded, revoked = false, saved = '', closed = false;
+const element = tag => ({tag, children: [], value: '', textContent: '',
+  append(child) { this.children.push(child); },
+  replaceChildren() { this.children = []; },
+  click() { downloaded = this.download; }
+});
+const byId = id => {
+  if (!input.ids.includes(id)) return null;
+  if (!elements.has(id)) elements.set(id, element(id));
+  return elements.get(id);
+};
+byId('change-data').textContent = input.changes;
+const context = {document: {
+  getElementById: byId, createElement: element,
+  querySelectorAll(selector) {
+    assert.equal(selector, 'main > section');
+    return input.sections.map(section => ({id: section.id,
+      querySelector(selector) {
+        const heading = selector.split(',').map(tag => section.headings[tag.trim()])
+          .find(text => text !== undefined);
+        return heading === undefined ? null : {textContent: heading};
+      }
+    }));
+  }
+}, window: {}, Blob, URL: {
+  createObjectURL(blob) { context.downloadBlob = blob; return 'blob:comments'; },
+  revokeObjectURL(url) { assert.equal(url, 'blob:comments'); revoked = true; }
+}, setTimeout(callback) { callback(); }};
+vm.runInNewContext(input.script, context);
+async function checkControls() {
+  assert.deepEqual(byId('comment-section').children.map(option => option.value),
+    input.sections.map(section => section.id));
+  assert.equal(byId('comment-section').children.find(option =>
+    option.value === 'revision-history').textContent, 'Revision history');
+  assert.deepEqual(byId('changes').children.map(item => item.textContent),
+    JSON.parse(input.changes).changes);
+  byId('comment-section').value = 'revision-history';
+  byId('comment-text').value = '  Check revision entry.  ';
+  byId('add-comment').onclick();
+  assert.equal(byId('comment-list').children[0].textContent,
+    'revision-history: Check revision entry.');
+  assert.equal(byId('comment-text').value, '');
+  assert.equal(byId('comment-status').textContent, 'Unsaved comments.');
+  byId('add-comment').onclick();
+  assert.equal(byId('comment-list').children.length, 1);
+  context.window.showSaveFilePicker = async options => {
+    assert.equal(options.suggestedName, 'report.comments.json');
+    return {createWritable: async () => ({
+      write: async text => { saved = text; }, close: async () => { closed = true; }
+    })};
+  };
+  await byId('save-comments').onclick();
+  const expected = {revision: 'Initial', comments: [
+    {section: 'revision-history', text: 'Check revision entry.'}]};
+  assert.deepEqual(JSON.parse(saved), expected);
+  assert.equal(closed, true);
+  assert.equal(byId('comment-status').textContent, 'Comments saved to the selected file.');
+  delete context.window.showSaveFilePicker;
+  await byId('save-comments').onclick();
+  assert.equal(downloaded, 'report.comments.json');
+  assert.deepEqual(JSON.parse(await context.downloadBlob.text()), expected);
+  assert.equal(revoked, true);
+  const load = text => byId('load-comments').onchange({target: {files: [
+    {text: async () => text}]}});
+  await load(JSON.stringify({revision: 'Initial', comments: [
+    {section: 'summary', text: 'Loaded review note.'}]}));
+  assert.equal(byId('comment-list').children.length, 1);
+  assert.equal(byId('comment-list').children[0].textContent, 'summary: Loaded review note.');
+  assert.equal(byId('comment-status').textContent, 'Comments loaded.');
+  await load('{"revision":"Initial","comments":[{}]}');
+  assert.match(byId('comment-status').textContent, /^Comments were not loaded:/);
+  assert.equal(byId('comment-list').children[0].textContent, 'summary: Loaded review note.');
+}
+checkControls().catch(error => { console.error(error); process.exitCode = 1; });
+"""
+
+
+@pytest.mark.parametrize("rebuild", [False, True], ids=["saved", "rebuilt"])
+def test_comment_controls_initialize_with_revision_history(tmp_path, rebuild):
+    """Execute report JavaScript against its section headings and comment controls.
+
+    Node supplies the JavaScript runtime; a small DOM adapter supplies only the
+    interfaces used here. Browser layout and native file dialogs are not tested.
+    """
+    document = (load_builder().build(tmp_path)[0] if rebuild else
+                (REPORT / "report.html").read_text(encoding="utf-8"))
+    sections = [{"id": section_id, "headings": dict(re.findall(
+        r"<(h[23])>(.*?)</h[23]>", body, re.S))}
+        for section_id, body in re.findall(
+            r'<section id="([^"]+)">(.*?)</section>', document, re.S)]
+    assert any(section["id"] == "revision-history" for section in sections)
+    changes = re.search(r'<script id="change-data" type="application/json">(.*?)</script>',
+                        document, re.S).group(1)
+    script = re.search(r"<script>\s*(.*?)</script>", document, re.S).group(1)
+    result = subprocess.run(
+        ["node", "-e", COMMENT_CONTROLS_SCRIPT], input=json.dumps({
+            "sections": sections, "changes": changes, "script": script,
+            "ids": re.findall(r'\bid="([^"]+)"', document)}),
+        capture_output=True, text=True, encoding="utf-8", check=False, timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
