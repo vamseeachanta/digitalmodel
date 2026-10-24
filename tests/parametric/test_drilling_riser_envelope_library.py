@@ -47,7 +47,7 @@ def test_version_bump_makes_stub_read_stale(monkeypatch):
 
 def test_query_covered_point_carries_stub_solver_block():
     result = query._handle_value(_atlas(), _COVERED)
-    assert result["in_range"] is False
+    assert result["in_range"] is True
     assert result["value"] is None
     assert result["reason"] == "validation unavailable"
     assert "confidence" not in result
@@ -57,12 +57,18 @@ def test_query_covered_point_carries_stub_solver_block():
 
 
 def test_query_unknown_mode_escalates():
+    prediction = _atlas().predict({**_COVERED, "mode": "survival"})
+    assert prediction.in_range is False
+    assert "survival" in prediction.reason
     result = query._handle_value(_atlas(), {**_COVERED, "mode": "survival"})
     assert result["in_range"] is False
     assert result["action"] == "escalate"
 
 
 def test_query_out_of_grid_escalates_never_extrapolates():
+    prediction = _atlas().predict({**_COVERED, "offset_pct": 99.0})
+    assert prediction.in_range is False
+    assert "offset_pct" in prediction.reason and "outside" in prediction.reason
     result = query._handle_value(_atlas(), {**_COVERED, "offset_pct": 99.0})
     assert result["in_range"] is False
     assert result["action"] == "escalate"

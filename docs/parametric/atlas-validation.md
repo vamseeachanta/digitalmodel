@@ -12,6 +12,7 @@ This is a metadata contract, not independent verification of the measurement.
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-10-20 | Distinguish unavailable validation from measured zero and reject incomplete or nonfinite sweep grids. |
+| 2 | 2026-10-24 | Gate dynamic amplification on validation, align library manifests and preserve coverage diagnostics during escalation. |
 
 `Atlas.max_rel_error` and `local_error` return NaN when validation is unavailable.
 `save` writes a null manifest error and `status: unavailable`; loading preserves
@@ -20,6 +21,9 @@ or confidence band. Library provenance remains visible in query escalation.
 `Atlas.predict` remains a geometric interpolation primitive and can be used for
 holdout evaluation; an in-range prediction alone does not qualify a query answer.
 The catalog displays `unavailable`, including for unvalidated libraries.
+Unavailable-validation escalation retains geometric `in_range`
+and includes the coverage reason when both checks fail. An in-range escalation
+still provides no value or confidence band; consumers must inspect `action`.
 
 `atlas_from_summary` requires finite, unique, nonempty axis definitions and a
 finite response at each unique declared Cartesian node. Equal row counts alone
@@ -70,7 +74,33 @@ interpolation; it adds no standards-derived coefficients or acceptance limits.
 The specification remains a draft; this change implements the missing-evidence
 behavior described in [issue 2118](https://github.com/vamseeachanta/digitalmodel/issues/2118).
 
-Committed atlas payloads remain unchanged. The two operability publishing
-scripts still default direct validation dictionary reads to zero and require a
-follow-up. Holdout evaluation for bridge-built atlases is also outside this
-change; see [issue 816](https://github.com/vamseeachanta/digitalmodel/issues/816).
+The four library manifest validation blocks now match their unavailable
+`validation.json` evidence: `max_rel_error: null` and `status: unavailable`.
+Grid payloads and validation measurements are unchanged. Holdout evaluation for
+bridge-built atlases remains outside this change; see issue 816.
+The static operability cache is reissued because its fingerprint includes the
+envelope source. Every grid value, axis and validation result matches the prior
+version exactly; prior versions remain loadable by their identifiers.
+
+## Caller audit
+
+| Caller | Validation and coverage behavior |
+|---|---|
+| `parametric/query.py` confidence handlers | Require measured validation; retain geometric range and coverage reasons on escalation. |
+| `drilling_riser/operability_screening.py:screen_operability` | Require measured validation before a verdict; report coverage and validation failures together. |
+| `drilling_riser/envelope.py:compute_operating_envelope` with `dynamic=True` | Unavailable validation or failed coverage makes von Mises NaN and increments `escalated_points`. |
+| `mooring_resilience/screening.py:intact_tension_kN`, `foundation_capacity_kN` | Direct `predict` callers check geometry only and return no confidence band. Validation availability and freshness are not checked; their downstream screening verdicts retain this limitation. |
+| `parametric/generate.py`, `drilling_riser/operability_atlas.py` | Direct interpolation supports held-out error evaluation before validation metadata exists. |
+| `parametric/catalog.py` | Displays unavailable validation explicitly. |
+| `parametric/refresh.py` | Loads atlases for metadata and freshness checks; does not establish interpolation accuracy. |
+| `scripts/drilling_riser/build_operability_explorer.py`, `build_operability_monitor.py` | Deferred: direct validation dictionary reads still default missing errors to zero. |
+| `scripts/hf/publish_atlas_explorer.py` | Deferred: manifest reader assumes numeric error metadata; it must handle unavailable validation. |
+
+## Limits and follow-up
+
+The three publishing readers require follow-up before rendering unavailable
+validation. CI registration remains under the workflows domain; a parametric
+domain should include the edited suites. These items remain recorded in the
+pull request because this revision excludes CI configuration changes and issue
+creation. The direct mooring screening callers above remain geometry-only;
+this revision adds no confidence contract to those callers.

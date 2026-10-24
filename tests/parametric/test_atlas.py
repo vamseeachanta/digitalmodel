@@ -122,7 +122,8 @@ def test_code_check_straddle_escalates():
         {"outer_diameter": 0.20, "wall_thickness": 0.015,
          "effective_tension_kN": 1600, "bending_moment_kNm": 80, "smys": 359e6},
     )
-    assert result["in_range"] is False
+    assert result["in_range"] is True
+    assert result["action"] == "escalate"
     assert "straddles" in result["reason"]
 
 

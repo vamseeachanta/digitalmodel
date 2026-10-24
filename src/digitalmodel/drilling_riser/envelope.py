@@ -299,8 +299,9 @@ def compute_operating_envelope(
     is multiplied by the dynamic amplification factor from the
     ``drilling_riser_envelope`` library atlas (a STUB until a licensed OrcaFlex
     run populates it), and ``EnvelopeResult.dynamic_provenance`` is populated
-    with the solver marker + disclaimer. A point outside the atlas coverage
-    ESCALATES (its von Mises → NaN), never extrapolates. ``dynamic=False``
+    with the solver marker + disclaimer. Unavailable validation or a point
+    outside the atlas coverage ESCALATES (its von Mises → NaN), never
+    extrapolates. ``dynamic=False``
     (default) is the pure C1 static path, byte-for-byte unchanged.
     """
     rig_limits = rig_limits or RigEnvelopeLimits()
@@ -382,7 +383,7 @@ def compute_operating_envelope(
                             "tp_s": sea.tp_s,
                         }
                     )
-                    if pred.in_range:
+                    if dyn_atlas.validation_available and pred.in_range:
                         util["von_mises"][i, j, k] = vm * pred.value
                     else:
                         util["von_mises"][

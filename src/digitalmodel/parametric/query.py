@@ -24,8 +24,8 @@ SCREENING_DISCLAIMER = (
     "A full on-demand run remains the document of record."
 )
 ESCALATE_DISCLAIMER = (
-    "Outside the atlas coverage — routed to a full on-demand run (24h SLA). "
-    "No value is extrapolated."
+    "Atlas evidence does not support an answer — routed to a full on-demand run (24h SLA). "
+    "No value is served."
 )
 
 
@@ -113,15 +113,28 @@ def _provenance(atlas: Atlas) -> dict[str, Any]:
     return prov
 
 
-def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
+def _escalation(atlas: Atlas, reason: str, *, in_range: bool = False) -> dict[str, Any]:
     return {
         "value": None,
-        "in_range": False,
+        "in_range": in_range,
         "reason": reason,
         "action": "escalate",
         "disclaimer": ESCALATE_DISCLAIMER,
         "provenance": _provenance(atlas),
     }
+
+
+def _validation_escalation(atlas: Atlas, points: list[dict[str, Any]]) -> dict[str, Any]:
+    """Retain geometric coverage reasons alongside unavailable validation."""
+    predictions = [atlas.predict(point) for point in points]
+    reasons = dict.fromkeys([
+        "validation unavailable",
+        *(prediction.reason for prediction in predictions if not prediction.in_range),
+    ])
+    return _escalation(
+        atlas, "; ".join(reasons),
+        in_range=all(prediction.in_range for prediction in predictions),
+    )
 
 
 # -- per-workflow handlers ---------------------------------------------------
@@ -138,7 +151,9 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     and synthetic_rope_mooring_fatigue (MBL slice) — the slice axes are simply
     whatever point fields are not bin-level / load-case control keys."""
     if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
+        bins = point.get("tension_range_bins")
+        points = [{**point, **b} for b in bins] if bins else [point]
+        return _validation_escalation(atlas, points)
     shared = {k: v for k, v in point.items() if k not in _FATIGUE_CONTROL_KEYS}
     bins = point.get("tension_range_bins")
     if bins is None:
@@ -188,6 +203,7 @@ def _utilisation_result(atlas: Atlas, u: float, band: list[float], e: float) -> 
         return _escalation(
             atlas,
             f"utilisation {u:.3f} band [{band[0]:.3f}, {band[1]:.3f}] straddles 1.0",
+            in_range=True,
         )
     return {
         "response": "utilisation",
@@ -205,7 +221,7 @@ def _handle_utilisation(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     """Boundary class where the atlas predicts the utilisation directly
     (code_check, free_span): interpolate, then threshold at 1.0."""
     if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
+        return _validation_escalation(atlas, [point])
     prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
@@ -220,13 +236,13 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     utilisation = demand * FoS / capacity. The atlas axes stay geometry/soil
     only; the demand is not baked into the grid."""
     if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
+        return _validation_escalation(atlas, [point])
     prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
     capacity = prediction.value
     if capacity <= 0:
-        return _escalation(atlas, "non-positive capacity")
+        return _escalation(atlas, "non-positive capacity", in_range=True)
     demand = float(point["demand_kN"])
     fos = float(point.get("factor_of_safety", 1.0))
     e = atlas.local_error(point)
@@ -234,7 +250,7 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
     band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
     result = _utilisation_result(atlas, u, band, e)
-    if result["in_range"]:
+    if result.get("action") != "escalate":
         result["capacity_kN"] = capacity
     return result
 
@@ -243,7 +259,7 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     """Plain value class: interpolate the response and report it with a band
     (rao heave, fpso max line tension)."""
     if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
+        return _validation_escalation(atlas, [point])
     prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
@@ -264,11 +280,14 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
 def _handle_rao(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     # query is natural in period; the atlas axis is frequency (the workflow's
     # interpolation space), so convert here, then treat as a plain value.
-    if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
     lookup = dict(point)
     if "frequency_rad_s" not in lookup and "period_s" in lookup:
-        lookup["frequency_rad_s"] = 2.0 * math.pi / float(lookup["period_s"])
+        try:
+            lookup["frequency_rad_s"] = 2.0 * math.pi / float(lookup["period_s"])
+        except (TypeError, ValueError, ZeroDivisionError):
+            if not atlas.validation_available:
+                return _validation_escalation(atlas, [lookup])
+            raise
     return _handle_value(atlas, lookup)
 
 
@@ -276,7 +295,7 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
     """Single-sea-state spectral fatigue: atlas predicts annual damage; life =
     1/annual_damage, margin against design_life*dff (spectral_fatigue)."""
     if not atlas.validation_available:
-        return _escalation(atlas, "validation unavailable")
+        return _validation_escalation(atlas, [point])
     prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)

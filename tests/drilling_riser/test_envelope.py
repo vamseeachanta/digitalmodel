@@ -264,7 +264,14 @@ def test_stroke_and_moonpool_populate_with_rig_data():
 # -- #1346 solver-tier dynamic path (stub library) -----------------------------
 
 
-def test_dynamic_amplifies_von_mises_and_carries_stub_provenance():
+def test_dynamic_amplifies_von_mises_and_carries_stub_provenance(monkeypatch):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    # Synthetic measured-zero metadata exercises the validated caller path.
+    atlas.validation = {"max_rel_error": 0.0}
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
     common = dict(
         offsets_pct=[2.0], current_speeds_mps=[1.0], seastates=[SeaState(3.0, 12.0)]
     )
@@ -281,6 +288,23 @@ def test_dynamic_amplifies_von_mises_and_carries_stub_provenance():
     assert "disclaimer" in dyn.dynamic_provenance
 
 
+def test_dynamic_without_validation_escalates_each_covered_point():
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    assert not atlas.validation_available
+    assert atlas.predict({"mode": "drilling", "offset_pct": 2.0,
+                          "current_speed_mps": 1.0, "hs_m": 3.0,
+                          "tp_s": 12.0}).in_range
+    dyn = compute_operating_envelope(
+        **_BASE, dynamic=True, offsets_pct=[2.0, 4.0],
+        current_speeds_mps=[0.5, 1.0], seastates=[SeaState(3.0, 12.0)],
+    )
+    assert np.isnan(dyn.per_limit_utilisation["von_mises"]).all()
+    assert dyn.dynamic_provenance["escalated_points"] == 4
+
+
 def test_dynamic_false_is_a_noop():
     common = dict(
         offsets_pct=[1.0, 3.0],
@@ -295,7 +319,13 @@ def test_dynamic_false_is_a_noop():
     )
 
 
-def test_dynamic_out_of_coverage_escalates_von_mises():
+def test_dynamic_out_of_coverage_escalates_von_mises(monkeypatch):
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+
+    atlas = Atlas.load(DEFAULT_ATLAS_ROOT, "drilling_riser_envelope")
+    atlas.validation = {"max_rel_error": 0.0}
+    monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
     # offset 99% WD is outside the atlas grid -> von Mises escalates (NaN), counted
     dyn = compute_operating_envelope(
         **_BASE,

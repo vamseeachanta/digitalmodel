@@ -78,8 +78,8 @@ def atlas_from_summary(
         not df[axis.name].isin(axis.grid).all() for axis in axes
     ):
         raise ValueError("atlas grid is not full-factorial: duplicate or undeclared node")
-    if not np.isfinite(df[axis_names + [response]].to_numpy(dtype=float)).all():
-        raise ValueError("atlas axes and response must contain only finite values")
+    if not np.isfinite(df[response].to_numpy(dtype=float)).all():
+        raise ValueError("atlas response must contain only finite values")
 
     grid = df[axis_names + [response]].reset_index(drop=True)
     return Atlas(

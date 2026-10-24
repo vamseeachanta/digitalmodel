@@ -29,7 +29,8 @@ axes:
   - 180.0
 validation:
   metric: null
-  max_rel_error: 0.0
+  max_rel_error: null
+  status: unavailable
   threshold: null
   passes: null
 provenance:
