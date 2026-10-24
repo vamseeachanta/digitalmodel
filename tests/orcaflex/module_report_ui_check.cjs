@@ -56,7 +56,18 @@ const window = {async showSaveFilePicker(options) {
   }; }};
 }};
 const script = report.match(/<script>([\s\S]*?)<\/script>/)[1];
-vm.runInNewContext(script, {document, window, setTimeout, URL, Blob}, {timeout: 1000});
+const context = {document, window, setTimeout, URL, Blob};
+vm.runInNewContext(script, context, {timeout: 1000});
+
+function checkDifference(marker, expected) {
+  const detail = marker.attributes["aria-label"];
+  assert(detail.endsWith(`difference: ${expected} % of reference.`));
+  assert.equal(marker.children.find(node => node.tag === "title").textContent, detail);
+  for (const event of ["mouseenter", "focus", "click"]) {
+    marker.events[event]();
+    assert.equal(elements.get("chart-readout").textContent, detail);
+  }
+}
 
 async function check() {
   const data = JSON.parse(elements.get("evidence").textContent);
@@ -66,7 +77,19 @@ async function check() {
     marker.events.focus();
     assert(elements.get("chart-readout").textContent.includes(data.chart[index].tension.toFixed(1)));
     assert(elements.get("chart-readout").textContent.includes("limit: not established"));
+    checkDifference(marker, "0.0");
   });
+  const percentageCases = [
+    [100, "0.0"], [100.04, "0.0"], [99.96, "0.0"],
+    [101.26, "1.3"], [98.74, "−1.3"], [100.14, "0.1"], [99.86, "−0.1"],
+  ];
+  const chart = elements.get("tension-chart");
+  chart.replaceChildren();
+  const chartData = percentageCases.map(([tension]) => ({angle: 10, tension, reference: 100}));
+  vm.runInNewContext(`evidence.chart = ${JSON.stringify(chartData)}; drawChart();`, context, {timeout: 1000});
+  const percentageMarkers = chart.children.filter(node => node.tag === "circle");
+  assert.equal(percentageMarkers.length, percentageCases.length);
+  percentageMarkers.forEach((marker, index) => checkDifference(marker, percentageCases[index][1]));
   assert.equal(elements.get("comment-section").children.length, 10);
   elements.get("comment-section").value = "s5";
   elements.get("comment-text").value = "Check the <support> capacity.";
@@ -84,6 +107,6 @@ async function check() {
   window.showSaveFilePicker = async () => { throw new Error("Cancelled"); };
   await elements.get("save-comments").click();
   assert(elements.get("comment-status").textContent.includes("not saved"));
-  console.log("PASS: chart markers, hover, comment save/readback, invalid input and cancellation");
+  console.log("PASS: chart markers, percentage rounding, hover, comment save/readback, invalid input and cancellation");
 }
 check().catch(error => { console.error(error); process.exitCode = 1; });

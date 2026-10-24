@@ -309,11 +309,13 @@ function drawChart() {
       stroke: "var(--edge)", "stroke-dasharray": "3 3"});
     shape("text", {x: 6, y: y(row.tension) + 5}, row.tension.toFixed(1));
     const difference = (row.tension - row.reference) / row.reference * 100;
+    const roundedDifference = difference.toFixed(1);
+    const displayedDifference = roundedDifference === "-0.0" ? "0.0" : roundedDifference.replace("-", "−");
     const detail = `Case: still water at ${row.angle.toFixed(1)} degrees; component: upper support; ` +
       `demand: ${row.tension.toFixed(1)} kN; tension limit: not established; ` +
       `software angle limit: ${evidence.angle_limit.toFixed(1)} degrees; ` +
       `force-balance reference: ${row.reference.toFixed(1)} kN; difference: ` +
-      `${difference.toExponential(2).replace("-", "−")} % of reference.`;
+      `${displayedDifference} % of reference.`;
     const marker = shape("circle", {cx: x(row.angle), cy: y(row.tension), r: 8,
       fill: "white", stroke: "var(--brand)", "stroke-width": 2, tabindex: 0,
       role: "button", "aria-label": detail});
