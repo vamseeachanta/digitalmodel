@@ -55,6 +55,12 @@ def test_render_matches_saved_artifacts_without_filesystem_mutation():
     assert module.CHANGES == json.loads((REPORT / "changes.json").read_text())
 
 
+def test_rendered_and_saved_report_have_no_trailing_whitespace():
+    for html in (builder().render(),
+                 (REPORT / "index.html").read_text(encoding="utf-8")):
+        assert not re.search(r"[ \t]+$", html, re.M)
+
+
 def test_every_example_value_and_chart_ordinate_matches_module():
     from digitalmodel.orcawave.motion_statistics import (
         compute_response_spectrum, short_term_statistics,

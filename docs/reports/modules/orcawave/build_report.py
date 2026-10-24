@@ -89,7 +89,7 @@ def render():
     template = template.replace("{{changes}}", json.dumps(CHANGES))
     if re.search(r"\{\{\w+\}\}", template):
         raise ValueError("Unresolved report field")
-    return template
+    return re.sub(r"[ \t]+$", "", template, flags=re.M)
 
 
 def build(destination=HERE):
