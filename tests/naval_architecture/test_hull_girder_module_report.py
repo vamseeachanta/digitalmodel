@@ -6,6 +6,7 @@ import copy
 import importlib.util
 import json
 import re
+import subprocess
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -233,6 +234,39 @@ def test_small_nonzero_values_are_preserved():
     assert module.format_number(0) == "0.0"
     assert module.format_number(-0.00001) == "−1.0e−05"
     assert module.format_number(1.25) == "1.2"
+
+
+@pytest.mark.parametrize("placement", ["before", "after"])
+def test_module_ignore_exceptions_coexist(tmp_path, placement):
+    """A sibling report remains visible regardless of exception-block order."""
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    sibling = (
+        "!docs/reports/modules/hydrodynamics/\n"
+        "docs/reports/modules/hydrodynamics/*\n"
+        "!docs/reports/modules/hydrodynamics/index.html\n"
+    )
+    if placement == "before":
+        anchor = "!docs/reports/2026-09-13-ansys-evidence-stage-a.html\n"
+        assert anchor in rules
+        rules = rules.replace(anchor, sibling + anchor, 1)
+    else:
+        rules += "\n" + sibling
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8")
+    subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
+    paths = [
+        "docs/reports/modules/hydrodynamics/index.html",
+        *(f"docs/reports/modules/hullgirderscreening/{name}"
+          for name in ("build_report.py", "report.html", "changes.json")),
+        "docs/reports/modules/hydrodynamics/generated.csv",
+        "docs/reports/modules/hullgirderscreening/generated.csv",
+        "docs/reports/modules/other/generated.csv",
+    ]
+    result = subprocess.run(
+        ["git", "-c", "core.excludesFile=", "check-ignore", "--no-index", *paths],
+        cwd=tmp_path, check=False, capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert set(result.stdout.splitlines()) == set(paths[-3:])
 
 
 def test_interactive_chart_and_comment_round_trip(rebuilt, tmp_path):
