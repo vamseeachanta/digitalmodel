@@ -7,7 +7,25 @@ import yaml
 
 from digitalmodel.hull_wastage_screen.workflow import router
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
+
+
+@pytest.mark.parametrize("filename", ["test_screen.py", "test_workflow.py"])
+def test_focused_file_is_owned_and_in_ci_command(filename):
+    """Both focused files must belong to a domain and its executed command."""
+    import shlex
+    from scripts.ci.detect_touched_domains import (
+        parse_domains, path_matches_root, touched_domains,
+    )
+    path = Path(__file__).with_name(filename).relative_to(ROOT).as_posix()
+    domains = parse_domains(ROOT / "tests/DOMAINS.md")
+    assert [d.name for d in touched_domains([path], domains)] == ["asset-integrity"]
+    gate = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text())[
+        "gates"]["tests-asset-integrity"]
+    assert gate["enabled"] is True
+    assert any(path_matches_root(path, root) for root in gate["test_roots"])
+    assert any(path_matches_root(path, token) for token in shlex.split(gate["command"])
+               if token.startswith("tests/"))
 
 
 def test_example_workflow(tmp_path):
@@ -34,6 +52,32 @@ def test_report_escapes_inputs(tmp_path):
     report = (tmp_path / "hull-wastage.html").read_text()
     assert "<script>bad()" not in report
     assert "&lt;script&gt;" in report
+
+
+@pytest.mark.parametrize("nominal,measured,compression,shear", [
+    (50., 50., 0., 200.), (12., 10., 10., 20.),
+    (24., 20., 100., 0.), (20., 10., 10., 0.),
+])
+def test_unsupported_plate_capacity_is_retained_as_unevaluated(
+    tmp_path, nominal, measured, compression, shear,
+):
+    """Numeric output and HTML must not present an unsupported plate capacity."""
+    from .test_screen import buckling_case
+    data = buckling_case()
+    data["elements"][0].update(as_built_mm=nominal, measured_mm=measured)
+    data["buckling"].update(sigma_x_mpa=compression, tau_mpa=shear)
+    data["output_dir"] = str(tmp_path)
+    result = router({"hull_wastage_screen": data})["hull_wastage_screen"]["result"]
+    saved = json.loads((tmp_path / "hull-wastage.json").read_text())
+    assert saved == result
+    plate = saved["checks"]["buckling"]
+    assert plate["status"] == "NOT_EVALUATED"
+    assert "utilization" not in plate
+    assert "capacity_retained_fraction" not in plate
+    report = (tmp_path / "hull-wastage.html").read_text()
+    assert plate["reason"] in report
+    assert "utilization:" not in report
+    assert "capacity_retained_fraction:" not in report
 
 
 def test_registry_and_engine_route():

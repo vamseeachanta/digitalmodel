@@ -9,7 +9,8 @@ unstiffened plate with the existing metal-loss FFS solver. Missing checks remain
 This is engineering decision support. Class survey acceptance is not established.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
-<tr><td>0</td><td>2026-10-20</td><td>Initial workflow and synthetic arithmetic validation basis.</td></tr></table>
+<tr><td>0</td><td>2026-10-20</td><td>Initial workflow and synthetic arithmetic validation basis.</td></tr>
+<tr><td>1</td><td>2026-10-24</td><td>Restricted plate decisions to elastic compression and placed focused tests under the existing asset-integrity CI command.</td></tr></table>
 <h2>Inputs and method</h2>
 <p>All thicknesses are in mm; section geometry is in m; plate stresses are in MPa.
 Each element requires a unique ID, as-built thickness, representative measured thickness,
@@ -52,8 +53,14 @@ are yield_strength, ultimate_strength and youngs_modulus (MPa), poissons_ratio
 (dimensionless) and density (kg/m³). Loads are nonnegative compression/shear
 magnitudes at the reduced section; the adapter does not redistribute loads.</p>
 <p>The existing <code>assess_plate_uniform_loss</code> method is called at the lower-bound
-thickness. Its utilization criterion is retained. Transverse compression is explicitly
-NOT_EVALUATED because the existing plate solver does not evaluate that component.
+thickness for elastic compression only. Its utilization criterion is retained.
+Transverse compression is explicitly NOT_EVALUATED because the existing plate solver
+does not evaluate that component. Any nonzero shear is NOT_EVALUATED because its
+capacity and interaction lack primary citations and independent benchmarks.
+If either nominal or measured compression capacity would use the inherited inelastic
+correction, the plate check is NOT_EVALUATED. Nominal capacity is included because
+it enters the retained-capacity ratio. The elastic branch includes the inherited
+solver boundary at half the yield stress; this boundary does not establish code qualification.
 Pitting, stiffener wastage, stiffened-panel capacity, nonuniform loss and full CSR
 buckling qualification are not established by this adapter. A failed optional plate
 check produces RENEW as a screening action requiring strength/repair assessment;
@@ -76,7 +83,7 @@ The direct router above avoids importing unrelated workflow adapters.
 It writes <code>hull-wastage.json</code> and <code>hull-wastage.html</code>.
 Existing analyses are never overwritten; re-issues require a fresh output directory.</p>
 <h2>Validation record</h2>
-<p><code>tests/hull_wastage_screen/</code> contains independent arithmetic and boundary
+<p><code>tests/asset_integrity/hull_wastage_screen/</code> contains independent arithmetic and boundary
 tests. Expected values are derived in test docstrings; no comparator calls the implementation
 under test. Local reserve and percentage boundaries, fully consumed material,
 uncertainty, invalid inputs, missing data, duplicate IDs, global modulus and neutral-axis
@@ -89,7 +96,10 @@ three strip own-inertia terms. The exact independent expression is retained in t
 from NACA TN 3781 (1957), equation (20), with the half-wave length equal to plate width.
 The elastic plate stress expression and a hand-derived utilization are evaluated
 independently in the test. This checks orchestration and elastic arithmetic;
-it does not qualify the inherited inelastic or combined-load model.</p>
+it does not qualify the inherited inelastic or combined-load model. Regression tests
+require unsupported shear and inelastic cases to remain NOT_EVALUATED, including
+when only nominal capacity enters the inelastic branch. Both test files belong to
+the asset-integrity domain and are collected recursively by its existing CI command.</p>
 <h2>Disposition and later slices</h2>
 <p>Priority is RENEW, then NOT_EVALUATED, then MONITOR, then ACCEPT. The shared FFS
 <code>Verdict</code> vocabulary and hull <code>action_for</code> mapping are reused:

@@ -1,4 +1,4 @@
-"""Synthetic arithmetic benchmarks; no vessel or measured inspection data."""
+"""Synthetic arithmetic benchmarks for the hull wastage screening adapter."""
 from copy import deepcopy
 
 import pytest
@@ -211,32 +211,82 @@ def test_buckling_basis_describes_evaluated_model():
     result = assess(buckling_case())["checks"]["buckling"]
     assert "NACA TN 3781" in result["basis"]
     assert "equations (1), (20)" in result["basis"]
-    assert "Johnson-Ostenfeld correction (uncited)" in result["basis"]
+    assert "uncited" not in result["basis"]
+    assert "shear" in result["limitation"]
+    assert "inelastic" in result["limitation"]
     assert "API 579" not in result["basis"]
     assert "DNV-RP-C201" not in result["basis"]
     assert result["code_qualified"] is False
 
 
-def test_thinned_plate_inelastic_hand_calculation():
+@pytest.mark.parametrize("compression", [100., 1000.])
+def test_thinned_plate_inelastic_is_not_evaluated(compression):
     """NACA TN 3781 eqs (1)/(20): sigma_e > fy/2 at t=20, b=1000 mm.
 
-    Independently apply the inherited Johnson-Ostenfeld formula (uncited):
-    sigma_cr = fy * (1 - fy/(4*sigma_e)), U = 100/sigma_cr.
-    This checks arithmetic only; no code qualification is implied.
+    The inherited inelastic correction lacks a primary citation and benchmark.
+    Neither a passing nor a failing utilization can establish a disposition.
     """
     import math
     data = buckling_case()
     data["elements"][0].update(as_built_mm=24., measured_mm=20.)
-    data["buckling"]["sigma_x_mpa"] = 100.
+    data["buckling"]["sigma_x_mpa"] = compression
     result = assess(data)["checks"]["buckling"]
     elastic = 4 * math.pi**2 * 200000 / (12 * (1 - .3**2)) * (.02)**2
-    nominal_elastic = elastic * (24 / 20)**2
     assert elastic > 300 / 2
-    corrected = 300 * (1 - 300 / (4 * elastic))
-    nominal_corrected = 300 * (1 - 300 / (4 * nominal_elastic))
-    assert result["utilization"] == pytest.approx(100 / corrected)
-    assert result["capacity_retained_fraction"] == pytest.approx(corrected / nominal_corrected)
-    assert result["status"] == "ACCEPT"
+    assert result["status"] == "NOT_EVALUATED"
+    assert "inelastic" in result["reason"]
+    assert "utilization" not in result
+    assert "capacity_retained_fraction" not in result
+
+
+@pytest.mark.parametrize("compression,shear,nominal,measured", [
+    (0., 200., 50., 50.),
+    (10., 200., 50., 50.),
+    (0., 20., 12., 10.),
+    (10., 20., 12., 10.),
+    (1000., 20., 12., 10.),
+    (10., 1.e-12, 12., 10.),
+])
+def test_shear_cannot_establish_plate_disposition(compression, shear, nominal, measured):
+    """Pure shear at 200 MPa gives sqrt(3)*200 > selected yield 300 MPa.
+
+    The uncited shear capacity and interaction cannot govern any disposition,
+    including for smaller loads, combined loads or a plate that would fail.
+    """
+    data = buckling_case()
+    data["elements"][0].update(as_built_mm=nominal, measured_mm=measured)
+    data["buckling"].update(sigma_x_mpa=compression, tau_mpa=shear)
+    result = assess(data)
+    plate = result["checks"]["buckling"]
+    assert plate["status"] == "NOT_EVALUATED"
+    assert "shear" in plate["reason"].lower()
+    assert "utilization" not in plate
+    assert "capacity_retained_fraction" not in plate
+    assert result["status"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("compression", [10., 1000.])
+def test_nominal_inelastic_capacity_cannot_govern_retention(compression):
+    """Measured elastic stress is below fy/2 but nominal stress exceeds it."""
+    data = buckling_case()
+    data["elements"][0]["as_built_mm"] = 20.
+    data["buckling"]["sigma_x_mpa"] = compression
+    plate = assess(data)["checks"]["buckling"]
+    assert plate["status"] == "NOT_EVALUATED"
+    assert "inelastic" in plate["reason"]
+    assert "capacity_retained_fraction" not in plate
+
+
+@pytest.mark.parametrize("yield_factor,status", [
+    (.999999, "NOT_EVALUATED"), (1., "ACCEPT"), (1.000001, "ACCEPT"),
+])
+def test_nominal_elastic_branch_boundary(yield_factor, status):
+    """The inherited correction starts strictly above half the yield stress."""
+    import math
+    data = buckling_case()
+    nominal_elastic = 4 * math.pi**2 * 200000 / (12 * (1 - .3**2)) * (.012)**2
+    data["buckling"]["material"]["yield_strength"] = 2 * nominal_elastic * yield_factor
+    assert assess(data)["checks"]["buckling"]["status"] == status
 
 
 @pytest.mark.parametrize("field,value,label", [
