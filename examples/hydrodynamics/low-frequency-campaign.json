@@ -1,5 +1,5 @@
 {
-  "source": "base spec of the codenamed vessel; reconstructed full-body geometry and proposed sampling",
+  "source": "assumed, based on previous experience; reconstructed full-body geometry and proposed sampling",
   "base_spec": "MISSING",
   "meshes": {
     "coarse": "meshes/coarse.gdf",
@@ -8,7 +8,7 @@
   },
   "mesh_manifest": "full-body-meshes.json",
   "base_values": {
-    "basis": "base spec of the codenamed vessel",
+    "basis": "assumed, based on previous experience; reviewed source specification not retained",
     "mass_kg": 119052930,
     "centre_of_gravity_m": [115.5, 0, -5.5],
     "centre_of_gravity_basis": "estimate",
@@ -51,7 +51,13 @@
       "status": "proposed",
       "approval": "PROPOSED: needs DF QM approval",
       "heave_natural_frequency_rad_s": "MISSING",
-      "heading_justification": "MISSING",
+      "heading_justification": {
+        "0": "MISSING",
+        "45": "MISSING",
+        "90": "MISSING",
+        "135": "MISSING",
+        "180": "MISSING"
+      },
       "dispersion": "omega squared = g k tanh(k h), h = 1000 m; deep-water approximation is not assumed"
     }
   },

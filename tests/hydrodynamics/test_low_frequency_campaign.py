@@ -50,6 +50,10 @@ def inputs(tmp_path):
     (tmp_path / "full-body-meshes.json").write_bytes(reference.read_bytes())
     request = {
         "source": "synthetic test specification, not engineering input",
+        "base_spec": "synthetic reviewed base specification",
+        "heading_convention": "synthetic heading convention",
+        "weight_report": "synthetic reviewed weight report",
+        "final_frequency_list": "synthetic reviewed sampling reference",
         "approvals": {
             key: "APPROVED: synthetic reference" for key in campaign.APPROVALS
         },
@@ -71,6 +75,13 @@ def inputs(tmp_path):
             ]
         },
     }
+    request["criteria"]["asymptotic_max_rad_s"].update(
+        heave_natural_frequency_rad_s=2.0,
+        heading_justification={
+            str(heading): "synthetic heading-specific applicability evidence"
+            for heading in request["headings_deg"]
+        },
+    )
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps(request), encoding="utf-8")
     return base_path, request_path, tmp_path / "prepared", base, request
@@ -153,6 +164,84 @@ def test_bad_grid_rejected_before_output(inputs, field, value):
     with pytest.raises(ValueError):
         prepare(inputs)
     assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["base_spec", "heading_convention", "weight_report", "final_frequency_list"],
+)
+@pytest.mark.parametrize(
+    "fault", ["omitted", None, "", " ", "MISSING", "PROPOSED", {}, False]
+)
+def test_required_evidence_cannot_be_omitted_or_empty(inputs, field, fault):
+    if fault == "omitted":
+        inputs[4].pop(field)
+    else:
+        inputs[4][field] = fault
+    inputs[1].write_text(json.dumps(inputs[4]))
+    with pytest.raises(ValueError, match="evidence|MISSING|PROPOSED"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "fault", ["omitted", None, "", 0, -0.4, True, "nan", "inf", "MISSING"]
+)
+def test_corrected_heave_frequency_requires_positive_finite_evidence(inputs, fault):
+    criterion = inputs[4]["criteria"]["asymptotic_max_rad_s"]
+    if fault == "omitted":
+        criterion.pop("heave_natural_frequency_rad_s")
+    else:
+        criterion["heave_natural_frequency_rad_s"] = fault
+    inputs[1].write_text(json.dumps(inputs[4]))
+    with pytest.raises(ValueError, match="frequency|numeric|MISSING"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "omitted",
+        "single_string",
+        "empty",
+        "missing_heading",
+        "blank_heading",
+        "alias",
+        "extra",
+    ],
+)
+def test_asymptotic_justification_is_required_for_each_heading(inputs, fault):
+    criterion = inputs[4]["criteria"]["asymptotic_max_rad_s"]
+    justification = criterion["heading_justification"]
+    if fault == "omitted":
+        criterion.pop("heading_justification")
+    elif fault == "single_string":
+        criterion["heading_justification"] = "synthetic general reference"
+    elif fault == "empty":
+        criterion["heading_justification"] = {}
+    elif fault == "missing_heading":
+        justification.pop("90.0")
+    elif fault == "blank_heading":
+        justification["90.0"] = " "
+    elif fault == "alias":
+        justification["90"] = justification["90.0"]
+    else:
+        justification["45.0"] = "synthetic unrequested heading"
+    inputs[1].write_text(json.dumps(inputs[4]))
+    with pytest.raises(ValueError, match="heading.*evidence|heading.*justification"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_heading_evidence_uses_numeric_identity(inputs):
+    criterion = inputs[4]["criteria"]["asymptotic_max_rad_s"]
+    criterion["heading_justification"] = {
+        str(int(heading)): "synthetic heading-specific evidence"
+        for heading in inputs[4]["headings_deg"]
+    }
+    inputs[1].write_text(json.dumps(inputs[4]))
+    assert len(prepare(inputs)["cases"]) == 12
 
 
 @pytest.mark.parametrize("value", [None, -1, True, float("inf")])
@@ -449,6 +538,29 @@ def test_asymptotic_limit_above_candidate_bound_rejected(inputs):
     inputs[1].write_text(json.dumps(inputs[4]))
     with pytest.raises(ValueError, match="asymptotic limit"):
         prepare(inputs)
+
+
+@pytest.mark.parametrize(
+    "corrected,limit,allowed",
+    [
+        (0.4, 0.2, False),
+        (0.4, 0.1, True),
+        (0.4, "0.10000000000000001", False),
+        (2, 0.25, False),
+    ],
+)
+def test_asymptotic_limit_obeys_corrected_and_dry_quarter_bounds(
+    inputs, corrected, limit, allowed
+):
+    criterion = inputs[4]["criteria"]["asymptotic_max_rad_s"]
+    criterion.update(heave_natural_frequency_rad_s=corrected, value=limit)
+    inputs[1].write_text(json.dumps(inputs[4]))
+    if allowed:
+        assert len(prepare(inputs)["cases"]) == 12
+    else:
+        with pytest.raises(ValueError, match="asymptotic limit.*ceiling"):
+            prepare(inputs)
+        assert not inputs[2].exists()
 
 
 @pytest.mark.parametrize(

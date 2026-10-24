@@ -14,11 +14,15 @@ from pathlib import Path
 
 import numpy as np
 
+# Geometry, displacement, mass and environment: assumed, based on previous
+# experience. A reviewed source specification is not retained with this tool;
+# these inputs are reconstruction assumptions, not qualified engineering data.
 LENGTH, BEAM, DRAFT, TAPER = 231.0, 49.0, 11.0, 16.5
 VOLUME, MASS, RHO, GRAVITY = 116149.2, 119052930.0, 1025.0, 9.80665
 END_HALF_BREADTH = (VOLUME / DRAFT - BEAM * (LENGTH - TAPER)) / (2 * TAPER)
 # (end intervals, middle intervals, transverse intervals, vertical intervals).
 # Even transverse counts split the bottom and transoms at the centreline.
+# Counts and target sizes are supplied meshing choices; quality is unqualified.
 LEVELS = {"coarse": (5, 59, 14, 3), "medium": (7, 80, 20, 5), "fine": (10, 118, 28, 6)}
 TARGET_SIZES = {"coarse": 3.5, "medium": 2.47, "fine": 1.75}
 
@@ -197,6 +201,10 @@ def _integrate(parsed):
 def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
     """Check mass balance and transverse buoyancy within 0.001 of mesh beam.
 
+    The 0.01 mass residual and 0.001 transverse beam fraction are supplied
+    investigation criteria, not independently verified standard limits. The
+    default density is assumed, based on previous experience. The run request
+    records these limits in its geometry and loading basis.
     Gravity cancels in the force ratio. Symmetry flags allow planar closure
     for integration but never multiply volume. No weight report is inferred.
     """
@@ -255,8 +263,11 @@ def generate(output):
         taper_length_m=TAPER,
         end_half_breadth_m=END_HALF_BREADTH,
         displacement_m3=VOLUME,
-        basis="base spec of the codenamed vessel; equal end breadth reconstructed from displacement",
-        limitation="Reconstructed geometry; original surface and panel quality are not qualified.",
+        basis="assumed, based on previous experience; equal end breadth reconstructed from displacement",
+        limitation=(
+            "Reconstructed geometry; original surface and panel quality are not qualified. "
+            "Digest agreement establishes reproducibility, not source validity."
+        ),
         meshes={},
     )
     for level in LEVELS:

@@ -12,8 +12,8 @@
   "taper_length_m": 16.5,
   "end_half_breadth_m": 1.4702479338842696,
   "displacement_m3": 116149.2,
-  "basis": "base spec of the codenamed vessel; equal end breadth reconstructed from displacement",
-  "limitation": "Reconstructed geometry; original surface and panel quality are not qualified.",
+  "basis": "assumed, based on previous experience; equal end breadth reconstructed from displacement",
+  "limitation": "Reconstructed geometry; original surface and panel quality are not qualified. Digest agreement establishes reproducibility, not source validity.",
   "meshes": {
     "coarse": {
       "file": "coarse.gdf",

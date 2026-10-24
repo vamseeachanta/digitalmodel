@@ -68,6 +68,16 @@ def test_half_mesh_fails_without_implicit_reflection(tmp_path):
     assert 11 < report["centre_of_buoyancy_m"][1] < 12.5
 
 
+def test_generated_manifest_discloses_unverified_basis(tmp_path):
+    generated = mesh.generate(tmp_path / "meshes")
+    retained = json.loads(
+        (ROOT / "examples/hydrodynamics/full-body-meshes.json").read_text()
+    )
+    assert generated == retained
+    assert "assumed, based on previous experience" in generated["basis"]
+    assert "source validity" in generated["limitation"]
+
+
 @pytest.mark.parametrize(
     "beam_scale,offset,decision",
     [(1, 0.1, "FAIL"), (1, -0.1, "FAIL"), (1, 0.01, "PASS"), (0.1, 0.01, "FAIL")],

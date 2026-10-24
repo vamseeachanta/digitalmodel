@@ -130,6 +130,39 @@ def grid(values, *, headings=False):
     return parsed
 
 
+def require_evidence(request, headings):
+    """Require substantive evidence and one applicability record per heading."""
+    for field in (
+        "base_spec",
+        "heading_convention",
+        "weight_report",
+        "final_frequency_list",
+    ):
+        value = request.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"required evidence missing for {field}")
+    asymptote = request["criteria"]["asymptotic_max_rad_s"]
+    corrected = number(asymptote.get("heave_natural_frequency_rad_s"))
+    if corrected <= 0:
+        raise ValueError("positive corrected heave natural frequency required")
+    records = asymptote.get("heading_justification")
+    if not isinstance(records, dict) or not records:
+        raise ValueError("heading-specific justification evidence required")
+    justified = [number(heading) for heading in records]
+    if (
+        len(set(justified)) != len(justified)
+        or set(justified) != set(headings)
+        or any(
+            not isinstance(value, str) or not value.strip()
+            for value in records.values()
+        )
+    ):
+        raise ValueError(
+            "heading justification evidence must cover each requested heading"
+        )
+    return corrected
+
+
 def local_mesh(root, value):
     """Resolve only existing portable relative mesh paths within the input root."""
     if not isinstance(value, str) or not value or "\\" in value or ":" in value:
@@ -209,6 +242,11 @@ def build(base_path, request_path, output):
     }
     frequencies = grid(request["frequencies_rad_s"])
     headings = grid(request["headings_deg"], headings=True)
+    corrected = require_evidence(request, headings)
+    # Supplied investigation rule, documented in the run request: four times
+    # the corrected natural period means a quarter of its angular frequency.
+    if limits["asymptotic_max_rad_s"] > corrected / 4:
+        raise ValueError("asymptotic limit exceeds corrected-heave ceiling")
     old_frequency = base["frequencies"]
     if old_frequency.get("input_type") != "frequency" or "range" in old_frequency:
         raise ValueError("base requires explicit angular-frequency values")

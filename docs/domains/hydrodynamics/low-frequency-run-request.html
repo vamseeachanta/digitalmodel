@@ -22,12 +22,14 @@ and physical qualification are not established; no solver is run by these tools.
 <tbody>
 <tr><td>0</td><td>2026-10-15</td><td>Prepared the matched mesh/removal campaign and export checks to investigate reported low-frequency motion.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Required complete preparation evidence and justification for each heading, enforced the corrected natural-frequency bound, and marked unverified geometry inputs as assumptions.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
 
 <h2>Geometry and loading basis</h2>
-<p>Scope: issue 1548. The base spec of the codenamed vessel supplies mass 119,052,930 kg,
+<p>Scope: issue 1548. Geometry, loading and environmental inputs are assumed, based on previous experience;
+a reviewed source specification is not retained with this package. The assumed mass is 119,052,930 kg,
 CoG [115.5, 0, -5.5] m (estimate), gyradii [17.15, 57.75, 60.06] m (estimate), B44 = 6.0e6,
 water depth 1,000 m, density 1,025 kg/m3 and gravity 9.80665 m/s2. A weight report is MISSING.
 The heading convention, including which end is the bow, and the final frequency list are MISSING.
@@ -48,7 +50,9 @@ Generated meshes remain in the controlled run package; the repository retains th
 Copy the manifest beside the request and retain the meshes under the base-spec directory. The geometry-only
 DF2 check integrates the supplied panels without applying symmetry reflection. It returns volume, waterplane
 area, centre of buoyancy and |rho × V − M|/M; gravity cancels from this force ratio. All three full-body levels
-pass the 1.0 % criterion. The half-body negative control has volume 58,074.6 m3, half the waterplane,
+pass the supplied 1.0 % mass-residual criterion and transverse buoyancy within 0.001 of mesh beam.
+These are supplied investigation criteria, not independently verified standard limits. Digest agreement
+establishes reproducibility, not source validity. The half-body negative control has volume 58,074.6 m3, half the waterplane,
 an off-centre buoyancy location and 50.0 % mass residual, and returns FAIL. Missing, nonfinite, open,
 duplicated or reversed surfaces return NOT_EVALUATED. This does not qualify all hydrostatic or mesh gates.</p>
 
@@ -60,6 +64,12 @@ The maintainer must supply a reviewed single-body base spec, heading convention,
 corrected heave natural frequency and heading-specific asymptotic justification. Approval references must be
 recorded as <code>APPROVED: reference</code>, and each comparison criterion must be marked approved.
 These strings record evidence; they do not authenticate an approval.</p>
+<p>The required evidence fields <code>base_spec</code>, <code>heading_convention</code>,
+<code>weight_report</code> and <code>final_frequency_list</code> require nonblank reference strings.
+Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency_rad_s</code>
+requires a positive finite corrected frequency, and <code>heading_justification</code> requires an object
+mapping each requested heading in degrees to a nonblank evidence reference or rationale. Numeric heading
+identity is used; missing, duplicate or unrequested headings are refused. Omitted fields cannot bypass the gate.</p>
 <p>Before writing any specification the campaign checks header symmetry against the spec and requires DF2 PASS
 at every mesh level. ISX maps to the yz plane and ISY to the xz plane. A nonzero flag with symmetry none,
 a zero flag with declared symmetry, or a different plane is refused. This is a campaign-specific consistency
@@ -92,6 +102,8 @@ Convention and physical-model agreement require native evidence. Numerical agree
 <tr><td>Asymptotic upper frequency</td><td>At most 0.236 rad/s, proposed only. A1 DF5.1 checks the longer of the
 longest period and four times the corrected heave natural period. The corrected natural frequency is MISSING;
 the final bound may need to be lower. Justify it for every heading, well below the anomaly frequencies.
+Preparation enforces both one quarter of the corrected natural angular frequency and one quarter of
+the dry natural angular frequency calculated from each mesh waterplane, density, gravity and mass.
 Finite-frequency beam-sea heave above unity can be physical and is not rejected by applying this band there.</td></tr>
 <tr><td>Long-period heave</td><td>Inclusive [0.98, 1.02] m/m at approved asymptotic samples only.
 Basis: repository <code>qa_gates.py</code>, AQ-10; supplied AQG r1 DF5 reference;
@@ -141,7 +153,8 @@ results and flags until qualification. Dataset publication and downstream flag p
 
 <h2>Sources and open items</h2>
 <ul>
-<li>Base spec of the codenamed vessel: stated dimensions, loading estimates, environment and original sample grid.</li>
+<li>Dimensions, loading, environment and original sample grid: assumed, based on previous experience;
+the reviewed base specification is MISSING.</li>
 <li>Issue 1548: reported low-frequency anomaly and proposed mesh/removal investigation.</li>
 <li>Repository <code>input_schemas.py</code>, <code>orcawave_backend.py</code>, <code>aqwa_backend.py</code>,
 <code>spec_converter.py</code> and <code>qa_gates.py::EXTERNAL_CHECKS</code>: schema, mappings and screening band.</li>
