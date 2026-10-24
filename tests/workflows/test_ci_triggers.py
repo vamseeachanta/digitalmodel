@@ -398,6 +398,37 @@ def test_base_consumers_use_local_tip() -> None:
     )
 
 
+@pytest.fixture
+def register_diff_repository(tmp_path: Path) -> tuple[Path, dict, str]:
+    """Provide explicit history and remote refs without borrowing checkout Git."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    git(repository, "init", "--quiet", "-b", "main")
+    subprocess.run(
+        ["git", "fast-import", "--quiet"], cwd=repository, env=env,
+        input=(
+            b"commit refs/heads/main\nmark :1\n"
+            b"committer Fixture <> 1700000000 +0000\n"
+            b"data 4\nroot\n\n"
+            b"commit refs/heads/main\n"
+            b"committer Fixture <> 1700000001 +0000\n"
+            b"data 4\nmain\nfrom :1\n\n"
+            b"commit refs/heads/feature\nmark :2\n"
+            b"committer Fixture <> 1700000002 +0000\n"
+            b"data 4\nbase\nfrom :1\n\n"
+            b"commit refs/heads/feature\n"
+            b"committer Fixture <> 1700000003 +0000\n"
+            b"data 4\nhead\nfrom :2\n\ndone\n"
+        ),
+        capture_output=True, check=True,
+    )
+    git(repository, "symbolic-ref", "HEAD", "refs/heads/feature")
+    git(repository, "update-ref", "refs/remotes/origin/main", "main")
+    return repository, env, git(repository, "rev-parse", "HEAD~2")
+
+
 @pytest.mark.parametrize("event_name,tip,before,expected", [
     ("workflow_dispatch", "", "", "{sha}^"),
     ("workflow_dispatch", "HEAD~2", "HEAD~2", "{sha}^"),
@@ -408,18 +439,15 @@ def test_base_consumers_use_local_tip() -> None:
     ("push", "HEAD~2", "0" * 40, "0" * 40),
 ])
 def test_quality_gates_register_diff_base(
-    event_name: str, tip: str, before: str, expected: str,
+    register_diff_repository, event_name: str, tip: str, before: str, expected: str,
 ) -> None:
     """Resolve the shipped expression and capture the checker's diff base."""
     step = next(
         step for step in load_workflow("quality-gates.yml")["jobs"]["quality-gates"]["steps"]
         if step.get("name") == "Check engineering register changes"
     )
-    env = {key: value for key, value in os.environ.items()
-           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
-    sha = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=WORKFLOWS.parents[1], env=env, text=True
-    ).strip()
+    repository, env, fallback = register_diff_repository
+    sha = git(repository, "rev-parse", "HEAD")
     base = evaluate_expression(step["env"]["REGISTER_BASE"][3:-2], {
         "github.event_name": event_name,
         "steps.build_merge.outputs.tip": tip,
@@ -428,15 +456,13 @@ def test_quality_gates_register_diff_base(
     })
     assert base == expected.format(sha=sha)
     if not base or base == "0" * 40:
-        expected_diff = subprocess.check_output(
-            ["git", "merge-base", "origin/main", "HEAD"], cwd=WORKFLOWS.parents[1], env=env, text=True
-        ).strip()
+        expected_diff = fallback
     else:
         expected_diff = base
     # Execute the shipped shell and capture the checker's actual arguments.
     completed = subprocess.run(
         ["bash", "-c", 'python() { printf "%s\\n" "$@"; }\n' + step["run"]],
-        cwd=WORKFLOWS.parents[1],
+        cwd=repository,
         env={**env, "REGISTER_BASE": base, "GITHUB_EVENT_NAME": event_name},
         capture_output=True,
         text=True,

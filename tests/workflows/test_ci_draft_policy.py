@@ -22,7 +22,7 @@ DRAFT_GUARD = (
 
 @pytest.fixture
 def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
-    """Capture the checker boundary in an independent, two-commit repository."""
+    """Capture the checker boundary with divergent main and feature commits."""
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("GIT_")}
     repository = tmp_path / "repository"
@@ -37,18 +37,25 @@ def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
             b"commit refs/heads/main\nmark :1\n"
             b"committer Test <test@example.invalid> 1700000000 +0000\n"
             b"data 4\nbase\n\n"
-            b"commit refs/heads/main\n"
+            b"commit refs/heads/feature\n"
             b"committer Test <test@example.invalid> 1700000001 +0000\n"
-            b"data 4\nhead\nfrom :1\n\ndone\n"
+            b"data 4\nhead\nfrom :1\n\n"
+            b"commit refs/heads/main\n"
+            b"committer Test <> 1700000002 +0000\n"
+            b"data 4\nmain\nfrom :1\n\ndone\n"
         ),
         capture_output=True, check=True,
+    )
+    subprocess.run(
+        ["git", "symbolic-ref", "HEAD", "refs/heads/feature"], cwd=repository,
+        env=env, capture_output=True, text=True, check=True,
     )
     base = subprocess.run(
         ["git", "rev-parse", "HEAD^"], cwd=repository, env=env,
         capture_output=True, text=True, check=True,
     ).stdout.strip()
     subprocess.run(
-        ["git", "update-ref", "refs/remotes/origin/main", base], cwd=repository,
+        ["git", "update-ref", "refs/remotes/origin/main", "main"], cwd=repository,
         env=env, capture_output=True, text=True, check=True,
     )
     checker = repository / "scripts/enforcement/check-engineering-register.py"
@@ -61,7 +68,7 @@ def register_repository(tmp_path: Path) -> tuple[Path, dict, str]:
 
 def test_register_repository_is_minimal(register_repository) -> None:
     """The checker fixture must not copy or borrow the project object database."""
-    repository, env, _ = register_repository
+    repository, env, base = register_repository
     for arguments, expected in ((["rev-list", "--count", "HEAD"], "2"),
                                 (["ls-tree", "-r", "HEAD"], "")):
         result = subprocess.run(
@@ -70,6 +77,16 @@ def test_register_repository_is_minimal(register_repository) -> None:
         )
         assert result.stdout.strip() == expected
     assert not (repository / ".git/objects/info/alternates").exists()
+    main_tip = subprocess.run(
+        ["git", "rev-parse", "origin/main"], cwd=repository, env=env,
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    assert main_tip != base
+    merge_base = subprocess.run(
+        ["git", "merge-base", "origin/main", "HEAD"], cwd=repository, env=env,
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    assert merge_base == base
 
 
 @pytest.mark.parametrize("event,base,success", (
@@ -101,12 +118,6 @@ def test_register_diff_base(register_repository, event, base, success) -> None:
     )
     assert (result.returncode == 0) == success, result.stderr
     if success:
-        if base != "HEAD":
-            parent = subprocess.run(
-                ["git", "rev-parse", "HEAD^"], cwd=repository, env=env,
-                capture_output=True, text=True, check=True,
-            ).stdout.strip()
-            assert base_commit == parent
         assert json.loads(result.stdout) == [
             "--diff", "HEAD" if base == "HEAD" else base_commit,
         ]
