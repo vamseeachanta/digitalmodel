@@ -130,6 +130,28 @@ def test_report_writes_lf_even_with_windows_text_defaults(rebuilt, tmp_path, mon
         assert payload == (REPORT / name).read_bytes(), f"Rebuild with: {REBUILD}"
 
 
+@pytest.mark.parametrize("name", ["lifting-lug-analysis.html", "changes.json"])
+def test_report_goldens_keep_lf_with_crlf_checkout(rebuilt, name):
+    """Apply Git's checkout filters without changing the index or working tree."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
+    git = ["git", "-c", "core.autocrlf=true", "-c", "core.eol=crlf",
+           "-c", "core.attributesFile="]
+    path = (REPORT / name).relative_to(ROOT).as_posix()
+    blob = f"HEAD:{path}"
+    expected = (rebuilt[1] / name).read_bytes()
+    # The same blob at an unprotected path proves CRLF conversion is active.
+    control = subprocess.run(
+        [*git, "cat-file", "--filters", f"--path=checkout-control/{name}", blob],
+        cwd=ROOT, env=env, capture_output=True, check=True).stdout
+    assert b"\r\n" in control
+    assert control.replace(b"\r\n", b"\n") == expected
+    checkout = subprocess.run([*git, "cat-file", "--filters", blob],
+                              cwd=ROOT, env=env, capture_output=True, check=True).stdout
+    assert b"\r" not in checkout, f"Checkout must preserve LF: {path}"
+    assert checkout == expected, f"Rebuild with: {REBUILD}"
+
+
 def test_every_displayed_example_number_matches_hand_calculation(rebuilt):
     _, _, text = rebuilt
     page = Page(text)
