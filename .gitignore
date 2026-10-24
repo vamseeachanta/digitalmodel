@@ -588,6 +588,7 @@ docs/reports/abstracted-hulls/*
 docs/reports/modules/*
 !docs/reports/modules/assetintegrity/
 docs/reports/modules/assetintegrity/*
+!docs/reports/modules/assetintegrity/README.md
 !docs/reports/modules/assetintegrity/build_report.py
 !docs/reports/modules/assetintegrity/changes.json
 !docs/reports/modules/assetintegrity/public-example.json
