@@ -237,6 +237,65 @@ class HangingResult:
         return min(self.effective_tension_n) < 0.0
 
 
+@dataclass(frozen=True)
+class StringWeightInventory:
+    """Forces in N; submerged weight is signed, positive downwards (D2)."""
+
+    dry_weight_n: float
+    contents_weight_n: float
+    filled_weight_n: float
+    buoyancy_n: float
+    submerged_weight_n: float
+
+
+def string_weight_inventory(
+    sections: Sequence[BundleSection], *, gravity_m_s2: float
+) -> StringWeightInventory:
+    """Separate wall/hardware, contents and displaced-fluid weight (D1/D2).
+
+    D2 and R4 (University Physics Volume 1, 2016, section 14.4) are documented
+    in the companion mining-lift guide. Dry weight includes buoyancy material
+    and attached hardware; axial added mass is inertia only. Lower-end loads
+    are excluded. Contents inertia participation never changes static weight.
+    """
+    if sections is None:
+        raise ValueError("at least one BundleSection is required")
+    sections = tuple(sections)
+    if not sections or any(not isinstance(s, BundleSection) for s in sections):
+        raise ValueError("at least one BundleSection is required")
+    _number("gravity_m_s2", gravity_m_s2, strict=True)
+    dry = (
+        sum(
+            s.length_m
+            * (
+                sum(t.wall_area_m2 * t.material_density_kg_m3 for t in s.tubes)
+                + s.additional_mass_kg_m
+            )
+            for s in sections
+        )
+        * gravity_m_s2
+    )
+    contents = (
+        sum(
+            s.length_m * sum(t.bore_area_m2 * t.contents_density_kg_m3 for t in s.tubes)
+            for s in sections
+        )
+        * gravity_m_s2
+    )
+    buoyancy = (
+        sum(
+            s.length_m * s.external_density_kg_m3 * s.displaced_area_m2
+            for s in sections
+        )
+        * gravity_m_s2
+    )
+    filled = dry + contents
+    submerged = filled - buoyancy
+    if not all(isfinite(v) for v in (dry, contents, filled, buoyancy, submerged)):
+        raise ValueError("weight inventory exceeded finite numeric range")
+    return StringWeightInventory(dry, contents, filled, buoyancy, submerged)
+
+
 def free_hanging_screen(
     sections: Sequence[BundleSection], *, gravity_m_s2: float, lower_end_force_n: float
 ) -> HangingResult:
