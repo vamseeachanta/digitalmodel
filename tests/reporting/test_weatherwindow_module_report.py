@@ -184,7 +184,7 @@ def test_house_style_references_and_comment_controls():
     changes = json.loads((DIRECTORY / "changes.json").read_text(encoding="utf-8"))
     assert changes["history"][0]["revision"] == "0"
     assert changes["history"][0]["changes"]
-    assert changes["history"][-1]["revision"] == "1"
+    assert changes["history"][-1]["revision"] == "2"
 
 
 def test_rounding_diagnostic_matches_documented_limitation():
@@ -215,7 +215,11 @@ def test_chart_inputs_are_module_consistency_checks():
     assert chart["windows"] == record["windows_hours"]
 
 
-def test_chart_and_comment_interaction_without_browser(tmp_path):
+@pytest.mark.parametrize("io_stage", [
+    "round-trip", "write", "close", "folder-read", "folder-read-saved",
+    "file-read", "file-read-saved",
+])
+def test_chart_and_comment_interaction_without_browser(tmp_path, io_stage):
     """Exercise the delivered script using a minimal DOM and in-memory file handles."""
     node = shutil.which("node")
     assert node, "Node is required for the report interaction check"
@@ -239,7 +243,11 @@ class Element {
   click() {downloads.push(this.download);}
   querySelector() {return {textContent:this.textContent};}
 }
-const nodes={}, downloads=[], blobs=[], stored={};
+const nodes={}, downloads=[], blobs=[], stored={}, windowEvents={};
+function deferred() {let resolve;const promise=new Promise(done=>{resolve=done;});return {promise,resolve};}
+const entered=deferred(), release=deferred();
+let pausedStage="";
+async function pause(stage) {if(stage===pausedStage) {entered.resolve();await release.promise;}}
 const get=id=>nodes[id]??=(new Element());
 for(const [id,payload] of Object.entries(METADATA)) get(id).textContent=payload;
 const sections=SECTION_IDS.map(id=>{const e=get(id);e.id=id;e.textContent=id;return e;});
@@ -247,11 +255,17 @@ get("last-revision").value="none";get("comment-section").value=SECTION_IDS[0];
 const context={
   document:{getElementById:get,querySelectorAll:()=>sections,
     createElement:tag=>new Element(tag),createElementNS:(_,tag)=>new Element(tag)},
-  window:{addEventListener:()=>{}},Blob,
+  window:{addEventListener:(event,callback)=>{windowEvents[event]=callback;}},Blob,
   URL:{createObjectURL:blob=>{blobs.push(blob);return "blob:test";},revokeObjectURL:()=>{}},
   setTimeout:callback=>callback(),
 };
 vm.createContext(context);vm.runInContext(SCRIPT,context);
+function isDirty() {
+  let prevented=false;
+  windowEvents.beforeunload({preventDefault:()=>{prevented=true;}});
+  return prevented;
+}
+async function addComment(text) {get("comment-text").value=text;await get("add-comment").trigger("click");}
 (async()=>{
   const heights=get("height-chart");
   assert.deepEqual(heights.children.filter(e=>e.tag==="text" && e.attrs.x==="15").map(e=>Number(e.textContent)),[0,1,2,3,4]);
@@ -273,8 +287,8 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   context.window.showDirectoryPicker=async()=>({getFileHandle:async(name,options)=>{
     if(name==="report.html") return {getFile:async()=>({text:async()=>REPORT_HTML})};
     if(!stored[name] && !options?.create) throw Object.assign(new Error(),{name:"NotFoundError"});
-    return {getFile:async()=>({text:async()=>stored[name]}),
-      createWritable:async()=>({write:async text=>{stored[name]=text;},close:async()=>{}})};
+    return {getFile:async()=>({text:async()=>{const text=stored[name];await pause("folder-read");return text;}}),
+      createWritable:async()=>({write:async text=>{await pause("write");stored[name]=text;},close:async()=>{await pause("close");}})};
   }});
   await get("open-folder").trigger("click");
   assert.match(get("comment-status").textContent,/adjacent saving is enabled/);
@@ -283,10 +297,49 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   assert.equal(JSON.parse(stored["report.comments.json"]).comments[0].text,"Use unrounded quantities.");
   await get("open-folder").trigger("click");
   assert.match(get("comment-list").children[0].textContent,/Use unrounded quantities/);
+  assert.equal(isDirty(),false);
+  if(["write","close"].includes(IO_STAGE)) {
+    await addComment("Snapshot before saving.");
+    pausedStage=IO_STAGE;
+    const saving=get("save-comments").trigger("click");
+    await entered.promise;
+    await addComment("Added during saving.");
+    release.resolve();await saving;
+    assert.equal(get("comment-list").children.length,3);
+    assert.equal(JSON.parse(stored["report.comments.json"]).comments.length,2);
+    assert.equal(isDirty(),true,"A comment added during saving must retain the unload warning");
+    assert.match(get("comment-status").textContent,/unsaved/);
+    pausedStage="";await get("save-comments").trigger("click");
+    assert.equal(JSON.parse(stored["report.comments.json"]).comments.length,3);
+    assert.equal(isDirty(),false,"A successful retry must clear the unload warning");
+  }
+  if(IO_STAGE.includes("read")) {
+    const file={text:async()=>{const text=stored["report.comments.json"];await pause("file-read");return text;}};
+    pausedStage=IO_STAGE.replace(/-saved$/,"");
+    const load=()=>IO_STAGE.startsWith("file-read")
+      ? get("load-comments").trigger("change",{target:{files:[file]}})
+      : get("open-folder").trigger("click");
+    const loading=load();await entered.promise;
+    await addComment("Added during loading.");
+    const savedDuringRead=IO_STAGE.endsWith("-saved");
+    if(savedDuringRead) await get("save-comments").trigger("click");
+    release.resolve();await loading;
+    assert.equal(get("comment-list").children.length,2,"Loading must preserve comments added while reading");
+    assert.match(get("comment-list").children[1].textContent,/Added during loading/);
+    assert.equal(isDirty(),!savedDuringRead);
+    assert.match(get("comment-status").textContent,/Save current comments|comments.*changed/i);
+    pausedStage="";await get("save-comments").trigger("click");await load();
+    assert.equal(get("comment-list").children.length,2);
+    assert.equal(isDirty(),false,"An unchanged load after saving must succeed");
+    assert.doesNotMatch(get("comment-status").textContent,/comments.*changed/i);
+  }
   get("last-revision").value="0";await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/unrounded/);
   get("last-revision").value="1";await get("last-revision").trigger("change");
+  assert.match(get("change-list").textContent,/comments/);
+  get("last-revision").value="2";await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/No engineering changes/);
+  process.stdout.write("Interaction checks completed\n");
 })().catch(error=>{console.error(error);process.exitCode=1;});
 '''
     # Plain JSON is passed as JavaScript data, never through shell interpolation.
@@ -299,12 +352,17 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
         f"const SECTION_IDS={json.dumps(section_ids)};",
         f"const SCRIPT={json.dumps(script, ensure_ascii=False)};",
         f"const REPORT_HTML={json.dumps(text, ensure_ascii=False)};",
+        f"const IO_STAGE={json.dumps(io_stage)};",
         harness,
     ])
     target = tmp_path / "interaction.cjs"
     target.write_text(content, encoding="utf-8", newline="\n")
-    result = subprocess.run([node, target.as_posix()], capture_output=True, text=True, encoding="utf-8", check=False)
+    result = subprocess.run(
+        [node, target.as_posix()], capture_output=True, text=True,
+        encoding="utf-8", check=False, timeout=20,
+    )
     assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "Interaction checks completed"
 
 
 @pytest.mark.parametrize("sibling_first", [True, False])

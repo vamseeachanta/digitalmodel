@@ -18,6 +18,14 @@
         "Wave-height axis labels match their plotted coordinates; percentile attribution and operation-start wording are corrected.",
         "The rebuild check compares all calculation metadata, and shared ignore rules support adjacent module reports."
       ]
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-24",
+      "changes": [
+        "Saving records the exact written snapshot so comments added during a write retain the unsaved warning.",
+        "Folder and file loading retain current comments when edits occur during a read, including edits saved before the read completes."
+      ]
     }
   ]
 }

@@ -547,13 +547,16 @@ document.getElementById("add-comment").addEventListener("click",()=>{
 document.getElementById("load-comments").addEventListener("change",async event=>{
   try {
     if (!event.target.files.length) return;
+    const snapshot=JSON.stringify(comments);
     const loaded=validComments(JSON.parse(await event.target.files[0].text()));
+    if (JSON.stringify(comments)!==snapshot) throw new Error("Comments changed while loading; retry after saving current comments.");
     if (JSON.stringify(comments)!==savedText) throw new Error("Save current comments before loading another file.");
     comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Comment file loaded.";
   } catch(error) {status.textContent=error.message;}
 });
 document.getElementById("open-folder").addEventListener("click",async()=>{
   try {
+    const snapshot=JSON.stringify(comments);
     if (!window.showDirectoryPicker) throw new Error("Folder access is unavailable. Save downloads the comment file; place it beside this HTML.");
     const chosen=await window.showDirectoryPicker({mode:"readwrite"});
     const report=await (await chosen.getFileHandle("report.html")).getFile();
@@ -562,20 +565,24 @@ document.getElementById("open-folder").addEventListener("click",async()=>{
     let loaded=[];
     try {loaded=validComments(JSON.parse(await (await (await chosen.getFileHandle("report.comments.json")).getFile()).text()));}
     catch(error) {if(error.name!=="NotFoundError") throw error;}
+    if (JSON.stringify(comments)!==snapshot) throw new Error("Comments changed while loading; retry after saving current comments.");
     directory=chosen; comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Report folder opened; adjacent saving is enabled.";
   } catch(error) {status.textContent=error.message;}
 });
 document.getElementById("save-comments").addEventListener("click",async()=>{
   try {
+    const snapshot=JSON.stringify(comments);
     const payload=JSON.stringify({report:"weather-window-module",revision,comments},null,2)+"\n";
     if(directory) {
       const handle=await directory.getFileHandle("report.comments.json",{create:true});
       const writable=await handle.createWritable(); await writable.write(payload); await writable.close();
-      savedText=JSON.stringify(comments); status.textContent="Comments saved beside report.html.";
+      savedText=snapshot;
+      status.textContent=JSON.stringify(comments)===snapshot
+        ? "Comments saved beside report.html." : "Earlier comments saved; newer comments have unsaved changes.";
     } else {
       const url=URL.createObjectURL(new Blob([payload],{type:"application/json"}));
       const link=document.createElement("a"); link.href=url; link.download="report.comments.json"; link.click();
-      setTimeout(()=>URL.revokeObjectURL(url),1000); savedText=JSON.stringify(comments);
+      setTimeout(()=>URL.revokeObjectURL(url),1000); savedText=snapshot;
       status.textContent="Comment file downloaded. Place report.comments.json beside this HTML and load it when reopening.";
     }
   } catch(error) {status.textContent=error.message;}

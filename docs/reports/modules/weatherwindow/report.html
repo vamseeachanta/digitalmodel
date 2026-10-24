@@ -123,7 +123,7 @@ An operation start is not supported by this record under the supplied duration c
 but <span data-value="result.num_viable_windows">0</span> spells meet the required duration.</li></ul></li></ul>
 <p>These are results for a synthetic public repository example, not a forecast or a location-specific installation envelope.
 Heading, wave period, structural response and a live-support trigger are NOT_EVALUATED.</p>
-<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>The fixed-interval weather-window screen is documented using the existing public illustrative record. The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated. Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance.</td></tr><tr><td>1</td><td>2026-10-22</td><td>Chart criteria use unrounded values and preserve input precision so that displayed rounding cannot change a decision. Wave-height axis labels match their plotted coordinates; percentile attribution and operation-start wording are corrected. The rebuild check compares all calculation metadata, and shared ignore rules support adjacent module reports.</td></tr></tbody></table>
+<h3>Revision history</h3><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-22</td><td>The fixed-interval weather-window screen is documented using the existing public illustrative record. The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated. Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance.</td></tr><tr><td>1</td><td>2026-10-22</td><td>Chart criteria use unrounded values and preserve input precision so that displayed rounding cannot change a decision. Wave-height axis labels match their plotted coordinates; percentile attribution and operation-start wording are corrected. The rebuild check compares all calculation metadata, and shared ignore rules support adjacent module reports.</td></tr><tr><td>2</td><td>2026-10-24</td><td>Saving records the exact written snapshot so comments added during a write retain the unsaved warning. Folder and file loading retain current comments when edits occur during a read, including edits saved before the read completes.</td></tr></tbody></table>
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -331,7 +331,7 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 
 <aside class="review-controls" aria-label="Report review">
 <h3>Engineering changes</h3><label for="last-revision">Last revision read</label>
-<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option><option value="1">Revision 1</option></select>
+<select id="last-revision"><option value="none">No earlier revision</option><option value="0">Revision 0</option><option value="1">Revision 1</option><option value="2">Revision 2</option></select>
 <p id="change-list"></p>
 <h3>Comments</h3><label for="comment-section">Report section</label><select id="comment-section"></select>
 <label for="comment-text">Comment text</label><textarea id="comment-text"></textarea>
@@ -345,7 +345,7 @@ otherwise the comment file is downloaded and placed beside this HTML. Comments a
 </main>
 <script id="calculation" type="application/json">{"hs_m": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "sample_count": 56, "sample_start_hours": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "windows_hours": [36.0, 30.0, 24.0, 33.0], "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2.0, "required_duration_hours": 48.0, "time_step_hours": 3.0, "record_hours": 168.0, "workability_pct": 73.21428571428571, "required_workability_pct": 50.0, "longest_window_hours": 36.0, "mean_window_hours": 30.8, "p10_window_hours": 25.8, "p90_window_hours": 35.1, "num_windows": 4, "num_viable_windows": 0, "operation_fits_window": false, "screening_status": "fail"}, "diagnostic": {"hs_m": 1, "hs_limit_m": 2, "required_hours": 1, "interval_hours": 0.96, "raw_longest_hours": 0.96, "result": {"standard": "DNV-OS-H101 / Noble Denton 0027 (weather windows)", "hs_limit_m": 2, "required_duration_hours": 1, "time_step_hours": 0.96, "record_hours": 0.96, "workability_pct": 104.16666666666667, "required_workability_pct": null, "longest_window_hours": 1.0, "mean_window_hours": 1.0, "p10_window_hours": 1.0, "p90_window_hours": 1.0, "num_windows": 1, "num_viable_windows": 0, "operation_fits_window": true, "screening_status": "pass"}}, "upstream_test_count": 17, "report_test_count": 12}</script>
 <script id="chart-data" type="application/json">{"heights": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.8, 2.8, 2.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 3.0, 3.0, 3.0, 3.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.5, 2.5, 2.5, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 3.2, 3.2, 3.2, 3.2, 3.2], "times": [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 51.0, 54.0, 57.0, 60.0, 63.0, 66.0, 69.0, 72.0, 75.0, 78.0, 81.0, 84.0, 87.0, 90.0, 93.0, 96.0, 99.0, 102.0, 105.0, 108.0, 111.0, 114.0, 117.0, 120.0, 123.0, 126.0, 129.0, 132.0, 135.0, 138.0, 141.0, 144.0, 147.0, 150.0, 153.0, 156.0, 159.0, 162.0, 165.0], "interval": 3.0, "heightLimit": 2.0, "required": 48.0, "windows": [36.0, 30.0, 24.0, 33.0], "heightAccepted": [true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, false, false, false, false, true, true, true, true, true, true, true, true, false, false, false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false], "windowAccepted": [false, false, false, false]}</script>
-<script id="engineering-changes" type="application/json">{"report": "weather-window-module", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["The fixed-interval weather-window screen is documented using the existing public illustrative record.", "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.", "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."]}, {"revision": "1", "date": "2026-10-22", "changes": ["Chart criteria use unrounded values and preserve input precision so that displayed rounding cannot change a decision.", "Wave-height axis labels match their plotted coordinates; percentile attribution and operation-start wording are corrected.", "The rebuild check compares all calculation metadata, and shared ignore rules support adjacent module reports."]}]}</script>
+<script id="engineering-changes" type="application/json">{"report": "weather-window-module", "history": [{"revision": "0", "date": "2026-10-22", "changes": ["The fixed-interval weather-window screen is documented using the existing public illustrative record.", "The failed continuous-duration criterion is separated from accepted exposure, and the rounding boundary is demonstrated.", "Required environmental and installation inputs are identified so that the screening result is not treated as installation acceptance."]}, {"revision": "1", "date": "2026-10-22", "changes": ["Chart criteria use unrounded values and preserve input precision so that displayed rounding cannot change a decision.", "Wave-height axis labels match their plotted coordinates; percentile attribution and operation-start wording are corrected.", "The rebuild check compares all calculation metadata, and shared ignore rules support adjacent module reports."]}, {"revision": "2", "date": "2026-10-24", "changes": ["Saving records the exact written snapshot so comments added during a write retain the unsaved warning.", "Folder and file loading retain current comments when edits occur during a read, including edits saved before the read completes."]}]}</script>
 <script>
 "use strict";
 const chart = JSON.parse(document.getElementById("chart-data").textContent);
@@ -443,13 +443,16 @@ document.getElementById("add-comment").addEventListener("click",()=>{
 document.getElementById("load-comments").addEventListener("change",async event=>{
   try {
     if (!event.target.files.length) return;
+    const snapshot=JSON.stringify(comments);
     const loaded=validComments(JSON.parse(await event.target.files[0].text()));
+    if (JSON.stringify(comments)!==snapshot) throw new Error("Comments changed while loading; retry after saving current comments.");
     if (JSON.stringify(comments)!==savedText) throw new Error("Save current comments before loading another file.");
     comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Comment file loaded.";
   } catch(error) {status.textContent=error.message;}
 });
 document.getElementById("open-folder").addEventListener("click",async()=>{
   try {
+    const snapshot=JSON.stringify(comments);
     if (!window.showDirectoryPicker) throw new Error("Folder access is unavailable. Save downloads the comment file; place it beside this HTML.");
     const chosen=await window.showDirectoryPicker({mode:"readwrite"});
     const report=await (await chosen.getFileHandle("report.html")).getFile();
@@ -458,20 +461,24 @@ document.getElementById("open-folder").addEventListener("click",async()=>{
     let loaded=[];
     try {loaded=validComments(JSON.parse(await (await (await chosen.getFileHandle("report.comments.json")).getFile()).text()));}
     catch(error) {if(error.name!=="NotFoundError") throw error;}
+    if (JSON.stringify(comments)!==snapshot) throw new Error("Comments changed while loading; retry after saving current comments.");
     directory=chosen; comments=loaded; savedText=JSON.stringify(comments); showComments(); status.textContent="Report folder opened; adjacent saving is enabled.";
   } catch(error) {status.textContent=error.message;}
 });
 document.getElementById("save-comments").addEventListener("click",async()=>{
   try {
+    const snapshot=JSON.stringify(comments);
     const payload=JSON.stringify({report:"weather-window-module",revision,comments},null,2)+"\n";
     if(directory) {
       const handle=await directory.getFileHandle("report.comments.json",{create:true});
       const writable=await handle.createWritable(); await writable.write(payload); await writable.close();
-      savedText=JSON.stringify(comments); status.textContent="Comments saved beside report.html.";
+      savedText=snapshot;
+      status.textContent=JSON.stringify(comments)===snapshot
+        ? "Comments saved beside report.html." : "Earlier comments saved; newer comments have unsaved changes.";
     } else {
       const url=URL.createObjectURL(new Blob([payload],{type:"application/json"}));
       const link=document.createElement("a"); link.href=url; link.download="report.comments.json"; link.click();
-      setTimeout(()=>URL.revokeObjectURL(url),1000); savedText=JSON.stringify(comments);
+      setTimeout(()=>URL.revokeObjectURL(url),1000); savedText=snapshot;
       status.textContent="Comment file downloaded. Place report.comments.json beside this HTML and load it when reopening.";
     }
   } catch(error) {status.textContent=error.message;}
