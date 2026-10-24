@@ -41,6 +41,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
     ("docs/bha_database.md", ("subsea",)),
+    ("scripts/corrosion/", ("specialized",)),
+    ("docs/reports/modules/corrosion/", ("specialized",)),
     # Domain records bind retained inputs and outputs checked by contracts tests.
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
