@@ -592,3 +592,4 @@ docs/reports/modules/fielddevelopment/*
 !docs/reports/modules/fielddevelopment/interaction.js
 !docs/reports/modules/fielddevelopment/report.html
 !docs/reports/modules/fielddevelopment/changes.json
+!docs/reports/modules/fielddevelopment/README.md
