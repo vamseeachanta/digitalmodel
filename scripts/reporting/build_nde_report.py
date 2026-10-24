@@ -221,8 +221,9 @@ def build_report(destination: Path | None = None) -> None:
     document = render_report()
     changes = json.dumps(CHANGES, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / "nde-module-analysis.html").write_text(document, encoding="utf-8")
-    (destination / "changes.json").write_text(changes, encoding="utf-8")
+    (destination / "nde-module-analysis.html").write_text(
+        document, encoding="utf-8", newline="\n")
+    (destination / "changes.json").write_text(changes, encoding="utf-8", newline="\n")
 
 
 REPORT = '''<!doctype html>

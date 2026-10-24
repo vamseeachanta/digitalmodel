@@ -75,10 +75,38 @@ def test_rebuild_matches_committed_report_and_changes(tmp_path, monkeypatch):
     monkeypatch.setenv("GIT_COMMON_DIR", str(tmp_path / "common.git"))
     builder.build_report(tmp_path)
     for name in ("nde-module-analysis.html", "changes.json"):
-        assert (tmp_path / name).read_bytes() == (REPORT_DIR / name).read_bytes()
+        expected = (REPORT_DIR / name).read_bytes().replace(b"\r\n", b"\n")
+        assert (tmp_path / name).read_bytes() == expected, (
+            "Rebuild with: PYTHONPATH=src uv run --no-project python "
+            "scripts/reporting/build_nde_report.py"
+        )
     assert report_data(
         (tmp_path / "nde-module-analysis.html").read_text(encoding="utf-8"), "changes-data"
     ) == json.loads((tmp_path / "changes.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("default_newline", ["\n", "\r\n"], ids=["posix", "windows"])
+@pytest.mark.parametrize("name", ["nde-module-analysis.html", "changes.json"])
+def test_report_output_bytes_use_utf8_and_lf(
+    tmp_path, monkeypatch, default_newline, name
+):
+    builder = load_builder()
+    write_text = Path.write_text
+
+    def platform_write_text(path, data, encoding=None, errors=None, newline=None):
+        # Use real file writes, emulating only the platform's default translation.
+        return write_text(
+            path, data, encoding=encoding, errors=errors,
+            newline=default_newline if newline is None else newline,
+        )
+
+    monkeypatch.setattr(Path, "write_text", platform_write_text)
+    builder.build_report(tmp_path)
+    expected = (REPORT_DIR / name).read_bytes().replace(b"\r\n", b"\n")
+    assert (tmp_path / name).read_bytes() == expected, (
+        "Rebuild with: PYTHONPATH=src uv run --no-project python "
+        "scripts/reporting/build_nde_report.py"
+    )
 
 
 def test_source_digests_ignore_checkout_line_endings(tmp_path, monkeypatch):
@@ -174,7 +202,8 @@ def test_missing_layout_styles_fail_explicitly(tmp_path, monkeypatch):
         target = tmp_path / source
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / source, target)
-    (tmp_path / builder.EXEMPLAR).write_text("<html></html>", encoding="utf-8")
+    (tmp_path / builder.EXEMPLAR).write_text(
+        "<html></html>", encoding="utf-8", newline="\n")
     monkeypatch.setattr(builder, "ROOT", tmp_path)
     with pytest.raises(ValueError, match="layout stylesheet"):
         builder.house_style()
@@ -189,7 +218,7 @@ def test_fixture_refactor_does_not_change_calculation(tmp_path, monkeypatch):
     changed.parent.mkdir(parents=True)
     changed.write_text(source.replace("test_synthetic_pulse_travel_time",
                                      "test_isolated_pulse_travel_time"),
-                       encoding="utf-8")
+                       encoding="utf-8", newline="\n")
     monkeypatch.setattr(builder, "ROOT", tmp_path)
     actual = builder.compute_example()
     assert actual["inputs"] == expected["inputs"]
