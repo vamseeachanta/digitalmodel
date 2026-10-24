@@ -220,26 +220,61 @@ def test_report_rejects_missing_amplification_instead_of_using_a_default(rebuilt
 
 
 def test_report_ignore_rules_preserve_sibling_exceptions(tmp_path):
-    """An earlier sibling exception survives; unlisted outputs stay ignored."""
+    """All module exceptions survive the shared rules; other outputs stay ignored."""
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("GIT_")}
     subprocess.run(["git", "init", "--quiet", tmp_path.as_posix()], env=env, check=True)
     rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
-    sibling = ("!docs/reports/modules/\ndocs/reports/modules/*/*\n"
-               "!docs/reports/modules/sibling/\n"
+    sibling = ("!docs/reports/modules/sibling/\n"
                "!docs/reports/modules/sibling/report.html\n")
     rules = rules.replace("# Keep the reproducible lifting lug module report and its source.",
                           sibling + "# Keep the reproducible lifting lug module report and its source.")
     (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
     paths = ["docs/reports/modules/sibling/report.html",
              "docs/reports/modules/liftinglug/lifting-lug-analysis.html",
+             "docs/reports/modules/liftinglug/build_report.py",
+             "docs/reports/modules/liftinglug/changes.json",
+             "docs/reports/modules/vesselseakeeping/index.html",
+             "docs/reports/modules/vesselseakeeping/changes.json",
+             "scripts/reports/build_vessel_seakeeping_module_report.py"]
+    ignored = [
              "docs/reports/modules/sibling/unlisted.json",
-             "docs/reports/modules/liftinglug/unlisted.json"]
+             "docs/reports/modules/liftinglug/unlisted.json",
+             "docs/reports/modules/vesselseakeeping/unlisted.json",
+             "docs/reports/modules/unlisted/report.html",
+             "docs/reports/modules/sibling/calculations/result.json",
+             "scripts/reports/unlisted.py"]
+    for name in paths + ignored:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fixture\n", encoding="utf-8", newline="\n")
     checked = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"],
-                             input="\n".join(paths) + "\n", cwd=tmp_path, env=env,
+                             input="\n".join(paths + ignored) + "\n", cwd=tmp_path, env=env,
                              encoding="utf-8", capture_output=True, check=False)
     assert checked.returncode in (0, 1), checked.stderr
-    assert set(checked.stdout.splitlines()) == set(paths[2:])
+    assert set(checked.stdout.splitlines()) == set(ignored)
+    # Control: the later wildcard from the conflicting parent block hides
+    # both reports and the sibling, even though their exceptions remain.
+    (tmp_path / ".gitignore").write_text(
+        rules + "\n/docs/reports/modules/*\n", encoding="utf-8", newline="\n")
+    shadowed = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"],
+                              input="\n".join(paths) + "\n", cwd=tmp_path, env=env,
+                              encoding="utf-8", capture_output=True, check=False)
+    assert shadowed.returncode == 0, shadowed.stderr
+    assert set(shadowed.stdout.splitlines()) == set(paths[:-1])
+
+
+def test_report_ignore_rules_have_one_shared_parent_block():
+    """A later parent wildcard must not override earlier module exceptions."""
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    parents = [i for i, rule in enumerate(rules)
+               if re.fullmatch(r"!?/?docs/reports/modules/(?:\*(?:/\*)?)?", rule)]
+    assert [rules[i] for i in parents] == [
+        "!/docs/reports/modules/", "/docs/reports/modules/*/*"]
+    exceptions = [i for i, rule in enumerate(rules)
+                  if re.match(r"!/?docs/reports/modules/[^*]+/", rule)]
+    assert exceptions
+    assert max(parents) < min(exceptions)
 
 
 def chart_data(text):
