@@ -44,6 +44,10 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reports/build_vessel_seakeeping_module_report.py": (
+        "renders the seakeeping analysis under docs/reports, not docs/api; "
+        "dedicated reporting tests verify byte reproduction and worked values"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),

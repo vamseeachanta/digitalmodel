@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wall-thickness load interaction worked example</title>
+<link rel="stylesheet" href="../api/_assets/brand.css">
+<style>
+body{max-width:960px;margin:auto;padding:24px;font-family:system-ui,sans-serif;line-height:1.6}
+h1,h2{color:var(--navy)}table{border-collapse:collapse;width:100%}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}a{color:var(--teal)}
+.table-wrap{overflow-x:auto}code{overflow-wrap:anywhere}
+</style></head><body>
+<h1>Wall-thickness load interaction worked example</h1>
+<p>The illustrative reference section changes from collapse-governed at zero tension and
+moment to combined-load-governed at the loaded corners. The largest corner reaches
+154.5% of the inherited utilisation criterion of 100.0%. This establishes agreement
+with the implemented equations at the tested corners; design qualification remains
+<strong>NOT_EVALUATED</strong>.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>The load-grid example records the inputs,
+arithmetic and limits needed to interpret the explorer.</td></tr>
+<tr><td>2</td><td>2026-10-21</td><td>The assumed product-specification level is
+stated to distinguish the material basis from a qualified design input.</td></tr>
+<tr><td>3</td><td>2026-10-21</td><td>The assumed strength conversions are
+identified and source references are retained as text to avoid broken site links.</td></tr>
+<tr><td>4</td><td>2026-10-21</td><td>The yield and tensile rounding rules are
+stated to explain the displayed precision; calculation inputs are unchanged.</td></tr></tbody></table>
+<p>Table 1. Revision history of the worked example.</p>
+<h2>Inputs</h2>
+<p>All case inputs are <strong>assumed, based on previous experience</strong>, inherited
+from the existing reference case in <code>build_wall_thickness_explorer.py</code>. No measured case or published design example is asserted.</p>
+<table><thead><tr><th>Input</th><th>Value</th></tr></thead><tbody>
+<tr><td>Outside diameter (mm)</td><td>323.9</td></tr>
+<tr><td>Nominal wall thickness (mm)</td><td>18.000</td></tr>
+<tr><td>Corrosion allowance (mm)</td><td>0.000</td></tr>
+<tr><td>Yield / tensile strength (MPa)</td><td>448.0 / 530.9</td></tr>
+<tr><td>Elastic modulus (GPa) / Poisson ratio</td><td>207.0 / 0.3</td></tr>
+<tr><td>Internal / external pressure (MPa)</td><td>20.0 / 10.0</td></tr>
+<tr><td>Fabrication tolerance (%) / safety class</td><td>12.5 / medium</td></tr>
+</tbody></table><p>Table 2. Assumed inputs; the inherited strategies apply geometry allowances differently.</p>
+<p>The strengths 448.0 / 530.9 MPa are rounded ksi conversions of assumed
+65 ksi yield / 77 ksi tensile inputs. The yield input is rounded down to the nearest
+1 MPa; the tensile input is rounded to the nearest 0.1 MPa.
+They are not asserted as API 5L tabulated minima.
+The X65 label is illustrative; no edition, table or product-specification level is
+qualified for this example, and these values shall not establish material compliance.</p>
+<h2>Method and sources</h2>
+<p>The source is the repository implementation of <strong>API STD 2RD (2013), Method 1</strong>:
+<code>ApiStd2rdStrategy</code> in <code>api_std_2rd.py</code>,
+functions <code>compute_plastic_tension</code>, <code>compute_yield_moment</code>,
+<code>_check_burst</code>, <code>_check_collapse</code> and <code>_check_combined</code>.
+The standard text is not independently verified in this example. The coefficients are
+inherited from that implementation, and no new standards-derived factor is introduced.</p>
+<ol>
+<li>Exact integration of the annulus gives <code>A = pi*t*(D-t)</code>.
+Multiplying this area by yield strength gives <code>T_y = SMYS*A</code>:
+<strong>7,749.6 kN</strong>.</li>
+<li>The inherited thin-wall moment approximation is
+<code>M_y = (pi/4)*SMYS*(D-t)^2*t</code>: <strong>592.7 kN m</strong>.
+This is not an exact thick-wall section-modulus calculation.</li>
+<li>The implemented burst equation gives <code>p_b</code> = <strong>51.9 MPa</strong>.
+The pressure correction is evaluated from the inherited design factor and the net
+pressure ratio, as specified by <code>_check_combined</code>.</li>
+<li>The combined utilisation is
+<code>u = (abs(T)/T_y + abs(M)/M_y)/F_corrected</code>.
+The independent arithmetic is written in full in
+the corner tests in <code>test_wall_thickness_3d.py</code>;
+the analyzer is not used to calculate those expected values.</li>
+</ol>
+<p>Each load endpoint is a sampling choice of 60.0% of its reference capacity, rounded
+to the nearest N or N m. This choice spans a change in governing check; it is not a
+factor prescribed by a standard or an allowable-load envelope.</p>
+<h2>Answer</h2>
+<div class="table-wrap"><table><thead><tr><th>Tension (kN)</th><th>Moment (kN m)</th>
+<th>Combined utilisation (%)</th><th>Governing check</th><th>Maximum utilisation (%)</th>
+</tr></thead><tbody>
+<tr><td>0.0</td><td>0.0</td><td>0.0</td><td>collapse</td><td>39.7</td></tr>
+<tr><td>4,649.8</td><td>0.0</td><td>77.3</td><td>combined</td><td>77.3</td></tr>
+<tr><td>0.0</td><td>355.6</td><td>77.3</td><td>combined</td><td>77.3</td></tr>
+<tr><td>4,649.8</td><td>355.6</td><td>154.5</td><td>combined</td><td>154.5</td></tr>
+</tbody></table></div>
+<p>Table 3. Rounded display values; the tests use unrounded arithmetic and compare
+against half the six-decimal output quantum. The inherited criterion is utilisation
+at or below 100.0%; the largest corner exceeds it.</p>
+<h2>Reproduction and data contract</h2>
+<p>The full grid contains 354,609 rows: 41 wall values, 31 tensions, 31 moments and
+nine design codes. Every full row carries its code, axes, utilisation, governing check,
+per-check values, code reference and qualification status. A null per-check value means
+that check is not implemented for that code; it does not mean zero utilisation.</p>
+<p>Set <code>STUDY</code> and <code>DATASETS</code> to destinations outside the checkout,
+then run from the repository root with the reporting dependencies installed:</p>
+<pre>PYTHONPATH=src python scripts/capabilities/build_wall_thickness_3d.py --output "$STUDY"
+python scripts/capabilities/build_wall_thickness_3d_page.py --source "$STUDY"
+python scripts/hf/build_capability_datasets.py --wall-thickness-source "$STUDY" --out "$DATASETS"</pre>
+<p>The second command produces the page and compact sidecar together. Serve the docs
+through HTTP to use fetch; opening the HTML directly as a local file can block it.
+The existing dataset builder prepares the full rows for publication; it does not upload them.</p>
+<p>The display snapshot contains at most 22,869 points and less than 400 kB of JSON.
+It retains every second wall and every third load sample, including endpoints.
+Displayed utilisation is quantized; cell colours use the majority governing check
+among the corners. Neither cell colour nor interpolated boundaries establish off-grid capacity.</p>
+<h2>Limits and way forward</h2>
+<p>Qualification is NOT_EVALUATED because the governing standards and source case have
+not been independently qualified. Compression, fatigue, defects and installation history
+are outside this study. Different codes implement different check sets and do not all
+respond to tension and moment. Engineering use requires a qualified case, the applicable
+standard and checks outside this demonstration. External dataset publication and website
+registration require separate maintainer actions.</p>
+<p><a href="../api/structural/wall-thickness-3d-explorer.html">Open the load explorer</a> &middot;
+<a href="../api/structural/wall-thickness-3d-explorer.json">Download its compact data contract</a></p>
+</body></html>

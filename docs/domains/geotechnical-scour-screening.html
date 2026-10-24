@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scour screening analysis</title>
+<style>
+body { max-width: 58rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 sans-serif; color: #172535; }
+table { border-collapse: collapse; width: 100%; } td, th { padding: .5rem; border: 1px solid #bbb; text-align: left; }
+caption { caption-side: bottom; text-align: left; } code, pre { background: #f2f5f8; } pre { padding: 1rem; overflow: auto; }
+</style>
+<h1>Scour screening analysis</h1>
+<h2>Summary</h2>
+<p>The scour APIs assess a supplied sediment-motion basis and armour comparison
+criterion. A nonzero pipeline or monopile scour depth remains
+<code>NOT_EVALUATED</code> because a qualified depth model is not established.
+The worked example gives a critical mean current of 1.2 m/s and an armour
+velocity number of 1.5, above the supplied limit of 1.0. The armour comparison
+therefore fails; the grading or loading requires revision before a protection
+design can be assessed. Inputs are synthetic arithmetic examples, not design data.</p>
+<h2>Revision history</h2>
+<table><caption>Table 1. Initial issue of the screening analysis.</caption><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-21</td><td>Document sourced motion thresholds and explicit missing
+scour basis; replace unsupported depth and armour acceptance claims.</td></tr>
+</table>
+<h2>Method and reference qualification</h2>
+<p><a href="https://www.fhwa.dot.gov/publications/research/infrastructure/hydraulics/03052/05b.cfm">FHWA-RD-03-052,
+Field Observations and Evaluations of Streambed Scour at Bridges (May 2005),
+chapter 5, equation 3</a> gives the Neill/Shields mean-current threshold in SI:
+<code>Ucrit = 31.08 sqrt(theta_cr) h^(1/6) d50^(1/3)</code>. Grain size is converted
+from millimetres at the API boundary to metres in this equation; depth is in
+metres and the answer in metres per second. The coefficient is tied to the
+published SI relation, not a universal material law. The Shields parameter is
+required input; no temperature-specific or sediment-specific default is supplied.
+The caller must qualify this steady, noncohesive approach-flow relation for the
+sediment and fluid being assessed. Cohesive sediment and wave motion are excluded.</p>
+<p>The separate <code>critical_sediment_motion</code> helper returns shear stress
+and shear velocity using <a href="https://www.hec.usace.army.mil/software/hec-ras/documentation/HEC-RAS%202D%20Sediment%20Technical%20Reference%20Manual-v6.4.1.pdf">USACE,
+HEC-RAS 2D Sediment Technical Reference Manual, version 6.4.1 (2023),
+section 2.14.1 equation 132 and section 2.13.1 following equation 111</a>.
+Its shear velocity is distinct from a depth-averaged current. Below-threshold
+approach flow does not exclude local clear-water scour at a pile or pipeline.</p>
+<p>The public scope of <a href="https://www.dnv.com/energy/standards-guidelines/dnv-rp-f107-risk-assessment-of-pipeline-protection/">DNV-RP-F107,
+Risk assessment of pipeline protection, edition 2019-09 amended 2021-09</a>
+addresses accidental interference. It does not establish the removed scour
+curves. <a href="https://www.dnv.com/energy/standards-guidelines/dnv-rp-0618-rock-scour-protection-for-monopiles/">DNV-RP-0618,
+Rock scour protection for monopiles, edition 2022-09</a> addresses rock protection
+design; its licensed calculation clauses have not been verified here. No DNV
+compliance, calibrated depth, universal rock limit or minimum layer thickness
+is claimed. No value from a licensed publication is reproduced.</p>
+<h2>Worked example: inputs, calculation and answer</h2>
+<p>The runnable input is <a href="../../examples/workflows/scour-assessment/input.yml">the scour
+workflow example</a>. All properties and limits below are explicitly supplied
+synthetic inputs. They are selected for independent arithmetic, not field use.</p>
+<table><caption>Table 2. Synthetic calculation inputs.</caption><tr><th>Input</th><th>Value</th><th>Units</th></tr>
+<tr><td>Sediment median diameter</td><td>1.0</td><td>mm</td></tr>
+<tr><td>Water depth</td><td>64.0</td><td>m</td></tr>
+<tr><td>Critical Shields parameter</td><td>0.04</td><td>dimensionless</td></tr>
+<tr><td>Pile diameter; approach current</td><td>6.0; 1.0</td><td>m; m/s</td></tr>
+<tr><td>Pipeline diameter; current; wave orbital velocity; period</td><td>0.5; 0.8; 0.2; 10.0</td><td>m; m/s; m/s; s</td></tr>
+<tr><td>Rock and water density</td><td>2000.0; 1000.0</td><td>kg/m³</td></tr>
+<tr><td>Rock median diameter; gravity</td><td>0.4; 10.0</td><td>m; m/s²</td></tr>
+<tr><td>Armour current; comparison limit; layer count</td><td>3.0; 1.0; 3.0</td><td>m/s; dimensionless; dimensionless</td></tr>
+</table>
+<p>Independent threshold calculation: <code>sqrt(0.04) = 0.2</code>,
+<code>64^(1/6) = 2</code> and <code>0.001^(1/3) = 0.1</code>.
+Multiplying these factors by the cited SI coefficient gives a critical current
+reported as 1.2 m/s. The tests preserve the unrounded multiplication. Both
+approach currents are below the unrounded threshold, so current motion is
+<code>BELOW_THRESHOLD</code>. Pipeline <code>KC = 0.2 × 10 / 0.5 = 4.0</code>
+and current fraction <code>0.8 / (0.8 + 0.2) = 0.8</code> are diagnostics only.
+Both scour depths are <code>null</code>, with <code>NOT_EVALUATED</code> status.</p>
+<p>The dimensionless armour velocity is defined by
+<code>Ns = U / sqrt(g d50 (rho_rock / rho_water − 1))</code>.
+For the supplied values the denominator is <code>sqrt(10 × 0.4 × 1) = 2</code>,
+and <code>Ns = 3 / 2 = 1.5</code>. The comparison
+<code>Ns &lt;= stability_limit</code> fails against 1.0. This limit is a synthetic
+input, not a recommendation. Nominal layer geometry is
+<code>3 × 0.4 = 1.2 m</code>; it is reported even when the stability comparison
+fails and shall not be interpreted as a required protection thickness.</p>
+<pre>from digitalmodel.geotechnical.scour import monopile_scour_depth
+
+result = monopile_scour_depth(
+    pile_diameter_m=6.0, current_velocity_ms=1.0, water_depth_m=64.0,
+    sediment_d50_mm=1.0, critical_shields_parameter=0.04,
+)
+assert result.sediment_motion_status == "BELOW_THRESHOLD"
+assert result.scour_depth_m is None
+assert result.status == "NOT_EVALUATED"</pre>
+<h2>API changes and remaining qualification</h2>
+<p>Existing positional arguments remain accepted. Nonzero depth results now use
+<code>None</code> (JSON <code>null</code>) with a reason, replacing unsupported
+numbers. At zero current and zero wave velocity, the narrow hydrodynamic result
+is zero scour with <code>NO_FLOW</code> status; this does not establish historical
+scour or future loading. Missing motion inputs are named. Magnitudes, dimensions
+and supplied criteria reject invalid or nonfinite values before zero-flow handling.</p>
+<p>The wave period is explicit when wave diagnostics are required. The optional
+armour inputs are <code>gravity_ms2</code>, <code>stability_limit</code> and
+<code>layer_count</code>. Omitted inputs remain unevaluated. A supplied limit
+compares only the displayed dimensionless velocity number on a matching velocity
+basis. Even <code>stability_status=PASS</code> leaves the full design
+<code>status=NOT_EVALUATED</code>. Filters, grading, placement, wave action, edge
+scour, geotechnical response and service loading are not assessed.</p>
+<p>Further work requires a qualified pipeline and pile depth model with its
+calibration domain, independently transcribed published cases, and a protection
+design basis specifying the applicable stability criterion and layer geometry.
+Synthetic tests establish arithmetic and missing-basis behavior; agreement with
+measured scour is not established. Historical reporting examples containing the
+old depth values are not qualification evidence for this API.</p>
+</html>

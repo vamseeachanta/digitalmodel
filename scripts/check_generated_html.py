@@ -163,6 +163,12 @@ GENERATORS = (
         ("docs/api/cfd/sloshing-cfd-study.html",),
     ),
     Generator(
+        "scripts/capabilities/build_dual_tank_sloshing_study.py",
+        ("docs/api/cfd/dual-tank-sloshing-cfd-study.html",),
+        inputs=("tests/hydrodynamics/test_utube_tank.py",
+                "docs/api/cfd/data/dual_tank_cfd_evidence.json"),
+    ),
+    Generator(
         "scripts/capabilities/build_sloshing_explorer.py",
         ("docs/api/structural/sloshing-explorer.html",),
     ),
@@ -172,7 +178,8 @@ GENERATORS = (
     ),
     Generator(
         "scripts/capabilities/build_wall_thickness_3d_page.py",
-        ("docs/api/structural/wall-thickness-3d-explorer.html",),
+        ("docs/api/structural/wall-thickness-3d-explorer.html",
+         "docs/api/structural/wall-thickness-3d-explorer.json"),
         prerequisites=("scripts/capabilities/build_wall_thickness_3d.py",),
     ),
     Generator(
