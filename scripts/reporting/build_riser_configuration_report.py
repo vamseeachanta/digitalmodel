@@ -171,7 +171,8 @@ def render_report():
                      "CANDIDATES": candidate_table(data), "EXCURSIONS": excursion_table(data),
                      "DATA": json.dumps(display_data(data), ensure_ascii=True, allow_nan=False),
                      "ANCHOR_AGREEMENT": "agree" if agrees else "do not agree",
-                     "CHANGES": html.escape(changes["changes"][0]["description"])}
+                     "CHANGES": html.escape(changes["changes"][0]["description"]),
+                     "REVISION": json.dumps(changes["revision"]).replace("<", "\\u003c")}
     for key, value in substitutions.items():
         template = template.replace("{{" + key + "}}", value)
     template = re.sub(r"\[\[([\w.]+):(\d+)\]\]",

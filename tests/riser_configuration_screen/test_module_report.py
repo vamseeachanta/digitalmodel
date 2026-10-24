@@ -8,6 +8,7 @@ import importlib.util
 import json
 import math
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -176,3 +177,100 @@ def test_example_headline_values_have_independent_anchors():
     # Far-excursion hangoff: T/A + E*(D/2)*kappa_top, divided by yield.
     assert radial[2]["static_von_mises_utilisation"] == pytest.approx(
         0.2625, abs=0.00005, rel=0)
+
+
+@pytest.mark.parametrize("revision", ["B", "C"])
+@pytest.mark.parametrize("save_method", ["picker", "download"])
+def test_feedback_revision_round_trip(tmp_path, monkeypatch, revision, save_method):
+    """Execute shipped handlers with a small DOM and both save transports."""
+    module = builder()
+    changes = json.loads((FOLDER / "changes.json").read_text(encoding="utf-8"))
+    changes["revision"] = revision
+    (tmp_path / "changes.json").write_text(json.dumps(changes), encoding="utf-8")
+    (tmp_path / "report.template.html").write_text(
+        (FOLDER / "report.template.html").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(module, "FOLDER", tmp_path)
+    page = module.render_report()
+    payloads = dict(re.findall(
+        r'<script id="([^"]+)" type="application/json">(.*?)</script>', page, re.S))
+    script = re.search(r"<script>(.*?)</script>", page, re.S)[1]
+    setup = r"""
+const assert = require('node:assert/strict');
+class Element {
+  constructor() { this.textContent = ''; this.value = ''; this.children = []; }
+  append(...children) { this.children.push(...children); }
+  replaceChildren(...children) { this.children = children; }
+  setAttribute() {}
+  addEventListener() {}
+  get selectedOptions() { return this.children.slice(0, 1); }
+  click() { downloaded = true; }
+}
+const nodes = new Map();
+const getNode = id => {
+  if (!nodes.has(id)) nodes.set(id, new Element());
+  return nodes.get(id);
+};
+for (const [id, text] of Object.entries(PAYLOADS)) getNode(id).textContent = text;
+getNode('quantity').value = 'top_tension_n';
+const heading = new Element(); heading.id = 's1'; heading.textContent = '1. Executive summary';
+const document = {
+  getElementById: getNode, createElement: () => new Element(),
+  createElementNS: () => new Element(), querySelectorAll: () => [heading]
+};
+let savedText, savedBlob, downloaded = false, closed = false;
+const window = {};
+if (SAVE_METHOD === 'picker') window.showSaveFilePicker = async () => ({
+  createWritable: async () => ({write: async text => { savedText = text; },
+    close: async () => { closed = true; }})
+});
+const URL = {createObjectURL: blob => { savedBlob = blob; return 'blob:comments'; },
+  revokeObjectURL() {}};
+const setTimeout = callback => callback();
+"""
+    checks = r"""
+async function checkFeedback() {
+  const original = [{section: heading.textContent, text: '<tag> & comment'}];
+  getNode('comment-text').value = '  ' + original[0].text + '  ';
+  getNode('add-comment').onclick();
+  await getNode('save-comments').onclick();
+  if (SAVE_METHOD === 'download') {
+    assert.ok(downloaded); savedText = await savedBlob.text();
+  } else assert.ok(closed);
+  const saved = JSON.parse(savedText);
+  assert.equal(saved.revision, REVISION);
+  assert.deepEqual(saved.comments, original);
+  const load = async value => getNode('load-comments').onchange({
+    target: {files: [{text: async () => JSON.stringify(value)}]}
+  });
+  const rendered = () => getNode('comment-list').children.map(li => li.textContent);
+  const expected = original.map(c => `${c.section}: ${c.text}`);
+  // Reload after changing the list, so a no-op load cannot pass.
+  getNode('comment-text').value = 'Unsaved extra'; getNode('add-comment').onclick();
+  assert.equal(rendered().length, 2);
+  await load(saved);
+  assert.equal(getNode('comment-status').textContent, 'Saved comments loaded.');
+  assert.deepEqual(rendered(), expected);
+  // Old, missing and future revisions must not replace current comments.
+  for (const revision of ['A', undefined, 'future']) {
+    await load({revision, comments: [{section: 'Other', text: 'Wrong revision'}]});
+    assert.match(getNode('comment-status').textContent, /not a compatible comments file/);
+    assert.deepEqual(rendered(), expected);
+  }
+  for (const comments of [null, [{}], [null], [{section: 's1', text: 42}]]) {
+    await load({revision: REVISION, comments});
+    assert.match(getNode('comment-status').textContent, /not a compatible comments file/);
+    assert.deepEqual(rendered(), expected);
+  }
+  await load({revision: REVISION, comments: []});
+  assert.equal(getNode('comment-status').textContent, 'Saved comments loaded.');
+  assert.deepEqual(rendered(), []);
+}
+checkFeedback().catch(error => { console.error(error); process.exitCode = 1; });
+"""
+    result = subprocess.run(
+        ["node", "-"], input=(f"const PAYLOADS = {json.dumps(payloads)};\n"
+                             f"const REVISION = {json.dumps(revision)};\n"
+                             f"const SAVE_METHOD = {json.dumps(save_method)};\n"
+                             + setup + script + checks),
+        text=True, capture_output=True, timeout=30, check=False)
+    assert result.returncode == 0, result.stderr
