@@ -106,6 +106,9 @@ class Load:
         if type(self.lug_count) is not int or self.lug_count <= 0:
             raise ValueError("lug_count must be a positive integer")
         _source(self.source)
+        # Canonical continuous inputs make revisions independent of numeric syntax.
+        for name in ("gross_kip", "factor"):
+            object.__setattr__(self, name, float(getattr(self, name)))
 
     @property
     def fy(self):
@@ -138,6 +141,8 @@ class Geometry:
             for v in values.values()
         ):
             raise ValueError("geometry must be finite numeric values")
+        for name, value in values.items():
+            object.__setattr__(self, name, float(value))
 
     def scaled(self, scale):
         # Scaling about the hole, then translating the base centroid to (0,0),

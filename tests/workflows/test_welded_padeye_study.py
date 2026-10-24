@@ -1,4 +1,4 @@
-"""Independent equilibrium checks for an idealized rectangular welded padeye."""
+"""Hand-calculation and regression checks for a rectangular welded padeye."""
 
 from dataclasses import replace
 import math
@@ -106,6 +106,12 @@ def test_bad_load_rejected(value):
         study.Load(value, 1, 2, "test")
 
 
+@pytest.mark.parametrize("lug_count", [3.0, True, 0, -1, "3"])
+def test_lug_count_requires_a_positive_integer(lug_count):
+    with pytest.raises(ValueError, match="lug_count"):
+        study.Load(12, 1.5, lug_count, "test")
+
+
 @pytest.mark.parametrize("angle", [-1, 90, float("nan")])
 def test_bad_angle_rejected(geometry, load, angle):
     with pytest.raises(ValueError):
@@ -204,6 +210,34 @@ def test_lookup_cannot_mutate_dataset(geometry, load):
         study.lookup(data, data["revision"], [1.25, 1, 1, 45], "screening")["status"]
         == "CALCULATED_SCREENING"
     )
+
+
+@pytest.mark.parametrize(
+    "record,field",
+    [
+        ("geometry", "width"),
+        ("geometry", "height"),
+        ("geometry", "hole_x"),
+        ("geometry", "hole_y"),
+        ("geometry", "hole_radius"),
+        ("geometry", "weld_leg"),
+        ("load", "gross_kip"),
+        ("load", "factor"),
+    ],
+)
+def test_revision_ignores_equivalent_integer_and_float_inputs(record, field):
+    geometry = study.Geometry(4.0, 6.0, 0.0, 3.0, 1.0, 1.0, "synthetic rectangle")
+    load = study.Load(12.0, 2.0, 3, "synthetic load")
+    expected = study.build_study(geometry, load)
+    if record == "geometry":
+        geometry = replace(geometry, **{field: int(getattr(geometry, field))})
+    else:
+        load = replace(load, **{field: int(getattr(load, field))})
+    actual = study.build_study(geometry, load)
+    assert actual["rows"] == expected["rows"]
+    assert actual["revision"] == expected["revision"]
+    assert type(actual[record][field]) is float
+    assert type(actual["load"]["lug_count"]) is int
 
 
 def test_revision_is_independent_of_source_line_endings(
