@@ -14,6 +14,8 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+FRESHNESS_POLICY = json.loads((ROOT / "docs/ci/runtime-policy.json").read_text())["baseline_freshness"]
+FRESHNESS_HOURS = FRESHNESS_POLICY["schedule_interval_hours"] + FRESHNESS_POLICY["grace_hours"]
 SPEC = importlib.util.spec_from_file_location("ci_baseline", ROOT / "scripts/ci/ci_baseline.py")
 ci = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ci)
@@ -475,13 +477,19 @@ def test_selection_does_not_fall_back_to_stale_sweep():
                                   [artifact()], "example/repository", NOW) is None
 
 
-@pytest.mark.parametrize("hours,accepted", [(25, True), (30, True), (30.01, False), (-0.01, False)])
+@pytest.mark.parametrize("hours,accepted", [
+    (FRESHNESS_HOURS - 5, True), (FRESHNESS_HOURS, True),
+    (FRESHNESS_HOURS + 0.01, False), (-0.01, False),
+])
 def test_selection_uses_thirty_hour_freshness(hours, accepted):
     run = sweep(event="workflow_dispatch", updated_at=(NOW - timedelta(hours=hours)).isoformat())
     assert (ci.select_baseline_run([run], [artifact()], "example/repository", NOW) is not None) is accepted
 
 
-@pytest.mark.parametrize("hours,expected", [(25, 0), (30, 0), (30.01, 1), (-0.01, 1)])
+@pytest.mark.parametrize("hours,expected", [
+    (FRESHNESS_HOURS - 5, 0), (FRESHNESS_HOURS, 0),
+    (FRESHNESS_HOURS + 0.01, 1), (-0.01, 1),
+])
 def test_comparison_default_matches_selection_freshness(tmp_path, hours, expected):
     row = result(completed_at=(NOW - timedelta(hours=hours)).isoformat())
     base = baseline(tmp_path, row)
@@ -496,7 +504,24 @@ def test_workflow_comparison_uses_thirty_hour_freshness():
     workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
     job = workflow["jobs"]["domain-tests-required"]
     enforce = next(step for step in job["steps"] if step.get("name") == "Enforce required domain result")
-    assert "--max-age-hours 30" in enforce["run"]
+    assert f"--max-age-hours {FRESHNESS_HOURS}" in enforce["run"]
+
+
+def test_freshness_limit_has_a_documented_daily_sweep_basis():
+    freshness = FRESHNESS_POLICY
+    assert freshness["rationale"].strip()
+    assert freshness["schedule_interval_hours"] == 24
+    assert 0 < freshness["grace_hours"] < freshness["schedule_interval_hours"]
+    assert ci.BASELINE_MAX_AGE_HOURS == (
+        freshness["schedule_interval_hours"] + freshness["grace_hours"]
+    )
+    workflow = yaml.safe_load((ROOT / ".github/workflows/full-matrix-sweep.yml").read_text())
+    cron = workflow["on"]["schedule"][0]["cron"].split()
+    assert cron[2:] == ["*", "*", "*"]
+    assert all(field.isdecimal() for field in cron[:2])
+    document = ROOT / "docs/ci/runtime-policy.html"
+    assert document.is_file()
+    assert 'href="runtime-policy.json"' in document.read_text()
 
 
 def test_newest_published_sweep_wins_over_older_red():

@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "basis": "explicit_resource_policy",
+  "rationale": "These are finite resource allocations, not measured durations or completion guarantees. The companion runtime-policy.html explains their scope and limitations.",
+  "budgets": {
+    "control": {
+      "allocations_minutes": {"setup_and_control_work": 10},
+      "margin_minutes": 5,
+      "rationale": "Metadata, matrix construction, drift checks, result aggregation and deployment receive ten minutes for setup and primary work plus five minutes for variation. These jobs do not receive the dependency-heavy test allowance."
+    },
+    "standard": {
+      "allocations_minutes": {"setup_and_dependencies": 15, "primary_work": 30},
+      "margin_minutes": 15,
+      "rationale": "Dependency-heavy tests and documentation builds receive fifteen minutes for setup, thirty for primary work and fifteen for variation. The resulting cap is a resource ceiling; cold-cache completion within it remains unverified."
+    },
+    "publication": {
+      "allocations_minutes": {"setup_and_dependencies": 20, "serial_tests": 120, "build_and_upload": 10},
+      "margin_minutes": 30,
+      "rationale": "Publication runs the unsharded test command before build and upload. Its serial test allocation is larger than a domain shard allocation. Thirty additional minutes permit variation within a finite cap. No publication duration is inferred from aggregate shard time; successful publication within this cap remains unverified."
+    },
+    "retained_focused": {
+      "allocations_minutes": {"existing_limit": 20},
+      "margin_minutes": 0,
+      "rationale": "The existing focused-test limit is retained without a new runtime estimate or added margin."
+    },
+    "retained_sweep": {
+      "allocations_minutes": {"existing_limit": 40},
+      "margin_minutes": 0,
+      "rationale": "The existing per-shard full-sweep limit is retained without a new runtime estimate or added margin."
+    }
+  },
+  "jobs": {
+    "capability-card-links.yml": {"card-links": "control"},
+    "docs.yml": {"docs": "standard"},
+    "full-matrix-sweep.yml": {
+      "full-matrix": "control",
+      "sweep-tests": "retained_sweep",
+      "sweep-result": "control"
+    },
+    "gmsh-meshing-tests.yml": {"focused-tests": "retained_focused"},
+    "pages.yml": {"build": "standard", "deploy": "control"},
+    "parametric-atlas-drift.yml": {"atlas-drift": "control"},
+    "publish.yml": {"publish": "publication"},
+    "quality-gates-by-domain.yml": {
+      "detect-domains": "control",
+      "ci-harness-tests": "standard",
+      "domain-tests": "standard",
+      "domain-tests-required": "control"
+    },
+    "quality-gates.yml": {"quality-gates-aggregate": "control", "quality-gates": "standard"},
+    "repo-structure.yml": {"repo-structure": "control"},
+    "store-data-tests.yml": {"content-store": "standard"},
+    "workflow-automation-tests.yml": {"test": "standard"}
+  },
+  "baseline_freshness": {
+    "schedule_interval_hours": 24,
+    "grace_hours": 6,
+    "rationale": "A daily full sweep plus a six-hour grace window permits scheduling and completion variation of one quarter of the daily cadence without accepting an entirely missed daily sweep. This is a staleness tolerance, not a claim about hosted scheduling. Selection uses run updated_at; comparison also checks shard completed_at. Future evidence and ages beyond the inclusive window are rejected."
+  }
+}

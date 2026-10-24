@@ -13,6 +13,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
 SNAPSHOT = json.loads((ROOT / "tests/data/workflow_job_names.json").read_text())
+POLICY = json.loads((ROOT / "docs/ci/runtime-policy.json").read_text())
 PR_WORKFLOWS = {
     "docs.yml", "gmsh-meshing-tests.yml", "parametric-atlas-drift.yml",
     "quality-gates-by-domain.yml", "quality-gates.yml", "repo-structure.yml",
@@ -29,6 +30,36 @@ def test_snapshot_workflows_are_present() -> None:
     assert set(SNAPSHOT) == {
         path.name for path in WORKFLOWS.iterdir() if path.suffix in {".yml", ".yaml"}
     }
+
+
+def test_runtime_policy_covers_every_job() -> None:
+    """Every limit needs a documented allocation and an explicit rationale."""
+    assert POLICY["basis"] == "explicit_resource_policy"
+    assignments = POLICY["jobs"]
+    assert set(assignments) == set(SNAPSHOT)
+    assert all(set(assignments[name]) == set(jobs) for name, jobs in SNAPSHOT.items())
+    used_classes = {name for jobs in assignments.values() for name in jobs.values()}
+    assert used_classes == set(POLICY["budgets"])
+    for budget in POLICY["budgets"].values():
+        assert budget["rationale"].strip()
+        assert budget["allocations_minutes"]
+        assert all(type(value) is int and value > 0
+                   for value in budget["allocations_minutes"].values())
+        assert type(budget["margin_minutes"]) is int
+        assert budget["margin_minutes"] >= 0
+
+
+def budget_minutes(name: str) -> int:
+    """Derive the cap from the documented work allocations and margin."""
+    budget = POLICY["budgets"][name]
+    return sum(budget["allocations_minutes"].values()) + budget["margin_minutes"]
+
+
+def test_runtime_policy_missing_job_is_rejected(monkeypatch) -> None:
+    """Policy-derived parametrization cannot hide a removed job assignment."""
+    monkeypatch.setitem(POLICY["jobs"], "docs.yml", {})
+    with pytest.raises(AssertionError):
+        test_runtime_policy_covers_every_job()
 
 
 @pytest.mark.parametrize(
@@ -62,25 +93,9 @@ def test_pull_request_draft_policy(path: Path) -> None:
 @pytest.mark.parametrize(
     "filename,job_id,minutes",
     [
-        ("capability-card-links.yml", "card-links", 15),
-        ("docs.yml", "docs", 60),
-        ("full-matrix-sweep.yml", "full-matrix", 15),
-        ("full-matrix-sweep.yml", "sweep-tests", 40),
-        ("full-matrix-sweep.yml", "sweep-result", 15),
-        ("gmsh-meshing-tests.yml", "focused-tests", 20),
-        ("pages.yml", "build", 60),
-        ("pages.yml", "deploy", 15),
-        ("parametric-atlas-drift.yml", "atlas-drift", 15),
-        ("publish.yml", "publish", 180),
-        ("quality-gates-by-domain.yml", "detect-domains", 15),
-        ("quality-gates-by-domain.yml", "ci-harness-tests", 60),
-        ("quality-gates-by-domain.yml", "domain-tests", 60),
-        ("quality-gates-by-domain.yml", "domain-tests-required", 15),
-        ("quality-gates.yml", "quality-gates-aggregate", 15),
-        ("quality-gates.yml", "quality-gates", 60),
-        ("repo-structure.yml", "repo-structure", 15),
-        ("store-data-tests.yml", "content-store", 60),
-        ("workflow-automation-tests.yml", "test", 60),
+        (filename, job_id, budget_minutes(budget))
+        for filename, jobs in POLICY["jobs"].items()
+        for job_id, budget in jobs.items()
     ],
 )
 def test_job_timeout(filename: str, job_id: str, minutes: int) -> None:
@@ -98,7 +113,7 @@ def test_timeout_inventory_covers_every_job() -> None:
             (WORKFLOWS / filename).read_text(encoding="utf-8"), Loader=yaml.BaseLoader,
         )
         for job_id, job in workflow["jobs"].items():
-            limit = 180 if filename == "publish.yml" else 60
+            limit = budget_minutes("publication" if filename == "publish.yml" else "standard")
             assert 0 < int(job.get("timeout-minutes", "0")) <= limit, (filename, job_id)
 
 
