@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Draft workflow policy</title>
+  <style>
+    body { max-width: 76ch; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 system-ui, sans-serif; color: #182633; }
+    h1, h2 { line-height: 1.2; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: .5rem; border: 1px solid #bac5ce; text-align: left; }
+    caption { caption-side: bottom; text-align: left; margin: .5rem 0 1rem; }
+    code { overflow-wrap: anywhere; }
+    a { color: #075985; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Draft workflow policy</h1>
+  <p>Heavy draft jobs are skipped while required aggregates fail closed;
+    existing sweep, concurrency and runtime policies are preserved, and manual
+    dispatch uses the shared ancestor for register diffs.</p>
+  <p>The implementation basis is revision <code>e3292a8b</code>.
+    This document describes that behavior without changing workflow configuration.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>0</td><td>2026-10-24</td><td>The description is aligned with the
+      implemented draft guards and dispatch support. Claims about removed push
+      sweeps, new timeouts and extended freshness are corrected.</td></tr></tbody>
+    <caption>Table 1. Description revision.</caption>
+  </table>
+
+  <h2>Plan-lite</h2>
+  <ul>
+    <li>Heavy jobs will skip draft pull requests; required aggregates will remain unconditional.</li>
+    <li>All eight pull-request workflows will accept <code>ready_for_review</code>.</li>
+    <li>All twelve workflows will support manual dispatch.</li>
+    <li>Existing push sweeps, concurrency groups, explicit timeouts and freshness limits will remain in force.</li>
+    <li>Policy tests will pin job names, draft guards, event subscriptions and dispatch diff routing.</li>
+  </ul>
+
+  <h2>What changed</h2>
+  <p>The eight pull-request workflows skip heavy draft jobs and accept
+    <code>ready_for_review</code>. The four workflows with existing
+    <code>edited</code> subscriptions retain them; the other four omit
+    <code>edited</code>. Existing path filters continue to apply.
+    Manual dispatch is available in all twelve workflows.</p>
+  <p>The required <code>Domain test aggregate</code> and <code>Run Quality Gates</code>
+    jobs retain <code>always()</code>. They fail when required dependencies are
+    skipped, failed or cancelled. Drafts therefore remain blocked by these
+    required checks until applicable checks succeed on a ready pull request.</p>
+  <p>The full sweep still runs on every push to <code>main</code>, the nightly
+    schedule and manual dispatch. Each sweep retains its own run-specific
+    concurrency group with cancellation disabled. Existing push groups and
+    deployment concurrency policies are preserved.</p>
+  <p>Only two jobs have explicit timeouts: the existing 20-minute focused test
+    budget and 40-minute sweep budget. No publish timeout is added. Baseline
+    selection and comparison retain 24-hour freshness. Manual quality-gate
+    dispatch computes the register diff base with
+    <code>git merge-base origin/main HEAD</code>.</p>
+
+  <h2>Description figures</h2>
+  <table>
+    <thead><tr><th>Measure</th><th>Current count</th></tr></thead>
+    <tbody>
+      <tr><td>Workflows</td><td>12</td></tr>
+      <tr><td>Jobs, before matrix expansion</td><td>19</td></tr>
+      <tr><td>Jobs with explicit timeouts, unchanged</td><td>2</td></tr>
+      <tr><td>Mutation controls</td><td>157</td></tr>
+    </tbody>
+    <caption>Table 2. Inventory pinned by the workflow policy tests.</caption>
+  </table>
+
+  <h2>Verification basis</h2>
+  <p>The <a href="../tests/workflows/test_ci_draft_policy.py">workflow policy
+    tests</a> check the inventory, reject duplicate YAML keys at three mapping
+    depths, and exercise mutated guards, triggers, timeouts and concurrency.
+    Executable cases check aggregate failure handling and detector routing.
+    The <a href="../tests/workflows/test_ci_triggers.py">trigger tests</a>
+    cover register diff routing for dispatch, push and pull-request events,
+    including unavailable ancestry. The
+    <a href="../tests/scripts/test_ci_baseline.py">baseline tests</a>
+    check ages below, at and above the existing freshness boundary.</p>
+
+  <h2>Known limits</h2>
+  <p>Local shell and policy tests do not establish hosted scheduling or ready-PR
+    execution. Required checks on a ready pull request remain to be observed
+    before merging. Existing path filters determine optional workflow coverage;
+    global changes or unavailable push ancestry can still select every domain.</p>
+
+  <h2>Implementation references</h2>
+  <ul>
+    <li><a href="../.github/workflows/full-matrix-sweep.yml">Full sweep triggers and concurrency</a></li>
+    <li><a href="../.github/workflows/quality-gates-by-domain.yml">Domain draft guards and required aggregate</a></li>
+    <li><a href="../.github/workflows/quality-gates.yml">Quality draft guards and register diff base</a></li>
+    <li><a href="../scripts/ci/ci_baseline.py">Baseline selection and comparison</a></li>
+  </ul>
+</main>
+</body>
+</html>
