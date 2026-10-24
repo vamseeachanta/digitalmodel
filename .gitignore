@@ -267,6 +267,10 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+# Keep module directories traversable; each report opts in its retained files.
+!docs/reports/modules/
+docs/reports/modules/*/*
+
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
@@ -581,10 +585,6 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
-
-# Keep module directories traversable; each report opts in its retained files.
-!docs/reports/modules/
-docs/reports/modules/*/*
 
 # Retain the uncertainty module report and its reproducible source only.
 !docs/reports/modules/uncertainty/

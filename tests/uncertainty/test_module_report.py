@@ -230,15 +230,20 @@ def test_report_structure_and_current_evidence():
 
 
 
-def test_report_ignore_rules_preserve_sibling_reports(tmp_path):
+@pytest.mark.parametrize("marker", [
+    "!docs/reports/2026-09-13-ansys-evidence-stage-a.html\n",
+    "# Retain the uncertainty module report and its reproducible source only.\n",
+])
+def test_report_ignore_rules_preserve_sibling_reports(tmp_path, marker):
     # Disposable repository; inherited Git bindings must not select a caller's checkout.
     env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     subprocess.run(["git", "init", "-q", tmp_path.as_posix()], check=True, env=env)
     rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
-    marker = "# Retain the uncertainty module report"
     earlier = "!docs/reports/modules/alpha/\n!docs/reports/modules/alpha/index.html\n"
     later = "\n!docs/reports/modules/beta/\n!docs/reports/modules/beta/index.html\n"
-    rules = rules.replace(marker, earlier + marker) + later
+    # Cover an exception near the first report opt-in, before the old exclusion.
+    assert rules.count(marker) == 1
+    rules = rules.replace(marker, marker + earlier) + later
     (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
     for name in ["alpha/index.html", "beta/index.html", "uncertainty/index.html"]:
         result = subprocess.run(["git", "check-ignore", "--no-index", "docs/reports/modules/" + name],
