@@ -417,6 +417,23 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Install signal processing report browser
+        if: matrix.domain == 'specialized'
+        env:
+          DOMAIN_GATE_COMMAND: ${{ steps.gate.outputs.command }}
+        run: |
+          python - <<'PY'
+          import os
+          import shlex
+          import subprocess
+
+          command = shlex.split(os.environ["DOMAIN_GATE_COMMAND"])
+          python_index = command.index("python")
+          subprocess.run(command[:python_index] + [
+              "python", "-m", "playwright", "install", "--with-deps", "chromium",
+          ], check=True)
+          PY
+
       - name: Select trusted register
         if: matrix.domain == 'orcaflex'
         env:

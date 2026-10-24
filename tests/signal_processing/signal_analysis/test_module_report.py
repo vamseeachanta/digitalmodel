@@ -5,7 +5,9 @@
 import importlib.metadata
 import importlib.util
 import json
+import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -53,6 +55,48 @@ def test_exact_rebuild_has_pinned_ci_environment():
         matching = [run for run in run_steps if command in run]
         assert matching, command
         assert all(f"--with-requirements {requirements}" in run for run in matching)
+
+
+@pytest.mark.parametrize("installer_exit", (0, 7))
+def test_specialized_shard_provisions_matching_browser(tmp_path, installer_exit):
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    )
+    steps = workflow["jobs"]["domain-tests"]["steps"]
+    installers = [index for index, step in enumerate(steps)
+                  if "playwright" in step.get("run", "")]
+    assert len(installers) == 1, "The specialized job must provision its report browser"
+    index = installers[0]
+    install = steps[index]
+    assert install["if"] == "matrix.domain == 'specialized'"
+    assert next(i for i, step in enumerate(steps) if step.get("id") == "gate") < index
+    assert index < next(i for i, step in enumerate(steps) if step.get("id") == "domain-gate")
+    assert install["env"]["DOMAIN_GATE_COMMAND"] == "${{ steps.gate.outputs.command }}"
+
+    runner = tmp_path / "runner with spaces.py"
+    record = tmp_path / "browser-command.json"
+    runner.write_text(
+        "import json, os, sys\n"
+        "from pathlib import Path\n"
+        "Path(os.environ['BROWSER_RECORD']).write_text(json.dumps(sys.argv[1:]), "
+        "encoding='utf-8', newline='\\n')\n"
+        "sys.exit(int(os.environ['INSTALLER_EXIT']))\n",
+        encoding="utf-8", newline="\n",
+    )
+    prefix = ["run", "--no-sources", "--with-editable", ".[test]", "--with", "example-package>=1"]
+    command = shlex.join([sys.executable, runner.as_posix(), *prefix,
+                          "python", "-m", "pytest", "tests/signal_processing/", "-q"])
+    environment = dict(os.environ, DOMAIN_GATE_COMMAND=command,
+                       BROWSER_RECORD=record.as_posix(), INSTALLER_EXIT=str(installer_exit))
+    completed = subprocess.run(
+        [sys.executable, "-c", "\n".join(install["run"].splitlines()[1:-1])],
+        text=True, encoding="utf-8",
+        env=environment, capture_output=True,
+    )
+    assert (completed.returncode == 0) == (installer_exit == 0), completed.stderr
+    assert json.loads(record.read_text(encoding="utf-8")) == [
+        *prefix, "python", "-m", "playwright", "install", "--with-deps", "chromium",
+    ]
 
 
 @pytest.fixture
