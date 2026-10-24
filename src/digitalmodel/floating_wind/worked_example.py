@@ -201,8 +201,11 @@ class _TableRows(HTMLParser):
             self.row = []
             self.cell = None
             self.is_result = "result" in (dict(attrs).get("class") or "").split()
-        elif tag in {"td", "th"} and self.row is not None:
-            self.cell = (tag, [])
+        elif tag in {"td", "th"}:
+            if self.row is None:
+                self.errors.append(f"report table has a cell outside a row at <{tag}>")
+            else:
+                self.cell = (tag, [])
 
     def handle_data(self, data):
         if self.cell is not None:

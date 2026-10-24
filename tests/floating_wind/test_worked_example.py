@@ -257,6 +257,41 @@ def test_complete_audit_rejects_numeric_result_markup(
     assert evidence["execution_ready"] is False
 
 
+@pytest.mark.parametrize("wrapper", ["bare", "tbody"])
+@pytest.mark.parametrize("cell_tag", ["td", "th"])
+def test_complete_audit_rejects_result_cells_outside_row(
+    monkeypatch, capsys, wrapper, cell_tag
+):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            start_tag = '<tr class="result">'
+            start = text.index(start_tag + "<td>Surge natural period</td>")
+            end = text.index("</tr>", start) + len("</tr>")
+            cells = text[start + len(start_tag) : end - len("</tr>")]
+            placeholder = "[RESULT: not calculated; case unselected]"
+            assert cells.count(placeholder) == 1
+            cells = cells.replace(placeholder, "12.4 s")
+            cells = cells.replace("<td>", f"<{cell_tag}>").replace(
+                "</td>", f"</{cell_tag}>"
+            )
+            if wrapper == "tbody":
+                cells = "<tbody>" + cells + "</tbody>"
+            text = text[:start] + cells + text[end:]
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    evidence = subject.audit_phase_a(ROOT)
+    assert any("outside a row" in error for error in evidence["errors"])
+    assert evidence["execution_ready"] is False
+    assert subject.main(["--root", str(ROOT)]) == 1
+    import json
+
+    assert json.loads(capsys.readouterr().out) == evidence
+
+
 def test_result_section_requires_class_even_on_placeholder_rows():
     row = (
         "<tr><td>Period</td><td>[RESULT: not calculated]</td>"
