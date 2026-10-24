@@ -85,8 +85,15 @@ def test_registry_and_engine_route():
     rows = [r for r in registry["workflows"] if r["id"] == "hull-wastage-screen"]
     assert len(rows) == 1
     assert rows[0]["basename"] == "hull_wastage_screen"
-    # Read routing source without importing unrelated licensed-solver adapters.
     import ast
+    test_path, test_name = rows[0]["test"].split("::")
+    registered_test = ROOT / test_path
+    assert registered_test.is_file(), test_path
+    assert test_name in {
+        node.name for node in ast.parse(registered_test.read_text()).body
+        if isinstance(node, ast.FunctionDef)
+    }, rows[0]["test"]
+    # Read routing source without importing unrelated licensed-solver adapters.
     tree = ast.parse((ROOT / "src/digitalmodel/engine.py").read_text())
     arms = [n for n in ast.walk(tree) if isinstance(n, ast.If)
             and 'basename == \'hull_wastage_screen\'' == ast.unparse(n.test)]
@@ -166,3 +173,61 @@ def test_near_boundary_report_retains_governing_precision(tmp_path):
     assert "age_applicability" in report
     assert "CSR input deviations" in report
     assert "reserve_mm differs from CSR" in report
+
+
+@pytest.fixture
+def configured_engine(monkeypatch):
+    """Load the complete engine, stubbing only unrelated workflow adapters."""
+    import ast
+    import importlib.util
+    import sys
+    from types import ModuleType
+
+    def unused_adapter(*args, **kwargs):
+        pytest.fail("An unrelated workflow adapter was called")
+
+    engine_path = ROOT / "src/digitalmodel/engine.py"
+    # Inspect imports only; execute the entire shipped module and entry point.
+    for node in ast.parse(engine_path.read_text()).body:
+        if not isinstance(node, ast.ImportFrom) or not node.module:
+            continue
+        if not node.module.startswith("digitalmodel."):
+            continue
+        if node.module == "digitalmodel.solvers.orcaflex.output_control":
+            continue
+        stub = ModuleType(node.module)
+        for alias in node.names:
+            setattr(stub, alias.name, unused_adapter)
+        monkeypatch.setitem(sys.modules, node.module, stub)
+    spec = importlib.util.spec_from_file_location("_hull_wastage_engine", engine_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.engine
+
+
+@pytest.mark.parametrize("absolute_output", [False, True])
+def test_complete_engine_loads_base_config(
+    tmp_path, monkeypatch, configured_engine, absolute_output,
+):
+    """Real file loading, configuration merging and dispatch produce both outputs."""
+    input_dir = tmp_path / "config"
+    input_dir.mkdir()
+    caller_dir = tmp_path / "caller"
+    caller_dir.mkdir()
+    cfg = yaml.safe_load((ROOT / "examples/workflows/hull-wastage-screen/input.yml").read_text())
+    output = tmp_path / "absolute-results" if absolute_output else input_dir / "results"
+    if absolute_output:
+        cfg["hull_wastage_screen"]["output_dir"] = str(output)
+    input_path = input_dir / "input.yml"
+    input_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    monkeypatch.chdir(caller_dir)
+    result = configured_engine(inputfile=str(input_path))
+    screen = result["hull_wastage_screen"]["result"]
+    assert result["default"]["log_level"] == "INFO"
+    assert result["default"]["config"]["overwrite"]["output"] is True
+    assert screen["status"] == "NOT_EVALUATED"
+    assert screen["elements"][0]["renewal_mm"] == 8.
+    assert screen["elements"][0]["status"] == "MONITOR"
+    assert json.loads((output / "hull-wastage.json").read_text()) == screen
+    assert "Hull-structure wastage analysis" in (output / "hull-wastage.html").read_text()
+    assert not (caller_dir / "results").exists()

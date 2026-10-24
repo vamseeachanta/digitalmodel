@@ -1357,7 +1357,7 @@ workflows:
     outputs:
       - examples/workflows/hull-wastage-screen/results/hull-wastage.json
       - examples/workflows/hull-wastage-screen/results/hull-wastage.html
-    test: tests/hull_wastage_screen/test_workflow.py::test_example_workflow
+    test: tests/asset_integrity/hull_wastage_screen/test_workflow.py::test_example_workflow
     runtime: offline
     result:
       kind: in_memory
