@@ -46,6 +46,9 @@ The audit uses the following method:
   must carry the result class and all four cells, with nonempty, nonnumeric
   result placeholders in its three value cells, whether they use data or header
   tags. Marked result rows outside that section are rejected.
+  Table rows and cells require explicit closing tags. Unfinished markup at
+  the next row or cell, a row/table/section boundary or end of input fails
+  the audit, even when every retained row contains valid placeholders.
 
 The expected answer for the current sources is:
 

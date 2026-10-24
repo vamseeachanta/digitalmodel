@@ -267,6 +267,66 @@ def test_result_section_requires_class_even_on_placeholder_rows():
     assert subject.audit_result_rows(result_table(row + marked))
 
 
+def test_complete_audit_rejects_numeric_result_without_row_end(monkeypatch, capsys):
+    read_text = Path.read_text
+
+    def changed_text(path, *, encoding="utf-8", **kwargs):
+        text = read_text(path, encoding=encoding, **kwargs)
+        if path == ROOT / subject.DOCUMENTS / "report-skeleton.html":
+            start = text.index('<tr class="result"><td>Surge natural period</td>')
+            end = text.index("</tr>", start) + len("</tr>")
+            row = text[start:end]
+            placeholder = "[RESULT: not calculated; case unselected]"
+            assert row.count(placeholder) == 1
+            row = row.replace(placeholder, "12.4 s")
+            text = text[:start] + row.removesuffix("</tr>") + text[end:]
+        return text
+
+    monkeypatch.setattr(Path, "read_text", changed_text)
+    evidence = subject.audit_phase_a(ROOT)
+    assert any("unfinished" in error for error in evidence["errors"])
+    assert evidence["execution_ready"] is False
+    assert subject.main(["--root", str(ROOT)]) == 1
+    import json
+
+    assert json.loads(capsys.readouterr().out) == evidence
+
+
+@pytest.mark.parametrize("audit", ["input", "result"])
+@pytest.mark.parametrize(
+    "boundary", ["row", "cell", "row-end", "table", "section", "eof"]
+)
+def test_audits_reject_unfinished_table_markup(audit, boundary):
+    if audit == "result":
+        prefix = '<section id="results"><table>' + RESULT_HEADER
+        row = (
+            '<tr class="result"><td>Surge natural period</td>'
+            "<td>[RESULT: not calculated]</td><td>[RESULT: comparator unselected]</td>"
+            "<td>[RESULT: evidence absent]</td></tr>"
+        )
+    else:
+        prefix = "<section><table>"
+        row = "<tr><td>Wave height</td><td>7 (L02 line 1: WaveHs)</td></tr>"
+    unfinished = row.removesuffix("</tr>")
+    ending = "</table></section>"
+    if boundary == "row":
+        ending = row + ending
+    elif boundary == "cell":
+        unfinished = row.replace("</td>", "", 1)
+    elif boundary == "row-end":
+        unfinished = row.removesuffix("</td></tr>") + "</tr>"
+    elif boundary == "section":
+        ending = "</section>"
+    elif boundary == "eof":
+        ending = ""
+    html = prefix + row + unfinished + ending
+    if audit == "result":
+        errors = subject.audit_result_rows(html)
+    else:
+        errors = subject.audit_input_echo(html, {"L02": ["WaveHs: 7"]})
+    assert any("unfinished" in error for error in errors), errors
+
+
 def test_repository_phase_a_evidence():
     evidence = subject.audit_phase_a(ROOT)
     assert evidence["errors"] == []

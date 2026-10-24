@@ -163,20 +163,35 @@ def cited_value(lines: list[str], line: int, end: int | None = None) -> str:
 
 
 class _TableRows(HTMLParser):
-    """Retain cell text, section membership and result-class rows structurally."""
+    """Retain table evidence and reject unfinished rows or cells explicitly."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.sections = []
         self.has_basis = False
         self.rows = []
+        self.errors = []
         self.result_rows = []
         self.result_sections = 0
         self.is_result = False
         self.row = None
         self.cell = None
 
+    def _require_closed_row(self, boundary):
+        if self.row is not None or self.cell is not None:
+            self.errors.append(
+                f"report table has an unfinished row or cell at {boundary}"
+            )
+
+    def close(self):
+        super().close()
+        self._require_closed_row("end of input")
+
     def handle_starttag(self, tag, attrs):
+        if tag in {"section", "table", "tr"}:
+            self._require_closed_row(f"<{tag}>")
+        elif tag in {"td", "th"} and self.cell is not None:
+            self.errors.append(f"report table has an unfinished cell at <{tag}>")
         if tag == "section":
             section = dict(attrs).get("id")
             self.sections.append(section)
@@ -184,6 +199,7 @@ class _TableRows(HTMLParser):
             self.result_sections += section == "results"
         elif tag == "tr":
             self.row = []
+            self.cell = None
             self.is_result = "result" in (dict(attrs).get("class") or "").split()
         elif tag in {"td", "th"} and self.row is not None:
             self.cell = (tag, [])
@@ -193,6 +209,11 @@ class _TableRows(HTMLParser):
             self.cell[1].append(data)
 
     def handle_endtag(self, tag):
+        if tag in {"table", "section"}:
+            self._require_closed_row(f"</{tag}>")
+        elif tag == "tr" and self.cell is not None:
+            self.errors.append("report table has an unfinished cell at </tr>")
+            self.cell = None
         if tag in {"td", "th"} and self.cell is not None:
             kind, text = self.cell
             self.row.append((kind, " ".join("".join(text).split())))
@@ -212,7 +233,7 @@ def audit_input_echo(html: str, sources: dict[str, list[str]]) -> list[str]:
     parser = _TableRows()
     parser.feed(html)
     parser.close()
-    errors, checked, observed = [], 0, Counter()
+    errors, checked, observed = list(parser.errors), 0, Counter()
     pattern = r"(.+?) \((L02|K03) lines? (\d+)(?:-(\d+))?: (\w+)\)"
     for in_basis, row in parser.rows:
         if parser.has_basis and not in_basis:
@@ -259,7 +280,7 @@ def audit_result_rows(html: str) -> list[str]:
     parser = _TableRows()
     parser.feed(html)
     parser.close()
-    errors = []
+    errors = list(parser.errors)
     if parser.result_sections != 1:
         errors.append("report requires exactly one results section")
     header = [
