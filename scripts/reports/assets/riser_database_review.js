@@ -29,13 +29,22 @@
     }));
   };
 
+  const canonicalize = (value) => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+    }
+    return value;
+  };
+  const fingerprint = (item) => JSON.stringify(canonicalize(item));
+
   const mergeComments = (incoming) => {
-    const fingerprints = new Set(comments.map((item) => JSON.stringify(item)));
+    const fingerprints = new Set(comments.map(fingerprint));
     incoming.forEach((item) => {
-      const fingerprint = JSON.stringify(item);
-      if (!fingerprints.has(fingerprint)) {
+      const key = fingerprint(item);
+      if (!fingerprints.has(key)) {
         comments.push(item);
-        fingerprints.add(fingerprint);
+        fingerprints.add(key);
       }
     });
   };

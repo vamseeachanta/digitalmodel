@@ -297,6 +297,76 @@ def report_page(rebuilt):
         browser.close()
 
 
+@pytest.mark.parametrize("difference", ["none", "revision", "digest", "array_order", "note"])
+def test_comment_import_ignores_key_order_and_preserves_distinct_records(difference):
+    original = {
+        "text": "Selected passage", "section": "summary", "note": "Check geometry.",
+        "replacement": "", "revision": "1",
+        "source_digests": {"example": "first", "table": "second"},
+        "context": [{"label": "geometry", "units": "mm"}, {"label": "depth", "units": "m"}],
+    }
+    incoming = json.loads(json.dumps(original))
+    if difference == "revision":
+        incoming["revision"] = "2"
+    elif difference == "digest":
+        incoming["source_digests"]["example"] = "changed"
+    elif difference == "array_order":
+        incoming["context"].reverse()
+    elif difference == "note":
+        incoming["note"] = "A different note."
+
+    def reorder(value):
+        if isinstance(value, dict):
+            return {key: reorder(item) for key, item in reversed(value.items())}
+        if isinstance(value, list):
+            return [reorder(item) for item in value]
+        return value
+
+    # Run the complete shipped script and its import handler with a minimal DOM.
+    # Browser binaries are unnecessary for this JSON merge regression.
+    result = subprocess.run(
+        ["node", "-e", r"""
+        const fs = require('node:fs');
+        const vm = require('node:vm');
+        const [original, incoming] = JSON.parse(fs.readFileSync(0, 'utf8'));
+        const envelope = comments => ({document:'Riser reference database analysis',
+          revision:'1', source_digests:original.source_digests, comments});
+        let saved = JSON.stringify(envelope([original]));
+        const elements = new Map();
+        const element = () => ({append() {}, replaceChildren() {},
+          addEventListener(event, handler) {this[event] = handler;}});
+        global.document = {
+          getElementById(id) {
+            if (!elements.has(id)) elements.set(id, element());
+            return elements.get(id);
+          },
+          createElement:element, addEventListener() {}, querySelectorAll:() => []
+        };
+        document.getElementById('report-data').textContent = JSON.stringify({
+          source_digests:original.source_digests});
+        document.getElementById('report-changes').textContent = JSON.stringify({
+          ...envelope([]), changes:[]});
+        global.localStorage = {getItem:() => saved, setItem:(_key, value) => {saved = value;}};
+        vm.runInThisContext(fs.readFileSync(process.argv[1], 'utf8'));
+        (async () => {
+          const event = {target:{files:[{text:async () => JSON.stringify(
+            envelope([incoming, incoming]))}]}};
+          const control = document.getElementById('import-comments');
+          await control.change(event);
+          await control.change(event);
+          if (!document.getElementById('comment-status').textContent.includes('imported.')) {
+            throw new Error('Import did not complete');
+          }
+          process.stdout.write(saved);
+        })().catch(error => {console.error(error); process.exitCode = 1;});
+        """, str(ROOT / "scripts/reports/assets/riser_database_review.js")],
+        input=json.dumps([original, reorder(incoming)]), text=True,
+        capture_output=True, check=True,
+    )
+    expected = [original] if difference == "none" else [original, incoming]
+    assert json.loads(result.stdout)["comments"] == expected
+
+
 def add_browser_comment(page):
     """Select actual report text before using the visible comment controls."""
     page.evaluate("""() => {

@@ -32,15 +32,11 @@ EXTRA_STYLE = Path("src/digitalmodel/reporting/assets/standard_report.css")
 EXAMPLE_ID = "riser_drilling"
 CHANGES = {
     "document": "Riser reference database analysis",
-    "revision": "1",
-    "date": "2026-10-22",
+    "revision": "2",
+    "date": "2026-10-24",
     "changes": [
-        {"section": "worked-example", "description":
-         "Explain why shared-source geometry agrees and distinguish an independent benchmark."},
-        {"section": "limitations", "description":
-         "Clarify the missing connection basis and the unverified criteria locator."},
-        {"section": "source-records", "description":
-         "Make source fingerprints and report regeneration independent of checkout text settings."},
+        {"section": "comments", "description":
+         "Deduplicate comments with reordered object keys while preserving distinct records."},
     ],
 }
 
