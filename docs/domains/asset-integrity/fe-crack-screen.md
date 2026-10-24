@@ -19,6 +19,7 @@ licensed-source constants.
 | --- | --- | --- |
 | A | 2026-10-20 | Initial solver-free screening method and independent arithmetic example. |
 | B | 2026-10-22 | Preserve supplied report criteria, report arrest cycles and share threshold integration with the fatigue API. |
+| C | 2026-10-24 | Retain finite target cycles when threshold arrest occurs exactly at the requested final depth; distinguish arrival from earlier arrest. |
 
 Table 1. Document revisions.
 
@@ -64,11 +65,17 @@ Table 1. Document revisions.
   `log(K1/K0)/(C*b)`. Constant K gives `Delta_a/(C*K^m)`.
   The implementation uses logarithmic forms to limit cancellation.
 - **Threshold:** equality or a crossing of the supplied threshold returns
-  `ARRESTED`, with no finite life to the final depth. The crossing depth is
+  `ARRESTED`. The crossing depth is
   calculated from the linear segment, including a crossing between samples.
   `cycles_to_arrest` gives the integral to that depth, including earlier segments;
-  `cycles` remains `None` because the final depth is not reached. An integral
-  diverging at zero DeltaK has `cycles_to_arrest=None`, displayed as `unbounded`.
+  `cycles` remains `None` when arrest precedes the final depth. When equality
+  occurs exactly at the final depth and the integral converges, both fields
+  give the finite arrival count even though growth arrests there. For example,
+  the artificial linear range 5 to 2 over depths 0.001 to 0.002 m, with
+  `C=1e-10`, `m=2` and threshold 2, gives
+  `(1/2-1/5)/(1e-10*3000) = 1000000.0` cycles to the final depth.
+  An integral diverging at zero DeltaK has both cycle fields `None`, with
+  `cycles_to_arrest` displayed as `unbounded`.
   An absent arrest depth displays as `n/a`.
   This hard-cutoff model is an explicit approximation; material behaviour near
   threshold is not qualified by the Paris law. The reported minimum
@@ -89,8 +96,11 @@ Table 1. Document revisions.
 The existing `fatigue.crack_growth.paris_law_life` API delegates each sampled
 interval to the same threshold-aware `growth_life` API. Its optional `threshold`
 defaults to zero; callable DeltaK is approximated linearly over `da_step`.
-An arrested history ends at the actual arrest depth, with infinite life to the
-requested final depth. This replaces the earlier left-endpoint integration.
+An arrested history ends at the actual arrest depth with zero growth rate.
+Life to the requested final depth is finite when arrest occurs exactly there
+and the integral converges; earlier arrest or a divergent integral gives
+infinite life. Matching finite endpoint histories can pass the supplied
+history tolerance. This replaces the earlier left-endpoint integration.
 The separate implementation proposed in #3106 is not present on this branch;
 cross-branch consolidation remains pending.
 

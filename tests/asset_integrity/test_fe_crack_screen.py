@@ -118,6 +118,47 @@ def test_threshold_crossing_and_equality_arrest():
     assert growth_life([[0.001, 2], [0.002, 4]], law)["arrest_a_m"] == 0.001
 
 
+@pytest.mark.parametrize("initial_depth,expected", [(0.001, 1000000), (0.0005, 1200000)])
+def test_threshold_at_final_depth_retains_finite_arrival_cycles(initial_depth, expected):
+    """K=5 -> 2 gives 1000000 cycles; .0005 m at K=5 adds 200000."""
+    table = [[0.001, 5], [0.002, 2]]
+    if initial_depth < 0.001:
+        table.insert(0, [initial_depth, 5])
+    result = growth_life(table, case()["growth"])
+    assert result["cycles"] == pytest.approx(expected)
+    assert result["status"] == "ARRESTED"
+    assert result["arrest_a_m"] == 0.002
+    assert result["cycles_to_arrest"] == pytest.approx(expected)
+
+
+def test_threshold_at_interior_knot_does_not_reach_final_depth():
+    table = [[0.001, 5], [0.002, 2], [math.nextafter(0.002, math.inf), 2]]
+    result = growth_life(table, case()["growth"])
+    assert result["status"] == "ARRESTED"
+    assert result["cycles"] is None
+    assert result["arrest_a_m"] == 0.002
+    assert result["cycles_to_arrest"] == pytest.approx(1000000)
+
+
+@pytest.mark.parametrize("subdivide", [False, True])
+def test_history_arriving_at_threshold_matches_finite_integral(subdivide):
+    """Hand integration to K=2 gives 1e6 cycles; to K=3.5 gives 2e6/7."""
+    data = case()
+    data["states"][0]["delta_k"] = 5
+    data["states"][1]["delta_k"] = 2
+    data["history"] = [[0.001, 0], [0.002, 1000000]]
+    if subdivide:
+        data["history"].insert(1, [0.0015, 2000000 / 7])
+    data["history_tolerance_fraction"] = 1e-9
+    data["history_basis"] = "Artificial analytical integral to the threshold endpoint"
+    result = assess_fe_crack(data)
+    assert result["growth"]["cycles"] == pytest.approx(1000000)
+    assert result["checks"]["history"]["status"] == "PASS"
+    assert result["checks"]["history"]["cycle_ratios"] == pytest.approx(
+        [1] * (len(data["history"]) - 1)
+    )
+
+
 def test_e_ratio_and_threshold_rule_are_separate_inputs():
     """E ratio 0.5 scales DeltaK 4 to 2; unchanged threshold 2 arrests.
 
@@ -474,12 +515,14 @@ def test_zero_threshold_with_integrable_exponent_has_finite_arrest_cycles():
     law = dict(case()["growth"], threshold=0, m=0.5)
     result = growth_life([[0.001, 5], [0.002, 0]], law)
     assert result["cycles_to_arrest"] == pytest.approx(0.002 / (1e-10 * math.sqrt(5)))
+    assert result["cycles"] == pytest.approx(result["cycles_to_arrest"])
 
 
 def test_zero_threshold_arrest_has_unbounded_cycles():
     law = dict(case()["growth"], threshold=0)
     result = growth_life([[0.001, 5], [0.002, 0]], law)
     assert result["cycles_to_arrest"] is None
+    assert result["cycles"] is None
     data = dict(case(), growth=law)
     data["states"][0]["delta_k"] = 5
     data["states"][1]["delta_k"] = 0

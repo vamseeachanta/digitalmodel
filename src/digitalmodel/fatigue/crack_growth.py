@@ -89,7 +89,9 @@ def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None, *, thresh
     Returns
     -------
     cycles_to_failure : float
-        Total cycles N from a_initial to a_critical, or infinity on arrest.
+        Total cycles N from a_initial to a_critical. Arrival exactly at the
+        threshold endpoint is finite if its integral converges; arrest before
+        a_critical or a divergent integral returns infinity.
     history : pd.DataFrame
         Columns: crack_size (m), cycles (cumulative N), da_dN (m/cycle).
         On arrest, ends at the actual arrest depth with zero growth rate;
@@ -148,7 +150,12 @@ def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None, *, thresh
                     "crack_size": segment["arrest_a_m"],
                     "cycles": arrest_cycles, "da_dN": 0.0,
                 })
-            return math.inf, pd.DataFrame(records)
+            target_cycles = (
+                arrest_cycles
+                if end == a_critical and segment["cycles"] is not None
+                else math.inf
+            )
+            return target_cycles, pd.DataFrame(records)
         N += segment["cycles"]
         a, dk = end, dk_end
 

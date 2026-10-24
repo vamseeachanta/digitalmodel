@@ -109,8 +109,9 @@ def growth_life(table, law, *, multiplier=1.0):
     Threshold equality arrests. Linear segments make endpoint checks sufficient
     to find every threshold crossing; no sampling can miss a narrow crossing.
     This Paris model does not establish near-threshold material behaviour.
-    For arrest, cycles remains None (no life to the final depth), while
-    cycles_to_arrest records the evaluated integral, or None if it diverges.
+    On arrest, cycles_to_arrest records the integral, or None if it diverges.
+    If arrest occurs exactly at the last supplied depth, cycles also records
+    that finite arrival count; arrest before that depth leaves cycles as None.
     """
     pairs = table_pairs(table, "DeltaK table")
     if pairs[0][0] <= 0:
@@ -136,6 +137,8 @@ def growth_life(table, law, *, multiplier=1.0):
                 arrest = (
                     a0
                     if k0 <= threshold
+                    else a1
+                    if k1 == threshold
                     else a0 + (a1 - a0) * (k0 - threshold) / (k0 - k1)
                 )
                 if k0 > threshold:
@@ -152,6 +155,8 @@ def growth_life(table, law, *, multiplier=1.0):
                     if total is not None
                     else None,
                 )
+                if a1 == pairs[-1][0] and k0 > threshold and k1 == threshold:
+                    result["cycles"] = result["cycles_to_arrest"]
                 return result
             total += _segment_cycles(a1 - a0, k0, k1, c, m)
         except (OverflowError, ZeroDivisionError, ValueError) as error:
