@@ -110,7 +110,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <li>The excessive-free-surface condition does not meet the initial stability criterion.
 <ul><li>The fluid metacentric height is <span data-value="excess.gm_fluid_m" data-digits="4">−4.5691</span> m. Slack-tank exposure is to be reduced and the loading condition recalculated before acceptance, as required by the free-surface basis in <a href="#ref-1">the Code</a>.</li></ul></li></ul>
 <h3>Revision history</h3>
-<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-22</td><td>Initial issue: the calculation basis and evidence limits are documented to support engineering use.</td></tr></tbody></table>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-22</td><td>Initial issue: the calculation basis and evidence limits are documented to support engineering use.</td></tr><tr><td>B</td><td>2026-10-25</td><td>The zero-arm sign reference is separated from acceptance criteria, and the source-table arithmetic inconsistency is identified to prevent misleading interpretation.</td></tr></tbody></table>
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -175,7 +175,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <article id="worked-example">
 <p>The published tabulated cross-curve arms are passed to the module after unit conversion. The published gravity-centre height is <span data-value="public.kg_ft" data-digits="2">23.84</span> ft, equivalent to <span data-value="public.kg_m" data-digits="6">7.266432</span> m. The exact length conversion used is <span data-value="public.m_per_ft" data-digits="4">0.3048</span> m/ft. <a href="#ref-2">Course example</a>; <a href="#ref-3">unit conversion source</a>.</p>
 <p>At heel <span data-value="public.heel_deg.5" data-digits="0">30</span> degrees, the published cross-curve arm is <span data-value="public.kn_ft.5" data-digits="2">15.02</span> ft. Subtracting the sine correction and converting to metres gives <span data-value="public.gz_m.5" data-digits="4">0.9449</span> m. This is the headline result calculated from the displayed inputs.</p>
-<p>The complete input and comparison table is provided in the appendix. Differences are calculated against the published rounded corrected arms and increase in percentage magnitude near a zero righting arm. The published input gravity centre is used without replacement by rounded intermediate corrections. Negative arms at the largest heel indicate a restoring-moment reversal in the supplied curve; that range is excluded from any positive-stability interpretation. A flooding limit, full loading inventory and opening geometry are not supplied for this calculation, so operational acceptance is NOT_EVALUATED. <a href="#ref-2">Course example and stability interpretation</a>.</p>
+<p>The complete input and comparison table is provided in the appendix. Differences are calculated against the published corrected-arm table, which contains an arithmetic inconsistency as well as rounded corrections, and increase in percentage magnitude near a zero righting arm. The published input gravity centre and comparison values are preserved; the arithmetic inconsistency is described in Validation. Negative arms at the largest heel indicate a restoring-moment reversal in the supplied curve; that range is excluded from any positive-stability interpretation. A flooding limit, full loading inventory and opening geometry are not supplied for this calculation, so operational acceptance is NOT_EVALUATED. <a href="#ref-2">Course example and stability interpretation</a>.</p>
 </article>
 <figure><svg id="public-chart" viewBox="0 0 720 300" role="img" aria-label="Published example righting arm against heel angle"></svg>
 <figcaption>Calculated righting arm against heel for the public example. The zero-arm line marks the sign change. It is not an approved operating-heel limit; downflooding remains NOT_EVALUATED.</figcaption></figure>
@@ -187,7 +187,8 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <p>The existing suite contains <span data-value="test_count" data-digits="0">93</span> test definitions across the calculation and workflow areas listed below. Counts are indexed from test definitions and are not execution receipts. Coverage includes hydrostatic interpolation, loading moments, rectangular free surface, trim, righting-arm integration, limiting gravity centre, missing citations and damage-condition edge cases.</p>
 <table><thead><tr><th>Coverage</th><th>Test definitions</th><th>Source</th></tr></thead><tbody><tr><td>Intact calculation</td><td><span data-value="tests.0.count" data-digits="0">35</span></td><td><a href="#records">Calculation tests</a></td></tr><tr><td>Intact workflow</td><td><span data-value="tests.1.count" data-digits="0">17</span></td><td><a href="#records">Calculation tests</a></td></tr><tr><td>Damage calculation</td><td><span data-value="tests.2.count" data-digits="0">21</span></td><td><a href="#records">Calculation tests</a></td></tr><tr><td>Damage workflow</td><td><span data-value="tests.3.count" data-digits="0">20</span></td><td><a href="#records">Calculation tests</a></td></tr></tbody></table>
 <p>The report tests separately assert mass conservation, virtual gravity-centre rise, fluid metacentric height and published righting-arm values against hand-worked literals. Consistency checks compare displayed numbers with fresh module calls and compare a rebuilt page with the committed page. These checks do not establish statutory applicability or field performance.</p>
-<p>The public corrected-arm table has rounded intermediate sine corrections. Percentage differences are shown against that table rather than described as disagreement with a physical measurement. A future validation set requires approved hydrostatic tables, a loading survey, tank state records and matching opening limits. <a href="#ref-1">Code, stability information and free surfaces</a>.</p>
+<p>The public corrected-arm table contains an arithmetic inconsistency as well as rounded intermediate sine corrections. At <span data-value="public.heel_deg.11" data-digits="0">90</span> degrees, the published inputs give <span data-value="public.kn_ft.11" data-digits="2">25.45</span> − <span data-value="public.kg_ft" data-digits="2">23.84</span> = 1.61 ft, whereas the source table prints <span data-value="public.published_gz_ft.11" data-digits="2">1.63</span> ft. Rounding alone does not explain that discrepancy. Published inputs and comparison values are preserved, and percentage differences are shown against the source table rather than described as disagreement with a physical measurement. <a href="#ref-2">Course Notes, Summer 2020, example 4.1, page 4-14</a>.</p>
+<p>A future validation set requires approved hydrostatic tables, a loading survey, tank state records and matching opening limits. <a href="#ref-1">Code, stability information and free surfaces</a>.</p>
 </section>
 
 <section id="recommendations"><h2>8. Key Findings, Limitations and Recommendations</h2>
@@ -221,7 +222,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <table><thead><tr><th>Criterion</th><th>Fluid KG limit (m)</th><th>Interpretation</th><th>Source</th></tr></thead><tbody><tr><td>Area under GZ, 0-30 deg</td><td><span data-value="intact.kg_limits.0.kg_limit_m" data-digits="4">10.3333</span></td><td>The search is capped at KM.</td><td><a href="#ref-1">Source</a></td></tr><tr><td>Area under GZ, 0-40 deg (40 deg or downflooding)</td><td><span data-value="intact.kg_limits.1.kg_limit_m" data-digits="4">10.3333</span></td><td>The search is capped at KM.</td><td><a href="#ref-1">Source</a></td></tr><tr><td>Area under GZ, 30-40 deg</td><td><span data-value="intact.kg_limits.2.kg_limit_m" data-digits="4">10.3333</span></td><td>The search is capped at KM.</td><td><a href="#ref-1">Source</a></td></tr><tr><td>Righting arm GZ at 30 deg</td><td><span data-value="intact.kg_limits.3.kg_limit_m" data-digits="4">10.3333</span></td><td>The search is capped at KM.</td><td><a href="#ref-1">Source</a></td></tr><tr><td>Angle of maximum GZ</td><td><span data-value="intact.kg_limits.4.kg_limit_m" data-digits="4">10.3333</span></td><td>The search is capped at KM.</td><td><a href="#ref-1">Source</a></td></tr><tr><td>Initial metacentric height GM0 (fluid)</td><td><span data-value="intact.kg_limits.5.kg_limit_m" data-digits="4">10.1833</span></td><td>The criterion limits the search.</td><td><a href="#ref-1">Source</a></td></tr></tbody></table>
 <p>All displayed calculation values are generated from returned results or echoed inputs. Public arrays are embedded at bounded precision. Hand anchors use stated arithmetic tolerances; rebuild consistency checks give the exact rebuild command on a stale result or calculation-source digest. Text is read and written explicitly as UTF-8, with line-feed writes. Report tests are to be executed with the optional Python UTF-8 environment override unset.</p>
 <p>The pre-flight checks cover the reference links, ten-section structure, source access records, inlined house style, numerical bindings, hand arithmetic, input precision, comment export controls and public wording. Numerical checks are separate from approval of the physical inputs. Browser interaction testing is not included.</p>
-<details><summary>Engineering changes since initial issue</summary><ul><li>Initial issue: the intact screening method, public cross-curve example and synthetic loading case are documented.</li><li>The effects of free surface and the limits of table-based acceptance are distinguished from operational approval.</li></ul></details>
+<details><summary>Engineering changes since initial issue</summary><ul><li>The public chart identifies arm signs without an acceptance verdict; the metacentric-height chart retains its sourced minimum.</li><li>The source-table arithmetic inconsistency is distinguished from rounded corrections; published inputs and comparison values are preserved.</li></ul></details>
 <details id="comments"><summary>Section comments</summary>
 <p>Comments remain local. Choose a report section, enter a note and add it to the list. Save beside the report as report.comments.json. Where a file picker is unavailable, move the downloaded file beside the report. Existing comments are loaded with the file control.</p>
 <label for="comment-section">Section</label><select id="comment-section"></select>
@@ -241,15 +242,22 @@ function element(parent, tag, attrs, text) {
   if (text !== undefined) el.textContent = text;
   parent.appendChild(el); return el;
 }
-function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
+function chart(id, xs, ys, basis, xLabel, component, caseLabel, xUnit, yUnit) {
+  if (!basis || !["criterion", "reference"].includes(basis.mode) || !Number.isFinite(basis.value) ||
+      !xs.length || xs.length !== ys.length || !xs.every(Number.isFinite) || !ys.every(Number.isFinite) ||
+      (basis.mode === "reference" && basis.value !== 0) ||
+      (basis.mode === "criterion" && (typeof basis.source !== "string" || !basis.source.trim()))) {
+    throw new Error("Charts require finite samples and an explicit zero reference or sourced criterion.");
+  }
+  const criterion = basis.mode === "criterion", limit = basis.value;
   const svg = document.getElementById(id + "-chart");
   const ymin = Math.min(limit, ...ys), ymax = Math.max(limit, ...ys);
   const range = ymax - ymin || 1;
   const px = x => 70 + (x - Math.min(...xs)) / (Math.max(...xs) - Math.min(...xs) || 1) * 600;
   const py = y => 245 - (y - ymin + range * 0.1) / (range * 1.2) * 210;
   element(svg, "path", {d: "M70 25V245H680", fill: "none", stroke: "var(--ink)"});
-  element(svg, "line", {x1: 70, x2: 680, y1: py(limit), y2: py(limit), stroke: "var(--nogo)", "stroke-dasharray": "6 4"});
-  element(svg, "text", {x: 74, y: py(limit) - 7, fill: "var(--ink)"}, "Limit " + limit.toFixed(2) + " " + yUnit);
+  element(svg, "line", {x1: 70, x2: 680, y1: py(limit), y2: py(limit), stroke: criterion ? "var(--nogo)" : "var(--ink)", "stroke-dasharray": "6 4"});
+  element(svg, "text", {x: 74, y: py(limit) - 7, fill: "var(--ink)"}, (criterion ? "Minimum " : "Zero-arm reference ") + limit.toFixed(3) + " " + yUnit);
   element(svg, "polyline", {points: xs.map((x,i) => px(x)+","+py(ys[i])).join(" "), fill: "none", stroke: "var(--brand)", "stroke-width": 2});
   element(svg, "text", {x: 300, y: 286, fill: "var(--ink)"}, xLabel + " (" + xUnit + ")");
   element(svg, "text", {x: 75, y: 18, fill: "var(--ink)"}, component + " (" + yUnit + ")");
@@ -258,10 +266,14 @@ function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
   const readout = document.getElementById(id + "-readout");
   const control = document.getElementById(id + "-select");
   function describe(i) {
-    return "Case: " + caseLabel(i) + "; component: " + component + "; " + xLabel + ": " + xs[i].toFixed(2) + " " + xUnit + "; demand: " + ys[i].toFixed(4) + " " + yUnit + "; limit: " + limit.toFixed(2) + " " + yUnit + ". " + (ys[i] >= limit ? "The plotted minimum is met." : "The plotted minimum is not met.");
+    const input = "Case: " + caseLabel(i) + "; component: " + component + "; " + xLabel + ": " + xs[i].toPrecision(3) + " " + xUnit + "; value: " + ys[i].toPrecision(3) + " " + yUnit;
+    if (criterion) return input + "; minimum: " + limit.toFixed(3) + " " + yUnit + "; source: " + basis.source + ". " + (ys[i] >= limit ? "The plotted minimum is met." : "The plotted minimum is not met.");
+    const sign = ys[i] === 0 ? "Zero" : ys[i] > 0 ? "Positive" : "Negative";
+    return input + "; zero-arm reference: " + limit.toFixed(3) + " " + yUnit + ". " + sign + " righting arm; operational acceptance is NOT_EVALUATED.";
   }
   xs.forEach((x,i) => {
-    const point = element(svg, "circle", {cx:px(x), cy:py(ys[i]), r:5, fill:ys[i]>=limit?"var(--go)":"var(--nogo)", tabindex:0, "aria-label":describe(i)});
+    const fill = criterion ? (ys[i] >= limit ? "var(--go)" : "var(--nogo)") : "var(--brand)";
+    const point = element(svg, "circle", {cx:px(x), cy:py(ys[i]), r:5, fill, tabindex:0, "aria-label":describe(i)});
     element(point, "title", {}, describe(i));
     point.addEventListener("pointerover", () => {control.value=i; readout.textContent=describe(i);});
     point.addEventListener("focus", () => {control.value=i; readout.textContent=describe(i);});
@@ -270,8 +282,8 @@ function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
   function select() {const i=Number(control.value); marker.setAttribute("cx",px(xs[i])); marker.setAttribute("cy",py(ys[i])); readout.textContent=describe(i);}
   control.addEventListener("input",select); select();
 }
-chart("sensitivity", record.sensitivity.map(r=>r.fsc_m), record.sensitivity.map(r=>r.gm_fluid_m), record.intact.criteria_results[5].required, "Free-surface correction", "Fluid metacentric height", i=>["No free surface", "Reference", "Excess free surface"][i], "m", "m");
-chart("public", record.public.heel_deg, record.public.gz_m, 0, "Heel", "Righting arm", ()=>"Public example", "degrees", "m");
+chart("sensitivity", record.sensitivity.map(r=>r.fsc_m), record.sensitivity.map(r=>r.gm_fluid_m), {mode: "criterion", value: record.intact.criteria_results[5].required, source: "2008 IS Code, Part A 2.2.4 (reference 1)"}, "Free-surface correction", "Fluid metacentric height", i=>["No free surface", "Reference", "Excess free surface"][i], "m", "m");
+chart("public", record.public.heel_deg, record.public.gz_m, {mode: "reference", value: 0}, "Heel", "Righting arm", ()=>"Public example", "degrees", "m");
 let comments = [];
 const sectionChoice = document.getElementById("comment-section");
 const status = document.getElementById("comment-status");

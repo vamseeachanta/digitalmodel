@@ -5,6 +5,7 @@
 import importlib.util
 import json
 import re
+import subprocess
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -64,6 +65,90 @@ def test_consistency_public_curve_matches_direct_api(result):
     assert result["public"]["heel_deg"] == heels
     assert result["public"]["kn_ft"] == kn_ft
     assert result["public"]["gz_m"] == pytest.approx(actual.gz_m, abs=1e-9)
+
+
+@pytest.fixture(scope="module")
+def chart_readouts(result):
+    """Execute the generated chart code against a minimal document surface."""
+    script = re.search(r"<script>(.*?)</script>", builder.render(result), re.S)[1]
+    harness = """
+const vm = require("node:vm");
+const nodes = new Map();
+function node() {
+  return {children: [], attrs: {}, events: {}, textContent: "", value: "0",
+    setAttribute(key, value) {this.attrs[key] = value;},
+    appendChild(child) {this.children.push(child);},
+    addEventListener(name, callback) {this.events[name] = callback;}};
+}
+const document = {
+  getElementById(id) {if (!nodes.has(id)) nodes.set(id, node()); return nodes.get(id);},
+  createElementNS(ns, tag) {const item = node(); item.tag = tag; return item;},
+  querySelectorAll() {return [];}
+};
+document.getElementById("report-data").textContent = JSON.stringify(DATA);
+const context = vm.createContext({document});
+vm.runInContext(SCRIPT, context);
+function sample(id, index) {
+  const control = document.getElementById(id + "-select"); control.value = index;
+  control.events.input();
+  const readout = document.getElementById(id + "-readout");
+  const text = readout.textContent;
+  const points = document.getElementById(id + "-chart").children.filter(p => p.attrs["aria-label"]);
+  const point = points[index];
+  point.events.focus(); const focus = readout.textContent;
+  point.events.pointerover();
+  return {text, focus, hover: readout.textContent, label: point.attrs["aria-label"],
+    title: point.children[0].textContent, fill: point.attrs.fill,
+    labels: document.getElementById(id + "-chart").children.filter(p => p.tag === "text").map(p => p.textContent)};
+}
+const output = {public: [0, 5, 13].map(i => sample("public", i)),
+  sensitivity: [0, 1, 2].map(i => sample("sensitivity", i)), invalid: []};
+for (const basis of [null, {mode: "unknown", value: 0},
+  {mode: "criterion", value: 0.15}, {mode: "criterion", value: NaN, source: "Reference"},
+  {mode: "criterion", value: Infinity, source: "Reference"}]) {
+  try {
+    context.basis = basis;
+    vm.runInContext('chart("probe", [0], [1], basis, "Input", "Result", ()=>"Example", "m", "m")', context);
+    output.invalid.push(false);
+  } catch (error) {output.invalid.push(true);}
+}
+console.log(JSON.stringify(output));
+"""
+    harness = harness.replace("DATA", json.dumps(builder.rounded(result)), 1)
+    harness = harness.replace("SCRIPT", json.dumps(script), 1)
+    run = subprocess.run(
+        ["node", "-"], input=harness, capture_output=True, encoding="utf-8", check=True
+    )
+    return json.loads(run.stdout)
+
+
+@pytest.mark.parametrize("index,sign", [(0, "Zero"), (1, "Positive"), (2, "Negative")])
+def test_public_chart_sign_is_not_an_acceptance_criterion(chart_readouts, index, sign):
+    sample = chart_readouts["public"][index]
+    text = sample["text"]
+    assert f"{sign} righting arm" in text
+    assert "acceptance is NOT_EVALUATED" in text
+    assert "zero-arm reference: 0.000 m" in text
+    assert "Zero-arm reference 0.000 m" in sample["labels"]
+    assert not re.search(r"limit|minimum|\bmet\b|\bpass\b|\bfail\b", text, re.I)
+    assert sample["fill"] == "var(--brand)"
+    assert all(sample[key] == text for key in ("focus", "hover", "label", "title"))
+
+
+@pytest.mark.parametrize("index,met", [(0, True), (1, True), (2, False)])
+def test_sensitivity_chart_retains_the_sourced_minimum(chart_readouts, index, met):
+    sample = chart_readouts["sensitivity"][index]
+    text = sample["text"]
+    assert "minimum: 0.150 m" in text
+    assert "2008 IS Code, Part A 2.2.4" in text
+    assert "Minimum 0.150 m" in sample["labels"]
+    assert ("The plotted minimum is met." if met else "The plotted minimum is not met.") in text
+    assert sample["fill"] == ("var(--go)" if met else "var(--nogo)")
+    assert all(sample[key] == text for key in ("focus", "hover", "label", "title"))
+
+
+def test_chart_rejects_missing_invalid_or_unsourced_basis(chart_readouts):
+    assert all(chart_readouts["invalid"])
 
 
 class Bindings(HTMLParser):
@@ -189,9 +274,7 @@ def test_public_wording():
 
 
 def test_artifacts_are_unignored_and_scratch_is_external(tmp_path):
-    import subprocess
-
-    files = [str(p.relative_to(ROOT)) for p in REPORT.iterdir() if p.is_file()]
+    files = [p.relative_to(ROOT).as_posix() for p in REPORT.iterdir() if p.is_file()]
     check = subprocess.run(["git", "check-ignore", *files], cwd=ROOT, capture_output=True)
     assert check.returncode == 1, "Report deliverables must be unignored"
     with pytest.raises(ValueError, match="outside the repository"):

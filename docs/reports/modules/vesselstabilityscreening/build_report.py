@@ -36,11 +36,11 @@ TESTS = (
     "test_vessel_stability_screening_damage_workflow.py",
 )
 CHANGES = {
-    "revision": "A",
-    "date": "2026-10-22",
+    "revision": "B",
+    "date": "2026-10-25",
     "changes": [
-        "Initial issue: the intact screening method, public cross-curve example and synthetic loading case are documented.",
-        "The effects of free surface and the limits of table-based acceptance are distinguished from operational approval.",
+        "The public chart identifies arm signs without an acceptance verdict; the metacentric-height chart retains its sourced minimum.",
+        "The source-table arithmetic inconsistency is distinguished from rounded corrections; published inputs and comparison values are preserved.",
     ],
 }
 
@@ -79,7 +79,7 @@ def indexed_tests() -> list[dict]:
         path = ROOT / "tests/naval_architecture" / name
         tree = ast.parse(path.read_text(encoding="utf-8"))
         count = sum(isinstance(n, ast.FunctionDef) and n.name.startswith("test_") for n in ast.walk(tree))
-        rows.append({"path": str(path.relative_to(ROOT)), "count": count})
+        rows.append({"path": path.relative_to(ROOT).as_posix(), "count": count})
     return rows
 
 
@@ -215,7 +215,10 @@ def render(data: dict) -> str:
 <li>The excessive-free-surface condition does not meet the initial stability criterion.
 <ul><li>The fluid metacentric height is {n('excess.gm_fluid_m')} m. Slack-tank exposure is to be reduced and the loading condition recalculated before acceptance, as required by the free-surface basis in <a href="#ref-1">the Code</a>.</li></ul></li></ul>
 <h3>Revision history</h3>
-{table(['Revision', 'Date', 'What changed and why'], [['A', '2026-10-22', 'Initial issue: the calculation basis and evidence limits are documented to support engineering use.']])}
+{table(['Revision', 'Date', 'What changed and why'], [
+['A', '2026-10-22', 'Initial issue: the calculation basis and evidence limits are documented to support engineering use.'],
+['B', '2026-10-25', 'The zero-arm sign reference is separated from acceptance criteria, and the source-table arithmetic inconsistency is identified to prevent misleading interpretation.'],
+])}
 </section>
 
 <section id="introduction"><h2>2. Introduction</h2>
@@ -280,7 +283,7 @@ def render(data: dict) -> str:
 <article id="worked-example">
 <p>The published tabulated cross-curve arms are passed to the module after unit conversion. The published gravity-centre height is {n('public.kg_ft', 2)} ft, equivalent to {n('public.kg_m', 6)} m. The exact length conversion used is {n('public.m_per_ft')} m/ft. <a href="#ref-2">Course example</a>; <a href="#ref-3">unit conversion source</a>.</p>
 <p>At heel {n('public.heel_deg.5', 0)} degrees, the published cross-curve arm is {n('public.kn_ft.5', 2)} ft. Subtracting the sine correction and converting to metres gives {n('public.gz_m.5')} m. This is the headline result calculated from the displayed inputs.</p>
-<p>The complete input and comparison table is provided in the appendix. Differences are calculated against the published rounded corrected arms and increase in percentage magnitude near a zero righting arm. The published input gravity centre is used without replacement by rounded intermediate corrections. Negative arms at the largest heel indicate a restoring-moment reversal in the supplied curve; that range is excluded from any positive-stability interpretation. A flooding limit, full loading inventory and opening geometry are not supplied for this calculation, so operational acceptance is NOT_EVALUATED. <a href="#ref-2">Course example and stability interpretation</a>.</p>
+<p>The complete input and comparison table is provided in the appendix. Differences are calculated against the published corrected-arm table, which contains an arithmetic inconsistency as well as rounded corrections, and increase in percentage magnitude near a zero righting arm. The published input gravity centre and comparison values are preserved; the arithmetic inconsistency is described in Validation. Negative arms at the largest heel indicate a restoring-moment reversal in the supplied curve; that range is excluded from any positive-stability interpretation. A flooding limit, full loading inventory and opening geometry are not supplied for this calculation, so operational acceptance is NOT_EVALUATED. <a href="#ref-2">Course example and stability interpretation</a>.</p>
 </article>
 <figure><svg id="public-chart" viewBox="0 0 720 300" role="img" aria-label="Published example righting arm against heel angle"></svg>
 <figcaption>Calculated righting arm against heel for the public example. The zero-arm line marks the sign change. It is not an approved operating-heel limit; downflooding remains NOT_EVALUATED.</figcaption></figure>
@@ -292,7 +295,8 @@ def render(data: dict) -> str:
 <p>The existing suite contains {n('test_count', 0)} test definitions across the calculation and workflow areas listed below. Counts are indexed from test definitions and are not execution receipts. Coverage includes hydrostatic interpolation, loading moments, rectangular free surface, trim, righting-arm integration, limiting gravity centre, missing citations and damage-condition edge cases.</p>
 {tests_table}
 <p>The report tests separately assert mass conservation, virtual gravity-centre rise, fluid metacentric height and published righting-arm values against hand-worked literals. Consistency checks compare displayed numbers with fresh module calls and compare a rebuilt page with the committed page. These checks do not establish statutory applicability or field performance.</p>
-<p>The public corrected-arm table has rounded intermediate sine corrections. Percentage differences are shown against that table rather than described as disagreement with a physical measurement. A future validation set requires approved hydrostatic tables, a loading survey, tank state records and matching opening limits. <a href="#ref-1">Code, stability information and free surfaces</a>.</p>
+<p>The public corrected-arm table contains an arithmetic inconsistency as well as rounded intermediate sine corrections. At {n('public.heel_deg.11', 0)} degrees, the published inputs give {n('public.kn_ft.11', 2)} − {n('public.kg_ft', 2)} = 1.61 ft, whereas the source table prints {n('public.published_gz_ft.11', 2)} ft. Rounding alone does not explain that discrepancy. Published inputs and comparison values are preserved, and percentage differences are shown against the source table rather than described as disagreement with a physical measurement. <a href="#ref-2">Course Notes, Summer 2020, example 4.1, page 4-14</a>.</p>
+<p>A future validation set requires approved hydrostatic tables, a loading survey, tank state records and matching opening limits. <a href="#ref-1">Code, stability information and free surfaces</a>.</p>
 </section>
 
 <section id="recommendations"><h2>8. Key Findings, Limitations and Recommendations</h2>
@@ -358,15 +362,22 @@ function element(parent, tag, attrs, text) {
   if (text !== undefined) el.textContent = text;
   parent.appendChild(el); return el;
 }
-function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
+function chart(id, xs, ys, basis, xLabel, component, caseLabel, xUnit, yUnit) {
+  if (!basis || !["criterion", "reference"].includes(basis.mode) || !Number.isFinite(basis.value) ||
+      !xs.length || xs.length !== ys.length || !xs.every(Number.isFinite) || !ys.every(Number.isFinite) ||
+      (basis.mode === "reference" && basis.value !== 0) ||
+      (basis.mode === "criterion" && (typeof basis.source !== "string" || !basis.source.trim()))) {
+    throw new Error("Charts require finite samples and an explicit zero reference or sourced criterion.");
+  }
+  const criterion = basis.mode === "criterion", limit = basis.value;
   const svg = document.getElementById(id + "-chart");
   const ymin = Math.min(limit, ...ys), ymax = Math.max(limit, ...ys);
   const range = ymax - ymin || 1;
   const px = x => 70 + (x - Math.min(...xs)) / (Math.max(...xs) - Math.min(...xs) || 1) * 600;
   const py = y => 245 - (y - ymin + range * 0.1) / (range * 1.2) * 210;
   element(svg, "path", {d: "M70 25V245H680", fill: "none", stroke: "var(--ink)"});
-  element(svg, "line", {x1: 70, x2: 680, y1: py(limit), y2: py(limit), stroke: "var(--nogo)", "stroke-dasharray": "6 4"});
-  element(svg, "text", {x: 74, y: py(limit) - 7, fill: "var(--ink)"}, "Limit " + limit.toFixed(2) + " " + yUnit);
+  element(svg, "line", {x1: 70, x2: 680, y1: py(limit), y2: py(limit), stroke: criterion ? "var(--nogo)" : "var(--ink)", "stroke-dasharray": "6 4"});
+  element(svg, "text", {x: 74, y: py(limit) - 7, fill: "var(--ink)"}, (criterion ? "Minimum " : "Zero-arm reference ") + limit.toFixed(3) + " " + yUnit);
   element(svg, "polyline", {points: xs.map((x,i) => px(x)+","+py(ys[i])).join(" "), fill: "none", stroke: "var(--brand)", "stroke-width": 2});
   element(svg, "text", {x: 300, y: 286, fill: "var(--ink)"}, xLabel + " (" + xUnit + ")");
   element(svg, "text", {x: 75, y: 18, fill: "var(--ink)"}, component + " (" + yUnit + ")");
@@ -375,10 +386,14 @@ function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
   const readout = document.getElementById(id + "-readout");
   const control = document.getElementById(id + "-select");
   function describe(i) {
-    return "Case: " + caseLabel(i) + "; component: " + component + "; " + xLabel + ": " + xs[i].toFixed(2) + " " + xUnit + "; demand: " + ys[i].toFixed(4) + " " + yUnit + "; limit: " + limit.toFixed(2) + " " + yUnit + ". " + (ys[i] >= limit ? "The plotted minimum is met." : "The plotted minimum is not met.");
+    const input = "Case: " + caseLabel(i) + "; component: " + component + "; " + xLabel + ": " + xs[i].toPrecision(3) + " " + xUnit + "; value: " + ys[i].toPrecision(3) + " " + yUnit;
+    if (criterion) return input + "; minimum: " + limit.toFixed(3) + " " + yUnit + "; source: " + basis.source + ". " + (ys[i] >= limit ? "The plotted minimum is met." : "The plotted minimum is not met.");
+    const sign = ys[i] === 0 ? "Zero" : ys[i] > 0 ? "Positive" : "Negative";
+    return input + "; zero-arm reference: " + limit.toFixed(3) + " " + yUnit + ". " + sign + " righting arm; operational acceptance is NOT_EVALUATED.";
   }
   xs.forEach((x,i) => {
-    const point = element(svg, "circle", {cx:px(x), cy:py(ys[i]), r:5, fill:ys[i]>=limit?"var(--go)":"var(--nogo)", tabindex:0, "aria-label":describe(i)});
+    const fill = criterion ? (ys[i] >= limit ? "var(--go)" : "var(--nogo)") : "var(--brand)";
+    const point = element(svg, "circle", {cx:px(x), cy:py(ys[i]), r:5, fill, tabindex:0, "aria-label":describe(i)});
     element(point, "title", {}, describe(i));
     point.addEventListener("pointerover", () => {control.value=i; readout.textContent=describe(i);});
     point.addEventListener("focus", () => {control.value=i; readout.textContent=describe(i);});
@@ -387,8 +402,8 @@ function chart(id, xs, ys, limit, xLabel, component, caseLabel, xUnit, yUnit) {
   function select() {const i=Number(control.value); marker.setAttribute("cx",px(xs[i])); marker.setAttribute("cy",py(ys[i])); readout.textContent=describe(i);}
   control.addEventListener("input",select); select();
 }
-chart("sensitivity", record.sensitivity.map(r=>r.fsc_m), record.sensitivity.map(r=>r.gm_fluid_m), record.intact.criteria_results[5].required, "Free-surface correction", "Fluid metacentric height", i=>["No free surface", "Reference", "Excess free surface"][i], "m", "m");
-chart("public", record.public.heel_deg, record.public.gz_m, 0, "Heel", "Righting arm", ()=>"Public example", "degrees", "m");
+chart("sensitivity", record.sensitivity.map(r=>r.fsc_m), record.sensitivity.map(r=>r.gm_fluid_m), {mode: "criterion", value: record.intact.criteria_results[5].required, source: "2008 IS Code, Part A 2.2.4 (reference 1)"}, "Free-surface correction", "Fluid metacentric height", i=>["No free surface", "Reference", "Excess free surface"][i], "m", "m");
+chart("public", record.public.heel_deg, record.public.gz_m, {mode: "reference", value: 0}, "Heel", "Righting arm", ()=>"Public example", "degrees", "m");
 let comments = [];
 const sectionChoice = document.getElementById("comment-section");
 const status = document.getElementById("comment-status");
