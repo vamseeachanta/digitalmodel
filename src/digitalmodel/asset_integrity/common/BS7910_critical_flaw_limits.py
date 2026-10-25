@@ -165,9 +165,6 @@ class BS7910_2013():
         self.get_stress_intensity_factor_at_discontinuities()
         K_mat = self.get_critical_stress_intensity_factor()
         finite_number(K_mat, 'fracture toughness', positive=True)
-        self.get_reference_stress_by_annex(self.reference_stress_annex)
-        self.L_r = self.reference_stress / (
-            self.material_grade_properties['SMYS'])
         table_solution = hasattr(self, 'stress_intensity')
         points = ('deep', 'free_surface')
         if table_solution and not all(point in self.stress_intensity for point in points):
@@ -183,6 +180,9 @@ class BS7910_2013():
                 finally:
                     self.flaw.theta = original_theta
             self.get_stress_intensity_factor_solution(stress_intensity_key=point)
+            # Reference equations require the current loads set by the intensity solution.
+            self.get_reference_stress_by_annex(self.reference_stress_annex)
+            self.L_r = self.reference_stress / self.material_grade_properties['SMYS']
             self.get_plasticity_correction()
             kr = self.K_I / K_mat + self.plasticity_correction
             for name, value in (('K_r', kr), ('L_r', self.L_r), ('delta_K_I', self.delta_K_I)):

@@ -160,24 +160,88 @@ def test_A74_solution_must_be_explicit_and_qualified(selection):
         component.get_stress_intensity_factor_solution_Annex_M_7_2_2()
 
 
-def test_A75_surface_point_can_govern():
+def _table_flaw_assessment():
     component = object.__new__(BS7910_2013)
-    component.flaw = SimpleNamespace(dimensions={"a": 1, "c": 1})
-    component.material_grade_properties = {"SMYS": 100}
-    component.get_reference_annexes = lambda: None
-    component.stress_intensity_annex = "synthetic"
-    component.reference_stress_annex = "synthetic"
-    component.get_stress_intensity_factor_solution_by_annex = lambda *args: setattr(component, "stress_intensity", {"deep": {}, "free_surface": {}})
-    component.get_stress_intensity_factor_at_discontinuities = lambda: None
-    def intensity(stress_intensity_key):
-        component.K_I = component.delta_K_I = {"deep": 1, "free_surface": 2}[stress_intensity_key]
-    component.get_stress_intensity_factor_solution = intensity
-    component.get_critical_stress_intensity_factor = lambda: 1
-    component.get_reference_stress_by_annex = lambda *args: setattr(component, "reference_stress", 1)
-    component.get_plasticity_correction = lambda: setattr(component, "plasticity_correction", 0)
+    component.cfg = AttributeDict(
+        default={"settings": {"stress_intensity_factor_solution": "table",
+                              "scf_bending": 1., "ctod": .1}},
+        Outer_Pipe={"Geometry": {"Design_WT": 10. / 25.4}},
+        pipe_properties={"geometry": {"Nominal_ID": 200. / 25.4}},
+        loading={
+            "primary_membrane_stress": {
+                "value": 1000., "membrane_factor": 1., "bending_factor": .5},
+            "secondary_membrane_stress": {
+                "stress_to_yield": {"axial": 0.}, "bending_factor": 0.},
+        },
+    )
+    component.flaw = SimpleNamespace(
+        dimensions={"a": 2., "c": 4.}, theta=90,
+        geometry="thin_pipe", orientation="axial", location="internal_surface")
+    component.material_grade_properties = {"SMYS": 100., "SMUS": 150.}
+    component.material_properties = {"E": 200000., "Poissionsratio": .3}
+    component.delta_P_m, component.delta_P_b = 1., .5
+    # Synthetic coefficients bracket the geometry; no source table is qualified.
+    component.stress_intensity_solution_tables = {"Table_M_2": pd.DataFrame(
+        [[.1, .25, .05, 90, "Depth", 1., .5],
+         [.4, .75, .2, 90, "Depth", 1., .5],
+         [.1, .25, .05, 0, "Surface", 2., 1.],
+         [.4, .75, .2, 0, "Surface", 2., 1.]],
+        columns=["a_over_B", "a_over_c", "B_over_ri", "theta",
+                 "theta_location", "Mm", "Mb"])}
+    return component
+
+
+@pytest.mark.parametrize("prior_loads", [None, (100., 50.)])
+def test_A75_surface_point_can_govern(prior_loads):
+    component = _table_flaw_assessment()
+    if prior_loads is not None:
+        component.P_m, component.P_b = prior_loads
     component.get_flaw_fad_properties()
-    assert component.K_r == 2
-    assert component.delta_K_I == 2
+    # BS 7910:2013, Annex P, Equation P.18: with a/B=.2, c/B=.4,
+    # B/ri=.1, Pm=6.894757 MPa and Pb=3.447379 MPa, reference=10.884957 MPa.
+    # Lr=10.884957/100=.108849571; the synthetic surface coefficients give
+    # KI=(2*6.894757+3.447379)*sqrt(pi*2)=43.206484 MPa sqrt(mm).
+    # The existing toughness method gives 1947.852373 MPa sqrt(mm), so
+    # Kr=43.206484/1947.852373=.022181601; zero secondary stress gives rho=0.
+    assert component.reference_stress == pytest.approx(10.884957072)
+    assert component.L_r == pytest.approx(.108849571)
+    assert component.K_r == pytest.approx(.022181601)
+    assert component.K_I == pytest.approx(43.206483944)
+    # Range=(2*1+1*.5)*sqrt(pi*2)=6.266570687 MPa sqrt(mm).
+    assert component.delta_K_I == pytest.approx(6.266570687)
+    assert component.governing_crack_front == "free_surface"
+    assert set(component.crack_front_results) == {"deep", "free_surface"}
+    assert component.crack_front_results["deep"]["K_r"] == pytest.approx(.0110908004)
+
+
+def test_A75_reassessment_uses_current_loads_for_reference_stress():
+    component = _table_flaw_assessment()
+    # Prime only prior state: 1000 psi and a .5 bending factor, in MPa.
+    component.P_m, component.P_b = 6.894757293168, 3.447378646584
+    for pressure, reference, kr in [(1000., 10.884957072, .022181601),
+                                    (2000., 21.769914144, .044363202)]:
+        component.cfg.loading["primary_membrane_stress"]["value"] = pressure
+        component.get_flaw_fad_properties()
+        # Doubling both primary stresses doubles reference stress and KI/Kmat.
+        assert component.reference_stress == pytest.approx(reference)
+        assert component.L_r == pytest.approx(reference / 100.)
+        assert component.K_r == pytest.approx(kr)
+        assert component.governing_crack_front == "free_surface"
+
+
+def test_A75_fracture_and_growth_can_have_different_governing_points():
+    component = _table_flaw_assessment()
+    table = component.stress_intensity_solution_tables["Table_M_2"]
+    table.loc[table.theta_location == "Depth", "Mb"] = 2.
+    component.delta_P_m, component.delta_P_b = 0., 1.
+    component.get_flaw_fad_properties()
+    # Deep KI=(Pm+2*Pb)*sqrt(pi*a) < surface KI=(2*Pm+Pb)*sqrt(pi*a).
+    # Deep range=2*sqrt(pi*2)=5.013256549; surface range is half that.
+    assert component.governing_crack_front == "free_surface"
+    assert component.K_r == pytest.approx(.022181601)
+    assert component.delta_K_I == pytest.approx(5.013256549)
+    assert component.crack_front_results["deep"]["delta_K_I"] == pytest.approx(5.013256549)
+    assert component.crack_front_results["free_surface"]["delta_K_I"] == pytest.approx(2.506628275)
 
 
 @pytest.mark.parametrize("kr", [2., np.nan])
