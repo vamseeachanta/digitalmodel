@@ -29,7 +29,12 @@ SOURCES = (
 
 
 def _positive(name: str, value: float) -> None:
-    if not math.isfinite(value) or value <= 0:
+    if (
+        not isinstance(value, (int, float))
+        or isinstance(value, bool)
+        or not math.isfinite(value)
+        or value <= 0
+    ):
         raise ValueError(f"{name} must be finite and positive")
 
 
@@ -111,7 +116,9 @@ class TankImpedance:
         for name in ("conduit_area_m2", "forcing_period_s", "roll_amplitude_rad"):
             _positive(name, getattr(self, name))
         if not (
-            math.isfinite(self.moment_per_roll.real)
+            isinstance(self.moment_per_roll, (int, float, complex))
+            and not isinstance(self.moment_per_roll, bool)
+            and math.isfinite(self.moment_per_roll.real)
             and math.isfinite(self.moment_per_roll.imag)
         ):
             raise ValueError("moment_per_roll must have finite components")
@@ -238,16 +245,11 @@ def render_roll_reduction_html(
     *,
     revision: str,
     date: str,
+    change: str,
     previous_revisions: tuple[tuple[str, str, str], ...] = (),
 ) -> str:
-    """Render a self-contained analysis section with provenance and no file writes."""
-    history = previous_revisions + (
-        (
-            revision,
-            date,
-            "Issued dimensional area sweep to distinguish calculated response from unavailable data.",
-        ),
-    )
+    """Render an analysis section with the current change reason and prior rows."""
+    history = previous_revisions + ((revision, date, change),)
     revision_rows = "".join(
         "<tr>" + "".join(f"<td>{escape(cell)}</td>" for cell in row) + "</tr>"
         for row in history

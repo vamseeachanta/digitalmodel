@@ -12,6 +12,7 @@ See module SOURCES for exact links and restoring-equation source.
 
 from dataclasses import replace
 import math
+from types import SimpleNamespace
 
 import pytest
 
@@ -82,7 +83,9 @@ def test_missing_data_never_becomes_a_zero_result(vessel, points, missing):
         "gravity_m_s2",
     ],
 )
-@pytest.mark.parametrize("bad", [0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "bad", [0, -1, float("nan"), float("inf"), True, False, "1", None, 1j]
+)
 def test_invalid_vessel_inputs(field, bad):
     with pytest.raises(ValueError, match=field):
         replace(basis(), **{field: bad})
@@ -97,7 +100,9 @@ def test_invalid_damping(bad):
 @pytest.mark.parametrize(
     "field", ["conduit_area_m2", "forcing_period_s", "roll_amplitude_rad"]
 )
-@pytest.mark.parametrize("bad", [0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "bad", [0, -1, float("nan"), float("inf"), True, False, "1", None, 1j]
+)
 def test_invalid_tank_inputs(field, bad):
     with pytest.raises(ValueError, match=field):
         replace(point(), **{field: bad})
@@ -112,6 +117,19 @@ def test_provenance_is_required(obj):
 def test_nonfinite_complex_moment_is_rejected():
     with pytest.raises(ValueError, match="moment_per_roll"):
         point(moment=complex(0, math.nan))
+
+
+@pytest.mark.parametrize(
+    "bad", [True, False, "1", None, object(), SimpleNamespace(real=1, imag=0)]
+)
+def test_nonnumeric_moment_is_rejected(bad):
+    with pytest.raises(ValueError, match="moment_per_roll"):
+        point(moment=bad)
+
+
+@pytest.mark.parametrize("moment", [0, 1.5, 1 - 2j])
+def test_numeric_moment_types_are_accepted(moment):
+    assert point(moment=moment).moment_per_roll == moment
 
 
 def test_duplicate_areas_and_mixed_operating_points_are_rejected():
@@ -136,7 +154,9 @@ def test_cancelled_coupled_impedance_is_rejected():
 
 def test_report_has_basis_sources_revision_and_curve():
     result = reduction_sweep(basis(), [point(), point(2, -60j)])
-    html = render_roll_reduction_html(result, revision="A", date="2026-10-19")
+    html = render_roll_reduction_html(
+        result, revision="A", date="2026-10-19", change="Initial arithmetic example"
+    )
     assert "50.0" in html and "75.0" in html
     assert "Revision history" in html
     assert html.index("Summary") < html.index("Revision history") < html.index("Method")
@@ -149,11 +169,16 @@ def test_report_has_basis_sources_revision_and_curve():
 
 def test_missing_report_and_html_escaping():
     result = reduction_sweep(None, [])
-    html = render_roll_reduction_html(result, revision="<script>", date="2026-10-19")
+    html = render_roll_reduction_html(
+        result, revision="<script>", date="2026-10-19", change="Explain <script>"
+    )
     assert "NOT_EVALUATED" in html and "vessel basis" in html
     assert "&lt;script&gt;" in html and "<script>" not in html
+    assert "Explain &lt;script&gt;" in html
     result = reduction_sweep(replace(basis(), source="<script>"), [point()])
-    assert "<script>" not in render_roll_reduction_html(result, revision="A", date="x")
+    assert "<script>" not in render_roll_reduction_html(
+        result, revision="A", date="x", change="Initial issue"
+    )
 
 
 def test_nonfinite_derived_response_is_rejected():
@@ -166,7 +191,22 @@ def test_report_reissue_preserves_prior_revision():
         reduction_sweep(None, []),
         revision="B",
         date="2026-10-20",
+        change="Updated impedance basis after calibration",
         previous_revisions=(("A", "2026-10-19", "Initial issue for data readiness"),),
     )
-    assert "Initial issue for data readiness" in html
+    assert (
+        "<tr><td>A</td><td>2026-10-19</td>"
+        "<td>Initial issue for data readiness</td></tr>"
+    ) in html
+    assert (
+        "<tr><td>B</td><td>2026-10-20</td>"
+        "<td>Updated impedance basis after calibration</td></tr>"
+    ) in html
     assert html.index("2026-10-19") < html.index("2026-10-20")
+
+
+def test_report_change_description_is_required():
+    with pytest.raises(TypeError, match="change"):
+        render_roll_reduction_html(
+            reduction_sweep(None, []), revision="B", date="2026-10-20"
+        )

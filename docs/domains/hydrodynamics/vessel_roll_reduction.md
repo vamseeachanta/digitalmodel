@@ -13,6 +13,7 @@ repository. That calculation remains **NOT_EVALUATED**.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | A | 2026-10-19 | Added dimensional coupling and a declared arithmetic example so unavailable vessel data cannot become an illustrative vessel result. |
+| B | 2026-10-24 | Required a change reason for each report issue and rejected boolean and nonnumeric dimensional inputs to preserve provenance and input validity. |
 
 ## Inputs and method
 
@@ -84,15 +85,19 @@ points = [
 ]
 result = reduction_sweep(vessel, points)
 assert [row.reduction_percent for row in result.rows] == [50.0, 75.0]
-html = render_roll_reduction_html(result, revision="A", date="2026-10-19")
-# The caller may save this self-contained section in the owning analysis report.
+html = render_roll_reduction_html(
+    result, revision="A", date="2026-10-19",
+    change="Issued dimensional area sweep using declared arithmetic inputs",
+)
+# The caller may save this section in the analysis report that contains it.
 missing = reduction_sweep(None, [])
 assert missing.status == "NOT_EVALUATED"
 ```
 
+Each report issue requires a `change` description stating what changed and why.
 For a reissue, pass earlier `(revision, date, change)` rows through
-`previous_revisions`; the renderer appends the current issue without changing
-those rows.
+`previous_revisions`; the renderer appends the current issue with its supplied
+change description without changing those rows.
 
 The HTML contains the input basis, sources, revision history, area/reduction
 curve, table, missing evidence and limitations. Provenance strings are escaped;
