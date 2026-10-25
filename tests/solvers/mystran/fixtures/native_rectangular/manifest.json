@@ -5,7 +5,7 @@
   "source": {
     "url": "https://github.com/MystranSolver/MYSTRANSolver/tree/19.0.0",
     "commit": "3a5913a904ee1adbda9fbcaf9c0a6af8e10f0f9f",
-    "version_string": "MYSTRAN Version 19.0.0   JUN 28 2026 MYSTRAN developed by Dr Bill Case",
+    "version_string": "MYSTRAN Version 19.0.0   JUN 28 2026",
     "acquisition": "Source build; the release contains only a Windows binary."
   },
   "build": {
@@ -49,12 +49,12 @@
     "error_pct": "%",
     "force": "N"
   },
-  "extraction": "Selected version, epsilon, displacement table through grid 5, SPC table through grid 1, and END OF JOB lines; trailing spaces removed; all numeric tokens unchanged. Other header lines omitted, no result values replaced.",
+  "extraction": "Selected version, epsilon, displacement table through grid 5, SPC table through grid 1, and END OF JOB lines; trailing spaces removed; all numeric tokens unchanged. Other header lines omitted, no result values replaced. The version banner is sanitized to remove personal attribution while retaining the solver version and date.",
   "retention": "Full outputs and build logs retained locally; only decks, excerpts and this manifest are repository fixtures. Local retention does not establish backup.",
   "sha256": {
-    "y.F06": "cf3e7d5adfdc367c2b420d4c316ad69385603d51ee204167796f928a53c84f02",
+    "y.F06": "001be2dc8047b653c17c4c112da412042220b1fe0f503f4e1b2530688f4eacfe",
     "y.bdf": "5625daa377f3ab88f03087f2aba5896aa0dbf188b714971f6f51bb8c982f837a",
-    "z.F06": "47608a2b0ca8826e22ad6b95d3127f70f08f14b5bb2136d505fdc133e2f2ba74",
+    "z.F06": "0f71a8be04ff7c27af6f4b808cb4d769762b4faab8a2f121200b1b6a21f2c5ee",
     "z.bdf": "f5bd6a322b490e3c37f654a960b7a5a14629e478a56eecef10cee1582f2323e5"
   },
   "cases": {

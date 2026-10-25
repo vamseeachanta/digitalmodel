@@ -89,7 +89,7 @@ def test_native_rectangular_bending(tmp_path, plane):
 @pytest.mark.parametrize("plane", ["y", "z"])
 def test_recorded_rectangular_bending(tmp_path, plane):
     """Bind the current writer and parsed evidence to stored native agreement."""
-    manifest = json.loads((FIXTURES / "manifest.json").read_text())
+    manifest = json.loads((FIXTURES / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["criteria_version"] == "rectangular-bending-v1"
     assert manifest["max_error_pct"] == 1.0
     case = manifest["cases"][plane]
@@ -105,9 +105,25 @@ def test_recorded_rectangular_bending(tmp_path, plane):
     assert error_pct < manifest["max_error_pct"]
 
 
+@pytest.mark.parametrize("artifact", ["manifest.json", "y.F06", "z.F06"])
+def test_recorded_version_banners(artifact):
+    """Retain solver version and date without personal attribution."""
+    text = (FIXTURES / artifact).read_text(encoding="utf-8")
+    if artifact == "manifest.json":
+        banners = [json.loads(text)["source"]["version_string"]]
+    else:
+        banners = [line.strip() for line in text.splitlines() if "MYSTRAN" in line]
+    if banners != ["MYSTRAN Version 19.0.0   JUN 28 2026"]:
+        pytest.fail("Solver banner must contain only the recorded version and date")
+
+
 def test_recorded_evidence_digests():
-    """Detect changes to either committed deck or verbatim F06 excerpt."""
-    manifest = json.loads((FIXTURES / "manifest.json").read_text())
+    """Detect changes to either committed deck or documented F06 excerpt."""
+    manifest = json.loads((FIXTURES / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["sha256"]) == {"y.bdf", "z.bdf", "y.F06", "z.F06"}
     for name, expected in manifest["sha256"].items():
-        assert hashlib.sha256((FIXTURES / name).read_bytes()).hexdigest() == expected
+        assert hashlib.sha256((FIXTURES / name).read_bytes()).hexdigest() == expected, (
+            "Rebuild native output with MYSTRAN_EXE=<executable> python -m pytest "
+            "tests/solvers/mystran/test_native_run.py -k test_native_rectangular_bending; "
+            "then re-extract per the manifest extraction metadata and refresh sha256"
+        )
