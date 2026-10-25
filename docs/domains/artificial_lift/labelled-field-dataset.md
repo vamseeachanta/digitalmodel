@@ -11,6 +11,7 @@ are distributed here.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Prepare the request and a permission-gated intake adapter so missing data cannot become an accuracy claim. |
+| Correction | 2026-10-24 | Match default export headers and count records in intake errors; check the inventory tables against the open PDFs. |
 
 ## Source basis
 
@@ -38,6 +39,12 @@ returned an access denial and its alternative archive returned a browser
 challenge; neither response was used as scientific evidence.
 
 ### Reconcile before use
+
+The open PDFs were checked on 2026-10-25 (UTC). Article Table 1 and doctoral
+thesis Table 5.1 agree on the following counts and valve associations; the
+monograph subset below was checked against its Table 3.1. These checks confirm
+the printed tables and their arithmetic, not any received dataset. The valve
+association difference between the sources remains unresolved.
 
 Table 1 of the article and Table 5.1 of the doctoral thesis give:
 
@@ -118,6 +125,10 @@ these references can also be private and require review before publication.
 
 Each array cell must contain a JSON array of finite numbers. Only the selected
 three columns are accepted, to reject accidentally included identity columns.
+The defaults are `cargas`, `posicoes`, `tipo`, as in monograph Appendix A.
+For other headers, supply `columns` explicitly in load/position/type order,
+for example `columns=("loads", "positions", "type")`. Invalid-row errors count
+CSV records starting at 2 after the header, including cells with line breaks.
 This does not anonymize arbitrary cell contents; review the export before
 loading. Unknown types remain counted and unscored. Preserve point traversal
 order. No sorting, interpolation, unit conversion or normalization occurs.

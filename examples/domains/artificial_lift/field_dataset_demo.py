@@ -62,6 +62,7 @@ def run_example() -> dict:
         codebook_reference="invented-example-dictionary",
         card_space="pump",
         units={"position": "in", "load": "lbf"},
+        columns=("loads", "positions", "type"),
     )
     predictions = iter(["NORMAL", "GAS_LOCK", "GAS_INTERFERENCE"])
     # Software demonstration policy, not a sample-adequacy recommendation.

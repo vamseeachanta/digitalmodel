@@ -143,12 +143,13 @@ def load_three_column_export(
     codebook_reference: str,
     card_space: str,
     units: dict[str, str],
-    columns: tuple[str, str, str] = ("loads", "positions", "type"),
+    columns: tuple[str, str, str] = ("cargas", "posicoes", "tipo"),
 ) -> FieldDataset:
     """Load supplier-confirmed bytes and explicit codes into the benchmark set.
 
     Arrays are JSON in CSV cells. Select columns in load/position/type order;
-    arbitrary CSV column order is supported. All other columns are rejected.
+    defaults match the cited export: cargas/posicoes/tipo. Arbitrary CSV
+    column order is supported. All other columns are rejected.
     Unknown type codes and unsupported published classes remain unscored.
     Physical axis units and pump-card space are required by the existing model.
     No sample is transformed, discarded silently or relabelled by its shape.
@@ -224,7 +225,7 @@ def load_three_column_export(
         ):
             raise ValueError("Export must contain exactly the selected three columns")
         records = []
-        for row in reader:
+        for record_index, row in enumerate(reader, start=2):
             try:
                 if None in row or any(row[c] is None for c in columns):
                     raise ValueError("Row width does not match columns")
@@ -248,7 +249,7 @@ def load_three_column_export(
             except (ValueError, TypeError, OverflowError, RecursionError):
                 # Do not expose supplied card contents through exception chains.
                 raise ValueError(
-                    f"Invalid export row {reader.line_num}; no records loaded"
+                    f"Invalid export row {record_index}; no records loaded"
                 ) from None
     except (UnicodeDecodeError, csv.Error):
         raise ValueError("Invalid UTF-8 CSV export; no records loaded") from None

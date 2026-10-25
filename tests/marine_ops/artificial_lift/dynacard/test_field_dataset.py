@@ -73,6 +73,7 @@ def load(tmp_path, permission, provenance, rows=None, **kwargs):
         codebook_reference="fixture dictionary",
         card_space="pump",
         units={"position": "in", "load": "lbf"},
+        columns=("loads", "positions", "type"),
     )
     options.update(kwargs)
     return load_three_column_export(path, **options)
@@ -157,6 +158,7 @@ def test_column_order_does_not_change_point_order(tmp_path, permission, provenan
         codebook_reference="fixture dictionary",
         card_space="pump",
         units={"position": "in", "load": "lbf"},
+        columns=("loads", "positions", "type"),
     )
     assert dataset.cards[0].card.position == [0, 1, 1, 0]
 
@@ -257,6 +259,20 @@ def test_rejects_malformed_arrays(tmp_path, permission, provenance, loads, posit
         load(tmp_path, permission, provenance, rows=[(loads, positions, "healthy")])
 
 
+@pytest.mark.parametrize("valid_records", [0, 1, 2])
+def test_multiline_cells_report_record_index(
+    tmp_path, permission, provenance, valid_records
+):
+    rows = [("[0,\n0,1,1]", "[0,1,\n1,0]", "healthy")] * valid_records
+    rows.append(("private\ninvalid-array", "[0,1,1,0]", "private-code"))
+    with pytest.raises(ValueError) as error:
+        load(tmp_path, permission, provenance, rows=rows)
+    assert str(error.value) == (
+        f"Invalid export row {valid_records + 2}; no records loaded"
+    )
+    assert error.value.__suppress_context__ is True
+
+
 def test_unknown_and_unsupported_labels_are_counted(tmp_path, permission, provenance):
     rows = [
         ("[0,0,1,1]", "[0,1,1,0]", code) for code in ("healthy", "sensor", "unknown")
@@ -293,12 +309,11 @@ def test_exact_columns_and_row_width(tmp_path, permission, provenance, rows, hea
             codebook_reference="fixture",
             card_space="pump",
             units={"position": "in", "load": "lbf"},
+            columns=("loads", "positions", "type"),
         )
 
 
-def test_portuguese_headers_require_explicit_selection(
-    tmp_path, permission, provenance
-):
+def test_default_headers_match_cited_export(tmp_path, permission, provenance):
     path, digest = csv_export(
         tmp_path, [("[0,0,1,1]", "[0,1,1,0]", "1")], ("cargas", "posicoes", "tipo")
     )
@@ -311,7 +326,6 @@ def test_portuguese_headers_require_explicit_selection(
         codebook_reference="fixture dictionary",
         card_space="pump",
         units={"position": "in", "load": "lbf"},
-        columns=("cargas", "posicoes", "tipo"),
     )
     assert dataset.cards[0].label == "NORMAL"
 
