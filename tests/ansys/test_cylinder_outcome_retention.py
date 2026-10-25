@@ -6,6 +6,7 @@ that attempt or imply completion. Counts are event counts, not engineering
 constants. No numerical model or acceptance tolerance is introduced.
 """
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,18 @@ from tests.ansys.test_cylinder_canary import ORDER, protocol as protocol
 from tests.ansys.test_cylinder_diagnostic_driver import SyntheticReservation, driver
 from tests.ansys.test_cylinder_intermediate_resume import intermediate as intermediate
 from tests.ansys.test_cylinder_pressure_resume import harness as harness
+
+
+@pytest.fixture(autouse=True)
+def synthetic_junction_api(monkeypatch):
+    """Provide the missing API only for synthetic non-Windows retention tests.
+
+    These temporary trees cannot contain Windows junctions. Python 3.12+ and
+    Windows keep the real implementation; symlink checks remain real everywhere.
+    Hash-bound runtime sources and the existing platform gate stay unchanged.
+    """
+    if os.name != 'nt' and not hasattr(Path, 'is_junction'):
+        monkeypatch.setattr(Path, 'is_junction', lambda self: False, raising=False)
 
 
 @pytest.mark.parametrize('execution_failure', [False, True])
