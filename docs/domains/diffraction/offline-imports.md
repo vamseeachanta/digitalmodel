@@ -10,6 +10,7 @@ it changes no hydrodynamic equations, coefficients or acceptance limits.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-20 | Defer interface imports so offline test collection can run without licensed software. |
+| 1 | 2026-10-24 | Document missing-interface flags and defer CLI detection until command execution so help and collection stay offline. |
 
 ## Import contract
 
@@ -33,12 +34,21 @@ Explicit access to `OrcaWaveConverter`, `convert_orcawave_results`,
 `extract_all_damping` resolves the licensed modules. The package-level
 `ORCAWAVE_AVAILABLE` and `TEST_UTILITIES_AVAILABLE` flags and
 `result_extractor.CONVERTER_AVAILABLE` also opt into interface detection when
-read. Optional solver exports retain a `None` fallback if importing the
-dependency raises `ImportError`. Direct converter submodule imports retain
+read. Without `OrcFxAPI`, all three flags now return `False` rather than the
+previous `True`, so `convert-orcawave`, `compare` and `plot-raos` report the
+missing dependency before conversion. Optional solver exports retain a `None`
+fallback if importing the dependency raises `ImportError`. Direct converter submodule imports retain
 their normal missing-dependency errors. Import errors other than `ImportError`
 are propagated. A wildcard import requests licensed exports too; offline callers
 should import the named helpers they need. `dir()` lists exports without loading
 the interface.
+
+Importing `digitalmodel.hydrodynamics.diffraction.cli`, displaying command help
+and collecting the diffraction CLI test modules do not request an interface.
+The three commands above read the availability flag and resolve the converter
+only when executed. Tests that explicitly request an interface, including the
+specialized CLI suite's `pytest.importorskip("OrcFxAPI")`, remain outside this
+zero-request collection contract.
 
 The implementation follows [PEP 562, Module `__getattr__` and `__dir__`
 (2017), Specification](https://peps.python.org/pep-0562/#specification).
@@ -72,12 +82,16 @@ imported. The wrapper detects ordinary import statements; the finder detects
 dynamic imports and discovery requests. Rejection raises a `BaseException`
 subclass so an optional-dependency `except ImportError` cannot hide a request.
 The expected request list is empty, as required by issue #2526. No interface
-substitutes are installed in these offline checks, and collection policy and
+substitutes are installed in the numerical checks, and collection policy and
 numerical cases are unchanged.
 
 The regression runs the complete analytical-cylinder, unit conversion, mesh
 orientation, open-boundary, mesh-pipeline, reverse-parser and AH1 parser files.
 It also checks report and result-extraction helpers and the worked example.
+Additional fresh-process tests cover CLI imports, help and collection, the
+missing-interface flags and six export fallbacks, and propagation of converter
+errors other than `ImportError`. Missing-interface tests let discovery return no
+module; a separate command-resolution test uses a converter test double.
 Run it with:
 
 ```bash

@@ -24,11 +24,7 @@ from digitalmodel.hydrodynamics.diffraction import (
     AQWAConverter,
     OrcaFlexExporter,
     validate_results,
-    ORCAWAVE_AVAILABLE
 )
-
-if ORCAWAVE_AVAILABLE:
-    from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
 
 from digitalmodel.hydrodynamics.diffraction.comparison_framework import compare_diffraction_results
 from digitalmodel.hydrodynamics.diffraction.batch_processor import process_batch_from_config_file
@@ -222,9 +218,13 @@ def convert_orcawave(model_file, vessel_name, water_depth, output, validate, for
         diffraction convert-orcawave model.sim -d 1200 -o ./output
         diffraction convert-orcawave model.sim -v FPSO_A -d 1200
     """
+    from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
+
     if not ORCAWAVE_AVAILABLE:
         click.echo(click.style("[ERROR] OrcFxAPI not available. Install OrcaFlex with Python API.", fg='red', bold=True))
         sys.exit(1)
+
+    from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
 
     click.echo("=" * 80)
     click.echo("OrcaWave to OrcaFlex Conversion")
@@ -330,9 +330,13 @@ def compare(aqwa_folder, orcawave_file, vessel_name, water_depth, output, tolera
     Example:
         diffraction compare ./aqwa_analysis model.sim FPSO_A -d 1200
     """
+    from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
+
     if not ORCAWAVE_AVAILABLE:
         click.echo(click.style("[ERROR] OrcFxAPI not available for OrcaWave comparison.", fg='red', bold=True))
         sys.exit(1)
+
+    from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
 
     click.echo("=" * 80)
     click.echo("AQWA vs OrcaWave Comparison")
@@ -1245,12 +1249,16 @@ def plot_raos_cmd(model_file, water_depth, vessel_name, output, x_axis, headings
         diffraction plot-raos model.sim -d 100\n
         diffraction plot-raos model.sim -d 100 --x-axis frequency --headings 0,45,90
     """
+    from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
+
     if not ORCAWAVE_AVAILABLE:
         click.echo(click.style(
             "[ERROR] OrcFxAPI not available. Install OrcaFlex with Python API.",
             fg="red", bold=True,
         ))
         sys.exit(1)
+
+    from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
 
     click.echo("=" * 80)
     click.echo("RAO Plotter")

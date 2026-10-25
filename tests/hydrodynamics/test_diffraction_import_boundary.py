@@ -64,12 +64,33 @@ sys.meta_path.insert(0, RejectInterfaces())
 """
 
 
-def _run_guarded(code: str, tmp_path: Path) -> None:
+_MISSING_INTERFACE = _GUARD + """
+from importlib.machinery import PathFinder
+
+original_find_spec = PathFinder.find_spec
+
+def missing_interface_spec(fullname, path=None, target=None):
+    if fullname.split(".")[0] == "OrcFxAPI":
+        return None
+    return original_find_spec(fullname, path, target)
+
+PathFinder.find_spec = missing_interface_spec
+
+def check(name):
+    if name.split(".")[0] == "OrcFxAPI":
+        attempts.append(name)
+        return
+    if name.split(".")[0] in roots:
+        raise ForbiddenInterface(name)
+"""
+
+
+def _run_guarded(code: str, tmp_path: Path, guard: str = _GUARD) -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join([str(ROOT / "src"), env.get("PYTHONPATH", "")])
     # This is a harness timeout, not an engineering acceptance limit.
     result = subprocess.run(
-        [sys.executable, "-c", _GUARD + textwrap.dedent(code)],
+        [sys.executable, "-c", guard + textwrap.dedent(code)],
         cwd=ROOT,
         env=env,
         text=True,
@@ -88,6 +109,7 @@ def _run_guarded(code: str, tmp_path: Path) -> None:
         f"{PACKAGE}.solver.report_extractors",
         f"{PACKAGE}.result_extractor",
         f"{PACKAGE}.report_generator",
+        f"{PACKAGE}.cli",
     ],
 )
 def test_offline_imports_never_request_interfaces(module, tmp_path):
@@ -150,6 +172,163 @@ def test_worked_example_without_interfaces(tmp_path):
         """
         import runpy
         runpy.run_path("examples/demos/diffraction/offline_imports.py", run_name="__main__")
+        assert attempts == []
+    """,
+        tmp_path,
+    )
+
+
+def test_missing_interface_flags_and_exports(tmp_path):
+    """Normal import discovery returns no interface, rather than raising a guard."""
+    _run_guarded(
+        """
+        import importlib
+        from digitalmodel.hydrodynamics import diffraction as package
+        from digitalmodel.hydrodynamics.diffraction import result_extractor, solver
+
+        assert attempts == []
+        assert package.ORCAWAVE_AVAILABLE is False
+        assert package.TEST_UTILITIES_AVAILABLE is False
+        assert result_extractor.CONVERTER_AVAILABLE is False
+        for name in (
+            "OrcaWaveConverter", "convert_orcawave_results",
+            "OrcaWaveDataExtractor", "extract_all_rao_data",
+            "extract_all_added_mass", "extract_all_damping",
+        ):
+            assert getattr(package, name) is None
+            assert getattr(solver, name) is None
+        try:
+            importlib.import_module(solver.__name__ + ".orcawave_converter")
+        except ImportError:
+            pass
+        else:
+            raise AssertionError("direct converter import did not raise ImportError")
+        assert attempts and set(attempts) == {"OrcFxAPI"}
+        assert not any(name.split(".")[0] in roots for name in sys.modules)
+    """,
+        tmp_path,
+        guard=_MISSING_INTERFACE,
+    )
+
+
+@pytest.mark.parametrize(
+    "export, submodule",
+    [
+        ("OrcaWaveConverter", "orcawave_converter"),
+        ("convert_orcawave_results", "orcawave_converter"),
+        ("OrcaWaveDataExtractor", "orcawave_data_extraction"),
+        ("extract_all_rao_data", "orcawave_data_extraction"),
+        ("extract_all_added_mass", "orcawave_data_extraction"),
+        ("extract_all_damping", "orcawave_data_extraction"),
+    ],
+)
+def test_converter_errors_propagate(export, submodule, tmp_path):
+    _run_guarded(
+        f"""
+        from digitalmodel.hydrodynamics import diffraction as package
+        from digitalmodel.hydrodynamics.diffraction import solver
+
+        class BrokenConverterFinder(importlib.abc.MetaPathFinder):
+            def find_spec(self, fullname, path=None, target=None):
+                if fullname == solver.__name__ + "." + {submodule!r}:
+                    raise RuntimeError("converter import failed")
+                return None
+
+        sys.meta_path.insert(0, BrokenConverterFinder())
+        for module in (package, solver):
+            try:
+                getattr(module, {export!r})
+            except RuntimeError as exc:
+                assert str(exc) == "converter import failed"
+            else:
+                raise AssertionError("converter error was swallowed")
+        assert attempts == []
+    """,
+        tmp_path,
+    )
+
+
+def test_cli_help_and_collection_never_request_interfaces(tmp_path):
+    _run_guarded(
+        f"""
+        import pytest
+        from click.testing import CliRunner
+        from digitalmodel.hydrodynamics.diffraction.cli import cli
+
+        runner = CliRunner()
+        for command in ([], ["convert-orcawave"], ["compare"], ["plot-raos"]):
+            result = runner.invoke(cli, command + ["--help"])
+            assert result.exit_code == 0, result.output
+        result = pytest.main([
+            "tests/hydrodynamics/diffraction/test_cli_integration.py",
+            "tests/hydrodynamics/diffraction/test_cli_run_validation.py",
+            "--collect-only", "-q", "-p", "no:cacheprovider",
+            "--basetemp=" + {str(tmp_path / "collection")!r},
+        ])
+        assert result == pytest.ExitCode.OK
+        assert attempts == []
+    """,
+        tmp_path,
+    )
+
+
+def test_cli_missing_interface_fails_at_command_time(tmp_path):
+    _run_guarded(
+        f"""
+        from pathlib import Path
+        from click.testing import CliRunner
+        from digitalmodel.hydrodynamics.diffraction.cli import cli
+
+        assert attempts == []
+        model = Path({str(tmp_path / "model.sim")!r})
+        model.write_text("test input")
+        runner = CliRunner()
+        for command in (
+            ["convert-orcawave", str(model)],
+            ["compare", str(model.parent), str(model), "test"],
+            ["plot-raos", str(model)],
+        ):
+            attempts.clear()
+            result = runner.invoke(cli, command + ["--water-depth", "100"])
+            assert result.exit_code == 1, result.output
+            assert "OrcFxAPI not available" in result.output
+            assert attempts and set(attempts) == {{"OrcFxAPI"}}
+        assert not any(name.split(".")[0] in roots for name in sys.modules)
+    """,
+        tmp_path,
+        guard=_MISSING_INTERFACE,
+    )
+
+
+def test_cli_resolves_converter_when_commands_run(tmp_path):
+    """Exercise command resolution with a test double, without an interface."""
+    _run_guarded(
+        f"""
+        import importlib
+        from pathlib import Path
+        from unittest.mock import MagicMock
+        from click.testing import CliRunner
+        from digitalmodel.hydrodynamics import diffraction as package
+
+        cli_module = importlib.import_module(package.__name__ + ".cli")
+        package.ORCAWAVE_AVAILABLE = True
+        package.OrcaWaveConverter = MagicMock(
+            side_effect=RuntimeError("converter reached")
+        )
+        cli_module.AQWAConverter = MagicMock()
+        model = Path({str(tmp_path / "model.sim")!r})
+        model.write_text("test input")
+        runner = CliRunner()
+        for command in (
+            ["convert-orcawave", str(model)],
+            ["compare", str(model.parent), str(model), "test"],
+            ["plot-raos", str(model)],
+        ):
+            package.OrcaWaveConverter.reset_mock()
+            result = runner.invoke(cli_module.cli, command + ["--water-depth", "100"])
+            assert result.exit_code == 1, result.output
+            assert "converter reached" in result.output
+            package.OrcaWaveConverter.assert_called_once()
         assert attempts == []
     """,
         tmp_path,
