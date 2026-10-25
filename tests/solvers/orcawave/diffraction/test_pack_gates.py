@@ -6,6 +6,7 @@
 import ast
 import importlib.util
 import logging
+import multiprocessing
 import subprocess
 import sys
 from collections import Counter
@@ -624,3 +625,25 @@ def test_started_pool_worker_errors_remain_fatal(tmp_path, monkeypatch):
     with pytest.raises(OSError, match="synthetic .* failure"):
         validator.validate_all()
     assert validator.results == {}
+
+
+@pytest.mark.parametrize("start_method", multiprocessing.get_all_start_methods())
+@pytest.mark.parametrize("failed_start", [0, 2, 3])
+def test_real_pool_startup_cleanup(
+    tmp_path, requested_geometry, start_method, failed_start
+):
+    """Real worker starts must finish or be joined before sequential fallback.
+
+    The probe owns and cleans its workers even when the regression fails, and
+    runs separately so fork and spawn do not inherit the pytest process state.
+    Zero selects normal parallel completion; other cases fail a later start.
+    """
+    for name in requested_geometry:
+        (tmp_path / name).touch()
+    probe = Path(__file__).with_name("pool_startup_probe.py")
+    result = subprocess.run(
+        [sys.executable, str(probe), geometry.__file__, str(tmp_path),
+         start_method, str(failed_start)],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

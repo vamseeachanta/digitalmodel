@@ -66,7 +66,7 @@ class GeometryValidator:
             "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
 
-        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 4, 2026).
+        # Source: docs/agent-pack.md, section 5, G0-GEOMETRY (revision 6, 2026).
         # Clear stale results and reject omissions before parsing or pool creation.
         self.results = {}
         missing = [name for name in geometry_files
@@ -95,6 +95,14 @@ class GeometryValidator:
                         for name, kind in geometry_files.items()
                     }
                 except OSError:
+                    # Startup can fail before the manager thread exists, when
+                    # shutdown alone cannot reap workers. Snapshot before exit
+                    # clears this registry; older Python has no public abort API.
+                    workers = tuple((getattr(executor, "_processes", None) or {}).values())
+                    for worker in workers:
+                        worker.terminate()
+                    for worker in workers:
+                        worker.join()
                     logger.warning("Process pool submission failed; validating sequentially")
                     parallel = False
                 else:

@@ -5,7 +5,7 @@
 | Module | solvers/orcawave |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/solvers/orcawave` |
-| Pack revision | 5; 2026-10-20 |
+| Pack revision | 6; 2026-10-25 |
 | Code revision | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Analysis family | Diffraction; registry code DF |
 | Quality role | Diffraction quality manager; deputy: diffraction quality manager on another provider |
@@ -26,6 +26,7 @@ regressions use synthetic inputs only and establish no solver qualification.
 | 3 | 2026-10-19 | Rejected absent requested regular geometry files before worker creation; retained partial-input, parser and topology limitations. |
 | 4 | 2026-10-20 | Recorded complete requested-input refusal, atomic parser results, edge-closure and QA-state repairs; retained the historical audit pin and unresolved engineering qualifications. |
 | 5 | 2026-10-20 | Bound the 100-test result to revision 64f5380d, which includes the submission-failure regressions. |
+| 6 | 2026-10-25 | Required worker termination and joining before sequential retry after partial startup; added real-executor regressions for fork, spawn and forkserver. |
 
 ## 1. Purpose and scope
 
@@ -157,11 +158,23 @@ alone does not establish pool availability. Repeated reads after a partial
 submission are permitted because these parsers only read geometry files.
 The two geometry-discovery log messages are retained for diagnostics.
 
+Revision 6 requires workers started before a submission failure to be stopped
+and joined before sequential parsing. Context-manager shutdown alone does not
+reap workers if startup fails before the executor manager thread exists.
+The repair snapshots the executor's worker registry before shutdown clears it;
+this uses a private Python implementation detail where no public abort API is
+available. Real-executor regressions inject failure at the second and third
+process starts and assert no surviving workers or unjoined children before
+sequential parsing. Normal parallel completion is also exercised for each
+available start method: fork, spawn and forkserver on the tested interpreter.
+
 The historical diagnostics and section-6 catalogue remain bound to the code pin
 above; their repaired contracts are identified in
 [the issue-2738 qualification note](issue-2738-qualification.html). The suite
 passed 100 tests at `64f5380d` in the second-provider review (Python 3.12.3,
-NumPy 1.26.4). Closure is an edge-incidence criterion, not hydrostatic or native
+NumPy 1.26.4). The cleanup repair passed 109 tests on Python 3.11.17 and 3.12.15
+with NumPy 1.26.4: 88 gate tests, 20 pack-lint tests and one setup test.
+Closure is an edge-incidence criterion, not hydrostatic or native
 solver qualification. The small-area heuristic, numerical physics, units,
 caller bypasses, partial CSV/Excel channels, packaging and provenance remain open.
 
