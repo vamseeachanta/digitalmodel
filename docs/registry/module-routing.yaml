@@ -488,6 +488,9 @@ modules:
       fatigue_apps:
         agent_pack: src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md
         qa_family: EC
+      stress:
+        agent_pack: src/digitalmodel/structural/stress/docs/agent-pack.md
+        qa_family: EC
       offshore_resilience:
         agent_pack: src/digitalmodel/structural/offshore_resilience/docs/agent-pack.md
         qa_family: EC
