@@ -29,7 +29,7 @@ def qualifier():
 def put(root, name, text="fixture"):
     target = root / name
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(text, encoding="utf-8")
+    target.write_text(text, encoding="utf-8", newline="\n")
     return target
 
 
@@ -100,6 +100,83 @@ def test_output_read_by_another_consumer_stays_required(qualifier, tmp_path):
     assert row["role"] == "input"
 
 
+@pytest.mark.parametrize("method,mode", [
+    ("to_csv", "a"), ("to_csv", "a+"), ("to_csv", "r+"),
+    ("to_csv", "w+"), ("to_json", "a"), ("open", "a"),
+])
+def test_append_and_update_destinations_are_inputs(qualifier, tmp_path, method, mode):
+    put(tmp_path, "asset.csv")
+    call = "open" if method == "open" else f"frame.{method}"
+    put(tmp_path, "run.py", f'{call}("asset.csv", mode="{mode}")\n')
+    row = qualifier.qualify(tmp_path, ["asset.csv"], ["run.py"])[0]
+    assert row["disposition"] == "RETAIN_REQUIRED"
+    assert row["role"] == "input"
+    assert row["consumers"] == ["run.py"]
+    assert not row["unresolved"]
+
+
+@pytest.mark.parametrize("source", [
+    'frame.to_csv("asset.csv", mode=unknown_mode)\n',
+    'frame.to_json("asset.csv", mode="invalid")\n',
+    'frame.to_csv("asset.csv", **options)\n',
+    'open("asset.csv", mode=unknown_mode)\n',
+])
+def test_unknown_write_modes_remain_unresolved(qualifier, tmp_path, source):
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "other.csv")
+    put(tmp_path, "run.py", source)
+    rows = qualifier.qualify(tmp_path, ["asset.csv", "other.csv"], ["run.py"])
+    assert rows[0]["disposition"] == "RETAIN_REQUIRED"
+    assert rows[0]["unresolved"]
+    assert rows[1]["disposition"] == "RETAIN_UNRESOLVED"
+
+
+@pytest.mark.parametrize("mode,disposition", [("a", "RETAIN_REQUIRED"),
+                                               ("w", "REVIEW_REQUIRED")])
+def test_bound_write_mode_is_resolved(qualifier, tmp_path, mode, disposition):
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "run.py", f'mode = "{mode}"\nframe.to_csv("asset.csv", mode=mode)\n')
+    row = qualifier.qualify(tmp_path, ["asset.csv"], ["run.py"])[0]
+    assert row["disposition"] == disposition
+    assert not row["unresolved"]
+
+
+def test_annotated_reassignment_replaces_stale_path(qualifier, tmp_path):
+    put(tmp_path, "unused.csv")
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "run.py", 'p = "unused.csv"; p: str = "asset.csv"; pd.read_csv(p)\n')
+    rows = qualifier.qualify(tmp_path, ["unused.csv", "asset.csv"], ["run.py"])
+    assert rows[0]["disposition"] == "REVIEW_REQUIRED"
+    assert rows[1]["disposition"] == "RETAIN_REQUIRED"
+    assert rows[1]["consumers"] == ["run.py"]
+    assert not rows[1]["unresolved"]
+
+
+def test_dynamic_annotated_reassignment_invalidates_stale_path(qualifier, tmp_path):
+    put(tmp_path, "unused.csv")
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "run.py", 'p = "unused.csv"; p: str = resolve_path(); pd.read_csv(p)\n')
+    rows = qualifier.qualify(tmp_path, ["unused.csv", "asset.csv"], ["run.py"])
+    assert all(row["disposition"] == "RETAIN_UNRESOLVED" for row in rows)
+    assert all(row["unresolved"] for row in rows)
+
+
+def test_annotation_without_assignment_preserves_path(qualifier, tmp_path):
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "run.py", 'p = "asset.csv"; p: str; pd.read_csv(p)\n')
+    row = qualifier.qualify(tmp_path, ["asset.csv"], ["run.py"])[0]
+    assert row["disposition"] == "RETAIN_REQUIRED"
+    assert not row["unresolved"]
+
+
+def test_utf8_bom_consumer_retains_input(qualifier, tmp_path):
+    put(tmp_path, "asset.csv")
+    put(tmp_path, "run.py", '\ufeffpd.read_csv("asset.csv")\n')
+    row = qualifier.qualify(tmp_path, ["asset.csv"], ["run.py"])[0]
+    assert row["disposition"] == "RETAIN_REQUIRED"
+    assert not row["unresolved"]
+
+
 @pytest.mark.parametrize("name,text", [
     ("run.py", "df = pd.read_csv(resolve_input())"),
     ("run.py", "invalid python :"),
@@ -129,7 +206,7 @@ def test_cli_reports_every_candidate_without_modifying_it(qualifier, tmp_path, c
     rows = json.loads(capsys.readouterr().out)
     assert [r["path"] for r in rows] == ["docs/page.md"]
     assert rows[0]["disposition"] == "REVIEW_REQUIRED"
-    assert (tmp_path / "docs/page.md").read_text() == "fixture"
+    assert (tmp_path / "docs/page.md").read_text(encoding="utf-8") == "fixture"
 
 
 @pytest.mark.parametrize("text", [

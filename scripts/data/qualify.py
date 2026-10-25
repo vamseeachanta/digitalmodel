@@ -24,6 +24,8 @@ CONFIGURATION = {".yaml", ".yml", ".json", ".toml", ".ini", ".cfg", ".qgs", ".qg
 TEXT_CONSUMERS = EXECUTABLE | CONFIGURATION | {".md", ".txt", ".rst", ".xml"}
 WRITES = {"to_csv", "to_json", "to_excel", "write_text", "write_bytes", "savefig"}
 READS = {"read_csv", "read_json", "read_excel", "read_text", "read_bytes", "LoadData"}
+FILE_MODES = {kind + suffix for kind in "rwax"
+              for suffix in ("", "b", "t", "+", "+b", "b+", "+t", "t+")}
 
 
 def _path(root, name):
@@ -106,8 +108,9 @@ def _python_references(text):
            for node in ast.walk(tree)):
         unresolved.append("Python control flow requires review")
     for node in sorted(ast.walk(tree), key=lambda item: getattr(item, "lineno", 0)):
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
                 if isinstance(target, ast.Name):
                     bindings[target.id] = _value(node.value, bindings)
         if not isinstance(node, ast.Call):
@@ -121,12 +124,19 @@ def _python_references(text):
             arguments = node.args + [kw.value for kw in node.keywords
                                      if kw.arg in {"path", "path_or_buf", "filepath_or_buffer"}]
         role = "output" if name in WRITES else "read" if name in READS else "input"
-        if name == "open":
-            mode = _value(node.args[1], bindings) if len(node.args) > 1 else "r"
+        if name in WRITES | {"open"}:
+            mode = "r" if name == "open" else "w"
+            if name == "open" and len(node.args) > 1:
+                mode = _value(node.args[1], bindings)
             mode = next((_value(kw.value, bindings) for kw in node.keywords if kw.arg == "mode"), mode)
+            if any(kw.arg is None for kw in node.keywords):
+                mode = None
             # Updating, appending or exclusive creation may consume existing
             # bytes; only an explicit truncating write is output-only.
             role = "output" if mode in {"w", "wb", "wt"} else "read"
+            if mode not in FILE_MODES:
+                unresolved.append("Python write mode is unresolved or invalid")
+        if name == "open":
             arguments = node.args[:1] + [kw.value for kw in node.keywords if kw.arg == "file"]
         if name in READS | WRITES | {"open"} and not arguments:
             unresolved.append("Python dependency has no resolved path")
@@ -152,7 +162,7 @@ def _references(path):
         return [(element.text.strip(), "input") for text in texts
                 for element in ET.fromstring(text).iter("datasource")
                 if element.text and element.text.strip()], []
-    text = path.read_text(encoding="utf-8-sig")
+    text = path.read_text(encoding="utf-8").removeprefix("\ufeff")
     if path.suffix.lower() == ".py":
         return _python_references(text)
     if path.suffix.lower() == ".qgs":

@@ -75,14 +75,21 @@ def select_rows(rows, selector):
 
 
 def destination(root, row):
-    """Reject symlinks and paths that escape the repository root."""
+    """Reject links, reparse points and paths that escape the repository root."""
     path = validate_path(row["path"])
     root = Path(root).absolute()
     target = root / path
     current = target
     while current != root:
-        if current.is_symlink():
-            raise ValueError("Symlink destination is not permitted")
+        try:
+            metadata = current.lstat()
+        except FileNotFoundError:
+            metadata = None
+        if metadata is not None and (
+                stat.S_ISLNK(metadata.st_mode)
+                or getattr(metadata, "st_file_attributes", 0)
+                & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+            raise ValueError("Link or reparse-point destination is not permitted")
         current = current.parent
     if not target.resolve().is_relative_to(root.resolve()):
         raise ValueError("Destination escapes repository root")
@@ -142,8 +149,12 @@ def verified_file(path, row):
 def fetch_row(root, row, transfer_timeout=None):
     """Verify staged bytes before restoring a manifest-listed file."""
     target = destination(root, row)
-    if verified_file(target, row):
-        return target
+    try:
+        if verified_file(target, row):
+            return target
+    except OSError:
+        # Reuse is optional; staged bytes must still pass size and digest checks.
+        pass
     with tempfile.TemporaryDirectory(prefix="store-fetch-") as temp_dir:
         # Python 3.11 stat permission flags: restore creator access masked by
         # umask, without granting group/other access or executable payloads.

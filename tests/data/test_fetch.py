@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import stat
+from types import SimpleNamespace
 
 import pytest
 
@@ -33,7 +34,8 @@ def store_case(tmp_path, monkeypatch):
     store_id = f"blobs/sha256/{digest[:2]}/{digest}.dat"
     (root / "data/MANIFEST.tsv").write_text(
         "path\tbytes\tsha256\tstore_id\n"
-        f"data/sample.dat\t{len(payload)}\t{digest}\t{store_id}\n"
+        f"data/sample.dat\t{len(payload)}\t{digest}\t{store_id}\n",
+        encoding="utf-8", newline="\n",
     )
     store = tmp_path / "store"
     blob = store / "data/digitalmodel" / store_id
@@ -94,7 +96,9 @@ def test_missing_mounted_blob_is_not_masked_by_remote(fetch_module, store_case, 
 
 def test_malformed_manifest_is_reported(fetch_module, store_case, capsys):
     root, _, store_id, _ = store_case
-    (root / "data/MANIFEST.tsv").write_text("path\tbytes\tsha256\tstore_id\ndata/sample.dat\n")
+    (root / "data/MANIFEST.tsv").write_text(
+        "path\tbytes\tsha256\tstore_id\ndata/sample.dat\n", encoding="utf-8", newline="\n",
+    )
     assert fetch_module.main([store_id], repo_root=root) != 0
     assert "Invalid manifest" in capsys.readouterr().err
 
@@ -120,7 +124,10 @@ def test_unset_cli_is_nonzero(monkeypatch):
 def test_path_traversal_rejected(fetch_module, store_case):
     root, _, store_id, payload = store_case
     manifest = root / "data/MANIFEST.tsv"
-    manifest.write_text(manifest.read_text().replace("data/sample.dat", "../escape.dat"))
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8").replace("data/sample.dat", "../escape.dat"),
+        encoding="utf-8", newline="\n",
+    )
     assert fetch_module.main([store_id], repo_root=root) != 0
     assert not (root.parent / "escape.dat").exists()
 
@@ -201,7 +208,8 @@ def test_store_marker_skip_reason(tmp_path, monkeypatch):
         "store_file = m.store_file\n"
         "store_data_marker = m.store_data_marker\n"
         "@pytest.mark.store_data('missing-id')\n"
-        "def test_missing():\n    raise AssertionError('must skip')\n"
+        "def test_missing():\n    raise AssertionError('must skip')\n",
+        encoding="utf-8", newline="\n",
     )
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "-c", str(SCRIPT.parents[2] / "pytest.ini"), str(probe), "-rs", "-o",
@@ -224,7 +232,8 @@ def test_bare_store_marker_skip_reason(tmp_path, monkeypatch):
         "store_file = m.store_file\n"
         "store_data_marker = m.store_data_marker\n"
         "@pytest.mark.store_data\n"
-        "def test_missing():\n    raise AssertionError('must skip')\n"
+        "def test_missing():\n    raise AssertionError('must skip')\n",
+        encoding="utf-8", newline="\n",
     )
     env = os.environ.copy()
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
@@ -251,7 +260,10 @@ def test_direct_destination_rejects_invalid_paths(fetch_module, store_case, path
 def test_manifest_rejects_git_metadata(fetch_module, store_case, path):
     root, _, _, _ = store_case
     manifest = root / "data/MANIFEST.tsv"
-    manifest.write_text(manifest.read_text().replace("data/sample.dat", path))
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8").replace("data/sample.dat", path),
+        encoding="utf-8", newline="\n",
+    )
     with pytest.raises(ValueError):
         fetch_module.read_manifest(root)
 
@@ -283,6 +295,57 @@ def test_verified_existing_file_needs_no_store(fetch_module, store_case, monkeyp
     monkeypatch.delenv("ACE_DATA_ROOT")
     assert fetch_module.main([store_id], repo_root=root) == 0
     assert target.stat().st_ino == before
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX read-permission semantics")
+@pytest.mark.parametrize("valid_blob", [True, False])
+def test_unreadable_same_size_destination_requires_verified_restore(
+        fetch_module, store_case, valid_blob):
+    root, blob, _, payload = store_case
+    target = root / "data/sample.dat"
+    original = b"x" * len(payload)
+    target.write_bytes(original)
+    target.chmod(0)
+    if not valid_blob:
+        blob.write_bytes(b"y" * len(payload))
+    try:
+        row = fetch_module.read_manifest(root)[0]
+        if valid_blob:
+            assert fetch_module.fetch_row(root, row) == target
+            assert target.read_bytes() == payload
+        else:
+            with pytest.raises(ValueError, match="SHA-256 or size verification"):
+                fetch_module.fetch_row(root, row)
+            assert stat.S_IMODE(target.stat().st_mode) == 0
+            target.chmod(stat.S_IRUSR | stat.S_IWUSR)
+            assert target.read_bytes() == original
+    finally:
+        target.chmod(stat.S_IRUSR | stat.S_IWUSR)
+
+
+@pytest.mark.parametrize("component", ["data", "data/sample.dat"])
+@pytest.mark.parametrize("existing", [True, False])
+def test_reparse_point_destination_rejected(
+        fetch_module, store_case, monkeypatch, component, existing):
+    root, _, _, payload = store_case
+    target = root / "data/sample.dat"
+    if existing:
+        target.write_bytes(payload)
+    original_lstat = Path.lstat
+
+    def attributes(path, *args, **kwargs):
+        if path == root / component:
+            return SimpleNamespace(st_mode=stat.S_IFDIR,
+                                   st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
+        return original_lstat(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "lstat", attributes)
+    with pytest.raises(ValueError, match="destination"):
+        fetch_module.fetch_row(root, fetch_module.read_manifest(root)[0])
+    if existing:
+        assert target.read_bytes() == payload
+    else:
+        assert not target.exists()
 
 
 def test_transfer_timeout_is_not_a_connection_failure(fetch_module, store_case, monkeypatch):
