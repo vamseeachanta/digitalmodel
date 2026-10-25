@@ -61,7 +61,7 @@ After resolving the cause, use a fresh destination; do not overwrite or treat a 
 <table>
 <thead><tr><th>Item</th><th>Requested work and retained evidence</th></tr></thead>
 <tbody>
-<tr><td>Programs</td><td>OrcaWave and AQWA, on the authorized solver workstation after review.
+<tr><td>Programs</td><td>OrcaWave and AQWA, on a licensed installation after review.
 Retain program versions, native-deck conversion version, solver settings, warnings and completion evidence.</td></tr>
 <tr><td>Inputs</td><td>Each generated case specification and its bound source mesh; common loading,
 water depth, reference frame, wave amplitude normalization, heading convention and damping treatment.
@@ -125,7 +125,7 @@ No acceptance tolerance is assigned: this is a diagnostic comparison, marked NOT
 <caption>AQG-style band and caller-supplied comparison criteria; no implicit mesh or solver limits.</caption>
 </table>
 <p><code>numerical_screen</code> reports PASS only when all applicable numerical checks pass, including diagnostic
-removal-off cases. A failed diagnostic case may coexist with a satisfactory corrected candidate; the per-sample report
+removal-off cases. A failed diagnostic case may coexist with a corrected candidate that passes every applicable check; the per-sample report
 is the evidence for that distinction. Exit status is nonzero for a failed numerical screen or invalid input.
 An exit status of zero is never engineering acceptance. <code>qualification</code> and <code>native_execution</code>
 remain NOT_EVALUATED even for numerically passing or synthetic exports.</p>
