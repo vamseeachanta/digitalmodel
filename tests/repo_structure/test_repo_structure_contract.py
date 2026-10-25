@@ -5,6 +5,7 @@
 
 import copy
 import importlib.util
+import os
 import shlex
 import subprocess
 import sys
@@ -15,6 +16,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/maintenance/verify_repo_structure.py"
+
+
+def git_environment():
+    return {key: value for key, value in os.environ.items()
+            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
 
 
 def checker():
@@ -35,7 +41,8 @@ def test_repo_structure_config_loads():
 
 def test_current_control_files_and_checker_artifacts_pass():
     paths = subprocess.check_output(
-        ["git", "ls-tree", "-r", "--name-only", "HEAD"], cwd=ROOT, text=True
+        ["git", "ls-tree", "-r", "--name-only", "HEAD"],
+        cwd=ROOT, env=git_environment(), text=True,
     ).splitlines()
     paths += [
         "docs/standards/repo-structure.md", "config/repo_structure.yml",
@@ -107,14 +114,15 @@ def test_current_inventory_has_no_generated_exception_to_grandfather():
 
 
 def test_cli_clean_and_violation(tmp_path):
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    env = git_environment()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], env=env, check=True)
     (tmp_path / "README.md").write_text("fixture\n")
     command = [sys.executable, str(SCRIPT), "--repo", str(tmp_path),
                "--config", str(ROOT / "config/repo_structure.yml")]
-    clean = subprocess.run(command, capture_output=True, text=True)
+    clean = subprocess.run(command, env=env, capture_output=True, text=True)
     assert clean.returncode == 0, clean.stdout + clean.stderr
     (tmp_path / "unexpected.py").write_text("pass\n")
-    bad = subprocess.run(command, capture_output=True, text=True)
+    bad = subprocess.run(command, env=env, capture_output=True, text=True)
     assert bad.returncode == 1
     assert "unexpected.py: root-allowlist" in bad.stdout
 
@@ -182,7 +190,8 @@ def test_paths_are_normalized_and_portable(path):
 @pytest.mark.parametrize("case", ["top-level", "nested", "merged", "unhashable"])
 def test_cli_rejects_duplicate_yaml_keys(tmp_path, case):
     """A second key must not replace either a rule list or a nested allowlist."""
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    env = git_environment()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], env=env, check=True)
     contract = tmp_path / "contract.yml"
     text = yaml.safe_dump(config())
     if case == "top-level":
@@ -196,11 +205,49 @@ def test_cli_rejects_duplicate_yaml_keys(tmp_path, case):
     contract.write_text(text)
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--repo", str(tmp_path), "--config", str(contract)],
-        capture_output=True, text=True,
+        env=env, capture_output=True, text=True,
     )
     assert result.returncode == 2
     assert result.stderr == "structure: cannot read repository paths or contract\n"
     assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("case", [
+    "top-level", "nested", "merged", "unhashable", "clean-and-violation",
+])
+def test_cli_fixtures_preserve_caller_repository(tmp_path, monkeypatch, case):
+    """Inherited Git bindings must not redirect fixture commands to a caller."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+    caller = tmp_path / "caller"
+    subprocess.run(["git", "init", "-q", str(caller)], env=env, check=True)
+    subprocess.run(["git", "config", "core.filemode", "false"],
+                   cwd=caller, env=env, check=True)
+    (caller / "README.md").write_text("caller file must remain unchanged\n")
+    subprocess.run(["git", "read-tree", "--empty"], cwd=caller, env=env, check=True)
+
+    def snapshot():
+        return {path.relative_to(caller): path.read_bytes() if path.is_file() else None
+                for path in caller.rglob("*")}
+
+    before = snapshot()
+    for key, path in {
+        "GIT_DIR": caller / ".git",
+        "GIT_WORK_TREE": caller,
+        "GIT_COMMON_DIR": caller / ".git",
+        "GIT_INDEX_FILE": caller / ".git/index",
+    }.items():
+        monkeypatch.setenv(key, str(path))
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    try:
+        if case == "clean-and-violation":
+            test_cli_clean_and_violation(fixture)
+        else:
+            test_cli_rejects_duplicate_yaml_keys(fixture, case)
+    finally:
+        assert snapshot() == before, "fixture commands changed the caller repository"
+    assert (fixture / ".git").is_dir()
 
 
 def test_worked_path_classification_example():
