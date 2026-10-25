@@ -958,7 +958,11 @@ def surface_card_from_pump_card(
         survey_from_context,
     )
     from .everitt_jennings.damping import estimate_damping_profile
-    from .everitt_jennings.solver import build_coefficients, build_simulation
+    from .everitt_jennings.solver import (
+        MIN_CARD_SAMPLES,
+        build_coefficients,
+        build_simulation,
+    )
 
     pump_position_m = np.asarray(pump_card.position, dtype=np.float64) * U.IN2M
     pump_load_n = np.asarray(pump_card.load, dtype=np.float64) * U.LB2N
@@ -966,8 +970,8 @@ def surface_card_from_pump_card(
         raise ValueError("pump position and load must have the same number of samples")
     # The periodic time stencil needs the duplicated endpoint and neighbours;
     # this is the same minimum used by build_simulation, not a physical limit.
-    if len(pump_position_m) < 4:
-        raise ValueError("pump card needs at least 4 samples to march")
+    if len(pump_position_m) < MIN_CARD_SAMPLES:
+        raise ValueError(f"pump card needs at least {MIN_CARD_SAMPLES} samples to march")
     if not (
         np.all(np.isfinite(pump_position_m)) and np.all(np.isfinite(pump_load_n))
     ):

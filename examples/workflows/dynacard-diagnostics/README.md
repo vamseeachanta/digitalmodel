@@ -10,6 +10,7 @@ route; it does not establish diagnostic accuracy on measured cards.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Document the card boundary, independent static calculation and runnable round trip. |
+| 2 | 2026-10-24 | State static conversion constants, test the retained dynamic figures and share the stencil sample minimum. |
 
 ## Inputs and method
 
@@ -46,8 +47,10 @@ supply the expected result independently of the upward/downward recurrence.
 
 The automated static example uses a stationary pump position at zero, a
 1000 lbf pump load, a 100 ft rod and a 1 in diameter. These are mathematical
-test inputs. Modulus, rod density, fluid density and gravity use the supplied
-context and existing solver constants; no material qualification is implied.
+test inputs. Modulus, rod density and fluid density use the supplied context;
+gravity and conversion factors are stated as literals in the test, including
+the model's rounded force and density conversions. No material qualification
+is implied.
 The test evaluates area, elastic extension and buoyant weight directly in SI,
 then compares with forward-model output on several grids. With datum zeroing
 disabled, surface position equals `delta`; with it enabled, surface position
@@ -79,7 +82,9 @@ measured comparison. The retained run gave:
 
 Load nRMSE is the root mean square load error divided by the original load
 range, expressed as a percentage. These rounded observations are outputs,
-not acceptance limits. Existing tests also exercise every generated mode
+not acceptance limits. A regression test compares the script's results with
+this JSON block using an absolute tolerance of 0.05 for its rounded figures.
+Existing tests also exercise every generated mode
 through the default solver; the independent static test prevents a shared
 forward/inverse implementation error from being the only source of evidence.
 
