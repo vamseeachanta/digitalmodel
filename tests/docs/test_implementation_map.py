@@ -439,3 +439,94 @@ def test_reel_lay_family_is_required(sample, empty):
     if empty:
         doc["families"].append({"id": family_id, "implementations": []})
     assert f"missing or empty family: {family_id}" in check_map(doc, root)
+
+
+def test_summary_figures_match_retained_map(map_document):
+    """Summary counts describe retained rows rather than historical searches."""
+    text = MAP_PATH.with_suffix(".md").read_text(encoding="utf-8")
+    families = map_document["families"]
+    counts = {f["id"]: len(f["implementations"]) for f in families}
+    table = {}
+    for line in text.splitlines():
+        cells = [cell.strip() for cell in line.split("|")]
+        if len(cells) == 6 and cells[1].strip("`") in counts:
+            table[cells[1].strip("`")] = int(cells[3])
+    assert table == counts
+    outside = sum(e["module"] != f["first_module"]
+                  for f in families for e in f["implementations"])
+    assert f"{len(families)} families and {sum(counts.values())} entries" in text
+    assert f"{outside} entries lie outside the first module" in text
+    rejected = [r for r in map_document["rejected_candidates"]
+                if r.get("disposition") == "needs_review"]
+    matches = sum(len(r["families"]) for r in rejected)
+    distinct = len({(r["path"], r["symbol"]) for r in rejected})
+    assert (f"Current rejection rows contain {matches} unresolved family matches "
+            f"over {distinct} distinct definitions") in text
+    historical = sum(f.get("reconciliation", {}).get("unresolved_definitions", 0)
+                     for f in families)
+    assert f"historical reconciliation counters total {historical}" in text
+
+
+def test_reel_lay_inspection_digests_are_recorded(reel_lay_family):
+    """The inspection has its own source fingerprints, separate from refreshes."""
+    for row in reel_lay_family["implementations"]:
+        assert row["inspected_file_sha256"] == row["file_sha256"]
+        assert row["inspected_body_sha256"] == row["body_sha256"]
+
+
+def test_summary_defect_counts_match_retained_map(map_document):
+    """Defect totals follow current entries when classifications are removed."""
+    text = MAP_PATH.with_suffix(".md").read_text(encoding="utf-8")
+    for issue in map_document["known_defects"]:
+        assessments = [d["affected"] for f in map_document["families"]
+                       for e in f["implementations"] for d in e.get("defects", [])
+                       if d["issue"] == issue["number"]]
+        line = next(line for line in text.splitlines()
+                    if line.startswith(f"| {issue['number']}:"))
+        counts = [int(cell.strip()) for cell in line.split("|")[2:-1]]
+        assert counts == [assessments.count(status)
+                          for status in ("yes", "no", "not_checked", "not_applicable")]
+
+
+@pytest.mark.parametrize("change", ["body", "comment"])
+def test_reel_lay_inspection_drift_survives_regeneration(reel_lay_family, tmp_path, change):
+    """Refreshing a changed source must not clear its inspection diagnostics."""
+    module = generator()
+    family = copy.deepcopy(reel_lay_family)
+    path = family["implementations"][0]["path"]
+    text = (ROOT / path).read_text(encoding="utf-8")
+    # Establish an inspected snapshot independently of the retained map's pins.
+    for row in family["implementations"]:
+        row["inspected_file_sha256"] = row["file_sha256"]
+        row["inspected_body_sha256"] = row["body_sha256"]
+    source = tmp_path / path
+    source.parent.mkdir(parents=True)
+    source.write_text(text, encoding="utf-8")
+    doc = {"families": [family], "rejected_candidates": [],
+           "seed_verification": [], "searched": {}}
+    before = copy.deepcopy(doc)
+    assert module.map_staleness(doc, tmp_path) == []
+    if change == "body":
+        original = 'reel_core_radius = config["reel_core_radius_m"]'
+        assert text.count(original) == 1
+        text = text.replace(original, original + " * 2.0")
+    else:
+        text += "\n# Source comment changed after inspection.\n"
+    source.write_text(text, encoding="utf-8")
+    assert any(p.startswith("file digest drift:") for p in module.map_staleness(doc, tmp_path))
+    result = module.regenerate(doc, tmp_path, tracked_paths=[path], revision="b" * 40)
+    refreshed = result["families"][0]
+    assert refreshed["source_revision"] == family["source_revision"]
+    for old, new in zip(family["implementations"], refreshed["implementations"]):
+        assert new["inspected_file_sha256"] == old["inspected_file_sha256"]
+        assert new["inspected_body_sha256"] == old["inspected_body_sha256"]
+    diagnostics = module.map_staleness(result, tmp_path)
+    assert f"inspected file digest drift: {path}" in diagnostics
+    body_warning = f"inspected body digest drift: {path}:_reel_result"
+    assert (body_warning in diagnostics) == (change == "body")
+    assert not any(p.startswith(("file digest drift:", "body digest drift:"))
+                   for p in diagnostics)
+    again = module.regenerate(result, tmp_path, tracked_paths=[path], revision="c" * 40)
+    rendered = module.render_map(yaml.safe_dump(result), again)
+    assert module.map_staleness(yaml.safe_load(rendered), tmp_path) == diagnostics
+    assert doc == before

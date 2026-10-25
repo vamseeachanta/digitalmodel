@@ -246,16 +246,19 @@ def map_staleness(doc: dict[str, Any], root: str | Path) -> list[str]:
             data = sources.read(path)
         except (ValueError, OSError):
             continue  # Missing references are hard failures in check_map.
-        digest = row.get("file_sha256")
-        if digest and hashlib.sha256(data).hexdigest() != digest:
-            stale.add(f"file digest drift: {path}")
+        for key, label in (("file_sha256", "file"),
+                           ("inspected_file_sha256", "inspected file")):
+            if row.get(key) and hashlib.sha256(data).hexdigest() != row[key]:
+                stale.add(f"{label} digest drift: {path}")
         symbol = row.get("symbol")
         node = sources.index(path).get(symbol) if symbol and Path(path).suffix == ".py" else None
         if node is not None:
             if "line" in row and row["line"] not in (node.lineno, start_line(node)):
                 stale.add(f"line drift: {path}:{symbol}")
-            if row.get("body_sha256") and body_digest(node) != row["body_sha256"]:
-                stale.add(f"body digest drift: {path}:{symbol}")
+            for key, label in (("body_sha256", "body"),
+                               ("inspected_body_sha256", "inspected body")):
+                if row.get(key) and body_digest(node) != row[key]:
+                    stale.add(f"{label} digest drift: {path}:{symbol}")
         elif row.get("line") is not None and not symbol:
             if not isinstance(row["line"], int) or not 1 <= row["line"] <= len(data.splitlines()):
                 stale.add(f"line drift: {path}")
