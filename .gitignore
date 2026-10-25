@@ -618,3 +618,9 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Retain only the HIPPS worked-example source and local documentation.
+!/docs/reports/modules/hipps/
+/docs/reports/modules/hipps/*
+!/docs/reports/modules/hipps/build_worked_example.py
+!/docs/reports/modules/hipps/README.md
