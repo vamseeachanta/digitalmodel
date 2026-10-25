@@ -19,14 +19,14 @@ when that call returns or raises an exception.
 
 ## Existing example
 
-The [OCIMF chart module](../../../src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py)
+The [OCIMF chart module](https://github.com/vamseeachanta/digitalmodel/blob/90b3e40a5638da4e0a13ba76657a9937e1def452/src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py)
 accepts `csv_file` in `load_data` and `main`, and `output_dir` in `main`, report
 creation and each plotting function. A library call without `output_dir` writes
 to `ocimf_charts` below the working directory at call time. The command-line
 entry retains the repository-relative `docs/charts/phase2/ocimf` destination.
 Importing the chart module creates neither destination.
 
-The [visualization initializer](../../../src/digitalmodel/marine_ops/marine_analysis/visualization/__init__.py)
+The [visualization initializer](https://github.com/vamseeachanta/digitalmodel/blob/90b3e40a5638da4e0a13ba76657a9937e1def452/src/digitalmodel/marine_ops/marine_analysis/visualization/__init__.py)
 exposes chart submodules lazily. Accessing `ocimf_charts` does not load
 `integration_charts`. This example defines the chart boundary; it does not
 certify import safety of every ancestor package or every chart module.
@@ -46,8 +46,8 @@ are restored after successful and failing chart calls. Use synthetic data only
 for routing and state-isolation checks; engineering validation requires its own
 sourced inputs and independently calculated expected results.
 
-The [chart generation tests](../../../tests/marine_ops/marine_analysis/test_ocimf_charts.py)
-and [cold import tests](../../../tests/marine_ops/marine_analysis/test_visualization_import_contract.py)
+The [chart generation tests](https://github.com/vamseeachanta/digitalmodel/blob/90b3e40a5638da4e0a13ba76657a9937e1def452/tests/marine_ops/marine_analysis/test_ocimf_charts.py)
+and [cold import tests](https://github.com/vamseeachanta/digitalmodel/blob/90b3e40a5638da4e0a13ba76657a9937e1def452/tests/marine_ops/marine_analysis/test_visualization_import_contract.py)
 cover these boundaries. The existing atlas tests retain numerical regression
 coverage. These checks are focused regressions, rather than a repository-wide
 import audit.
