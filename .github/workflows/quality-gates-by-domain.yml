@@ -289,6 +289,7 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            docs/reports/modules/mooringresilience/test_report.py \
             -q --tb=line
 
       - name: Report implementation map staleness

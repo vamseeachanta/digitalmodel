@@ -54,7 +54,11 @@ def test_reporting_changes_select_the_collecting_domain(changed_path, monkeypatc
     assert DOMAIN in {domain.name for domain in selected}
 
 
-def test_registration_guard_runs_in_the_independent_hosted_harness():
+@pytest.mark.parametrize("test_path", [
+    "tests/scripts/test_reporting_ci_registration.py",
+    "docs/reports/modules/mooringresilience/test_report.py",
+])
+def test_registration_guard_runs_in_the_independent_hosted_harness(test_path):
     workflow = yaml.safe_load(
         (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(
             encoding="utf-8"
@@ -64,4 +68,4 @@ def test_registration_guard_runs_in_the_independent_hosted_harness():
     assert "if" not in harness
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
-    assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])
+    assert test_path in shlex.split(step["run"])

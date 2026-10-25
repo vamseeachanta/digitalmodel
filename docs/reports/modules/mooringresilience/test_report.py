@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import re
 
 import pytest
 
@@ -84,3 +85,17 @@ def test_document_contract():
     assert "fatigue margin limit" in html
     changes = json.loads((HERE / "changes.json").read_text(encoding="utf-8"))
     assert changes[0]["revision"] == "R1"
+
+
+@pytest.mark.parametrize(("selector", "property_name", "expected"), [
+    (".wrap", "background", "var(--panel)"),
+    ("svg text", "fill", "var(--ink)"),
+])
+def test_report_surface_and_svg_text_follow_theme(selector, property_name, expected):
+    html = (HERE / "report.html").read_text(encoding="utf-8")
+    css = re.search(r"<style>(.*?)</style>", html, re.S).group(1)
+    rules = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    values = [match.group(1).strip() for rule in rules
+              for match in re.finditer(r"(?:^|;)\s*" + property_name + r"\s*:\s*([^;]+)", rule)]
+    assert values, f"No theme declaration for {selector} {property_name}"
+    assert values[-1] == expected
