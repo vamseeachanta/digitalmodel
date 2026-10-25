@@ -160,7 +160,7 @@ def test_every_example_value_and_chart_equals_module(rebuilt, tmp_path):
     cfg = copy.deepcopy(original)
     cfg["rao_spectral_fatigue"]["output_dir"] = str(tmp_path)
     result = router(cfg)["rao_spectral_fatigue"]
-    with Path(result["results_csv"]).open() as stream:
+    with Path(result["results_csv"]).open(encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
     assert data["design_life_years"] == result["design_life_years"]
     assert data["dff"] == result["dff"]
@@ -213,7 +213,8 @@ def test_structure_offline_style_and_engineering_wording(rebuilt):
     assert parser.remote_resources == []
     visible = " ".join(parser.visible)
     assert not re.search(r'\b(owner|could|should|would|lane|agent|session)\b', visible, re.I)
-    assert not re.search(r'/home/|/mnt/|@[\w.-]+\.[a-z]{2,}', page)
+    private_roots = "|".join(f"/{name}/" for name in ("home", "mnt"))
+    assert not re.search(private_roots + r'|@[\w.-]+\.[a-z]{2,}', page)
     assert 'screening arithmetic' in visible
     assert 'Not covered' in visible
     assert 'NOT_EVALUATED' in visible
