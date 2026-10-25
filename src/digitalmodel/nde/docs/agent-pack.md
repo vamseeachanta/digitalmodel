@@ -4,7 +4,7 @@
 |---|---|
 | Package | `src/digitalmodel/nde` |
 | Code pin | `3554b14fde67f44b1c52b81b6c72106282eaff29` (`origin/main` at preparation) |
-| Revision / status | 1 / DRAFT; engineering qualification UNVERIFIED |
+| Revision / status | 2 / DRAFT; engineering qualification UNVERIFIED |
 | Analysis family | EC (engineering calculation; proposed for these APIs) |
 
 Pinned knowledge for isolated sampled-pulse timing and the optional acoustic-scattering loader. Synthetic receiver traces test timing arithmetic; mocked dataset items establish wrapper behavior only. No ultrasonic inspection qualification or real dataset execution is claimed.
@@ -14,6 +14,7 @@ Pinned knowledge for isolated sampled-pulse timing and the optional acoustic-sca
 | Revision | Date | What changed and why |
 |---|---|---|
 | 1 | 2026-10-22 | Record pinned interfaces, independent arithmetic, executable gates and evidence gaps for review. |
+| 2 | 2026-10-25 | Correct the numeric-literal ledger to describe pulse timing and bookkeeping without an unrelated IPR qualification. |
 
 ## 1. Purpose and scope
 
@@ -55,7 +56,7 @@ Public pages opened 2026-10-22; records retained externally with address, time a
 
 ### Implementation numeric-literal ledger
 
-This ledger records code values, not accepted engineering limits. Except for the explicitly sourced IPR coefficients and algebraic identities above, physical constants, approximations, empirical thresholds, example/default inputs and numerical settings are NOT_EVALUATED. Counts, fractions used for averaging, indexing and unit-prefix arithmetic describe implementation bookkeeping only. Every use is located below; no external source is inferred from a variable name.
+This ledger records implementation values, not accepted engineering limits. The constant-speed pulse-timing relation is sourced above; its worked-example inputs remain synthetic fixture choices. The literals `0` and `1` support trace validation and indexing; the default `10` is a loader item count, NOT_EVALUATED as a physically meaningful sampling choice. Every use is located below; no external source is inferred from a variable name.
 
 | File | Literal and source line(s) | Status |
 |---|---|---|
