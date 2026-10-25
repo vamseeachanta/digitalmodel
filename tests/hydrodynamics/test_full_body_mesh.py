@@ -31,6 +31,9 @@ def test_full_mesh_geometry_and_determinism(level, tmp_path):
     assert abs(len(parsed["panels"]) - target) / target < 0.05
     report = mesh.check_df2_buoyancy(path, 119052930)
     assert report["decision"] == "PASS"
+    assert report["mass_kg"] == pytest.approx(119052930)
+    assert report["density_kg_m3"] == pytest.approx(1025)
+    # Supplied criteria: 1 / 100 = 0.01; 1 / 1000 = 0.001.
     assert report["volume_m3"] == pytest.approx(116149.2, rel=1e-8)
     assert report["waterplane_area_m2"] == pytest.approx(116149.2 / 11)
     assert report["centre_of_buoyancy_m"] == pytest.approx([115.5, 0, -5.5], abs=1e-8)
@@ -50,7 +53,9 @@ def test_full_mesh_geometry_and_determinism(level, tmp_path):
     )
     assert vertices == {(x, -y, z) for x, y, z in vertices}
     manifest = json.loads(
-        (ROOT / "examples/hydrodynamics/full-body-meshes.json").read_text()
+        (ROOT / "examples/hydrodynamics/full-body-meshes.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert hashlib.sha256(data).hexdigest() == manifest["meshes"][level]["sha256"]
 
@@ -66,6 +71,34 @@ def test_half_mesh_fails_without_implicit_reflection(tmp_path):
     assert report["waterplane_area_m2"] == pytest.approx(116149.2 / 22)
     assert report["relative_error"] == pytest.approx(0.5)
     assert 11 < report["centre_of_buoyancy_m"][1] < 12.5
+
+
+def test_df2_records_supplied_criteria_and_input_basis(tmp_path):
+    path = tmp_path / "full.gdf"
+    path.write_bytes(mesh.gdf_bytes("coarse"))
+    report = mesh.check_df2_buoyancy(path, 119052930)
+    assert report["decision"] == "PASS"
+    assert report["mass_relative_error_limit"] == pytest.approx(0.01)
+    assert report["transverse_beam_fraction_limit"] == pytest.approx(0.001)
+    # Hand calculation: centre limit = 49 m * 0.001 = 0.049 m.
+    assert report["transverse_centre_limit_m"] == pytest.approx(0.049)
+    assert "supplied investigation criteria" in report["criteria_basis"]
+    assert "assumed, based on previous experience" in report["input_basis"]
+
+
+def test_generated_manifest_labels_unsupported_inputs(tmp_path):
+    manifest = mesh.generate(tmp_path / "generated")
+    assert "assumed, based on previous experience" in manifest["basis"]
+    retained = json.loads(
+        (ROOT / "examples/hydrodynamics/full-body-meshes.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["basis"] == retained["basis"]
+    for level in ("coarse", "medium", "fine"):
+        assert (
+            manifest["meshes"][level]["sha256"] == retained["meshes"][level]["sha256"]
+        ), "Rebuild with python scripts/benchmark/full_body_mesh.py <output>"
 
 
 @pytest.mark.parametrize(
@@ -161,7 +194,7 @@ def test_nonunit_ulen_cannot_be_interpreted_as_coordinate_scale(tmp_path, ulen):
     path = tmp_path / "nonunit.gdf"
     lines = mesh.gdf_bytes("coarse").decode().splitlines()
     lines[1] = f"{ulen} 9.80665"
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="ULEN.*1.0"):
         mesh.read_gdf(path)
     report = mesh.check_df2_buoyancy(path, mesh.MASS)

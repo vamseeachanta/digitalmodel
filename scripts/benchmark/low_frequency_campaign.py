@@ -36,6 +36,7 @@ APPROVALS = (
     "weight_report",
     "frequency_list",
 )
+EVIDENCE = ("base_spec", "heading_convention", "weight_report", "final_frequency_list")
 
 
 def require_complete(value):
@@ -60,6 +61,24 @@ def approved(value):
         and value.startswith("APPROVED: ")
         and bool(value[10:].strip())
     )
+
+
+def asymptotic_evidence(record, headings):
+    """Require corrected heave frequency and reviewed evidence for every heading."""
+    corrected = number(record.get("heave_natural_frequency_rad_s"))
+    if corrected <= 0:
+        raise ValueError("positive corrected heave natural frequency required")
+    evidence = record.get("heading_justification")
+    if not isinstance(evidence, dict):
+        raise ValueError("reviewed justification required for every heading")
+    normalized = {number(heading): reference for heading, reference in evidence.items()}
+    if (
+        len(normalized) != len(evidence)
+        or set(normalized) != set(headings)
+        or any(not approved(reference) for reference in normalized.values())
+    ):
+        raise ValueError("exact heading coverage and reviewed references required")
+    return corrected / 4
 
 
 LEVELS = ("coarse", "medium", "fine")
@@ -172,6 +191,10 @@ def build(base_path, request_path, output):
         raise ValueError("auxiliary mesh references are not supported")
     if not isinstance(request.get("source"), str) or not request["source"].strip():
         raise ValueError("campaign source required")
+    if any(not approved(request.get(key)) for key in EVIDENCE):
+        raise ValueError(
+            "reviewed evidence references required before any case is issued"
+        )
     require_complete(request)
     approvals = request.get("approvals", {})
     if any(not approved(approvals.get(key)) for key in APPROVALS):
@@ -189,6 +212,7 @@ def build(base_path, request_path, output):
     }
     frequencies = grid(request["frequencies_rad_s"])
     headings = grid(request["headings_deg"], headings=True)
+    corrected_ceiling = asymptotic_evidence(criteria["asymptotic_max_rad_s"], headings)
     old_frequency = base["frequencies"]
     if old_frequency.get("input_type") != "frequency" or "range" in old_frequency:
         raise ValueError("base requires explicit angular-frequency values")
@@ -231,9 +255,9 @@ def build(base_path, request_path, output):
     gravity = float(number(base["environment"].get("gravity", mesh_geometry.GRAVITY)))
     if gravity <= 0:
         raise ValueError("positive finite environment gravity required")
-    # Dry heave estimate only: omega_n = sqrt(rho*g*A_wp/M). The corrected
-    # natural period and heading-specific applicability still require review.
-    ceiling = min(
+    # Supplied investigation criterion: dry linear-heave estimate with restoring
+    # stiffness rho*g*A_wp. The corrected bound and all headings require evidence.
+    dry_ceiling = min(
         math.sqrt(
             base["environment"].get("water_density", 1025)
             * gravity
@@ -243,8 +267,13 @@ def build(base_path, request_path, output):
         / 4
         for report in df2.values()
     )
-    if not math.isfinite(ceiling) or limits["asymptotic_max_rad_s"] > number(ceiling):
-        raise ValueError("asymptotic limit exceeds the DF2-derived dry-heave ceiling")
+    if not math.isfinite(dry_ceiling):
+        raise ValueError("finite DF2-derived dry-heave ceiling required")
+    ceiling = min(number(dry_ceiling), corrected_ceiling)
+    if limits["asymptotic_max_rad_s"] > ceiling:
+        raise ValueError(
+            "asymptotic limit exceeds the corrected or DF2-derived dry-heave ceiling"
+        )
     mesh_manifest_path = local_mesh(root, request.get("mesh_manifest"))
     mesh_manifest = json.loads(mesh_manifest_path.read_bytes())
     records = mesh_manifest.get("meshes") if isinstance(mesh_manifest, dict) else None
@@ -314,7 +343,11 @@ def build(base_path, request_path, output):
         headings_deg=request["headings_deg"],
         native_execution="NOT_EVALUATED",
         df2=df2,
-        asymptotic_ceiling_rad_s=ceiling,
+        asymptotic_ceiling_rad_s=float(ceiling),
+        asymptotic_bounds_rad_s=dict(
+            dry=dry_ceiling, corrected=float(corrected_ceiling)
+        ),
+        evidence={key: request[key] for key in EVIDENCE},
         approvals=approvals,
     )
     return manifest, contents

@@ -23,6 +23,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tr><td>0</td><td>2026-10-15</td><td>Prepared the matched mesh/removal campaign and export checks to investigate reported low-frequency motion.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
 <tr><td>2</td><td>2026-10-20</td><td>Added transverse buoyancy and mesh-digest checks, restricted symmetry and ULEN, and derived the sampling ceiling from geometry and loading to prevent invalid preparations.</td></tr>
+<tr><td>3</td><td>2026-10-25</td><td>Required reviewed evidence and complete heading justification, enforced both corrected and dry heave frequency bounds, and labelled unsupported defaults to prevent incomplete preparations.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -32,7 +33,10 @@ and physical qualification are not established; no solver is run by these tools.
 CoG [115.5, 0, -5.5] m (estimate), gyradii [17.15, 57.75, 60.06] m (estimate), B44 = 6.0e6,
 water depth 1,000 m, density 1,025 kg/m3 and gravity 9.80665 m/s2. A weight report is MISSING.
 The heading convention, including which end is the bow, and the final frequency list are MISSING.
-The estimates do not replace a weight report.</p>
+The estimates do not replace a weight report. The retained geometry, loading, environmental values and mesh
+discretization are assumed, based on previous experience, pending reviewed source records; they are not
+qualified engineering inputs. The DF2 mass and transverse limits below are supplied investigation criteria,
+not universal engineering acceptance limits.</p>
 <p>The deterministic NumPy generator constructs a full wall-sided hull of length 231.0 m, beam 49.0 m
 and draft 11.0 m, with equal end breadths and linear tapers over x = 0 to 16.5 m and 214.5 to 231.0 m.
 Both transoms are closed; the waterline is open. The end half-breadth is derived from
@@ -62,6 +66,13 @@ The maintainer must supply a reviewed single-body base spec, heading convention,
 corrected heave natural frequency and heading-specific asymptotic justification. Approval references must be
 recorded as <code>APPROVED: reference</code>, and each comparison criterion must be marked approved.
 These strings record evidence; they do not authenticate an approval.</p>
+<p>The required <code>base_spec</code>, <code>heading_convention</code>, <code>weight_report</code> and
+<code>final_frequency_list</code> fields each require a nonblank <code>APPROVED: reference</code>.
+Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency_rad_s</code> must be a positive
+finite corrected frequency in rad/s, and <code>heading_justification</code> must map every requested heading
+to its own nonblank <code>APPROVED: reference</code>. For example, a requested heading of 90 degrees requires
+a <code>"90": "APPROVED: reviewed applicability reference"</code> entry. Missing, additional or equivalent
+duplicate heading keys are rejected. An omitted or invalid evidence field prevents all case output.</p>
 <p>Before writing any specification the campaign requires DF2 PASS at every mesh level,
 specification symmetry <code>none</code> and GDF flags ISX = ISY = 0. Symmetry declarations in the unified schema
 describe full-body optimization, not half-mesh input. This campaign does not support those optimizations.
@@ -93,9 +104,12 @@ Apply to coarse/medium and medium/fine, for both translations, holding program a
 These are supplied investigation candidates, not approved limits or demonstrated convergence.</td></tr>
 <tr><td>Solver pairs</td><td>Absolute amplitude difference no greater than 0.05 m/m, holding mesh and treatment fixed.
 Convention and physical-model agreement require native evidence. Numerical agreement alone does not establish correctness.</td></tr>
-<tr><td>Asymptotic upper frequency</td><td>The preparation ceiling is the smallest sqrt(rho × g × A_wp / M) / 4
-across the DF2 waterplane areas, using the base mass, density and gravity. For the current geometry the
-proposed 0.236 rad/s lies below this dry-heave ceiling. A1 DF5.1 checks the longer of the
+<tr><td>Asymptotic upper frequency</td><td>The preparation ceiling is the smaller of the corrected natural frequency
+divided by four and the smallest sqrt(rho × g × A_wp / M) / 4 across the DF2 waterplane areas, using the base
+mass, density and gravity. Both bounds are retained in the preparation manifest and equality is permitted.
+These are supplied investigation criteria; the dry estimate assumes linear heave restoring stiffness.
+For the current geometry the proposed 0.236 rad/s lies below the dry-heave ceiling only; acceptance against
+the corrected bound is not established. A1 DF5.1 checks the longer of the
 longest period and four times the corrected heave natural period. The corrected natural frequency is MISSING;
 the final bound may need to be lower. Justify it for every heading, well below the anomaly frequencies.
 Finite-frequency beam-sea heave above unity can be physical and is not rejected by applying this band there.</td></tr>

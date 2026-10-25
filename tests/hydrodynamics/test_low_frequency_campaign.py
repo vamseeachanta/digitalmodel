@@ -43,7 +43,7 @@ def inputs(tmp_path):
         "solver_options": {"remove_irregular_frequencies": True, "precision": "double"},
     }
     base_path = tmp_path / "base.yml"
-    base_path.write_text(yaml.safe_dump(base), encoding="utf-8")
+    base_path.write_text(yaml.safe_dump(base), encoding="utf-8", newline="\n")
     for level in campaign.LEVELS:
         (tmp_path / f"{level}.gdf").write_bytes(campaign.mesh_geometry.gdf_bytes(level))
     (tmp_path / "full-body-meshes.json").write_bytes(
@@ -53,6 +53,10 @@ def inputs(tmp_path):
     )
     request = {
         "source": "synthetic test specification, not engineering input",
+        "base_spec": "APPROVED: synthetic base specification",
+        "heading_convention": "APPROVED: synthetic heading convention",
+        "weight_report": "APPROVED: synthetic weight report",
+        "final_frequency_list": "APPROVED: synthetic frequency list",
         "approvals": {
             key: "APPROVED: synthetic reference" for key in campaign.APPROVALS
         },
@@ -74,13 +78,137 @@ def inputs(tmp_path):
             ]
         },
     }
+    request["criteria"]["asymptotic_max_rad_s"].update(
+        heave_natural_frequency_rad_s=4.0,
+        heading_justification={
+            "0": "APPROVED: synthetic head-sea applicability",
+            "90": "APPROVED: synthetic beam-sea applicability",
+            "180": "APPROVED: synthetic following-sea applicability",
+        },
+    )
     request_path = tmp_path / "request.json"
-    request_path.write_text(json.dumps(request), encoding="utf-8")
+    request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
     return base_path, request_path, tmp_path / "prepared", base, request
 
 
 def prepare(inputs):
     return campaign.prepare(*inputs[:3])
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["base_spec", "heading_convention", "weight_report", "final_frequency_list"],
+)
+@pytest.mark.parametrize("fault", ["omitted", "blank", "unreviewed", "empty_reference"])
+def test_required_evidence_blocks_output(inputs, field, fault):
+    if fault == "omitted":
+        inputs[4].pop(field)
+    else:
+        inputs[4][field] = {
+            "blank": " \t",
+            "unreviewed": "synthetic unreviewed reference",
+            "empty_reference": "APPROVED: ",
+        }[fault]
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="evidence|reference"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "field", ["heave_natural_frequency_rad_s", "heading_justification"]
+)
+def test_required_asymptotic_evidence_blocks_output(inputs, field):
+    inputs[4]["criteria"]["asymptotic_max_rad_s"].pop(field)
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("value", [None, 0, -0.4, True, float("nan"), float("inf"), ""])
+def test_invalid_corrected_frequency_blocks_output(inputs, value):
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["heave_natural_frequency_rad_s"] = (
+        value
+    )
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {},
+        "APPROVED: no heading coverage",
+        {"0": "APPROVED: synthetic applicability"},
+        {"0": "APPROVED: reference", "90": "", "180": "APPROVED: reference"},
+        {"0": "APPROVED: reference", "90": "APPROVED: ", "180": "APPROVED: reference"},
+        {"0": "APPROVED: reference", "90": "unreviewed", "180": "APPROVED: reference"},
+        {key: "APPROVED: reference" for key in ("0", "0.0", "90", "180")},
+        {key: "APPROVED: reference" for key in ("0", "90", "180", "270")},
+        {key: "APPROVED: reference" for key in ("0", "90", "nan")},
+    ],
+)
+def test_incomplete_heading_evidence_blocks_output(inputs, value):
+    inputs[4]["criteria"]["asymptotic_max_rad_s"]["heading_justification"] = value
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "gravity,corrected,limit,ceiling,corrected_bound,allowed",
+    [
+        (4, 0.4, 0.1, 0.1, 0.1, True),
+        (4, 0.4, 0.2, 0.1, 0.1, False),
+        (4, 4.0, 0.5, 0.5, 1.0, True),
+        (4, 4.0, 0.5001, 0.5, 1.0, False),
+    ],
+)
+def test_corrected_and_dry_frequency_bounds(
+    inputs, gravity, corrected, limit, ceiling, corrected_bound, allowed
+):
+    # Independent 2 x 2 x 1 m wet box: V = 4 m3, A_wp = 4 m2, M = 4100 kg.
+    # Dry bound = sqrt(1025 * 4 * 4 / 4100) / 4 = 0.5 rad/s exactly.
+    # Corrected bounds = 0.4 / 4 = 0.1 and 4.0 / 4 = 1.0 rad/s.
+    # These synthetic literals exercise both limiting cases and inclusive bounds.
+    box = [
+        [[0, -1, 0], [0, 1, 0], [0, 1, -1], [0, -1, -1]],
+        [[2, -1, -1], [2, 1, -1], [2, 1, 0], [2, -1, 0]],
+        [[0, -1, -1], [2, -1, -1], [2, -1, 0], [0, -1, 0]],
+        [[0, 1, 0], [2, 1, 0], [2, 1, -1], [0, 1, -1]],
+        [[0, -1, -1], [0, 1, -1], [2, 1, -1], [2, -1, -1]],
+    ]
+    manifest_path = inputs[0].parent / "full-body-meshes.json"
+    mesh_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    for level in campaign.LEVELS:
+        data = campaign.mesh_geometry.encode_gdf(box).split(b"\n", 1)[1]
+        data = f"Synthetic {level} box\n".encode("utf-8") + data
+        (inputs[0].parent / f"{level}.gdf").write_bytes(data)
+        mesh_manifest["meshes"][level]["sha256"] = campaign.digest(data)
+    manifest_path.write_text(json.dumps(mesh_manifest), encoding="utf-8", newline="\n")
+    inputs[3]["vessel"]["inertia"]["mass"] = 4100
+    inputs[3]["environment"]["gravity"] = gravity
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
+    inputs[4]["criteria"]["asymptotic_max_rad_s"].update(
+        value=limit, heave_natural_frequency_rad_s=corrected
+    )
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
+    if allowed:
+        manifest = prepare(inputs)
+        assert len(manifest["cases"]) == 12
+        assert manifest["asymptotic_ceiling_rad_s"] == pytest.approx(ceiling)
+        assert manifest["asymptotic_bounds_rad_s"]["dry"] == pytest.approx(0.5)
+        assert manifest["asymptotic_bounds_rad_s"]["corrected"] == pytest.approx(
+            corrected_bound
+        )
+    else:
+        with pytest.raises(ValueError, match="asymptotic limit"):
+            prepare(inputs)
+        assert not inputs[2].exists()
 
 
 def export(inputs, manifest, mutate=None):
@@ -102,8 +230,10 @@ def export(inputs, manifest, mutate=None):
     if mutate:
         mutate(rows)
     path = inputs[2].parent / "results.csv"
-    with path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=campaign.COLUMNS)
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        writer = csv.DictWriter(
+            stream, fieldnames=campaign.COLUMNS, lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
     return path
@@ -140,7 +270,7 @@ def test_preparation_preserves_physical_inputs_and_sources(inputs):
 )
 def test_bad_grid_rejected_before_output(inputs, field, value):
     inputs[4][field] = value
-    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -149,7 +279,7 @@ def test_bad_grid_rejected_before_output(inputs, field, value):
 @pytest.mark.parametrize("value", [None, -1, True, float("inf")])
 def test_missing_or_invalid_criterion_is_not_defaulted(inputs, value):
     inputs[4]["criteria"]["mesh_absolute_m_per_m"]["value"] = value
-    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         prepare(inputs)
 
@@ -157,14 +287,14 @@ def test_missing_or_invalid_criterion_is_not_defaulted(inputs, value):
 @pytest.mark.parametrize("mesh", ["../outside.gdf", "/outside.gdf", "missing.gdf"])
 def test_invalid_mesh_path(inputs, mesh):
     inputs[4]["meshes"]["fine"] = mesh
-    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         prepare(inputs)
 
 
 def test_auxiliary_mesh_rejected(inputs):
     inputs[3]["vessel"]["control_surface"] = {"mesh_file": "fine.gdf"}
-    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="auxiliary"):
         prepare(inputs)
 
@@ -179,7 +309,9 @@ def test_existing_output_not_overwritten(inputs):
 
 def test_changed_mesh_detected(inputs):
     prepare(inputs)
-    (inputs[0].parent / "fine.gdf").write_text("changed", encoding="utf-8")
+    (inputs[0].parent / "fine.gdf").write_text(
+        "changed", encoding="utf-8", newline="\n"
+    )
     with pytest.raises(ValueError, match="digest"):
         campaign.verify_manifest(inputs[2] / "manifest.json")
 
@@ -204,15 +336,15 @@ def test_mesh_manifest_required_before_any_case_is_written(inputs, fault):
     elif fault == "outside":
         inputs[4]["mesh_manifest"] = "../full-body-meshes.json"
     elif fault == "invalid_json":
-        path.write_text("not JSON")
+        path.write_text("not JSON", encoding="utf-8", newline="\n")
     else:
-        manifest = json.loads(path.read_text())
+        manifest = json.loads(path.read_text(encoding="utf-8"))
         if fault == "missing_level":
             manifest["meshes"].pop("fine")
         else:
             manifest["meshes"]["fine"]["sha256"] = "invalid"
-        path.write_text(json.dumps(manifest))
-    inputs[1].write_text(json.dumps(inputs[4]))
+        path.write_text(json.dumps(manifest), encoding="utf-8", newline="\n")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -348,7 +480,7 @@ def test_assessment_validates_each_criterion_once(inputs, monkeypatch):
 )
 def test_missing_approval_blocks_all_cases(inputs, field, value):
     inputs[4]["approvals"][field] = value
-    inputs[1].write_text(json.dumps(inputs[4]))
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="approval|MISSING|PROPOSED"):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -372,7 +504,7 @@ def test_symmetry_mismatch_blocks_all_cases(inputs, flags, declared):
         )
     )
     inputs[3]["vessel"]["geometry"]["symmetry"] = declared
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="symmetry"):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -394,7 +526,7 @@ def test_half_mesh_with_cleared_flags_cannot_issue(inputs):
 
 def test_mass_mismatch_blocks_all_cases(inputs):
     inputs[3]["vessel"]["inertia"]["mass"] /= 2
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="DF2"):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -413,8 +545,10 @@ def test_equal_volume_asymmetry_blocks_all_cases(inputs):
 def test_coarse_replaces_original_half_mesh(inputs):
     # The old base mesh is retained as provenance, never forced into the ladder.
     inputs[3]["vessel"]["geometry"]["mesh_file"] = "old.gdf"
-    (inputs[0].parent / "old.gdf").write_text("original unqualified mesh")
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    (inputs[0].parent / "old.gdf").write_text(
+        "original unqualified mesh", encoding="utf-8", newline="\n"
+    )
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     manifest = prepare(inputs)
     assert len(manifest["cases"]) == 12
     assert set(manifest["df2"]) == set(campaign.LEVELS)
@@ -424,7 +558,7 @@ def test_coarse_replaces_original_half_mesh(inputs):
 def test_proposed_template_cannot_issue(inputs):
     template = SCRIPT.parents[2] / "examples/hydrodynamics/low-frequency-campaign.json"
     inputs[1].write_bytes(template.read_bytes())
-    with pytest.raises(ValueError, match="MISSING|PROPOSED|approval|proposed"):
+    with pytest.raises(ValueError, match="MISSING|PROPOSED|approval|proposed|evidence"):
         prepare(inputs)
     assert not inputs[2].exists()
 
@@ -432,7 +566,7 @@ def test_proposed_template_cannot_issue(inputs):
 def test_proposed_criterion_cannot_be_approved_by_source_string(inputs):
     record = inputs[4]["criteria"]["mesh_absolute_m_per_m"]
     record["status"] = "proposed"
-    inputs[1].write_text(json.dumps(inputs[4]))
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="approved|PROPOSED"):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -441,7 +575,7 @@ def test_proposed_criterion_cannot_be_approved_by_source_string(inputs):
 @pytest.mark.parametrize("mode", ["free_floating", "unknown"])
 def test_nonexplicit_mass_cannot_issue(inputs, mode):
     inputs[3]["vessel"]["inertia"]["mode"] = mode
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="explicit mass"):
         prepare(inputs)
     assert not inputs[2].exists()
@@ -449,7 +583,7 @@ def test_nonexplicit_mass_cannot_issue(inputs, mode):
 
 def test_asymptotic_limit_above_candidate_bound_rejected(inputs):
     inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = 0.35
-    inputs[1].write_text(json.dumps(inputs[4]))
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="asymptotic limit"):
         prepare(inputs)
 
@@ -472,7 +606,7 @@ def test_asymptotic_ceiling_uses_df2_loading_and_environment(
 ):
     geometry = campaign.mesh_geometry
     manifest_path = inputs[0].parent / "full-body-meshes.json"
-    mesh_manifest = json.loads(manifest_path.read_text())
+    mesh_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     for level in campaign.LEVELS:
         panels = geometry.panels_for_level(level)
         panels[:, :, 0] *= area_scale
@@ -480,12 +614,12 @@ def test_asymptotic_ceiling_uses_df2_loading_and_environment(
         data = geometry.encode_gdf(panels)
         (inputs[0].parent / f"{level}.gdf").write_bytes(data)
         mesh_manifest["meshes"][level]["sha256"] = campaign.digest(data)
-    manifest_path.write_text(json.dumps(mesh_manifest))
+    manifest_path.write_text(json.dumps(mesh_manifest), encoding="utf-8", newline="\n")
     inputs[3]["vessel"]["inertia"]["mass"] *= draft_scale * area_scale * density_scale
     inputs[3]["environment"].update(water_density=1025 * density_scale, gravity=gravity)
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     inputs[4]["criteria"]["asymptotic_max_rad_s"]["value"] = limit
-    inputs[1].write_text(json.dumps(inputs[4]))
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8", newline="\n")
     expected_ceiling = math.sqrt(gravity / (geometry.DRAFT * draft_scale)) / 4
     assert (limit < expected_ceiling) == allowed
     if allowed:
@@ -500,14 +634,14 @@ def test_asymptotic_ceiling_uses_df2_loading_and_environment(
 @pytest.mark.parametrize("gravity", [None, -1, 0, True, float("nan"), float("inf")])
 def test_invalid_gravity_blocks_derived_ceiling_before_output(inputs, gravity):
     inputs[3]["environment"]["gravity"] = gravity
-    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         prepare(inputs)
     assert not inputs[2].exists()
 
 
 def test_mesh_generator_is_collected_by_diffraction_ci_domain():
-    text = (SCRIPT.parents[2] / "tests/DOMAINS.md").read_text()
+    text = (SCRIPT.parents[2] / "tests/DOMAINS.md").read_text(encoding="utf-8")
     row = next(
         line
         for line in text.splitlines()

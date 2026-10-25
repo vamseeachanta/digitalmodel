@@ -14,11 +14,18 @@ from pathlib import Path
 
 import numpy as np
 
+# Geometry, loading and environment: assumed, based on previous experience.
+# No reviewed source record is retained for these default investigation inputs.
 LENGTH, BEAM, DRAFT, TAPER = 231.0, 49.0, 11.0, 16.5
 VOLUME, MASS, RHO, GRAVITY = 116149.2, 119052930.0, 1025.0, 9.80665
+INPUT_BASIS = (
+    "assumed, based on previous experience; reconstructed geometry, loading, "
+    "environment and mesh discretization; reviewed source records required"
+)
 END_HALF_BREADTH = (VOLUME / DRAFT - BEAM * (LENGTH - TAPER)) / (2 * TAPER)
 # (end intervals, middle intervals, transverse intervals, vertical intervals).
 # Even transverse counts split the bottom and transoms at the centreline.
+# Discretization and target sizes: assumed, based on previous experience.
 LEVELS = {"coarse": (5, 59, 14, 3), "medium": (7, 80, 20, 5), "fine": (10, 118, 28, 6)}
 TARGET_SIZES = {"coarse": 3.5, "medium": 2.47, "fine": 1.75}
 
@@ -112,7 +119,7 @@ def gdf_bytes(level):
 
 def read_gdf(path):
     """Read dimensional WAMIT quads without scaling or symmetry reflection."""
-    lines = Path(path).read_text(encoding="ascii").splitlines()
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
     if len(lines) < 4:
         raise ValueError("incomplete GDF header")
     ulen, gravity = map(float, lines[1].split())
@@ -145,6 +152,8 @@ def check_symmetry(mesh, declared):
 
 def _integrate(parsed):
     """Integrate signed tetrahedra; close only boundaries on zero-coordinate planes."""
+    # Numerical geometry epsilons: assumed, based on previous experience;
+    # computational checks only, not supplied engineering acceptance limits.
     panels = parsed["panels"]
     if np.max(panels[:, :, 2]) > 1e-8:
         raise ValueError("DF2 requires a wet surface at waterline z=0")
@@ -202,6 +211,9 @@ def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
     Gravity cancels in the force ratio. Symmetry flags allow planar closure
     for integration but never multiply volume. No weight report is inferred.
     PASS also requires |y_B| <= 0.001 times the supplied mesh beam.
+    The 0.01 mass tolerance and 0.001 beam fraction are supplied investigation
+    criteria, not universal engineering acceptance limits. Default density is
+    assumed, based on previous experience; supplied inputs require review.
     """
     result = dict(
         decision="NOT_EVALUATED",
@@ -210,6 +222,12 @@ def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
         centre_of_buoyancy_m=None,
         transverse_centre_limit_m=None,
         relative_error=None,
+        mass_kg=mass_kg,
+        density_kg_m3=rho,
+        mass_relative_error_limit=tolerance,
+        transverse_beam_fraction_limit=0.001,
+        criteria_basis="supplied investigation criteria; not universal acceptance limits",
+        input_basis="supplied mass and density; default density assumed, based on previous experience",
     )
     try:
         if (
@@ -258,7 +276,7 @@ def generate(output):
         taper_length_m=TAPER,
         end_half_breadth_m=END_HALF_BREADTH,
         displacement_m3=VOLUME,
-        basis="base spec of the codenamed vessel; equal end breadth reconstructed from displacement",
+        basis=INPUT_BASIS,
         limitation="Reconstructed geometry; original surface and panel quality are not qualified.",
         meshes={},
     )
@@ -281,7 +299,7 @@ def generate(output):
             panels=len(panels_for_level(level)),
             target_size_m=TARGET_SIZES[level],
         )
-    data = (json.dumps(manifest, indent=2, allow_nan=False) + "\n").encode()
+    data = (json.dumps(manifest, indent=2, allow_nan=False) + "\n").encode("utf-8")
     path = output / "full-body-meshes.json"
     if path.exists() and path.read_bytes() != data:
         raise ValueError("existing manifest digest mismatch")
