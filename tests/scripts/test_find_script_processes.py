@@ -117,3 +117,34 @@ def test_unresolvable_argument_does_not_abort_scan(tmp_path, lookup):
     record(proc, 101, ["bash", str(loop)], tmp_path)
     record(proc, 102, ["bash", str(script)], tmp_path)
     assert lookup(script, tmp_path, proc) == [102]
+
+
+@pytest.mark.parametrize("prefix", [[], ["bash"]], ids=["argv0", "wrapper"])
+def test_unresolvable_argument_does_not_hide_later_match(tmp_path, lookup, prefix):
+    """PID 101 qualifies despite a cyclic path before its exact script argv."""
+    script = tmp_path / "driver.sh"
+    script.touch()
+    loop = tmp_path / "loop"
+    loop.symlink_to(loop)
+    proc = tmp_path / "proc"
+    proc.mkdir()
+    record(proc, 101, [*prefix, str(loop), str(script)], tmp_path)
+    assert lookup(script, tmp_path, proc) == [101]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux procfs integration")
+def test_live_shell_script_with_cyclic_argv0(tmp_path, lookup):
+    """The launched Bash PID qualifies when argv0 cannot be resolved."""
+    script = tmp_path / "driver.sh"
+    script.write_text('printf "ready\\n"\nread -r release\n')
+    loop = tmp_path / "loop"
+    loop.symlink_to(loop)
+    with subprocess.Popen(
+        [str(loop), str(script)], executable="/bin/bash", cwd=tmp_path,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
+    ) as process:
+        try:
+            assert process.stdout.readline() == "ready\n"
+            assert process.pid in lookup(script, tmp_path)
+        finally:
+            process.communicate(input="release\n")

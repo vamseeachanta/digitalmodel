@@ -25,16 +25,20 @@ def find_script_processes(script: Path, cwd: Path, proc_root: Path = Path("/proc
             if observed_cwd != cwd:
                 continue
             argv = (entry / "cmdline").read_bytes().split(b"\0")
-            for argument in filter(None, argv):
+        except (OSError, RuntimeError):
+            # proc_pid_cwd(5): access is permission-controlled; processes exit.
+            continue
+        for argument in filter(None, argv):
+            try:
                 path = Path(os.fsdecode(argument))
                 if not path.is_absolute():
                     path = observed_cwd / path
                 if path.resolve() == script:
                     candidates.append(int(entry.name))
                     break
-        except (OSError, RuntimeError):
-            # proc_pid_cwd(5): access is permission-controlled; processes exit.
-            continue
+            except (OSError, RuntimeError):
+                # One unresolvable argument must not hide a later match.
+                continue
     return sorted(candidates)
 
 
