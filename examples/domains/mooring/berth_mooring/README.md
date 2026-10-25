@@ -14,6 +14,7 @@ supplied allowables. Coupled responses are `NOT_EVALUATED` in the example.
 |---|---|---|
 | 00 | 2026-10-20 | Initial solver-free preparation and worked example to expose the method and pending response. |
 | 01 | 2026-10-20 | Refined passing histories and corrected response summaries, model metadata and report presentation to answer review findings. |
+| 02 | 2026-10-25 | Registered public equation references and preserved small input factors in worked arithmetic. |
 
 ## Inputs and method
 

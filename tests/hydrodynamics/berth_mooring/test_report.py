@@ -135,8 +135,8 @@ def test_report_tables_expose_captions_and_unconverged_loads(report_data):
 def test_report_revision_preserves_initial_issue_and_records_correction(report_data):
     spec, manifest = report_data
     report = build_report(spec, manifest)
-    assert report.document.revision == "01"
-    assert report.document.number == "B0000-RPT-013-01"
+    assert report.document.revision == "02"
+    assert report.document.number == "B0000-RPT-013-02"
     revision = next(s for s in report.sections if s.key == "revision").blocks[0]
     assert revision.rows[0] == [
         "00",
@@ -145,6 +145,8 @@ def test_report_revision_preserves_initial_issue_and_records_correction(report_d
     ]
     assert revision.rows[1][:2] == ["01", "2026-10-20"]
     assert revision.rows[1][2].strip()
+    assert revision.rows[2][:2] == ["02", "2026-10-25"]
+    assert revision.rows[2][2].strip()
 
 
 def test_report_describes_spatial_refinement_and_time_step_upper_bound(report_data):
@@ -245,3 +247,34 @@ def test_report_uses_changed_inputs(tmp_path):
     assert "340" in html and "3.40e+03" in html
     assert "squared = 240 kN" in html
     assert "squared = 60.0 kN" not in html
+
+
+def test_report_registers_public_sources_in_references(report_data):
+    from digitalmodel.reporting import render_html
+
+    spec, manifest = report_data
+    report = build_report(spec, manifest)
+    assert len(report.citations) == 2
+    for html in (render_html(report), (INPUT.parent / "report.html").read_text()):
+        references = html.split('<section id="references-cited">', 1)[1].split(
+            "</section>", 1
+        )[0]
+        for citation in report.citations:
+            assert f'href="{citation["url"]}"' in references
+            assert citation["publisher"] in references
+            assert citation["section"] in references
+            assert citation["retrieved"] in references
+        assert "No external references cited" not in html
+        assert '<span class="k">Citations</span> 2' in html
+
+
+def test_worked_arithmetic_preserves_small_input_factors(report_data):
+    """0.5 * 1.2 * 1000 * 0.04 * 10**2 = 2400 N, at x=0.04 m."""
+    spec, manifest = report_data
+    spec["wind"]["area_m2"] = 1000.0
+    spec["wind"]["coefficient"] = 0.04
+    spec["wind"]["application_m"] = [0.04, 0.04]
+    report = build_report(spec, manifest)
+    answer = next(s for s in report.sections if s.key == "answer").blocks[1].markdown
+    assert "wind: |F| = 0.5 x 1.2 x 1000.0 x 0.04 x 10.0 squared = 2.40 kN" in answer
+    assert "Mz = 0.04 x 2.40 - 0.04 x 0.00 = 0.0960 kN m" in answer

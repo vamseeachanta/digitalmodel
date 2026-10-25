@@ -18,6 +18,7 @@ from digitalmodel.hydrodynamics.berth_mooring import (
 from digitalmodel.reporting import (
     DocumentMeta,
     Provenance,
+    PublicWebCitation,
     ReportSpec,
     Section,
     TableBlock,
@@ -117,31 +118,49 @@ def build_report(spec: dict, manifest: dict) -> ReportSpec:
             "01", "2026-10-20",
             "Refined passage sampling, corrected response summary and clarified pending qualification.",
         ],
+        [
+            "02", "2026-10-25",
+            "Registered public equation references and preserved small input factors in worked arithmetic.",
+        ],
     ]
     calculations = []
     for key, load in (("wind", wind), ("current", current)):
         data = spec[key]
         speed = math.hypot(*data["velocity_m_s"])
         calculations.append(
-            f"{key}: |F| = 0.5 x {data['density_kg_m3']:.1f} x {data['area_m2']:.1f} "
-            f"x {data['coefficient']:.1f} x {speed:.1f} squared = "
+            f"{key}: |F| = 0.5 x {data['density_kg_m3']} x {data['area_m2']} "
+            f"x {data['coefficient']} x {speed} squared = "
             f"{kn(math.hypot(*load[:2]))} kN; "
-            f"Mz = {data['application_m'][0]:.1f} x {kn(load[1])} "
-            f"- {data['application_m'][1]:.1f} x {kn(load[0])} = {kn(load[2])} kN m."
+            f"Mz = {data['application_m'][0]} x {kn(load[1])} "
+            f"- {data['application_m'][1]} x {kn(load[0])} = {kn(load[2])} kN m."
         )
     return ReportSpec(
         document=DocumentMeta(
-            number="B0000-RPT-013-01",
-            revision="01",
+            number="B0000-RPT-013-02",
+            revision="02",
             title="Generic berth mooring analysis",
             project="Generic example",
             client="Not applicable",
-            date="2026-10-20",
+            date="2026-10-25",
             revision_history=[
                 {"rev": rev, "date": date, "description": description}
                 for rev, date, description in revision_rows
             ],
         ),
+        citations=[
+            PublicWebCitation(
+                code_id="Drag Equation", publisher="NASA",
+                revision="Public web edition", section="Drag equation",
+                url=SOURCE_URLS["drag"], retrieved="2026-10-20",
+                note="Dynamic-pressure relation only; no coefficient values adopted.",
+            ),
+            PublicWebCitation(
+                code_id="Links: Data", publisher="Orcina",
+                revision="Public web edition", section="Tethers and springs",
+                url=SOURCE_URLS["links"], retrieved="2026-10-20",
+                note="Tether and spring laws only; no stiffness or capacity values adopted.",
+            ),
+        ],
         provenance=Provenance().add(
             "calculation",
             "generic-berth-input",
