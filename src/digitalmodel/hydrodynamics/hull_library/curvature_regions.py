@@ -12,9 +12,10 @@ substituting other area weights need not reproduce HullProd's global signature.
 """
 
 from dataclasses import dataclass
+from math import nextafter
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 
 @dataclass(frozen=True)
@@ -43,7 +44,14 @@ class CurvatureRegionSummary:
     regions: dict[str, CurvatureRegionContribution]
 
 
-def _validated_inputs(coordinates, curvature, area, valid, lref, end_fraction):
+def _validated_inputs(
+    coordinates: ArrayLike,
+    curvature: ArrayLike,
+    area: ArrayLike,
+    valid: ArrayLike,
+    lref: float,
+    end_fraction: float,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.bool_]]:
     x, k, a = (np.asarray(value, dtype=float) for value in (coordinates, curvature, area))
     mask = np.asarray(valid)
     if x.ndim != 1 or not x.size or any(v.shape != x.shape for v in (k, a, mask)):
@@ -66,7 +74,7 @@ def _validated_inputs(coordinates, curvature, area, valid, lref, end_fraction):
     return x, k, a, mask
 
 
-def _coverage_status(area, valid):
+def _coverage_status(area: NDArray[np.float64], valid: NDArray[np.bool_]) -> str:
     positive_area = area > 0
     if not np.any(positive_area & valid):
         return "NOT_EVALUATED"
@@ -74,23 +82,45 @@ def _coverage_status(area, valid):
     return "PARTIAL" if np.any(positive_area & ~valid) else "EVALUATED"
 
 
-def _weighted_regions(x, k, area, valid, lref, end_fraction):
+def _weighted_regions(
+    x: NDArray[np.float64],
+    k: NDArray[np.float64],
+    area: NDArray[np.float64],
+    valid: NDArray[np.bool_],
+    lref: float,
+    end_fraction: float,
+) -> CurvatureRegionSummary:
     span = x.max() - x.min()
     lower = x.min() + end_fraction * span
-    # A shared origin keeps the two cuts identical for an exact half-span.
     upper = x.min() + (1 - end_fraction) * span
+    if end_fraction == 0.5:
+        # Average the endpoints directly to avoid rounding the span first.
+        lower = upper = x.min() / 2 + x.max() / 2
+    # One adjacent binary64 value on either side of a cut belongs to middle.
+    # This absorbs cut rounding without a scale-dependent absolute tolerance.
+    # Scalar nextafter also permits the exact subnormal neighbors of zero.
+    lower_boundary = nextafter(float(lower), -np.inf)
+    upper_boundary = nextafter(float(upper), np.inf)
     valid_area = float(np.sum(area[valid]))
     total_area = float(np.sum(area))
     # arXiv:2609.27544v1 (2026), eqs. (3), (4), (39): q_D = |K| L_ref^2;
     # I_D = sum(A_i q_D_i) / sum(A_i) on valid samples. Use areas, not counts.
     contribution = np.zeros_like(area)
     if valid_area > 0:
-        contribution[valid] = (area[valid] / valid_area) * np.abs(k[valid]) * lref * lref
+        active = valid & (area > 0) & (k != 0)
+        # Combine bounded mantissas and integer exponents before rescaling.
+        # Normalizing area first can underflow even when A*|K|*Lref^2/Avalid
+        # is representable. Zero weights and zero curvature stay exactly zero.
+        am, ae = np.frexp(area[active])
+        km, ke = np.frexp(np.abs(k[active]))
+        lm, le = np.frexp(lref)
+        dm, de = np.frexp(valid_area)
+        contribution[active] = np.ldexp(am * km * lm * lm / dm, ae + ke + 2 * le - de)
     intensity = float(np.sum(contribution))
     selections = {
-        "lower_end": x < lower,
-        "middle": (x >= lower) & (x <= upper),
-        "upper_end": x > upper,
+        "lower_end": x < lower_boundary,
+        "middle": (x >= lower_boundary) & (x <= upper_boundary),
+        "upper_end": x > upper_boundary,
     }
     regions = {}
     for name, selected in selections.items():
@@ -102,7 +132,10 @@ def _weighted_regions(x, k, area, valid, lref, end_fraction):
             area=region_area,
             valid_area=region_valid,
             I_D_contribution=value if region_valid > 0 else None,
-            intensity_share=value / intensity if intensity > 0 and region_valid > 0 else None,
+            intensity_share=(
+                float(np.divide(value, intensity))
+                if intensity > 0 and region_valid > 0 else None
+            ),
         )
     return CurvatureRegionSummary(
         status=_coverage_status(area, valid),
@@ -131,18 +164,22 @@ def summarize_curvature_regions(
     Coordinates and lref share a length unit; area uses its square and K its
     inverse square. The longitudinal axis and its direction are chosen by the
     caller. End cuts use the full coordinate span, including invalid samples.
-    Exact cut vertices belong to the middle; no triangle clipping is performed.
+    Cut vertices and their immediately adjacent binary64 values belong to the
+    middle to absorb floating-point boundary rounding. No triangle clipping is
+    performed. Half-span cuts use the average of the two endpoint coordinates.
 
     Missing curvature is excluded only through an explicit boolean valid mask.
     Status is PARTIAL when positive area is excluded and NOT_EVALUATED when no
     valid area exists. For zero total intensity, shares are undefined (None).
     No end-region fraction or engineering acceptance limit is assumed.
+    Overflow, invalid arithmetic and underflow raise ValueError; nonzero
+    contributions or shares are never silently rounded down to zero.
     """
     x, k, area, mask = _validated_inputs(
         longitudinal_coordinates, gaussian_curvature, vertex_area, valid, lref, end_fraction
     )
     try:
-        with np.errstate(over="raise", invalid="raise", divide="raise"):
+        with np.errstate(over="raise", under="raise", invalid="raise", divide="raise"):
             return _weighted_regions(x, k, area, mask, lref, end_fraction)
     except FloatingPointError as exc:
         raise ValueError("curvature quadrature exceeds finite numerical range") from exc

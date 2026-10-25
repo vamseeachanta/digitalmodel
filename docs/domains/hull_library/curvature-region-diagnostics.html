@@ -26,7 +26,9 @@ NOT_EVALUATED.</p>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-19</td><td>Add explicit area-weighted region contributions,
 coverage and independent hand controls to separate end-region effects.</td></tr>
-<caption>Table 1. Initial diagnostic method revision.</caption>
+<tr><td>2</td><td>2026-10-25</td><td>Preserve decimal midpoint membership and
+nonzero intensity across extreme area ratios; document numerical limits.</td></tr>
+<caption>Table 1. Diagnostic method revisions.</caption>
 </table>
 <h2>Method and source</h2>
 <p><a href="https://arxiv.org/html/2609.27544v1">Geometry-Based Metrics for
@@ -58,10 +60,17 @@ The axis direction is supplied by the caller; lower and upper do not imply bow
 and stern.</p>
 <p>For coordinate limits x_min and x_max, the lower cut is
 x_min + f (x_max - x_min), and the upper cut is x_max - f (x_max - x_min).
-The two end intervals use strict inequalities. Exact cut vertices belong to the
-middle. The mathematical bound 0 &lt; f &le; 1/2 prevents overlapping end intervals;
+Half-span cuts are computed as the average of the endpoint coordinates.
+Cut vertices and the immediately adjacent binary64 values on either side belong
+to the middle to absorb boundary rounding. End intervals use strict inequalities
+against these expanded middle boundaries. The mathematical bound
+0 &lt; f &le; 1/2 prevents overlapping end intervals;
 it is not a fabrication limit. The full coordinate span includes invalid samples.
 Vertices are assigned as whole quadrature samples; triangles are not clipped.</p>
+<p>Quadrature combines binary mantissas and exponents before rescaling each
+contribution, so small normalized areas do not erase representable intensity.
+Overflow, invalid arithmetic and underflow raise ValueError; nonzero
+contributions and intensity shares are never silently rounded down to zero.</p>
 <p>Areas shall come from the same represented quadrature as the curvature.
 Matching array lengths alone does not establish correspondence. Supplying
 barycentric areas for curvature integrated with other weights need not reproduce
@@ -109,7 +118,10 @@ curvature is 1 + 4 + 0 + 2 + 1 = 8. Thus I_D = 4 &times; 8 / 8 = 4.</p>
 Valid area becomes 6, I_D becomes 4 &times; 4 / 6 = 8/3, and the middle
 contribution becomes 4 &times; 2 / 6 = 4/3. The tests also cover zero curvature,
 missing valid area, scale invariance, shape errors, nonfinite inputs, overflow,
-and excluded areas smaller than floating-point sum resolution.</p>
+and excluded areas smaller than floating-point sum resolution. Decimal midpoint
+membership is checked through area and contribution. Independent 450-digit
+decimal controls cover extreme finite area ratios; unrepresentable nonzero
+contributions and shares are rejected.</p>
 <h2>Later slices</h2>
 <p>Native field and area-weight extraction, vertex-order qualification,
 matched-density hull comparisons, and end-closure acceptance remain separate

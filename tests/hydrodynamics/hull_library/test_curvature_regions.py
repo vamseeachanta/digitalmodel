@@ -6,6 +6,7 @@ All geometry, areas and curvature values below are synthetic test inputs.
 """
 
 from dataclasses import asdict
+from decimal import Decimal, localcontext
 import json
 
 import numpy as np
@@ -190,3 +191,83 @@ def test_half_span_cuts_coincide_despite_decimal_rounding():
     )
     assert result.lower_cut == result.upper_cut
     assert result.lower_cut == pytest.approx(0.3)
+    middle = result.regions["middle"]
+    assert middle.status == "EVALUATED"
+    assert middle.area == middle.valid_area == 2
+    assert middle.I_D_contribution == 0
+
+
+def test_decimal_midpoint_retains_area_and_nonzero_contribution():
+    result = summarize_curvature_regions(
+        [0.1, 0.3, 0.5], [1, 1, 1], [1, 1, 1], [True] * 3,
+        lref=1, end_fraction=0.5,
+    )
+    middle = result.regions["middle"]
+    assert middle.status == "EVALUATED"
+    assert middle.area == middle.valid_area == 1
+    assert middle.I_D_contribution == pytest.approx(1 / 3)
+    assert middle.intensity_share == pytest.approx(1 / 3)
+
+
+def test_cut_boundary_policy_includes_one_adjacent_float_only():
+    below = np.nextafter(0.25, -np.inf)
+    above = np.nextafter(0.75, np.inf)
+    coordinates = [0, np.nextafter(below, -np.inf), below, 0.25,
+                   0.75, above, np.nextafter(above, np.inf), 1]
+    result = summarize_curvature_regions(
+        coordinates, [1] * 8, [1] * 8, [True] * 8, lref=1, end_fraction=0.25,
+    )
+    assert result.regions["lower_end"].area == 2
+    assert result.regions["middle"].area == 4
+    assert result.regions["upper_end"].area == 2
+    assert result.regions["middle"].I_D_contribution == 0.5
+
+
+@pytest.mark.parametrize(
+    "areas,curvatures,length",
+    [([1e-200, 1e200], [1e200, 0], 1e100),
+     ([1e200, 1e-200], [1e200, 0], 1e-100)],
+)
+def test_scaled_quadrature_matches_independent_decimal_control(areas, curvatures, length):
+    """450-digit arithmetic evaluates the formula without binary intermediates."""
+    with localcontext() as context:
+        context.prec = 450
+        a = [Decimal.from_float(value) for value in areas]
+        k = [Decimal.from_float(float(value)) for value in curvatures]
+        lref = Decimal.from_float(length)
+        expected = float(sum(ai * abs(ki) * lref**2 for ai, ki in zip(a, k)) / sum(a))
+    result = summarize_curvature_regions(
+        [0, 1], curvatures, areas, [True, True], lref=length, end_fraction=0.25,
+    )
+    assert result.status == "EVALUATED"
+    assert result.I_D == pytest.approx(expected, rel=1e-14, abs=0)
+    lower = result.regions["lower_end"]
+    assert lower.I_D_contribution == pytest.approx(expected, rel=1e-14, abs=0)
+    assert lower.intensity_share == 1
+    assert result.regions["upper_end"].intensity_share == 0
+
+
+def test_unrepresentable_nonzero_contribution_is_rejected():
+    with pytest.raises(ValueError, match="numerical range"):
+        summarize_curvature_regions(
+            [0, 1], [1e-300, 0], [1, 1], [True, True],
+            lref=1e-100, end_fraction=0.25,
+        )
+
+
+def test_zero_midpoint_has_a_representable_boundary_neighborhood():
+    result = summarize_curvature_regions(
+        [-1, 0, 1], [1, 1, 1], [1, 1, 1], [True] * 3,
+        lref=1, end_fraction=0.5,
+    )
+    assert result.lower_cut == result.upper_cut == 0
+    assert result.regions["middle"].area == 1
+    assert result.regions["middle"].I_D_contribution == pytest.approx(1 / 3)
+
+
+def test_unrepresentable_nonzero_intensity_share_is_rejected():
+    with pytest.raises(ValueError, match="numerical range"):
+        summarize_curvature_regions(
+            [0, 1], [1e-200, 1e200], [1, 1], [True, True],
+            lref=1, end_fraction=0.25,
+        )
