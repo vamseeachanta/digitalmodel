@@ -1,7 +1,12 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Durable workflow for synthetic mooring-rope service-life screening."""
+"""Durable workflow for synthetic mooring-rope service-life screening.
+
+All numeric scalar inputs accept finite numbers or numeric strings convertible
+by float(), subject to each field's positive or nonnegative constraint.
+Booleans are rejected. Temperature is optional and permits negative values.
+"""
 
 from __future__ import annotations
 

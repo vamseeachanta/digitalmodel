@@ -4,6 +4,7 @@
 """Numeric-domain regressions for the synthetic-rope screening route."""
 
 from copy import deepcopy
+import csv
 import math
 from pathlib import Path
 import re
@@ -145,6 +146,62 @@ def test_finite_inputs_preserve_hand_calculated_results(cfg):
     assert summary["governing_mechanism"] == "compression"
     assert summary["passes"] is True
     assert result["screening_status"] == "pass"
+
+
+@pytest.mark.parametrize("per_line", [False, True], ids=["global", "per-line"])
+def test_nonzero_model_coefficients_match_independent_calculation(cfg, per_line):
+    """Exercise both coefficients with invented, non-neutral arithmetic inputs.
+
+    Knockdown ln(4) at mean ratio 1/2 gives exp(-ln(4)/2)=1/2, so
+    the effective intercept is 4 and allowable counts are 100 and 25.
+    Damage=4/100+1/25=2/25; life=2/(2/25)=25; fatigue margin=25/4.
+    Creep reference ratio 1/4 and coefficient 4 give exponent -1,
+    life=20/10=2 years and margin=2/4=1/2, governing a failed screen.
+    Relative tolerance follows agent-pack.md section 5, G2.
+    """
+    settings = cfg[MODULE]
+    models = {
+        "tn_curve": {**settings["tn_curve"], "mean_load_knockdown": math.log(4)},
+        "creep": {
+            **settings["creep"],
+            "load_ratio_ref": 0.25,
+            "decades_per_load_ratio": 4.0,
+        },
+    }
+    target = settings["lines"][0] if per_line else settings
+    target.update(models)
+    output_dir = Path(settings["output_dir"])
+    result = router(cfg)
+    summary = result[MODULE]["lines"][0]
+    expected = {
+        "total_damage": 2 / 25,
+        "fatigue_life_years": 25.0,
+        "fatigue_margin": 25 / 4,
+        "creep_life_years": 2.0,
+        "creep_margin": 1 / 2,
+        "compression_margin": 2.0,
+    }
+    for key, value in expected.items():
+        assert summary[key] == pytest.approx(value, rel=1e-12, abs=0.0)
+    with (output_dir / f"{MODULE}_{MODULE}.csv").open() as stream:
+        rows = list(csv.DictReader(stream))
+    assert [float(row["allowable_cycles"]) for row in rows] == pytest.approx(
+        [100.0, 25.0], rel=1e-12, abs=0.0,
+    )
+    assert summary["governing_mechanism"] == "creep"
+    assert summary["passes"] is False
+    assert result["screening_status"] == "fail"
+
+
+@pytest.mark.parametrize("path", NUMERIC_FIELDS, ids=lambda p: ".".join(map(str, p)))
+def test_all_numeric_fields_accept_finite_numeric_strings(cfg, path):
+    """Scalar conversion accepts numeric strings for every numeric field."""
+    parent = _field_parent(cfg, path)
+    parent[path[-1]] = str(parent[path[-1]])
+    summary = router(cfg)[MODULE]["lines"][0]
+    assert summary["total_damage"] == pytest.approx(1 / 25, rel=1e-12, abs=0.0)
+    assert summary["creep_margin"] == pytest.approx(5.0, rel=1e-12, abs=0.0)
+    assert summary["compression_margin"] == pytest.approx(2.0, rel=1e-12, abs=0.0)
 
 
 @pytest.mark.parametrize("temperature", [None, 0.0, "-5.0"])
