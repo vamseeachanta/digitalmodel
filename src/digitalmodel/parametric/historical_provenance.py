@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Reconstruct historical atlas fingerprints without importing historical code.
 
 The trusted index pins raw source blobs and unchanged atlas artifacts. Its
@@ -13,6 +16,7 @@ import argparse
 import ast
 import hashlib
 import json
+import os
 import re
 import subprocess
 from pathlib import Path, PurePosixPath
@@ -24,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = "docs/registry/workflows.yaml"
 REFRESH = "src/digitalmodel/parametric/refresh.py"
 WRAPPER = "src/digitalmodel/parametric/generate.py"
+INDEX = "atlases/historical-provenance.json"
 MISMATCH = "Stored fingerprint does not match retained publication basis."
 Reader = Callable[[str], bytes]
 
@@ -76,7 +81,9 @@ def archive_reader(root: Path) -> Reader:
 def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
     try:
         return subprocess.check_output(
-            ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL
+            ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL,
+            env={key: value for key, value in os.environ.items()
+                 if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}},
         )
     except (OSError, subprocess.CalledProcessError):
         raise EvidenceError("Unavailable Git evidence or retained history") from None
@@ -222,11 +229,80 @@ def _working_tree_drift(record: dict, root: Path, revision: str) -> list[str]:
     return sorted(drift)
 
 
-def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main") -> dict:
-    """Verify committed evidence and report checkout artifact drift separately."""
+def _commit(root: Path, ref: str) -> str:
+    return _git(root, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").decode().strip()
+
+
+def _ancestor(root: Path, revision: str, head: str) -> bool:
+    try:
+        _git(root, "merge-base", "--is-ancestor", revision, head)
+    except EvidenceError:
+        return False
+    return True
+
+
+def _inventory_at(root: Path, revision: str) -> dict[str, dict]:
+    if not _git(root, "ls-tree", revision, "--", INDEX):
+        return {}
+    try:
+        rows = json.loads(git_reader(root, revision)(INDEX))["atlases"]
+        entries = {row["manifest"]: row for row in rows}
+        if len(entries) != len(rows):
+            raise ValueError("Duplicate manifest")
+        return entries
+    except (KeyError, TypeError, ValueError):
+        raise EvidenceError("Invalid committed inventory") from None
+
+
+def _verify_retention(record: dict, root: Path, retained_ref: str,
+                      revision: str, pr_head: str | None) -> None:
+    retained = _commit(root, retained_ref)
+    source = record["source_revision"]
+    on_default = _ancestor(root, source, retained)
+    try:
+        branch = _git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
+    except EvidenceError:
+        branch = ""
+    default_branch = "refs/heads/" + retained_ref.rsplit("/", 1)[-1]
+    if (_ancestor(root, revision, retained)
+            or branch == default_branch or os.environ.get("GITHUB_REF") == default_branch):
+        if not on_default:
+            raise EvidenceError(
+                "Source revision is not retained on the default branch; possible squash-merged "
+                "orphan. Provenance-entry changes require a merge commit, not a squash merge."
+            )
+        return
+
+    ci_ref = re.fullmatch(r"refs/pull/([0-9]+)/(?:head|merge)", os.environ.get("GITHUB_REF", ""))
+    head_ref = pr_head or (f"refs/pull/{ci_ref[1]}/head" if ci_ref else "HEAD")
+    head = _commit(root, head_ref)
+    if ci_ref and head != _commit(root, f"refs/pull/{ci_ref[1]}/head"):
+        raise EvidenceError("Explicit head does not match the CI pull request head")
+    if not _ancestor(root, head, revision):
+        raise EvidenceError("Pull request head is outside the current checkout ancestry")
+    base = _git(root, "merge-base", retained, head).decode().strip()
+    before = _inventory_at(root, base)
+    current = _inventory_at(root, head).get(record["manifest"])
+    changed = current is not None and current != before.get(record["manifest"])
+    if changed:
+        if current != record:
+            raise EvidenceError("Entry does not match the committed inventory at the pull request head")
+        if not _ancestor(root, source, head):
+            raise EvidenceError("Changed entry source revision is not contained in the pull request head")
+    elif not on_default:
+        raise EvidenceError("An unchanged entry requires source retention on the default branch")
+
+
+def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main",
+               pr_head: str | None = None) -> dict:
+    """Verify committed evidence and report checkout artifact drift separately.
+
+    Only changed, committed inventory entries may use pull-request ancestry.
+    Default-branch checks always require ancestry in the retained default ref.
+    """
     read = git_reader(root, record["source_revision"])
-    _git(root, "merge-base", "--is-ancestor", record["source_revision"], retained_ref)
     revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
+    _verify_retention(record, root, retained_ref, revision, pr_head)
     verify_artifacts(record, root, revision=revision)
     try:
         fingerprint = verify_sources(record, read)
@@ -246,12 +322,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--index", type=Path, default=ROOT / "atlases/historical-provenance.json")
     parser.add_argument("--retained-ref", default="origin/main")
+    parser.add_argument("--pr-head", help="Pull request head ref contained in the checked revision")
     args = parser.parse_args(argv)
     inventory = json.loads(args.index.read_text(encoding="utf-8"))
     incomplete = False
     for record in inventory["atlases"]:
         try:
-            result = verify_git(record, retained_ref=args.retained_ref)
+            options = {"pr_head": args.pr_head} if args.pr_head else {}
+            result = verify_git(record, retained_ref=args.retained_ref, **options)
         except EvidenceError as error:
             result = {"status": "REJECTED", "reason": str(error)}
         print(json.dumps({"manifest": record["manifest"], **result}, sort_keys=True))
