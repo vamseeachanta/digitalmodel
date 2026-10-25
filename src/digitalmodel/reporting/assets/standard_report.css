@@ -14,6 +14,7 @@
 .titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:760px){.titleblock{grid-template-columns:1fr}}
 .titleblock .kv{min-width:0}
+.titleblock .kv,.revhist{overflow-x:visible}
 .kv>.tbl-wrap{margin-top:0;border:0;border-radius:0}
 .titleblock .kv table{min-width:0}
 .titleblock .kv td:first-child{width:38%;white-space:normal}

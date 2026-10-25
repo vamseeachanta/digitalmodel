@@ -557,6 +557,8 @@ def test_pack_tables_scroll_locally(tmp_path, layout_browser, viewport, media, s
     Result and appendix cells must exactly equal the synthetic CSV input;
     narrow tables must fit at desktop width. Print emulation checks layout,
     not whether all off-screen columns paginate in a PDF.
+    Computed overflowX and maxWidth assertions are configuration checks;
+    page overflow, local overflow and final-cell reachability check behaviour.
     """
     from digitalmodel.reporting import Section
 
