@@ -1,0 +1,279 @@
+{
+  "model_revision": "analytical-v1",
+  "criteria_revision": "analytical-v1",
+  "dataset_id": "sloshing-analytical-fixture",
+  "owner": "digitalmodel",
+  "intended_use": "Synthetic analytical software regression only; no physical validation.",
+  "inputs": {
+    "length_m": 1.0,
+    "height_m": 1.0,
+    "depth_m": 0.5,
+    "displacement_m": 0.001,
+    "gravity_m_s2": 9.81,
+    "period_ratio": 8.0,
+    "units": {
+      "length_m": "m",
+      "height_m": "m",
+      "depth_m": "m",
+      "displacement_m": "m",
+      "gravity_m_s2": "m/s^2",
+      "period_ratio": "1"
+    }
+  },
+  "assumptions": {
+    "length_m": "SYNTHETIC-ASSUMPTION",
+    "height_m": "SYNTHETIC-ASSUMPTION",
+    "depth_m": "SYNTHETIC-ASSUMPTION",
+    "displacement_m": "SYNTHETIC-ASSUMPTION",
+    "gravity_m_s2": "SYNTHETIC-ASSUMPTION",
+    "period_ratio": "SYNTHETIC-ASSUMPTION",
+    "model": "Rigid walls, incompressible irrotational flow, linear small displacement; viscosity, damping, wall flexibility and nonlinear response excluded.",
+    "reference_points": "Synthetic period ratios 1.1 and 8; frequencies only, no response histories."
+  },
+  "derivation": [
+    "Incompressible irrotational flow gives Laplace(phi)=0 in a rigid rectangular tank.",
+    "For x in [0,L], z in [-h,0], impermeable boundaries admit phi_n proportional to cos(k_n*x)*cosh(k_n*(z+h)), k_n=n*pi/L.",
+    "Linear kinematic and dynamic free-surface conditions give omega_n^2=g*k_n*tanh(k_n*h), for positive integer n.",
+    "Odd and even modes are eigenmodes; their forcing coupling is not calculated.",
+    "T1=2*pi/omega1; T=period_ratio*T1; omega=omega1/period_ratio; acceleration amplitude=displacement*omega^2.",
+    "Hydrostatic slope d(eta)/dx=-acceleration/g gives the spatial end-to-end magnitude L*displacement*omega^2/g; this is not temporal peak-to-peak elevation."
+  ],
+  "modes": [
+    {
+      "mode": 1,
+      "wave_number_rad_m": 3.141592653589793,
+      "omega_rad_s": 5.316553374316752,
+      "units": {
+        "wave_number_rad_m": "rad/m",
+        "omega_rad_s": "rad/s"
+      }
+    },
+    {
+      "mode": 2,
+      "wave_number_rad_m": 6.283185307179586,
+      "omega_rad_s": 7.836342636657429,
+      "units": {
+        "wave_number_rad_m": "rad/m",
+        "omega_rad_s": "rad/s"
+      }
+    },
+    {
+      "mode": 3,
+      "wave_number_rad_m": 9.42477796076938,
+      "omega_rad_s": 9.614684109065045,
+      "units": {
+        "wave_number_rad_m": "rad/m",
+        "omega_rad_s": "rad/s"
+      }
+    },
+    {
+      "mode": 4,
+      "wave_number_rad_m": 12.566370614359172,
+      "omega_rad_s": 11.102938165997399,
+      "units": {
+        "wave_number_rad_m": "rad/m",
+        "omega_rad_s": "rad/s"
+      }
+    }
+  ],
+  "results": {
+    "period_ratio": 8.0,
+    "omega1_rad_s": 5.316553374316752,
+    "t1_s": 1.1818155231042065,
+    "excitation_omega_rad_s": 0.664569171789594,
+    "excitation_period_s": 9.454524184833652,
+    "acceleration_amplitude_m_s2": 0.00044165218409310687,
+    "quasi_static_end_to_end_m": 4.502060999929734e-05,
+    "classification": "QUASI_STATIC_ANCHOR",
+    "excursion_interpretation": "Hydrostatic spatial amplitude approximation; physical accuracy NOT_ESTABLISHED.",
+    "status": "SYNTHETIC-ANALYTICAL",
+    "units": {
+      "omega1_rad_s": "rad/s",
+      "t1_s": "s",
+      "excitation_omega_rad_s": "rad/s",
+      "excitation_period_s": "s",
+      "acceleration_amplitude_m_s2": "m/s^2",
+      "quasi_static_end_to_end_m": "m",
+      "period_ratio": "1"
+    }
+  },
+  "reference_points": [
+    {
+      "period_ratio": 1.1,
+      "omega1_rad_s": 5.316553374316752,
+      "t1_s": 1.1818155231042065,
+      "excitation_omega_rad_s": 4.8332303402879555,
+      "excitation_period_s": 1.2999970754146273,
+      "acceleration_amplitude_m_s2": 0.023360115522280026,
+      "quasi_static_end_to_end_m": 0.0023812554049215113,
+      "classification": "DYNAMIC_REFERENCE",
+      "excursion_interpretation": "Hydrostatic slope proxy only; NOT a dynamic or near-resonant response amplitude.",
+      "status": "SYNTHETIC-ANALYTICAL",
+      "units": {
+        "omega1_rad_s": "rad/s",
+        "t1_s": "s",
+        "excitation_omega_rad_s": "rad/s",
+        "excitation_period_s": "s",
+        "acceleration_amplitude_m_s2": "m/s^2",
+        "quasi_static_end_to_end_m": "m",
+        "period_ratio": "1"
+      },
+      "purpose": "Synthetic near-first-mode frequency descriptor; no dynamic response predicted."
+    },
+    {
+      "period_ratio": 8.0,
+      "omega1_rad_s": 5.316553374316752,
+      "t1_s": 1.1818155231042065,
+      "excitation_omega_rad_s": 0.664569171789594,
+      "excitation_period_s": 9.454524184833652,
+      "acceleration_amplitude_m_s2": 0.00044165218409310687,
+      "quasi_static_end_to_end_m": 4.502060999929734e-05,
+      "classification": "QUASI_STATIC_ANCHOR",
+      "excursion_interpretation": "Hydrostatic spatial amplitude approximation; physical accuracy NOT_ESTABLISHED.",
+      "status": "SYNTHETIC-ANALYTICAL",
+      "units": {
+        "omega1_rad_s": "rad/s",
+        "t1_s": "s",
+        "excitation_omega_rad_s": "rad/s",
+        "excitation_period_s": "s",
+        "acceleration_amplitude_m_s2": "m/s^2",
+        "quasi_static_end_to_end_m": "m",
+        "period_ratio": "1"
+      },
+      "purpose": "Synthetic off-resonance sway anchor; no pitch experiment reproduced."
+    }
+  ],
+  "criteria": {
+    "software_identity_relative_allowance": 1e-12,
+    "allowance_scope": "Software/asymptotic identities only; no physical tolerance.",
+    "quasi_static_period_ratio_minimum": 8.0,
+    "threshold_basis": "Proposed synthetic anchor convention; no accuracy demonstrated.",
+    "physical_acceptance": "NOT_ESTABLISHED"
+  },
+  "evidence_status": {
+    "synthetic_model_regression": "ANALYTICAL_REFERENCE",
+    "physical_validation": "BLOCKED",
+    "solver_2d_3d_agreement": "NOT_ESTABLISHED"
+  },
+  "missing": [
+    {
+      "id": "numerical-sway-reference",
+      "status": "BLOCKED",
+      "needed": "Rights-cleared rigid-tank sway samples with units and probe coordinates."
+    },
+    {
+      "id": "sway-probe-boundary-equivalence",
+      "status": "UNVERIFIED",
+      "needed": "Probe definitions, boundary conditions and rigid-wall equivalence evidence."
+    },
+    {
+      "id": "calibrated-pitch-forcing",
+      "status": "BLOCKED",
+      "needed": "Linkage dimensions and calibrated pitch forcing; not replaced by sway."
+    },
+    {
+      "id": "native-input-output-evidence",
+      "status": "UNVERIFIED",
+      "needed": "Native inputs, histories, digests and reduction criteria for matched cases."
+    },
+    {
+      "id": "source-specific-public-numerical-reuse",
+      "status": "UNVERIFIED",
+      "needed": "Documented source-specific permission for public numerical reuse."
+    }
+  ],
+  "cited_metadata": {
+    "status": "UNVERIFIED",
+    "numerical_reuse": "UNVERIFIED",
+    "used_in_calculation": false,
+    "source_id": "cited-publication",
+    "basis": "Supplied historical descriptors; publication payload was not inspected.",
+    "citation": "Applied Ocean Research; publication date 2026-09-13; full title not supplied.",
+    "rights": "Citation only; CC BY-NC-ND 4.0 does not establish numerical reuse here.",
+    "sway": {
+      "length_m": 0.57,
+      "height_m": 0.3,
+      "depth_m": 0.15,
+      "displacement_mm": 0.4,
+      "excitation_omega_rad_s": 5.028,
+      "reported_frequency_ratio": 0.83,
+      "acceleration_expression": "a*omega^2*sin(omega*t); a is displacement",
+      "wall_condition": "Flexible-wall figure; rigid-limit equivalence UNVERIFIED"
+    },
+    "historical_proposal": {
+      "omega1_rad_s": 6.058,
+      "status": "UNADOPTED",
+      "use": "Historical metadata only; no numerical comparator."
+    },
+    "pitch": {
+      "length_m": 0.25,
+      "span_m": 0.16,
+      "height_m": 0.15,
+      "fill_fractions": [
+        0.3,
+        0.5
+      ],
+      "period_s": 6.0,
+      "reported_excitation_hz": 0.167,
+      "reported_first_frequency_hz": 1.47,
+      "probe_from_right_wall_mm": 25.0,
+      "acquisition_frames_s": 50.0,
+      "numerical_samples": "ABSENT",
+      "forcing": "BLOCKED: linkage dimensions absent",
+      "viscosity": "UNVERIFIED exponent; excluded from calculation"
+    },
+    "rotational_geometry": {
+      "breadth_m": 0.9,
+      "length_m": 1.35,
+      "height_m": 0.9,
+      "depth_m": 0.45,
+      "use": "Descriptive only; roll/pitch summaries are not pure-sway references."
+    },
+    "unadopted_proposals": {
+      "period_ratio_threshold": 8.0,
+      "planar_spatial_difference_percent": 3.0,
+      "quasi_static_difference_percent": 5.0,
+      "use": "Not physical acceptance authority; no solver comparison is available."
+    }
+  },
+  "sources": [
+    {
+      "id": "supplied-evidence-summary",
+      "sha256": "c24795c00c6c56df19a953fff558adf60620be0c3e1549bf69e732659feb54b1",
+      "verification": "SUPPLIED-HISTORICAL-ASSERTION",
+      "observed_at": "2026-10-25 UTC",
+      "freshness": "NOT_REVERIFIED",
+      "use": "Provenance only; no source-derived arrays."
+    },
+    {
+      "id": "historical-research-summary",
+      "sha256": "6d68bca3184e0023db9ec912323135254f3a57122d216bba5370d84ed694c9af",
+      "verification": "SUPPLIED-HISTORICAL-ASSERTION",
+      "observed_at": "2026-10-25 UTC",
+      "freshness": "NOT_REVERIFIED",
+      "use": "Provenance only; no source-derived arrays."
+    },
+    {
+      "id": "cited-publication",
+      "sha256": "a80411c1054c6f877c2974f195af1d125c24ce45164b9fbde50eaee1d474e4fc",
+      "verification": "SUPPLIED-HISTORICAL-ASSERTION",
+      "observed_at": "2026-10-25 UTC",
+      "freshness": "NOT_REVERIFIED",
+      "use": "Provenance only; no source-derived arrays."
+    }
+  ],
+  "counts": {
+    "synthetic_reference_points": 2,
+    "eigenmodes": 4,
+    "qualified_physical_results": 0,
+    "missing_evidence_items": 5
+  },
+  "next_evidence_step": "Obtain a rights-cleared rigid-tank sway reference package with probe definitions, forcing, native histories and input digests.",
+  "revision_history": [
+    {
+      "revision": "1",
+      "date": "2026-10-25",
+      "change": "Synthetic rigid-tank references added to expose physical-evidence gaps."
+    }
+  ]
+}
