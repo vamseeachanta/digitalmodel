@@ -182,6 +182,38 @@ def test_exact_headroom_is_allowed_but_larger_volume_is_rejected():
         verify_coupling(case, sweep, spec)
 
 
+@pytest.mark.parametrize("period", [6.2514, 0.9])
+def test_ninety_percent_fill_accepts_exact_headroom(period):
+    """Synthetic fill=.9: 1200-1080=120 m3; capacity=.1 adds 120 m3.
+
+    Period=.9 also rounds the computed half-cycle inflow slightly above 120.
+    """
+    sweep, spec = reference(fill=0.9, capacity=0.1, period=period)
+    case = map_sweep_case_to_openfoam_case(sweep, spec)
+    result = verify_coupling(case, sweep, spec)
+    assert result.passed
+    assert result.headroom_m3 == pytest.approx(120.0, rel=2e-15, abs=0.0)
+    assert result.planned_inflow_m3 == pytest.approx(120.0, rel=2e-15, abs=0.0)
+    assert result.headroom_exhaustion_time_s == pytest.approx(period / 2.0)
+
+
+def test_ninety_percent_fill_rejects_small_physical_overflow():
+    """Synthetic excess=1200*1e-12 m3, larger than arithmetic roundoff."""
+    sweep, spec = reference(fill=0.9, capacity=0.1 + 1e-12)
+    with pytest.raises(ValueError, match="exceeds initialized headroom"):
+        map_sweep_case_to_openfoam_case(sweep, spec)
+
+
+def test_gate_rejects_positive_inflow_into_zero_headroom():
+    """A full tank cannot admit even a synthetic 1e-15 m3/s inlet."""
+    sweep, spec = reference(capacity=0.0)
+    case = map_sweep_case_to_openfoam_case(sweep, spec)
+    case.fill_level = 1.0
+    inlet(case).extra["volumetricFlowRate"] = "constant 1e-15"
+    with pytest.raises(ValueError, match="headroom=0"):
+        verify_coupling(case, sweep, spec)
+
+
 @pytest.mark.parametrize("duplicate", [False, True])
 def test_gate_rejects_ambiguous_or_unbounded_inlet(duplicate):
     sweep, spec = reference()

@@ -66,6 +66,11 @@ _PULSE_TOL: float = 1e-9
 # Absolute tolerance for the planned-exchange mass residual (kg).
 _MASS_TOL: float = 1e-6
 
+# Each volume path uses at most eight rounded operations. With unit roundoff
+# epsilon/2, eight epsilons bound their relative disagreement. No absolute
+# allowance is applied, so zero headroom still rejects every positive inflow.
+_INVENTORY_REL_TOL: float = 8.0 * math.ulp(1.0)
+
 # Rounding applied to inputs before hashing (kills float noise for reproducible
 # manifest hashes across platforms).
 _ROUND = 6
@@ -481,12 +486,18 @@ def _verify_inflow_inventory(
     snap = snap_fill_to_cell_face(
         dimensions[2], dc.cell_counts()[2], case.fill_level, warn=False
     )
-    headroom = math.prod(dimensions) * (1.0 - snap.fill_level)
+    # Count dry cells directly: 1 - snapped_fill loses precision near full fill.
+    dry_fraction = (snap.n_cells - snap.n_fill_cells) / snap.n_cells
+    headroom = math.prod(dimensions) * dry_fraction
     if not math.isfinite(headroom):
         raise ValueError("coupled inventory needs finite tank headroom")
     planned = rate * (sc.end_time - sc.start_time)
     exhaustion = sc.start_time + headroom / rate if rate > 0.0 else None
-    if not math.isfinite(planned) or planned > headroom:
+    if not math.isfinite(planned) or (
+        planned > headroom and not math.isclose(
+            planned, headroom, rel_tol=_INVENTORY_REL_TOL, abs_tol=0.0
+        )
+    ):
         raise ValueError(
             f"planned inlet inflow={planned:.6g} m^3 exceeds initialized "
             f"headroom={headroom:.6g} m^3, exhausted at t={exhaustion:.6g} s "

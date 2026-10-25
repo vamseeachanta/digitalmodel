@@ -10,6 +10,7 @@ atmospheric vent introduced by #1528.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Bound constant inflow by duration and initialized headroom to prevent planned overflow. |
+| 2 | 2026-10-25 | Preserve exact-capacity acceptance under arithmetic roundoff while retaining overflow rejection. |
 
 ## Method and decision
 
@@ -42,6 +43,16 @@ The limit is tank capacity itself, with no empirical allowance or coefficient.
 `setFieldsDict` initialization. Thus an upward mesh snap reduces the headroom
 used by the gate. The inventory is assumed to describe the state at the declared
 start time; restart-field inventories are not inspected.
+
+Headroom is computed from the fraction of dry vertical cells, avoiding
+cancellation in `1 - snapped_fill` near a full tank. The comparison permits
+relative roundoff of `8 * math.ulp(1.0)` with zero absolute tolerance. Each volume
+path uses at most eight rounded operations; unit roundoff is half a machine
+epsilon, so eight epsilons bound the relative disagreement of the two paths.
+This is an arithmetic bound, with no empirical increase in capacity. Zero
+headroom still rejects every positive inflow. Synthetic regressions cover a
+90% fill with 120.0 m3 headroom and 120.0 m3 inflow, a period that also rounds
+the inflow upward, and a physical excess larger than the roundoff bound.
 
 The gate reads `volumetricFlowRate` from the actual inlet boundary condition,
 using the OpenFOAM v2312
