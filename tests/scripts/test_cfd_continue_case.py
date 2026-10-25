@@ -110,7 +110,8 @@ def test_reached_target_is_done(continuation, last):
 
 
 @pytest.mark.parametrize("log", ["Time = 2\n", "", "Time = nan\n",
-                                 "Time = 3\nTime = invalid\n"])
+                                 "Time = 3\nTime = invalid\n",
+                                 r"Time = \063" + "\n"])
 def test_zero_exit_without_target_evidence_fails(continuation, log):
     case = continuation(log=log)
     assert not (case / "CONT_DONE").exists()
@@ -123,3 +124,28 @@ def test_nonzero_exit_fails_even_at_target(continuation):
     case = continuation(rc="7")
     assert not (case / "CONT_DONE").exists()
     assert "rc=7" in (case / "CONT_FAILED").read_text()
+
+
+@pytest.mark.parametrize("last,end", [(r"\063", "3"), ("3", r"\063")])
+def test_worker_rejects_escaped_time_values(tmp_path, last, end):
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    launcher = bindir / "mpirun"
+    launcher.write_text('#!/usr/bin/env bash\nprintf "Time = %s\\n" "$TEST_LAST"\n')
+    launcher.chmod(0o755)
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    env.update(PATH=f"{bindir}:{env['PATH']}", TEST_LAST=last,
+               DM_CFD_MPIRUN_FLAGS="")
+    worker = SCRIPT.parent / "lib/cfd_continue_worker.sh"
+    result = subprocess.run(
+        ["bash", str(worker), "fakeSolver", "1", end, "ledger", "case"],
+        cwd=tmp_path, env=env, capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    assert not (tmp_path / "CONT_DONE").exists()
+    failure = (tmp_path / "CONT_FAILED").read_text()
+    assert f"Time={last}" in failure
+    assert f"target={end}" in failure
+    assert "rc=0" in failure
+    assert not (tmp_path / "run.pid").exists()
