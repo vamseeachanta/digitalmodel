@@ -269,7 +269,8 @@ reports/
 docs/reports/*
 # Keep all module report sources and deliverables; exclude local build products.
 !docs/reports/modules/
-!docs/reports/modules/**
+# Open nested report directories without overriding other local-only patterns.
+!docs/reports/modules/**/reports/
 docs/reports/modules/**/__pycache__/
 docs/reports/modules/**/*.py[cod]
 docs/reports/modules/**/.pytest_cache/
