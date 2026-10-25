@@ -60,7 +60,8 @@ def joint_counts(sections_m: Sequence[float], joint_length_m: float, tol_m: floa
     counts = []
     for i, length in enumerate(lengths):
         count = 1  # one section endpoint, per the sequence definition above
-        if length - joint > tol:
+        # Preserve the existing floating-point boundary for a single joint.
+        if length > joint + tol:
             ratio = length / joint
             if not math.isfinite(ratio):
                 raise ValueError(f"section {i}: joint count is not finite")

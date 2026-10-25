@@ -11,6 +11,7 @@ exclusion boundaries and sampling tolerances remains **NOT_EVALUATED**.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Define input and expansion contracts and assess unresolved topology to avoid treating rounding tolerance as engineering acceptance. |
+| 1 | 2026-10-25 | Restore the single-joint tolerance comparison and add adjacent-float regressions to preserve previously supported station maps. |
 
 ## Arithmetic and supported inputs
 
@@ -22,9 +23,12 @@ standard values are introduced.
 For section length `L`, start coordinate `s`, joint length `J` and supplied
 whole-joint tolerance `t`, coupling positions inside a multi-joint section are
 `s + k*J`. The section endpoint is always `s + L`. The existing expansion rule
-expands when `L - J > t`, takes `n = round(L/J)`, and requires the length
+expands when `L > J + t`, takes `n = round(L/J)`, and requires the length
 residual `abs(L/J - n)*J <= t`. Such a section contributes `n` positions,
 including its endpoint; every shorter section contributes its endpoint alone.
+The addition is evaluated before comparison: `L == J + t` contributes only its
+endpoint. Subtracting `J` before comparison can change this decision through
+floating-point rounding and does not preserve the existing boundary behavior.
 This is arithmetic bookkeeping, not a coupling design rule.
 
 `sections_m` retains its existing nonempty ordered-real-input contract: positive
@@ -99,5 +103,9 @@ expanded intermediate coordinate.
 positions, counts and residuals in test docstrings. It checks finite scalar
 validation, exact and exceeded budgets, preflight before any joint iteration,
 non-representable ratios, zero sampling distances, and CR-10 `NOT_EVALUATED`
-propagation. The existing postprocess tests cover compatibility. No solver is
-started or imported by these checks.
+propagation. Single-joint regressions check the representable lengths immediately
+below, at and above the existing default `J + t` boundary: the first two return
+one endpoint and the last is refused. CR-10 regressions confirm that the equality
+case remains evaluable for both regular and irregular waves. The existing
+postprocess tests cover compatibility. No solver is started or imported by these
+checks.

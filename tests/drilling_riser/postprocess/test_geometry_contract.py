@@ -6,6 +6,8 @@ Every finite fixture below is a chosen input; expected positions/counts are
 independent applications of the arithmetic sequence written in each docstring.
 """
 
+import math
+
 import pytest
 
 from digitalmodel.drilling_riser.postprocess.evaluate import evaluate_case
@@ -30,6 +32,32 @@ def test_invalid_joint_tolerance_is_refused(tol):
     """A rounding tolerance is a finite nonnegative input, never a NaN bypass."""
     with pytest.raises(ValueError, match="tol_m"):
         coupling_positions([2.0], joint_length_m=2.0, tol_m=tol)
+
+
+@pytest.mark.parametrize("length, accepted", [
+    pytest.param(math.nextafter(27.433, -math.inf), True, id="below"),
+    pytest.param(27.433, True, id="at"),
+    pytest.param(math.nextafter(27.433, math.inf), False, id="above"),
+])
+def test_single_joint_tolerance_boundary(length, accepted):
+    """Legacy J=27.432, t=0.001: L <= 27.433 gives one endpoint; next float fails."""
+    if accepted:
+        assert joint_counts([length], 27.432, 1e-3) == [1]
+        assert coupling_positions([length]) == [length]
+    else:
+        with pytest.raises(ValueError, match="whole number"):
+            joint_counts([length], 27.432, 1e-3)
+        with pytest.raises(ValueError, match="whole number"):
+            coupling_positions([length])
+
+
+@pytest.mark.parametrize("wave, status", [("irregular", "PASS"), ("regular", "SCREENING")])
+def test_single_joint_tolerance_boundary_reaches_cr10(wave, status):
+    """L=27.433 is the legacy J+t boundary; its endpoint remains evaluable."""
+    stations = {"sections_m": [27.433], "exclude_below_m": 0.0}
+    result = evaluate_case({None: _doc([27.433], sig=[1.0])}, ROW,
+                           {"wave_kind": wave, "cr10_stations": stations})
+    assert result.status == status
 
 
 def test_joint_counts_and_budget_include_short_sections_and_end_b():
