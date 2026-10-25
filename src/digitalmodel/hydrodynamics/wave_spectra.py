@@ -301,6 +301,7 @@ class WaveSpectra:
         Returns:
             Spectral moment
         """
+        frequencies = np.asarray(frequencies, dtype=float)
         integrand = frequencies**n * spectrum
         return float(_trapezoid(integrand, frequencies))
 

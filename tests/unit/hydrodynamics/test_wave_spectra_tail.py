@@ -144,6 +144,51 @@ def test_pm_energy_period_and_power():
     assert math.isnan(ws.energy_period_from_spectrum(omega, zero))
 
 
+@pytest.mark.parametrize("frequency_dtype", [np.int32, np.int64, np.uint64])
+def test_statistics_accept_integer_frequencies(frequency_dtype):
+    """Integer grids retain the statistics supported by floating grids."""
+    ws = WaveSpectra()
+    omega = np.array([1, 2, 3], dtype=frequency_dtype)
+    density = np.array([1.0, 2.0, 1.0])
+    stats = ws.spectrum_statistics(omega, density)
+    assert stats == pytest.approx(ws.spectrum_statistics(omega.astype(float), density))
+    # Unit-spaced trapezoids: m(-1)=(1+1)/2+(1+1/3)/2=5/3;
+    # m0=(1+2)/2+(2+1)/2=3; m1=(1+4)/2+(4+3)/2=6;
+    # m2=(1+8)/2+(8+9)/2=13; m4=(1+32)/2+(32+81)/2=73.
+    assert stats["m_minus1"] == pytest.approx(1.6666666666666667)
+    assert stats["m0"] == pytest.approx(3.0)
+    assert stats["m1"] == pytest.approx(6.0)
+    assert stats["m2"] == pytest.approx(13.0)
+    assert stats["m4"] == pytest.approx(73.0)
+    np.testing.assert_array_equal(omega, [1, 2, 3])
+    assert omega.dtype == np.dtype(frequency_dtype)
+
+
+@pytest.mark.parametrize("frequency_dtype", [np.int32, np.int64, np.uint64])
+def test_energy_period_accepts_integer_frequencies(frequency_dtype):
+    """Energy periods agree for integer and floating frequency grids."""
+    ws = WaveSpectra()
+    omega = np.array([1, 2, 3], dtype=frequency_dtype)
+    density = np.array([1.0, 2.0, 1.0])
+    period = ws.energy_period_from_spectrum(omega, density)
+    assert period == pytest.approx(ws.energy_period_from_spectrum(omega.astype(float), density))
+    # The hand-integrated moments above give Te=2*pi*(5/3)/3=10*pi/9 s.
+    assert period == pytest.approx(3.490658503988659)
+
+
+@pytest.mark.parametrize("frequency_dtype", [np.int32, np.int64, np.uint64])
+def test_power_accepts_integer_frequencies(frequency_dtype):
+    """Incident power agrees for integer and floating frequency grids."""
+    ws = WaveSpectra()
+    omega = np.array([1, 2, 3], dtype=frequency_dtype)
+    density = np.array([1.0, 2.0, 1.0])
+    fluid = {"water_density": 1000, "gravity": 10}
+    power = ws.deep_water_wave_power(omega, density, **fluid)
+    assert power == pytest.approx(ws.deep_water_wave_power(omega.astype(float), density, **fluid))
+    # Synthetic fluid inputs give P=1000*10^2*(5/3)/2=250000/3 W/m.
+    assert power == pytest.approx(83333.33333333333)
+
+
 @pytest.mark.parametrize("fluid", [{"water_density": 0, "gravity": 10},
                                     {"water_density": 1000, "gravity": float("nan")}])
 def test_invalid_power_properties(fluid):
