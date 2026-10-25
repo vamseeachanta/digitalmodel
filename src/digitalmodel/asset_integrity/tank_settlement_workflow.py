@@ -28,8 +28,18 @@ CRITERIA_GAP = (
 )
 
 
+def _require_keys(value, name, required, optional=()):
+    """Reject malformed mappings before field access or keyword expansion."""
+    if not isinstance(value, dict):
+        raise ValueError(f"{name} must be a mapping")
+    if not set(required).issubset(value) or set(value) - set(required) - set(optional):
+        raise ValueError(f"{name} has missing required keys or unexpected keys")
+    return value
+
+
 def _tank_context(block):
-    tank = block["tank"]
+    tank = _require_keys(block["tank"], "tank", (
+        "diameter_m", "height_m", "fill_height_m", "course_thicknesses_mm", "material_grade"))
     for key in ("diameter_m", "height_m"):
         finite(tank[key], key, positive=True)
     fill = finite(tank["fill_height_m"], "fill_height_m", nonnegative=True)
@@ -52,15 +62,22 @@ def assess(block):
     Annex B local out-of-plane deflection. Course thickness, grade and fill
     are retained for engineering follow-up, not used to infer missing limits.
     """
+    _require_keys(block, "tank_settlement", ("tank", "shell_survey"),
+                  ("edge", "bottom_profile", "component_id"))
     tank = _tank_context(block)
-    shell = block["shell_survey"]
+    shell = _require_keys(block["shell_survey"], "shell_survey", ("angles_deg", "elevations_mm"))
     geometry = {"shell": reduce_shell_survey(tank["diameter_m"], **shell),
                 "edge": None, "bottom": None}
-    flags, notes = ["UNVERIFIED_ANNEX_B_CRITERIA"], [CRITERIA_GAP]
-    for name, key, reducer in (("edge", "edge", reduce_edge_settlement),
-                               ("bottom", "bottom_profile", reduce_bottom_profile)):
+    flags = ["UNVERIFIED_ANNEX_B_CRITERIA", "SHELL_COVERAGE_UNVERIFIED"]
+    notes = [CRITERIA_GAP, "Shell station count and spacing have not been verified against Annex B; "
+             "fit conditioning is diagnostic and does not establish survey sufficiency."]
+    for name, key, reducer, fields in (
+        ("edge", "edge", reduce_edge_settlement,
+         ("radial_extent_m", "shell_elevation_mm", "reference_elevation_mm")),
+        ("bottom", "bottom_profile", reduce_bottom_profile, ("distances_m", "elevations_mm")),
+    ):
         if key in block:
-            geometry[name] = reducer(**block[key])
+            geometry[name] = reducer(**_require_keys(block[key], key, fields))
         else:
             flags.append(f"MISSING_{name.upper()}_SURVEY")
             notes.append(f"No {name} survey supplied; missing measurements are not zero.")
@@ -89,7 +106,7 @@ def assess(block):
 def _report(result, component_id):
     def display(value):
         if isinstance(value, float):
-            return f"{value:.1f}"
+            return f"{value:.3g}"
         if isinstance(value, list):
             return ", ".join(display(v) for v in value)
         return value
@@ -110,16 +127,18 @@ def _report(result, component_id):
         component_id, "Settlement screening analysis", result["decision"], sections,
         result["limitations"],
     )
-    # Explicit dimensionless slope display avoids rounding a small tilt to zero.
+    # Significant figures preserve small nonzero tilts in mm/m.
     slope = result["geometry"]["shell"]["tilt_slope"]
-    report = report.replace("</body>", f"<p>Shell tilt: {html.escape(f'{slope * 1000:.1f}')} mm/m.</p></body>")
+    report = report.replace("</body>", f"<p>Shell tilt: {html.escape(f'{slope * 1000:.3g}')} mm/m.</p></body>")
     return report
 
 
 def run_workflow(cfg, output_dir):
     """Write a readback-friendly JSON result and offline HTML assessment."""
-    if cfg.get("basename") != "tank_settlement_screen":
+    if not isinstance(cfg, dict) or cfg.get("basename") != "tank_settlement_screen":
         raise ValueError("basename must be tank_settlement_screen")
+    if "tank_settlement" not in cfg:
+        raise ValueError("tank_settlement is required")
     block = cfg["tank_settlement"]
     result = assess(block)
     output = Path(output_dir)

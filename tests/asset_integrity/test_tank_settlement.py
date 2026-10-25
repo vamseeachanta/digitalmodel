@@ -156,6 +156,8 @@ def test_report_and_workflow(block, tmp_path):
     result = run_workflow(copy.deepcopy(cfg), tmp_path)
     saved = json.loads((tmp_path / "settlement-summary.json").read_text())
     assert saved == result
+    assert saved["geometry"]["shell"]["design_matrix_condition_number"] == pytest.approx(math.sqrt(2))
+    assert "SHELL_COVERAGE_UNVERIFIED" in saved["decision"]["applicability"]["flags"]
     report = (tmp_path / "settlement-report.html").read_text()
     assert "&lt;tank&gt;" in report and "<tank>" not in report
     assert "Revision history" in report
@@ -202,3 +204,109 @@ def test_preserve_profile_evidence(block):
     assert result["edge_survey"] == block["edge"]
     assert result["bottom_profile"] == block["bottom_profile"]
     assert all(s["url"].startswith("https://") for s in result["sources"])
+
+
+@pytest.mark.parametrize("scale", [1e-8, 1, 1e8])
+@pytest.mark.parametrize("first_harmonic", [0, 1e-14])
+def test_negligible_fitted_amplitude_has_no_direction(scale, first_harmonic):
+    """Second-harmonic variation alone cannot define a planar high point."""
+    angles = list(range(0, 360, 45))
+    elevations = [scale * (math.cos(2 * math.radians(t))
+                          + first_harmonic * math.cos(math.radians(t))) for t in angles]
+    result = reduce_shell_survey(10, angles, elevations)
+    assert result["high_point_azimuth_deg"] is None
+
+
+@pytest.mark.parametrize("scale", [1e-8, 1, 1e8])
+def test_small_resolvable_first_harmonic_retains_direction(scale):
+    angles = list(range(0, 360, 45))
+    elevations = [scale * (math.cos(2 * math.radians(t))
+                          + 1e-8 * math.sin(math.radians(t))) for t in angles]
+    result = reduce_shell_survey(10, angles, elevations)
+    assert result["high_point_azimuth_deg"] == pytest.approx(90, abs=1e-5)
+
+
+def test_uniform_coverage_condition_number(survey):
+    """Orthogonal columns have norms sqrt(8), 2, 2: condition=sqrt(2)."""
+    result = reduce_shell_survey(10, *survey)
+    assert result["design_matrix_condition_number"] == pytest.approx(math.sqrt(2))
+
+
+def test_clustered_coverage_is_exposed(block):
+    """Derive singular-value ratio from the symmetric survey's Gram matrix."""
+    angles = [0, 10, 20, 30]
+    block["shell_survey"] = {"angles_deg": angles, "elevations_mm": [0, 1, 2, 3]}
+    result = assess(block)
+    # Rotate to +/-5 and +/-15 degrees; rotation preserves singular values.
+    cosines = [math.cos(math.radians(t)) for t in [-15, -5, 5, 15]]
+    c_sum, c_squared_sum = sum(cosines), sum(c*c for c in cosines)
+    root = math.sqrt((4 - c_squared_sum)**2 + 4*c_sum**2)
+    expected = math.sqrt((4 + c_squared_sum + root) / (4 + c_squared_sum - root))
+    shell = result["geometry"]["shell"]
+    assert shell["design_matrix_condition_number"] == pytest.approx(expected)
+    assert shell["largest_station_gap_deg"] == 330
+    assert "SHELL_COVERAGE_UNVERIFIED" in result["decision"]["applicability"]["flags"]
+
+
+def test_even_coverage_remains_unverified(block):
+    result = assess(block)
+    assert "SHELL_COVERAGE_UNVERIFIED" in result["decision"]["applicability"]["flags"]
+    assert result["decision"]["verdict"] == "ESCALATE"
+
+
+_INPUT_KEYS = {
+    "tank": ["diameter_m", "height_m", "fill_height_m", "course_thicknesses_mm",
+             "material_grade"],
+    "shell_survey": ["angles_deg", "elevations_mm"],
+    "edge": ["radial_extent_m", "shell_elevation_mm", "reference_elevation_mm"],
+    "bottom_profile": ["distances_m", "elevations_mm"],
+}
+
+
+@pytest.mark.parametrize("section,key", [(s, k) for s, keys in _INPUT_KEYS.items() for k in keys])
+def test_missing_input_key_is_value_error(block, section, key):
+    del block[section][key]
+    with pytest.raises(ValueError, match=section):
+        assess(block)
+
+
+@pytest.mark.parametrize("section", _INPUT_KEYS)
+def test_extra_input_key_is_value_error(block, section):
+    block[section]["units"] = "unexpected"
+    with pytest.raises(ValueError, match=section):
+        assess(block)
+
+
+@pytest.mark.parametrize("section", _INPUT_KEYS)
+@pytest.mark.parametrize("value", [None, [], "invalid", 1])
+def test_nonmapping_section_is_value_error(block, section, value):
+    block[section] = value
+    with pytest.raises(ValueError, match=section):
+        assess(block)
+
+
+@pytest.mark.parametrize("value", [None, [], "invalid", {}, {"tank": {}}])
+def test_malformed_assessment_is_value_error(value):
+    with pytest.raises(ValueError):
+        assess(value)
+
+
+@pytest.mark.parametrize("cfg", [None, [], "invalid", {},
+    {"basename": "tank_settlement_screen"},
+    {"basename": "tank_settlement_screen", "tank_settlement": None}])
+def test_malformed_workflow_is_value_error(cfg, tmp_path):
+    with pytest.raises(ValueError):
+        run_workflow(cfg, tmp_path / "output")
+    assert not (tmp_path / "output").exists()
+
+
+def test_report_retains_small_geometry(block, tmp_path):
+    """A 0.2 mm amplitude on D=10 m gives 0.04 mm/m slope."""
+    angles = block["shell_survey"]["angles_deg"]
+    block["shell_survey"]["elevations_mm"] = [
+        0.2*math.cos(math.radians(t)) + 0.02*math.cos(2*math.radians(t)) for t in angles]
+    run_workflow({"basename": "tank_settlement_screen", "tank_settlement": block}, tmp_path)
+    report = (tmp_path / "settlement-report.html").read_text()
+    assert "Shell tilt: 0.04 mm/m." in report
+    assert "<td>tilt_angle_deg</td><td>0.00229</td>" in report
+    assert "<td>maximum_absolute_residual_mm</td><td>0.02</td>" in report

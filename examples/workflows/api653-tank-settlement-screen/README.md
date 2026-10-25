@@ -11,6 +11,7 @@ verified. No operating, re-level or repair decision is established.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-20 | Initial diagnostic workflow; unresolved acceptance criteria are exposed rather than inferred. |
+| 1 | 2026-10-24 | Validate input keys, expose survey conditioning and coverage uncertainty, suppress undefined directions, preserve small report values and clarify routing. |
 
 ## Run offline
 
@@ -25,7 +26,8 @@ The CLI will write `settlement-summary.json` and `settlement-report.html` to the
 input directory's `results/` folder. `--output-dir <directory>` selects a separate
 output folder. The registered invocation is standalone and does not use the
 central engine or import a licensed solver. The JSON retains calculation
-precision; the human-facing report rounds displayed values to one decimal place.
+precision; the human-facing report uses three significant figures so small
+nonzero tilts, angles and residuals remain visible.
 
 ## Input basis
 
@@ -50,6 +52,42 @@ Edge and bottom inputs may be omitted; their missing-data flags are then returne
 Omission never becomes a zero measurement. Four distinct shell stations are the
 software minimum for three fit coefficients plus a residual; this is not an
 API survey-spacing requirement.
+
+### Input and output schema
+
+The configuration must be a mapping with `basename: tank_settlement_screen` and
+a `tank_settlement` mapping. Within `tank_settlement`, `tank` and `shell_survey`
+are required; `edge`, `bottom_profile` and `component_id` are optional. Each
+supplied survey must be a mapping. Missing required keys, unexpected keys in
+these input blocks and non-mapping blocks raise `ValueError`.
+
+| Input block | Required keys; no additional keys allowed |
+| --- | --- |
+| `tank` | `diameter_m`, `height_m`, `fill_height_m`, `course_thicknesses_mm`, `material_grade` |
+| `shell_survey` | `angles_deg`, `elevations_mm` |
+| `edge` | `radial_extent_m`, `shell_elevation_mm`, `reference_elevation_mm` |
+| `bottom_profile` | `distances_m`, `elevations_mm` |
+
+The result retains `schema_version: 1`. Downstream workflow routing reads the
+top-level `action` field, currently `ESCALATE-TO-LEVEL-3`. The nested
+`decision.action` is the shared FFS vocabulary value `ESCALATE`; it records the
+assessment decision and is not the workflow routing field. Neither establishes
+a code verdict or authorizes a solver run.
+
+`geometry.shell.design_matrix_condition_number` is the ratio of the largest to
+smallest singular value of the design matrix with columns `1`, `cos(theta)` and
+`sin(theta)`. It indicates sensitivity of the fit to survey errors; it has no
+acceptance threshold. `largest_station_gap_deg` remains a geometric diagnostic.
+`decision.applicability.flags` always includes `SHELL_COVERAGE_UNVERIFIED` until
+Annex B station count and spacing requirements are verified, including for an
+evenly spaced survey. A good fit statistic does not qualify survey coverage.
+
+`geometry.shell.high_point_azimuth_deg` is `null` when the fitted first-harmonic
+amplitude is zero or numerically negligible relative to the largest absolute
+elevation departure from the mean. The numerical cutoff is a relative factor of
+`1e-12`, independent of units or any standard's acceptance criteria. A survey
+containing only second-harmonic variation therefore has no fitted high-point
+direction. The fitted amplitude and residuals remain available in the JSON.
 
 ## Method and worked answer
 

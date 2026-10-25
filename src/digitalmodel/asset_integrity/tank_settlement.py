@@ -56,7 +56,7 @@ def reduce_shell_survey(diameter_m, angles_deg, elevations_mm):
     matrix = np.column_stack((np.ones(len(z)), np.cos(radians), np.sin(radians)))
     # Centering protects small survey variations from a large absolute datum.
     datum = float(z[0])
-    coefficients, _, rank, _ = np.linalg.lstsq(matrix, z - datum, rcond=None)
+    coefficients, _, rank, singular_values = np.linalg.lstsq(matrix, z - datum, rcond=None)
     if rank != 3:
         raise ValueError("shell survey cannot resolve a plane")
     fitted_relative = matrix @ coefficients
@@ -69,7 +69,9 @@ def reduce_shell_survey(diameter_m, angles_deg, elevations_mm):
     total = float(variation @ variation)
     error = float(residuals @ residuals)
     r_squared = None if total == 0 else 1 - error / total
-    azimuth = None if total == 0 else math.degrees(math.atan2(coefficients[2], coefficients[1])) % 360
+    # Numerical resolution relative to survey variation, not an acceptance limit.
+    negligible_amplitude = amplitude <= 1e-12 * float(np.abs(variation).max())
+    azimuth = None if negligible_amplitude else math.degrees(math.atan2(coefficients[2], coefficients[1])) % 360
     result = {
         "coefficients_mm": coefficients.tolist(),
         "fitted_elevations_mm": (fitted_relative + datum).tolist(),
@@ -77,6 +79,7 @@ def reduce_shell_survey(diameter_m, angles_deg, elevations_mm):
         "diametral_tilt_mm": 2 * amplitude, "tilt_slope": slope,
         "tilt_angle_deg": math.degrees(math.atan(slope)),
         "high_point_azimuth_deg": azimuth, "r_squared": r_squared,
+        "design_matrix_condition_number": float(singular_values[0] / singular_values[-1]),
         "largest_station_gap_deg": float(np.diff(np.r_[np.sort(angles), min(angles)+360]).max()),
         "maximum_absolute_residual_mm": float(np.abs(residuals).max()),
     }
