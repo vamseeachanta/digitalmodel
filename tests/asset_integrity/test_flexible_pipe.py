@@ -141,7 +141,8 @@ def test_clean_observations_do_not_qualify_a_method():
     )
     assert result["decision"]["verdict"] == "ESCALATE"
     assert all(row["status"] == "NOT_EVALUATED" for row in result["failure_modes"])
-    assert all(row["evidence"] for row in result["failure_modes"])
+    assert all(row["missing_inputs"] == [] for row in result["failure_modes"])
+    assert all(row["verdict"] == "ESCALATE" for row in result["failure_modes"])
 
 
 def test_flooding_factor_does_not_create_remaining_life():
@@ -154,8 +155,25 @@ def test_flooding_factor_does_not_create_remaining_life():
         }
     )
     assert result["remaining_fatigue_life_years"] is None
-    assert result["evidence"]["flooded_life_factor"] == 0.5
-    assert any("environment" in gap.lower() for gap in result["limitations"])
+    computed = {key: value for key, value in result.items() if key != "evidence"}
+
+    def check_computed_fields(value):
+        if isinstance(value, dict):
+            assert "flooded_life_factor" not in value
+            for child in value.values():
+                check_computed_fields(child)
+        elif isinstance(value, list):
+            for child in value:
+                check_computed_fields(child)
+        else:
+            # The unqualified shortcut 20 x 0.5 = 10 must never be calculated.
+            assert value != 10
+
+    check_computed_fields(computed)
+    baseline = screen_flexible_pipe({"annulus_test": "flooded"})
+    assert computed == {
+        key: value for key, value in baseline.items() if key != "evidence"
+    }
 
 
 def test_published_incident_evidence_requires_assessment():
@@ -176,6 +194,11 @@ def test_published_incident_evidence_requires_assessment():
     assert row["evidence"]["annulus_test"] == "leak_indicated"
     assert result["evidence"]["annulus_test"] != "flooded"
     assert row["verdict"] == "ESCALATE"
+    armour = next(
+        row for row in result["failure_modes"] if row["mode"] == "tensile_armour"
+    )
+    assert armour["missing_inputs"] == ["total_armour_wires", "broken_armour_wires"]
+    assert armour["verdict"] == "ESCALATE"
     assert result["remaining_capacity"] is None
 
 
@@ -200,6 +223,12 @@ def test_report_escapes_inputs_and_persists_only_on_request(tmp_path):
     assert "Remaining capacity" in report
     assert Path(result["report_path"]).read_text(encoding="utf-8") == report
     assert report.index("Revision history") < report.index("Inspection evidence")
+    from datetime import datetime, timezone
+
+    assert "Workflow version" in report
+    revision = report.split("Revision history", 1)[1].split("Workflow version", 1)[0]
+    assert datetime.now(timezone.utc).date().isoformat() in revision
+    assert "2026-10-20" not in revision
 
 
 def test_router_without_output_dir_does_not_write(tmp_path, monkeypatch):
@@ -209,6 +238,34 @@ def test_router_without_output_dir_does_not_write(tmp_path, monkeypatch):
     cfg = router({"basename": "flexible_pipe_integrity_screen"})
     assert cfg["flexible_pipe_integrity_screen"]["decision"]["verdict"] == "ESCALATE"
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("yaml_value", ["", " {}"])
+def test_empty_assessment_mapping_leaves_observations_unknown(yaml_value):
+    import yaml
+
+    from digitalmodel.asset_integrity.flexible_pipe_workflow import router
+
+    cfg = yaml.safe_load(
+        "basename: flexible_pipe_integrity_screen\n"
+        f"flexible_pipe_assessment:{yaml_value}\n"
+    )
+    result = router(cfg)["flexible_pipe_integrity_screen"]
+    assert result["decision"]["verdict"] == "ESCALATE"
+    assert all(row["missing_inputs"] for row in result["failure_modes"])
+
+
+@pytest.mark.parametrize("block", [[], ["evidence"], "invalid", 0, False, 1])
+def test_non_mapping_assessment_has_clear_error(block):
+    from digitalmodel.asset_integrity.flexible_pipe_workflow import router
+
+    with pytest.raises(ValueError, match="flexible_pipe_assessment must be a mapping"):
+        router(
+            {
+                "basename": "flexible_pipe_integrity_screen",
+                "flexible_pipe_assessment": block,
+            }
+        )
 
 
 def test_registered_workflow_runs_with_licensed_imports_blocked(monkeypatch):
@@ -301,6 +358,32 @@ def test_report_formats_fraction_as_percentage():
     )["flexible_pipe_integrity_screen"]
     assert "33.3 %" in result["report_html"]
     assert "0.333333" not in result["report_html"]
+
+
+@pytest.mark.parametrize("broken,ratio", [(3, "3 / 10000"), (None, "not evaluated")])
+def test_report_shows_count_ratio_when_percentage_rounds_to_zero(broken, ratio):
+    from digitalmodel.asset_integrity.flexible_pipe_workflow import router
+
+    result = router(
+        {
+            "basename": "flexible_pipe_integrity_screen",
+            "flexible_pipe_assessment": {
+                "evidence": {
+                    "total_armour_wires": 10000,
+                    "broken_armour_wires": broken,
+                    "allowable_broken_fraction": 0.0,
+                    "allowable_fraction_reference": "Test-only count criterion, section A",
+                }
+            },
+        }
+    )["flexible_pipe_integrity_screen"]
+    assert (
+        f"<td>Broken wires / total wires (b/N)</td><td>{ratio}</td>"
+        in result["report_html"]
+    )
+    comparison = "ABOVE_INPUT_LIMIT" if broken is not None else "NOT_EVALUATED"
+    assert result["wire_inventory"]["input_limit_comparison"] == comparison
+    assert result["decision"]["verdict"] == "ESCALATE"
 
 
 def test_unavailable_load_history_is_missing_evidence():

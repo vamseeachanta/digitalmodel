@@ -18,27 +18,30 @@ groups it into five failure modes and returns <code>ESCALATE</code> pending qual
 pipe-specific assessment. Remaining capacity and fatigue life are
 <code>NOT_EVALUATED</code>. Wire counts provide inventory statistics only.</p>
 <h2>Revision history</h2>
-<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<table><caption>Revision history of this workflow guide.</caption>
+<tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
 <tr><td>Initial issue</td><td>2026-10-20</td><td>Evidence intake, count arithmetic and report routing are introduced to expose unqualified capacity and life checks.</td></tr>
-<caption>Revision history of this workflow guide.</caption></table>
+<tr><td>Second issue</td><td>2026-10-24</td><td>Count ratios clarify rounded percentages; report and workflow revisions are distinguished; empty input handling and evidence tests are corrected.</td></tr>
+</table>
 <h2>Method and sources</h2>
 <p>The <a href="https://www.hse.gov.uk/pipelines/resources/flexiblepipe.htm">HSE inspection guidance (2008), Recommendations</a>
 calls for failure-mode-based inspection and monitoring. Its Good practice guidance section
 lists API RP 17B, third edition (2002), <em>Recommended Practice for Flexible Pipe</em>.
 This workflow does not reproduce API acceptance limits or claim API compliance.</p>
 <p>The public regulator report
-<a href="https://www.havtil.no/contentassets/c2a5bd00e8214411ad5c4966009d6ade/un-bonded-flexible-risers--recent-field-experience-and-actions--for-increased-robustness.pdf">Un-bonded Flexible Risers – Recent Field Experience and Actions for Increased Robustness (2013), revision 5</a>
+<a href="https://www.havtil.no/contentassets/c2a5bd00e8214411ad5c4966009d6ade/un-bonded-flexible-risers--recent-field-experience-and-actions--for-increased-robustness.pdf">Un-bonded Flexible Risers – Recent Field Experience and Actions for Increased Robustness (2013), revision 5</a>,
+by 4Subsea AS for PSA Norway, document 0389-26583-U-0032,
 provides the evidence grouping below. Section 5.5 requires damage and consequence assessment;
 section 5.4.1 identifies environment-specific fatigue data needs. These observations do not
 establish a generic count-to-capacity or flooded-life equation.</p>
 <table>
+<caption>Grouped evidence taxonomy; locators refer to the public report, not API clauses.</caption>
 <tr><th>Failure-mode group</th><th>Inputs recorded</th><th>Report sections</th></tr>
 <tr><td>Outer sheath damage / annulus flooding</td><td>Breach location, annulus test, vent condition</td><td>4.4, 5.6, 5.7</td></tr>
 <tr><td>Tensile armour corrosion / rupture</td><td>Total and broken wires, annulus condition</td><td>4.4, 4.6, 5.5</td></tr>
 <tr><td>End-fitting fatigue</td><td>Age in years, load-history availability</td><td>5.4.1</td></tr>
 <tr><td>Carcass collapse</td><td>Collapse indication</td><td>4.3, 4.6</td></tr>
 <tr><td>Pressure-sheath creep / rupture</td><td>Damage indication</td><td>4.3, 4.6, 5.4.1</td></tr>
-<caption>Grouped evidence taxonomy; locators refer to the public report, not API clauses.</caption>
 </table>
 <p>For every group, assessment status is <code>NOT_EVALUATED</code> and action is
 <code>ESCALATE</code>. This action is software evidence-gap policy. No automatic
@@ -62,6 +65,11 @@ zero breaks and absence of indications do not establish fitness for service.</p>
 and a supplied life reduction multiplier lies in (0, 1]. These bounds are not
 engineering acceptance limits. Citation strings record the supplied basis; their
 accuracy and applicability are not automatically verified.</p>
+<p>An empty assessment block leaves observations unknown; a non-mapping block is
+rejected with an input error. Report percentages use one decimal place, with the
+exact broken-wire count ratio b / N shown alongside the inventory to distinguish
+small fractions that round to zero. Each generated report records its own issue
+date separately from the workflow version.</p>
 <h2>Worked example: inputs, method and answer</h2>
 <p>The following invented counts illustrate inventory arithmetic and are not measured
 engineering data. For total count N = 40 and broken count b = 2, the intact count

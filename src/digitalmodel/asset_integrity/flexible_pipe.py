@@ -13,7 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 FIELD_EXPERIENCE = (
     "Un-bonded Flexible Risers - Recent Field Experience and Actions for "
-    "Increased Robustness (2013), revision 5"
+    "Increased Robustness (2013), revision 5; "
+    "4Subsea AS for PSA Norway, document 0389-26583-U-0032"
 )
 FIELD_EXPERIENCE_URL = (
     "https://www.havtil.no/contentassets/c2a5bd00e8214411ad5c4966009d6ade/"

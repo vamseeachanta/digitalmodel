@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import datetime, timezone
+
 from .assessment.ffs_report import FFSReport
 from .assessment.screening_report import store_report
 from .flexible_pipe import screen_flexible_pipe
@@ -24,18 +27,34 @@ def _display_values(values):
 
 def router(cfg):
     """Assess explicit evidence and optionally persist a self-contained report."""
-    block = cfg.get("flexible_pipe_assessment", {})
+    block = cfg.get("flexible_pipe_assessment")
+    if block is None:
+        block = {}
+    if not isinstance(block, Mapping):
+        raise ValueError("flexible_pipe_assessment must be a mapping")
     result = screen_flexible_pipe(block.get("evidence", {}))
+    total = result["evidence"]["total_armour_wires"]
+    broken = result["evidence"]["broken_armour_wires"]
     sections = {
         "Revision history": {
+            "Initial issue": f"{datetime.now(timezone.utc).date().isoformat()}: Evidence screen generated from supplied observations."
+        },
+        "Workflow version": {
             "Initial issue": "2026-10-20: Evidence intake and count arithmetic; quantitative models remain unqualified."
         },
         "Inspection evidence (years where stated; fractions as percentages)": _display_values(
             result["evidence"]
         ),
-        "Wire inventory (counts; fractions as percentages)": _display_values(
-            result["wire_inventory"]
-        ),
+        "Wire inventory (counts; fractions as percentages)": {
+            **_display_values(result["wire_inventory"]),
+            # The exact count ratio distinguishes small nonzero fractions
+            # when the displayed percentages round to the same value.
+            "Broken wires / total wires (b/N)": (
+                f"{broken} / {total}"
+                if broken is not None and total is not None
+                else None
+            ),
+        },
         "Unqualified calculations": {
             "Remaining capacity": "NOT_EVALUATED",
             "Remaining fatigue life (years)": "NOT_EVALUATED",
