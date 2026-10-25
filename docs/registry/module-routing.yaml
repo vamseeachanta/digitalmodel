@@ -385,8 +385,14 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      blender_automation:
+        agent_pack: src/digitalmodel/solvers/blender_automation/docs/agent-pack.md
+        qa_family: CF
       calculix:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
+        qa_family: FE
+      gmsh_meshing:
+        agent_pack: src/digitalmodel/solvers/gmsh_meshing/docs/agent-pack.md
         qa_family: FE
       ghs:
         agent_pack: src/digitalmodel/solvers/ghs/docs/agent-pack.md

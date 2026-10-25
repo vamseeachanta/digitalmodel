@@ -215,16 +215,19 @@ def test_registry_rejects_duplicate_mapping_keys(text: str) -> None:
 
 
 def test_registry_preserves_solver_submodule_routes() -> None:
-    """Expect the manually enumerated routes in the registry at 272a424107ab.
+    """Expect the manually enumerated routes in the registry at d34bda5cf18d.
 
-    Independent inventory: calculix, ghs, mystran, openfoam, orcaflex,
-    seven orcaflex child packages, orcawave and top_level make fourteen routes.
+    Independent inventory: blender_automation, calculix, gmsh_meshing, ghs,
+    mystran, openfoam, orcaflex, seven orcaflex child packages, orcawave and
+    top_level make sixteen routes.
     Paths and QA families are transcribed from docs/registry/module-routing.yaml
     at that revision; these are routing metadata, not engineering limits.
     For intentional changes, re-enumerate routes by hand from the registry, not loader output.
     """
     expected_families = {
+        "blender_automation": "CF",
         "calculix": "FE",
+        "gmsh_meshing": "FE",
         "ghs": "EC",
         "mystran": "FE",
         "openfoam": "CF",
