@@ -3,15 +3,22 @@
 
 """Independent geometry examples for the starting-shape admission screen.
 
-All dimensions below are synthetic inputs, not design recommendations.
+Synthetic dimensions below are test inputs, not design recommendations.
 The two straight segments (0,0,0)->(3,4,0)->(6,8,0) each have length
 sqrt(3**2 + 4**2) = 5, hence total length 10 and three nodes.
 Distance basis: OpenStax, Calculus Volume 3 (2016), section 2.2.
 Acceptance basis: AQG r0 section 4 G0.6, as transcribed in
 src/digitalmodel/solvers/orcaflex/docs/agent-pack.md (C06).
+
+Repository examples also characterize the current admission policy: every
+starting-shape FAIL becomes an ERROR, including on hand-authored models.
+Arc length is compared with unstretched section lengths; a mismatch alone
+does not establish physical invalidity or native load failure. The severity
+policy for hand-authored models remains a maintainer decision.
 """
 
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 import yaml
@@ -51,6 +58,44 @@ def test_hand_calculated_geometry(model):
     assert result["arc_length"].actual == pytest.approx(0)
     # XYZ coordinates contain no evidence of the source line's diameter.
     assert result["dimensions"].status == "NOT_EVALUATED"
+
+
+def test_repository_d04_example_passes_file_validation():
+    """The existing library example passes the offline geometry screen.
+
+    The source file is used directly so its sections, table encodings and
+    coordinate frames are exercised together through the public validator.
+    Passing this screen does not establish native statics acceptance.
+    """
+    root = Path(__file__).resolve().parents[3]
+    path = root / "docs/domains/orcaflex/examples/yml/D04/D04 J-tube pull in.yml"
+    result = OrcaFlexYAMLValidator().validate_file(path)
+    assert result.valid, [str(issue) for issue in result.errors]
+    lengths = [f for f in result.starting_shapes if f.check == "arc_length"]
+    assert lengths
+    assert all(f.status == "PASS" for f in lengths)
+    assert not any(f.status == "FAIL" for f in result.starting_shapes)
+
+
+def test_repository_installation_model_is_rejected_only_for_arc_length():
+    """An existing installation model flips validity under the C06 screen.
+
+    This records the existing ERROR policy while its applicability to
+    stretched starting shapes awaits a maintainer decision. No solver
+    acceptance or physical defect is inferred from the geometric mismatch.
+    """
+    root = Path(__file__).resolve().parents[3]
+    path = root / (
+        "docs/domains/orcaflex/installation/pipeline/route_a/monolithic/Step1.yml"
+    )
+    result = OrcaFlexYAMLValidator().validate_file(path)
+    assert not result.valid
+    assert result.errors
+    assert all(issue.property == "StartingShape" for issue in result.errors)
+    failures = [f for f in result.starting_shapes if f.status == "FAIL"]
+    assert [f.check for f in failures] == ["arc_length"]
+    assert failures[0].actual > failures[0].limit
+    assert failures[0].limit == pytest.approx(0.001)
 
 
 def test_missing_table_is_distinct_from_bad_table(model):
