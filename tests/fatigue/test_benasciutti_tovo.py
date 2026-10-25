@@ -87,7 +87,9 @@ def test_hand_calculated_correction_and_equivalent_range():
 
 
 @pytest.mark.parametrize("slope", [1, 2, 3, 5, 7])  # Eq. (11): b >= 1.
-@pytest.mark.parametrize("variance, angular_frequency", [(1, 1), (0.03, 3), (2.3, 7.1)])
+@pytest.mark.parametrize("variance, angular_frequency", [
+    (1, 1), (0.03, 3), (2.3, 7.1), (0.01, 14.9), (0.01, 0.3),
+])
 def test_exact_narrowband_limit(slope, variance, angular_frequency):
     """A spectral line has m_j=variance*omega**j; Eq. (11) gives lambda=1."""
     moments = SpectralMoments(**{
@@ -97,6 +99,31 @@ def test_exact_narrowband_limit(slope, variance, angular_frequency):
     expected = narrow_band_damage(moments, slope, 0)
     assert actual.damage_rate == expected.damage_rate
     assert actual.equivalent_stress_range == expected.equivalent_stress_range
+
+
+@pytest.mark.parametrize("offset", [-2, 2])
+def test_unity_normalization_roundoff_allowed(offset):
+    """Two roots and two divisions allow gamma_4, approximately two ulps.
+
+    Accuracy and Stability of Numerical Algorithms, 2nd ed. (2002),
+    Sections 2.2 and 3.1, Lemma 3.1: gamma_n=n*u/(1-n*u).
+    For binary64, u=2**-53, so gamma_4 is just above 2**-51.
+    These perturbations are arithmetic allowances, not design margins.
+    """
+    moments = SpectralMoments(m0=1, m1=1 + offset * math.ulp(1.0), m2=1, m4=1)
+    actual = benasciutti_tovo_damage(moments, 3, 0)
+    expected = narrow_band_damage(moments, 3, 0)
+    assert actual.damage_rate == expected.damage_rate
+
+
+def test_near_unity_ratios_share_narrowband_limit():
+    """Ratios just below unity have the same rounding budget as those above."""
+    moments = SpectralMoments(
+        m0=1, m1=1 - math.ulp(1.0), m2=1 - math.ulp(1.0), m4=1,
+    )
+    actual = benasciutti_tovo_damage(moments, 3, 0)
+    expected = narrow_band_damage(moments, 3, 0)
+    assert actual.damage_rate == expected.damage_rate
 
 
 @pytest.mark.parametrize("width", [0.1, 0.01, 0.001, 0.0001])
@@ -148,8 +175,9 @@ def test_invalid_moments_rejected(field, invalid):
     dict(m0=1, m1=2, m2=1, m4=2),  # alpha1 > 1
     dict(m0=1, m1=1, m2=2, m4=1),  # alpha2 > 1
     dict(m0=1, m1=0.1, m2=1, m4=2),  # alpha1 < alpha2
-    dict(m0=1, m1=1 - 4 * math.ulp(1.0), m2=1, m4=1),  # ordering beyond roundoff
-    dict(m0=1, m1=1 + 2 * math.ulp(1.0), m2=1, m4=1),  # upper bound beyond roundoff
+    dict(m0=1, m1=1 - 5 * math.ulp(1.0), m2=1, m4=1),  # ordering beyond roundoff
+    dict(m0=1, m1=1 + 3 * math.ulp(1.0), m2=1, m4=1),  # upper bound beyond roundoff
+    dict(m0=1, m1=1e-17, m2=1, m4=1e32),  # small ratios still require ordering
 ])
 def test_inconsistent_moment_ratios_rejected(data):
     """Nonnegative-frequency PSD moments require 0 < alpha2 <= alpha1 <= 1."""

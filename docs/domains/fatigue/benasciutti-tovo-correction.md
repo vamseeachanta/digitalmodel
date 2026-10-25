@@ -12,6 +12,7 @@ engineering acceptance factors remain caller inputs.
 | --- | --- | --- |
 | 1 | 2026-10-22 | Replace the increasing wide-band factor with BT2 and qualify its reduction bounds. |
 | 2 | 2026-10-24 | Account for both moment ratios in the boundary roundoff check and independently check the equivalent range. |
+| 3 | 2026-10-25 | Derive the full normalization roundoff allowance, normalize both sides of unity and refresh the affected atlas. |
 
 ## Method and sources
 
@@ -44,10 +45,19 @@ For positive moments satisfying `0 < alpha2 <= alpha1 <= 1` and slope `b >= 1`,
 the mixture has `alpha2**(b-1) <= lambda <= 1`. This slope restriction follows
 from the exponent in Eq. (11); it is not an engineering acceptance criterion.
 Inputs outside this domain, or nonfinite moments and S-N parameters, raise
-`ValueError`. Each moment ratio has a roundoff allowance of one floating-point
-unit at unity. Their ordering check combines both allowances, so scaled
-spectral-line inputs reach the narrow-band limit despite opposite rounding
-errors. Inconsistencies beyond these allowances are rejected.
+`ValueError`. The arithmetic allowance follows
+[Accuracy and Stability of Numerical Algorithms, second edition (2002)](https://doi.org/10.1137/1.9780898718027.ch3),
+Sections 2.2 and 3.1, Lemma 3.1. For each ratio, two square roots and two
+divisions introduce four relative rounding factors, each bounded by the unit
+roundoff `u=ulp(1)/2`. Their product, including reciprocal factors, has a
+relative error bounded by `gamma_4=4*u/(1-4*u)`, assuming normal intermediate
+results. The ordering allowance is
+`gamma_4/(1-gamma_4)*(alpha1+alpha2)`, expressed using the computed ratios.
+This retains a relative ordering check even for small ratios. Both ratios
+within `gamma_4` of unity are normalized to unity, from either side, after
+validation. Scaled spectral lines therefore reach the analytical limit;
+inconsistencies beyond these arithmetic allowances are rejected. The allowance
+does not cover measurement uncertainty or select an engineering design margin.
 
 ## Worked example
 

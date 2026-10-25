@@ -382,13 +382,23 @@ def benasciutti_tovo_damage(
     # roots avoid overflowing products of otherwise representable moments.
     alpha1 = moments.m1 / math.sqrt(moments.m0) / math.sqrt(moments.m2)
     alpha2 = moments.m2 / math.sqrt(moments.m0) / math.sqrt(moments.m4)
-    # Each ratio has a one-unit roundoff allowance at unity; ordering
-    # combines both allowances. Neither is an engineering acceptance limit.
-    roundoff = math.ulp(1.0)
+    # Accuracy and Stability of Numerical Algorithms, 2nd ed. (2002),
+    # Sections 2.2 and 3.1, Lemma 3.1: two roots and two divisions give
+    # alpha_hat/alpha=(1+d1)*(1+d2)/((1+d3)*(1+d4)), |di|<=u.
+    # Hence |alpha_hat/alpha-1|<=gamma_4=4*u/(1-4*u). Ordering uses
+    # both relative error bounds expressed in terms of the computed ratios.
+    unit_roundoff = math.ulp(1.0) / 2.0
+    roundoff = 4.0 * unit_roundoff / (1.0 - 4.0 * unit_roundoff)
+    ordering_roundoff = roundoff / (1.0 - roundoff) * (alpha1 + alpha2)
     if not (0 < alpha2 <= 1.0 + roundoff
-            and alpha1 <= 1.0 + roundoff
-            and alpha2 - alpha1 <= 2.0 * roundoff):
+            and 0 < alpha1 <= 1.0 + roundoff
+            and alpha2 - alpha1 <= ordering_roundoff):
         raise ValueError("moments must satisfy 0 < alpha2 <= alpha1 <= 1")
+    # Normalize the same uncertainty interval on both sides of unity.
+    if abs(alpha1 - 1.0) <= roundoff:
+        alpha1 = 1.0
+    if abs(alpha2 - 1.0) <= roundoff:
+        alpha2 = 1.0
     alpha2 = min(alpha2, 1.0)
     alpha1 = min(max(alpha1, alpha2), 1.0)
 
