@@ -16,13 +16,16 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
-def deployment(tmp_path):
+def deployment(tmp_path, request):
     repo = tmp_path / "repo"
     scripts = repo / "scripts/cfd"
     scripts.mkdir(parents=True)
     shutil.copytree(ROOT / "scripts/cfd/lib", scripts / "lib")
     shutil.copy(ROOT / "scripts/cfd/deploy_lane.sh", scripts)
     (scripts / "payload.sh").write_bytes(b"original\n")
+    for name in ("stage45_driver.sh", "mesh_store.sh", "prune_case.sh", "solve_case.sh"):
+        content = b"if then\n" if getattr(request, "param", None) == name else b"exit 0\n"
+        (scripts / name).write_bytes(content)
     package = repo / "src/digitalmodel"
     package.mkdir(parents=True)
     (package / "payload.py").write_bytes(b"original\n")
@@ -44,7 +47,6 @@ set -eu
 shift 5
 if [[ "$*" == *'/proc/'* ]]; then echo '0 0'; exit; fi
 cd "$REMOTE"
-if [[ "$*" == *'bash -n'* ]]; then exit; fi
 HOME="$REMOTE" bash -c "$*"
 """)
     rsync = commands / "rsync"
@@ -89,6 +91,31 @@ def test_verified_stamp_identifies_exact_revision(deployment):
     assert result.returncode == 0, result.stderr
     assert f"digitalmodel@{tree}" in stamp.read_text()
     assert "parity=verified" in stamp.read_text()
+
+
+@pytest.mark.parametrize(
+    "deployment",
+    ["stage45_driver.sh", "mesh_store.sh", "prune_case.sh", "solve_case.sh"],
+    indirect=True,
+)
+@pytest.mark.parametrize("historical_stamp", [False, True])
+def test_invalid_remote_script_prevents_new_stamp(deployment, historical_stamp):
+    _, remote, _, _ = deployment
+    stamp = remote / "cfd/campaign/scripts/DEPLOYED.txt"
+    previous = b"previous verified deployment\n"
+    if historical_stamp:
+        stamp.parent.mkdir(parents=True)
+        stamp.write_bytes(previous)
+
+    result, stamp, _ = run_deploy(deployment)
+
+    assert result.returncode != 0
+    assert "syntax error" in result.stderr
+    assert "remote scripts parse OK" not in result.stdout
+    if historical_stamp:
+        assert stamp.read_bytes() == previous
+    else:
+        assert not stamp.exists()
 
 
 @pytest.mark.parametrize(

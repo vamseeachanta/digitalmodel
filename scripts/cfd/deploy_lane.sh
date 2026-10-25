@@ -87,7 +87,10 @@ rsync -a --checksum $DRY --itemize-changes \
   "${script_filters[@]}" \
   "$HERE/" "$HOST:$DEST"
 [ -n "$DRY" ] && exit 0
-$SSH "$HOST" "cd cfd/$CAMPAIGN && bash -n scripts/stage45_driver.sh scripts/mesh_store.sh scripts/prune_case.sh scripts/solve_case.sh && echo 'deploy_lane: remote scripts parse OK'" </dev/null
+$SSH "$HOST" "cd cfd/$CAMPAIGN &&
+  for script in scripts/stage45_driver.sh scripts/mesh_store.sh scripts/prune_case.sh scripts/solve_case.sh; do
+    bash -n \"\$script\" || exit
+  done && echo 'deploy_lane: remote scripts parse OK'" </dev/null
 # rsync(1), --checksum / --dry-run / --itemize-changes: compare file
 # contents rather than trusting size and mtime; any pending change denies parity.
 # Source: https://download.samba.org/pub/rsync/rsync.1 (online edition, option sections).
