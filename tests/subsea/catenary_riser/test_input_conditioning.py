@@ -21,6 +21,9 @@ from digitalmodel.subsea.catenary_riser import (
     MaterialProperties,
     RiserConfiguration,
     SimpleCatenaryAnalyzer,
+    AIR,
+    SEAWATER,
+    get_fluid,
 )
 from digitalmodel.subsea.catenary_riser.cli import cli
 from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator
@@ -96,6 +99,63 @@ def test_module_gravity_and_duplicate_keys(riser):
         LazyWaveConfiguration(riser, [module, replace(module, name="other")])
     with pytest.raises(ValueError, match="length"):
         LazyWaveConfiguration(riser, [replace(module, start_length=19)])
+
+
+@pytest.mark.parametrize("alias,expected", [
+    ("water", SEAWATER), ("WATER", SEAWATER), ("empty", AIR), ("Empty", AIR),
+])
+def test_fluid_aliases_preserve_preset_identity(alias, expected):
+    # Alias compatibility only; preset densities remain unqualified metadata.
+    assert get_fluid(alias) is expected
+
+
+@pytest.mark.parametrize("gravity", [2, 4])
+def test_coated_module_gravity_hand_balance(riser, gravity):
+    """Synthetic coated diameters: riser=2.2, foam=3, module=3.2 m.
+
+    Annular areas are 1.04pi (foam), .31pi (outer coating), 1.35pi
+    (displaced fluid). Densities 1, 3, 2 give net module force
+    (1.04 + .93 - 2.70)pi*g = -.73pi*g N/m. Bare weight is
+    1.46pi*g N/m, so the combined section weighs .73pi*g N/m.
+    """
+    module = BuoyancyModule(
+        "foam", 2, 3, 1, 1, outer_coating_thickness=.1, outer_coating_density=3,
+    )
+    configured = replace(riser, gravity=gravity)
+    expected_force = -.73 * math.pi * gravity
+    expected_section = .73 * math.pi * gravity
+    assert module.buoyancy_force_per_length(
+        configured.external_fluid, 2.2, gravity=gravity,
+    ) == pytest.approx(expected_force)
+    for calculator, source in (
+        (EffectiveWeightCalculator(), configured),
+        (EffectiveWeightCalculator(gravity=gravity), riser),
+    ):
+        result = calculator.calculate_with_buoyancy_module(source, module)
+        assert result.effective_weight == pytest.approx(1.46 * math.pi * gravity)
+        assert result.buoyancy_module_force == pytest.approx(expected_force)
+        assert result.effective_weight_with_buoyancy == pytest.approx(expected_section)
+    profile = LazyWaveConfiguration(configured, [module]).get_effective_weight_profile()
+    assert profile["bare_riser"] == pytest.approx(1.46 * math.pi * gravity)
+    assert profile["foam"] == pytest.approx(expected_section)
+    assert riser.gravity == 2
+
+
+@pytest.mark.parametrize("thickness,density,module_force", [
+    (None, None, -2.5), (0, None, -2.5), (.1, 0, -3.74),
+])
+def test_absent_or_zero_density_coating_weight(riser, thickness, density, module_force):
+    uncoated = replace(riser, coating_thickness=thickness, coating_density=density)
+    assert uncoated.coating_weight_per_length == 0
+    # Bare riser OD=2. Module foam area=1.25pi; g=2, densities=1 and 2.
+    # A zero-density .1 m shell adds .31pi displaced area, hence -1.24pi N/m.
+    module = BuoyancyModule(
+        "foam", 2, 3, 1, 1,
+        outer_coating_thickness=thickness, outer_coating_density=density,
+    )
+    assert module.buoyancy_force_per_length(
+        riser.external_fluid, 2, gravity=2,
+    ) == pytest.approx(module_force * math.pi)
 
 
 @pytest.mark.parametrize("angle", [0, 90, -1, math.nan, math.inf])

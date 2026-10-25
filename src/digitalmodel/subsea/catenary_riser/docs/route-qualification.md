@@ -15,6 +15,7 @@ qualify native exports, elasticity, bending, fatigue, current or dynamics.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | DRAFT 1 | 2026-10-22 | Establish route contracts, input checks, screening and evidence gaps for independent review. |
+| DRAFT 2 | 2026-10-25 | Bind qualification observations to direct behavioral assertions and retain broader route gaps. |
 
 ## Sources and applicability
 
@@ -175,3 +176,42 @@ function names and updated links locate current code. The old inventory is retai
 so omissions are visible. Unqualified native exports, empirical legacy buoyancy
 sizing, RAO conventions, material presets and fatigue-input preprocessing require
 separate evidence. The legacy lazy-wave vertical-force defect is left to #2044.
+
+### Qualification evidence audit
+
+All 36 previously TESTED observations are checked against their named assertions.
+The revised inventory contains 35 TESTED and 51 NOT_EVALUATED observations out of
+86 historical observations. The broader-route observation remains NOT_EVALUATED:
+a vertex overlap case cannot qualify arbitrary endpoints, elastic routes or
+native coordinate transformations. These counts describe evidence dispositions,
+not engineering acceptance or branch coverage.
+
+Direct `get_fluid` calls assert that water resolves to the seawater object and
+empty resolves to the air object, including case normalization. This establishes
+alias compatibility without qualifying preset densities. The coated-module hand
+case uses riser, foam and outer-coated diameters of 2.2, 3.0 and 3.2 m. Annular
+areas of 1.04pi, 0.31pi and 1.35pi with synthetic densities of 1, 3 and 2 kg/m³
+give module force `-0.73pi*g N/m`. The direct method, calculator and weight profile
+are checked at accelerations of 2 and 4 m/s²; the calculator override is checked
+independently of configuration gravity. Absent and zero-density coatings retain
+separate assertions, including displaced volume for a zero-density shell.
+
+The remaining mappings are checked in the following groups:
+
+| Observation group | Direct evidence and scope |
+| --- | --- |
+| Vertex geometry, angles and legacy force route | Hand triangle, inverse/exhaustion and infeasible-force assertions in `test_route_qualification` and `test_audit_regressions`. |
+| Riser displaced area and module callers | Annular hand balance and both weight callers in `test_audit_regressions`; configured and override gravity cases in `test_input_conditioning`. |
+| CLI exception paths and lazy-wave quarantine | Invalid geometry refuses output; the lazy-wave command exposes quarantine; analyzer calls raise rather than return geometry. |
+| Riser gravity, coatings and module keys | Component hand weights, paired-input refusal, absent-coating assertions, duplicate/reserved names and overlap checks in `test_input_conditioning`. |
+| Legacy units and inactive branches | Hand inch-area conversion, explicit no-branch errors and inactive-export refusal in `test_input_conditioning`. Missing-resource export tests exercise Python builders only. |
+| Report defaults and dictionary coercion | Empty provenance stays missing; empty roll-ups return None and N/A; omitted result groups become empty lists. |
+| Report status and renderer paths | Invalid values, marginal display convention, missing evidence, unavailable/incompatible builders and unknown status styling have explicit assertions. Rendering does not authenticate supplied evidence. |
+| README example | The example states quarantine and makes no analyzer `analyze` call; the independent analyzer refusal test remains linked. |
+
+Table 2. Audited mappings retain only the scope exercised by their assertions.
+
+The AST inventory test establishes that cited nodes exist. It does not establish
+behavioral coverage. Binding regressions protect the corrected mappings, while
+the named tests establish their behavior; future TESTED additions require the
+same claim-to-assertion audit.

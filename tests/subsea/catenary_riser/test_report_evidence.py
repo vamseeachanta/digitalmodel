@@ -126,10 +126,27 @@ def test_passing_subset_does_not_become_overall_pass():
 
 def test_no_groups_plain_dictionary_and_unknown_style():
     payload = dict(project="synthetic", riser_name="synthetic", riser_type="SCR", water_depth_m=2)
+    data = report._coerce(payload)
+    assert data.strength_results == []
+    assert data.fatigue_results == []
+    assert data.code_checks == []
     output = report.render_html(payload)
     assert "PARTIAL EVIDENCE — NOT CERTIFIED" in output
     assert all(name in output for name in ("strength_results", "fatigue_results", "code_checks"))
     assert report._status_span("UNKNOWN") == "UNKNOWN"
+
+
+def test_report_defaults_preserve_missing_evidence():
+    provenance = report.Provenance()
+    assert provenance.standard_revision == ""
+    assert provenance.run_id == ""
+    assert provenance.generated_utc == ""
+    assert set(provenance.missing_fields) == {"standard_revision", "run_id", "generated_utc"}
+    data = report.RiserReportData("synthetic", "synthetic", "SCR", 2)
+    assert data.max_strength_utilisation is None
+    assert data.min_fatigue_life_years is None
+    assert data.overall_status == "N/A"
+    assert "revision_history" in data.evidence_issues
 
 
 def test_marginal_band_remains_a_report_convention():

@@ -127,3 +127,39 @@ def test_every_section_six_claim_has_a_disposition():
             for name in names:
                 source = next(n for n in source.body
                               if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == name)
+
+
+@pytest.mark.parametrize("claim_prefix,node", [
+    ("`models.py:243`", "test_input_conditioning.py::test_coated_module_gravity_hand_balance"),
+    ("`models.py:433`", "test_input_conditioning.py::test_fluid_aliases_preserve_preset_identity"),
+    ("`report.py:147`", "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"),
+    ("`report.py:190`", "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"),
+    ("`report.py:213`", "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"),
+    ("`report.py:155`", "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"),
+])
+def test_qualification_cites_direct_behavioral_evidence(claim_prefix, node):
+    """Protect audited bindings; AST name resolution alone is not coverage."""
+    root = Path(__file__).resolve().parents[3]
+    path = root / "src/digitalmodel/subsea/catenary_riser/docs/qualification.json"
+    records = json.loads(path.read_text())["claims"]
+    record, = [r for r in records if r["claim"].startswith(claim_prefix)]
+    assert record["status"] == "TESTED"
+    assert node in record["tests"]
+
+
+def test_broader_route_qualification_is_not_inferred_from_vertex_overlap():
+    root = Path(__file__).resolve().parents[3]
+    path = root / "src/digitalmodel/subsea/catenary_riser/docs/qualification.json"
+    records = json.loads(path.read_text())["claims"]
+    record, = [r for r in records if r["claim"].startswith("Distinct catenary routes")]
+    assert record["status"] == "NOT_EVALUATED"
+    assert "tests" not in record
+
+
+def test_readme_example_preserves_lazy_wave_quarantine():
+    root = Path(__file__).resolve().parents[3]
+    readme = (root / "src/digitalmodel/subsea/catenary_riser/README.md").read_text()
+    assert "LazyWaveAnalyzer.analyze remains quarantined and raises NotImplementedError" in readme
+    example = readme.split("```python\n", 1)[1].split("```", 1)[0]
+    calls = [n for n in ast.walk(ast.parse(example)) if isinstance(n, ast.Call)]
+    assert not any(isinstance(n.func, ast.Attribute) and n.func.attr == "analyze" for n in calls)

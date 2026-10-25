@@ -89,82 +89,78 @@
     {
       "claim": "`models.py:159`: Steel-weight gravity is fixed inside a property [src/digitalmodel/subsea/catenary_riser/models.py:L214-L214]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The hand balance asserts steel weight at configured acceleration and net weight under an explicit calculator override. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override"
       ]
     },
     {
       "claim": "`models.py:168`: Coating gravity is fixed; missing or false-valued inputs give zero coating weight [src/digitalmodel/subsea/catenary_riser/models.py:L223-L224]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Coating weight is checked against hand arithmetic; missing required density is rejected and absent or zero-density coatings have zero material weight. No broader native or engineering qualification is inferred.",
       "tests": [
         "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_missing_coating_density_is_rejected",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
       ]
     },
     {
       "claim": "`models.py:174`: Contents-weight gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L229-L229]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The hand balance asserts contents weight at configured acceleration and net weight under an explicit calculator override. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override"
       ]
     },
     {
       "claim": "`models.py:179`: Displaced-fluid buoyancy gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L234-L234]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The hand balance asserts displaced-fluid force at configured acceleration and net weight under an explicit calculator override. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override"
       ]
     },
     {
       "claim": "`models.py:238`: Buoyancy material gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L303-L303]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Uncoated and coated annular hand balances exercise module force through the calculator and profile; the coated case uses two accelerations and a calculator override. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys",
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance"
       ]
     },
     {
       "claim": "`models.py:243`: Buoyancy coating gravity is fixed; absent coating gives zero [src/digitalmodel/subsea/catenary_riser/models.py:L308-L310]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "A nonzero-density outer coating is included in the hand balance at two accelerations through the direct method, calculator and profile. Absent and zero-density coating cases are asserted separately. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
       ]
     },
     {
       "claim": "`models.py:248`: Displaced module-fluid gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L313-L313]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The hand balance includes the outer-coated displaced annulus at two accelerations; zero-density coating still displaces fluid. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
       ]
     },
     {
       "claim": "`models.py:293`: Duplicate module names overwrite profile entries; bare_riser overwrites a module with that name [src/digitalmodel/subsea/catenary_riser/models.py:L375-L377]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Duplicate and reserved profile keys are explicitly rejected; overlapping and out-of-range module sections are also checked. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
         "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
       ]
     },
     {
       "claim": "`models.py:433`: Water resolves to seawater and empty resolves to air [src/digitalmodel/subsea/catenary_riser/models.py:L516-L521]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Direct get_fluid calls assert water and empty alias identity, including case normalization. Preset density qualification is not inferred. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
-        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+        "test_input_conditioning.py::test_fluid_aliases_preserve_preset_identity"
       ]
     },
     {
@@ -281,60 +277,49 @@
     {
       "claim": "`report.py:147`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L151-L157]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Default revision, run identity and timestamp remain empty and are reported missing; neither renderer supplies calculation evidence. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
-        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence",
+        "test_report_evidence.py::test_required_provenance_is_not_inferred"
       ]
     },
     {
       "claim": "`report.py:190`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L219-L229]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The empty report explicitly returns None for both strength and fatigue roll-ups. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
-        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
       ]
     },
     {
       "claim": "`report.py:213`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L257-L259]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The empty report explicitly returns N/A for overall status. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
-        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
       ]
     },
     {
       "claim": "`report.py:227`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L273-L276]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Dictionary coercion explicitly preserves a missing strength group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
         "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
       ]
     },
     {
       "claim": "`report.py:231`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L277-L280]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Dictionary coercion explicitly preserves a missing fatigue group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
         "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
       ]
     },
     {
       "claim": "`report.py:235`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L281-L284]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Dictionary coercion explicitly preserves a missing code-check group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
         "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
       ]
     },
@@ -374,18 +359,15 @@
     },
     {
       "claim": "Distinct catenary routes require broader qualification; #2756 (related #1811).",
-      "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
-      "tests": [
-        "test_route_qualification.py::test_legacy_vertex_overlap"
-      ]
+      "status": "NOT_EVALUATED",
+      "reason": "A vertex overlap regression establishes only its stated boundary condition. General elastic routes, arbitrary end conditions and native export transformations lack broader qualification evidence."
     },
     {
       "claim": "README presents a working lazy-wave example despite quarantine. [src/digitalmodel/subsea/catenary_riser/README.md:L117-L137] [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The README example explicitly records quarantine and contains no analyze call; the analyzer itself raises rather than returning fabricated geometry. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_installation_example.py::test_scaled_1000_m_example_and_rounding",
+        "test_route_qualification.py::test_readme_example_preserves_lazy_wave_quarantine",
         "test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating"
       ]
     },
@@ -540,20 +522,16 @@
     {
       "claim": "`report.py:155` [src/digitalmodel/subsea/catenary_riser/report.py:L159-L161]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "Missing calculation time is explicitly retained as an empty default and reported missing; revision history is independently required. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
-        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
       ]
     },
     {
       "claim": "`report.py:477` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L529-L536]",
       "status": "TESTED",
-      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "reason": "The unknown-style branch explicitly returns the supplied status text without a styled span. No broader native or engineering qualification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_required_provenance_is_not_inferred",
-        "test_report_evidence.py::test_missing_group_is_partial_evidence",
         "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
       ]
     },
