@@ -224,6 +224,29 @@ def test_shared_delivery_range_failure_is_rejected(tube):
         distribute_chemical(3e-6, demands(), tube, FLUID, 10000, 0)
 
 
+def test_shared_delivery_validation_message_is_preserved(monkeypatch):
+    """An upstream validation error must retain its explanation and cause."""
+    from digitalmodel.subsea.manifolds import chemical_injection
+
+    error = ValueError("unsupported delivery input")
+
+    def reject_delivery(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(chemical_injection, "check_delivery", reject_delivery)
+    with pytest.raises(ValueError, match="shared delivery: unsupported delivery input") as caught:
+        distribute_chemical(3e-6, demands(), TUBE, FLUID, 10000, 0)
+    assert caught.value.__cause__ is error
+    assert "arithmetic" not in str(caught.value)
+
+
+def test_shared_delivery_reynolds_underflow_keeps_validation_message():
+    """Synthetic rho*v rounds to zero before the shared Reynolds calculation."""
+    with pytest.raises(ValueError, match="shared delivery: reynolds must be > 0") as caught:
+        distribute_chemical(1e-300, demands(), TUBE, ChemicalFluid(1e-300, 0.01), 10000, 0)
+    assert isinstance(caught.value.__cause__, ValueError)
+
+
 def test_active_allocated_rate_underflow_is_rejected():
     """Tiny target / total target is ~1e-320; Q=1e-6 makes q round to zero."""
     tiny = InjectionDemand(1e-300, 1e-20, 0, 0)

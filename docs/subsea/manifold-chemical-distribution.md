@@ -6,6 +6,14 @@ extends the chemical core with cited arithmetic, independent examples and
 checks for numerical range failures. It does not complete the issue's API
 qualification or public equipment data requirements.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 0 | 2026-10-18 | Added cited equations, independent worked examples and numerical range checks to document the bounded chemical distribution screen. |
+| 1 | 2026-10-18 | Clarified that the shared transition behavior has no verified pressure-drop bound. |
+| 2 | 2026-10-25 | Added this revision record and preserved shared-delivery validation messages so upstream input errors retain their explanation. |
+
 ## Equations and sources
 
 | Quantity | Equation | Readable basis |
