@@ -45,6 +45,8 @@ def calculate_catenary_config(
     Total length shall cover the suspended arc. The remaining length is laid
     straight on a frictionless flat seabed. Endpoint span is an output, not an
     independently satisfied constraint. No acceptance factor is applied.
+    This sagging catenary requires downward submerged weight w > 0; buoyant
+    sections with negative weight and neutrally buoyant sections are rejected.
     """
     for name, value in (
         ("horizontal_tension_n", horizontal_tension_n),

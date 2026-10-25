@@ -4,6 +4,8 @@
 
 import hashlib
 from io import BytesIO
+from types import SimpleNamespace
+from unittest.mock import Mock
 from zipfile import ZipFile
 from xml.etree import ElementTree
 
@@ -88,3 +90,41 @@ def test_unsupported_array_formula_fails_explicitly(tmp_path):
     wb.close()
     with pytest.raises(ValueError, match="ordinary text formulas"):
         extract_formulas(path)
+
+
+@pytest.mark.parametrize("dimension", ["sheet", "row", "cell"])
+@pytest.mark.parametrize("longer_view", ["formulas", "cached"])
+def test_mismatched_views_fail_explicitly_and_close_workbooks(
+    tmp_path, monkeypatch, dimension, longer_view
+):
+    """Neither view may silently lose an extra sheet, row or cell."""
+    path = tmp_path / "mismatched.xlsx"
+    path.write_bytes(b"mocked workbook snapshot")
+    formula_cell = SimpleNamespace(data_type="f", value="=2+3", coordinate="A1")
+    shapes = {
+        "formulas": [[(formula_cell,)]],
+        "cached": [[(SimpleNamespace(value=5),)]],
+    }
+    longer = shapes[longer_view]
+    if dimension == "sheet":
+        longer.append(longer[0])
+    elif dimension == "row":
+        longer[0].append(longer[0][0])
+    else:
+        longer[0][0] += (longer[0][0][0],)
+    workbooks = [
+        Mock(
+            worksheets=[
+                Mock(title="Synthetic", iter_rows=Mock(return_value=iter(rows)))
+                for rows in sheets
+            ]
+        )
+        for sheets in shapes.values()
+    ]
+    monkeypatch.setattr(openpyxl, "load_workbook", Mock(side_effect=workbooks))
+
+    with pytest.raises(ValueError, match="zip"):
+        extract_formulas(path)
+
+    for workbook in workbooks:
+        workbook.close.assert_called_once_with()

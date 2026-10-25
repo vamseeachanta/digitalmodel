@@ -25,6 +25,8 @@ structural design acceptance is established.</p>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-19</td><td>Introduce sourced equations, a formula extractor,
 independent hand calculations and an example so assumptions and missing evidence remain visible.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Document the positive-weight catenary domain
+and explicit workbook-view mismatch errors to clarify input limits.</td></tr>
 <caption>Table 1. Document revision history.</caption>
 </table>
 
@@ -79,7 +81,10 @@ and partially immersed configurations require a different displacement balance.<
 <h3>C1. Flexible catenary</h3>
 <p>H is prescribed horizontal tension, w uniform downward submerged weight,
 h top elevation above the flat seabed and L total available length. H, w and L
-are positive; h is nonnegative. No endpoint span is prescribed independently.</p>
+are positive; h is nonnegative. This sagging catenary requires w &gt; 0:
+buoyant sections with negative weight and neutrally buoyant sections are rejected,
+even though the section calculator retains negative submerged weight.
+No endpoint span is prescribed independently.</p>
 <pre>a = H/w
 z = a (cosh(x/a) − 1)
 s = a sinh(x/a) = sqrt(h(h + 2a))
@@ -164,7 +169,8 @@ for record in extraction.formulas:
 <p>The optional openpyxl dependency reads formula and cached-value views from one
 immutable input snapshot. Workbook bytes are hashed and never modified. All
 worksheets, including hidden sheets, are inspected. Only ordinary text formulas
-are supported; unsupported formula objects raise an error. Macros, external links
+are supported; unsupported formula objects and mismatched sheet, row or cell
+counts between views raise an error. Macros, external links
 and Excel formulas are not executed. Missing or stale cached values are not
 promoted to validated engineering results. Extraction records can contain private
 sheet names or formula text and require a separate publication review.</p>

@@ -37,6 +37,7 @@ def extract_formulas(path: str | Path) -> WorkbookExtraction:
 
     The same immutable byte snapshot supplies both formula and cached-value
     views. Unsupported non-text array/data-table formulas fail explicitly.
+    Mismatched sheet, row or cell counts between views raise ValueError.
     Extracted sheet names and formula text may contain confidential data;
     extraction does not authorize publication of the resulting records.
     """
@@ -52,9 +53,13 @@ def extract_formulas(path: str | Path) -> WorkbookExtraction:
         )
         try:
             records = []
-            for sheet, values in zip(formulas.worksheets, cached.worksheets):
-                for row, value_row in zip(sheet.iter_rows(), values.iter_rows()):
-                    for cell, value in zip(row, value_row):
+            for sheet, values in zip(
+                formulas.worksheets, cached.worksheets, strict=True
+            ):
+                for row, value_row in zip(
+                    sheet.iter_rows(), values.iter_rows(), strict=True
+                ):
+                    for cell, value in zip(row, value_row, strict=True):
                         if cell.data_type != "f":
                             continue
                         if not isinstance(cell.value, str):
