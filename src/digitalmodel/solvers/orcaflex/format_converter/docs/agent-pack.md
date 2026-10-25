@@ -5,7 +5,7 @@
 | Module | solvers/orcaflex/format_converter |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/solvers/orcaflex/format_converter |
-| Pack revision | 3, 2026-10-18 |
+| Pack revision | 4, 2026-10-25 |
 | Code revision | 7aad603be1c6136106dbb2381ce5096b050654f8 |
 | Analysis family | OrcaFlex riser and mooring; text conversion, routing family MR |
 | Quality role | OrcaFlex riser/mooring quality manager |
@@ -28,6 +28,18 @@ The routing registry assigns beta maturity to the enclosing solvers domain, with
 UNVERIFIED: Supported target program versions, geometric applicability and physical-load fidelity are not established by the offline evidence; native acceptance remains open in #280.
 
 Reverse extraction is best-effort, with expected and actionable gaps reported separately; section 10 item O1 retains the native-qualification boundary. [src/digitalmodel/solvers/orcaflex/format_converter/modular_to_spec.py:L48-L85] [src/digitalmodel/solvers/orcaflex/format_converter/modular_to_spec.py:L172-L222]
+
+### Revision history
+
+Revisions 0–3 are reconstructed from the recorded pack headers and changes; revision 0 was first committed on 2026-10-17 after the 2026-10-16 execution record.
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 0 | 2026-10-17 | Added the converter knowledge pack to document implementation evidence and qualification gaps. |
+| 1 | 2026-10-17 | Clarified gate applicability and fixture drift, corrected the missing-include citation and reconciled implementation coverage. |
+| 2 | 2026-10-18 | Classified stale-fixture outcomes as SKIP to distinguish executed pytest cases from unexecuted qualification procedures. |
+| 3 | 2026-10-18 | Retained original-against-converted statics parity for both conversion routes and separated downstream model qualification. |
+| 4 | 2026-10-25 | Linked the G2 procedure to check-11a, recorded revision provenance and identified the unavailable gate source so acceptance evidence can be traced. |
 
 ## 2. Inputs and outputs
 
@@ -87,6 +99,8 @@ No engineering formula or licensed-standard criterion is used in the conversion 
 
 AQG r0, sections 4–9 and 10, supplies the gate contract in section 5; it is not a solver manual or a licensed engineering standard. (Analysis QA gates, revision 0, sections 4–10.)
 
+UNVERIFIED: A retrievable source for AQG r0 has not been established. The title, revision and section references identify the intended source; its gate thresholds remain unconfirmed independently.
+
 The documented reverse-extraction boundary warns against treating extracted specifications as lossless model definitions. [docs/domains/orcaflex/QUICKSTART_FILE_CONVERSION.md:L295-L350]
 UNVERIFIED: no governing engineering-standard edition, clause or calculation Citation sidecar was established for these transformations; section 10 item O2 records the qualification boundary.
 
@@ -123,7 +137,7 @@ These procedures define acceptance checks; offline representation checks do not 
 | G0 | Applicable | C1: execute `TestModularToSingleConverter.test_missing_include_warns`; inspect `report.warnings`, never accept `success` alone. | At least 1 missing-include warning (count) for the negative fixture; 0 warnings (count) required for a production conversion. [tests/solvers/orcaflex/format_converter/test_modular_to_single.py:L99-L112] | Negative regression PASS |
 | G0 | Applicable | C2: strict-parse emitted master and all includes with duplicate keys rejected; compare source UnitsSystem and every transferred numeric value; verify every referenced include exists. | 0 duplicate keys, 0 unresolved files, 0 changed source values (counts); 0 unit-system differences (count). [src/digitalmodel/solvers/orcaflex/format_converter/single_to_modular.py:L121-L147] | Proposed acceptance inspection; no detection check exists in the shipped tests for all these conditions; issue pending (1) |
 | G1 | Applicable | C3: load the emitted `master.yml` or merged single YAML in the target OrcaFlex version, through the version-matched demo route or the licensed LoadData route; compare object inventory with source. | 0 load warnings, 0 load errors, 0 object-count differences (counts); exact version match. | NOT_RUN: licensed interface and solver execution excluded; #280 (AQG r0, section 5) |
-| G2 | Applicable to conversion parity in check-11a; C4 is downstream | C4 (downstream model check): calculate statics for the converted model; compare line top tension and angle with an independent hand calculation; record every object and offset sweep. | 0 unconverged models (count); tension difference at most 5 %, angle difference at most 1.0 degree; at least 6 offsets (count); 0 unchecked objects (count). | Converter performs no statics solution; C4 does not establish conversion fidelity. Downstream C4 NOT_RUN: licensed solver required; #280 (AQG r0, section 6) |
+| G2 | Applicable to conversion parity in check-11a; C4 is downstream | Conversion parity: execute check-11a in the additional checks table below for both conversion routes, including its separate parity criterion and zero-source-tension handling. C4 (downstream model check): calculate statics for the converted model; compare line top tension and angle with an independent hand calculation; record every object and offset sweep. | 0 unconverged models (count); tension difference at most 5 %, angle difference at most 1.0 degree; at least 6 offsets (count); 0 unchecked objects (count). | Converter performs no statics solution; C4 does not establish conversion fidelity. Downstream C4 NOT_RUN: licensed solver required; #280 (AQG r0, section 6) |
 | G3 | NOT_APPLICABLE to converter | C5 (downstream model check): run converted model from converged statics with production settings and retain the final image and warnings. | Reach 1 s simulated time; 0 errors, warnings or nonnumeric results (counts); tension change at most 25 % relative to statics. | Converter performs no dynamics solution; C5 does not establish conversion fidelity. Downstream C5 NOT_RUN: licensed solver required; #280 (AQG r0, section 7) |
 | G4 | Conditional | C6: for a new diffraction-derived VesselTypes input, require its diffraction record; compare balance and independent displacement against the producing run. | 0 missing records (count); weight/buoyancy mismatch at most 1.0 %; displacement mismatch at most 0.5 %. | NOT_APPLICABLE to synthetic conversion cases; no new diffraction run supplies them. [tests/solvers/orcaflex/format_converter/conftest.py:L59-L89] (AQG r0, section 8) |
 | G5 | Applicable to issued report | C7: reconcile ConversionReport warnings, expected_gaps and actionable_gaps with the report appendix and link the solver-gate records by input digest. | 0 omitted warnings or gaps (counts); 0 missing required gate records (count). [src/digitalmodel/solvers/orcaflex/format_converter/protocols.py:L19-L44] | NOT_RUN: no engineering report or solver record issued; #280 (AQG r0, section 9) |
@@ -227,6 +241,7 @@ The sweep found no int() / float() conversion of external text, no 1970 sentinel
 | 2026-10-16 | Pack revision 0 | Inspect warning propagation through merge_to_dict before relying on extracted output | [src/digitalmodel/solvers/orcaflex/format_converter/modular_to_single.py:L95-L105] | Sections 5 and 6; issue pending (1); shared-log entry not assigned |
 | 2026-10-16 | Pack revision 0 | Stale fixture roots hide available reference data and lose coverage even when pytest exits successfully | [tests/solvers/orcaflex/format_converter/conftest.py:L9-L55] | Sections 4, 6 and 10; #2008; shared-log entry not assigned |
 | 2026-10-17 | Initial pack | Distinguish representation regressions from model qualification; do not use confidence as whole-model fidelity. | [src/digitalmodel/solvers/orcaflex/format_converter/modular_to_spec.py:L189-L222] |Sections 4–6 define this boundary. Shared-log entry: Not created; issue pending (7) |
+| 2026-10-25 | Pack revision 4 | Check a gate procedure cell against its applicability cell; downstream hand checks cannot establish conversion parity. | Section 5, G2 and check-11a | G2 now links directly to the separate parity procedure; source retrieval remains open. |
 
 ## 8. Review responsibilities and escalation
 
@@ -1053,6 +1068,6 @@ Execution comparison repeated on 2026-10-17: BASE and AFTER each collected 131 c
 
 The current combined converter/fidelity and contract/routing invocation uses `PYTHONPATH=src uv run --no-sources python -m pytest tests/solvers/orcaflex/format_converter tests/solvers/orcaflex/modular_generator/test_roundtrip_fidelity.py tests/contracts tests/docs/test_digitalmodel_routing_contract.py -q -rA -p no:cacheprovider --basetemp=<scratch>`. On 2026-10-18, BASE and AFTER each collected 628 cases: 593 passed, 35 skipped and 0 failed, with identical passing node IDs. The contract/routing subset contributed 497 passes; converter/fidelity contributed 96 passes and 35 skips. The earlier 625-case total is superseded by the current test inventory; the converter source remains at the code pin. [tests/docs/test_digitalmodel_routing_contract.py:L94-L110]
 
-Three contract cases were added after the code pin: `tests/contracts/test_force_units_boundary_contract.py::test_suffix_vocabulary_accepts_each_unit_class[dimensionless-most_loaded_share]`, `tests/contracts/test_force_units_boundary_contract.py::test_scanner_accepts_imperial_and_dimensionless_names[most_loaded_share]` and `tests/contracts/test_runtime_dependencies.py::test_known_undeclared_list_excludes_declared_dependencies`. These current-checkout nodes explain the difference from the earlier total; scratch documentation assertions are separate inspection aids and are excluded from repository test counts.
+Three contract cases were added after the code pin: `tests/contracts/test_force_units_boundary_contract.py::test_suffix_vocabulary_accepts_each_unit_class[dimensionless-most_loaded_share]`, `tests/contracts/test_force_units_boundary_contract.py::test_scanner_accepts_imperial_and_dimensionless_names[most_loaded_share]` and `tests/contracts/test_runtime_dependencies.py::test_known_undeclared_list_excludes_declared_dependencies`. These current-checkout nodes explain the difference from the earlier total.
 
 The full contracts domain also includes pack-node collection that can import licensed bindings through other packs' native test files; that broader invocation was NOT_RUN under the solver prohibition. The contract directory and explicit routing file above were run without excluding tests from either path. [tests/DOMAINS.md:L13-L13] [tests/docs/test_agent_pack_node_ids.py:L18-L38] [tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py:L25-L36]
