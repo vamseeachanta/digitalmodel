@@ -13,12 +13,14 @@ References:
     - Noble Denton 0027/ND: General Guidelines for Marine Operations
 """
 
+import hashlib
+import json
 import math
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Literal, Optional
 
 import numpy as np
-import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -105,24 +107,123 @@ class ScatterDiagram(BaseModel):
 # Operability table
 # ---------------------------------------------------------------------------
 
+SampleField = Literal["hs_m", "tp_s", "wind_mps", "current_mps"]
+
+
+class ObservationProvenance(BaseModel):
+    """Source identity and supplied quality; neither establishes engineering readiness."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    source_id: Literal["synthetic", "noaa-ndbc", "coops"]
+    record_id: str = Field(min_length=1, pattern=r"\S")
+    quality: Literal["synthetic", "unverified", "missing"]
+    input_sha256: Optional[str] = Field(None, pattern=r"^[a-f0-9]{64}$")
+
+
+class SampleUnits(BaseModel):
+    """Explicit units for synchronized input; conversion belongs at the parser."""
+
+    model_config = ConfigDict(extra="forbid")
+    duration_hours: Literal["h"]
+    hs_m: Literal["m"]
+    tp_s: Literal["s"]
+    wind_mps: Literal["m/s"]
+    current_mps: Literal["m/s"]
+
+
+class SynchronizedSample(BaseModel):
+    """One co-timed interval, with no interpolation or implicit series join.
+
+    All supplied variables describe the same interval. Source selection, peak
+    period qualification, averaging, spatial representativeness and deployment
+    depth remain the caller's responsibility. Missing enabled values are errors.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    start_utc: datetime
+    duration_hours: float = Field(gt=0)
+    hs_m: float = Field(ge=0)
+    tp_s: float = Field(ge=0)
+    wind_mps: Optional[float] = Field(None, ge=0)
+    current_mps: Optional[float] = Field(None, ge=0)
+    units: SampleUnits
+    provenance: Dict[SampleField, ObservationProvenance]
+
+    @field_validator("start_utc", mode="before")
+    @classmethod
+    def explicit_utc(cls, value: object) -> datetime:
+        """Accept UTC datetimes or ISO text with an explicit zero offset."""
+        if isinstance(value, str):
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if not isinstance(value, datetime) or value.utcoffset() != timedelta(0):
+            raise ValueError("start_utc requires an explicit UTC timestamp")
+        return value
+
+    @model_validator(mode="after")
+    def check_interval_and_metadata(self) -> "SynchronizedSample":
+        """Reject unrepresentable exposure and untraceable supplied values."""
+        try:
+            end = self.start_utc + timedelta(hours=self.duration_hours)
+        except OverflowError as error:
+            raise ValueError("duration exceeds the UTC timestamp range") from error
+        if end <= self.start_utc:
+            raise ValueError("duration must form a positive UTC interval")
+        names: tuple[SampleField, ...] = ("hs_m", "tp_s", "wind_mps", "current_mps")
+        for name in names:
+            if getattr(self, name) is not None:
+                if name not in self.provenance or self.provenance[name].quality == "missing":
+                    raise ValueError(f"{name} requires source and nonmissing quality metadata")
+        return self
+
+
 class OperabilityInput(BaseModel):
     """Input for operability calculation.
 
-    Reference: DNV-OS-H101 Section 3.
+    Synchronized samples provide software joint-limit checks only. No standards
+    compliance or site engineering acceptance is established by this interface.
+    Without samples, the legacy wave scatter calculation is retained.
     """
+
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     hs_limit: float = Field(2.5, gt=0.0, description="Operational Hs limit (m)")
     tp_limit: Optional[float] = Field(None, gt=0.0, description="Operational Tp limit (s)")
     wind_limit_mps: Optional[float] = Field(None, gt=0.0, description="Wind speed limit (m/s)")
     current_limit_mps: Optional[float] = Field(None, gt=0.0, description="Current speed limit (m/s)")
     scatter: ScatterDiagram = Field(default_factory=ScatterDiagram)
+    samples: Optional[List[SynchronizedSample]] = None
 
-    def calculate_operability(self) -> Dict[str, float]:
+    @model_validator(mode="after")
+    def check_sample_availability(self) -> "OperabilityInput":
+        """Reject unsupported joint inference and missing enabled observations."""
+        enabled = [("hs_m", self.hs_limit), ("tp_s", self.tp_limit),
+                   ("wind_mps", self.wind_limit_mps), ("current_mps", self.current_limit_mps)]
+        if self.samples is None:
+            if self.wind_limit_mps is not None or self.current_limit_mps is not None:
+                raise ValueError("enabled wind/current limits require synchronized samples")
+        else:
+            if not self.samples:
+                raise ValueError("samples must contain positive observed duration")
+            previous_end = None
+            for row in self.samples:
+                if previous_end is not None and row.start_utc < previous_end:
+                    raise ValueError("samples must be ordered, unique and nonoverlapping")
+                previous_end = row.start_utc + timedelta(hours=row.duration_hours)
+                for name, limit in enabled:
+                    if limit is not None and getattr(row, name) is None:
+                        raise ValueError(f"enabled {name} limit requires samples without missing values")
+        return self
+
+    def calculate_operability(self) -> dict:
         """Calculate overall operability percentage.
 
         Returns:
             Dict with operability metrics.
         """
-        prob = self.scatter.total_probability_below(self.hs_limit, self.tp_limit)
+        # Revalidate mutable nested data and trusted construction/copy bypasses.
+        checked = type(self).model_validate(self.model_dump())
+        if checked.samples is not None:
+            return checked._sample_operability()
+        prob = checked.scatter.total_probability_below(checked.hs_limit, checked.tp_limit)
 
         return {
             "operability_pct": round(prob * 100.0, 1),
@@ -130,6 +231,165 @@ class OperabilityInput(BaseModel):
             "hs_limit_m": self.hs_limit,
             "tp_limit_s": self.tp_limit,
         }
+
+    def _sample_operability(self) -> dict:
+        """Weight the joint pass mask by observed hours and break runs at gaps.
+
+        Coverage spans the first start to the last end. Interior gaps are missing
+        coverage, excluded from observed exposure; coverage outside that span is
+        unknown. Percentages and windows are returned without display rounding.
+        """
+        rows = self.samples
+        if rows is None:
+            raise ValueError("synchronized samples are required")
+        observed = math.fsum(row.duration_hours for row in rows)
+        if not math.isfinite(observed) or observed <= 0:
+            raise ValueError("observed duration denominator must be finite and positive")
+        limits = (("hs_m", self.hs_limit), ("tp_s", self.tp_limit),
+                  ("wind_mps", self.wind_limit_mps), ("current_mps", self.current_limit_mps))
+        passes: List[bool] = []
+        windows: List[float] = []
+        run: List[float] = []
+        gaps: List[float] = []
+        previous_end = rows[0].start_utc
+        for row in rows:
+            gap = (row.start_utc - previous_end).total_seconds() / 3600
+            gaps.append(gap)
+            passed = all(limit is None or getattr(row, name) <= limit for name, limit in limits)
+            passes.append(passed)
+            if run and (gap > 0 or not passed):
+                windows.append(math.fsum(run))
+                run = []
+            if passed:
+                run.append(row.duration_hours)
+            previous_end = row.start_utc + timedelta(hours=row.duration_hours)
+        if run:
+            windows.append(math.fsum(run))
+        passing = math.fsum(row.duration_hours for row, passed in zip(rows, passes) if passed)
+        return {
+            "operability_pct": 100.0 * (passing / observed),
+            "non_operability_pct": 100.0 * ((observed - passing) / observed),
+            "hs_limit_m": self.hs_limit, "tp_limit_s": self.tp_limit,
+            "wind_limit_mps": self.wind_limit_mps, "current_limit_mps": self.current_limit_mps,
+            "observed_duration_hours": observed, "passing_duration_hours": passing,
+            "missing_coverage_hours": math.fsum(gaps),
+            "coverage_start_utc": rows[0].start_utc, "coverage_end_utc": previous_end,
+            "sample_passes": passes, "window_durations_hours": windows,
+            "engineering_readiness": "UNVERIFIED",
+        }
+
+
+def _parser_provenance(provenance: dict, source_id: str, payload: bytes) -> dict:
+    """Preserve supplied source/quality and bind it to the exact input bytes."""
+    parsed = ObservationProvenance.model_validate(provenance)
+    if parsed.source_id != source_id:
+        raise ValueError("provenance source_id does not match the parser")
+    digest = hashlib.sha256(payload).hexdigest()
+    if parsed.input_sha256 is not None and parsed.input_sha256 != digest:
+        raise ValueError("supplied input digest does not match the parser bytes")
+    return {**parsed.model_dump(), "input_sha256": digest}
+
+
+def _unique_json_members(pairs: List[tuple]) -> dict:
+    """Reject duplicate JSON fields before a later member can conceal a value."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON member: {key}")
+        result[key] = value
+    return result
+
+
+def _source_number(value: object, *, missing: tuple,
+                   maximum: Optional[float] = None) -> Optional[float]:
+    """Decode an explicit source missing token without coercing it to zero."""
+    if value in missing:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        raise ValueError("invalid source number")
+    number = float(value)
+    if not math.isfinite(number) or number < 0 or (maximum is not None and number > maximum):
+        raise ValueError("source number is nonfinite or outside the supported range")
+    return number
+
+
+def parse_ndbc_standard_met(payload: bytes, *, provenance: dict) -> List[dict]:
+    """Parse supplied realtime standard-met bytes under the NOAA NDBC guide.
+
+    https://www.ndbc.noaa.gov/faq/measdes.shtml defines UTC, MM missing values,
+    WSPD in m/s and WDIR coming from true north. DPD remains dominant period,
+    never Tp. Gusts and other standard columns are retained as raw fields only.
+    Historical numeric sentinel formats are unsupported and rejected. No height
+    correction, averaging conversion, qualification or network access occurs.
+    """
+    source = _parser_provenance(provenance, "noaa-ndbc", payload)
+    lines = [line.split() for line in payload.decode("ascii").splitlines() if line.strip()]
+    if len(lines) < 3 or lines[0][:5] != ["#YY", "MM", "DD", "hh", "mm"]:
+        raise ValueError("realtime standard-met header and samples are required")
+    names, units = lines[0][5:], lines[1][5:]
+    known = {"WDIR": "degT", "WSPD": "m/s", "GST": "m/s", "WVHT": "m",
+             "DPD": "sec", "APD": "sec", "MWD": "degT", "PRES": "hPa",
+             "ATMP": "degC", "WTMP": "degC", "DEWP": "degC", "VIS": "nmi",
+             "PTDY": "hPa", "TIDE": "ft"}
+    if (lines[1][:5] != ["#yr", "mo", "dy", "hr", "mn"] or len(names) != len(set(names))
+            or not {"WDIR", "WSPD", "WVHT", "DPD"}.issubset(names)
+            or any(name not in known for name in names) or units != [known[n] for n in names]):
+        raise ValueError("unsupported standard-met fields or units")
+    result = []
+    for tokens in lines[2:]:
+        if len(tokens) != len(lines[0]):
+            raise ValueError("standard-met row does not match its header")
+        raw = dict(zip(names, tokens[5:]))
+        values = {}
+        for name in ("WDIR", "WSPD", "WVHT", "DPD"):
+            sentinel = 999 if name == "WDIR" else 99
+            value = _source_number(raw[name], missing=("MM",), maximum=360 if name == "WDIR" else None)
+            if value == sentinel:
+                raise ValueError("historical numeric missing sentinels are unsupported")
+            values[name] = value
+        year, month, day, hour, minute = map(int, tokens[:5])
+        result.append({"start_utc": datetime(year, month, day, hour, minute, tzinfo=timezone.utc),
+                       "hs_m": values["WVHT"], "dominant_period_s": values["DPD"],
+                       "wind_mps": values["WSPD"], "wind_from_degrees_true": values["WDIR"],
+                       "provenance": dict(source), "raw_fields": raw})
+    return result
+
+
+def parse_coops_currents(payload: bytes, *, provenance: dict, units: str,
+                         time_zone: str, expected_bin: int) -> List[dict]:
+    """Parse supplied CO-OPS core current JSON, independently of qualification.
+
+    NOAA API/response guides: https://api.tidesandcurrents.noaa.gov/api/prod/
+    and responseHelp.html. Only metric/gmt core t/s/d/b rows are supported.
+    Empty/null stays missing as a defensive software policy, not a documented
+    NOAA sentinel guarantee; source acceptance of that detail is blocked pending
+    authoritative evidence. Other undocumented sentinels fail. Bin identifies
+    the explicitly requested bin, not deployment depth.
+    No timestamps or intervals are inferred or joined to another source.
+    """
+    if units != "metric" or time_zone != "gmt":
+        raise ValueError("only metric units and gmt timestamps are supported")
+    if type(expected_bin) is not int or expected_bin <= 0:
+        raise ValueError("one positive expected bin identifier is required")
+    source = _parser_provenance(provenance, "coops", payload)
+    document = json.loads(payload, object_pairs_hook=_unique_json_members)
+    if not isinstance(document, dict) or set(document) != {"data"}:
+        raise ValueError("only the core currents data schema is supported")
+    rows = document["data"]
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("current samples are required")
+    result = []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"t", "s", "d", "b"}:
+            raise ValueError("current row requires only t/s/d/b")
+        if str(row["b"]) != str(expected_bin):
+            raise ValueError("unsupported or mismatched current bin")
+        speed = _source_number(row["s"], missing=("", None))
+        result.append({"start_utc": datetime.strptime(row["t"], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc),
+                       "current_mps": None if speed is None else speed / 100.0,
+                       "current_direction_degrees": _source_number(row["d"], missing=("", None), maximum=360),
+                       "bin_id": expected_bin, "provenance": dict(source)})
+    return result
 
 
 class OperabilityTable(BaseModel):

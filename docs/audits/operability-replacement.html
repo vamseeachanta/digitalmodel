@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synchronized operability software analysis</title>
+<style>body{font:16px/1.5 system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#172b3a}table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{border:1px solid #bccbd4;padding:.4rem;text-align:left}code{overflow-wrap:anywhere}a{color:#075b80}</style>
+</head><body>
+<h1>Synchronized operability software analysis</h1>
+<h2>Summary</h2><p>Synthetic joint limits pass 2 h of 6 h (33.3%); wave-only limits pass 4 h of 6 h (66.7%). Engineering readiness remains UNVERIFIED.</p>
+<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-25</td><td>Joint wind/current software checks are introduced to prevent ignored limits.</td></tr>
+</table><p>Table 1. Issued revisions.</p>
+<h2>Synthetic results</h2><table><tr><th>Criteria</th><th>Passing duration (h)</th><th>Observed duration (h)</th><th>Passing (%)</th></tr>
+<tr><td>Joint</td><td>2.0</td><td>6.0</td><td>33.3</td></tr>
+<tr><td>Wave only</td><td>4.0</td><td>6.0</td><td>66.7</td></tr>
+</table><p>Table 2. Software fixtures, with unrounded acceptance arithmetic.</p>
+<h2>Input rows</h2><table><tr><th>Case</th><th>Start (UTC)</th><th>Duration (h)</th><th>Hs (m)</th><th>Tp (s)</th><th>Wind (m/s)</th><th>Current (m/s)</th><th>Joint pass</th></tr>
+<tr><td>A</td><td>2000-01-01T00:00:00Z</td><td>1.0</td><td>1.0</td><td>7.0</td><td>8.0</td><td>0.5</td><td>True</td></tr>
+<tr><td>B</td><td>2000-01-01T01:00:00Z</td><td>1.0</td><td>2.0</td><td>8.0</td><td>10.0</td><td>1.0</td><td>True</td></tr>
+<tr><td>C</td><td>2000-01-01T02:00:00Z</td><td>1.0</td><td>1.0</td><td>7.0</td><td>10.1</td><td>0.5</td><td>False</td></tr>
+<tr><td>D</td><td>2000-01-01T03:00:00Z</td><td>1.0</td><td>1.0</td><td>7.0</td><td>8.0</td><td>1.1</td><td>False</td></tr>
+<tr><td>E</td><td>2000-01-01T04:00:00Z</td><td>1.0</td><td>2.1</td><td>7.0</td><td>8.0</td><td>0.5</td><td>False</td></tr>
+<tr><td>F</td><td>2000-01-01T05:00:00Z</td><td>1.0</td><td>1.0</td><td>8.1</td><td>8.0</td><td>0.5</td><td>False</td></tr>
+</table><p>Table 3. Synthetic co-timed input; provenance is synthetic for every variable.</p>
+<h2>Criteria and calculation basis</h2>
+<p>synthetic-v1: Hs ≤ 2.0 m; Tp ≤ 8.0 s; wind ≤ 10.0 m/s; current ≤ 1.0 m/s. These thresholds are software fixtures.</p>
+<p>Each enabled upper limit passes at equality. Passing hours are summed from the joint sample mask; marginals are never multiplied.</p><p>Observed duration excludes interior gaps; windows break at gaps and failures. Coverage outside the first-start/last-end span is unknown.</p>
+<p>Synthetic current parser check: 100.0 cm/s converts to 1.0 m/s.</p>
+<h2>Engineering prerequisites</h2>
+<p><strong>joint_history: UNVERIFIED</strong> — No synchronized environmental history is supplied; only synthetic co-timed software samples are admitted.</p>
+<p><strong>site_operating_limits: UNVERIFIED</strong> — Approved engineering limits are absent; synthetic-v1 thresholds are software fixtures only.</p>
+<p><strong>current_deployment_depth: UNVERIFIED</strong> — Deployment depth is absent; a bin identifier does not qualify current engineering input.</p>
+<p><strong>standards_derived_acceptance: UNVERIFIED</strong> — Standards-derived criteria and fixtures are excluded; no standards compliance is evaluated.</p>
+<h2>Parser scope</h2><ul>
+<li>NDBC realtime standard-met only; MM stays missing; historical numeric sentinels are rejected.</li>
+<li>NDBC gust is not WSPD; dominant period is not promoted to peak period; no height or averaging correction is applied.</li>
+<li>CO-OPS core data rows t/s/d/b only; metric/gmt and one explicit positive bin are required; empty/null stays missing.</li>
+<li>Parser output is not a qualified synchronized sample or a measured interval. Provenance and raw-input digest are retained.</li>
+</ul><h2>Source acceptance</h2>
+<p><strong>ndbc_realtime_fields_units_missing: CONFIRMED</strong> Documentation fields and units are confirmed by the recorded receipts.</p>
+<p><strong>coops_fields_units_bin: CONFIRMED</strong> Documentation fields and units are confirmed by the recorded receipts.</p>
+<p><strong>coops_missing_values: BLOCKED-IF-MISSING</strong> The retrieved API and response guides do not specify missing-value tokens. Empty/null preservation is a defensive software policy; source-specific missing-value acceptance requires authoritative evidence.</p>
+<h2>Source attribution and receipts</h2>
+<p>NOAA NDBC and CO-OPS documentation supplies field semantics only. All numerical fixtures are independently synthetic, not official NOAA observations. No endorsement is implied; no third-party material or raw observed series is reproduced.</p>
+<p><a href="https://www.ndbc.noaa.gov/faq/measdes.shtml">N: noaa-ndbc</a>; 2026-10-25T06:41:31Z; HTTP 200; 51265 bytes.<br><code>e16d1ed2d813778892915a6c83ea41b3db3161bd5a1227281e4b75b6c77206ba</code><br>Realtime MM missing; UTC; WSPD m/s; wind from true north; DPD remains dominant period.</p>
+<p><a href="https://api.tidesandcurrents.noaa.gov/api/prod/">A: coops</a>; 2026-10-25T06:41:42.682296Z; HTTP 200; 42037 bytes.<br><code>2f35c273fdb3eeca2aa98111d0ed62998500c2ed9f4c507b0543d919dd6b4da5</code><br>Explicit metric/gmt request; current cm/s divided by 100; requested bin is an identifier.</p>
+<p><a href="https://api.tidesandcurrents.noaa.gov/api/prod/responseHelp.html">R: coops</a>; 2026-10-25T06:41:42.938084Z; HTTP 200; 23254 bytes.<br><code>c934a7921f56b80bbd5b05701795357a97cb5cb3c692931c3d96e8194976ba69</code><br>Core current fields t, s, d, b; no depth inferred from bin.</p>
+<p><a href="https://www.weather.gov/disclaimer">P: noaa-ndbc</a>; 2026-10-25T06:41:43.338442Z; HTTP 200; 41679 bytes.<br><code>8919bb160c331dbee30b25a03f3061b9f934bf05bb684c62fd1680e44ae43b8f</code><br>NWS public-domain material subject to stated exceptions; identify source; no endorsement or altered official data.</p>
+<p><a href="https://tidesandcurrents.noaa.gov/disclaimers.html">Q: coops</a>; 2026-10-25T06:41:43.790530Z; HTTP 200; 24039 bytes.<br><code>4af265156e195fda2a8c4457af5bd2f73b74d70cd9219f3a4ae94d2d2543363c</code><br>NOS attribution requested; altered content is independent; third-party exclusions remain.</p>
+<p>Receipts record documentation retrieved on the stated dates; no live endpoint behavior is guaranteed.</p>
+<h2>Reproduction digests</h2>
+<p>src/digitalmodel/orcaflex/weather_window.py<br><code>40c4ff57f8f0cbb2c48d6182b8c8862d1fc2751be130b985f7cff4a48ba38aa6</code></p>
+<p>tests/orcaflex/test_weather_window.py<br><code>cb4c6459b97348dee463abc7311195069604d7ec8f1c5b1f276020f9fe525dcd</code></p>
+<p>scripts/reporting/operability_replacement.py<br><code>ad432d52c0bae6751da9eef170a0cfd81933f86b96157d5c54bdf31f5ba2da76</code></p>
+<p>Canonical synthetic input SHA-256: <code>ada7f235a25c134236d0dfce6ca5254e266a883b95416f0428a1efad5860fe43</code>.</p>
+<p>Provide approved limits, synchronized history and deployment-depth evidence before an engineering assessment. Standards-derived acceptance is outside this software check.</p>
+</body></html>

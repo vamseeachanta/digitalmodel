@@ -1,0 +1,413 @@
+{
+  "calculation_basis": "Each enabled upper limit passes at equality. Passing hours are summed from the joint sample mask; marginals are never multiplied.",
+  "code_sha256": {
+    "scripts/reporting/operability_replacement.py": "ad432d52c0bae6751da9eef170a0cfd81933f86b96157d5c54bdf31f5ba2da76",
+    "src/digitalmodel/orcaflex/weather_window.py": "40c4ff57f8f0cbb2c48d6182b8c8862d1fc2751be130b985f7cff4a48ba38aa6",
+    "tests/orcaflex/test_weather_window.py": "cb4c6459b97348dee463abc7311195069604d7ec8f1c5b1f276020f9fe525dcd"
+  },
+  "coverage_basis": "Observed duration excludes interior gaps; windows break at gaps and failures. Coverage outside the first-start/last-end span is unknown.",
+  "criteria": {
+    "current_limit_mps": 1.0,
+    "hs_limit": 2.0,
+    "tp_limit": 8.0,
+    "wind_limit_mps": 10.0
+  },
+  "criteria_revision": "synthetic-v1",
+  "criteria_units": {
+    "current_limit_mps": "m/s",
+    "hs_limit": "m",
+    "tp_limit": "s",
+    "wind_limit_mps": "m/s"
+  },
+  "engineering_readiness": "UNVERIFIED",
+  "freshness": "Receipts record documentation retrieved on the stated dates; no live endpoint behavior is guaranteed.",
+  "gaps": {
+    "current_deployment_depth": {
+      "disposition": "Deployment depth is absent; a bin identifier does not qualify current engineering input.",
+      "status": "UNVERIFIED"
+    },
+    "joint_history": {
+      "disposition": "No synchronized environmental history is supplied; only synthetic co-timed software samples are admitted.",
+      "status": "UNVERIFIED"
+    },
+    "site_operating_limits": {
+      "disposition": "Approved engineering limits are absent; synthetic-v1 thresholds are software fixtures only.",
+      "status": "UNVERIFIED"
+    },
+    "standards_derived_acceptance": {
+      "disposition": "Standards-derived criteria and fixtures are excluded; no standards compliance is evaluated.",
+      "status": "UNVERIFIED"
+    }
+  },
+  "input_sha256": "ada7f235a25c134236d0dfce6ca5254e266a883b95416f0428a1efad5860fe43",
+  "inputs": [
+    {
+      "case": "A",
+      "current_mps": 0.5,
+      "duration_hours": 1.0,
+      "hs_m": 1.0,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "A",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "A",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "A",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "A",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T00:00:00Z",
+      "tp_s": 7.0,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 8.0
+    },
+    {
+      "case": "B",
+      "current_mps": 1.0,
+      "duration_hours": 1.0,
+      "hs_m": 2.0,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "B",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "B",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "B",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "B",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T01:00:00Z",
+      "tp_s": 8.0,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 10.0
+    },
+    {
+      "case": "C",
+      "current_mps": 0.5,
+      "duration_hours": 1.0,
+      "hs_m": 1.0,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "C",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "C",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "C",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "C",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T02:00:00Z",
+      "tp_s": 7.0,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 10.1
+    },
+    {
+      "case": "D",
+      "current_mps": 1.1,
+      "duration_hours": 1.0,
+      "hs_m": 1.0,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "D",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "D",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "D",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "D",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T03:00:00Z",
+      "tp_s": 7.0,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 8.0
+    },
+    {
+      "case": "E",
+      "current_mps": 0.5,
+      "duration_hours": 1.0,
+      "hs_m": 2.1,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "E",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "E",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "E",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "E",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T04:00:00Z",
+      "tp_s": 7.0,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 8.0
+    },
+    {
+      "case": "F",
+      "current_mps": 0.5,
+      "duration_hours": 1.0,
+      "hs_m": 1.0,
+      "provenance": {
+        "current_mps": {
+          "quality": "synthetic",
+          "record_id": "F",
+          "source_id": "synthetic"
+        },
+        "hs_m": {
+          "quality": "synthetic",
+          "record_id": "F",
+          "source_id": "synthetic"
+        },
+        "tp_s": {
+          "quality": "synthetic",
+          "record_id": "F",
+          "source_id": "synthetic"
+        },
+        "wind_mps": {
+          "quality": "synthetic",
+          "record_id": "F",
+          "source_id": "synthetic"
+        }
+      },
+      "start_utc": "2000-01-01T05:00:00Z",
+      "tp_s": 8.1,
+      "units": {
+        "current_mps": "m/s",
+        "duration_hours": "h",
+        "hs_m": "m",
+        "tp_s": "s",
+        "wind_mps": "m/s"
+      },
+      "wind_mps": 8.0
+    }
+  ],
+  "joint": {
+    "engineering_readiness": "UNVERIFIED",
+    "missing_coverage_hours": 0.0,
+    "non_operability_pct_display": "66.7",
+    "observed_duration_hours": 6.0,
+    "operability_pct_display": "33.3",
+    "passing_duration_hours": 2.0,
+    "passing_fraction": {
+      "denominator_hours": 6.0,
+      "numerator_hours": 2.0
+    },
+    "sample_passes": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ],
+    "window_durations_hours": [
+      2.0
+    ]
+  },
+  "parser_check": {
+    "input_cm_per_s": 100.0,
+    "kind": "synthetic supplied bytes",
+    "output_m_per_s": 1.0,
+    "status": "PASS"
+  },
+  "parser_limits": [
+    "NDBC realtime standard-met only; MM stays missing; historical numeric sentinels are rejected.",
+    "NDBC gust is not WSPD; dominant period is not promoted to peak period; no height or averaging correction is applied.",
+    "CO-OPS core data rows t/s/d/b only; metric/gmt and one explicit positive bin are required; empty/null stays missing.",
+    "Parser output is not a qualified synchronized sample or a measured interval. Provenance and raw-input digest are retained."
+  ],
+  "parser_source_acceptance": {
+    "coops_fields_units_bin": {
+      "receipts": [
+        "A",
+        "R"
+      ],
+      "status": "CONFIRMED"
+    },
+    "coops_missing_values": {
+      "reason": "The retrieved API and response guides do not specify missing-value tokens. Empty/null preservation is a defensive software policy; source-specific missing-value acceptance requires authoritative evidence.",
+      "status": "BLOCKED-IF-MISSING"
+    },
+    "ndbc_realtime_fields_units_missing": {
+      "receipts": [
+        "N"
+      ],
+      "status": "CONFIRMED"
+    }
+  },
+  "revision_history": [
+    {
+      "change": "Joint wind/current software checks are introduced to prevent ignored limits.",
+      "date": "2026-10-25",
+      "revision": "0"
+    }
+  ],
+  "software_check": "PASS",
+  "source_receipts": [
+    {
+      "basis": "Realtime MM missing; UTC; WSPD m/s; wind from true north; DPD remains dominant period.",
+      "bytes": 51265,
+      "http_status": 200,
+      "key": "N",
+      "retrieved_utc": "2026-10-25T06:41:31Z",
+      "sha256": "e16d1ed2d813778892915a6c83ea41b3db3161bd5a1227281e4b75b6c77206ba",
+      "source_id": "noaa-ndbc",
+      "url": "https://www.ndbc.noaa.gov/faq/measdes.shtml"
+    },
+    {
+      "basis": "Explicit metric/gmt request; current cm/s divided by 100; requested bin is an identifier.",
+      "bytes": 42037,
+      "http_status": 200,
+      "key": "A",
+      "retrieved_utc": "2026-10-25T06:41:42.682296Z",
+      "sha256": "2f35c273fdb3eeca2aa98111d0ed62998500c2ed9f4c507b0543d919dd6b4da5",
+      "source_id": "coops",
+      "url": "https://api.tidesandcurrents.noaa.gov/api/prod/"
+    },
+    {
+      "basis": "Core current fields t, s, d, b; no depth inferred from bin.",
+      "bytes": 23254,
+      "http_status": 200,
+      "key": "R",
+      "retrieved_utc": "2026-10-25T06:41:42.938084Z",
+      "sha256": "c934a7921f56b80bbd5b05701795357a97cb5cb3c692931c3d96e8194976ba69",
+      "source_id": "coops",
+      "url": "https://api.tidesandcurrents.noaa.gov/api/prod/responseHelp.html"
+    },
+    {
+      "basis": "NWS public-domain material subject to stated exceptions; identify source; no endorsement or altered official data.",
+      "bytes": 41679,
+      "http_status": 200,
+      "key": "P",
+      "retrieved_utc": "2026-10-25T06:41:43.338442Z",
+      "sha256": "8919bb160c331dbee30b25a03f3061b9f934bf05bb684c62fd1680e44ae43b8f",
+      "source_id": "noaa-ndbc",
+      "url": "https://www.weather.gov/disclaimer"
+    },
+    {
+      "basis": "NOS attribution requested; altered content is independent; third-party exclusions remain.",
+      "bytes": 24039,
+      "http_status": 200,
+      "key": "Q",
+      "retrieved_utc": "2026-10-25T06:41:43.790530Z",
+      "sha256": "4af265156e195fda2a8c4457af5bd2f73b74d70cd9219f3a4ae94d2d2543363c",
+      "source_id": "coops",
+      "url": "https://tidesandcurrents.noaa.gov/disclaimers.html"
+    }
+  ],
+  "source_reuse": "NOAA NDBC and CO-OPS documentation supplies field semantics only. All numerical fixtures are independently synthetic, not official NOAA observations. No endorsement is implied; no third-party material or raw observed series is reproduced.",
+  "summary": "Synthetic joint limits pass 2 h of 6 h (33.3%); wave-only limits pass 4 h of 6 h (66.7%).",
+  "title": "Synchronized operability software analysis",
+  "wave_only": {
+    "engineering_readiness": "UNVERIFIED",
+    "missing_coverage_hours": 0.0,
+    "non_operability_pct_display": "33.3",
+    "observed_duration_hours": 6.0,
+    "operability_pct_display": "66.7",
+    "passing_duration_hours": 4.0,
+    "passing_fraction": {
+      "denominator_hours": 6.0,
+      "numerator_hours": 4.0
+    },
+    "sample_passes": [
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ],
+    "window_durations_hours": [
+      4.0
+    ]
+  }
+}
