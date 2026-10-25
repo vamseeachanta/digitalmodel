@@ -217,11 +217,24 @@ def test_build_ssh_command_quotes_repo_dir_with_spaces(tmp_path: Path) -> None:
 def test_default_hosts_use_neutral_gpu_claw_target(monkeypatch) -> None:
     dispatcher = load_dispatcher()
     monkeypatch.delenv("CFD_GPU_CLAW_SSH", raising=False)
+    monkeypatch.delenv("CFD_ACE_LINUX_2_SSH", raising=False)
 
     gpu_host = dispatcher.default_hosts()[0]
 
-    assert gpu_host.name == "gpu-claw"
-    assert gpu_host.ssh_target == "gpu-claw"
+    assert gpu_host.name == "dedicated-cfd"
+    assert gpu_host.ssh_target == "dedicated-cfd"
+    shared_host = load_dispatcher().default_hosts()[1]
+    assert shared_host.name == "shared-cfd"
+    assert shared_host.ssh_target == "shared-cfd"
+
+
+def test_default_hosts_preserve_ssh_overrides(monkeypatch) -> None:
+    dispatch = load_dispatcher()
+    monkeypatch.setenv("CFD_GPU_CLAW_SSH", "configured-dedicated")
+    monkeypatch.setenv("CFD_ACE_LINUX_2_SSH", "configured-shared")
+    assert [host.ssh_target for host in dispatch.default_hosts()] == [
+        "configured-dedicated", "configured-shared",
+    ]
 
 
 def test_cli_dry_run_does_not_invoke_ssh(tmp_path: Path) -> None:

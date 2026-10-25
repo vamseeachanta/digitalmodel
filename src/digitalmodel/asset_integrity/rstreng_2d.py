@@ -33,7 +33,9 @@ effective axial profile ``d_eff(x_a)`` and then calls the 1D engine *verbatim*
      (i.e. predicts a higher, less conservative burst pressure) when the
      deepest pits do not co-locate at the same axial station, because averaging
      dilutes an isolated deep pit. Prefer MAX for fitness-for-service verdicts;
-     AREA-WEIGHTED is offered for sensitivity / less-conservative screening.
+     AREA-WEIGHTED is offered for sensitivity calculations only. Its typed
+     applicability record prevents a screening decision, even when the
+     projected profile lies inside the formula's depth envelope.
 
 SIMPLIFICATION: this is a *simple projection* (collapse each axial station to a
 scalar, then run the validated 1D method). It is **not** a full 2D interacting-
@@ -49,10 +51,16 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import (
+    Applicability,
+    check_upper_limit,
+    flagged,
+    merge,
+)
 
 from digitalmodel.asset_integrity.corroded_pipe import (
     CorrodedPipeResult,
+    _B31G_MAX_DT,
     rstreng_effective_area,
 )
 
@@ -63,6 +71,9 @@ PROJECTION_MAX = "max"
 PROJECTION_AREA_WEIGHTED = "area_weighted"
 _PROJECTIONS = (PROJECTION_MAX, PROJECTION_AREA_WEIGHTED)
 
+RAW_DEPTH_FLAG = "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY"
+SENSITIVITY_ONLY_FLAG = "RSTRENG_2D_SENSITIVITY_ONLY"
+
 
 @dataclass
 class RiverBottom2DResult:
@@ -71,6 +82,19 @@ class RiverBottom2DResult:
     Surfaces the projection rule used and the governing axial segment, and
     carries the full 1D :class:`CorrodedPipeResult` (``result``) so every
     failure-pressure field is available unchanged.
+
+    ``within_applicability`` and ``projected_profile_applicability`` retain
+    the projected-profile formula validity. ``raw_grid_applicability`` checks
+    the deepest source measurement. ``applicability`` combines both with the
+    sensitivity-only restriction for use by the decision layer. Its ``ok``
+    value is also exposed as ``screening_eligible``; passing it establishes
+    only depth/projection qualification, not full fitness for service.
+
+    ``details['max_d_over_t']`` retains the projected maximum; the separate
+    ``raw_max_d_over_t`` records the source maximum. The details also retain
+    ``sensitivity_only``, ``screening_eligible`` and combined ``applicability``
+    for ordinary dataclass serialization. Direct construction without a raw
+    qualification record is marked NOT_EVALUATED and cannot qualify screening.
     """
 
     projection_rule: str  # "max" | "area_weighted"
@@ -78,13 +102,51 @@ class RiverBottom2DResult:
     d_eff_in: list  # projected 1D effective-depth profile
     governing_segment: tuple  # (i, j) axial indices of worst segment
     result: CorrodedPipeResult  # full 1D RSTRENG result (verbatim)
-    within_applicability: bool  # max(d)/t <= 0.80 (B31G validity)
+    within_applicability: bool  # legacy projected-profile validity only
     details: dict = field(default_factory=dict)
+    raw_grid_applicability: Applicability = field(
+        default_factory=lambda: flagged(
+            "RSTRENG_2D_RAW_DEPTH_NOT_EVALUATED",
+            "Raw-grid depth qualification was not evaluated.",
+        )
+    )
+
+    @property
+    def projected_profile_applicability(self) -> Applicability:
+        """Formula validity of the projected profile; legacy result unchanged."""
+        return self.result.applicability
+
+    @property
+    def sensitivity_only(self) -> bool:
+        """Area weighting is qualified for sensitivity calculations only."""
+        return self.projection_rule == PROJECTION_AREA_WEIGHTED
 
     @property
     def applicability(self) -> Applicability:
-        """Projected-profile validity; raw maximum depth is checked only in MAX mode."""
-        return self.result.applicability
+        """Screening qualification including raw depth and projection purpose.
+
+        The legacy boolean and embedded result describe only the projected
+        formula. Decision consumers must use this combined record.
+        """
+        purpose = None
+        if self.sensitivity_only:
+            # Source: 2026-06-29 validation record, AREA-WEIGHTED Caveat.
+            purpose = flagged(
+                SENSITIVITY_ONLY_FLAG,
+                "Area-weighted projection is sensitivity-only; use MAX for "
+                "fitness-for-service screening.",
+            )
+        return merge(
+            self.projected_profile_applicability, self.raw_grid_applicability, purpose
+        )
+
+    @property
+    def screening_eligible(self) -> bool:
+        """Whether depth/projection qualification permits a screening decision.
+
+        This is not a pressure acceptance verdict or a full flaw assessment.
+        """
+        return self.applicability.ok
 
     # --- convenience pass-throughs to the embedded 1D result ---------------
     @property
@@ -189,7 +251,9 @@ def rstreng_2d_river_bottom(
 
     Returns:
         :class:`RiverBottom2DResult` exposing the projection rule, governing
-        axial segment, applicability flag and the full 1D RSTRENG result.
+        axial segment, raw-grid and projected-profile qualification, and the
+        full 1D RSTRENG result. ``within_applicability`` retains its legacy
+        projected-profile meaning; use ``applicability`` for decisions.
     """
     if projection not in _PROJECTIONS:
         raise ValueError(
@@ -228,18 +292,36 @@ def rstreng_2d_river_bottom(
         )
         affected_width = float(np.sum(weights))
 
-    return RiverBottom2DResult(
+    raw_max_dt = float(np.max(grid)) / t
+    # Reuse the existing envelope, without a second numeric acceptance limit.
+    # Source: docs/domains/rstreng-2d-validation-2026-06-29.md (2026),
+    # Purpose / Result surface, ASME B31G-2012 basis. Use unaveraged measurements.
+    raw_applicability = check_upper_limit(
+        raw_max_dt, _B31G_MAX_DT, flag=RAW_DEPTH_FLAG,
+        quantity="raw grid max(d)/t", method="ASME B31G raw-measurement",
+    )
+
+    assessment = RiverBottom2DResult(
         projection_rule=projection,
         axial_positions_in=[float(v) for v in x],
         d_eff_in=[float(v) for v in d_eff],
         governing_segment=governing_segment,
         result=result,
         within_applicability=within,
+        raw_grid_applicability=raw_applicability,
         details={
             "n_axial": int(grid.shape[0]),
             "n_circ": int(grid.shape[1]),
             "affected_width": affected_width,
             "critical_length_in": float(result.details["critical_length_in"]),
             "max_d_over_t": float(result.details["d_over_t"]),
+            "raw_max_d_over_t": raw_max_dt,
         },
     )
+    # Retain qualification in ordinary dataclass/JSON serialization as well.
+    assessment.details.update(
+        sensitivity_only=assessment.sensitivity_only,
+        screening_eligible=assessment.screening_eligible,
+        applicability=assessment.applicability.to_dict(),
+    )
+    return assessment

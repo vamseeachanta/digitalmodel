@@ -118,9 +118,47 @@ field and assumes independence between fields. It is an explicit assumption,
 not measured geological uncertainty. Invalid physical draws raise an error
 without clipping or rejection sampling.
 
-Unresolved draws are counted and invalidate the affected bands; they are never
-discarded to obtain apparently better quantiles. Infeasible draws are counted
-separately. The lower limit is max(pore P90, collapse P90). The ceiling
+Every curve reports `resolved_draws`, `unresolved_draws` and
+`unresolved_fraction = unresolved_draws / total_draws`. For the collapse curve,
+`ensemble.max_unresolved_fraction` supplies the study-specific upper limit on
+that fraction. It must be a finite number in [0, 1]; these bounds follow from
+the definition of a fraction. No engineering acceptance limit is assumed.
+When resolved draws exist and the unresolved fraction is at or below the
+supplied limit, P10/P50/P90 are calculated over resolved draws only. The band
+reports `RESOLVED_DRAWS_ONLY` if any draws are unresolved, otherwise
+`ALL_DRAWS_RESOLVED`. `quantile_basis` explicitly labels the conditional
+population. These percentiles do not estimate unconditional collapse quantiles.
+Unresolved status alone does not establish bias direction: a scan can miss a
+narrow stable interval below fracture initiation, including a lower collapse
+pressure than those retained. Excluding such draws can shift percentiles upward.
+Downward bias remains a risk if omitted draws have higher collapse pressures
+than resolved draws. The collapse band therefore reports
+`unknown (unresolved draws may include numerical misses)` in `bias_direction`
+whenever any draw is unresolved; all-resolved bands report
+`none (all draws resolved)`. A supplied fraction limit does not correct bias.
+
+Above the supplied limit, or with no resolved draws, the band is
+`INDETERMINATE` with null percentiles and an explicit `indeterminate_reason`.
+If unresolved draws exist but the limit is omitted or null, the band is also
+`INDETERMINATE` and `unresolved_fraction_check` is `NOT_EVALUATED`.
+All-resolved ensembles retain their percentiles without a supplied limit.
+Counts, fraction and the supplied limit remain visible for indeterminate bands.
+Other curves and the ceiling retain the requirement that every draw resolve.
+Their `unresolved_fraction_check` is `ALL_DRAWS_REQUIRED`, and any unresolved
+draw gives `indeterminate_reason: ALL_DRAWS_REQUIRED`; the collapse fraction
+limit does not apply to them.
+
+Interpolation follows *Sample Quantiles in Statistical Packages* (1996),
+equation (1) and Definition 7, pages 361 and 363,
+[DOI: 10.1080/00031305.1996.10473566](https://doi.org/10.1080/00031305.1996.10473566).
+For sorted resolved values, the zero-based index is `h = (n - 1) p`, with
+linear interpolation between adjacent values. This preserves the previous
+all-resolved quantile method; `sources.yaml` records the checked source.
+
+Infeasible draws are counted separately. Conditional collapse bands do not
+establish a window: any unresolved collapse or ceiling draw still nulls the
+corresponding window limit and prevents a feasible-window result.
+For all-resolved draws, the lower limit is max(pore P90, collapse P90). The ceiling
 is P10 of the per-draw minimum of tensile initiation, Shmin and the additional
 shear upper bound. These marginal quantile limits are not a joint 80% safety
 guarantee. No operational margin, ECD or mud recommendation is provided.

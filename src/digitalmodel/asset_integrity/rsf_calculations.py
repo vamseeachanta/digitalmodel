@@ -81,14 +81,22 @@ def check_ffs_level1(
         t_measured: Measured remaining wall thickness (inches).
         t_required: Code-minimum required wall thickness (inches).
         t_nominal: Original design wall thickness (inches).
-        design_pressure_psi: Original design/operating pressure (psi).
+        design_pressure_psi: Positive, finite design/operating pressure (psi).
         smys_psi: Specified minimum yield strength (psi).
         outer_diameter_in: Pipe outer diameter (inches).
         weld_efficiency: Weld joint efficiency (1.0 for seamless).
 
     Returns:
         dict with acceptable, rsf, mawp_psi, mawp_reduced, remaining_pressure_fraction.
+
+    Raises:
+        ValueError: Design pressure is non-positive or non-finite.
     """
+    # API domain requirement, not a standard acceptance limit: issue 2598.
+    # https://github.com/vamseeachanta/digitalmodel/issues/2598
+    if not math.isfinite(design_pressure_psi) or design_pressure_psi <= 0.0:
+        raise ValueError("design_pressure_psi must be positive and finite")
+
     rsf_result = calculate_rsf(t_measured, t_required, t_nominal)
 
     if outer_diameter_in <= 0:
@@ -98,9 +106,7 @@ def check_ffs_level1(
     mawp_psi = (2.0 * smys_psi * weld_efficiency * t_measured) / outer_diameter_in
 
     acceptable = rsf_result["rsf"] >= RSF_ALLOWABLE and t_measured >= t_required
-    remaining_pressure_fraction = (
-        mawp_psi / design_pressure_psi if design_pressure_psi > 0 else 0.0
-    )
+    remaining_pressure_fraction = mawp_psi / design_pressure_psi
 
     return {
         "acceptable": acceptable,

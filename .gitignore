@@ -267,10 +267,16 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+!docs/reports/orcaflex-smoke-artifact-freshness.html
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 # Durable module analysis and engineering change register.
 !docs/reports/modules/
 docs/reports/modules/*
+!docs/reports/modules/riserfatigue/
+docs/reports/modules/riserfatigue/*
+!docs/reports/modules/riserfatigue/generate_report.py
+!docs/reports/modules/riserfatigue/report.html
+!docs/reports/modules/riserfatigue/changes.json
 !docs/reports/modules/cp/
 docs/reports/modules/cp/*
 !docs/reports/modules/cp/index.html
@@ -408,6 +414,13 @@ coverage.wrk*.xml
 *.wrk*.xml
 outputs/
 specs/
+# Retain the scalar-result schema and its checks beside tracked manifests.
+!/src/digitalmodel/specs/
+/src/digitalmodel/specs/*
+!/src/digitalmodel/specs/engineering_result.py
+!/tests/specs/
+/tests/specs/*
+!/tests/specs/test_engineering_result.py
 
 # Agent worktrees (local-only, must not be tracked as gitlinks)
 .claude/worktrees/
@@ -468,6 +481,17 @@ docs/reports/abstracted-hulls/*
 # Retain the synthetic worked pipeline assessment.
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
+!docs/reports/padeye-lift-point-analysis.html
+
+# Preserve the GIS module report and its rebuild sources.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/gis/
+docs/reports/modules/gis/*
+!docs/reports/modules/gis/build_report.py
+!docs/reports/modules/gis/changes.json
+!docs/reports/modules/gis/report.html
+!docs/reports/modules/gis/sources.json
 
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
@@ -588,3 +612,14 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Reproducible vessel seakeeping module documentation
+!/scripts/reports/
+/scripts/reports/*
+!/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/
+!/docs/reports/modules/
+/docs/reports/modules/*
+!/docs/reports/modules/vesselseakeeping/
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json

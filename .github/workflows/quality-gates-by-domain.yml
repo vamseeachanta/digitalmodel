@@ -408,7 +408,10 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          print(gates[os.environ["GATE_NAME"]]["command"])
+          command = gates[os.environ["GATE_NAME"]]["command"]
+          if os.environ["GATE_NAME"] == "tests-subsea":
+              command += " tests/riser_fatigue/"
+          print(command)
           PY
           )
           {

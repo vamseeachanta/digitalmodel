@@ -10,7 +10,7 @@
 ## Prerequisites
 
 - Blender available on `PATH` or through `BLENDER_BIN`.
-- Canonical execution host for live evidence: dev-secondary.
+- Canonical execution host for live evidence: the rendering workstation.
 
 ## Commands
 
@@ -32,6 +32,6 @@ blender -b --python scripts/blender/smoke-render.py -- --output /tmp/blender-bas
 
 ## Failure Modes
 
-- Missing Blender binary: rerun on dev-secondary or set `BLENDER_BIN`.
+- Missing Blender binary: rerun on the rendering workstation or set `BLENDER_BIN`.
 - Render process failure: inspect stderr for headless/GPU/runtime failures.
 - Empty or missing PNG: treat as a failed baseline even if Blender exits zero.
