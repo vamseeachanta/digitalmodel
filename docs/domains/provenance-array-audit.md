@@ -14,6 +14,7 @@ immutability qualification.
 | Revision | Date | What changed and why |
 |---|---|---|
 | Initial | 2026-10-19 | Inventory provenance-bearing numerical containers and protect accelerogram samples from mutation beside a retained source digest. |
+| Update | 2026-10-25 | Reject ndarray subclasses before coercion, restore array-aware record equality, and retain snapshot bytes and metadata without a mutable array header. |
 
 ## Boundary and method
 
@@ -30,7 +31,16 @@ legacy default dictionary-state reconstruction. Deliberate access to a record's
 raw `__dict__` or `object.__setattr__` is outside this boundary. Explicit array
 copies and derived outputs may be writable because they do not retain aliases
 to the stored samples. Object-reference arrays are refused rather than encoded
-as raw pointer bytes.
+as raw pointer bytes. Masked arrays and other ndarray subclasses are rejected
+before coercion so that masks or subclass semantics cannot silently disappear.
+Plain ndarray inputs and ordinary numerical sequences remain supported.
+
+Retained samples are represented by tuples of immutable bytes, dtype and shape
+metadata. Public reads require this byte-backed snapshot representation; a raw
+array inserted without initialization is rejected before a header is created.
+This check does not qualify arbitrary dictionary-state tampering. Equality uses
+an identity fast path, array-aware sample comparisons and all three scalar
+metadata fields; distinct record classes defer to the other operand.
 
 ## Inventory
 
@@ -69,6 +79,15 @@ reconstruction. Exact equality is used; no physical acceptance tolerance or
 engineering coefficient is introduced. Existing unit-conversion constants and
 reader validation limits are unchanged.
 
+The focused reader, baseline and integrity suite passes 57 tests with NumPy
+1.26.4, compared with 32 before this update. The 25 added cases include 21
+failures reproduced before implementation and four compatibility checks.
+The integrity module now contains 50 cases. Both sample fields are exercised
+for masked and subclass inputs, unsnapshotted state and retained header edits.
+Equality is checked for reflexivity, independent snapshots, every field change
+and distinct operand classes. This qualification does not cover the entire
+response-spectrum workflow or the other containers in the inventory.
+
 The digest still identifies source file bytes. Direct construction or
 `dataclasses.replace` can intentionally pair new samples with an existing
 digest; neither operation authenticates those samples. The fix prevents later
@@ -87,6 +106,10 @@ mutation of the accepted snapshot and does not certify input provenance.
   `_read_only`, and the snapshot/reconstruction methods inventoried above.
 
 ## Later slices
+
+Retain subclass semantics explicitly or reject the input before coercion when
+extending another provenance-bearing numerical container; a writable-flag test
+alone cannot detect mask loss or mutable header aliases.
 
 Audit the mutable kinematic result and validation cache with independent alias
 and reconstruction regressions. Establish a versioned shape/dtype-aware identity

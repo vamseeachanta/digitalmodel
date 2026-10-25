@@ -28,10 +28,13 @@ class AccelerogramRecord:
         # immutable ultimate backing, rather than just setflags(write=False).
         # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.flags.html
         for name in ("time_s", "acceleration_m_s2"):
-            value = np.asarray(object.__getattribute__(self, name))
+            value = object.__getattribute__(self, name)
+            if isinstance(value, np.ndarray) and type(value) is not np.ndarray:
+                raise TypeError("accelerogram arrays cannot be ndarray subclasses")
+            value = np.asarray(value)
             if value.dtype.hasobject:
                 raise TypeError("accelerogram arrays cannot contain object references")
-            snapshot = np.ndarray(value.shape, dtype=value.dtype, buffer=value.tobytes())
+            snapshot = (value.tobytes(), value.dtype, value.shape)
             object.__setattr__(self, name, snapshot)
 
     def __getattribute__(self, name: str):
@@ -40,8 +43,26 @@ class AccelerogramRecord:
             # NumPy ndarray reference, buffer parameter: a fresh header may share
             # immutable bytes without exposing the retained header via .base.
             # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
-            return np.ndarray(value.shape, dtype=value.dtype, buffer=value.base)
+            if not (
+                isinstance(value, tuple) and len(value) == 3
+                and isinstance(value[0], bytes)
+            ):
+                raise TypeError("accelerogram requires an immutable sample snapshot")
+            data, dtype, shape = value
+            return np.ndarray(shape, dtype=dtype, buffer=data)
         return value
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if type(self) is not type(other):
+            return NotImplemented
+        return (
+            np.array_equal(self.time_s, other.time_s)
+            and np.array_equal(self.acceleration_m_s2, other.acceleration_m_s2)
+            and (self.units, self.source_path, self.source_digest)
+            == (other.units, other.source_path, other.source_digest)
+        )
 
     def __reduce__(self):
         # Python pickle reference, object.__reduce__: reconstruct through the

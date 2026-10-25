@@ -153,3 +153,94 @@ def test_object_references_cannot_be_retained_as_raw_bytes(record, field):
     """Object buffers contain references rather than immutable sample values."""
     with pytest.raises(TypeError, match="object references"):
         replace(record, **{field: getattr(record, field).astype(object)})
+
+
+@pytest.mark.parametrize("field", ["time_s", "acceleration_m_s2"])
+@pytest.mark.parametrize("masked", [True, False])
+def test_masked_inputs_are_rejected_before_mask_loss(record, field, masked):
+    samples = np.ma.array([1.0, 100.0], mask=[False, masked])
+    with pytest.raises(TypeError, match="ndarray subclasses"):
+        replace(record, **{field: samples})
+    _assert_original(record)
+
+
+@pytest.mark.parametrize("field", ["time_s", "acceleration_m_s2"])
+def test_ndarray_subclasses_are_rejected_before_coercion(record, field):
+    class SampleArray(np.ndarray):
+        """Represent semantics that coercion to a base ndarray would discard."""
+
+    samples = getattr(record, field).view(SampleArray)
+    with pytest.raises(TypeError, match="ndarray subclasses"):
+        replace(record, **{field: samples})
+
+
+def test_multisample_record_equality_is_reflexive(record):
+    assert record == record
+    assert not (record != record)
+
+
+@pytest.mark.parametrize("reconstruct", [replace, copy, deepcopy])
+def test_record_equality_compares_independent_snapshots(record, reconstruct):
+    equivalent = reconstruct(record)
+    assert equivalent == record
+    assert record == equivalent
+    assert not (record != equivalent)
+
+
+@pytest.mark.parametrize("field", [
+    "time_s", "acceleration_m_s2", "units", "source_path", "source_digest",
+])
+def test_record_equality_detects_each_changed_field(record, field):
+    changed = {
+        "time_s": record.time_s + 0.5,
+        "acceleration_m_s2": record.acceleration_m_s2 + 1.0,
+        "units": "g",
+        "source_path": record.source_path.with_name("different.asc"),
+        "source_digest": sha256(b"different").hexdigest(),
+    }
+    different = replace(record, **{field: changed[field]})
+    assert different != record
+    assert record != different
+
+
+def test_record_equality_defers_for_other_types(record):
+    other = object()
+    assert record.__eq__(other) is NotImplemented
+    assert record != other
+
+
+def test_record_equality_preserves_exact_class_comparison(record):
+    class DerivedRecord(AccelerogramRecord):
+        """Match the field values while retaining a different record type."""
+
+    other = DerivedRecord(**asdict(record))
+    assert record.__eq__(other) is NotImplemented
+    assert record != other
+
+
+@pytest.mark.parametrize("field", ["time_s", "acceleration_m_s2"])
+@pytest.mark.parametrize("writeable", [True, False])
+def test_public_read_rejects_unsnapshotted_retained_state(record, field, writeable):
+    invalid = object.__new__(AccelerogramRecord)
+    invalid.__dict__.update(asdict(record))
+    invalid.__dict__[field].setflags(write=writeable)
+    assert invalid.__dict__[field].base is None
+    with pytest.raises(TypeError, match="immutable sample snapshot"):
+        getattr(invalid, field)
+
+
+@pytest.mark.parametrize("field", ["time_s", "acceleration_m_s2"])
+def test_retained_state_does_not_expose_a_mutable_array_header(record, field):
+    retained = vars(record)[field]
+    with pytest.raises((AttributeError, TypeError)):
+        retained.dtype = np.uint8
+    _assert_original(record)
+
+
+@pytest.mark.parametrize("sequence", [list, tuple])
+def test_plain_sequences_remain_supported_constructor_inputs(record, sequence):
+    retained = replace(
+        record, time_s=sequence([0.0, 0.5, 1.0, 1.5]),
+        acceleration_m_s2=sequence([0.0, 1.0, -2.0, 1.0]),
+    )
+    _assert_original(retained)
