@@ -273,32 +273,21 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["value"] > 0.0
         lo, hi = result["confidence"]["band"]
         assert lo <= result["value"] <= hi
-    elif workflow["id"] == "diffraction-library-query":
+    elif workflow["id"] in {
+        "diffraction-library-query",
+        "orcaflex-library-query",
+        "drilling-riser-envelope-library-query",
+    }:
         result = cfg["parametric_query"]["result"]
-        # licensed-solver sparse library: covered case interpolates within
+        # Geometric coverage does not establish measured validation. The shipped
+        # stub libraries retain solver provenance while escalating covered points.
         assert result["in_range"] is True
-        assert result["response"] == "heave_rao_m_per_m"
-        assert result["value"] > 0.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
-    elif workflow["id"] == "orcaflex-library-query":
-        result = cfg["parametric_query"]["result"]
-        # licensed-solver sparse library: covered load case interpolates heading
-        assert result["in_range"] is True
-        assert result["response"] == "max_effective_tension_N"
-        assert result["value"] > 0.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
-    elif workflow["id"] == "drilling-riser-envelope-library-query":
-        result = cfg["parametric_query"]["result"]
-        # licensed-solver sparse library: covered operating mode interpolates
-        # offset x current x Hs x Tp; the DAF is a dimensionless multiplier >= 1.
-        assert result["in_range"] is True
-        assert result["response"] == "von_mises_daf"
-        assert result["value"] >= 1.0
-        lo, hi = result["confidence"]["band"]
-        assert lo <= result["value"] <= hi
-        # the STUB must self-identify at the query surface (#1346 governance fix)
+        assert result["action"] == "escalate"
+        assert result["reason"] == "validation unavailable"
+        assert result["value"] is None
+        assert "response" not in result
+        assert "confidence" not in result
+        assert result["provenance"]["atlas_id"]
         assert result["provenance"]["solver"]["licensed"] is False
         assert result["provenance"]["solver"]["version"] == "STUB"
     elif workflow["id"] == "drilling-riser-operability-query":
