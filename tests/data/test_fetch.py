@@ -241,6 +241,14 @@ def test_bare_store_marker_skip_reason(tmp_path, monkeypatch):
 @pytest.mark.parametrize("path", [
     ".git", ".git/config", ".git/hooks/pre-commit", "nested/.git/objects/blob",
     ".GIT/HEAD", "nested/.Git/config", ".git./config", ".git /config",
+    "GIT~1/config", "git~1./hooks/pre-commit", ".g\u200cit/config",
+    "nested/GiT~1 /hooks/pre-commit", ".git.\u200c /config",
+    "nested/.\u200cGIT\ufeff. /config", "g\u200cit~1./config",
+    *[f"nested/.g{chr(codepoint)}it/config" for codepoint in (
+        0x200C, 0x200D, 0x200E, 0x200F,
+        0x202A, 0x202B, 0x202C, 0x202D, 0x202E,
+        0x206A, 0x206B, 0x206C, 0x206D, 0x206E, 0x206F, 0xFEFF,
+    )],
 ])
 def test_git_metadata_destinations_rejected(fetch_module, store_case, path):
     """Git repository-layout: .git is metadata, including a worktree gitfile.
@@ -248,7 +256,8 @@ def test_git_metadata_destinations_rejected(fetch_module, store_case, path):
     Each literal path contains a metadata component; rejection is expected
     before retrieval, with sentinel bytes preserved and no added paths.
     Source: https://git-scm.com/docs/gitrepository-layout (Git 2.51.1).
-    Case and trailing-dot/space variants are rejected for portable manifests.
+    Case, trailing-dot/space, NTFS short-name and HFS+ ignorable-character
+    variants are rejected for portable manifests.
     """
     root, _, _, _ = store_case
     (root / ".git").write_bytes(b"gitdir: preserved metadata")
@@ -297,7 +306,10 @@ def test_restrictive_creation_mask(fetch_module, store_case, mask):
     assert stat.S_IMODE(target.stat().st_mode) == stat.S_IRUSR | stat.S_IWUSR
 
 
-@pytest.mark.parametrize("path", [".gitignore", ".github/workflows/job.yml", "data/git.dat"])
+@pytest.mark.parametrize("path", [
+    ".gitignore", ".github/workflows/job.yml", "data/git.dat",
+    "data/git~1.txt", "data/na\u00efve.dat",
+])
 def test_ordinary_payload_names_remain_allowed(fetch_module, store_case, path):
     """Only metadata components are reserved; unrelated Git-like names restore."""
     root, _, store_id, payload = store_case
