@@ -11,6 +11,7 @@ selected values and every unselected item. Native preservation remains
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-22 | Extend nested syntax guards and add artifact and snapshot audits to detect unintended object recreation and detached connections. |
+| Correction | 2026-10-25 | Register Wings alongside WaveTrains and Draughts so mapping input cannot bypass structural-operation and name validation. |
 
 ## Basis and method
 
@@ -29,8 +30,10 @@ floating-point tolerance or physical acceptance criterion.
 
 - `build_variation_document` and `write_variation_model` convert registered
   named collections and nested Name-bearing lists into modification mappings.
-  Known nested `WaveTrains` and `Draughts` collections also handle empty lists.
-  Ordinary property tables remain lists. Ambiguous mixed named lists fail.
+  Known nested `WaveTrains`, `Draughts` and `Wings` collections also handle empty
+  lists. Their mapping forms reject structural operations, renaming, invalid
+  property mappings and duplicate names without changing inputs. Ordinary
+  property tables remain lists. Ambiguous mixed named lists fail.
 - `validate_variation_document` checks an already parsed artifact without
   normalizing it. `load_variation_document` additionally rejects duplicate YAML
   keys, aliases, and malformed YAML before syntax validation. Native blank
@@ -73,7 +76,7 @@ reference = {
     "Lines": [{"Name": "Sling", "EndAConnection": "Body"}],
     "Shapes": [{"Name": "Attachment", "Connection": "Body"}],
 }
-master.write_text(yaml.safe_dump(reference), encoding="utf-8")
+master.write_text(yaml.safe_dump(reference), encoding="utf-8", newline="\n")
 original_bytes = master.read_bytes()
 variation = root / "changes" / "case.yml"
 write_variation_model(
@@ -122,8 +125,8 @@ authenticate snapshot provenance, export completeness, solver version, or the
 absence of omitted default data. A residual numerical representation change
 fails exact equality and requires investigation rather than an invented tolerance.
 
-Object existence is not checked by the writer. Unnamed nested structures and
-unregistered empty nested collections require separate qualification. This is
-not a repository-wide audit: specialized workflow writers and hand-authored
-IncludeFile compositions retain their existing behavior. Physical validity,
+Object existence is not checked by the writer. Unnamed nested structures,
+unregistered nested mappings and unregistered empty collections require separate
+qualification. This is not a repository-wide audit: specialized workflow writers
+and hand-authored IncludeFile compositions retain their existing behavior. Physical validity,
 statics, dynamics and acceptance remain outside these structural checks.

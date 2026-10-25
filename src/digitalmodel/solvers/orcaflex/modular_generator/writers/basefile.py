@@ -79,8 +79,9 @@ _COMPOSITION_DIRECTIVES = frozenset({"basefile", "basefilenotracking", "includef
 
 # Orcina, Variation models, opening example and Text data format (accessed
 # 2026-10-22): WaveTrains and Draughts are nested named collections. Knowing
-# these keys also lets empty lists be treated as empty modifications.
-_NESTED_NAMED_COLLECTIONS = frozenset({"WaveTrains", "Draughts"})
+# these keys, including Wings supported by named-list conversion, applies the
+# same structural guard to mappings and treats empty lists as empty edits.
+_NESTED_NAMED_COLLECTIONS = frozenset({"WaveTrains", "Draughts", "Wings"})
 
 
 def _nested_modifications(value: Any, path: str, *, artifact: bool = False) -> Any:
@@ -315,7 +316,7 @@ def _relative_base_reference(base_path: Path, out_dir: Path) -> str:
         relative = base_path.relative_to(out_dir)
     except ValueError:
         relative = Path(os.path.relpath(base_path.resolve(), out_dir.resolve()))
-    return str(relative).replace("\\", "/")
+    return relative.as_posix()
 
 
 def build_variation_document(
@@ -411,7 +412,7 @@ def write_variation_model(
     document = build_variation_document(base_path, overrides, out_path)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as handle:
+    with open(out_path, "w", encoding="utf-8", newline="\n") as handle:
         yaml.dump(
             document,
             handle,

@@ -12,6 +12,7 @@ Snapshot comparisons exercise an audit utility, never native solver behavior.
 from copy import deepcopy
 
 import pytest
+import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator.writers.basefile import (
     build_variation_document,
@@ -50,13 +51,95 @@ def test_nested_named_lists_become_modifications(tmp_path, section, value, expec
 
 
 @pytest.mark.parametrize(
-    "objects", [[], [{"Name": "Wave"}], {"New": {}}, {"Wave": {"Name*": "other"}}]
+    "path",
+    [
+        ("Environment", "WaveTrains"),
+        ("VesselTypes", "Type", "Draughts"),
+        ("6DBuoys", "Body", "Wings"),
+    ],
 )
-def test_nested_artifact_creation_and_structural_operations_are_rejected(objects):
-    with pytest.raises(ValueError, match="WaveTrains"):
-        validate_variation_document(
-            {"BaseFile": "master.yml", "Environment": {"WaveTrains": objects}}
+@pytest.mark.parametrize("entry_point", ["builder", "artifact"])
+@pytest.mark.parametrize(
+    "objects",
+    [
+        {"New": "Item"},
+        {"nEw": {}},
+        {"Deleted": "Item"},
+        {"Order": ["Item"]},
+        {"Item": {"Name": "other"}},
+        {"Item": {"nAmE*": "other"}},
+        {"Item": None},
+        {"": {}},
+        {"Item": {}, "item": {}},
+    ],
+)
+def test_nested_mapping_operations_are_rejected(tmp_path, path, entry_point, objects):
+    """Each registered collection rejects structural edits and invalid names."""
+    from digitalmodel.solvers.orcaflex.modular_generator.writers import (
+        load_variation_document,
+    )
+
+    overrides = objects
+    for key in reversed(path):
+        overrides = {key: overrides}
+    before = deepcopy(overrides)
+    artifact = tmp_path / "case.yml"
+    if entry_point == "builder":
+        with pytest.raises(ValueError, match=path[-1]):
+            build_variation_document(tmp_path / "master.yml", overrides, artifact)
+    else:
+        artifact.write_text(
+            yaml.safe_dump({"BaseFile": "master.yml", **overrides}, sort_keys=False),
+            encoding="utf-8",
+            newline="\n",
         )
+        source_bytes = artifact.read_bytes()
+        with pytest.raises(ValueError, match=path[-1]):
+            load_variation_document(artifact)
+        assert artifact.read_bytes() == source_bytes
+    assert overrides == before
+
+
+@pytest.mark.parametrize(
+    "section,value",
+    [
+        ("Environment", {"WaveTrains": {"Wave": {"WaveHeight": "edit"}}}),
+        ("VesselTypes", {"Type": {"Draughts": {"Draught": {"Mass": "edit"}}}}),
+        ("6DBuoys", {"Body": {"Wings": {"Wing": {"WingType": "edit"}}}}),
+    ],
+)
+def test_nested_named_mappings_preserve_property_edits(tmp_path, section, value):
+    """Literal name-keyed edits remain unchanged through writing and loading."""
+    from digitalmodel.solvers.orcaflex.modular_generator.writers import (
+        load_variation_document,
+        write_variation_model,
+    )
+
+    before = deepcopy(value)
+    artifact = tmp_path / "case.yml"
+    write_variation_model(tmp_path / "master.yml", {section: value}, artifact)
+    assert load_variation_document(artifact) == {"BaseFile": "master.yml", section: before}
+    assert value == before
+    assert b"\r" not in artifact.read_bytes()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("Environment", "WaveTrains"),
+        ("VesselTypes", "Type", "Draughts"),
+        ("6DBuoys", "Body", "Wings"),
+    ],
+)
+@pytest.mark.parametrize(
+    "objects", [[], [{"Name": "Item"}], {"New": {}}, {"Item": {"Name*": "other"}}]
+)
+def test_nested_artifact_creation_and_structural_operations_are_rejected(path, objects):
+    overrides = objects
+    for key in reversed(path):
+        overrides = {key: overrides}
+    with pytest.raises(ValueError, match=path[-1]):
+        validate_variation_document({"BaseFile": "master.yml", **overrides})
 
 
 def test_nested_named_mapping_cannot_hide_list_creation_in_an_unknown_collection():
@@ -86,6 +169,8 @@ def test_empty_nested_collections_and_property_tables(tmp_path):
         tmp_path / "master.yml",
         {
             "Environment": {"WaveTrains": [], "CurrentProfile": [["depth", "speed"]]},
+            "VesselTypes": {"Type": {"Draughts": []}},
+            "6DBuoys": {"Body": {"Wings": []}},
         },
         tmp_path / "case.yml",
     )
@@ -93,6 +178,8 @@ def test_empty_nested_collections_and_property_tables(tmp_path):
         "WaveTrains": {},
         "CurrentProfile": [["depth", "speed"]],
     }
+    assert document["VesselTypes"] == {"Type": {"Draughts": {}}}
+    assert document["6DBuoys"] == {"Body": {"Wings": {}}}
 
 
 @pytest.mark.parametrize(
@@ -111,7 +198,7 @@ def test_artifact_loader_rejects_hidden_duplicates_and_creation(tmp_path, text):
     )
 
     artifact = tmp_path / "case.yml"
-    artifact.write_text(text, encoding="utf-8")
+    artifact.write_text(text, encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         load_variation_document(artifact)
 
@@ -123,7 +210,9 @@ def test_artifact_loader_preserves_native_blank_and_default(tmp_path):
 
     artifact = tmp_path / "case.yml"
     artifact.write_text(
-        "BaseFile: master.yml\nGeneral:\n  Script: \n  Default: ~\n", encoding="utf-8"
+        "BaseFile: master.yml\nGeneral:\n  Script: \n  Default: ~\n",
+        encoding="utf-8",
+        newline="\n",
     )
     assert load_variation_document(artifact) == {
         "BaseFile": "master.yml",
@@ -146,7 +235,7 @@ def test_artifact_loader_rejects_invalid_or_aliased_yaml(tmp_path, text):
     )
 
     artifact = tmp_path / "case.yml"
-    artifact.write_text(text, encoding="utf-8")
+    artifact.write_text(text, encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         load_variation_document(artifact)
 
@@ -306,10 +395,11 @@ def test_template_reference_mode_uses_nested_modifications(tmp_path):
 
     master = tmp_path / "master.yml"
     source = tmp_path / "variation.yml"
-    master.write_text("General: {}\n", encoding="utf-8")
+    master.write_text("General: {}\n", encoding="utf-8", newline="\n")
     source.write_text(
         "Environment:\n  WaveTrains: [{Name: Wave, WaveHeight: edit}]\n",
         encoding="utf-8",
+        newline="\n",
     )
     output = tmp_path / "out" / "case.yml"
     before = master.read_bytes(), source.read_bytes()
@@ -332,17 +422,17 @@ def test_template_reference_mode_rejects_unsafe_output(tmp_path, defect):
 
     master = tmp_path / "master.yml"
     source = tmp_path / "variation.yml"
-    master.write_text("General: {}\n", encoding="utf-8")
-    source.write_text("Lines: [{Name: Sling}]\n", encoding="utf-8")
+    master.write_text("General: {}\n", encoding="utf-8", newline="\n")
+    source.write_text("Lines: [{Name: Sling}]\n", encoding="utf-8", newline="\n")
     output = tmp_path / "out" / "case.yml"
     if defect == "master":
         output = master
     elif defect == "variation":
         output = source
     elif defect == "duplicate":
-        source.write_text("Lines: {}\nLines: {}\n", encoding="utf-8")
+        source.write_text("Lines: {}\nLines: {}\n", encoding="utf-8", newline="\n")
     else:
-        source.write_text("IncludeFile: other.yml\n", encoding="utf-8")
+        source.write_text("IncludeFile: other.yml\n", encoding="utf-8", newline="\n")
     before = master.read_bytes(), source.read_bytes()
     result = TemplateGenerator().generate(master, source, output, as_reference=True)
     assert result["success"] is False
