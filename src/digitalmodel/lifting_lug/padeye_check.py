@@ -10,9 +10,14 @@ Rounded heads, cheek plates, eccentric forces and oblique loads are excluded.
 Sources read for this implementation:
 * OpenStax, University Physics Volume 1 (2016), section 12.3: stress = force/area.
   https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus
-* Stress Analysis Manual (October 1986), section 9.2, equations (9-3a), (9-6a):
-  projected bearing and net-section areas; empirical strength factors are NOT
-  implemented. https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual
+* Stress Analysis Manual (October 1986), sections 9.3.1 and 9.3.2, equations
+  (9-3a), (9-6a): projected bearing and net-section areas; empirical strength
+  factors are NOT implemented.
+  https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual
+* MechaniCalc, Lug Analysis, "Shear Tear Out Along Two Planes" (undated,
+  accessed 2026-10-25): simplified effective length Lsp = e - h/2 and area
+  As = 2*Lsp*t. This is a net-ligament convention, not a tangent-plane derivation.
+  https://mechanicalc.com/reference/lug-analysis#simplified-shear-tear-out
 * IMO MSC.1/Circ.1663 (2023), annex 3.1: applicable class or accepted standards
   are needed for design. This guideline supplies no plate stress allowables.
 
@@ -250,9 +255,10 @@ def check_padeye(
 ) -> PadeyeResult:
     """Calculate nominal demands and supplied-limit comparisons in N, mm, MPa.
 
-    Shear tear-out uses two straight planes from the hole tangent to the straight
-    loaded edge. It is a nominal area idealisation, not an ultimate lug capacity
-    model. The manual's empirical coefficients and interaction are excluded.
+    Shear tear-out uses MechaniCalc's simplified net-ligament convention,
+    As = 2*Lsp*t with Lsp = e - h/2. This effective length is not the length
+    of a physical plane parallel to the load at the hole's side tangent.
+    Ultimate lug capacity and empirical interaction remain unevaluated.
     """
     criteria = criteria if criteria is not None else ScreeningCriteria()
     design_load = (
@@ -266,8 +272,9 @@ def check_padeye(
     bearing_area = plate.pin_diameter_mm * plate.thickness_mm
     # Rectangular net area, consistent with Stress Analysis Manual (1986), 9-6a.
     net_area = (plate.width_mm - plate.hole_diameter_mm) * plate.thickness_mm
-    # Two planes, each of length e-D/2: geometric area derivation + F/A,
-    # OpenStax (2016), 12.3. The factors 2 are plane count and diameter/radius.
+    # MechaniCalc, Lug Analysis, "Shear Tear Out Along Two Planes":
+    # As=2*Lsp*t, Lsp=a=e-h/2 (their R and Dh correspond to e and h here).
+    # Adopted net-ligament convention; no empirical strength factor is used.
     shear_area = (
         2
         * (plate.loaded_edge_distance_mm - plate.hole_diameter_mm / 2)

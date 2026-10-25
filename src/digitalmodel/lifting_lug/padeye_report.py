@@ -40,7 +40,9 @@ CRITERIA = ScreeningCriteria(
     Criterion(100, INPUT_SOURCE),
     Criterion(60, INPUT_SOURCE),
 )
-DATE = "2026-10-19"
+INITIAL_DATE = "2026-10-19"
+DATE = "2026-10-25"
+REVISION = 1
 CHANGES = [
     {
         "section": "basis",
@@ -57,6 +59,18 @@ CHANGES = [
     {
         "section": "weld-results",
         "change": "Nominal weld comparison and effective throat requirement calculated.",
+    },
+    {
+        "section": "method",
+        "change": "Net-ligament convention sourced and manual section locators corrected.",
+    },
+    {
+        "section": "geometry",
+        "change": "Effective net-ligament markers replace the tangent-plane depiction.",
+    },
+    {
+        "section": "summary",
+        "change": "Synthetic example status clarified; report files use deterministic UTF-8 bytes.",
     },
 ]
 SECTIONS = [
@@ -130,16 +144,18 @@ def _weld_chart() -> str:
 SCHEMATIC = """<svg viewBox="0 0 880 470" role="img" aria-label="Centred plate, loaded hole, symmetric base weld and supporting plate">
 <title>Single plate with straight loaded edge; centred axial pin load and balanced base attachment.</title>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#125c85"/></marker></defs>
-<path d="M100 365V70H380V365" fill="#dce9ed" stroke="#125c85" stroke-width="3"/>
-<circle cx="240" cy="225" r="53" fill="white" stroke="#125c85" stroke-width="3"/>
-<circle cx="240" cy="225" r="44" fill="#bbc9d1" stroke="#364b59"/>
+<path d="M100 365V50H380V365" fill="#dce9ed" stroke="#125c85" stroke-width="3"/>
+<circle cx="240" cy="225" r="52.5" fill="white" stroke="#125c85" stroke-width="3"/>
+<circle cx="240" cy="225" r="43.75" fill="#bbc9d1" stroke="#364b59"/>
 <path d="M240 225V25" stroke="#125c85" stroke-width="4" marker-end="url(#arrow)"/>
 <text x="255" y="38">Axial sling load</text>
 <path d="M100 300H380" stroke="#364b59" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
 <text x="135" y="323">Width: 160.0 mm</text>
-<path d="M405 225V70M380 70H415M295 225H415" stroke="#364b59" fill="none"/>
+<path d="M405 225V50M380 50H415M292.5 225H415" stroke="#364b59" fill="none"/>
 <text x="415" y="145">Centre to edge:</text><text x="415" y="165">100.0 mm</text>
-<path d="M187 225V70M293 225V70" stroke="#aa4b20" stroke-dasharray="6 4"/>
+<path d="M187.5 172.5V50M292.5 172.5V50" stroke="#aa4b20" stroke-dasharray="6 4"/>
+<path d="M187.5 172.5H292.5" stroke="#aa4b20" stroke-dasharray="2 4"/>
+<text x="415" y="195">Net ligament: 70.0 mm</text>
 <text x="30" y="403">Front view: hole 60.0 mm; pin 50.0 mm</text>
 <path d="M80 365H400V385H80Z" fill="#aebec7" stroke="#364b59"/>
 <path d="M105 355H375M105 360H375" stroke="#aa4b20" stroke-width="3"/>
@@ -172,7 +188,7 @@ REVIEW_SCRIPT = r"""(() => {
   const config = JSON.parse(document.getElementById('review-config').textContent);
   const el = id => document.getElementById(id);
   const ids = new Set(config.sections.map(s => s[0]));
-  const state = {report: 'Padeye and lift point analysis', revision: 0,
+  const state = {report: 'Padeye and lift point analysis', revision: config.revision,
                  content_digest: config.content_digest, comments: []};
   const status = text => { el('comment-status').textContent = text; };
   for (const section of config.sections) {
@@ -317,7 +333,7 @@ def render_report() -> str:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padeye and lift point analysis</title><style>{STYLE}</style></head>
 <body><main><header><p class="title">Padeye and lift point analysis</p>
-<p>Draft for client review</p><p>Synthetic example · Revision 0 · {DATE}</p></header>
+<p>Synthetic example - not for issue</p><p>Synthetic example · Revision {REVISION} · {DATE}</p></header>
 <nav aria-label="Report contents">{nav}</nav>
 <section id="summary"><h2>1. Summary</h2>
 <p>The lift point is a single plate with a centred pin hole and a balanced welded base.
@@ -332,7 +348,8 @@ An effective throat of {weld.required_throat_mm:.3f} mm is required for that tar
 <ul><li>American Bureau of Shipping (ABS) acceptance is NOT_EVALUATED because applicable rule criteria and the complete connection basis are absent.</li></ul></li></ul>
 <p>Revision history</p>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead><tbody>
-<tr><td>0</td><td>{DATE}</td><td>Initial synthetic example to demonstrate nominal stress calculations and missing-criterion handling.</td></tr></tbody></table>
+<tr><td>0</td><td>{INITIAL_DATE}</td><td>Initial synthetic example to demonstrate nominal stress calculations and missing-criterion handling.</td></tr>
+<tr><td>{REVISION}</td><td>{DATE}</td><td>Sourced the net-ligament convention and corrected its depiction and manual locators; clarified synthetic status and retained deterministic report bytes across platforms.</td></tr></tbody></table>
 </section>
 <section id="basis"><h2>2. Analysis basis</h2>
 <p>A centred axial load is applied in the plane of a uniform plate. Direct force is transferred
@@ -351,7 +368,9 @@ No material strength, code coefficient or acceptance limit is inferred.</p></sec
 across the load, and edge distance is measured along the load from the hole centre.</p>
 <figure>{SCHEMATIC}<figcaption>Figure 1. Physical load path and idealised attachment.
 The pin and hole are concentric for dimension display; clearance contact is not modelled.
-The support reaction is equal and opposite to the applied axial force. No mesh is used.</figcaption></figure>
+The support reaction is equal and opposite to the applied axial force. Dashed strips are
+effective-area markers, not physical tangent fracture paths. Their length is the
+adopted net ligament e − h/2. No mesh is used.</figcaption></figure>
 </section>
 <section id="method"><h2>4. Calculation method</h2>
 <p>Nominal areas are formed from the entered effective dimensions. The following symbols
@@ -361,8 +380,13 @@ D is the dynamic amplification input; K is the skew input. The force is P = S ×
 Here P = 100.0 × 1.2 × 1.5 = {result.design_load_kn:.1f} kN.</p>
 <p>For thickness t, plate width w, pin diameter d, hole diameter h and centre-to-edge distance e,
 the projected bearing area is d × t, the net tensile area is (w − h) × t,
-and the nominal two-plane shear area is 2 × (e − h/2) × t.
-The shear expression is a geometric screening idealisation; empirical lug interaction is excluded.</p>
+and the adopted net-ligament shear area is 2 × Lsp × t, with Lsp = e − h/2.
+This is MechaniCalc's simplified convention in <a href="https://mechanicalc.com/reference/lug-analysis#simplified-shear-tear-out">Lug Analysis, Shear Tear Out Along Two Planes</a>,
+using its R = e and Dh = h. It is not derived from force divided by area:
+physical planes parallel to the load at the hole's side tangents would have length e.
+The adopted effective length is the axial clear ligament; Figure 1 marks this length
+without asserting those tangent fracture paths. Empirical lug interaction and code
+strength calculations, including AISC 360-16 D5, are not implemented.</p>
 <p>The nominal stress is P divided by the corresponding area, with force in newtons and area in square millimetres
 giving megapascals (MPa). For effective throat a and total effective weld length L, the weld area is a × L.
 The weld quantity is a nominal resultant stress on the throat, rather than resolved shear stress.</p>
@@ -406,17 +430,20 @@ the issued page and its change panel.</p></section>
 <section id="references"><h2>9. References</h2>
 <p>Mechanics references and lifting guidance are distinguished from the unresolved class criteria.
 No empirical lug strength factor is taken from the references.</p>
-<h3>9.1 Source coverage</h3><p>The public mechanics text and lifting guideline were read.
+<h3>9.1 Source coverage</h3><p>The public mechanics text, lug-analysis convention and lifting guideline were read.
 The ABS rule endpoint could not be resolved; no ABS design equation or allowable is claimed.</p>
 <h3>9.2 Source locators</h3><ul>
 <li><a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">OpenStax, University Physics Volume 1 (2016), section 12.3</a>:
 nominal normal and shear stress as force divided by area.</li>
-<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), section 9.2, equations 9-3a and 9-6a</a>:
+<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), sections 9.3.1 and 9.3.2, equations 9-3a and 9-6a</a>:
 projected bearing and net-section geometry; the empirical strength factors are excluded.</li>
+<li><a href="https://mechanicalc.com/reference/lug-analysis#simplified-shear-tear-out">MechaniCalc, Lug Analysis, Simplified Analysis: Shear Tear Out Along Two Planes</a>
+(undated; accessed {DATE}): the adopted effective-length convention is Lsp = a = R − Dh/2,
+with total area As = 2 × Lsp × t. No ultimate shear strength is adopted.</li>
 <li><a href="https://ww2.eagle.org/content/dam/eagle/Images/rules-and-resources/regulatory-updates/solas-requirements/guidelines-hyperlinks/msc1-circ1663-guidelines-for-lifting-appliances%20(4).pdf">IMO MSC.1/Circ.1663 (2023), annex 3.1 and 3.2</a>:
 design, construction, installation, testing and examination basis.</li>
 <li><a href="https://ww2.eagle.org/en/rules-and-resources/regulatory-updates/SOLAS-requirements-on-board-ships.html">ABS public lifting guidance</a> identifies Publication 152,
-Guide for Certification of Lifting Appliances. The linked rule content was unavailable on {DATE}; edition and clauses are unconfirmed.</li>
+Guide for Certification of Lifting Appliances. The linked rule content was unavailable on {INITIAL_DATE}; edition and clauses are unconfirmed.</li>
 <li>Reproduction: <code>python -m digitalmodel.lifting_lug.padeye_report --output docs/reports/padeye-lift-point</code>,
 with the source package available. Independent checks: <code>tests/workflows/test_padeye_check.py</code>
 and <code>tests/workflows/test_padeye_report.py</code>. Change panel: <code>changes.json</code>.</li>
@@ -453,6 +480,7 @@ comments beside the report and reload them to confirm the saved copy. Unsaved co
 """
     config = {
         "sections": SECTIONS,
+        "revision": REVISION,
         "content_digest": hashlib.sha256(page.encode()).hexdigest(),
     }
     review = (
@@ -469,16 +497,16 @@ def write_report(directory: Path) -> None:
     """Write the standalone HTML and a digest-bound, deterministic change panel."""
     directory.mkdir(parents=True, exist_ok=True)
     page = render_report()
-    (directory / "report.html").write_text(page, encoding="utf-8")
+    (directory / "report.html").write_bytes(page.encode("utf-8"))
     changes = {
         "report": "Padeye and lift point analysis",
-        "revision": 0,
+        "revision": REVISION,
         "date": DATE,
-        "report_digest": hashlib.sha256(page.encode()).hexdigest(),
+        "report_digest": hashlib.sha256(page.encode("utf-8")).hexdigest(),
         "changes": CHANGES,
     }
-    (directory / "changes.json").write_text(
-        json.dumps(changes, indent=2) + "\n", encoding="utf-8"
+    (directory / "changes.json").write_bytes(
+        (json.dumps(changes, indent=2) + "\n").encode("utf-8")
     )
 
 

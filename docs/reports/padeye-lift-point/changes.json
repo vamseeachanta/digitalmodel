@@ -1,8 +1,8 @@
 {
   "report": "Padeye and lift point analysis",
-  "revision": 0,
-  "date": "2026-10-19",
-  "report_digest": "6459c7ea86c4364386abf603f6b70282d4376355faa17c0c098875a0751bf919",
+  "revision": 1,
+  "date": "2026-10-25",
+  "report_digest": "229507bda7a788bc1e57c48bf3a7a78ae3715824a7ac02fc02a9c28e6f70a2d5",
   "changes": [
     {
       "section": "basis",
@@ -19,6 +19,18 @@
     {
       "section": "weld-results",
       "change": "Nominal weld comparison and effective throat requirement calculated."
+    },
+    {
+      "section": "method",
+      "change": "Net-ligament convention sourced and manual section locators corrected."
+    },
+    {
+      "section": "geometry",
+      "change": "Effective net-ligament markers replace the tangent-plane depiction."
+    },
+    {
+      "section": "summary",
+      "change": "Synthetic example status clarified; report files use deterministic UTF-8 bytes."
     }
   ]
 }

@@ -5,7 +5,9 @@
 All dimensions, loads and comparison limits below are synthetic test inputs,
 defined here rather than taken from a standard. Mechanics basis: OpenStax,
 University Physics Volume 1 (2016), section 12.3, force divided by resisting
-area. The two shear planes and the weld throat area are geometric derivations.
+area. Tear-out area uses MechaniCalc's simplified net-ligament convention
+(Lug Analysis, "Shear Tear Out Along Two Planes", accessed 2026-10-25):
+As=2*Lsp*t, Lsp=e-h/2. The weld throat area is a geometric derivation.
 No synthetic comparison limit establishes ABS acceptance.
 """
 
@@ -114,7 +116,7 @@ def test_zero_load_is_distinct_from_missing_criteria():
 def test_width_and_loaded_edge_distance_are_independent():
     """Doubling width from 160 to 320 gives A_net=(320-60)*20=5200.
 
-    Shear planes remain 2*(100-30)*20=2800 mm2, OpenStax 12.3 (2016).
+    The adopted net-ligament area remains 2*(100-30)*20=2800 mm2.
     """
     result = check_padeye(replace(PLATE, width_mm=320), LOAD)
     assert result.checks[1].demand_mpa == pytest.approx(450 / 13)

@@ -10,7 +10,7 @@ figcaption,.caption{font-size:14px;color:#526774}textarea{width:95%;min-height:8
 button{padding:6px 10px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}.comment{border-left:3px solid #b8cbd4;padding:8px}
 @media(max-width:650px){main{padding:18px}.title{font-size:26px}table{font-size:12px}}</style></head>
 <body><main><header><p class="title">Padeye and lift point analysis</p>
-<p>Draft for client review</p><p>Synthetic example · Revision 0 · 2026-10-19</p></header>
+<p>Synthetic example - not for issue</p><p>Synthetic example · Revision 1 · 2026-10-25</p></header>
 <nav aria-label="Report contents"><a href='#summary'>Summary</a><a href='#basis'>Basis</a><a href='#geometry'>Geometry</a><a href='#method'>Method</a><a href='#plate-results'>Plate results</a><a href='#weld-results'>Weld results</a><a href='#way-forward'>Way forward</a><a href='#validation'>Validation</a><a href='#references'>References</a><a href='#appendix'>Appendix</a></nav>
 <section id="summary"><h2>1. Summary</h2>
 <p>The lift point is a single plate with a centred pin hole and a balanced welded base.
@@ -25,7 +25,8 @@ An effective throat of 10.000 mm is required for that target at the same load an
 <ul><li>American Bureau of Shipping (ABS) acceptance is NOT_EVALUATED because applicable rule criteria and the complete connection basis are absent.</li></ul></li></ul>
 <p>Revision history</p>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead><tbody>
-<tr><td>0</td><td>2026-10-19</td><td>Initial synthetic example to demonstrate nominal stress calculations and missing-criterion handling.</td></tr></tbody></table>
+<tr><td>0</td><td>2026-10-19</td><td>Initial synthetic example to demonstrate nominal stress calculations and missing-criterion handling.</td></tr>
+<tr><td>1</td><td>2026-10-25</td><td>Sourced the net-ligament convention and corrected its depiction and manual locators; clarified synthetic status and retained deterministic report bytes across platforms.</td></tr></tbody></table>
 </section>
 <section id="basis"><h2>2. Analysis basis</h2>
 <p>A centred axial load is applied in the plane of a uniform plate. Direct force is transferred
@@ -45,16 +46,18 @@ across the load, and edge distance is measured along the load from the hole cent
 <figure><svg viewBox="0 0 880 470" role="img" aria-label="Centred plate, loaded hole, symmetric base weld and supporting plate">
 <title>Single plate with straight loaded edge; centred axial pin load and balanced base attachment.</title>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#125c85"/></marker></defs>
-<path d="M100 365V70H380V365" fill="#dce9ed" stroke="#125c85" stroke-width="3"/>
-<circle cx="240" cy="225" r="53" fill="white" stroke="#125c85" stroke-width="3"/>
-<circle cx="240" cy="225" r="44" fill="#bbc9d1" stroke="#364b59"/>
+<path d="M100 365V50H380V365" fill="#dce9ed" stroke="#125c85" stroke-width="3"/>
+<circle cx="240" cy="225" r="52.5" fill="white" stroke="#125c85" stroke-width="3"/>
+<circle cx="240" cy="225" r="43.75" fill="#bbc9d1" stroke="#364b59"/>
 <path d="M240 225V25" stroke="#125c85" stroke-width="4" marker-end="url(#arrow)"/>
 <text x="255" y="38">Axial sling load</text>
 <path d="M100 300H380" stroke="#364b59" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
 <text x="135" y="323">Width: 160.0 mm</text>
-<path d="M405 225V70M380 70H415M295 225H415" stroke="#364b59" fill="none"/>
+<path d="M405 225V50M380 50H415M292.5 225H415" stroke="#364b59" fill="none"/>
 <text x="415" y="145">Centre to edge:</text><text x="415" y="165">100.0 mm</text>
-<path d="M187 225V70M293 225V70" stroke="#aa4b20" stroke-dasharray="6 4"/>
+<path d="M187.5 172.5V50M292.5 172.5V50" stroke="#aa4b20" stroke-dasharray="6 4"/>
+<path d="M187.5 172.5H292.5" stroke="#aa4b20" stroke-dasharray="2 4"/>
+<text x="415" y="195">Net ligament: 70.0 mm</text>
 <text x="30" y="403">Front view: hole 60.0 mm; pin 50.0 mm</text>
 <path d="M80 365H400V385H80Z" fill="#aebec7" stroke="#364b59"/>
 <path d="M105 355H375M105 360H375" stroke="#aa4b20" stroke-width="3"/>
@@ -70,7 +73,9 @@ across the load, and edge distance is measured along the load from the hole cent
 <text x="560" y="460">Schematic; dimensions govern, not scale</text>
 </svg><figcaption>Figure 1. Physical load path and idealised attachment.
 The pin and hole are concentric for dimension display; clearance contact is not modelled.
-The support reaction is equal and opposite to the applied axial force. No mesh is used.</figcaption></figure>
+The support reaction is equal and opposite to the applied axial force. Dashed strips are
+effective-area markers, not physical tangent fracture paths. Their length is the
+adopted net ligament e − h/2. No mesh is used.</figcaption></figure>
 </section>
 <section id="method"><h2>4. Calculation method</h2>
 <p>Nominal areas are formed from the entered effective dimensions. The following symbols
@@ -80,8 +85,13 @@ D is the dynamic amplification input; K is the skew input. The force is P = S ×
 Here P = 100.0 × 1.2 × 1.5 = 180.0 kN.</p>
 <p>For thickness t, plate width w, pin diameter d, hole diameter h and centre-to-edge distance e,
 the projected bearing area is d × t, the net tensile area is (w − h) × t,
-and the nominal two-plane shear area is 2 × (e − h/2) × t.
-The shear expression is a geometric screening idealisation; empirical lug interaction is excluded.</p>
+and the adopted net-ligament shear area is 2 × Lsp × t, with Lsp = e − h/2.
+This is MechaniCalc's simplified convention in <a href="https://mechanicalc.com/reference/lug-analysis#simplified-shear-tear-out">Lug Analysis, Shear Tear Out Along Two Planes</a>,
+using its R = e and Dh = h. It is not derived from force divided by area:
+physical planes parallel to the load at the hole's side tangents would have length e.
+The adopted effective length is the axial clear ligament; Figure 1 marks this length
+without asserting those tangent fracture paths. Empirical lug interaction and code
+strength calculations, including AISC 360-16 D5, are not implemented.</p>
 <p>The nominal stress is P divided by the corresponding area, with force in newtons and area in square millimetres
 giving megapascals (MPa). For effective throat a and total effective weld length L, the weld area is a × L.
 The weld quantity is a nominal resultant stress on the throat, rather than resolved shear stress.</p>
@@ -125,13 +135,16 @@ the issued page and its change panel.</p></section>
 <section id="references"><h2>9. References</h2>
 <p>Mechanics references and lifting guidance are distinguished from the unresolved class criteria.
 No empirical lug strength factor is taken from the references.</p>
-<h3>9.1 Source coverage</h3><p>The public mechanics text and lifting guideline were read.
+<h3>9.1 Source coverage</h3><p>The public mechanics text, lug-analysis convention and lifting guideline were read.
 The ABS rule endpoint could not be resolved; no ABS design equation or allowable is claimed.</p>
 <h3>9.2 Source locators</h3><ul>
 <li><a href="https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus">OpenStax, University Physics Volume 1 (2016), section 12.3</a>:
 nominal normal and shear stress as force divided by area.</li>
-<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), section 9.2, equations 9-3a and 9-6a</a>:
+<li><a href="https://engineeringlibrary.org/reference/lug-analysis-air-force-stress-manual">Stress Analysis Manual (October 1986), sections 9.3.1 and 9.3.2, equations 9-3a and 9-6a</a>:
 projected bearing and net-section geometry; the empirical strength factors are excluded.</li>
+<li><a href="https://mechanicalc.com/reference/lug-analysis#simplified-shear-tear-out">MechaniCalc, Lug Analysis, Simplified Analysis: Shear Tear Out Along Two Planes</a>
+(undated; accessed 2026-10-25): the adopted effective-length convention is Lsp = a = R − Dh/2,
+with total area As = 2 × Lsp × t. No ultimate shear strength is adopted.</li>
 <li><a href="https://ww2.eagle.org/content/dam/eagle/Images/rules-and-resources/regulatory-updates/solas-requirements/guidelines-hyperlinks/msc1-circ1663-guidelines-for-lifting-appliances%20(4).pdf">IMO MSC.1/Circ.1663 (2023), annex 3.1 and 3.2</a>:
 design, construction, installation, testing and examination basis.</li>
 <li><a href="https://ww2.eagle.org/en/rules-and-resources/regulatory-updates/SOLAS-requirements-on-board-ships.html">ABS public lifting guidance</a> identifies Publication 152,
@@ -166,14 +179,14 @@ comments beside the report and reload them to confirm the saved copy. Unsaved co
 <button id="save-comments" type="button">Save comments beside report</button>
 <label>Load comments <input id="load-comments" type="file" accept="application/json,.json"></label>
 <p id="comment-status" role="status">No comments saved.</p><div id="comment-list"></div>
-<details><summary>Change panel</summary><ul><li>Initial synthetic basis with supplied comparison targets and unresolved class criteria.</li><li>Centred plate and balanced direct weld idealisation defined.</li><li>Nominal bearing, net tension and shear demands calculated.</li><li>Nominal weld comparison and effective throat requirement calculated.</li></ul></details>
+<details><summary>Change panel</summary><ul><li>Initial synthetic basis with supplied comparison targets and unresolved class criteria.</li><li>Centred plate and balanced direct weld idealisation defined.</li><li>Nominal bearing, net tension and shear demands calculated.</li><li>Nominal weld comparison and effective throat requirement calculated.</li><li>Net-ligament convention sourced and manual section locators corrected.</li><li>Effective net-ligament markers replace the tangent-plane depiction.</li><li>Synthetic example status clarified; report files use deterministic UTF-8 bytes.</li></ul></details>
 <noscript>Comment controls require JavaScript. The analysis remains readable.</noscript>
-</section></main><script id="review-config" type="application/json">{"content_digest": "ccfc8f4897d0a9ee20223c455a015e734019f52355fc319013bfc1295b720617", "sections": [["summary", "Summary"], ["basis", "Basis"], ["geometry", "Geometry"], ["method", "Method"], ["plate-results", "Plate results"], ["weld-results", "Weld results"], ["way-forward", "Way forward"], ["validation", "Validation"], ["references", "References"], ["appendix", "Appendix"]]}</script><script>(() => {
+</section></main><script id="review-config" type="application/json">{"content_digest": "b4f28d421b7fe950db7cc90bbbe934bccc571d81ecfa212a4ccfa2085380e1df", "revision": 1, "sections": [["summary", "Summary"], ["basis", "Basis"], ["geometry", "Geometry"], ["method", "Method"], ["plate-results", "Plate results"], ["weld-results", "Weld results"], ["way-forward", "Way forward"], ["validation", "Validation"], ["references", "References"], ["appendix", "Appendix"]]}</script><script>(() => {
   'use strict';
   const config = JSON.parse(document.getElementById('review-config').textContent);
   const el = id => document.getElementById(id);
   const ids = new Set(config.sections.map(s => s[0]));
-  const state = {report: 'Padeye and lift point analysis', revision: 0,
+  const state = {report: 'Padeye and lift point analysis', revision: config.revision,
                  content_digest: config.content_digest, comments: []};
   const status = text => { el('comment-status').textContent = text; };
   for (const section of config.sections) {
