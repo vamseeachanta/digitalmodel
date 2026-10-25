@@ -14,6 +14,10 @@ import pytest
 import yaml
 
 from digitalmodel.drilling_riser.global_model.build import write_model
+from digitalmodel.drilling_riser.global_model.events import (
+    LMRP_LINE,
+    recoil_hold_tension_n,
+)
 from digitalmodel.drilling_riser.global_model.hand_checks import tension_references
 from digitalmodel.drilling_riser.global_model.hang_off import hang_off_spec, hung_weight_n
 from digitalmodel.drilling_riser.global_model.open_water import (
@@ -160,3 +164,44 @@ def test_soft_hang_off_excludes_separate_stack_contents(spec, density, with_lmrp
         expected_weight, rel=ARITHMETIC_REL
     )
     assert hung_weight_n(hanging) == pytest.approx(expected_weight, rel=ARITHMETIC_REL)
+
+
+@pytest.mark.parametrize("bore", [0.0, 0.4])
+@pytest.mark.parametrize("density", [0.0, 1500.0])
+def test_recoil_hold_matches_hand_balance_and_emitted_lmrp(
+    spec, tmp_path, bore, density
+):
+    """Hold the ring, riser and LMRP; the BOP and inner barrel are not released.
+
+    From the synthetic fixture, dry riser mass is 280450 kg and displaced
+    water mass is 1025*(11.8*1.3 + 80*0.5 + 150*1.26 + 50*0.5)
+    = 276073.5 kg. The ring contributes 30000 kg above water; the LMRP
+    contributes 89932.5 kg net, as derived above. Their sum is 124309 kg.
+    Riser bore diameters are 46, 19 and 19.25 inches in the fixture, with
+    lengths 18, 80 and (150+50) m; only these bores add separate fluid.
+    The same buoyancy, gravity and arithmetic-only tolerance apply here.
+    """
+    model = _with_stack_bore(spec, bore, density)
+    riser_contents_volume = math.pi / 4 * (
+        18 * (46 * 0.0254)**2
+        + 80 * (19 * 0.0254)**2
+        + 200 * (19.25 * 0.0254)**2
+    )
+    expected_weight = (124309.0 + density * riser_contents_volume) * GRAVITY
+    assert recoil_hold_tension_n(model) == pytest.approx(
+        expected_weight, rel=ARITHMETIC_REL
+    )
+
+    data = model.model_dump()
+    data["recoil"] = {
+        "stages": [{"duration_s": None, "tension_n": expected_weight}]
+    }
+    output = write_model(RiserGlobalModelSpec.model_validate(data), tmp_path / "recoil")
+    lines = {
+        row["Name"]: row
+        for path in (output / "includes").glob("*.yml")
+        for row in (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("Lines", [])
+    }
+    assert lines[LMRP_LINE]["ContentsDensity"] == 0.0
+    assert lines["Stack"]["ContentsDensity"] == 0.0
+    assert lines["Riser"]["ContentsDensity"] == density / KG_PER_TONNE
