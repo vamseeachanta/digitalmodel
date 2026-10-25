@@ -133,7 +133,7 @@ def test_claims_are_read_from_published_sources(builder):
     for value in claims.values():
         assert str(value) in text
     assert "the cause is not established" in text
-    assert "an earlier explanation was withdrawn." in text
+    assert "an earlier explanation was withdrawn" not in text
     assert "±" in text and "exception" in text
     assert "does not qualify the invented illustrative geometry" in text
 
@@ -207,7 +207,7 @@ def test_output_structure_links_and_privacy(builder):
     assert "<img" not in text
     assert "Conclusions and next steps" in text and "Not done" in text
     assert "Revision history" in text
-    assert text.index('id="summary"') < text.index('id="geometry"') < text.index('id="revisions"')
+    assert text.index('id="summary"') < text.index('id="revisions"') < text.index('id="geometry"')
     forbidden = ["/" + part + "/" for part in ("home", "mnt")]
     assert all(value not in text for value in forbidden)
     assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
@@ -309,13 +309,32 @@ def test_a2_preserved_inputs_and_table_cells(builder):
     }
     for path, digest in expected.items():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
-    text = re.sub(r'<tr class="revision-[23]">.*?</tr>', '', builder.render(), flags=re.S)
+    # Every raw evidence value and locator retains the pre-correction binding,
+    # including moments now displayed in MN m and the frequency-error range.
+    class EvidenceBindings(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.values = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag == 'data':
+                attrs = dict(attrs)
+                self.values.append((attrs['data-provenance'], attrs['value']))
+
+    bindings = EvidenceBindings()
+    bindings.feed(builder.render())
+    assert len(bindings.values) == 211
+    digest = hashlib.sha256(json.dumps(sorted(bindings.values), ensure_ascii=False).encode()).hexdigest()
+    assert digest == '507bcb21019c7de157586b27789f7c607708049ea5dea5780441174aa305617c'
+    text = re.sub(r'<details id="revision-history">.*?</details>', '', builder.render(), flags=re.S)
     text = re.sub(r'<div id="sensitivity-matrix">.*?</div>', '', text, flags=re.S)
     cells = [re.sub(r' \[I\d+\]', '', html.unescape(re.sub('<[^>]+>', '', c)))
              for c in re.findall('<td>(.*?)</td>', text, re.S)]
-    assert len(cells) == 259
+    # The revision table is checked separately. Pin the revised engineering
+    # labels, MN m presentation and distinguishable frequency-error bounds.
+    assert len(cells) == 244
     digest = hashlib.sha256(json.dumps(sorted(cells), ensure_ascii=False).encode()).hexdigest()
-    assert digest == 'eef4a55dc509428f7c0c685a13ac8aebc877ae99f82ab22599f0de17f98f23dd'
+    assert digest == 'f90157044a70b0c2d09b596948f559b3e72c54a5de0e4b202e6af4e2528a7555'
 
 
 def test_a3_derived_findings(builder):
@@ -426,8 +445,8 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
 
     text = builder.render()
     ids = re.findall(r'<h2 id="([^"]+)"', text)
-    assert ids == ['summary', 'introduction', 'geometry', 'method', 'curves', 'validation',
-                   'limits', 'forward', 'basis', 'sensitivity', 'reproduce', 'revisions']
+    assert ids == ['summary', 'revisions', 'introduction', 'geometry', 'method', 'curves',
+                   'validation', 'limits', 'forward', 'basis', 'sensitivity', 'reproduce']
     assert '<details><summary>' in text
     spec = (ROOT / 'docs/plans/2026-10-25-dual-tank-page-layout-spec.md').read_text()
     visible = html.unescape(re.sub('<[^>]+>', '', text))
@@ -657,9 +676,12 @@ def test_a6_exact_chart_set_and_independent_marker_counts(builder):
     assert set(roots) == {'coupled-response', 'natural-period-vs-area', 'period-error',
                           'natural', 'inertia', 'damping', 'moment', 'split', 'cfd-amplitude',
                           'cfd-fill-period', 'cfd-fill-damping', 'cfd-loss-area', 'cfd-forced-exchange'}
-    summary = text.split('<h3>5.1 Coupled roll and archived period checks</h3>')[1].split('<h3>5.2 Illustrative response curves</h3>')[0]
+    summary = text.split('<h3>5.1 Coupled roll response</h3>')[1].split('<h3>5.2 Illustrative response curves</h3>')[0]
     assert {svg.attrib['id'] for svg in chart_roots(summary)} == {
-        'coupled-response', 'natural-period-vs-area', 'period-error'}
+        'coupled-response'}
+    archived = text.split('<h3>5.4 Archived CFD comparisons</h3>')[1]
+    assert {'natural-period-vs-area', 'period-error'} <= {
+        svg.attrib['id'] for svg in chart_roots(archived)}
     evidence = json.loads(builder.EVIDENCE_PATH.read_text())
     counts = {
         'natural-period-vs-area': [3, 1, 4, 3], 'period-error': [len(evidence['period_checks'])],
@@ -712,11 +734,10 @@ def test_reporting_section_order_and_pinned_headlines(builder):
     text = builder.render()
     headings = re.findall(r'<h2 id="[^"]+">(.*?)</h2>', text)
     assert headings == [
-        '1 Executive summary', '2 Introduction', '3 Design data',
+        '1 Executive summary', 'Revision history', '2 Introduction', '3 Design data',
         '4 Analysis methodology', '5 Results', '6 Validation and benchmark',
         '7 Limitations', '8 Conclusions and next steps', '9 References',
         'Appendix A – Sensitivity matrix', 'Appendix B – Reproduce commands',
-        'Appendix C – Revision history',
     ]
     summary = text.split('<h2 id="summary">', 1)[1].split('<h2 id="introduction">', 1)[0]
     visible = html.unescape(re.sub('<[^>]+>', '', summary))
@@ -737,12 +758,14 @@ def test_design_basis_assumptions_and_standard_record(builder):
     assert re.findall(r'<h3[^>]*>(.*?)</h3>', design) == [
         '3.1 Site or field data', '3.2 Structure or equipment data',
         '3.3 Environmental data', '3.4 Vessel data', '3.5 Criteria',
-        '3.6 Method', '3.7 Load cases',
+        '3.6 Load cases',
     ]
     assert design.count('ASSUMED') >= 7
     revisions = text.split('<details id="revision-history">', 1)[1].split('</details>', 1)[0]
     assert '<summary>' in revisions and ' open' not in revisions[:revisions.index('<summary>')]
-    assert 'P6' in revisions and '08f081f46' in revisions
+    assert 'Numbered engineering sections' in revisions
+    assert not re.search(r'\b[A-Z]\d+\b|[0-9a-f]{9}', revisions)
+    assert 'Not assigned' not in revisions
 
 
 def test_body_has_citations_instead_of_raw_source_lists(builder):
@@ -768,7 +791,7 @@ def test_numbered_objects_and_print_style(builder):
     captions = re.findall('<figcaption>(.*?)</figcaption>', text, re.S)
     assert len(captions) == 14
     assert all(re.match(r'Figure \d+\.\d+ – ', caption) for caption in captions)
-    assert len(re.findall(r'<caption>Table [\dA-C]+\.\d+ – ', text)) == text.count('<table>')
+    assert len(re.findall(r'<caption>Table [\dA-CR]+\.\d+ – ', text)) == text.count('<table>')
     assert '@media print' in builder.LAYOUT_CSS
     assert '.study-chart text{font-size:13px' in builder.LAYOUT_CSS
     assert '.study-chart{max-width:440px' in builder.LAYOUT_CSS
@@ -787,3 +810,72 @@ def test_schematic_dimensions_are_proportional_and_explicit(builder):
         scale * 2 * builder.ILLUSTRATIVE_CENTROID_OFFSET)
     assert len(svg.findall(".//g[@class='dimension']")) >= 3
     assert 'fill="var(--panel)"' in builder.schematic()
+
+
+@pytest.mark.parametrize('viewport,scrollbar', [(390, 0), (390, 15), (600, 15)])
+def test_schematic_text_has_readable_narrow_screen_scale(builder, viewport, scrollbar):
+    """Bound the final SVG scale with the wrapper and scrollbar allowance.
+
+    This checks the layout arithmetic; browser font rendering is not measured.
+    """
+    svg = ElementTree.fromstring(re.search(r'<svg id="schematic".*?</svg>', builder.schematic(), re.S).group())
+    width = float(svg.attrib['viewBox'].split()[2])
+    style = re.search(r'\.schematic svg\{([^}]+)', builder.LAYOUT_CSS)[1]
+    font = float(re.search(r'font-size:(\d+)px', style)[1])
+    maximum = float(re.search(r'max-width:(\d+)px', style)[1])
+    available = viewport - scrollbar - 16
+    assert font * min(available, maximum) / width >= 12
+    assert width <= 440
+
+
+def test_results_keep_illustrative_and_archived_figures_separate(builder):
+    text = builder.render()
+    results = text.split('<h2 id="curves">', 1)[1].split('<h2 id="validation">', 1)[0]
+    illustrative, archived = results.split('<h3>5.4 Archived CFD comparisons</h3>')
+    assert {svg.attrib['id'] for svg in chart_roots(illustrative)} == {
+        'coupled-response', 'natural', 'inertia', 'damping', 'moment', 'split'}
+    assert {svg.attrib['id'] for svg in chart_roots(archived)} == {
+        'natural-period-vs-area', 'period-error', 'cfd-amplitude', 'cfd-fill-period',
+        'cfd-fill-damping', 'cfd-loss-area', 'cfd-forced-exchange'}
+    assert 'quadratic loss makes it amplitude-dependent' in illustrative.split('id="coupled-response"')[0]
+    assert 'archived CFD campaign' in text.split('<h2 id="introduction">')[1].split('<h2 id="geometry">')[0]
+
+
+def test_summary_defines_alpha_and_qualifies_the_predicted_benefit(builder):
+    text = builder.render()
+    visible = re.sub('<[^>]+>', '', text)
+    summary = visible.split('1 Executive summary', 2)[-1].split('Revision history')[0]
+    assert 'illustrative screening prediction' in summary
+    assert 'anti-roll benefit on a real vessel is not established' in summary
+    assert 'alpha' in summary and 'normalized stiffness scale' in summary
+    assert 'tank authority' not in visible.lower()
+    design = visible.split('3.6 Load cases')[1].split('4 Analysis methodology')[0]
+    assert 'μ = 0.05 and tuning ratio 1.0 are ASSUMED' in design
+
+
+def test_reader_definitions_and_precision_are_source_bound(builder):
+    text = re.sub('<[^>]+>', '', builder.render())
+    for phrase in ('Exchange amplitude is the volume', 'Frozen-fluid inertia is',
+                   'exchange plateau is the broad', 'forced-sweep peak',
+                   'normal solver-completion message', 'automated case-launch scripts',
+                   'open-boundary transfer check', 'list of analytical screening cases',
+                   'imposed forcing condition', 'over-critical', '195.4 %'):
+        assert phrase in text
+    assert 'Refitted inverse-area law RMS' in text
+    assert 'Refitted linear-in-area law' not in text
+    assert 'Equivalent damping ratio (no units)' in text
+    assert 'CFD-derived damping (no units)' in text
+    assert '0.30–0.33 %' in text
+    assert 'Roll-moment amplitude (MN m)' in text
+    assert '7.5' in text
+    for phrase in ('version confirmation is pending', 'an earlier explanation was withdrawn',
+                   'source-neutral review', 'Not assigned'):
+        assert phrase not in text
+
+
+def test_reference_locators_stay_in_reference_register(builder):
+    text = builder.render()
+    body = text.split('<h2 id="basis">')[0]
+    # Body tooltips and metadata keep resolvable markers, not visible locator lists.
+    assert '<summary>Chart sources and archive locators</summary>' not in body
+    assert '<summary>Chart sources and archive locators</summary>' in text.split('9.2 Data record and builder links')[1]

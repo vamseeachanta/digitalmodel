@@ -1,6 +1,6 @@
 # Connected-tank sloshing page, revision 2: layout, chart and prose specification
 
-Status: implemented scope and acceptance record for maintainer review, 2026-10-25. The specification, builder, generated page, chart CSVs and tests form one connected-tank page change.
+Status: implemented scope and acceptance record for maintainer review, 2026-10-25. Sections 1–8 retain the earlier layout specification; Section 9 governs the final reporting layout and its verification limits. The specification, builder, generated page, chart CSVs and tests form one connected-tank page change.
 
 - Page: `docs/api/cfd/dual-tank-sloshing-cfd-study.html` at dd24f2094, live at https://vamseeachanta.github.io/digitalmodel/cfd/dual-tank-sloshing-cfd-study.html.
 - Builder: `scripts/capabilities/build_dual_tank_sloshing_study.py`, which writes the page.
@@ -11,14 +11,14 @@ Status: implemented scope and acceptance record for maintainer review, 2026-10-2
 - Scope: one connected-tank page, its builder, 13 chart CSVs and the two study test files. The implementation adds the schematic, three summary charts, interactive points, numeric axes, discrete-case markers and CSV links. The evidence records and analytical model inputs retain their published values.
 - Sequence: retain the source and table preservation checks; add independent equation checks for computed exports and both reported peaks; identify the original inverse-area fill-damping prediction; regenerate with the builder; measure the page in exact-width iframes; record checks and limits.
 - Validation: the initial two-file study suite passed 82 tests; the final suite passed 86. Independent checks use explicit illustrative inputs, cuboid inertia integration, an algebraic harmonic-balance solution and scalar bisection, without obtaining expected values from `compute()` or model calls. Deliberate calculation perturbations confirm that these checks reject regenerated errors. Integration checks still cover byte-identical page and CSV regeneration, source digests, preserved table cells, chart metadata and public wording. File-level check results and unavailable checks are recorded with the implementation review.
-- A11 measurement, 2026-10-25: Chromium 151.0.7922.34 on Linux aarch64, outer viewport 1280 × 1000 px, separate iframes with zero border and exact widths of 390 px and 600 px. Both iframe bounding widths and `innerWidth` equal the requested widths. Vertical scrollbars leave document client widths of 375 px and 585 px respectively; document and body scroll widths equal those client widths, so neither iframe has sideways scroll. All 14 SVGs were measured: minimum rendered text sizes are 12.6 px and 20.2 px respectively, and no SVG text bounding box exceeds its SVG bounds. A11 is accepted for these measurements.
+- Superseded A11 measurement, 2026-10-25 (before the final reporting layout; not acceptance evidence for the current schematic): Chromium 151.0.7922.34 on Linux aarch64, outer viewport 1280 × 1000 px, separate iframes with zero border and exact widths of 390 px and 600 px. Both iframe bounding widths and `innerWidth` equal the requested widths. Vertical scrollbars leave document client widths of 375 px and 585 px respectively; document and body scroll widths equal those client widths, so neither iframe has sideways scroll. All 14 SVGs were measured: minimum rendered text sizes are 12.6 px and 20.2 px respectively, and no SVG text bounding box exceeds its SVG bounds. These measurements do not establish acceptance of the current schematic.
 - Known limits: these checks assess the implemented equations and presentation, not the physical validity of the analytical model. No new CFD assessment or archived-source digest revalidation is included. Width measurements cover the stated browser and widths; other browsers and physical touch interaction remain unmeasured. Newsletter prose is unchanged.
 
 ## 1. Review comments this revision answers
 
 1. General comment (maintainer review, 2026-10-25): follow the single-tank page. Put a schematic at the top and a few charts in the summary, and make every chart interactive.
 2. Comment 1, on the chart "Exchange natural period against conduit area": "Follow good plotting standards." Section 5 says what is wrong with that chart, and section 4.2 says what replaces it.
-3. The page reads for an outside engineer in this order: what was found, then the limits, then the method. The wording matches the newsletter description: "This study is extended to assess", and "an analytical screening model calibrated on CFD assessment". The page does not say that the connected model is based on the single-tank analysis. The page itself states that the connected model is calibrated on its own and that "a matched single-tank and connected-tank comparison is not established".
+3. The page reads for an outside engineer in this order: what was found, then the limits, then the method. The current introduction states the analytical scope: "This study extends the analytical scope of the single-tank sloshing study to assess", and "an analytical screening model calibrated on CFD assessment". The page does not say that the connected model is based on the single-tank analysis. The page itself states that the connected model is calibrated on its own and that "a matched single-tank and connected-tank comparison is not established".
 
 ## 2. Fixed rules (every acceptance check depends on them)
 
@@ -75,7 +75,7 @@ C1. "Predicted roll response with and without the connected tank (illustrative s
 - The band below 20 s is shaded and labelled "outside the published moment-fit band" (from `published_claims()`).
 - Hover: at each computed period, both values and the period.
 - CSV `coupled-response.csv`: `forcing_period_s,roll_bare_per_unit_moment,roll_with_tank_per_unit_moment`.
-- Lead-in sentence (template; numbers derived by the builder from the CSV): "With the tank, the predicted peak roll falls from {bare_peak} to {tank_peak} per unit wave moment (vessel roll period 20.0 s, hull damping 5.0 %, tank authority 12.0 %); this is a screening prediction for the invented system." Both peaks are printed to one decimal, and the test in check A3 computes them from the CSV.
+- Lead-in sentence (template; numbers derived by the builder from the CSV): "With the tank, the predicted peak roll falls from {bare_peak} to {tank_peak} per unit wave moment (vessel roll period 20.0 s, hull damping 5.0 %, alpha 12.0 %); this is a screening prediction for the invented system." Both peaks are printed to one decimal, and the test in check A3 computes them from the CSV.
 
 C2. "Exchange natural period against conduit area (archived twin-tank CFD, 50 % fill)". This replaces today's chart; see section 5.
 - x: conduit area (m²), linear and to scale, from 0 to 15 m², ticks every 3 m².
@@ -143,7 +143,7 @@ C2 replaces it, with the error view in C3.
 
 ### 6.1 Summary
 
-"This study is extended to assess a U-tube style anti-roll arrangement: two connected tanks with invented geometry, joined by a conduit. The geometry represents no particular vessel or client. The connected-tank model is an analytical screening model calibrated on CFD assessment: the aggregate results of 35 cases from an earlier, archived CFD campaign on a separate twin-tank geometry. Analysis is performed to determine the connected-tank response and how closely the calibrated model reproduces the archived CFD; the key results are summarized below."
+"This study extends the analytical scope of the single-tank sloshing study to assess a U-tube style anti-roll arrangement: two connected tanks with invented geometry, joined by a conduit. The geometry represents no particular vessel or client. The connected-tank model is an analytical screening model calibrated on CFD assessment: the aggregate results of 35 cases from an earlier, archived CFD campaign on a separate twin-tank geometry. Analysis is performed to determine the connected-tank response and how closely the calibrated model reproduces the archived CFD; the key results are summarized below."
 
 Findings (a bulleted list; each number printed through `evidence_value` with its pointer):
 - "Conduit loss: a calibrated area exponent of 2.138 fits the archived damping with 8.6 % RMS over 35 cases. The simple inverse-area law, refitted on its own, gives 36.5 % RMS." (`loss.exponent`, `loss.rms`, `loss.cases`, `loss.linear_rms`)
@@ -152,9 +152,9 @@ Findings (a bulleted list; each number printed through `evidence_value` with its
 
 ### 6.2 Limits
 
-"These results support screening only; design qualification is not established. The moment fit holds for forcing periods of 20 s and longer (4.3 % RMS) and degrades below about 16 s; the cause is not established, and an earlier explanation was withdrawn. Transfer of the calibration to the invented geometry is an assumption, also inside that band; the new geometry's natural period must be measured before the effective conduit length is recalibrated. The single-tank comparison illustrates peak splitting and merging only: single and connected tanks are not compared at matched mass, tuning, hull damping and forcing. Continuous fill coverage, anti-roll phase and anti-roll benefit remain unestablished."
+"These results support screening only; design qualification is not established. The moment fit holds for forcing periods of 20 s and longer (4.3 % RMS) and degrades below about 16 s; the cause is not established. Transfer of the calibration to the invented geometry is an assumption, also inside that band; the new geometry's natural period must be measured before the effective conduit length is recalibrated. The single-tank comparison illustrates peak splitting and merging only: single and connected tanks are not compared at matched mass, tuning, hull damping and forcing. Continuous fill coverage, anti-roll phase and anti-roll benefit remain unestablished."
 
-Every clause above is today's page text, gathered in one place. The duplicates are removed from Summary, Single-tank comparison and Left (TW-45, one statement in one place).
+Every clause above is today's page text, gathered in one place. The duplicates are removed from Summary, Single-tank comparison and Left (one statement in one place).
 
 ### 6.3 Method
 
@@ -191,7 +191,7 @@ Acceptance checks. Each is a test unless it says otherwise.
 - A7 Hover: every marker and computed point has a `<title>` holding both values with units.
 - A8 Schematic: an SVG with id `schematic` comes before `#summary`. It contains the labels for both legs, the conduit (with A_c and its value), the free surfaces, Δh and "roll angle φ", and its values equal the builder constants.
 - A9 Order: the `h2` ids appear in the section 3 order, and the kept anchor ids exist.
-- A10 Wording: the page contains "This study is extended to assess" and "an analytical screening model calibrated on CFD assessment". It does not contain "based on the benchmarked single tank" or "connecting lines guide the eye". "validated", "verified" and "proven" appear only where they appear today.
+- A10 Wording: the page contains "This study extends the analytical scope of the single-tank sloshing study to assess" and "an analytical screening model calibrated on CFD assessment". It does not contain "based on the benchmarked single tank" or "connecting lines guide the eye". "validated", "verified" and "proven" appear only where they appear today.
 - A11 Width (manual check, recorded in the PR body): no sideways scroll at 390 px and 600 px, measured in an iframe of that exact width, not a narrower headless window.
 - A12 Public repository: no client, vessel, project or private-case names, and no internal role or tracker words, on the page or in the CSVs.
 - The PR body lists every test run, with its platform, and every test not run, with the reason.
@@ -205,10 +205,19 @@ One line per change, with its reason:
 - the prediction-error chart moved and banded;
 - every chart interactive with a CSV (general comment);
 - the summary rewritten findings first, then limits, then method (outside-engineer reading order);
-- the limits gathered in one place (TW-45);
+- the limits gathered in one place (one statement in one place);
 - "connecting lines" removed (plotting standard 5);
 - the evidence-class chart removed (not a series);
 - "benchmark" renamed in the single-tank comparison title (it is a comparison model);
 - the newsletter wording aligned where the page backs it; "based on the benchmarked single tank" not used (the page calibrates the connected model on its own).
 
 The maintainer's own comments on revision 2 govern over this list.
+
+
+## 9. Final reporting layout and readability correction
+
+- Scope: retain all analytical inputs, calibration records and 13 CSV exports. Separate the illustrative response in Sections 5.1–5.3 from archived comparisons in Section 5.4. Define alpha at first use, identify the illustrative screening prediction and retain the unestablished physical benefit. Clarify terms, damping conventions and assumed comparison inputs. Place revision history directly after the summary and keep source locators in Section 9.2.
+- Sequence: add regression checks for the reported defects; update the builder; regenerate the page; verify the report and evidence suites, analytical model and file-level checks. Existing assertions for section order, public revision wording and corrected display precision follow the revised presentation.
+- Schematic: use a 360 × 290 SVG viewBox with 16-unit text and one scale for widths, centroid spacing and fill depth. Long explanatory notes are HTML below the drawing. At 390 px with 16 px wrapper padding and a 15 px scrollbar allowance, 359 px remains: the text-scale lower bound is 15.9 px. At 600 px the 440 px SVG maximum gives 19.6 px text. These bounds exceed the 12 px minimum; they are layout arithmetic, not browser measurements. The earlier iframe measurements above are superseded.
+- Reporting: use alpha for the normalized tank stiffness scale; the 10.0 to 5.7 response reduction is the illustrative screening prediction. Preserve the 0.2964–0.3264 frequency-error record and display 0.30–0.33 % so its bounds remain distinguishable. Display roll moments in MN m while retaining raw evidence values and exports. Explain the over-critical equivalent damping and the percent-to-ratio conversion.
+- Limits: browser rendering, text bounding boxes, desktop and print layout and interaction are unmeasured in this correction. No browser or solver is started. Physical qualification, continuous fill coverage and calibration transfer remain unestablished. The maintainer must inspect the final rendered page before merging.

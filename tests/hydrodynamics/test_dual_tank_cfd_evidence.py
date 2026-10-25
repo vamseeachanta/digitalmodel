@@ -100,6 +100,8 @@ def test_new_sections_numbers_come_from_json():
         if isinstance(value, (float, int)):
             allowed.add(str(value))
             allowed.update(f"{value:.{precision}f}" for precision in range(7))
+            if fact['unit'] == 'N m':
+                allowed.add(f'{value / 1e6:.1f}')
         elif isinstance(value, str):
             allowed.update(re.findall(r"(?<![\w])\d+(?:\.\d+)?", value))
             # Percentage prose may display evidence rounded to 0.1 %.
@@ -132,17 +134,35 @@ def test_comparison_percentages_keep_raw_values_and_one_decimal():
         source = fact["provenance"]
         node = cells[source["path"] + "#" + source["pointer"]]
         assert node.attrib["value"] == str(fact["value"])
-        assert node.text == f"{fact['value']:.1f}"
+        precision = 2 if fact in [frequency['minimum_error'], frequency['maximum_error']] else 1
+        assert node.text == f"{fact['value']:.{precision}f}"
     for row in data["evidence_classes"]:
         for key in ("key_finding", "limitation"):
             fact = row[key]
             source = fact["provenance"]
             node = cells[source["path"] + "#" + source["pointer"]]
             assert node.attrib["value"] == fact["value"]
-            assert not re.search(r"\d\.\d{2,}\s*%", node.text)
+            if '0.2964-0.3264%' in fact['value']:
+                assert '0.30–0.33 %' in node.text
+            else:
+                assert not re.search(r"\d\.\d{2,}\s*%", node.text)
     frequency_text = " ".join(root.itertext())
-    assert "0.755580-0.755807 Hz vs 0.758054 Hz analytical; 0.3-0.3 % error" in frequency_text
+    assert "0.755580-0.755807 Hz vs 0.758054 Hz analytical; 0.30–0.33 % error" in frequency_text
     assert "0.8 % exchange and 1.5 % roll moment" in frequency_text
+
+
+def test_moment_display_changes_units_without_changing_evidence():
+    builder = module('build_dual_tank_sloshing_study')
+    data = json.loads(DATA.read_text())
+    root = ElementTree.fromstring('<div>' + builder.render_cfd_evidence() + '</div>')
+    cells = {node.attrib['data-provenance']: node for node in root.iter('data')}
+    for row in data['forced_sweep']:
+        fact = row['moment']
+        source = fact['provenance']
+        node = cells[source['path'] + '#' + source['pointer']]
+        assert node.attrib['value'] == str(fact['value'])
+        assert node.text == f"{fact['value'] / 1e6:.1f}"
+    assert 'Roll-moment amplitude (MN m)' in builder.render_cfd_evidence()
 
 
 @pytest.mark.parametrize(("source", "expected"), [
