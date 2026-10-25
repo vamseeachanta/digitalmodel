@@ -3,7 +3,7 @@
 """Architecture acceptance checks against repository evidence, without solvers.
 
 Expected sets are independently enumerated from directories, card declarations,
-and the existing page ownership registry. No engineering constants are used.
+and the existing page provenance registry. No engineering constants are used.
 """
 
 import ast
@@ -25,9 +25,22 @@ CARDS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CARDS)
 
 
+@pytest.fixture(autouse=True)
+def legacy_default_encoding(monkeypatch):
+    """Exercise evidence reads with the legacy Windows default encoding."""
+    original = Path.read_text
+
+    def read_text(path, encoding=None, errors=None):
+        return original(path, encoding=encoding or "cp1252", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+
+
 @pytest.fixture(scope="module")
 def inventory():
-    return json.loads((ARTIFACTS / "repo-architecture.json").read_text())
+    return json.loads(
+        (ARTIFACTS / "repo-architecture.json").read_text(encoding="utf-8")
+    )
 
 
 def test_every_observed_domain_page_is_inventoried(inventory):
@@ -112,7 +125,7 @@ def test_evidence_paths_and_direct_calculation_imports_exist(inventory):
             if artifact["state"] == "committed":
                 assert (ROOT / artifact["path"]).is_file()
             assert artifact["writer"] in [row["producer"], *row["prerequisites"]]
-            text = (ROOT / artifact["writer"]).read_text()
+            text = (ROOT / artifact["writer"]).read_text(encoding="utf-8")
             name = Path(artifact["path"]).name
             suffix_derived = (
                 Path(name).with_suffix(".html").name in text
@@ -136,7 +149,7 @@ def test_execution_boundaries_do_not_confuse_screening_with_licensed_runs(invent
 
 
 def test_one_diagram_covers_every_page_and_capability(inventory):
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
     assert drawing.startswith("flowchart LR\n")
     for row in inventory["pages"]:
         assert f'{row["node"]}["' in drawing
@@ -159,8 +172,8 @@ def test_one_diagram_covers_every_page_and_capability(inventory):
 
 
 def test_readme_embeds_exact_committed_mermaid_source():
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
-    readme = (ROOT / "README.md").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert readme.count("<!-- repo-architecture:start -->") == 1
     block = readme.split("<!-- repo-architecture:start -->")[1].split(
         "<!-- repo-architecture:end -->"
@@ -180,11 +193,13 @@ def test_publication_is_evidence_limited(inventory):
     assert publication["website"]["evidence"] == "docs/api/capabilities/index.html"
     for row in publication.values():
         assert row["remote_status"] == "NOT_EVALUATED"
-    assert "NOT_EVALUATED" in (ARTIFACTS / "repo-architecture.html").read_text()
+    assert "NOT_EVALUATED" in (ARTIFACTS / "repo-architecture.html").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_documentation_has_worked_example_and_revision_history():
-    report = (ARTIFACTS / "repo-architecture.html").read_text()
+    report = (ARTIFACTS / "repo-architecture.html").read_text(encoding="utf-8")
     assert (
         report.index("Summary")
         < report.index("Revision history")
@@ -202,7 +217,7 @@ def test_diagram_node_identifiers_are_unique():
     For example, declarations a,b,c and edges a→b,b→c yield 3 distinct nodes
     and zero missing endpoints by set subtraction; no rendering engine is used.
     """
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
     declarations = re.findall(r'^\s*(\w+)\["', drawing, re.M)
     assert len(declarations) == len(set(declarations))
     edges = re.findall(r"^\s*(\w+) (?:-->|-\.->) (\w+)\s*$", drawing, re.M)
@@ -214,7 +229,7 @@ def test_direct_import_pointers_match_current_producer_source(inventory):
     for row in inventory["pages"]:
         if not row["producer"]:
             continue
-        tree = ast.parse((ROOT / row["producer"]).read_text())
+        tree = ast.parse((ROOT / row["producer"]).read_text(encoding="utf-8"))
         modules = {
             node.module
             for node in ast.walk(tree)
@@ -227,7 +242,7 @@ def test_direct_import_pointers_match_current_producer_source(inventory):
 
 
 def test_drawing_preserves_sibling_outputs_and_generated_prerequisite(inventory):
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
     for row in inventory["pages"]:
         for index, artifact in enumerate(row["artifacts"]):
             node = f"a{row['node']}_{index}"
@@ -243,7 +258,7 @@ def test_every_implemented_dataset_projection_has_a_source_edge(inventory):
     dataset row function, including the generated full-resolution study.
     """
     source = ROOT / "scripts/hf/build_capability_datasets.py"
-    tree = ast.parse(source.read_text())
+    tree = ast.parse(source.read_text(encoding="utf-8"))
     inputs = {
         "docs/api/" + call.args[0].value
         for call in ast.walk(tree)
@@ -259,13 +274,13 @@ def test_every_implemented_dataset_projection_has_a_source_edge(inventory):
         for index, artifact in enumerate(row["artifacts"])
     }
     assert inputs <= artifacts.keys()
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
     for path in inputs:
         assert f"{artifacts[path]} --> tidy" in drawing
 
 
 def test_registered_inputs_remain_visible_before_page_generation(inventory):
-    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text()
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
     for generator in ownership.GENERATORS:
         expected = set(generator.inputs)
         expected.update(arg for arg in generator.arguments if (ROOT / arg).is_file())
