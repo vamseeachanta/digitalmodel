@@ -10,6 +10,7 @@ magnitude. No equations, conversion factors or acceptance limits are exercised.
 import csv
 import io
 import json
+import math
 from copy import deepcopy
 
 import pytest
@@ -386,6 +387,91 @@ def test_readers_reject_nonfinite_numeric_tokens_anywhere(format, token):
         text = source_text([row(details="TOKEN")], format).replace('"""TOKEN"""', token)
     with pytest.raises(ValueError, match="finite"):
         load_text(text, format)
+
+
+def numeric_source_text(record, format, token):
+    """Insert the raw numeric token before either reader can round it."""
+    text = source_text([record], format)
+    placeholder = '"TOKEN"' if format == "json" else '""TOKEN""'
+    assert text.count(placeholder) == 1
+    text = text.replace(placeholder, token)
+    assert token in text
+    return text
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize("location", ["value", "mapping", "array"])
+@pytest.mark.parametrize(
+    "token",
+    [
+        "1e-9999",
+        "-1e-9999",
+        "1e-324",
+        "-1e-324",
+        "2e-324",
+        "-2e-324",
+        "2.4e-324",
+        "-2.4e-324",
+        "1E-400",
+        "0.0000001e-400",
+        "1e-999999999999999999999999999999",
+        pytest.param("0." + "0" * 350 + "1e-400", id="long-significand"),
+        pytest.param("0." + "0" * 400 + "1", id="fractional-positive"),
+        pytest.param("-0." + "0" * 400 + "1", id="fractional-negative"),
+    ],
+)
+def test_readers_reject_nonzero_numeric_underflow(format, location, token):
+    # Each significand is nonzero, even below half the smallest subnormal.
+    record = row(value="TOKEN")
+    if location == "mapping":
+        record = row(details={"sample": "TOKEN"})
+    elif location == "array":
+        record = row(details={"samples": ["TOKEN"]})
+    text = numeric_source_text(record, format, token)
+    with pytest.raises(ValueError, match="underflow"):
+        load_text(text, format)
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize(
+    "token, expected",
+    [
+        ("0.0", 0.0),
+        ("-0.0", -0.0),
+        ("0e-9999", 0.0),
+        ("-0e-9999", -0.0),
+        ("0E+9999", 0.0),
+        ("-0.000E+9999", -0.0),
+        ("0.000", 0.0),
+        ("0e5", 0.0),
+        ("0e-999999999999999999999999999999", 0.0),
+        pytest.param("0." + "0" * 400, 0.0, id="fractional-zero"),
+        ("5e-324", 5e-324),
+        ("-5e-324", -5e-324),
+        ("2.5e-324", 5e-324),
+        ("-2.5e-324", -5e-324),
+        ("1e-323", 1e-323),
+        ("-1e-323", -1e-323),
+        ("1e+0", 1.0),
+    ],
+)
+def test_readers_preserve_zero_and_representable_numeric_tokens(
+    format, token, expected
+):
+    text = numeric_source_text(row(value="TOKEN"), format, token)
+    result = json.loads(load_text(text, format).to_json())[0]
+    assert result["value"] == expected
+    assert math.copysign(1.0, result["value"]) == math.copysign(1.0, expected)
+    assert result["export_value_state"] == "computed"
+
+
+@pytest.mark.parametrize("format", ["json", "csv"])
+@pytest.mark.parametrize("token", ["1e-9999", "-1e-9999"])
+def test_readers_retain_underflow_tokens_supplied_as_source_text(format, token):
+    text = source_text([row(value=token)], format)
+    result = json.loads(load_text(text, format).to_json())[0]
+    assert result["value"] == token
+    assert result["export_value_state"] == "invalid"
 
 
 @pytest.mark.parametrize(

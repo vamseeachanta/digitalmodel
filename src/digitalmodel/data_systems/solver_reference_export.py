@@ -28,6 +28,10 @@ from_json() and from_csv() accept source rows or previously exported rows.
 Readers reject duplicate keys/columns and inconsistent export annotations before
 returning an exporter. Readback establishes structural fidelity only: source
 claims, execution metadata and export annotations never authenticate a fresh run.
+Floating-point tokens use Python float precision with ordinary rounding. A
+nonzero token that rounds to zero causes the entire input to be rejected; supply
+it as source text to retain it unchanged (classified invalid in the value field).
+Already-decoded caller values have no source token to check for precision loss.
 """
 
 from __future__ import annotations
@@ -68,10 +72,22 @@ def _nonfinite_constant(token: str) -> None:
     raise ValueError("Source evidence must be JSON-compatible and finite")
 
 
+def _source_float(token: str) -> float:
+    """Reject nonzero source tokens that cannot survive as a nonzero float."""
+    value = float(token)
+    significand = token.lower().split("e", 1)[0]
+    if value == 0.0 and any(digit in "123456789" for digit in significand):
+        raise ValueError("Source numeric evidence would underflow to zero")
+    return value
+
+
 def _read_json(text: str) -> Any:
     """Decode JSON without silently dropping members or accepting extensions."""
     return json.loads(
-        text, object_pairs_hook=_unique_object, parse_constant=_nonfinite_constant
+        text,
+        object_pairs_hook=_unique_object,
+        parse_constant=_nonfinite_constant,
+        parse_float=_source_float,
     )
 
 
