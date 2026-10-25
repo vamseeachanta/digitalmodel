@@ -3,5 +3,10 @@
     "revision": "A",
     "date": "2026-10-21",
     "change": "The spectral operability method, illustrative calculation and limits of use are presented for initial assessment."
+  },
+  {
+    "revision": "B",
+    "date": "2026-10-24",
+    "change": "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."
   }
 ]
