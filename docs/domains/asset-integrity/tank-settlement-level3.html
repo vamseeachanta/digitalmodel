@@ -15,7 +15,9 @@ No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acce
 <tr><td>1</td><td>2026-10-20</td><td>Initial geometry/load preparation and explicit missing evidence;
 unavailable code factors and solver results are kept out of acceptance decisions.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>Strict JSON loading, explicit applicability gaps and tabulated input evidence;
-output placeholders align the command, registry and readback tests.</td></tr></table>
+output placeholders align the command, registry and readback tests.</td></tr>
+<tr><td>3</td><td>2026-10-25</td><td>Focused validation counts and a reproducible test command are recorded;
+cancelled hosted checks are distinguished from passing test evidence.</td></tr></table>
 <p>Table 1. Document revisions.</p>
 <h2>Scope and executable plan</h2>
 <p>Scope is tracked by issue 2174.
@@ -100,6 +102,17 @@ Exact current subclauses are <strong>not verified</strong>; no guessed crosswalk
 Licensed clause text was not accessed. No acceptance constants are emitted, so no standards-derived numeric sidecar is implied.
 The public sources above were opened successfully on 2026-10-20. They support only the stated arithmetic.</p>
 <h2>Checks and review limits</h2>
+<p>The focused run on 2026-10-25 passed 42 preparation tests and two registry tests:
+44 passed, with no failures or skips. The following command reproduces that scope:</p>
+<pre><code>uv run --no-project --with pytest --with pyyaml --with numpy \
+  --with pandas --with pint --with scipy python -m pytest \
+  tests/asset_integrity/test_tank_settlement_level3.py \
+  tests/workflows/test_registry_versioning.py \
+  -q -rA -p no:cacheprovider --basetemp="{temporary_dir}"</code></pre>
+<p>Replace <code>{temporary_dir}</code> with a new, disposable test directory outside the source checkout.
+These results establish only the arithmetic and handoff behaviour exercised by those tests.
+Cancelled hosted checks supply no passing-test evidence; aggregate validation remains unresolved
+until the required harness and selected domain tests complete successfully.</p>
 <p>The tests exercise independent harmonic, pressure and weight anchors; invalid scalars and structures;
 optional roof, girder and wind intent; JSON serialization; missing-check escalation;
 and CLI output readback plus registry linkage. The input digest binds the handoff to its supplied configuration,
