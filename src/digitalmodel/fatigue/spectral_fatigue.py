@@ -382,11 +382,12 @@ def benasciutti_tovo_damage(
     # roots avoid overflowing products of otherwise representable moments.
     alpha1 = moments.m1 / math.sqrt(moments.m0) / math.sqrt(moments.m2)
     alpha2 = moments.m2 / math.sqrt(moments.m0) / math.sqrt(moments.m4)
-    # One representable unit at unity accommodates floating-point roundoff;
-    # it is not an empirical bandwidth or engineering acceptance limit.
+    # Each ratio has a one-unit roundoff allowance at unity; ordering
+    # combines both allowances. Neither is an engineering acceptance limit.
     roundoff = math.ulp(1.0)
     if not (0 < alpha2 <= 1.0 + roundoff
-            and alpha2 - roundoff <= alpha1 <= 1.0 + roundoff):
+            and alpha1 <= 1.0 + roundoff
+            and alpha2 - alpha1 <= 2.0 * roundoff):
         raise ValueError("moments must satisfy 0 < alpha2 <= alpha1 <= 1")
     alpha2 = min(alpha2, 1.0)
     alpha1 = min(max(alpha1, alpha2), 1.0)

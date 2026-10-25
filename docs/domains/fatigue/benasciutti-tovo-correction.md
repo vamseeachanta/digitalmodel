@@ -11,6 +11,7 @@ engineering acceptance factors remain caller inputs.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-22 | Replace the increasing wide-band factor with BT2 and qualify its reduction bounds. |
+| 2 | 2026-10-24 | Account for both moment ratios in the boundary roundoff check and independently check the equivalent range. |
 
 ## Method and sources
 
@@ -43,8 +44,10 @@ For positive moments satisfying `0 < alpha2 <= alpha1 <= 1` and slope `b >= 1`,
 the mixture has `alpha2**(b-1) <= lambda <= 1`. This slope restriction follows
 from the exponent in Eq. (11); it is not an engineering acceptance criterion.
 Inputs outside this domain, or nonfinite moments and S-N parameters, raise
-`ValueError`. One floating-point unit at unity accommodates moment-ratio
-roundoff at the boundary.
+`ValueError`. Each moment ratio has a roundoff allowance of one floating-point
+unit at unity. Their ordering check combines both allowances, so scaled
+spectral-line inputs reach the narrow-band limit despite opposite rounding
+errors. Inconsistencies beyond these allowances are rejected.
 
 ## Worked example
 
@@ -114,5 +117,6 @@ absolute-rate convention is outside this change. The separate
 also outside this qualification. The `duration` argument remains accepted for
 compatibility; the API returns damage per second, not cumulative damage.
 
-Second-provider review remains pending. No fatigue acceptance factor or
-licensed-standard coefficient is selected by this change.
+Qualification includes scaled spectral-line limits and an equivalent-range
+oracle using the scalar damage anchor and analytical peak rate. No fatigue
+acceptance factor or licensed-standard coefficient is selected by this change.

@@ -65,6 +65,9 @@ def test_hand_calculated_correction_and_equivalent_range():
     =0.8857400580055089. Rayleigh Eq. (5) in range convention gives
     D_NB=(2*sqrt(2))**3*Gamma(2.5)/(2*pi)=6*sqrt(2/pi).
     Hence D_BT=4.240309903003382 per second for A=1.
+    Section 2.1, converting the peak rate from rad/s to cycles/s:
+    nu_p=sqrt(m4/m2)/(2*pi)=sqrt(7029/4805)/(2*pi).
+    Eq. (4): S_eq=(D_BT/nu_p)**(1/3) for A=1.
     Relative tolerance 1e-12 retains twelve decimal digits of this calculation.
     """
     moments = rectangular_moments()
@@ -75,7 +78,8 @@ def test_hand_calculated_correction_and_equivalent_range():
         0.8857400580055089, rel=1e-12,
     )
     # Output rounds ranges to three decimals; half that resolution is 0.0005.
-    expected_range = (result.damage_rate / moments.nu_p) ** (1 / 3)
+    analytical_peak_rate = math.sqrt(7029 / 4805) / (2 * math.pi)
+    expected_range = (4.240309903003382 / analytical_peak_rate) ** (1 / 3)
     assert abs(result.equivalent_stress_range - expected_range) <= 0.0005
     assert result.damage_per_year / result.damage_rate == pytest.approx(
         nb.damage_per_year / nb.damage_rate, rel=1e-12,
@@ -83,9 +87,12 @@ def test_hand_calculated_correction_and_equivalent_range():
 
 
 @pytest.mark.parametrize("slope", [1, 2, 3, 5, 7])  # Eq. (11): b >= 1.
-def test_exact_narrowband_limit(slope):
-    """A unit spectral line has m_j=1; Eq. (11) gives lambda=1."""
-    moments = SpectralMoments(m0=1, m1=1, m2=1, m4=1)
+@pytest.mark.parametrize("variance, angular_frequency", [(1, 1), (0.03, 3), (2.3, 7.1)])
+def test_exact_narrowband_limit(slope, variance, angular_frequency):
+    """A spectral line has m_j=variance*omega**j; Eq. (11) gives lambda=1."""
+    moments = SpectralMoments(**{
+        f"m{j}": variance * angular_frequency**j for j in (0, 1, 2, 4)
+    })
     actual = benasciutti_tovo_damage(moments, slope, 0)
     expected = narrow_band_damage(moments, slope, 0)
     assert actual.damage_rate == expected.damage_rate
@@ -141,6 +148,8 @@ def test_invalid_moments_rejected(field, invalid):
     dict(m0=1, m1=2, m2=1, m4=2),  # alpha1 > 1
     dict(m0=1, m1=1, m2=2, m4=1),  # alpha2 > 1
     dict(m0=1, m1=0.1, m2=1, m4=2),  # alpha1 < alpha2
+    dict(m0=1, m1=1 - 4 * math.ulp(1.0), m2=1, m4=1),  # ordering beyond roundoff
+    dict(m0=1, m1=1 + 2 * math.ulp(1.0), m2=1, m4=1),  # upper bound beyond roundoff
 ])
 def test_inconsistent_moment_ratios_rejected(data):
     """Nonnegative-frequency PSD moments require 0 < alpha2 <= alpha1 <= 1."""
