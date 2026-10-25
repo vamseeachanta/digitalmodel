@@ -38,6 +38,8 @@ FAMILY_IDS = (
     "sn-curves-and-miner-damage", "cathodic-protection-calculations",
     "api-5ct-5l-grade-tables", "external-solver-batch-run-stacks",
     "dnv-rp-e305-on-bottom-stability", "linear-wave-kinematics",
+    "second-order-slow-drift-response", "extreme-statistics", "design-waves",
+    "sloshing", "geotechnics", "scour",
 )
 REQUIRED_KEYS = {
     "schema_version", "repository", "revision", "searched", "families",
@@ -377,17 +379,24 @@ def reconcile(doc: dict[str, Any], texts: dict[str, str], sources: Sources) -> N
                                    if r.get("disposition") != "needs_review"]
     for family in doc["families"]:
         print(f"Reconciling {family['id']}", flush=True)
+        scope = family.get("inventory_scope")
+        family_texts = (
+            {p: texts[p] for p in scope["source_paths"] if p in texts}
+            if scope else texts
+        )
         patterns = [re.compile(s["pattern"], re.I) for s in family["search_signals"]]
         audit = []
         for signal, pattern in zip(family["search_signals"], patterns):
-            hits = [p for p, text in texts.items() if _SEARCH_MODULE.matches(pattern, text)]
+            hits = [p for p, text in family_texts.items() if _SEARCH_MODULE.matches(pattern, text)]
             audit.append({"search": signal["search"], "matching_files": len(hits)})
         family["search_audit"] = audit
-        named_hits, unresolved = _reconcile_names(family, doc, texts, sources, patterns)
+        named_hits, unresolved = _reconcile_names(family, doc, family_texts, sources, patterns)
         family["reconciliation"] = {"matched_definitions": named_hits,
                                     "unresolved_definitions": unresolved}
-        family["coverage"] = "partial" if unresolved else "reconciled_names"
+        family["coverage"] = "partial" if unresolved or scope else "reconciled_names"
         family["coverage_reason"] = (
+            "Only the listed source paths were inspected; name reconciliation does not establish semantic completeness."
+            if scope else
             "Unresolved name matches are recorded individually in rejected_candidates; classification requires inspection."
             if unresolved else "All name matches in searched non-test Python definitions are accounted for; dynamic code and semantic completeness remain unestablished."
         )
@@ -459,6 +468,8 @@ def regenerate(doc: dict[str, Any], root: str | Path, tracked_paths: list[str] |
     sources = Sources(root)
     # Historical patterns stored regex escapes twice. Normalize exactly one layer.
     for family in doc["families"]:
+        if "inventory_scope" in family:
+            family["inventory_scope"]["revision"] = doc["revision"]
         for signal in family["search_signals"]:
             signal["pattern"] = signal["pattern"].replace("\\\\", "\\")
         for entry in family["implementations"]:
