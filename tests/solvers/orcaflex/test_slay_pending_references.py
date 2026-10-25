@@ -47,7 +47,22 @@ def test_pending_evidence_allows_reference_numbers(tmp_path, monkeypatch, additi
         test_pending_report_rows_require_specific_published_evidence(label)
 
 
-@pytest.mark.parametrize("band", ["10 m", "20 %", "0-10 m", "5.0 metres", "3 degrees"])
+@pytest.mark.parametrize(
+    "band",
+    [
+        "10 m",
+        "20 %",
+        "0-10 m",
+        "5.0 metres",
+        "3 degrees",
+        "20 percent",
+        "20 per cent",
+        "10 mm",
+        "3 deg",
+        "3°",
+        "2 ft",
+    ],
+)
 def test_pending_evidence_rejects_numerical_bands(tmp_path, monkeypatch, band):
     report = (CAMPAIGN / "analysis.html").read_text(encoding="utf-8")
     report = report.replace(
@@ -103,7 +118,11 @@ def test_pending_report_rows_require_specific_published_evidence(label):
         assert term in evidence
     # Reference years and clause numbers are allowed; unit-bearing bands are not.
     assert (
-        re.search(r"\d+(?:\.\d+)?\s*(?:%|(?:m|metres?|meters?|degrees?)\b)", evidence)
+        re.search(
+            r"\d+(?:\.\d+)?\s*(?:%|°|"
+            r"(?:percent|per cent|mm|m|metres?|meters?|deg(?:rees?)?|ft)\b)",
+            evidence,
+        )
         is None
     )
 
