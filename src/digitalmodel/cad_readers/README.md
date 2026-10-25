@@ -10,6 +10,7 @@ structural model merely because it can be read.
 | --- | --- | --- |
 | 1 | 2026-10-22 | Add format adapters and a shared units contract for geometry ingestion. |
 | 2 | 2026-10-24 | Reject incomplete STEP unit coverage before transfer to prevent inconsistent root dimensions. |
+| 3 | 2026-10-25 | Record the CAD and routing test counts, including the unit-coverage and test-ownership regressions. |
 
 ## Formats and dependencies
 
@@ -141,3 +142,11 @@ the millimetre-to-metre factor. Independent hand calculation:
 dimensions are independent hand calculations in the test docstrings. Kernel
 comparisons use `Precision::Confusion`, the kernel numerical precision, rather
 than a guessed design acceptance limit.
+
+At revision 3, `python -m pytest tests/cad_readers -q -rA -p no:cacheprovider`
+passed 49 tests, and the same command for
+`tests/docs/test_digitalmodel_routing_contract.py` passed 10 tests, with no
+skips. Both suites ran with external temporary directories and the optional
+geometry dependencies installed. These counts include the STEP unit-coverage
+and test-ownership regressions. Production DWG conversion and physical topology
+qualification remain untested.
