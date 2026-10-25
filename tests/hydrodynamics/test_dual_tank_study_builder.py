@@ -4,6 +4,7 @@
 import importlib.util
 import math
 import re
+from html import escape as html_escape
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -204,9 +205,9 @@ def test_output_structure_links_and_privacy(builder):
                for svg in chart_roots(text)) == 2
     assert text.count("<script") == 1
     assert "<img" not in text
-    assert "Way forward" in text and "Not done" in text
+    assert "Conclusions and next steps" in text and "Not done" in text
     assert "Revision history" in text
-    assert text.index("Summary") < text.index("Revision history") < text.index("Illustrative geometry")
+    assert text.index('id="summary"') < text.index('id="geometry"') < text.index('id="revisions"')
     forbidden = ["/" + part + "/" for part in ("home", "mnt")]
     assert all(value not in text for value in forbidden)
     assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
@@ -255,7 +256,7 @@ def assert_public_wording(text):
     assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
     assert not re.search(r"[A-Za-z]:\\Users\\", text, re.I)
     # This exact source sentence is prescribed for the discrete-period view.
-    scanned = text.replace('No fitted curve: the archived geometry is not published, so the model cannot be drawn between the cases from committed inputs.', '')
+    scanned = text.replace('9.2 Data record and builder links', '').replace('No fitted curve: the archived geometry is not published, so the model cannot be drawn between the cases from committed inputs.', '')
     assert not re.search(process_words, scanned, re.I)
     assert not re.search(r"</?(?:b|strong)\b", text, re.I)
     assert not re.search(r"\b(?:could|should|would)\b", text, re.I)
@@ -308,8 +309,9 @@ def test_a2_preserved_inputs_and_table_cells(builder):
     }
     for path, digest in expected.items():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
-    text = re.sub(r'<tr class="revision-2">.*?</tr>', '', builder.render(), flags=re.S)
-    cells = [html.unescape(re.sub('<[^>]+>', '', c))
+    text = re.sub(r'<tr class="revision-[23]">.*?</tr>', '', builder.render(), flags=re.S)
+    text = re.sub(r'<div id="sensitivity-matrix">.*?</div>', '', text, flags=re.S)
+    cells = [re.sub(r' \[I\d+\]', '', html.unescape(re.sub('<[^>]+>', '', c)))
              for c in re.findall('<td>(.*?)</td>', text, re.S)]
     assert len(cells) == 259
     digest = hashlib.sha256(json.dumps(sorted(cells), ensure_ascii=False).encode()).hexdigest()
@@ -359,7 +361,9 @@ def test_a4_a6_a7_every_plotted_point_matches_csv(builder):
                 title = node.find('title').text
                 assert series['name'] in title
                 assert spec['xunit'] in title and spec['yunit'] in title
-                assert point['source'] in title
+                assert builder.chart_reference(spec['id']) in title
+                reference = text.split(f'id="ref-chart-{spec["id"]}"', 1)[1].split('</ul></li>', 1)[0]
+                assert html_escape(point['source']) in reference
                 assert node.attrib['data-tooltip'] == title
         assert bool(svg.findall('polyline')) == spec['continuous']
         if not spec['continuous']:
@@ -403,7 +407,7 @@ def test_a5_linear_axes_round_ticks_and_band(builder):
 
 def test_a8_schematic_is_constant_driven(builder, monkeypatch):
     text = builder.render()
-    assert text.index('<svg id="schematic"') < text.index('<h2 id="summary"')
+    assert text.index('<h2 id="geometry"') < text.index('<svg id="schematic"') < text.index('<h2 id="method"')
     svg = ElementTree.fromstring(re.search(r'<svg id="schematic".*?</svg>', text, re.S).group())
     labels = ' '.join(svg.itertext())
     for label in ('Left leg', 'Right leg', 'conduit', 'A_c', 'free surface', 'Δh',
@@ -422,13 +426,15 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
 
     text = builder.render()
     ids = re.findall(r'<h2 id="([^"]+)"', text)
-    assert ids == ['summary', 'limits', 'revisions', 'method', 'geometry', 'validation',
-                   'curves', 'comparison', 'cfd-evidence', 'forward', 'left', 'basis']
+    assert ids == ['summary', 'introduction', 'geometry', 'method', 'curves', 'validation',
+                   'limits', 'forward', 'basis', 'sensitivity', 'reproduce', 'revisions']
     assert '<details><summary>' in text
     spec = (ROOT / 'docs/plans/2026-10-25-dual-tank-page-layout-spec.md').read_text()
     visible = html.unescape(re.sub('<[^>]+>', '', text))
     for section in ('6.1 Summary', '6.2 Limits', '6.3 Method'):
         passage = spec.split('### ' + section, 1)[1].split('\n\n"', 1)[1].split('"', 1)[0]
+        passage = passage.replace('illustrative inputs below', 'illustrative inputs in Section 3')
+        passage = passage.replace('key results are summarized below', 'key results are summarized in Section 1')
         assert passage in visible
     assert 'based on the benchmarked single tank' not in visible
     assert 'connecting lines guide the eye' not in visible
@@ -651,7 +657,7 @@ def test_a6_exact_chart_set_and_independent_marker_counts(builder):
     assert set(roots) == {'coupled-response', 'natural-period-vs-area', 'period-error',
                           'natural', 'inertia', 'damping', 'moment', 'split', 'cfd-amplitude',
                           'cfd-fill-period', 'cfd-fill-damping', 'cfd-loss-area', 'cfd-forced-exchange'}
-    summary = text.split('<h2 id="summary">')[1].split('<h2 id="limits">')[0]
+    summary = text.split('<h3>5.1 Coupled roll and archived period checks</h3>')[1].split('<h3>5.2 Illustrative response curves</h3>')[0]
     assert {svg.attrib['id'] for svg in chart_roots(summary)} == {
         'coupled-response', 'natural-period-vs-area', 'period-error'}
     evidence = json.loads(builder.EVIDENCE_PATH.read_text())
@@ -697,3 +703,87 @@ def test_a1_exports_ignore_one_ulp_model_roundoff(builder, monkeypatch):
 
     monkeypatch.setattr(builder.MODEL, 'coupled_roll_response', rounded_differently)
     assert builder.render() == before
+
+
+def test_reporting_section_order_and_pinned_headlines(builder):
+    """Pin the reporting sequence and the existing evidence headline values."""
+    import html
+
+    text = builder.render()
+    headings = re.findall(r'<h2 id="[^"]+">(.*?)</h2>', text)
+    assert headings == [
+        '1 Executive summary', '2 Introduction', '3 Design data',
+        '4 Analysis methodology', '5 Results', '6 Validation and benchmark',
+        '7 Limitations', '8 Conclusions and next steps', '9 References',
+        'Appendix A – Sensitivity matrix', 'Appendix B – Reproduce commands',
+        'Appendix C – Revision history',
+    ]
+    summary = text.split('<h2 id="summary">', 1)[1].split('<h2 id="introduction">', 1)[0]
+    visible = html.unescape(re.sub('<[^>]+>', '', summary))
+    # Existing evidence record: loss, calibration and off-calibration period checks.
+    for value in ('2.138', '8.6 %', '35', '36.5 %', '3.7 %', '14.31 s',
+                  'four of five off-calibration checks'):
+        assert value in visible
+    # Existing response CSV, independently constrained by the equation checks.
+    assert 'falls from 10.0 to 5.7 per unit wave moment' in visible
+    assert 3 <= summary.count('<li>') <= 5
+    assert summary.index('Use these results') < summary.index('design qualification is not established')
+    assert '<h2 id="left">' not in text and ': screening estimate' not in text
+
+
+def test_design_basis_assumptions_and_standard_record(builder):
+    text = builder.render()
+    design = text.split('<h2 id="geometry">', 1)[1].split('<h2 id="method">', 1)[0]
+    assert re.findall(r'<h3[^>]*>(.*?)</h3>', design) == [
+        '3.1 Site or field data', '3.2 Structure or equipment data',
+        '3.3 Environmental data', '3.4 Vessel data', '3.5 Criteria',
+        '3.6 Method', '3.7 Load cases',
+    ]
+    assert design.count('ASSUMED') >= 7
+    revisions = text.split('<details id="revision-history">', 1)[1].split('</details>', 1)[0]
+    assert '<summary>' in revisions and ' open' not in revisions[:revisions.index('<summary>')]
+    assert 'P6' in revisions and '08f081f46' in revisions
+
+
+def test_body_has_citations_instead_of_raw_source_lists(builder):
+    text = builder.render()
+    body = text.split('<h2 id="summary">', 1)[1].split('<h2 id="basis">', 1)[0]
+    # Metadata retains machine-readable provenance; visible text uses references.
+    visible = re.sub('<[^>]+>', '', body)
+    assert 'archived-cfd-campaign-' not in visible
+    assert not re.search(r'(?:src|scripts|tests|docs)/|\.json#/|\.py#', visible)
+    assert '<ul class="sources">' not in body
+    for svg in chart_roots(body):
+        for node in svg.findall('.//g[@data-tooltip]'):
+            assert 'archived-cfd-campaign-' not in node.attrib['data-tooltip']
+            assert '[I' in node.find('title').text
+    refs = text.split('<h2 id="basis">', 1)[1]
+    assert '9.1 Public references' in refs and '9.2 Data record and builder links' in refs
+    assert 'archived-cfd-campaign-' in refs
+    assert_references_resolve(text, PAGE)
+
+
+def test_numbered_objects_and_print_style(builder):
+    text = builder.render()
+    captions = re.findall('<figcaption>(.*?)</figcaption>', text, re.S)
+    assert len(captions) == 14
+    assert all(re.match(r'Figure \d+\.\d+ – ', caption) for caption in captions)
+    assert len(re.findall(r'<caption>Table [\dA-C]+\.\d+ – ', text)) == text.count('<table>')
+    assert '@media print' in builder.LAYOUT_CSS
+    assert '.study-chart text{font-size:13px' in builder.LAYOUT_CSS
+    assert '.study-chart{max-width:440px' in builder.LAYOUT_CSS
+    for svg in chart_roots(text):
+        assert all(float(circle.attrib['r']) <= 2.5 for circle in svg.findall('.//circle'))
+
+
+def test_schematic_dimensions_are_proportional_and_explicit(builder):
+    svg = ElementTree.fromstring(re.search(r'<svg id="schematic".*?</svg>', builder.schematic(), re.S).group())
+    legs = svg.findall(".//rect[@class='tank-leg']")
+    assert len(legs) == 2
+    water = svg.find(".//rect[@class='water-depth']")
+    scale = float(legs[0].attrib['width']) / builder.ILLUSTRATIVE_LEG_WIDTH
+    assert float(water.attrib['height']) == pytest.approx(scale * builder.ILLUSTRATIVE_FILL_DEPTH)
+    assert float(legs[1].attrib['x']) - float(legs[0].attrib['x']) == pytest.approx(
+        scale * 2 * builder.ILLUSTRATIVE_CENTROID_OFFSET)
+    assert len(svg.findall(".//g[@class='dimension']")) >= 3
+    assert 'fill="var(--panel)"' in builder.schematic()

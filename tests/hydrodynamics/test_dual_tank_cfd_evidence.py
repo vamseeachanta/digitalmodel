@@ -107,6 +107,8 @@ def test_new_sections_numbers_come_from_json():
                 allowed.update(f"{float(n):.1f}" for n in re.split("[-–]", percentage))
     # Round axis ticks are presentation values; evidence prose remains source-bound.
     prose = re.sub(r'<figure\b.*?</figure>', '', evidence, flags=re.S)
+    prose = re.sub(r'<h3[^>]*>.*?</h3>', '', prose, flags=re.S)
+    prose = prose.replace('Appendix A', '')
     visible = re.sub(r"<[^>]+>", " ", prose)
     for number in re.findall(r"(?<![\w])\d+(?:\.\d+)?", visible):
         assert number in allowed, number
@@ -119,7 +121,7 @@ def test_new_sections_numbers_come_from_json():
 def test_comparison_percentages_keep_raw_values_and_one_decimal():
     builder = module("build_dual_tank_sloshing_study")
     data = json.loads(DATA.read_text())
-    root = ElementTree.fromstring(builder.render_cfd_evidence())
+    root = ElementTree.fromstring('<div>' + builder.render_cfd_evidence() + builder.evidence_classes() + '</div>')
     cells = {node.attrib["data-provenance"]: node for node in root.iter("data")}
     loss, mesh, frequency = data["loss"], data["mesh"], data["frequency"]
     comparisons = [loss[key] for key in ("rms", "linear_rms", "small_area_rms", "large_area_rms")]
