@@ -11,6 +11,7 @@ import ast
 import inspect
 import logging
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -86,17 +87,29 @@ def test_directory_early_returns(analysis_class, tmp_path, exists):
     }
 
 
-def test_directory_delegates_matching_paths_and_config(analysis_class, tmp_path):
-    """One synthetic text file matches; the other suffix is excluded by glob."""
+@pytest.mark.parametrize("pattern", [None, "**/*.dat"])
+def test_directory_delegates_matching_paths_and_config(analysis_class, tmp_path, pattern):
+    """Default glob stays local; a recursive pattern includes a nested file."""
     included = tmp_path / "included.dat"
     included.write_text("synthetic input; not a solver model", encoding="utf-8")
     (tmp_path / "excluded.txt").write_text("excluded", encoding="utf-8")
+    nested = tmp_path / "nested" / "included.dat"
+    nested.parent.mkdir()
+    nested.write_text("synthetic nested input", encoding="utf-8")
     analysis = analysis_class()
     expected = object()
     analysis.process_files_parallel = Mock(return_value=expected)
     config = {"static": False}
-    assert analysis.process_directory(str(tmp_path), config=config) is expected
-    analysis.process_files_parallel.assert_called_once_with([str(included)], config)
+    kwargs = {} if pattern is None else {"pattern": pattern}
+    assert analysis.process_directory(str(tmp_path), config=config, **kwargs) is expected
+    analysis.process_files_parallel.assert_called_once()
+    paths, received_config = analysis.process_files_parallel.call_args.args
+    expected_paths = [included] if pattern is None else [included, nested]
+    assert sorted(paths) == sorted(str(path) for path in expected_paths)
+    assert received_config is config
+    guide = (MODULE / "THREAD_OPTIMIZATION_GUIDELINES.md").read_text(encoding="utf-8")
+    assert "without recursion" not in guide
+    assert "a caller pattern containing `**` recurses" in guide
 
 
 def test_readme_maturity_matches_parent_registry():
@@ -105,7 +118,7 @@ def test_readme_maturity_matches_parent_registry():
     maturity = re.search(r"^    maturity: (\w+)$", group, re.MULTILINE)[1]
     readme = (MODULE / "MODULE_README.md").read_text(encoding="utf-8")
     assert f"**Status**: {maturity}" in readme
-    assert "Production Ready" not in readme
+    assert re.search(r"(?i)production[- ]ready", readme) is None
 
 
 def test_guideline_examples_match_constructor_and_methods(analysis_class):
@@ -148,6 +161,18 @@ def test_performance_guidance_exposes_evidence_boundary():
     assert "helper-evidence.html" in text
 
 
+def test_readme_parallel_claims_expose_evidence_boundary():
+    readme = (MODULE / "MODULE_README.md").read_text(encoding="utf-8")
+    performance = readme.split("## Performance\n", 1)[1].split("\n---", 1)[0]
+    recommendations, benchmarks = performance.split("### Benchmarks\n", 1)
+    assert "UNVERIFIED" in recommendations
+    assert "UNVERIFIED" in benchmarks
+    assert "helper-evidence.html" in performance
+    parallel = re.search(r"^\- \*\*Parallel Processing\*\*: (.+)$", readme, re.M)[1]
+    assert "NOT_EVALUATED" in parallel
+    assert "Thread-safe" not in parallel
+
+
 def test_evidence_page_classifies_every_new_test():
     """Every test entry in this focused slice must carry a dependency status."""
     page = (MODULE / "docs/helper-evidence.html").read_text(encoding="utf-8")
@@ -172,3 +197,33 @@ def test_evidence_page_links_resolve():
     page = MODULE / "docs/helper-evidence.html"
     for target in re.findall(r'href="([^"]+)"', page.read_text(encoding="utf-8")):
         assert (page.parent / target).is_file(), target
+
+
+def test_evidence_table_captions_are_first_children():
+    """Captions precede row groups in markup; CSS controls visual placement."""
+
+    class TableParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.tables = []
+            self.stack = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "table":
+                self.tables.append([])
+            elif self.stack and self.stack[-1] == "table":
+                self.tables[-1].append(tag)
+            if tag == "table" or self.stack:
+                self.stack.append(tag)
+
+        def handle_endtag(self, tag):
+            if self.stack:
+                assert self.stack.pop() == tag
+
+    parser = TableParser()
+    parser.feed((MODULE / "docs/helper-evidence.html").read_text(encoding="utf-8"))
+    parser.close()
+    assert parser.tables
+    for children in parser.tables:
+        assert children[0] == "caption"
+        assert children.count("caption") == 1
