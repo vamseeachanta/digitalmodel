@@ -69,9 +69,17 @@ model input or result.
 ## Validation and limits
 
 ```bash
-PYTHONPATH=src python -m pytest tests/floating_wind/test_worked_example.py -p no:cacheprovider
+PYTHONPATH=src python -m pytest tests/floating_wind/test_worked_example.py -q -rA -p no:cacheprovider -o addopts=''
+PYTHONPATH=src python -m pytest tests/floating_wind --ignore=tests/floating_wind/test_workflow.py -q -rA -p no:cacheprovider -o addopts=''
 ruff check --no-cache src/digitalmodel/floating_wind/worked_example.py tests/floating_wind/test_worked_example.py
 ```
+
+The offline validation run on 2026-10-25 at revision `4f2b91b4` passed 84
+focused audit tests and 217 floating-wind regression tests, including the focused
+tests. The regression command excludes the workflow file, which writes outputs
+into the checkout. Its ten solver-tier tests prepare inputs and mark dispatch
+intent only; no licensed solver ran. The full repository suite and native
+Windows execution of this revision were not run.
 
 The dependency scan is limited to the named keys in these models and masters.
 It does not discover transitive dependencies inside controllers, prove library
