@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from html import escape
 from importlib import resources
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from stat import S_IMODE
+import uuid
 
 from digitalmodel._output_paths import validate_output_paths
 from digitalmodel.subsea.cross_sections.io import load_cross_section_fixture
@@ -195,16 +196,20 @@ def write_report_files(output_dir: Path, formats: set[str]) -> list[Path]:
 
 def _atomic_write(path: Path, text: str) -> Path:
     # Exclusive creation owns this temporary file; never reuse <name>.tmp.
-    # Source: Python 3.11 tempfile.NamedTemporaryFile, delete=False.
-    # https://docs.python.org/3.11/library/tempfile.html#tempfile.NamedTemporaryFile
+    # Source: Python 3.11 open: 'x' creates exclusively with the active umask.
+    # https://docs.python.org/3.11/library/functions.html#open
+    try:
+        mode = S_IMODE(path.stat().st_mode)
+    except FileNotFoundError:
+        mode = None
+    candidate = path.with_name(path.name + f".{uuid.uuid4().hex}.tmp")
     tmp = None
     try:
-        with NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=path.parent,
-            prefix=path.name + ".", suffix=".tmp", delete=False,
-        ) as stream:
-            tmp = Path(stream.name)
+        with candidate.open(mode="x", encoding="utf-8", newline="\n") as stream:
+            tmp = candidate
             stream.write(text)
+        if mode is not None:
+            tmp.chmod(mode)
         tmp.replace(path)
     finally:
         if tmp is not None and tmp.exists():
