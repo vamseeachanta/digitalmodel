@@ -10,6 +10,7 @@ recursive pytest runs. A green domain matrix makes no claim about these tests.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Record the non-gating policy and repair prerequisites for the example suite. |
+| Validation recipe | 2026-10-25 | Add isolated policy validation with its required dependency and clarify the limits of local results. |
 
 ## Scope and evidence
 
@@ -49,6 +50,35 @@ command above documents the measurement; it is not a hermetic test recipe. Run
 it in a disposable checkout, with temporary output outside the repository, and
 retain the evidence before restoring generated outputs. No solver is needed for
 the measured demo suite.
+
+## Policy validation
+
+The routing and collection guards can be checked without executing the
+demonstrations. Set `TMPDIR` to an existing temporary directory outside the
+repository, then run:
+
+```sh
+uv run --no-project --with pytest --with pytest-asyncio \
+  --with pyyaml --with assetutilities \
+  python -m pytest tests/scripts/test_example_ci_policy.py \
+  tests/scripts/test_detect_touched_domains.py \
+  tests/contracts/test_collection_visibility.py \
+  -q -rA -p no:cacheprovider --basetemp="$TMPDIR/example-policy-tests"
+```
+
+`assetutilities` is required by `tests/contracts/conftest.py`, including when
+only the collection-visibility contract is selected. `--no-project` requires
+that dependency to be supplied explicitly. The command passed 93 tests,
+including 12 policy cases, on 2026-10-25. These counts describe the targeted
+suite; the historical demonstration counts above describe a different suite.
+
+A targeted pass establishes the asserted routing and collection properties.
+Completed required hosted checks remain necessary before merging. Both
+`Run Quality Gates` and `Domain test aggregate` reject cancelled prerequisites
+under the existing workflow definitions. Such an aggregate failure does not
+establish a failing application test when the prerequisite records no test
+steps. The prerequisite results and annotations shall be inspected before a
+test regression or a passing hosted gate is reported.
 
 ## Worked routing example
 
