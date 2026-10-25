@@ -20,6 +20,7 @@ licensed-source constants.
 | A | 2026-10-20 | Initial solver-free screening method and independent arithmetic example. |
 | B | 2026-10-22 | Preserve supplied report criteria, report arrest cycles and share threshold integration with the fatigue API. |
 | C | 2026-10-24 | Retain finite target cycles when threshold arrest occurs exactly at the requested final depth; distinguish arrival from earlier arrest. |
+| D | 2026-10-25 | Record the focused regression modules, case counts and execution command to make the validation scope reproducible. |
 
 Table 1. Document revisions.
 
@@ -180,6 +181,41 @@ increasing depth and cycles; `history_tolerance_fraction` and `history_basis`
 are required. Optional `consistency` requires `geometry_factor`, `lower_ratio`,
 `upper_ratio` and `basis`. Omitted diagnostic inputs return `NOT_EVALUATED`.
 Each diagnostic `PASS` applies only to its supplied criterion, not the component.
+
+## Regression coverage
+
+The focused regression set contains 182 cases across five test modules.
+
+| Coverage | Test module | Cases |
+| --- | --- | --- |
+| Screening, report and command | `tests/asset_integrity/test_fe_crack_screen.py` | 86 |
+| Fatigue growth API | `tests/fatigue/test_crack_growth.py` | 32 |
+| Crack FAD assessment | `tests/asset_integrity/test_crack_fad.py` | 11 |
+| Legacy FAD table | `tests/asset_integrity/test_fad.py` | 25 |
+| Shared FAD curves | `tests/asset_integrity/test_fad_curves.py` | 28 |
+
+Table 2. Focused regression scope; the three existing FAD modules total 64 cases.
+
+Finite threshold-endpoint arrival is compared with independent integrals in
+both growth APIs and history diagnostics. Earlier arrest and divergent
+integrals remain separate cases. Report cases cover supplied-criteria readback,
+rendered comparisons, absent-depth display and refusal to overwrite output.
+
+With the declared runtime and test dependencies available, run from the
+repository root:
+
+```bash
+PYTHONPATH=src uv run python -m pytest \
+  tests/asset_integrity/test_fe_crack_screen.py \
+  tests/fatigue/test_crack_growth.py \
+  tests/asset_integrity/test_crack_fad.py \
+  tests/asset_integrity/test_fad.py \
+  tests/asset_integrity/test_fad_curves.py \
+  -q -rA -p no:cacheprovider
+```
+
+Case counts describe coverage; passing regressions do not establish code
+conformity, FE qualification or allowable service life.
 
 ## Later slices and limits
 
