@@ -12,6 +12,7 @@ qualification.
 | --- | --- | --- |
 | Initial | 2026-10-19 | Document source controls and their limits so structural results are not treated as complete input qualification. |
 | 1 | 2026-10-19 | Make the strict profile opt-in so existing callers retain support for native numeric names and repeated directives; state the profile's exclusions. |
+| 2 | 2026-10-25 | Check effective include-entry mappings so merged references receive the same shape checks as literal entries, while preserving source duplicate diagnostics. |
 
 ## Source controls
 
@@ -42,6 +43,9 @@ The existing SafeLoader scalar resolution and merge behavior remain in use.
 A merge directive and a local override are distinct source keys; two merge
 directives in one mapping are rejected by the strict profile. Merge expansion
 does not establish resolved assignment context or native compatibility.
+Section and include-entry shape checks use effective merge values, including
+local overrides and merge-list precedence. These checks flatten a copied graph;
+the original graph retains duplicate-key and assignment-order evidence.
 
 ## Interpretation and limits
 

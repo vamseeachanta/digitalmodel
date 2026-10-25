@@ -6,7 +6,10 @@ Expected source lines are counted directly in each literal, independently
 of the validator. Fixture scalars are synthetic labels, not physical data.
 """
 
+from textwrap import indent
+
 import pytest
+import yaml
 
 from digitalmodel.solvers.orcaflex.yaml_validator import validate_orcaflex_yaml
 
@@ -252,6 +255,69 @@ def test_merged_section_include_lists_remain_supported(tmp_path, section):
     (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
     text = f"<<:\n  {section}:\n  - includefile: fragment.yml\n"
     assert validate(tmp_path, text).valid
+
+
+def section_include_text(section, entry, inherited):
+    text = f"{section}:\n- {{{entry}}}\n"
+    return "<<:\n" + indent(text, "  ") if inherited else text
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("inherited", [False, True])
+@pytest.mark.parametrize("entry", [
+    "includefile: fragment.yml",
+    "<<: {includefile: fragment.yml}",
+    "<<: {<<: {includefile: fragment.yml}}",
+    "<<: [{includefile: fragment.yml}, {includefile: null}]",
+    "<<: {includefile: null}, includefile: fragment.yml",
+    "includefile: fragment.yml, <<: {includefile: null}",
+])
+def test_include_entry_merges_match_literal_mappings(tmp_path, section, inherited, entry):
+    """SafeLoader independently confirms nested merges and override priority."""
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    text = section_include_text(section, entry, inherited)
+    literal = f"{section}:\n- includefile: fragment.yml\n"
+    assert yaml.safe_load(text) == yaml.safe_load(literal)
+    assert validate(tmp_path, literal).valid
+    assert validate(tmp_path, text).valid
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("inherited", [False, True])
+@pytest.mark.parametrize("value", ["null", "''", "7", "true", "[]", "{}"])
+def test_include_entry_local_override_must_be_a_nonempty_string(
+    tmp_path, section, inherited, value,
+):
+    """A valid inherited reference cannot hide the effective invalid value."""
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    entry = f"<<: {{includefile: fragment.yml}}, includefile: {value}"
+    text = section_include_text(section, entry, inherited)
+    assert yaml.safe_load(text)[section][0] == {"includefile": yaml.safe_load(value)}
+    result = validate(tmp_path, text)
+    assert not result.valid
+    assert any(issue.property == section and issue.line == (2 if inherited else 1)
+               and "mapping or a nonempty include list" in issue.message
+               for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("inherited", [False, True])
+@pytest.mark.parametrize(("entry", "key"), [
+    ("<<: {includefile: fragment.yml, includefile: fragment.yml}", "includefile"),
+    ("<<: {}, includefile: fragment.yml, includefile: fragment.yml", "includefile"),
+    ("<<: {includefile: fragment.yml}, <<: {}", "<<"),
+])
+def test_include_merge_shape_check_preserves_duplicate_evidence(
+    tmp_path, section, inherited, entry, key,
+):
+    """All flow-entry keys are on line 2, or line 3 under a root merge."""
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    result = validate(tmp_path, section_include_text(section, entry, inherited))
+    assert not result.valid
+    duplicates = [issue for issue in result.errors if "Duplicate mapping key" in issue.message]
+    assert len(duplicates) == 1
+    assert duplicates[0].property == key
+    assert duplicates[0].line == (3 if inherited else 2)
 
 
 @pytest.mark.parametrize("strict_profile", [False, True])

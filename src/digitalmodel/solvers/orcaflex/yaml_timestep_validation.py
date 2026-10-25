@@ -144,6 +144,21 @@ def _mapping_key_issues(node):
     return issues
 
 
+def _is_include_entry(node):
+    """Check the effective reference on a mapping from the copied graph."""
+    if not isinstance(node, MappingNode):
+        return False
+    loader = yaml.SafeLoader("")
+    try:
+        loader.flatten_mapping(node)
+    finally:
+        loader.dispose()
+    effective = {_key(key): value for key, value in node.value}
+    value = effective.get("includefile")
+    return (isinstance(value, ScalarNode)
+            and value.tag == "tag:yaml.org,2002:str" and bool(value.value.strip()))
+
+
 def _document_shape_issues(root):
     """Require content and recognizable property-section containers.
 
@@ -177,11 +192,7 @@ def _document_shape_issues(root):
         if isinstance(value, MappingNode):
             continue
         if isinstance(value, SequenceNode) and value.value and all(
-            isinstance(item, MappingNode) and any(
-                _key(k) == "includefile" and isinstance(v, ScalarNode)
-                and v.tag == "tag:yaml.org,2002:str" and v.value.strip()
-                for k, v in item.value
-            ) for item in value.value
+            _is_include_entry(item) for item in value.value
         ):
             continue
         issues.append(("error", f"{name} must be a mapping or a nonempty include list",
