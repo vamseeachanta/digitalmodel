@@ -2,7 +2,7 @@
 
 ## Summary
 
-Refs #2120. This bounded audit inventories evidence consumers and adapters in
+Refs [#2120](https://github.com/vamseeachanta/digitalmodel/issues/2120). This bounded audit inventories evidence consumers and adapters in
 this repository and hardens the existing ANSYS exact-lookup boundary. It does
 not establish ecosystem coverage or qualify an engineering response. The
 implementation retains the current evidence schema and its external authority
@@ -13,6 +13,7 @@ model.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Record inspected boundaries and add exact comparison, checker identity and retained-example regressions. |
+| 1 | 2026-10-25 | Link the scope issue so the standalone audit has navigable evidence. |
 
 ## Plan-lite
 
