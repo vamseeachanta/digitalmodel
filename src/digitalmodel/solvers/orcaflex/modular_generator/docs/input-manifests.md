@@ -9,6 +9,18 @@ the override entry point.
 This implements input integrity evidence for issue #2515. It does not establish
 engineering acceptance or native solver compatibility.
 
+## Plan-lite
+
+1. Capture will fingerprint the staged master, parameters and generated includes,
+   follow their YAML composition dependencies and write the manifest before
+   publishing the bundle.
+2. Verification will resolve the recorded seed names again, rediscover the graph
+   and compare exact input-byte, aggregate and manifest digests.
+3. Focused tests will cover manifest capture and tampering, both generation entry
+   points, backward compatibility, section overrides and collection collisions.
+   Immutable revision binding, native solver compatibility, native Windows
+   execution and the full repository suite will remain deferred.
+
 ## Scope and format
 
 The manifest seeds include `master.yml`, `inputs/parameters.yml` and every
