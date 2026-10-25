@@ -11,6 +11,7 @@ import json
 import math
 from pathlib import Path
 import re
+import subprocess
 
 import pytest
 import yaml
@@ -94,6 +95,17 @@ def assert_html_matches(actual, expected):
     assert re.sub(annotations, 'data-value=""', actual) == re.sub(
         annotations, 'data-value=""', expected
     ), command
+
+
+@pytest.mark.parametrize("artifact", ["index.html", "changes.json"])
+def test_committed_report_artifacts_are_not_ignored(artifact):
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--",
+         f"docs/reports/modules/cp/{artifact}"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert not result.stdout
 
 
 def test_report_rebuild_is_deterministic_and_committed(built):

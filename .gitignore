@@ -623,3 +623,7 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+!/docs/reports/modules/cp/
+!/docs/reports/modules/cp/index.html
+!/docs/reports/modules/cp/changes.json
