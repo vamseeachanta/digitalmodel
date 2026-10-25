@@ -17,7 +17,7 @@ criterion, not a solver limit. Warped panels retain only a projected diagnostic.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from fractions import Fraction
 import math
 from typing import Literal, TypeVar
@@ -27,6 +27,8 @@ from numpy.typing import ArrayLike, NDArray
 
 Status = Literal["PASS", "FAIL", "NOT_EVALUATED"]
 Array = NDArray[np.float64]
+_CHECK_NAMES = ("edge_ratio", "corner_angles", "convexity", "mapping_jacobian",
+                "planarity")
 
 
 @dataclass(frozen=True)
@@ -164,6 +166,24 @@ class QuadPanelQuality:
 
 
 @dataclass(frozen=True)
+class QuadCheckSummary:
+    """Panel indices partitioned by the outcome of one geometric check."""
+
+    passed_panels: tuple[int, ...]
+    failed_panels: tuple[int, ...]
+    not_evaluated_panels: tuple[int, ...]
+
+    @property
+    def status(self) -> Status:
+        """Failure takes precedence; an empty mesh supplies no passing evidence."""
+        if self.failed_panels:
+            return "FAIL"
+        if self.not_evaluated_panels or not self.passed_panels:
+            return "NOT_EVALUATED"
+        return "PASS"
+
+
+@dataclass(frozen=True)
 class QuadMeshQualityReport:
     """Shared geometry report, independent of hydrostatics and outward winding."""
 
@@ -179,14 +199,44 @@ class QuadMeshQualityReport:
         """Aggregate geometric checks only; missing bounds prevent a full PASS."""
         return _combined([panel.status for panel in self.panels])
 
+    @property
+    def check_summaries(self) -> dict[str, QuadCheckSummary]:
+        """Locate failing and unqualified panels independently for every metric."""
+        return {
+            name: QuadCheckSummary(
+                passed_panels=tuple(panel.panel_index for panel in self.panels
+                                    if panel.checks[name].status == "PASS"),
+                failed_panels=tuple(panel.panel_index for panel in self.panels
+                                    if panel.checks[name].status == "FAIL"),
+                not_evaluated_panels=tuple(panel.panel_index for panel in self.panels
+                                           if panel.checks[name].status == "NOT_EVALUATED"),
+            ) for name in _CHECK_NAMES
+        }
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a detached JSON-compatible snapshot including computed statuses.
+
+        The top-level status describes geometry only. Solver qualification is
+        retained separately, including when all supplied geometric checks pass.
+        Diagnostic precision is preserved; display rounding belongs to callers.
+        """
+        result = asdict(self)
+        result["status"] = self.status
+        for data, panel in zip(result["panels"], self.panels):
+            data["status"] = panel.status
+        result["check_summaries"] = {
+            name: {**asdict(summary), "status": summary.status}
+            for name, summary in self.check_summaries.items()
+        }
+        return result
+
 
 def _panel_quality(
     points: Array, index: int, tolerance: float, criteria: QuadQualityCriteria | None,
 ) -> QuadPanelQuality:
     checks = {
         key: QualityCheck("NOT_EVALUATED", "Geometry does not define this measurement.")
-        for key in ("edge_ratio", "corner_angles", "convexity", "mapping_jacobian",
-                    "planarity")
+        for key in _CHECK_NAMES
     }
     for key in ("edge_ratio", "corner_angles"):
         checks[key] = QualityCheck("NOT_EVALUATED", "Required geometric bound was not supplied.")

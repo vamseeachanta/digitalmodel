@@ -357,3 +357,177 @@ def test_unrepresentable_jacobian_is_explicit(scale):
     """
     with pytest.raises(ValueError, match="floating-point range"):
         assess(np.asarray(RECTANGLE) * scale)
+
+
+def test_check_summaries_locate_failures_and_missing_bounds():
+    """Rectangle J=2; skew rhombus J=4/5 and angles acos(3/5).
+
+    With the synthetic 60-degree minimum only the rhombus fails angles.
+    Neither panel has an edge-ratio bound, so both remain unevaluated there.
+    Counts and indices follow enumeration, independently of the metric code.
+    """
+    nodes = RECTANGLE + [[0, 0, 0], [1, 0, 0], [1.6, 0.8, 0], [0.6, 0.8, 0]]
+    report = assess_quad_mesh(
+        nodes, [[0, 1, 2, 3], [4, 5, 6, 7]], planarity_tolerance=0,
+        criteria=QuadQualityCriteria(basis="Synthetic angular exclusion", min_angle_deg=60),
+    )
+    angles = report.check_summaries["corner_angles"]
+    assert angles.status == "FAIL"
+    assert angles.passed_panels == (0,)
+    assert angles.failed_panels == (1,)
+    assert angles.not_evaluated_panels == ()
+    edges = report.check_summaries["edge_ratio"]
+    assert edges.status == "NOT_EVALUATED"
+    assert edges.not_evaluated_panels == (0, 1)
+    assert edges.passed_panels == edges.failed_panels == ()
+    assert report.check_summaries["mapping_jacobian"].passed_panels == (0, 1)
+    assert report.status == "FAIL"
+
+
+def test_check_summary_failure_precedes_warped_unevaluated_map():
+    """Fold J=2-3v fails; warp z=uv has no qualified surface map.
+
+    The mapping summary must retain both the failed and unevaluated indices.
+    """
+    report = assess_quad_mesh(
+        [[0, 0, 0], [2, 0, 0], [0, 1, 0], [1, 1, 0],
+         [0, 0, 0], [1, 0, 0], [1, 1, 1], [0, 1, 0]],
+        [[0, 1, 2, 3], [4, 5, 6, 7]], planarity_tolerance=0,
+    )
+    summary = report.check_summaries["mapping_jacobian"]
+    assert summary.status == "FAIL"
+    assert summary.failed_panels == (0,)
+    assert summary.not_evaluated_panels == (1,)
+    assert summary.passed_panels == ()
+    assert report.check_summaries["planarity"].failed_panels == (1,)
+
+
+def test_empty_mesh_summaries_do_not_pass():
+    """An empty set of panels supplies no evidence for any geometric check."""
+    report = assess_quad_mesh(
+        np.empty((0, 3)), np.empty((0, 4), dtype=int), planarity_tolerance=0,
+    )
+    assert set(report.check_summaries) == {
+        "edge_ratio", "corner_angles", "convexity", "mapping_jacobian", "planarity",
+    }
+    for summary in report.check_summaries.values():
+        assert summary.status == "NOT_EVALUATED"
+        assert summary.passed_panels == summary.failed_panels == ()
+        assert summary.not_evaluated_panels == ()
+    payload = json.loads(json.dumps(report.to_dict(), allow_nan=False))
+    assert payload["panels"] == []
+    assert payload["status"] == "NOT_EVALUATED"
+    assert all(item["status"] == "NOT_EVALUATED"
+               for item in payload["check_summaries"].values())
+
+
+def test_json_report_includes_computed_statuses_and_solver_limit():
+    """Rectangle has positive J=2, but missing bounds prevent geometric PASS."""
+    report = assess(RECTANGLE)
+    payload = report.to_dict()
+    encoded = json.loads(json.dumps(payload, allow_nan=False))
+    assert encoded["status"] == "NOT_EVALUATED"
+    assert encoded["panels"][0]["status"] == "NOT_EVALUATED"
+    assert encoded["check_summaries"]["mapping_jacobian"] == {
+        "status": "PASS", "passed_panels": [0], "failed_panels": [],
+        "not_evaluated_panels": [],
+    }
+    assert encoded["solver_qualification"]["status"] == "NOT_EVALUATED"
+    assert encoded["planarity_tolerance"] == 0
+    assert encoded["criteria"] is None
+    assert encoded["panels"][0]["min_projected_jacobian"] == pytest.approx(2)
+    payload["panels"][0]["checks"]["mapping_jacobian"]["status"] = "FAIL"
+    assert report.panels[0].checks["mapping_jacobian"].status == "PASS"
+
+
+def test_json_report_distinguishes_geometric_pass_from_solver_qualification():
+    """Rectangle bounds equal hand values: ratio 2, angles 90 degrees, J=2."""
+    report = assess(RECTANGLE, criteria=QuadQualityCriteria(
+        basis="Synthetic rectangle boundary", max_edge_ratio=2,
+        min_angle_deg=90, max_angle_deg=90, min_jacobian=2,
+    ))
+    payload = report.to_dict()
+    assert payload["status"] == payload["panels"][0]["status"] == "PASS"
+    assert all(item["status"] == "PASS" for item in payload["check_summaries"].values())
+    assert payload["solver_qualification"]["status"] == "NOT_EVALUATED"
+    assert payload["criteria"]["basis"] == "Synthetic rectangle boundary"
+
+
+@pytest.mark.parametrize("points", [
+    [[0, 0, 0]] * 4,
+    [[0, 0, 0], [1, 1, 0], [0, 1, 0], [1, 0, 0]],
+])
+def test_json_report_preserves_undefined_diagnostics(points):
+    """Coincident vertices and bow tie have zero centre derivative cross product.
+
+    Neither defines a centre normal, so J and plane distance are undefined.
+    """
+    payload = json.loads(json.dumps(assess(points).to_dict(), allow_nan=False))
+    assert payload["panels"][0]["min_projected_jacobian"] is None
+    assert payload["panels"][0]["max_plane_distance"] is None
+    assert payload["panels"][0]["corner_angles_deg"] is None
+    assert payload["check_summaries"]["mapping_jacobian"]["failed_panels"] == [0]
+    assert payload["status"] == "FAIL"
+
+
+def test_worked_example_reports_independent_geometry_and_qualification():
+    """Check the executable example against hand calculations, not its output.
+
+    In panel order: rectangle x=2u,y=v -> J=2; rhombus edges (1,0),
+    (3/5,4/5) -> J=4/5 and angle acos(3/5)<60 degrees; flat triangle
+    x=2u+2uv,y=v-uv -> J=2-2u+2v reaches zero; fold x=2u+v-3uv,y=v
+    -> J=2-3v reaches -1; warp x=u,y=v,z=uv -> projected J minimum
+    2/sqrt(6), distance 1/sqrt(6), with no qualified surface map.
+    All edge ratios are <=5, so only independent angular/mapping/planarity
+    checks expose the rejected fixtures. Bounds are synthetic example inputs.
+    Longest/shortest lengths give ratios 2,1,sqrt(17),sqrt(5),sqrt(2).
+    The fold's unsigned angles are 45 and atan(1/2) degrees, with reflex
+    complements at the two negative turns.
+    """
+    import runpy
+    from pathlib import Path
+
+    example = Path(__file__).resolve().parents[2] / (
+        "examples/domains/hydrodynamics/quad_mesh_quality.py"
+    )
+    namespace = runpy.run_path(str(example))
+    report = namespace["build_report"]()
+    assert namespace["CASE_NAMES"] == (
+        "rectangle", "skew_rhombus", "flat_triangle", "folded_quad", "warped_quad",
+    )
+    assert [panel.min_projected_jacobian for panel in report.panels] == pytest.approx(
+        [2, 4 / 5, 0, -1, 2 / math.sqrt(6)],
+    )
+    assert report.panels[2].min_projected_jacobian == 0
+    assert [panel.edge_ratio for panel in report.panels] == pytest.approx(
+        [2, 1, math.sqrt(17), math.sqrt(5), math.sqrt(2)],
+    )
+    acute = math.degrees(math.atan(1 / 2))
+    assert report.panels[3].corner_angles_deg == pytest.approx(
+        [45, acute, 360 - acute, 315],
+    )
+    assert report.panels[4].max_plane_distance == pytest.approx(1 / math.sqrt(6))
+    assert report.check_summaries["edge_ratio"].passed_panels == tuple(range(5))
+    assert report.check_summaries["corner_angles"].failed_panels == (1, 2, 3)
+    assert report.check_summaries["mapping_jacobian"].failed_panels == (2, 3)
+    assert report.check_summaries["mapping_jacobian"].not_evaluated_panels == (4,)
+    assert [panel.status for panel in report.panels] == ["PASS"] + ["FAIL"] * 4
+    assert report.status == "FAIL"
+    assert report.solver_qualification.status == "NOT_EVALUATED"
+
+
+def test_worked_example_emits_complete_strict_json(capsys):
+    """The five synthetic panels retain their identity in the saved report."""
+    import runpy
+    from pathlib import Path
+
+    example = Path(__file__).resolve().parents[2] / (
+        "examples/domains/hydrodynamics/quad_mesh_quality.py"
+    )
+    runpy.run_path(str(example), run_name="__main__")
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["case_names"][2] == "flat_triangle"
+    assert payload["status"] == "FAIL"
+    assert payload["panels"][0]["status"] == "PASS"
+    assert payload["check_summaries"]["planarity"]["failed_panels"] == [4]
+    assert payload["solver_qualification"]["status"] == "NOT_EVALUATED"
