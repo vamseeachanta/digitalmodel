@@ -44,6 +44,10 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reporting/build_naval_evidence_report.py": (
+        "renders the naval evidence analysis under docs/reports, not docs/api; "
+        "dedicated naval evidence tests verify byte reproduction"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),

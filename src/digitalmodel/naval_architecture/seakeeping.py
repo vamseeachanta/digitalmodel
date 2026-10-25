@@ -201,7 +201,7 @@ def significant_motion(
     """
     if len(rao_values) != len(wave_spectrum_values):
         raise ValueError("RAO and spectrum arrays must have same length")
-    if not rao_values:
+    if len(rao_values) == 0:
         raise ValueError("RAO and spectrum arrays must be nonempty")
 
     m0 = sum(

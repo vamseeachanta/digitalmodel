@@ -2204,7 +2204,7 @@
     "src/digitalmodel/naval_architecture/resistance.py": "9c95175da33277e07fb0bdd7ed6ab91c7dc11cce6068d6d0f8e2d2845dc049fe",
     "src/digitalmodel/naval_architecture/rudder_stock_torque.py": "5e8a84256cf095bf4ab5cd52c7b33d74e639674f36affe37f1260c994393e597",
     "src/digitalmodel/naval_architecture/scantlings.py": "a138325225b50a1139813696718155c741cc8a8261035b631935c3d4f477b304",
-    "src/digitalmodel/naval_architecture/seakeeping.py": "b464d04ae9e14b9f60bb13b855586308dd453c77207a5bf36ef4dcaf756ef00f",
+    "src/digitalmodel/naval_architecture/seakeeping.py": "6fb5e750a325bde71bdfefdbd6f405979320f8d59e67d0e2d9f6fba4b6669aad",
     "src/digitalmodel/naval_architecture/ship_data.py": "57d77bc732205f0fab894e1b48d2d067e3569b66f0ff1cd48a66c3680f4a5a78",
     "src/digitalmodel/naval_architecture/ship_dimensions.py": "acdfe1ef6c68ed6c45a34f4d87e332a4f617e2f4a8ce788c46ba0ff82dc6b29d",
     "src/digitalmodel/naval_architecture/solid_occlusion.py": "cbfd56fcd433b2278e977ad8d8a9c37df1cf2e3a59f7ab53d223ba5c6800eb9c",
@@ -2223,7 +2223,7 @@
     "src/digitalmodel/naval_architecture/workflow.py": "c794f6def13714572e4da1a5e9230cca03367ee142d877f1f55bd66ea8b5f877",
     "src/digitalmodel/naval_architecture/workflow_calculations.py": "aa237e042e1dea912d18a9e7a369cb1f533690ec04e3fd3260b55f1cbf06cdd7",
     "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
-    "scripts/reporting/build_naval_evidence_report.py": "f32663020fd7c8903cfa9ca8f4a6a9ba9373aa9640dd9933af876a08c6b698ca",
+    "scripts/reporting/build_naval_evidence_report.py": "84a425410bc1099baf94332cb150aa4070e5213b4b926dba95748d469588b59c",
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a"
   }
 }

@@ -3,6 +3,7 @@
 
 """No empty evidence collection may imply an evaluated safe condition."""
 
+import numpy as np
 import pytest
 
 from digitalmodel.naval_architecture.damage_stability_screening import DamageCaseResult
@@ -36,6 +37,25 @@ def test_empty_lifting_criteria_do_not_pass():
 def test_empty_spectral_evidence_is_refused():
     with pytest.raises(ValueError, match="nonempty"):
         significant_motion([], [], 1.0)
+
+
+@pytest.mark.parametrize(
+    "rao_values,spectrum,step,expected",
+    [
+        (np.ones(10), np.ones(10), 0.1, 2.0),
+        (np.array([0.0]), np.array([1.0]), 0.1, 0.0),
+        (np.array([2.0]), np.array([0.25]), 1.0, 2.0),
+    ],
+)
+def test_nonempty_numpy_spectral_evidence(rao_values, spectrum, step, expected):
+    # s = 2*sqrt(sum(RAO**2*S*step)): 10*1*1*0.1 = 1 gives 2;
+    # 0**2*1*0.1 = 0 gives 0; 2**2*0.25*1 = 1 gives 2.
+    assert significant_motion(rao_values, spectrum, step) == pytest.approx(expected)
+
+
+def test_empty_numpy_spectral_evidence_is_refused():
+    with pytest.raises(ValueError, match="nonempty"):
+        significant_motion(np.array([]), np.array([]), 0.1)
 
 
 def test_missing_cut_evidence_emits_unevaluated_note():

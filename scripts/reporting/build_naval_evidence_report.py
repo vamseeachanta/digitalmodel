@@ -29,9 +29,11 @@ SOURCE = "https://eng.libretexts.org/@go/page/55503"
 SECTIONS = ("summary", "scope", "inputs", "method", "worked-example", "pitfalls",
             "limits", "recommendations", "evidence", "symbols")
 CHANGES = {
-    "document": "naval-architecture-evidence-analysis", "revision": 1,
+    "document": "naval-architecture-evidence-analysis", "revision": 2,
     "history": [{"revision": 1, "date": "2026-10-22",
-                 "change": "Record explicit missing evidence, empty selections and uncapped response for issue #2597."}],
+                 "change": "Record explicit missing evidence, empty selections and uncapped response for issue #2597."},
+                {"revision": 2, "date": "2026-10-25",
+                 "change": "Refresh source digests after restoring NumPy spectral inputs and classifying the report generator."}],
 }
 
 
@@ -291,7 +293,7 @@ def build(output: Path = OUTPUT) -> list[Path]:
     paths = []
     for name, content in artifacts().items():
         path = output / name
-        path.write_text(content, encoding="utf-8")
+        path.write_text(content, encoding="utf-8", newline="\n")
         paths.append(path)
     return paths
 
