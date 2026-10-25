@@ -346,14 +346,65 @@ def pressure_bounds(
     }
 
 
-def _band(values, tvd):
-    # Never condition on successful draws: unresolved draws invalidate bands.
+def _validate_unresolved_fraction_limit(limit):
+    # A fraction is bounded by zero and one by definition. No engineering
+    # acceptance limit is supplied here: it must come from the caller.
+    if limit is not None and (
+        isinstance(limit, bool)
+        or not isinstance(limit, (int, float))
+        or not math.isfinite(limit)
+        or not 0 <= limit <= 1
+    ):
+        raise ValueError("max_unresolved_fraction must be finite and in [0, 1]")
+
+
+def _band(values, tvd, *, max_unresolved_fraction=None, require_all_draws=False):
+    """Conditional empirical band; unresolved-draw policy is an explicit input."""
+    _validate_unresolved_fraction_limit(max_unresolved_fraction)
+    if not values:
+        raise ValueError("band requires at least one draw")
+    resolved = [v for v in values if v is not None]
+    unresolved = len(values) - len(resolved)
+    fraction = unresolved / len(values)
+    reason = None
+    if require_all_draws and unresolved:
+        reason = "ALL_DRAWS_REQUIRED"
+    elif not resolved:
+        reason = "NO_RESOLVED_DRAWS"
+    elif unresolved:
+        if max_unresolved_fraction is None:
+            reason = "UNRESOLVED_FRACTION_LIMIT_NOT_SUPPLIED"
+        elif fraction > max_unresolved_fraction:
+            reason = "UNRESOLVED_FRACTION_EXCEEDS_LIMIT"
+    # Sample Quantiles in Statistical Packages (1996), eq. (1), Definition 7,
+    # pp. 361, 363: h=(n-1)*p with linear interpolation. P10/P50/P90 retain
+    # the existing workflow convention (issue #2669); they are conditional
+    # on resolution, not estimates of the unresolved population's quantiles.
     quantiles = (
         [None] * 3
-        if any(v is None for v in values)
-        else np.quantile(values, [0.1, 0.5, 0.9]).tolist()
+        if reason is not None
+        else np.quantile(resolved, [0.1, 0.5, 0.9], method="linear").tolist()
     )
-    result = {"validation_status": NOT_VALIDATED}
+    status = "INDETERMINATE"
+    if reason is None:
+        status = "RESOLVED_DRAWS_ONLY" if unresolved else "ALL_DRAWS_RESOLVED"
+    result = {
+        "validation_status": NOT_VALIDATED,
+        "numerical_status": status,
+        "indeterminate_reason": reason,
+        "quantile_basis": "resolved_draws_only",
+        "resolved_draws": len(resolved),
+        "unresolved_draws": unresolved,
+        "unresolved_fraction": fraction,
+        "max_unresolved_fraction": max_unresolved_fraction,
+        "unresolved_fraction_check": (
+            "ALL_DRAWS_REQUIRED"
+            if require_all_draws
+            else "NOT_EVALUATED"
+            if max_unresolved_fraction is None
+            else "EVALUATED"
+        ),
+    }
     for name, value in zip(("p10", "p50", "p90"), quantiles):
         result[name + "_psi"] = value
         result[name + "_emw_ppg"] = None if value is None else value / (0.052 * tvd)
@@ -369,6 +420,8 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
     clipping, rejection sampling or silently changing the prior distribution.
     """
     ensemble = config.get("ensemble", {})
+    unresolved_limit = ensemble.get("max_unresolved_fraction")
+    _validate_unresolved_fraction_limit(unresolved_limit)
     n = ensemble.get("samples", 128)
     if not isinstance(n, int) or n < 1:
         raise ValueError("ensemble samples must be an integer >= 1")
@@ -412,14 +465,30 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             draws.append(draw)
             bounds.append(pressure_bounds(draw, **controls))
         curves = {
-            "pore": _band([c.pore_pressure_psi for c in draws], tvd),
-            "collapse": _band([b["collapse"]["pressure_psi"] for b in bounds], tvd),
-            "fracture_initiation": _band(
-                [b["fracture_initiation"]["pressure_psi"] for b in bounds], tvd
+            "pore": _band(
+                [c.pore_pressure_psi for c in draws], tvd, require_all_draws=True
             ),
-            "minimum_horizontal_stress": _band([c.shmin_psi for c in draws], tvd),
+            "collapse": _band(
+                [b["collapse"]["pressure_psi"] for b in bounds],
+                tvd,
+                max_unresolved_fraction=unresolved_limit,
+            ),
+            "fracture_initiation": _band(
+                [b["fracture_initiation"]["pressure_psi"] for b in bounds],
+                tvd,
+                require_all_draws=True,
+            ),
+            "minimum_horizontal_stress": _band(
+                [c.shmin_psi for c in draws], tvd, require_all_draws=True
+            ),
         }
+        curves["collapse"]["bias_direction"] = (
+            "unknown (unresolved draws may include numerical misses)"
+            if curves["collapse"]["unresolved_draws"]
+            else "none (all draws resolved)"
+        )
         failed = sum(b["collapse"]["pressure_psi"] is None for b in bounds)
+        # Conditional collapse quantiles do not establish a joint window.
         low = (
             None
             if failed
@@ -427,7 +496,11 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
         )
         # Include the first shear interval's upper bound as well as the four
         # requested curves. Joint draw ceilings preserve competing upper limits.
-        upper = _band([b["conservative_ceiling_psi"] for b in bounds], tvd)
+        upper = _band(
+            [b["conservative_ceiling_psi"] for b in bounds],
+            tvd,
+            require_all_draws=True,
+        )
         high = upper["p10_psi"]
         window.append(
             {
@@ -497,7 +570,15 @@ def run_workflow(config: dict, output_dir: str | Path) -> dict:
             "sigma": sigma,
             "method": "empirical normal-input Monte Carlo; P10 low / P50 median / P90 high",
             "dependence": "independent fields; identical standardized draws across depth",
-            "failed_draw_policy": "null bands if any bound is unresolved; invalid physical draws raise",
+            "max_unresolved_fraction": unresolved_limit,
+            "failed_draw_policy": (
+                "collapse bands use resolved draws only within the supplied unresolved-fraction limit; "
+                "bias direction is unknown for unresolved draws because narrow stable intervals may be missed numerically; "
+                "downward bias is possible if omitted draws have higher collapse pressures than the resolved draws; "
+                "unresolved draws without a supplied limit, or no resolved draws, give an indeterminate band; "
+                "windows remain unavailable if any collapse or ceiling draw is unresolved; "
+                "invalid physical draws raise"
+            ),
         },
         "polar_projection": "equal-angle stereographic: radius=tan(inclination/2), azimuth clockwise from north; nominal only",
         "window": window,
