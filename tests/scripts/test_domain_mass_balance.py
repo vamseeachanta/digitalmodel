@@ -51,6 +51,61 @@ def test_maximum_drift(values, limit, status, maximum):
     assert result["sample_count"] == len(values)
 
 
+@pytest.mark.parametrize("route", ["function", "log", "cli"])
+@pytest.mark.parametrize(
+    ("final", "status"),
+    [
+        ("0.5499999999999999", "PASS"),
+        ("0.55", "PASS"),
+        ("0.5500000000000001", "FAIL"),
+        ("0.4500000000000001", "PASS"),
+        ("0.45", "PASS"),
+        ("0.4499999999999999", "FAIL"),
+    ],
+)
+def test_decimal_gain_loss_boundary(tmp_path, route, final, status):
+    """From 0.5, exactly 0.05 gain or loss meets the inclusive 0.1 limit."""
+    if route == "function":
+        result = balance.evaluate_drift([0.5, float(final)], 0.1)
+    elif route == "log":
+        result = balance.assess_log(
+            log_text(["0.5", final]).splitlines(), 0.1, fixed_domain=True,
+        )
+    else:
+        path = tmp_path / "log.interFoam"
+        path.write_text(log_text(["0.5", final]))
+        process = subprocess.run(
+            [sys.executable, str(SCRIPT), str(path), "--fixed-domain", "--json",
+             "--max-relative-drift=0.1"],
+            capture_output=True, text=True, check=False,
+        )
+        assert process.returncode == (0 if status == "PASS" else 1)
+        result = json.loads(process.stdout)
+    assert result["status"] == status
+
+
+@pytest.mark.parametrize(
+    ("final", "limit", "status"),
+    [
+        ("0.5500000000000000000000000000000000000001", "0.1", "FAIL"),
+        ("0.4499999999999999999999999999999999999999", "0.1", "FAIL"),
+        ("0.55", "0.0999999999999999999999999999999999999999", "FAIL"),
+        ("0.55", "0.1000000000000000000000000000000000000001", "PASS"),
+    ],
+)
+def test_cli_preserves_decimal_sample_and_limit_precision(tmp_path, final, limit, status):
+    """Digits beyond binary float and default decimal precision affect the gate."""
+    path = tmp_path / "log.interFoam"
+    path.write_text(log_text(["0.5", final]))
+    process = subprocess.run(
+        [sys.executable, str(SCRIPT), str(path), "--fixed-domain", "--json",
+         f"--max-relative-drift={limit}"],
+        capture_output=True, text=True, check=False,
+    )
+    assert process.returncode == (0 if status == "PASS" else 1)
+    assert json.loads(process.stdout)["status"] == status
+
+
 @pytest.mark.parametrize(
     "values",
     [[], [0.5], [0, 0.1], [-0.1, 0.5], [0.5, 1.1],
