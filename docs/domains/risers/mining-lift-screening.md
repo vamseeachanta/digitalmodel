@@ -185,27 +185,20 @@ For length `10 m` and gravity `10 m/s2`, independent arithmetic gives dry weight
 on either side, at each endpoint and at a single-point interval. These quantities
 are verification inputs, not sourced material properties or design defaults.
 
+The auxiliary-tube case halves the S1 outer diameter and wall thickness, retains
+the same material and contents properties, and sets zero contents coupling and
+no axial load transfer. With the same attachments, length and gravity, the
+combined dry weight is `850*pi N`, contents weight `62.5*pi N`, filled weight
+`912.5*pi N`, buoyancy `225*pi N` and submerged weight `687.5*pi N`.
+The filled inventory is also checked against the sum of both tubes' complete
+mass per length plus attached mass; the auxiliary contributes no axial stiffness.
+
 ### Design-basis interface
 
-The public `lift_design_basis` interface was inspected in the separate data
-repository's draft [design-basis change](https://github.com/vamseeachanta/worldenergydata/pull/1636).
-Its quantities carry `value`, `unit` and `source`. This calculation module retains
-its existing SI interface; it neither imports nor duplicates that model. Callers
-validate the basis first and retain its evidence when extracting numeric values.
-
-| Design-basis field | Existing calculation input or required decision |
-| --- | --- |
-| `string.length_m` | `BundleSection.length_m`; partition explicitly for distributed properties. |
-| `string.outer_diameter_m`, `string.inner_diameter_m` | `Tube.outer_diameter_m`; `wall_thickness_m = (outer_diameter_m-inner_diameter_m)/2`. Both diameters must use m and leave a positive wall and bore. |
-| `string.young_modulus_pa` | `Tube.youngs_modulus_pa`; spelling differs in the established interfaces, units remain Pa. |
-| `environment.water_density_kg_m3` | `BundleSection.external_density_kg_m3`. |
-| `string.mass_per_length_kg_m` | No automatic mapping: establish whether it includes contents and attachments. Supply wall material density and additional mass separately; reconcile the resulting inventory with the basis. |
-| `auxiliary_lines` | One additional `Tube` per line; connection load transfer and contents inertia participation remain explicit inputs. |
-| `environment.peak_wave_period_s`, `motion.response_period_s` | Individual periods, not a complete wave-period range. Supply the screening bounds from a cited environmental envelope; do not infer them from either scalar. |
-| `cases[].top_tension_n` | A comparison input, not the lower boundary force. Compare with calculated top effective tension only after reconciling wall/effective-tension definitions. |
-| `pump.installation_depth_m` | Does not specify bottom mass. Supply `lower_end_mass_kg` and `lower_end_force_n` separately; an internal pump requires a distributed model extension. |
-
-Table: Explicit interface mapping; numeric values remain in their named SI units.
+Field mapping will be documented in the separate design-basis change when its
+interface is established. This calculation module retains its existing SI
+interface; it neither imports nor duplicates the draft model. Callers validate
+the basis first and retain its evidence when extracting numeric values.
 
 Layer lengths, local solids volume fraction, particle and carrier densities,
 gravity, attachment displacement, axial added mass, contents coupling and lower
@@ -213,7 +206,8 @@ assembly properties require separate evidence. No value is inferred from water
 depth, pump duty, allowable stress or a missing basis field. Existing
 `SlurryLayer.liquid_density_kg_m3`, `solids_density_kg_m3` and
 `solids_volume_fraction` match the flow-screening vocabulary.
-Packages 4 through 9 remain separate work; this change does not qualify a design.
+This change completes item 1 of issue 3192: weight inventory and the
+axial/wave-period screen. It does not qualify a design.
 
 Verification covers R1 phase limits and profile coordinates, hand-integrated
 effective tension and D3, D5 mesh convergence, D6 lower mass, D7 nonuniform sections, auxiliary connection

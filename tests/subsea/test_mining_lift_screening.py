@@ -47,6 +47,39 @@ def test_weight_components_and_top_tension_hand_balance():
     assert static.effective_tension_n[0] == pytest.approx(550 * pi + 20)
 
 
+def test_inventory_includes_non_load_carrying_auxiliary_tube():
+    # Auxiliary OD=1, wall=.25: wall=3*pi/16, bore=pi/16, displacement=pi/4.
+    # With the main tube and attachments: dry=(6*pi+1.5*pi+pi)*100=850*pi;
+    # contents=(.5*pi+.125*pi)*100=62.5*pi; buoyancy=(pi+.25*pi+pi)*100=225*pi.
+    main = bundle().tubes[0]
+    auxiliary = Tube(
+        outer_diameter_m=1.0,
+        wall_thickness_m=0.25,
+        material_density_kg_m3=8.0,
+        youngs_modulus_pa=800.0,
+        contents_density_kg_m3=2.0,
+        contents_inertia_fraction=0.0,
+        carries_axial_load=False,
+    )
+    section = bundle(tubes=(main, auxiliary))
+    result = string_weight_inventory([section], gravity_m_s2=10.0)
+    assert result.dry_weight_n == pytest.approx(850 * pi)
+    assert result.contents_weight_n == pytest.approx(62.5 * pi)
+    assert result.filled_weight_n == pytest.approx(912.5 * pi)
+    assert result.buoyancy_n == pytest.approx(225 * pi)
+    assert result.submerged_weight_n == pytest.approx(687.5 * pi)
+    assert main.mass_kg_m == pytest.approx(6.5 * pi)
+    assert auxiliary.mass_kg_m == pytest.approx(1.625 * pi)
+    assert result.filled_weight_n == pytest.approx(
+        (main.mass_kg_m + auxiliary.mass_kg_m + section.additional_mass_kg_m)
+        * section.length_m
+        * 10.0
+    )
+    assert section.axial_stiffness_n == pytest.approx(600 * pi)
+    static = free_hanging_screen([section], gravity_m_s2=10.0, lower_end_force_n=20.0)
+    assert static.effective_tension_n[0] == pytest.approx(687.5 * pi + 20)
+
+
 def test_inventory_retains_negative_weight_and_multiple_sections():
     # First section net=550*pi; second: 750*pi-1000*pi=-250*pi.
     result = string_weight_inventory(
