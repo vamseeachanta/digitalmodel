@@ -70,6 +70,19 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_floating_wind_module_report.py",
+        ("docs/reports/modules/floatingwind/report.html",
+         "docs/reports/modules/floatingwind/changes.json"),
+        inputs=(
+            "examples/workflows/floating-wind-sizing/input.yml",
+            "src/digitalmodel/reporting/assets/calc_report_format.html",
+            "docs/domains/cathodic_protection/reports/cases/S01/report.html",
+            "pyproject.toml",
+            *(path.relative_to(REPO).as_posix()
+              for path in sorted((REPO / "tests/floating_wind").glob("test_*.py"))),
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
