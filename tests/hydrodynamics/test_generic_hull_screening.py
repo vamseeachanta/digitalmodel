@@ -50,7 +50,12 @@ def test_undamped_two_degree_hand_check(builder):
     )
     assert moment.in_phase / 1e-7 == pytest.approx(359 / 24, rel=1e-10)
     assert abs(moment.quadrature / 1e-7) < 1e-10
-    response = 1 / (0.75 - 0.1 * (moment.in_phase / 1e-7) / (53 / 6))
+    response = model.coupled_roll_response(
+        forcing_period=4 * math.pi, vessel_roll_period=2 * math.pi,
+        hull_damping_ratio=0.0, tank_authority=0.1,
+        geometry=geometry, conduit_area=1.0, density=1.0, gravity=1.0,
+        loss_coefficient=1e-20,
+    )
     assert response == pytest.approx(2120 / 1231, rel=1e-10)
     for sign in (-1, 1):
         x = (1529 + sign * math.sqrt(532873)) / 1892
@@ -99,7 +104,7 @@ def test_unconverged_response_is_rejected(builder, monkeypatch):
         builder.screen_case(18, .02, .05)
 
 
-def test_table_basis_and_quote_comparison(record):
+def test_table_basis_and_damping_comparison(record):
     assert len(record["cases"]) == 20
     assert {row["roll_period_s"] for row in record["cases"]} == {18.0, 21.0}
     assert {row["hull_damping_ratio"] for row in record["cases"]} == {0.02, 0.05}
@@ -107,11 +112,42 @@ def test_table_basis_and_quote_comparison(record):
     for row in record["cases"]:
         expected = 100 * (1 - row["tank_peak_rao"] / row["bare_peak_rao"])
         assert row["reduction_percent"] == pytest.approx(expected)
-        assert row["max_relative_residual"] < 1e-5
+        assert row["max_relative_residual_bound"] <= 1e-5
         assert len(row["forcing_periods_s"]) == len(row["tank_rao"]) == 121
-    for quote in record["quote_checks"]:
-        assert quote["difference_percentage_points"] == pytest.approx(
-            quote["computed_percent"] - quote["quoted_percent"])
+    assert "quote_checks" not in record
+
+
+@pytest.mark.parametrize("direction", [-math.inf, math.inf])
+def test_numeric_serialization_ignores_last_bit_math_drift(
+    builder, record, tmp_path, monkeypatch, direction,
+):
+    """Exercise optimization and serialization with perturbed libm results."""
+    builder.build(tmp_path / "reference", record=record)
+    for name in ("sin", "tan", "hypot"):
+        original = getattr(math, name)
+
+        def perturbed(*args, original=original):
+            return math.nextafter(original(*args), direction)
+
+        monkeypatch.setattr(math, name, perturbed)
+    builder.build(tmp_path / "perturbed")
+    for relative in (builder.PAGE, builder.DATA, builder.TEST):
+        assert ((tmp_path / "reference" / relative).read_bytes()
+                == (tmp_path / "perturbed" / relative).read_bytes())
+
+
+def test_saved_floats_have_at_most_twelve_significant_digits(builder):
+    def check(value):
+        if isinstance(value, float):
+            assert value == float(format(value, ".12g"))
+        elif isinstance(value, dict):
+            for child in value.values():
+                check(child)
+        elif isinstance(value, list):
+            for child in value:
+                check(child)
+
+    check(json.loads((ROOT / builder.DATA).read_text(encoding="utf-8")))
 
 
 def test_invalid_screen_inputs_are_rejected(builder):
@@ -149,12 +185,30 @@ def test_page_wording_links_and_preservation(builder, record):
     text = builder.render(record)
     assert '<title>Generic hull coupled roll screening estimate</title>' in text
     assert 'Generic hull roll-plus-tank screening estimate' in text
-    assert '18 s cases mildly extrapolate' in text
+    assert '18 s sweep starts at 12.6 s' in text
     assert 'No tank-on and tank-off real-vessel comparison' in text
     assert 'P.E. sign-off remains pending' in text
     assert 'AI generated' in text
     assert 'Revision history' in text
-    assert 'Quote comparison' in text
+    assert 'quote' not in text.lower()
+    assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text
+    assert 'conduit area A_c = 6.8 m²' in text
+    assert '120 m² in plan' in text
+    assert 'Ks also includes water redistribution between the legs' in text
+    assert 'Hull damping (% of critical)' in text
+    assert '4.3 % RMS error' in text
+    assert 'below about 16 s' in text
+    assert '14.3 s' in text
+    assert 'ratio 0.505' in text
+    assert '0.43 to 0.72' in text
+    assert '6.0 % more roll' in text
+    assert '29.5 %' in text
+    assert '25.0 % limit' in text
+    assert text.count('ASSUMED - to be confirmed') == 3
+    assert "checks arithmetic and the coupling denominator" in text
+    assert "not the physics of the moment model" in text
+    assert 'Mon 26 Oct' not in text
+    assert 'Questions: support&#64;aceengineer.com' in text
     assert '\u2014' not in text
     for folder in ("home", "mnt"):
         assert "/" + folder + "/" not in text

@@ -12,30 +12,32 @@ caption{caption-side:bottom;text-align:left;padding:12px 0}pre{white-space:pre-w
 <p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p></header>
 <h2>Summary</h2>
 <p>The coupled model predicts a screening estimate for generic hulls. No result represents a real hull.</p>
-<p class="notice">At 18 s, alpha 0.05 with no units, and A_c = 6.8 m², the screening estimates are 46.1 % and 23.3 %.
-They replace proposed quotes of 47.2 % and 23.5 %, respectively. The quote table gives the differences.</p>
+<p class="notice">At 18 s, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
+the screening estimates are 46.1 % at 2 % hull damping and 23.3 % at 5 %.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr></tbody></table>
+<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
+<tr><td>Clarification</td><td>2026-10-25</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr></tbody></table>
 <h2>Coupled method: screening estimate</h2>
 <p>The model links hull roll to water transfer between connected tank legs. Tank moments feed back into the hull roll equation.
 Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha has no units.</p>
 <p>The public model includes vertical-centroid and local free-surface terms in that quasi-static stiffness.
-Its denominator also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
+Ks also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
 <p>The normalized bare-hull impedance is D = 1 − (T₀/T)² + 2iζ(T₀/T).
 The coupled impedance is D − αH/Kₛ. H is tank moment per roll angle; Kₛ is its quasi-static limit.</p>
-<p>The hull equation uses normalized restoring of 1, with no units. The model sets forcing to give 5° bare roll at the nominal resonance.
-Forcing stays fixed within each tank-on and tank-off comparison. Forcing changes between hull-damping groups because tank loss depends on amplitude.</p>
+<p>The hull equation uses normalized restoring of 1, with no units. The model sets forcing to give 5° bare roll at the nominal resonance
+(ASSUMED - to be confirmed). Forcing stays fixed within each tank-on and tank-off comparison.
+Forcing is rescaled between damping groups to keep the 5 degree bare-roll reference, so the comparison also changes the tank amplitude.</p>
 <p>The calculation finds each response peak separately over 0.7 to 1.3 times the hull roll period, with no units.
 It refines all sampled local peaks. Reduction equals 100 % times one minus the coupled peak divided by the bare peak.</p>
 <h2>Tank basis: screening estimate</h2>
-<p>The calculation uses public reference tank inputs, with no actual hull geometry.
-Each leg measures 20.0 m by 6.0 m. Fill depth is 5.0 m; centroid offset is 5.0 m.
+<p>The calculation uses public reference tank inputs (ASSUMED - to be confirmed), with no actual hull geometry.
+Each leg measures 20.0 m by 6.0 m (120 m² in plan). Fill depth is 5.0 m; centroid offset is 5.0 m.
 Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
-<p>The data record lists every coefficient and its units. Calibration transfer remains an assumption.
+<p>The data record lists every coefficient and its units. Calibration transfer: ASSUMED - to be confirmed.
 These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page.</p>
 <h2>Peak roll reduction: screening estimate</h2>
-<table><thead><tr><th>Hull roll period (s)</th><th>Hull damping (%)</th><th>Alpha (1)</th>
+<table><thead><tr><th>Hull roll period (s)</th><th>Hull damping (% of critical)</th><th>Alpha (1)</th>
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>
 <tr><td>18</td><td>2</td><td>0.02</td><td>24.3</td><td>18.1</td></tr>
 <tr><td>18</td><td>2</td><td>0.05</td><td>46.1</td><td>18.5</td></tr>
@@ -57,28 +59,30 @@ These screening estimates use the public reference tank, which differs from the 
 <tr><td>21</td><td>5</td><td>0.10</td><td>29.8</td><td>22.4</td></tr>
 <tr><td>21</td><td>5</td><td>0.15</td><td>35.2</td><td>23.4</td></tr>
 <tr><td>21</td><td>5</td><td>0.20</td><td>37.7</td><td>24.5</td></tr>
-</tbody><caption>Screening estimate sensitivity matrix. Tool: public U-tube model and the linked generator; exact source digests appear in the data record.</caption></table>
-<p>At 18 s and alpha 0.05, with no units, increasing hull damping from 2 % to 5 % roughly halves the screening benefit.
-The remaining benefit is 0.5 times the lower-damping benefit, with no units.</p>
-<h2>Quote comparison: screening estimate</h2>
-<p>Both comparisons use an 18 s generic hull period, alpha 0.05 with no units, and conduit area A_c of 6.8 m².</p>
-<table><thead><tr><th>Hull damping (%)</th><th>Proposed quote (%)</th><th>Generated screening estimate (%)</th>
-<th>Difference (percentage points)</th></tr></thead><tbody>
-<tr><td>2</td><td>47.2</td><td>46.1</td><td>-1.1</td></tr>
-<tr><td>5</td><td>23.5</td><td>23.3</td><td>-0.2</td></tr>
-</tbody><caption>Screening estimate minus proposed quote, computed before rounding. No coefficient was fitted to either quote.</caption></table>
+</tbody><caption>Screening estimate sensitivity matrix. Tool: public U-tube model and the linked generator.
+Model file: src/digitalmodel/hydrodynamics/utube_tank.py; Git blob: 90f316a9189a8c66e2b079fe14f634788308d062; generation date: 2026-10-25.
+Exact source digests appear in the data record.</caption></table>
+<p>In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio 0.505).
+The ratio of the 5 % benefit to the 2 % benefit ranges from 0.43 to 0.72 across the matrix.
+For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are 18 s: 0.43, 0.50, 0.62, 0.69, 0.72; 21 s: 0.43, 0.51, 0.59, 0.64, 0.66.
+These comparisons rescale forcing between damping groups and therefore change the tank amplitude.</p>
 <h2>Long-period penalty: screening estimate</h2>
 <p>Slow water transfer reduces the effective hull restoring. In the slow-forcing limit, the roll ratio approaches 1/(1−α), with no units.
-At alpha 0.05, with no units, that limit gives 5.3 % more roll. A near-resonance reduction does not remove this penalty.</p>
+At alpha 0.05, with no units, that limit gives 5.3 % more roll.
+At 60 s forcing and 18 s hull period with 2 % hull damping, there is 6.0 % more roll at alpha 0.05
+and 29.5 % at alpha 0.20, against a 25.0 % limit.
+The slow-forcing limit understates the penalty at 60 s. A near-resonance reduction does not remove this penalty.</p>
 <h2>Hand checks: screening estimate</h2>
 <p>Alpha = 0, with no units, gives zero reduction, or 0 %.
-An independent undamped box calculation checks the coupled denominator and both natural frequencies.</p>
+An undamped box hand check copies the model's own moment formula, so it checks arithmetic and the coupling denominator,
+not the physics of the moment model. It also checks both natural frequencies.</p>
 <p>For that mathematical check, each leg measures 2 m by 1 m, with 1 m depth and 1 m offset.
 The conduit has 1 m² area and 1 m effective length. Fluid density is 1 kg/m³; gravity is 1 m/s².</p>
 <p>The hand calculation gives Kₛ = 53/6 N m/rad and H = 359/24 N m/rad at 0.5 rad/s.
 At alpha 0.1, with no units, the response is 2120/1231 times normalized forcing, with no units.</p>
 <h2>Validity limits: screening estimate</h2>
-<p>The 18 s cases mildly extrapolate below the moment model's validated band of 20 s and longer.
+<p>The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established.
+The reference tank's natural period is 14.3 s; the 18 s sweep starts at 12.6 s.
 Every sampled forcing period below 20 s lies outside that band, including parts of the 21 s sweep.
 The published moment fit does not validate coupled hull reduction.</p>
 <p>No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.
@@ -87,7 +91,9 @@ These screening estimates exclude sea-state weighting, structural loads and desi
 <pre>python scripts/capabilities/build_generic_hull_screening.py
 python -m pytest tests/hydrodynamics/test_generic_hull_screening.py</pre>
 <p>The generator writes this page, the data record and the independent-oracle test from one script.
-The test checks limiting cases, equilibrium residuals, frequency refinement and exact regeneration.</p>
+The tests check limiting cases, raw equilibrium residuals, frequency refinement and byte-identical regeneration of canonical numeric output.
+JSON floats retain at most 12 significant digits; refined peak periods are rounded to 0.0001 s, and residuals are reported as conservative power-of-ten upper bounds.
+Last-bit math perturbation tests check output stability; native platform runs are required to confirm each supported runtime.</p>
 <p><a href="data/generic_hull_roll_screening.json">Screening estimate data, arrays, units and source digests</a> ·
 <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Screening estimate generator and test source</a> ·
 <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">Public coupled model</a> ·
@@ -95,5 +101,5 @@ The test checks limiting cases, equilibrium residuals, frequency refinement and 
 <h2>Left</h2>
 <p>AI generated the script, calculations, tests and draft text. Engineering checks and acceptance remain pending.
 P.E. sign-off remains pending; no engineer signature is asserted.</p>
-<p>Technical-reviewer, claims, cold-read and Codex review passes remain pending for Mon 26 Oct 2026 18:00Z.</p>
+<p>Questions: support&#64;aceengineer.com</p>
 <footer>Screening estimate only. Generated with Codex.</footer></body></html>
