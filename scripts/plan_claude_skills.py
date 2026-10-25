@@ -48,9 +48,10 @@ def pointer_plan(repo, hub, date, skills_dir=None):
     except ValueError as error:
         raise ValueError("date must be a valid calendar date in YYYYMMDD") from error
     destination = skill_destination(repo, skills_dir)
+    relative_destination = destination.relative_to(repo)
     artifacts = [
         {
-            "path": f".claude/skills/{name}",
+            "path": (relative_destination / name).as_posix(),
             "kind": "symlink",
             "target": os.path.relpath(internal / name, destination),
         }
@@ -58,7 +59,7 @@ def pointer_plan(repo, hub, date, skills_dir=None):
     ]
     artifacts.append(
         {
-            "path": ".claude/skills/.ecosystem-propagated",
+            "path": (relative_destination / ".ecosystem-propagated").as_posix(),
             "kind": "file",
             "content": date + "\n",
         }

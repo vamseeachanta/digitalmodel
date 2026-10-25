@@ -144,14 +144,28 @@ def test_arbitrary_checkout_depth_has_no_absolute_target(tmp_path):
     assert list(repo.iterdir()) == []
 
 
-def test_apply_alias_and_explicit_destination(tmp_path):
+@pytest.mark.parametrize("destination", ["pointers", "nested/pointers with spaces"])
+def test_apply_alias_and_explicit_destination(tmp_path, destination):
     repo, hub = fixture(tmp_path)
-    output = repo / "pointers"
-    args = command(repo, hub) + ["--apply", "--skills-dir", str(output)]
-    first = run(args)
+    output = repo / destination
+    args = command(repo, hub) + ["--skills-dir", str(output)]
+    preview = run(args + ["--dry-run"])
+    assert preview.returncode == 0, preview.stderr
+    recipe = json.loads(preview.stdout)
+    assert recipe["mode"] == "plan"
+    assert {row["path"] for row in recipe["artifacts"]} == {
+        f"{destination}/{name}" for name in (*NAMES, ".ecosystem-propagated")
+    }
+    assert list(repo.iterdir()) == []
+    first = run(args + ["--apply"])
     assert first.returncode == 0, first.stderr
+    applied = json.loads(first.stdout)
+    assert applied["mode"] == "apply"
+    assert applied["artifacts"] == recipe["artifacts"]
     assert_artifacts(repo, hub, destination=output)
-    second = run(args)
+    assert all((repo / row["path"]).exists() for row in applied["artifacts"])
+    assert not (repo / ".claude").exists()
+    second = run(args + ["--apply"])
     assert second.returncode == 0, second.stderr
     assert second.stdout == first.stdout
 
