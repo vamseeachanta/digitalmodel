@@ -211,3 +211,103 @@ const folder = {getFileHandle: async name => {assert.equal(name, "report.comment
     script.write_text(harness + builder._INTERACTIONS + assertions, encoding="utf-8", newline="\n")
     result = subprocess.run([node, str(script)], capture_output=True, text=True, encoding="utf-8", timeout=15)
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize("previous_folder", [False, True])
+@pytest.mark.parametrize("load_result", [
+    "lookup-denied", "file-unreadable", "file-disappeared", "text-unreadable",
+    "text-disappeared", "malformed-json", "invalid-schema", "absent", "valid-empty",
+])
+def test_comment_save_uses_only_a_validated_folder(builder, tmp_path, load_result, previous_folder):
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node is unavailable for the browserless interaction check")
+    # Prematurely accepting a folder permits Save to overwrite unread comments.
+    # Only lookup-level absence permits a new file; read errors preserve the old destination.
+    harness = r'''
+const assert = require("node:assert/strict");
+const [loadResult, previousFolder] = process.argv.slice(2);
+const elements = new Map();
+global.document = {
+  querySelectorAll: () => [],
+  getElementById(id) {
+    if (!elements.has(id)) elements.set(id, {
+      value: "", textContent: "", append() {}, replaceChildren() {}
+    });
+    return elements.get(id);
+  },
+  createElement: () => ({append() {}}), createTextNode: text => ({textContent: text})
+};
+global.window = {};
+const failure = name => Object.assign(new Error("Comment read failed"), {name});
+let selectedWrites = 0, previousSaved;
+const selectedHandle = {
+  async getFile() {
+    if (loadResult === "file-unreadable") throw failure("NotReadableError");
+    if (loadResult === "file-disappeared") throw failure("NotFoundError");
+    return {async text() {
+      if (loadResult === "text-unreadable") throw failure("NotReadableError");
+      if (loadResult === "text-disappeared") throw failure("NotFoundError");
+      if (loadResult === "malformed-json") return "{";
+      if (loadResult === "invalid-schema") return '[{"section":"bad","text":"Invalid"}]';
+      return "[]";
+    }};
+  },
+  async createWritable() {
+    selectedWrites++;
+    return {async write() {}, async close() {}};
+  }
+};
+const selectedFolder = {async getFileHandle(name, options) {
+  assert.equal(name, "report.comments.json");
+  if (!options?.create) {
+    if (loadResult === "lookup-denied") throw failure("NotAllowedError");
+    if (loadResult === "absent") throw failure("NotFoundError");
+  }
+  return selectedHandle;
+}};
+const safeFolder = {async getFileHandle(name) {
+  assert.equal(name, "report.comments.json");
+  return {
+    getFile: async () => ({text: async () => '[{"section":"s2","text":"Previous comment"}]'}),
+    createWritable: async () => ({
+      write: async text => { previousSaved = JSON.parse(text); }, close: async () => {}
+    })
+  };
+}};
+'''
+    assertions = r'''
+(async () => {
+  const el = id => document.getElementById(id);
+  if (previousFolder === "yes") {
+    window.showDirectoryPicker = async () => safeFolder;
+    await el("comment-folder").onclick();
+    el("comment-section").value = "s1";
+    el("comment-text").value = "Unsaved comment";
+    el("comment-add").onclick();
+  }
+  const before = JSON.parse(JSON.stringify(comments));
+  window.showDirectoryPicker = async () => selectedFolder;
+  await el("comment-folder").onclick();
+  assert.deepEqual(comments, before, "Folder selection must preserve current comments");
+  await el("comment-save").onclick();
+  if (["absent", "valid-empty"].includes(loadResult)) {
+    assert.equal(selectedWrites, 1, "A validated or confirmed absent file permits saving");
+    assert.equal(previousSaved, undefined);
+  } else {
+    assert.equal(selectedWrites, 0, "A failed load must never open a writer in that folder");
+    if (previousFolder === "yes") {
+      assert.deepEqual(previousSaved, before, "The previous validated folder remains usable");
+    } else {
+      assert.match(status.textContent, /Select the report folder/);
+    }
+  }
+})().catch(error => { console.error(error); process.exitCode = 1; });
+'''
+    script = tmp_path / "validated-comments.cjs"
+    script.write_text(harness + builder._INTERACTIONS + assertions, encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [node, str(script), load_result, "yes" if previous_folder else "no"],
+        capture_output=True, text=True, encoding="utf-8", timeout=15,
+    )
+    assert result.returncode == 0, result.stderr

@@ -545,16 +545,21 @@ document.getElementById("comment-add").onclick = () => {
 document.getElementById("comment-folder").onclick = async () => {
   try {
     if (!window.showDirectoryPicker) throw new Error("Folder access is unavailable. Use Export and Import.");
-    directory = await window.showDirectoryPicker({mode: "readwrite"});
+    const selected = await window.showDirectoryPicker({mode: "readwrite"});
+    let handle;
     try {
-      const handle = await directory.getFileHandle("report.comments.json");
+      handle = await selected.getFileHandle("report.comments.json");
+    } catch (error) {
+      if (error.name !== "NotFoundError") throw error;
+    }
+    if (handle) {
       const loaded = validate(JSON.parse(await (await handle.getFile()).text()));
       comments = comments.concat(loaded); display();
       status.textContent = "Saved comments loaded; unsaved comments are kept. Save to keep the combined list.";
-    } catch (error) {
-      if (error.name !== "NotFoundError") throw error;
+    } else {
       status.textContent = "Folder selected. Save writes report.comments.json beside the report.";
     }
+    directory = selected;
   } catch (error) { status.textContent = error.message; }
 };
 document.getElementById("comment-save").onclick = async () => {
