@@ -102,6 +102,29 @@ def _digest(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _validate_output_paths(files: list[Path], out: Path) -> None:
+    """Reject source/record aliases, including pending writes, before any write."""
+    def identities(path: Path) -> set[Path | tuple[int, int]]:
+        keys: set[Path | tuple[int, int]] = {path.resolve()}
+        if path.exists():
+            stat = path.stat()
+            keys.add((stat.st_dev, stat.st_ino))
+        return keys
+
+    seen: set[Path | tuple[int, int]] = set()
+    for source in files:
+        seen.update(identities(source))
+    records = [out / "results.json"]
+    records.extend(out / f"F{index:02d}" / "checkpoint.json"
+                   for index in range(1, len(files) + 1))
+    for record in records:
+        for target in (record, record.with_suffix(".json.pending")):
+            keys = identities(target)
+            if seen.intersection(keys):
+                raise ValueError("Input, report and checkpoint paths must not alias")
+            seen.update(keys)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Inspect one file or a folder; return 1 for file failures and 2 for usage errors."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -117,6 +140,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     files = (sorted(p for p in source.rglob("*") if p.is_file() and p.suffix.lower() in SUFFIXES)
              if source.is_dir() else [source])
+    try:
+        _validate_output_paths(files, out)
+    except (OSError, ValueError) as exc:
+        print(f"Invalid input/output paths: {exc}")
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     rows = []
     for index, path in enumerate(files, 1):

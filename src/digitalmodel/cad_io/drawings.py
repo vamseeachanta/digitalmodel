@@ -47,6 +47,8 @@ def _convert(tool: str, source: Path, target: Path, *options: str) -> Path:
             result = subprocess.run(  # no shell; the input is an absolute path
                 [executable, *options, "-o", str(target), str(source)],
                 cwd=target.parent, stdout=log, stderr=subprocess.STDOUT,
+                # Pilot per-process time budget, not a format limit. Selection
+                # basis: REPRODUCE.md, "Pilot settings and selection basis".
                 timeout=120, check=False,
             )
         except subprocess.TimeoutExpired as exc:

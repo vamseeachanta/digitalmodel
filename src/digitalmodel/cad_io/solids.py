@@ -30,6 +30,9 @@ def _mesh(path: Path, target: Path) -> dict[str, Any]:
             raise ValueError("STEP contains no solid volumes")
         bounds = gmsh.model.getBoundingBox(-1, -1)
         span = max(bounds[i + 3] - bounds[i] for i in range(3))
+        # Pilot sizing: four characteristic lengths across the longest span,
+        # with a half-size lower bound for local refinement. See REPRODUCE.md,
+        # "Pilot settings and selection basis"; no accuracy claim is implied.
         gmsh.option.setNumber("Mesh.MeshSizeMin", span / 8)
         gmsh.option.setNumber("Mesh.MeshSizeMax", span / 4)
         gmsh.option.setNumber("Mesh.ElementOrder", 1)

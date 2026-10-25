@@ -10,6 +10,7 @@ solids; no historical input or derived output is distributed with the package.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-22 | Add conversion and solid checks with synthetic inputs to assess a headless CAD workflow. |
+| 1 | 2026-10-25 | Reject input/report/checkpoint aliases before writes to preserve source bytes; document mesh and converter settings so their selection basis is explicit. |
 
 ## Placement and interfaces
 
@@ -50,6 +51,22 @@ operations. The optional `cad-io` extra installs the drawing and solid readers;
 When `out_dir` is omitted, the two inspection functions retain their artifacts
 in a new directory under `TMPDIR`. Use an explicit directory for reproducible
 artifact locations. Conversion and surface exports refuse existing targets.
+
+## Pilot settings and selection basis
+
+These values are pilot operating choices, rather than values prescribed by a
+standard or calibrated against engineering results:
+
+| Setting | Selection basis | Limit |
+| --- | --- | --- |
+| Maximum mesh size `span / 4` | Select four characteristic lengths across the largest bounding-box extent for a coarse export trial with few elements. | A target size, not a guaranteed element count or an accuracy criterion. |
+| Minimum mesh size `span / 8` | Allow local sizing down to half the maximum target size while bounding the requested refinement range. | Small features may require finer sizing; no convergence study supports this value. |
+| Converter timeout `120` seconds | Bound each converter invocation to two minutes so an unresponsive tool cannot hold the sequential batch indefinitely. | An operating budget, not a measured upper bound for valid drawings. Large inputs may time out; a round trip invokes multiple converters, each with its own budget. |
+
+`span` is the largest imported bounding-box extent in model length units. The
+divisors are dimensionless and scale with that extent. These choices establish
+neither mesh quality nor engineering accuracy. A format smoke check only proves
+that an export can be produced; it does not validate these sizing choices.
 
 ## Rebuild from a clean checkout
 
@@ -119,6 +136,12 @@ outside an input folder. Files receive deterministic sorted codes such as `F01`,
 with independent artifact folders and `results.json` checkpoints. The result
 contains each code, format, SHA-256 input digest, status, step results and reason.
 Step failures do not stop the remaining files or independent checks.
+Before creating output directories or writing files, the command rejects source,
+report and checkpoint aliases, including their pending JSON writes. Resolved
+paths detect symlinks; filesystem identities detect existing hardlinks. The same
+check rejects aliases between output records. Rejection returns exit code 2 and
+preserves the input and existing records. This preflight assumes paths remain
+unchanged during the run; concurrent filesystem changes are outside its scope.
 
 The printed converted fraction counts readable drawing metadata or successful
 STEP surface exports. A converted file can still have failed checks; the summary

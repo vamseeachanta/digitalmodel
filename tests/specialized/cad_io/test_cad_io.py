@@ -131,6 +131,54 @@ def test_cli_rejects_output_inside_input_without_touching_input(drawings):
     assert not (folder / "results.json").exists()
 
 
+@pytest.mark.parametrize("name", [
+    "results.json", "results.json.pending",
+    "F01/checkpoint.json", "F01/checkpoint.json.pending",
+])
+@pytest.mark.parametrize("alias", ["direct", "symlink", "hardlink"])
+def test_cli_rejects_source_record_alias_before_writes(tmp_path, name, alias):
+    out = tmp_path / "out"
+    target = out / name
+    target.parent.mkdir(parents=True)
+    source = target if alias == "direct" else tmp_path / "source.json"
+    original = b'{"input": "preserve these bytes"}\n'
+    source.write_bytes(original)
+    if alias == "symlink":
+        target.symlink_to(source)
+    elif alias == "hardlink":
+        target.hardlink_to(source)
+    before = {p.relative_to(tmp_path): p.read_bytes()
+              for p in tmp_path.rglob("*") if p.is_file()}
+
+    status = main([str(source), "--out", str(out)])
+
+    assert source.read_bytes() == original
+    assert {p.relative_to(tmp_path): p.read_bytes()
+            for p in tmp_path.rglob("*") if p.is_file()} == before
+    assert status == 2
+
+
+@pytest.mark.parametrize("alias", ["symlink", "hardlink"])
+def test_cli_rejects_report_checkpoint_alias_before_writes(tmp_path, alias):
+    source = tmp_path / "source.json"
+    source.write_text("unsupported input")
+    out = tmp_path / "out"
+    (out / "F01").mkdir(parents=True)
+    report = out / "results.json"
+    original = b'{"existing": "report"}\n'
+    report.write_bytes(original)
+    checkpoint = out / "F01" / "checkpoint.json"
+    if alias == "symlink":
+        checkpoint.symlink_to(report)
+    else:
+        checkpoint.hardlink_to(report)
+
+    status = main([str(source), "--out", str(out)])
+
+    assert report.read_bytes() == checkpoint.read_bytes() == original
+    assert status == 2
+
+
 def test_missing_tool_has_clear_error(drawings, tmp_path, monkeypatch):
     monkeypatch.setattr(shutil, "which", lambda _: None)
     with pytest.raises(RuntimeError, match="dwg2dxf"):
