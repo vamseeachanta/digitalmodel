@@ -306,16 +306,16 @@ def render_reference(saved, output):
         controls.append(f'<label>{html.escape(key)} <select data-key="{key}">{values}</select></label>')
     # Escape '<' before embedding JSON in a script to prevent closing tags.
     payload = json.dumps(rows, allow_nan=False).replace('<', '\\u003c')
-    page = '''<!doctype html><html lang="en"><meta charset="utf-8">
+    page = ''.join(('''<!doctype html><html lang="en"><meta charset="utf-8">
 <title>Elastic plate reference lookup</title>
 <style>body{font:16px sans-serif;max-width:70em;margin:2em auto;padding:1em}
 #controls{display:flex;flex-wrap:wrap;gap:1em}label{display:grid}pre{white-space:pre-wrap}</style>
 <h1>Saved elastic plate references</h1>
 <p>Engineering minimum thickness: NOT_EVALUATED. Ideal elastic model only;
 no renewal or asset FFS acceptance. Controls retrieve saved combinations only.</p>
-<div id="controls">CONTROLS</div><pre id="result" role="status"></pre>
+<div id="controls">''', ''.join(controls), '''</div><pre id="result" role="status"></pre>
 <script>
-const rows=PAYLOAD;
+const rows=''', payload, ''';
 const controls=[...document.querySelectorAll('select')];
 function show(){
  const selection=Object.fromEntries(controls.map(s=>[s.dataset.key,JSON.parse(s.value)]));
@@ -326,8 +326,8 @@ function show(){
 }
 controls.forEach(s=>s.addEventListener('change',show));show();
 </script></html>
-'''.replace('CONTROLS', ''.join(controls)).replace('PAYLOAD', payload)
-    output.write_text(page, encoding='utf-8')
+'''))
+    output.write_text(page, encoding='utf-8', newline='\n')
 
 
 def write_reference_study(source, output):
@@ -337,7 +337,7 @@ def write_reference_study(source, output):
     saved = compute_reference_study(read_reference_json(source))
     output.mkdir(parents=True, exist_ok=True)
     result = output / 'reference.json'
-    result.write_text(json.dumps(saved, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    result.write_text(json.dumps(saved, indent=2, allow_nan=False) + '\n', encoding='utf-8', newline='\n')
     render_reference(saved, output / 'lookup.html')
     paths = [Path(__file__), REFERENCE_SCHEMA,
              ROOT / 'src/digitalmodel/structural/plate_capacity/elastic_buckling.py']
@@ -354,7 +354,7 @@ def write_reference_study(source, output):
                     executed_utc=datetime.now(timezone.utc).isoformat(),
                     algorithms={p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                                 for p in paths}, rows=len(saved['rows']))
-    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8', newline='\n')
     return saved
 
 
@@ -385,7 +385,7 @@ def main(argv=None):
     rows = [compute(c) for c in cases()]
     args.output.mkdir(parents=True, exist_ok=True)
     output = args.output/'precomputed.json'
-    output.write_text(json.dumps(dict(schema_version=1, rows=rows), indent=2, allow_nan=False), encoding='utf-8')
+    output.write_text(json.dumps(dict(schema_version=1, rows=rows), indent=2, allow_nan=False), encoding='utf-8', newline='\n')
     code_paths = [Path(__file__), ROOT/'src/digitalmodel/structural/structural_analysis/buckling.py',
                   ROOT/'src/digitalmodel/structural/structural_analysis/panel_buckling.py',
                   ROOT/'src/digitalmodel/structural/structural_analysis/models.py']
@@ -403,7 +403,7 @@ def main(argv=None):
         material_provenance='existing models.STEEL_AH36; assumed isotropic engineering constants',
         class_rule_status='DNV current landing edition 2023-09 differs from implementation 2010; no clause audit',
         publication_scope='internal research; no engineering acceptance')
-    (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2), encoding='utf-8')
+    (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2), encoding='utf-8', newline='\n')
     render(rows, args.output/'lookup.html')
     print(json.dumps(dict(rows=len(rows), host=platform.node(), manifest=str(args.output/'manifest.json'))))
 
@@ -454,7 +454,7 @@ selectors.forEach(s=>s.addEventListener('change',showSaved));
 showSaved();
 </script>'''.replace('PAYLOAD',payload)
     html=html.replace('<body>','<body>'+banner+controls).replace('</body>',js+'</body>')
-    output.write_text(html,encoding='utf-8')
+    output.write_text(html,encoding='utf-8',newline='\n')
 
 
 if __name__ == '__main__':

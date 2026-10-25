@@ -82,7 +82,7 @@ def test_booleans_are_not_physical_numeric_parameters():
 def reference_input():
     import json
     return json.loads((PATH.parents[2] / 'data/ship_structure_reference/'
-                       'elastic_reference_inputs.json').read_text())
+                       'elastic_reference_inputs.json').read_text(encoding='utf-8'))
 
 
 def test_reference_square_hand_calculation_and_loss_scaling():
@@ -242,19 +242,19 @@ def test_reference_cli_roundtrip_and_saved_only_view(tmp_path, capsys):
     output = tmp_path / 'results'
     assert study.main(['--reference-input', str(source), '--output', str(output)]) == 0
     capsys.readouterr()
-    saved = json.loads((output / 'reference.json').read_text())
-    manifest = json.loads((output / 'manifest.json').read_text())
+    saved = json.loads((output / 'reference.json').read_text(encoding='utf-8'))
+    manifest = json.loads((output / 'manifest.json').read_text(encoding='utf-8'))
     import hashlib
     assert manifest['result_sha256'] == hashlib.sha256(
         (output / 'reference.json').read_bytes()).hexdigest()
     assert manifest['input_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest()
-    html = (output / 'lookup.html').read_text()
+    html = (output / 'lookup.html').read_text(encoding='utf-8')
     for field in saved['rows'][0]['case']:
         assert f'data-key="{field}"' in html
     assert 'NOT_EVALUATED' in html
     assert 'fetch(' not in html
     selection = tmp_path / 'selection.json'
-    selection.write_text(json.dumps(saved['rows'][0]['case']))
+    selection.write_text(json.dumps(saved['rows'][0]['case']), encoding='utf-8', newline='\n')
     assert study.main(['--reference-lookup', str(output / 'reference.json'),
                        '--selection', str(selection)]) == 0
     assert json.loads(capsys.readouterr().out)['reference_status'] == 'COMPUTED'
@@ -264,16 +264,20 @@ def test_reference_cli_roundtrip_and_saved_only_view(tmp_path, capsys):
 
 def test_reference_cli_rejects_duplicate_keys(tmp_path):
     source = tmp_path / 'bad.json'
-    source.write_text('{"schema_version": 1, "schema_version": 1}')
+    source.write_text('{"schema_version": 1, "schema_version": 1}', encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='Duplicate'):
         study.main(['--reference-input', str(source), '--output', str(tmp_path / 'out')])
 
 
-def test_reference_view_numeric_controls_execute_saved_lookup(tmp_path):
+@pytest.mark.parametrize('material_id', [
+    'synthetic-nu0', 'PAYLOAD', 'prefixPAYLOADsuffix', 'CONTROLS', 'SCRIPT',
+])
+def test_reference_view_numeric_controls_execute_saved_lookup(tmp_path, material_id):
     """Execute the shipped view script with a minimal DOM, without a browser.
 
     Numeric HTML controls are strings; their JSON values must be restored before
-    comparing saved numbers. A missing combination must clear the old result.
+    comparing saved numbers. Template tokens in material IDs must stay literal.
+    A missing combination must clear the old result.
     """
     import json
     import shutil
@@ -283,7 +287,12 @@ def test_reference_view_numeric_controls_execute_saved_lookup(tmp_path):
     node = shutil.which('node')
     if node is None:
         pytest.skip('Node is unavailable for the standalone view script check')
-    saved = study.compute_reference_study(reference_input())
+    data = reference_input()
+    data['materials'][material_id] = data['materials'].pop('synthetic-nu0')
+    for item in data['cases']:
+        if item['material_id'] == 'synthetic-nu0':
+            item['material_id'] = material_id
+    saved = study.compute_reference_study(data)
     output = tmp_path / 'lookup.html'
     study.render_reference(saved, output)
 
@@ -302,17 +311,17 @@ def test_reference_view_numeric_controls_execute_saved_lookup(tmp_path):
                 self.current['options'].append(attrs['value'])
 
     parser = Controls()
-    page = output.read_text()
+    page = output.read_text(encoding='utf-8')
     parser.feed(page)
     script = page.split('<script>')[1].split('</script>')[0]
-    harness = '''
+    harness = ''.join(('''
 const vm=require('vm');
-const controls=CONTROLS;
+const controls=''', json.dumps(parser.controls), ''';
 for(const c of controls){c.value=c.options[0];c.addEventListener=()=>{};}
 const display={textContent:''};
 const context={document:{querySelectorAll:()=>controls,getElementById:()=>display}};
 vm.createContext(context);
-vm.runInContext(SCRIPT,context);
+vm.runInContext(''', json.dumps(script), ''',context);
 const first=JSON.parse(display.textContent);
 if(first.reference_status!=='COMPUTED')throw Error('Initial saved row not displayed');
 if(first.minimum_remaining_thickness_mm!==null)throw Error('Engineering minimum exposed');
@@ -323,7 +332,7 @@ if(thin.elastic_critical_stress_MPa!==9.9)throw Error('Wrong saved thinning case
 controls.find(c=>c.dataset.key==='span_mm').value='150';
 vm.runInContext('show()',context);
 if(!display.textContent.startsWith('UNCOMPUTED'))throw Error('Stale row retained');
-'''.replace('CONTROLS', json.dumps(parser.controls)).replace('SCRIPT', json.dumps(script))
+'''))
     subprocess.run([node, '-e', harness], check=True, capture_output=True, text=True)
 
 
@@ -333,7 +342,7 @@ def test_reference_script_does_not_embed_input_markup(tmp_path):
     saved = study.compute_reference_study(data)
     output = tmp_path / 'lookup.html'
     study.render_reference(saved, output)
-    page = output.read_text()
+    page = output.read_text(encoding='utf-8')
     assert '</script><b>unsafe</b>' not in page
     assert page.count('</script>') == 1
 
@@ -354,6 +363,6 @@ def test_reference_saved_bundle_digest_is_checked(tmp_path):
     output = tmp_path / 'results'
     study.main(['--reference-input', str(source), '--output', str(output)])
     result = output / 'reference.json'
-    result.write_text(result.read_text() + '\n')
+    result.write_text(result.read_text(encoding='utf-8') + '\n', encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='digest mismatch'):
         study.main(['--reference-lookup', str(result), '--selection', str(source)])
