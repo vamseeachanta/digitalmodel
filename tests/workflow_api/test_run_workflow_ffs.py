@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from assetutilities.workflow_api.envelope import result_hash
+
 from digitalmodel.workflow_api import ResultEnvelope, run_workflow
 
 from tests.workflow_api.golden_helpers import deep_approx, load_golden
@@ -44,3 +46,9 @@ def test_ffs_golden():
     assert env.determinism["reproducible"] is True
     golden = load_golden("ffs_metal_loss.json")
     deep_approx(env.result, golden["result"], rel=1e-6)
+
+
+def test_ffs_golden_hash_matches_payload():
+    """Require the stored digest to describe the exact golden payload."""
+    golden = load_golden("ffs_metal_loss.json")
+    assert result_hash(golden["result"]) == golden["result_hash"]
