@@ -12,9 +12,14 @@ import hashlib
 import html
 import json
 import math
+from datetime import date
 from pathlib import Path
 
 from surface_crack_post import BENCHMARK, reference_k
+
+
+# Research sampling floor, not proof of convergence or a code requirement.
+MIN_INTERIOR_STATIONS = 2
 
 
 def positive(value, name, *, integer=False, zero_allowed=False):
@@ -30,13 +35,15 @@ def positive(value, name, *, integer=False, zero_allowed=False):
 
 def compare_run(run, relative_limit):
     """Recompute differences without trusting cached reference/error fields."""
+    rss = run.get("peak_rss_kib")
     summary = {
         "refinement": positive(run.get("refinement"), "refinement", integer=True),
         "nodes": positive(run.get("nodes"), "nodes", integer=True),
         "elements": positive(run.get("elements"), "elements", integer=True),
         "wall_seconds": positive(run.get("wall_seconds"), "wall_seconds",
                                  zero_allowed=True),
-        "peak_rss_kib": positive(run.get("peak_rss_kib"), "peak_rss_kib"),
+        "peak_rss_kib": None if rss is None else positive(rss, "peak_rss_kib"),
+        "cost": "NOT_EVALUATED" if rss is None else "RECORDED",
         "native_outputs": "NOT_REVALIDATED",
         "native_j": "NOT_EVALUATED",
         "contour_independence": "NOT_EVALUATED",
@@ -61,6 +68,8 @@ def compare_run(run, relative_limit):
         differences[angle] = (candidate - reference) / reference
     if 0 not in differences or 90 not in differences:
         raise ValueError("front must include both surface and deepest endpoints")
+    if len(differences) - 2 < MIN_INTERIOR_STATIONS:
+        raise ValueError("front must include at least two interior stations")
     maximum = max(abs(value) for value in differences.values())
     summary.update(
         deepest_difference=differences[90], surface_difference=differences[0],
@@ -94,7 +103,16 @@ def audit(data, *, relative_limit):
         "scope": "historical receipt arithmetic; no native files revalidated",
         "benchmark": dict(BENCHMARK),
         "relative_limit": relative_limit,
-        "limit_basis": "caller-supplied research comparator; not code acceptance",
+        "limit_basis": (
+            "caller-supplied research comparator; not code acceptance. "
+            "NASA TM-83200 (1981) reports equations generally within about "
+            "5.0% of its source FE results, except at free-surface intersections. "
+            "The historical 5.0% band matches the nominal scale of that "
+            "reference fit scatter. Source errors use each case's maximum; "
+            "this audit divides by each station's reference K. Thus "
+            "it is not independent solver accuracy evidence."
+        ),
+        "minimum_interior_stations": MIN_INTERIOR_STATIONS,
         "recorded_runs": len(compared),
         "runs_with_front_comparison": sum(
             run["comparison"] != "NOT_EVALUATED" for run in compared),
@@ -120,11 +138,14 @@ comparisons and 0 are qualified Level 3 results. No new benchmark solve is start
 by this audit. Solver selection is NOT_EVALUATED: native Code_Aster results,
 contour sensitivity and the licensed comparison are absent. Of the evaluated
 front comparisons, $EXCEEDED exceed the $LIMIT% research comparator and $WITHIN
-meet it. That comparator is a study choice, not an API 579 limit.</p>
+meet it. $LIMIT_BASIS</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Receipt audit and sourced solver recommendation
-added to distinguish reference agreement from native qualification.</td></tr></table>
+added to distinguish reference agreement from native qualification.</td></tr>
+<tr><td>2</td><td>$REPORT_DATE</td><td>Portable offline imports, optional cost
+evidence, interior coverage and explicit evidence dates added; output rendering
+completed before writing either artifact.</td></tr></table>
 <p>Table 1. Issue history for this benchmarking analysis.</p>
 <h2>Worked example: inputs, method and answer</h2>
 <p>The existing synthetic plate has a = c = 5 mm, thickness = 10.000 mm, half-width =
@@ -137,20 +158,24 @@ the finite-plate surface-flaw tension solution. With a/c = 1 and a/t = 0.5,
 Q = 2.464, M1 = 1.04, M2 = -0.54 + 0.89/1.2, M3 = 0.5 - 1/1.65.
 The finite-width factor is sqrt(sec(pi*sqrt(0.5)/10)). The deepest-point K is
 100*(M1 + M2/4 + M3/16)*fw*sqrt(pi*0.005/Q), giving 8.8 MPa sqrt(m).
-The surface multiplier g is 1 + 0.1 + 0.35*(0.5)^2, giving 10.4 MPa sqrt(m).
+The surface multiplier is g = 1.1875 (f_phi = 1 at a/c = 1);
+K_surf = 10.4 MPa sqrt(m).
 The test docstring records the independent arithmetic with unrounded values.</p>
 <p>The finest recorded deepest K is $KDEEP MPa sqrt(m). Signed relative difference
 is defined as 100*(candidate-reference)/reference and is computed before rounding:
 $DEEP%. The surface difference is $SURFACE%. Every front station is recomputed
 against the existing reference implementation; cached differences and reference
-columns in the old receipt are not trusted.</p>
+columns in the old receipt are not trusted. Both endpoints and at least two
+interior stations are required as a research sampling floor; that floor alone
+does not establish convergence or adequate front resolution.</p>
 <h2>Recorded mesh cost and reference comparison</h2>
 <table><tr><th>Refinement</th><th>Elements</th><th>Nodes</th><th>Time (s)</th>
 <th>Peak RSS (KiB)</th><th>Deepest difference (%)</th>
 <th>Surface difference (%)</th><th>Max absolute front difference (%)</th></tr>
 $ROWS</table>
-<p>Table 2. Historical costs from the 2026-10-11 receipt; these are not measurements
-of the current environment. Differences are calculated from unrounded K values.</p>
+<p>Table 2. Historical costs from the $RECEIPT_DATE receipt; these are not measurements
+of the current environment. Missing RSS is NOT_EVALUATED, leaving the cost
+comparison NOT_EVALUATED. Differences are calculated from unrounded K values.</p>
 <p>The original campaign uses linear C3D8/C3D6 elements and nodal-stress
 extrapolation, not a native J-integral. Its three meshes are retained as recorded;
 no added refinement or singular-element result is implied. The finest maximum
@@ -185,7 +210,7 @@ margin, weld applicability or licensed-solver agreement is established. The link
 licensed comparison is not a matching plate benchmark and requires a common case
 and input basis before comparison. No go verdict or follow-on issue is issued.</p>
 <h2>Reproduction and traceability</h2>
-<pre>python scripts/studies/surface_crack_verdict.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --relative-limit 0.05 --sources &lt;source-receipts.json&gt; --output-json &lt;audit.json&gt; --output-html &lt;analysis.html&gt;</pre>
+<pre>python scripts/studies/surface_crack_verdict.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --relative-limit 0.05 --sources &lt;source-receipts.json&gt; --receipt-date $RECEIPT_DATE --report-date $REPORT_DATE --output-json &lt;audit.json&gt; --output-html &lt;analysis.html&gt;</pre>
 <p>The relative limit repeats the historical research input only. The source
 receipts can be recovered from the sources field of the committed audit JSON.
 The command reads historical evidence and starts no solver or network request.
@@ -213,7 +238,9 @@ def render(document):
     rows = []
     for run in result["runs"]:
         values = [str(run[key]) for key in ("refinement", "elements", "nodes")]
-        values += [f'{run[key]:.1f}' for key in ("wall_seconds", "peak_rss_kib")]
+        values += [f'{run["wall_seconds"]:.1f}',
+                   "NOT_EVALUATED" if run["peak_rss_kib"] is None
+                   else f'{run["peak_rss_kib"]:.0f}']
         values += [("NOT_EVALUATED" if run[key] is None else f'{100*run[key]:.1f}')
                    for key in ("deepest_difference", "surface_difference",
                                "max_abs_front_difference")]
@@ -225,7 +252,8 @@ def render(document):
     sources = "".join(
         f'<li><a href="{html.escape(s["url"], quote=True)}">'
         f'{html.escape(s["title"])}</a>; {html.escape(s["edition"])}; '
-        f'retrieved {html.escape(s["retrieved_utc"])}; HTTP {s["http_status"]}. '
+        f'retrieved {html.escape(s["retrieved_utc"])}; '
+        f'HTTP {html.escape(str(s["http_status"]))}. '
         f'{html.escape(s["reuse"])}</li>' for s in document["sources"])
     return Template(REPORT).substitute(
         RECORDED=result["recorded_runs"], COMPARED=result["runs_with_front_comparison"],
@@ -234,6 +262,9 @@ def render(document):
         WITHIN=sum(r["comparison"] == "WITHIN_RESEARCH_COMPARATOR"
                    for r in result["runs"]),
         LIMIT=f'{100*result["relative_limit"]:.1f}', ROWS="\n".join(rows),
+        LIMIT_BASIS=html.escape(result["limit_basis"]),
+        RECEIPT_DATE=html.escape(iso_date(document["receipt_date"])),
+        REPORT_DATE=html.escape(iso_date(document["report_date"])),
         DEEP=percent("deepest_difference"), SURFACE=percent("surface_difference"),
         MAXIMUM=percent("max_abs_front_difference"),
         KDEEP=("NOT_EVALUATED" if last["deepest_k_mpa_sqrt_m"] is None
@@ -243,12 +274,22 @@ def render(document):
     )
 
 
+def iso_date(value: str) -> str:
+    """Require an explicit, calendar-valid ISO date for reproducible reports."""
+    parsed = date.fromisoformat(value)
+    if parsed.isoformat() != value:
+        raise ValueError("date must use YYYY-MM-DD")
+    return value
+
+
 def main():
     """Write a reproducible audit and HTML report from recorded inputs."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, required=True)
     parser.add_argument("--relative-limit", type=float, required=True)
     parser.add_argument("--sources", type=Path, required=True)
+    parser.add_argument("--receipt-date", type=iso_date, required=True)
+    parser.add_argument("--report-date", type=iso_date, required=True)
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-html", type=Path, required=True)
     args = parser.parse_args()
@@ -258,6 +299,8 @@ def main():
         raise ValueError("input and output paths must be distinct")
     raw = args.results.read_bytes()
     document = {
+        "receipt_date": args.receipt_date,
+        "report_date": args.report_date,
         "input_sha256": hashlib.sha256(raw).hexdigest(),
         "input_locator": args.results.name,
         "reference_implementation": {
@@ -266,11 +309,13 @@ def main():
                 "src/digitalmodel/asset_integrity/assessment/crack_fad.py"
             ).read_bytes()).hexdigest(),
         },
-        "sources": json.loads(args.sources.read_text()),
+        "sources": json.loads(args.sources.read_text(encoding="utf-8")),
         "assessment": audit(json.loads(raw), relative_limit=args.relative_limit),
     }
-    args.output_json.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n")
-    args.output_html.write_text(render(document))
+    json_text = json.dumps(document, indent=2, allow_nan=False) + "\n"
+    html_text = render(document)
+    args.output_json.write_text(json_text, encoding="utf-8")
+    args.output_html.write_text(html_text, encoding="utf-8")
 
 
 if __name__ == "__main__":

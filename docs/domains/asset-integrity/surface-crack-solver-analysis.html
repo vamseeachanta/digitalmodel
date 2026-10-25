@@ -11,11 +11,14 @@ comparisons and 0 are qualified Level 3 results. No new benchmark solve is start
 by this audit. Solver selection is NOT_EVALUATED: native Code_Aster results,
 contour sensitivity and the licensed comparison are absent. Of the evaluated
 front comparisons, 3 exceed the 5.0% research comparator and 0
-meet it. That comparator is a study choice, not an API 579 limit.</p>
+meet it. caller-supplied research comparator; not code acceptance. NASA TM-83200 (1981) reports equations generally within about 5.0% of its source FE results, except at free-surface intersections. The historical 5.0% band matches the nominal scale of that reference fit scatter. Source errors use each case&#x27;s maximum; this audit divides by each station&#x27;s reference K. Thus it is not independent solver accuracy evidence.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Receipt audit and sourced solver recommendation
-added to distinguish reference agreement from native qualification.</td></tr></table>
+added to distinguish reference agreement from native qualification.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Portable offline imports, optional cost
+evidence, interior coverage and explicit evidence dates added; output rendering
+completed before writing either artifact.</td></tr></table>
 <p>Table 1. Issue history for this benchmarking analysis.</p>
 <h2>Worked example: inputs, method and answer</h2>
 <p>The existing synthetic plate has a = c = 5 mm, thickness = 10.000 mm, half-width =
@@ -28,22 +31,26 @@ the finite-plate surface-flaw tension solution. With a/c = 1 and a/t = 0.5,
 Q = 2.464, M1 = 1.04, M2 = -0.54 + 0.89/1.2, M3 = 0.5 - 1/1.65.
 The finite-width factor is sqrt(sec(pi*sqrt(0.5)/10)). The deepest-point K is
 100*(M1 + M2/4 + M3/16)*fw*sqrt(pi*0.005/Q), giving 8.8 MPa sqrt(m).
-The surface multiplier g is 1 + 0.1 + 0.35*(0.5)^2, giving 10.4 MPa sqrt(m).
+The surface multiplier is g = 1.1875 (f_phi = 1 at a/c = 1);
+K_surf = 10.4 MPa sqrt(m).
 The test docstring records the independent arithmetic with unrounded values.</p>
 <p>The finest recorded deepest K is 7.7 MPa sqrt(m). Signed relative difference
 is defined as 100*(candidate-reference)/reference and is computed before rounding:
 -11.9%. The surface difference is -6.7%. Every front station is recomputed
 against the existing reference implementation; cached differences and reference
-columns in the old receipt are not trusted.</p>
+columns in the old receipt are not trusted. Both endpoints and at least two
+interior stations are required as a research sampling floor; that floor alone
+does not establish convergence or adequate front resolution.</p>
 <h2>Recorded mesh cost and reference comparison</h2>
 <table><tr><th>Refinement</th><th>Elements</th><th>Nodes</th><th>Time (s)</th>
 <th>Peak RSS (KiB)</th><th>Deepest difference (%)</th>
 <th>Surface difference (%)</th><th>Max absolute front difference (%)</th></tr>
-<tr><td>6</td><td>504</td><td>679</td><td>2.4</td><td>19384.0</td><td>-16.0</td><td>-5.6</td><td>16.0</td></tr>
-<tr><td>12</td><td>3744</td><td>4381</td><td>6.8</td><td>123868.0</td><td>-13.1</td><td>-8.7</td><td>13.1</td></tr>
-<tr><td>24</td><td>28800</td><td>31225</td><td>54.7</td><td>1546644.0</td><td>-11.9</td><td>-6.7</td><td>11.9</td></tr></table>
+<tr><td>6</td><td>504</td><td>679</td><td>2.4</td><td>19384</td><td>-16.0</td><td>-5.6</td><td>16.0</td></tr>
+<tr><td>12</td><td>3744</td><td>4381</td><td>6.8</td><td>123868</td><td>-13.1</td><td>-8.7</td><td>13.1</td></tr>
+<tr><td>24</td><td>28800</td><td>31225</td><td>54.7</td><td>1546644</td><td>-11.9</td><td>-6.7</td><td>11.9</td></tr></table>
 <p>Table 2. Historical costs from the 2026-10-11 receipt; these are not measurements
-of the current environment. Differences are calculated from unrounded K values.</p>
+of the current environment. Missing RSS is NOT_EVALUATED, leaving the cost
+comparison NOT_EVALUATED. Differences are calculated from unrounded K values.</p>
 <p>The original campaign uses linear C3D8/C3D6 elements and nodal-stress
 extrapolation, not a native J-integral. Its three meshes are retained as recorded;
 no added refinement or singular-element result is implied. The finest maximum
@@ -78,7 +85,7 @@ margin, weld applicability or licensed-solver agreement is established. The link
 licensed comparison is not a matching plate benchmark and requires a common case
 and input basis before comparison. No go verdict or follow-on issue is issued.</p>
 <h2>Reproduction and traceability</h2>
-<pre>python scripts/studies/surface_crack_verdict.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --relative-limit 0.05 --sources &lt;source-receipts.json&gt; --output-json &lt;audit.json&gt; --output-html &lt;analysis.html&gt;</pre>
+<pre>python scripts/studies/surface_crack_verdict.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --relative-limit 0.05 --sources &lt;source-receipts.json&gt; --receipt-date 2026-10-11 --report-date 2026-10-24 --output-json &lt;audit.json&gt; --output-html &lt;analysis.html&gt;</pre>
 <p>The relative limit repeats the historical research input only. The source
 receipts can be recovered from the sources field of the committed audit JSON.
 The command reads historical evidence and starts no solver or network request.
