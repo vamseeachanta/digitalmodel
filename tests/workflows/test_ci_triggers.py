@@ -549,22 +549,28 @@ ROUTED_JOBS = (
 )
 RUNNER_SETTINGS = (
     None, "", "unknown", '"unknown"', '"ubuntu-latest"',
-    '["self-hosted","Linux","ARM64"]', "linux-arm64", "LiNuX-ArM64",
+    '["self-hosted","Linux","ARM64"]', "linux-arm64", "self-hosted-arm64",
+    "SeLf-HoStEd-ArM64",
 )
 TRUST_CASES = (
-    ("pull_request", "base/repo", True),
-    ("pull_request", "fork/repo", False),
-    ("push", "", True),
-    ("workflow_dispatch", "", True),
+    ("pull_request", "base/repo", False, True),
+    ("pull_request", "base/repo", True, True),
+    ("pull_request", "fork/repo", False, False),
+    ("pull_request", "fork/repo", True, False),
+    ("push", "", False, True),
+    ("workflow_dispatch", "", False, True),
 )
 
 
-def runner_context(event: str, head: str, setting: str | None) -> dict[str, Any]:
+def runner_context(
+    event: str, head: str, setting: str | None, draft: bool = False,
+) -> dict[str, Any]:
     """Use synthetic repositories and the documented hosted default."""
     context = {
         "github.repository": "base/repo",
         "github.event_name": event,
         "github.event.pull_request.head.repo.full_name": head,
+        "github.event.pull_request.draft": draft,
         "matrix.domain": "subsea",
         "matrix.runner": "ubuntu-latest",
     }
@@ -583,41 +589,58 @@ def selected_runner(filename: str, job_id: str, context: dict[str, Any]) -> Any:
 
 @pytest.mark.parametrize("filename,job_id", ROUTED_JOBS)
 @pytest.mark.parametrize("setting", RUNNER_SETTINGS)
-@pytest.mark.parametrize("event,head,trusted", TRUST_CASES)
+@pytest.mark.parametrize("event,head,draft,trusted", TRUST_CASES)
 def test_runner_selection_uses_only_trusted_allowlisted_overrides(
     filename: str, job_id: str, setting: str | None,
-    event: str, head: str, trusted: bool,
+    event: str, head: str, draft: bool, trusted: bool,
 ) -> None:
     """Unknown values stay hosted; forks never receive self-hosted labels."""
     expected = "ubuntu-latest"
-    if trusted and setting in ("linux-arm64", "LiNuX-ArM64"):
+    if trusted and setting in ("self-hosted-arm64", "SeLf-HoStEd-ArM64"):
         expected = ["self-hosted", "Linux", "ARM64"]
-    assert selected_runner(filename, job_id, runner_context(event, head, setting)) == expected
+    context = runner_context(event, head, setting, draft)
+    assert selected_runner(filename, job_id, context) == expected
     # Routing must not replace an executed check with a skipped job.
     condition = load_workflow(filename)["jobs"][job_id].get("if", "")
     assert "head.repo" not in condition and "PR_GATE_RUNNER" not in condition
 
 
+@pytest.mark.parametrize("filename", ("quality-gates.yml", "quality-gates-by-domain.yml"))
+def test_drafts_cannot_skip_jobs_or_steps(filename: str) -> None:
+    """Draft state cannot replace required checks with skipped jobs or steps."""
+    for job_id, job in load_workflow(filename)["jobs"].items():
+        for entry in [job, *job.get("steps", [])]:
+            condition = str(entry.get("if", ""))
+            assert not re.search(r"\bdraft\b", condition, re.IGNORECASE), (
+                filename, job_id, entry.get("name"), condition,
+            )
+
+
 @pytest.mark.parametrize("domain", ("solver-smoke", "specialized"))
-@pytest.mark.parametrize("setting", (None, "", "unknown", "linux-arm64"))
-@pytest.mark.parametrize("event,head", (("pull_request", "base/repo"), ("push", "")))
+@pytest.mark.parametrize("setting", (None, "", "unknown", "self-hosted-arm64"))
+@pytest.mark.parametrize("event,head,draft", (
+    ("pull_request", "base/repo", False),
+    ("pull_request", "base/repo", True),
+    ("push", "", False),
+))
 def test_gmsh_exceptions_keep_original_matrix_runner(
-    domain: str, setting: str | None, event: str, head: str,
+    domain: str, setting: str | None, event: str, head: str, draft: bool,
 ) -> None:
     """Both Gmsh shards retain their original hosted runner independently."""
-    context = runner_context(event, head, setting)
+    context = runner_context(event, head, setting, draft)
     context.update({"matrix.domain": domain, "matrix.runner": "ubuntu-22.04"})
     assert selected_runner("quality-gates-by-domain.yml", "domain-tests", context) == "ubuntu-22.04"
 
 
 @pytest.mark.parametrize("domain", ("subsea", "solver-smoke", "specialized"))
 @pytest.mark.parametrize("runner", ("self-hosted", ["self-hosted", "Linux", "ARM64"]))
-@pytest.mark.parametrize("setting", (None, "linux-arm64"))
+@pytest.mark.parametrize("setting", (None, "self-hosted-arm64"))
+@pytest.mark.parametrize("draft", (False, True))
 def test_fork_matrix_cannot_select_self_hosted_runner(
-    domain: str, runner: Any, setting: str | None,
+    domain: str, runner: Any, setting: str | None, draft: bool,
 ) -> None:
     """A fork-controlled detector output cannot bypass the job-level guard."""
-    context = runner_context("pull_request", "fork/repo", setting)
+    context = runner_context("pull_request", "fork/repo", setting, draft)
     context.update({"matrix.domain": domain, "matrix.runner": runner})
     assert selected_runner("quality-gates-by-domain.yml", "domain-tests", context) == "ubuntu-latest"
 
