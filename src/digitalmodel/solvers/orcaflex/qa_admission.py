@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 from collections.abc import Callable, Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -79,7 +80,10 @@ class AdmissionContext:
         request = self.requests.get(case["case_id"])
         if not isinstance(request, AdmissionRequest):
             raise AdmissionRefused("B1", "missing model evidence record")
-        record = request.record
+        # The frozen request can still contain mutable nested evidence. Keep
+        # eligibility checks, signature authentication and the digest on the
+        # same snapshot even if the caller refreshes that evidence during I/O.
+        record = deepcopy(request.record)
         if not isinstance(record, Mapping) or record.get("case_id") != case["case_id"]:
             raise AdmissionRefused("B1", "missing or mismatched model evidence record")
 

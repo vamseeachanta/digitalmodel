@@ -5,6 +5,7 @@ unchanged signed control is admitted once. These are logical contract tests,
 not calculated engineering values or claims of native qualification.
 """
 
+from copy import deepcopy
 from dataclasses import FrozenInstanceError, replace
 import hashlib
 import json
@@ -46,6 +47,60 @@ def test_validated_binding_contains_both_immutable_identities(control):
     for field in ("input_sha256", "evidence_sha256"):
         with pytest.raises(FrozenInstanceError):
             setattr(binding, field, "changed")
+
+
+@pytest.mark.parametrize("refresh", ("input-fingerprint", "failed-gate"))
+def test_in_place_refresh_during_image_readback_uses_one_signed_snapshot(
+    control, monkeypatch, refresh,
+):
+    """B2/B3 eligibility and B6 authentication apply to the same record bytes."""
+    case, qa, record = control
+    original = deepcopy(record)
+    refreshed = deepcopy(record)
+    if refresh == "input-fingerprint":
+        refreshed["input_sha256"] = hashlib.sha256(b"replacement inputs").hexdigest()
+        refusal = "B2"
+    else:
+        refreshed["gates"]["G2"]["status"] = "FAIL"
+        refusal = "B3"
+    refreshed["signature"]["approval"] = "refreshed-test-only"
+
+    # Both versions have exact-content approval. A valid signature alone does
+    # not establish fingerprint equality or passing gates under section 5.
+    signed = {}
+    for version in (original, refreshed):
+        payload = json.dumps(
+            {key: value for key, value in version.items() if key != "signature"},
+            sort_keys=True, separators=(",", ":"), allow_nan=False,
+        ).encode()
+        signed[payload] = version["signature"]
+    original_payload = next(iter(signed))
+    verifier = Mock(side_effect=lambda payload, signature: signed.get(payload) == signature)
+    qa = replace(qa, verify_signature=verifier)
+    image = qa.requests[case["case_id"]].images["static"]
+    read_bytes = Path.read_bytes
+
+    def read_then_refresh(path):
+        contents = read_bytes(path)
+        if path == image:
+            # Refresh existing objects, preserving aliases to the nested gate
+            # and signature mappings as well as to the top-level record.
+            record["input_sha256"] = refreshed["input_sha256"]
+            record["gates"]["G2"].update(refreshed["gates"]["G2"])
+            record["signature"].update(refreshed["signature"])
+        return contents
+
+    monkeypatch.setattr(Path, "read_bytes", read_then_refresh)
+    binding = qa.validate(case, "test-version")
+
+    assert record == refreshed
+    verifier.assert_called_once_with(original_payload, original["signature"])
+    assert binding.input_sha256 == json.loads(original_payload)["input_sha256"]
+    assert binding.evidence_sha256 == hashlib.sha256(original_payload).hexdigest()
+    # The refreshed, signed record is ineligible on the next admission attempt.
+    with pytest.raises(AdmissionRefused, match=refusal):
+        qa.validate(case, "test-version")
+    assert verifier.call_count == 1
 
 
 @pytest.mark.parametrize("refusal", ("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9"))

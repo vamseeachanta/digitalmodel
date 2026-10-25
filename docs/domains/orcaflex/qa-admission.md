@@ -13,6 +13,7 @@ qualification. A worker's `status=ok` remains an execution result.
 | --- | --- | --- |
 | 1 | 2026-10-19 | Define evidence admission and worker binding so incomplete or changed evidence cannot silently enter a batch. |
 | 2 | 2026-10-19 | Migrate native test callers, retain validated evidence digests, and preserve adapter failure classification and test dependency coverage. |
+| 3 | 2026-10-25 | Snapshot nested evidence and its signature before validation so in-place refreshes cannot change the content after eligibility checks. |
 
 ## Basis and scope
 
@@ -110,6 +111,10 @@ remain required. Ledger and extracted result records retain
 
 Successful validation returns an immutable `AdmissionBinding` containing the
 input fingerprint and approved payload digest from the same captured request.
+Before the first evidence check, validation takes a deep snapshot of the record,
+including its signature. Eligibility checks, authentication and the evidence
+digest all use that snapshot. An in-place refresh during image readback cannot
+substitute a different fingerprint, gate result or signature after checking.
 Worker submission uses these returned identities without reading the requests
 mapping again. A concurrent request refresh therefore cannot substitute an
 unvalidated input fingerprint for the approved one.
