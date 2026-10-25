@@ -13,6 +13,7 @@ runbook accompanies issue #2053 and the existing CFD supervision scripts.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Added marker interpretation, recorded-PID inspection and descriptor-based cleanup to prevent wrapper matches. |
+| 1 | 2026-10-25 | Added a test-interpreter preflight because Python builds can omit the required descriptor APIs. |
 
 ## Diagnosis
 
@@ -133,6 +134,22 @@ existing launchers remain later work. No engineering equation, coefficient or
 acceptance threshold is introduced.
 
 ## Validation and sources
+
+Before running the recorded-PID tests, select a Python interpreter that exposes
+both descriptor APIs. Python version alone does not establish their availability.
+Use the same interpreter for the preflight and the test run:
+
+```bash
+: "${PROCESS_TEST_PYTHON:?set an interpreter with Linux pidfd support}"
+"$PROCESS_TEST_PYTHON" -c \
+  'from os import pidfd_open; from signal import pidfd_send_signal'
+uv run --no-project --python "$PROCESS_TEST_PYTHON" --with pytest \
+  python -m pytest tests/scripts/test_cfd_case_process.py -q -rA \
+  -p no:cacheprovider --basetemp="${TMPDIR:?}/recorded-pid-tests"
+```
+
+Set `TMPDIR` to a scratch directory outside the repository. A missing API leaves
+process inspection unavailable; the helper's refusal remains required.
 
 [`test_cfd_case_process.py`](../../../tests/scripts/test_cfd_case_process.py)
 uses ordinary Python children in temporary directories. Expected results
