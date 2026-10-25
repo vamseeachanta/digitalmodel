@@ -336,3 +336,118 @@ def test_completed_history_gate_and_offline_reduction(study, tmp_path, monkeypat
     (case_dir / "constant" / "dynamicMeshDict").write_text("changed input\n")
     with pytest.raises(ValueError, match="digest"):
         study.main([*args, "--reduce-only"])
+
+
+@pytest.fixture
+def completed_resonant_hold(study, tmp_path, monkeypatch):
+    """Build both variants with synthetic histories and no solver execution."""
+    import json
+
+    row = study._select_sweep_case("worst-fill-resonant")
+    duration = 2 * row.roll_period_s
+
+    def synthetic_run(case_dir, ranks):
+        import re
+
+        alpha = case_dir / "0" / "alpha.water"
+        text, count = re.subn(
+            r"internalField\s+uniform 0;",
+            "internalField nonuniform List<scalar>\n4\n(0 1 1 0)\n;", alpha.read_text(),
+        )
+        assert count == 1
+        text = text.replace("    object", '    location "0";\n    object')
+        alpha.write_text(text.replace("    ", "\t"))
+        mesh = case_dir / "constant" / "polyMesh" / "points"
+        mesh.parent.mkdir(parents=True)
+        mesh.write_text("Synthetic initialization-generated mesh\n")
+        history = case_dir / "postProcessing" / "liquidVolume" / "0" / "volFieldValue.dat"
+        history.parent.mkdir(parents=True)
+        history.write_text("".join(f"{i * duration / 4} 960.0\n" for i in range(5)))
+
+    monkeypatch.setattr(study, "_require_openfoam_environment", lambda: None)
+    monkeypatch.setattr(study, "_run_case", synthetic_run)
+    evidence = tmp_path / "runup.json"
+    evidence.write_text(json.dumps(dict(
+        case_id=row.case_id, variant="vent_top", frame="tank",
+        start_time_s=0, end_time_s=duration, peak_elevation_m=9.5,
+        source="Synthetic spatial maximum; no measured solver result",
+    )))
+    output = tmp_path / "manifest.json"
+    args = [
+        "--work-root", str(tmp_path / "cases"), "--output", str(output),
+        "--motion", "resonant", "--sweep-case", "worst-fill-resonant",
+        "--cycles", "2", "--max-sample-gap-s", str(duration / 2),
+        "--ranks", "1", "--runup-evidence", str(evidence),
+    ]
+    assert study.main(args) == 2  # Only the vent has synthetic clearance evidence.
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Offline reduction must not rebuild or run a solver")
+
+    for name in ("_build_case", "_run_case", "_require_openfoam_environment"):
+        monkeypatch.setattr(study, name, forbidden)
+    return args, output
+
+
+@pytest.mark.parametrize("change", ["inlet_value", "boundary_type", "dimensions", "missing"])
+def test_reduction_rejects_changed_liquid_field(study, completed_resonant_hold, change):
+    import json
+    import re
+
+    args, output = completed_resonant_hold
+    original = output.read_bytes()
+    manifest = json.loads(original)
+    case_dir = Path(manifest["variants"]["vent_top"]["case_directory"])
+    alpha = case_dir / "0" / "alpha.water"
+    text = alpha.read_text()
+    if change == "inlet_value":
+        text, count = re.subn(r"(inletValue\s+uniform\s+)0;", r"\g<1>1;", text)
+        assert count > 0
+    elif change == "boundary_type":
+        assert "inletOutlet" in text
+        text = text.replace("inletOutlet", "fixedValue")
+    elif change == "dimensions":
+        assert "[0 0 0 0 0 0 0]" in text
+        text = text.replace("[0 0 0 0 0 0 0]", "[0 1 0 0 0 0 0]")
+    else:
+        alpha.unlink()
+    if change != "missing":
+        alpha.write_text(text)
+
+    with pytest.raises(ValueError, match="case input digest mismatch"):
+        study.main([*args, "--variants", "vent_top", "--reduce-only"])
+    assert output.read_bytes() == original
+
+
+def test_subset_reduction_preserves_other_completed_variant(study, completed_resonant_hold):
+    import json
+
+    args, output = completed_resonant_hold
+    before = json.loads(output.read_text())
+    baseline = study.VARIANT_BASELINE
+    vent = study.VARIANT_VENT_TOP
+    assert study.main([*args, "--variants", vent, "--reduce-only"]) == 0
+    after_vent = json.loads(output.read_text())
+    assert after_vent["variants"][baseline] == before["variants"][baseline]
+    assert after_vent["variants"][vent]["assessment"]["case_status"] == "PASS"
+
+    # The unselected completed history remains available for a later reduction.
+    assert study.main([*args, "--variants", baseline, "--reduce-only"]) == 2
+    after_baseline = json.loads(output.read_text())
+    assert after_baseline["variants"][vent] == after_vent["variants"][vent]
+    assert after_baseline["variants"][baseline] == before["variants"][baseline]
+
+
+def test_reduction_rejects_unterminated_liquid_field_string(study, completed_resonant_hold):
+    import json
+
+    args, output = completed_resonant_hold
+    original = output.read_bytes()
+    manifest = json.loads(original)
+    case_dir = Path(manifest["variants"]["vent_top"]["case_directory"])
+    alpha = case_dir / "0" / "alpha.water"
+    alpha.write_text(alpha.read_text() + '\n"\n')
+
+    with pytest.raises(ValueError, match="invalid liquid field"):
+        study.main([*args, "--variants", "vent_top", "--reduce-only"])
+    assert output.read_bytes() == original

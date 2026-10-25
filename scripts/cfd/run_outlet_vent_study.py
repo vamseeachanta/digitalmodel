@@ -423,18 +423,51 @@ def _write_manifest(path: Path, manifest: dict) -> None:
         stream.write("\n")
 
 
+def _stable_liquid_field(path: Path) -> bytes:
+    """Retain liquid-field settings despite setFields values and text formatting."""
+    text = path.read_text(encoding="utf-8")
+    tokens = re.findall(
+        r'\s+|"(?:\\.|[^"\\])*"|//[^\n]*|/\*.*?\*/|[^\s"{}();/]+|[{}();/]',
+        text, re.DOTALL,
+    )
+    if "".join(tokens) != text:
+        raise ValueError("invalid liquid field; incomplete token")
+    tokens = [t for t in tokens if not t.isspace() and not t.startswith(("//", "/*"))]
+    try:
+        if tokens[:2] != ["FoamFile", "{"]:
+            raise ValueError("missing field header")
+        header_end = tokens.index("}", 2)
+        header = tokens[2:header_end]
+        # OpenFOAM adds location metadata when rewriting the initial field.
+        if "location" in header:
+            start = header.index("location")
+            del header[start:header.index(";", start) + 1]
+        body = tokens[header_end + 1:]
+        start = body.index("internalField")
+        end = body.index(";", start)
+        if body.index("boundaryField") <= end:
+            raise ValueError("invalid field ordering")
+    except ValueError as exc:
+        raise ValueError("invalid liquid field; stable case inputs cannot be hashed") from exc
+    stable = ["FoamFile", "{", *header, "}", *body[:start], *body[end + 1:]]
+    return json.dumps(stable).encode()
+
+
 def _case_input_digest(case_dir: Path) -> str:
-    """Hash stable case inputs; setFields rewrites alpha and generates polyMesh."""
+    """Hash stable inputs, including liquid boundaries; omit generated polyMesh."""
     digest = hashlib.sha256()
     for directory in ("0", "constant", "system"):
         for path in sorted((case_dir / directory).rglob("*")):
             relative = path.relative_to(case_dir)
-            if (not path.is_file() or relative.as_posix() == "0/alpha.water"
+            if (not path.is_file()
                     or relative.parts[:2] == ("constant", "polyMesh")):
                 continue
             digest.update(relative.as_posix().encode())
             digest.update(b"\0")
-            digest.update(path.read_bytes())
+            digest.update(
+                _stable_liquid_field(path) if relative.as_posix() == "0/alpha.water"
+                else path.read_bytes()
+            )
     return digest.hexdigest()
 
 
@@ -523,6 +556,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
     manifest = _initial_manifest(args)
+    if previous is not None:
+        manifest["variants"] = {
+            variant: record for variant, record in previous["variants"].items()
+            if record.get("status") == "completed"
+        }
     manifest["selected_case"] = asdict(row)
     manifest["highest_fill_near_resonant_case_ids"] = [
         c.case_id for c in worst_fill_resonant_cases(_study_sweep().cases)
@@ -604,8 +642,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     _print_summary(manifest)
     if args.motion == "resonant" and not args.dry_run:
         return 0 if all(
-            result["assessment"]["case_status"] == "PASS"
-            for result in manifest["variants"].values()
+            manifest["variants"][variant]["assessment"]["case_status"] == "PASS"
+            for variant in variants
         ) else 2
     return 0
 

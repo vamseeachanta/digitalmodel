@@ -13,6 +13,7 @@ in #1978. Refs #1980 and #1528.
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-10-19 | Add motion-enabled preparation and evidence assessment because a static hold does not establish run-up clearance. |
+| 2 | 2026-10-25 | Retain liquid boundary settings in input digests and preserve completed variants during subset reduction to prevent reuse of mismatched evidence or loss of other records. |
 
 ## Scope and inputs
 
@@ -100,11 +101,20 @@ After extracting the interface evidence, repeat the same command with
 `--reduce-only --runup-evidence "$OUTPUT_DIR/evidence.json"` and the original
 `--output` manifest; omit `--dry-run`. Offline reduction reads the completed
 volume history without rebuilding or starting OpenFOAM. Recorded input and
-history digests must match. The input digest excludes `0/alpha.water` and
-`constant/polyMesh`, which initialization creates or changes; it includes the
-setFields specification, boundary fields and motion dictionary. A completed
-hold is not run again using the same output manifest. Each completed variant
-is recorded before moving to the next variant.
+history digests must match. The liquid-field digest retains dimensions, field
+type and boundary conditions, including `inletValue`. Initialization-generated
+`internalField` values and field-header location metadata are omitted; comments
+and whitespace are normalized. Generated `constant/polyMesh` files are excluded.
+The setFields specification, other boundary fields and motion dictionary remain
+included. Older digests that omitted the liquid boundary settings cannot qualify
+completed histories under this check; they are rejected without changing the
+manifest. A completed hold is not run again using the same output manifest.
+Each completed variant is recorded before moving to the next variant.
+
+Reduction of selected variants preserves the unselected completed records,
+including their original digests and assessment criteria, for later reuse. The
+command exit status applies to the selected variants; preserved records retain
+their own assessment status. No case pass releases the coupled matrix.
 
 To assess headroom, provide `--runup-evidence evidence.json` with this schema
 (shown with synthetic worked-example values, not an actual matrix measurement):
