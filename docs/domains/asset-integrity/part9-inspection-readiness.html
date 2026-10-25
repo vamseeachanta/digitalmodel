@@ -30,6 +30,9 @@ sufficiency or acceptance under API 579-1/ASME FFS-1.</p>
   <tr><td>2</td><td>2026-10-22</td><td>Annex editions and unresolved growth are
   corrected; physical input checks, independent boundary tests and declared report
   output are added. Generated HTML is kept outside the assessment hash.</td></tr>
+  <tr><td>3</td><td>2026-10-25</td><td>The input table is aligned with the
+  implementation and source basis: every requested edition raises the unqualified
+  crosswalk flag, including 2016.</td></tr>
   <caption>Table 1. Document issue history.</caption>
 </table>
 
@@ -72,8 +75,9 @@ interpreted as false. All input values in the example are synthetic.</p>
 <table>
   <tr><th>Block</th><th>Required fields and representation</th></tr>
   <tr><td>Root</td><td><code>component_id</code>, <code>standard_edition</code>
-  as text; <code>units: mm-MPa-C</code>. Requested editions other than 2016
-  raise a crosswalk flag; no edition is numerically qualified.</td></tr>
+  as text; <code>units: mm-MPa-C</code>. Every requested edition, including 2016,
+  raises <code>EDITION_CROSSWALK_UNQUALIFIED</code>; no edition is numerically
+  qualified.</td></tr>
   <tr><td>inspection</td><td><code>date</code> as a quoted ISO date,
   <code>method</code>, <code>sizing_basis</code> as nonempty text.</td></tr>
   <tr><td>geometry</td><td><code>shape</code>: cylinder, sphere, plate or other;
