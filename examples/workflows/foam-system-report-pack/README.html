@@ -17,7 +17,9 @@
   <table>
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
     <tbody><tr><td>Initial</td><td>2026-10-19</td><td>Document the newline comparison
-      contract to explain fixture regeneration on different checkouts.</td></tr></tbody>
+      contract to explain fixture regeneration on different checkouts.</td></tr>
+      <tr><td>01</td><td>2026-10-24</td><td>Record the native Windows CRLF
+        checkout results and retain the hosted Windows CI limitation.</td></tr></tbody>
   </table>
   <p>Table A. Revision history.</p>
 
@@ -76,8 +78,10 @@ False</pre>
   <p>The comparison normalizes CRLF pairs throughout the payload, including
     quoted fields. Raw-file hashes can still differ between checkouts. Git
     attributes, production CSV output and sizing results are unchanged. The
-    CRLF checkout is simulated with temporary files; native Windows execution
-    is not established by this test run.</p>
+    local regression suite simulates CRLF checkouts with temporary files.
+    Native Windows execution was verified on one CRLF checkout by the
+    second-provider review: 16 tests passed, and the base-revision regression
+    test failed as expected. Hosted Windows CI is not established.</p>
 </main>
 </body>
 </html>
