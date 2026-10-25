@@ -302,7 +302,8 @@ jobs:
     if: >-
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
       (needs.detect-domains.outputs.has-domains == 'true')
-    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || matrix.runner }}
+    # Gmsh domains stay on matrix.runner: gmsh has no linux-aarch64 wheel.
+    runs-on: ${{ vars.PR_GATE_RUNNER && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON(vars.PR_GATE_RUNNER) || matrix.runner }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
@@ -396,10 +397,7 @@ jobs:
 
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
-        # Self-hosted runners have no sudo; skip apt when the library is already present.
-        run: |
-          if dpkg -s libglu1-mesa >/dev/null 2>&1; then echo "libglu1-mesa present"; exit 0; fi
-          sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
 
       - name: Create reports directory
         run: mkdir -p reports
