@@ -508,6 +508,15 @@ def test_reserved_case_name_rejected_before_writing(inputs, tmp_path, name):
     assert not list(tmp_path.iterdir())
 
 
+@pytest.mark.parametrize("name", ["operating", "OPERATING", "Operating"])
+def test_duplicate_case_names_rejected_before_writing(inputs, tmp_path, name):
+    inputs["load_cases"].append(dict(name=name, hs_m=3, tp_s=9, steady_load_kN=0))
+    output = tmp_path / "output"
+    with pytest.raises(ValueError, match="unique portable identifiers"):
+        prepare_chain(ChainInput.model_validate(inputs), output)
+    assert not output.exists()
+
+
 def test_written_specifications_match_bundle_and_manifest(inputs, tmp_path):
     bundle = prepare_chain(ChainInput.model_validate(inputs), tmp_path)
     assert (

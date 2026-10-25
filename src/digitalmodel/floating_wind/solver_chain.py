@@ -156,7 +156,8 @@ class ChainInput(BaseModel):
         if not re.fullmatch(r"[a-zA-Z0-9_-]+\.gdf", self.mesh_file):
             raise ValueError("mesh_file must be a portable GDF basename")
         names = [lc.name for lc in self.load_cases]
-        if len(set(names)) != len(names) or any(
+        # Output names must also be distinct on case-insensitive filesystems.
+        if len({n.casefold() for n in names}) != len(names) or any(
             not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]*", n) for n in names
         ):
             raise ValueError("load-case names must be unique portable identifiers")
