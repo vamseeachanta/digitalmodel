@@ -12,6 +12,9 @@ prevent a module-level availability probe during collection.
 import ast
 import hashlib
 import json
+import os
+import re
+import subprocess
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -21,6 +24,22 @@ ROOT = Path(__file__).resolve().parents[2]
 REGISTER = ROOT / "docs/domains/risers/global-model-qualification.json"
 REPORT = REGISTER.with_suffix(".html")
 TESTS = ROOT / "tests/drilling_riser/global_model"
+
+
+def _git_bytes(*args):
+    env = os.environ.copy()
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"):
+        env.pop(name, None)
+    return subprocess.run(
+        ["git", "-C", str(ROOT), *args], check=True, capture_output=True, env=env,
+    ).stdout
+
+
+def _snapshot_bytes(register, path):
+    assert (ROOT / path).resolve().is_relative_to(ROOT)
+    return _git_bytes("cat-file", "blob", f'{register["snapshot_revision"]}:{path}')
+
 
 # Source: knowledge pack revision 2, section 5, AQG applicability paragraph.
 GATES = {"G0", "G1", "G2", "G3", "G4", "G5"}
@@ -41,7 +60,7 @@ def register():
 def test_all_required_evidence_stays_unqualified(register):
     """Missing evidence has no native record, appointment or qualification PASS."""
     assert register["qualification_status"] == "NOT_EVALUATED"
-    assert register["snapshot_revision"] == "6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c"
+    assert re.fullmatch(r"[0-9a-f]{40}", register["snapshot_revision"])
     rows = register["requirements"]
     assert {row["id"] for row in rows} == REQUIREMENTS
     assert len(rows) == len(REQUIREMENTS)
@@ -66,10 +85,8 @@ def test_every_source_is_a_readable_fingerprinted_repository_file(register):
     sources = register["sources"]
     assert sources
     for source in sources.values():
-        path = ROOT / source["path"]
-        assert path.is_relative_to(ROOT)
-        assert path.is_file()
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"]
+        raw = _snapshot_bytes(register, source["path"])
+        assert hashlib.sha256(raw).hexdigest() == source["sha256"]
     for row in register["requirements"]:
         assert all(basis["source"] in sources for basis in row["basis"])
         assert all(basis["locator"].strip() for basis in row["basis"])
@@ -84,6 +101,9 @@ class ReportParser(HTMLParser):
         self.links = []
         self.rows = {}
         self.current = None
+        self.coverage = {}
+        self.coverage_file = None
+        self.cell = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -91,16 +111,42 @@ class ReportParser(HTMLParser):
             self.current = attrs["data-requirement"]
             self.requirements.append(self.current)
             self.rows[self.current] = []
+        if "data-test-file" in attrs:
+            self.coverage_file = attrs["data-test-file"]
+            assert self.coverage_file not in self.coverage
+            self.coverage[self.coverage_file] = []
+        if tag == "td" and self.coverage_file:
+            self.cell = []
         if tag == "a":
             self.links.append(attrs["href"])
 
     def handle_data(self, data):
         if self.current:
             self.rows[self.current].append(data)
+        if self.cell is not None:
+            self.cell.append(data)
 
     def handle_endtag(self, tag):
+        if tag == "td" and self.cell is not None:
+            self.coverage[self.coverage_file].append("".join(self.cell).strip())
+            self.cell = None
         if tag == "tr":
             self.current = None
+            self.coverage_file = None
+
+
+def test_report_table_c_matches_every_inventory_row(register):
+    parser = ReportParser()
+    parser.feed(REPORT.read_text(encoding="utf-8"))
+    assert parser.coverage == {
+        row["file"]: [
+            Path(row["file"]).name,
+            str(len(row["solver_marked_tests"])),
+            str(len(row["other_tests"])),
+            row["classification"],
+            row["execution_status"],
+        ] for row in register["test_coverage"]
+    }
 
 
 def test_report_exposes_every_gap_and_resolves_repository_links(register):
@@ -119,7 +165,12 @@ def test_report_exposes_every_gap_and_resolves_repository_links(register):
         assert row["required_record"] in rendered
     for link in parser.links:
         assert not link.startswith(("http:", "https:"))
-        assert (REPORT.parent / link.split("#")[0]).resolve().is_file()
+        path = (REPORT.parent / link.split("#")[0]).resolve()
+        assert path.is_relative_to(ROOT)
+        if path.is_relative_to(TESTS):
+            assert _snapshot_bytes(register, path.relative_to(ROOT).as_posix())
+        else:
+            assert path.is_file()
     index = (REPORT.parent / "risers.md").read_text(encoding="utf-8")
     assert f"]({REPORT.name})" in index
 
@@ -138,15 +189,19 @@ def _test_functions(tree):
 
 
 def test_static_coverage_lists_every_file_without_collecting_it(register):
-    """Expected membership is the live file set, not a hard-coded test count."""
+    """Expected membership comes from the snapshot tree, not later working files."""
     entries = register["test_coverage"]
+    paths = _git_bytes(
+        "ls-tree", "-r", "--name-only", "-z", register["snapshot_revision"],
+        "--", TESTS.relative_to(ROOT).as_posix() + "/",
+    ).decode("utf-8").rstrip("\0").split("\0")
     assert {row["file"] for row in entries} == {
-        path.relative_to(ROOT).as_posix() for path in TESTS.glob("test_*.py")
+        path for path in paths if Path(path).parent == TESTS.relative_to(ROOT)
+        and Path(path).match("test_*.py")
     }
     assert len(entries) == len({row["file"] for row in entries})
     for row in entries:
-        path = ROOT / row["file"]
-        raw = path.read_bytes()
+        raw = _snapshot_bytes(register, row["file"])
         assert hashlib.sha256(raw).hexdigest() == row["sha256"]
         tree = ast.parse(raw)
         functions = _test_functions(tree)
@@ -168,7 +223,7 @@ def test_static_coverage_lists_every_file_without_collecting_it(register):
 def test_collection_probe_flags_are_visible_without_executing_calls(register):
     """Availability expressions outside test bodies are collection-time hazards."""
     for row in register["test_coverage"]:
-        tree = ast.parse((ROOT / row["file"]).read_bytes())
+        tree = ast.parse(_snapshot_bytes(register, row["file"]))
         outside_bodies = []
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -185,3 +240,53 @@ def test_collection_probe_flags_are_visible_without_executing_calls(register):
             assert row["classification"] == "MIXED_WITH_COLLECTION_PROBE"
     assert any(row["classification"] == "MIXED_WITH_COLLECTION_PROBE"
                for row in register["test_coverage"])
+
+
+@pytest.mark.parametrize("change", ["edit", "add", "delete"])
+def test_inventory_checks_use_snapshot_despite_live_test_changes(
+    register, monkeypatch, change,
+):
+    """A later test-only change cannot invalidate a historical evidence snapshot."""
+    original_glob = Path.glob
+    original_read = Path.read_bytes
+    original_is_file = Path.is_file
+    target = TESTS / "test_campaign.py"
+
+    def live_glob(path, pattern):
+        paths = list(original_glob(path, pattern))
+        if path == TESTS:
+            if change == "add":
+                paths.append(TESTS / "test_later.py")
+            elif change == "delete":
+                paths.remove(target)
+        return iter(paths)
+
+    def live_read(path):
+        if path == target and change == "edit":
+            return b"raise AssertionError('live tests must not be imported')\n"
+        return original_read(path)
+
+    monkeypatch.setattr(Path, "glob", live_glob)
+    monkeypatch.setattr(Path, "read_bytes", live_read)
+    monkeypatch.setattr(
+        Path, "is_file",
+        lambda path: False if path == target and change == "delete" else original_is_file(path),
+    )
+    test_static_coverage_lists_every_file_without_collecting_it(register)
+    test_collection_probe_flags_are_visible_without_executing_calls(register)
+    test_report_exposes_every_gap_and_resolves_repository_links(register)
+
+
+def test_source_path_cannot_escape_repository(register, monkeypatch):
+    outside = ROOT / "../outside.py"
+    original_read = Path.read_bytes
+    original_is_file = Path.is_file
+    raw = b"synthetic source bytes\n"
+    register["sources"] = {
+        "pack": {"path": "../outside.py", "sha256": hashlib.sha256(raw).hexdigest()},
+    }
+    register["requirements"] = [{"basis": [{"source": "pack", "locator": "test"}]}]
+    monkeypatch.setattr(Path, "is_file", lambda p: p == outside or original_is_file(p))
+    monkeypatch.setattr(Path, "read_bytes", lambda p: raw if p == outside else original_read(p))
+    with pytest.raises(AssertionError):
+        test_every_source_is_a_readable_fingerprinted_repository_file(register)
