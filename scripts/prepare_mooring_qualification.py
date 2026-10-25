@@ -161,7 +161,9 @@ def prepare_bundle(output_root: Path) -> Path:
         source_sha256 = digest(source)
         phase = "generation"
         with contextlib.redirect_stdout(sys.stderr):
-            ModularModelGenerator(source).generate(root / "bundle")
+            ModularModelGenerator(source).generate(
+                root / "bundle", failure_dir=root / "failed-generation",
+            )
         phase = "manifest"
         contract = load_contract()
         files = [{"path": p.relative_to(root).as_posix(), "sha256": digest(p)}

@@ -182,9 +182,11 @@ def test_input_snapshot_uses_shared_nonvolatile_contract(execution):
     assert snapshot == {"basename": "synthetic", "setting": "fixture"}
 
 
-def test_failure_digest_binds_saved_bytes_without_reserializing(execution):
+@pytest.mark.parametrize("rerun", [False, True])
+def test_failure_digest_binds_saved_bytes_without_reserializing(execution, monkeypatch, rerun):
     """A non-JSON object's changing text must not invalidate the saved digest."""
     root, cfg, module = execution
+    serializations = []
 
     class ChangingText:
         text = "fixture"
@@ -192,16 +194,34 @@ def test_failure_digest_binds_saved_bytes_without_reserializing(execution):
         def __str__(self):
             result = self.text
             self.text += " changed"
+            serializations.append(result)
             return result
 
     cfg["setting"] = ChangingText()
 
+    calls = []
+
     def fail(**kwargs):
+        calls.append(kwargs)
+        if rerun and len(calls) == 1:
+            return {}
         raise RuntimeError("synthetic failure")
 
     module.engine = fail
-    with pytest.raises(RuntimeError):
-        runner._run_once(cfg, ResultLocator())
+    monkeypatch.setattr(runner, "lookup_row_for_cfg", lambda cfg: None)
+    if rerun:
+        first = root.parent / "successful"
+        first.mkdir()
+        roots = iter((first, root))
+        monkeypatch.setattr(runner.tempfile, "mkdtemp", lambda **kwargs: str(next(roots)))
+    envelope = runner.run_workflow(cfg=cfg, verify_reproducible=rerun)
+    assert envelope.status == "error"
+    assert len(calls) == (2 if rerun else 1)
+    if rerun:
+        assert not first.exists()
     metadata = root / ".workflow-evidence"
     record = json.loads((metadata / "failure.json").read_bytes())
-    assert record["input_hash"] == hashlib.sha256((metadata / "input.json").read_bytes()).hexdigest()
+    saved = (metadata / "input.json").read_bytes()
+    assert envelope.provenance["input_hash"] == record["input_hash"] == hashlib.sha256(saved).hexdigest()
+    assert json.loads(saved) == {"basename": "synthetic", "setting": "fixture"}
+    assert serializations == ["fixture"]

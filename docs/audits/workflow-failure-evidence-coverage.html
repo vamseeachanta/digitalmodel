@@ -10,7 +10,8 @@ injection, not native execution or engineering qualification. The matrix regress
 preserves mixed historical response states while a diagnostic result is published.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
-<tr><td>1</td><td>2026-10-19</td><td>Initial failure-retention scope and live registry inventory, to bound coverage claims.</td></tr></table>
+<tr><td>1</td><td>2026-10-19</td><td>Initial failure-retention scope and live registry inventory, to bound coverage claims.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>Retain failed generator staging and freeze canonical input once; strengthen regressions and record bounded test coverage.</td></tr></table>
 <p>Table 1. Revision history.</p>
 <h2>Basis and acceptance criteria</h2>
 <p>Issue 2124
@@ -25,20 +26,22 @@ Retained <code>.workflow-evidence/input.json</code> bytes are bound to
 <code>failure.json</code> by their SHA-256 digest; the failure record identifies the stage
 and failed state. Existing files are retained rather than overwritten when the metadata
 name collides. Exception notes expose the retained directory; error envelopes keep the
-input digest and notes. Metadata recording is best effort and cannot mask the primary
+input digest and notes. Canonical bytes and their digest are frozen once before
+execution and reused for provenance, retention and reproducibility reruns.
+Metadata recording is best effort and cannot mask the primary
 exception. Retention limits and disposal remain separate decisions.</p>
 <h2>Verification</h2>
-<p>The combined offline suite passes 135 tests across the workflow API, preparation,
-observed evidence and replay/publication modules. The failure-retention regressions first
-reproduced evidence deletion, then passed with the corrections. Shared API result goldens
-and successful preparation output checks remain unchanged.</p>
-<p>Repository structure, whitespace and absolute-path checks pass. Ruff reports only two
-baseline E402 findings at unchanged imports in <code>scripts/prepare_mooring_qualification.py</code>,
-lines 18 and 19; the same statements are present on the baseline. No LFS-tracked file changes.</p>
+<p>The starting offline suite passed 118 tests. The expanded offline suite passes
+139 tests across failure retention, preparation, observed evidence, replay/publication
+and generator validation. Four strengthened regression cases failed before the corrections.
+Successful preparation and validation publication checks pass. The complete workflow API
+suite could not run with the declared dependency bounds because a compatible binary
+wheel for <code>pylife&gt;=2.2,&lt;3.0</code> was unavailable; no source build was attempted.
+Shared API result goldens remain unverified in this run.</p>
 <h2>Inspected failure paths</h2>
 <table><tr><th>Path</th><th>Evidence and disposition</th></tr>
 <tr><td>src/digitalmodel/workflow_api/runner.py</td><td>Unconditional cleanup removed partial outputs after failure. Cleanup is now success-only. Synthetic tests cover engine, extraction, hashing, interruption, metadata collision and failed reproducibility rerun.</td></tr>
-<tr><td>scripts/prepare_mooring_qualification.py</td><td>The issue-described correction is absent from the inspected baseline: cleanup deleted failed preparation. The correction retains copied source and partial generated files, records source digest and failure phase, and re-raises the original exception. No native execution is included.</td></tr>
+<tr><td>scripts/prepare_mooring_qualification.py</td><td>Failed staging is copied into failed-generation before temporary cleanup, separately from the published bundle. Copied source, partial generated files, source digest and failure phase remain available with the original exception. Successful publication is unchanged. No native execution is included.</td></tr>
 <tr><td>src/digitalmodel/workflows/installation_variant_study.py</td><td>Exception cleanup deletes the partial directory and staging master. A separate tested correction is deferred; shared API coverage does not correct this path.</td></tr>
 <tr><td>src/digitalmodel/solvers/smoke/workflow.py</td><td>Scratch cleanup can remove failed probe evidence when keep_scratch is false. Runtime testing is deferred because native solver access is excluded.</td></tr>
 <tr><td>src/digitalmodel/ansys/analysis_replay.py and analysis_matrix_publish.py</td><td>Existing aggregation and publication preserve mixed historical states in the new synthetic regression; no production change is needed.</td></tr></table>

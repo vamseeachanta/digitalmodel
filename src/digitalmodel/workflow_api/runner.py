@@ -44,7 +44,6 @@ from assetutilities.workflow_api import (
 from assetutilities.workflow_api.envelope import (
     canonical_input,
     compute_reproducible,
-    input_hash,
     make_provenance,
     result_hash,
     utc_now_iso,
@@ -142,7 +141,15 @@ def _standard_revisions_from_payload(payload: dict) -> list:
     return revisions
 
 
-def _retain_failure(root: str, cfg: dict, phase: str, exc: BaseException) -> None:
+def _snapshot_input(cfg: dict) -> tuple[bytes, str]:
+    """Freeze canonical bytes and their digest before execution can change input."""
+    raw_input = canonical_input(cfg).encode("utf-8")
+    return raw_input, hashlib.sha256(raw_input).hexdigest()
+
+
+def _retain_failure(
+    root: str, snapshot: tuple[bytes, str], phase: str, exc: BaseException,
+) -> None:
     """Record failure metadata without masking the original exception.
 
     The shared canonical input excludes volatile top-level configuration keys.
@@ -153,11 +160,11 @@ def _retain_failure(root: str, cfg: dict, phase: str, exc: BaseException) -> Non
     try:
         metadata = Path(root) / ".workflow-evidence"
         metadata.mkdir()
-        raw_input = canonical_input(cfg).encode("utf-8")
+        raw_input, ihash = snapshot
         (metadata / "input.json").write_bytes(raw_input)
         record = {
             "status": "failed", "phase": phase,
-            "input_hash": hashlib.sha256(raw_input).hexdigest(),
+            "input_hash": ihash,
         }
         (metadata / "failure.json").write_text(
             json.dumps(record, sort_keys=True), encoding="utf-8"
@@ -166,11 +173,15 @@ def _retain_failure(root: str, cfg: dict, phase: str, exc: BaseException) -> Non
         exc.add_note(f"Failure metadata could not be recorded ({type(error).__name__})")
 
 
-def _run_once(cfg: dict, locator: ResultLocator):
+def _run_once(
+    cfg: dict, locator: ResultLocator, *, snapshot: tuple[bytes, str] | None = None,
+):
     """Run once; clean successful outputs and retain failed evidence."""
     # Imported lazily -- the digitalmodel engine import is heavy.
     from digitalmodel.engine import engine
 
+    if snapshot is None:
+        snapshot = _snapshot_input(cfg)
     root = tempfile.mkdtemp(prefix="dmwf_")
     phase = "engine"
     try:
@@ -185,7 +196,7 @@ def _run_once(cfg: dict, locator: ResultLocator):
         phase = "hashing"
         rhash = result_hash(payload)
     except BaseException as exc:
-        _retain_failure(root, cfg, phase, exc)
+        _retain_failure(root, snapshot, phase, exc)
         raise
     else:
         shutil.rmtree(root, ignore_errors=True)
@@ -219,10 +230,11 @@ def run_workflow(
                 else ResultLocator.default_for(cfg)
             )
 
-        ihash = input_hash(cfg)
-        payload, warns, rhash = _run_once(cfg, locator)
+        snapshot = _snapshot_input(cfg)
+        ihash = snapshot[1]
+        payload, warns, rhash = _run_once(cfg, locator, snapshot=snapshot)
         repro = compute_reproducible(
-            lambda: _run_once(cfg, locator)[2], rhash, verify_reproducible
+            lambda: _run_once(cfg, locator, snapshot=snapshot)[2], rhash, verify_reproducible
         )
         return ResultEnvelope(
             workflow_id=wid,
