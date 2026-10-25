@@ -1,0 +1,126 @@
+{
+  "schema_version": "scour-table-audit-1",
+  "criteria_version": "scour-readback-criteria-1",
+  "status": "SYNTHETIC_ONLY",
+  "source_status": "SOURCE_NOT_ADMITTED",
+  "source_admitted": false,
+  "engineering_qualified": false,
+  "evidence_structure_valid": true,
+  "diagnostic": "SOFTWARE_EXERCISE_ONLY",
+  "published_cases_expected": 73,
+  "published_cases_admitted": 0,
+  "published_cases_blocked": 73,
+  "source_cells_independently_read_back": 0,
+  "candidate_counts": null,
+  "synthetic_counts": {
+    "physical": 2,
+    "literature": 1,
+    "total": 3,
+    "cells": 10
+  },
+  "source_basis": {
+    "key": "S",
+    "doi": "https://doi.org/10.1016/j.apor.2026.105302",
+    "expected_sha256": "d6b7f16df361f9ee36cc626886ea130f09d3455e8ec94ca9bfd0b1756e92007b",
+    "declared_version": "2026-10-15",
+    "licence": "CC BY-NC-ND 4.0",
+    "observation": "Cached packet metadata; source bytes and rights not admitted.",
+    "table_roles": {
+      "2": "physical inputs",
+      "6": "physical results",
+      "7": "literature"
+    },
+    "excluded": "Tables 3-5 describe 18 separate CFD cases; no CFD case enters the 73-case count."
+  },
+  "summary": "Offline software checks do not establish source admission or geotechnical validation.",
+  "revision_history": [
+    {
+      "revision": "0",
+      "date": "2026-10-25",
+      "change": "Initial metadata-only audit; source admission and six missing-input dispositions are made explicit."
+    }
+  ],
+  "qualification_criteria": [
+    "Exact pinned PDF digest before CSV validation.",
+    "Human source-specific rights review for scratch extraction and literature contributions.",
+    "Exactly 58 paired physical IDs plus 15 literature IDs, qualified by source group.",
+    "Actual source headers and field-specific units checked against the paper; printed dimensionless strings preserved.",
+    "Every required original cell independently read back with bound CSV digests."
+  ],
+  "limits": [
+    "SYNTHETIC_ONLY denotes invented software fixtures, with zero admitted published cases.",
+    "Source mode checks an evidence candidate; PERMITTED and MATCH declarations alone cannot authenticate human review.",
+    "Header semantics and field-specific units remain UNVERIFIED until source inspection; the proposed schema is not an observed source table.",
+    "The current CLI has no authenticated human-review channel and always leaves source_admitted and engineering_qualified false.",
+    "No source cells, numeric transcriptions, inferred particle properties or optional normalization are emitted.",
+    "The cached source domain is steady currents with intact riprap within laboratory calibration conditions; cyclic or damaged protection is excluded.",
+    "Public numeric redistribution is not authorized; scratch permission does not establish public fixture rights.",
+    "Unsafe output aliases or unreadable existing rights evidence prevent all report writes and return exit 2; supplied evidence is preserved."
+  ],
+  "gaps": [
+    {
+      "id": "checked_scour_transcription",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "S: cached table locations only; Tables 2 and 6 contain 58 paired physical cases; Table 7 contains 15 literature cases.",
+        "T: synthetic equation checks do not establish a published fixture."
+      ],
+      "consequence": "Zero of the 73 published cases is admitted or independently read back in this audit.",
+      "owner_role": "source readback reviewer",
+      "missing_input": "Digest-verified S, complete scratch CSVs for Tables 2/6/7, actual headers and units, and independent original-cell readback."
+    },
+    {
+      "id": "public_scour_table_rights",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "S: CC BY-NC-ND 4.0 is reported by the cached packet; public derived-fixture permission is UNVERIFIED.",
+        "Separately sourced literature contributions require their own review."
+      ],
+      "consequence": "Neither scratch extraction nor public numeric redistribution is authorized by this report.",
+      "owner_role": "source rights reviewer",
+      "missing_input": "Human source-specific rights review backed by digest-verified evidence for extraction, literature contributions and the scratch destination; a separate public grant before redistribution."
+    },
+    {
+      "id": "native_cyclic_runs",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "Y: described normalized curves and loading combinations do not establish supplied native runs."
+      ],
+      "consequence": "Native cyclic response qualification cannot be calculated from descriptions alone.",
+      "owner_role": "cyclic analysis maintainer",
+      "missing_input": "Native cyclic input/output runs with stable identifiers, units, digests and versioned acceptance criteria."
+    },
+    {
+      "id": "clay_log_strain_convention",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "Y: equation 8 logarithm base and strain convention remain UNVERIFIED in the cached packet."
+      ],
+      "consequence": "The cyclic degradation convention cannot be qualified; no additional clay helper is implemented.",
+      "owner_role": "constitutive model reviewer",
+      "missing_input": "Source-confirmed logarithm base and strain definition for Y equation 8, with applicable units and independent review."
+    },
+    {
+      "id": "native_cptu_matrix",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "C: Table 4 has eight parameter rows, not native benchmark cases; underlying data were not supplied.",
+        "A and Z: archive script, native case count and supporting-source interpretation remain UNVERIFIED."
+      ],
+      "consequence": "CPTU benchmark qualification is not established by parameter rows or supporting-document listings.",
+      "owner_role": "penetration analysis maintainer",
+      "missing_input": "Native CPTU case matrix, source inputs and outputs, case counts, units, digests, source rights and acceptance criteria."
+    },
+    {
+      "id": "retained_scour_cptu_outputs",
+      "status": "BLOCKED-IF-MISSING",
+      "evidence": [
+        "N and D: bounded historical index observations found no matching names; current retained-output coverage was not inspected.",
+        "H: one pipeline example does not establish a riprap benchmark."
+      ],
+      "consequence": "No matching retained scour or CPTU result is admitted; absence across all retained data is not established.",
+      "owner_role": "retained data custodian",
+      "missing_input": "Matching owner-held source/run manifests with stable case identifiers, versions, units, SHA-256 digests, access rights and qualified native outputs."
+    }
+  ]
+}
