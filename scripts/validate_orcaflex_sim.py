@@ -40,7 +40,7 @@ REJECT_REASONS = {
 STRENGTH_VARS = ("Effective Tension", "Wall Tension", "Bend Moment", "Curvature", "Bend Radius")
 
 # Application-defined status for the deferral permitted by issue #2325;
-# distinct from the existing pass, failure and usage statuses (see module docstring).
+# distinct from the existing pass, failure and usage statuses (see module documentation).
 NOT_EVALUATED = 3
 
 
