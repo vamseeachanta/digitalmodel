@@ -130,7 +130,9 @@ def test_native_settings_must_match_spec(checker, key, value):
 def test_native_reference_matches_canonical_spec(checker):
     import yaml
 
-    environment = yaml.safe_load(CANONICAL.with_name("spec.yml").read_text())["environment"]
+    environment = yaml.safe_load(
+        CANONICAL.with_name("spec.yml").read_text(encoding="utf-8")
+    )["environment"]
     result = checker.check_mesh(CANONICAL)
     expected = checker.compare_native(result, native_record(result))["expected"]
     assert expected["k33_n_per_m"] == environment["water_density"] * environment["gravity"]

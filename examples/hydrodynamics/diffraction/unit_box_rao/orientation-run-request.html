@@ -13,6 +13,7 @@ review. It does not authorize a run from a development environment.</p>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-19</td><td>Initial request for native hydrostatic readback of the repaired box.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Defined time budgets, evidence reuse conditions and fixed-spec screening to prevent unlike-input acceptance.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Added command timeout flags to enforce the stated solver caps.</td></tr>
 </table>
 <h2>Purpose and retained inputs</h2>
 <p>The run will check positive heave restoring stiffness, displaced volume,
@@ -36,8 +37,8 @@ face and agreement of all axis volumes without importing any solver:</p>
 mesh orientation and density/gravity in the emitted decks, and then execute:</p>
 <pre>diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml --dry-run -o output/orcawave/
 diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml --dry-run -o output/aqwa/
-diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -o output/orcawave/
-diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -o output/aqwa/</pre>
+diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -t 180 -o output/orcawave/
+diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -t 300 -o output/aqwa/</pre>
 <p>Command source: repository
 <a href="../../../../src/digitalmodel/hydrodynamics/diffraction/cli.py">cli.py,
 run_orcawave_cmd and run_aqwa_cmd</a>, and the adjacent <a href="README.md">README</a>.
