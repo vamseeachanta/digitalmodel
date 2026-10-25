@@ -10,10 +10,12 @@ stored in the fixture; none is obtained from a call to the model.
 
 The p. 89 worked solution prints 162 and 146 BOPD, with graph-read factors
 0.40 and 0.90. Its subsequent prose says 145, inconsistently; the worked
-solution is the comparator. An absolute allowance of half its last displayed
-BOPD is chosen for printed results. Arithmetic checks use 1e-10 in output
-units, far below the printed precision but above floating-point roundoff for
-these inputs. These are reproduction criteria, not empirical accuracy limits.
+solution supplies the graph-read comparators. Each factor has an absolute
+allowance of 0.005, half its last displayed decimal place. The printed qmax
+is on a display boundary (162.5 versus 162), so integer rates are retained
+for context only. Arithmetic checks use 1e-10 in output units, far below the
+printed precision but above floating-point roundoff for these inputs. These
+are reproduction criteria, not empirical accuracy limits.
 """
 
 import json
@@ -60,14 +62,16 @@ def calibrated(reservoir, vogel_example):
 
 
 def test_published_example(calibrated, vogel_example):
-    """Reproduce the two integer outputs of Vogel (1968), p. 89 solution."""
+    """Reproduce the graph-read factors in Vogel (1968), p. 89 solution."""
     expected = vogel_example["published_outputs"]
-    tolerance = expected["absolute_tolerance_bopd"]
-    assert calibrated.qmax_bopd == pytest.approx(
-        expected["qmax_bopd"], abs=tolerance, rel=0
+    tolerance = vogel_example["acceptance"]["graph_factor_absolute_tolerance"]
+    test_rate = vogel_example["published_inputs"]["test_rate_bopd"]
+    assert test_rate / calibrated.qmax_bopd == pytest.approx(
+        expected["test_rate_fraction"], abs=tolerance, rel=0
     )
-    assert calibrated.flow_rate(expected["prediction_pressure_psi"]) == pytest.approx(
-        expected["prediction_rate_bopd"], abs=tolerance, rel=0
+    predicted_rate = calibrated.flow_rate(expected["prediction_pressure_psi"])
+    assert predicted_rate / calibrated.qmax_bopd == pytest.approx(
+        expected["prediction_rate_fraction"], abs=tolerance, rel=0
     )
 
 
@@ -123,10 +127,18 @@ def test_calibration_rejects_nonfinite(reservoir, vogel_example, field, invalid)
 # Zero and negative values probe Eq. (1)'s pr>0, qtest>0, 0<=pwf<pr domain
 # (Vogel 1968, Eq. (1), pp. 88-89); they are not fitted constants.
 @pytest.mark.parametrize(
-    ("field", "invalid"),
-    [("pr", 0.0), ("pr", -1.0), ("rate", 0.0), ("rate", -1.0), ("pwf", -1.0)],
+    ("field", "invalid", "message"),
+    [
+        ("pr", 0.0, "positive"),
+        ("pr", -1.0, "positive"),
+        ("rate", 0.0, "positive"),
+        ("rate", -1.0, "positive"),
+        ("pwf", -1.0, "test pressure"),
+    ],
 )
-def test_calibration_rejects_outside_domain(reservoir, vogel_example, field, invalid):
+def test_calibration_rejects_outside_domain(
+    reservoir, vogel_example, field, invalid, message
+):
     """Reject invalid observations rather than clipping a calibration test."""
     data = vogel_example["published_inputs"]
     rate, pwf = data["test_rate_bopd"], data["test_pressure_psi"]
@@ -136,7 +148,7 @@ def test_calibration_rejects_outside_domain(reservoir, vogel_example, field, inv
         rate = invalid
     else:
         pwf = invalid
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         VogelIpr.from_test_point(reservoir, rate, pwf)
 
 
