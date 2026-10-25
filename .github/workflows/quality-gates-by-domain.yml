@@ -17,7 +17,7 @@ name: Quality Gates by Domain
 "on":
   pull_request:
     # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -33,7 +33,6 @@ permissions:
 jobs:
   detect-domains:
     name: Detect touched test domains
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -190,7 +189,6 @@ jobs:
 
   ci-harness-tests:
     name: CI harness and compliance tests
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     needs: detect-domains
     runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
@@ -299,9 +297,7 @@ jobs:
   domain-tests:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
-    if: >-
-      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
-      (needs.detect-domains.outputs.has-domains == 'true')
+    if: needs.detect-domains.outputs.has-domains == 'true'
     # Gmsh domains stay on matrix.runner: gmsh has no linux-aarch64 wheel.
     runs-on: ${{ vars.PR_GATE_RUNNER && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON(vars.PR_GATE_RUNNER) || matrix.runner }}
     strategy:
@@ -481,9 +477,7 @@ jobs:
   domain-tests-required:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: >-
-      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
-      (always())
+    if: always()
     runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
       - name: Report scope of this result

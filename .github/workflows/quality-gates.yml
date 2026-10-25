@@ -3,7 +3,7 @@ name: Quality Gates
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
 
@@ -21,9 +21,7 @@ jobs:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
-    if: >-
-      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
-      (always())
+    if: always()
     runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
       - name: Verify matrix result
@@ -33,7 +31,6 @@ jobs:
 
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
