@@ -4,7 +4,8 @@
 
 No solver or time-series peak extraction is performed. Notation is shape k,
 scale lambda and location gamma; response, scale and location share units.
-Source W: NIST/SEMATECH e-Handbook, 1.3.6.6.8, Weibull Distribution:
+Source W: NIST/SEMATECH e-Handbook, online edition 2026, 1.3.6.6.8,
+Weibull Distribution:
 https://www.itl.nist.gov/div898/handbook/eda/section3/eda3668.htm
 The general density, standard CDF, inverse and gamma moments on that page
 give every distribution equation below by X = gamma + lambda*Z.
@@ -48,43 +49,45 @@ class WeibullDistribution:
         if self.shape <= 0 or self.scale <= 0:
             raise ValueError("Shape and scale must be positive")
 
-    def _standardize(self, x: ArrayLike) -> FloatArray:
+    def _log_standardize(self, x: ArrayLike) -> tuple[FloatArray, FloatArray]:
         array = np.asarray(x, dtype=float)
         if np.any(np.isnan(array)):
             raise ValueError("Response must not contain NaN")
-        with np.errstate(over="ignore", invalid="ignore"):
+        with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
             difference = array - self.location
-            # Source W's z=(x-gamma)/lambda, reordered only when the
-            # subtraction overflows for finite, opposite-signed operands.
-            return np.where(
-                np.isinf(difference) & np.isfinite(array),
-                array / self.scale - self.location / self.scale,
-                difference / self.scale,
+            # Source W: log z=log(x-gamma)-log(lambda). Preserve support
+            # before scaling; even a finite distance/scale can underflow.
+            log_distance = np.where(
+                np.isposinf(difference) & np.isfinite(array),
+                np.logaddexp(np.log(np.abs(array)), np.log(abs(self.location))),
+                np.log(difference),
             )
+            return difference, log_distance - math.log(self.scale)
 
     def pdf(self, x: ArrayLike) -> Response:
         """Density, including the right-hand limit at location (Source W)."""
-        z = self._standardize(x)
+        difference, log_z = self._log_standardize(x)
         with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+            log_hazard = self.shape * log_z
             log_density = (
                 math.log(self.shape)
                 - math.log(self.scale)
-                + (self.shape - 1) * np.log(z)
-                - z**self.shape
+                + (self.shape - 1) * log_z
+                - np.exp(log_hazard)
             )
-            result = np.where(z > 0, np.exp(log_density), 0.0)
+            result = np.where(difference > 0, np.exp(log_density), 0.0)
         # At k=1 the removable 0*log(0) term has limit zero.
         boundary = (
             math.inf if self.shape < 1 else 1 / self.scale if self.shape == 1 else 0.0
         )
-        result = np.where(z == 0, boundary, result)
-        return _scalar_or_array(np.where(np.isposinf(z), 0.0, result))
+        result = np.where(difference == 0, boundary, result)
+        return _scalar_or_array(np.where(np.isposinf(log_hazard), 0.0, result))
 
     def logcdf(self, x: ArrayLike) -> Response:
         """Log CDF without subtracting two nearly equal numbers (Source W)."""
-        z = self._standardize(x)
+        difference, log_z = self._log_standardize(x)
         with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
-            log_hazard = self.shape * np.log(z)
+            log_hazard = self.shape * log_z
             # Source W plus 1-exp(-t)=t+O(t^2). Below machine epsilon,
             # log F=log t with an absolute correction smaller than eps/2;
             # retain log t when t itself underflows.
@@ -93,19 +96,55 @@ class WeibullDistribution:
                 log_hazard,
                 np.log(-np.expm1(-np.exp(log_hazard))),
             )
-            result = np.where(z > 0, log_probability, -np.inf)
+            result = np.where(difference > 0, log_probability, -np.inf)
         return _scalar_or_array(result)
 
     def logsf(self, x: ArrayLike) -> Response:
         """Log survival, -((x-gamma)/lambda)^k on the support (Source W)."""
-        z = self._standardize(x)
+        difference, log_z = self._log_standardize(x)
         with np.errstate(over="ignore", invalid="ignore"):
-            result = np.where(z > 0, -(z**self.shape), 0.0)
+            result = np.where(difference > 0, -np.exp(self.shape * log_z), 0.0)
         return _scalar_or_array(result)
 
     def cdf(self, x: ArrayLike) -> Response:
         """Cumulative probability; zero below the support (Source W)."""
         return _scalar_or_array(-np.expm1(np.asarray(self.logsf(x))))
+
+    def _shifted_exponential(self, log_power: ArrayLike) -> Response:
+        """Combine Source W's positive quantile term and signed location."""
+        power = np.asarray(log_power, dtype=float)
+        with np.errstate(over="ignore", invalid="ignore"):
+            multiplier = np.exp(power)
+            reference = max(self.scale, abs(self.location))
+            ratio = self.scale / reference
+            # Source W, divided by a common finite reference before adding.
+            # Subnormal factors/products lose precision before rescaling;
+            # use the logarithmic fallback unless all are normal floats.
+            positive = ratio * multiplier
+            direct = reference * (positive + self.location / reference)
+            tiny = np.finfo(float).tiny
+            representable = (
+                np.isfinite(multiplier)
+                & (multiplier >= tiny)
+                & (ratio >= tiny)
+                & (positive >= tiny)
+            )
+            if np.all(representable):
+                return _scalar_or_array(direct)
+            term = math.log(self.scale) + power
+            if self.location == 0:
+                result = np.exp(term)
+            else:
+                logs = np.stack(
+                    (term, np.full_like(term, math.log(abs(self.location))))
+                )
+                weights = np.array([1, np.sign(self.location)]).reshape(
+                    (2,) + (1,) * term.ndim
+                )
+                log_result, sign = logsumexp(logs, b=weights, axis=0, return_sign=True)
+                result = sign * np.exp(log_result)
+            result = np.where(representable, direct, result)
+        return _scalar_or_array(np.where(np.isneginf(power), self.location, result))
 
     def quantile(self, probability: ArrayLike) -> Response:
         """Inverse CDF with Q(0)=location and Q(1)=infinity (Source W)."""
@@ -113,10 +152,7 @@ class WeibullDistribution:
         if np.any(~np.isfinite(p)) or np.any((p < 0) | (p > 1)):
             raise ValueError("Cumulative probability must be finite in [0, 1]")
         with np.errstate(divide="ignore", over="ignore"):
-            result = self.location + np.exp(
-                math.log(self.scale) + np.log(-np.log1p(-p)) / self.shape
-            )
-        return _scalar_or_array(result)
+            return self._shifted_exponential(np.log(-np.log1p(-p)) / self.shape)
 
     def return_level(self, cycles: float) -> float:
         """Q(1-1/N)=gamma+lambda*(ln N)^(1/k), N >= 1 (Source W).
@@ -131,8 +167,7 @@ class WeibullDistribution:
             return self.location
         with np.errstate(over="ignore"):
             return float(
-                self.location
-                + np.exp(math.log(self.scale) + math.log(math.log(cycles)) / self.shape)
+                self._shifted_exponential(math.log(math.log(cycles)) / self.shape)
             )
 
     def moment(self, order: int) -> float:
@@ -140,17 +175,33 @@ class WeibullDistribution:
 
         Substitution t=z^k gives E[Z^j]=Gamma(1+j/k). Thus
         E[X^r]=sum_j binom(r,j)*gamma^(r-j)*lambda^j*Gamma(1+j/k).
-        OverflowError is raised if a requested term exceeds float range.
+        Signed terms are combined in log space; OverflowError is raised
+        if the final moment exceeds float range.
         """
         if isinstance(order, bool) or not isinstance(order, int) or order < 0:
             raise ValueError("Moment order must be a nonnegative integer")
-        return math.fsum(
-            math.comb(order, j)
-            * self.location ** (order - j)
-            * self.scale**j
-            * math.exp(gammaln(1 + j / self.shape))
-            for j in range(order + 1)
+        logs, signs = [], []
+        for j in range(order + 1):
+            power = order - j
+            if self.location == 0 and power:
+                continue
+            log_location = power * math.log(abs(self.location)) if power else 0.0
+            logs.append(
+                math.log(math.comb(order, j))
+                + log_location
+                + j * math.log(self.scale)
+                + gammaln(1 + j / self.shape)
+            )
+            signs.append(-1 if self.location < 0 and power % 2 else 1)
+        largest = max(logs)
+        # Sum bounded, signed terms accurately even when the largest
+        # positive and negative terms cancel exactly (Source W expansion).
+        signed_sum = math.fsum(
+            sign * math.exp(value - largest) for value, sign in zip(logs, signs)
         )
+        if signed_sum == 0:
+            return 0.0
+        return math.copysign(math.exp(largest + math.log(abs(signed_sum))), signed_sum)
 
     @property
     def mean(self) -> float:
@@ -162,7 +213,11 @@ class WeibullDistribution:
         """Variance independent of location (Source W, standard deviation)."""
         a = gammaln(1 + 1 / self.shape)
         b = gammaln(1 + 2 / self.shape)
-        return float(self.scale**2 * np.exp(2 * a) * np.expm1(b - 2 * a))
+        # Source W: lambda^2 * exp(b) * (1-exp(2*a-b)). No factor
+        # is exponentiated until its scale has been included.
+        with np.errstate(over="ignore", divide="ignore"):
+            log_variance = 2 * math.log(self.scale) + b + np.log(-np.expm1(2 * a - b))
+            return float(np.exp(log_variance))
 
 
 @dataclass(frozen=True)

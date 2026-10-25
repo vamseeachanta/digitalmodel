@@ -76,7 +76,7 @@ def test_tail_logs_and_support_mismatch():
     NIST 1.3.5.14 logarithmic formula. No epsilon clipping of a bad fit.
     """
     law = wf.WeibullDistribution(1, 1)
-    assert law.logsf(1000) == -1000
+    assert law.logsf(1000) == pytest.approx(-1000)
     assert np.isfinite(wf.goodness_of_fit([1, 2, 3, 4, 1000], law).ad.statistic)
     assert math.isinf(wf.goodness_of_fit([0, 1, 2, 3, 4], law).ad.statistic)
     assert math.isinf(wf.goodness_of_fit([-1, 1, 2, 3, 4], law).ad.statistic)
@@ -209,3 +209,18 @@ def test_critical_value_sample_size_must_match():
             wf.WeibullDistribution(1, 1),
             ks_critical=wf.CriticalValue(1, 0.05, 10, "synthetic control"),
         )
+
+
+def test_ad_retains_finite_interior_observations_with_tiny_ratios():
+    """NIST e-Handbook, online edition 2026, 1.3.5.14 and 1.3.6.6.8.
+
+    At x_i=i*10^-200, k=.5 and scale=10^200, log F_i~.5 ln(i)-200 ln(10).
+    The log-survival corrections are below 3*10^-200; their contribution
+    is below float precision. The raw AD sum therefore remains finite.
+    """
+    law = wf.WeibullDistribution(0.5, 1e200)
+    result = wf.goodness_of_fit(np.arange(1, 6) * 1e-200, law)
+    expected = -5 - sum(
+        (2 * i - 1) / 5 * (0.5 * math.log(i) - 200 * math.log(10)) for i in range(1, 6)
+    )
+    assert result.ad.statistic == pytest.approx(expected)
