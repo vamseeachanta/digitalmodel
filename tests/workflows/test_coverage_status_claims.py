@@ -27,37 +27,37 @@ MATCHING = (
 
 @SEPARATORS
 @pytest.mark.parametrize(
-    'claim',
+    ('claim', 'expected_error'),
     [
-        '60 of 156 baseline cases verified',
-        '61 of 160 baseline cases verified',
-        '1 numerical failure',
-        '1 missing cell',
+        ('60 of 156 baseline cases verified', '60 VERIFIED stated'),
+        ('61 of 160 baseline cases verified', '160 planned cases stated'),
+        ('1 numerical failure', '1 FAILED stated'),
+        ('1 missing cell', '1 MISSING stated'),
     ],
     ids=['verified', 'planned', 'failed', 'missing'],
 )
-def test_stale_whitespace_claims_rejected_for_every_count(claim, separator):
+def test_stale_whitespace_claims_rejected_for_every_count(claim, expected_error, separator):
     """61 + 0 + 95 = 156; 60 verified, 160 planned or either singular 1 is stale."""
     status = claim.replace(' ', separator)
-    with pytest.raises(ValueError, match='coverage'):
+    with pytest.raises(ValueError, match=re.escape(expected_error)):
         report.render_html(summary(), config={'design_data': [design_row(status=status)]})
 
 
 @SEPARATORS
 @pytest.mark.parametrize(
-    'claim',
+    ('claim', 'expected_error'),
     [
-        '60 of 156 baseline cases verified',
-        '61 of 160 baseline cases verified',
-        '1 numerical failure',
-        '1 missing cell',
+        ('60 of 156 baseline cases verified', '60 VERIFIED stated'),
+        ('61 of 160 baseline cases verified', '160 planned cases stated'),
+        ('1 numerical failure', '1 FAILED stated'),
+        ('1 missing cell', '1 MISSING stated'),
     ],
     ids=['verified', 'planned', 'failed', 'missing'],
 )
-def test_later_variant_claim_cannot_hide_behind_matching_claim(claim, separator):
+def test_later_variant_claim_cannot_hide_behind_matching_claim(claim, expected_error, separator):
     """The first claim matches 61 + 0 + 95 = 156; each later stale count must fail."""
     status = MATCHING + '; ' + claim.upper().replace(' ', separator)
-    with pytest.raises(ValueError, match='coverage'):
+    with pytest.raises(ValueError, match=re.escape(expected_error)):
         report.render_html(summary(), config={'design_data': [design_row(status=status)]})
 
 
@@ -79,7 +79,7 @@ def test_repeated_matching_singular_whitespace_claims_preserve_text(separator, c
 def test_coverage_documentation_worked_example():
     """61 + 1 + 1 = 63: valid input renders; changing only 63 to 64 raises."""
     path = Path('docs/api/installation/coverage-status-claims.html')
-    document = (Path(__file__).resolve().parents[2] / path).read_text()
+    document = (Path(__file__).resolve().parents[2] / path).read_text(encoding='utf-8')
     examples = re.findall(r'<pre><code>(.*?)</code></pre>', document, re.DOTALL)
     assert len(examples) == 1
     exec(compile(unescape(examples[0]), str(path), 'exec'), {})
