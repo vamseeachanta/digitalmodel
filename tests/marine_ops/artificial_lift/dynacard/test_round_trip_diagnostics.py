@@ -19,6 +19,10 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter i
     EverittJenningsContextSolver,
     solve_downhole_card,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver import (
+    EverittJenningsSolver,
+    RodString,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     AnalysisResults,
     CardData,
@@ -72,7 +76,7 @@ def test_round_trip_preserves_input_label(mode, seed):
 
 
 def test_calculation_card_is_unchanged_and_diagnostic_card_survives_serialization():
-    """The new card must not silently change existing calculation inputs."""
+    """Wrappers agree on calculation inputs; both cards survive serialization."""
     pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
     ctx = context_for(pump)
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
@@ -83,6 +87,63 @@ def test_calculation_card_is_unchanged_and_diagnostic_card_survives_serializatio
     assert restored.diagnostic_card != restored.downhole_card
     assert restored.diagnostic_card.load[-1] == restored.diagnostic_card.load[0]
     assert restored.diagnostic_card.position[-1] == restored.diagnostic_card.position[0]
+
+
+@pytest.mark.parametrize(
+    "solver_options,expected_load",
+    [
+        ({"smooth_window": 0}, [7, 14, 6, 15, 11, 10, 10, 7]),
+        ({}, np.array([1660, 2976, 2031, 2605, 2941, 2010, 2430, 1660]) / 231),
+    ],
+    ids=["unfiltered", "default_filter"],
+)
+def test_manufactured_calculation_samples(solver_options, expected_load):
+    """Hand calculation independent of wrappers, generators and filter calls.
+
+    Synthetic SI inputs set EA = rho*A = dx = dt = 1, zero damping and zero
+    buoyant weight. The surface boundary gives u1 = -position + load. One
+    spatial step gives u2[j] = u1[j+1] + u1[j-1] - u0[j], cyclically:
+    u2 = [18, 23, 18, 22, 18, 18, 19, 18]. Calculation load at sample zero
+    uses (3*u2 - 4*u1 + u0)/2 = 7; the other unique samples use u2 - u1.
+
+    The default window clips to seven samples, with polynomial order five.
+    For seven equally spaced points the vector v = [1,-6,15,-20,15,-6,1]
+    is orthogonal to every polynomial through degree five and v.v = 924.
+    Hence the fitted values are y - v*(v.y)/924. The left and right windows
+    have v.y = -172 and 80, respectively. This gives the rational samples
+    above, with the last replaced by the first AFTER filtering to close the
+    loop (the unclosed final fit would be 1597/231).
+
+    These are manufactured numerical inputs, not material or design values.
+    The tolerance allows float64 arithmetic round-off only.
+    """
+    rods = RodString(
+        diameters=np.array([2 / np.sqrt(np.pi)]),
+        lengths=np.array([2.0]),
+        moduli=np.array([1.0]),
+        densities=np.array([1.0]),
+    )
+    result = EverittJenningsSolver(n_nodes=3, **solver_options).solve(
+        position=np.array([0, 1, 2, 3, 3, 2, 1, 0]),
+        load=np.array([10, 10, 14, 10, 10, 10, 10, 10]),
+        rods=rods,
+        strokes_per_minute=60 / 7,
+        pump_diameter=0.1,
+        tubing_id=0.2,
+        fluid_density=1.0,
+        damping=np.zeros(2),
+    )
+    np.testing.assert_allclose(result.load, expected_load, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(
+        result.position, [-18, -23, -18, -22, -18, -18, -19, -18],
+        rtol=0, atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        result.diagnostic_load, [8, 14, 6, 15, 11, 10, 10, 8],
+        rtol=0, atol=1e-12,
+    )
+    assert result.load[-1] == result.load[0]
+    assert result.position[-1] == result.position[0]
 
 
 def test_consistent_diagnostic_strain_recovers_the_supplied_pump_load():
