@@ -18,7 +18,10 @@
   <table>
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
     <tbody><tr><td>Initial</td><td>2026-10-19</td><td>Document the decimal
-      representation correction and bounded discovery coverage.</td></tr></tbody>
+      representation correction and bounded discovery coverage.</td></tr>
+      <tr><td>Validation update</td><td>2026-10-25</td><td>Record independent
+        review coverage, repeated local checks and the outstanding hosted
+        domain result.</td></tr></tbody>
   </table>
   <p>Table 1. Revision history.</p>
 
@@ -112,8 +115,23 @@
   <p>Existing stored evidence is not rewritten. A previously accepted value outside
     the receiving contract now refuses; its original bytes must remain retained.
     No licensed solver is started or queried, and no native qualification is
-    established by these synthetic tests. Exact independent reciprocal review is
-    outstanding and is not replaced by the local inspection.</p>
+    established by these synthetic tests.</p>
+
+  <h2>Independent review and repeated validation</h2>
+  <p>Independent review at revision <code>a635ead1</code> identified no blocking
+    code finding in the five changed files. It repeated the 27 boundary cases
+    and the affected-module suite: 515 tests passed with three existing
+    private-fixture skips. The broader 2,416-test count above was not independently
+    repeated.</p>
+  <p>Subsequent local runs repeated the 27 boundary cases and the affected-module
+    suite: 515 tests passed with three existing private-fixture skips.
+    Hosted domain coverage remains incomplete: the harness and domain jobs in
+    <a href="../../.github/workflows/quality-gates-by-domain.yml">the domain
+      workflow</a> run <code>39283649402</code> were cancelled before test steps
+    ran, and the aggregate failed. A rerun was requested at the same revision;
+    its second attempt remains queued. Acceptance
+    still requires completed hosted results; the local representation tests
+    establish no native solver or engineering qualification.</p>
 
   <h2>Later slices</h2>
   <p>Issue 2125 remains open for aggregate count derivation, provider-metadata and
