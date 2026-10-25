@@ -61,5 +61,21 @@ Run both files with the repository test environment:
 uv run python -m pytest tests/infrastructure/performance/test_sustained_load_policy.py tests/infrastructure/performance/test_load_testing.py
 ```
 
+For an isolated check without resolving the project environment, include the
+dependencies imported by both modules and the performance fixtures. A
+pytest-only environment cannot collect these tests because the shared
+`conftest.py` imports `psutil` and `memory_profiler`:
+
+```sh
+uv run --no-project --with pytest --with numpy --with pandas --with psutil \
+  --with memory-profiler --with pytest-asyncio --no-build \
+  python -m pytest tests/infrastructure/performance/test_sustained_load_policy.py \
+  tests/infrastructure/performance/test_load_testing.py -q -rA -p no:cacheprovider
+```
+
+This runs nine deterministic policy cases and seven timed scenarios. The
+`--no-build` option requires compatible wheels; an unavailable wheel requires a
+supported test environment rather than a source build.
+
 Long-term latency trending and calibration against product requirements remain
 separate benchmark work; these regressions do not establish either.
