@@ -1,0 +1,125 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Subsea manifold cathodic protection analysis</title>
+<style>body{font:1rem/1.6 system-ui,sans-serif;color:#123047;background:#f8fafc;max-width:74rem;margin:auto;padding:1rem}
+h1,h2{line-height:1.25}a{color:#087e8b}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%}
+th,td{padding:.6rem;text-align:left;border-bottom:1px solid #c5d9e4;vertical-align:top}
+th{background:#e8f3f7}section{margin:2rem 0}img{width:100%;height:auto}.notice{border-left:4px solid #087e8b;padding:1rem}
+</style></head><body>
+<h1>Subsea manifold cathodic protection analysis</h1>
+<section id="summary"><h2>Summary</h2>
+<p>The mass-sized arrangement of 28 anodes does not meet the criterion; 64 anodes are needed and final current governs.</p>
+<p>Published geometry and synthetic or assumed CP inputs; screening examples requiring engineering review.</p><p class="notice">clearance required before outward release</p></section>
+<section id="revision-history"><h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>0</td><td>2026-10-25</td><td>Initial step data and public report copies from saved case evidence.</td></tr>
+</table></section>
+<figure><img src="../schematics/S03.svg" alt="Overall dimensions are not recorded; proportional anode detail only."><figcaption>Overall dimensions are not recorded; proportional anode detail only.</figcaption></figure>
+<section id="inputs"><h2>Inputs</h2>
+<p>State geometry, environment, coating and anode inputs.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Structure and zones</td><td>not applicable</td><td>Subsea manifold; exterior seawater surfaces</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Design life</td><td>t</td><td>25.0</td><td>yr</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>submerged surface area</td><td>A</td><td>850.0</td><td>m²</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>submerged coating category</td><td>not applicable</td><td>III</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>submerged initial coating breakdown</td><td>f_ci</td><td>0.020</td><td>dimensionless</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Coating breakdown factors; dnv-rp-b401 2021-05 Table 8-4 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>submerged mean coating breakdown</td><td>f_cm</td><td>0.170</td><td>dimensionless</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Coating breakdown factors; dnv-rp-b401 2021-05 Table 8-4 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>submerged final coating breakdown</td><td>f_cf</td><td>0.320</td><td>dimensionless</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Coating breakdown factors; dnv-rp-b401 2021-05 Table 8-4 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Seawater temperature</td><td>T</td><td>6.0</td><td>°C</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>Seawater resistivity</td><td>rho</td><td>0.330</td><td>Ω m</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>Anode alloy and type</td><td>not applicable</td><td>aluminium; stand_off</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Net mass per anode</td><td>m_a</td><td>80.0</td><td>kg</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>Anode length</td><td>L_a</td><td>0.600</td><td>m</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>Anode radius</td><td>d_a</td><td>0.045</td><td>m</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a></td></tr>
+<tr><td>Electrochemical capacity</td><td>epsilon</td><td>2000</td><td>Ah/kg</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Anode materials; dnv-rp-b401 2021-05 Table 8-6 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>The stated input classes and missing data apply to this example.</p></section>
+<section id="criteria"><h2>Criteria</h2>
+<p>State the criteria and their recorded edition basis.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>submerged initial current density</td><td>i_initial</td><td>0.250</td><td>A/m²</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-1 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>submerged mean current density</td><td>i_mean</td><td>0.120</td><td>A/m²</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-1 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>submerged final current density</td><td>i_final</td><td>0.170</td><td>A/m²</td><td>synthetic</td><td>DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-1 (as cited by the case pack)</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Utilisation factor</td><td>u</td><td>0.85</td><td>dimensionless</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Protective potential and reference electrode</td><td>not applicable</td><td>NOT_EVALUATED: qualify the applicable potential and reference electrode before a survey criterion is set</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Checks applied</td><td>not applicable</td><td>Mass; initial output and final output</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>Only the recorded aggregate criteria are assessed.</p></section>
+<section id="anode-sizing"><h2>Anode sizing</h2>
+<p>Compare lifetime mass and current-output requirements.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Initial current demand</td><td>I_initial</td><td>4.2</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Mean current demand</td><td>I_mean</td><td>17.3</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Final current demand</td><td>I_final</td><td>46.2</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Initial output per anode</td><td>I_a_initial</td><td>0.9595</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Initial anode resistance</td><td>R_a_initial</td><td>0.260554</td><td>Ω</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Final output per anode</td><td>I_a_final</td><td>0.7276</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Final anode resistance</td><td>R_a_final</td><td>0.343586</td><td>Ω</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Anodes needed for mass</td><td>N_mass</td><td>28</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Anodes needed for initial</td><td>N_initial</td><td>5</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Anodes needed for final</td><td>N_final</td><td>64</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Governing check</td><td>not applicable</td><td>final</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>The mass-sized arrangement of 28 anodes does not meet the criterion; 64 anodes are needed and final current governs.</p></section>
+<section id="distribution"><h2>Distribution</h2>
+<p>State the recorded allocation and positions requiring attention.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Arrangement anode count</td><td>N_p</td><td>28</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Anodes per zone</td><td>not applicable</td><td>NOT_EVALUATED: only an aggregate count is recorded; no zone allocation is inferred</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Deepest position</td><td>not applicable</td><td>NOT_EVALUATED: elevations and member coordinates are not recorded</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>Allocation is limited to the quantities recorded in the case data.</p></section>
+<section id="check"><h2>Check</h2>
+<p>Compare the provided arrangement with the saved demand.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Anodes provided</td><td>N_p</td><td>28</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Anodes needed</td><td>N_r</td><td>64</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Mass provided</td><td>M_p</td><td>2240.0</td><td>kg</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Mass needed</td><td>M_r</td><td>2233.8</td><td>kg</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Initial output provided</td><td>I_p_initial</td><td>26.9</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Final output provided</td><td>I_p_final</td><td>20.4</td><td>A</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Mass margin</td><td>margin</td><td>0.3</td><td>%</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Initial margin</td><td>margin</td><td>532.1</td><td>%</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Final margin</td><td>margin</td><td>−55.9</td><td>%</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Aggregate result</td><td>not applicable</td><td>does not meet the criterion</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Additional initial-design anodes</td><td>delta_N</td><td>36</td><td>anodes</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-6">[6]</a></td></tr>
+<tr><td>Additional initial-design net mass</td><td>delta_M</td><td>2880.0</td><td>kg</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>The mass-sized arrangement of 28 anodes does not meet the criterion; 64 anodes are needed and final current governs.</p></section>
+<section id="monitoring-plan"><h2>Monitoring plan</h2>
+<p>Identify survey positions and the inputs needed to set an intervention plan.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Quantity</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Input class</th><th>Basis</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Maintainer monitoring and initial-design rule</td><td>not applicable</td><td>When protection criteria are not met or their attainment is uncertain, monitoring is required. Where monitoring and retrofit are not planned, provide adequate anodes in the initial design.</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Potential measurement positions</td><td>not applicable</td><td>deepest lower frame positions; remote outer faces and shielded connections</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Reference electrode</td><td>not applicable</td><td>NOT_EVALUATED: confirm the applicable electrode and potential basis</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Survey frequency</td><td>not applicable</td><td>NOT_EVALUATED: service schedule and access are required</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Trigger potential</td><td>not applicable</td><td>NOT_EVALUATED: qualified criterion and measured potentials are required</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Action at trigger</td><td>not applicable</td><td>NOT_EVALUATED: investigate; size local intervention after condition and continuity checks</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Retrofit quantity and required date</td><td>not applicable</td><td>NOT_EVALUATED: local demand, depletion, access and lead time are required</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Initial-design option</td><td>not applicable</td><td>Provide adequate anode mass and output before installation if monitoring and retrofit are not planned</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+<tr><td>Inputs still needed</td><td>not applicable</td><td>reference electrode and applicable potential criterion; measured potentials at deep and remote positions; survey access and service schedule; remaining anode mass and depletion rate; electrical continuity and local current demand; retrofit access and delivery lead time</td><td>not applicable</td><td>synthetic</td><td>Synthetic case input and saved results</td><td><a href="#source-5">[5]</a>, <a href="#source-6">[6]</a></td></tr>
+</tbody></table></div>
+<p>NOT_EVALUATED: supply the listed inputs before setting survey criteria and intervention dates.</p></section>
+<section id="recommendations"><h2>Recommendations</h2>
+<h3>Design</h3><p>Use the additional initial-design anodes and net mass stated in the check table; recheck the final arrangement.</p>
+<h3>Monitoring</h3><p>When protection criteria are not met or their attainment is uncertain, monitoring is required. Where monitoring and retrofit are not planned, provide adequate anodes in the initial design.</p>
+<h3>Retrofit</h3><p>NOT_EVALUATED: local quantity and required date need potentials, continuity, condition, demand and access evidence.</p>
+</section><section id="limits"><h2>Limits</h2>
+<p>Aggregate sizing only. Local potentials, allocation, continuity and installed condition are not established.</p></section>
+<section id="references"><h2>References</h2>
+<p>DNV-RP-B401 (May 2021); edition and locators retained from the case pack only.</p>
+<p id="source-5">[5] <code>docs/domains/cathodic_protection/reports/cases/S03/input.yml</code>; commit <code>d34bda5cf18d11be48b17c7ba94e5c8127af2bf2</code>; SHA-256 <code>d4719146b1f40428313e762bb1b785b52108614ba713fc6a07bbdf564206e4e7</code>. Repository source, not a hosted link.</p>
+<p id="source-6">[6] <code>docs/domains/cathodic_protection/reports/cases/S03/results.json</code>; commit <code>d34bda5cf18d11be48b17c7ba94e5c8127af2bf2</code>; SHA-256 <code>113b6acd425198ff9937327f2f47dd2d080a87c2f3524e3936c40c6987317517</code>. Repository source, not a hosted link.</p>
+</section></body></html>

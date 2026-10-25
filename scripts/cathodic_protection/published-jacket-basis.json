@@ -1,0 +1,23 @@
+{
+  "commit": "23f613112a0b3810363f99206c4af305c0d98147",
+  "source_ref": "origin/codex/mrcp-work",
+  "source_path": "docs/reports/modules/cp/index.html",
+  "source_sha256": "f54d1c102a336716ff226f89ccd1c9c13ee89e99ab101da2ace49b7f36d94518",
+  "embedded_data_id": "calculation-data",
+  "source_keys": {
+    "required_count": "results.current_output_verification.recommended_anode_count",
+    "provided_count": "results.current_output_verification.anode_count",
+    "initial_output_A": "results.current_output_verification.anode_current_output_initial_A",
+    "final_output_A": "results.current_output_verification.anode_current_output_final_A"
+  },
+  "values": {
+    "required_count": 547,
+    "provided_count": 569,
+    "initial_output_A": 5.0119,
+    "final_output_A": 3.5798
+  },
+  "governing_check": "mass",
+  "assessment": "declared assumed reproduction",
+  "aggregate_checks": "all three pass",
+  "limits": "Aggregate reproduction only; installed-design acceptance and local retrofit sizing are not established."
+}
