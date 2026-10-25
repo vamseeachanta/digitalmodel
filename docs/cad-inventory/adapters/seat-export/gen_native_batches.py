@@ -24,8 +24,18 @@ OTHER_SEAT = {"prt", "catpart", "x_t", "x_b", "f3d", "f3z"}
 
 
 def _windows_component(value):
-    if not value or re.search(r'[<>:"|?*\\\x00-\x1f]', value):
+    if (
+        not value
+        or value.endswith((" ", "."))
+        or re.search(r'[<>:"|?*\\\x00-\x1f]', value)
+    ):
         raise ValueError("source path contains a non-Windows filename component")
+    # Device names remain reserved with extensions, including superscript digits.
+    stem = value.partition(".")[0].rstrip(" ").upper()
+    if stem in {"CON", "PRN", "AUX", "NUL"} or re.fullmatch(
+        r"(?:COM|LPT)[1-9¹²³]", stem
+    ):
+        raise ValueError("source path contains a reserved Windows filename component")
 
 
 def _roots(source_root, windows_root):

@@ -55,6 +55,11 @@ the macro's `SRC_ROOT`. Mapping uses path components; paths outside the source r
 or containing traversal or list separators are rejected before output is written.
 Unsupported formats and rows with another readability classification are skipped.
 
+Reserved Windows device names, including those with extensions, and components
+ending in a space or period are rejected in mapped source paths and configured
+Windows subdirectories. These restrictions follow Microsoft's
+[filename conventions](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions).
+
 `CAD_BATCH_OUTPUT` shall name a new directory outside public Git. An existing
 directory is rejected to preserve earlier runs. Batch lists retain CRLF separators,
 and `_manifest.json` retains per-group counts and priority order. Filename collisions

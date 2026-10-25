@@ -201,6 +201,91 @@ def test_invalid_source_paths_leave_no_output(adapter, tmp_path, relative):
     assert not output.exists()
 
 
+@pytest.fixture(
+    params=[
+        *"CON PRN AUX NUL COM1 COM2 COM3 COM4 COM5 COM6 COM7 COM8 COM9".split(),
+        *"LPT1 LPT2 LPT3 LPT4 LPT5 LPT6 LPT7 LPT8 LPT9".split(),
+        *"COM¹ COM² COM³ LPT¹ LPT² LPT³".split(),
+        "NUL.ipt",
+        "con.sldprt",
+        "PrN.iam",
+        "aux.tar.gz",
+        "com1.ipt",
+        "lPt9.sldasm",
+        "COM².ipt",
+        "LPT³.ipt",
+        "NUL .ipt",
+        "part.ipt ",
+        "part.ipt.",
+        "parts ",
+        "parts.",
+    ]
+)
+def invalid_windows_component(request):
+    return request.param
+
+
+@pytest.mark.parametrize("placement", ["filename", "directory"])
+def test_invalid_windows_source_components_leave_no_output(
+    adapter, tmp_path, invalid_windows_component, placement
+):
+    source = tmp_path / "source"
+    relative = invalid_windows_component
+    if placement == "directory":
+        relative += "/part.ipt"
+    index = tmp_path / "index.tsv"
+    output = tmp_path / "new" / "batches"
+    write_index(
+        index,
+        [row(source / "part.ipt", "ipt"), row(source / relative, "ipt")],
+    )
+    with pytest.raises(ValueError):
+        adapter.generate_batches(index, output, source, "Q:\\")
+    assert not output.parent.exists()
+
+
+@pytest.mark.parametrize("root", ["Q:\\", "\\\\example.invalid\\archive\\"])
+def test_invalid_windows_subdirectories_leave_no_output(
+    adapter, tmp_path, invalid_windows_component, root
+):
+    source = tmp_path / "source"
+    index = tmp_path / "index.tsv"
+    output = tmp_path / "new" / "batches"
+    write_index(index, [row(source / "part.ipt", "ipt")])
+    windows_root = root + invalid_windows_component + "\\files"
+    with pytest.raises(ValueError):
+        adapter.generate_batches(index, output, source, windows_root)
+    assert not output.parent.exists()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "NULpart.ipt",
+        "CONSOLE.ipt",
+        "COM0.ipt",
+        "COM10.ipt",
+        "LPT0.ipt",
+        "LPT10.ipt",
+        ".hidden.ipt",
+        "part name.ipt",
+        "part .ipt",
+        "part..ipt",
+    ],
+)
+def test_valid_windows_component_near_matches_generate_batches(adapter, tmp_path, name):
+    source = tmp_path / "source"
+    index = tmp_path / "index.tsv"
+    output = tmp_path / "batches"
+    write_index(index, [row(source / name, "ipt")])
+    manifest = adapter.generate_batches(index, output, source, "Q:\\" + name)
+    assert manifest["totals"] == {"sw": 0, "inv": 1, "other": 0, "projects": 1}
+    batch = manifest["batches"][0]
+    assert (output / batch["inv_file"]).read_bytes() == (
+        "Q:\\" + name + "\\" + name + "\r\n"
+    ).encode("utf-8")
+
+
 @pytest.mark.parametrize("kind", ["sibling", "relative", "root"])
 def test_containment_is_by_components(adapter, tmp_path, kind):
     source = tmp_path / "source"
