@@ -2,16 +2,22 @@
 import hashlib
 import importlib.util
 import json
+import os
 import re
+import shlex
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
 from digitalmodel.hydrodynamics.seakeeping import operability_analysis
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / 'docs/reports/modules/hydrodynamics'
+REBUILD = 'Rebuild with: PYTHONPATH=src uv run python docs/reports/modules/hydrodynamics/generate.py'
 
 
 def load_builder():
@@ -36,7 +42,7 @@ def test_rebuild_and_every_worked_value(tmp_path):
     builder = load_builder()
     builder.build(tmp_path)
     for name in ('index.html', 'changes.json'):
-        assert (tmp_path / name).read_bytes() == (REPORT / name).read_text(encoding='utf-8').encode('utf-8')
+        assert (tmp_path / name).read_bytes() == (REPORT / name).read_text(encoding='utf-8').encode('utf-8'), REBUILD
     page = (tmp_path / 'index.html').read_text(encoding='utf-8')
     payload = json.loads(re.search(
         r'<script id="example-data" type="application/json">(.*?)</script>', page, re.S)[1])
@@ -55,9 +61,11 @@ def test_rebuild_and_every_worked_value(tmp_path):
     assert payload['result']['operability_pct'] == pytest.approx(90.0)
     assert [r['operable'] for r in actual['sea_state_results']] == [True, True, True, False]
     # The plotted demands and limit are the same values as the calculation.
-    for index, row in enumerate(actual['sea_state_results']):
-        assert f'data-demand="{row["significant_amplitude"]}"' in page
-    assert f'data-limit="{payload["inputs"]["criterion"]}"' in page
+    demands = [float(value) for value in re.findall(r'data-demand="([^"]+)"', page)]
+    limits = [float(value) for value in re.findall(r'data-limit="([^"]+)"', page)]
+    assert demands == pytest.approx([
+        row['significant_amplitude'] for row in actual['sea_state_results']])
+    assert limits == pytest.approx([payload['inputs']['criterion']] * len(demands))
 
 
 @pytest.mark.parametrize('newline', [b'\r\n', b'\r'], ids=['crlf', 'cr'])
@@ -76,9 +84,9 @@ def test_rebuild_ignores_checkout_newlines(tmp_path, newline):
     builder.ROOT = checkout
     builder.build(tmp_path / 'converted')
     assert builder.calculate()['source_digest_format'] == 'sha256-utf8-lf'
-    assert builder.calculate()['sources'] == expected
+    assert builder.calculate()['sources'] == expected, REBUILD
     for name in ('index.html', 'changes.json'):
-        assert (tmp_path / 'converted' / name).read_bytes() == (tmp_path / 'lf' / name).read_bytes()
+        assert (tmp_path / 'converted' / name).read_bytes() == (tmp_path / 'lf' / name).read_bytes(), REBUILD
     # Canonicalization must still detect substantive edits.
     target = checkout / 'docs/api/_assets/brand.css'
     target.write_bytes(target.read_bytes() + b'/* Content change. */')
@@ -253,15 +261,106 @@ def test_report_checks_belong_to_hosted_domain():
     row = next(line for line in table.splitlines()
                if line.startswith('| hydrodynamics-other '))
     assert '`tests/hydrodynamics/test_module_report.py`' in row.split('|')[2]
+    gates = yaml.safe_load(
+        (ROOT / '.claude/quality-gates.yaml').read_text(encoding='utf-8'))['gates']
+    gate = gates['tests-hydrodynamics-other']
+    assert gate['enabled'] is True
+    assert gate['domain'] == 'hydrodynamics-other'
+    assert gate['failure_action'] == 'block'
+    assert 'tests/hydrodynamics/test_module_report.py' in gate['test_roots']
+    command = shlex.split(gate['command'])
+    pytest_args = command[command.index('pytest') + 1:]
+    assert 'tests/hydrodynamics/test_module_report.py' in pytest_args
 
 
-def test_report_ignore_exception_is_narrow():
-    import subprocess
+@pytest.mark.parametrize('changed_path', [
+    'docs/reports/modules/hydrodynamics/generate.py',
+    'docs/reports/modules/hydrodynamics/index.html',
+    'docs/reports/modules/hydrodynamics/changes.json',
+    'docs/api/_assets/brand.css',
+    'docs/api/cfd/turbulent-flat-plate-verification.html',
+])
+def test_report_dependency_selects_its_hosted_domain(changed_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        'hydrodynamics_report_domains', ROOT / 'scripts/ci/detect_touched_domains.py')
+    detector = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, detector)
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(ROOT / 'tests/DOMAINS.md')
+    selected = {domain.name for domain in detector.touched_domains([changed_path], domains)}
+    assert selected == {'hydrodynamics-other'}
+
+
+def test_retained_citation_selects_report_and_existing_domains(monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        'hydrodynamics_citation_domains', ROOT / 'scripts/ci/detect_touched_domains.py')
+    detector = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, detector)
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(ROOT / 'tests/DOMAINS.md')
+    selected = {domain.name for domain in detector.touched_domains(
+        ['src/digitalmodel/orcawave/docs/engineering-citations.md'], domains)}
+    assert selected == {'contracts', 'hydrodynamics-diffraction', 'hydrodynamics-other'}
+    for source in load_builder().SOURCES:
+        selected = {domain.name for domain in detector.touched_domains([source], domains)}
+        assert 'hydrodynamics-other' in selected, source
+
+
+def test_domain_table_uses_utf8_under_ascii_locale(tmp_path):
+    domains_file = tmp_path / 'DOMAINS.md'
+    domains_file.write_text(
+        '| hydrodynamics-other | `tests/hydrodynamics/` | Spectral résumé. |\n',
+        encoding='utf-8', newline='\n')
+    env = dict(os.environ, LC_ALL='C', PYTHONCOERCECLOCALE='0', PYTHONUTF8='0')
+    result = subprocess.run(
+        [sys.executable, '-X', 'utf8=0', str(ROOT / 'scripts/ci/detect_touched_domains.py'),
+         '--domains-file', domains_file.as_posix(), '--mode', 'full',
+         '--output-format', 'list'],
+        env=env, text=True, encoding='utf-8', capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == 'hydrodynamics-other'
+
+
+def test_report_ignore_exception_is_narrow(tmp_path):
+    rules = (ROOT / '.gitignore').read_text(encoding='utf-8')
+    lines = [line.lstrip('/') for line in rules.splitlines()]
+    shared = [i for i, line in enumerate(lines) if line == 'docs/reports/modules/*']
+    assert len(shared) == 1, 'Keep one shared module-report ignore header before all exceptions'
+    exceptions = [i for i, line in enumerate(lines)
+                  if line.startswith(('!docs/reports/modules/', '!/docs/reports/modules/'))
+                  and line.rstrip('/') not in ('!docs/reports/modules', '!/docs/reports/modules')]
+    assert exceptions and shared[0] < min(exceptions)
+
+    # A later report will add only its exceptions, retaining this report's exports.
+    rules += ('\n!docs/reports/modules/other-report/\n'
+              'docs/reports/modules/other-report/*\n'
+              '!docs/reports/modules/other-report/index.html\n')
+    (tmp_path / '.gitignore').write_text(rules, encoding='utf-8', newline='\n')
+    env = {key: value for key, value in os.environ.items()
+           if key not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR')}
+    subprocess.run(['git', 'init', '-q', tmp_path.as_posix()], env=env, check=True,
+                   capture_output=True)
 
     folder = 'docs/reports/modules/hydrodynamics/'
     for name, ignored in [('comments.json', True), ('scratch.txt', True),
                           ('index.html', False), ('generate.py', False),
                           ('changes.json', False)]:
         result = subprocess.run(['git', 'check-ignore', '--no-index', '-q', folder + name],
-                                cwd=ROOT, check=False)
+                                cwd=tmp_path, env=env, check=False)
         assert result.returncode == (0 if ignored else 1), name
+    result = subprocess.run(
+        ['git', 'check-ignore', '--no-index', '-q',
+         'docs/reports/modules/other-report/index.html'],
+        cwd=tmp_path, env=env, check=False)
+    assert result.returncode == 1
+    for name in ('index.html', 'changes.json'):
+        result = subprocess.run(
+            ['git', 'check-ignore', '--no-index', '-q',
+             'docs/reports/modules/vesselseakeeping/' + name],
+            cwd=tmp_path, env=env, check=False)
+        assert result.returncode == 1, 'Retain existing module report exports'
+    result = subprocess.run(
+        ['git', 'check-ignore', '--no-index', '-q',
+         'docs/reports/modules/vesselseakeeping/scratch.txt'],
+        cwd=tmp_path, env=env, check=False)
+    assert result.returncode == 0

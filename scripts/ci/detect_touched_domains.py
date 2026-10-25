@@ -45,6 +45,9 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
+    ("docs/reports/modules/hydrodynamics/", ("hydrodynamics-other",)),
+    ("docs/api/_assets/brand.css", ("hydrodynamics-other",)),
+    ("docs/api/cfd/turbulent-flat-plate-verification.html", ("hydrodynamics-other",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
@@ -71,6 +74,9 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("tests/orcaflex/test_mooring_design_citations.py", ("citations",)),
     ("tests/specialized/cathodic_protection/", ("cathodic-protection",)),
 )
+DOCUMENT_DEPENDENCIES: dict[str, tuple[str, ...]] = {
+    "src/digitalmodel/orcawave/docs/engineering-citations.md": ("hydrodynamics-other",),
+}
 PACKAGE_DATA_DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("orcaflex/", ("orcaflex",)),
     ("subsea/", ("subsea",)),
@@ -107,7 +113,7 @@ def normalize_root(root: str) -> str:
 def parse_domains(domains_file: Path) -> list[Domain]:
     """Read shard roots from the ownership table."""
     domains: list[Domain] = []
-    for raw_line in domains_file.read_text().splitlines():
+    for raw_line in domains_file.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line.startswith("|") or "`tests/" not in line:
             continue
@@ -124,7 +130,7 @@ def parse_domains(domains_file: Path) -> list[Domain]:
 
     if not domains:
         raise ValueError(
-            f"No domains with backtick-wrapped tests/... roots found in {domains_file}"
+            f"No domains with backtick-wrapped tests/... roots found in {domains_file.as_posix()}"
         )
     return domains
 
@@ -440,6 +446,7 @@ def touched_domains(
     """Select the union of shards affected by changed paths."""
     selected_names: set[str] = set()
     for path in changed_files:
+        selected_names.update(DOCUMENT_DEPENDENCIES.get(normalize_root(path), ()))
         if pinned_domains:
             selected_names.update(pinned_domains.get(normalize_root(path), set()))
         # A pin adds record tests even for paths otherwise handled outside the matrix.
