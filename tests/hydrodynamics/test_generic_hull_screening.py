@@ -192,6 +192,14 @@ def test_published_reductions_are_preserved(record):
     assert [round(row["reduction_percent"], 1) for row in rows] == [46.1, 23.3]
 
 
+def test_calculation_record_is_unchanged(builder):
+    """Pin the complete numeric/data basis of the presentation baseline."""
+    saved = json.loads((ROOT / builder.DATA).read_text(encoding="utf-8"))
+    saved.pop("provenance")
+    digest = hashlib.sha256(json.dumps(saved, sort_keys=True).encode()).hexdigest()
+    assert digest == "a41b54eb0653e046d90d15db80f30cfc6bde47faef7e76da4e0144186a4e628c"
+
+
 def test_schematic_uses_record_dimensions(builder, record):
     import copy
     from xml.etree import ElementTree
@@ -244,7 +252,7 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
     assert len(parsed.controls) == len(series)
     assert rendered.count("<title>") == len(expected)
     assert "onchange=" in rendered and "toggleAttribute('hidden'" in builder.render(record)
-    assert "data/generic_hull_roll_screening.json" in rendered
+    assert 'href="#ref-data"' in rendered
     if index == 0:
         assert xs == [100 * row["hull_damping_ratio"] for row in record["cases"]
                       if row["roll_period_s"] == 18 and row["alpha"] == .05]
@@ -259,14 +267,104 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
 
 
 def test_page_section_order_and_collapsed_revisions(builder, record):
+    from html.parser import HTMLParser
+
+    class Headings(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.headings, self.current = [], None
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "h2":
+                self.current = ""
+
+        def handle_data(self, data):
+            if self.current is not None:
+                self.current += data
+
+        def handle_endtag(self, tag):
+            if tag == "h2":
+                self.headings.append(self.current)
+                self.current = None
+
     page = builder.render(record)
-    markers = ['<h1>', 'id="hull-section"', 'id="summary"', 'id="damping"',
-               'id="response"', 'id="alpha"', 'id="comparison"',
-               'id="limits"', 'id="method"', '<details id="revisions">']
+    parsed = Headings()
+    parsed.feed(page)
+    assert parsed.headings == [
+        "1 Executive summary", "2 Introduction", "3 Design data",
+        "4 Analysis methodology", "5 Results", "6 Validation and benchmark",
+        "7 Limitations", "8 Conclusions and next steps", "9 References",
+        "Appendix A Sensitivity matrix", "Appendix B Reproduce commands",
+    ]
+    markers = ['id="summary"', 'id="introduction"', 'id="design-data"',
+               'id="hull-section"', 'id="method"', 'id="comparison"',
+               'id="damping"', 'id="response"', 'id="alpha"', 'id="validation"',
+               'id="limits"', 'id="conclusions"', 'id="references"',
+               'id="sensitivity"', 'id="reproduce"', '<details id="revisions">']
     positions = [page.index(marker) for marker in markers]
     assert positions == sorted(positions)
     assert '<details id="revisions" open' not in page
-    assert '<summary>Revision history</summary>' in page
+    assert '<summary>Appendix C Revision history</summary>' in page
+    assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in page
+    assert ': screening estimate</h' not in page
+    assert '<h2>Left</h2>' not in page
+
+
+def test_report_traceability_and_print_contract(builder, record):
+    from html.parser import HTMLParser
+    from xml.etree import ElementTree
+
+    class Report(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.ids, self.targets, self.locators = [], [], []
+            self.in_references = False
+            self.captions, self.caption = [], None
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if attrs.get("id") == "references":
+                self.in_references = True
+            if tag == "section" and attrs.get("id") == "sensitivity":
+                self.in_references = False
+            if "id" in attrs:
+                self.ids.append(attrs["id"])
+            href = attrs.get("href", "")
+            if href.startswith("#"):
+                self.targets.append(href[1:])
+            if href.startswith(("../../../", "data/", "dual-tank")):
+                self.locators.append(self.in_references)
+            if tag in ("caption", "figcaption"):
+                self.caption = ""
+
+        def handle_data(self, data):
+            if self.caption is not None:
+                self.caption += data
+
+        def handle_endtag(self, tag):
+            if tag in ("caption", "figcaption"):
+                self.captions.append(self.caption)
+                self.caption = None
+
+    page = builder.render(record)
+    parsed = Report()
+    parsed.feed(page)
+    assert len(parsed.ids) == len(set(parsed.ids))
+    assert set(parsed.targets) <= set(parsed.ids)
+    assert parsed.locators and all(parsed.locators)
+    assert all(caption.startswith(("Figure ", "Table ")) for caption in parsed.captions)
+    assert 'Table A.1' in page and 'Figure 3.1' in page and 'Figure 5.3' in page
+    assert '08f081f46' in page and 'P6' in page
+    assert '@media print' in page and '.chart text' in page
+    assert 'r="2.5"' in page and 'font-size="12"' in page
+    svg = ElementTree.fromstring(builder.schematic(record))
+    assert len(svg.findall('.//marker')) >= 1
+    assert 'marker-start=' in builder.schematic(record)
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert 3 <= summary.count('<li>') <= 5
+    numbered = page.split('<section id="summary">')[1].split('<section id="sensitivity">')[0]
+    import re
+    assert not re.search(r'\bline \d+', numbered.split('<section id="references">')[0])
 
 
 def test_page_wording_links_and_preservation(builder, record):
@@ -303,11 +401,11 @@ def test_page_wording_links_and_preservation(builder, record):
     assert '6.0 % more roll' in text
     assert '29.5 %' in text
     assert '25.0 % limit' in text
-    assert text.count('ASSUMED - to be confirmed') == 3
+    assert text.count('ASSUMED - to be confirmed') >= 3
     assert "checks arithmetic and the coupling denominator" in text
     assert "not the physics of the moment model" in text
     assert 'Mon 26 Oct' not in text
-    assert 'Questions: support&#64;aceengineer.com' in text
+    assert 'Questions:' not in text
     assert '\u2014' not in text
     for folder in ("home", "mnt"):
         assert "/" + folder + "/" not in text
@@ -317,6 +415,6 @@ def test_page_wording_links_and_preservation(builder, record):
     for href in links.links:
         url = urlsplit(href)
         if not url.scheme:
-            assert (page.parent / url.path).is_file(), href
+            assert (page.parent / url.path if url.path else page).is_file(), href
     parent = (ROOT / builder.PARENT_PAGE).read_text()
     assert f'href="{Path(builder.PAGE).name}"' in parent

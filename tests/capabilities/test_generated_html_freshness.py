@@ -132,9 +132,11 @@ def test_generic_screening_page_has_matched_interactive_exports():
         assert rows[1:] == [[name, str(x), str(y)] for name, x, y in points]
         expected.extend((x, y) for _, x, y in points)
     assert page.points == expected
-    markers = ['<h1>', 'id="hull-section"', 'id="summary"', 'id="damping"',
-               'id="response"', 'id="alpha"', 'id="comparison"', 'id="limits"',
-               'id="method"', '<details id="revisions">']
+    markers = ['<h1>', 'id="summary"', 'id="introduction"', 'id="design-data"',
+               'id="hull-section"', 'id="method"', 'id="comparison"', 'id="damping"',
+               'id="response"', 'id="alpha"', 'id="validation"', 'id="limits"',
+               'id="conclusions"', 'id="references"', 'id="sensitivity"',
+               'id="reproduce"', '<details id="revisions">']
     assert [text.index(marker) for marker in markers] == sorted(text.index(marker) for marker in markers)
     assert '<details id="revisions" open' not in text
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text
