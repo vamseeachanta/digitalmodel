@@ -6,9 +6,11 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
 import subprocess
 from pathlib import Path
+from urllib.error import URLError
 
 import pytest
 
@@ -26,6 +28,11 @@ def repository(tmp_path, monkeypatch, request):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.delenv("GITHUB_REF", raising=False)
     monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    # Only disposable histories receive policy evidence; real inventories do not.
+    monkeypatch.setattr(history, "_integration_policy", lambda *args: {
+        "allow_merge_commit": True, "allow_squash_merge": False,
+        "allow_rebase_merge": False,
+    }, raising=False)
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
@@ -43,7 +50,7 @@ def repository(tmp_path, monkeypatch, request):
     git("config", "user.name", "Provenance fixture")
     git("config", "user.email", "fixture")
     row = copy.deepcopy(next(
-        row for row in json.loads((ROOT / INDEX).read_text())["atlases"]
+        row for row in json.loads((ROOT / INDEX).read_text(encoding="utf-8"))["atlases"]
         if row["status"] == "VERIFIED"
         and row["workflow_id"] == getattr(request, "param", "mooring-fatigue")
     ))
@@ -85,13 +92,13 @@ def repository(tmp_path, monkeypatch, request):
     def prepare(kind="modified"):
         before = [] if kind == "added" else [feature_row if kind == "unchanged" else row]
         index = root / INDEX
-        index.write_text(json.dumps({"atlases": before}), encoding="utf-8")
+        index.write_text(json.dumps({"atlases": before}), encoding="utf-8", newline="\n")
         base = commit("Default inventory", source)
         git("update-ref", "refs/heads/main", base)
         git("update-ref", "refs/remotes/origin/main", base)
         wrapper.write_bytes(original + b"\n# Feature wrapper snapshot.\n")
         current_row = row if kind == "retained" else feature_row
-        index.write_text(json.dumps({"atlases": [current_row]}), encoding="utf-8")
+        index.write_text(json.dumps({"atlases": [current_row]}), encoding="utf-8", newline="\n")
         head = commit("Feature inventory", base, feature_source)
         git("update-ref", "refs/heads/feature", head)
         git("symbolic-ref", "HEAD", "refs/heads/feature")
@@ -115,7 +122,7 @@ def local_ci_merge(case, monkeypatch, *, event=False):
     monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
     if event:
         path = case["root"].parent / "event.json"
-        path.write_text(json.dumps({"pull_request": {"head": {"sha": case["head"]}}}))
+        path.write_text(json.dumps({"pull_request": {"head": {"sha": case["head"]}}}), encoding="utf-8", newline="\n")
         monkeypatch.setenv("GITHUB_EVENT_PATH", str(path))
 
 
@@ -134,11 +141,11 @@ def test_advancing_main_does_not_relax_untouched_entry(repository, monkeypatch, 
     case = repository("unchanged")
     main_row = copy.deepcopy(case["row"])
     main_row["reason"] = "Metadata changed only on main"
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [main_row]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [main_row]}), encoding="utf-8", newline="\n")
     tip = case["commit"]("Main-only inventory change", case["base"])
     case["git"]("update-ref", "refs/remotes/origin/main", tip)
     # Restore the feature's files before testing or building the CI merge.
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [case["row"]]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [case["row"]]}), encoding="utf-8", newline="\n")
     case["git"]("add", INDEX)
     assert case["git"]("merge-base", tip, case["head"]) == case["base"]
     if ci_merge:
@@ -163,10 +170,10 @@ def test_invalid_event_head_fails_closed(repository, monkeypatch, damage):
     if damage == "missing":
         monkeypatch.setenv("GITHUB_EVENT_PATH", str(path.parent / "absent.json"))
     elif damage == "malformed":
-        path.write_text("{")
+        path.write_text("{", encoding="utf-8", newline="\n")
     else:
         head = "HEAD" if damage == "symbolic" else case["unrelated"]
-        path.write_text(json.dumps({"pull_request": {"head": {"sha": head}}}))
+        path.write_text(json.dumps({"pull_request": {"head": {"sha": head}}}), encoding="utf-8", newline="\n")
     with pytest.raises(history.EvidenceError, match="event payload|checkout ancestry"):
         history.verify_git(case["row"], case["root"])
 
@@ -203,7 +210,7 @@ def test_local_ci_merge_rejects_synthetic_only_inventory(repository, monkeypatch
     local_ci_merge(case, monkeypatch, event=event)
     row = copy.deepcopy(case["row"])
     row["source_revision"] = case["unrelated"]
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     synthetic = case["commit"]("Synthetic-only inventory", case["base"], case["head"])
     case["git"]("update-ref", "--no-deref", "HEAD", synthetic)
     with pytest.raises(history.EvidenceError, match="committed inventory"):
@@ -252,7 +259,7 @@ def test_changed_entry_cannot_claim_revision_outside_its_head(repository, revisi
         case["git"]("update-ref", "refs/remotes/origin/main", case["unrelated"])
     else:
         row["source_revision"] = case["unrelated"]
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     head = case["commit"]("Invalid provenance claim", case["head"])
     case["git"]("update-ref", "refs/heads/feature", head)
     with pytest.raises(history.EvidenceError, match="pull request head"):
@@ -321,7 +328,7 @@ def test_pull_request_retention_preserves_evidence_checks(repository, damage):
         row[damage]["standards"] = []
     else:
         row[damage] = "unsupported"
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     head = case["commit"]("Damaged evidence", case["head"])
     case["git"]("update-ref", "refs/heads/feature", head)
     with pytest.raises(history.EvidenceError):
@@ -353,7 +360,7 @@ def test_ci_rejects_source_only_in_synthetic_merge(repository, monkeypatch):
     case["git"]("update-ref", "refs/pull/17/head", case["head"])
     row = case["row"]
     row["source_revision"] = case["unrelated"]
-    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}))
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     synthetic = case["commit"]("Synthetic-only entry", case["head"], case["unrelated"])
     case["git"]("update-ref", "refs/heads/check", synthetic)
     case["git"]("symbolic-ref", "HEAD", "refs/heads/check")
@@ -437,3 +444,150 @@ def test_alternate_objects_cannot_supply_source_evidence(repository, monkeypatch
     monkeypatch.setenv("GIT_ALTERNATE_OBJECT_DIRECTORIES", str(objects))
     with pytest.raises(history.EvidenceError, match="Unavailable Git evidence"):
         history.git_reader(case["root"], foreign)
+
+
+def test_branch_only_source_rejects_unproven_merge_policy(repository, monkeypatch):
+    case = repository()
+    policies = [
+        {"allow_merge_commit": True, "allow_squash_merge": True, "allow_rebase_merge": False},
+        {"allow_merge_commit": True, "allow_squash_merge": False, "allow_rebase_merge": True},
+        {"allow_merge_commit": False, "allow_squash_merge": False, "allow_rebase_merge": False},
+        {},
+        {"allow_merge_commit": True, "allow_squash_merge": "false", "allow_rebase_merge": False},
+        {"allow_merge_commit": True, "allow_squash_merge": 0, "allow_rebase_merge": False},
+    ]
+    for policy in policies:
+        monkeypatch.setattr(history, "_integration_policy", lambda *args: policy)
+        with pytest.raises(history.EvidenceError, match="merge-only integration"):
+            history.verify_git(case["row"], case["root"])
+
+
+def test_default_retained_source_requires_no_policy_request(repository, monkeypatch):
+    case = repository("retained")
+
+    def unavailable(*args):
+        raise AssertionError("Default-retained sources shall remain offline")
+
+    monkeypatch.setattr(history, "_integration_policy", unavailable)
+    assert history.verify_git(case["row"], case["root"])["status"] == "VERIFIED"
+
+
+@pytest.fixture
+def policy_request(tmp_path, monkeypatch):
+    for name in ("GITHUB_REF", "GITHUB_REPOSITORY", "GITHUB_ACTIONS", "GITHUB_EVENT_PATH",
+                 "GH_TOKEN", "GITHUB_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(history, "_git", lambda *args: b"https://github.com/example/repository.git")
+    requests = []
+    metadata = {"full_name": "example/repository", "default_branch": "main",
+                "allow_merge_commit": True, "allow_squash_merge": False,
+                "allow_rebase_merge": False}
+
+    class Connection:
+        def __init__(self, host, *, timeout):
+            self.host = host
+            self.timeout = timeout
+
+        def request(self, method, path, *, headers):
+            assert method == "GET"
+            requests.append(("https://" + self.host + path, self.timeout))
+
+        def getresponse(self):
+            response = io.BytesIO(json.dumps(metadata).encode("utf-8"))
+            response.status = 200
+            return response
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(history, "HTTPSConnection", Connection)
+    return tmp_path, metadata, requests
+
+
+def test_policy_reader_binds_response_to_destination(policy_request):
+    root, metadata, requests = policy_request
+    assert history._integration_policy(root, "origin/main") == metadata
+    assert requests == [("https://api.github.com/repos/example/repository", 10)]
+
+
+@pytest.mark.parametrize("damage", ["identity", "branch", "transport", "json", "shape", "http"])
+def test_policy_reader_rejects_unavailable_or_misdirected_evidence(policy_request, monkeypatch, damage):
+    root, metadata, _ = policy_request
+    if damage == "identity":
+        metadata["full_name"] = "example/other"
+    elif damage == "branch":
+        metadata["default_branch"] = "other"
+    elif damage == "transport":
+        def unavailable(*args, **kwargs):
+            raise URLError("Unavailable policy")
+        monkeypatch.setattr(history.HTTPSConnection, "request", unavailable)
+    else:
+        def invalid_response(self):
+            response = io.BytesIO(b"{" if damage == "json" else b"null")
+            response.status = 403 if damage == "http" else 200
+            return response
+        monkeypatch.setattr(history.HTTPSConnection, "getresponse", invalid_response)
+    with pytest.raises(history.EvidenceError, match="integration policy"):
+        history._integration_policy(root, "origin/main")
+
+
+def test_ci_policy_uses_base_repository_instead_of_fork_origin(policy_request, monkeypatch):
+    root, metadata, requests = policy_request
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "example/destination")
+    metadata["full_name"] = "example/destination"
+    assert history._integration_policy(root, "origin/main") == metadata
+    assert requests[0][0] == "https://api.github.com/repos/example/destination"
+
+
+def test_ci_policy_rejects_mismatched_event_destination(policy_request, monkeypatch):
+    root, _, requests = policy_request
+    event = root / "event.json"
+    event.write_text(json.dumps({"pull_request": {"base": {
+        "repo": {"full_name": "example/other"}}}}), encoding="utf-8", newline="\n")
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "example/destination")
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event))
+    with pytest.raises(history.EvidenceError, match="integration policy"):
+        history._integration_policy(root, "origin/main")
+    assert requests == []
+
+
+def test_local_policy_ignores_inherited_ci_repository(policy_request, monkeypatch):
+    root, metadata, requests = policy_request
+    monkeypatch.setenv("GITHUB_REPOSITORY", "example/other")
+    assert history._integration_policy(root, "origin/main") == metadata
+    assert requests[0][0] == "https://api.github.com/repos/example/repository"
+
+
+def test_ci_policy_requires_destination_identity(policy_request, monkeypatch):
+    root, _, requests = policy_request
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
+    with pytest.raises(history.EvidenceError, match="integration policy"):
+        history._integration_policy(root, "origin/main")
+    assert requests == []
+
+
+@pytest.mark.parametrize("remote", [
+    "https://github.com/example/repository.git",
+    "git" + "@" + "github.com:example/repository.git",
+    "ssh://git" + "@" + "github.com/example/repository.git",
+])
+def test_local_policy_accepts_supported_origin_urls(policy_request, monkeypatch, remote):
+    root, metadata, _ = policy_request
+    monkeypatch.setattr(history, "_git", lambda *args: remote.encode("utf-8"))
+    assert history._integration_policy(root, "origin/main") == metadata
+
+
+@pytest.mark.parametrize("remote", [
+    "https://example.invalid/example/repository.git",
+    "https://github.com/example/../repository",
+    "https://github.com/example/repository?query=other",
+    "file:repository",
+])
+def test_local_policy_rejects_untrusted_origin_urls(policy_request, monkeypatch, remote):
+    root, _, requests = policy_request
+    monkeypatch.setattr(history, "_git", lambda *args: remote.encode("utf-8"))
+    with pytest.raises(history.EvidenceError, match="integration policy"):
+        history._integration_policy(root, "origin/main")
+    assert requests == []

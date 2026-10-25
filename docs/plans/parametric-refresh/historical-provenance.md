@@ -16,6 +16,7 @@ qualification of the engineering methods or proof of a historical execution.
 | 2 | 2026-10-21 | Distinguish configured checkout conversion from content edits, fail the audit on content drift, and reject archive directory junctions. |
 | 3 | 2026-10-24 | Permit changed pull-request entries to retain their own source snapshots and require merge commits to preserve that ancestry after merging. |
 | 4 | 2026-10-25 | Resolve CI heads from event evidence or validated local merges, isolate Git object reads, and describe merge-only integration and recovery. |
+| 5 | 2026-10-25 | Reject branch-only source retention unless live destination settings establish merge-only integration, preventing acceptance before a squash or rebase can orphan the source. |
 
 ## Inventory and interpretation
 
@@ -127,7 +128,11 @@ entries by manifest path against the inventory at the merge base with
 `--retained-ref` (default `origin/main`). A qualifying entry shall exactly match
 the committed entry at the pull-request head, and its source revision shall be
 an ancestor of that head. Unchanged entries still require default-branch
-ancestry. All existing source, basis, fingerprint and artifact checks remain.
+ancestry. A branch-only source also requires live destination policy evidence:
+merge commits enabled, squash merging disabled and rebase merging disabled.
+Missing, invalid, unavailable or unsafe policy evidence rejects that exception.
+Sources already retained on the default branch require no policy request.
+All existing source, basis, fingerprint and artifact checks remain.
 
 For a local feature checkout, the head defaults to `HEAD`; `--pr-head` may name
 an explicit head contained in the checkout ancestry. In CI, `GITHUB_REF` of
@@ -145,18 +150,34 @@ substitutes for the head, and an explicit override shall resolve to the same
 authenticated head. Missing evidence fails closed; the verifier never fetches.
 Inherited object-directory overrides and Git replacement objects are ignored.
 
-Pull requests that introduce or change provenance entries **shall merge with a
-merge commit, without squash or rebase**. Squash, merge commit and rebase are all
-enabled in repository settings; the normal squash default shall be overridden
-for these changes. A merge commit preserves the original authenticated source
-snapshots without a later index rewrite. Automatic post-merge repinning is not
-implemented: a replacement revision could contain different source bytes and
-would require full reconstruction before acceptance.
+Branch-only source retention **requires an enforced merge-only integration
+policy**, rather than a manually selected merge method. Before accepting that
+exception, the verifier reads the destination repository's current settings
+from the GitHub repository API. Each policy field shall be an explicit Boolean:
+`allow_merge_commit: true`, `allow_squash_merge: false` and
+`allow_rebase_merge: false`. The response repository and default branch shall
+match the destination and retained branch. In CI, `GITHUB_REPOSITORY` identifies
+the destination and is cross-checked with the event's base repository when an
+event file is supplied; a contributor fork's origin cannot authorize integration.
+Local checks resolve the destination from a supported GitHub origin URL.
 
-Maintainers shall select the merge-commit method explicitly for an
-inventory-changing request. A helper that always selects squash cannot integrate
-that request. This requirement is a maintainer integration step; no merge
-helper, workflow or repository setting is changed or enforced by the verifier.
+The API request uses a ten-second timeout and an optional `GH_TOKEN` or
+`GITHUB_TOKEN`. Missing settings, insufficient access, rate limits and connection
+errors reject branch-only retention; they do not authorize an offline fallback.
+The [repository API](https://docs.github.com/en/rest/repos/repos#get-a-repository)
+requires read and write contents permissions to expose merge settings.
+Positive policy verification with the existing read-only workflow
+credential is therefore not established. No workflow permission or repository
+setting is changed by this verifier. Existing default-retained sources continue
+to verify offline. Enabling the exception requires separately authorized
+merge-only settings and policy-read access.
+
+A merge commit preserves the original authenticated source snapshots without a
+later index rewrite. Automatic repinning is not implemented: a replacement
+revision could contain different source bytes and would require full
+reconstruction before acceptance. Manual merge selection alone does not satisfy
+the policy gate. Later privileged policy changes or direct history rewrites are
+outside the evidence established by a policy read.
 
 After merging, verification on the default branch requires source ancestry in
 the retained default ref, even when the old feature or pull-request ref remains.
@@ -173,6 +194,9 @@ the retained ref and resolved SHA; if that ref is stale, fetch it before retryin
 Temporary-repository tests cover added, changed and unchanged entries,
 advancing default tips, detached CI merges without pull refs, invalid event
 heads, both merge styles, unrelated revisions and unchanged digest validation.
+Policy tests cover unsafe or incomplete settings, strict Boolean values,
+destination identity, fork origins, unavailable responses and offline handling
+of sources already retained on the default branch.
 The entry comparison uses the merge base with the authenticated head, rather
 than the latest retained inventory: a main-only metadata edit does not turn an
 untouched pull-request entry into a changed entry. No workflow or atlas is

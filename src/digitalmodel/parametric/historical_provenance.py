@@ -19,8 +19,10 @@ import json
 import os
 import re
 import subprocess
+from http.client import HTTPException, HTTPSConnection
 from pathlib import Path, PurePosixPath
 from typing import Callable
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -281,6 +283,66 @@ def _ci_head(root: Path, ci_ref: str, retained: str, revision: str) -> str:
         ) from None
 
 
+def _integration_repository(root: Path) -> str:
+    ci = (os.environ.get("GITHUB_ACTIONS") == "true"
+          or os.environ.get("GITHUB_REF", "").startswith("refs/pull/"))
+    repository = os.environ.get("GITHUB_REPOSITORY") if ci else None
+    try:
+        if not repository:
+            if ci:
+                raise ValueError("Missing CI destination")
+            remote = _git(root, "remote", "get-url", "origin").decode("utf-8").strip()
+            prefix, separator, path = remote.partition(":")
+            if separator and prefix.split("@") == ["git", "github.com"]:
+                repository = path
+            else:
+                parsed = urlsplit(remote)
+                if (parsed.hostname != "github.com" or parsed.port is not None
+                        or parsed.query or parsed.fragment or parsed.password
+                        or not (parsed.scheme == "https" and parsed.username is None
+                                or parsed.scheme == "ssh" and parsed.username == "git")):
+                    raise ValueError("Unsupported destination")
+                repository = parsed.path.removeprefix("/")
+            repository = repository.removesuffix(".git")
+        if (not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository)
+                or any(part in {".", ".."} for part in repository.split("/"))):
+            raise ValueError("Invalid destination")
+        event_path = os.environ.get("GITHUB_EVENT_PATH")
+        if event_path:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            destination = event["pull_request"]["base"]["repo"]["full_name"]
+            if not isinstance(destination, str) or destination.casefold() != repository.casefold():
+                raise ValueError("Mismatched destination")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid integration policy destination") from None
+    return repository
+
+
+def _integration_policy(root: Path, retained_ref: str) -> dict:
+    repository = _integration_repository(root)
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "historical-provenance"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    connection = HTTPSConnection("api.github.com", timeout=10)
+    try:
+        connection.request("GET", "/repos/" + repository, headers=headers)
+        response = connection.getresponse()
+        if response.status != 200:
+            raise ValueError("Unavailable policy response")
+        policy = json.loads(response.read(1048577))
+        if (not isinstance(policy, dict)
+                or not isinstance(policy.get("full_name"), str)
+                or policy["full_name"].casefold() != repository.casefold()
+                or policy.get("default_branch") != retained_ref.rsplit("/", 1)[-1]):
+            raise ValueError("Mismatched destination or branch")
+    except (OSError, ValueError, TypeError, HTTPException):
+        raise EvidenceError("Unavailable or invalid integration policy evidence") from None
+    finally:
+        connection.close()
+    return policy
+
+
 def _verify_retention(record: dict, root: Path, retained_ref: str,
                       revision: str, pr_head: str | None) -> None:
     retained = _commit(root, retained_ref)
@@ -321,6 +383,16 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
             raise EvidenceError("Entry does not match the committed inventory at the pull request head")
         if not _ancestor(root, source, head):
             raise EvidenceError("Changed entry source revision is not contained in the pull request head")
+        if not on_default:
+            policy = _integration_policy(root, retained_ref)
+            if (policy.get("allow_merge_commit") is not True
+                    or policy.get("allow_squash_merge") is not False
+                    or policy.get("allow_rebase_merge") is not False):
+                raise EvidenceError(
+                    "Branch-only sources require merge-only integration: merge commits enabled, "
+                    "squash and rebase disabled, with explicit policy evidence. Retain the source "
+                    "on the default branch or establish that policy before integration."
+                )
     elif not on_default:
         raise EvidenceError("An unchanged entry requires source retention on the default branch."
                             + retention_hint)
@@ -330,7 +402,7 @@ def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/m
                pr_head: str | None = None) -> dict:
     """Verify committed evidence and report checkout artifact drift separately.
 
-    Only changed, committed inventory entries may use pull-request ancestry.
+    Changed, committed entries may use pull-request ancestry under merge-only policy.
     Default-branch checks always require ancestry in the retained default ref.
     """
     read = git_reader(root, record["source_revision"])
