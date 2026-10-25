@@ -478,6 +478,16 @@ docs/reports/abstracted-hulls/*
 !docs/reports/pipeline-ffs-assessment.manifest.json
 !docs/reports/padeye-lift-point-analysis.html
 
+# Preserve the GIS module report and its rebuild sources.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/gis/
+docs/reports/modules/gis/*
+!docs/reports/modules/gis/build_report.py
+!docs/reports/modules/gis/changes.json
+!docs/reports/modules/gis/report.html
+!docs/reports/modules/gis/sources.json
+
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
 # directory named lib at ANY depth -- it silently swallowed the files that fix
