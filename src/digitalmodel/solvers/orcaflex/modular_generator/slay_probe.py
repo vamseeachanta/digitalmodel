@@ -151,7 +151,7 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
     Their readings and any supplied reference values do not affect acceptance.
     S1 bounds conformity; S2 design acceptance and convergence remain separate.
     Pipe diameter and stinger radius are required in metres and recorded with
-    the computed S1 strain limit in the report.
+    the computed S1 strain limit and explicit units in the report.
     """
     if len(grounded_tension) == 0:
         raise ValueError("Grounded tension readback is required")
@@ -187,7 +187,8 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
     status = ("rejected" if counts["failed"] else
               f"accepted with {counts['not_evaluated']} rows not evaluated")
     return {"status": status, "fully_accepted": False, "counts": counts, "rows": rows,
-            "diameter": diameter, "radius": radius, "s1_limit": s1_limit}
+            "diameter": diameter, "radius": radius, "s1_limit": s1_limit,
+            "units": {"diameter": "m", "radius": "m", "s1_limit": "1"}}
 
 
 def assert_static_acceptance(**readings):

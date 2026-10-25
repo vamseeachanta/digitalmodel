@@ -174,8 +174,18 @@ def test_static_qa_records_campaign_dimensions_and_limit():
     result = evaluate_static_acceptance(**readings)
     assert result["diameter"] == readings["diameter"]
     assert result["radius"] == readings["radius"]
-    assert result["s1_limit"] == 1.10 * readings["diameter"] / (2 * readings["radius"])
+    criteria = json.loads((CAMPAIGN / "criteria.json").read_text())["criteria"]
+    assert result["s1_limit"] == pytest.approx(criteria["stinger_conformity"]["numeric_limit"])
     assert result["rows"]["stinger_conformity"]["status"] == "PASS"
+
+
+@pytest.mark.parametrize("dimensions", [qa_dimensions(), dict(diameter=0.508, radius=120)])
+def test_static_qa_records_explicit_units(dimensions):
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import evaluate_static_acceptance
+    readings = qa_readings()
+    readings.update(dimensions)
+    result = evaluate_static_acceptance(**readings)
+    assert result["units"] == {"diameter": "m", "radius": "m", "s1_limit": "1"}
 
 
 def test_static_qa_uses_supplied_dimensions_for_s1_limit():
