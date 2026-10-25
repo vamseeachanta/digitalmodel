@@ -1,8 +1,8 @@
 {
   "source_rights": "Source rights: internal use only. The L01 source model files are held in the project repositories; runs use the project licences; results are kept in the private data store; nothing derived from the source model is published in a public repository or page until its provenance is recorded.",
   "allocation_policy": {
-    "stage1_max_licensed_minutes": 60,
-    "later_stage_multiplier": 1.25,
+    "stage1_max_licensed_minutes": "NOT_EVALUATED",
+    "later_stage_multiplier": "NOT_EVALUATED",
     "citation": "NOT_EVALUATED",
     "contingency_rationale": "NOT_EVALUATED"
   },
@@ -122,7 +122,7 @@
     }
   ],
   "stage1": {
-    "cap_licensed_minutes": 60,
+    "cap_licensed_minutes": "NOT_EVALUATED",
     "periods_s": [
       2,
       7.5,
@@ -145,7 +145,7 @@
       "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:67",
       "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2_matched.yml:70"
     ],
-    "stop_rule": "stop at 60 minutes of cumulative licensed time across both solvers, all variants and failed attempts",
+    "stop_rule": "NOT_EVALUATED",
     "cases": [
       {
         "id": "L01-S1-F01-H01",
@@ -440,13 +440,13 @@
   "later_stages": [
     {
       "cases": 90,
-      "allocation": "allocation = measured stage-1 minutes per case x 90 x 1.25, set by the solver manager from the measured time"
+      "allocation": "NOT_EVALUATED"
     },
     {
       "cases": 180,
-      "allocation": "allocation = measured stage-1 minutes per case x 180 x 1.25, set by the solver manager from the measured time"
+      "allocation": "NOT_EVALUATED"
     }
   ],
   "native_inputs": "WITHHELD",
-  "limitations": "This record does not assert physical equivalence, native readback, completion or engineering qualification. The 60-minute maximum and 1.25 multiplier are proposals without an established allocation-policy citation or contingency rationale; missing policy evidence prevents issuance. Native inputs also remain withheld while any reconciliation row is DISAGREES or NOT_EVALUATED. No source deck is modified by this record."
+  "limitations": "This record does not assert physical equivalence, native readback, completion or engineering qualification. Allocation limits, contingency, stop rule and later allocations remain NOT_EVALUATED until the solver manager supplies a cited resource policy and contingency rationale. Missing policy evidence prevents issuance. Native inputs also remain withheld while any reconciliation row is DISAGREES or NOT_EVALUATED. No source deck is modified by this record."
 }

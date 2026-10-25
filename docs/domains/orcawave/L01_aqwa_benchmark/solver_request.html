@@ -17,6 +17,9 @@ unresolved inputs cannot be issued.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>AQWA coefficient output is selected before
 the options list closes, and cited allocation-policy inputs are required so that
 an omitted output or unsupported timing limit cannot pass preparation.</td></tr>
+<tr><td>3</td><td>2026-10-24</td><td>Native issuance refuses source-tree and
+Git-worktree destinations, requires document references and restart after the
+options list closes, and withholds uncited allocation values.</td></tr>
 </table>
 <p>Table: Revision history.</p>
 
@@ -157,13 +160,18 @@ missing evidence or unequal normalized values refuse issuance. With all rows
 AGREES and the other controls satisfied, it writes stage1.yml, stage1.dat and a
 read-back manifest exclusively to the supplied private working directory.
 Existing output directories are preserved. No solver library is imported or queried.</p>
+<p>The output must be outside the source root and every Git work tree, including
+linked work trees. Resolved paths are checked so that a symbolic link cannot
+redirect derivatives into either tree. The offline check constrains the location;
+the solver manager must separately establish access controls for the private store.</p>
 <p>The current record is refused. A changed status alone cannot reconcile unequal
 values. The reconciliation values and citations are supplied evidence, rather
 than independently authenticated physical equivalence. The solver manager shall
 review them against the pinned decks. Native preparation selects the declared
 periods/headings, converts period to AQWA HRTZ and updates the mesh reference.
 It selects <code>OPTIONS AHD1</code> before the options list closes, preserving
-the immediate REST/RESTART card order. Missing or malformed Deck 0 options
+the immediate REST/RESTART card order, with RESTART after OPTIONS END.
+Missing or malformed Deck 0 options
 refuse issuance. Native readback must confirm the expected AH1 output;
 an offline option selection does not establish solver completion.
 Other model fields are preserved. AQWA card precision is retained in the issued
@@ -171,26 +179,31 @@ deck; the manifest records the native-to-request mapping. Native import/readback
 mesh QA and the complete scientific basis remain required before execution.</p>
 
 <h2>Licensed-minute ladder</h2>
-<p>Allocation basis: NOT_EVALUATED. The 60-minute maximum and 1.25 multiplier
-below are proposals; an approved resource-policy citation and contingency
-rationale have not been supplied. The execution summary supports the case counts
-only. Neither numeric value is an engineering limit or an approved allocation.</p>
+<p>Allocation basis: NOT_EVALUATED. The policy maximum, stage-1 cap, later-stage
+multiplier and allocations remain NOT_EVALUATED until the solver manager supplies
+a cited resource policy and contingency rationale. The execution summary supports
+the case counts only.</p>
 <p>Both preparation commands require <code>allocation_policy</code> with
 <code>stage1_max_licensed_minutes</code>, <code>later_stage_multiplier</code>,
 <code>citation</code> and <code>contingency_rationale</code>. The maximum must be
 positive and finite; the multiplier must be finite and at least one. Blank,
-missing or unevaluated evidence refuses preparation. The stage-1 cap must not
+missing or unevaluated evidence refuses preparation. A citation must identify a
+document with a locator: a relative document filename and positive line number,
+an HTTP(S) document URL with a fragment, or a document title followed by a comma
+and a revision, section or clause reference. Placeholder words and punctuation
+are refused for both citation and rationale. A document reference is required;
+an approval word alone does not establish a policy. The stage-1 cap must not
 exceed that policy maximum; later allocations use its multiplier. The issued
 manifest retains all four inputs. These checks validate supplied declarations;
 the solver manager must establish the cited policy's authority before scheduling.</p>
 <table border="1">
-<tr><th>Stage</th><th>Cases</th><th>Proposed allocation and stop rule</th></tr>
+<tr><th>Stage</th><th>Cases</th><th>Allocation and stop rule</th></tr>
 <tr><td>1</td><td>16 paired grid points, each in AQWA and OrcaWave</td>
-<td>60 licensed minutes total across both solvers, all thread/panel variants,
-loading, calculation, saving and failed attempts. Stop at 60 minutes;
-the solver manager stops both solvers when cumulative licensed time reaches the cap.</td></tr>
-<tr><td>2</td><td>90</td><td>allocation = measured stage-1 minutes per case x 90 x 1.25, set by the solver manager from the measured time</td></tr>
-<tr><td>3</td><td>180</td><td>allocation = measured stage-1 minutes per case x 180 x 1.25, set by the solver manager from the measured time</td></tr>
+<td>NOT_EVALUATED. Supply a cited cap covering both solvers, all thread/panel
+variants, loading, calculation, saving and failed attempts. The solver manager
+stops both solvers when cumulative licensed time reaches that cap.</td></tr>
+<tr><td>2</td><td>90</td><td>NOT_EVALUATED until stage-1 timing and a cited contingency multiplier are supplied.</td></tr>
+<tr><td>3</td><td>180</td><td>NOT_EVALUATED until stage-1 timing and a cited contingency multiplier are supplied.</td></tr>
 </table>
 <p>Table: Timing allocation. The later stages are not allocated or issued until
 stage 1 is measured. Minutes per case are measured separately for each solver
@@ -225,7 +238,7 @@ retain execution logs, input digests and native readback in the private data sto
 <tr><td>L01-S1-F04-H04</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
 </table>
 <p>Table: Stage-1 case IDs, solvers and expected native outputs. The shared
-60-minute stop rule applies to every listed case.</p>
+stop rule remains NOT_EVALUATED until the solver manager supplies the cited cap.</p>
 
 <h2>Solver run request</h2>
 <ol>

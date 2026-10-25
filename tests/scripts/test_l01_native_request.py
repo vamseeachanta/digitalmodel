@@ -83,7 +83,7 @@ def test_unreconciled_row_prevents_any_native_output(mod, candidate, status, qua
     request, root = candidate
     next(row for row in request["reconciliation"]
          if row["quantity"] == quantity)["status"] = status
-    output = root / "issued"
+    output = root.parent / (root.name + "-issued")
     with pytest.raises(ValueError, match="reconciliation"):
         mod.issue_native_inputs(request, root, output)
     assert not output.exists()
@@ -97,8 +97,8 @@ def test_missing_or_incomplete_rights_prevents_issuance(mod, candidate, rights):
     else:
         request["source_rights"] = rights
     with pytest.raises(ValueError, match="rights"):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 @pytest.mark.parametrize("cap", [None, 60.1, 61, 0, -1, True, float("nan")])
@@ -109,8 +109,8 @@ def test_absent_or_invalid_stage1_cap_prevents_issuance(mod, candidate, cap):
     else:
         request["stage1"]["cap_licensed_minutes"] = cap
     with pytest.raises(ValueError, match="cap"):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 @pytest.mark.parametrize("mutation", ["missing_row", "duplicate_row", "value", "unit",
@@ -139,13 +139,13 @@ def test_declarations_cannot_bypass_evidence_checks(mod, candidate, mutation):
     else:
         request["stage1"]["periods_s"][-1] = 5
     with pytest.raises(ValueError):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 def test_all_controls_issue_real_files_and_shared_budget_manifest(mod, candidate):
     request, root = candidate
-    output = root / "issued"
+    output = root.parent / (root.name + "-issued")
     manifest = mod.issue_native_inputs(request, root, output)
     assert manifest["native_inputs"] == "ISSUED"
     assert manifest["stage1"]["cap_licensed_minutes"] == 60
@@ -180,7 +180,7 @@ def test_all_controls_issue_real_files_and_shared_budget_manifest(mod, candidate
 
 def test_existing_output_is_preserved(mod, candidate):
     request, root = candidate
-    output = root / "issued"
+    output = root.parent / (root.name + "-issued")
     output.mkdir()
     (output / "manifest.json").write_text("preserve", encoding="utf-8", newline="\n")
     with pytest.raises(FileExistsError):
@@ -207,15 +207,15 @@ def test_incompatible_native_mapping_is_refused_before_output(mod, candidate, mu
     path.write_text(source, encoding="utf-8", newline="\n")
     request["sources"]["OrcaWave"]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
     with pytest.raises(ValueError):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 def test_native_frequency_mapping_uses_the_emitted_card_precision(mod, candidate):
     request, root = candidate
     sources_before = {p.name: p.read_bytes() for p in root.iterdir()}
-    manifest = mod.issue_native_inputs(request, root, root / "issued")
-    native = (root / "issued/stage1.dat").read_text(encoding="utf-8")
+    manifest = mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    native = ((root.parent / (root.name + "-issued")) / "stage1.dat").read_text(encoding="utf-8")
     cards = [line for line in native.splitlines() if line[6:10] == "HRTZ"]
     assert [float(line[20:30]) for line in cards] == [0.25, 0.3333333, 0.5, 1]
     mapping = manifest["native_to_request"]
@@ -230,13 +230,13 @@ def test_cli_refusal_has_no_output(mod, tmp_path, capsys):
     with pytest.raises(SystemExit) as error:
         mod.main(["issue", str(REQUEST), str(output), "--source-root", str(ROOT)])
     assert error.value.code == 1
-    assert "reconciliation" in capsys.readouterr().err
+    assert "cap" in capsys.readouterr().err
     assert not output.exists()
 
 
 def test_repository_basis_remains_withheld(mod, tmp_path):
     request = json.loads(REQUEST.read_text(encoding="utf-8"))
-    with pytest.raises(ValueError, match="reconciliation"):
+    with pytest.raises(ValueError, match="cap"):
         mod.issue_native_inputs(request, ROOT, tmp_path / "issued")
     assert not (tmp_path / "issued").exists()
 
@@ -251,8 +251,8 @@ def test_complete_deck0_selects_ah1_before_end_without_splitting_restart(
         source = source.replace("OPTIONS GOON\n", "OPTIONS GOON\nOPTIONS AHD1\n")
         path.write_text(source, encoding="utf-8", newline="\n")
         request["sources"]["AQWA"]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
-    mod.issue_native_inputs(request, root, root / "issued")
-    native = (root / "issued/stage1.dat").read_text(encoding="utf-8")
+    mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    native = ((root.parent / (root.name + "-issued")) / "stage1.dat").read_text(encoding="utf-8")
     lines = native.splitlines()
     assert sum("AHD1" in line.split()[1:] for line in lines
                if line.startswith("OPTIONS ")) == 1
@@ -284,8 +284,8 @@ def test_invalid_deck0_refuses_issuance(mod, candidate, mutation):
     path.write_text(source, encoding="utf-8", newline="\n")
     request["sources"]["AQWA"]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
     with pytest.raises(ValueError, match="Deck 0"):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 @pytest.mark.parametrize("field", ["allocation_policy", "stage1_max_licensed_minutes",
@@ -298,8 +298,8 @@ def test_missing_allocation_policy_prevents_issuance(mod, candidate, field):
     else:
         del request["allocation_policy"][field]
     with pytest.raises(ValueError, match="allocation policy"):
-        mod.issue_native_inputs(request, root, root / "issued")
-    assert not (root / "issued").exists()
+        mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
+    assert not (root.parent / (root.name + "-issued")).exists()
 
 
 @pytest.mark.parametrize("multiplier", [1.5, 1.0000001])
@@ -308,8 +308,103 @@ def test_issuance_uses_and_retains_supplied_resource_policy(mod, candidate, mult
     request["allocation_policy"].update(stage1_max_licensed_minutes=45,
                                          later_stage_multiplier=multiplier)
     request["stage1"]["cap_licensed_minutes"] = 40
-    manifest = mod.issue_native_inputs(request, root, root / "issued")
+    manifest = mod.issue_native_inputs(request, root, root.parent / (root.name + "-issued"))
     assert manifest["allocation_policy"] == request["allocation_policy"]
     assert "stop at 40 minutes" in manifest["stage1"]["stop_rule"]
     assert all(f"x {multiplier}," in stage["allocation"]
                for stage in manifest["later_stages"])
+
+
+@pytest.mark.parametrize("destination", ["source", "nested", "symlink", "git_dir",
+                                          "git_file", "git_ancestor", "git_symlink"])
+def test_public_tree_destinations_refuse_before_output(mod, candidate, tmp_path,
+                                                      destination):
+    request, root = candidate
+    if destination == "source":
+        output = root
+    elif destination == "nested":
+        (root / "docs").mkdir()
+        output = root / "docs/stage1"
+    elif destination == "symlink":
+        alias = root.parent / (root.name + "-alias")
+        alias.symlink_to(root, target_is_directory=True)
+        output = alias / "stage1"
+    else:
+        tree = root.parent / (root.name + "-tree")
+        tree.mkdir()
+        if destination == "git_file":
+            (tree / ".git").write_text("gitdir: synthetic\n", encoding="utf-8")
+        else:
+            (tree / ".git").mkdir()
+            (tree / ".git/HEAD").write_text("ref: refs/heads/synthetic\n", encoding="utf-8")
+        parent = tree / "docs" if destination == "git_ancestor" else tree
+        parent.mkdir(exist_ok=True)
+        output = parent / "stage1"
+        if destination == "git_symlink":
+            alias = root.parent / (root.name + "-git-alias")
+            alias.symlink_to(tree, target_is_directory=True)
+            output = alias / "stage1"
+    before = sorted(root.rglob("*"))
+    with pytest.raises(ValueError, match="private output"):
+        mod.issue_native_inputs(request, root, output)
+    assert sorted(root.rglob("*")) == before
+    if destination != "source":
+        assert not output.exists()
+
+
+@pytest.mark.parametrize("field", ["citation", "contingency_rationale"])
+@pytest.mark.parametrize("value", ["-", "NOT-EVALUATED", "NOT_EVALUATED.",
+                                    "none", "TODO", "TBC"])
+def test_placeholder_policy_evidence_refuses_issuance(mod, candidate, field, value):
+    request, root = candidate
+    request["allocation_policy"][field] = value
+    output = root.parent / (root.name + "-issued")
+    with pytest.raises(ValueError, match="allocation policy"):
+        mod.issue_native_inputs(request, root, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("citation", ["approved", "a policy exists", "section 2"])
+def test_policy_citation_requires_a_document_reference(mod, candidate, citation):
+    request, root = candidate
+    request["allocation_policy"]["citation"] = citation
+    output = root.parent / (root.name + "-issued")
+    with pytest.raises(ValueError, match="document reference"):
+        mod.issue_native_inputs(request, root, output)
+    assert not output.exists()
+
+
+def test_restart_before_options_end_refuses_issuance(mod, candidate):
+    request, root = candidate
+    path = root / "candidate.dat"
+    source = path.read_text(encoding="utf-8").replace(
+        "OPTIONS LHFR SFBM MQTF REST END\nRESTART  1  5\n",
+        "OPTIONS LHFR SFBM MQTF REST\nRESTART  1  5\nOPTIONS END\n")
+    path.write_text(source, encoding="utf-8", newline="\n")
+    request["sources"]["AQWA"]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    output = root.parent / (root.name + "-issued")
+    with pytest.raises(ValueError, match="Deck 0"):
+        mod.issue_native_inputs(request, root, output)
+    assert not output.exists()
+
+
+def test_stored_allocations_remain_unevaluated_until_cited():
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+    assert set(request["allocation_policy"].values()) == {"NOT_EVALUATED"}
+    assert request["stage1"]["cap_licensed_minutes"] == "NOT_EVALUATED"
+    assert request["stage1"]["stop_rule"] == "NOT_EVALUATED"
+    assert all(stage["allocation"] == "NOT_EVALUATED"
+               for stage in request["later_stages"])
+
+
+@pytest.mark.parametrize("citation", [
+    "Synthetic resource policy, revision 1, section 2",
+    "policies/synthetic-resource-policy.md:12",
+    "https://example.org/synthetic-resource-policy#section-2",
+])
+def test_document_reference_forms_are_retained(mod, candidate, citation):
+    request, root = candidate
+    request["allocation_policy"]["citation"] = citation
+    output = root.parent / (root.name + "-issued")
+    manifest = mod.issue_native_inputs(request, root, output)
+    assert manifest["allocation_policy"]["citation"] == citation

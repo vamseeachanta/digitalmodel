@@ -71,9 +71,17 @@ def allocation_policy(request, cap):
             raise ValueError("contingency multiplier cannot reduce measured time")
         for key in ("citation", "contingency_rationale"):
             value = text(policy.get(key)).strip().casefold()
-            if value in {"not_evaluated", "not evaluated", "tbd", "n/a",
-                         "unknown", "pending", "unverified"}:
+            normalized = re.sub(r"[\W_]+", "", value)
+            if normalized in {"", "notevaluated", "tbd", "na", "none", "todo",
+                              "tbc", "unknown", "pending", "unverified"}:
                 raise ValueError("evaluated citation and contingency rationale required")
+        citation = policy["citation"].strip()
+        # Require a retrievable document and locator, rather than an approval word.
+        if not (re.fullmatch(r"[\w./-]+\.[\w]+:[1-9][0-9]*", citation)
+                or re.fullmatch(r"https?://[^\s/#]+/[^\s]*#[^\s]+", citation)
+                or re.fullmatch(r".+\S,\s*(?:revision|section|clause)\s+\S.*",
+                                citation, flags=re.IGNORECASE)):
+            raise ValueError("allocation citation requires a document reference and locator")
     except ValueError as error:
         raise ValueError(f"allocation policy: {error}") from error
     if cap > maximum:
@@ -282,6 +290,10 @@ def select_ah1_output(aqwa):
         if "REST" in tokens and (i + 1 >= len(lines)
                                    or not lines[i + 1].startswith("RESTART ")):
             raise ValueError("AQWA Deck 0 requires RESTART immediately after REST")
+    restarts = [i for i, line in enumerate(lines) if line.startswith("RESTART ")]
+    if any(i != ends[0] + 1 or "REST" not in lines[i - 1].split()[1:]
+           for i in restarts):
+        raise ValueError("AQWA Deck 0 requires RESTART immediately after OPTIONS END")
     if not any("AHD1" in tokens for _, tokens in options):
         insertion = next(i for i, tokens in options if "REST" in tokens or "END" in tokens)
         lines.insert(insertion, "OPTIONS AHD1\n")
@@ -338,7 +350,7 @@ def issue_native_inputs(request, root, output):
              "requested_heading_deg": h} for h in request["stage1"]["headings_deg"]],
     }
     serialized = json.dumps(manifest, indent=2, allow_nan=False) + "\n"
-    output = Path(output)
+    output = private_output_directory(root, output)
     output.mkdir()  # Exclusive; never overwrite a previous issuance.
     for name, raw in payloads.items():
         with (output / name).open("xb") as stream:
@@ -351,6 +363,20 @@ def issue_native_inputs(request, root, output):
     if read_json(output / "manifest.json") != manifest:
         raise ValueError("issued manifest readback mismatch")
     return manifest
+
+
+def private_output_directory(root, output):
+    """Refuse source-tree and Git-worktree derivatives, resolving symlinks first."""
+    root = Path(root).resolve(strict=True)
+    output = Path(output).resolve()
+    # A work tree has a gitfile or a metadata directory containing HEAD.
+    # Empty marker directories do not establish a Git repository.
+    if output.is_relative_to(root) or any(
+            (parent / ".git").is_file() or (parent / ".git/HEAD").is_file()
+            or (parent / ".git").is_symlink()
+            for parent in (output, *output.parents)):
+        raise ValueError("private output must be outside the source root and Git work trees")
+    return output
 
 
 def digest(value):
