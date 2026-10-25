@@ -26,9 +26,13 @@ are chosen for the hand calculation in
 The depth cap and tolerance are numerical search settings, not standard limits.
 
 The point gives Lr = 0.260 and Kr = 0.085, against f(Lr) = 0.983 and
-Lr_max = 1.250. The point is inside the stated envelope. The fixed-length depth
-search extends above the assessed 4.0 mm depth to its geometry cap near 5.0 mm;
+Lr_max = 1.250. The deepest crack-front point governs. The point is inside
+the stated envelope. The fixed-length depth search extends above the assessed
+4.0 mm depth to its geometry cap near 5.0 mm;
 this is **not a failure boundary**.
+The separate 5.0 mm test fixture gives Lr = 0.263 and Kr = 0.094, with the
+surface point governing; those values do not describe the registered example.
+
 The disposition remains `ESCALATE` and the handoff includes the input basis,
 computed point, search result, triggers, recommended analyses and open questions.
 

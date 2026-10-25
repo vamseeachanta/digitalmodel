@@ -20,7 +20,9 @@ record independent arithmetic and the remaining qualification gaps.</td></tr>
 extends above the assessed flaw; state the wide-plate and continuous-yield
 limits and identify the stress-intensity reference.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>Correct the governing crack-front point
-and record both point values so the explanation matches the hand calculation.</td></tr></tbody></table>
+and record both point values so the explanation matches the hand calculation.</td></tr>
+<tr><td>3</td><td>2026-10-25</td><td>Distinguish the registered example
+from the deeper test fixture so their assessment values are not interchanged.</td></tr></tbody></table>
 <p>Table 1. Issue history.</p>
 <h2>Inputs and data basis</h2>
 <p>The committed <a href="../../../examples/workflows/crack-fad-level2-handoff/input.yml">input example</a>
@@ -65,6 +67,10 @@ expression gives governing deepest-point stress intensity = 8.48 MPa sqrt(m),
 with g = f_phi = 1; surface-point stress intensity = 8.45 MPa sqrt(m).
 Kr = 0.085 and curve height = 0.983. The point is inside the curve and below
 Lr_max = 1.250. These rounded values are display values; tests retain precision.</p>
+<p>The separate 5.0 mm deep test fixture in <code>case()</code> retains
+Lr = 0.263, Kr = 0.094 and curve height = 0.983, with the surface point
+governing. It tests a different geometry from the registered 4.0 mm example
+above; its assessment values and governing point do not apply to that example.</p>
 <p>A separate collapse-governed synthetic case uses half-length and thickness
 20.0 mm, membrane and yield stress 400.0 MPa, tensile strength 600.0 MPa, and
 artificially large toughness so fracture does not govern. Then alpha = a/40
