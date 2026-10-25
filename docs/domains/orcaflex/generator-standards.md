@@ -15,6 +15,7 @@ coefficients, default inputs or generated models. Numerical behaviour is unchang
 | --- | --- | --- |
 | 1 | 2026-10-19 | Inventory the standards-labelled inputs and evidence gaps so that publication metadata cannot be mistaken for engineering qualification. |
 | 2 | 2026-10-19 | Record the separate uncited strength fallback, confirm the catalogue title wording and extend the inventory checks for portable paths and citation syntax. |
+| 3 | 2026-10-25 | Distinguish overlapping test selections and record their verified counts so that validation figures remain reproducible. |
 
 ## Publication identities and edition boundaries
 
@@ -96,6 +97,47 @@ fields and material/chain property keys with the current source. It also checks
 catalogue metadata separately from unresolved governing locators and records the
 missing sidecars at each assessed boundary. These are evidence-coverage tests,
 not numerical engineering validation or a licensed-text comparison.
+
+On 2026-10-25, the union of the two focused test selections passed 182 tests,
+with no failures or skips. Counts for each selection were derived from the test
+identifiers in that single run; the overlapping selections are not additive.
+
+| Selection | Inventory contracts | Existing regression tests | Total passed |
+| --- | --- | --- | --- |
+| Inventory module | 24 | 0 | 24 |
+| Routing and installation | 24 | 99 | 123 |
+| Generic schema | 24 | 120 | 144 |
+| Union | 24 | 158 | 182 |
+
+Table 3. Focused test counts at the time of execution. All selections include
+`tests/docs/test_generator_standards_inventory.py`. The other modules are under
+`tests/solvers/orcaflex/modular_generator/`.
+
+Both selections include `builders/test_linetype_builder.py`,
+`routers/test_mooring_router.py`, `test_schema_compat.py` and
+`test_builder_context.py`. The routing and installation selection also includes
+`routers/test_routing_integration.py` and `test_slay_schema.py`. The generic schema
+selection instead includes `test_generic_schema.py`.
+
+The union was run on the uncommitted tree with:
+
+```sh
+uv run --no-project --with pytest --with 'pydantic>=2.7,<3' \
+  --with 'pyyaml>=6,<7' --with 'numpy>=1.24,<2' --with loguru --with scipy \
+  python -m pytest tests/docs/test_generator_standards_inventory.py \
+  tests/solvers/orcaflex/modular_generator/builders/test_linetype_builder.py \
+  tests/solvers/orcaflex/modular_generator/routers/test_mooring_router.py \
+  tests/solvers/orcaflex/modular_generator/routers/test_routing_integration.py \
+  tests/solvers/orcaflex/modular_generator/test_schema_compat.py \
+  tests/solvers/orcaflex/modular_generator/test_slay_schema.py \
+  tests/solvers/orcaflex/modular_generator/test_generic_schema.py \
+  tests/solvers/orcaflex/modular_generator/test_builder_context.py \
+  -q -rA -p no:cacheprovider --basetemp="$TMPDIR/bt-union" \
+  --junitxml="$TMPDIR/union.xml"
+```
+
+Local test success does not establish hosted test success. The cancelled hosted
+test jobs still require successful execution before merge.
 
 Later work requires authorized source qualification of the unresolved titles,
 editions, clause titles and coefficients, followed by an explicit design-input
