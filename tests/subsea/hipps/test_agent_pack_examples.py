@@ -1,4 +1,4 @@
-"""Independent synthetic arithmetic; no API or IEC compliance is established."""
+"""Synthetic arithmetic and a sourced band example; no API or IEC compliance."""
 
 import runpy
 from pathlib import Path
@@ -79,14 +79,16 @@ def test_closure_hand_calculation():
 
 
 def test_classification_literal():
-    """Encoded band arithmetic only, sil_analysis.py table; IEC text UNVERIFIED.
+    """Emerson, Safety Integrity Level (SIL), January 2015, p.3,
+    section "IEC 61508 and IEC 61511": the SIL2 PFD range is 0.01-0.001.
 
-    Synthetic PFD=.001 is the encoded SIL2 lower endpoint; reciprocal=1000.
-    This checks a code boundary, not architectural suitability or achieved SIL.
+    Synthetic PFD=.005 lies strictly inside that independently sourced range:
+    .001 < .005 < .01, so the expected band is SIL2; 1/.005=200.
+    Endpoint inclusion and architectural suitability are not established here.
     """
-    result = classify_sil(0.001, target_sil=2)
+    result = classify_sil(0.005, target_sil=2)
     assert result.sil is SIL.SIL2
-    assert result.rrf == 1000
+    assert result.rrf == 200
     assert result.meets_target
 
 

@@ -22,16 +22,32 @@ NAME = re.compile(r"`([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)`")
 DEFINITIONS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
-def public_definitions(package: Path, root: Path) -> dict[tuple[str, str], int]:
-    """Map (source path, qualified symbol) to its definition-name line."""
-    definitions = {}
-    trees = {}
-    exports = set()
-    for path in sorted(package.rglob("*.py")):
-        if any(part in {"docs", "__pycache__"} for part in path.relative_to(package).parts):
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
-        trees[path] = tree
+def local_imports(trees: dict, module_paths: dict) -> dict:
+    """Resolve explicit relative and absolute imports within the package."""
+    imports = {path: {} for path in trees}
+    for module, path in module_paths.items():
+        context = module.split(".")
+        if path.name != "__init__.py":
+            context = context[:-1]
+        for node in trees[path].body:
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            parts = node.module.split(".") if node.module else []
+            if node.level:
+                if node.level > len(context):
+                    continue
+                parts = context[:len(context) - node.level + 1] + parts
+            source = module_paths.get(".".join(parts))
+            if source is not None:
+                for alias in node.names:
+                    imports[path][alias.asname or alias.name] = (source, alias.name)
+    return imports
+
+
+def public_exports(trees: dict, module_paths: dict) -> dict:
+    """Propagate module exports through local bindings to their definitions."""
+    exports = {path: set() for path in trees}
+    for path, tree in trees.items():
         for node in tree.body:
             if isinstance(node, ast.Assign) and any(
                 isinstance(target, ast.Name) and target.id == "__all__"
@@ -42,13 +58,44 @@ def public_definitions(package: Path, root: Path) -> dict[tuple[str, str], int]:
                 except (ValueError, TypeError):
                     continue
                 if isinstance(value, (list, tuple)):
-                    exports.update(name for name in value if isinstance(name, str))
+                    exports[path].update(name for name in value if isinstance(name, str))
+    imports = local_imports(trees, module_paths)
+    for path, bindings in imports.items():
+        exports[path].update(name for name in bindings if not name.startswith("_"))
+    changed = True
+    while changed:
+        changed = False
+        for path, bindings in imports.items():
+            for name, (source, original) in bindings.items():
+                if name in exports[path] and original not in exports[source]:
+                    exports[source].add(original)
+                    changed = True
+    return exports
+
+
+def public_definitions(package: Path, root: Path) -> dict[tuple[str, str], int]:
+    """Map (source path, qualified symbol) to its definition-name line."""
+    definitions = {}
+    trees = {}
+    module_paths = {}
+    package_parts = package.relative_to(root).parts
+    if package_parts[0] == "src":
+        package_parts = package_parts[1:]
+    for path in sorted(package.rglob("*.py")):
+        if any(part in {"docs", "__pycache__"} for part in path.relative_to(package).parts):
+            continue
+        trees[path] = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        parts = path.relative_to(package).with_suffix("").parts
+        if parts[-1] == "__init__":
+            parts = parts[:-1]
+        module_paths[".".join((*package_parts, *parts))] = path
+    exports = public_exports(trees, module_paths)
 
     for path, tree in trees.items():
         def visit(nodes, prefix=""):
             for node in nodes:
                 if isinstance(node, DEFINITIONS):
-                    if node.name.startswith("_") and node.name not in exports:
+                    if node.name.startswith("_") and (prefix or node.name not in exports[path]):
                         continue
                     name = prefix + node.name
                     definitions[(path.relative_to(root).as_posix(), name)] = node.lineno
