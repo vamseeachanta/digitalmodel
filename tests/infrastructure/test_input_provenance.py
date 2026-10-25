@@ -238,11 +238,14 @@ def test_digest_bound_rights_terms_never_become_permission(term):
     assert result["source_rights"] == "NOT_EVALUATED"
 
 
-@pytest.mark.parametrize("raw", [b'""', b'null', b'true', b'{}', b'[]', b'2.5'])
-def test_json_root_values_are_not_silently_discarded(raw):
+@pytest.mark.parametrize("raw,expected", [
+    (b'""', ""), (b'null', None), (b'true', True),
+    (b'{}', {}), (b'[]', []), (b'2.5', 2.5),
+])
+def test_json_root_values_are_not_silently_discarded(raw, expected):
     """Every listed JSON text has one root node and no child edges."""
     value = load_bounded_json(raw, max_bytes=len(raw), max_nodes=1, max_depth=0)
-    assert bounded_leaves(value, max_nodes=1, max_depth=0) == {(): json.loads(raw)}
+    assert bounded_leaves(value, max_nodes=1, max_depth=0) == {(): expected}
 
 
 def test_decoder_recursion_error_is_a_controlled_refusal(monkeypatch):
