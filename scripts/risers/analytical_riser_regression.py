@@ -71,17 +71,28 @@ CRITERIA = {
     "angle": {"limit": 1e-9, "units": "deg", "form": "absolute", "citation": "REPORT"},
     "global_force": {"limit": 1e-12, "units": "1", "form": "relative", "citation": "REPORT"},
     "force_consistency": {"limit": 1e-12, "units": "1", "form": "relative", "citation": "REPORT"},
+    "segment_arc": {"limit": 1e-9, "units": "1", "form": "relative",
+                    "citation": "REPORT: numerical geometry band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+                    "basis": "Each vertex-to-interface arc is R*sinh(X/R)",
+                    "source": "https://openstax.org/books/calculus-volume-1/pages/6-9-calculus-of-the-hyperbolic-functions"},
+    "wave_elevation": {"limit": 1e-6, "units": "m", "form": "absolute",
+                       "citation": "REPORT: depth closure band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+                       "basis": "Sag and hog are elevations above seabed from signed segment drops"},
+    "interface_continuity": {"limit": 1e-12, "units": "1", "form": "relative",
+                             "citation": "REPORT: force equilibrium band; OpenStax, University Physics Volume 1, 2016 edition, section 12.1, equation 12.2",
+                             "basis": "Continuous vertical tension at each bare/buoyed interface: abs(w_left)*S_left = abs(w_right)*S_right",
+                             "source": "https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium"},
     "closed_tension": {"limit": 5.0, "units": "%", "form": "relative", "citation": "CLOSED/BASIS"},
     "closed_angle": {"limit": 1.0, "units": "deg", "form": "absolute", "citation": "CLOSED/BASIS"},
     "closed_touchdown": {"limit": 5.0, "units": "%", "form": "relative", "citation": "CLOSED/BASIS"},
 }
 BLOCKERS = [
     {"id": "catenary_manifest", "status": "BLOCKED-IF-MISSING",
-     "next_input": "Accepted owner manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review."},
+     "next_input": "Accepted maintainer manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review."},
     {"id": "lazy_wave_manifest", "status": "BLOCKED-IF-MISSING",
-     "next_input": "Accepted owner manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability."},
+     "next_input": "Accepted maintainer manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability."},
     {"id": "public_reuse", "status": "BLOCKED-IF-MISSING",
-     "next_input": "Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result owner."},
+     "next_input": "Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result maintainer."},
 ]
 
 
@@ -215,6 +226,7 @@ def metric(actual: float, target: float, limit: float, units: str,
     else:
         residual, threshold = (difference / abs(target) if relative else difference), limit
     return {"status": "PASS" if residual <= threshold else "FAIL",
+            "actual": actual, "target": target,
             "residual": residual, "limit": threshold, "units": units}
 
 
@@ -236,14 +248,16 @@ def check_geometry(case: dict[str, Any], result: dict[str, Any],
     signs = [1] if case["type"] == "SCR" else [1, -1, -1, 1, 1]
     if len(segments) != len(signs) or len(weights) != len(signs):
         raise EvidenceError("analytical segment membership mismatch")
-    drops, loads, weight_errors, horizontal_errors = [], [], [], []
+    drops, loads, arcs, weight_errors, horizontal_errors = [], [], [], [], []
     for segment, weight, sign in zip(segments, weights, signs, strict=True):
         for value in segment.values():
             finite(value)
+        finite(weight)
         radius, span = segment["radius_m"], segment["horizontal_m"]
         if radius <= 0 or span <= 0 or segment["length_m"] <= 0 or weight == 0:
             raise EvidenceError("invalid analytical segment")
         drops.append(sign * radius * (math.cosh(span / radius) - 1))
+        arcs.append(radius * math.sinh(span / radius))
         loads.append(weight * segment["length_m"])
         weight_errors.append(abs(segment["weight_N_per_m"] / weight - 1))
         horizontal_errors.append(abs(result["horizontal_N"] / (abs(weight) * radius) - 1))
@@ -256,7 +270,32 @@ def check_geometry(case: dict[str, Any], result: dict[str, Any],
         "segment_weights": metric(max(weight_errors), 0, 1e-12, "1"),
         "horizontal_balance": metric(max(horizontal_errors), 0, 1e-12, "1"),
     }
+    for index, (segment, arc) in enumerate(zip(segments, arcs, strict=True), 1):
+        checks[f"segment_{index}_arc"] = metric(
+            segment["length_m"], arc, finite(CRITERIA["segment_arc"]["limit"]), "1", relative=True)
+    if case["type"] == "SLWR":
+        checks.update(check_wave_geometry(values, drops, arcs, weights))
     return checks
+
+
+def check_wave_geometry(values: dict[str, Any], drops: list[float],
+                        arcs: list[float], weights: list[float]) -> dict[str, Any]:
+    """Check elevations above seabed and tension continuity at weight changes.
+
+    Segment drops and arcs follow OpenStax, Calculus Volume 1 (2016), section
+    6.9. Interface force equilibrium follows OpenStax, University Physics
+    Volume 1 (2016), section 12.1, equation 12.2; no point load is applied.
+    """
+    drop = values["water_depth"] + values["hang_off_elevation"]
+    elevation_limit = finite(CRITERIA["wave_elevation"]["limit"])
+    force_limit = finite(CRITERIA["interface_continuity"]["limit"])
+    forces = [abs(weight) * arc for weight, arc in zip(weights, arcs, strict=True)]
+    return {
+        "sag_elevation": metric(drop - drops[0], values["sag_elevation"], elevation_limit, "m"),
+        "hog_elevation": metric(drop - math.fsum(drops[:3]), values["hog_elevation"], elevation_limit, "m"),
+        "rising_interface": metric(forces[1], forces[2], force_limit, "1", relative=True),
+        "falling_interface": metric(forces[3], forces[4], force_limit, "1", relative=True),
+    }
 
 
 def solve_assumed(case: dict[str, Any], modules: dict[str, ModuleType]) -> tuple[dict[str, Any], list[float]]:
@@ -321,7 +360,7 @@ def source_revision(root: Path) -> str:
                    if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
     paths = [pin["path"] for pin in PINS.values()]
     result = subprocess.run(["git", "-C", str(root), "log", "-1", "--format=%H", "--", *paths],
-                            capture_output=True, text=True, check=True, env=environment)
+                            capture_output=True, text=True, encoding="utf-8", check=True, env=environment)
     return result.stdout.strip()
 
 
@@ -370,14 +409,16 @@ def assemble(root: Path, blobs: dict[str, bytes], assumed: list[dict[str, Any]],
                    "native_runs": 0, "qualified_results": 0},
         "criteria": CRITERIA, "blockers": BLOCKERS,
         "revision_history": [{"revision": 0, "date": "2026-10-25",
-                              "change": "Initial source-bound analytical replay to separate regression evidence from native qualification."}],
+                              "change": "Initial source-bound analytical replay to separate regression evidence from native qualification."},
+                             {"revision": 1, "date": "2026-10-25",
+                              "change": "Check every local arc, requested sag/hog elevation and interface continuity to reject compensating errors and stale geometry; use maintainer terminology."}],
         "sources": {key: {"path": pin["path"], "sha256": hashlib.sha256(blobs[key]).hexdigest(),
                           "bytes": len(blobs[key]), "freshness": "Pinned bytes verified at replay; upstream freshness unverified"}
                     for key, pin in PINS.items()},
         "method": "SCR angle geometry and complementary-angle forces; five-segment SLWR; independent RK4 shooting against stored closed forms, C1 inextensible and C2 elastic. N internally, m and degrees; kN comparison boundary. Source revision identifies the last commit affecting pinned analytical sources; digests identify the replayed bytes.",
         "limits": ["Assumed source cases; no measured or qualified installation result.",
                    "Four distinct assumed cases and two separate integration comparisons; no native solver was executed.",
-                   "Segment depth and global force are recomputed without solver pass flags or prepared geometry.",
+                   "Segment arcs, signed depth, requested sag/hog elevations, interface continuity and global force are recomputed without solver pass flags or prepared geometry.",
                    "Pipe mass uses the nominal section and the inspected weight mapping; steel density and gravity are assumed mapping defaults.",
                    "Historical aggregate statics flags do not establish governing mesh criteria, accepted review or installation applicability.",
                    "Third-party rights and source-specific payload publication approval remain UNVERIFIED; numerical readbacks stay in scratch.",
@@ -402,7 +443,8 @@ def metadata(report: dict[str, Any]) -> dict[str, Any]:
 
 def render_html(public: dict[str, Any]) -> str:
     """Render only the public whitelist, with revision history after summary."""
-    escaped = lambda value: html.escape(str(value))
+    def escaped(value: Any) -> str:
+        return html.escape(str(value))
     sections = []
     for title, key in (("Revision history", "revision_history"), ("Criteria", "criteria"),
                        ("Analytical outcomes", "assumed"), ("Integration comparisons", "comparisons"),
@@ -431,8 +473,9 @@ def write_reports(report: dict[str, Any], root: Path, out_dir: Path, metadata_on
     names = ["analytical-riser-regression.json", "analytical-riser-regression.html"]
     if not metadata_only:
         names.append("analytical-riser-regression-readback.json")
-    if any((destination / name).is_symlink() for name in names):
-        raise EvidenceError("output file symlinks are inadmissible")
+    if any((destination / name).is_symlink()
+           or getattr(destination / name, "is_junction", lambda: False)() for name in names):
+        raise EvidenceError("output file symlinks and junctions are inadmissible")
     public = metadata(report)
     payloads = [json.dumps(public, indent=2, allow_nan=False) + "\n", render_html(public)]
     if not metadata_only:
@@ -440,7 +483,7 @@ def write_reports(report: dict[str, Any], root: Path, out_dir: Path, metadata_on
     destination.mkdir(parents=True, exist_ok=True)
     for name, payload in zip(names, payloads, strict=True):
         path = destination / name
-        path.write_text(payload, encoding="utf-8")
+        path.write_text(payload, encoding="utf-8", newline="\n")
         if path.read_text(encoding="utf-8") != payload:
             raise EvidenceError("saved report readback mismatch")
 

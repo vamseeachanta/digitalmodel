@@ -8,6 +8,8 @@ import hashlib
 import importlib.util
 import json
 import math
+import shlex
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -63,7 +65,7 @@ def test_source_failure_precedes_replay(sources, kind):
     if kind == "missing":
         path.rename(path.with_suffix(".missing"))
     else:
-        path.write_text("not valid JSON")
+        path.write_text("not valid JSON", encoding="utf-8", newline="\n")
     with pytest.raises(regression.EvidenceError, match="FIXTURE"):
         regression.verify_sources(sources)
 
@@ -71,9 +73,9 @@ def test_source_failure_precedes_replay(sources, kind):
 def test_nested_manifest_disagreement_even_with_matching_outer_digest(sources, monkeypatch):
     pins = copy.deepcopy(regression.PINS)
     path = sources / pins["MANIFEST"]["path"]
-    document = json.loads(path.read_text())
+    document = json.loads(path.read_text(encoding="utf-8"))
     document["files"][0]["sha256"] = "0" * 64
-    path.write_text(json.dumps(document))
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
     pins["MANIFEST"].update(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                             bytes=path.stat().st_size)
     monkeypatch.setattr(regression, "PINS", pins)
@@ -110,6 +112,109 @@ def test_exact_family_membership(cases):
 def test_force_and_angle_units():
     assert regression.newtons_to_kn(2500) == 2.5
     assert regression.angle_from_vertical(4, 3) == pytest.approx(53.13010235415598)
+
+
+@pytest.fixture
+def wave_triangle(triangle):
+    """Five arcs with rational heights and continuous interface forces."""
+    case, result = triangle
+    case["type"] = "SLWR"
+    case["values"].update(water_depth=2.0, sag_elevation=1.0, hog_elevation=1.5)
+    # cosh(asinh(3/4))=5/4; cosh(asinh(5/12))=13/12.
+    # R*(cosh-1) gives drops [1, 1/3, 1/6, 1/2, 1] m.
+    # Signed depth=2 m; sag=2-1=1 m; hog=1+1/3+1/6=1.5 m.
+    # Rising V=1*(5/3)=2*(5/6)=5/3 N; falling V=2*(3/2)=1*3=3 N.
+    radii, slopes, weights = [4, 4, 2, 2, 4], [3/4, 5/12, 5/12, 3/4, 3/4], [1, 1, -2, -2, 1]
+    result["segments"] = [
+        {"length_m": radius*slope, "horizontal_m": radius*math.asinh(slope),
+         "radius_m": radius, "weight_N_per_m": weight}
+        for radius, slope, weight in zip(radii, slopes, weights, strict=True)]
+    return case, result, weights
+
+
+def test_compensating_segment_lengths_cannot_pass(wave_triangle):
+    case, result, weights = wave_triangle
+    assert regression.aggregate(regression.check_geometry(case, result, weights)) == "PASS"
+    result["segments"][0]["length_m"] += 1
+    result["segments"][1]["length_m"] -= 1
+    checks = regression.check_geometry(case, result, weights)
+    assert checks["global_force"]["status"] == "PASS"
+    assert checks["segment_1_arc"]["status"] == "FAIL"
+    assert checks["segment_2_arc"]["status"] == "FAIL"
+    assert regression.aggregate(checks) == "FAIL"
+
+
+@pytest.mark.parametrize("index", range(5))
+def test_each_segment_arc_is_checked(wave_triangle, index):
+    case, result, weights = wave_triangle
+    result["segments"][index]["length_m"] += 0.01
+    checks = regression.check_geometry(case, result, weights)
+    assert checks[f"segment_{index+1}_arc"]["status"] == "FAIL"
+
+
+@pytest.mark.parametrize("elevation", ["sag_elevation", "hog_elevation"])
+def test_stale_geometry_rejected_after_requested_elevation_changes(wave_triangle, elevation):
+    case, result, weights = wave_triangle
+    case["values"][elevation] += 0.01
+    checks = regression.check_geometry(case, result, weights)
+    assert checks["depth"]["status"] == "PASS"
+    assert checks[elevation]["status"] == "FAIL"
+    assert regression.aggregate(checks) == "FAIL"
+
+
+def test_reconstructed_elevations_and_interfaces_match_hand_values(wave_triangle):
+    case, result, weights = wave_triangle
+    checks = regression.check_geometry(case, result, weights)
+    # Hand calculations appear in wave_triangle, independently of solver output.
+    assert checks["sag_elevation"]["actual"] == pytest.approx(1.0)
+    assert checks["hog_elevation"]["actual"] == pytest.approx(1.5)
+    assert checks["rising_interface"]["actual"] == pytest.approx(5/3)
+    assert checks["falling_interface"]["actual"] == pytest.approx(3.0)
+    assert regression.aggregate(checks) == "PASS"
+
+
+@pytest.mark.parametrize(("index", "criterion"), [(1, "rising_interface"), (3, "falling_interface")])
+def test_each_interface_rejects_discontinuous_geometry(wave_triangle, index, criterion):
+    case, result, weights = wave_triangle
+    segment = result["segments"][index]
+    segment["horizontal_m"] += 0.01
+    segment["length_m"] = segment["radius_m"]*math.sinh(segment["horizontal_m"]/segment["radius_m"])
+    checks = regression.check_geometry(case, result, weights)
+    assert checks[f"segment_{index+1}_arc"]["status"] == "PASS"
+    assert checks[criterion]["status"] == "FAIL"
+
+
+@pytest.mark.parametrize("path", [
+    "scripts/risers/analytical_riser_regression.py",
+    "docs/audits/analytical-riser-regression.json",
+    "docs/audits/analytical-riser-regression.html",
+    "tests/subsea/test_analytical_riser_regression.py",
+])
+def test_regression_changes_select_covered_ci_domain(path):
+    spec = importlib.util.spec_from_file_location(
+        "riser_domain_detector", ROOT / "scripts/ci/detect_touched_domains.py")
+    detector = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = detector
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+    assert {d.name for d in detector.touched_domains([path], domains)} == {"subsea"}
+
+
+def test_existing_subsea_gate_collects_regression_suite():
+    import yaml
+
+    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
+    gate = gates["tests-subsea"]
+    path = Path(__file__).relative_to(ROOT).as_posix()
+    assert any(path.startswith(root) for root in gate["test_roots"])
+    assert "tests/subsea/" in shlex.split(gate["command"])
+
+
+def test_output_junction_is_rejected_before_writes(replay, tmp_path, monkeypatch):
+    monkeypatch.setattr(Path, "is_junction", lambda path: path.name.endswith(".json"), raising=False)
+    with pytest.raises(regression.EvidenceError, match="symlinks|junctions"):
+        regression.write_reports(replay, ROOT, tmp_path / "output", metadata_only=True)
+    assert not (tmp_path / "output").exists()
 
 
 def test_relative_denominator_and_missing_zero_rule():
@@ -188,10 +293,10 @@ def test_full_payload_rejects_destination_before_writes(tmp_path, monkeypatch, e
         destination.mkdir()
         (destination / "analytical-riser-regression-readback.json").symlink_to(root / "sentinel")
     sentinel = root / "sentinel"
-    sentinel.write_text("preserve")
+    sentinel.write_text("preserve", encoding="utf-8", newline="\n")
     with pytest.raises(regression.EvidenceError):
         regression.write_reports({}, root, destination, metadata_only=False)
-    assert sentinel.read_text() == "preserve"
+    assert sentinel.read_text(encoding="utf-8") == "preserve"
     assert sorted(p.name for p in root.iterdir()) == ["sentinel"]
 
 
@@ -224,9 +329,9 @@ def test_metadata_whitelist_and_saved_readback(replay, tmp_path):
     assert keys(metadata).isdisjoint({"values", "residual", "horizontal_N", "expected",
                                     "inputs", "readback", "mapping_defaults"})
     regression.write_reports(replay, ROOT, tmp_path, metadata_only=True)
-    document = json.loads((tmp_path / "analytical-riser-regression.json").read_text())
+    document = json.loads((tmp_path / "analytical-riser-regression.json").read_text(encoding="utf-8"))
     assert document == metadata
-    html = (tmp_path / "analytical-riser-regression.html").read_text()
+    html = (tmp_path / "analytical-riser-regression.html").read_text(encoding="utf-8")
     assert html.index("Summary") < html.index("Revision history") < html.index("Criteria")
     assert "BLOCKED-IF-MISSING" in html
     assert not (tmp_path / "analytical-riser-regression-readback.json").exists()
@@ -239,7 +344,7 @@ def test_deterministic_replay(replay):
 def test_full_readback_retains_results_only_in_scratch(replay, tmp_path, monkeypatch):
     monkeypatch.setenv("TMPDIR", str(tmp_path))
     regression.write_reports(replay, ROOT, tmp_path / "full", metadata_only=False)
-    saved = json.loads((tmp_path / "full/analytical-riser-regression-readback.json").read_text())
+    saved = json.loads((tmp_path / "full/analytical-riser-regression-readback.json").read_text(encoding="utf-8"))
     assert saved == replay
     assert all("readback" in row and "inputs" in row for row in saved["assumed"] + saved["comparisons"])
 
@@ -267,8 +372,9 @@ def test_failed_comparison_remains_failed(monkeypatch):
 
 def test_committed_metadata_matches_generator(replay):
     public = regression.metadata(replay)
-    assert json.loads((ROOT / "docs/audits/analytical-riser-regression.json").read_text()) == public
-    assert (ROOT / "docs/audits/analytical-riser-regression.html").read_text() == regression.render_html(public)
+    rebuild = "Rebuild: uv run --no-project python scripts/risers/analytical_riser_regression.py --root . --metadata-only --out-dir docs/audits"
+    assert json.loads((ROOT / "docs/audits/analytical-riser-regression.json").read_text(encoding="utf-8")) == public, rebuild
+    assert (ROOT / "docs/audits/analytical-riser-regression.html").read_text(encoding="utf-8") == regression.render_html(public), rebuild
 
 
 def test_source_history_identity_survives_deliverable_commit(monkeypatch, tmp_path):

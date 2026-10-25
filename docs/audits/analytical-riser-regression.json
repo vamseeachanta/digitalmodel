@@ -3,7 +3,7 @@
   "status": "PASS",
   "readiness": "ASSUMED_ANALYTICAL_ONLY",
   "source_revision": "0ed7d8b8e2989db31514f2e871d43d4ae28b189f",
-  "utility_sha256": "2fc1270d4ced14893eabbc98f3425fd303d2a441abee3e89694e927fb7936f93",
+  "utility_sha256": "1c864adbf8fd32284c8f3d96dd09dcc32d438018a99c39605a290d4947b8b4d8",
   "counts": {
     "assumed_attempted": 4,
     "assumed_completed": 4,
@@ -39,6 +39,29 @@
       "form": "relative",
       "citation": "REPORT"
     },
+    "segment_arc": {
+      "limit": 1e-09,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT: numerical geometry band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+      "basis": "Each vertex-to-interface arc is R*sinh(X/R)",
+      "source": "https://openstax.org/books/calculus-volume-1/pages/6-9-calculus-of-the-hyperbolic-functions"
+    },
+    "wave_elevation": {
+      "limit": 1e-06,
+      "units": "m",
+      "form": "absolute",
+      "citation": "REPORT: depth closure band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+      "basis": "Sag and hog are elevations above seabed from signed segment drops"
+    },
+    "interface_continuity": {
+      "limit": 1e-12,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT: force equilibrium band; OpenStax, University Physics Volume 1, 2016 edition, section 12.1, equation 12.2",
+      "basis": "Continuous vertical tension at each bare/buoyed interface: abs(w_left)*S_left = abs(w_right)*S_right",
+      "source": "https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium"
+    },
     "closed_tension": {
       "limit": 5.0,
       "units": "%",
@@ -62,17 +85,17 @@
     {
       "id": "catenary_manifest",
       "status": "BLOCKED-IF-MISSING",
-      "next_input": "Accepted owner manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review."
+      "next_input": "Accepted maintainer manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review."
     },
     {
       "id": "lazy_wave_manifest",
       "status": "BLOCKED-IF-MISSING",
-      "next_input": "Accepted owner manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability."
+      "next_input": "Accepted maintainer manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability."
     },
     {
       "id": "public_reuse",
       "status": "BLOCKED-IF-MISSING",
-      "next_input": "Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result owner."
+      "next_input": "Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result maintainer."
     }
   ],
   "revision_history": [
@@ -80,6 +103,11 @@
       "revision": 0,
       "date": "2026-10-25",
       "change": "Initial source-bound analytical replay to separate regression evidence from native qualification."
+    },
+    {
+      "revision": 1,
+      "date": "2026-10-25",
+      "change": "Check every local arc, requested sag/hog elevation and interface continuity to reject compensating errors and stale geometry; use maintainer terminology."
     }
   ],
   "sources": {
@@ -160,7 +188,7 @@
   "limits": [
     "Assumed source cases; no measured or qualified installation result.",
     "Four distinct assumed cases and two separate integration comparisons; no native solver was executed.",
-    "Segment depth and global force are recomputed without solver pass flags or prepared geometry.",
+    "Segment arcs, signed depth, requested sag/hog elevations, interface continuity and global force are recomputed without solver pass flags or prepared geometry.",
     "Pipe mass uses the nominal section and the inspected weight mapping; steel density and gravity are assumed mapping defaults.",
     "Historical aggregate statics flags do not establish governing mesh criteria, accepted review or installation applicability.",
     "Third-party rights and source-specific payload publication approval remain UNVERIFIED; numerical readbacks stay in scratch.",
@@ -177,7 +205,8 @@
         "global_force": "PASS",
         "tension": "PASS",
         "segment_weights": "PASS",
-        "horizontal_balance": "PASS"
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS"
       }
     },
     {
@@ -190,7 +219,8 @@
         "global_force": "PASS",
         "tension": "PASS",
         "segment_weights": "PASS",
-        "horizontal_balance": "PASS"
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS"
       }
     },
     {
@@ -203,7 +233,16 @@
         "global_force": "PASS",
         "tension": "PASS",
         "segment_weights": "PASS",
-        "horizontal_balance": "PASS"
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS",
+        "segment_2_arc": "PASS",
+        "segment_3_arc": "PASS",
+        "segment_4_arc": "PASS",
+        "segment_5_arc": "PASS",
+        "sag_elevation": "PASS",
+        "hog_elevation": "PASS",
+        "rising_interface": "PASS",
+        "falling_interface": "PASS"
       }
     },
     {
@@ -216,7 +255,16 @@
         "global_force": "PASS",
         "tension": "PASS",
         "segment_weights": "PASS",
-        "horizontal_balance": "PASS"
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS",
+        "segment_2_arc": "PASS",
+        "segment_3_arc": "PASS",
+        "segment_4_arc": "PASS",
+        "segment_5_arc": "PASS",
+        "sag_elevation": "PASS",
+        "hog_elevation": "PASS",
+        "rising_interface": "PASS",
+        "falling_interface": "PASS"
       }
     }
   ],

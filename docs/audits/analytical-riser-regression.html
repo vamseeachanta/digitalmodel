@@ -13,6 +13,11 @@
     &quot;revision&quot;: 0,
     &quot;date&quot;: &quot;2026-10-25&quot;,
     &quot;change&quot;: &quot;Initial source-bound analytical replay to separate regression evidence from native qualification.&quot;
+  },
+  {
+    &quot;revision&quot;: 1,
+    &quot;date&quot;: &quot;2026-10-25&quot;,
+    &quot;change&quot;: &quot;Check every local arc, requested sag/hog elevation and interface continuity to reject compensating errors and stale geometry; use maintainer terminology.&quot;
   }
 ]</pre><h2>Criteria</h2><pre>{
   &quot;depth&quot;: {
@@ -38,6 +43,29 @@
     &quot;units&quot;: &quot;1&quot;,
     &quot;form&quot;: &quot;relative&quot;,
     &quot;citation&quot;: &quot;REPORT&quot;
+  },
+  &quot;segment_arc&quot;: {
+    &quot;limit&quot;: 1e-09,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT: numerical geometry band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9&quot;,
+    &quot;basis&quot;: &quot;Each vertex-to-interface arc is R*sinh(X/R)&quot;,
+    &quot;source&quot;: &quot;https://openstax.org/books/calculus-volume-1/pages/6-9-calculus-of-the-hyperbolic-functions&quot;
+  },
+  &quot;wave_elevation&quot;: {
+    &quot;limit&quot;: 1e-06,
+    &quot;units&quot;: &quot;m&quot;,
+    &quot;form&quot;: &quot;absolute&quot;,
+    &quot;citation&quot;: &quot;REPORT: depth closure band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9&quot;,
+    &quot;basis&quot;: &quot;Sag and hog are elevations above seabed from signed segment drops&quot;
+  },
+  &quot;interface_continuity&quot;: {
+    &quot;limit&quot;: 1e-12,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT: force equilibrium band; OpenStax, University Physics Volume 1, 2016 edition, section 12.1, equation 12.2&quot;,
+    &quot;basis&quot;: &quot;Continuous vertical tension at each bare/buoyed interface: abs(w_left)*S_left = abs(w_right)*S_right&quot;,
+    &quot;source&quot;: &quot;https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium&quot;
   },
   &quot;closed_tension&quot;: {
     &quot;limit&quot;: 5.0,
@@ -68,7 +96,8 @@
       &quot;global_force&quot;: &quot;PASS&quot;,
       &quot;tension&quot;: &quot;PASS&quot;,
       &quot;segment_weights&quot;: &quot;PASS&quot;,
-      &quot;horizontal_balance&quot;: &quot;PASS&quot;
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;
     }
   },
   {
@@ -81,7 +110,8 @@
       &quot;global_force&quot;: &quot;PASS&quot;,
       &quot;tension&quot;: &quot;PASS&quot;,
       &quot;segment_weights&quot;: &quot;PASS&quot;,
-      &quot;horizontal_balance&quot;: &quot;PASS&quot;
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;
     }
   },
   {
@@ -94,7 +124,16 @@
       &quot;global_force&quot;: &quot;PASS&quot;,
       &quot;tension&quot;: &quot;PASS&quot;,
       &quot;segment_weights&quot;: &quot;PASS&quot;,
-      &quot;horizontal_balance&quot;: &quot;PASS&quot;
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_2_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_3_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_4_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_5_arc&quot;: &quot;PASS&quot;,
+      &quot;sag_elevation&quot;: &quot;PASS&quot;,
+      &quot;hog_elevation&quot;: &quot;PASS&quot;,
+      &quot;rising_interface&quot;: &quot;PASS&quot;,
+      &quot;falling_interface&quot;: &quot;PASS&quot;
     }
   },
   {
@@ -107,7 +146,16 @@
       &quot;global_force&quot;: &quot;PASS&quot;,
       &quot;tension&quot;: &quot;PASS&quot;,
       &quot;segment_weights&quot;: &quot;PASS&quot;,
-      &quot;horizontal_balance&quot;: &quot;PASS&quot;
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_2_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_3_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_4_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_5_arc&quot;: &quot;PASS&quot;,
+      &quot;sag_elevation&quot;: &quot;PASS&quot;,
+      &quot;hog_elevation&quot;: &quot;PASS&quot;,
+      &quot;rising_interface&quot;: &quot;PASS&quot;,
+      &quot;falling_interface&quot;: &quot;PASS&quot;
     }
   }
 ]</pre><h2>Integration comparisons</h2><pre>[
@@ -135,17 +183,17 @@
   {
     &quot;id&quot;: &quot;catenary_manifest&quot;,
     &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
-    &quot;next_input&quot;: &quot;Accepted owner manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review.&quot;
+    &quot;next_input&quot;: &quot;Accepted maintainer manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review.&quot;
   },
   {
     &quot;id&quot;: &quot;lazy_wave_manifest&quot;,
     &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
-    &quot;next_input&quot;: &quot;Accepted owner manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability.&quot;
+    &quot;next_input&quot;: &quot;Accepted maintainer manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability.&quot;
   },
   {
     &quot;id&quot;: &quot;public_reuse&quot;,
     &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
-    &quot;next_input&quot;: &quot;Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result owner.&quot;
+    &quot;next_input&quot;: &quot;Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result maintainer.&quot;
   }
 ]</pre><h2>Source identities</h2><pre>{
   &quot;REPORT&quot;: {
@@ -223,7 +271,7 @@
 }</pre><h2>Known limits</h2><pre>[
   &quot;Assumed source cases; no measured or qualified installation result.&quot;,
   &quot;Four distinct assumed cases and two separate integration comparisons; no native solver was executed.&quot;,
-  &quot;Segment depth and global force are recomputed without solver pass flags or prepared geometry.&quot;,
+  &quot;Segment arcs, signed depth, requested sag/hog elevations, interface continuity and global force are recomputed without solver pass flags or prepared geometry.&quot;,
   &quot;Pipe mass uses the nominal section and the inspected weight mapping; steel density and gravity are assumed mapping defaults.&quot;,
   &quot;Historical aggregate statics flags do not establish governing mesh criteria, accepted review or installation applicability.&quot;,
   &quot;Third-party rights and source-specific payload publication approval remain UNVERIFIED; numerical readbacks stay in scratch.&quot;,
