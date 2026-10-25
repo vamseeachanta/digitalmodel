@@ -9,6 +9,7 @@ import ast
 import hashlib
 import io
 import json
+import os
 from pathlib import Path, PurePosixPath
 import subprocess
 import sys
@@ -53,10 +54,13 @@ def load_rules(root):
     return rules
 
 
-def git_read(root, *args):
+def git_read(root, *args, input=None):
     """Read Git metadata without changing the index or traversing directories."""
-    return subprocess.run(["git", "-C", str(root), *args], check=True,
-                          capture_output=True).stdout
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(key, None)
+    return subprocess.run(["git", "-C", root.as_posix(), *args], check=True,
+                          capture_output=True, input=input, env=env).stdout
 
 
 def read_inventory(root, ref=None):
@@ -66,6 +70,10 @@ def read_inventory(root, ref=None):
     checkouts never enter the inventory. A deleted worktree file is omitted.
     Tree blobs are read in a single batch, without exporting another checkout.
     """
+    root = root.resolve()
+    actual = Path(git_read(root, "rev-parse", "--show-toplevel").decode("utf-8").strip())
+    if actual.resolve() != root:
+        raise ValueError("Requested root must match the repository root")
     args = ("ls-tree", "-r", "-z", ref) if ref else ("ls-files", "--stage", "-z")
     entries = {}
     for record in git_read(root, *args).split(b"\0"):
@@ -85,9 +93,8 @@ def read_inventory(root, ref=None):
     contents = {}
     if ref and sources:
         objects = "\n".join(entries[path] for path in sources) + "\n"
-        result = subprocess.run(["git", "-C", str(root), "cat-file", "--batch"],
-                                input=objects.encode(), capture_output=True, check=True)
-        stream = io.BytesIO(result.stdout)
+        stream = io.BytesIO(git_read(root, "cat-file", "--batch",
+                                    input=objects.encode("utf-8")))
         for path in sources:
             _, kind, size = stream.readline().split()
             if kind != b"blob":
@@ -232,7 +239,7 @@ def main(argv=None):
     rendered = render(contract)
     fresh = output.is_file() and output.read_text(encoding="utf-8") == rendered
     if args.write:
-        output.write_text(rendered, encoding="utf-8")
+        output.write_text(rendered, encoding="utf-8", newline="\n")
     print(f"Family inventory: {len(contract['module_to_family'])} modules, "
           f"{len(contract['test_file_to_family'])} test files, "
           f"{len(contract['engine']['modules'])} ENGINE modules; "

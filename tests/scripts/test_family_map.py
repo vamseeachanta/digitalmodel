@@ -4,8 +4,10 @@
 
 import ast
 import copy
+import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -38,7 +40,8 @@ def live(generator, rules):
 
 
 def test_snapshot_schema_and_internal_consistency(generator):
-    contract = json.loads(CONTRACT.read_text(), object_pairs_hook=generator.unique_object)
+    contract = json.loads(CONTRACT.read_text(encoding="utf-8"),
+                          object_pairs_hook=generator.unique_object)
     assert contract["schema_version"] == 2
     assert contract["coverage_mode"] == "report-only"
     assert set(contract["families"]) == {
@@ -109,20 +112,23 @@ def test_untracked_environments_and_checkouts_are_not_inventoried(
 ):
     tracked = "tests/test_tracked.py"
     (tmp_path / "tests").mkdir()
-    (tmp_path / tracked).write_text("")
+    (tmp_path / tracked).write_text("", encoding="utf-8", newline="\n")
     excluded = tmp_path / directory
     excluded.mkdir(parents=True)
-    (excluded / "pyvenv.cfg").write_text("include-system-site-packages = false\n")
-    (excluded / "test_noise.py").write_text("")
+    (excluded / "pyvenv.cfg").write_text("include-system-site-packages = false\n",
+                                       encoding="utf-8", newline="\n")
+    (excluded / "test_noise.py").write_text("", encoding="utf-8", newline="\n")
     calls = []
 
     def git_read(root, *args):
         calls.append(args)
+        if args == ("rev-parse", "--show-toplevel"):
+            return root.as_posix().encode("utf-8") + b"\n"
         return f"100644 {'0' * 40} 0\t{tracked}\0".encode()
 
     monkeypatch.setattr(generator, "git_read", git_read)
     assert generator.read_inventory(tmp_path) == ({}, [tracked])
-    assert calls == [("ls-files", "--stage", "-z")]
+    assert calls == [("rev-parse", "--show-toplevel"), ("ls-files", "--stage", "-z")]
 
 
 def test_symlink_and_submodule_entries_are_excluded(generator, tmp_path, monkeypatch):
@@ -131,7 +137,10 @@ def test_symlink_and_submodule_entries_are_excluded(generator, tmp_path, monkeyp
             ("120000", "tests/test_link.py"), ("160000", "checkout"),
         ]
     )
-    monkeypatch.setattr(generator, "git_read", lambda *args: records.encode())
+    monkeypatch.setattr(generator, "git_read", lambda root, *args: (
+        root.as_posix().encode("utf-8") + b"\n"
+        if args == ("rev-parse", "--show-toplevel") else records.encode()
+    ))
     assert generator.read_inventory(tmp_path) == ({}, [])
 
 
@@ -193,12 +202,13 @@ def _assert_registry_families(generator, rules, registry):
             if declared is None:
                 continue
             if path.endswith("agent-pack.md"):
-                path = str(Path(path).parent.parent / "__init__.py")
+                path = (Path(path).parent.parent / "__init__.py").as_posix()
             assert generator.module_family(generator.module_for_path(path), rules) == declared
 
 
 def test_registry_families_agree_with_live_rules(generator, rules):
-    registry = yaml.safe_load((ROOT / "docs/registry/module-routing.yaml").read_text())
+    registry = yaml.safe_load((ROOT / "docs/registry/module-routing.yaml").read_text(
+        encoding="utf-8"))
     _assert_registry_families(generator, rules, registry)
 
 
@@ -243,7 +253,7 @@ def test_rendering_is_deterministic(generator, rules):
 
 def test_stale_snapshot_is_report_only_but_check_detects_it(tmp_path):
     output = tmp_path / "families.json"
-    output.write_text("{}\n")
+    output.write_text("{}\n", encoding="utf-8", newline="\n")
     command = [sys.executable, str(SCRIPT), "--output", str(output)]
     report = subprocess.run([*command, "--report"], capture_output=True, text=True)
     assert report.returncode == 0, report.stderr
@@ -254,3 +264,87 @@ def test_stale_snapshot_is_report_only_but_check_detects_it(tmp_path):
     assert write.returncode == 0, write.stderr
     check = subprocess.run([*command, "--check"], capture_output=True, text=True)
     assert check.returncode == 0, check.stderr
+
+
+GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")
+
+
+def _fixture_git(root, *args):
+    env = {key: value for key, value in os.environ.items() if key not in GIT_BINDINGS}
+    return subprocess.run(["git", "-C", root.as_posix(), *args], env=env,
+                          check=True, capture_output=True, text=True, encoding="utf-8")
+
+
+@pytest.fixture(params=["checkout", "linked-worktree"])
+def inventory_repositories(tmp_path, request, rules):
+    caller = tmp_path / "caller"
+    primary = tmp_path / "primary"
+    _fixture_git(tmp_path, "init", caller.as_posix())
+    _fixture_git(tmp_path, "init", primary.as_posix())
+    target = primary
+    if request.param == "linked-worktree":
+        target = tmp_path / "target"
+        _fixture_git(primary, "worktree", "add", "--orphan", target.as_posix())
+    for root, files in [
+        (caller, {"src/digitalmodel/__init__.py": "CALLER = True\n"}),
+        (target, {
+            "src/digitalmodel/__init__.py": 'LABEL = "caf\u00e9"\n',
+            "src/digitalmodel/units.py": "VALUE = 1\n",
+            "tests/test_sample.py": "",
+            "config/ci/module-family-rules.json": json.dumps(rules),
+        }),
+    ]:
+        for name, text in files.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8", newline="\n")
+        _fixture_git(root, "add", ".")
+    tree = _fixture_git(target, "write-tree").stdout.strip()
+    return caller, target, tree
+
+
+def _repository_digests(root, output):
+    return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in root.rglob("*") if path.is_file() and path != output}
+
+
+@pytest.mark.parametrize("binding", [None, *GIT_BINDINGS, "all"])
+@pytest.mark.parametrize("use_ref", [False, True])
+def test_real_inventory_ignores_caller_git_bindings(
+    inventory_repositories, tmp_path, monkeypatch, binding, use_ref,
+):
+    caller, target, tree = inventory_repositories
+    output = tmp_path / "inventory.json"
+    before = _repository_digests(tmp_path, output)
+    for key in GIT_BINDINGS:
+        monkeypatch.delenv(key, raising=False)
+        if binding in (key, "all"):
+            value = caller if key == "GIT_WORK_TREE" else caller / ".git"
+            monkeypatch.setenv(key, value.as_posix())
+    command = [sys.executable, SCRIPT.as_posix(), "--root", target.as_posix(),
+               "--output", output.as_posix(), "--write"]
+    if use_ref:
+        command.extend(["--ref", tree])
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+    assert result.returncode == 0, "Inventory generation failed"
+    contract = json.loads(output.read_text(encoding="utf-8"))
+    assert contract["module_to_family"] == {
+        "digitalmodel": "ENGINE", "digitalmodel.units": "ENGINE",
+    }
+    assert contract["test_file_to_family"] == {"tests/test_sample.py": "solvers"}
+    assert _repository_digests(tmp_path, output) == before
+    assert b"\r\n" not in output.read_bytes()
+
+
+def test_inventory_rejects_a_root_inside_another_repository(
+    inventory_repositories, tmp_path, generator,
+):
+    _, target, tree = inventory_repositories
+    nested = target / "nested"
+    nested.mkdir()
+    output = tmp_path / "inventory.json"
+    before = _repository_digests(tmp_path, output)
+    for ref in (None, tree):
+        with pytest.raises(ValueError, match="repository root"):
+            generator.read_inventory(nested, ref)
+    assert _repository_digests(tmp_path, output) == before
