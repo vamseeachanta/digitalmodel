@@ -9,6 +9,7 @@ Flask-HTTPAuth **4.8.1** was measured with real Flask test-client requests.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | A | 2026-10-22 | Replace deprecated callbacks with a shared verifier to handle Unicode passwords and reject malformed wire encodings. |
+| B | 2026-10-25 | Record local test counts and the hosted aggregate cancellation evidence to distinguish measured authentication results from pending domain coverage. |
 
 ## Inputs and method
 
@@ -135,3 +136,24 @@ recorded with commands in the change description. In particular, Capytaine
 complete. No solver installation was built from source and no licensed solver
 was started or imported. The passing dependency tests do not establish that
 the optional solvers execute here.
+
+## Validation evidence
+
+On 2026-10-25, the complete web suite passed locally: **524 passed**, including
+**384 tests in the four changed test files**, with no failures or skips. The
+command was `PYTHONPATH=src:. python -m pytest tests/web/ -q -rA -p no:cacheprovider`
+with temporary output outside the repository. The environment used Python 3.12.15,
+pytest 8.4.2, Flask 3.1.3, Flask-HTTPAuth 4.8.1 and Flask-RESTful 0.3.10.
+These counts establish web-suite results only; the broader-suite figures in
+the change description were not rerun.
+
+The hosted aggregate log for run `39830604607`, job `120057461154`,
+reports `CI harness detector tests did not succeed: cancelled`. The run's job
+metadata records 23 cancelled jobs, all with no executed steps, and one failed
+aggregate. The cancellation annotations for the harness and the web-containing
+`tests-misc` job confirm explicit cancellation. Across all checks on the same
+head, eight succeeded. This is evidence of incomplete hosted execution;
+it provides no domain-test result and establishes no authentication defect.
+The aggregate requires the harness to succeed, as does the current main
+workflow. A completed hosted run remains necessary before drawing conclusions
+about domain coverage. No workflow or gate change is indicated by this evidence.
