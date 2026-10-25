@@ -187,10 +187,12 @@ The live analytical dependencies are `JLayConfig`, `PipelayPipeProperties`,
 ### Scoped reel-lay classification
 
 The canonical [implementation map](../../../../docs/registry/implementation-map.md),
-revision 4, adds the `reel-lay-residual-curvature` family for the inspected
+revision 6, records the `reel-lay-residual-curvature` family for the inspected
 `run_reel_lay` wrapper and its `_reel_result` calculation. The YAML family's
-`source_revision` pins that inspection separately from the historical search
-snapshot. AST reference tests resolve both definitions and check the direct
+`source_revision` and retained `inspected_file_sha256` and
+`inspected_body_sha256` fields pin that inspection separately from regenerated
+metadata. Staleness diagnostics report divergence from those fingerprints even
+after regeneration. AST reference tests resolve both definitions and check the direct
 delegation without importing a solver. The rows establish source classification;
 numerical and native solver qualification remain `NOT_EVALUATED`.
 Operability, stinger and J-lay classification remain later slices of issue #2766.

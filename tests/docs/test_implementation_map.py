@@ -420,15 +420,81 @@ def test_missing_or_empty_reel_lay_family_is_reported(sample, disposition):
 
 def test_reel_lay_classification_limits_survive_regeneration(sample, reel_lay_family):
     """Name reconciliation shall retain the inspected classification boundary."""
-    doc, _ = sample
+    doc, root = sample
     doc["families"] = [copy.deepcopy(reel_lay_family)]
     path = "src/digitalmodel/pipelay/workflow.py"
-    result = generator().regenerate(doc, ROOT, tracked_paths=[path], revision="b" * 40)
+    source = root / path
+    source.parent.mkdir(parents=True)
+    source.write_text((ROOT / path).read_text() +
+                      "\ndef residual_curvature_probe():\n    return 0\n")
+    result = generator().regenerate(doc, root, tracked_paths=[path], revision="b" * 40)
     family = result["families"][0]
-    assert family["coverage"] == "reconciled_names"
+    assert family["coverage"] == "partial"
     assert family["reconciliation"] == {
-        "matched_definitions": 2, "unresolved_definitions": 0,
+        "matched_definitions": 3, "unresolved_definitions": 1,
     }
+    assert any(r["symbol"] == "residual_curvature_probe"
+               and r["disposition"] == "needs_review"
+               for r in result["rejected_candidates"])
     assert family["classification_limits"] == reel_lay_family["classification_limits"]
     assert family["source_revision"] == reel_lay_family["source_revision"]
     test_reel_lay_inventory_does_not_claim_qualification(family)
+
+
+@pytest.mark.parametrize("change,body_changed", [
+    ("# source annotation\n", False),
+    ("", True),
+])
+def test_inspected_digests_remain_stale_after_regeneration(sample, change, body_changed):
+    """Refreshing live hashes cannot renew a curated source inspection."""
+    doc, root = sample
+    family = doc["families"][0]
+    family["source_revision"] = "a" * 40
+    row = family["implementations"][0]
+    source = root / row["path"]
+    row["inspected_file_sha256"] = row["file_sha256"]
+    row["inspected_body_sha256"] = generator().body_digest(
+        generator().definitions(source.read_text())[row["symbol"]])
+    inspected = {key: row[key] for key in ("inspected_file_sha256", "inspected_body_sha256")}
+    assert generator().map_staleness(doc, root) == []
+    original = source.read_text()
+    source.write_text(change + (original.replace("return 1", "return 3")
+                                if body_changed else original))
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    refreshed = result["families"][0]["implementations"][0]
+    assert {key: refreshed[key] for key in inspected} == inspected
+    assert result["families"][0]["source_revision"] == "a" * 40
+    assert refreshed["file_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert refreshed["body_sha256"] == generator().body_digest(
+        generator().definitions(source.read_text())[row["symbol"]])
+    stale = generator().map_staleness(result, root)
+    assert "inspected file digest drift: sample.py" in stale
+    assert ("inspected body digest drift: sample.py:First.calculate" in stale) == body_changed
+    assert not any(p.startswith(("file digest drift:", "body digest drift:")) for p in stale)
+
+
+def test_reel_lay_inspected_digests_match_source(reel_lay_family):
+    """The curated inspection records file bytes and each exact AST body."""
+    for row in reel_lay_family["implementations"]:
+        source = ROOT / row["path"]
+        node = generator().definitions(source.read_text())[row["symbol"]]
+        assert row["inspected_file_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+        assert row["inspected_body_sha256"] == generator().body_digest(node)
+
+
+def test_summary_figures_match_map_rows(map_document):
+    """Check the summary against rows rather than retained search counters."""
+    summary = MAP_PATH.with_suffix(".md").read_text()
+    families = map_document["families"]
+    for family in families:
+        table_row = next(line for line in summary.splitlines()
+                         if line.startswith(f"| `{family['id']}` |"))
+        assert int(table_row.split("|")[3].strip()) == len(family["implementations"])
+    total = sum(len(f["implementations"]) for f in families)
+    outside = sum(e["module"] != f["first_module"]
+                  for f in families for e in f["implementations"])
+    assert f"{len(families)} families and {total} entries; {outside} entries lie outside" in summary
+    rejected = [r for r in map_document["rejected_candidates"]
+                if r.get("disposition") == "needs_review"]
+    distinct = len({(r["path"], r["symbol"]) for r in rejected})
+    assert f"{len(rejected)} unresolved family matches involving {distinct} distinct definitions" in summary

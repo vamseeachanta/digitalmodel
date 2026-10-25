@@ -26475,6 +26475,8 @@ families:
   search_signals:
   - search: algorithm
     pattern: \b(?:run_reel_lay|_reel_result)\b
+  - search: vocabulary
+    pattern: reel|straighten|residual_curv
   implementations:
   - path: src/digitalmodel/pipelay/workflow.py
     symbol: run_reel_lay
@@ -26488,6 +26490,8 @@ families:
     module: pipelay/workflow.py
     file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
     body_sha256: 7972cdab275e067c76cb828fdbe2a70f25743cc41a1b5db1f7b7510c9b500aa7
+    inspected_file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
+    inspected_body_sha256: 7972cdab275e067c76cb828fdbe2a70f25743cc41a1b5db1f7b7510c9b500aa7
     delegates_to:
     - path: src/digitalmodel/pipelay/workflow.py
       symbol: _reel_result
@@ -26503,11 +26507,13 @@ families:
     module: pipelay/workflow.py
     file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
     body_sha256: 35f473bd5b3d8f906bbec8d12a311abbfe5eb19aac831e272b55a4e35414f9d2
+    inspected_file_sha256: 99660683ef428813334aa616de62aed95b6fc117652f63f921b0e6ba5d95f119
+    inspected_body_sha256: 35f473bd5b3d8f906bbec8d12a311abbfe5eb19aac831e272b55a4e35414f9d2
   identical_groups: []
   first_module: pipelay/workflow.py
   coverage: partial
   coverage_reason: No repository-wide search was regenerated for this scoped family; name-reconciliation counts remain unestablished.
-  notes: Source classification only. The numerical assumptions are documented in src/digitalmodel/pipelay/docs/screening-basis.md, E5-E6; this inventory does not qualify those assumptions or any acceptance limit.
+  notes: Source classification only. Validation is delegated to validate_settings in src/digitalmodel/pipelay/validation.py; REEL_DEFAULTS at lines 11-12 supplies the screening defaults. The numerical assumptions and validation criteria are documented in src/digitalmodel/pipelay/docs/screening-basis.md, E5-E6 and V2-V4; this inventory does not qualify those assumptions or any acceptance limit. The inspected_file_sha256 and inspected_body_sha256 fields record the source_revision inspection and are retained by regeneration until renewed source inspection.
 byte_identical_groups:
 - id: file-001
   sha256: 62095d6e678265a526f70da009a8909b60d9e8fed8d790d3e091f7b5f32656f3
