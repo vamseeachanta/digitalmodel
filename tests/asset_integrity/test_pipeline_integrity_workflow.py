@@ -137,9 +137,39 @@ def test_applicability_requires_boolean(case):
         replace(case, formula_applicable="yes")
 
 
-def test_rejects_nonfinite_calculated_capacity(case):
-    with pytest.raises(ValueError, match="calculated"):
-        assess_pressure_design(replace(case, yield_strength_mpa=1e308))
+@pytest.mark.parametrize("field", ["design_factor", "joint_factor", "temperature_factor"])
+@pytest.mark.parametrize("value", [1.0000000000000002, 72.0])
+def test_rejects_factors_above_one(case, field, value):
+    with pytest.raises(ValueError, match=field):
+        replace(case, **{field: value})
+
+
+@pytest.mark.parametrize("field", ["design_factor", "joint_factor", "temperature_factor"])
+@pytest.mark.parametrize("value", [0.5, 1.0])
+def test_accepts_fractional_factors_and_unit_boundary(case, field, value):
+    result = assess_pressure_design(replace(case, **{field: value}))
+    assert result.pressure_status == "EVALUATED"
+    assert getattr(result.inputs, field) == value
+
+
+def test_large_strength_has_finite_calculated_capacity(case):
+    """P = (10/500)*2*1e308*0.5 = 2e306 MPa, despite 2*S overflowing."""
+    result = assess_pressure_design(replace(case, yield_strength_mpa=1e308))
+    assert result.design_pressure_mpa == pytest.approx(2e306)
+    assert result.utilisation_ratio == pytest.approx(2e-306, abs=0.0)
+    assert result.required_wall_thickness_mm == pytest.approx(2e-305, abs=0.0)
+    assert result.meets_pressure_design is True
+    json.dumps(asdict(result), allow_nan=False)
+
+
+def test_rejects_capacity_underflow_to_zero(case):
+    with pytest.raises(ValueError, match="design pressure"):
+        assess_pressure_design(replace(case, yield_strength_mpa=5e-324))
+
+
+def test_rejects_nonfinite_calculated_utilisation(case):
+    with pytest.raises(ValueError, match="thickness and utilisation"):
+        assess_pressure_design(replace(case, yield_strength_mpa=1e-307))
 
 
 @pytest.mark.parametrize("value", [True, None, "200"])

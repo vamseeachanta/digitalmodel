@@ -11,6 +11,7 @@ does not exceed design pressure.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add the pressure stage with required source references so callers can inspect its basis. |
+| Correction | 2026-10-25 | Clarify the pressure screen, bound factor fractions and avoid intermediate capacity overflow. |
 
 ## Source and equations
 
@@ -28,8 +29,10 @@ meets_pressure_design = P_demand <= P_design
 
 The coefficient in the first equation is specified in §192.105(a). The required
 thickness equation is its algebraic rearrangement; the utilisation ratio is the
-definition of demand divided by capacity. No rounding or numerical tolerance is
-applied to the pressure comparison.
+definition of demand divided by capacity. The pressure comparison is a
+definitional screen of demand against the §192.105(a) design pressure, not a
+regulatory operating-pressure acceptance criterion. No rounding or numerical
+tolerance is applied to the pressure comparison.
 
 `D` and `t` are nominal outside diameter and nominal wall thickness in mm.
 `S` is yield strength in MPa, `F` is the design factor, `E` is the longitudinal
@@ -41,6 +44,13 @@ Strength and all factors are required inputs. The caller must provide nonempty
 references identifying their source, edition and clause or table. The source
 points to §§192.107, 192.111, 192.113 and 192.115 for their selection. This slice
 does not implement those selection rules or validate the references.
+
+Factors must be fractions in `(0, 1]`. This is a plausibility bound consistent
+with the tables in [§192.111, Design factor (F) for steel pipe](https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol3/xml/CFR-2025-title49-vol3-sec192-111.xml),
+[§192.113, Longitudinal joint factor (E) for steel pipe](https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol3/xml/CFR-2025-title49-vol3-sec192-113.xml)
+and [§192.115, Temperature derating factor (T) for steel pipe](https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol3/xml/CFR-2025-title49-vol3-sec192-115.xml),
+2025 annual edition, opened on 2026-10-25. Passing this bound does not establish
+that a factor is permitted for the pipe, location or temperature.
 
 ## Single invocation
 
@@ -71,8 +81,10 @@ payload = asdict(result)  # JSON-compatible inputs, outputs, source and limitati
 The tests write out the independent substitutions for this example and for
 higher demand and reduced-factor configurations. No grade table or material
 default is used. Invalid geometry, nonfinite numbers, negative demand, missing
-references and nonpositive strength or factors raise `ValueError`. Calculated
-overflow or underflow to zero capacity also raises `ValueError`.
+references, nonpositive strength or factors, and factors above one raise
+`ValueError`. Capacity evaluation starts with the wall-to-diameter ratio to
+avoid intermediate overflow for finite large strength. Underflow to zero
+capacity and nonfinite calculated thickness or utilisation raise `ValueError`.
 
 `formula_applicable` is a required caller confirmation. It covers the scope of
 §192.105(a), including wall thickness attributable to concurrent external loads,
