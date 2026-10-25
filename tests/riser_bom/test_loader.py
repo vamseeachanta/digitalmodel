@@ -3,6 +3,7 @@
 """External JSON contract; rates are visibly invented, not scaled real costs."""
 
 import json
+import traceback
 from dataclasses import asdict
 from pathlib import Path
 
@@ -93,6 +94,26 @@ def test_unavailable_basis_does_not_disclose_path(tmp_path):
     with pytest.raises(ValueError, match="External cost basis is unavailable") as error:
         load_cost_basis(tmp_path / "missing.json")
     assert str(tmp_path) not in str(error.value)
+
+
+@pytest.mark.parametrize("failure", ["symlink_loop", "non_utf8"])
+def test_unreadable_basis_errors_are_sanitized(tmp_path, failure):
+    external = tmp_path / "unreadable.json"
+    document_marker = "unreadable basis contents"
+    if failure == "symlink_loop":
+        external.symlink_to(external)
+    else:
+        external.write_bytes(document_marker.encode("ascii") + b"\xff")
+
+    with pytest.raises(ValueError) as error:
+        load_cost_basis(external)
+
+    assert type(error.value) is ValueError
+    assert str(error.value) == "External cost basis is unavailable"
+    public_error = "".join(traceback.format_exception(error.value))
+    assert str(external) not in public_error
+    assert str(tmp_path) not in public_error
+    assert document_marker not in public_error
 
 
 def test_vendored_basis_rejected_before_read():

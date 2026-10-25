@@ -29,13 +29,13 @@ def load_cost_basis(path: str | Path) -> CostBasis:
     loading succeeded. Errors omit the supplied path and document contents.
     Public synthetic examples shall be copied to external scratch before loading.
     """
-    resolved = Path(path).resolve()
-    public_root = Path(__file__).resolve().parents[3]
-    if resolved.is_relative_to(public_root):
-        raise ValueError("Cost basis must be external to the public repository")
     try:
+        resolved = Path(path).resolve()
+        public_root = Path(__file__).resolve().parents[3]
+        if resolved.is_relative_to(public_root):
+            raise ValueError("Cost basis must be external to the public repository")
         text = resolved.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, RuntimeError, UnicodeError):
         raise ValueError("External cost basis is unavailable") from None
     try:
         data = json.loads(text, parse_float=Decimal, object_pairs_hook=_unique_object)
