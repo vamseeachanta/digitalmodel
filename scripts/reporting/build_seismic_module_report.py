@@ -175,6 +175,9 @@ def build(output_dir: Path = ROOT / OUTPUT) -> None:
             "Cross-runtime numerical comparison budgets are separated from exact same-runtime rebuilds.",
             "Review notes added during export remain unsaved, and intervening edits prevent import replacement.",
             "The current revision is added to the visible history, and integration remains available with newer numerical libraries.",
+        ]}, {"revision": "03", "date": "2026-10-25", "changes": [
+            "Shared note-count, text-length and UTF-8 file-size limits prevent exports that cannot be imported.",
+            "Rejected additions retain the draft and saved comments; canonical export size is checked before imports replace notes.",
         ]}],
     }
     environment = Environment(

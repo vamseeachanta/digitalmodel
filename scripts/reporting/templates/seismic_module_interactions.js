@@ -106,6 +106,16 @@
   const text = document.getElementById("comment-text");
   const section = document.getElementById("comment-section");
   const allowedSections = new Set(Array.from(section.options, option => option.value));
+  const maxNotes = 1000, maxNoteLength = 10000, maxFileBytes = 1000000;
+  function encodeNotes(items) {
+    if (!Array.isArray(items) || items.length > maxNotes
+        || !items.every(note => note && allowedSections.has(note.section)
+        && typeof note.text === "string" && note.text.length <= maxNoteLength)) throw new Error("format");
+    const content = JSON.stringify({document: changes.document, revision: "00",
+      notes: items.map(note => ({section: note.section, text: note.text}))}, null, 2) + "\n";
+    if (new Blob([content]).size > maxFileBytes) throw new Error("size");
+    return content;
+  }
   text.addEventListener("input", () => { generation += 1; });
   function renderNotes() {
     const list = document.getElementById("comments-list");
@@ -124,7 +134,14 @@
       status.textContent = "Enter a review note before adding it.";
       return;
     }
-    notes.push({section: section.value, text: text.value.trim()});
+    const note = {section: section.value, text: text.value.trim()};
+    try {
+      encodeNotes([...notes, note]);
+    } catch (error) {
+      status.textContent = "The note was not added. Comments are limited to 1,000 notes, 10,000 characters per note and 1,000,000 UTF-8 bytes per file in a listed section. Shorten the draft or save it separately.";
+      return;
+    }
+    notes.push(note);
     generation += 1;
     text.value = "";
     saved = false;
@@ -137,9 +154,9 @@
       return;
     }
     const exportGeneration = generation;
-    const content = JSON.stringify({document: changes.document, revision: "00", notes}, null, 2) + "\n";
     const name = "seismic-analysis.comments.json";
     try {
+      const content = encodeNotes(notes);
       if (window.showSaveFilePicker) {
         const handle = await window.showSaveFilePicker({suggestedName: name,
           types: [{description: "Review notes", accept: {"application/json": [".json"]}}]});
@@ -173,13 +190,12 @@
       const file = event.target.files[0];
       if (!file) return;
       if (!saved || text.value.trim()) throw new Error("pending notes");
-      if (file.size > 1000000) throw new Error("size");
+      if (file.size > maxFileBytes) throw new Error("size");
       const loadGeneration = generation;
       const value = JSON.parse(await file.text());
       if (generation !== loadGeneration || !saved || text.value.trim()) throw new Error("intervening edits");
-      if (value.document !== changes.document || value.revision !== "00" || !Array.isArray(value.notes)
-          || value.notes.length > 1000 || !value.notes.every(note => note && allowedSections.has(note.section)
-          && typeof note.text === "string" && note.text.length <= 10000)) throw new Error("format");
+      if (value.document !== changes.document || value.revision !== "00") throw new Error("format");
+      encodeNotes(value.notes);
       notes = value.notes.map(note => ({section: note.section, text: note.text}));
       generation += 1;
       saved = true;

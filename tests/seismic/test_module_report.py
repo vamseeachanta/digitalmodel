@@ -181,7 +181,7 @@ def test_issued_comparison_retains_exact_metadata_and_display_binding(fault):
         assert_report_agreement(str(soup), original)
 
 
-NOTE_PERSISTENCE_PROBE = r"""
+NOTE_DOM_PROBE = r"""
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
@@ -192,7 +192,7 @@ function element(id) {
     value: '', textContent: '', children: [], options: [{value: 'section-1'}], listeners: {},
     addEventListener(type, handler) { this.listeners[type] = handler; },
     append(...nodes) { this.children.push(...nodes); },
-    replaceChildren() { this.children = []; }
+    replaceChildren() { this.children = []; }, click() {}
   });
   return elements.get(id);
 }
@@ -205,6 +205,10 @@ const document = {
   querySelector() { return {textContent: '1. Summary'}; },
   createElement() { return element(Symbol()); }, createTextNode(text) { return {textContent: text}; }
 };
+"""
+
+
+NOTE_PERSISTENCE_PROBE = NOTE_DOM_PROBE + r"""
 let release, entered, exported, paused = false, pauseEnabled = true;
 const blocked = new Promise(resolve => { release = resolve; });
 const reached = new Promise(resolve => { entered = resolve; });
@@ -221,7 +225,7 @@ window.showSaveFilePicker = async () => {
     };
   }};
 };
-vm.runInNewContext(fs.readFileSync(script, 'utf8'), {document, window});
+vm.runInNewContext(fs.readFileSync(script, 'utf8'), {document, window, Blob});
 function addNote(value) {
   element('comment-text').value = value;
   element('comment-text').listeners.input?.();
@@ -298,6 +302,125 @@ async function mutate() {
   }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });
 """
+
+
+NOTE_LIMIT_PROBE = NOTE_DOM_PROBE + r"""
+let exported;
+if (edit === 'picker') {
+  window.showSaveFilePicker = async () => ({createWritable: async () => ({
+    write: async content => { exported = content; }, close: async () => {}
+  })});
+}
+const URL = {
+  createObjectURL(blob) { exported = blob.text(); return 'blob:comments'; },
+  revokeObjectURL() {}
+};
+vm.runInNewContext(fs.readFileSync(script, 'utf8'), {
+  document, window, Blob, URL, setTimeout(callback) { callback(); }
+});
+const encode = notes => JSON.stringify({document: 'Example analysis', revision: '00', notes}, null, 2) + '\n';
+const bytes = content => Buffer.byteLength(content, 'utf8');
+const note = text => ({section: 'section-1', text});
+function warns() {
+  let warned = false;
+  window.listeners.beforeunload({preventDefault() { warned = true; }});
+  return warned;
+}
+async function load(content) {
+  const target = {value: 'selected', files: [{size: bytes(content), text: async () => content}]};
+  await element('load-comments').listeners.change({target});
+  assert.equal(target.value, '');
+}
+async function importNotes(notes) {
+  await load(encode(notes));
+  assert.match(element('comments-status').textContent, /were loaded/);
+}
+function add(text) {
+  element('comment-text').value = text;
+  element('comment-text').listeners.input();
+  element('add-comment').listeners.click();
+}
+function visibleNotes() {
+  return element('comments-list').children.map(item => item.children[1].textContent.slice(2));
+}
+async function roundTrip(expected) {
+  assert.equal(warns(), true, 'Accepted additions need saving');
+  await element('save-comments').listeners.click();
+  const content = await exported;
+  assert.ok(bytes(content) <= 1000000, 'An exported file must meet the import byte limit');
+  assert.deepEqual(JSON.parse(content).notes, expected);
+  assert.equal(warns(), false, 'A valid export clears the warning');
+  await importNotes([]);
+  await load(content);
+  assert.match(element('comments-status').textContent, /were loaded/);
+  assert.deepEqual(visibleNotes(), expected.map(item => item.text), 'Export must round-trip without loss');
+  assert.equal(warns(), false);
+  return content;
+}
+function byteBoundary(character, unitBytes) {
+  const notes = [], full = note(character.repeat(Math.floor(10000 / character.length)));
+  while (bytes(encode([...notes, full])) <= 1000000) notes.push(full);
+  const tail = note('');
+  const remaining = 1000000 - bytes(encode([...notes, tail]));
+  tail.text = character.repeat(Math.floor(remaining / unitBytes)) + 'x'.repeat(remaining % unitBytes);
+  assert.ok(tail.text.length <= 10000);
+  notes.push(tail);
+  assert.equal(bytes(encode(notes)), 1000000);
+  return notes;
+}
+(async () => {
+  // UTF-8: e-acute uses 2 bytes; a supplementary character uses 4 bytes and
+  // 2 UTF-16 code units. A JSON-escaped quote uses 2 serialized bytes.
+  const byteCases = {ascii: ['x', 1], unicode: ['é', 2], escaped: ['"', 2], astral: ['😀', 4]};
+  if (phase === 'compact-import') {
+    add('Existing note');
+    await roundTrip([note('Existing note')]);
+    const oversized = byteBoundary('x', 1);
+    oversized.at(-1).text += 'x';
+    const compact = JSON.stringify(JSON.parse(encode(oversized)));
+    assert.ok(bytes(compact) < 1000000);
+    await load(compact);
+    assert.match(element('comments-status').textContent, /not loaded/,
+      'Import must reject notes whose next canonical export exceeds the limit');
+    assert.deepEqual(visibleNotes(), ['Existing note']);
+    assert.equal(warns(), false);
+    return;
+  }
+  const expected = phase === 'count' ? Array.from({length: 1000}, () => note('x'))
+    : phase === 'text' ? [note('x'.repeat(10000))] : byteBoundary(...byteCases[phase]);
+  await importNotes(expected.slice(0, -1));
+  add(expected.at(-1).text);
+  assert.equal(element('comment-text').value, '');
+  const content = await roundTrip(expected);
+  if (phase in byteCases) assert.equal(bytes(content), 1000000);
+  const rejected = phase === 'text' ? 'x'.repeat(10001) : 'x';
+  add(rejected);
+  assert.deepEqual(visibleNotes(), expected.map(item => item.text), 'An over-limit addition must not change notes');
+  assert.equal(element('comment-text').value, rejected, 'A rejected draft must remain available');
+  assert.equal(warns(), true, 'A rejected draft must retain its unload warning');
+  assert.match(element('comments-status').textContent, /not added/);
+  await element('save-comments').listeners.click();
+  assert.equal(await exported, content, 'A pending rejected draft must not overwrite the saved file');
+})().catch(error => { console.error(error.message); process.exitCode = 1; });
+"""
+
+
+@pytest.mark.parametrize("source", ["template", "embedded"])
+@pytest.mark.parametrize("mode", ["picker", "download"])
+@pytest.mark.parametrize("boundary", ["count", "text", "ascii", "unicode", "escaped", "astral", "compact-import"])
+def test_note_limits_preserve_export_import_round_trips(source, mode, boundary, tmp_path):
+    node = shutil.which("node")
+    assert node, "Node.js is required for the offline note limit regression"
+    script = ROOT / "scripts/reporting/templates/seismic_module_interactions.js"
+    if source == "embedded":
+        soup = BeautifulSoup((REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8"), "html.parser")
+        script = tmp_path / "embedded-interactions.js"
+        script.write_text(soup.find_all("script")[-1].string, encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [node, "-e", NOTE_LIMIT_PROBE, script.as_posix(), boundary, mode],
+        capture_output=True, text=True, encoding="utf-8", check=False, timeout=15,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 @pytest.mark.parametrize("phase,edit", [
