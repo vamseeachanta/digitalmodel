@@ -1,6 +1,7 @@
 """Publication contract tests use synthetic arithmetic, not licensed constants."""
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 from unittest.mock import Mock
@@ -82,6 +83,17 @@ def test_unverified_atlas_blocks_publication(atlas, change):
         publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
 
 
+@pytest.mark.parametrize("field", ["max_rel_error", "threshold"])
+@pytest.mark.parametrize("value", [False, True])
+def test_boolean_validation_numbers_block_publication(atlas, field, value):
+    root, folder, _, manifest = atlas
+    manifest["validation"].update(max_rel_error=0.0, threshold=1.0)
+    manifest["validation"][field] = value
+    (folder / "manifest.yaml").write_text(yaml.safe_dump(manifest))
+    with pytest.raises(ValueError, match="validation"):
+        publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+
+
 @pytest.mark.parametrize("change", ["empty", "duplicate", "missing_axis", "off_grid"])
 def test_grid_contract_rejected(atlas, change):
     root, folder, frame, _ = atlas
@@ -117,6 +129,8 @@ def test_card_discloses_citation_gap_and_hashes(atlas):
     assert "NOT_EVALUATED" in card
     assert "schema_version" in card
     assert entry["hashes"]["grid.parquet"] in card
+    assert "## Revision history" not in card
+    assert "docs/hf-atlas-publishing.md" in card
 
 
 def test_citation_sidecar_survives_card(atlas):
@@ -139,6 +153,7 @@ def test_publish_is_atomic_and_pins_remote_readback(atlas):
     entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
     api = Mock()
     api.repo_info.return_value.private = False
+    api.repo_info.return_value.sha = "expected-parent"
     api.create_commit.return_value.oid = "published-revision"
     api.hf_hub_download.side_effect = lambda **kw: str(root / kw["filename"])
     for filename, content in publisher.publication_files([entry]).items():
@@ -151,8 +166,22 @@ def test_publish_is_atomic_and_pins_remote_readback(atlas):
         repo_id="test/dataset", repo_type="dataset", private=False
     )
     assert api.create_commit.call_count == 1
+    assert api.create_commit.call_args.kwargs["parent_commit"] == (
+        api.repo_info.return_value.sha
+    )
     for call in api.hf_hub_download.call_args_list:
         assert call.kwargs["revision"] == revision
+
+
+def test_private_remote_blocks_publication(atlas):
+    root, _, _, _ = atlas
+    entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+    api = Mock()
+    api.repo_info.return_value.private = True
+    with pytest.raises(ValueError, match="private"):
+        publisher.publish_entries(api, "test/dataset", [entry])
+    api.create_commit.assert_not_called()
+    api.hf_hub_download.assert_not_called()
 
 
 def test_remote_digest_mismatch_blocks_success(atlas):
@@ -190,6 +219,39 @@ def test_short_viewer_sample_is_not_ready(atlas):
             entry,
             {"num_rows_total": 2, "rows": [{"row": {"n_cycles": 10.0, "damage": 0.1}}]},
         )
+
+
+@pytest.mark.parametrize("row", [{}, None, [], {"row": None}, {"row": []}])
+def test_malformed_viewer_row_is_rejected(atlas, row):
+    root, _, _, _ = atlas
+    entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+    payload = {
+        "num_rows_total": 2,
+        "rows": [row, {"row": {"n_cycles": 20.0, "damage": 0.2}}],
+    }
+    with pytest.raises(ValueError, match="rows"):
+        publisher.validate_rows(entry, payload)
+
+
+@pytest.mark.parametrize("row", [{}, None])
+def test_malformed_viewer_row_exhausts_retries(atlas, monkeypatch, row):
+    root, _, _, _ = atlas
+    entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+    payload = {
+        "num_rows_total": 2,
+        "rows": [row, {"row": {"n_cycles": 20.0, "damage": 0.2}}],
+    }
+    request = Mock(
+        side_effect=lambda *args, **kwargs: io.BytesIO(json.dumps(payload).encode())
+    )
+    sleep = Mock()
+    monkeypatch.setattr(publisher, "urlopen", request)
+    monkeypatch.setattr(publisher.time, "sleep", sleep)
+    with pytest.raises(RuntimeError, match="viewer NOT_READY") as error:
+        publisher.verify_viewer("test/dataset", [entry], attempts=2, delay=1)
+    assert isinstance(error.value.__cause__, ValueError)
+    assert request.call_count == 2
+    sleep.assert_called_once_with(1)
 
 
 def test_nonfinite_axis_is_rejected_even_if_declared(atlas):

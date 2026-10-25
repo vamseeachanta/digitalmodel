@@ -11,6 +11,10 @@ row count. An upload can succeed while viewer readiness remains unestablished.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Document the publication gate, reproducible example and remaining qualification limits. |
+| 2 | 2026-10-24 | Reject boolean validation numbers and malformed viewer rows; cover publication guards and maintain card history here to avoid stale generated revisions. |
+
+The generated dataset card refers to this history rather than repeating a fixed
+revision number and publication date.
 
 ## Reproduce
 
@@ -45,10 +49,13 @@ that every declared point occurs exactly once and that the response is finite
 and nonnegative. Both rows pass. Replacing one damage value with infinity,
 removing a point, or duplicating a point blocks publication. A viewer response
 with the wrong damage, total count or sample length blocks readiness.
+Missing or malformed row records follow the same bounded retry path and end with
+`viewer NOT_READY` if the response remains invalid.
 
 Interpolation acceptance uses the error and threshold already recorded by the
 source manifest. This demonstrates preservation of the source validation claim;
 it does not independently reproduce the underlying physical calculation.
+Boolean error or threshold values are rejected rather than interpreted as numbers.
 
 ## Configurations and registry
 

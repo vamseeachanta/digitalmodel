@@ -59,7 +59,10 @@ def validate_grid(frame, manifest):
         validation.get("passes") is not True
         or validation.get("metric") != "max_rel_error"
         or any(
-            not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0
+            isinstance(v, bool)
+            or not isinstance(v, (int, float))
+            or not math.isfinite(v)
+            or v < 0
             for v in (error, limit)
         )
         or error > limit
@@ -152,11 +155,8 @@ def build_card(entries):
         "Synthetic screening outputs from the existing parametric atlases. "
         "Publication integrity checks do not establish engineering qualification.",
         "",
-        "## Revision history",
-        "",
-        "| Revision | Date | Change and reason |",
-        "| --- | --- | --- |",
-        "| 1 | 2026-10-19 | Add source digests and explicit provenance limits. |",
+        "Publication history is maintained in the repository's "
+        "`docs/hf-atlas-publishing.md`.",
         "",
         "## Data basis",
         "",
@@ -257,15 +257,15 @@ def validate_rows(entry, payload):
     rows = payload.get("rows") or []
     if payload.get("num_rows_total") != len(frame) or len(rows) != min(len(frame), 100):
         raise ValueError("rows count differs from source")
-    actual = pd.DataFrame([row["row"] for row in rows])
     try:
+        actual = pd.DataFrame([row["row"] for row in rows])
         pd.testing.assert_frame_equal(
             actual[frame.columns],
             frame.iloc[: len(actual)].reset_index(drop=True),
             check_dtype=False,
             check_exact=True,
         )
-    except (AssertionError, KeyError) as exc:
+    except (AssertionError, KeyError, TypeError) as exc:
         raise ValueError("rows values differ from source") from exc
 
 
