@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         reason = str(exc) if isinstance(exc, ValueError) else 'required evidence is missing or malformed'
         report, passed = dict(admitted=False, qualified=False, reason=reason), False
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n', encoding='utf-8')
-    print('PASS' if passed else 'FAIL')
+    print('PENDING_THRESHOLD_DECISION' if passed is None else 'PASS' if passed else 'FAIL')
     return 0 if passed else 1
 
 

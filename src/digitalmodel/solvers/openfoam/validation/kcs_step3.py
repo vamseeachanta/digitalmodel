@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import math
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -40,8 +41,27 @@ def validate_policy(policy: dict) -> None:
 
 
 def _thresholds_pending(policy: dict) -> bool:
-    return any('decision' in group and group['decision'] is None
-               for group in policy['threshold_basis'].values())
+    groups = policy.get('threshold_basis')
+    if not isinstance(groups, dict) or not groups:
+        return True
+    for group in groups.values():
+        if not isinstance(group, dict):
+            return True
+        status, decision = group.get('status'), group.get('decision')
+        if status == 'inherited':
+            continue
+        if (not isinstance(status, str) or not status.strip()
+                or status == 'assumed_pending_maintainer_decision'
+                or not isinstance(decision, str)):
+            return True
+        dated, separator, explanation = decision.partition(':')
+        try:
+            recorded_date = date.fromisoformat(dated)
+        except ValueError:
+            return True
+        if recorded_date.isoformat() != dated or not separator or not explanation.strip():
+            return True
+    return False
 
 
 def load_policy(path: Path) -> dict:
@@ -236,8 +256,9 @@ def compare_run(history: Path, metadata: dict, row: dict, policy: dict) -> dict:
     report = compare_rows(rows, metadata, row, policy)
     diagnostics = _diagnostics(metadata, policy, {'values': {'lpp': {'value': row['conditions']['lpp_m']}}})
     report.update(history_sha256=sha, diagnostics=diagnostics)
+    if not diagnostics['passed']:
+        report['comparison_passed'] = False
     if report['comparison_passed'] is not None:
-        report['comparison_passed'] = report['comparison_passed'] and diagnostics['passed']
         report['coarse_smoke_passed'] = bool(report['comparison_passed'] and reference_is_qualified(row)
                                               and metadata['evidence_kind'] == 'native' and metadata['mesh'] == 'coarse')
     return report
@@ -303,7 +324,8 @@ def compare_triplet(histories: list[Path], metadata: list[dict], row: dict, poli
                 if a['free_surface'][key] <= 0 or b['free_surface'][key] <= 0 or not math.isclose(b['free_surface'][key] / a['free_surface'][key], b['h_m'] / a['h_m'], rel_tol=1e-6):
                     raise ValueError('surface spacing is not systematically refined')
         reports = [compare_run(path, meta, row, policy) for path, meta in pairs]
-        if not pending and not all(r['comparison_passed'] for r in reports):
+        if any(r['comparison_passed'] is False for r in reports) or (
+                not pending and not all(r['comparison_passed'] for r in reports)):
             raise ValueError('every grid requires passing comparison and convergence')
         keys = [f'{quantity}_a{n}' for quantity in SIGNALS for n in range(1, 5)] + ['wave_over_lpp_a1']
         limits = {key: policy['gci'][key] for key in

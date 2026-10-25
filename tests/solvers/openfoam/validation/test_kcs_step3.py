@@ -387,7 +387,7 @@ def test_shared_source_edit_invalidates_verified_readback(field):
 
 @pytest.mark.parametrize('command', ['compare', 'triplet'])
 @pytest.mark.parametrize('decisions_recorded', [False, True])
-def test_cli_reads_real_evidence_and_writes_verdict(tmp_path, command, decisions_recorded, monkeypatch):
+def test_cli_reads_real_evidence_and_writes_verdict(tmp_path, command, decisions_recorded, monkeypatch, capsys):
     import importlib.util
     spec = importlib.util.spec_from_file_location('head_wave_cli', ROOT / 'scripts/cfd/readback_kcs_step3.py')
     cli = importlib.util.module_from_spec(spec)
@@ -412,6 +412,7 @@ def test_cli_reads_real_evidence_and_writes_verdict(tmp_path, command, decisions
         metadata_path.write_text(json.dumps(meta))
         args.extend(['--history', str(history), '--metadata', str(metadata_path)])
     assert cli.main(args) == (0 if decisions_recorded else 1)
+    assert capsys.readouterr().out.strip() == ('PASS' if decisions_recorded else 'PENDING_THRESHOLD_DECISION')
     report = json.loads(output.read_text())
     assert report['amplitude_gci_passed' if command == 'triplet' else 'comparison_passed'] is (True if decisions_recorded else None)
     if not decisions_recorded:
@@ -423,6 +424,7 @@ def record_synthetic_decisions(policy, monkeypatch):
     """Model a separate policy revision for analytical controls only."""
     for group in policy['threshold_basis'].values():
         if 'decision' in group:
+            group['status'] = 'recorded'
             group['decision'] = '2000-01-01: synthetic decision for analytical controls only'
     monkeypatch.setattr(qa, 'POLICY_SHA256', qa.digest(policy))
 
@@ -486,3 +488,105 @@ def test_recorded_decisions_restore_file_verdicts_and_admission(tmp_path, monkey
     with pytest.raises(ValueError, match='history'):
         qa.require_run_admission('medium', reference_path, criteria_path, histories[-1],
                                  metadata_path, condition_id='C1')
+
+
+@pytest.mark.parametrize('status,decision', [
+    ('recorded', None),
+    ('recorded', ''),
+    ('recorded', '   '),
+    ('recorded', 'TBD'),
+    ('recorded', 'synthetic decision without a date'),
+    ('recorded', '2000-02-30: invalid calendar date'),
+    ('recorded', '2000-01-01'),
+    ('recorded', '2000-01-01:   '),
+    ('recorded', 1),
+    (None, '2000-01-01: synthetic decision'),
+    ('', '2000-01-01: synthetic decision'),
+    ('assumed_pending_maintainer_decision', '2000-01-01: synthetic decision'),
+])
+def test_incomplete_decisions_keep_comparison_and_admission_pending(
+        status, decision, tmp_path, monkeypatch):
+    rows, meta, condition, policy = inputs()
+    record_synthetic_decisions(policy, monkeypatch)
+    group = policy['threshold_basis']['harmonic_comparison']
+    for key, value in (('status', status), ('decision', decision)):
+        if value is None:
+            group.pop(key)
+        else:
+            group[key] = value
+    monkeypatch.setattr(qa, 'POLICY_SHA256', qa.digest(policy))
+    meta['criteria_sha256'] = qa.digest(policy)
+    report = qa.compare_rows(rows, meta, condition, policy)
+    assert report['comparison_passed'] is None
+    assert report['status'] == 'PENDING_THRESHOLD_DECISION'
+    condition['readback'].update(status='verified', source_sha256='a' * 64)
+    reference = qa.load_reference(FIXTURE)
+    reference['reference_rows'][1] = condition
+    reference_path, criteria_path = tmp_path / 'reference.json', tmp_path / 'criteria.json'
+    reference_path.write_text(json.dumps(reference))
+    criteria_path.write_text(json.dumps(policy))
+    for mesh in ('medium', 'fine'):
+        with pytest.raises(ValueError, match='PENDING_THRESHOLD_DECISION'):
+            qa.require_run_admission(mesh, reference_path, criteria_path, condition_id='C1')
+
+
+@pytest.mark.parametrize('decisions_recorded', [False, True])
+@pytest.mark.parametrize('grid', [0, 1, 2])
+@pytest.mark.parametrize('diagnostic', ['p_rgh', 'U', 'y_plus', 'dx_m', 'dz_m'])
+def test_inherited_diagnostic_failures_block_comparison_and_triplet(
+        tmp_path, decisions_recorded, grid, diagnostic, monkeypatch):
+    _, _, condition, policy = inputs()
+    if decisions_recorded:
+        record_synthetic_decisions(policy, monkeypatch)
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
+    meta = metadata[grid]
+    if diagnostic in ('p_rgh', 'U'):
+        meta['residuals'][diagnostic] = 2 * policy['residual_limits'][diagnostic]
+    elif diagnostic == 'y_plus':
+        meta['y_plus']['max'] = 2 * policy['mesh_limits']['maximum_y_plus']
+    else:
+        limit = policy['mesh_limits']['maximum_d' + diagnostic[1] + '_over_lpp']
+        meta['free_surface'][diagnostic] = 2 * limit * condition['conditions']['lpp_m']
+    report = qa.compare_run(histories[grid], meta, condition, policy)
+    assert report['diagnostics']['passed'] is False
+    assert report['comparison_passed'] is False
+    assert report['coarse_smoke_passed'] is False
+    if not decisions_recorded:
+        assert report['status'] == 'PENDING_THRESHOLD_DECISION'
+        assert report['history_fit']['passed'] is None
+        assert all(q['passed'] is None for q in report['quantities'].values())
+    # Keep refinement systematic so the grid verdict is the failing prerequisite.
+    for item in metadata:
+        for key in ('dx_m', 'dz_m'):
+            item['free_surface'][key] = meta['free_surface'][key] * item['h_m'] / meta['h_m']
+    with pytest.raises(ValueError, match='every grid requires passing comparison and convergence'):
+        qa.compare_triplet(histories, metadata, condition, policy)
+
+
+@pytest.mark.parametrize('command', ['compare', 'triplet'])
+def test_cli_prints_fail_for_inherited_failure_while_thresholds_pending(tmp_path, command, capsys):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('head_wave_cli', ROOT / 'scripts/cfd/readback_kcs_step3.py')
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    _, _, condition, policy = inputs()
+    histories, metadata = analytic_triplet(tmp_path, condition, policy, 'nonmonotone')
+    metadata[0]['residuals']['U'] = 2 * policy['residual_limits']['U']
+    reference = qa.load_reference(FIXTURE)
+    reference['reference_rows'][1] = condition
+    reference_path, output = tmp_path / 'reference.json', tmp_path / 'report.json'
+    reference_path.write_text(json.dumps(reference))
+    args = [command, '--condition', 'C1', '--reference', str(reference_path),
+            '--criteria', str(POLICY), '--output', str(output)]
+    count = 3 if command == 'triplet' else 1
+    for history, meta in zip(histories[:count], metadata[:count]):
+        metadata_path = tmp_path / f'{meta["mesh"]}.json'
+        metadata_path.write_text(json.dumps(meta))
+        args.extend(['--history', str(history), '--metadata', str(metadata_path)])
+    assert cli.main(args) == 1
+    assert capsys.readouterr().out.strip() == 'FAIL'
+    report = json.loads(output.read_text())
+    if command == 'compare':
+        assert report['comparison_passed'] is False
+    else:
+        assert 'every grid requires passing comparison and convergence' in report['reason']

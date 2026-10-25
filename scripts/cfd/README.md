@@ -261,11 +261,19 @@ free-surface checks reuse step 1's observed-diagnostics routine and declared
 limits. These checks do not establish wave-resolution adequacy or reflection
 uncertainty for a future production campaign.
 
-Until every provisional group's `decision` is recorded in a reviewed policy
-revision, reports carry `status: PENDING_THRESHOLD_DECISION`. Quantity, fit,
-comparison, coarse-smoke and amplitude-GCI verdicts are `null`; computed values,
-errors, drift and GCI estimates remain available as diagnostics. The comparison
-and triplet CLI commands return a nonzero exit status for pending verdicts.
+Until every provisional group's `status` leaves
+`assumed_pending_maintainer_decision` and its `decision` records a valid calendar
+date and nonempty explanation (`YYYY-MM-DD: explanation`) in a reviewed policy
+revision, reports carry `status: PENDING_THRESHOLD_DECISION`. Missing status or
+decision fields, blank values and placeholders remain pending. Groups with
+`status: inherited` do not require a new decision record. Quantity, fit and
+amplitude-GCI verdicts remain `null`; computed values, errors, drift and GCI
+estimates remain available as diagnostics. Comparison and coarse-smoke verdicts
+also remain `null` when inherited diagnostics pass. An inherited residual, y+ or
+free-surface limit failure sets both verdicts to `false` even while thresholds
+are pending, and any failed grid refuses triplet GCI. The comparison and triplet
+CLI commands print `PENDING_THRESHOLD_DECISION` for a pending verdict, `FAIL`
+for a definitive failure, and return a nonzero exit status for either.
 
 At the fourth retained harmonic, 32 samples per encounter cycle give 8 samples
 per harmonic period, above the Nyquist minimum of 2. This does not derive the
