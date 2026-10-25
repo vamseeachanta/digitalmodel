@@ -17,6 +17,7 @@ import io
 import json
 import os
 from pathlib import Path
+import stat
 import tokenize
 
 # Orcina, OrcFxAPI Python reference, Model: Construction and threadCount,
@@ -41,14 +42,38 @@ _SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
 _POOLS = {"ProcessPoolExecutor", "ThreadPoolExecutor", "Pool"}
 
 
-def _local_calls(scope: ast.AST):
-    """Yield calls in one lexical scope, excluding nested definitions."""
-    for child in ast.iter_child_nodes(scope):
-        if isinstance(child, _SCOPES):
+def _definition_parts(
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda,
+) -> tuple[list[ast.AST], list[ast.AST]]:
+    """Separate enclosing-scope expressions from a definition's child body."""
+    enclosing = []
+    for field, value in ast.iter_fields(node):
+        if field == "body":
             continue
-        if isinstance(child, ast.Call):
-            yield child
-        yield from _local_calls(child)
+        if isinstance(value, ast.AST):
+            enclosing.append(value)
+        elif isinstance(value, list):
+            enclosing.extend(child for child in value if isinstance(child, ast.AST))
+    body = node.body
+    return enclosing, list(body) if isinstance(body, list) else [body]
+
+
+def _local_calls(scope: ast.AST):
+    """Yield calls in this scope, including nested definition expressions."""
+
+    def walk(node):
+        if isinstance(node, _SCOPES):
+            children, _ = _definition_parts(node)
+        else:
+            if isinstance(node, ast.Call):
+                yield node
+            children = ast.iter_child_nodes(node)
+        for child in children:
+            yield from walk(child)
+
+    nodes = _definition_parts(scope)[1] if isinstance(scope, _SCOPES) else [scope]
+    for node in nodes:
+        yield from walk(node)
 
 
 def _argument(call: ast.Call, name: str, position: int) -> ast.AST | None:
@@ -112,9 +137,13 @@ class _Inventory(ast.NodeVisitor):
         }
 
     def visit_FunctionDef(self, node):
-        """Enter a definition without attributing its calls to the parent."""
+        """Visit definition expressions in the parent, then enter the body."""
+        enclosing, body = _definition_parts(node)
+        for expression in enclosing:
+            self.visit(expression)
         self.scopes.append(node)
-        self.generic_visit(node)
+        for child in body:
+            self.visit(child)
         self.scopes.pop()
 
     visit_AsyncFunctionDef = visit_FunctionDef
@@ -187,6 +216,9 @@ def _audit_file(path: Path, root: Path, report: dict):
     """Read and hash one source file, preserving failures in the inventory."""
     relative = path.relative_to(root).as_posix()
     try:
+        if not stat.S_ISREG(path.lstat().st_mode):
+            report["errors"].append({"path": relative, "type": "UnsupportedFileType"})
+            return
         data = path.read_bytes()
         encoding, _ = tokenize.detect_encoding(io.BytesIO(data).readline)
         rows = audit_source(data.decode(encoding), relative)
@@ -202,7 +234,7 @@ def audit_tree(root: Path) -> dict:
     """Audit regular Python files with coverage, digests and explicit errors.
 
     Paths are relative to the selected directory. Symbolic links are excluded.
-    Parse/read errors remain errors, rather than implying complete coverage.
+    Unsupported file types and parse/read failures remain explicit errors.
     """
     root = Path(root)
     if root.is_symlink() or not root.is_dir():

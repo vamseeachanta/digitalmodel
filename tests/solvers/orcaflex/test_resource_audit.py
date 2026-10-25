@@ -3,6 +3,7 @@
 """Source-only resource audit tests; fixtures are synthetic Python snippets."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -88,6 +89,103 @@ def test_scope_evidence_separates_operations_and_nested_functions():
         ["conversion"],
         ["simulation"],
     ]
+
+
+@pytest.mark.parametrize(
+    "definition,body_scope",
+    [
+        (
+            "def extract(m=api.Model(), ready=model.RunSimulation()):\n"
+            "    m.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "extract",
+        ),
+        (
+            "async def extract(*, m=api.Model(), ready=model.RunSimulation()):\n"
+            "    m.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "extract",
+        ),
+        (
+            "@decorate(api.Model(), model.RunSimulation())\n"
+            "def extract():\n"
+            "    model.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "extract",
+        ),
+        (
+            "extract = lambda m=api.Model(), ready=model.RunSimulation(): "
+            "(m.TimeHistory('X'), api.Model())\n",
+            "<lambda>",
+        ),
+        (
+            "@decorate(api.Model(), model.RunSimulation())\n"
+            "class Extract:\n"
+            "    model.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "Extract",
+        ),
+        (
+            "class Extract(base(api.Model(), model.RunSimulation())):\n"
+            "    model.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "Extract",
+        ),
+        (
+            "def extract(m: annotate(api.Model(), model.RunSimulation())):\n"
+            "    m.TimeHistory('X')\n"
+            "    api.Model()\n",
+            "extract",
+        ),
+    ],
+)
+@pytest.mark.parametrize("nested", [False, True])
+def test_definition_expressions_belong_to_enclosing_scope(
+    definition, body_scope, nested
+):
+    """Definition expressions and body calls share identical inventory boundaries."""
+    source = "model = api.Model()\n" + definition
+    parent_scope = "<module>"
+    if nested:
+        source = "def outer():\n" + "".join(
+            "    " + line for line in source.splitlines(keepends=True)
+        )
+        parent_scope = "outer"
+        body_scope = "outer." + body_scope
+    rows = audit_source(source, "example.py")
+    assert len(rows) == 3
+    assert [row["scope"] for row in rows] == [
+        parent_scope,
+        parent_scope,
+        body_scope,
+    ]
+    assert [row["scope_operations"] for row in rows] == [
+        ["simulation"],
+        ["simulation"],
+        ["extraction"],
+    ]
+
+
+def test_tree_rejects_fifo_without_waiting_for_a_writer(tmp_path):
+    """A Python-suffixed FIFO is reported without opening its blocking stream."""
+    os.mkfifo(tmp_path / "stream.py")
+    script = (
+        Path(__file__).resolve().parents[3]
+        / "src/digitalmodel/solvers/orcaflex/resource_audit.py"
+    )
+    result = subprocess.run(
+        [sys.executable, str(script), str(tmp_path)],
+        capture_output=True,
+        text=True,
+        timeout=3,
+        check=False,
+    )
+    assert result.returncode == 1, result.stderr
+    report = json.loads(result.stdout)
+    assert report["errors"] == [{"path": "stream.py", "type": "UnsupportedFileType"}]
+    assert report["files_scanned"] == []
+    assert report["source_sha256"] == {}
+    assert report["findings"] == []
 
 
 def test_worker_declarations_are_not_associated_with_models():
