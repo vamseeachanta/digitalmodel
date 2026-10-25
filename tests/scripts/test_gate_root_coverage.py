@@ -14,7 +14,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-GATES = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text())["gates"]
+GATES = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
 SHARDS = {name: gate for name, gate in GATES.items() if gate.get("domain")}
 spec = importlib.util.spec_from_file_location("domain_gate", ROOT / "scripts/ci/domain_gate.py")
 gate = importlib.util.module_from_spec(spec)
@@ -59,8 +59,10 @@ def pytest_paths(command, root=ROOT):
 
 def covers(path, command):
     roots, ignored = pytest_paths(command)
-    return any(path == root or root in path.parents for root in roots) and not any(
-        path == root or root in path.parents for root in ignored
+    return path in roots or (
+        any(root in path.parents for root in roots) and not any(
+            path == root or root in path.parents for root in ignored
+        )
     )
 
 
@@ -73,12 +75,16 @@ def unassigned_files(files, commands, exceptions=()):
 def test_declared_test_roots_are_executed():
     """Existing routed tests need matching pytest arguments, not metadata alone."""
     missing = []
-    for line in (ROOT / "tests/DOMAINS.md").read_text().splitlines():
+    held = gate.read_policy(ROOT)["held"]
+    for line in (ROOT / "tests/DOMAINS.md").read_text(encoding="utf-8").splitlines():
         cells = line.split("|")
         if len(cells) < 4 or (name := "tests-" + cells[1].strip()) not in SHARDS:
             continue
         roots, _ = pytest_paths(gate.command_for(name, ROOT))
         for root in re.findall(r"`(tests/[^`]+)`", cells[2]):
+            if root in held and held[root]["gate"] == name:
+                assert Path(root) not in roots, "Held explicit files must leave PR selections"
+                continue
             if (ROOT / root).exists() and root.endswith(("/", ".py")) and Path(root) not in roots:
                 missing.append(f"{name}: {root}")
     assert not missing, f"{len(missing)} missing root assignments:\n" + "\n".join(missing)
@@ -133,6 +139,9 @@ def test_cathodic_files_are_assigned_exactly_once():
         ("tests/a/test_one.py", "--ignore=tests/a/test_one.py tests/a/", False),
         ("tests/a/test_one.py", "tests/a/test_one.py::test_one", False),
         ("tests/a/test_one.py", "tests/a/test_one.py", True),
+        ("tests/a/test_one.py", "tests/a/test_one.py --ignore=tests/a/test_one.py", True),
+        ("tests/a/test_one.py", "tests/a/test_one.py --ignore=tests/a/", True),
+        ("tests/a/test_one.py", "tests/a/ tests/a/test_one.py --ignore=tests/a/test_one.py", True),
     ],
 )
 def test_execution_path_matching(path, arguments, expected):
@@ -142,8 +151,8 @@ def test_execution_path_matching(path, arguments, expected):
 def test_pytest_paths_expands_shell_globs(tmp_path):
     directory = tmp_path / "tests" / "module"
     directory.mkdir(parents=True)
-    (directory / "test_one.py").write_text("")
-    (directory / "helper.py").write_text("")
+    (directory / "test_one.py").write_text("", encoding="utf-8", newline="\n")
+    (directory / "helper.py").write_text("", encoding="utf-8", newline="\n")
     roots, _ = pytest_paths("python -m pytest tests/module/test_*.py", root=tmp_path)
     assert roots == [Path("tests/module/test_one.py")]
 
@@ -184,6 +193,6 @@ def test_pytest_configuration_does_not_hide_test_selections():
     import configparser
 
     config = configparser.ConfigParser(interpolation=None)
-    config.read(ROOT / "pytest.ini")
+    config.read(ROOT / "pytest.ini", encoding="utf-8")
     assert config["pytest"]["python_files"].split() == ["test_*.py", "*_test.py"]
     pytest_paths("python -m pytest tests/ " + config["pytest"]["addopts"])

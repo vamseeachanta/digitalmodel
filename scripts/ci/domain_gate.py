@@ -9,6 +9,7 @@ import ast
 import configparser
 import json
 import re
+import shlex
 import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
@@ -81,7 +82,7 @@ def validate_shrink_only(current: dict, trusted: dict) -> None:
 
 def read_policy(root: Path) -> dict:
     """Read a narrow exception registry; never accept directories or wildcards."""
-    policy = json.loads((root / POLICY).read_text())
+    policy = json.loads((root / POLICY).read_text(encoding="utf-8"))
     if set(policy) != {"held", "collection"}:
         raise ValueError("Expected held and collection exception maps")
     for entries in policy.values():
@@ -102,12 +103,12 @@ def check_trusted_policy(root: Path, ref: str) -> None:
     # A missing file is permitted only for the registry's first introduction.
     listing = subprocess.run(
         ["git", "ls-tree", "--name-only", ref, "--", POLICY], cwd=root,
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, encoding="utf-8",
     )
     if listing.stdout.strip():
         previous = subprocess.run(
             ["git", "show", f"{ref}:{POLICY}"], cwd=root,
-            check=True, capture_output=True, text=True,
+            check=True, capture_output=True, text=True, encoding="utf-8",
         )
         validate_shrink_only(read_policy(root), json.loads(previous.stdout))
 
@@ -117,7 +118,7 @@ def collection_exclusions(root: Path) -> set[str]:
     files = test_files(root)
     excluded = set()
     config = configparser.ConfigParser(interpolation=None)
-    config.read(root / "pytest.ini")
+    config.read(root / "pytest.ini", encoding="utf-8")
     patterns = config["pytest"]["norecursedirs"].split()
     for path in files:
         for directory in Path(path).parents:
@@ -126,7 +127,7 @@ def collection_exclusions(root: Path) -> set[str]:
                    for pattern in patterns):
                 excluded.add(path)
     for conftest in [root / "conftest.py", *(root / "tests").rglob("conftest.py")]:
-        tree = ast.parse(conftest.read_text())
+        tree = ast.parse(conftest.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if ((isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                  and node.name == "pytest_ignore_collect")
@@ -135,14 +136,14 @@ def collection_exclusions(root: Path) -> set[str]:
                 or (isinstance(node, (ast.AugAssign, ast.AnnAssign))
                     and isinstance(node.target, ast.Name)
                     and node.target.id in {"collect_ignore", "collect_ignore_glob"})):
-                raise ValueError(f"Unsupported dynamic collection exclusion: {conftest.relative_to(root)}")
+                raise ValueError(f"Unsupported dynamic collection exclusion: {conftest.relative_to(root).as_posix()}")
             if not isinstance(node, ast.Assign):
                 continue
             targets = {target.id for target in node.targets if isinstance(target, ast.Name)}
             if not targets & {"collect_ignore", "collect_ignore_glob"}:
                 continue
             if not isinstance(node.value, (ast.List, ast.Tuple)):
-                raise ValueError(f"Non-declarative collection exclusions: {conftest.relative_to(root)}")
+                raise ValueError(f"Non-declarative collection exclusions: {conftest.relative_to(root).as_posix()}")
             for item in node.value.elts:
                 if isinstance(item, ast.Constant) and isinstance(item.value, str):
                     value = item.value
@@ -156,7 +157,7 @@ def collection_exclusions(root: Path) -> set[str]:
                       and isinstance(item.args[0].right.value, str)):
                     value = item.args[0].right.value
                 else:
-                    raise ValueError(f"Unsupported collection exclusion: {conftest.relative_to(root)}")
+                    raise ValueError(f"Unsupported collection exclusion: {conftest.relative_to(root).as_posix()}")
                 relative = (conftest.parent / value).relative_to(root).as_posix()
                 excluded.update(path for path in files if
                                 (fnmatch(path, relative) if "collect_ignore_glob" in targets else
@@ -166,13 +167,27 @@ def collection_exclusions(root: Path) -> set[str]:
 
 def command_for(name: str, root: Path, sweep: bool = False) -> str:
     """Build the actual PR or sweep command, preserving all other gate options."""
-    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
     command = gates[name]["command"]
     additions = [path for path in ADDITIONAL_ROOTS.get(name, ()) if (root / path).exists()]
     ignored = list(OWNERSHIP_IGNORES.get(name, ()))
     if not sweep:
         policy = read_policy(root)
-        ignored.extend(path for path, entry in policy["held"].items() if entry["gate"] == name)
+        held = {path for path, entry in policy["held"].items() if entry["gate"] == name}
+        # Pytest collects explicitly selected files even when --ignore names them.
+        if held:
+            lexer = shlex.shlex(command, posix=True)
+            lexer.whitespace_split = True
+            lexer.commenters = ""
+            kept, end = [], 0
+            for token in lexer:
+                start, end = end, lexer.instream.tell()
+                if token not in held:
+                    # Keep shell quoting and unquoted globs exactly as authored.
+                    kept.append(command[start:end])
+            command = "".join(kept)
+        additions = [path for path in additions if path not in held]
+        ignored.extend(held)
     return " ".join([command, *additions, *(f"--ignore={path}" for path in sorted(ignored))])
 
 
