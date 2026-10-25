@@ -166,6 +166,9 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Run security-lint contracts with the pinned hook's scanner and import helper.
+    "bandit==1.7.5",
+    "pbr>=2.0.0",
     "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",

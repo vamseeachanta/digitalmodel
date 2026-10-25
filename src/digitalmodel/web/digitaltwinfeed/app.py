@@ -121,7 +121,7 @@ def blog():
 
 
 if __name__ == '__main__':
-    # Flask 3.1 Flask.run API: explicit loopback and disabled interactive debug.
+    # Flask 3.1.2 Flask.run API: explicit loopback and disabled interactive debug.
     # https://flask.palletsprojects.com/en/3.1.x/api/#flask.Flask.run
     app.run(host="127.0.0.1", debug=False)
 else:

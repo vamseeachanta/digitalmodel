@@ -45,8 +45,8 @@ def read_yaml(path):
     if any(isinstance(t, (AliasToken, AnchorToken)) for t in yaml.scan(raw)):
         raise BhaDatabaseError(f'{path.name}: YAML aliases/anchors refused')
     # UniqueLoader retains SafeLoader's constructors and rejects duplicate keys.
-    # Use PyYAML 6.0.2 load's lifecycle explicitly; never use an unsafe loader.
-    # https://github.com/yaml/pyyaml/blob/6.0.2/lib/yaml/__init__.py#L74-L81
+    # Use PyYAML 6.0.1 load's lifecycle explicitly; never use an unsafe loader.
+    # https://github.com/yaml/pyyaml/blob/6.0.1/lib/yaml/__init__.py#L74-L83
     loader = UniqueLoader(raw)
     try:
         return raw, loader.get_single_data()

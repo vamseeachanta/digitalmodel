@@ -1,6 +1,6 @@
 """Exercise the script entry point without loading blueprints or opening a socket.
 
-Expected settings follow Flask 3.1 Flask.run API: explicit debug=False disables
+Expected settings follow Flask 3.1.2 Flask.run API: explicit debug=False disables
 both debugger and reloader; the documented local-only address is 127.0.0.1.
 https://flask.palletsprojects.com/en/3.1.x/api/#flask.Flask.run
 """

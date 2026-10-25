@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-# Bandit is a dev extra, not a runtime/test-extra dependency. Report missing
-# lint tooling as a skip in minimal environments rather than breaking collection.
+# The test extra supplies Bandit and pbr. Minimal environments without the test
+# extra report missing lint tooling as a skip rather than breaking collection.
 BanditConfig = pytest.importorskip(
     "bandit.core.config", reason="Security-lint contracts require Bandit and pbr",
 ).BanditConfig

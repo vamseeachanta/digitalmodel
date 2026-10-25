@@ -1,9 +1,9 @@
 """Custom SafeLoader boundary contracts, using synthetic YAML grammar examples.
 
-PyYAML 6.0.2 SafeLoader constructs standard YAML values, rejects Python tags,
+PyYAML 6.0.1 SafeLoader constructs standard YAML values, rejects Python tags,
 and get_single_data rejects multiple documents. Duplicate keys and anchors are
 additionally refused by the catalogue's existing contract.
-https://github.com/yaml/pyyaml/blob/6.0.2/lib/yaml/__init__.py
+https://github.com/yaml/pyyaml/blob/6.0.1/lib/yaml/__init__.py
 """
 import pytest
 import yaml
