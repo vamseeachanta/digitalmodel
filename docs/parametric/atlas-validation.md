@@ -13,6 +13,7 @@ This is a metadata contract, not independent verification of the measurement.
 |---|---|---|
 | 1 | 2026-10-20 | Distinguish unavailable validation from measured zero and reject incomplete or nonfinite sweep grids. |
 | 2 | 2026-10-22 | Gate dynamic amplification on validation, restore coverage assertions, and regenerate manifest summaries and the static operability cache. |
+| 3 | 2026-10-25 | Exclude dynamically escalated cells from allowable verdicts and the operable fraction in drilling and hang-off modes. |
 
 `Atlas.max_rel_error` and `local_error` return NaN when validation is unavailable.
 `save` writes a null manifest error and `status: unavailable`; loading preserves
@@ -83,7 +84,7 @@ static and does not start a licensed solver.
 
 | Caller | Validation policy |
 |---|---|
-| `drilling_riser/envelope.py`, dynamic amplification | Requires available validation and geometric coverage; otherwise von Mises becomes NaN and the point is counted in `escalated_points`. |
+| `drilling_riser/envelope.py`, dynamic amplification | Requires available validation, geometric coverage and a finite prediction; otherwise von Mises becomes NaN, the point is counted in `escalated_points`, and its allowable verdict is false. Escalated cells do not contribute to the operable fraction; validated cells retain their verdicts independently. |
 | `mooring_resilience/screening.py`, `intact_tension_kN` | Uses geometric prediction from the computed tension atlas; does not produce a confidence band or independently qualify validation. |
 | `mooring_resilience/screening.py`, `foundation_capacity_kN` | Uses geometric prediction from the computed capacity atlas; does not produce a confidence band or independently qualify validation. |
 

@@ -383,7 +383,8 @@ def test_flexjoint_governing_min_uses_hardware_rating():
 @pytest.mark.parametrize("validation", [None, {}, {
     "status": "unavailable", "max_rel_error": 0.0,
 }])
-def test_dynamic_unavailable_validation_escalates_every_point(monkeypatch, validation):
+@pytest.mark.parametrize("mode", [OperatingMode.DRILLING, OperatingMode.HANG_OFF])
+def test_dynamic_unavailable_validation_escalates_every_point(monkeypatch, validation, mode):
     from digitalmodel.parametric.atlas import Atlas
     from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
 
@@ -392,7 +393,54 @@ def test_dynamic_unavailable_validation_escalates_every_point(monkeypatch, valid
         atlas.validation = validation
     assert not atlas.validation_available
     monkeypatch.setattr(Atlas, "load", lambda *args, **kwargs: atlas)
-    dyn = _env([2.0, 4.0], [0.5, 1.0],
-               [SeaState(3.0, 12.0), SeaState(5.0, 12.0)], dynamic=True)
+    dyn = _env([0.0, 0.5], [0.0, 0.2],
+               [SeaState(3.0, 12.0), SeaState(5.0, 12.0)], dynamic=True, mode=mode)
     assert np.isnan(dyn.per_limit_utilisation["von_mises"]).all()
     assert dyn.dynamic_provenance["escalated_points"] == 8
+    assert not dyn.allowable_mask.any()
+    assert dyn.operable_fraction == 0.0
+
+
+@pytest.mark.parametrize("mode", [OperatingMode.DRILLING, OperatingMode.HANG_OFF])
+def test_dynamic_missing_validation_cannot_clear_failed_stress(validated_dynamic_atlas, mode):
+    inputs = dict(_BASE, tension_n=30.0e6)
+    common = dict(
+        offsets_pct=[2.0], current_speeds_mps=[1.0],
+        seastates=[SeaState(3.0, 12.0)], dynamic=True, mode=mode,
+    )
+    validated = compute_operating_envelope(**inputs, **common)
+    assert validated.per_limit_utilisation["von_mises"][0, 0, 0] > 1.0
+    assert not validated.allowable_mask.any()
+    validated_dynamic_atlas.validation = {}
+    unavailable = compute_operating_envelope(**inputs, **common)
+    assert np.isnan(unavailable.per_limit_utilisation["von_mises"]).all()
+    assert unavailable.dynamic_provenance["escalated_points"] == 1
+    assert not unavailable.allowable_mask.any()
+    assert unavailable.operable_fraction == 0.0
+
+
+@pytest.mark.parametrize("mode", [OperatingMode.DRILLING, OperatingMode.HANG_OFF])
+def test_dynamic_escalation_excludes_only_uncovered_cells(validated_dynamic_atlas, mode):
+    dyn = _env(
+        [0.5], [0.2], [SeaState(3.0, 12.0), SeaState(3.0, 99.0)],
+        dynamic=True, mode=mode,
+    )
+    assert np.isfinite(dyn.per_limit_utilisation["von_mises"][0, 0, 0])
+    assert np.isnan(dyn.per_limit_utilisation["von_mises"][0, 0, 1])
+    assert dyn.dynamic_provenance["escalated_points"] == 1
+    assert dyn.allowable_mask.tolist() == [[[True, False]]]
+    # One of the two equally weighted cells has complete validation and coverage.
+    assert dyn.operable_fraction == 0.5
+
+
+@pytest.mark.parametrize("mode", [OperatingMode.DRILLING, OperatingMode.HANG_OFF])
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
+def test_dynamic_nonfinite_prediction_escalates(validated_dynamic_atlas, monkeypatch, mode, value):
+    from digitalmodel.parametric.atlas import Prediction
+
+    monkeypatch.setattr(validated_dynamic_atlas, "predict", lambda point: Prediction(value, True))
+    dyn = _env([0.5], [0.2], [SeaState(3.0, 12.0)], dynamic=True, mode=mode)
+    assert np.isnan(dyn.per_limit_utilisation["von_mises"]).all()
+    assert dyn.dynamic_provenance["escalated_points"] == 1
+    assert not dyn.allowable_mask.any()
+    assert dyn.operable_fraction == 0.0

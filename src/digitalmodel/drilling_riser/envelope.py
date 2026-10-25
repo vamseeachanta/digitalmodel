@@ -186,7 +186,7 @@ class EnvelopeResult:
     ``per_limit_utilisation`` maps a limit name to an array of shape
     ``(n_offset, n_current, n_seastate)``; NaN marks a limit with no data
     (excluded from governing/allowable). ``allowable_mask`` is True where every
-    evaluated limit is within its allowable.
+    evaluated limit is within its allowable and no dynamic check is escalated.
     """
 
     mode: OperatingMode
@@ -301,7 +301,8 @@ def compute_operating_envelope(
     run populates it), and ``EnvelopeResult.dynamic_provenance`` is populated
     with the solver marker + disclaimer. Unavailable validation or a point
     outside the atlas coverage ESCALATES (its von Mises → NaN), never
-    extrapolates. ``dynamic=False``
+    extrapolates. Nonfinite predictions also escalate. Escalated points are
+    excluded from the allowable region and operable fraction. ``dynamic=False``
     (default) is the pure C1 static path, byte-for-byte unchanged.
     """
     rig_limits = rig_limits or RigEnvelopeLimits()
@@ -316,6 +317,7 @@ def compute_operating_envelope(
     currents = np.asarray(current_speeds_mps, dtype=float)
     seas = tuple(seastates)
     shape = (offsets.size, currents.size, len(seas))
+    dyn_escalation_mask = np.zeros(shape, dtype=bool)
 
     util = {
         k: np.full(shape, np.nan)
@@ -383,12 +385,17 @@ def compute_operating_envelope(
                             "tp_s": sea.tp_s,
                         }
                     )
-                    if dyn_atlas.validation_available and pred.in_range:
+                    if (
+                        dyn_atlas.validation_available
+                        and pred.in_range
+                        and np.isfinite(pred.value)
+                    ):
                         util["von_mises"][i, j, k] = vm * pred.value
                     else:
                         util["von_mises"][
                             i, j, k
                         ] = np.nan  # escalate, never extrapolate
+                        dyn_escalation_mask[i, j, k] = True
                         dyn_escalated += 1
                 heave = rao_heave_m_per_m * sea.hs_m
                 stroke_avail = rig_limits.tj_stroke_m or rig_limits.tensioner_stroke_m
@@ -417,7 +424,7 @@ def compute_operating_envelope(
         governing = np.array(stacked_names, dtype=object)[gov_idx]
         allowable = (
             np.nanmax(np.where(np.isnan(stacked), -np.inf, stacked), axis=-1) <= 1.0
-        )
+        ) & ~dyn_escalation_mask
 
     dynamic_provenance = None
     if dyn_atlas is not None:
