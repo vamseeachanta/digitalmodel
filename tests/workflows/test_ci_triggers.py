@@ -4,6 +4,7 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import json
 import os
 import re
 import subprocess
@@ -63,23 +64,44 @@ def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
 
 
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
-    """Evaluate the small Actions expression subset used by concurrency."""
+    """Evaluate the bounded Actions subset used by concurrency and routing.
+
+    Split only at top level so quoted JSON and parenthesized trust guards
+    retain Actions operator precedence and short-circuit evaluation.
+    """
     expression = expression.strip()
-    for operator in (" || ", " && ", " == "):
-        if operator in expression:
-            left, right = expression.split(operator, 1)
-            value = evaluate_expression(left, context)
-            if operator == " || ":
-                return value or evaluate_expression(right, context)
-            if operator == " && ":
-                return value and evaluate_expression(right, context)
-            return value == evaluate_expression(right, context)
+    for operator in (" || ", " && ", " == ", " != "):
+        depth = 0
+        for match in re.finditer(r"'[^']*'|[()]| \|\| | && | == | != ", expression):
+            token = match[0]
+            if token == "(":
+                depth += 1
+            elif token == ")":
+                depth -= 1
+            elif depth == 0 and token == operator:
+                left, right = expression[:match.start()], expression[match.end():]
+                value = evaluate_expression(left, context)
+                if operator == " || ":
+                    return value or evaluate_expression(right, context)
+                if operator == " && ":
+                    return value and evaluate_expression(right, context)
+                other = evaluate_expression(right, context)
+                if isinstance(value, str) and isinstance(other, str):
+                    value, other = value.casefold(), other.casefold()
+                return (value == other) if operator == " == " else (value != other)
+    if expression.startswith("(") and expression.endswith(")"):
+        return evaluate_expression(expression[1:-1], context)
+    decoded = re.fullmatch(r"fromJSON\((.*)\)", expression)
+    if decoded:
+        return json.loads(evaluate_expression(decoded[1], context))
     formatted = re.fullmatch(r"format\('([^']+)', (github\.[\w.]+)\)", expression)
     if formatted:
         template, variable = formatted.groups()
         return template.format(context[variable])
     if expression.startswith("'") and expression.endswith("'"):
         return expression[1:-1]
+    if expression == "always()":
+        return True
     return context[expression]
 
 
@@ -515,3 +537,130 @@ def test_repo_structure_cancels_superseded_runs(
     )
     assert group == expected
     assert concurrency["cancel-in-progress"] is True
+
+
+ROUTED_JOBS = (
+    ("quality-gates.yml", "quality-gates-aggregate"),
+    ("quality-gates.yml", "quality-gates"),
+    ("quality-gates-by-domain.yml", "detect-domains"),
+    ("quality-gates-by-domain.yml", "ci-harness-tests"),
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("quality-gates-by-domain.yml", "domain-tests-required"),
+)
+RUNNER_SETTINGS = (
+    None, "", "unknown", '"unknown"', '"ubuntu-latest"',
+    '["self-hosted","Linux","ARM64"]', "linux-arm64", "LiNuX-ArM64",
+)
+TRUST_CASES = (
+    ("pull_request", "base/repo", True),
+    ("pull_request", "fork/repo", False),
+    ("push", "", True),
+    ("workflow_dispatch", "", True),
+)
+
+
+def runner_context(event: str, head: str, setting: str | None) -> dict[str, Any]:
+    """Use synthetic repositories and the documented hosted default."""
+    context = {
+        "github.repository": "base/repo",
+        "github.event_name": event,
+        "github.event.pull_request.head.repo.full_name": head,
+        "matrix.domain": "subsea",
+        "matrix.runner": "ubuntu-latest",
+    }
+    if setting is not None:
+        context["vars.PR_GATE_RUNNER"] = setting
+    return context
+
+
+def selected_runner(filename: str, job_id: str, context: dict[str, Any]) -> Any:
+    """Evaluate the actual job-level selection, including fork isolation."""
+    expression = load_workflow(filename)["jobs"][job_id]["runs-on"]
+    assert expression.startswith("${{") and expression.endswith("}}")
+    # Actions resolves an unset configuration variable to an empty string.
+    return evaluate_expression(expression[3:-2], {"vars.PR_GATE_RUNNER": "", **context})
+
+
+@pytest.mark.parametrize("filename,job_id", ROUTED_JOBS)
+@pytest.mark.parametrize("setting", RUNNER_SETTINGS)
+@pytest.mark.parametrize("event,head,trusted", TRUST_CASES)
+def test_runner_selection_uses_only_trusted_allowlisted_overrides(
+    filename: str, job_id: str, setting: str | None,
+    event: str, head: str, trusted: bool,
+) -> None:
+    """Unknown values stay hosted; forks never receive self-hosted labels."""
+    expected = "ubuntu-latest"
+    if trusted and setting in ("linux-arm64", "LiNuX-ArM64"):
+        expected = ["self-hosted", "Linux", "ARM64"]
+    assert selected_runner(filename, job_id, runner_context(event, head, setting)) == expected
+    # Routing must not replace an executed check with a skipped job.
+    condition = load_workflow(filename)["jobs"][job_id].get("if", "")
+    assert "head.repo" not in condition and "PR_GATE_RUNNER" not in condition
+
+
+@pytest.mark.parametrize("domain", ("solver-smoke", "specialized"))
+@pytest.mark.parametrize("setting", (None, "", "unknown", "linux-arm64"))
+@pytest.mark.parametrize("event,head", (("pull_request", "base/repo"), ("push", "")))
+def test_gmsh_exceptions_keep_original_matrix_runner(
+    domain: str, setting: str | None, event: str, head: str,
+) -> None:
+    """Both Gmsh shards retain their original hosted runner independently."""
+    context = runner_context(event, head, setting)
+    context.update({"matrix.domain": domain, "matrix.runner": "ubuntu-22.04"})
+    assert selected_runner("quality-gates-by-domain.yml", "domain-tests", context) == "ubuntu-22.04"
+
+
+@pytest.mark.parametrize("domain", ("subsea", "solver-smoke", "specialized"))
+@pytest.mark.parametrize("runner", ("self-hosted", ["self-hosted", "Linux", "ARM64"]))
+@pytest.mark.parametrize("setting", (None, "linux-arm64"))
+def test_fork_matrix_cannot_select_self_hosted_runner(
+    domain: str, runner: Any, setting: str | None,
+) -> None:
+    """A fork-controlled detector output cannot bypass the job-level guard."""
+    context = runner_context("pull_request", "fork/repo", setting)
+    context.update({"matrix.domain": domain, "matrix.runner": runner})
+    assert selected_runner("quality-gates-by-domain.yml", "domain-tests", context) == "ubuntu-latest"
+
+
+@pytest.mark.parametrize("filename", ("quality-gates.yml", "quality-gates-by-domain.yml"))
+def test_pr_code_has_only_read_permissions(filename: str) -> None:
+    """Checkout, build, test and aggregate code cannot obtain write tokens."""
+    workflow = load_workflow(filename)
+    assert all(value == "read" for value in workflow["permissions"].values())
+    for job_id, job in workflow["jobs"].items():
+        if job_id == "comment-results":
+            continue
+        permissions = job.get("permissions", workflow["permissions"])
+        assert all(value == "read" for value in permissions.values())
+        for step in job["steps"]:
+            if step.get("uses", "").startswith("actions/checkout@"):
+                assert step["with"]["persist-credentials"] is False
+
+
+@pytest.mark.parametrize("event,head,expected", (
+    ("pull_request", "base/repo", True),
+    ("pull_request", "fork/repo", False),
+    ("push", "", False),
+    ("workflow_dispatch", "", False),
+))
+def test_comments_are_separate_from_pr_code(event: str, head: str, expected: bool) -> None:
+    """A hosted, checkout-free job alone receives comment write access."""
+    workflow = load_workflow("quality-gates.yml")
+    job = workflow["jobs"]["comment-results"]
+    assert job["needs"] == "quality-gates"
+    assert job["runs-on"] == "ubuntu-latest"
+    assert job["permissions"] == {"pull-requests": "write"}
+    assert job["continue-on-error"] is True
+    assert "always()" in job["if"]
+    context = runner_context(event, head, None)
+    assert evaluate_expression(job["if"], context) is expected
+    assert len(job["steps"]) == 1
+    step = job["steps"][0]
+    assert step["uses"] == "actions/github-script@v7"
+    assert step["env"] == {"QUALITY_GATES_RESULT": "${{ needs.quality-gates.result }}"}
+    script = step["with"]["script"]
+    assert "${{" not in script
+    assert "require(" not in script
+    assert "github.rest.issues.createComment" in script
+    for other in workflow["jobs"]["quality-gates"]["steps"]:
+        assert not other.get("uses", "").startswith("actions/github-script@")

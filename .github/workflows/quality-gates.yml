@@ -13,16 +13,16 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
+# PR_GATE_RUNNER accepts linux-arm64; unset/unknown values keep hosted defaults.
+# The job-level trust guard keeps fork code on hosted runners.
 jobs:
   quality-gates-aggregate:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
     if: always()
-    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'linux-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Verify matrix result
         env:
@@ -31,7 +31,7 @@ jobs:
 
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
-    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'linux-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +41,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0  # need history so the abs-path guard can diff vs base
@@ -165,52 +166,30 @@ jobs:
             coverage.xml
           retention-days: 30
 
+  comment-results:
+    name: Comment quality gate result
+    needs: quality-gates
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    continue-on-error: true
+    # Write access is isolated from checkout, artifacts and PR-provided scripts.
+    steps:
       - name: Comment PR with results
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
         uses: actions/github-script@v7
+        env:
+          QUALITY_GATES_RESULT: ${{ needs.quality-gates.result }}
         with:
           script: |
-            const fs = require('fs');
-
-            try {
-              const results = JSON.parse(fs.readFileSync('reports/quality_gates_results.json', 'utf8'));
-
-              const statusEmoji = {
-                'pass': '✅',
-                'warning': '⚠️',
-                'failure': '❌',
-                'skipped': '⏭️'
-              };
-
-              let comment = '## Quality Gates Report\n\n';
-              comment += `**Overall Status:** ${statusEmoji[results.overall_status]} ${results.overall_status.toUpperCase()}\n\n`;
-              comment += `**Summary:**\n`;
-              comment += `- ✅ Passed: ${results.gates_passed}\n`;
-              comment += `- ⚠️ Warned: ${results.gates_warned}\n`;
-              comment += `- ❌ Failed: ${results.gates_failed}\n`;
-              comment += `- ⏭️ Skipped: ${results.gates_skipped}\n\n`;
-              comment += `**Gate Results:**\n\n`;
-
-              results.results.forEach(result => {
-                comment += `### ${statusEmoji[result.status]} ${result.gate_name}\n`;
-                comment += `${result.message}\n\n`;
-
-                if (Object.keys(result.metrics).length > 0) {
-                  comment += '**Metrics:**\n';
-                  for (const [key, value] of Object.entries(result.metrics)) {
-                    comment += `- ${key}: ${typeof value === 'number' ? value.toFixed(2) : value}\n`;
-                  }
-                  comment += '\n';
-                }
-              });
-
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            } catch (error) {
-              console.error('Failed to post comment:', error);
+            const result = process.env.QUALITY_GATES_RESULT;
+            const statuses = new Set(['success', 'failure', 'cancelled', 'skipped']);
+            if (!statuses.has(result)) {
+              throw new Error('Unexpected quality gate result');
             }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Quality Gates Report\n\n**Matrix result:** ${result}\n\nDetailed gate results and coverage are available in this workflow run's artifacts.`
+            });
