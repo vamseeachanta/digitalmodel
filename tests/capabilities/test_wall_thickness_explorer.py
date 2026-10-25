@@ -5,7 +5,44 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from scripts.capabilities import build_wall_thickness_explorer as builder
+
+
+@pytest.mark.parametrize(
+    "combined,governing",
+    [
+        (0.25, "burst"),
+        (-0.25, "burst"),
+        (1e-8, "burst"),
+        (float("nan"), "burst"),
+        (float("inf"), "burst"),
+        (float("-inf"), "burst"),
+        (0.0, "combined"),
+    ],
+    ids=["positive", "negative", "rounds-to-zero", "nan", "inf", "minus-inf", "governing"],
+)
+def test_pressure_only_projection_rejects_loaded_or_governing_combined(
+    monkeypatch, combined, governing,
+):
+    """Only an exactly zero, non-governing check may be omitted."""
+    analysis = SimpleNamespace(
+        checks={"burst": 0.5, "combined": combined},
+        max_utilisation=0.5, governing_check=governing, is_safe=True,
+        code_reference="synthetic pressure case",
+    )
+
+    class Analyzer:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def perform_analysis(self):
+            return analysis
+
+    monkeypatch.setattr(builder, "WallThicknessAnalyzer", Analyzer)
+    with pytest.raises(ValueError, match="combined"):
+        builder._run(0.02, next(iter(builder.DesignCode)))
 
 
 def test_pressure_only_projection_omits_only_unloaded_combined(monkeypatch):

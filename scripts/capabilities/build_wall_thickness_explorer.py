@@ -69,6 +69,10 @@ def _run(wall_m: float, code: DesignCode) -> dict:
     )
     factors = DesignFactors(safety_class=_SC)
     res = WallThicknessAnalyzer(geom, mat, loads, factors, code=code).perform_analysis()
+    if res.checks.get("combined", 0.0) != 0.0 or res.governing_check == "combined":
+        raise ValueError(
+            "Pressure-only export may omit combined only when zero and non-governing"
+        )
     checks = {k: round(float(v), 4) for k, v in res.checks.items() if k != "combined"}
     return {
         "max_util": round(float(res.max_utilisation), 4),

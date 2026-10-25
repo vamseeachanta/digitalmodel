@@ -16,7 +16,9 @@
   <table>
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
     <tbody><tr><td>1</td><td>2026-10-19</td><td>Document sidecar freshness and the
-    pressure-only projection to prevent stale data from passing the HTML check.</td></tr></tbody>
+    pressure-only projection to prevent stale data from passing the HTML check.</td></tr>
+    <tr><td>2</td><td>2026-10-24</td><td>Require omitted checks to be zero and
+    non-governing, and state the Linux and LF requirement for byte comparison.</td></tr></tbody>
   </table>
   <p>Table 1. Documentation revision history.</p>
 
@@ -36,6 +38,12 @@
   <p>The shadow includes package version metadata for source-only imports.
   Generator child processes discard inherited Git repository bindings so their
   working directory, rather than a caller's Git environment, selects the tree.</p>
+  <p>The regeneration contract is supported on Linux with LF line endings in
+  the checkout. Generators use platform-native newlines: Windows regeneration
+  can produce CRLF bytes that differ from committed LF bytes, and a CRLF
+  checkout differs from Linux output. Newline-only drift can have an empty text
+  diff because the diagnostic splits text into lines. Run this byte comparison
+  from a Linux checkout with LF line endings.</p>
 
   <h2>Worked example: unchanged page, stale sidecar</h2>
   <p>Inputs: a committed page containing <code>&lt;html&gt;same&lt;/html&gt;</code>
@@ -55,6 +63,9 @@
   evaluated tension and bending capacity. Pressure-dependent checks named
   <code>combined_loading</code> remain included. The study inputs, strategy
   equations, governing utilizations and passing-wall results are unchanged.</p>
+  <p>Export fails if any omitted <code>combined</code> value is not exactly zero
+  or if <code>combined</code> governs the result. The value is checked before
+  rounding, so a small nonzero value cannot be hidden by the projection.</p>
   <p>Independent projection example: input checks
   <code>{"burst":0.5,"combined_loading":0.25,"combined":0.0}</code> become
   <code>{"burst":0.5,"combined_loading":0.25}</code>. The largest utilization
