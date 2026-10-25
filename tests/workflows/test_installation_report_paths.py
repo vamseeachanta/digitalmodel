@@ -175,7 +175,7 @@ def test_mapping_rejects_symlink_escape(tmp_path):
 @pytest.mark.parametrize("kind", ["partial", "capability", "full"])
 @pytest.mark.parametrize("escaping", [True, False])
 def test_symlinked_reports_validate_the_lexical_dataset(tmp_path, kind, escaping):
-    """URL parent traversal uses the dataset containing the reports link."""
+    """Both report locations must resolve the link to the same retained case."""
     dataset = tmp_path / "dataset"
     dataset.mkdir()
     physical = tmp_path / "physical"
@@ -201,14 +201,44 @@ def test_symlinked_reports_validate_the_lexical_dataset(tmp_path, kind, escaping
         with pytest.raises(ValueError, match="outside dataset"):
             render(kind, data, config, base)
     else:
-        links = Links()
-        links.feed(render(kind, data, config, base))
         expected = "../runs/case/extracted/report.html"
-        assert expected in links.targets
         resolved = urlsplit(urljoin((base / "full.html").as_uri(), expected))
         assert url2pathname(resolved.path) == str(target)
         assert target.read_text() == "retained extraction"
+        assert (physical / "reports" / unquote(expected)).read_text() == "outside extraction"
+        with pytest.raises(ValueError, match="different case directories"):
+            render(kind, data, config, base)
     assert data == frozen
+
+
+@pytest.mark.parametrize("kind", ["partial", "capability", "full"])
+def test_symlinked_reports_with_shared_dataset_remain_portable(tmp_path, kind):
+    """Two parent steps reach the same dataset from either report location."""
+    target = tmp_path / "runs/case/extracted/report.html"
+    target.parent.mkdir(parents=True)
+    target.write_text("retained extraction", encoding="utf-8")
+    physical = tmp_path / "physical/reports"
+    physical.mkdir(parents=True)
+    base = tmp_path / "linked/reports"
+    base.parent.mkdir()
+    try:
+        base.symlink_to(physical, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"Directory symlink unavailable: {error}")
+    data = summary("retained")
+    frozen = deepcopy(data)
+    config = {"dataset_root": "../..", "case_run_dirs": {"0": "runs/case"}}
+    frozen_config = deepcopy(config)
+    links = Links()
+    links.feed(render(kind, data, config, base))
+    expected = "../../runs/case/extracted/report.html"
+    assert expected in links.targets
+    for location in (base, physical):
+        resolved = urlsplit(urljoin((location / "full.html").as_uri(), expected))
+        assert url2pathname(resolved.path) == str(target)
+        assert (location / unquote(expected)).read_text() == "retained extraction"
+    assert data == frozen
+    assert config == frozen_config
 
 
 def test_no_mapping_keeps_existing_link_behavior(tmp_path):

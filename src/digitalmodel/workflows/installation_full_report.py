@@ -204,7 +204,7 @@ def _appendix_case_details(cases, base):
 
 def _references_appendices(summary, payload, config, evidence, base, created):
     rows = [[escape(name), escape(value['path']), escape(value['sha256'])] for name, value in evidence.items()]
-    references = _table(['Source', 'Owner-relative / report-relative locator', 'SHA-256'], rows)
+    references = _table(['Source', 'Maintainer-relative / report-relative locator', 'SHA-256'], rows)
     for row in config.get('references', []):
         locator = str(row['path'])
         if ':' in locator.split('/')[0] or locator.startswith(('/', '\\')):

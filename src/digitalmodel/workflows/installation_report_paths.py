@@ -3,6 +3,7 @@
 ``dataset_root`` is relative to the report directory; ``case_run_dirs`` maps
 all stringified case indices to POSIX paths beneath that dataset root. Source
 rows remain unchanged. Without a mapping, existing link behavior is retained.
+Mapped cases must agree from lexical and physical report locations.
 This resolves locators only; it does not verify the linked evidence contents.
 """
 import os
@@ -31,5 +32,9 @@ def display_cases(summary, config, base):
         resolved = Path(run_dir).resolve()
         if not resolved.is_relative_to(root):
             raise ValueError('Case mapping resolves outside dataset root')
+        physical = Path(os.path.normpath(
+            os.path.join(Path(base).resolve(), locator, entry))).resolve()
+        if physical != resolved:
+            raise ValueError('Report locations resolve to different case directories')
         rows.append(dict(row, run_dir=run_dir))
     return rows
