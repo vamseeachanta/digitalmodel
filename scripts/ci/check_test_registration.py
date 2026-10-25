@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Reconcile test-file enrollment without importing or collecting test modules."""
@@ -13,6 +16,7 @@ import re
 import shlex
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -22,7 +26,12 @@ if __package__ in (None, ""):
 from scripts.ci import detect_touched_domains as detector
 
 
-def matches(root: Path, path: str, pattern: str, cache=None) -> bool:
+def matches(
+    root: Path,
+    path: str,
+    pattern: str,
+    cache: dict[str, list[tuple[str, bool]]] | None = None,
+) -> bool:
     """Match a shell-expanded directory or file, without prefix collisions."""
     pattern = pattern.removeprefix("./").rstrip("/")
     if Path(pattern).is_absolute() or ".." in Path(pattern).parts:
@@ -45,9 +54,11 @@ def pytest_tokens(command: str) -> list[str]:
     """Validate the executable invocation before reading pytest arguments."""
     if any(char in command for char in ";&|`$\n\\"):
         raise ValueError("Unsupported shell composition in pytest command")
-    for raw in shlex.split(command, posix=False):
-        if raw.startswith(("'tests/", '"tests/', "'./tests/", '"./tests/')) and any(
-            char in raw for char in "*?["
+    for raw in re.findall(r"""(?:[^\s'"]+|'[^']*'|"[^"]*")+""", command):
+        if shlex.split(raw)[0].startswith(("tests/", "./tests/")) and any(
+            char in segment
+            for segment in re.findall(r"'[^']*'|\"[^\"]*\"", raw)
+            for char in "*?["
         ):
             raise ValueError("Quoted wildcard test roots need explicit audit support")
     tokens = shlex.split(command)
@@ -84,7 +95,9 @@ def pytest_tokens(command: str) -> list[str]:
 
 def pytest_arguments(command: str) -> tuple[list[str], list[str], list[str]]:
     """Read roots and ignores; reject unmodelled selection and configuration."""
-    roots, ignores, globs = [], [], []
+    roots: list[str] = []
+    ignores: list[str] = []
+    globs: list[str] = []
     args = iter(pytest_tokens(command))
     for arg in args:
         option = arg.split("=", 1)[0]
@@ -163,7 +176,7 @@ def validate_collection_policy(tree: ast.Module) -> None:
 def collection_rules(root: Path) -> list[tuple[str, str]]:
     """Read declarative ignores with AST; never execute a conftest file."""
     config = configparser.ConfigParser(interpolation=None)
-    config.read(root / "pytest.ini")
+    config.read(root / "pytest.ini", encoding="utf-8")
     rules = [
         ("norecurse", item)
         for item in config["pytest"].get("norecursedirs", "").split()
@@ -245,7 +258,19 @@ def ignore_literal(node: ast.AST) -> str:
     raise ValueError("Dynamic collection exclusions need explicit audit support")
 
 
-def collection_excluded(root: Path, path: str, roots: list[str], rules) -> bool:
+def glob_targets(path: str, pattern: str) -> list[str]:
+    """Match a file and every ancestor that pytest traverses during collection."""
+    return [
+        candidate.as_posix()
+        for candidate in [Path(path), *Path(path).parents]
+        if candidate.as_posix() != "."
+        and fnmatch.fnmatchcase(candidate.as_posix(), pattern)
+    ]
+
+
+def collection_excluded(
+    root: Path, path: str, roots: list[str], rules: list[tuple[str, str]]
+) -> bool:
     """Account for recursive ignores; explicitly named paths bypass recursion."""
     for kind, pattern in rules:
         if kind == "norecurse":
@@ -262,7 +287,7 @@ def collection_excluded(root: Path, path: str, roots: list[str], rules) -> bool:
                 )
             ]
         elif kind == "glob":
-            targets = [path] if fnmatch.fnmatchcase(path, pattern) else []
+            targets = glob_targets(path, pattern)
         else:
             targets = [pattern] if matches(root, path, pattern) else []
         for target in targets:
@@ -281,7 +306,7 @@ def collection_excluded(root: Path, path: str, roots: list[str], rules) -> bool:
 def discovered_tests(root: Path) -> list[str]:
     """Use the repository's pytest filename patterns, including ignored files."""
     config = configparser.ConfigParser(interpolation=None)
-    config.read(root / "pytest.ini")
+    config.read(root / "pytest.ini", encoding="utf-8")
     patterns = config["pytest"]["python_files"].split()
     return sorted(
         path.relative_to(root).as_posix()
@@ -290,7 +315,12 @@ def discovered_tests(root: Path) -> list[str]:
     )
 
 
-def missing_roots(root: Path, domains, gates, commands) -> set[str]:
+def missing_roots(
+    root: Path,
+    domains: list[detector.Domain],
+    gates: dict[str, dict[str, Any]],
+    commands: dict[str, tuple[list[str], list[str], list[str]]],
+) -> set[str]:
     """Detect stale directory, file and glob entries, including empty roots."""
     findings = set()
     for domain in domains:
@@ -306,7 +336,12 @@ def missing_roots(root: Path, domains, gates, commands) -> set[str]:
     return findings
 
 
-def documented_owner(root: Path, path: str, domains, cache):
+def documented_owner(
+    root: Path,
+    path: str,
+    domains: list[detector.Domain],
+    cache: dict[str, list[tuple[str, bool]]],
+) -> tuple[detector.Domain | None, str]:
     """Resolve specific ownership and overrides without silently choosing ties."""
     owners = [
         domain
@@ -336,7 +371,9 @@ def documented_owner(root: Path, path: str, domains, cache):
 def audit(root: Path) -> set[str]:
     """Return exact enrollment defects as kind|domain|repository-relative-path."""
     domains = detector.parse_domains(root / "tests/DOMAINS.md")
-    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
     commands = {
         domain.name: pytest_arguments(
             gates.get(f"tests-{domain.name}", {}).get("command", "")
@@ -346,7 +383,7 @@ def audit(root: Path) -> set[str]:
     }
     rules = collection_rules(root)
     harness = harness_roots(root)
-    cache = {}
+    cache: dict[str, list[tuple[str, bool]]] = {}
     findings = missing_roots(root, domains, gates, commands)
     for path in discovered_tests(root):
         owner, problem = documented_owner(root, path, domains, cache)
@@ -368,7 +405,7 @@ def audit(root: Path) -> set[str]:
         if not any(matches(root, path, item, cache) for item in roots):
             findings.add(f"missing-command|{name}|{path}")
         elif any(matches(root, path, item) for item in ignores) or any(
-            fnmatch.fnmatchcase(path, pattern) for pattern in globs
+            glob_targets(path, pattern) for pattern in globs
         ):
             findings.add(f"command-excluded|{name}|{path}")
         if collection_excluded(root, path, roots, rules):
@@ -417,8 +454,8 @@ def main(argv: list[str] | None = None) -> int:
     ) as error:
         print(f"Test registration audit failed: {error}", file=sys.stderr)
         return 1
-    for error in sorted(errors):
-        print(error)
+    for finding in sorted(errors):
+        print(finding)
     print(
         f"Test registration: {len(errors)} new/stale defects; {len(findings & exceptions.keys())} acknowledged findings"
     )
