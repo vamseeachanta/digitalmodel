@@ -9,6 +9,7 @@ interpolation and the out-of-range rail live in Atlas.predict and are shared.
 from __future__ import annotations
 
 import math
+import warnings
 from pathlib import Path
 from typing import Any, Callable
 
@@ -43,6 +44,13 @@ def router(cfg: dict) -> dict:
     # enforced below; this legacy spelling cannot relax the confidence gate.
     if "confidence" in policy and policy["confidence"] != "required":
         raise ValueError("deprecated policy.confidence only permits 'required'")
+    if "confidence" in policy:
+        warnings.warn(
+            "parametric_query.policy.confidence is deprecated; remove it. "
+            "Atlas validation is always enforced.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     on_out_of_range = policy.get("on_out_of_range", "escalate")
     if on_out_of_range not in {"escalate", "error"}:
         raise ValueError(

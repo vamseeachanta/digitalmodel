@@ -5,6 +5,7 @@ written out below, rather than the response implementations under test.
 """
 
 import math
+import warnings
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -140,7 +141,15 @@ def test_shipped_query_defaults_serve_validated_capacity(monkeypatch, tmp_path, 
         cfg["parametric_query"]["policy"]["confidence"] = "required"
     monkeypatch.setattr(Atlas, "load", lambda *args: _atlas())
     monkeypatch.setattr(query, "_staleness", lambda _: None)
-    result = query.router(cfg)["parametric_query"]["result"]
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = query.router(cfg)["parametric_query"]["result"]
+    assert len(caught) == int(legacy_policy)
+    if legacy_policy:
+        assert caught[0].category is DeprecationWarning
+        assert "policy.confidence" in str(caught[0].message)
+        assert "remove" in str(caught[0].message)
+        assert caught[0].filename == __file__
     assert result["value"] == pytest.approx(0.4)
     assert result["confidence"]["band"] == pytest.approx([0.4, 0.4])
     assert result["screening_status"] == "pass"
