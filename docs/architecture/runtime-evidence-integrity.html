@@ -24,14 +24,16 @@ acceptance criterion or solver execution is changed.</p>
 <h2>Revision history</h2>
 <table>
 <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>1</td><td>2026-10-19</td><td>An assertion inventory, export refusal fix and optimization regressions are added to prevent optimized execution from removing evidence readback.</td></tr></tbody>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>An assertion inventory, export refusal fix and optimization regressions are added to prevent optimized execution from removing evidence readback.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>Directory enumeration errors now refuse incomplete inventories; literal CLI expectations and traversal regressions cover all three interpreter modes.</td></tr></tbody>
 <caption>Table 1. Initial audit revision for <a href="https://github.com/vamseeachanta/digitalmodel/issues/2127">issue 2127</a>.</caption>
 </table>
 <h2>Scope and method</h2>
 <p>The inventory is produced from Python syntax trees without importing scanned modules.
 Comments and docstrings are excluded. Paths, source lines, enclosing definitions and
 assertion expressions are retained by the utility for contextual review. Missing or
-unparseable input refuses the inventory rather than reporting successful coverage.
+unparseable input and directory enumeration errors refuse the inventory rather than
+reporting successful coverage.
 Equivalent lexical paths are normalized before enumeration.</p>
 <p>The bounded command is <code>python scripts/audit_runtime_asserts.py src/digitalmodel
 scripts/review/results/issue-2089/replay-synthetic-example.py</code>.
@@ -79,8 +81,13 @@ all evidence entry points or dynamically generated code have been reviewed.</p>
 </table>
 <h2>Verification</h2>
 <p>The new tests and all existing tests for the touched monitoring module pass:
-45 tests comprising nine inventory cases, nine export cases, fifteen retained-reference
+52 tests comprising sixteen inventory cases, nine export cases, fifteen retained-reference
 cases and twelve existing monitoring cases. Ruff passes on all four Python files.</p>
+<p>Enumeration failures are injected at the directory scanning boundary, independently
+of filesystem privileges. The CLI must exit unsuccessfully without emitting JSON under
+normal execution, <code>-O</code> and <code>-OO</code>. Successful CLI output is compared
+against a literal assertion record. Separate regressions retain the directory-symlink
+boundary for links within and outside the requested root.</p>
 <p>Export tests independently substitute the literal JSON value <code>tampered</code>
 for <code>synthetic</code>. Valid exports remain readable, changed exports refuse, and
 an existing output remains unchanged. Reference tests pin the original synthetic bytes

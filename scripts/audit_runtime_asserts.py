@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 from pathlib import Path
 import tokenize
 
@@ -42,6 +43,11 @@ class AssertionVisitor(ast.NodeVisitor):
         })
 
 
+def _raise_walk_error(error):
+    """Refuse incomplete traversal instead of suppressing enumeration errors."""
+    raise error
+
+
 def inventory(root, paths):
     """Return a deterministic inventory; missing or unparseable input refuses it."""
     root = Path(root).resolve(strict=True)
@@ -52,7 +58,16 @@ def inventory(root, paths):
             raise FileNotFoundError("inventory input missing")
         if not candidate.is_relative_to(root):
             raise ValueError("source outside inventory root")
-        files.update(candidate.rglob("*.py") if candidate.is_dir() else [candidate])
+        if candidate.is_dir():
+            for directory, _subdirectories, filenames in os.walk(
+                candidate, onerror=_raise_walk_error, followlinks=False
+            ):
+                files.update(
+                    Path(directory) / filename
+                    for filename in filenames if filename.endswith(".py")
+                )
+        else:
+            files.add(candidate)
     rows, scanned = [], []
     for path in sorted(files):
         if not path.resolve().is_relative_to(root):

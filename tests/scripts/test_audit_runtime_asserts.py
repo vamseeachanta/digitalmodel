@@ -112,4 +112,85 @@ def test_cli_inventories_asserts_even_when_interpreter_optimization_is_enabled(m
          "--root", str(tmp_path), "."],
         env=env, capture_output=True, text=True, check=True,
     )
-    assert json.loads(result.stdout) == auditor().inventory(tmp_path, ["."])
+    assert json.loads(result.stdout) == {
+        "files_scanned": ["example.py"],
+        "assertions": [
+            {"path": "example.py", "line": 1, "scope": "<module>",
+             "test": "digest", "message": None},
+        ],
+    }
+
+
+@pytest.mark.parametrize("error_type", [PermissionError, OSError])
+def test_inventory_propagates_directory_enumeration_errors(tmp_path, monkeypatch, error_type):
+    """Failure to enumerate a nested directory cannot establish complete coverage."""
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    (blocked / "hidden.py").write_text("assert digest\n", encoding="utf-8")
+    original_scandir = os.scandir
+
+    def scandir(path):
+        if Path(path) == blocked:
+            raise error_type("directory enumeration failed")
+        return original_scandir(path)
+
+    monkeypatch.setattr(os, "scandir", scandir)
+    with pytest.raises(error_type, match="directory enumeration failed"):
+        auditor().inventory(tmp_path, ["."])
+
+
+@pytest.mark.parametrize("mode", [(), ("-O",), ("-OO",)])
+def test_cli_refuses_inventory_when_directory_enumeration_fails(mode, tmp_path):
+    """Inject an enumeration refusal independently of filesystem privilege levels."""
+    (tmp_path / "visible.py").write_text("assert ready\n", encoding="utf-8")
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    (blocked / "hidden.py").write_text("assert digest\n", encoding="utf-8")
+    program = '''
+import os
+from pathlib import Path
+import runpy
+import sys
+
+script, root = sys.argv[1:]
+blocked = Path(root) / "blocked"
+original_scandir = os.scandir
+
+def scandir(path):
+    if Path(path) == blocked:
+        raise PermissionError("directory enumeration failed")
+    return original_scandir(path)
+
+os.scandir = scandir
+sys.argv = [script, "--root", root, "."]
+runpy.run_path(script, run_name="__main__")
+'''
+    env = os.environ.copy()
+    env.pop("PYTHONOPTIMIZE", None)
+    result = subprocess.run(
+        [sys.executable, *mode, "-c", program,
+         str(ROOT / "scripts/audit_runtime_asserts.py"), str(tmp_path)],
+        env=env, capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+    assert result.stdout == ""
+    assert "PermissionError: directory enumeration failed" in result.stderr
+
+
+@pytest.mark.parametrize("outside", [False, True])
+def test_inventory_does_not_traverse_directory_symlinks(tmp_path, outside):
+    """Nested directory links remain outside the recursive inventory boundary."""
+    root = tmp_path / "root"
+    root.mkdir()
+    target = (tmp_path if outside else root) / "target"
+    target.mkdir()
+    (target / "example.py").write_text("assert digest\n", encoding="utf-8")
+    (root / "linked").symlink_to(target, target_is_directory=True)
+    result = auditor().inventory(root, ["."])
+    assert result == {
+        "files_scanned": [] if outside else ["target/example.py"],
+        "assertions": [] if outside else [
+            {"path": "target/example.py", "line": 1, "scope": "<module>",
+             "test": "digest", "message": None},
+        ],
+    }
