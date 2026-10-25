@@ -192,6 +192,50 @@ def test_published_reductions_are_preserved(record):
     assert [round(row["reduction_percent"], 1) for row in rows] == [46.1, 23.3]
 
 
+def test_summary_qualifies_fit_and_names_slow_forcing_limit(builder, record):
+    page = builder.render(record)
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert "model's stated moment-fit band (≥20 s)" in summary
+    assert "46.1 % peak at 18.5 s lies outside it" in summary
+    assert "25.0 % slow-forcing limit" in summary
+    assert "1/(1−α)" in summary
+    assert 'natural period is 14.3 s <a href="#ref-builder">[I4]</a>' in summary
+    assert "No external publication is used" in page
+    assert "published moment" not in page
+
+
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_chart_ticks_are_round_and_distinct(builder, record, index):
+    from xml.etree import ElementTree
+
+    svg = ElementTree.fromstring(builder.chart_svg(*builder.chart_specs(record)[index]))
+    for axis in ("x", "y"):
+        ticks = svg.findall(f'.//text[@data-axis="{axis}"]')
+        labels = [tick.text for tick in ticks]
+        assert len(labels) >= 3
+        assert len(labels) == len(set(labels))
+        values = [float(label) for label in labels]
+        assert values == sorted(values)
+        if axis == "y":
+            assert all(value % 5 == 0 for value in values)
+        if axis == "x" and index == 2:
+            assert labels == ["0.00", "0.05", "0.10", "0.15", "0.20"]
+
+
+def test_schematic_and_response_explain_motion_and_scale(builder, record):
+    page = builder.render(record)
+    svg = builder.schematic(record)
+    assert "φ" in svg and 'id="roll-motion"' in svg
+    assert 'id="water-flow"' in svg and "Oscillatory flow" in svg
+    assert "Roll amplification factor (1)" in page
+    assert "5° bare roll" in page and "2ζ" in page
+    assert "retained rather than tuned to the 18 s hull" in page
+    assert page.index("Kₛ is") < page.index("Kₛ also includes")
+    assert "Alpha is dimensionless" in page
+    assert "tank authority" not in page
+    assert "Calibration transfer means" in page
+
+
 def test_calculation_record_is_unchanged(builder):
     """Pin the complete numeric/data basis of the presentation baseline."""
     saved = json.loads((ROOT / builder.DATA).read_text(encoding="utf-8"))
@@ -294,7 +338,7 @@ def test_page_section_order_and_collapsed_revisions(builder, record):
         "1 Executive summary", "2 Introduction", "3 Design data",
         "4 Analysis methodology", "5 Results", "6 Validation and benchmark",
         "7 Limitations", "8 Conclusions and next steps", "9 References",
-        "Appendix A Sensitivity matrix", "Appendix B Reproduce commands",
+        "Appendix A Sensitivity matrix", "Appendix B Review status",
     ]
     markers = ['id="summary"', 'id="introduction"', 'id="design-data"',
                'id="hull-section"', 'id="method"', 'id="comparison"',
@@ -354,7 +398,12 @@ def test_report_traceability_and_print_contract(builder, record):
     assert parsed.locators and all(parsed.locators)
     assert all(caption.startswith(("Figure ", "Table ")) for caption in parsed.captions)
     assert 'Table A.1' in page and 'Figure 3.1' in page and 'Figure 5.3' in page
-    assert '08f081f46' in page and 'P6' in page
+    assert 'Summary and chart clarification' in page
+    assert 'Earlier headline clarification recorded' in page
+    assert 'Git blob:' not in page and 'conventions commit' not in page
+    assert '<pre>python' not in page and 'Last-bit math perturbation' not in page
+    assert 'It refines all sampled local peaks' not in page
+    assert 'Internal engineering report' not in page
     assert '@media print' in page and '.chart text' in page
     assert 'r="2.5"' in page and 'font-size="12"' in page
     svg = ElementTree.fromstring(builder.schematic(record))
@@ -362,9 +411,8 @@ def test_report_traceability_and_print_contract(builder, record):
     assert 'marker-start=' in builder.schematic(record)
     summary = page.split('<section id="summary">')[1].split('</section>')[0]
     assert 3 <= summary.count('<li>') <= 5
-    numbered = page.split('<section id="summary">')[1].split('<section id="sensitivity">')[0]
     import re
-    assert not re.search(r'\bline \d+', numbered.split('<section id="references">')[0])
+    assert not re.search(r'\bline \d+', page)
 
 
 def test_page_wording_links_and_preservation(builder, record):
@@ -391,16 +439,16 @@ def test_page_wording_links_and_preservation(builder, record):
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text
     assert 'conduit area A_c = 6.8 m²' in text
     assert '120 m² in plan' in text
-    assert 'Ks also includes water redistribution between the legs' in text
+    assert 'Kₛ also includes water redistribution between the legs' in text
     assert 'Hull damping (% of critical)' in text
     assert '4.3 % RMS error' in text
     assert 'below about 16 s' in text
     assert '14.3 s' in text
     assert 'ratio 0.505' in text
-    assert '0.43 to 0.72' in text
+    assert '0.432 to 0.725' in text
     assert '6.0 % more roll' in text
     assert '29.5 %' in text
-    assert '25.0 % limit' in text
+    assert '25.0 % slow-forcing limit' in text
     assert text.count('ASSUMED - to be confirmed') >= 3
     assert "checks arithmetic and the coupling denominator" in text
     assert "not the physics of the moment model" in text

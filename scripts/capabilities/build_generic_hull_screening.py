@@ -3,7 +3,13 @@
 """Generate a generic hull screening estimate, data and independent tests.
 
 Run: python scripts/capabilities/build_generic_hull_screening.py
+Check: python -m pytest tests/hydrodynamics/test_generic_hull_screening.py
 Only the standard library and the public U-tube model are required.
+
+The peak search refines every sampled local maximum. Generated JSON retains
+at most 12 significant digits, rounds peak periods to 0.0001 s and reports
+power-of-ten upper residual bounds. Last-bit math perturbation tests
+check output stability; native runs must confirm each supported runtime.
 """
 
 from __future__ import annotations
@@ -209,22 +215,41 @@ def compute() -> dict[str, Any]:
     }
 
 
-# Adapted from build_dual_tank_sloshing_study.chart: retain its axes and palette.
-def chart_svg(identifier, title, xs, series, xlabel, ylabel, supported_from=None):
+def axis_ticks(low: float, high: float) -> tuple[list[float], int]:
+    """Enclose an axis with round, evenly spaced, unambiguous tick labels."""
+    raw_step = (high - low) / 5
+    magnitude = 10 ** math.floor(math.log10(raw_step))
+    step = next(value * magnitude for value in (1, 2, 5, 10)
+                if value * magnitude >= raw_step)
+    start, stop = math.floor(low / step), math.ceil(high / step)
+    decimals = max(0, -math.floor(math.log10(step)))
+    return [round(index * step, decimals) for index in range(start, stop + 1)], decimals
+
+
+# Adapted from build_dual_tank_sloshing_study.chart: retain its palette.
+def chart_svg(
+    identifier: str, title: str, xs: list[float],
+    series: list[tuple[str, list[float]]], xlabel: str, ylabel: str,
+    supported_from: float | None = None,
+) -> str:
     """Inline accessible SVG with independent axes, legend and validity shading."""
     colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78", "#555555")
     left, right, top, bottom = 84, 770, 46, 300
     xmin, xmax = min(xs), max(xs)
     ymin = min(0, min(min(ys) for _, ys in series))
     ymax = max(max(ys) for _, ys in series)
+    xticks, xdigits = axis_ticks(xmin, xmax)
+    yticks, ydigits = axis_ticks(ymin, ymax)
+    xmin, xmax = xticks[0], xticks[-1]
+    ymin, ymax = yticks[0], yticks[-1]
 
-    def x(value):
+    def x(value: float) -> float:
         return left + (value - xmin) / (xmax - xmin) * (right - left)
 
-    def y(value):
+    def y(value: float) -> float:
         return bottom - (value - ymin) / (ymax - ymin) * (bottom - top)
 
-    shading = (" Shaded periods are outside the published moment fit band."
+    shading = (" Shaded periods are outside the model's stated moment-fit band."
                if supported_from is not None else "")
     parts = [f'<svg id="{identifier}" class="chart" viewBox="0 0 820 440" role="img" '
              f'aria-labelledby="{identifier}-title {identifier}-desc" '
@@ -239,16 +264,15 @@ def chart_svg(identifier, title, xs, series, xlabel, ylabel, supported_from=None
         parts.append(f'<rect x="{left}" y="{top}" '
                      f'width="{x(supported_from)-left:.1f}" '
                      f'height="{bottom-top}" fill="#fff0d0"/>')
-    for i in range(6):
-        xv = xmin + (xmax - xmin) * i / 5
-        yv = ymin + (ymax - ymin) * i / 5
+    for yv in yticks:
         parts.extend([
             f'<path d="M {left} {y(yv):.1f} H {right}" stroke="#e2e7eb"/>',
-            f'<text x="{left-8}" y="{y(yv)+4:.1f}" text-anchor="end" '
-            f'font-size="12">{yv:.1f}</text>',
-            f'<text x="{x(xv):.1f}" y="322" text-anchor="middle" '
-            f'font-size="12">{xv:.1f}</text>',
+            f'<text data-axis="y" x="{left-8}" y="{y(yv)+4:.1f}" text-anchor="end" '
+            f'font-size="12">{yv:.{ydigits}f}</text>',
         ])
+    for xv in xticks:
+        parts.append(f'<text data-axis="x" x="{x(xv):.1f}" y="322" text-anchor="middle" '
+                     f'font-size="12">{xv:.{xdigits}f}</text>')
     parts.extend([
         f'<text class="axis-title" x="427" y="345" text-anchor="middle">{html.escape(xlabel)}</text>',
         '<text class="axis-title" transform="translate(18 175) rotate(-90)" text-anchor="middle">'
@@ -298,6 +322,10 @@ from Table 3.1. Hull outline and conduit height are symbolic; no hull dimensions
 <defs><marker id="dimension-arrow" viewBox="0 0 10 10" refX="5" refY="5"
 markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M 9 1 L 1 5 L 9 9" fill="none" stroke="#526579" stroke-width="1.5"/>
+</marker>
+<marker id="motion-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+<path d="M 1 1 L 9 5 L 1 9 Z" fill="#0f8a7e"/>
 </marker></defs>
 <rect width="820" height="450" fill="white"/>
 <text x="410" y="28" text-anchor="middle" font-size="16">U-tube anti-roll tank · transverse section</text>
@@ -308,6 +336,13 @@ fill="#f2f6fa" stroke="#526579" stroke-width="2"/>
  fill="#c4d9ef" stroke="#0B3D91" stroke-width="2"/>
 <path d="M {left:.1f} {waterline:.1f} h {width:.1f} M {right:.1f} {waterline:.1f} h {width:.1f}"
  stroke="#0f8a7e" stroke-width="2"/>
+<g id="roll-motion" fill="none" stroke="#0f8a7e" stroke-width="2">
+<path d="M 665 90 A 48 48 0 0 1 710 125" marker-end="url(#motion-arrow)"/>
+</g><text x="721" y="120" fill="#16324f" font-size="14">φ (roll)</text>
+<g id="water-flow" fill="none" stroke="#0f8a7e" stroke-width="2">
+<path d="M {centre-42} {base-duct/2-3:.1f} h 84" marker-end="url(#motion-arrow)"/>
+<path d="M {centre+42} {base-duct/2+3:.1f} h -84" marker-end="url(#motion-arrow)"/>
+</g><text x="{centre}" y="{base-27:.1f}" text-anchor="middle" fill="#16324f" font-size="14">Oscillatory flow</text>
 <path d="M {centre} 105 V 367 M {centre-offset:.1f} 122 V {base+10:.1f}
  M {centre+offset:.1f} 122 V {base+10:.1f}" stroke="#8293a4" stroke-dasharray="6 4" fill="none"/>
 <g stroke="#526579" stroke-width="1" fill="none">
@@ -345,7 +380,7 @@ def chart_specs(record: dict[str, Any]) -> list[tuple]:
         ("response", "Roll response with and without the tank",
          response["forcing_periods_s"],
          [("Without tank", response["bare_rao"]), ("With tank", response["tank_rao"])],
-         "Wave forcing period (s)", "Roll / unit wave moment (1)"),
+         "Wave forcing period (s)", "Roll amplification factor (1)"),
         ("alpha", "Peak roll reduction against alpha", sorted({row["alpha"] for row in cases}),
          [(f"Hull damping {100 * damping:.0f} %",
            [row["reduction_percent"] for row in cases if row["hull_damping_ratio"] == damping])
@@ -355,16 +390,15 @@ def chart_specs(record: dict[str, Any]) -> list[tuple]:
 
 
 def source_note() -> str:
-    """Identify source lines in the same data record and calculation code."""
-    return ('<a href="data/generic_hull_roll_screening.json">Data record</a>: '
-            'assumptions and cases fields. '
-            f'<a href="../../../{SCRIPT}">Builder</a>: '
-            f'compute, line {compute.__code__.co_firstlineno}; '
-            f'screen_case, line {screen_case.__code__.co_firstlineno}; '
-            f'chart_specs, line {chart_specs.__code__.co_firstlineno}.')
+    """Describe calculation provenance without implementation locators."""
+    return ('Includes the tank natural-period calculation and chart selections. '
+            'Reproduction commands and numerical-output conventions are in the builder documentation.')
 
 
-def interactive_chart(identifier, title, xs, series, xlabel, ylabel) -> str:
+def interactive_chart(
+    identifier: str, title: str, xs: list[float],
+    series: list[tuple[str, list[float]]], xlabel: str, ylabel: str,
+) -> str:
     """Use identical values for SVG hover targets and downloadable CSV rows."""
     stream = io.StringIO(newline="")
     writer = csv.writer(stream, lineterminator="\n")
@@ -408,15 +442,12 @@ def render(record: dict[str, Any]) -> str:
               for row in record["damping_comparison"]]
     ratio_groups = '; '.join(
         f'{period:.0f} s: ' + ', '.join(
-            f'{row["higher_to_lower_damping_benefit_ratio"]:.2f}'
+            f'{row["higher_to_lower_damping_benefit_ratio"]:.3f}'
             for row in record["damping_comparison"] if row["roll_period_s"] == period)
         for period in (18.0, 21.0))
     natural_period = MODEL.natural_period(
         leg_area=GEOMETRY.leg_area, conduit_area=CONDUIT_AREA,
         fill_depth=GEOMETRY.fill_depth, effective_conduit_length=GEOMETRY.effective_conduit_length)
-    model_bytes = (ROOT / MODEL_PATH).read_bytes()
-    model_blob = hashlib.sha1(
-        f'blob {len(model_bytes)}\0'.encode() + model_bytes).hexdigest()
     charts = ''.join(interactive_chart(*spec) for spec in chart_specs(record))
 
     # Input values/units are record.assumptions; table citations identify their
@@ -482,32 +513,33 @@ nav{{display:none}}a{{color:inherit;text-decoration:none}}details>table{{display
 </style></head><body>
 <header><h1>Generic hull coupled roll screening estimate</h1>
 <p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p>
-<p>Internal engineering report · generic normalized hull</p></header>
+<p>Engineering screening analysis · generic normalized hull</p></header>
 <nav aria-label="Contents"><ul>
 <li><a href="#summary">1 Executive summary</a></li><li><a href="#introduction">2 Introduction</a></li>
 <li><a href="#design-data">3 Design data</a></li><li><a href="#method">4 Analysis methodology</a></li>
 <li><a href="#comparison">5 Results</a></li><li><a href="#validation">6 Validation and benchmark</a></li>
 <li><a href="#limits">7 Limitations</a></li><li><a href="#conclusions">8 Conclusions and next steps</a></li>
 <li><a href="#references">9 References</a></li><li><a href="#sensitivity">Appendix A Sensitivity matrix</a></li>
-<li><a href="#reproduce">Appendix B Reproduce commands</a></li><li><a href="#revisions">Appendix C Revision history</a></li>
+<li><a href="#reproduce">Appendix B Review status</a></li><li><a href="#revisions">Appendix C Revision history</a></li>
 </ul></nav>
 <section id="summary"><h2>1 Executive summary</h2>
 <p>The coupled model can be used to compare generic hull roll with and without the connected tank.
 The results are screening estimates; no result represents a real hull.</p>
-<p class="notice">The published moment fit does not validate coupled hull reduction.
+<p class="notice">The model's stated moment fit does not validate coupled hull reduction.
 No tank-on and tank-off real-vessel comparison establishes these reductions.
 The implications are listed in <a href="#limits">Section 7</a>.</p>
 <ul>
-<li>At an 18 s hull roll period, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
+<li>At an 18 s hull roll period, alpha 0.05, and conduit area A_c = 6.8 m²,
 the peak roll reduction screening estimates are {lower_damping_benefit:.1f} % at 2 % hull damping and {higher_damping_benefit:.1f} % at 5 %.
 See <a href="#fig-damping">Figure 5.1</a>.</li>
 <li>At 60 s forcing and 18 s hull period with 2 % hull damping, there is {case(0.02)["long_period_penalty_percent"]:.1f} % more roll at alpha 0.05
-and {case(0.02, 0.20)["long_period_penalty_percent"]:.1f} % at alpha 0.20, against a {100 * (1 / (1 - 0.20) - 1):.1f} % limit.
+and {case(0.02, 0.20)["long_period_penalty_percent"]:.1f} % at alpha 0.20, compared with the {100 * (1 / (1 - 0.20) - 1):.1f} % slow-forcing limit at alpha 0.20, from 1/(1−α).
 See <a href="#penalty">Section 5.2</a>.</li>
 <li>The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established.
 See <a href="#validation">Section 6</a>.</li>
-<li>The reference tank's natural period is {natural_period:.1f} s; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
-Every sampled forcing period below 20 s lies outside that band, including parts of the 21 s sweep.
+<li>The reference tank's natural period is {natural_period:.1f} s <a href="#ref-builder">[I4]</a>; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
+Every sampled forcing period below 20 s lies outside the model's stated moment-fit band (≥20 s), including parts of the 21 s sweep.
+The {lower_damping_benefit:.1f} % peak at {case(0.02)['tank_peak_period_s']:.1f} s lies outside it.
 See <a href="#sensitivity">Appendix A</a>.</li>
 </ul></section>
 <section id="introduction"><h2>2 Introduction</h2>
@@ -525,7 +557,7 @@ Conduit area A_c is 6.8 m². The model supplies effective length, fluid properti
 <table id="inputs"><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead>
 <tbody>{inputs}</tbody><caption>Table 3.1 – Recorded tank and normalized-hull inputs.</caption></table>
 <p class="notes">In the loss-coefficient unit, n is the loss area exponent in Table 3.1.</p>
-<p>Calibration transfer: ASSUMED - to be confirmed.
+<p>Calibration transfer means using the model's calibrated loss parameters in this reference-tank and generic-hull calculation: ASSUMED - to be confirmed.
 These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page <a href="#ref-study">[I3]</a>.</p>
 <p>The transverse leg widths, fill depths and centroid offsets in <a href="#fig-section">Figure 3.1</a> use the dimensions in <a href="#inputs">Table 3.1</a>.
 Tank dimensions are recorded assumptions; the hull outline supplies no hull dimensions.</p>
@@ -536,19 +568,20 @@ Tank dimensions are recorded assumptions; the hull outline supplies no hull dime
 <p>Generic hull periods are 18 s and 21 s; hull damping is 2 % and 5 % of critical, and alpha is 0.02, 0.05, 0.10, 0.15 and 0.20.
 All hull values are ASSUMED; no real hull data is used. The full load-case matrix is in <a href="#sensitivity">Appendix A</a>.</p>
 <h3>3.5 Criteria and sources</h3>
-<p>No design acceptance criterion is specified. The arithmetic checks and the published moment-fit band are distinguished in <a href="#validation">Section 6</a>.
+<p>No design acceptance criterion is specified. The arithmetic checks and the model's stated moment-fit band are distinguished in <a href="#validation">Section 6</a>.
 Their sources are <a href="#ref-builder">[I4]</a> and <a href="#ref-public">[R1]</a>.</p>
-<h3>3.6 Method</h3><p>The coupled roll method is described in <a href="#method">Section 4</a>.</p>
+<h3>3.6 Coupled roll model</h3><p>The coupled roll method is described in <a href="#method">Section 4</a>.</p>
 <h3>3.7 Load cases</h3>
 <p>Every combination of the assumed hull periods, damping and alpha values is retained in <a href="#sensitivity-table">Table A.1</a>.
 The response sweep covers 0.7 to 1.3 times each hull period; the additional long-period comparison uses 60 s forcing <a href="#ref-data">[I1]</a>.</p>
 </section>
 <section id="method"><h2>4 Analysis methodology</h2>
 <p>The model links hull roll to water transfer between connected tank legs. Tank moments feed back into the hull roll equation.
-Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha has no units.</p>
+Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha is dimensionless.</p>
 <p>The public U-tube model is used; a software version is not declared. Its exact source is identified in <a href="#ref-model">[I2]</a>.
-The public model includes vertical-centroid and local free-surface terms in that quasi-static stiffness.
-Ks also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
+Kₛ is the quasi-static tank moment per roll angle.
+The public model includes vertical-centroid and local free-surface terms in Kₛ.
+Kₛ also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
 <p id="eq-bare">(4.1) The normalized bare-hull impedance is D = 1 − (T₀/T)² + 2iζ(T₀/T).</p>
 <p id="eq-coupled">(4.2) The coupled impedance is D − αH/Kₛ. H is tank moment per roll angle; Kₛ is its quasi-static limit.</p>
 <p>T₀ is the hull roll period (s), T is the forcing period (s), ζ is the hull damping ratio (1), and i is the imaginary unit.
@@ -556,52 +589,54 @@ H and Kₛ use the same moment-per-angle units, so both impedances and alpha are
 <p>The hull equation uses normalized restoring of 1, with no units. The model sets forcing to give 5° bare roll at the nominal resonance
 (ASSUMED - to be confirmed). Forcing stays fixed within each tank-on and tank-off comparison.
 Forcing is rescaled between damping groups to keep the 5 degree bare-roll reference, so the comparison also changes the tank amplitude.</p>
-<p>The calculation finds each response peak separately over 0.7 to 1.3 times the hull roll period, with no units.
-It refines all sampled local peaks. Reduction equals 100 % times one minus the coupled peak divided by the bare peak.
+<p>The calculation finds each response peak separately over 0.7 to 1.3 times the hull roll period. Reduction equals 100 % times one minus the coupled peak divided by the bare peak.
 The input basis and calculation are recorded in <a href="#ref-data">[I1]</a> and <a href="#ref-builder">[I4]</a>.</p>
 </section>
 <section id="comparison"><h2>5 Results</h2>
 <p>All charts select the existing 18 s hull roll period and conduit area {a['conduit_area_m2']:.1f} m².
 The wave-period chart uses 2 % hull damping and alpha 0.05. Alpha is normalized stiffness as defined in <a href="#method">Section 4</a>.
-The calculated tank natural period is {natural_period:.1f} s.</p>
+The calculated tank natural period is {natural_period:.1f} s <a href="#ref-builder">[I4]</a>.
+The reference geometry is retained rather than tuned to the 18 s hull; the tank and hull natural periods therefore differ.</p>
 <h3>5.1 Peak roll reduction</h3>
 <p><a href="#fig-damping">Figure 5.1</a> shows peak reduction against hull damping;
-<a href="#fig-response">Figure 5.2</a> shows roll response against forcing period;
+<a href="#fig-response">Figure 5.2</a> shows the dimensionless roll amplification factor against forcing period;
 <a href="#fig-alpha">Figure 5.3</a> shows peak reduction against alpha.
 The full sensitivity matrix and damping comparison are in <a href="#sensitivity">Appendix A</a>.</p>
+<p>The amplification factor multiplies the normalized wave moment to give roll in radians.
+The bare factor is 1/(2ζ) at the nominal hull resonance; a normalized moment of 2ζ times 5° in radians gives the 5° bare roll used here.</p>
 {charts}
 <h3 id="penalty">5.2 Long-period penalty</h3>
-<p>Slow water transfer reduces the effective hull restoring. In the slow-forcing limit, the roll ratio approaches 1/(1−α), with no units.
-At alpha 0.05, with no units, that limit gives {100 * (1 / (1 - 0.05) - 1):.1f} % more roll.</p>
+<p>Slow water transfer reduces the effective hull restoring. In the slow-forcing limit, the roll ratio approaches 1/(1−α).
+At alpha 0.05, that limit gives {100 * (1 / (1 - 0.05) - 1):.1f} % more roll.</p>
 <p>At 60 s forcing and 18 s hull period with 2 % hull damping, there is {case(0.02)["long_period_penalty_percent"]:.1f} % more roll at alpha 0.05
-and {case(0.02, 0.20)["long_period_penalty_percent"]:.1f} % at alpha 0.20, against a {100 * (1 / (1 - 0.20) - 1):.1f} % limit.
+and {case(0.02, 0.20)["long_period_penalty_percent"]:.1f} % at alpha 0.20, compared with the {100 * (1 / (1 - 0.20) - 1):.1f} % slow-forcing limit at alpha 0.20, from 1/(1−α).
 The slow-forcing limit understates the penalty at 60 s. A near-resonance reduction does not remove this penalty.
 The comparison is recorded in <a href="#ref-data">[I1]</a>.</p></section>
 <section id="validation"><h2>6 Validation and benchmark</h2>
-<p>The published moment fit and the mathematical hand checks address different quantities.
+<p>The model's stated moment fit and the mathematical hand checks address different quantities.
 The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established <a href="#ref-public">[R1]</a>.</p>
-<p>The published moment fit does not validate coupled hull reduction.
+<p>The model's stated moment fit does not validate coupled hull reduction.
 No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.</p>
-<p>Alpha = 0, with no units, gives zero reduction, or 0 %.
+<p>Alpha = 0 gives zero reduction, or 0 %.
 An undamped box hand check copies the model's own moment formula, so it checks arithmetic and the coupling denominator,
 not the physics of the moment model. It also checks both natural frequencies <a href="#ref-tests">[I5]</a>.</p>
 <p>For that mathematical check, each leg measures 2 m by 1 m, with 1 m depth and 1 m offset.
 The conduit has 1 m² area and 1 m effective length. Fluid density is 1 kg/m³; gravity is 1 m/s².</p>
 <p>The hand calculation gives Kₛ = 53/6 N m/rad and H = 359/24 N m/rad at 0.5 rad/s.
-At alpha 0.1, with no units, the response is 2120/1231 times normalized forcing, with no units <a href="#ref-tests">[I5]</a>.</p>
+At alpha 0.1, the response is 2120/1231 times normalized forcing, with no units <a href="#ref-tests">[I5]</a>.</p>
 </section>
 <section id="limits"><h2>7 Limitations</h2>
 <p>The reductions are screening estimates for generic hulls, with no real-hull evidence; the missing comparison is described in <a href="#validation">Section 6</a>.</p>
 <ul>
-<li>The reference tank's natural period is {natural_period:.1f} s; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
-Every sampled forcing period below 20 s lies outside the published moment-fit band, including parts of the 21 s sweep; see <a href="#sensitivity-notes">Appendix A notes</a>.</li>
+<li>The reference tank's natural period is {natural_period:.1f} s <a href="#ref-builder">[I4]</a>; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
+Every sampled forcing period below 20 s lies outside the model's stated moment-fit band, including parts of the 21 s sweep; see <a href="#sensitivity-notes">Appendix A notes</a>.</li>
 <li>The damping comparisons rescale forcing between damping groups and therefore change tank amplitude; see <a href="#damping-comparison">Appendix A damping comparison</a>.</li>
 <li>Calibration transfer and the reference tank dimensions remain assumed; their basis is in <a href="#inputs">Table 3.1</a>.</li>
 <li>These screening estimates exclude sea-state weighting, structural loads and design qualification; the assessed scope is in <a href="#introduction">Section 2</a>.</li>
 <li>A near-resonance reduction does not remove the long-period penalty; see <a href="#penalty">Section 5.2</a>.</li>
 </ul></section>
 <section id="conclusions"><h2>8 Conclusions and next steps</h2>
-<p>The peak reduction depends on the assumed hull damping and tank authority; the separate peak comparisons are shown in <a href="#comparison">Section 5</a> and <a href="#sensitivity">Appendix A</a>.
+<p>The peak reduction depends on the assumed hull damping and alpha; the separate peak comparisons are shown in <a href="#comparison">Section 5</a> and <a href="#sensitivity">Appendix A</a>.
 The near-resonance reduction does not remove the long-period penalty in <a href="#penalty">Section 5.2</a>.</p>
 <p>Calibration transfer and the bare-roll reference remain ASSUMED.
 The missing real-vessel tank-on and tank-off comparison in <a href="#validation">Section 6</a> remains the evidence gap for coupled hull reduction.</p>
@@ -609,14 +644,15 @@ The missing real-vessel tank-on and tank-off comparison in <a href="#validation"
 <section id="references"><h2>9 References</h2>
 <p>The public model basis and the calculation records identify the inputs, results and mathematical checks used in this report.</p>
 <h3>9.1 Public references</h3>
-<ul><li id="ref-public">[R1] Public U-tube moment correlation: 4.3 % RMS error for forcing periods of 20 s and longer; degradation below about 16 s has no established cause.
-The published statement is retained in the <a href="#ref-model">model reference [I2]</a>; no independent coupled-hull validation is cited.</li></ul>
+<p>No external publication is used. The moment-fit statement below comes from the model documentation.</p>
+<ul><li id="ref-public">[R1] The model's stated moment fit: 4.3 % RMS error for forcing periods of 20 s and longer; degradation below about 16 s has no established cause.
+The statement is retained in the <a href="#ref-model">model reference [I2]</a>; no independent coupled-hull validation is cited.</li></ul>
 <h3>9.2 Data record and builder links</h3>
 <ul>
 <li id="ref-data">[I1] Model/data: <a href="data/generic_hull_roll_screening.json">{DATA}</a>.
 Assumptions, units, cases, damping comparisons, numeric arrays and source digests.</li>
 <li id="ref-model">[I2] Solver/program: public U-tube model; version not declared.
-<a href="../../../{MODEL_PATH}">{MODEL_PATH}</a>. Git blob: {model_blob}.</li>
+<a href="../../../{MODEL_PATH}">{MODEL_PATH}</a>. Source digest is recorded in [I1].</li>
 <li id="ref-study">[I3] Model context: <a href="dual-tank-sloshing-cfd-study.html">{PARENT_PAGE}</a>.
 The illustrative tank differs from the reference tank used here.</li>
 <li id="ref-builder">[I4] Calculation and figure builder: <a href="../../../{SCRIPT}">{SCRIPT}</a>.
@@ -625,17 +661,17 @@ The illustrative tank differs from the reference tank used here.</li>
 Hand-check inputs and rational oracle values are defined in test_undamped_two_degree_hand_check.</li>
 </ul></section>
 <section id="sensitivity"><h2>Appendix A Sensitivity matrix</h2>
-<p>The full matrix retains every calculated hull-period, damping and tank-authority combination.
+<p>The full matrix retains every calculated hull-period, damping and alpha combination.
 <a href="#sensitivity-table">Table A.1</a> gives the peak reduction and the coupled peak forcing period <a href="#ref-data">[I1]</a>.</p>
 <table id="sensitivity-table"><thead><tr><th>Hull roll period (s)</th><th>Hull damping (% of critical)</th><th>Alpha (1)</th>
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>{chr(10).join(rows)}</tbody>
 <caption>Table A.1 – Peak reduction sensitivity matrix.</caption></table>
 <p id="damping-comparison">In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio {ratio:.3f}).
-The ratio of the 5 % benefit to the 2 % benefit ranges from {min(ratios):.2f} to {max(ratios):.2f} across the matrix.
+The ratio of the 5 % benefit to the 2 % benefit ranges from {min(ratios):.3f} to {max(ratios):.3f} across the matrix.
 For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are {ratio_groups}.
 These comparisons rescale forcing between damping groups and therefore change the tank amplitude <a href="#ref-data">[I1]</a>.</p>
 <ol id="sensitivity-notes" class="notes">
-<li>The wave-period chart shades sampled forcing periods below 20 s, outside the published moment-fit band.
+<li>The wave-period chart shades sampled forcing periods below 20 s, outside the model's stated moment-fit band.
 The 18 s sweep starts at 12.6 s; the band also excludes parts of the 21 s sweep <a href="#ref-data">[I1]</a>, <a href="#ref-public">[R1]</a>.</li>
 <li>All charts select existing calculated samples without interpolation or new cases.
 CSV contains each plotted series point; hover or focus points for values and use checkboxes to toggle series.
@@ -643,14 +679,8 @@ The static SVG retains axes, units, legend and plotted samples for printing <a h
 <li>Reference tank geometry and calibration transfer are assumed; no actual hull geometry is supplied.
 Hull outline and conduit height are symbolic; widths, depths and centroid offsets use the recorded dimensions <a href="#ref-data">[I1]</a>.</li>
 </ol></section>
-<section id="reproduce"><h2>Appendix B Reproduce commands</h2>
-<p>The calculation and generated artifacts are reproduced with the following commands.</p>
-<pre>python scripts/capabilities/build_generic_hull_screening.py
-python -m pytest tests/hydrodynamics/test_generic_hull_screening.py</pre>
-<p>The generator writes this page, the data record and the independent-oracle test from one script.
-The tests check limiting cases, raw equilibrium residuals, frequency refinement and byte-identical regeneration of canonical numeric output.
-JSON floats retain at most 12 significant digits; refined peak periods are rounded to 0.0001 s, and residuals are reported as conservative power-of-ten upper bounds.
-Last-bit math perturbation tests check output stability; native platform runs are required to confirm each supported runtime.</p>
+<section id="reproduce"><h2>Appendix B Review status</h2>
+<p>Calculation records, source links and reproduction instructions are identified in <a href="#ref-builder">[I4]</a>.</p>
 <p>AI generated the script, calculations, tests and draft text. Engineering checks and acceptance remain pending.
 P.E. sign-off remains pending; no engineer signature is asserted.</p></section>
 <details id="revisions"><summary>Appendix C Revision history</summary>
@@ -658,7 +688,8 @@ P.E. sign-off remains pending; no engineer signature is asserted.</p></section>
 <tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
 <tr><td>Clarification</td><td>{GENERATION_DATE}</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr>
 <tr><td>Interactive summary</td><td>{GENERATION_DATE}</td><td>Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.</td></tr>
-<tr><td>Report layout</td><td>{GENERATION_DATE}</td><td>Engineering reporting conventions P6, 13 October 2026, commit 08f081f46 applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.</td></tr>
+<tr><td>Report layout</td><td>{GENERATION_DATE}</td><td>Engineering reporting layout applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.</td></tr>
+<tr><td>Summary and chart clarification</td><td>{GENERATION_DATE}</td><td>Earlier headline clarification recorded: peak roll reduction estimates refer to an 18 s hull roll period, with separate 2 % and 5 % damping cases. Moment-fit provenance and extrapolation, slow-forcing limit, tuning basis, symbols and chart scales clarified; calculation data retained.</td></tr>
 </tbody><caption>Table C.1 – Revision history.</caption></table></details>
 <script>
 function toggleSeries(chart, series, visible) {{
@@ -900,6 +931,50 @@ def test_published_reductions_are_preserved(record):
     assert [round(row["reduction_percent"], 1) for row in rows] == [46.1, 23.3]
 
 
+def test_summary_qualifies_fit_and_names_slow_forcing_limit(builder, record):
+    page = builder.render(record)
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert "model's stated moment-fit band (≥20 s)" in summary
+    assert "46.1 % peak at 18.5 s lies outside it" in summary
+    assert "25.0 % slow-forcing limit" in summary
+    assert "1/(1−α)" in summary
+    assert 'natural period is 14.3 s <a href="#ref-builder">[I4]</a>' in summary
+    assert "No external publication is used" in page
+    assert "published moment" not in page
+
+
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_chart_ticks_are_round_and_distinct(builder, record, index):
+    from xml.etree import ElementTree
+
+    svg = ElementTree.fromstring(builder.chart_svg(*builder.chart_specs(record)[index]))
+    for axis in ("x", "y"):
+        ticks = svg.findall(f'.//text[@data-axis="{axis}"]')
+        labels = [tick.text for tick in ticks]
+        assert len(labels) >= 3
+        assert len(labels) == len(set(labels))
+        values = [float(label) for label in labels]
+        assert values == sorted(values)
+        if axis == "y":
+            assert all(value % 5 == 0 for value in values)
+        if axis == "x" and index == 2:
+            assert labels == ["0.00", "0.05", "0.10", "0.15", "0.20"]
+
+
+def test_schematic_and_response_explain_motion_and_scale(builder, record):
+    page = builder.render(record)
+    svg = builder.schematic(record)
+    assert "φ" in svg and 'id="roll-motion"' in svg
+    assert 'id="water-flow"' in svg and "Oscillatory flow" in svg
+    assert "Roll amplification factor (1)" in page
+    assert "5° bare roll" in page and "2ζ" in page
+    assert "retained rather than tuned to the 18 s hull" in page
+    assert page.index("Kₛ is") < page.index("Kₛ also includes")
+    assert "Alpha is dimensionless" in page
+    assert "tank authority" not in page
+    assert "Calibration transfer means" in page
+
+
 def test_calculation_record_is_unchanged(builder):
     """Pin the complete numeric/data basis of the presentation baseline."""
     saved = json.loads((ROOT / builder.DATA).read_text(encoding="utf-8"))
@@ -1002,7 +1077,7 @@ def test_page_section_order_and_collapsed_revisions(builder, record):
         "1 Executive summary", "2 Introduction", "3 Design data",
         "4 Analysis methodology", "5 Results", "6 Validation and benchmark",
         "7 Limitations", "8 Conclusions and next steps", "9 References",
-        "Appendix A Sensitivity matrix", "Appendix B Reproduce commands",
+        "Appendix A Sensitivity matrix", "Appendix B Review status",
     ]
     markers = ['id="summary"', 'id="introduction"', 'id="design-data"',
                'id="hull-section"', 'id="method"', 'id="comparison"',
@@ -1062,7 +1137,12 @@ def test_report_traceability_and_print_contract(builder, record):
     assert parsed.locators and all(parsed.locators)
     assert all(caption.startswith(("Figure ", "Table ")) for caption in parsed.captions)
     assert 'Table A.1' in page and 'Figure 3.1' in page and 'Figure 5.3' in page
-    assert '08f081f46' in page and 'P6' in page
+    assert 'Summary and chart clarification' in page
+    assert 'Earlier headline clarification recorded' in page
+    assert 'Git blob:' not in page and 'conventions commit' not in page
+    assert '<pre>python' not in page and 'Last-bit math perturbation' not in page
+    assert 'It refines all sampled local peaks' not in page
+    assert 'Internal engineering report' not in page
     assert '@media print' in page and '.chart text' in page
     assert 'r="2.5"' in page and 'font-size="12"' in page
     svg = ElementTree.fromstring(builder.schematic(record))
@@ -1070,9 +1150,8 @@ def test_report_traceability_and_print_contract(builder, record):
     assert 'marker-start=' in builder.schematic(record)
     summary = page.split('<section id="summary">')[1].split('</section>')[0]
     assert 3 <= summary.count('<li>') <= 5
-    numbered = page.split('<section id="summary">')[1].split('<section id="sensitivity">')[0]
     import re
-    assert not re.search(r'\bline \d+', numbered.split('<section id="references">')[0])
+    assert not re.search(r'\bline \d+', page)
 
 
 def test_page_wording_links_and_preservation(builder, record):
@@ -1099,16 +1178,16 @@ def test_page_wording_links_and_preservation(builder, record):
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text
     assert 'conduit area A_c = 6.8 m²' in text
     assert '120 m² in plan' in text
-    assert 'Ks also includes water redistribution between the legs' in text
+    assert 'Kₛ also includes water redistribution between the legs' in text
     assert 'Hull damping (% of critical)' in text
     assert '4.3 % RMS error' in text
     assert 'below about 16 s' in text
     assert '14.3 s' in text
     assert 'ratio 0.505' in text
-    assert '0.43 to 0.72' in text
+    assert '0.432 to 0.725' in text
     assert '6.0 % more roll' in text
     assert '29.5 %' in text
-    assert '25.0 % limit' in text
+    assert '25.0 % slow-forcing limit' in text
     assert text.count('ASSUMED - to be confirmed') >= 3
     assert "checks arithmetic and the coupling denominator" in text
     assert "not the physics of the moment model" in text
