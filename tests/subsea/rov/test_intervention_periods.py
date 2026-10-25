@@ -6,7 +6,8 @@
 Reference: DNV-ST-N001, Marine operations and marine warranty, December 2023,
 clauses 2.6.2.1, 2.6.7.3 / Figure 2-4 and 2.6.9.2. Publisher:
 https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/
-Clause verification against the official edition is NOT_EVALUATED.
+The publisher page identifies the edition, not the contents of these clauses.
+Clause verification against the official edition remains NOT_EVALUATED.
 All inputs below are synthetic arithmetic examples, not qualified ratings or
 standard contingency/alpha recommendations. Test docstrings independently
 derive expected schedules. Equality suffices for integer/binary-fraction results;

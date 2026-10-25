@@ -6,7 +6,8 @@
 Reference: DNV-ST-N001, Marine operations and marine warranty, December 2023,
 clauses 2.6.2.1, 2.6.7.3 / Figure 2-4 and 2.6.9.2. Publisher:
 https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/
-Clause verification against the official edition is NOT_EVALUATED.
+The publisher page identifies the edition, not the contents of these clauses.
+Clause verification against the official edition remains NOT_EVALUATED.
 ``from_operation_periods`` adds caller-assessed planned and contingency counts;
 all Hs decisions delegate to ``seastate_limits.seastate_operability``.
 
