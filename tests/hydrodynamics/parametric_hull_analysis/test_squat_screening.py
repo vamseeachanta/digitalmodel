@@ -157,8 +157,9 @@ def test_barrass_independent_arithmetic():
         )
     )
     assert result.maximum_m == pytest.approx(0.8 * 8**2.08 / 120)
-    assert result.bow_m is None and result.stern_m is None
-    assert result.governing_end == "unknown"
+    assert result.bow_m == pytest.approx(0.8 * 8**2.08 / 120)
+    assert result.stern_m is None and result.trim_change_m is None
+    assert result.governing_end == "bow prediction only"
 
 
 def test_romisch_bow_stern_and_trim_hand_calculation():
@@ -414,6 +415,10 @@ def test_cross_check_spread_and_missing_method():
     values = [r.maximum_m for r in table.results]
     assert table.spread_m == pytest.approx(max(values) - min(values))
     assert table.all_evaluated
+    bow_only = next(r for r in table.results if r.method is Formula.BARRASS_1981)
+    assert bow_only.bow_m == bow_only.maximum_m
+    assert bow_only.stern_m is None and bow_only.trim_change_m is None
+    assert bow_only.governing_end == "bow prediction only"
     restricted = compare_formulas(
         hull(channel_kind=ChannelKind.DREDGED, channel_width_m=100)
     )
@@ -535,6 +540,10 @@ def test_dredged_channel_worked_example():
         for row, value in zip(data["rows"][method], values, strict=True):
             assert row.squat.maximum_m == pytest.approx(value, abs=5.1e-7)
             assert row.net_ukc_m == pytest.approx(4.3 - value, abs=5.1e-7)
+            if method is Formula.BARRASS_1981:
+                assert row.squat.bow_m == pytest.approx(value, abs=5.1e-7)
+                assert row.squat.stern_m is None and row.squat.trim_change_m is None
+                assert row.squat.governing_end == "bow prediction only"
     assert not data["rows"][Formula.BARRASS_1981][-1].meets_criterion
     assert all(
         data["rows"][method][-1].meets_criterion

@@ -15,6 +15,7 @@ remain `NOT_EVALUATED`.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-22 | Add sourced formula screening, explicit UKC budgets and a synthetic example to expose shallow-water clearance sensitivity. |
+| 1 | 2026-10-25 | Identify the 1981 equation's bow-only prediction so comparisons and UKC budgets retain its known end and unavailable stern. |
 
 ## API and inputs
 
@@ -61,7 +62,7 @@ source identifiers, applicability description and supplied corrections.
 
 | Method | Equation and coefficient source | Screening range and limitations |
 | --- | --- | --- |
-| Barrass 1979/1981 | `q=Cb*(S/(1-S))^(2/3)*Vk^2.08/30`, `S=B*T/(W*h)`; [2, (2), (4)-(5)] | `1.1<=h/T<=1.5`, `0.5<=Cb<=0.9`; all channel kinds; supplied effective width in open water. Maximum position is unavailable. |
+| Barrass 1979/1981 | `Sb=Cb*(S/(1-S))^(2/3)*Vk^2.08/30`, `S=B*T/(W*h)`; [2, section 6, (2), (4)-(5)] | `1.1<=h/T<=1.5`, `0.5<=Cb<=0.9`; all channel kinds; supplied effective width in open water. Bow squat only; stern and trim are unavailable. |
 | Romisch 1989 | `Sb=Cv*Cf*K*T`, `Ss=Cv*K*T`; `Cv=8*r²*((r-0.5)^4+0.0625)`, `Cf=(10*B*Cb/Lpp)²`, `K=0.155*sqrt(h/T)`; [1, A4 (7)-(10)] | `1.19<=h/T<=2.25`, `V<Vcr`; both ends and change in draught difference. Open `Vcr=sqrt(g*h)*0.58*(h*Lpp/(B*T))^0.125` [1, (11)]. Restricted critical speed and its source must be supplied. |
 | Huuska/Guliev, open ICORELS equivalent | `Sb=2.4*Cb*B*T/Lpp*Fnh²/sqrt(1-Fnh²)*Ks`; [1, A3 (6)] | `1.1<=h/T<=2.0`; open `Ks=1` [1, A3]; restricted `Ks` and source are required because trench geometry is absent. Applying the HG depth range to the open equivalent is conservative implementation policy; Table 1 gives no numerical ICORELS bounds. Stern is unavailable. |
 | Eryuzlu 1994 | `Sb=0.298*h²/T*(V/sqrt(g*T))^2.289*(h/T)^(-2.972)*Kb`; [1, A2 (5)]. Dredged width factor `Kb=3.1/sqrt(W/B)` below `W/B=9.61`, otherwise 1 [2, (8)]; open `Kb=1` [1, A2]. | `1.1<=h/T<=2.5`, `Cb>=0.8`; open or dredged, excluding canals; intended for bulbous-bow cargo/bulk hulls [2, section 6]. Hull-family suitability must be confirmed externally. Stern is unavailable. |
@@ -74,6 +75,8 @@ are used: [2, (7)] contains a conflicting exponent and speed symbol.
 
 `maximum_m` is the largest **predicted** displacement. For bow-only methods,
 it is a bow prediction and does not establish the unmodelled stern clearance.
+The 1981 result retains `bow_m=maximum_m`, `governing_end="bow prediction only"`,
+and unavailable `stern_m` and `trim_change_m` in comparisons and UKC rows.
 Romisch's `trim_change_m` is `Sb-Ss`, positive bow down, in metres. It is not an
 angle. Initial trim is assumed zero. A full-form synthetic hull has bow-governing
 squat; a fine-form synthetic hull can have stern-governing squat under its

@@ -291,12 +291,13 @@ def _gate(item: SquatInputs, method: Formula) -> str:
 def barrass_1981(
     item: SquatInputs, corrections: SuppliedCorrections | None = None
 ) -> SquatResult:
-    """[B17] (4)-(5): q=Cb*(S/(1-S))**(2/3)*Vk**2.08/30.
+    """[B17] (4)-(5): bow=Cb*(S/(1-S))**(2/3)*Vk**2.08/30.
 
     S=B*T/(W*h) per [B17] (2), with supplied effective W in open water.
     Range: 0.5<=Cb<=0.9, 1.1<=h/T<=1.5; all three channel kinds (Table 1),
     additionally Fnh<1. This is the 1979/1981 version, not the later B3
-    expression in [P11]. Position is unknown; no B3 trim rule is transferred.
+    expression in [P11]. Bow squat is predicted; stern and trim are unknown.
+    No B3 trim rule is transferred.
     """
     method = Formula.BARRASS_1981
     if reason := _gate(item, method):
@@ -304,8 +305,8 @@ def barrass_1981(
     s = item.area_blockage
     vk = item.speed_m_s / METRES_PER_SECOND_PER_KNOT
     # [B17] (4)-(5): powers 2/3 and 2.08; denominator 30.
-    maximum = item.block_coefficient * (s / (1 - s)) ** (2 / 3) * vk**2.08 / 30
-    return _result(item, method, corrections, maximum=maximum)
+    bow = item.block_coefficient * (s / (1 - s)) ** (2 / 3) * vk**2.08 / 30
+    return _result(item, method, corrections, bow=bow)
 
 
 def romisch_1989(
