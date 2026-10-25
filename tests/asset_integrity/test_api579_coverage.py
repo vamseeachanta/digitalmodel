@@ -151,6 +151,13 @@ def test_engine_route_is_registered_without_importing_solver_integrations():
         and any(alias.name == "router" for alias in node.names)
         for node in branches[0].body
     )
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name) and node.func.id == "router"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Name) and node.args[0].id == "cfg_base"
+        for statement in branches[0].body for node in ast.walk(statement)
+    )
     registry_path = ROOT / "docs/registry/workflows.yaml"
     registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     entry = next(row for row in registry["workflows"] if row["id"] == "api579-coverage-screen")
@@ -159,7 +166,10 @@ def test_engine_route_is_registered_without_importing_solver_integrations():
 
 
 def test_catalog_separates_available_intake_from_planned_calculations():
-    from digitalmodel.asset_integrity.offering_catalog import load
+    from digitalmodel.asset_integrity.offering_catalog import (
+        capability_map_entries,
+        load,
+    )
 
     catalog = load()
     assert catalog.ffs["engines"]["parts-8-11-13-14"] == {"status": "planned", "issue": 2203}
@@ -167,12 +177,17 @@ def test_catalog_separates_available_intake_from_planned_calculations():
     assert intake["status"] == "workflow"
     assert intake["workflow"] == "api579-coverage-screen"
     assert "NOT_EVALUATED" in intake["caveat"]
+    assert (
+        capability_map_entries(catalog)["api579-coverage-intake"]["caveat"]
+        == intake["caveat"]
+    )
     assert not any("api579-coverage-intake" in row.engines for row in catalog.rows)
     capability_map = yaml.safe_load(
         (ROOT / "docs/capability-map/capabilities-added.yml").read_text(encoding="utf-8")
     )["engines"]["ffs"]
     assert capability_map["parts-8-11-13-14"] == {"status": "planned", "issue": 2203}
     assert capability_map["api579-coverage-intake"]["status"] == "workflow"
+    assert capability_map["api579-coverage-intake"]["caveat"] == intake["caveat"]
     rows = [row for row in catalog.rows if "parts-8-11-13-14" in row.engines]
     assert rows
     assert all(row.status == "planned" and row.issue == 2203 for row in rows)
