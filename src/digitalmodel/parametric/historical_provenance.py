@@ -79,11 +79,14 @@ def archive_reader(root: Path) -> Reader:
 
 
 def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                          "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"}}
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     try:
         return subprocess.check_output(
             ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL,
-            env={key: value for key, value in os.environ.items()
-                 if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}},
+            env=env,
         )
     except (OSError, subprocess.CalledProcessError):
         raise EvidenceError("Unavailable Git evidence or retained history") from None
@@ -254,11 +257,37 @@ def _inventory_at(root: Path, revision: str) -> dict[str, dict]:
         raise EvidenceError("Invalid committed inventory") from None
 
 
+def _ci_head(root: Path, ci_ref: str, retained: str, revision: str) -> str:
+    pull_ref = ci_ref.rsplit("/", 1)[0] + "/head"
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    if event_path:
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            head = event["pull_request"]["head"]["sha"]
+            if not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head):
+                raise ValueError("Invalid head object ID")
+            return _commit(root, head)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise EvidenceError("Unavailable or invalid CI pull request head in event payload") from None
+    try:
+        return _commit(root, pull_ref)
+    except EvidenceError:
+        parents = _git(root, "rev-list", "--parents", "-n", "1", revision).decode().split()
+        if ci_ref.endswith("/merge") and len(parents) == 3 and parents[1] == retained:
+            return parents[2]
+        raise EvidenceError(
+            f"Missing CI pull request head ref {pull_ref}; provide the event head SHA "
+            "or a two-parent merge whose first parent is the retained tip"
+        ) from None
+
+
 def _verify_retention(record: dict, root: Path, retained_ref: str,
                       revision: str, pr_head: str | None) -> None:
     retained = _commit(root, retained_ref)
     source = record["source_revision"]
     on_default = _ancestor(root, source, retained)
+    retention_hint = (f" Retained ref {retained_ref} ({retained}) does not retain source {source}, "
+                      "or the retained ref is stale; fetch it.")
     try:
         branch = _git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
     except EvidenceError:
@@ -270,14 +299,17 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
             raise EvidenceError(
                 "Source revision is not retained on the default branch; possible squash-merged "
                 "orphan. Provenance-entry changes require a merge commit, not a squash merge."
+                + retention_hint
             )
         return
 
     ci_ref = re.fullmatch(r"refs/pull/([0-9]+)/(?:head|merge)", os.environ.get("GITHUB_REF", ""))
-    head_ref = pr_head or (f"refs/pull/{ci_ref[1]}/head" if ci_ref else "HEAD")
-    head = _commit(root, head_ref)
-    if ci_ref and head != _commit(root, f"refs/pull/{ci_ref[1]}/head"):
-        raise EvidenceError("Explicit head does not match the CI pull request head")
+    if ci_ref:
+        head = _ci_head(root, ci_ref[0], retained, revision)
+        if pr_head and _commit(root, pr_head) != head:
+            raise EvidenceError("Explicit head does not match the CI pull request head")
+    else:
+        head = _commit(root, pr_head or "HEAD")
     if not _ancestor(root, head, revision):
         raise EvidenceError("Pull request head is outside the current checkout ancestry")
     base = _git(root, "merge-base", retained, head).decode().strip()
@@ -290,7 +322,8 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
         if not _ancestor(root, source, head):
             raise EvidenceError("Changed entry source revision is not contained in the pull request head")
     elif not on_default:
-        raise EvidenceError("An unchanged entry requires source retention on the default branch")
+        raise EvidenceError("An unchanged entry requires source retention on the default branch."
+                            + retention_hint)
 
 
 def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main",

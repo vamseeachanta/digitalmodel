@@ -21,9 +21,11 @@ INDEX = "atlases/historical-provenance.json"
 @pytest.fixture
 def repository(tmp_path, monkeypatch, request):
     # Never let a caller's Git bindings redirect fixture mutations.
-    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.delenv("GITHUB_REF", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
@@ -88,15 +90,138 @@ def repository(tmp_path, monkeypatch, request):
         git("update-ref", "refs/heads/main", base)
         git("update-ref", "refs/remotes/origin/main", base)
         wrapper.write_bytes(original + b"\n# Feature wrapper snapshot.\n")
-        index.write_text(json.dumps({"atlases": [feature_row]}), encoding="utf-8")
+        current_row = row if kind == "retained" else feature_row
+        index.write_text(json.dumps({"atlases": [current_row]}), encoding="utf-8")
         head = commit("Feature inventory", base, feature_source)
         git("update-ref", "refs/heads/feature", head)
         git("symbolic-ref", "HEAD", "refs/heads/feature")
         return dict(root=root, git=git, commit=commit, base=base, head=head,
-                    row=copy.deepcopy(feature_row), unrelated=unrelated,
+                    row=copy.deepcopy(current_row), unrelated=unrelated,
                     source=source, before=before)
 
     return prepare
+
+
+def local_ci_merge(case, monkeypatch, *, event=False):
+    """Reproduce the workflow's detached merge without fetching a pull ref."""
+    git = case["git"]
+    retained = git("rev-parse", "origin/main")
+    git("checkout", "--detach", retained)
+    git("merge", "--no-ff", "--no-edit", case["head"])
+    assert git("rev-parse", "--abbrev-ref", "HEAD") == "HEAD"
+    assert git("rev-parse", "HEAD^1") == retained
+    assert git("rev-parse", "HEAD^2") == case["head"]
+    assert git("for-each-ref", "refs/pull/17/head") == ""
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
+    if event:
+        path = case["root"].parent / "event.json"
+        path.write_text(json.dumps({"pull_request": {"head": {"sha": case["head"]}}}))
+        monkeypatch.setenv("GITHUB_EVENT_PATH", str(path))
+
+
+@pytest.mark.parametrize("kind", ["added", "retained"])
+@pytest.mark.parametrize("event", [False, True])
+def test_workflow_local_merge_without_pull_ref(repository, monkeypatch, kind, event):
+    case = repository(kind)
+    local_ci_merge(case, monkeypatch, event=event)
+    result = history.verify_git(case["row"], case["root"])
+    assert result["status"] == "VERIFIED"
+    assert result["working_tree_drift"] == []
+
+
+@pytest.mark.parametrize("ci_merge", [False, True])
+def test_advancing_main_does_not_relax_untouched_entry(repository, monkeypatch, ci_merge):
+    case = repository("unchanged")
+    main_row = copy.deepcopy(case["row"])
+    main_row["reason"] = "Metadata changed only on main"
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [main_row]}))
+    tip = case["commit"]("Main-only inventory change", case["base"])
+    case["git"]("update-ref", "refs/remotes/origin/main", tip)
+    # Restore the feature's files before testing or building the CI merge.
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [case["row"]]}))
+    case["git"]("add", INDEX)
+    assert case["git"]("merge-base", tip, case["head"]) == case["base"]
+    if ci_merge:
+        local_ci_merge(case, monkeypatch, event=True)
+    with pytest.raises(history.EvidenceError, match="unchanged.*default branch"):
+        history.verify_git(case["row"], case["root"])
+
+
+@pytest.mark.parametrize("event", [False, True])
+def test_local_merge_cannot_substitute_synthetic_head(repository, monkeypatch, event):
+    case = repository()
+    local_ci_merge(case, monkeypatch, event=event)
+    with pytest.raises(history.EvidenceError, match="CI pull request head"):
+        history.verify_git(case["row"], case["root"], pr_head="HEAD")
+
+
+@pytest.mark.parametrize("damage", ["missing", "malformed", "symbolic", "outside"])
+def test_invalid_event_head_fails_closed(repository, monkeypatch, damage):
+    case = repository()
+    local_ci_merge(case, monkeypatch, event=True)
+    path = case["root"].parent / "event.json"
+    if damage == "missing":
+        monkeypatch.setenv("GITHUB_EVENT_PATH", str(path.parent / "absent.json"))
+    elif damage == "malformed":
+        path.write_text("{")
+    else:
+        head = "HEAD" if damage == "symbolic" else case["unrelated"]
+        path.write_text(json.dumps({"pull_request": {"head": {"sha": head}}}))
+    with pytest.raises(history.EvidenceError, match="event payload|checkout ancestry"):
+        history.verify_git(case["row"], case["root"])
+
+
+def test_event_head_takes_precedence_over_stale_pull_ref(repository, monkeypatch):
+    case = repository()
+    local_ci_merge(case, monkeypatch, event=True)
+    case["git"]("update-ref", "refs/pull/17/head", case["base"])
+    assert history.verify_git(case["row"], case["root"])["status"] == "VERIFIED"
+
+
+@pytest.mark.parametrize("parents", ["wrong-first", "extra"])
+def test_local_merge_fallback_requires_exact_retained_parent(repository, monkeypatch, parents):
+    case = repository()
+    ancestry = [case["head"], case["base"]] if parents == "wrong-first" else [
+        case["base"], case["head"], case["unrelated"]]
+    synthetic = case["commit"]("Invalid merge shape", *ancestry)
+    case["git"]("update-ref", "--no-deref", "HEAD", synthetic)
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
+    with pytest.raises(history.EvidenceError, match="Missing CI pull request head ref"):
+        history.verify_git(case["row"], case["root"])
+
+
+def test_head_checkout_does_not_infer_its_own_parent(repository, monkeypatch):
+    case = repository()
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/17/head")
+    with pytest.raises(history.EvidenceError, match="Missing CI pull request head ref"):
+        history.verify_git(case["row"], case["root"])
+
+
+@pytest.mark.parametrize("event", [False, True])
+def test_local_ci_merge_rejects_synthetic_only_inventory(repository, monkeypatch, event):
+    case = repository()
+    local_ci_merge(case, monkeypatch, event=event)
+    row = copy.deepcopy(case["row"])
+    row["source_revision"] = case["unrelated"]
+    (case["root"] / INDEX).write_text(json.dumps({"atlases": [row]}))
+    synthetic = case["commit"]("Synthetic-only inventory", case["base"], case["head"])
+    case["git"]("update-ref", "--no-deref", "HEAD", synthetic)
+    with pytest.raises(history.EvidenceError, match="committed inventory"):
+        history.verify_git(row, case["root"])
+
+
+def test_merge_original_head_recovers_squashed_source_retention(repository):
+    case = repository()
+    squashed = case["commit"]("Squashed inventory", case["base"])
+    case["git"]("update-ref", "refs/heads/main", squashed)
+    case["git"]("update-ref", "refs/remotes/origin/main", squashed)
+    case["git"]("symbolic-ref", "HEAD", "refs/heads/main")
+    with pytest.raises(history.EvidenceError, match="squash.*merge commit"):
+        history.verify_git(case["row"], case["root"])
+    recovered = case["commit"]("Retain original source ancestry", squashed, case["head"])
+    case["git"]("update-ref", "refs/heads/main", recovered)
+    case["git"]("update-ref", "refs/remotes/origin/main", recovered)
+    assert history.verify_git(case["row"], case["root"])["status"] == "VERIFIED"
 
 
 @pytest.mark.parametrize("kind", ["added", "modified"])
@@ -172,8 +297,10 @@ def test_ci_merge_checkout_uses_pull_request_head(repository, monkeypatch):
 
 def test_ci_requires_the_actual_pull_request_head_ref(repository, monkeypatch):
     case = repository()
+    single_parent = case["commit"]("Non-merge checkout", case["base"])
+    case["git"]("update-ref", "--no-deref", "HEAD", single_parent)
     monkeypatch.setenv("GITHUB_REF", "refs/pull/17/merge")
-    with pytest.raises(history.EvidenceError, match="retained history"):
+    with pytest.raises(history.EvidenceError, match="Missing CI pull request head ref refs/pull/17/head"):
         history.verify_git(case["row"], case["root"])
 
 
@@ -270,3 +397,43 @@ def test_detached_default_branch_ci_stays_strict_with_stale_ref(repository, monk
     monkeypatch.setenv("GITHUB_REF", "refs/heads/main")
     with pytest.raises(history.EvidenceError, match="squash.*merge commit"):
         history.verify_git(case["row"], case["root"])
+
+
+@pytest.mark.parametrize("kind", ["unchanged", "default"])
+def test_retention_failure_identifies_ref_and_staleness(repository, monkeypatch, kind):
+    case = repository("unchanged" if kind == "unchanged" else "modified")
+    if kind == "default":
+        monkeypatch.setenv("GITHUB_REF", "refs/heads/main")
+    with pytest.raises(history.EvidenceError) as error:
+        history.verify_git(case["row"], case["root"])
+    assert "origin/main" in str(error.value)
+    assert case["base"] in str(error.value)
+    assert "or the retained ref is stale; fetch it" in str(error.value)
+
+
+@pytest.mark.parametrize("variable", ["GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"])
+def test_verifier_ignores_inherited_object_directories(repository, monkeypatch, variable):
+    case = repository()
+    monkeypatch.setenv(variable, str(case["root"].parent / "missing-objects"))
+    assert history.verify_git(case["row"], case["root"])["status"] == "VERIFIED"
+
+
+def test_verifier_ignores_replace_objects(repository, monkeypatch):
+    case = repository()
+    case["git"]("replace", case["row"]["source_revision"], case["unrelated"])
+    monkeypatch.delenv("GIT_NO_REPLACE_OBJECTS", raising=False)
+    assert history.verify_git(case["row"], case["root"])["status"] == "VERIFIED"
+    assert case["git"]("show-ref", "--hash", f"refs/replace/{case['row']['source_revision']}") == case["unrelated"]
+
+
+def test_alternate_objects_cannot_supply_source_evidence(repository, monkeypatch):
+    case = repository()
+    content = case["git"]("cat-file", "-p", case["head"]) + "\nAlternate evidence\n"
+    objects = case["root"].parent / "alternate-objects"
+    objects.mkdir()
+    monkeypatch.setenv("GIT_OBJECT_DIRECTORY", str(objects))
+    foreign = case["git"]("hash-object", "-w", "-t", "commit", "--stdin", data=content.encode())
+    monkeypatch.delenv("GIT_OBJECT_DIRECTORY")
+    monkeypatch.setenv("GIT_ALTERNATE_OBJECT_DIRECTORIES", str(objects))
+    with pytest.raises(history.EvidenceError, match="Unavailable Git evidence"):
+        history.git_reader(case["root"], foreign)
