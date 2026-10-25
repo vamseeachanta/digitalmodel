@@ -15,12 +15,11 @@ pre { overflow-x: auto; background: #eef3f6; padding: 1rem; }
 </head>
 <body>
 <h1>Squat and under-keel clearance screening</h1>
-<p>This addition covers the dispatched squat follow-up to
-<a href="https://github.com/vamseeachanta/digitalmodel/issues/1704">issue 1704</a>,
-not completion of its original broader test-coverage scope.</p>
+<p>This guide describes unrestricted-channel squat estimates, under-keel clearance
+budgets and evaluation of supplied speed grids.</p>
 <h2>Method and provenance</h2>
-<p>Slice 1 evaluates unrestricted-channel bow and stern squat using the
-Romisch (1989) method as reproduced in <a href="https://pianc-jp.org/news/images/On%20Course%20142.pdf">
+<p>Bow and stern squat are evaluated using the
+Römisch (1989) method as reproduced in <a href="https://pianc-jp.org/news/images/On%20Course%20142.pdf">
 PIANC On Course 142 (2011)</a>, Appendix A4, printed page 22, equations (7)-(10).
 The original 1989 publication has not been directly verified.</p>
 <pre>r = speed relative to water / critical speed
@@ -36,7 +35,8 @@ The supplied interval does not establish hull/channel qualification.</p>
 convention. The deep-water turning guard is not applied to this shallow-water
 formula. Depth classification does not establish navigability.</p>
 <h2>Clearance and speed grid</h2>
-<p>Slice 2 applies the geometric accounting identity, introducing no empirical factor:</p>
+<p>Under-keel clearance is calculated using the geometric accounting identity,
+introducing no empirical factor:</p>
 <pre>static clearance = h - T
 residual clearance = h - T - max(Sb, Ss) - allowance
 margin = residual clearance - supplied minimum clearance</pre>
@@ -46,7 +46,7 @@ accounted for. Zero must be explicit. The optional minimum is a CitedValue in me
 Equality meets that supplied minimum; no minimum gives NOT_EVALUATED.
 Negative residuals are retained. budget_exhausted includes allowances and is not
 a claim of bottom contact.</p>
-<p>Slice 3 evaluates a supplied speed grid in order. Any invalid row fails the call.
+<p>A supplied speed grid is evaluated in order. Any invalid row fails the call.
 No row is silently dropped; no limiting speed is interpolated or approved.</p>
 <h2>Worked synthetic example</h2>
 <table>
@@ -101,7 +101,7 @@ Wave response, initial trim, heel, bathymetric uncertainty, channel qualificatio
 and allowance completeness are not evaluated. The hand calculation verifies
 arithmetic, not measured squat. Operational acceptance requires a reviewed
 hull/channel basis and all relevant clearance contributions.</p>
-<h2>Later slices</h2>
+<h2>Future work</h2>
 <p>Restricted-channel and canal critical-speed derivation, measured-data comparison,
 wave-response integration and external navigation criteria remain later work.
 No licensed solver or bathymetry service is used by this API.</p>

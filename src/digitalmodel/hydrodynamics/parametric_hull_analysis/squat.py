@@ -1,9 +1,9 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Unrestricted-channel Romisch squat and an explicit clearance budget.
+"""Unrestricted-channel Römisch squat and an explicit clearance budget.
 
 Method: PIANC On Course 142 (2011), Appendix A4, printed p. 22, eqs. (7)-(10),
-reporting Romisch (1989). The original 1989 publication is not verified here.
+reporting Römisch (1989). The original 1989 publication is not verified here.
 https://pianc-jp.org/news/images/On%20Course%20142.pdf
 
 Critical speed and the empirical h/T envelope require caller-supplied cited
@@ -31,7 +31,7 @@ ROMISCH_REFERENCE = Citation(
     section="On Course 142, Appendix A4, p. 22, equations (7)-(10)",
     wiki_path="wikis/marine-engineering/wiki/standards/romisch-squat.md",
     source_sibling="generic",
-    note="Romisch (1989) as reported in https://pianc-jp.org/news/images/On%20Course%20142.pdf",
+    note="Römisch (1989) as reported in https://pianc-jp.org/news/images/On%20Course%20142.pdf",
 )
 
 
