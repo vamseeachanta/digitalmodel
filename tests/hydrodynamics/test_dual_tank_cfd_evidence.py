@@ -86,7 +86,8 @@ def test_builder_evidence_reads_only_json(monkeypatch, tmp_path):
     second = builder.render_cfd_evidence()
     assert first != second
     assert 'value="8.25"' in second
-    assert re.findall(r'<polyline[^>]+>', first) != re.findall(r'<polyline[^>]+>', second)
+    assert re.findall(r'<g[^>]+data-y=[^>]+>', first) != re.findall(r'<g[^>]+data-y=[^>]+>', second)
+    assert '<polyline' not in first and '<polyline' not in second
 
 
 def test_new_sections_numbers_come_from_json():
@@ -104,7 +105,9 @@ def test_new_sections_numbers_come_from_json():
             # Percentage prose may display evidence rounded to 0.1 %.
             for percentage in re.findall(r"(\d+(?:\.\d+)?(?:[-–]\d+(?:\.\d+)?)?)\s*%", value):
                 allowed.update(f"{float(n):.1f}" for n in re.split("[-–]", percentage))
-    visible = re.sub(r"<[^>]+>", " ", evidence)
+    # Round axis ticks are presentation values; evidence prose remains source-bound.
+    prose = re.sub(r'<figure\b.*?</figure>', '', evidence, flags=re.S)
+    visible = re.sub(r"<[^>]+>", " ", prose)
     for number in re.findall(r"(?<![\w])\d+(?:\.\d+)?", visible):
         assert number in allowed, number
     assert "exception" in evidence.lower()

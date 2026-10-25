@@ -1,0 +1,3 @@
+fill_pct,cfd_period_s,model_period_s,evidence_pointer
+25,13.453723723246052,13.954,archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/2/measured_Tn_s | archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/2/predicted_Tn_s
+70,14.384289572307821,14.589,archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/3/measured_Tn_s | archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/3/predicted_Tn_s

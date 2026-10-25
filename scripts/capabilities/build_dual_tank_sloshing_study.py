@@ -8,6 +8,9 @@ is loaded by file so optional hydrodynamics package dependencies are unnecessary
 from __future__ import annotations
 
 import ast
+import csv
+import io
+import textwrap
 import html
 import importlib.util
 import json
@@ -170,59 +173,400 @@ def compute():
                 tuning=tuning, absorbers=absorbers)
 
 
-def chart(identifier, title, xs, series, xlabel, ylabel, supported_from=None):
-    """Inline accessible SVG with independent axes, legend and validity shading."""
-    colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78", "#555555")
-    left, right, top, bottom = 84, 770, 46, 300
-    xmin, xmax = min(xs), max(xs)
-    ymin = min(0, min(min(ys) for _, ys in series))
-    ymax = max(max(ys) for _, ys in series)
+PLOT_LEFT, PLOT_RIGHT = 72, 342
+PLOT_TOP, PLOT_BOTTOM = 32, 252
+SERIES_COLORS = ('var(--navy)', 'var(--teal)', 'var(--accent)', 'var(--mut)', 'var(--red)')
 
-    def x(value):
-        return left + (value - xmin) / (xmax - xmin) * (right - left)
 
-    def y(value):
-        return bottom - (value - ymin) / (ymax - ymin) * (bottom - top)
+def nice_step(value):
+    """Round an axis step upward to a power-of-ten multiple of 1, 2 or 5."""
+    power = 10 ** math.floor(math.log10(value))
+    return next(multiplier * power for multiplier in (1, 2, 5, 10)
+                if multiplier * power >= value * (1 - 1e-12))
 
-    shading = (" Shaded periods are outside the published moment fit band."
-               if supported_from is not None else "")
-    parts = [f'<svg id="{identifier}" viewBox="0 0 820 440" role="img" '
-             f'aria-labelledby="{identifier}-title {identifier}-desc" '
-             'style="width:100%;height:auto">',
-             f'<title id="{identifier}-title">{html.escape(title)}</title>',
-             f'<desc id="{identifier}-desc">{html.escape(ylabel)} against '
-             f'{html.escape(xlabel)}. {html.escape("; ".join(n for n, _ in series))}.'
-             f'{shading}</desc>',
-             '<rect width="820" height="440" fill="white"/>',
-             f'<text x="84" y="22" fill="#16324f">{html.escape(title)}</text>']
-    if supported_from is not None:
-        parts.append(f'<rect x="{left}" y="{top}" '
-                     f'width="{x(supported_from)-left:.1f}" '
-                     f'height="{bottom-top}" fill="#fff0d0"/>')
-    for i in range(6):
-        xv = xmin + (xmax - xmin) * i / 5
-        yv = ymin + (ymax - ymin) * i / 5
-        parts.extend([
-            f'<path d="M {left} {y(yv):.1f} H {right}" stroke="#e2e7eb"/>',
-            f'<text x="{left-8}" y="{y(yv)+4:.1f}" text-anchor="end" '
-            f'font-size="12">{yv:.1f}</text>',
-            f'<text x="{x(xv):.1f}" y="322" text-anchor="middle" '
-            f'font-size="12">{xv:.1f}</text>',
-        ])
-    parts.extend([
-        f'<text x="427" y="345" text-anchor="middle">{html.escape(xlabel)}</text>',
-        '<text transform="translate(18 175) rotate(-90)" text-anchor="middle">'
-        f'{html.escape(ylabel)}</text>',
-    ])
-    for index, (name, ys) in enumerate(series):
-        color = colors[index % len(colors)]
-        points = " ".join(f"{x(xv):.1f},{y(yv):.1f}" for xv, yv in zip(xs, ys))
-        parts.extend([
-            f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2"/>',
-            f'<text x="84" y="{365+index*16}" fill="{color}" '
-            f'font-size="12">{html.escape(name)}</text>',
-        ])
-    return "\n".join(parts) + "\n</svg>"
+
+def axis_range(values, zero=True):
+    low, high = min(values), max(values)
+    if zero:
+        low = min(0, low)
+    step = nice_step((high - low or 1) / 4)
+    return (math.floor(low / step) * step, math.ceil(high / step) * step), step
+
+
+def source_pointer(fact):
+    source = fact['provenance']
+    return source['path'] + '#' + source['pointer']
+
+
+def chart_specs(data=None, evidence=None, evidence_only=False):
+    """Define CSV rows and SVG series together from the analytical and evidence inputs."""
+    d = (compute() if data is None else data) if not evidence_only else None
+    e = json.loads(EVIDENCE_PATH.read_text(encoding='utf-8')) if evidence is None else evidence
+    val = lambda fact: fact['value']
+    specs = []
+
+    def add(identifier, title, headers, rows, xkey, names, xlabel, ylabel,
+            xunit, yunit, sources, continuous=False, **options):
+        # Model evaluations have no archived decimal precision. Twelve significant
+        # digits remove interpreter-dependent floating-point tails in exports;
+        # archived observations and their provenance remain untouched.
+        if continuous:
+            rows = [[float(format(value, '.12g')) if isinstance(value, float) else value
+                     for value in row] for row in rows]
+        series = []
+        for index, (name, ykey) in enumerate(names):
+            points = []
+            for row_index, row in enumerate(rows):
+                mapped = dict(zip(headers, row))
+                if mapped[ykey] is None:
+                    continue
+                source = sources[index][row_index] if isinstance(sources[index], list) else sources[index]
+                points.append(dict(x=mapped[xkey], y=mapped[ykey], row=row_index, source=source))
+            series.append(dict(name=name, xkey=xkey, ykey=ykey, points=points))
+        xrange, xstep = axis_range([row[headers.index(xkey)] for row in rows], zero=False)
+        yrange, ystep = axis_range([p['y'] for s in series for p in s['points']])
+        specs.append(dict(id=identifier, title=title, headers=headers, rows=rows,
+                          series=series, xlabel=xlabel, ylabel=ylabel, xunit=xunit,
+                          yunit=yunit, continuous=continuous, xrange=xrange, xstep=xstep,
+                          yrange=yrange, ystep=ystep, **options))
+        return specs[-1]
+
+    model_source = MODEL_PATH.relative_to(ROOT).as_posix()
+    inputs_source = TEST_PATH.relative_to(ROOT).as_posix()
+    response_source = model_source + '#coupled_roll_response; ' + inputs_source + '#test_tank_reduces_peak_roll_near_resonance'
+    if d is not None:
+        c1 = add('coupled-response',
+                 'Predicted roll response with and without the connected tank (illustrative system)',
+                 ['forcing_period_s', 'roll_bare_per_unit_moment', 'roll_with_tank_per_unit_moment'],
+                 [list(row) for row in zip(d['periods'], *d['responses'])], 'forcing_period_s',
+                 [('Bare vessel', 'roll_bare_per_unit_moment'), ('With connected tank', 'roll_with_tank_per_unit_moment')],
+                 'Forcing period (s)', 'Roll per unit wave moment (normalized, no units)',
+                 's', 'no units', [response_source] * 2, True,
+                 validity=published_claims()['moment_min_period'])
+        c1.update(xrange=(min(d['periods']), max(d['periods'])), xstep=10)
+
+    calibration = e['calibration']
+    checks = e['period_checks']
+    historical = {val(r['area']): r['historical_period'] for r in e['area_sweep']}
+    area_checks = [r for r in checks if val(r['fill']) == val(calibration['fill'])]
+    cases = sorted([*area_checks, calibration], key=lambda r: val(r['area']))
+    rows, pointers = [], []
+    for case in cases:
+        area = val(case['area'])
+        role = 'calibration reference' if case is calibration else 'independent check'
+        facts = [case['measured_period'], case['predicted_period']]
+        if area in historical:
+            facts.append(historical[area])
+        pointer = ' | '.join(source_pointer(fact) for fact in facts)
+        rows.append([area, val(case['fill']), role, val(case['measured_period']),
+                     val(case['predicted_period']), val(historical[area]) if area in historical else None, pointer])
+        pointers.append(pointer)
+    c2 = add('natural-period-vs-area',
+             'Exchange natural period against conduit area (archived twin-tank CFD, 50 % fill)',
+             ['area_m2', 'fill_pct', 'role', 'cfd_period_s', 'model_period_s', 'historical_period_s', 'evidence_pointer'],
+             rows, 'area_m2', [('CFD-derived period', 'cfd_period_s'),
+                               ('Calibration reference', 'cfd_period_s'),
+                               ('Calibrated model', 'model_period_s'),
+                               ('Historical geometric-length model', 'historical_period_s')],
+             'Conduit area (m²)', 'Exchange natural period (s)', 'm²', 's', [pointers] * 4,
+             tolerance=val(e['published_band']), band_source=source_pointer(e['published_band']))
+    c2.update(xrange=(0, 15), xstep=3, yrange=(8, 28), ystep=4)
+    for series, role in zip(c2['series'][:2], ('independent check', 'calibration reference')):
+        series['points'] = [point for point in series['points'] if rows[point['row']][2] == role]
+    c2['series'][2]['shape'] = 'diamond'
+    c2['series'][3]['shape'] = 'cross'
+
+    band = val(e['published_band'])
+    c3 = add('period-error', 'Calibrated period error against the published ±3 % band',
+             ['area_m2', 'fill_pct', 'predicted_period_s', 'cfd_period_s', 'error_pct', 'band_pct', 'inside_band', 'evidence_pointer'],
+             [[val(r['area']), val(r['fill']), val(r['predicted_period']), val(r['measured_period']),
+               val(r['error']), band, abs(val(r['error'])) <= band,
+               ' | '.join(source_pointer(r[k]) for k in ('error', 'predicted_period', 'measured_period'))] for r in checks],
+             'area_m2', [('Prediction error', 'error_pct')], 'Case (m², %)', 'Period error (%)',
+             'm²', '%', [[source_pointer(r['error']) for r in checks]],
+             categories=[f"{val(r['area']):.1f} m², {val(r['fill']):.0f} %" for r in checks],
+             tolerance=band, band_source=source_pointer(e['published_band']))
+    c3.update(yrange=(-5, 5), ystep=1)
+
+    if d is not None:
+        add('natural', 'Rigid-column natural period against conduit area (illustrative system)',
+            ['area_m2', 'natural_period_s'], [list(r) for r in zip(d['areas'], d['natural'])],
+            'area_m2', [('Rigid-column model', 'natural_period_s')],
+            'Conduit area (m²)', 'Period (s)', 'm²', 's', [model_source + '#natural_period'], True)
+        add('inertia', 'Frozen-fluid roll inertia against conduit area (illustrative system)',
+            ['area_m2', 'inertia_million_kg_m2'],
+            [[a, v / 1e6] for a, v in zip(d['areas'], d['inertia'])],
+            'area_m2', [('Frozen-fluid prismatic model', 'inertia_million_kg_m2')],
+            'Conduit area (m²)', 'Inertia (million kg m²)', 'm²', 'million kg m²',
+            [model_source + '#_prismatic_properties'], True)
+        headers = ['area_m2'] + [f'damping_level_{i}_pct' for i in range(len(d['damping']))]
+        add('damping', 'Quadratic-loss damping against conduit area (illustrative system)', headers,
+            [list(r) for r in zip(d['areas'], *[[v * 100 for v in ys] for ys in d['damping']])],
+            'area_m2', [(f'Level-difference amplitude {level:.1f} m', headers[i + 1])
+                        for i, level in enumerate(d['inputs']['levels'])],
+            'Conduit area (m²)', 'Damping ratio (%)', 'm²', '%',
+            [model_source + '#equivalent_damping'] * len(d['damping']), True)
+        add('moment', 'Tank-on-vessel moment against forcing period (illustrative system)',
+            ['forcing_period_s', 'in_phase_MN_m', 'quadrature_MN_m', 'magnitude_MN_m'],
+            [[t, m.in_phase / 1e6, m.quadrature / 1e6, m.magnitude / 1e6]
+             for t, m in zip(d['periods'], d['moments'])], 'forcing_period_s',
+            [('In phase', 'in_phase_MN_m'), ('Quadrature', 'quadrature_MN_m'), ('Magnitude', 'magnitude_MN_m')],
+            'Forcing period (s)', 'Moment (MN m)', 's', 'MN m', [model_source + '#tank_moment'] * 3,
+            True, validity=published_claims()['moment_min_period'])
+        headers = ['frequency_ratio_no_units'] + [f'roll_damping_{i}_no_units' for i in range(len(d['absorbers']))]
+        add('split', 'Single-tank tuned absorber (comparison model)', headers,
+            [list(r) for r in zip(d['gs'], *[a['ys'] for a in d['absorbers']])], headers[0],
+            [(f"Damping {a['zeta'] * 100:.1f} %", headers[i + 1]) for i, a in enumerate(d['absorbers'])],
+            'Forcing / vessel natural frequency (no units)', 'Roll / static deflection (no units)',
+            'no units', 'no units', [REDUCTION_PATH.relative_to(ROOT).as_posix() + '#_response; ' +
+                                    JSON_PATH.relative_to(ROOT).as_posix() + f'#/curves/{i}'
+                                    for i in range(len(d['absorbers']))], True)
+
+    def evidence_chart(identifier, title, cases, xfield, yfields, xlabel, ylabel, xunit, yunit):
+        headers = [xfield[1]] + [field[1] for field in yfields] + ['evidence_pointer']
+        rows = [[val(r[xfield[0]])] + [val(r[field[0]]) for field in yfields] +
+                [' | '.join(source_pointer(r[field[0]]) for field in yfields)] for r in cases]
+        return add(identifier, title, headers, rows, xfield[1],
+                   [(field[2], field[1]) for field in yfields], xlabel, ylabel, xunit, yunit,
+                   [[source_pointer(r[field[0]]) for r in cases] for field in yfields])
+
+    evidence_chart('cfd-amplitude', 'Exchange amplitude against conduit area (archived CFD geometry)',
+                   e['area_sweep'], ('area', 'area_m2'),
+                   [('cfd_amplitude', 'cfd_amplitude_m3', 'CFD'),
+                    ('analytical_amplitude', 'historical_amplitude_m3', 'Historical analytical')],
+                   'Conduit area (m²)', 'Exchange amplitude (m³)', 'm²', 'm³')
+    fill = sorted([r for r in checks if val(r['fill']) != val(calibration['fill'])
+                   and val(r['area']) == val(calibration['area'])], key=lambda r: val(r['fill']))
+    evidence_chart('cfd-fill-period', 'Natural period against fill (archived CFD geometry)', fill,
+                   ('fill', 'fill_pct'), [('measured_period', 'cfd_period_s', 'CFD-derived'),
+                                          ('predicted_period', 'model_period_s', 'Predicted')],
+                   'Fill (%)', 'Natural period (s)', '%', 's')
+    chosen = [dict(fill=r['fill'], **min(r['damping'], key=lambda c:
+                  (val(c['roll']), abs(val(c['period']) - val(r['predicted_period']))))) for r in fill]
+    evidence_chart('cfd-fill-damping', 'Equivalent damping against fill (archived CFD geometry)', chosen,
+                   ('fill', 'fill_pct'), [('measured', 'cfd_damping_no_units', 'CFD-derived'),
+                                        ('linear_prediction', 'predicted_damping_no_units', 'Predicted')],
+                   'Fill (%)', 'Damping ratio (no units)', '%', 'no units')
+    loss = sorted(area_checks, key=lambda r: val(r['area']))
+    near = [dict(area=r['area'], **min(r['damping'], key=lambda c:
+                abs(val(c['period']) - val(r['predicted_period'])))) for r in loss]
+    evidence_chart('cfd-loss-area', 'Equivalent damping against conduit area (archived CFD geometry)', near,
+                   ('area', 'area_m2'), [('measured', 'cfd_damping_no_units', 'CFD-derived, near predicted natural period'),
+                                        ('linear_prediction', 'inverse_area_damping_no_units', 'Original inverse-area prediction')],
+                   'Conduit area (m²)', 'Damping ratio (no units)', 'm²', 'no units')
+    evidence_chart('cfd-forced-exchange', 'Medium-mesh forced exchange (archived CFD geometry)', e['forced_sweep'],
+                   ('period', 'forcing_period_s'), [('exchange', 'exchange_amplitude_m3', 'Exchange amplitude')],
+                   'Forcing period (s)', 'Exchange amplitude (m³)', 's', 'm³')
+    return specs
+
+
+def csv_text(spec):
+    """Keep the exact source precision and use UTF-8-compatible LF rows."""
+    stream = io.StringIO(newline='')
+    writer = csv.writer(stream, lineterminator='\n')
+    writer.writerow(spec['headers'])
+    writer.writerows(spec['rows'])
+    return stream.getvalue()
+
+
+def svg_text(x, y, value, **attrs):
+    """Wrap long SVG labels at a legible size in the narrowest layout."""
+    lines = textwrap.wrap(value, width=attrs.pop('wrap', 38)) or ['']
+    attributes = ' '.join(f'{key.rstrip("_").replace("_", "-")}="{html.escape(str(value), quote=True)}"'
+                          for key, value in attrs.items())
+    spans = ''.join(f'<tspan x="{x}" dy="{0 if i == 0 else 16}">{html.escape(line)} </tspan>'
+                    for i, line in enumerate(lines))
+    return f'<text x="{x}" y="{y}" {attributes}>{spans}</text>'
+
+
+def marker(shape, x, y, color):
+    attrs = f'stroke="{color}" stroke-width="1.6"'
+    if shape == 'diamond':
+        return f'<polygon points="{x:.2f},{y-5:.2f} {x+5:.2f},{y:.2f} {x:.2f},{y+5:.2f} {x-5:.2f},{y:.2f}" fill="var(--panel)" {attrs}/>'
+    if shape == 'square':
+        return f'<rect x="{x-4:.2f}" y="{y-4:.2f}" width="8" height="8" fill="{color}" {attrs}/>'
+    if shape == 'cross':
+        return (f'<line x1="{x-4:.2f}" y1="{y-4:.2f}" x2="{x+4:.2f}" y2="{y+4:.2f}" {attrs}/>'
+                f'<line x1="{x-4:.2f}" y1="{y+4:.2f}" x2="{x+4:.2f}" y2="{y-4:.2f}" {attrs}/>')
+    return f'<circle cx="{x:.2f}" cy="{y:.2f}" r="4" fill="{color}" {attrs}/>'
+
+
+def render_chart(spec):
+    """Use the single-tank inline SVG approach with native and touch tooltips."""
+    identifier = spec['id']
+    xmin, xmax = spec['xrange']
+    ymin, ymax = spec['yrange']
+    categories = spec.get('categories')
+    x = lambda value: PLOT_LEFT + (value - xmin) / (xmax - xmin) * (PLOT_RIGHT - PLOT_LEFT)
+    y = lambda value: PLOT_BOTTOM - (value - ymin) / (ymax - ymin) * (PLOT_BOTTOM - PLOT_TOP)
+    position = lambda point: (PLOT_LEFT + point['row'] * (PLOT_RIGHT - PLOT_LEFT) /
+                              (len(categories) - 1)) if categories else x(point['x'])
+    parts = []
+    if spec.get('validity') is not None:
+        parts.append(f'<rect class="band" x="{PLOT_LEFT}" y="{PLOT_TOP}" width="{x(spec["validity"])-PLOT_LEFT:.2f}" height="{PLOT_BOTTOM-PLOT_TOP}" fill="var(--warn)" opacity=".18"/>')
+    if categories:
+        band = spec['tolerance']
+        parts.append(f'<rect class="band" x="{PLOT_LEFT}" y="{y(band):.2f}" width="{PLOT_RIGHT-PLOT_LEFT}" height="{y(-band)-y(band):.2f}" fill="var(--teal)" opacity=".14"/>')
+    for axis, low, high, step in (('x', xmin, xmax, spec['xstep']), ('y', ymin, ymax, spec['ystep'])):
+        if axis == 'x' and categories:
+            for i, label in enumerate(categories):
+                px = PLOT_LEFT + i * (PLOT_RIGHT-PLOT_LEFT) / (len(categories)-1)
+                # Separate rows keep the five case labels legible on narrow screens.
+                parts.append(svg_text(px, PLOT_BOTTOM + 20 + (i % 2) * 32, label,
+                                      wrap=9, text_anchor=('start' if i == 0 else 'end' if i == len(categories)-1 else 'middle'), class_='x-tick'))
+            continue
+        precision = max(1 if (spec['xunit' if axis == 'x' else 'yunit'] == '%') else 0,
+                        -math.floor(math.log10(step)))
+        start, end = math.ceil(low / step), math.floor(high / step)
+        for i in range(start, end + 1):
+            value = i * step
+            label = f'{value:.{precision}f}'.replace('-', '−')
+            if axis == 'x':
+                parts.append(svg_text(f'{x(value):.2f}', PLOT_BOTTOM + 20, label,
+                                      text_anchor='middle', class_='x-tick', data_value=value))
+            else:
+                parts.append(f'<line x1="{PLOT_LEFT}" x2="{PLOT_RIGHT}" y1="{y(value):.2f}" y2="{y(value):.2f}" stroke="var(--grid)"/>')
+                parts.append(svg_text(PLOT_LEFT-7, f'{y(value)+4:.2f}', label,
+                                      text_anchor='end', class_='y-tick', data_value=value))
+    xlabel_y = PLOT_BOTTOM + (98 if categories else 48)
+    parts.append(svg_text((PLOT_LEFT+PLOT_RIGHT)/2, xlabel_y, spec['xlabel'],
+                          text_anchor='middle', class_='x-label', wrap=32))
+    parts.append(svg_text(0, 0, spec['ylabel'], transform='translate(18 142) rotate(-90)',
+                          text_anchor='middle', class_='y-label', wrap=29))
+    legend_y = xlabel_y + 48
+    if spec.get('validity') is not None:
+        parts.append(svg_text(12, legend_y, 'outside the published moment-fit band', fill='var(--ink)'))
+        legend_y += 36
+    if categories:
+        parts.append(svg_text(12, legend_y, f'Published ±{spec["tolerance"]:.1f} % band', fill='var(--ink)'))
+        legend_y += 24
+    for index, series in enumerate(spec['series']):
+        color = SERIES_COLORS[index % len(SERIES_COLORS)]
+        shape = series.get('shape', ('circle', 'square', 'diamond', 'cross')[index % 4])
+        points = series['points']
+        if spec['continuous']:
+            vertices = ' '.join(f'{position(p):.2f},{y(p["y"]):.2f}' for p in points)
+            parts.append(f'<polyline points="{vertices}" fill="none" stroke="{color}" stroke-width="1.6"/>')
+        for point in points:
+            row = dict(zip(spec['headers'], spec['rows'][point['row']]))
+            case = (categories[point['row']] if categories else
+                    f"{spec['xlabel']}: {format(point['x'], '.1f' if spec['xunit'] == '%' else '.6g')} {spec['xunit']}")
+            role = row.get('role', 'independent check' if not spec['continuous'] else 'continuous model evaluation')
+            color_point = color
+            comparison = ''
+            if categories:
+                inside = abs(point['y']) <= spec['tolerance']
+                comparison = 'inside the band' if inside else 'outside the band (low fill)'
+                if not inside:
+                    color_point = 'var(--red)'
+                comparison += (f"; prediction {row['predicted_period_s']} s; "
+                               f"CFD-derived period {row['cfd_period_s']} s")
+            fill = f"; fill {row['fill_pct']:.1f} %" if 'fill_pct' in row else ''
+            # C1 includes both responses at every period, whichever series has focus.
+            both = (f"; Bare vessel {row['roll_bare_per_unit_moment']:.6g} no units; "
+                    f"With connected tank {row['roll_with_tank_per_unit_moment']:.6g} no units"
+                    if identifier == 'coupled-response' else '')
+            yvalue = f"{point['y']:.1f}" if spec['yunit'] == '%' else f"{point['y']:.6g}"
+            tooltip = (f"{series['name']}; {case}; {spec['ylabel']}: {yvalue} {spec['yunit']}{fill}; "
+                       f"{role}; {comparison}{both}; {point['source']}").replace('−', '-')
+            tooltip = re.sub(r'(?<=\s)-(?=\d)', '−', tooltip)
+            px, py = position(point), y(point['y'])
+            parts.append(f'<g data-series="{index}" data-row="{point["row"]}" data-x="{point["x"]}" data-y="{point["y"]}" data-px="{px:.2f}" data-color="{color_point}" tabindex="0" data-tooltip="{html.escape(tooltip, quote=True)}"><title>{html.escape(tooltip)}</title>')
+            if identifier == 'natural-period-vs-area' and series['name'] == 'Calibrated model':
+                low, high = point['y'] * (1-spec['tolerance']/100), point['y'] * (1+spec['tolerance']/100)
+                parts.append(f'<g class="whisker" data-band="{spec["tolerance"]}" data-source="{html.escape(spec["band_source"], quote=True)}" stroke="{color}"><line x1="{px:.2f}" x2="{px:.2f}" y1="{y(low):.2f}" y2="{y(high):.2f}"/><line x1="{px-4:.2f}" x2="{px+4:.2f}" y1="{y(low):.2f}" y2="{y(low):.2f}"/><line x1="{px-4:.2f}" x2="{px+4:.2f}" y1="{y(high):.2f}" y2="{y(high):.2f}"/></g>')
+            parts.append(marker(shape, px, py, color_point) + '</g>')
+        parts.append(marker(shape, 17, legend_y-4, color))
+        label = ('calibration reference (not an independent check)'
+                 if series['name'] == 'Calibration reference' else series['name'])
+        parts.append(svg_text(30, legend_y, label, wrap=43, fill=color))
+        legend_y += 18 * len(textwrap.wrap(label, 43)) + 10
+    if categories:
+        parts.append(svg_text(12, legend_y, 'outside the band (low fill)', fill='var(--red)'))
+        legend_y += 24
+    desc = (f"{spec['ylabel']} against {spec['xlabel']}; x range {xmin:g} to {xmax:g}, "
+            f"y range {ymin:g} to {ymax:g}; " + '; '.join(s['name'] for s in spec['series']))
+    sources = ''.join('<li>' + html.escape(s['name']) + ': <code>' +
+                      html.escape(' | '.join(dict.fromkeys(p['source'] for p in s['points']))) + '</code></li>'
+                      for s in spec['series'])
+    return (f'<figure class="chart"><figcaption>{html.escape(spec["title"])}</figcaption>'
+            f'<svg id="{identifier}" class="study-chart" viewBox="0 0 360 {legend_y+12}" role="img" aria-labelledby="{identifier}-title {identifier}-desc">'
+            f'<title id="{identifier}-title">{html.escape(spec["title"])}</title>'
+            f'<desc id="{identifier}-desc">{html.escape(desc)}</desc>' + ''.join(parts) + '</svg>'
+            f'<p><a href="data/charts/{identifier}.csv">Data (CSV)</a></p><ul class="sources">{sources}</ul></figure>')
+
+
+def schematic():
+    """Draw the illustrative transverse section from the same input constants."""
+    width = ILLUSTRATIVE_LEG_WIDTH * 8
+    offset = ILLUSTRATIVE_CENTROID_OFFSET * 8
+    depth = ILLUSTRATIVE_FILL_DEPTH * 18
+    left, right = 180-offset, 180+offset
+    base = 240
+    effective = MODEL.UTubeGeometry(
+        leg_length=ILLUSTRATIVE_LEG_LENGTH, leg_width=ILLUSTRATIVE_LEG_WIDTH,
+        fill_depth=ILLUSTRATIVE_FILL_DEPTH, centroid_offset=ILLUSTRATIVE_CENTROID_OFFSET,
+    ).effective_conduit_length
+    labels = [
+        f'Each leg width {ILLUSTRATIVE_LEG_WIDTH:.1f} m; centroids ±{ILLUSTRATIVE_CENTROID_OFFSET:.1f} m from centreline',
+        f'Fill depth {ILLUSTRATIVE_FILL_DEPTH:.1f} m; free surfaces tilted: sketch, not a computed state',
+        f'conduit, area A_c = {ILLUSTRATIVE_CONDUIT_AREA:.1f} m², effective length {effective:.1f} m (calibrated reference, transfer assumed)',
+        f'Leg length {ILLUSTRATIVE_LEG_LENGTH:.1f} m into the page; tank height not specified',
+        'archived CFD twin-tank geometry is not shown',
+    ]
+    parts = ['<svg id="schematic" viewBox="0 0 360 650" role="img" aria-labelledby="schematic-title schematic-desc">',
+             '<title id="schematic-title">Illustrative U-tube system, transverse section</title>',
+             '<desc id="schematic-desc">' + html.escape('; '.join(labels)) + '</desc>']
+    for center, shift, name in ((left, -14, 'Left leg'), (right, 14, 'Right leg')):
+        parts.append(f'<rect x="{center-width/2}" y="75" width="{width}" height="{base-75}" fill="var(--panel)" stroke="var(--navy)" stroke-width="2"/>')
+        surface = base-depth+shift
+        parts.append(f'<polygon points="{center-width/2},{surface-5} {center+width/2},{surface+5} {center+width/2},{base} {center-width/2},{base}" fill="var(--teal)" opacity=".2"/>')
+        parts.append(f'<line x1="{center-width/2}" x2="{center+width/2}" y1="{surface-5}" y2="{surface+5}" stroke="var(--teal)" stroke-width="2"/>')
+        parts.append(svg_text(center, 60, name, text_anchor='middle'))
+        parts.append(svg_text(center, surface-15, 'free surface', text_anchor='middle'))
+    parts.append(f'<rect x="{left+width/2}" y="{base-ILLUSTRATIVE_CONDUIT_AREA*2}" width="{right-left-width}" height="{ILLUSTRATIVE_CONDUIT_AREA*2}" fill="var(--teal)" fill-opacity=".2" stroke="var(--navy)" stroke-width="2"/>')
+    parts.append(f'<line x1="180" x2="180" y1="{base-depth-14}" y2="{base-depth+14}" stroke="var(--ink)"/>')
+    parts.append(svg_text(188, base-depth+4, 'Δh'))
+    parts.extend(['<line x1="180" x2="180" y1="72" y2="288" stroke="var(--mut)" stroke-dasharray="4 4"/>',
+                  '<circle cx="180" cy="280" r="4" fill="var(--navy)"/>',
+                  '<path d="M 150 280 A 30 30 0 0 1 210 280" fill="none" stroke="var(--navy)" stroke-width="2"/>',
+                  '<polygon points="205,274 210,280 214,272" fill="var(--navy)"/>',
+                  svg_text(180, 310, 'roll angle φ', text_anchor='middle')])
+    y = 350
+    for label in labels:
+        parts.append(svg_text(12, y, label, wrap=44))
+        y += len(textwrap.wrap(label, 44)) * 16 + 14
+    parts.append('</svg>')
+    return ('<figure>' + ''.join(parts) + '<figcaption>Schematic of the invented, illustrative U-tube system (transverse section; not to scale vertically). It represents no particular vessel.</figcaption></figure>')
+
+
+LAYOUT_CSS = """
+figure{margin:22px 0;min-width:0}svg{width:100%;height:auto;display:block;color:var(--ink);font:inherit;font-size:13px;fill:var(--ink)}
+figcaption{font-size:1rem;color:var(--navy)}.sources{font-size:.8rem;padding-left:20px}.sources code{overflow-wrap:anywhere}
+.chart{border:1px solid var(--grid);border-radius:6px;padding:8px;background:var(--panel)}
+.chart g[tabindex]:focus{outline:2px solid var(--accent)}nav{overflow-wrap:anywhere}
+table{table-layout:fixed}td,th{overflow-wrap:anywhere}#chart-tooltip{position:fixed;bottom:10px;left:10px;max-width:calc(100vw - 20px);width:320px;padding:12px;background:var(--panel);color:var(--ink);border:1px solid var(--navy);z-index:2;overflow-wrap:anywhere;font-size:.85rem}
+@media(max-width:600px){.wrap{padding-left:8px;padding-right:8px}.chart{padding:4px}th,td{padding:5px 3px;font-size:.75rem}}
+"""
+
+TOOLTIP_SCRIPT = """<script>
+(() => {
+  const box = document.createElement('div');
+  box.id = 'chart-tooltip'; box.setAttribute('role', 'status'); box.hidden = true;
+  document.body.append(box);
+  const show = event => {
+    const point = event.target.closest('[data-tooltip]');
+    box.hidden = !point;
+    if (point) box.textContent = point.dataset.tooltip;
+  };
+  for (const name of ['pointerover', 'focusin', 'pointerdown']) document.addEventListener(name, show);
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') box.hidden = true; });
+  document.addEventListener('focusout', () => { box.hidden = true; });
+  document.addEventListener('pointerout', event => {
+    if (event.pointerType !== 'touch') box.hidden = true;
+  });
+})();
+</script>"""
 
 
 def format_percentage_text(value):
@@ -257,45 +601,6 @@ def evidence_table(headers, rows, caption):
     return f"<table><tr>{head}</tr>{body}</table><p class=\"sub\">{caption}</p>"
 
 
-def evidence_chart(identifier, title, labels, series, ylabel, tick_precision=1):
-    """Use the study's SVG style with categorical cases and source-valued ticks.
-
-    Axis ticks are selected from the observations; no interpolated data labels
-    or inferred intermediate validation points are introduced.
-    """
-    colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78")
-    values = [v for _, ys in series for v in ys]
-    low, high = min(values), max(values)
-    if high == low:
-        high = low + 1
-    ticks = sorted(set(values))
-    if len(ticks) > 6:
-        ticks = [ticks[round(i * (len(ticks) - 1) / 5)] for i in range(6)]
-    def x(i):
-        return 90 + i * 660 / max(1, len(labels) - 1)
-    def y(v):
-        return 300 - (v - low) * 245 / (high - low)
-    parts = [f'<svg id="{identifier}" viewBox="0 0 820 440" role="img" '
-             f'aria-labelledby="{identifier}-title {identifier}-desc" style="width:100%;height:auto">',
-             f'<title id="{identifier}-title">{html.escape(title)}</title>',
-             f'<desc id="{identifier}-desc">{html.escape(ylabel)}. '
-             'Discrete archived cases; connecting lines guide the eye.</desc>',
-             '<rect width="820" height="440" fill="white"/>',
-             f'<text x="84" y="22" fill="#16324f">{html.escape(title)}</text>']
-    for tick in ticks:
-        parts += [f'<path d="M 84 {y(tick):.1f} H 770" stroke="#e2e7eb"/>',
-                  f'<text x="76" y="{y(tick)+4:.1f}" text-anchor="end" font-size="12">{tick:.{tick_precision}f}</text>']
-    for i, label in enumerate(labels):
-        parts.append(f'<text x="{x(i):.1f}" y="322" text-anchor="middle" font-size="10">{html.escape(label)}</text>')
-    parts.append('<text transform="translate(18 175) rotate(-90)" text-anchor="middle">'
-                 f'{html.escape(ylabel)}</text>')
-    for i, (label, ys) in enumerate(series):
-        color = colors[i % len(colors)]
-        points = " ".join(f"{x(j):.1f},{y(v):.1f}" for j, v in enumerate(ys))
-        parts += [f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2"/>',
-                  f'<text x="84" y="{355+i*18}" fill="{color}" font-size="12">{html.escape(label)}</text>']
-    return "\n".join(parts) + "\n</svg>"
-
 
 def area_period_pairs(data):
     """Join independent reductions by physical area, never by row position."""
@@ -316,14 +621,14 @@ def render_cfd_evidence():
     v = evidence_value
     def val(fact):
         return fact["value"]
-    plot = evidence_chart
+    charts = {spec["id"]: render_chart(spec) for spec in chart_specs(evidence=d, evidence_only=True)}
     table = evidence_table
     rows = d["area_sweep"]
     conditions = d["area_conditions"]
     checks = d["period_checks"]
     calibration = d["calibration"]
     areas = [str(val(r["area"])) for r in rows]
-    part = ['<section id="cfd-evidence"><h2>CFD evidence</h2>',
+    part = ['<section><h2 id="cfd-evidence">CFD evidence</h2>',
             '<p>The CFD cases belong to an earlier, archived campaign on a twin-tank geometry that is not shown. '
             'That geometry is separate from the invented illustrative geometry above. These CFD results were not '
             'produced for this page. The <a href="data/dual_tank_cfd_evidence.json">evidence record</a> '
@@ -333,10 +638,7 @@ def render_cfd_evidence():
             f'<p>Exchange amplitudes are compared at forcing period {v(conditions["period"], 2)} s '
             f'and imposed roll {v(conditions["roll"])}°. Ratios are normalized to the smallest area. '
             'The historical analytical amplitude uses geometric conduit length; it is not the later calibrated model.</p>']
-    part.append(plot("cfd-amplitude", "Exchange amplitude against conduit area", areas,
-                     [("CFD", [val(r["cfd_amplitude"]) for r in rows]),
-                      ("Historical analytical", [val(r["analytical_amplitude"]) for r in rows])],
-                     "Exchange amplitude (m³); conduit area (m²)"))
+    part.append(charts["cfd-amplitude"])
     part.append(table(["Area (m²)", "CFD amplitude (m³)", "Analytical amplitude (m³)", "CFD ratio", "Analytical ratio"],
                       [[v(r["area"]), v(r["cfd_amplitude"]), v(r["analytical_amplitude"]),
                         v(r["cfd_ratio"], 3), v(r["analytical_ratio"], 3)] for r in rows],
@@ -344,9 +646,7 @@ def render_cfd_evidence():
     pairs = area_period_pairs(d)
     measured = [m for _, m, _ in pairs]
     predicted = [p for _, _, p in pairs]
-    part.append(plot("cfd-area-period", "Exchange natural period against conduit area", areas,
-                     [("CFD-derived natural period", list(map(val, measured))),
-                      ("Calibrated inertia model", list(map(val, predicted)))], "Natural period (s); area (m²)"))
+    part.append('<p><a href="#natural-period-vs-area">Exchange natural period against conduit area (archived twin-tank CFD, 50 % fill)</a></p>')
     part.append(table(["Area (m²)", "CFD-derived natural period (s)", "Calibrated prediction (s)", "Historical geometric-length prediction (s)"],
                       [[v(r["area"]), v(m), v(p), v(r["historical_period"])] for r, m, p in pairs],
                       "Period bases differ: the historical period is analytical, not a CFD measurement. The middle area is the calibration reference."))
@@ -359,10 +659,7 @@ def render_cfd_evidence():
              f'The calibration period is {v(calibration["predicted_period"], 2)} s against '
              f'{v(calibration["measured_period"], 2)} s from the reduction; it is not an independent check.</p>']
     labels = [f'{val(r["area"]):.1f} / {val(r["fill"]):.0f}' for r in checks]
-    part.append(plot("cfd-period-error", "Period prediction error: area / fill", labels,
-                     [("Prediction error", [val(r["error"]) for r in checks]),
-                      ("Published upper band", [val(band)] * len(checks)),
-                      ("Published lower band", [-val(band)] * len(checks))], "Period error (%); area (m²) / fill (%)"))
+
     part.append(table(["Area (m²)", "Fill (%)", "Prediction (s)", "CFD-derived (s)", "Error (%)", "Band comparison"],
                       [[v(r["area"]), v(r["fill"], 0), v(r["predicted_period"]), v(r["measured_period"]),
                         v(r["error"]), "Outside: exception" if abs(val(r["error"])) > val(band) else "Inside"] for r in checks],
@@ -375,11 +672,8 @@ def render_cfd_evidence():
              'the damping chart selects the lower-roll case nearest each predicted natural period.</p>']
     chosen = [min(r["damping"], key=lambda c: (val(c["roll"]), abs(val(c["period"]) - val(r["predicted_period"])))) for r in fill]
     fill_labels = [f'{val(r["fill"]):.0f}' for r in fill]
-    part.append(plot("cfd-fill-period", "Natural period against fill", fill_labels,
-                     [("CFD-derived", [val(r["measured_period"]) for r in fill]),
-                      ("Predicted", [val(r["predicted_period"]) for r in fill])], "Natural period (s); fill (%)"))
-    part.append(plot("cfd-fill-damping", "Equivalent damping against fill", fill_labels,
-                     [("Near predicted natural period; lower imposed roll", [val(c["measured"]) for c in chosen])], "Damping ratio; fill (%)", tick_precision=3))
+    part.append(charts["cfd-fill-period"])
+    part.append(charts["cfd-fill-damping"])
     part.append(table(["Fill (%)", "Area (m²)", "Forcing period (s)", "Roll (°)", "Equivalent damping ratio"],
                       [[v(r["fill"], 0), v(r["area"]), v(c["period"]), v(c["roll"]), v(c["measured"], 3)] for r in fill for c in r["damping"]],
                       "Fill-dependent damping at the archived forcing conditions; period predictions and measurements appear above."))
@@ -394,9 +688,7 @@ def render_cfd_evidence():
     # Use matched near-natural-period conditions, not an unqualified average of the loss-fit surface.
     loss_checks = sorted([r for r in checks if val(r["fill"]) == val(calibration["fill"])], key=lambda r: val(r["area"]))
     near = [min(r["damping"], key=lambda c: abs(val(c["period"]) - val(r["predicted_period"]))) for r in loss_checks]
-    part.append(plot("cfd-loss-area", "Equivalent damping against conduit area", [f'{val(r["area"]):.1f}' for r in loss_checks],
-                     [("CFD-derived, near predicted natural period", [val(c["measured"]) for c in near]),
-                      ("Original inverse-area prediction", [val(c["linear_prediction"]) for c in near])], "Damping ratio; area (m²)", tick_precision=3))
+    part.append(charts["cfd-loss-area"])
     part.append(table(["Area (m²)", "Fill (%)", "Forcing period (s)", "Roll (°)", "CFD-derived damping", "Original inverse-area damping"],
                       [[v(r["area"]), v(r["fill"], 0), v(c["period"]), v(c["roll"]), v(c["measured"], 3), v(c["linear_prediction"], 3)] for r, c in zip(loss_checks, near)],
                       "Conditions near each predicted natural period. The original inverse-area prediction uses the reference calibration, not the separate all-data coefficient refit."))
@@ -411,8 +703,7 @@ def render_cfd_evidence():
              'The exchange plateau is separate from the exchange natural period. Fine-mesh confirmation applies at the selected period only; '
              'it does not establish convergence throughout the sweep.</p>']
     sweep = d["forced_sweep"]
-    part.append(plot("cfd-forced-exchange", "Medium-mesh forced exchange", [f'{val(r["period"]):.0f}' for r in sweep],
-                     [("Exchange amplitude", [val(r["exchange"]) for r in sweep])], "Exchange amplitude (m³); forcing period (s)"))
+    part.append(charts["cfd-forced-exchange"])
     part.append(table(["Forcing period (s)", "Exchange amplitude (m³)", "Roll-moment amplitude (N m)"],
                       [[v(r["period"], 0), v(r["exchange"]), v(r["moment"])] for r in sweep],
                       "Completed, cycle-converged medium-mesh sweep."))
@@ -430,11 +721,6 @@ def render_cfd_evidence():
              '<p>Analytical screening cases are not CFD solves. Failed wrappers and open transfer are rejected. '
              'Short transfer checks are verification only. Trustworthy phase and anti-roll benefit remain withheld.</p>']
     classes = d["evidence_classes"]
-    # Counts are explicitly read from the review finding rather than inferred from generated inputs.
-    screening = next(r for r in classes if val(r["result_family"]) == "screening manifest")
-    rejected = next(r for r in classes if val(r["result_family"]) == "nine selected cases")
-    part.append(plot("cfd-class-counts", "Analytical cases and failed wrappers: separate evidence classes", ["Analytical screening", "Rejected wrappers"],
-                     [("Reviewed case counts; not completed CFD totals", [val(screening["case_count"]), val(rejected["case_count"])])], "Case count"))
     part.append(table(["Evidence class", "Result family", "Disposition", "Finding", "Limitation"],
                       [[v(r[key]) for key in ("evidence_class", "result_family", "status", "key_finding", "limitation")] for r in classes],
                       "The source-neutral review controls the evidence classification; methodology and validation are not interchangeable."))
@@ -445,7 +731,7 @@ def render():
     d = compute()
     c = published_claims()
     p, geometry = d["inputs"], d["geometry"]
-    style = SHOWCASE._CSS
+    style = SHOWCASE._CSS + LAYOUT_CSS
     claims = (
         ("Quadratic conduit loss: calibrated area exponent", c["area_exponent"]),
         ('Calibration cases (aggregate results only)', c["cases"]),
@@ -461,26 +747,23 @@ def render():
         f'<tr><td>{a["zeta"]*100:.1f}</td><td>{a["peaks"]}</td>'
         f'<td>{max(a["ys"]):.1f}</td></tr>' for a in d["absorbers"]
     )
-    svg_period = chart("natural", "Rigid-column natural period", d["areas"],
-                       [("Rigid-column model", d["natural"])], "Conduit area (m²)", "Period (s)")
-    svg_inertia = chart("inertia", "Frozen-fluid roll inertia", d["areas"],
-                        [("Frozen-fluid prismatic model", [v / 1e6 for v in d["inertia"]])],
-                        "Conduit area (m²)", "Inertia (million kg m²)")
-    svg_damping = chart("damping", "Quadratic-loss equivalent damping", d["areas"],
-                        [(f"Level-difference amplitude {level:.1f} m", [v * 100 for v in ys])
-                         for level, ys in zip(p["levels"], d["damping"])],
-                        "Conduit area (m²)", "Damping ratio (%)")
-    svg_moment = chart("moment", "Tank-on-vessel moment", d["periods"], [
-        ("In phase", [m.in_phase / 1e6 for m in d["moments"]]),
-        ("Quadrature", [m.quadrature / 1e6 for m in d["moments"]]),
-        ("Magnitude", [m.magnitude / 1e6 for m in d["moments"]]),
-    ], "Forcing period (s)", "Moment (MN m)", c["moment_min_period"])
-    svg_roll = chart("roll", "Normalized coupled roll response", d["periods"],
-                     list(zip(("Bare vessel", "Connected-tank model"), d["responses"])),
-                     "Forcing period (s)", "Roll / unit wave moment", c["moment_min_period"])
-    svg_split = chart("split", "Single-tank tuned-absorber benchmark", d["gs"],
-                      [(f'Damping {a["zeta"]*100:.1f} %', a["ys"]) for a in d["absorbers"]],
-                      "Forcing / vessel natural frequency", "Roll / static deflection")
+    specs = {spec['id']: spec for spec in chart_specs(d)}
+    charts = {identifier: render_chart(spec) for identifier, spec in specs.items()}
+    svg_period, svg_inertia, svg_damping, svg_moment, svg_roll, svg_split = (
+        charts[key] for key in ('natural', 'inertia', 'damping', 'moment', 'coupled-response', 'split'))
+    evidence = json.loads(EVIDENCE_PATH.read_text(encoding='utf-8'))
+    v = evidence_value
+    loss, calibration = evidence['loss'], evidence['calibration']
+    checks, band = evidence['period_checks'], evidence['published_band']
+    inside = sum(abs(row['error']['value']) <= band['value'] for row in checks)
+    words = ('zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten')
+    low_fill = next(row for row in checks if abs(row['error']['value']) > band['value'])
+    count_text = (f'<data value="{inside}" data-provenance="data/dual_tank_cfd_evidence.json#/period_checks">{words[inside]}</data> of '
+                  f'<data value="{len(checks)}" data-provenance="data/dual_tank_cfd_evidence.json#/period_checks">{words[len(checks)]}</data>')
+    # Peaks use precisely the rows written to the response CSV.
+    response_rows = specs['coupled-response']['rows']
+    bare_peak = max(row[1] for row in response_rows)
+    tank_peak = max(row[2] for row in response_rows)
     return f'''<!DOCTYPE html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -488,30 +771,38 @@ def render():
 <link rel="stylesheet" href="../_assets/brand.css"><style>{style}</style></head>
 <body><div class="wrap"><header><div class="kicker">Hydrodynamics · analytical study</div>
 <h1>Connected-tank sloshing analysis</h1>
-<p class="sub">Illustrative U-tube anti-roll response and a single-tank tuned-absorber comparison.</p></header>
+<p class="sub">U-tube anti-roll tank: analytical screening model calibrated on archived CFD</p>
+<div class="meta"><div><span>Analytical model</span></div><div><span>{v(loss["cases"], 0)} archived CFD cases (aggregate)</span></div><div><span>Period within ±{v(band, 0)} % at {inside} of {len(checks)} checks</span></div><div><span>Draft for maintainer review</span></div></div></header>
+<nav><a href="#schematic">Schematic</a> · <a href="#summary">Summary</a> · <a href="#limits">Limits</a> ·
+<a href="#revisions">Revision history</a> · <a href="#method">Method</a> · <a href="#geometry">Geometry</a> ·
+<a href="#validation">Published validation</a> · <a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
+<a href="#cfd-evidence">CFD evidence</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a> · <a href="#basis">Analysis basis</a></nav>
+{schematic()}
 <h2 id="summary">Summary</h2>
-<p>An invented, illustrative U-tube system comprises two tank legs connected by a conduit. Analysis is
-performed to determine the connected-tank response and compare it with a single-tank tuned absorber.
-The geometry represents no particular vessel or client. The results are summarized below.</p>
-<p>Analytical predictions are evaluated using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>
-and the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>, with
-<a href="#validation">published aggregate calibration results</a>. Archived computational fluid dynamics
-(CFD) evidence is presented separately from the illustrative predictions. The predictions support screening; design qualification is not established.</p>
-<p>The <a href="#limits">published moment-fit band</a> limits the use of the aggregate error statistic.
-Transfer to the invented geometry remains an assumption, including inside that band. The
-<a href="#comparison">single-tank comparison</a> illustrates peak splitting and merging; its amplitudes
-do not establish a design ranking.</p>
-<p>Draft for maintainer review.</p>
+<p>This study is extended to assess a U-tube style anti-roll arrangement: two connected tanks with invented geometry, joined by a conduit. The geometry represents no particular vessel or client. The connected-tank model is an analytical screening model calibrated on CFD assessment: the aggregate results of 35 cases from an earlier, archived CFD campaign on a separate twin-tank geometry. Analysis is performed to determine the connected-tank response and how closely the calibrated model reproduces the archived CFD; the key results are summarized below.</p>
+<ul><li>Conduit loss: a calibrated area exponent of {v(loss["exponent"], 3)} fits the archived damping with {v(loss["rms"])} % RMS over {v(loss["cases"], 0)} cases. The simple inverse-area law, refitted on its own, gives {v(loss["linear_rms"])} % RMS.</li>
+<li>Natural period: the calibrated model reproduces the CFD-derived exchange natural period within the published ±{v(band, 0)} % band at {count_text} off-calibration checks. The low-fill check ({v(low_fill["fill"], 0)} %) is {v(low_fill["error"])} % high. The calibration case agrees by construction ({v(calibration["predicted_period"], 2)} s against {v(calibration["measured_period"], 2)} s).</li>
+<li>Response: with the tank, the predicted peak roll of the invented system falls from {bare_peak:.1f} to {tank_peak:.1f} per unit wave moment. This is a screening prediction, not a design result.</li></ul>
+<p>With the tank, the predicted peak roll falls from {bare_peak:.1f} to {tank_peak:.1f} per unit wave moment (vessel roll period {p["vessel_period"]:.1f} s, hull damping {p["hull_damping"]*100:.1f} %, tank authority {p["authority"]*100:.1f} %); this is a screening prediction for the invented system.</p>
+{svg_roll}
+<p>No fitted curve: the archived geometry is not published, so the model cannot be drawn between the cases from committed inputs.</p>
+{charts["natural-period-vs-area"]}
+<p>The calibration case is not plotted, because it is not an independent check.</p>
+{charts["period-error"]}
+<h2 id="limits">Limits</h2>
+<p>These results support screening only; design qualification is not established. The moment fit holds for forcing periods of 20 s and longer (4.3 % RMS) and degrades below about 16 s; the cause is not established, and an earlier explanation was withdrawn. Transfer of the calibration to the invented geometry is an assumption, also inside that band; the new geometry's natural period must be measured before the effective conduit length is recalibrated. The single-tank comparison illustrates peak splitting and merging only: single and connected tanks are not compared at matched mass, tuning, hull damping and forcing. Continuous fill coverage, anti-roll phase and anti-roll benefit remain unestablished.</p>
+<details><summary>Revision history</summary>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr class="revision-2"><td>2</td><td>2026-10-25</td><td>schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place</td></tr>
 <tr><td>Display precision</td><td>2026-10-23</td><td>Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.</td></tr>
 <tr><td>Evidence</td><td>2026-10-23</td><td>Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.</td></tr>
 <tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>
 <tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>
 <tr><td>Initial</td><td>Not assigned</td><td>Public-source analysis added to document model scope and remaining work.</td></tr></table>
-<nav><a href="#geometry">Geometry</a> · <a href="#validation">Published validation</a> ·
-<a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
-<a href="#limits">Validity band</a> · <a href="#cfd-evidence">CFD evidence</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
+</details>
+<h2 id="method">Method</h2>
+<p>The connected-tank model and the tuned-absorber model are evaluated at the illustrative inputs below. The archived CFD evidence is reported separately: the evidence record gives the source reduction, field and digest of each value, and raw fields and the archived geometry are excluded. The analytical scope follows the single-tank sloshing study; the connected-tank model is calibrated on its own.</p>
 <h2 id="geometry">Illustrative geometry</h2>
 <p>Invented round dimensions are selected independently of the
 <a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference geometry</a>.
@@ -555,28 +846,20 @@ from a mass ratio. In the <a href="../../../src/digitalmodel/hydrodynamics/utube
 the forcing reference is fixed by the bare-vessel roll amplitude. The calculated response is roll per
 unit wave moment at that finite reference; quadratic loss makes it amplitude-dependent. Shading marks
 periods outside the published moment-fit band. Wave-spectrum and dimensional vessel calibration are
-not established.</p>{svg_roll}
+not established.</p>
+<p><a href="#coupled-response">Predicted roll response with and without the connected tank (illustrative system)</a></p>
 <h2 id="comparison">Single-tank comparison: split and merging</h2>
 <p>The <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a> is evaluated at the
 frequency grid and damping values in the <a href="../structural/sloshing-tld-twopeak.json">published response record</a>.
 The mass ratio, denoted by μ, is {d["mu"]}; the frequency tuning ratio is {d["tuning"]:.1f}.
 A single equivalent tank is coupled to an undamped primary vessel. The tank is not isolated, and its
-geometry is not matched to the U-tube system. Different normalizations and hull damping are used in
-the two models; their response amplitudes do not establish a design ranking.</p>
+geometry is not matched to the U-tube system.</p>
 {svg_split}<table><tr><th>Tank damping (%)</th><th>Resolved peaks</th><th>Peak normalized roll</th></tr>{absorber_rows}</table>
 <p>Two peaks are resolved in the light-damping curves; they merge as damping increases, and the peak
 rises again at the highest damping shown in the table. These curves are evaluated using the
 <a href="../../../scripts/cfd/reduce_tld_two_peak.py">single-tank model</a> and the
 <a href="../structural/sloshing-tld-twopeak.json">published response record</a>. New connected-tank CFD
-results are not included. The connected-tank curves are presented separately; a matched single-tank
-and connected-tank comparison is not established.</p>
-<h2 id="limits">Validity band</h2>
-<p class="callout">The moment model degrades below about {c["degrades_below"]} s and the CAUSE IS NOT ESTABLISHED.
-An earlier explanation was withdrawn. The residual also depends on roll amplitude.</p>
-<p>The reported moment RMS applies at forcing periods of {c["moment_min_period"]} s or longer for the
-<a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">published calibration</a>.
-Intermediate periods are not qualified by that aggregate statistic. Even inside the band, transfer
-to the invented geometry is an assumption. No new physical mechanism is proposed.</p>
+results are not included. The connected-tank curves are presented separately.</p>
 {render_cfd_evidence()}
 <h2 id="forward">Way forward</h2>
 <p>Further assessment is required before the illustrative response is applied to a design. The
@@ -589,10 +872,8 @@ to the invented geometry is an assumption. No new physical mechanism is proposed
 <li>Not done: Operating fill, freeboard, structural loads and dimensional vessel coupling require assessment.</li></ul>
 <h2 id="left">Left</h2>
 <p>The archived period checks do not establish a direct frozen-fluid roll-inertia error bound.
-Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted. Continuous fill
-coverage, matched single-tank versus connected-tank performance, and anti-roll phase or benefit remain
-unestablished. The earlier campaign does not qualify the invented illustrative geometry.</p>
-<h2 id="method">Analysis basis</h2>
+Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted. The earlier campaign does not qualify the invented illustrative geometry.</p>
+<h2 id="basis">Analysis basis</h2>
 <p>The analytical scope is described in the <a href="sloshing-cfd-study.html">sloshing study</a>.
 The connected-tank calculations and aggregate calibration statistics are defined in the
 <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">analytical model</a> and
@@ -600,13 +881,18 @@ The connected-tank calculations and aggregate calibration statistics are defined
 The single-tank comparison is defined in the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a>
 and <a href="../structural/sloshing-tld-twopeak.json">response record</a>.</p>
 <footer><a href="../../../scripts/capabilities/build_dual_tank_sloshing_study.py">Calculation basis for this study</a>.
-Illustrative analytical predictions and separate archived CFD evidence; transfer remains unqualified.</footer></div></body></html>
+Illustrative analytical predictions and separate archived CFD evidence; transfer remains unqualified.</footer></div>{TOOLTIP_SCRIPT}</body></html>
 '''
 
 
 def build(output=OUTPUT):
     started = perf_counter()
+    output = Path(output)
     output.write_text(render(), encoding="utf-8", newline="\n")
+    chart_directory = output.parent / 'data/charts'
+    chart_directory.mkdir(parents=True, exist_ok=True)
+    for spec in chart_specs():
+        (chart_directory / (spec['id'] + '.csv')).write_text(csv_text(spec), encoding='utf-8', newline='\n')
     elapsed = perf_counter() - started
     print(f"Generated connected-tank study; wall time {elapsed:.3f} s")
     return elapsed
