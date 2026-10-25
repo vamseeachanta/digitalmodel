@@ -12,10 +12,13 @@ These are input-integrity tests; no numerical response is manufactured.
 import hashlib
 import json
 import shutil
+import stat
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from digitalmodel.ansys import cylinder_preparation_audit
 from digitalmodel.ansys.cylinder_preparation import prepare_inputs
 from digitalmodel.ansys.cylinder_preparation_audit import audit_inputs as _audit_inputs
 
@@ -234,6 +237,36 @@ def test_redirected_or_shared_inputs_are_refused(bundle, kind):
         target = bundle
     with pytest.raises(ValueError):
         audit_inputs(target)
+
+
+@pytest.mark.parametrize("kind", ["reparse", "nonregular"])
+def test_redirected_or_nonregular_member_is_refused_before_opening(
+    bundle, monkeypatch, kind
+):
+    member = bundle / "proposal.json"
+    original_lstat = Path.lstat
+    monkeypatch.setattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400, raising=False)
+
+    def member_lstat(path, *args, **kwargs):
+        info = original_lstat(path, *args, **kwargs)
+        if path == member:
+            assert info.st_nlink == 1
+            return SimpleNamespace(
+                st_mode=info.st_mode if kind == "reparse" else stat.S_IFIFO,
+                st_nlink=info.st_nlink,
+                st_file_attributes=(
+                    stat.FILE_ATTRIBUTE_REPARSE_POINT if kind == "reparse" else 0
+                ),
+            )
+        return info
+
+    def forbidden_open(*args, **kwargs):
+        pytest.fail("Redirected or nonregular members must be refused before opening")
+
+    monkeypatch.setattr(Path, "lstat", member_lstat)
+    monkeypatch.setattr(cylinder_preparation_audit.os, "open", forbidden_open)
+    with pytest.raises(ValueError, match="Preparation member is redirected"):
+        audit_inputs(bundle)
 
 
 def test_missing_root_is_not_created(tmp_path):
