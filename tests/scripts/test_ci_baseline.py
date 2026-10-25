@@ -3,6 +3,7 @@
 
 """Exercise exact failure identities and fail-closed baseline comparisons."""
 
+import ast
 import importlib.util
 import json
 import os
@@ -21,6 +22,28 @@ SCR = "tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reprod
 NOW = datetime(2026, 10, 15, 12, tzinfo=timezone.utc)
 
 
+@pytest.mark.parametrize("name", [
+    "scripts/ci/ci_baseline.py",
+    "tests/scripts/test_ci_baseline.py",
+    "tests/workflows/test_ci_triggers.py",
+    "tests/workflows/test_ci_draft_policy.py",
+    "tests/scripts/test_run_shard.py",
+])
+def test_text_io_declares_encoding_and_write_newlines(name):
+    """Every text operation in the changed Python scope has a portable format."""
+    tree = ast.parse((ROOT / name).read_text(encoding="utf-8"))
+    for call in ast.walk(tree):
+        if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Attribute):
+            continue
+        if call.func.attr not in {"read_text", "write_text"}:
+            continue
+        options = {arg.arg: getattr(arg.value, "value", None) for arg in call.keywords
+                   if arg.arg in {"encoding", "newline"}}
+        assert options.get("encoding") == "utf-8", (name, call.lineno)
+        if call.func.attr == "write_text":
+            assert options.get("newline") == "\n", (name, call.lineno)
+
+
 EVIDENCE_URL = "https://github.com/example/repository/actions/runs/99"
 
 
@@ -35,13 +58,14 @@ def evidence_response(endpoint, **changes):
 @pytest.fixture(autouse=True)
 def evidence_metadata(monkeypatch):
     monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
+    monkeypatch.delenv("CI_BASE_TIP", raising=False)
     monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
     monkeypatch.setattr(ci, "gh_json", evidence_response)
 
 
 def run_health_writer(body, *, active=True, existing=True):
     """Execute the shipped health script with isolated GitHub and file doubles."""
-    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text(encoding="utf-8"))
     step = next(s for s in workflow['jobs']['sweep-result']['steps']
                 if s.get('name') == 'Update main health')
     harness = r'''
@@ -113,7 +137,7 @@ def test_health_preserves_close_and_create_rules(active, existing, kinds):
 
 
 def test_health_workflow_names_and_soft_failure_are_preserved():
-    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text(encoding="utf-8"))
     assert {key: job['name'] for key, job in workflow['jobs'].items()} == {
         'full-matrix': 'Build full shard matrix',
         'sweep-tests': 'sweep-tests-${{ matrix.domain }}',
@@ -143,7 +167,7 @@ def write_results(tmp_path, *rows):
     directory = tmp_path / "results"
     directory.mkdir(exist_ok=True)
     for row in rows:
-        (directory / f"result-{row['shard']}.json").write_text(json.dumps(row))
+        (directory / f"result-{row['shard']}.json").write_text(json.dumps(row), encoding="utf-8", newline="\n")
     return directory
 
 
@@ -161,7 +185,7 @@ def compare(tmp_path, base, rows):
     directory = write_results(tmp_path, *rows)
     summary, verdict = tmp_path / "summary.md", tmp_path / "verdict.json"
     status = ci.compare_results(base, directory, 24, summary, verdict, now=NOW)
-    return status, summary.read_text(), json.loads(verdict.read_text())
+    return status, summary.read_text(encoding="utf-8"), json.loads(verdict.read_text(encoding="utf-8"))
 
 
 def test_all_preexisting_names_main_run(tmp_path):
@@ -206,13 +230,13 @@ def test_unproven_baseline_fails(tmp_path, kind):
 def extract(tmp_path, text, kind="extract", conclusion="failure", exit_code=1):
     """Extract a synthetic JUnit file or hosted log."""
     source, output = tmp_path / "input", tmp_path / "output.json"
-    source.write_text(text)
+    source.write_text(text, encoding="utf-8", newline="\n")
     flag = "--junit" if kind == "extract" else "--log"
     assert ci.main([kind, flag, str(source), "--shard", "example", "--sha", "abc123",
                     "--run", "123", "--attempt", "1", "--conclusion", conclusion,
                     "--exit-code", str(exit_code),
                     "--completed-at", NOW.isoformat(), "--out", str(output)]) == 0
-    return json.loads(output.read_text())
+    return json.loads(output.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("content", ["", "<broken>"])
@@ -225,7 +249,7 @@ def test_missing_junit_is_unparsed(tmp_path):
     ci.main(["extract", "--junit", str(tmp_path / "absent"), "--shard", "example",
              "--sha", "abc", "--run", "1", "--attempt", "1", "--conclusion", "failure",
              "--out", str(output)])
-    assert json.loads(output.read_text())["parsed"] is False
+    assert json.loads(output.read_text(encoding="utf-8"))["parsed"] is False
 
 
 def test_junit_and_log_scr_id_agree(tmp_path):
@@ -258,7 +282,7 @@ def test_publish_carries_cancelled_shard_timestamp(tmp_path):
     directory = write_results(tmp_path, result(conclusion="cancelled", parsed=False))
     output = tmp_path / "next.json"
     ci.main(["publish", "--results", str(directory), "--previous", str(base), "--out", str(output)])
-    assert json.loads(output.read_text()) == json.loads(base.read_text())
+    assert json.loads(output.read_text(encoding="utf-8")) == json.loads(base.read_text(encoding="utf-8"))
 
 
 def test_publish_success_clears_old_failures(tmp_path):
@@ -266,7 +290,7 @@ def test_publish_success_clears_old_failures(tmp_path):
     directory = write_results(tmp_path, result(ids=(), conclusion="success"))
     output = tmp_path / "next.json"
     ci.main(["publish", "--results", str(directory), "--previous", str(base), "--out", str(output)])
-    assert json.loads(output.read_text())["tests"] == {}
+    assert json.loads(output.read_text(encoding="utf-8"))["tests"] == {}
 
 
 def test_missing_or_invalid_results_fail_closed(tmp_path):
@@ -274,12 +298,12 @@ def test_missing_or_invalid_results_fail_closed(tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()
     assert ci.compare_results(base, empty, 24, tmp_path / "s", tmp_path / "v", now=NOW) == 1
-    (empty / "result-bad.json").write_text("{")
+    (empty / "result-bad.json").write_text("{", encoding="utf-8", newline="\n")
     assert ci.compare_results(base, empty, 24, tmp_path / "s", tmp_path / "v", now=NOW) == 1
 
 
 def test_workflow_keeps_required_name_and_infrastructure_failures():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     job = workflow["jobs"]["domain-tests-required"]
     assert job["name"] == "Domain test aggregate"
     step = next(s for s in job["steps"] if s["name"] == "Enforce required domain result")
@@ -304,20 +328,20 @@ def test_same_id_in_different_shard_is_new(tmp_path):
 
 def test_test_metadata_must_match_shard_observation(tmp_path):
     base = baseline(tmp_path)
-    value = json.loads(base.read_text())
+    value = json.loads(base.read_text(encoding="utf-8"))
     value["tests"][SCR]["run_id"] = "older"
-    base.write_text(json.dumps(value))
+    base.write_text(json.dumps(value), encoding="utf-8", newline="\n")
     assert compare(tmp_path, base, [result()])[0] == 1
 
 
 def test_publish_absent_shard_carries_forward(tmp_path):
     base = baseline(tmp_path)
-    before = json.loads(base.read_text())
+    before = json.loads(base.read_text(encoding="utf-8"))
     empty = tmp_path / "empty"
     empty.mkdir()
     output = tmp_path / "next.json"
     ci.main(["publish", "--results", str(empty), "--previous", str(base), "--out", str(output)])
-    assert json.loads(output.read_text()) == before
+    assert json.loads(output.read_text(encoding="utf-8")) == before
 
 
 def test_publish_new_unparsed_observation_replaces_old_red(tmp_path):
@@ -345,7 +369,7 @@ def test_duplicate_shard_artifacts_fail_closed(tmp_path):
     for sub in ("a", "b"):
         folder = directory / sub
         folder.mkdir(parents=True)
-        (folder / "result-example.json").write_text(json.dumps(result()))
+        (folder / "result-example.json").write_text(json.dumps(result()), encoding="utf-8", newline="\n")
     assert ci.compare_results(base, directory, 24, tmp_path / "s", tmp_path / "v", now=NOW) == 1
 
 
@@ -354,7 +378,7 @@ def test_unparsed_main_does_not_resolve_prior_failure(tmp_path):
     directory = write_results(tmp_path, result(parsed=False, ids=(), run_id="456"))
     output = tmp_path / "next.json"
     ci.main(["publish", "--results", str(directory), "--previous", str(base), "--out", str(output)])
-    value = json.loads(output.read_text())
+    value = json.loads(output.read_text(encoding="utf-8"))
     assert SCR in value["tests"]
     assert value["shards"]["example"]["parsed"] is False
     assert compare(tmp_path, output, [result()])[0] == 1
@@ -493,7 +517,7 @@ def test_comparison_default_matches_selection_freshness(tmp_path, hours, expecte
 
 
 def test_workflow_comparison_uses_thirty_hour_freshness():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     job = workflow["jobs"]["domain-tests-required"]
     enforce = next(step for step in job["steps"] if step.get("name") == "Enforce required domain result")
     assert "--max-age-hours 30" in enforce["run"]
@@ -518,7 +542,7 @@ def test_extraction_does_not_invent_execution_count(tmp_path):
 def test_workflows_capture_exit_and_preserve_gate_conclusion():
     for path, job_id in (("full-matrix-sweep.yml", "sweep-tests"),
                          ("quality-gates-by-domain.yml", "domain-tests")):
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / path).read_text())
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / path).read_text(encoding="utf-8"))
         steps = workflow["jobs"][job_id]["steps"]
         gate = next(s for s in steps if s["name"] == "Run domain gate")
         assert "set +e" in gate["run"] and 'exit "$code"' in gate["run"]
@@ -555,7 +579,7 @@ def test_reader_downloads_verified_own_main(tmp_path, monkeypatch, event):
     run = sweep(event=event)
     mock_download(monkeypatch, [run], [artifact()], verified=dict(run, extra="detail"))
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
-    assert json.loads((tmp_path / "baseline.json").read_text()) == {"tests": {}, "shards": {}}
+    assert json.loads((tmp_path / "baseline.json").read_text(encoding="utf-8")) == {"tests": {}, "shards": {}}
 
 
 def test_reader_rejects_changed_provenance(tmp_path, monkeypatch):
@@ -607,13 +631,13 @@ def test_publish_recovered_main_failure_is_not_open(tmp_path):
     row = result(conclusion="success", exit_code=0, recovered=[SCR],
                  first_attempt_exit_code=1, first_attempt_failed={SCR: "assertion"})
     base = baseline(tmp_path, row)
-    assert json.loads(base.read_text())["tests"] == {}
+    assert json.loads(base.read_text(encoding="utf-8"))["tests"] == {}
 
 
 def test_workflows_pilot_only_orcaflex_in_report_mode():
     for name, job in (("quality-gates-by-domain.yml", "domain-tests"),
                       ("full-matrix-sweep.yml", "sweep-tests")):
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"))
         gate = next(step for step in workflow["jobs"][job]["steps"]
                     if step["name"] == "Run domain gate")
         run = gate["run"]
@@ -630,7 +654,7 @@ def test_workflows_pilot_only_orcaflex_in_report_mode():
 
 
 def test_aggregate_compares_successful_shards_too():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     steps = workflow["jobs"]["domain-tests-required"]["steps"]
     for name in ("Checkout baseline tools", "Download domain results"):
         step = next(step for step in steps if step["name"] == name)
@@ -647,12 +671,12 @@ def test_comparison_requires_recovery_and_register_evidence(tmp_path, recovered,
     row = result(ids=(node,), first_attempt_failed={node: "assertion"},
                  recovered=[node] if recovered else [])
     path = tmp_path / "register.yml"
-    path.write_text(json.dumps([dict(id=node, status="open", evidence=evidence)]))
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=evidence)]), encoding="utf-8", newline="\n")
     verdict = tmp_path / "verdict.json"
     status = ci.compare_results(base, write_results(tmp_path, row), 24,
                                 tmp_path / "summary.md", verdict, NOW, path)
     assert status == (0 if recovered and evidence else 1)
-    assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == (
+    assert json.loads(verdict.read_text(encoding="utf-8"))["shards"][0]["ids"][node] == (
         "FLAKY" if recovered and evidence else "NEW")
 
 
@@ -679,7 +703,7 @@ def test_extract_retry_evidence_keeps_original_messages(tmp_path, conclusion):
     code = 0 if conclusion == "success" else 1
     retry = dict(sha="abc123", run_id="123", exit_code=code,
                  first_attempt_exit_code=1, first_attempt_failed={node: "first message"}, recovered=[node])
-    (tmp_path / "flaky-example.json").write_text(json.dumps(retry))
+    (tmp_path / "flaky-example.json").write_text(json.dumps(retry), encoding="utf-8", newline="\n")
     xml = ('<testsuite tests="1" failures="1" errors="0">'
            '<testcase classname="tests.test_new" name="test_racy">'
            '<failure message="first message"/></testcase></testsuite>')
@@ -690,26 +714,26 @@ def test_extract_retry_evidence_keeps_original_messages(tmp_path, conclusion):
 
 
 def test_extract_mismatched_retry_record_fails_closed(tmp_path):
-    (tmp_path / "flaky-example.json").write_text(json.dumps(dict(sha="wrong")))
+    (tmp_path / "flaky-example.json").write_text(json.dumps(dict(sha="wrong")), encoding="utf-8", newline="\n")
     xml = ('<testsuite tests="1" failures="1" errors="0">'
            '<testcase classname="tests.test_new" name="test_racy"><failure/></testcase></testsuite>')
     assert extract(tmp_path, xml)["parsed"] is False
 
 
 @pytest.mark.parametrize("content", ["[]\n", None, '[{"id": "base-id", "status": "open", "evidence": ["main run"]}]\n'])
-def test_pr_register_comes_from_fetched_base(tmp_path, monkeypatch, content):
+def test_pr_register_comes_from_validated_base(tmp_path, monkeypatch, content):
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
-    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.setenv("CI_BASE_TIP", "a" * 40)
     monkeypatch.chdir(tmp_path)
     local = tmp_path / ".github/ci/flaky-register.yml"
     local.parent.mkdir(parents=True)
-    local.write_text('[{"id": "self-certified"}]')
+    local.write_text('[{"id": "self-certified"}]', encoding="utf-8", newline="\n")
     calls = []
 
     def git_output(command, **kwargs):
         calls.append(command)
-        if command[1] == "fetch":
-            return ""
+        if command[1] == "cat-file":
+            return "commit\n"
         if command[1] == "rev-parse":
             return "a" * 40 + "\n"
         if command[1] == "ls-tree":
@@ -720,9 +744,9 @@ def test_pr_register_comes_from_fetched_base(tmp_path, monkeypatch, content):
     monkeypatch.setattr(ci.subprocess, "check_output", git_output)
     output = tmp_path / "selected.yml"
     assert ci.main(["register", "--out", str(output)]) == 0
-    assert output.read_text() == (content if content is not None else "[]\n")
-    assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
-    assert local.read_text() == '[{"id": "self-certified"}]'
+    assert output.read_text(encoding="utf-8") == (content if content is not None else "[]\n")
+    assert calls[0] == ["git", "cat-file", "-t", "a" * 40]
+    assert local.read_text(encoding="utf-8") == '[{"id": "self-certified"}]'
 
 
 def test_non_pr_register_uses_checkout(tmp_path, monkeypatch):
@@ -730,7 +754,7 @@ def test_non_pr_register_uses_checkout(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     source = tmp_path / ".github/ci/flaky-register.yml"
     source.parent.mkdir(parents=True)
-    source.write_text("[]\n")
+    source.write_text("[]\n", encoding="utf-8", newline="\n")
     output = tmp_path / "selected.yml"
     assert ci.main(["register", "--out", str(output)]) == 0
     assert output.read_bytes() == source.read_bytes()
@@ -739,30 +763,36 @@ def test_non_pr_register_uses_checkout(tmp_path, monkeypatch):
 def test_workflow_register_is_selected_before_retry_and_comparison():
     for name, job in (("quality-gates-by-domain.yml", "domain-tests"),
                       ("full-matrix-sweep.yml", "sweep-tests")):
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"))
         steps = workflow["jobs"][job]["steps"]
         select = next(s for s in steps if s["name"] == "Select trusted register")
         gate = next(s for s in steps if s["name"] == "Run domain gate")
         assert steps.index(select) < steps.index(gate)
         assert "ci_baseline.py register" in select["run"]
-        assert select["env"]["GITHUB_BASE_REF"] == "${{ github.base_ref }}"
+        if name == "quality-gates-by-domain.yml":
+            assert select["env"]["CI_BASE_TIP"] == "${{ steps.build_merge.outputs.tip }}"
+        else:
+            assert select["env"]["GITHUB_BASE_REF"] == "${{ github.base_ref }}"
         assert '--register "$RUNNER_TEMP/flaky-register.yml"' in gate["run"]
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     steps = workflow["jobs"]["domain-tests-required"]["steps"]
     enforce = next(s for s in steps if s["name"] == "Enforce required domain result")
     assert "ci_baseline.py register" in enforce["run"]
+    assert enforce["env"]["CI_BASE_TIP"] == "${{ steps.build_merge.outputs.tip }}"
     assert '--register "$RUNNER_TEMP/flaky-register.yml"' in enforce["run"]
 
 
-@pytest.mark.parametrize("failure", ["fetch", "show"])
+@pytest.mark.parametrize("failure", ["cat-file", "rev-parse", "ls-tree", "show"])
 def test_register_transport_failure_never_falls_back(tmp_path, monkeypatch, failure):
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
-    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.setenv("CI_BASE_TIP", "a" * 40)
     output = tmp_path / "selected.yml"
 
     def git_output(command, **kwargs):
         if command[1] == failure:
             raise subprocess.CalledProcessError(1, command)
+        if command[1] == "cat-file":
+            return "commit"
         if command[1] == "rev-parse":
             return "a" * 40
         return ".github/ci/flaky-register.yml"
@@ -773,20 +803,53 @@ def test_register_transport_failure_never_falls_back(tmp_path, monkeypatch, fail
     assert not output.exists()
 
 
+@pytest.mark.parametrize("tip", ["", "main", "a" * 39, "a" * 41, "a" * 65, "g" * 40])
+def test_pr_register_rejects_missing_or_invalid_tip(tmp_path, monkeypatch, tip):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("CI_BASE_TIP", tip)
+    # Valid-looking Git responses cannot substitute for a missing guard output.
+    monkeypatch.setattr(ci.subprocess, "check_output", lambda *args, **kwargs: "")
+    output = tmp_path / "selected.yml"
+    with pytest.raises(ValueError, match="base tip"):
+        ci.select_register(output)
+    assert not output.exists()
+
+
+def test_pr_register_rejects_non_commit_tip(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("CI_BASE_TIP", "a" * 40)
+    monkeypatch.setattr(ci.subprocess, "check_output", lambda *args, **kwargs: "tree\n")
+    output = tmp_path / "selected.yml"
+    with pytest.raises(ValueError, match="commit"):
+        ci.select_register(output)
+    assert not output.exists()
+
+
+def test_pr_register_rejects_unbound_tip(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("CI_BASE_TIP", "a" * 40)
+    monkeypatch.setattr(ci.subprocess, "check_output", lambda cmd, **kwargs:
+                        "commit\n" if cmd[1] == "cat-file" else "b" * 40)
+    output = tmp_path / "selected.yml"
+    with pytest.raises(ValueError, match="first parent"):
+        ci.select_register(output)
+    assert not output.exists()
+
+
 @pytest.mark.parametrize("failure", ["register", "metadata"])
 @pytest.mark.parametrize("mode,domain,expected", [
     ("report", "success", 0), ("report", "failure", 1),
     ("enforce", "success", 1), ("enforce", "failure", 1),
 ])
 def test_baseline_transport_failure_obeys_mode(tmp_path, mode, domain, expected, failure):
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
                 if s["name"] == "Enforce required domain result")
     # Fail the runtime boundary, without network access or project synchronization.
     for executable in ("python", "uv"):
         path = tmp_path / executable
         code = 0 if executable == "python" and failure == "metadata" else 7
-        path.write_text(f"#!/bin/sh\nexit {code}\n")
+        path.write_text(f"#!/bin/sh\nexit {code}\n", encoding="utf-8", newline="\n")
         path.chmod(0o755)
     env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
                DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
@@ -800,7 +863,7 @@ def test_baseline_transport_failure_obeys_mode(tmp_path, mode, domain, expected,
 
 
 def test_comparison_runtime_is_isolated_and_pinned():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
                 if s["name"] == "Enforce required domain result")
     assert "--no-sources" not in step["run"]
@@ -808,7 +871,7 @@ def test_comparison_runtime_is_isolated_and_pinned():
 
 
 def test_enforce_applies_comparison_to_successful_domains():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
                 if s["name"] == "Enforce required domain result")
     assert 'elif [ "$CI_BASELINE_MODE" = "enforce" ]; then' in step["run"]
@@ -822,21 +885,21 @@ def test_pr_or_untrusted_run_evidence_is_new(tmp_path, monkeypatch, change):
     monkeypatch.setattr(ci, "gh_json", lambda endpoint: evidence_response(endpoint, **change))
     node = "tests/test_new.py::test_racy"
     path = tmp_path / "register.yml"
-    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]))
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]), encoding="utf-8", newline="\n")
     row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
                  first_attempt_failed={node: "assertion"}, recovered=[node])
     verdict = tmp_path / "verdict.json"
     assert ci.compare_results(baseline(tmp_path), write_results(tmp_path, row), 24,
                               tmp_path / "s", verdict, NOW, path) == 1
-    assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == "NEW"
+    assert json.loads(verdict.read_text(encoding="utf-8"))["shards"][0]["ids"][node] == "NEW"
 
 
 def test_pr_added_register_cannot_certify_comparison(tmp_path, monkeypatch):
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
-    monkeypatch.setattr(ci, "select_register", lambda out: out.write_text("[]\n"))
+    monkeypatch.setattr(ci, "select_register", lambda out: out.write_text("[]\n", encoding="utf-8", newline="\n"))
     node = "tests/test_new.py::test_racy"
     path = tmp_path / "register.yml"
-    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]))
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])]), encoding="utf-8", newline="\n")
     row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
                  first_attempt_failed={node: "assertion"}, recovered=[node])
     assert ci.compare_results(baseline(tmp_path), write_results(tmp_path, row), 24,
@@ -879,16 +942,16 @@ def test_success_without_complete_execution_stays_red(tmp_path, changes):
 
 @pytest.mark.parametrize("comparison", [0, 1])
 def test_enforce_returns_verdict_for_green_domains(tmp_path, comparison):
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     step = next(s for s in workflow["jobs"]["domain-tests-required"]["steps"]
                 if s["name"] == "Enforce required domain result")
     python = tmp_path / "python"
-    python.write_text("#!/bin/sh\nexit 0\n")
+    python.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8", newline="\n")
     python.chmod(0o755)
     uv = tmp_path / "uv"
     uv.write_text("#!/bin/sh\ncase \"$*\" in *'ci_baseline.py compare'*) "
                   f"echo comparison > baseline-summary.md; exit {comparison};; "
-                  "*) echo 2026-10-15T12:00:00Z > baseline-time.txt; exit 0;; esac\n")
+                  "*) echo 2026-10-15T12:00:00Z > baseline-time.txt; exit 0;; esac\n", encoding="utf-8", newline="\n")
     uv.chmod(0o755)
     env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
                DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
@@ -901,6 +964,6 @@ def test_enforce_returns_verdict_for_green_domains(tmp_path, comparison):
 
 @pytest.mark.parametrize("name", ["quality-gates-by-domain.yml", "full-matrix-sweep.yml"])
 def test_register_runtime_dependency_is_pinned(name):
-    workflow = (ROOT / ".github/workflows" / name).read_text()
+    workflow = (ROOT / ".github/workflows" / name).read_text(encoding="utf-8")
     assert "--with pyyaml " not in workflow
     assert "--with pyyaml==6.0.2 " in workflow

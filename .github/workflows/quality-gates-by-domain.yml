@@ -425,7 +425,7 @@ jobs:
       - name: Select trusted register
         if: matrix.domain == 'orcaflex'
         env:
-          GITHUB_BASE_REF: ${{ github.base_ref }}
+          CI_BASE_TIP: ${{ steps.build_merge.outputs.tip }}
         run: python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
 
       - name: Run domain gate
@@ -610,7 +610,7 @@ jobs:
       - name: Enforce required domain result
         if: always()
         env:
-          GITHUB_BASE_REF: ${{ github.base_ref }}
+          CI_BASE_TIP: ${{ steps.build_merge.outputs.tip }}
           CI_BASELINE_MODE: report
           GH_TOKEN: ${{ github.token }}
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}

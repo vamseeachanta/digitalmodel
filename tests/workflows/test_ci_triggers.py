@@ -217,7 +217,7 @@ def test_required_aggregate_fails_on_draft_skips(
 ])
 def test_workflow_loader_rejects_duplicate_keys(document: str, tmp_path: Path, monkeypatch) -> None:
     """Raw duplicate-key controls must fail before a mapping can discard evidence."""
-    (tmp_path / "duplicate.yml").write_text(document, encoding="utf-8")
+    (tmp_path / "duplicate.yml").write_text(document, encoding="utf-8", newline="\n")
     monkeypatch.setattr(sys.modules[__name__], "WORKFLOWS", tmp_path)
     with pytest.raises(yaml.constructor.ConstructorError, match="duplicate"):
         load_workflow("duplicate.yml")
@@ -350,12 +350,12 @@ import sys
 args = sys.argv[1:]
 assert args[:3] == ["run", "--no-sources", "python"]
 if args[3] == "scripts/ci/detect_touched_domains.py":
-    Path(os.environ["DETECTOR_ARGS"]).write_text(json.dumps(args[4:]))
+    Path(os.environ["DETECTOR_ARGS"]).write_text(json.dumps(args[4:]), encoding="utf-8", newline="\\n")
     print(os.environ["DETECTOR_MATRIX"])
 else:
     assert args[3] == "-c"
     os.execv(sys.executable, [sys.executable, *args[3:]])
-''', encoding="utf-8")
+''', encoding="utf-8", newline="\n")
     uv.chmod(0o755)
     matrix = json.dumps({"include": domains}, separators=(",", ":"))
     arguments = tmp_path / "arguments.json"
@@ -378,8 +378,8 @@ else:
         expected = ["--mode", "touched", "--base", "push-before", "--head", "push-after",
                     "--on-missing-base", "full"]
     expected += ["--domains-file", "tests/DOMAINS.md", "--output-format", "json-matrix"]
-    assert json.loads(arguments.read_text()) == expected
-    assert output.read_text().splitlines() == [
+    assert json.loads(arguments.read_text(encoding="utf-8")) == expected
+    assert output.read_text(encoding="utf-8").splitlines() == [
         f"matrix={matrix}", f"has_domains={str(bool(domains)).lower()}",
     ]
 
@@ -504,7 +504,7 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
         assert '"${parents[1]:-missing}" != "$PR_HEAD_SHA"' in script
     assert scripts
     assert len(set(scripts)) == 1
-    workflow = (WORKFLOWS / filename).read_text()
+    workflow = (WORKFLOWS / filename).read_text(encoding="utf-8")
     assert "merge_commit_sha" not in workflow
     assert "resolve_merge" not in workflow
     assert not re.search(r"gh\s+api", "\n".join(scripts))
@@ -534,7 +534,7 @@ def git(directory: Path, *args: str) -> str:
 
 def fixture_commit(directory: Path, filename: str, content: str) -> str:
     """Commit a text change in the disposable fixture only."""
-    (directory / filename).write_text(content, encoding="utf-8")
+    (directory / filename).write_text(content, encoding="utf-8", newline="\n")
     git(directory, "add", filename)
     git(directory, "commit", "-m", "Update fixture content")
     return git(directory, "rev-parse", "HEAD")
@@ -619,7 +619,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
     merge = job["steps"][index + 1]
     assert merge.get("id") == "build_merge"
     script = tmp_path / "merge.sh"
-    script.write_text(merge["run"], encoding="utf-8")
+    script.write_text(merge["run"], encoding="utf-8", newline="\n")
     # Only Git and the text tools used by the script are available, never API clients.
     tools = tmp_path / "bin"
     tools.mkdir()
@@ -659,7 +659,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
             '<<< "Malformed merge fixture")\n'
             f'  {quoted_git} reset --hard "$malformed" >/dev/null\n'
             'fi\n',
-            encoding="utf-8",
+            encoding="utf-8", newline="\n",
         )
         wrapper.chmod(0o755)
     result = subprocess.run([bash, "-x", str(script)], cwd=runner, env=env,
@@ -687,9 +687,9 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
         tested = git(runner, "rev-parse", "HEAD")
         tree = git(runner, "rev-parse", "HEAD^{tree}")
         assert f"tested={tested} first_parent={tip} second_parent={head} tip={tip} event_base={event_base} tree={tree}" in result.stdout
-        assert output.read_text().splitlines() == [f"tip={tip}"]
-        assert (runner / "head").read_text() == "head\n"
-        assert (runner / "base").read_text().startswith("base ")
+        assert output.read_text(encoding="utf-8").splitlines() == [f"tip={tip}"]
+        assert (runner / "head").read_text(encoding="utf-8") == "head\n"
+        assert (runner / "base").read_text(encoding="utf-8").startswith("base ")
 
 
 def test_base_consumers_use_local_tip() -> None:
@@ -701,7 +701,101 @@ def test_base_consumers_use_local_tip() -> None:
     quality = load_workflow("quality-gates.yml")
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-    assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
+    context = {"github.event_name": "pull_request", "steps.build_merge.outputs.tip": "a" * 40}
+    assert evaluate_expression(register["env"]["REGISTER_BASE"][3:-2], context) == "a" * 40
+
+
+@pytest.mark.parametrize("fork_base", [False, True])
+def test_fork_merge_register_uses_guarded_base(tmp_path: Path, fork_base: bool) -> None:
+    """A shallow fork cannot omit or replace the trusted base register."""
+    runner, origin, fork, event_base, _, head = merge_fixture(tmp_path, "fork-shallow")
+    source = tmp_path / "source"
+    register_path = ".github/ci/flaky-register.yml"
+    (source / register_path).parent.mkdir(parents=True, exist_ok=True)
+    git(source, "checkout", "main")
+    git(source, "fetch", str(origin), "main")
+    git(source, "merge", "--ff-only", "FETCH_HEAD")
+    tip = fixture_commit(source, register_path, '[{"id": "trusted-base"}]\n')
+    git(source, "push", str(origin), "main")
+    if fork_base:
+        git(source, "checkout", "head")
+        (source / register_path).parent.mkdir(parents=True, exist_ok=True)
+        fixture_commit(source, register_path, '[{"id": "self-certified"}]\n')
+        git(source, "push", str(fork), "HEAD:main")
+    job, index = repository_checkouts("quality-gates-by-domain.yml")[2]
+    merge = job["steps"][index + 1]
+    output = tmp_path / "output"
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update(BASE_REF="main", PR_HEAD_SHA=head, EVENT_BASE_SHA=event_base,
+               BASE_REPOSITORY_URL=origin.as_uri(), HEAD_REPOSITORY_URL=fork.as_uri(),
+               GITHUB_OUTPUT=str(output), GITHUB_EVENT_NAME="pull_request")
+    merged = subprocess.run(["bash", "-c", merge["run"]], cwd=runner, env=env,
+                            capture_output=True, text=True, timeout=60)
+    assert merged.returncode == 0, merged.stderr
+    assert output.read_text(encoding="utf-8") == f"tip={tip}\n"
+    select = next(step for step in job["steps"] if step.get("name") == "Select trusted register")
+    context = {"github.base_ref": "main", "steps.build_merge.outputs.tip": tip}
+    env.update({key: evaluate_expression(value[3:-2], context)
+                for key, value in select["env"].items()})
+    env["RUNNER_TEMP"] = str(tmp_path)
+    script = runner / "scripts/ci/ci_baseline.py"
+    script.parent.mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / "scripts/ci/ci_baseline.py", script)
+    selected = subprocess.run(["bash", "-c", select["run"]], cwd=runner, env=env,
+                              capture_output=True, text=True, timeout=30)
+    assert selected.returncode == 0, selected.stderr
+    assert (tmp_path / "flaky-register.yml").read_text(encoding="utf-8") == '[{"id": "trusted-base"}]\n'
+
+
+@pytest.mark.parametrize("event", ["workflow_dispatch", "push", "pull_request"])
+@pytest.mark.parametrize("changed,expected", [
+    ("The result meets the stated limit.\n", 0),
+    ("The result is obviously acceptable.\n", 1),
+])
+def test_executed_register_step_has_bounded_range(tmp_path: Path, event: str, changed: str, expected: int) -> None:
+    """The register step checks changed prose without rescanning old findings."""
+    git(tmp_path, "init", "-b", "main")
+    git(tmp_path, "config", "user.name", "Test")
+    git(tmp_path, "config", "user.email", fixture_email())
+    (tmp_path / "docs").mkdir()
+    base = fixture_commit(tmp_path, "docs/old.md", "The result is obviously acceptable.\n")
+    fixture_commit(tmp_path, "docs/change.md", changed)
+    checker = tmp_path / "scripts/enforcement/check-engineering-register.py"
+    checker.parent.mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / "scripts/enforcement/check-engineering-register.py", checker)
+    steps = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]["steps"]
+    step = next(step for step in steps if step.get("name") == "Check engineering register changes")
+    context = {"github.event_name": event, "github.event.before": base if event == "push" else "",
+               "steps.build_merge.outputs.tip": base if event == "pull_request" else ""}
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env["REGISTER_BASE"] = evaluate_expression(step["env"]["REGISTER_BASE"][3:-2], context)
+    result = subprocess.run(["bash", "-c", step["run"]], cwd=tmp_path, env=env,
+                            capture_output=True, text=True, timeout=30)
+    assert result.returncode == expected, result.stdout + result.stderr
+    assert "1 files scanned" in result.stdout
+
+
+@pytest.mark.parametrize("base", ["", "HEAD^"])
+def test_register_step_rejects_missing_range(tmp_path: Path, base: str) -> None:
+    """Empty bases and revisions without a parent cannot certify a scan."""
+    git(tmp_path, "init", "-b", "main")
+    git(tmp_path, "config", "user.name", "Test")
+    git(tmp_path, "config", "user.email", fixture_email())
+    (tmp_path / "docs").mkdir()
+    fixture_commit(tmp_path, "docs/example.md", "The result meets the stated limit.\n")
+    checker = tmp_path / "scripts/enforcement/check-engineering-register.py"
+    checker.parent.mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / "scripts/enforcement/check-engineering-register.py", checker)
+    steps = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]["steps"]
+    checkout = next(step for step in steps if step.get("name") == "Checkout code")
+    assert checkout["with"]["fetch-depth"] == 0
+    step = next(step for step in steps if step.get("name") == "Check engineering register changes")
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env["REGISTER_BASE"] = base
+    result = subprocess.run(["bash", "-c", step["run"]], cwd=tmp_path, env=env,
+                            capture_output=True, text=True, timeout=30)
+    assert result.returncode != 0, result.stdout
+    assert "files scanned" not in result.stdout
 
 
 

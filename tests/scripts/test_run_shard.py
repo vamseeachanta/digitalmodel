@@ -31,11 +31,12 @@ def evidence_metadata(tmp_path, monkeypatch):
         "head_repository=dict(full_name='example/repository'))\n"
         "jobs = [dict(name='tests-' + shard, run_id=99, head_sha='mainsha', status='completed', "
         "conclusion='failure') for shard in ('sample', 'real')]\n"
-        "print(json.dumps(dict(jobs=jobs) if '/jobs?' in endpoint else run))\n"
+        "print(json.dumps(dict(jobs=jobs) if '/jobs?' in endpoint else run))\n", encoding="utf-8", newline="\n"
     )
     gh.chmod(0o755)
     monkeypatch.setenv("PATH", str(bin_path) + os.pathsep + os.environ["PATH"])
     monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
+    monkeypatch.delenv("CI_BASE_TIP", raising=False)
     monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
 
 
@@ -55,9 +56,9 @@ def fake_gate(tmp_path, first=1, second=0, count=1, mode="failure"):
         "from xml.etree.ElementTree import Element, SubElement, ElementTree\n"
         "args = sys.argv[1:]\n"
         "state = pathlib.Path('attempts.json')\n"
-        "history = json.loads(state.read_text()) if state.exists() else []\n"
+        "history = json.loads(state.read_text(encoding='utf-8')) if state.exists() else []\n"
         "history.append(args)\n"
-        "state.write_text(json.dumps(history))\n"
+        "state.write_text(json.dumps(history), encoding='utf-8', newline='\\n')\n"
         f"code = {first} if len(history) == 1 else {second}\n"
         "print('attempt', len(history), flush=True)\n"
         f"mode = {mode!r}\n"
@@ -76,11 +77,11 @@ def fake_gate(tmp_path, first=1, second=0, count=1, mode="failure"):
         "    suite.set('errors', str(len(suite.findall('testcase/error'))))\n"
         "    pathlib.Path(target).parent.mkdir(parents=True, exist_ok=True)\n"
         "    ElementTree(root).write(target)\n"
-        "sys.exit(code)\n"
+        "sys.exit(code)\n", encoding="utf-8", newline="\n"
     )
     gate.chmod(0o755)
     (tmp_path / "tests").mkdir()
-    (tmp_path / "tests/test_fake.py").write_text("")
+    (tmp_path / "tests/test_fake.py").write_text("", encoding="utf-8", newline="\n")
     return gate
 
 
@@ -104,13 +105,13 @@ def invoke(tmp_path, gate, signal=False, shard="sample", options=(), summary=Non
 
 
 def history(tmp_path):
-    return json.loads((tmp_path / "attempts.json").read_text())
+    return json.loads((tmp_path / "attempts.json").read_text(encoding="utf-8"))
 
 
 def register(tmp_path, evidence=None, status="open"):
     path = tmp_path / "register.yml"
     path.write_text(json.dumps([dict(id="tests/test_fake.py::test_case_0",
-                                    status=status, evidence=[EVIDENCE_URL] if evidence is None else evidence)]))
+                                    status=status, evidence=[EVIDENCE_URL] if evidence is None else evidence)]), encoding="utf-8", newline="\n")
     return ("--mode", "enforce", "--register", str(path))
 
 
@@ -119,7 +120,7 @@ def test_failure_then_pass_records_and_warns(tmp_path, monkeypatch):
     result = invoke(tmp_path, fake_gate(tmp_path), options=register(tmp_path),
                     summary=tmp_path / "summary.md")
     assert result.returncode == 0, result.stderr
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
     message = record["first_attempt_failed"]["tests/test_fake.py::test_case_0"]
     assert len(message) <= 500
@@ -127,7 +128,7 @@ def test_failure_then_pass_records_and_warns(tmp_path, monkeypatch):
     assert {"sha", "run_id", "runner_cpu"} <= record.keys()
     assert "::warning::flaky, passed on retry: tests/test_fake.py::test_case_0" in result.stdout
     assert "attempt 1" in result.stdout and "attempt 2" in result.stdout
-    summary = (tmp_path / "summary.md").read_text()
+    summary = (tmp_path / "summary.md").read_text(encoding="utf-8")
     assert "assert mismatch" in summary and "registered with evidence" in summary
     assert "passed on retry" in summary and "returned 0" in summary
 
@@ -141,14 +142,14 @@ def test_failure_twice_stays_red(tmp_path):
 def test_partial_recovery_is_recorded_while_shard_stays_red(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, second=1, count=2, mode="partial"))
     assert result.returncode == 1
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
 
 
 def test_skipped_retry_does_not_count_as_a_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, mode="retry_skipped"))
     assert result.returncode == 1
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["ids"] == []
+    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))["ids"] == []
 
 
 @pytest.mark.parametrize("count,mode", [(21, "failure"), (1, "collection"), (1, "missing")])
@@ -161,7 +162,7 @@ def test_signal_abort_then_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
     assert result.returncode == 134
     assert len(history(tmp_path)) == 2
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
+    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))["kind"] == "signal-exit"
 
 
 def test_signal_normal_failure_never_retries(tmp_path):
@@ -176,8 +177,8 @@ def test_signal_abort_preserves_first_exit(tmp_path, mode, code):
     assert result.returncode == code
     assert len(history(tmp_path)) == 1
     report = tmp_path / "reports/junit-sample.xml"
-    assert "assert mismatch" in report.read_text()
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert "assert mismatch" in report.read_text(encoding="utf-8")
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["first_attempt_exit_code"] == code
     assert record["exit_code"] == code
     assert record["first_attempt_failed"] == {"tests/test_fake.py::test_case_0": "assert mismatch"}
@@ -193,11 +194,11 @@ def test_invoke_does_not_inherit_hosted_summary(tmp_path, monkeypatch):
 def test_unidentified_failure_is_reported(tmp_path):
     summary = tmp_path / "summary.md"
     gate = fake_gate(tmp_path)
-    gate.write_text(gate.read_text().replace("classname='tests.test_fake'", "classname='missing.module'"))
+    gate.write_text(gate.read_text(encoding="utf-8").replace("classname='tests.test_fake'", "classname='missing.module'"), encoding="utf-8", newline="\n")
     result = invoke(tmp_path, gate, summary=summary)
     assert result.returncode == 1
     assert len(history(tmp_path)) == 1
-    text = summary.read_text()
+    text = summary.read_text(encoding="utf-8")
     assert "1 failing cases without an established ID" in text
     assert "Unidentified failure" in text
     assert "missing.module" in text and "test_case_0" in text
@@ -205,9 +206,9 @@ def test_unidentified_failure_is_reported(tmp_path):
 
 def test_atlas_keeps_direct_gate():
     workflow = SCRIPT.parents[2] / ".github/workflows/parametric-atlas-drift.yml"
-    assert "run_shard.py" not in workflow.read_text()
-    assert "run: python -m digitalmodel.parametric.refresh" in workflow.read_text()
-    assert "atlas-retry-evidence" not in workflow.read_text()
+    assert "run_shard.py" not in workflow.read_text(encoding="utf-8")
+    assert "run: python -m digitalmodel.parametric.refresh" in workflow.read_text(encoding="utf-8")
+    assert "atlas-retry-evidence" not in workflow.read_text(encoding="utf-8")
 
 
 def test_retry_contains_only_failed_ids_and_original_flags(tmp_path):
@@ -231,7 +232,7 @@ def test_timeout_or_termination_never_retries(tmp_path, code):
 
 def test_malformed_report_fails_closed(tmp_path):
     path = tmp_path / "bad.xml"
-    path.write_text("not xml")
+    path.write_text("not xml", encoding="utf-8", newline="\n")
     assert module().junit_decision(path, 1, 20)["retry"] is False
 
 
@@ -256,8 +257,8 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, monkeypatc
         "    def test_once(self, value):\n"
         "        marker = Path(value)\n"
         "        existed = marker.exists()\n"
-        "        marker.write_text('seen')\n"
-        "        assert existed\n"
+        "        marker.write_text('seen', encoding='utf-8', newline='\\n')\n"
+        "        assert existed\n", encoding="utf-8", newline="\n"
     )
     expected_ids = [
         "tests/test_example.py::TestExample::test_once[a.b]",
@@ -267,7 +268,7 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, monkeypatc
     if registered:
         path = tmp_path / "register.yml"
         path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])
-                                    for node in expected_ids]))
+                                    for node in expected_ids]), encoding="utf-8", newline="\n")
         options.extend(["--register", str(path)])
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--shard", "real", "--junit", "reports/junit-real.xml", *options, "--",
@@ -277,7 +278,7 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, monkeypatc
     )
     assert not inherited_summary.exists()
     assert result.returncode == (0 if registered else 1), result.stdout + result.stderr
-    record = json.loads((tmp_path / "reports/flaky-real.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-real.json").read_text(encoding="utf-8"))
     assert record["ids"] == expected_ids
 
 
@@ -295,11 +296,11 @@ def test_n3_shared_state_passes_alone_but_stays_red(tmp_path, options):
     (tests / "test_state.py").write_text(
         "state = []\n"
         "def test_a():\n    state.append('changed')\n"
-        "def test_b():\n    assert not state\n"
+        "def test_b():\n    assert not state\n", encoding="utf-8", newline="\n"
     )
     result = invoke(tmp_path, Path(sys.executable), options=options)
     assert result.returncode == 1, result.stdout + result.stderr
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["ids"] == ["tests/test_state.py::test_b"]
 
 
@@ -326,7 +327,7 @@ def test_register_without_open_evidence_stays_red(tmp_path, evidence, status):
 def test_unreadable_register_stays_red(tmp_path, content):
     path = tmp_path / "register.yml"
     if content is not None:
-        path.write_text(content)
+        path.write_text(content, encoding="utf-8", newline="\n")
     options = ("--mode", "enforce", "--register", str(path))
     result = invoke(tmp_path, fake_gate(tmp_path), options=options)
     assert result.returncode == 1
@@ -344,7 +345,7 @@ def test_report_registered_recovery_preserves_original_exit(tmp_path):
     options = register(tmp_path)
     options = ("--mode", "report", *options[2:])
     assert invoke(tmp_path, fake_gate(tmp_path), options=options).returncode == 1
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["enforce_exit_code"] == 0
     assert record["mode"] == "report"
 
@@ -353,19 +354,19 @@ def test_summary_keeps_message_for_each_failure(tmp_path, monkeypatch):
     summary = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     assert invoke(tmp_path, fake_gate(tmp_path, count=2), summary=summary).returncode == 1
-    payload = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    payload = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert len(payload["first_attempt_failed"]) == 2
     for node, message in payload["first_attempt_failed"].items():
-        assert node in summary.read_text() and message in summary.read_text()
-    assert summary.read_text().count("not run") == 0
-    assert "missing" in summary.read_text() or "unreadable" in summary.read_text()
+        assert node in summary.read_text(encoding="utf-8") and message in summary.read_text(encoding="utf-8")
+    assert summary.read_text(encoding="utf-8").count("not run") == 0
+    assert "missing" in summary.read_text(encoding="utf-8") or "unreadable" in summary.read_text(encoding="utf-8")
 
 
 def test_stale_report_does_not_retry_or_change_exit(tmp_path):
     gate = fake_gate(tmp_path, first=3, mode="missing")
     report = tmp_path / "reports/junit-sample.xml"
     report.parent.mkdir()
-    report.write_text('<testsuite><testcase classname="tests.test_fake" name="test_case_0"><failure/></testcase></testsuite>')
+    report.write_text('<testsuite><testcase classname="tests.test_fake" name="test_case_0"><failure/></testcase></testsuite>', encoding="utf-8", newline="\n")
     os.utime(report, (1, 1))
     assert invoke(tmp_path, gate).returncode == 3
     assert len(history(tmp_path)) == 1
@@ -389,19 +390,19 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
     source = tmp_path / ".github/ci/flaky-register.yml"
     source.parent.mkdir(parents=True)
     entry = dict(id="tests/test_fake.py::test_case_0", status="open", evidence=[EVIDENCE_URL])
-    source.write_text(json.dumps([entry]))
+    source.write_text(json.dumps([entry]), encoding="utf-8", newline="\n")
     spec = importlib.util.spec_from_file_location("ci", SCRIPT.with_name("ci_baseline.py"))
     selector = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(selector)
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
-    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.setenv("CI_BASE_TIP", "a" * 40)
     monkeypatch.chdir(tmp_path)
     calls = []
 
     def base_output(command, **kwargs):
         calls.append(command)
-        if command[1] == "fetch":
-            return ""
+        if command[1] == "cat-file":
+            return "commit"
         if command[1] == "rev-parse":
             return "a" * 40
         if command[1] == "ls-tree":
@@ -413,7 +414,7 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
     monkeypatch.setattr(selector.subprocess, "check_output", base_output)
     selected = tmp_path / "register.yml"
     selector.select_register(selected)
-    assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
+    assert calls[0] == ["git", "cat-file", "-t", "a" * 40]
     monkeypatch.setattr(subprocess, "check_output", original_check_output)
     monkeypatch.delenv("GITHUB_EVENT_NAME")
     options = ("--mode", "enforce", "--register", str(selected))
@@ -430,29 +431,29 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
              "--sha", "abc123", "--run", "123", "--attempt", "1",
              "--conclusion", "success" if registered else "failure",
              "--exit-code", str(outcome.returncode), "--out", str(output)])
-    row = json.loads(output.read_text())
+    row = json.loads(output.read_text(encoding="utf-8"))
     node = "tests/test_fake.py::test_case_0"
     assert row["parsed"] is True and row["recovered"] == [node]
     assert row["first_attempt_failed"] == {node: "assert mismatch"}
     assert row["first_attempt_exit_code"] == 1
     assert row["failed"] == []
     base = tmp_path / "baseline.json"
-    base.write_text(json.dumps(dict(tests={}, shards={})))
+    base.write_text(json.dumps(dict(tests={}, shards={})), encoding="utf-8", newline="\n")
     verdict = tmp_path / "verdict.json"
     assert ci.compare_results(base, reports, 24, tmp_path / "comparison.md", verdict,
                               register=tmp_path / "register.yml") == (0 if registered else 1)
-    assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == ("FLAKY" if registered else "NEW")
+    assert json.loads(verdict.read_text(encoding="utf-8"))["shards"][0]["ids"][node] == ("FLAKY" if registered else "NEW")
     ci.publish(reports, "none", base)
-    assert json.loads(base.read_text())["tests"] == {}
+    assert json.loads(base.read_text(encoding="utf-8"))["tests"] == {}
 
 
 def test_signal_retry_summary_preserves_both_exits(tmp_path):
     summary = tmp_path / "summary.md"
     result = invoke(tmp_path, fake_gate(tmp_path, first=139), signal=True, summary=summary)
     assert result.returncode == 139
-    text = summary.read_text()
+    text = summary.read_text(encoding="utf-8")
     assert "signal exit 139" in text and "retry exit: 0" in text and "returned 139" in text
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text(encoding="utf-8"))
     assert record["first_attempt_exit_code"] == 139 and record["retry_exit_code"] == 0
 
 
@@ -469,12 +470,12 @@ def test_pr_added_register_cannot_clear_wrapper(tmp_path, monkeypatch):
     options = register(tmp_path)
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
     monkeypatch.setenv("GITHUB_BASE_REF", "main")
-    # There is no fetched base in this isolated directory. Never trust the PR file.
+    # There is no validated base tip here. Never trust the PR file.
     assert invoke(tmp_path, fake_gate(tmp_path), options=options).returncode == 1
 
 
 def test_pr_run_evidence_cannot_clear_wrapper(tmp_path):
     gate = fake_gate(tmp_path)
     gh = tmp_path / "bin/gh"
-    gh.write_text(gh.read_text().replace("event='push'", "event='pull_request'"))
+    gh.write_text(gh.read_text(encoding="utf-8").replace("event='push'", "event='pull_request'"), encoding="utf-8", newline="\n")
     assert invoke(tmp_path, gate, options=register(tmp_path)).returncode == 1

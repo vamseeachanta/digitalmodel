@@ -16,6 +16,9 @@ jobs:
     name: Build and Publish
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Provisional execution allocation, excluding queue time (not measured):
+    # 120 minutes tests + 30 dependency/build + 30 publication = 180 minutes.
+    # Full publication timing remains unverified; retain this cap until measured.
     timeout-minutes: 180
     # The pypi GitHub environment must have the owner as a REQUIRED REVIEWER.
     # No PyPI publish may occur without a later owner decision card.

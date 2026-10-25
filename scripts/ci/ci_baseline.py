@@ -19,6 +19,9 @@ from typing import Any
 from xml.etree import ElementTree
 
 
+# The daily schedule in full-matrix-sweep.yml is 24 hours apart. Allow 6 more
+# hours for completion jitter and consumption delay: 24 + 6 = 30 hours since
+# completion. A missed sweep stays stale; this is not a runtime measurement.
 BASELINE_MAX_AGE_HOURS = 30
 MAIN_BASELINE_EVENTS = {"push", "schedule", "workflow_dispatch"}
 
@@ -42,7 +45,7 @@ def read_json(path: Path) -> dict[str, Any]:
 def write_json(path: Path, value: dict[str, Any]) -> None:
     """Write a deterministic, readable artifact."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
 
 def junit_id(case: ElementTree.Element) -> str:
@@ -350,7 +353,7 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
         report["passed"] = all(outcomes)
     except (OSError, ValueError, KeyError, TypeError) as error:
         lines.append(f"\nComparison fails closed: {type(error).__name__}.")
-    summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    summary.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     write_json(verdict, report)
     return 0 if report["passed"] else 1
 
@@ -358,7 +361,7 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
 def gh_json(endpoint: str) -> dict[str, Any]:
     """Read authenticated workflow metadata through the hosted CLI."""
     value: dict[str, Any] = json.loads(
-        subprocess.check_output(["gh", "api", endpoint], text=True)
+        subprocess.check_output(["gh", "api", endpoint], text=True, encoding="utf-8")
     )
     return value
 
@@ -462,33 +465,35 @@ def reconcile_results(directory: Path, jobs: list[dict[str, Any]], prefix: str,
 
 
 def select_register(output: Path) -> None:
-    """Copy the base-tip register for PRs, or the checkout for other events.
+    """Copy the guarded base-tip register for PRs, or the checkout otherwise.
 
-    Fetch and object-read failures propagate. An absent file is an empty
-    register, never a reason to fall back to the pull request's own entries.
+    The tip belongs to this job's validated merge, not its origin remote.
+    Missing guard output and object-read failures propagate. An absent file
+    is an empty register, never a fallback to the pull request's own entries.
     """
     path = ".github/ci/flaky-register.yml"
     content = "[]\n"
     if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
-        base = os.environ.get("GITHUB_BASE_REF", "")
-        if not base or not re.fullmatch(r"[A-Za-z0-9_./-]+", base):
-            raise ValueError("Invalid base branch")
+        tip = os.environ.get("CI_BASE_TIP", "")
+        if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", tip):
+            raise ValueError("Invalid validated base tip")
         env = {key: value for key, value in os.environ.items()
                if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
 
         def git(*args: str) -> str:
-            return subprocess.check_output(["git", *args], text=True, env=env)
+            return subprocess.check_output(["git", *args], text=True,
+                                           encoding="utf-8", env=env)
 
-        git("fetch", "--no-tags", "origin", f"refs/heads/{base}")
-        tip = git("rev-parse", "FETCH_HEAD").strip()
-        if not re.fullmatch(r"[0-9a-f]{40,64}", tip):
-            raise ValueError("Invalid fetched base tip")
+        if git("cat-file", "-t", tip).strip() != "commit":
+            raise ValueError("Validated base tip is not a commit")
+        if git("rev-parse", "--verify", "HEAD^1").strip() != tip:
+            raise ValueError("Base tip does not match guarded merge first parent")
         if git("ls-tree", "--name-only", tip, "--", path).strip():
             content = git("show", f"{tip}:{path}")
     elif Path(path).is_file():
         content = Path(path).read_text(encoding="utf-8")
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(content, encoding="utf-8")
+    output.write_text(content, encoding="utf-8", newline="\n")
 
 
 def main(argv: list[str] | None = None) -> int:

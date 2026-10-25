@@ -136,8 +136,13 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+          # Manual runs check the selected revision against its first parent;
+          # fetch-depth: 0 above provides that parent, including merge history.
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event_name == 'workflow_dispatch' && 'HEAD^' || github.event.before }}
+        run: |
+          set -euo pipefail
+          test -n "$REGISTER_BASE"
+          python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
       - name: Create reports directory
         run: mkdir -p reports

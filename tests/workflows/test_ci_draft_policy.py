@@ -12,7 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
-SNAPSHOT = json.loads((ROOT / "tests/data/workflow_job_names.json").read_text())
+SNAPSHOT = json.loads((ROOT / "tests/data/workflow_job_names.json").read_text(encoding="utf-8"))
 PR_WORKFLOWS = {
     "docs.yml", "gmsh-meshing-tests.yml", "parametric-atlas-drift.yml",
     "quality-gates-by-domain.yml", "quality-gates.yml", "repo-structure.yml",
@@ -61,6 +61,12 @@ def test_pull_request_draft_policy(path: Path) -> None:
 
 @pytest.mark.parametrize(
     "filename,job_id,minutes",
+    # Provisional execution allocations, excluding queue time, not measurements:
+    # control jobs: 5 setup + 5 evaluation + 5 service calls = 15 minutes;
+    # test/build jobs: 15 dependencies + 40 checks + 5 reporting = 60 minutes;
+    # publication: 120 tests + 30 dependency/build + 30 publication = 180 minutes.
+    # The existing 20- and 40-minute caps remain unchanged; no measured runtime
+    # or equivalence of the sweep and pull request budgets is established.
     [
         ("capability-card-links.yml", "card-links", 15),
         ("docs.yml", "docs", 60),
@@ -120,7 +126,7 @@ def test_draft_policy_runs_in_ci_harness() -> None:
 @pytest.mark.parametrize("mutation", ["missing", "zero", "excessive"])
 def test_timeout_mutations_are_rejected(filename: str, job_id: str, mutation: str, monkeypatch) -> None:
     """Every committed job limit has negative controls without editing workflows."""
-    workflow = yaml.load((WORKFLOWS / filename).read_text(), Loader=yaml.BaseLoader)
+    workflow = yaml.load((WORKFLOWS / filename).read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     job = workflow["jobs"][job_id]
     minutes = int(job["timeout-minutes"])
     if mutation == "missing":
@@ -138,7 +144,7 @@ def test_timeout_mutations_are_rejected(filename: str, job_id: str, mutation: st
 def test_check_name_mutations_are_rejected(filename: str, job_id: str, monkeypatch) -> None:
     """Every job name remains bound to the committed inventory."""
     path = WORKFLOWS / filename
-    workflow = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+    workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     workflow["jobs"][job_id]["name"] = "changed-check"
     monkeypatch.setattr(yaml, "load", lambda *args, **kwargs: workflow)
     with pytest.raises(AssertionError):
@@ -150,7 +156,7 @@ def test_check_name_mutations_are_rejected(filename: str, job_id: str, monkeypat
 def test_readiness_event_mutations_are_rejected(filename: str, event: str, monkeypatch) -> None:
     """Deleting either required activity cannot silently disable its checks."""
     path = WORKFLOWS / filename
-    workflow = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+    workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     workflow["on"]["pull_request"]["types"] = [
         value for value in workflow["on"]["pull_request"]["types"] if value != event
     ]
