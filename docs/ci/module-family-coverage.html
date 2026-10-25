@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Module-family coverage evidence</title>
+  <style>
+    body { max-width: 76rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 sans-serif; color: #17212b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #bbc5ce; padding: .5rem; text-align: left; vertical-align: top; }
+    caption { caption-side: bottom; text-align: left; padding-top: .5rem; }
+    code { overflow-wrap: anywhere; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f0f3f5; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Module-family coverage evidence</h1>
+  <p>The hosted domain run at <code>9c63e0f6b90104b3c61d7ff45246584a6b9717f6</code>
+    reports 23 failures across four shards. The previous description lists 22 failures
+    and omits <code>tests/test_engine_embed_root.py::test_default_path_unchanged_golden</code>.
+    An exact-command comparison between the branch and current main has not been established.
+    Static path assignments do not establish collected tests or passing pull request checks.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-25</td><td>Record the complete hosted failure inventory and qualify the coverage claims.</td></tr></tbody>
+    <caption>Table 1. Evidence-note revision history.</caption>
+  </table>
+
+  <h2>Evidence basis</h2>
+  <p>The inspected branch is <code>5d64d578554fce1513c73bb561f95cc3248e4938</code>.
+    Its gate configuration is byte-identical to that of the earlier hosted run.
+    At inspection, <code>gh pr checks 2847</code> reports only a passing GitGuardian check;
+    no domain workflow run is reported at this branch head. The earlier run is
+    <a href="https://api.github.com/repositories/590299785/actions/runs/39200745151">the completed domain workflow</a>,
+    dated 2026-10-19. The counts below are read from its four failed job logs,
+    not from a new local execution.</p>
+  <table>
+    <thead><tr><th>Shard</th><th>Passed</th><th>Failed</th><th>Skipped</th><th>Expected failures</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610724/logs">marine-ops-other</a></td><td>2823</td><td>2</td><td>38</td><td>1</td></tr>
+      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610813/logs">solver-smoke</a></td><td>2724</td><td>8</td><td>84</td><td>0</td></tr>
+      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610723/logs">workflows</a></td><td>3169</td><td>5</td><td>12</td><td>0</td></tr>
+      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610713/logs">misc</a></td><td>100</td><td>8</td><td>1</td></tr>
+      <tr><th>Total for these four jobs</th><td>8816</td><td>23</td><td>135</td><td>1</td></tr>
+    </tbody>
+    <caption>Table 2. Historical hosted results for the four failed shards; these are not whole-matrix totals.</caption>
+  </table>
+
+  <h2>Complete hosted failure inventory</h2>
+  <h3>Marine operations: 2 failures</h3>
+  <pre>tests/marine_ops/vessel_db/test_audit.py::test_curated_has_no_uncited_numbers
+tests/marine_ops/vessel_db/test_loader.py::test_provenance_is_clean</pre>
+  <h3>Solver smoke: 8 failures</h3>
+  <pre>tests/parametrics/test_atlas_bridge.py::test_atlas_builds_with_two_axes
+tests/parametrics/test_atlas_bridge.py::test_predict_at_grid_node_matches_swept_value
+tests/parametrics/test_atlas_bridge.py::test_predict_interpolates_interior_point
+tests/parametrics/test_atlas_bridge.py::test_predict_out_of_range_is_gated
+tests/parametrics/test_atlas_bridge.py::test_atlas_from_summary_rejects_unknown_response
+tests/parametrics/test_atlas_serving.py::test_in_range_query_serves_utilisation
+tests/parametrics/test_atlas_serving.py::test_out_of_range_query_escalates
+tests/parametrics/test_pilots.py::test_orcaflex_fowt_sweep_returns_real_results</pre>
+  <h3>Workflows: 5 failures</h3>
+  <pre>tests/governance/test_identifier_gate_retirement.py::RetirementContract::test_existing_secret_hooks_are_preserved
+tests/legal/test_check_identifiers.py::TestTheExistingBacklog::test_the_backlog_has_not_grown
+tests/legal/test_check_identifiers_c11.py::TestCiRunsTheGate::test_the_quality_workflow_scans_the_whole_tree
+tests/legal/test_check_identifiers_fail_closed.py::TestSecondReview::test_the_hook_runs_in_staged_mode
+tests/legal/test_published_pages_have_no_internal_paths.py::test_published_html_outside_the_recorded_baseline_has_no_absolute_paths</pre>
+  <h3>Miscellaneous: 8 failures</h3>
+  <pre>tests/test_engine_embed_root.py::test_embed_rebases_config_dir_path
+tests/test_engine_embed_root.py::test_embed_quickcheck_writes_under_root
+tests/test_engine_embed_root.py::test_embed_writes_only_under_root
+tests/test_engine_embed_root.py::test_embed_no_logfile_no_logs_dir
+tests/test_engine_embed_root.py::test_embed_default_log_to_file_true_writes_log
+tests/test_engine_embed_root.py::test_embed_repeated_calls_reentrant
+tests/test_engine_embed_root.py::test_embed_skips_config_dir_recopy
+tests/test_engine_embed_root.py::test_default_path_unchanged_golden</pre>
+  <p>The last failure reports <code>ValueError: not enough values to unpack (expected 2, got 0)</code>
+    at <code>src/digitalmodel/engine.py:117</code>. The hosted invocation supplies
+    <code>--junitxml=reports/junit-misc.xml -o junit_family=xunit2</code>.
+    The earlier combined-root replay omitted this suffix and did not preserve the shard boundaries.</p>
+
+  <h2>Coverage figures and their limits</h2>
+  <p>A filename inventory at the inspected branch finds 1854 Python test files under
+    <code>tests/</code>, using <code>test_*.py</code> and <code>*_test.py</code>.
+    A local run of the coverage guard and empty-domain regression passes all 10 tests.
+    The guard reports zero unassigned files when pull request and sweep commands
+    are combined. Six paths are assigned only by the sweep workflow:</p>
+  <pre>tests/data/test_fetch.py
+tests/data/test_manifest.py
+tests/data/test_slwr_store_references.py
+tests/test_fetch_steel_shapes.py
+tests/test_steel_shapes.py
+tests/test_steel_shapes_import.py</pre>
+  <p>These six assignments do not establish pull request execution. The guard currently treats
+    selection options and collection exclusions leniently; <code>pytest.ini</code> recursion
+    exclusions and the 13 entries in <code>tests/conftest.py</code>'s <code>collect_ignore</code>
+    therefore limit any execution-coverage claim. The two cathodic-protection files also have
+    duplicate shard ownership. No collection-control or shard-command change is made by this note.</p>
+
+  <h2>Available-main comparison</h2>
+  <p>The available main ref is <code>d43f10e93bfe98a2d01a20784bb7f55e2cb88510</code>;
+    its merge base with the inspected branch is <code>272a424107ab9b2a3084bb61dada36dd66d601e8</code>.
+    Main has 163 commits absent from the branch at inspection. Reading main shows corrections
+    to the secret-hook assertion and the retired automatic-identifier-workflow assertion.
+    The historical 23 failures are not certified as failures of current main.</p>
+  <p>A remote-ref check on 2026-10-25 reports main at
+    <code>33341ac38b106f9533743a541fd11b6dfb9cbd81</code>.
+    Fetching main fails because Git metadata is read-only. The available main ref is therefore
+    a historical snapshot, and the 163-commit count applies only to that snapshot.</p>
+  <p>Main also contains three test files absent from the inspected branch:</p>
+  <pre>tests/hydrodynamics/test_quad_mesh_quality.py
+tests/hydrodynamics/test_shear_flow_values.py
+tests/marine_ops/test_response_benchmark.py</pre>
+  <p>The branch's coverage figure therefore does not certify a future merge result.
+    Main is not merged here. Workflow conflict resolution and assignment of newly introduced
+    paths require a separate change.</p>
+
+  <h2>Required comparison before an execution-coverage claim</h2>
+  <p>For every affected shard, the comparison will preserve the complete configured command,
+    dependency overlay, test-root order, plugins and hosted JUnit suffix on each revision.
+    Each result will record the revision, command, exit status, collection errors, passed,
+    failed and skipped counts, and complete failed node IDs. Failed-node sets will be compared
+    per shard. Until that comparison is available, branch-only failures remain unestablished.</p>
+  <p>The required-check failure remains unresolved. Reducing shard scope or introducing an
+    exclusion requires maintainer review; this evidence note does not authorize either change.
+    The tracking issue is <a href="https://api.github.com/repositories/590299785/issues/2083">issue 2083</a>.</p>
+  <p>The miscellaneous-shard replay stops before test collection because the required project
+    environment cannot be created on the read-only filesystem. No full-shard or current-main
+    replay is claimed. The local guard run uses only pytest and PyYAML. No licensed solver
+    is imported or executed.</p>
+</body>
+</html>
