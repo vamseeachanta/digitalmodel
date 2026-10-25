@@ -12,6 +12,7 @@ acceptance are **NOT_EVALUATED**.
 | --- | --- | --- |
 | 1 | 2026-10-20 | Added sampled response, wind, case execution and a reproducible spring example to consume existing force histories. |
 | 2 | 2026-10-22 | Included the full pretension resultant, added a period and passage-duration comparison, corrected wind conventions and preserved small reported responses. |
+| 3 | 2026-10-25 | Clarified unbalanced reference pretensions and recorded regression coverage to distinguish implementation checks from response qualification. |
 
 ## Inputs and method
 
@@ -21,8 +22,9 @@ response is requested. Neither line material nor length determines it. A
 separate line calculation or measurement must supply it. Existing `pretension`
 is in kN; the response boundary converts it to N as specified by
 [the units convention](../../UNITS.md). Fairleads and anchors share the midship
-coordinate origin. Reference pretensions are included in the total force and
-moment balance, including any initial resultant. Unstretched length does not
+coordinate origin. Reference pretension resultants are included in total
+equilibrium, with supplied motion bounds and residual tolerances governing the
+response calculation. Unstretched length does not
 bound the loaded horizontal reach; stretched geometry is not reconstructed.
 
 Let `q = [surge, sway, yaw]`, with translations in metres and yaw in radians.
@@ -135,6 +137,12 @@ and yaw `200/16000 rad` (approximately 0.7 degrees). The opposing surge
 line extends 0.1 m, giving `10000+1000*0.1 = 10100.0 N` tension.
 These exact arithmetic expectations are asserted in the tests.
 
+Reference pretensions may also have a nonzero resultant. With no external load,
+a synthetic surge resultant of 50.0 N and surge stiffness of 2000.0 N/m give
+`surge = (0-50)/2000 = -0.025 m`. The independent equilibrium test checks this
+displacement and equal opposing tensions at both strict and looser residual
+tolerances; the tolerance does not discard the physical resultant.
+
 Run from the repository with an explicit destination outside the source tree:
 
 ```sh
@@ -161,6 +169,16 @@ Tests independently assemble spring equilibrium answers, fender gap closure,
 wind force/moment arithmetic and output selection. Real force-calculator tests
 check increasing response with decreasing separation and quadratic speed
 scaling. These verify implementation behaviour, not measured response accuracy.
+
+The local regression on 2026-10-25 returned **370 passed, 6 skipped** across
+`tests/hydrodynamics/passing_ship`,
+`tests/hydrodynamics/test_passing_ship_forces_workflow.py` and
+`tests/hydrodynamics/parametric_hull_analysis/test_passing_ship_sweep.py`.
+The three response modules (`test_mooring_response.py`,
+`test_response_analysis.py` and `test_response_report.py`) contributed **73
+passing cases**, including example exports. The skips comprise one unavailable
+optional validation module and five cases awaiting extracted VBA reference
+values. These local results do not establish completion of hosted checks.
 
 Later work includes nonlinear catenary/geometric stiffness, slack-line response,
 inertia and damping, nonparallel tracks, directional wind tables and measured
