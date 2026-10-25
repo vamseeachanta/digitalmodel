@@ -37,6 +37,28 @@ The committed library carries `solver.licensed = false` and a `STUB` version in
 its provenance; the stub heave-RAO is a transparent single-DOF placeholder, not
 a hydrodynamic result.
 
+## Metadata changes and library versions
+
+Library IDs hash the axes, solver provenance and covered cases. Changing a
+solver provenance note therefore changes the ID even when numerical grid
+values and units stay the same. Regenerate the library and its default pointer
+together; editing a historical manifest in place leaves its directory ID
+inconsistent with the hash inputs.
+
+The public-metadata refresh replaced the four historical version directories:
+
+| Library | Previous ID | Replacement ID |
+|---|---|---|
+| `diffraction_library` | `e70b23544de6` | `611dc8860aeb` |
+| `drilling_riser_drift_off` | `d53bddd904d1` | `8e8869bea805` |
+| `drilling_riser_envelope` | `7ca25705d065` | `600e7851a283` |
+| `orcaflex_library` | `c198e029c428` | `615f32ca9da3` |
+
+Update queries pinned to a previous ID to use its replacement. The rebuilt
+Parquet files have new digests; numerical grid equality is checked after
+loading the data, rather than inferred from binary digests. All four libraries
+retain their synthetic STUB qualification and `solver.licensed = false`.
+
 ## Operator runbook to populate a real library
 
 1. On the licensed-solver workstation,
