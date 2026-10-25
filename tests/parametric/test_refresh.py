@@ -447,17 +447,19 @@ def test_two_failures_are_named_in_the_closing_block(stub_refresh_builds, capsys
 
 
 def test_leftover_refresh_directory_is_reported_before_status(
-    disk_refresh_builds, capsys,
+    disk_refresh_builds, monkeypatch, tmp_path, capsys,
 ):
     """Issue 2451: an interrupted run's evidence is reported and never removed."""
     root, _, _, _, _ = disk_refresh_builds([])
+    monkeypatch.setattr(refresh, "REPO_ROOT", tmp_path)
     leftover = root / ".refresh-interrupted"
     leftover.mkdir(parents=True)
     (leftover / "evidence.txt").write_text("retained")
     before = _file_digests(leftover)
     assert refresh.main([]) == 0
     assert capsys.readouterr().out.splitlines()[0] == (
-        "WARNING: leftover refresh directory .refresh-interrupted; inspect before removal")
+        f"WARNING: leftover refresh directory {leftover.relative_to(tmp_path)}; "
+        "inspect before removal")
     assert _file_digests(leftover) == before
 
 
@@ -470,19 +472,22 @@ def test_refresh_scratch_is_ignored():
                    if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
     result = subprocess.run(
         ["git", "check-ignore", "--no-index", "--stdin"],
-        cwd=refresh.REPO_ROOT, env=environment, text=True, capture_output=True,
-        input="atlases/.refresh-interrupted/evidence.txt\natlases/real_atlas/default.txt\n",
+        cwd=refresh.REPO_ROOT, env=environment, capture_output=True,
+        input=b"atlases/.refresh-interrupted/evidence.txt\natlases/real_atlas/default.txt\n",
         check=False,
     )
     assert result.returncode == 0
-    assert result.stdout.splitlines() == ["atlases/.refresh-interrupted/evidence.txt"]
+    assert result.stdout.splitlines() == [b"atlases/.refresh-interrupted/evidence.txt"]
 
 
-def test_failed_rollback_retains_previous_tree(disk_refresh_builds, monkeypatch, capsys):
+def test_failed_rollback_retains_previous_tree(
+    disk_refresh_builds, monkeypatch, tmp_path, capsys,
+):
     """Issue 2451: if both install and rollback fail, the original bytes remain recoverable."""
     from pathlib import Path
 
     root, ids, originals, _, _ = disk_refresh_builds([{"passes": True}])
+    monkeypatch.setattr(refresh, "REPO_ROOT", tmp_path)
     original_rename = Path.rename
 
     def failing_rename(source, target):
@@ -496,4 +501,35 @@ def test_failed_rollback_retains_previous_tree(disk_refresh_builds, monkeypatch,
     retained = list(root.glob(".refresh-*/previous"))
     assert len(retained) == 1
     assert _file_digests(retained[0]) == originals[ids[0]]
-    assert "WARNING: refresh recovery directory" in capsys.readouterr().out
+    assert (f"WARNING: refresh recovery directory {retained[0].parent.relative_to(tmp_path)}; "
+            "previous atlas retained; restore before retrying") in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("outcome", ["build-error", "invalid", "valid"])
+def test_cleanup_failure_preserves_build_outcome(
+    disk_refresh_builds, monkeypatch, tmp_path, capsys, outcome,
+):
+    """Cleanup failure must preserve the build exception or validation status."""
+    record = (RuntimeError("build failed") if outcome == "build-error"
+              else {"passes": outcome == "valid"})
+    root, ids, originals, roots, _ = disk_refresh_builds([record])
+    monkeypatch.setattr(refresh, "REPO_ROOT", tmp_path)
+
+    def failing_cleanup(path):
+        assert path == roots[0].parent
+        raise OSError("cleanup unavailable")
+
+    monkeypatch.setattr(refresh.shutil, "rmtree", failing_cleanup)
+    if outcome == "build-error":
+        with pytest.raises(RuntimeError, match="build failed"):
+            refresh.main(["--apply"])
+    else:
+        assert refresh.main(["--apply"]) == (0 if outcome == "valid" else 2)
+    if outcome != "valid":
+        assert _file_digests(root / ids[0]) == originals[ids[0]]
+    else:
+        assert _file_digests(root / ids[0]) != originals[ids[0]]
+    assert roots[0].parent.exists()
+    assert ("WARNING: could not remove refresh directory "
+            f"{roots[0].parent.relative_to(tmp_path)}; inspect before removal"
+            ) in capsys.readouterr().out

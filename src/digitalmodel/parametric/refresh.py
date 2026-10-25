@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -333,10 +334,14 @@ def _rebuild_atlas(workflow_id: str) -> str | None:
             destination is None or not destination.exists()
         ):
             # Retain the only previous copy if rollback itself cannot rename it.
-            print(f"WARNING: refresh recovery directory {temporary.name}; "
+            print(f"WARNING: refresh recovery directory {os.path.relpath(temporary, REPO_ROOT)}; "
                   "previous atlas retained; restore before retrying")
         else:
-            shutil.rmtree(temporary)
+            try:
+                shutil.rmtree(temporary)
+            except OSError:
+                print("WARNING: could not remove refresh directory "
+                      f"{os.path.relpath(temporary, REPO_ROOT)}; inspect before removal")
     return None
 
 
@@ -353,7 +358,7 @@ def main(argv: list[str]) -> int:
 
     for leftover in sorted(DEFAULT_ATLAS_ROOT.glob(".refresh-*")):
         if leftover.is_dir():
-            print(f"WARNING: leftover refresh directory {leftover.name}; "
+            print(f"WARNING: leftover refresh directory {os.path.relpath(leftover, REPO_ROOT)}; "
                   "inspect before removal")
 
     stale_ids = []
