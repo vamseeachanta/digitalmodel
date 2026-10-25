@@ -23,6 +23,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import shlex
+import stat
 import subprocess
 
 OUTPUT_NAMES = ("module-report-evidence.json", "module-report-evidence.html")
@@ -184,8 +185,8 @@ def inspect_commands(root, configs):
 
     Single-line command/run scalars and single-command literal blocks are
     supported. Conditions, disabled declarations, alternate working directories,
-    anchors, tags, multiline shell and unfamiliar YAML remain UNKNOWN. A condition
-    anywhere in a declaration file conservatively affects that entire file.
+    anchors, tags, pytest environment declarations, multiline shell and unfamiliar
+    YAML remain UNKNOWN. Uncertain context conservatively affects the entire file.
     """
     result = []
     for path in configs:
@@ -194,7 +195,8 @@ def inspect_commands(root, configs):
         lines = read_text(root, path).splitlines()
         active = [line for line in lines if line.strip() and not line.lstrip().startswith("#")]
         uncertain_file = any(re.search(
-            r"(?:^|\s)(?:if|when|working-directory):|enabled:\s*false|:\s*[!&*]|\t", line
+            r"(?:^|\s)(?:if|when|working-directory):|enabled:\s*(?:false|False|FALSE)\b"
+            r"|\bPYTEST_[A-Z_]+\b|:\s*[!&*]|\t", line
         ) for line in active)
         for index, line in enumerate(lines):
             match = re.match(r"^(\s*)(?:-\s*)?(command|run):\s*(.*)$", line)
@@ -339,8 +341,7 @@ def validate_observation(root, observation, sources):
             raise ValueError("finding needs detail and locator")
         for locator in finding["locators"]:
             if (locator["path"] not in paths or type(locator["line"]) is not int
-                    or locator["line"] < 1
-                    or locator["line"] > max(1, len(read_text(root, locator["path"]).splitlines()))):
+                    or locator["line"] < 1):
                 raise ValueError("invalid finding locator")
     return sorted(set(paths))
 
@@ -393,6 +394,12 @@ def build_audit(root, paths, revision, observations=None):
         dependencies = validate_observation(root, observation, sources)
         digests = {p: source_digest(root, p) for p in dependencies}
         fresh = observation["source_digests"] == digests and configs_current
+        if fresh:
+            # Saved line numbers describe pinned bytes, not a shortened source.
+            for finding in observation["rule_findings"]:
+                for locator in finding["locators"]:
+                    if locator["line"] > max(1, len(read_text(root, locator["path"]).splitlines())):
+                        raise ValueError("invalid finding locator")
         initial = not observations
         status, controls = selection(root, observation["test_paths"], commands, configs)
         literal_coverage = bool(observation["test_paths"]) and all(any(
@@ -516,10 +523,17 @@ def render_html(document):
 def write_outputs(document, out_dir):
     """Write only the two named artifacts, in UTF-8 with LF line endings."""
     out_dir = Path(out_dir)
+    for path in [out_dir, *(out_dir / name for name in OUTPUT_NAMES)]:
+        if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+            raise ValueError("output path must not be a symlink or junction")
+        try:
+            attributes = path.lstat()
+        except FileNotFoundError:
+            continue
+        # Reparse attributes also cover runtimes without Path.is_junction().
+        if getattr(attributes, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+            raise ValueError("output path must not be a symlink, junction or reparse point")
     out_dir.mkdir(parents=True, exist_ok=True)
-    for name in OUTPUT_NAMES:
-        if (out_dir / name).is_symlink():
-            raise ValueError("output path must not be a symlink")
     (out_dir / OUTPUT_NAMES[0]).write_text(
         json.dumps(document, indent=1, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8", newline="\n"
     )

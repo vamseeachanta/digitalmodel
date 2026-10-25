@@ -6,6 +6,8 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import stat
+from types import SimpleNamespace
 
 import pytest
 
@@ -98,6 +100,38 @@ def test_conditional_or_unparsed_configuration_is_unknown(tree, text):
     assert run(tree)["commands"][0]["status"] == "UNKNOWN"
 
 
+@pytest.mark.parametrize("path", [
+    ".claude/quality-gates.yaml", ".github/workflows/checks.yaml",
+])
+@pytest.mark.parametrize("declaration", [
+    "env:\n  PYTEST_ADDOPTS: --ignore=tests/reporting/test_alpha_report.py\n",
+    'env: {PYTEST_ADDOPTS: "--ignore=tests/reporting/test_alpha_report.py"}\n',
+    'env:\n  "PYTEST_ADDOPTS": --ignore=tests/reporting/test_alpha_report.py\n',
+    "env:\n  PYTEST_PLUGINS: collection_controls\n",
+    'env:\n  PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"\n',
+])
+def test_collection_environment_prevents_explicit_selection(tree, path, declaration):
+    root, paths = tree
+    paths.remove(".claude/quality-gates.yaml")
+    paths.append(path)
+    target = root / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(declaration + "run: pytest tests/reporting\n", encoding="utf-8", newline="\n")
+    document = run(tree)
+    assert document["commands"][0]["status"] == "UNKNOWN"
+    assert record(document)["selection_status"] == "UNKNOWN"
+    assert record(document)["literal_whole_file_coverage"] is True
+    assert record(document)["execution_evidence"]["status"] == "NOT_RUN"
+
+
+@pytest.mark.parametrize("disabled", ["false", "False", "FALSE"])
+def test_disabled_boolean_forms_prevent_explicit_selection(tree, disabled):
+    config(tree, "enabled: " + disabled + "\ncommand: pytest tests/reporting\n")
+    document = run(tree)
+    assert document["commands"][0]["status"] == "UNKNOWN"
+    assert record(document)["selection_status"] == "UNKNOWN"
+
+
 def test_literal_block_command_and_quoted_path(tree):
     config(tree, 'run: |\n  python -m pytest "tests/reporting/" -q\n')
     assert record(run(tree))["selection_status"] == "EXPLICIT"
@@ -116,7 +150,7 @@ def test_directory_boundary_is_not_a_prefix_match(tree):
 def test_multiple_tests_require_selection_of_every_path(tree):
     root, paths = tree
     path = "tests/reporting/test_second_report.py"
-    (root / path).write_text("# scripts/reporting/build_alpha_report.py\n", encoding="utf-8")
+    (root / path).write_text("# scripts/reporting/build_alpha_report.py\n", encoding="utf-8", newline="\n")
     paths.append(path)
     assert record(run(tree))["selection_status"] == "MISSING"
 
@@ -129,7 +163,7 @@ def test_multiple_tests_require_selection_of_every_path(tree):
     ("tests/reporting/conftest.py", 'def pytest_collection_modifyitems(items):\n    items.clear()\n'),
 ])
 def test_disabled_or_custom_collection_is_not_explicit(tree, name, text):
-    (tree[0] / name).write_text(text, encoding="utf-8")
+    (tree[0] / name).write_text(text, encoding="utf-8", newline="\n")
     tree[1].append(name)
     assert record(run(tree))["selection_status"] == "UNKNOWN"
 
@@ -137,7 +171,7 @@ def test_disabled_or_custom_collection_is_not_explicit(tree, name, text):
 def test_unrelated_conftest_does_not_invalidate_selection(tree):
     path = "tests/other/conftest.py"
     (tree[0] / path).parent.mkdir()
-    (tree[0] / path).write_text("collect_ignore = ['anything']\n", encoding="utf-8")
+    (tree[0] / path).write_text("collect_ignore = ['anything']\n", encoding="utf-8", newline="\n")
     tree[1].append(path)
     assert record(run(tree))["selection_status"] == "EXPLICIT"
 
@@ -179,11 +213,51 @@ def test_changed_digest_invalidates_human_findings(tree):
         "rule": "L1", "status": "OBSERVED_GAP", "detail": "Manual read.",
         "locators": [{"path": "scripts/reporting/build_alpha_report.py", "line": 1}],
     }]
-    (tree[0] / "scripts/reporting/build_alpha_report.py").write_text("# changed\n", encoding="utf-8")
+    (tree[0] / "scripts/reporting/build_alpha_report.py").write_text("# changed\n", encoding="utf-8", newline="\n")
     new = record(run(tree, old))
     assert new["observation_status"] == "STALE"
     assert all(item["status"] == "UNESTABLISHED" for item in new["rule_findings"][:7])
     assert "stale manual observations" in new["missing_inputs"]
+
+
+@pytest.mark.parametrize("replacement", ["# shortened\n", None])
+def test_stale_finding_survives_shortened_or_missing_source(tree, replacement):
+    path = "scripts/reporting/build_alpha_report.py"
+    target = tree[0] / path
+    target.write_text(
+        "# docs/reports/modules/alpha/index.html\n# second\n# third\n",
+        encoding="utf-8", newline="\n",
+    )
+    old = run(tree)
+    old["observations"][0]["rule_findings"] = [{
+        "rule": "L1", "status": "OBSERVED_GAP", "detail": "Manual source observation.",
+        "locators": [{"path": path, "line": 3}],
+    }]
+    if replacement is None:
+        target.unlink()
+    else:
+        target.write_text(replacement, encoding="utf-8", newline="\n")
+    document = run(tree, old)
+    report = record(document)
+    assert report["observation_status"] == "STALE"
+    assert "stale manual observations" in report["missing_inputs"]
+    assert all(f["status"] == "UNESTABLISHED" for f in report["rule_findings"][:7])
+    assert document["observations"] == old["observations"]
+    assert run(tree, document) == document
+    if replacement is None:
+        assert "generator file" in report["missing_inputs"]
+        assert report["source_digests"][path] is None
+
+
+@pytest.mark.parametrize("line", [0, -1, True, 1.5, "3", 2])
+def test_current_findings_reject_invalid_source_lines(tree, line):
+    document = run(tree)
+    document["observations"][0]["rule_findings"] = [{
+        "rule": "L1", "status": "OBSERVED_GAP", "detail": "Manual source observation.",
+        "locators": [{"path": "scripts/reporting/build_alpha_report.py", "line": line}],
+    }]
+    with pytest.raises(ValueError, match="locator"):
+        run(tree, document)
 
 
 def test_changed_configuration_invalidates_observation(tree):
@@ -250,6 +324,45 @@ def test_output_is_stable_escaped_and_read_before_overwrite(tree, tmp_path):
     assert "<script>alert" not in html
     assert html.index("Summary") < html.index("Revision history") < html.index("Rule basis")
     assert "NOT_RUN" in html
+
+
+@pytest.mark.parametrize("kind", ["symlink", "junction", "reparse_point"])
+@pytest.mark.parametrize("destination", ["directory", "named_output"])
+def test_output_links_are_rejected_before_writing(tree, tmp_path, monkeypatch, kind, destination):
+    output = tmp_path / "output"
+    protected = tmp_path / "protected"
+    protected.mkdir()
+    sentinel = protected / "sentinel.txt"
+    sentinel.write_text("preserve\n", encoding="utf-8", newline="\n")
+    if destination == "named_output":
+        output.mkdir()
+        linked = output / audit.OUTPUT_NAMES[0]
+    else:
+        linked = output
+    if kind == "symlink":
+        linked.symlink_to(protected, target_is_directory=True)
+    elif kind == "junction":
+        linked.mkdir()
+        # The runtime API is simulated where native directory junctions are unavailable.
+        monkeypatch.setattr(Path, "is_junction", lambda path: path == linked, raising=False)
+    else:
+        linked.mkdir()
+        original_lstat = Path.lstat
+
+        def reparse_lstat(path):
+            result = original_lstat(path)
+            if path == linked:
+                return SimpleNamespace(
+                    st_mode=result.st_mode, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                )
+            return result
+
+        monkeypatch.setattr(Path, "lstat", reparse_lstat)
+    with pytest.raises(ValueError, match="symlink|junction"):
+        audit.write_outputs(run(tree), output)
+    assert sentinel.read_text(encoding="utf-8") == "preserve\n"
+    assert sorted(p.name for p in protected.iterdir()) == ["sentinel.txt"]
+    assert not (output / audit.OUTPUT_NAMES[1]).exists()
 
 
 def test_outputs_are_excluded_from_sources(tree):
@@ -343,7 +456,7 @@ def test_inventory_digest_entries_are_structured_path_hash_pairs(tree):
 
 def test_static_collection_paths_with_parent_escape_remain_unknown(tree):
     path = "tests/reporting/conftest.py"
-    (tree[0] / path).write_text('collect_ignore = ["../reporting/test_alpha_report.py"]\n', encoding="utf-8")
+    (tree[0] / path).write_text('collect_ignore = ["../reporting/test_alpha_report.py"]\n', encoding="utf-8", newline="\n")
     tree[1].append(path)
     assert record(run(tree))["selection_status"] == "UNKNOWN"
 
