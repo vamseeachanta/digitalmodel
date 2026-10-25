@@ -7,11 +7,7 @@ Provides catenary equations, anchor radius calculation, line length estimation,
 pretension calculation, and a library of chain/wire/polyester properties.
 Supports spread mooring and turret mooring configurations.
 The companion ``mooring_design_fowt`` module checks the floating-wind watch
-circle against dynamic-cable curvature using a caller-supplied MBR limit. Its
-DNV-RP-0360 sidecar retains the MBR design-factor reference for static service
-in shallow water (edition 2016-03 amended 2021-10). DNV-ST-0359 (edition
-2025-12) concerns subsea power cable systems for offshore wind power plants;
-its public product page does not specify static or dynamic service.
+circle against dynamic-cable curvature and emits a DNV-RP-0360 sidecar.
 
 Does NOT require OrcFxAPI — all calculations are analytical/numerical.
 

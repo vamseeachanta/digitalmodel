@@ -15,6 +15,37 @@ qualification of the engineering methods or proof of a historical execution.
 | 1 | 2026-10-21 | Check committed artifact bytes, report checkout drift, allow symlinked archive parents, and read indexes as UTF-8 for portable verification. |
 | 2 | 2026-10-21 | Distinguish configured checkout conversion from content edits, fail the audit on content drift, and reject archive directory junctions. |
 | 3 | 2026-10-22 | Record intentional RP-0360 citation corrections and a separate current FOWT atlas without replacing retained evidence. |
+| 4 | 2026-10-25 | Bound the citation refresh scope and acceptance checks; preserve the source bytes pinned by the static screening record. |
+
+## Plan-lite: FOWT citation refresh
+
+Scope: correct public citation metadata and refresh the current FOWT atlas
+identity. Retain all historical evidence digests and numerical artifacts. The
+RP-0360 reference does not establish dynamic-cable applicability. Physical
+coefficients, acceptance limits and solver qualification remain outside this
+change.
+
+Proposed steps:
+
+1. Correct the edition and applicability wording in the FOWT module and its
+   citation consumers using the recorded public publisher metadata.
+2. Rebuild the current atlas from the corrected citation basis and select it
+   with the default pointer; retain the historical atlas directories.
+3. Document the four intentional historical manifest edits and require their
+   rejection by the unchanged digest audit. Preserve the common mooring module
+   bytes pinned by the separate static screening record.
+
+Acceptance checks before merge:
+
+- Run the six citation, FOWT workflow, atlas refresh and historical provenance
+  test files, plus `tests/docs/test_mooring_screening_run_record.py`.
+- Require all 18 current grid points and seven holdouts to retain their
+  numerical results, with a current fingerprint and corrected citation edition.
+- Require rejection and checkout drift for all four edited historical
+  manifests; keep the retained evidence index and screening record unchanged.
+- Run the engineering register, repository structure, whitespace, publication
+  identifier and LFS checks. Record existing failures separately from failures
+  introduced by this change.
 
 ## Inventory and interpretation
 
