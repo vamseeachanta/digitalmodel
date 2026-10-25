@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Citation lookup errors: Plan-lite</title>
+</head>
+<body>
+  <main>
+    <h1>Citation lookup errors: Plan-lite</h1>
+    <p>The change will identify citation lookup and read failures at calculation
+      time and will keep the dependent floating-wind mooring atlas current.</p>
+
+    <h2>Revision history</h2>
+    <table>
+      <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+      <tbody><tr><td>1</td><td>2026-10-25</td><td>Initial bounded scope, error
+        oracle and verification plan for the citation error change.</td></tr></tbody>
+    </table>
+    <p>Table 1. Revision history of this plan.</p>
+
+    <h2>Plan-lite</h2>
+    <p>The scope will cover page lookup, file-stat and page-read failures in
+      <code>src/digitalmodel/orcaflex/mooring_design_fowt.py</code>, their
+      regression cases, and the dependent <code>atlases/fowt_mooring/</code>
+      artifact and default pointer. Equations, engineering factors, caller-supplied
+      cable limits and acceptance limits will remain unchanged.</p>
+
+    <h2>Error oracle</h2>
+    <p>Calculation Output Citation Contract section 4.1, in
+      <code>workspace-hub:docs/standards/calc-output-citation.md</code>, will
+      govern configured-wiki resolution errors: failure will abort the
+      calculation with <code>CitationResolutionError</code> carrying the
+      <code>code_id</code>. The regression cases will also require suppression
+      of raw read-error paths and contents in displayed exceptions, across
+      standalone and overlay wiki layouts. Existing unconfigured-wiki behavior
+      will remain unchanged.</p>
+
+    <h2>Verification plan</h2>
+    <ol>
+      <li>The citation-resolution and mooring-design tests will check missing,
+        unreadable and mismatched pages, lookup and stat errors, and existing
+        geometry behavior using synthetic citation metadata.</li>
+      <li><code>python -m pytest tests/orcaflex/test_fowt_citation_resolution.py
+        tests/orcaflex/test_mooring_design_fowt.py tests/parametric</code> will
+        exercise the affected modules, atlas queries and committed-atlas
+        staleness gate.</li>
+      <li>The shipped <code>fowt-mooring-atlas-query</code> workflow test will
+        require an in-range utilisation. The atlas grid and complete holdout
+        record will be compared with the prior artifact.</li>
+      <li>Repository structure, applicable file checks, whitespace, publication
+        text and LFS attributes will be checked before handoff. Hosted failures
+        will be inspected and their evidence gaps will be recorded.</li>
+    </ol>
+
+    <h2>Qualification limits</h2>
+    <p>Synthetic citation metadata will serve only as resolver test input.
+      Authoritative standards metadata will remain unconfirmed until its source
+      page is available. Inherited standards labels will remain assumed, based
+      on previous experience. Neither this error change nor atlas freshness
+      will establish standards compliance or qualify the geometric screen for
+      final design.</p>
+  </main>
+</body>
+</html>
