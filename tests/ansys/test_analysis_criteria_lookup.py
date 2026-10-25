@@ -9,6 +9,8 @@ from tests.ansys.test_analysis_evidence import intake as intake
 from tests.ansys.test_analysis_lookup import query
 from tests.ansys.test_analysis_qualification import protocol as protocol
 
+__all__ = ["intake", "protocol"]
+
 
 def rebind(protocol, criteria):
     study, resolver, _, ledger, authority = protocol
