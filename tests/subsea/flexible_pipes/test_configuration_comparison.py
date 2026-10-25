@@ -14,6 +14,7 @@ import pytest
 from digitalmodel.subsea.flexible_pipes.configuration_comparison import (
     Case,
     Criterion,
+    CriteriaSet,
     Evidence,
     Measurement,
     case_table,
@@ -47,12 +48,16 @@ def evidence(case=None, **kwargs):
     )
 
 
-def criteria():
-    return {
-        "tension": Criterion(100, "kN", "Synthetic test limit", "maximum"),
-        "curvature": Criterion(0.25, "1/m", "Synthetic test limit", "maximum"),
-        "clearance": Criterion(0, "m", "Synthetic test limit", "minimum"),
-    }
+def criteria(**overrides):
+    return CriteriaSet(
+        "synthetic-v1",
+        {
+            "tension": Criterion(100, "kN", "Synthetic test limit", "maximum"),
+            "curvature": Criterion(0.25, "1/m", "Synthetic test limit", "maximum"),
+            "clearance": Criterion(0, "m", "Synthetic test limit", "minimum"),
+        }
+        | overrides,
+    )
 
 
 def test_symbolic_case_table():
@@ -103,10 +108,10 @@ def test_missing_criteria_response_and_convergence():
 def test_threshold_direction_units_and_boundary():
     rows = compare(replace(evidence(), clearance=measurement(0, "m")), criteria())
     assert rows[2]["status"] == "PASS"
-    bad = criteria() | {"tension": Criterion(100, "N", "Synthetic", "maximum")}
+    bad = criteria(tension=Criterion(100, "N", "Synthetic", "maximum"))
     with pytest.raises(ValueError, match="unit"):
         compare(evidence(), bad)
-    bad = criteria() | {"clearance": Criterion(0, "m", "Synthetic", "maximum")}
+    bad = criteria(clearance=Criterion(0, "m", "Synthetic", "maximum"))
     with pytest.raises(ValueError, match="direction"):
         compare(evidence(), bad)
 
@@ -299,3 +304,114 @@ def test_report_keeps_sources_and_limits_visible_without_raw_float_repr():
 def test_mesh_derived_overflow_is_rejected():
     with pytest.raises(ValueError, match="finite"):
         mesh_change(measurement(1e308, "m"), measurement(-1e308, "m"))
+
+
+@pytest.mark.parametrize("render", [False, True])
+def test_supplied_criteria_revision_must_match_evidence(render):
+    revised = CriteriaSet(
+        "synthetic-v2",
+        dict(criteria())
+        | {"tension": Criterion(70, "kN", "Revised synthetic limit", "maximum")},
+    )
+    with pytest.raises(ValueError, match="criteria revision"):
+        if render:
+            render_report([evidence()], revised, revision="1", date="2026-10-20")
+        else:
+            compare(evidence(), revised)
+    current = replace(evidence(), criteria_revision="synthetic-v2")
+    assert compare(current, revised)[0]["status"] == "FAIL"
+    report = render_report([current], revised, revision="1", date="2026-10-20")
+    assert "Supplied criteria revision: synthetic-v2" in report
+
+
+def test_nonempty_criteria_require_revision_binding():
+    limits = {"tension": Criterion(70, "kN", "Synthetic", "maximum")}
+    with pytest.raises(ValueError, match="revision-bound"):
+        compare(evidence(), limits)
+    with pytest.raises(ValueError, match="revision-bound"):
+        render_report([], limits, revision="1", date="2026-10-20")
+
+
+@pytest.mark.parametrize("metric,unit", [("curvature", "1/m"), ("clearance", "m")])
+def test_small_mesh_changes_never_display_as_zero(metric, unit):
+    from digitalmodel.subsea.flexible_pipes.configuration_comparison import MeshPair
+
+    coarse = replace(evidence(), **{metric: measurement(0.20004, unit)})
+    fine = replace(
+        coarse,
+        **{metric: measurement(0.2, unit)},
+        input_digest="d" * 64,
+        output_digest="e" * 64,
+    )
+    pair = MeshPair(coarse, fine, (measurement(2, "m"),), (measurement(1, "m"),))
+    report = render_report(
+        [coarse], criteria(), revision="1", date="2026-10-20", meshes=[pair]
+    )
+    row = report.split(f"<td>{metric} ({unit})</td>")[1].split("</tr>")[0]
+    assert row == "<td>&lt;0.1 (nonzero)</td><td>&lt;0.1 (nonzero) %</td>"
+
+
+def test_tension_display_preserves_the_verdict_distinction():
+    record = replace(evidence(), tension=measurement(1004, "kN"))
+    limits = criteria(tension=Criterion(1000, "kN", "Synthetic", "maximum"))
+    report = render_report([record], limits, revision="1", date="2026-10-20")
+    assert "1004.0; 1000.0; FAIL" in report
+
+
+def test_inventory_is_an_escaped_path_and_digest_table():
+    sources = [
+        {
+            "configuration": "<shape>",
+            "group": "<group>",
+            "path": "relative/<spec>.yml",
+            "sha256": "a" * 64,
+        }
+    ]
+    report = render_report([], {}, revision="1", date="2026-10-20", sources=sources)
+    section = report.split("<h2>Source inventory</h2>")[1].split("<h2>")[0]
+    assert "<th>Path</th><th>SHA-256</th>" in section
+    assert "<td>relative/&lt;spec&gt;.yml</td>" in section
+    assert "<td>" + "a" * 64 + "</td>" in section
+    assert "<shape>" not in section
+    assert "{'configuration'" not in section
+
+
+def test_criteria_set_snapshots_limits_and_requires_nonempty_revision():
+    limits = dict(criteria())
+    supplied = CriteriaSet("synthetic-v1", limits)
+    limits["tension"] = Criterion(70, "kN", "Revised synthetic limit", "maximum")
+    assert compare(evidence(), supplied)[0]["status"] == "PASS"
+    with pytest.raises(TypeError):
+        supplied.limits["tension"] = limits["tension"]
+    with pytest.raises(ValueError, match="criteria revision"):
+        CriteriaSet(" ", limits)
+
+
+@pytest.mark.parametrize(
+    "metric,unit,limit",
+    [("tension", "kN", 100), ("curvature", "1/m", 0.25), ("clearance", "m", 0)],
+)
+def test_scalar_rounding_never_hides_unequal_values(metric, unit, limit):
+    # Maximum criteria fail just above the limit; minimum criteria fail just below.
+    value = limit + 1e-8 if metric != "clearance" else limit - 1e-8
+    record = replace(evidence(), **{metric: measurement(value, unit)})
+    report = render_report([record], criteria(), revision="1", date="2026-10-20")
+    relation = "above" if metric != "clearance" else "below"
+    assert f"({relation} limit; difference below display resolution)" in report
+    index = list(criteria()).index(metric)
+    assert compare(record, criteria())[index]["status"] == "FAIL"
+    boundary = replace(record, **{metric: measurement(limit, unit)})
+    assert compare(boundary, criteria())[index]["status"] == "PASS"
+
+
+def test_exact_zero_mesh_change_remains_zero():
+    from digitalmodel.subsea.flexible_pipes.configuration_comparison import MeshPair
+
+    coarse = evidence()
+    fine = replace(coarse, input_digest="d" * 64, output_digest="e" * 64)
+    pair = MeshPair(coarse, fine, (measurement(2, "m"),), (measurement(1, "m"),))
+    report = render_report(
+        [coarse], criteria(), revision="1", date="2026-10-20", meshes=[pair]
+    )
+    assert report.count("<td>0.0</td><td>0.0 %</td>") == 3
+    assert "<td>&lt;0.1 (nonzero)" not in report

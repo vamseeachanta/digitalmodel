@@ -15,6 +15,7 @@ Native solver readback, source rights and design-code compliance are not atteste
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterator
 from dataclasses import dataclass
 from hashlib import sha256
 from html import escape
@@ -22,6 +23,7 @@ from itertools import product
 import math
 from pathlib import Path
 import re
+from types import MappingProxyType
 from typing import Mapping, Sequence
 
 
@@ -130,6 +132,44 @@ class Criterion(Measurement):
 
 
 @dataclass(frozen=True)
+class CriteriaSet(Mapping[str, Criterion]):
+    """An immutable snapshot of supplied limits under a declared revision.
+
+    The supplier shall issue a new revision when limits or their sources change.
+    A revision match checks metadata; it does not authenticate an approval.
+    """
+
+    revision: str
+    limits: Mapping[str, Criterion]
+
+    def __post_init__(self):
+        _text(self.revision, "criteria revision")
+        if set(self.limits) - METRICS.keys():
+            raise ValueError("unknown criterion")
+        if any(not isinstance(limit, Criterion) for limit in self.limits.values()):
+            raise ValueError("criteria require Criterion values")
+        object.__setattr__(self, "limits", MappingProxyType(dict(self.limits)))
+
+    def __getitem__(self, name: str) -> Criterion:
+        return self.limits[name]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.limits)
+
+    def __len__(self) -> int:
+        return len(self.limits)
+
+
+def _criteria_revision(criteria: Mapping[str, Criterion], records: Sequence[Evidence]):
+    if not isinstance(criteria, CriteriaSet):
+        if criteria:
+            raise ValueError("nonempty criteria require a revision-bound CriteriaSet")
+        return  # No supplied criteria: every scalar remains NOT_EVALUATED.
+    if any(record.criteria_revision != criteria.revision for record in records):
+        raise ValueError("supplied criteria revision must match evidence criteria revision")
+
+
+@dataclass(frozen=True)
 class Evidence:
     """Externally extracted whole-period extrema over a declared comparison region.
 
@@ -177,8 +217,7 @@ def compare(evidence: Evidence, criteria: Mapping[str, Criterion]) -> list[dict]
     DNV-OS-F201. Constant MBR-derived curvature limits must be supplied by the
     caller; tension-dependent/anisotropic MBR is outside this scalar screen.
     """
-    if set(criteria) - METRICS.keys():
-        raise ValueError("unknown criterion")
+    _criteria_revision(criteria, [evidence])
     rows = []
     for name, (unit, direction) in METRICS.items():
         result, limit = getattr(evidence, name), criteria.get(name)
@@ -249,6 +288,31 @@ def _cell(value) -> str:
     return escape(str(value))
 
 
+def _metric_values(value: float | None, limit: float | None, unit: str) -> tuple[str, str]:
+    decimals = {"kN": 1, "1/m": 5, "m": 4}[unit]
+    shown = [
+        "NOT_EVALUATED" if item is None else f"{item:.{decimals}f}"
+        for item in (value, limit)
+    ]
+    if (
+        value is not None
+        and limit is not None
+        and value != limit
+        and round(value, decimals) == round(limit, decimals)
+    ):
+        relation = "above" if value > limit else "below"
+        shown[0] += f" ({relation} limit; difference below display resolution)"
+    return shown[0], shown[1]
+
+
+def _display_change(value: float) -> str:
+    """Keep nonzero changes explicit when one decimal place would show zero."""
+    _number(value)
+    if 0 < value < 0.05:
+        return "&lt;0.1 (nonzero)"
+    return f"{value:.1f}"
+
+
 @dataclass(frozen=True)
 class MeshPair:
     """Two externally extracted runs, with sourced target lengths per section.
@@ -301,11 +365,11 @@ def _mesh_rows(meshes: Sequence[MeshPair], lookup: Mapping[Case, Evidence]) -> s
             if coarse and fine and pair.coarse.converged and pair.fine.converged:
                 relative = mesh_change(coarse, fine)
                 change = (
-                    f"{relative:.1f} %"
+                    f"{_display_change(relative)} %"
                     if relative is not None
                     else "undefined (zero reference)"
                 )
-                absolute = f"{abs(coarse.value - fine.value):.1f}"
+                absolute = _display_change(abs(coarse.value - fine.value))
             rows.append(
                 f"<tr><td>{pair.coarse.case.key}</td><td>{name} ({unit})</td>"
                 f"<td>{absolute}</td><td>{change}</td></tr>"
@@ -345,6 +409,7 @@ def render_report(
     _text(revision, "revision")
     _text(date, "date")
     _common(records)
+    _criteria_revision(criteria, records)
     lookup = {r.case: r for r in records}
     mesh_rows = _mesh_rows(meshes, lookup)
     history = history or [
@@ -370,18 +435,15 @@ def render_report(
         checks = compare(evidence, criteria) if evidence else []
         cells = []
         for check in checks:
+            value, limit = _metric_values(check["value"], check["limit"], check["unit"])
             cells.append(
                 "<td>"
                 + "; ".join(
-                    _cell(check[k])
-                    for k in (
-                        "value",
-                        "limit",
-                        "status",
-                        "reason",
-                        "source",
-                        "response_source",
-                    )
+                    [value, limit]
+                    + [
+                        _cell(check[k])
+                        for k in ("status", "reason", "source", "response_source")
+                    ]
                 )
                 + "</td>"
             )
@@ -390,7 +452,15 @@ def render_report(
         rows.append(
             f'<tr data-case="{case.key}"><td>{case.key}</td>' + "".join(cells) + "</tr>"
         )
-    provenance = "".join("<li>" + escape(str(record)) + "</li>" for record in sources)
+    provenance = "".join(
+        "<tr>"
+        + "".join(
+            f"<td>{_cell(record[key])}</td>"
+            for key in ("configuration", "group", "path", "sha256")
+        )
+        + "</tr>"
+        for record in sources
+    )
     evidence_list = "".join(_evidence_entry(record) for record in records)
     for pair in meshes:
         evidence_list += _evidence_entry(pair.fine)
@@ -420,7 +490,10 @@ Supplied scalar PASS/FAIL checks do not establish design-code compliance.</p>
 <h2>Case table</h2><p>Each result cell lists value; limit; status; reason; criterion source; response source.
 Max effective tension (kN), max curvature magnitude (1/m), min seabed clearance (m).
 Limits are inclusive. Signed clearance includes contact penetration.
-Scalar displays use three significant figures; comparisons use unrounded inputs.</p>
+Scalar displays use one decimal place for kN, five for 1/m and four for m;
+unequal values that round alike carry an above/below-limit marker.
+Comparisons use unrounded inputs.
+Supplied criteria revision: {_cell(criteria.revision if isinstance(criteria, CriteriaSet) else None)}.</p>
 <table><tr><th>Configuration / offset / sea state</th><th>Tension (kN)</th>
 <th>Curvature (1/m)</th><th>Clearance (m)</th></tr>{"".join(rows)}
 <caption>Symbolic cases from <a href="{ISSUE}">the comparison scope</a>.
@@ -437,6 +510,8 @@ Use mesh_change for sourced coarse/fine extrema on identical cases, common basis
 solver version and extraction scope. Report absolute changes alongside relative
 changes; a zero fine reference has no relative percentage. More than two levels
 and a project-supplied tolerance are needed to support a convergence conclusion.</p>
+<p>Changes use one decimal place; nonzero changes below display resolution
+are marked &lt;0.1 (nonzero), in the column's unit. Exact zero displays as 0.0.</p>
 <table><tr><th>Case</th><th>Metric (unit)</th><th>Absolute change (metric unit)</th>
 <th>Relative change (%)</th></tr>{mesh_rows}
 <caption>Descriptive mesh changes; convergence acceptance remains NOT_EVALUATED.</caption></table>
@@ -446,9 +521,15 @@ mesh refinements. Solver execution requires separate authorisation. Vendor model
 redistribution rights remain unverified; this report carries method and metadata.</p>
 <h2>Sources</h2><p>Orcina online help, accessed 2026-10-20; no licensed standard
 values are reproduced. API RP 2RD and DNV-OS-F201 checks are NOT_EVALUATED.</p>
-<ul>{source_links}</ul><h2>Source inventory</h2><ul>{provenance}</ul>
+<ul>{source_links}</ul><h2>Source inventory</h2>
+<table><tr><th>Configuration</th><th>Library</th><th>Path</th><th>SHA-256</th></tr>
+{provenance}<caption>Existing source specifications; paths are repository-relative.</caption></table>
+<p>Interim offline format: standard document control and sign-off are not supplied.
+Before engineering results are added, migrate to the shared ReportSpec renderer
+with document control, sign-off, revision history, criteria and evidence provenance.</p>
 <h2>Supplied evidence (synthetic or stored; not native attestation)</h2>
-<ul>{evidence_list}</ul></html>"""
+<ul>{evidence_list}</ul></html>
+"""
 
 
 def main() -> None:
