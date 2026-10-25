@@ -315,6 +315,112 @@ def test_genuine_global_change_uses_delta_t_response(adjust, key):
     assert receipt["response"]["maximum_absolute_change"] == 0.005
 
 
+@pytest.mark.parametrize("scheme,origin", [("localEuler", LOCAL), ("Euler", CD)])
+@pytest.mark.parametrize("key", ["maxCo", "maxAlphaCo", "maxDeltaT"])
+@pytest.mark.parametrize("bad", [None, "nan", "inf", "0", "-1", "yes", "1e999"])
+def test_incomplete_untargeted_active_readbacks_prevent_execution(
+    scheme, origin, key, bad
+):
+    """A passing target and bound response cannot qualify incomplete controls."""
+    missing_path = f"{origin}/{key}"
+    target = f"{origin}/{'maxDeltaT' if key == 'maxCo' else 'maxCo'}"
+    overrides = {missing_path: bad}
+    before = snapshot(scheme=scheme, adjust="yes", overrides=overrides)
+    after = snapshot(
+        scheme=scheme, adjust="yes", overrides={**overrides, target: "0.4"}
+    )
+    receipt = verify(
+        before,
+        after,
+        {target: 0.4},
+        response=response(
+            before, after, metric="rDeltaT" if scheme == "localEuler" else "deltaT"
+        ),
+    )
+    assert check(receipt, f"target:{target}")["status"] == "PASS"
+    assert check(receipt, "response")["status"] == "PASS"
+    assert receipt["status"] == "NOT_EVALUATED"
+    assert receipt["executed"] is False
+    for phase in ("before", "after"):
+        assert receipt[f"effective_{phase}"][key]["status"] == "NOT_EVALUATED"
+        assert (
+            check(receipt, f"active_control:{phase}:{key}")["status"] == "NOT_EVALUATED"
+        )
+    assert not any(item["status"] == "FAIL" for item in receipt["checks"])
+
+
+@pytest.mark.parametrize("scheme,origin", [("localEuler", LOCAL), ("Euler", CD)])
+def test_rejection_takes_precedence_over_incomplete_active_readbacks(scheme, origin):
+    target = f"{origin}/maxCo"
+    before = snapshot(
+        scheme=scheme, adjust="yes", overrides={f"{origin}/maxDeltaT": None}
+    )
+    after = snapshot(
+        scheme=scheme,
+        adjust="yes",
+        overrides={f"{origin}/maxDeltaT": None, target: "0.4"},
+    )
+    receipt = verify(
+        before,
+        after,
+        {target: 0.4},
+        response=response(before, after, before_snapshot_sha256="stale"),
+    )
+    assert check(receipt, "response")["reason"] == "response_snapshot_mismatch"
+    assert receipt["status"] == "REJECTED"
+    assert receipt["executed"] is False
+
+
+@pytest.mark.parametrize("scheme,origin", [("localEuler", LOCAL), ("Euler", CD)])
+def test_unsupported_delta_t_readback_does_not_block_supported_cap_edit(scheme, origin):
+    target = f"{origin}/maxCo"
+    before = snapshot(scheme=scheme, adjust="yes", overrides={f"{CD}/deltaT": None})
+    after = snapshot(
+        scheme=scheme,
+        adjust="yes",
+        overrides={f"{CD}/deltaT": None, target: "0.4"},
+    )
+    receipt = verify(
+        before,
+        after,
+        {target: 0.4},
+        response=response(
+            before, after, metric="rDeltaT" if scheme == "localEuler" else "deltaT"
+        ),
+    )
+    assert receipt["effective_before"]["deltaT"]["status"] == "NOT_EVALUATED"
+    assert receipt["effective_after"]["deltaT"]["status"] == "NOT_EVALUATED"
+    assert receipt["status"] == "EXECUTED"
+    assert receipt["executed"] is True
+
+
+def test_inactive_local_interface_cap_does_not_block_execution():
+    before = snapshot(overrides={f"{LOCAL}/maxAlphaCo": "1.0"})
+    after = snapshot(overrides={f"{LOCAL}/maxAlphaCo": "1.0", f"{LOCAL}/maxCo": "0.4"})
+    receipt = verify(
+        before, after, {f"{LOCAL}/maxCo": 0.4}, response=response(before, after)
+    )
+    assert receipt["effective_before"]["maxAlphaCo"]["status"] == "INACTIVE"
+    assert receipt["effective_after"]["maxAlphaCo"]["status"] == "INACTIVE"
+    assert receipt["status"] == "EXECUTED"
+    assert receipt["executed"] is True
+
+
+@pytest.mark.parametrize("bad", [None, "nan", "0", "-1"])
+def test_incomplete_inactive_fixed_step_caps_do_not_block_execution(bad):
+    overrides = {f"{CD}/{key}": bad for key in ("maxCo", "maxAlphaCo", "maxDeltaT")}
+    before = snapshot(scheme="Euler", overrides=overrides)
+    after = snapshot(scheme="Euler", overrides={**overrides, f"{CD}/deltaT": "0.005"})
+    receipt = verify(
+        before,
+        after,
+        {f"{CD}/deltaT": 0.005},
+        response=response(before, after, metric="deltaT"),
+    )
+    assert receipt["status"] == "EXECUTED"
+    assert receipt["executed"] is True
+
+
 @pytest.mark.parametrize(
     "overrides,reason",
     [

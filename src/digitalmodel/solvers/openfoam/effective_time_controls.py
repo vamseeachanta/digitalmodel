@@ -363,8 +363,9 @@ def verify_experiment(
     """Return one receipt; effective edits alone never establish execution.
 
     Every edit is a full consumed leaf path and its requested positive value.
-    All requested edits must take effect, and unrequested resolved settings must
-    remain unchanged. REJECTED takes precedence over incomplete evidence.
+    All requested edits must take effect, every required active control must
+    have valid readbacks in both snapshots, and unrequested resolved settings
+    must remain unchanged. REJECTED takes precedence over incomplete evidence.
     """
     checks = []
 
@@ -403,6 +404,17 @@ def verify_experiment(
     )
     active_before = resolve_time_controls(before)
     active_after = resolve_time_controls(after)
+    for phase, resolved in (("before", active_before), ("after", active_after)):
+        for key, control in resolved.items():
+            # No path denotes an unsupported control, including adaptive/local
+            # deltaT. Established inactive controls need no active readback.
+            if control.path is None or control.status == "INACTIVE":
+                continue
+            record(
+                f"active_control:{phase}:{key}",
+                "PASS" if control.status == "ACTIVE" else "NOT_EVALUATED",
+                control.reason,
+            )
     if not edits:
         record("targets", "NOT_EVALUATED", "no_requested_edits")
     for path, value in edits.items():

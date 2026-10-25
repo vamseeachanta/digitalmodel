@@ -10,6 +10,7 @@ It supports OpenCFD OpenFOAM v2312 `interFoam` with default `localEuler` or `Eul
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add effective-setting receipts to reject inactive diagnostic edits. |
+| 1 | 2026-10-25 | Require complete active-control evidence in both snapshots to prevent execution claims from incomplete readbacks. |
 
 ## Active controls
 
@@ -26,6 +27,10 @@ For local stepping, `maxAlphaCo` is inactive when it is greater than or equal to
 readable there. Global adaptive `deltaT` edits and local pseudo-time `deltaT`
 edits are `NOT_EVALUATED`; their interactions are outside this contract.
 Omitted active values remain `NOT_EVALUATED` even when the solver has defaults.
+Missing or invalid readbacks for any required active control in either snapshot
+keep the receipt `NOT_EVALUATED` when no rejection applies, including controls
+outside the requested edits. Established inactive controls and the unsupported
+`deltaT` cases described above are excluded from this evidence requirement.
 The global adjustment switch must be normalized to `yes` or `no` by the caller.
 
 ## Evidence collection and use
@@ -103,8 +108,9 @@ numerical limit was copied into the receipt checks.
 The regression suite uses synthetic settings and independent hand calculations
 written in its docstrings. It covers inert local edits, inactive fixed global
 caps, resolved-parent precedence over changed fragments, effective local/global
-edits, response thresholds, invalid observations, identity mismatches and
-preserved dictionaries/input/restart evidence.
+edits, response thresholds, invalid observations, identity mismatches,
+incomplete untargeted active readbacks, inactive-control exclusions, rejection
+precedence and preserved dictionaries/input/restart evidence.
 
 Native dictionary querying, version discovery, automatic trial integration,
 function-object controls and monitoring/process exception handling remain later
