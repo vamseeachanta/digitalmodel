@@ -150,7 +150,14 @@ def build_document(cfg: dict[str, Any] | None = None):
     geometry = view['inputs']['structure']['report_geometry']
     geometry['attribution'] = 'Published paper (2023) [1]'
     geometry['criterion_source'] = 'stated assumption; not printed in the paper'
-    geometry['citation'] = '[1]; see Section 9.2'
+    history = Section(key='revision-history', title='Revision history', blocks=[
+        TableBlock(title='Revision history', columns=['Revision', 'Date', 'Change and reason'], rows=[
+            ['00', '2026-10-22', 'Public worked example with explicit assumptions and reproducible results.']])])
+    section_order = list(SECTION_TITLES)
+    section_order.insert(1, history.title)
+    reference_number = section_order.index('References') + 1
+    locator = f'[1]; see Section {reference_number}.2'
+    geometry['citation'] = locator
     spec = anode_design_report(view)
     tables = {b.title: b for s in spec.sections for b in s.blocks if isinstance(b, TableBlock)}
     figure = next(b for b in spec.figure_blocks() if b.svg)
@@ -185,6 +192,9 @@ def build_document(cfg: dict[str, Any] | None = None):
             row[1] = str(cfg['inputs']['anode']['individual_anode_mass_kg'])
         elif row[0] == 'Anode equivalent radius (fresh)':
             row[1] = f'{float(row[1]):.3f}'
+    for row in tables['Independent estimate: anode mass and count'].rows:
+        if row[0] == 'Individual anode net mass':
+            row[1] = f"{cfg['inputs']['anode']['individual_anode_mass_kg']:.1f}"
     aggregate = tables['Installed arrangement: published outputs and independent estimate']
     aggregate.columns += ['Criterion and basis']
     for row in aggregate.rows:
@@ -256,13 +266,13 @@ def build_document(cfg: dict[str, Any] | None = None):
          'using the cylinder estimate, increase the count by six, to 575; recheck geometry, '
          'attachments and distribution before use.'),
         ('The public paper and standard edition are identified below.\n\n'
-         '## 9.1 Publications\n\n'
+         f'## {reference_number}.1 Publications\n\n'
          '[1] Study on Implementation and Optimization of Cathodic Protection for Offshore Oil '
          'Platform Jacket. Engineering Advances 3(3), 2023, 241–245. '
          'https://doi.org/10.26855/ea.2023.06.017.\n\n'
          '[2] DNV-RP-B401, Cathodic protection design, May 2021. '
          'https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/.\n\n'
-         '## 9.2 Source locators\n\n'
+         f'## {reference_number}.2 Source locators\n\n'
          '[1], p. 242, Tables 1–2 and Section 2: areas, effective densities, connected allowance, '
          'anode size, installed count, resistivity, driving voltage and printed checkpoints. '
          'Pages 243–244, Section 3: monitoring. Page 244, Section 5: proposed remedy. '
@@ -290,18 +300,18 @@ def build_document(cfg: dict[str, Any] | None = None):
              'Published checkpoints and calculated differences',
              'Measured potentials at the stated time of measurement')
     appendix = [tables[name] for name in names]
-    # Locators are grouped in Section 9.2; reference numbers remain beside the data.
+    # Locators follow the numbered References section, including revision history.
     for table in appendix:
         table.source = 'Published quantities [1]; assumed inputs and method [2] as stated in Design Data.'
         locator_columns = [i for i, name in enumerate(table.columns) if name in ('Locator', 'Source or note')]
         for row in table.rows:
             for i in locator_columns:
-                row[i] = '[1]; see Section 9.2'
+                row[i] = locator
             for i, cell in enumerate(row):
                 if isinstance(cell, str):
                     row[i] = re.sub(r'-(?=\d)', '−', cell)
                     if cell.startswith('[1], p.'):
-                        row[i] = '[1]; see Section 9.2'
+                        row[i] = locator
                 elif isinstance(cell, (float, int)) and cell < 0:
                     row[i] = f'{cell:g}'.replace('-', '−')
     spec.appendices = [
@@ -314,9 +324,7 @@ def build_document(cfg: dict[str, Any] | None = None):
                       'Browser interaction and a PDF derivative have not been checked. '
                       'Input precision is retained in the fixture and results JSON.')]),
     ]
-    spec.sections.insert(1, Section(key='revision-history', title='Revision history', blocks=[
-        TableBlock(title='Revision history', columns=['Revision', 'Date', 'Change and reason'], rows=[
-            ['00', '2026-10-22', 'Public worked example with explicit assumptions and reproducible results.']])]))
+    spec.sections.insert(1, history)
     for record in spec.citations:
         validate_citation(Citation(**record), repo_root=ROOT)
     return spec, numerical_record(cfg)

@@ -85,6 +85,30 @@ def test_anode_counts_have_independent_hand_calculations(builder):
     assert builder.numerical_record(cfg)['anode_counts'] == counts
 
 
+def test_reference_numbers_match_rendered_section_order(builder, tmp_path):
+    builder.build(tmp_path)
+    page = (tmp_path / 'cathodic-protection-analysis.html').read_text(encoding='utf-8')
+    sections = re.findall(r'<section id="[^"]+">\s*<div class="l1head">.*?'
+                          r'<h2>(.*?)</h2>.*?</section>', page, re.S)
+    number = next(i for i, section in enumerate(sections, 1) if section.startswith('References'))
+    assert f'<h4>{number}.1 Publications</h4>' in page
+    assert f'<h4>{number}.2 Source locators</h4>' in page
+    locators = re.findall(r'\[1\]; see Section (\d+\.\d+)', page)
+    assert locators and set(locators) == {f'{number}.2'}
+
+
+def test_displayed_mass_inputs_reproduce_mass_count(builder, tmp_path):
+    builder.build(tmp_path)
+    page = (tmp_path / 'cathodic-protection-analysis.html').read_text(encoding='utf-8')
+    table = re.search(r'Independent estimate: anode mass and count</div>(.*?)</table>',
+                      page, re.S).group(1)
+    rows = dict(re.findall(r'<tr><td>(.*?)</td><td>(.*?)</td><td>.*?</td></tr>', table))
+    total = float(rows['Total net anode mass required'])
+    individual = float(rows['Individual anode net mass'])
+    assert individual == 323.4
+    assert math.ceil(total / individual) == int(rows['Anodes by mass (N_mass)']) == 547
+
+
 def test_citations_resolve_from_repository_root(builder, tmp_path, monkeypatch):
     page = tmp_path / 'knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md'
     page.parent.mkdir(parents=True)
