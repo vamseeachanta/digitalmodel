@@ -289,8 +289,42 @@ def finite_number(value: Any) -> bool:
     return type(value) in (int, float) and math.isfinite(value)
 
 
+def literal_quantity_comparison(node: ast.AST, anchor: dict) -> bool:
+    """Require a quantity reference equated directly to its numeric literal."""
+    if (
+        not isinstance(node, ast.Compare)
+        or len(node.ops) != 1
+        or not isinstance(node.ops[0], ast.Eq)
+    ):
+        return False
+    left, right = node.left, node.comparators[0]
+    for reported, literal in ((left, right), (right, left)):
+        try:
+            value = ast.literal_eval(literal)
+        except (ValueError, TypeError):
+            continue
+        if not finite_number(value) or value != anchor.get("expected"):
+            continue
+        quantity = anchor.get("quantity")
+        if (
+            isinstance(reported, ast.Name)
+            and reported.id == quantity
+            or isinstance(reported, ast.Attribute)
+            and reported.attr == quantity
+            or isinstance(reported, ast.Subscript)
+            and isinstance(reported.slice, ast.Constant)
+            and reported.slice.value == quantity
+        ):
+            return True
+    return False
+
+
 def anchor_source_valid(root: Path, anchor: dict) -> bool:
-    """Require the working and literal assertion together in the cited span."""
+    """Match a real quantity assertion and its working within the cited span.
+
+    Quantity references are names, attributes or literal subscript keys. This
+    static check does not authenticate execution or the hand-worked basis.
+    """
     ref = anchor.get("test_ref", "")
     name, valid, _ = reference_info(root, ref)
     if not valid:
@@ -302,19 +336,35 @@ def anchor_source_valid(root: Path, anchor: dict) -> bool:
     if not start:
         return False
     lines = source_path(root, name).read_text(encoding="utf-8").splitlines()
-    span = "\n".join(lines[int(start) - 1 : int(end or start)])
+    first, last = int(start), int(end or start)
+    span = "\n".join(lines[first - 1 : last])
     assertion = anchor.get("assertion", "")
-    if not assertion or assertion not in span or anchor.get("working", "") not in span:
+    working = anchor.get("working", "")
+    if (
+        not isinstance(assertion, str)
+        or not assertion
+        or not isinstance(working, str)
+        or not working
+        or working not in span
+    ):
         return False
     try:
-        tree = ast.parse(assertion)
-    except (SyntaxError, TypeError):
+        source = ast.parse("\n".join(lines))
+        declared = ast.parse(assertion)
+    except (SyntaxError, ValueError, TypeError):
         return False
-    return any(isinstance(node, ast.Assert) for node in ast.walk(tree)) and any(
-        isinstance(node, ast.Constant)
-        and type(node.value) in (int, float)
-        and node.value == anchor.get("expected")
-        for node in ast.walk(tree)
+    if (
+        len(declared.body) != 1
+        or not isinstance(declared.body[0], ast.Assert)
+        or not literal_quantity_comparison(declared.body[0].test, anchor)
+    ):
+        return False
+    return any(
+        isinstance(node, ast.Assert)
+        and node.end_lineno is not None
+        and first <= node.lineno <= node.end_lineno <= last
+        and ast.dump(node) == ast.dump(declared.body[0])
+        for node in ast.walk(source)
     )
 
 

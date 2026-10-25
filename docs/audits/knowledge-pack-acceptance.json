@@ -1,8 +1,8 @@
 {
   "context": {
-    "base_equals_local_main": true,
-    "checkout_revision": "44b88d703865cd5489ec95bf2a32ab750ce72dcf",
-    "command_convention": "UV_BIN names the supplied permitted executable; TMPDIR names the authorized external scratch directory. These environment-variable forms were used for the recorded commands.",
+    "base_equals_local_main": false,
+    "checkout_revision": "e3b5e20be9d35247180ae8116e6267b57d730f3b",
+    "command_convention": "UV_BIN names the supplied executable; SCRATCH names the external evidence directory; TMPDIR names its temporary-file subdirectory. Recorded commands use these portable environment-variable forms.",
     "dependency_requirements": [
       "jinja2>=3.1.0,<4.0.0",
       "markupsafe>=2.1.0",
@@ -1112,14 +1112,14 @@
         ]
       }
     },
-    "lesson": "A claim requires its criterion, current evidence and inspected scope; a historical fix list does not establish present acceptance.",
+    "lesson": "A claim requires its criterion, current evidence and inspected scope; a historical fix list does not establish present acceptance. Numerical anchor evidence requires an actual source assertion with a literal expected comparator tied to the reported quantity; matching numeric text is insufficient.",
     "local_test_commands": {
-      "existing": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python -m pytest tests/asset_integrity/test_ffs_input_validation.py tests/code_checks/test_dnv_os_f101.py tests/riser_fatigue/test_touchdown.py tests/orcaflex/test_viv_screening.py tests/naval_architecture/test_vessel_stability_screening.py tests/naval_architecture/test_hull_girder_screening.py -q -rA -p no:cacheprovider --basetemp=\"$TMPDIR/existing-tests\"",
-      "validator": "\"$UV_BIN\" run --no-project --with pytest python -m pytest tests/reporting/test_knowledge_pack_acceptance.py -q -rA -p no:cacheprovider --basetemp=\"$TMPDIR/pack-tests\""
+      "existing": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python -m pytest tests/asset_integrity/test_ffs_input_validation.py tests/code_checks/test_dnv_os_f101.py tests/riser_fatigue/test_touchdown.py tests/orcaflex/test_viv_screening.py tests/naval_architecture/test_vessel_stability_screening.py tests/naval_architecture/test_hull_girder_screening.py -q -rA -p no:cacheprovider --basetemp=\"$SCRATCH/bt-existing\"",
+      "validator": "\"$UV_BIN\" run --no-project --with pytest python -m pytest tests/reporting/test_knowledge_pack_acceptance.py -q -rA -p no:cacheprovider --basetemp=\"$SCRATCH/bt-final\""
     },
     "local_test_outcomes": {
       "existing": "116 passed; regression outcomes do not establish source qualification.",
-      "validator": "74 passed; audit-validator tests are not qualified engineering results."
+      "validator": "96 passed; audit-validator tests are not qualified engineering results."
     },
     "not_run": [
       "Independent numerical qualification for every named family.",
@@ -1160,7 +1160,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1172,7 +1172,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "c1649aa3861610c616476c8571d2a7c0154e145903671a629de04a426ef72209",
+      "source_manifest_sha256": "f249c2f1133011d3fb90323144693852eaa1205f6192304bbce9ad7f7200f8ef",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1199,7 +1199,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1211,7 +1211,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "5770a526e71807de84a848da1e2c983d71acf2ae4d279fc842d6d50fc55cc748",
+      "source_manifest_sha256": "77c7335e4e9ce031ac370938a7aee918373fbc0d51072ea7295ff374df5d6b9f",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1238,7 +1238,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1250,7 +1250,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "c1649aa3861610c616476c8571d2a7c0154e145903671a629de04a426ef72209",
+      "source_manifest_sha256": "f249c2f1133011d3fb90323144693852eaa1205f6192304bbce9ad7f7200f8ef",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1276,7 +1276,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1288,7 +1288,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "c1649aa3861610c616476c8571d2a7c0154e145903671a629de04a426ef72209",
+      "source_manifest_sha256": "f249c2f1133011d3fb90323144693852eaa1205f6192304bbce9ad7f7200f8ef",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1311,9 +1311,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -1351,7 +1351,7 @@
             "observed": "accepted_value"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -1371,7 +1371,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "c1649aa3861610c616476c8571d2a7c0154e145903671a629de04a426ef72209",
+      "source_manifest_sha256": "f249c2f1133011d3fb90323144693852eaa1205f6192304bbce9ad7f7200f8ef",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1394,9 +1394,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -1412,7 +1412,7 @@
             "observed": "escalate_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -1431,7 +1431,7 @@
         "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
         "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301"
       },
-      "source_manifest_sha256": "c1649aa3861610c616476c8571d2a7c0154e145903671a629de04a426ef72209",
+      "source_manifest_sha256": "f249c2f1133011d3fb90323144693852eaa1205f6192304bbce9ad7f7200f8ef",
       "test_refs": [
         "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
       ]
@@ -1454,7 +1454,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1466,7 +1466,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "72514b7588a0afb6de849e9f4ba3321502ac0ab73c228571b2a66e7505edd1a5",
+      "source_manifest_sha256": "d01dda8e88c6f92ca814368fe8814219c2d0edc2dcd4ef4e720f244a9c301974",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1493,7 +1493,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1505,7 +1505,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "7a8918805be64d305173a2157cd69471cd0187a4da3e52991bd28649131a2c0d",
+      "source_manifest_sha256": "487e41847fbffc3b1d41c95f0b42703e1836b7ac699618cd2ad4eb600304ed68",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1532,7 +1532,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1544,7 +1544,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "72514b7588a0afb6de849e9f4ba3321502ac0ab73c228571b2a66e7505edd1a5",
+      "source_manifest_sha256": "d01dda8e88c6f92ca814368fe8814219c2d0edc2dcd4ef4e720f244a9c301974",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1570,7 +1570,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1582,7 +1582,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "72514b7588a0afb6de849e9f4ba3321502ac0ab73c228571b2a66e7505edd1a5",
+      "source_manifest_sha256": "d01dda8e88c6f92ca814368fe8814219c2d0edc2dcd4ef4e720f244a9c301974",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1605,9 +1605,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -1655,7 +1655,7 @@
             "observed": "accepted_nonfinite"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -1675,7 +1675,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "72514b7588a0afb6de849e9f4ba3321502ac0ab73c228571b2a66e7505edd1a5",
+      "source_manifest_sha256": "d01dda8e88c6f92ca814368fe8814219c2d0edc2dcd4ef4e720f244a9c301974",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1698,9 +1698,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -1776,7 +1776,7 @@
             "observed": "accepted_nonfinite"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -1795,7 +1795,7 @@
         "src/digitalmodel/code_checks/workflow.py": "b44de2590dd6f66c13d19a3027f7c7f67a82a5b2c2339083309a9dbd62f65fb3",
         "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e"
       },
-      "source_manifest_sha256": "72514b7588a0afb6de849e9f4ba3321502ac0ab73c228571b2a66e7505edd1a5",
+      "source_manifest_sha256": "d01dda8e88c6f92ca814368fe8814219c2d0edc2dcd4ef4e720f244a9c301974",
       "test_refs": [
         "tests/code_checks/test_dnv_os_f101.py:L1-L228"
       ]
@@ -1818,7 +1818,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1830,7 +1830,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "711b42c7c86cf4e08f2057711683dd521f68e17eb894f9c233f424b600b946c6",
+      "source_manifest_sha256": "5bbc5c51b2a7fef3d4caf22f185c328ce4014644d5989f7f79100f7d59122eba",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -1857,7 +1857,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1869,7 +1869,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "66b2feb9817d6d7384a0e3256dbb23a36caaa9b2344d1c4d025c2586d59c0813",
+      "source_manifest_sha256": "fb3abfccb7e04caf92236cc4b400b24bd49fe0a4f98e2d5827550bee2f8cffc1",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -1896,7 +1896,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1908,7 +1908,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "711b42c7c86cf4e08f2057711683dd521f68e17eb894f9c233f424b600b946c6",
+      "source_manifest_sha256": "5bbc5c51b2a7fef3d4caf22f185c328ce4014644d5989f7f79100f7d59122eba",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -1934,7 +1934,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -1946,7 +1946,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "711b42c7c86cf4e08f2057711683dd521f68e17eb894f9c233f424b600b946c6",
+      "source_manifest_sha256": "5bbc5c51b2a7fef3d4caf22f185c328ce4014644d5989f7f79100f7d59122eba",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -1969,9 +1969,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2033,7 +2033,7 @@
             "observed": "reject_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2052,7 +2052,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "711b42c7c86cf4e08f2057711683dd521f68e17eb894f9c233f424b600b946c6",
+      "source_manifest_sha256": "5bbc5c51b2a7fef3d4caf22f185c328ce4014644d5989f7f79100f7d59122eba",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -2075,9 +2075,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2179,7 +2179,7 @@
             "observed": "accepted_nonfinite"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2198,7 +2198,7 @@
         "src/digitalmodel/riser_fatigue/workflow.py": "1f2dfc668d662028cf535aa6d5a876a3863eaef08b36aa6cc80b150ae46978f0",
         "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
       },
-      "source_manifest_sha256": "711b42c7c86cf4e08f2057711683dd521f68e17eb894f9c233f424b600b946c6",
+      "source_manifest_sha256": "5bbc5c51b2a7fef3d4caf22f185c328ce4014644d5989f7f79100f7d59122eba",
       "test_refs": [
         "tests/riser_fatigue/test_touchdown.py:L1-L246"
       ]
@@ -2225,7 +2225,7 @@
         "pack missing or different from discovered family pack"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
       "probe_command": null,
       "probe_result": {
@@ -2235,7 +2235,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2264,7 +2264,7 @@
         "pack missing or different from discovered family pack"
       ],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
       "probe_command": null,
       "probe_result": {
@@ -2274,7 +2274,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2301,7 +2301,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
       "probe_command": null,
       "probe_result": {
@@ -2311,7 +2311,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2337,7 +2337,7 @@
         "pack missing or different from discovered family pack"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
       "probe_command": null,
       "probe_result": {
@@ -2347,7 +2347,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2371,9 +2371,9 @@
         "pack missing or different from discovered family pack"
       ],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2435,7 +2435,7 @@
             "observed": "reject_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2452,7 +2452,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2476,9 +2476,9 @@
         "pack missing or different from discovered family pack"
       ],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": null,
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2560,7 +2560,7 @@
             "observed": "accepted_nonfinite"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2577,7 +2577,7 @@
       "source_digests": {
         "src/digitalmodel/mooring_fatigue/workflow.py": "2e1e3239e58d7a2b429ef47c15e576f10dc81bc470ef85c8ee6816367cf2d6f8"
       },
-      "source_manifest_sha256": "edfc5dfdcbbff6f3ea50d70b1fc0ad06fc29b713337923c0387ba431a3fa4278",
+      "source_manifest_sha256": "f7d1b4c62425427be7b43afe13a43f6d67da54810c33ffada6e5a8848ebd2e00",
       "test_refs": []
     },
     {
@@ -2598,7 +2598,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2610,7 +2610,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "20434842cb4ff583f63e807d126f9a2b9d7bbb0119a441ee7d22554c004e7d07",
+      "source_manifest_sha256": "9c56ed7a8a018ab17a082eb5d7a48875e65d2de51cd7427b7b7b830042810e82",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2637,7 +2637,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2649,7 +2649,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "6b6a4b7a66835db29dc99c2ae9410d31119966a627bc136d4397cee5c362b550",
+      "source_manifest_sha256": "631b9e306d70d4521a2947c36d38ac97858edc8ea52fa72dd660a3b1d85398cf",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2676,7 +2676,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2688,7 +2688,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "20434842cb4ff583f63e807d126f9a2b9d7bbb0119a441ee7d22554c004e7d07",
+      "source_manifest_sha256": "9c56ed7a8a018ab17a082eb5d7a48875e65d2de51cd7427b7b7b830042810e82",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2714,7 +2714,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2726,7 +2726,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "20434842cb4ff583f63e807d126f9a2b9d7bbb0119a441ee7d22554c004e7d07",
+      "source_manifest_sha256": "9c56ed7a8a018ab17a082eb5d7a48875e65d2de51cd7427b7b7b830042810e82",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2749,9 +2749,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2813,7 +2813,7 @@
             "observed": "reject_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2833,7 +2833,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "20434842cb4ff583f63e807d126f9a2b9d7bbb0119a441ee7d22554c004e7d07",
+      "source_manifest_sha256": "9c56ed7a8a018ab17a082eb5d7a48875e65d2de51cd7427b7b7b830042810e82",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2856,9 +2856,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -2886,7 +2886,7 @@
             "observed": "reject_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -2905,7 +2905,7 @@
         "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
         "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d"
       },
-      "source_manifest_sha256": "20434842cb4ff583f63e807d126f9a2b9d7bbb0119a441ee7d22554c004e7d07",
+      "source_manifest_sha256": "9c56ed7a8a018ab17a082eb5d7a48875e65d2de51cd7427b7b7b830042810e82",
       "test_refs": [
         "tests/orcaflex/test_viv_screening.py:L1-L161"
       ]
@@ -2928,7 +2928,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2940,7 +2940,7 @@
         "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
         "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860"
       },
-      "source_manifest_sha256": "973c8a8c5bc8fc5ac1ea126ccf0a3efaf148064d829fc6a3ff6a6a8d9073b51b",
+      "source_manifest_sha256": "1ede605b87317dca1e2f5a86a580b62e0b12e146ec0c0977b41ff66373f0f519",
       "test_refs": [
         "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
       ]
@@ -2967,7 +2967,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -2979,7 +2979,7 @@
         "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
         "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860"
       },
-      "source_manifest_sha256": "4e0d2545de8113b5d30d2e5d0534e3cd5bc7e4969a49aae4f59ab389dd8756df",
+      "source_manifest_sha256": "e15f56397101c46d74dc79823b4f6cfe556abf6ee994a8bcffe4379ef75823dc",
       "test_refs": [
         "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
       ]
@@ -3006,7 +3006,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3018,7 +3018,7 @@
         "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
         "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860"
       },
-      "source_manifest_sha256": "973c8a8c5bc8fc5ac1ea126ccf0a3efaf148064d829fc6a3ff6a6a8d9073b51b",
+      "source_manifest_sha256": "1ede605b87317dca1e2f5a86a580b62e0b12e146ec0c0977b41ff66373f0f519",
       "test_refs": [
         "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
       ]
@@ -3044,7 +3044,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3056,7 +3056,7 @@
         "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
         "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860"
       },
-      "source_manifest_sha256": "973c8a8c5bc8fc5ac1ea126ccf0a3efaf148064d829fc6a3ff6a6a8d9073b51b",
+      "source_manifest_sha256": "1ede605b87317dca1e2f5a86a580b62e0b12e146ec0c0977b41ff66373f0f519",
       "test_refs": [
         "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
       ]
@@ -3079,9 +3079,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -3181,7 +3181,7 @@
             "observed": "accepted_nonfinite"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -3201,7 +3201,7 @@
         "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
         "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860"
       },
-      "source_manifest_sha256": "973c8a8c5bc8fc5ac1ea126ccf0a3efaf148064d829fc6a3ff6a6a8d9073b51b",
+      "source_manifest_sha256": "1ede605b87317dca1e2f5a86a580b62e0b12e146ec0c0977b41ff66373f0f519",
       "test_refs": [
         "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
       ]
@@ -3224,7 +3224,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3236,7 +3236,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "e97328ae4fe9dd399dd195d7a2313fe1205b67de6f8c8846f1e57e9970cc4063",
+      "source_manifest_sha256": "1d8c8e84271b89e63a6e4d8a4978ab81a7e6b3626fbec95c2c92e66c2841cc22",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -3263,7 +3263,7 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3275,7 +3275,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "b0964afe066687234c4c027f9020c8c31b1b8221293f753a368654ec50f6b6dc",
+      "source_manifest_sha256": "4351265c4678d1a54f8ddeafe6e3341f6e0301c87dff4ce88d229cbdfdf61d24",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -3302,7 +3302,7 @@
         "three independent literal anchors and reference basis are not established"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3314,7 +3314,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "e97328ae4fe9dd399dd195d7a2313fe1205b67de6f8c8846f1e57e9970cc4063",
+      "source_manifest_sha256": "1d8c8e84271b89e63a6e4d8a4978ab81a7e6b3626fbec95c2c92e66c2841cc22",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -3340,7 +3340,7 @@
         "NOT_RUN: current pull-request test execution is not established by this local audit"
       ],
       "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-      "observation_time": "2026-10-25T01:46:59Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
       "probe_command": null,
       "probe_result": {
@@ -3352,7 +3352,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "e97328ae4fe9dd399dd195d7a2313fe1205b67de6f8c8846f1e57e9970cc4063",
+      "source_manifest_sha256": "1d8c8e84271b89e63a6e4d8a4978ab81a7e6b3626fbec95c2c92e66c2841cc22",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -3375,9 +3375,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:37:22Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -3451,7 +3451,7 @@
             "observed": "accepted_value"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -3471,7 +3471,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "e97328ae4fe9dd399dd195d7a2313fe1205b67de6f8c8846f1e57e9970cc4063",
+      "source_manifest_sha256": "1d8c8e84271b89e63a6e4d8a4978ab81a7e6b3626fbec95c2c92e66c2841cc22",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -3494,9 +3494,9 @@
       ],
       "missing_evidence": [],
       "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-      "observation_time": "2026-10-25T01:33:57Z",
+      "observation_time": "2026-10-25T02:55:58Z",
       "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
-      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+      "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
       "probe_result": {
         "cases": [
           {
@@ -3513,7 +3513,7 @@
             "observed": "fail_with_reason"
           }
         ],
-        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+        "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
         "completed": true,
         "exit_status": 0,
         "interface": {
@@ -3532,7 +3532,7 @@
         "src/digitalmodel/hull_girder_screening/workflow.py": "03f7f9c3d87208b1c4fe33e9cf422c5f92a842664de0f2413cbecb4af952e1b8",
         "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
       },
-      "source_manifest_sha256": "e97328ae4fe9dd399dd195d7a2313fe1205b67de6f8c8846f1e57e9970cc4063",
+      "source_manifest_sha256": "1d8c8e84271b89e63a6e4d8a4978ab81a7e6b3626fbec95c2c92e66c2841cc22",
       "test_refs": [
         "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
       ]
@@ -6641,7 +6641,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -6651,14 +6651,14 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
             "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
             "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
             "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -6681,7 +6681,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -6707,7 +6707,7 @@
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
             "scripts/ffs/build_riser_joint_explorer.py": "e2ef4a6f58f436905793991107ccb01557318d8f471102f4b91d99547fe79d0f",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "scripts/studies/surface_crack_post.py": "8af6d6e70574e045042ff3cf43f3e81607bcfd7840ac2cb574548d6115f61059",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
@@ -6782,7 +6782,7 @@
             "tests/asset_integrity/test_rstreng_2d.py": "cd1c3704259face10e974590c5b6b53358a28687089f92dc05d2bd8616928db7",
             "tests/asset_integrity/test_uniform_loss_diagnostic.py": "4d25262a2be324c7da59aa3b097154f51f25c00b29206862e38325762330132c",
             "tests/contracts/test_string_addressed_dependencies.py": "1f96d9f0c1c48e2a36dad125f1a94694e0cc5dfcc01b5d96ae41ec1c7cd90c9e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -6803,7 +6803,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -6813,14 +6813,14 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
             "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
             "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
             "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -6841,7 +6841,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -6851,14 +6851,14 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
             "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
             "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
             "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -6877,9 +6877,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -6917,7 +6917,7 @@
                 "observed": "accepted_value"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -6932,14 +6932,14 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
               "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
               "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
               "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -6949,14 +6949,14 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
             "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
             "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
             "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -6975,9 +6975,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/asset_integrity/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -6993,7 +6993,7 @@
                 "observed": "escalate_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -7007,14 +7007,14 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
               "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
               "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
               "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "b2abbe69bc1895c678b2567713b0ae49a203a3f8536b23cfecdf39f55858dbf6",
@@ -7024,14 +7024,14 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/asset_integrity/__init__.py": "d47072e45c50214c580dca7bdbc0539b425c281663c4d326eaa4dd1f9754f2d4",
             "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
             "src/digitalmodel/asset_integrity/docs/agent-pack.md": "06e8aea8b15b2ba5ed004c6550f90fef2a63edd3e44c4d70b921296a9e711939",
             "tests/asset_integrity/test_ffs_input_validation.py": "e3be6ad4a4d8443af6892a9cbfe317372384eec5e3b3a3b0dfbfb9241efb6301",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/asset_integrity/test_ffs_input_validation.py:L1-L69"
@@ -7055,7 +7055,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7065,7 +7065,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7106,7 +7106,7 @@
             "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
             "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/code_checks/test_dnv_os_f101.py:L1-L228"
@@ -7129,7 +7129,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7150,7 +7150,7 @@
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
             "scripts/python/digitalmodel/analysis/RigidPipe.py": "a4f57d9832057f907ca356e0e019da306d4e7317bfb9aca17fe1ce8815c46482",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7195,7 +7195,7 @@
             "src/digitalmodel/subsea/pipeline/pipeline_pressure.py": "e332e5387333c52b2a85fa98e89156b98c1e3e7eeced880b3479b90e24f880ae",
             "tests/code_checks/test_code_check_workflow.py": "3fca829e5cf9c5137afea9a8c5c4311c780ccd19fd92a0898f32464b8ac4fc3e",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/workflows/test_durable_workflows.py": "d43357c0f10f41a22969d6217cb88d422aa60fa8e01901009c1a787a348e650e"
           },
           "test_refs": [
@@ -7217,7 +7217,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7227,7 +7227,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7268,7 +7268,7 @@
             "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
             "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/code_checks/test_dnv_os_f101.py:L1-L228"
@@ -7289,7 +7289,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7299,7 +7299,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7340,7 +7340,7 @@
             "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
             "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/code_checks/test_dnv_os_f101.py:L1-L228"
@@ -7359,9 +7359,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -7409,7 +7409,7 @@
                 "observed": "accepted_nonfinite"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -7424,7 +7424,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7465,7 +7465,7 @@
               "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
               "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
               "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -7475,7 +7475,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7516,7 +7516,7 @@
             "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
             "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/code_checks/test_dnv_os_f101.py:L1-L228"
@@ -7535,9 +7535,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/code_checks/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -7613,7 +7613,7 @@
                 "observed": "accepted_nonfinite"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -7627,7 +7627,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7668,7 +7668,7 @@
               "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
               "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
               "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "b2abbe69bc1895c678b2567713b0ae49a203a3f8536b23cfecdf39f55858dbf6",
@@ -7678,7 +7678,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -7719,7 +7719,7 @@
             "src/digitalmodel/orcaflex/viv_screening.py": "67c11eb115cf6f436a381a4d536647ecfbe8db95a65cbc797aa2c32488bd6307",
             "src/digitalmodel/orcaflex/weather_window.py": "85805a9357f602ca8d30c87278f26681de188db8e7113b72408dde1e3be92102",
             "tests/code_checks/test_dnv_os_f101.py": "1f9a1ad0d40b6cac3d223fa0c55590475663db57affac6cca8f7c69b7f80d08e",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/code_checks/test_dnv_os_f101.py:L1-L228"
@@ -7743,7 +7743,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7753,7 +7753,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -7811,7 +7811,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
           },
           "test_refs": [
@@ -7835,7 +7835,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7863,7 +7863,7 @@
             "examples/workflows/riser-fatigue/input.yml": "182df21885c202d611977a2f21cb8ca01dd5ed54e79e4f2080e70828ca818b85",
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -7922,7 +7922,7 @@
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
             "tests/fatigue/test_c203_citations.py": "f990b0a6dedf044d9ef6f05200b5163e7b89db93f270caad2e04e2835f294d7b",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_database/test_material_refs.py": "e602b67e174260a329e0f815c7ac2447f74bc2f539015e23d54e676dfae7d3c0",
             "tests/riser_fatigue/test_resolve_dff.py": "cd01a4c219a1c9d6984ddf19d53daf5e5a78111b08f33ba155f0e08dfaf207fe",
             "tests/riser_fatigue/test_riser_fatigue_workflow.py": "c66fcd9bb4da926d69265109d6fe30916e7149ee6ef1e778c8cd73e125ea4626",
@@ -7948,7 +7948,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -7958,7 +7958,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8016,7 +8016,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
           },
           "test_refs": [
@@ -8038,7 +8038,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -8048,7 +8048,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8106,7 +8106,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
           },
           "test_refs": [
@@ -8126,9 +8126,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -8190,7 +8190,7 @@
                 "observed": "reject_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -8204,7 +8204,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8262,7 +8262,7 @@
               "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
               "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
               "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
               "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
             },
             "status": "RUN",
@@ -8273,7 +8273,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8331,7 +8331,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
           },
           "test_refs": [
@@ -8351,9 +8351,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -8455,7 +8455,7 @@
                 "observed": "accepted_nonfinite"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -8469,7 +8469,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8527,7 +8527,7 @@
               "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
               "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
               "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
               "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
             },
             "status": "RUN",
@@ -8538,7 +8538,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8596,7 +8596,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/riser_fatigue/test_touchdown.py": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
           },
           "test_refs": [
@@ -8623,7 +8623,7 @@
             "The local mooring-fatigue pack is absent; no directly named mooring-fatigue test was discovered."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
           "probe_command": null,
           "probe_result": {
@@ -8633,7 +8633,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8686,7 +8686,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         },
@@ -8707,7 +8707,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
           "probe_command": null,
           "probe_result": {
@@ -8717,7 +8717,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8770,7 +8770,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         },
@@ -8789,7 +8789,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
           "probe_command": null,
           "probe_result": {
@@ -8799,7 +8799,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8852,7 +8852,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         },
@@ -8871,7 +8871,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
           "probe_command": null,
           "probe_result": {
@@ -8881,7 +8881,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -8934,7 +8934,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         },
@@ -8951,9 +8951,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -9015,7 +9015,7 @@
                 "observed": "reject_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -9029,7 +9029,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -9082,7 +9082,7 @@
               "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
               "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
               "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -9092,7 +9092,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -9145,7 +9145,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         },
@@ -9162,9 +9162,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": null,
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -9246,7 +9246,7 @@
                 "observed": "accepted_nonfinite"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -9260,7 +9260,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -9313,7 +9313,7 @@
               "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
               "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
               "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "b2abbe69bc1895c678b2567713b0ae49a203a3f8536b23cfecdf39f55858dbf6",
@@ -9323,7 +9323,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/_output_paths.py": "fccb04dea6c9bd09b532eeb70947cf5bb24dd00f1a0019992b90fd09545480fb",
@@ -9376,7 +9376,7 @@
             "src/digitalmodel/structural/fatigue/rainflow.py": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b",
             "src/digitalmodel/structural/fatigue/sn_curves.py": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad",
             "src/digitalmodel/structural/fatigue/worked_examples.py": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": []
         }
@@ -9398,7 +9398,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -9408,7 +9408,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9449,7 +9449,7 @@
             "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/orcaflex/test_viv_screening.py:L1-L161"
@@ -9472,7 +9472,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -9491,7 +9491,7 @@
             "examples/workflows/riser-viv-screening/input.yml": "9717e9de6dfb7b3f549d5101b9695a9a51f0e23fc2228dd67fe8d59c3c4dbd02",
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9536,7 +9536,7 @@
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "src/digitalmodel/viv_screening/workflow.py": "765aabac5719a0c9e0ffc05f04103c1bd70e7e2755183f674d1f99f25c2fad58",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96",
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9",
             "tests/workflow_api/test_run_workflow_viv_screening.py": "97c93bdd21a49fdd58d53b6ca19d8fa1318d78a9b02b12f75f04f784e317a0f7",
             "tests/workflows/test_durable_workflows.py": "d43357c0f10f41a22969d6217cb88d422aa60fa8e01901009c1a787a348e650e",
             "tests/workflows/test_viv_screening_workflow.py": "992eb50075f86bdb6eb83d61d0306b3ac2e1627ec4c85944d1a5d03d4b4250c5"
@@ -9560,7 +9560,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -9570,7 +9570,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9611,7 +9611,7 @@
             "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/orcaflex/test_viv_screening.py:L1-L161"
@@ -9632,7 +9632,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -9642,7 +9642,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9683,7 +9683,7 @@
             "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/orcaflex/test_viv_screening.py:L1-L161"
@@ -9702,9 +9702,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -9766,7 +9766,7 @@
                 "observed": "reject_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -9781,7 +9781,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9822,7 +9822,7 @@
               "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
               "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
               "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -9832,7 +9832,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9873,7 +9873,7 @@
             "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/orcaflex/test_viv_screening.py:L1-L161"
@@ -9892,9 +9892,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/viv_screening/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -9922,7 +9922,7 @@
                 "observed": "reject_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -9936,7 +9936,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -9977,7 +9977,7 @@
               "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
               "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
               "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "b2abbe69bc1895c678b2567713b0ae49a203a3f8536b23cfecdf39f55858dbf6",
@@ -9987,7 +9987,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/citations/__init__.py": "62b5a5161267c5b107bb54781c7ee60f3f0c247e1b31a2a98e6130e41d37a7d4",
@@ -10028,7 +10028,7 @@
             "src/digitalmodel/viv_screening/docs/agent-pack.md": "5b7feb1bf3a45b41caa9ce5780da0669eb1b4eefb0c715febc57257c9a6df31b",
             "src/digitalmodel/viv_screening/inputs.py": "bfd7ce175e53dc9c2db7e34dd9692d3f96171585a69badcf27c0b8546f64758d",
             "tests/orcaflex/test_viv_screening.py": "d4b83dcd8a32d68d285aca24ed07607f866be0c8b092ead778164b8603ab6e8d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/orcaflex/test_viv_screening.py:L1-L161"
@@ -10052,7 +10052,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10062,7 +10062,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
@@ -10081,7 +10081,7 @@
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
             "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
@@ -10104,7 +10104,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10120,7 +10120,7 @@
             "docs/registry/module-routing.yaml": "8e1bd70ac457a7745467f144f4f32be3ae69955baea502b26e3baab1fc07953f",
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/base_configs/modules/vessel_stability_screening/vessel_stability_screening.yml": "c542d7445f86cb676af0db4a2049dddf042f8bfd1b76d6bbf4eb09dc9202efa9",
@@ -10151,7 +10151,7 @@
             "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
             "tests/naval_architecture/test_vessel_stability_screening_damage_workflow.py": "67a61ecb966a3d21854998e42498d0ac6c61f491cf30355469e09d965b2862ee",
             "tests/naval_architecture/test_vessel_stability_screening_workflow.py": "2fc66b7a6a2e0169d29af48a0292f58ff7ce2911e36b3973f221d580c9d51e9d",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
@@ -10172,7 +10172,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10182,7 +10182,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
@@ -10201,7 +10201,7 @@
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
             "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
@@ -10222,7 +10222,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10232,7 +10232,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
@@ -10251,7 +10251,7 @@
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
             "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
@@ -10270,9 +10270,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -10372,7 +10372,7 @@
                 "observed": "accepted_nonfinite"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -10387,7 +10387,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
@@ -10406,7 +10406,7 @@
               "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
               "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
               "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -10416,7 +10416,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/naval_architecture/__init__.py": "2a12cb28c425f7e03a9ee618d566e84e4aca815c4b0125318fa63aa88bc3f684",
@@ -10435,7 +10435,7 @@
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "src/digitalmodel/vessel_stability_screening/docs/agent-pack.md": "d566d01cb99f9e0ec2dbebe85d3de3fa667251be90da41e3caf0a9315a9fc14f",
             "tests/naval_architecture/test_vessel_stability_screening.py": "931f2699f8fa2fe86421a9f4a37001a3e6ff7269bdcb5beb5c2d083231e47860",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_vessel_stability_screening.py:L1-L505"
@@ -10459,7 +10459,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10469,7 +10469,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10490,7 +10490,7 @@
             "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10513,7 +10513,7 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Local citation paths and line bounds are checked mechanically. Semantic agreement, source rights, applicability and independent calculation anchors are not inferred from a resolved citation.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10532,7 +10532,7 @@
             "examples/workflows/hull-girder-report-pack/make_demo_data.py": "77c8c4be9482249eb1ffdd6b3543237f204fa292198b9b204fe104489fcdbe55",
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/base_configs/modules/hull_girder_screening/hull_girder_screening.yml": "4c4e34603c78b036b58be88d9517d4bf99c0ac132e6fa4fb02b78239f4d76402",
@@ -10561,7 +10561,7 @@
             "tests/naval_architecture/test_hull_girder_strength.py": "09d06551f7942dc427b1d841d7be29275730a0fa03eb4fe6e841db5ca00545fd",
             "tests/naval_architecture/test_loading_computer.py": "4fe1264bb4d0fbead739635d75f2d82c3a4788d925c34dac82ade75d2c275a5c",
             "tests/report_pack/test_hull_girder_report_pack_demo.py": "732d84089a2e39b136c1c9261d5c614d0edbe85e18cec52f4e717c2144626a05",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10582,7 +10582,7 @@
             "Three independently qualified reported-number anchors, the applicable source basis and working beside the assertions remain unestablished for the report claim."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10592,7 +10592,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10613,7 +10613,7 @@
             "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10634,7 +10634,7 @@
             "A retained hosted test run tied to the reviewed pull-request head is required; a configured gate or test count is insufficient."
           ],
           "observation_basis": "Current local source and import-chain inspection only; an inventory path is not full method review or engineering qualification.",
-          "observation_time": "2026-10-25T01:46:59Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
           "probe_command": null,
           "probe_result": {
@@ -10644,7 +10644,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10665,7 +10665,7 @@
             "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10684,9 +10684,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:37:22Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -10760,7 +10760,7 @@
                 "observed": "accepted_value"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/screening_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/screening_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -10775,7 +10775,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10796,7 +10796,7 @@
               "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
               "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
               "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "df64a4ed168de526c67d1acf1383eec2f020886b5030b6acd01b3f3c388ba2dc",
@@ -10806,7 +10806,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10827,7 +10827,7 @@
             "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10846,9 +10846,9 @@
           ],
           "missing_evidence": [],
           "observation_basis": "Direct synthetic calls to the exact cited checkout, after inspection of eager imports and package initializers; no solver interface or licensed document was opened. Expectations are control-flow requirements, not engineering reference values.",
-          "observation_time": "2026-10-25T01:33:57Z",
+          "observation_time": "2026-10-25T02:55:58Z",
           "pack_path": "src/digitalmodel/hull_girder_screening/docs/agent-pack.md",
-          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+          "probe_command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
           "probe_result": {
             "cases": [
               {
@@ -10865,7 +10865,7 @@
                 "observed": "fail_with_reason"
               }
             ],
-            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$TMPDIR/probe-requirements.txt\" python \"$TMPDIR/aggregation_probes.py\"",
+            "command": "\"$UV_BIN\" run --no-project --with-requirements \"$SCRATCH/probe-requirements.txt\" python \"$SCRATCH/aggregation_probes.py\"",
             "completed": true,
             "exit_status": 0,
             "interface": {
@@ -10879,7 +10879,7 @@
             "source_digests": {
               "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
               "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-              "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+              "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
               "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
               "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
               "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10900,7 +10900,7 @@
               "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
               "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
               "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-              "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+              "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
             },
             "status": "RUN",
             "stdout_sha256": "b2abbe69bc1895c678b2567713b0ae49a203a3f8536b23cfecdf39f55858dbf6",
@@ -10910,7 +10910,7 @@
           "source_digests": {
             "pyproject.toml": "ee3ba8bc58d1e01551d08a60e12b9efb34a05caa47cef4e5fb3f5de45f23b144",
             "pytest.ini": "6d26ed961d2076adf521d9b115f2b8b6a157cccb42c68486cede46f1a4369ea3",
-            "scripts/reporting/knowledge_pack_acceptance.py": "a91bb5d00e621a0cd23f86d51cc13647dbc72404528d25e515fc37f0c9e76f38",
+            "scripts/reporting/knowledge_pack_acceptance.py": "a40558c73f5492edf363720c2062cd881c383d333307487602d779f3e5eb9817",
             "src/digitalmodel/__init__.py": "5927484e5f6e9f5924af4ff4cce6f5eef262af49126b07d245b3bf5b8029f7b1",
             "src/digitalmodel/_compat.py": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844",
             "src/digitalmodel/hull_girder_screening/__init__.py": "9c87e742521ee26a16f9d5e15cb4bf6166a1849133f4b3602523a52c7b80f558",
@@ -10931,7 +10931,7 @@
             "src/digitalmodel/naval_architecture/turning_circle_artifacts.py": "80bb21fd3a5b6b6179ed51076ca2eef7d6ec29618857766866e90f63f3d3a75f",
             "src/digitalmodel/naval_architecture/yaw_moment.py": "4b15b5cdfdc2e281b07cd9859864a8aa6b7985e7f16be2f3304560ee1231936e",
             "tests/naval_architecture/test_hull_girder_screening.py": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448",
-            "tests/reporting/test_knowledge_pack_acceptance.py": "4170603f71c3178a9daf522c71c56bb8c27e68e4d4af318d057a9318e6e23a96"
+            "tests/reporting/test_knowledge_pack_acceptance.py": "146164146f06fffd298d917e57d9ba668e86bdb42f86e821889ff11c549216f9"
           },
           "test_refs": [
             "tests/naval_architecture/test_hull_girder_screening.py:L1-L444"
@@ -10945,6 +10945,11 @@
       "change": "Initial bounded audit of current pack claims, citation targets and synthetic screening behavior; historical totals are not reused.",
       "date": "2026-10-25",
       "revision": "0"
+    },
+    {
+      "change": "Numerical-anchor validation now checks actual source assertions and quantity-specific literal comparators. Validator tests and synthetic receipts are refreshed after the correction; numerical qualification remains unestablished.",
+      "date": "2026-10-25",
+      "revision": "1"
     }
   ],
   "schema_version": 1,

@@ -344,11 +344,25 @@ def test_human_unestablished_judgment_cannot_be_promoted(evidence):
     assert finding(run(evidence))["disposition"] == "UNESTABLISHED"
 
 
-def test_numerical_claim_requires_three_literal_independent_anchors(evidence):
-    behavioral(evidence[2])
-    record = evidence[2]
+@pytest.fixture
+def numerical_evidence(evidence):
+    root, _, record = evidence
+    behavioral(record)
     record["claim_kind"] = "numerical_report"
     record["reference_basis"] = "Synthetic arithmetic only; no physical qualification."
+    test = "tests/asset_integrity/test_screen.py"
+    lines = ["from digitalmodel.asset_integrity.screen import screen"]
+    for n in (2, 3, 4):
+        lines.extend(
+            [
+                f"# {n - 1} + 1 = {n}",
+                f"synthetic_{n} = screen({n})",
+                f"assert synthetic_{n} == {n}",
+            ]
+        )
+    (root / test).write_text("\n".join(lines) + "\n")
+    record["test_refs"] = [f"{test}:L1-L10"]
+    record["source_digests"][test] = digest(root / test)
     record["anchors"] = [
         {
             "quantity": f"synthetic_{n}",
@@ -356,9 +370,9 @@ def test_numerical_claim_requires_three_literal_independent_anchors(evidence):
             "actual": n,
             "working": f"{n - 1} + 1 = {n}",
             "tolerance": 0,
-            "assertion": f"assert {n} == {n}",
+            "assertion": f"assert synthetic_{n} == {n}",
             "independence": "hand-worked",
-            "test_ref": f"tests/asset_integrity/test_screen.py:L{2 * n - 3}-L{2 * n - 2}",
+            "test_ref": f"{test}:L{3 * n - 4}-L{3 * n - 2}",
         }
         for n in (2, 3, 4)
     ]
@@ -375,9 +389,162 @@ def test_numerical_claim_requires_three_literal_independent_anchors(evidence):
     ]
     result["output"] = json.dumps(result["cases"], sort_keys=True)
     result["output_sha256"] = hashlib.sha256(result["output"].encode()).hexdigest()
+    result["source_digests"] = copy.deepcopy(record["source_digests"])
+    result["program"] = (root / test).read_text()
+    result["program_sha256"] = hashlib.sha256(result["program"].encode()).hexdigest()
+    return evidence
+
+
+def rewrite_numerical_source(evidence, transform):
+    root, _, record = evidence
+    test = "tests/asset_integrity/test_screen.py"
+    path = root / test
+    path.write_text(transform(path.read_text()))
+    record["source_digests"][test] = digest(path)
+    result = record["probe_result"]
+    result["source_digests"] = copy.deepcopy(record["source_digests"])
+    result["program"] = path.read_text()
+    result["program_sha256"] = hashlib.sha256(result["program"].encode()).hexdigest()
+
+
+def test_numerical_claim_requires_three_literal_independent_anchors(numerical_evidence):
+    evidence = numerical_evidence
+    record = evidence[2]
     assert finding(run(evidence))["disposition"] == "SUPPORTED"
     record["anchors"].pop()
     assert finding(run(evidence))["disposition"] == "UNESTABLISHED"
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "assert screen({n}) == screen({n})",
+        "assert {n} == {n}",
+        "assert synthetic_{n} == screen({n})",
+        "assert screen({n}) == {n}",
+        "assert unrelated == {n}",
+        "assert synthetic_{n} != {n}",
+        "assert synthetic_{n} == {n} + 0",
+        "assert synthetic_{n} == {n} == {n}",
+        "assert synthetic_{n} == {n} or True",
+        "assert True, {n}",
+        "assert synthetic_{n} == 0, {n}",
+    ],
+)
+def test_invalid_numerical_comparators_refuse_support(numerical_evidence, template):
+    record = numerical_evidence[2]
+    for n, anchor in zip((2, 3, 4), record["anchors"]):
+        original = anchor["assertion"]
+        anchor["assertion"] = template.format(n=n)
+        rewrite_numerical_source(
+            numerical_evidence,
+            lambda source: source.replace(original, anchor["assertion"]),
+        )
+    row = finding(run(numerical_evidence))
+    assert row["disposition"] == "UNESTABLISHED"
+    assert any("literal assertion" in gap for gap in row["missing_evidence"])
+
+
+@pytest.mark.parametrize("wrapper", ["# {}", '"""{}"""'])
+def test_assertion_text_without_source_assertions_refuses_support(
+    numerical_evidence, wrapper
+):
+    for anchor in numerical_evidence[2]["anchors"]:
+        rewrite_numerical_source(
+            numerical_evidence,
+            lambda source: source.replace(
+                anchor["assertion"], wrapper.format(anchor["assertion"])
+            ),
+        )
+    assert finding(run(numerical_evidence))["disposition"] == "UNESTABLISHED"
+
+
+def test_assertion_must_be_inside_cited_span(numerical_evidence):
+    for n, anchor in zip((2, 3, 4), numerical_evidence[2]["anchors"]):
+        assertion = anchor["assertion"]
+        rewrite_numerical_source(
+            numerical_evidence,
+            lambda source: source.replace(assertion, f"# {assertion}")
+            + assertion
+            + "\n",
+        )
+    assert finding(run(numerical_evidence))["disposition"] == "UNESTABLISHED"
+
+
+def test_invalid_cited_python_refuses_numerical_support(numerical_evidence):
+    rewrite_numerical_source(numerical_evidence, lambda source: source + "if (\n")
+    assert finding(run(numerical_evidence))["disposition"] == "UNESTABLISHED"
+
+
+def test_quantities_cannot_reuse_another_quantity_assertion(numerical_evidence):
+    for anchor in numerical_evidence[2]["anchors"]:
+        anchor["quantity"] = "different_" + anchor["quantity"]
+    receipt = numerical_evidence[2]["probe_result"]
+    for case in receipt["cases"]:
+        case["quantity"] = "different_" + case["quantity"]
+    receipt["output"] = json.dumps(receipt["cases"], sort_keys=True)
+    receipt["output_sha256"] = hashlib.sha256(receipt["output"].encode()).hexdigest()
+    assert finding(run(numerical_evidence))["disposition"] == "UNESTABLISHED"
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "assert {n} == synthetic_{n}",
+        "assert synthetic_{n} == +{n}",
+        'assert report["synthetic_{n}"] == {n}',
+        "assert report.synthetic_{n} == {n}",
+        "assert (\n    synthetic_{n}\n    == {n}\n)",
+    ],
+)
+def test_literal_quantity_comparators_support_bounded_claim(
+    numerical_evidence, template
+):
+    root, _, record = numerical_evidence
+    for n, anchor in zip((2, 3, 4), record["anchors"]):
+        original = anchor["assertion"]
+        anchor["assertion"] = template.format(n=n)
+        rewrite_numerical_source(
+            numerical_evidence,
+            lambda source: source.replace(original, anchor["assertion"]),
+        )
+    length = len(
+        (root / "tests/asset_integrity/test_screen.py").read_text().splitlines()
+    )
+    ref = f"tests/asset_integrity/test_screen.py:L1-L{length}"
+    record["test_refs"] = [ref]
+    for anchor in record["anchors"]:
+        anchor["test_ref"] = ref
+    report = run(numerical_evidence)
+    assert finding(report)["disposition"] == "SUPPORTED"
+    assert report["summary"]["qualified_engineering_results"] == 0
+
+
+def test_negative_literal_comparators_support_bounded_claim(numerical_evidence):
+    record = numerical_evidence[2]
+    for n, anchor in zip((2, 3, 4), record["anchors"]):
+        original = anchor["assertion"]
+        working = anchor["working"]
+        anchor.update(
+            expected=-n,
+            actual=-n,
+            assertion=f"assert synthetic_{n} == -{n}",
+            working=f"-{n - 1} - 1 = -{n}",
+        )
+        rewrite_numerical_source(
+            numerical_evidence,
+            lambda source: source.replace(original, anchor["assertion"])
+            .replace(working, anchor["working"])
+            .replace(f"screen({n})", f"screen(-{n})"),
+        )
+    receipt = record["probe_result"]
+    for case in receipt["cases"]:
+        case["arguments"]["value"] *= -1
+        case["expected"] *= -1
+        case["observed"] *= -1
+    receipt["output"] = json.dumps(receipt["cases"], sort_keys=True)
+    receipt["output_sha256"] = hashlib.sha256(receipt["output"].encode()).hexdigest()
+    assert finding(run(numerical_evidence))["disposition"] == "SUPPORTED"
 
 
 def test_repeated_anchors_do_not_count_as_three_numbers(evidence):
