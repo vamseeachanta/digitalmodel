@@ -26,7 +26,8 @@ Passing invariants do not establish the absolute engineering ratings.</p>
 <table>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-22</td><td>Hand-calculation cases and evidence gaps are recorded to distinguish numeric validation from regression invariants.</td></tr>
-<caption>Table 1. Initial issue of the calculation coverage record.</caption>
+<tr><td>1</td><td>2026-10-25</td><td>Local test counts and hosted cancellation evidence are recorded to distinguish executed validation from pending merge gates.</td></tr>
+<caption>Table 1. Revision history of the calculation coverage record.</caption>
 </table>
 <h2>Coverage</h2>
 <table>
@@ -38,6 +39,21 @@ Passing invariants do not establish the absolute engineering ratings.</p>
 <tr><td>5: adapters</td><td><code>run_well_bore_design</code>, <code>run_well_hydraulics</code>, <code>run_swab_surge</code>, <code>run_rop_analysis</code>, <code>run_tubular_design</code>, <code>run_casing_design</code>.</td><td>Numeric JSON/CSV readback for geometry and limiting cases; cost additivity for the unqualified bore-design lookup. Missing required inputs are refused before output is written. No standard design-factor acceptance is established.</td></tr>
 <caption>Table 2. Added coverage is bounded by the evidence available for each method.</caption>
 </table>
+<h2>Validation scope</h2>
+<p>Local execution on 2026-10-25 passed <strong>104 tests</strong> across the five touched
+test modules, including the <strong>52 added cases</strong>. A separate expanded run passed
+<strong>431 tests</strong> across all tubular and drilling-subpackage tests, both window modules
+and the adapter module. The expanded selection includes the 104-test selection.</p>
+<p>The complete <code>tests/well</code> command stopped during collection because
+<code>tests/well/test_swab_surge.py:11</code> imports the engine, whose
+<code>assetutilities</code> dependency was unavailable. That import is also present on
+<code>main</code>; the expanded result does not establish the ten tests in that file.</p>
+<p>Hosted check annotations for commit <code>80cd3c7e</code> identify maintainer-triggered
+cancellations before the prerequisite jobs executed any steps. The <code>Run Quality Gates</code>
+aggregate failed on a cancelled matrix result; <code>Domain test aggregate</code> failed on
+cancelled domain detection. These results do not establish a failing calculation or successful
+hosted acceptance. The maintainers should rerun the cancelled checks before merge.
+Absolute standard ratings and nonzero empirical benchmarks remain <strong>NOT_EVALUATED</strong>.</p>
 <h2>Worked example: specified casing section</h2>
 <p>Inputs: outside diameter 9.625 in, wall 0.472 in, specified axial yield stress 80,000 psi.
 The inner diameter is 9.625 &minus; 2 &times; 0.472 = 8.681 in.
