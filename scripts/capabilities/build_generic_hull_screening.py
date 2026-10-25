@@ -247,8 +247,8 @@ caption{{caption-side:bottom;text-align:left;padding:12px 0}}pre{{white-space:pr
 <p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p></header>
 <h2>Summary</h2>
 <p>The coupled model predicts a screening estimate for generic hulls. No result represents a real hull.</p>
-<p class="notice">At 18 s, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
-the screening estimates are {lower_damping_benefit:.1f} % at 2 % hull damping and {higher_damping_benefit:.1f} % at 5 %.</p>
+<p class="notice">At an 18 s hull roll period, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
+the peak roll reduction screening estimates are {lower_damping_benefit:.1f} % at 2 % hull damping and {higher_damping_benefit:.1f} % at 5 %.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
