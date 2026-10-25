@@ -15,6 +15,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 import sys
+import tracemalloc
 
 import pytest
 
@@ -174,6 +175,33 @@ def test_missing_topology_or_rank_is_not_evaluated(observed):
         mpi.check_effective_placement(receipt, observed, receipt.topology_sha256).status
         == "NOT_EVALUATED"
     )
+
+
+@pytest.mark.parametrize(
+    "observed",
+    [
+        (),
+        (mpi.RankPlacement(0, (0,), (0,)), mpi.RankPlacement(99_999, (1,), (1,))),
+    ],
+    ids=["empty", "sparse"],
+)
+def test_large_rank_count_with_incomplete_evidence_has_bounded_allocation(observed):
+    """Sparse evidence must not allocate all 100,000 synthetic rank IDs.
+
+    One MiB is a generous regression budget for these two tiny receipts,
+    not a rank cap or an engineering acceptance limit.
+    """
+    tracemalloc.start()
+    try:
+        receipt = baseline(ranks=100_000, observations=observed)
+        result = mpi.check_effective_placement(
+            receipt, observed, receipt.topology_sha256
+        )
+        _, peak_bytes = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert result.status == "NOT_EVALUATED"
+    assert peak_bytes < 1024 * 1024
 
 
 def test_unknown_or_different_topology_cannot_pass():

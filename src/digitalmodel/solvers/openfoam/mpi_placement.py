@@ -97,8 +97,8 @@ def _coverage(observations: tuple[RankPlacement, ...] | None, ranks: int) -> boo
         if row.rank in seen or row.rank >= ranks:
             raise ValueError("duplicate or out-of-range rank")
         seen.add(row.rank)
-    # Equality is the caller-requested coverage contract, not a fitted limit.
-    return seen == set(range(ranks)) and all(
+    # Unique, range-checked ranks cover the domain when their count matches.
+    return len(seen) == ranks and all(
         row.cpus is not None and row.sockets is not None for row in observations
     )
 
