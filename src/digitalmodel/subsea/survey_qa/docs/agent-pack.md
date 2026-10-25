@@ -77,7 +77,7 @@ by a peak picker. Unsupported geometry and nonfinite inputs raise `ValueError`.
 ## Output interpretation and limits
 
 `WITHIN_SCREEN` and `EXCEEDS_SCREEN` compare matched depth differences to an
-individual-sounding TVU ceiling. This is a conservative consistency screen,
+individual-sounding TVU ceiling. This is a consistency screen,
 not an IHO crossline rule or a full 95 percent uncertainty assessment.
 `NOT_EVALUATED` means the caller supplied no table evidence; differences and
 coverage counts remain available. No overlap is an error. Nearest-point matches
