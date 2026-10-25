@@ -2,6 +2,7 @@
 
 import json
 import math
+import re
 
 import pytest
 
@@ -145,3 +146,58 @@ def test_extraction_labels_historical_results(tmp_path, kh, valid):
     result = extract_wave_quality(tmp_path, cfg, window=(t[0], t[-1]))
     assert result["absorption"]["kh"] == pytest.approx(kh)
     assert result["absorption"]["valid"] is valid
+
+
+@pytest.mark.parametrize("depth,period", [(0.3, 3.554184), (0.3000026, 3.5542)])
+@pytest.mark.parametrize("existing", [False, True])
+def test_builder_rejects_serialized_boundary_crossing(tmp_path, depth, period, existing):
+    """Six significant digits can move either input outside Table 1's range.
+
+    The inverse dispersion calculation places each requested pair inside
+    the limit and its serialized pair outside, without replacing the solver.
+    """
+    limit_period = period_for_kh(math.pi / 10, depth)
+    assert period > limit_period
+    emitted_depth, emitted_period = float(f"{depth:.6g}"), float(f"{period:.6g}")
+    assert emitted_period < period_for_kh(math.pi / 10, emitted_depth)
+    cfg = WaveTankConfig(depth=depth, wave_period=period)
+    parent = tmp_path / "cases"
+    case = parent / cfg.name
+    if existing:
+        case.mkdir(parents=True)
+        (case / "provenance.json").write_text("previous case\n")
+    with pytest.raises(ValueError, match="shallowWaterAbsorption"):
+        build_wave_tank_case(cfg, parent)
+    if existing:
+        assert (case / "provenance.json").read_text() == "previous case\n"
+        assert [p.name for p in case.iterdir()] == ["provenance.json"]
+    else:
+        assert not parent.exists()
+
+
+def test_serialized_inputs_and_provenance_agree(tmp_path):
+    """Read the emitted dictionaries and independently check their regime.
+
+    Both inputs lose precision, while remaining inside the strict limit.
+    Provenance must describe those emitted values and their wave theory.
+    """
+    cfg = WaveTankConfig(depth=0.3000004, wave_period=3.554194)
+    case = build_wave_tank_case(cfg, tmp_path)
+    waveprops = (case / "constant/waveProperties").read_text()
+    setfields = (case / "system/setFieldsDict").read_text()
+    period = float(re.search(r"wavePeriod\s+([^;]+);", waveprops).group(1))
+    depth = float(re.search(r"box\s+\([^)]*\)\s+\([^)]*\s+(\S+)\);", setfields).group(1))
+    assert period != cfg.wave_period
+    assert depth != cfg.depth
+    q = math.pi / 10
+    assert (2 * math.pi / period)**2 < GRAVITY * q * math.tanh(q) / depth
+    status = shallow_water_absorption_status(period, depth)
+    assert status["valid"] is True
+    prov = json.loads((case / "provenance.json").read_text())
+    assert prov["absorption"] == status
+    assert prov["wave"]["T_s"] == period
+    assert prov["wave"]["depth_m"] == depth
+    k = dispersion_wavenumber(period, depth)
+    assert prov["wave"]["wavenumber_rad_m"] == k
+    assert prov["wave"]["wavelength_m"] == 2 * math.pi / k
+    assert prov["wave"]["celerity_m_s"] == (2 * math.pi / period) / k

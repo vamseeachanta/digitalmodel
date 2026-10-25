@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
 
@@ -446,10 +446,19 @@ def build_wave_tank_case(
     Raises:
         ValueError: For invalid period/depth or relative depth outside
             ``kh < pi/10`` (Higuera 2018, Table 1), before any case writes.
+            The check uses the six-significant-digit values emitted to the
+            case; provenance records those same period/depth values.
             No automatic deep-water alternative is implemented.
     """
     config = config or WaveTankConfig()
-    absorption = shallow_water_absorption_status(config.wave_period, config.depth)
+    fmt = "{:.6g}".format
+    period_text, depth_text = fmt(config.wave_period), fmt(config.depth)
+    emitted_config = replace(
+        config, wave_period=float(period_text), depth=float(depth_text)
+    )
+    absorption = shallow_water_absorption_status(
+        emitted_config.wave_period, emitted_config.depth
+    )
     if not absorption["valid"]:
         raise ValueError(
             f"shallowWaterAbsorption requires kh < pi/10; got kh={absorption['kh']:.6g}. "
@@ -462,13 +471,12 @@ def build_wave_tank_case(
     for sub in ("system", "constant", "0"):
         (case_dir / sub).mkdir(parents=True, exist_ok=True)
 
-    fmt = "{:.6g}".format
     gauges = " ".join(f"({fmt(x)} 0.02 0.0)" for x in config.gauges_x)
     blockmesh = (
         _BLOCKMESHDICT
         .replace("@LX@", fmt(config.tank_length))
         .replace("@LZ@", fmt(config.tank_height))
-        .replace("@DEPTH@", fmt(config.depth))
+        .replace("@DEPTH@", depth_text)
         .replace("@NX@", str(config.nx))
         .replace("@NZ@", str(config.nz))
     )
@@ -481,12 +489,12 @@ def build_wave_tank_case(
     waveprops = (
         _WAVEPROPERTIES
         .replace("@H@", fmt(config.wave_height))
-        .replace("@T@", fmt(config.wave_period))
+        .replace("@T@", period_text)
     )
     setfields = (
         _SETFIELDSDICT
         .replace("@LXP@", fmt(config.tank_length + 1))
-        .replace("@DEPTH@", fmt(config.depth))
+        .replace("@DEPTH@", depth_text)
     )
 
     sysd, constd, zerod = case_dir / "system", case_dir / "constant", case_dir / "0"
@@ -504,7 +512,7 @@ def build_wave_tank_case(
     (zerod / "p_rgh").write_text(_HDR.format(cls="volScalarField", obj="p_rgh") + _FIELD_P_RGH)
 
     (case_dir / "provenance.json").write_text(
-        json.dumps(_provenance(config), indent=2) + "\n"
+        json.dumps(_provenance(emitted_config), indent=2) + "\n"
     )
     return case_dir
 
