@@ -10,6 +10,7 @@ retained history. Neither operation qualifies engineering results.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-22 | Define canonical text, reproduce a hash example and record manifest ancestry gaps without replacing atlas data. |
+| 1 | 2026-10-25 | Isolate Git subprocesses, distinguish historical debt from local object availability and include provenance tests in CI. |
 
 ## Fingerprint coverage and method
 
@@ -119,21 +120,40 @@ locators, separate from historical fingerprint reconstruction.
 
 `tests/provenance/test_atlas_manifest_revisions.py` audits the current checkout.
 Known historical exceptions are enumerated by exact manifest path, original
-revision, status, inventory reason and explanatory reason in
+revision, observed status, inventory reason and explanatory reason in
 `tests/provenance/atlas_manifest_revision_exceptions.yaml`. They acknowledge
-debt and never convert unavailable evidence into verified ancestry. New gaps,
+debt and never convert unavailable evidence into verified ancestry. Status and
+inventory reason record the original observation; a complete clone may omit an
+object outside retained ancestry, or contain an object absent from that snapshot.
+For the same listed path and revision, the guard accepts either unknown-object
+or non-ancestor debt while the inventory reports the actual local outcome.
+Missing revisions remain separate from these object-availability changes.
+Revision-lookup operational errors remain `revision_lookup_unavailable` and fail
+the guard even for listed debt. New gaps,
 changed locators, unused exceptions and unavailable retained refs fail the guard.
 The synthetic Git tests cover an ancestor, an orphan object, an unknown object,
-a shallow clone, a missing retained ref and a source archive.
+a shallow clone, a complete clone without orphan objects, a missing retained ref
+and a source archive. Isolation tests bind Git environment variables to a
+disposable caller and check preservation of its files, objects, refs, reflogs,
+configuration and index. Inventory and fixture Git subprocesses clear inherited
+Git environment variables before selecting or initializing a repository.
+
+`tests/provenance/` belongs to the contracts CI shard. Routing regressions check
+each provenance test module against the touched-domain selector, gate roots and
+executed test command.
+The contracts command uses `GITHUB_REPOSITORY_OWNER`, supplied by GitHub Actions;
+a local invocation requires that variable to name the dependency namespace.
 
 ## Source archives and Git history requirements
 
-The ancestry guard requires Git, the manifest tree, the recorded commit objects,
-complete ancestry and `origin/main`. Only a shallow checkout causes an explicit
-skip, with a message requesting complete history. A missing ref, missing object,
-missing Git installation, empty manifest tree or source archive cannot silently
-pass. The inventory reports unavailable evidence and never fetches automatically.
-CI that needs an ancestry verdict must provide complete retained history.
+The debt guard requires Git, the manifest tree, complete retained ancestry and
+`origin/main`. Only a shallow checkout causes an explicit skip, with a message
+requesting complete history. A missing ref, missing Git installation, empty
+manifest tree or source archive fails. Missing recorded objects remain
+`UNAVAILABLE`; only exact listed historical debt can satisfy the census guard.
+An empty failure list therefore means no new or altered debt, not verified
+ancestry for every manifest. The inventory never fetches automatically. An
+ancestry verdict requires the recorded object and complete retained history.
 
 An exported source archive cannot prove Git ancestry. It can calculate the
 portable standalone fingerprint only when every declared source and config

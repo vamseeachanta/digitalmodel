@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Inventory recorded atlas revisions without modifying manifests or Git refs.
 
 Requires Python, PyYAML and Git. Reachability is established only with complete
@@ -8,6 +11,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -19,8 +23,12 @@ STATUSES = ("REACHABLE", "UNREACHABLE", "UNAVAILABLE")
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
+    # This read-only census uses only the explicitly selected repository.
+    # Inherited Git bindings can override -C, including its object store/index.
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     return subprocess.run(
         ["git", "-C", str(root), *args], capture_output=True, text=True, check=False,
+        encoding="utf-8", env=env,
     )
 
 
@@ -72,9 +80,13 @@ def inventory_manifests(repo_root: Path, retained_ref: str = "origin/main") -> d
             elif state != "COMPLETE":
                 row["reason"] = "history_shallow" if state == "SHALLOW" else state.lower()
             else:
-                commit = _git(root, "rev-parse", "--verify", "--end-of-options", f"{code_version}^{{commit}}")
+                assert retained is not None, "complete history requires a retained revision"
+                commit = _git(root, "rev-parse", "--verify", "--quiet", "--end-of-options", f"{code_version}^{{commit}}")
                 if commit.returncode:
-                    row["reason"] = "revision_unknown"
+                    # Quiet lookup emits no diagnostic for an absent object;
+                    # invalid object types and operational errors emit errors.
+                    row["reason"] = ("revision_unknown" if commit.returncode == 1 and not commit.stderr.strip()
+                                     else "revision_lookup_unavailable")
                 else:
                     ancestor = _git(root, "merge-base", "--is-ancestor", commit.stdout.strip(), retained)
                     # Git documents status 0 for ancestor, 1 for non-ancestor;
@@ -99,10 +111,11 @@ def inventory_manifests(repo_root: Path, retained_ref: str = "origin/main") -> d
 
 
 def manifest_revision_failures(report: dict, exceptions: dict) -> list[str]:
-    """Reject new gaps; exceptions bind one path, revision and observed failure.
+    """Reject new debt; exceptions bind an exact historical path and revision.
 
-    Exceptions acknowledge historical debt, never establish ancestry. An absent
-    retained ref or other operational failure cannot be allow-listed.
+    Recorded exception outcomes describe a snapshot, not object availability in
+    every clone. Unknown and non-ancestor objects remain distinct in the report.
+    Neither outcome establishes ancestry; operational failures still fail.
     """
     if report["history_state"] != "COMPLETE":
         return ["complete Git history and retained ref required: " + report["history_state"]]
@@ -115,10 +128,15 @@ def manifest_revision_failures(report: dict, exceptions: dict) -> list[str]:
         if row["status"] == "REACHABLE":
             continue
         exception = exceptions.get(path, {})
-        if (row["reason"] in {"revision_unknown", "revision_missing", "not_ancestor_of_retained_ref"}
+        outcomes = set()
+        if row["code_version"] is None:
+            outcomes = {("UNAVAILABLE", "revision_missing")}
+        elif isinstance(row["code_version"], str) and re.fullmatch(r"[0-9a-fA-F]+", row["code_version"]):
+            outcomes = {("UNAVAILABLE", "revision_unknown"),
+                        ("UNREACHABLE", "not_ancestor_of_retained_ref")}
+        if ((row["status"], row["reason"]) in outcomes
                 and exception.get("code_version") == row["code_version"]
-                and exception.get("status") == row["status"]
-                and exception.get("inventory_reason") == row["reason"]
+                and (exception.get("status"), exception.get("inventory_reason")) in outcomes
                 and isinstance(exception.get("reason"), str)
                 and exception["reason"].strip()):
             used.add(path)
@@ -129,6 +147,7 @@ def manifest_revision_failures(report: dict, exceptions: dict) -> list[str]:
 
 
 def main() -> None:
+    """Print the read-only manifest inventory as JSON."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--retained-ref", default="origin/main")
