@@ -2,20 +2,24 @@
 
 The parallel benchmark retains its existing performance gate and records the
 observations needed to investigate intermittent failures. Timing sensitivity is
-established by the failed attempt and successful unchanged retry described in
-issue #2103. The precise cause remains unestablished.
+established by the failed attempt described in
+[issue #2103](https://github.com/vamseeachanta/digitalmodel/issues/2103) and the
+successful [unchanged retry](https://github.com/vamseeachanta/digitalmodel/issues/2103#issuecomment-5641302552).
+The precise cause remains unestablished.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add timing and CPU observations and independent result checks to support investigation. |
+| 1 | 2026-10-25 | Link the issue and unchanged retry so the timing evidence and retained limit can be audited. |
 
 ## Test contract
 
 `tests/infrastructure/performance/test_benchmarks.py` continues to require the
 sequential mean divided by the parallel mean to exceed the existing limit.
-Issue #2103 (2026) records that limit; this change supplies no new acceptance
+[Issue #2103](https://github.com/vamseeachanta/digitalmodel/issues/2103) (2026)
+records that limit; this change supplies no new acceptance
 criterion. The existing workload, pool size, warm-up and repetition counts are
 retained. Means use the sum of samples divided by their count, as defined in the
 [Python statistics documentation, edition 3.11](https://docs.python.org/3.11/library/statistics.html#statistics.mean)
