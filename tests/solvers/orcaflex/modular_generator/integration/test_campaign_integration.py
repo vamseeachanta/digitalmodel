@@ -237,7 +237,7 @@ def _write_slay_campaign(path: Path) -> Path:
             },
             "equipment": {
                 "vessel": {
-                    "name": "Eclipse",
+                    "name": "VesselA",
                     "properties": {
                         "loa": 130,
                         "beam": 28,
