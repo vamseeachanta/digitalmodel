@@ -15,6 +15,7 @@ licence release and solver reuse remain `NOT_EVALUATED` for every entry.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Record selected cleanup boundaries and source fingerprints so later reuse reviews cannot silently inherit stale findings. |
+| Update | 2026-10-25 | Record completed source review and distinguish cancelled hosted tests from observed test failures. |
 
 ## Scope and method
 
@@ -118,9 +119,19 @@ ensuring that source audit does not depend on executing solver wrappers.
 The cases cover combined-source invalidation, file and parent symlinks, unsafe
 paths, duplicate keys/entries/dependencies, malformed records, JSON output,
 exit-status semantics, read refusal and the checked-in inventory's freshness.
-All 31 focused tests passed. Ruff, the engineering-register check, the identifier
-check and the repository-structure check passed. No solver, process termination,
-licence query or native API is exercised.
+Before and after this documentation update, all 31 focused tests passed. The
+offline CLI matched all 10 routes and 16 unique source dependencies; runtime
+evidence and solver reuse remained `NOT_EVALUATED`. Ruff, the engineering-register
+check, the repository-structure check and whitespace checks passed. No solver,
+process termination, licence query or native API is exercised.
+
+Hosted validation was inspected on 2026-10-25. GitHub job records and annotations
+identify the harness/compliance and workflow test jobs as cancelled. The domain
+aggregate requires successful harness completion and reports failure when that
+job is cancelled. The harness log download returned HTTP 404 (`BlobNotFound`),
+so no test-failure diagnosis can be drawn from that log. These results do not
+establish a defect in the source auditor or completed hosted test coverage.
+Completed hosted validation is still required before merge.
 
 ## Later slices and limits
 
@@ -134,5 +145,6 @@ applicable approved execution contract rather than this source audit.
 
 No runtime observation receipt is accepted by this tool, no persistent quarantine
 is implemented and no existing launch or cleanup behavior changes. Independent
-review remains pending. Source matching cannot certify permission, licence
-availability, absence of escaped processes or readiness to launch another solver.
+source review reported no findings for this snapshot. Source matching cannot
+certify permission, licence availability, absence of escaped processes or readiness
+to launch another solver.
