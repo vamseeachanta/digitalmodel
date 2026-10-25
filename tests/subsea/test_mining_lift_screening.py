@@ -98,7 +98,7 @@ def test_invalid_inventory_gravity(gravity):
         string_weight_inventory([bundle()], gravity_m_s2=gravity)
 
 
-@pytest.mark.parametrize("sections", [[], [object()]])
+@pytest.mark.parametrize("sections", [None, [], [object()]])
 def test_invalid_inventory_sections(sections):
     with pytest.raises(ValueError):
         string_weight_inventory(sections, gravity_m_s2=10.0)
