@@ -28,12 +28,11 @@ EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
 OUTPUT = ROOT / "docs/reports/modules/installation"
 LABELS = ("Small foundation", "Medium foundation", "Large foundation")
 CHANGES = {
-    "revision": "0",
-    "date": "2026-10-21",
+    "revision": "1",
+    "date": "2026-10-25",
     "changes": [
-        "Foundation splash-zone limits are calculated for every size in the public example.",
-        "Force contributions and the submerged-weight reserve are displayed together.",
-        "Vessel installability remains unevaluated until the vessel and site basis is supplied.",
+        "Both report outputs and their build inputs are registered for regeneration checks.",
+        "Zero-limit envelopes retain finite chart coordinates without changing calculated limits.",
     ],
 }
 
@@ -62,7 +61,7 @@ def calculate(snap_daf: float = calc.SPLASH_SNAP_DAF) -> dict:
         cases.append({"label": label, "catalog_id": key, "input": record, "module": result})
     tests = {}
     for filename in ("test_installation_pamphlet.py", "test_pipelay_integrity.py", "test_pipelay_stress.py"):
-        tree = ast.parse((ROOT / "tests/installation" / filename).read_text())
+        tree = ast.parse((ROOT / "tests/installation" / filename).read_text(encoding="utf-8"))
         tests[filename] = sum(
             isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
             for node in ast.walk(tree)
@@ -211,7 +210,7 @@ textarea{{display:block;width:100%;min-height:90px}} .chart-pair{{display:grid;g
 @media print{{.comment-controls{{display:none}} .wrap{{box-shadow:none}}}}
 </style></head><body class="hs-doc"><main class="wrap">
 <header><div class="kicker">Marine installation · module analysis</div>
-<h1>Foundation splash-zone screening</h1><p>Draft for client review</p></header>
+<h1>Foundation splash-zone screening</h1><p>Draft for maintainer review</p></header>
 
 <section id="executive"><h2>1. Executive Summary</h2>
 <p>The installation module is a collection of screening calculations for offshore lifting and pipe laying.
@@ -223,7 +222,10 @@ Analysis is performed to determine the foundation splash-zone wave-height limits
 <ul><li>Vessel orientation, crane capacity at radius, sling tensions, station-keeping tolerance and the combined sea-state limit require a qualified vessel basis.</li>
 <li>Vessel motions, local forecasts and lowering dynamics remain required before an installation decision is made.</li></ul></li></ul>
 <h3>Revision history</h3>
-{table(("Revision", "Date", "Change and cause"), [["0", "2026-10-21", "Initial analysis; the public foundation example and missing installation acceptance basis are documented."]])}
+{table(("Revision", "Date", "Change and cause"), [
+    ["0", "2026-10-21", "Initial analysis; the public foundation example and missing installation acceptance basis are documented."],
+    [CHANGES["revision"], CHANGES["date"], "Regeneration inputs and outputs are registered; zero-limit chart ranges are corrected to retain finite coordinates."],
+])}
 <figure><div id="overview-chart"></div><figcaption>Foundation-only splash-zone limits against peak period. The plotted limit is the module's rounded result; connecting lines guide the eye between calculated period points. A vessel operating limit is NOT_EVALUATED.</figcaption></figure>
 </section>
 
@@ -360,9 +362,9 @@ results = [
 <p>Calculation reproduction is checked by direct function comparison, an independent quadratic-root bracket and exact HTML regeneration. Every catalog size and supplied period is included. Input and result data are embedded for offline inspection; no licensed analysis application is accessed.</p>
 <p>The physical drawings are limited to catalog envelope geometry. Fabrication-drawing comparison, interactive visual inspection and comment-file saving in a browser remain pending. The report is a draft until these checks and the engineering basis review are completed.</p>
 <details><summary>Engineering changes since the initial issue</summary><div id="change-panel"></div>
-<p>The accompanying changes.json contains the same engineering change descriptions. This initial revision has no earlier issue for comparison.</p></details>
+<p>The accompanying changes.json contains the same engineering change descriptions for this revision.</p></details>
 <details class="comment-controls"><summary>Section comments</summary>
-<p>Comments are held in memory until saved. Choose the folder containing this HTML to save report.comments.json beside it. Where folder access is unavailable, download the comments and place that file beside the HTML. Reload saved comments to continue; report regeneration preserves existing comment files.</p>
+<p>Comments are held in memory until saved. Choose the folder containing this HTML to save report.comments.json beside it. Where folder access is unavailable, download the comments and place that file beside the HTML. Only comments matching this revision and calculation basis can be loaded. Regeneration leaves earlier comment files on disk; retain them separately for reference.</p>
 <label>Section <select id="comment-section"></select></label>
 <label>Comment <textarea id="comment-text" maxlength="10000"></textarea></label>
 <button type="button" id="comment-add">Add comment</button>
@@ -409,7 +411,8 @@ INTERACTIVE = r'''
   function envelope(id, selectedOnly) {
     const svg=frame(id, 'Foundation-only splash-zone limit; vessel acceptance unevaluated', 'Peak period (s)', 'Screen limit Hs (m)');
     const p=data.periods_s, ymin=0;
-    const ymax=Math.max(...data.cases.flatMap(c=>Object.values(c.module.hs_by_tp)))*1.15;
+    const maximum=Math.max(...data.cases.flatMap(c=>Object.values(c.module.hs_by_tp)));
+    const ymax=maximum===0?1:maximum*1.15;
     const x=t=>60+(t-p[0])/(p[p.length-1]-p[0])*430;
     const y=h=>250-(h-ymin)/ymax*210;
     const cases=selectedOnly?[data.cases[+el('case-select').value]]:data.cases;
@@ -435,12 +438,13 @@ INTERACTIVE = r'''
     const c=data.cases[+el('case-select').value], tp=+el('period-select').value;
     const root=c.module.hs_by_tp[tp.toFixed(1)], maxHs=Math.ceil(root/.25+1)*.25;
     const limit=c.module.submerged_weight_kn/c.module.daf;
+    const samples=Array.from({length:Math.round(maxHs/.25)+1},(_,i)=>i*.25);
+    const maxForce=Math.max(limit,...samples.map(h=>forces(c,tp,h).reduce((a,b)=>a+b,0)))*1.15;
     const svg=frame('component-chart','Hydrodynamic demand against the force reserve','Significant wave height (m)','Upward force (kN)');
-    const x=h=>60+h/maxHs*430, y=f=>250-f/(limit*1.5)*210;
+    const x=h=>60+h/maxHs*430, y=f=>250-f/maxForce*210;
     [0,limit/2,limit].forEach(f=>svg.append(create('text',{x:7,y:y(f)+4,fill:'var(--ink)'},f.toFixed(1))));
     svg.append(create('line',{x1:60,x2:490,y1:y(limit),y2:y(limit),stroke:'var(--nogo)','stroke-dasharray':'6 4'}));
     svg.append(create('text',{x:65,y:y(limit)-7,fill:'var(--nogo)'},`Force limit ${limit.toFixed(1)} kN`));
-    const samples=Array.from({length:Math.round(maxHs/.25)+1},(_,i)=>i*.25);
     ['Slamming','Drag','Inertia','Total'].forEach((component,j)=>{
       const color=['var(--brand)','var(--faint)','var(--muted)','var(--ink)'][j];
       const points=samples.map(h=>{const f=forces(c,tp,h);return [h,j===3?f.reduce((a,b)=>a+b,0):f[j]];});
@@ -509,8 +513,8 @@ INTERACTIVE = r'''
 def build(output_dir: Path = OUTPUT, snap_daf: float = calc.SPLASH_SNAP_DAF) -> None:
     """Write deliverables only; existing comment sidecars are never rewritten."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "index.html").write_text(render(snap_daf), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "index.html").write_text(render(snap_daf), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> None:

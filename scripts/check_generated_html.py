@@ -70,6 +70,19 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/reporting/build_installation_module_report.py",
+        ("docs/reports/modules/installation/index.html",
+         "docs/reports/modules/installation/changes.json"),
+        inputs=(
+            "examples/demos/gtm/data/mudmat_structures.json",
+            "docs/api/_assets/brand.css",
+            "docs/api/cfd/turbulent-flat-plate-verification.html",
+            "tests/installation/test_installation_pamphlet.py",
+            "tests/installation/test_pipelay_integrity.py",
+            "tests/installation/test_pipelay_stress.py",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

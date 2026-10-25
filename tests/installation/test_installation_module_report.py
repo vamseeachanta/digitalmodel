@@ -71,11 +71,12 @@ def embedded(html):
 
 def test_rebuild_is_exact_and_preserves_comments(writer, tmp_path):
     comments = tmp_path / "report.comments.json"
-    comments.write_text('{"comments": ["Retain this engineering query"]}\n')
+    comments.write_text('{"comments": ["Retain this engineering query"]}\n', encoding="utf-8", newline="\n")
     before = comments.read_bytes()
     writer.build(tmp_path)
-    assert (tmp_path / "index.html").read_bytes() == (REPORT / "index.html").read_bytes()
-    assert (tmp_path / "changes.json").read_bytes() == (REPORT / "changes.json").read_bytes()
+    rebuild = "Rebuild with PYTHONPATH=src uv run --no-project python scripts/reporting/build_installation_module_report.py"
+    assert (tmp_path / "index.html").read_bytes() == (REPORT / "index.html").read_bytes(), rebuild
+    assert (tmp_path / "changes.json").read_bytes() == (REPORT / "changes.json").read_bytes(), rebuild
     assert comments.read_bytes() == before
 
 
@@ -159,7 +160,7 @@ def test_ten_sections_sources_and_house_style(writer):
     assert '<script src=' not in html
     assert writer.house_css() in html
     assert "NOT_EVALUATED" in html
-    assert "Draft for client review" in html
+    assert "Draft for maintainer review" in html
 
 
 def test_public_visible_text_and_sidecar_controls(writer):
@@ -177,10 +178,20 @@ def test_public_visible_text_and_sidecar_controls(writer):
 
 def test_change_panel_matches_sidecar(writer):
     html = writer.render()
-    assert embedded(html)["changes"] == json.loads((REPORT / "changes.json").read_text())
+    assert embedded(html)["changes"] == json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
 
 
-def test_interactive_charts_and_comment_save_with_dom_double(writer):
+def test_revision_history_preserves_the_initial_issue(writer):
+    html = writer.render()
+    history = re.search(r'<h3>Revision history</h3>(.*?)</table>', html, re.S).group(1)
+    assert '<td>0</td><td>2026-10-21</td>' in history
+    assert f'<td>{writer.CHANGES["revision"]}</td><td>{writer.CHANGES["date"]}</td>' in history
+    assert writer.CHANGES["revision"] == "1"
+    assert history.count('<tr>') == 3  # Header and one row per issued revision.
+
+
+@pytest.mark.parametrize("snap_daf", [calc.SPLASH_SNAP_DAF, 100])
+def test_interactive_charts_and_comment_save_with_dom_double(writer, snap_daf):
     """Exercise the shipped inline code without starting a browser."""
     node = shutil.which("node")
     if node is None:
@@ -213,8 +224,26 @@ const titles = root => {
   walk(root);return out;
 };
 const initial=titles(el('component-chart'));
-el('case-select').value='2';el('period-select').value=String(input.data.periods_s.at(-1));
-el('case-select').listeners.change();
+const coordinateErrors=[], checkedCharts=[];
+const coordinates=new Set(['x','y','x1','x2','y1','y2','cx','cy','r','points','viewBox']);
+function checkCoordinates(root) {
+  Object.entries(root.attrs).forEach(([key,value])=>{
+    if(coordinates.has(key)&&String(value).trim().split(/[,\s]+/).some(v=>!Number.isFinite(Number(v))))
+      coordinateErrors.push(`${root.tag}:${key}`);
+  });
+  const points=root.tag==='circle'?[[root.attrs.cx,root.attrs.cy]]:
+    root.tag==='polyline'?root.attrs.points.split(' ').map(p=>p.split(',').map(Number)):[];
+  if(points.some(([x,y])=>x<60||x>500||y<30||y>250))
+    coordinateErrors.push(`${root.tag}:outside-plot`);
+  root.children.forEach(checkCoordinates);
+}
+input.data.cases.forEach((c,index)=>input.data.periods_s.forEach(tp=>{
+  el('case-select').value=String(index);el('period-select').value=String(tp);
+  el('case-select').listeners.change();
+  ['overview-chart','combined-chart','component-chart'].forEach(id=>{
+    checkedCharts.push(id);checkCoordinates(el(id));
+  });
+}));
 const changed=titles(el('component-chart'));
 (async()=>{
   el('comment-section').value=input.sections[0];
@@ -228,18 +257,30 @@ const changed=titles(el('component-chart'));
   el('comment-load').files=[{size:100,text:async()=>JSON.stringify(invalid)}];
   await el('comment-load').onchange();
   console.log(JSON.stringify({initial,changed,visible,savedStatus,overwriteStatus,
-    loadStatus:el('comment-status').textContent,preserved:saved===firstSaved,saved:JSON.parse(saved)}));
+    loadStatus:el('comment-status').textContent,preserved:saved===firstSaved,saved:JSON.parse(saved),
+    coordinateErrors,checkedCharts}));
 })().catch(error=>{console.error(error);process.exitCode=1;});
 '''
-    html = writer.render()
+    html = writer.render(snap_daf=snap_daf)
     data = embedded(html)
+    limits = [height for case in data["cases"] for height in case["module"]["hs_by_tp"].values()]
+    assert max(limits) == 0 if snap_daf == 100 else max(limits) > 0
     sections = re.findall(r'<section id="([^"]+)">', html)
     result = subprocess.run(
         [node, "-e", harness],
         input=json.dumps({"script": writer.INTERACTIVE, "data": data, "sections": sections}),
-        text=True, capture_output=True, check=True, timeout=30,
+        text=True, encoding="utf-8", capture_output=True, check=True, timeout=30,
     )
     state = json.loads(result.stdout)
+    assert state["coordinateErrors"] == []
+    assert len(state["checkedCharts"]) == 3 * len(data["cases"]) * len(data["periods_s"])
+    # Public illustrative small foundation, Hs=0: speed=0.5 m/s, area=36 m².
+    # Slam=1025*5*36*0.5²/2000=23.0625 kN; drag=1025*2*36*0.5²/2000=9.225 kN;
+    # inertia=0; total=23.0625+9.225=32.2875 kN, displayed to one decimal.
+    for component, expected in (("Slamming", 23.1), ("Drag", 9.2), ("Inertia", 0.0), ("Total", 32.3)):
+        title = next(title for title in state["initial"] if f"; {component};" in title and "Hs 0.00 m;" in title)
+        demand = float(re.search(r"demand ([\d.]+) kN", title).group(1))
+        assert demand == pytest.approx(expected, abs=0.05)
     for titles, case, period in (
         (state["initial"], data["cases"][0], data["periods_s"][0]),
         (state["changed"], data["cases"][-1], data["periods_s"][-1]),
