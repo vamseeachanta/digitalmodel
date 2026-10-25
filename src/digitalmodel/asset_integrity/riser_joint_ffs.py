@@ -375,12 +375,20 @@ def fleet_rollup(
 
     Every row of the selected component must have a nonblank joint ID and
     finite nonnegative life; otherwise raise ``ValueError`` before grouping.
-    Numeric life strings are converted before taking the minimum. Rows of
-    other components do not contribute. The input register is not modified.
+    Datetime and timedelta life columns are rejected. Numeric life strings
+    are converted before taking the minimum. Rows of other components do
+    not contribute. The input register is not modified.
     """
     comp = register[register["component"] == component].copy()
     if comp.empty:
         raise ValueError(f"no rows for component '{component}'.")
+    life_dtype = comp["min_life_years"].dtype
+    # Temporal coercion produces time counts rather than numeric years.
+    if (
+        pd.api.types.is_datetime64_any_dtype(life_dtype)
+        or pd.api.types.is_timedelta64_dtype(life_dtype)
+    ):
+        raise ValueError(f"{component} register requires life in numeric years")
     scan_life = pd.to_numeric(comp["min_life_years"], errors="coerce")
     ids = comp["joint_id"]
     # Issue #2334 (2026), follow-on scope: life must be finite and >= 0 for

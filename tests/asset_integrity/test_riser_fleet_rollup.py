@@ -43,6 +43,34 @@ def test_every_contributing_life_is_validated(register, joint_id, life):
         fleet_rollup(register)
 
 
+@pytest.mark.parametrize(
+    "dtype,life",
+    [
+        ("datetime64[ns]", "2026-01-01"),
+        ("datetime64[s]", "2026-01-01"),
+        ("datetime64[ns, UTC]", "2026-01-01"),
+        ("timedelta64[ns]", "1 day"),
+        ("timedelta64[s]", "1 day"),
+        ("timedelta64[ns]", "0 days"),
+    ],
+    ids=["datetime", "datetime-seconds", "datetime-utc", "timedelta",
+         "timedelta-seconds", "zero-timedelta"],
+)
+def test_temporal_life_columns_are_rejected(dtype, life):
+    """Dates and durations are not numeric years, even when time counts are >= 0."""
+    register = pd.DataFrame(
+        {
+            "component": ["Main"],
+            "joint_id": ["A"],
+            "min_life_years": pd.Series([life], dtype=dtype),
+        }
+    )
+    original = register.copy(deep=True)
+    with pytest.raises(ValueError, match="life"):
+        fleet_rollup(register)
+    pd.testing.assert_frame_equal(register, original)
+
+
 @pytest.mark.parametrize("joint_id", [None, pd.NA, float("nan"), "", " \t"])
 def test_every_contributing_joint_id_is_required(register, joint_id):
     """Issue #2334: grouping must not drop a scan whose joint is unidentified."""
