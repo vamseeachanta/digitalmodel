@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import math
 from bisect import bisect_left
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -123,12 +124,14 @@ class CalibrationTable:
                 "correction columns require an explicit trim/list attitude"
             )
         if has_corrections:
-            try:
-                trim, heel = self.correction_attitude_deg
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    "correction attitude must be a trim/list pair"
-                ) from exc
+            attitude = self.correction_attitude_deg
+            if (
+                not isinstance(attitude, Sequence)
+                or isinstance(attitude, (str, bytes, bytearray, Mapping))
+                or len(attitude) != 2
+            ):
+                raise ValueError("correction attitude must be a trim/list pair")
+            trim, heel = attitude
             attitude = (finite(trim, "trim_deg"), finite(heel, "list_deg"))
             # Same single-valued surface domain as centre_sounding:
             # OpenStax Precalculus 2e (2021), §5.4, vertical tangent excluded.
