@@ -1,4 +1,4 @@
-"""Single mooring-line-break frequency/consequence assessment.
+"""Calculate supplied frequency times consequence; retain tensions as context only.
 
 Basis: UK SCR-2015 regulation 16(1)(d), assessment of likelihood, consequence
 and controls; IMO MSC-MEPC.2/Circ.12/Rev.2 (2018), annex section 6.2.2 (data

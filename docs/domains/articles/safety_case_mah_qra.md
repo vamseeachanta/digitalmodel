@@ -11,6 +11,7 @@ coverage nor an ALARP demonstration.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-20 | Added the inventory, scenario methods and worked example to document inputs and outstanding model requirements. |
+| 2 | 2026-10-25 | Renamed the article to match its inventory and scenario scope; clarified CSV input handling, physical error lines and retained collision bases. |
 
 ## Method and sources
 
@@ -70,12 +71,18 @@ validated hazard and retained calculation context.
 | `barriers` | Tuple of nonblank controls; empty means no controls recorded |
 | `responsible_roles` | At least one nonblank responsible role |
 
+`MAHRegister.from_csv` accepts a file path (`str` or `Path`) or an open text
+stream. A string always denotes a path; CSV text is wrapped in `io.StringIO`.
+Both input forms accept a leading UTF-8 BOM. File-opening errors propagate as
+`OSError`; malformed CSV raises `MAHValidationError`.
+
 CSV uses exactly these column names. The two tuple fields are JSON arrays within
 CSV cells; standard CSV quoting handles embedded commas and quotation marks.
 Blank numeric cells mean unknown. A known zero remains zero. Non-finite values,
-negative quantities, extra/missing/duplicate columns, malformed arrays and
-duplicate identifiers are rejected. `MAHValidationError.row` is the physical CSV
-line at the end of the record; `.field` locates the invalid field. The entire
+negative quantities, underscore numeric literals, extra/missing/duplicate columns,
+malformed arrays and duplicate identifiers are rejected. `MAHValidationError.row`
+is the physical CSV line at the end of the record, or the parser failure line for
+malformed quoting; `.field` locates the invalid field. The entire
 ingest fails rather than silently retaining only valid rows.
 
 ```python
@@ -139,6 +146,10 @@ The actual `hydrodynamics.passing_ship` output is surge/sway interaction force
 neither collision probability nor impact damage, exposure or fatality
 consequences. This boundary also supplies no mooring response. No interaction
 force is treated as an impact load or converted to fatalities.
+
+The register entry combines traffic and probability bases into one
+`frequency_basis` string. CSV exchange preserves the combined text but does not
+recover the separate bases. The result's `inputs` retains their structured form.
 
 The example's alternative traffic scenario explicitly supplies `None` for
 probability and consequence, giving `NOT_EVALUATED`. The result's `missing_inputs`

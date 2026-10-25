@@ -53,11 +53,67 @@ def test_csv_ingest_and_loss():
     assert hazard.barriers[0] == "Inspection, including terminations"
 
 
-def test_csv_file_round_trip(tmp_path):
+@pytest.mark.parametrize("as_string", [False, True])
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_csv_file_round_trip(tmp_path, as_string, encoding):
     original = MAHRegister(hazards=(MajorAccidentHazard(**hazard_data()),))
     path = tmp_path / "register.csv"
-    path.write_text(original.to_csv(), encoding="utf-8")
-    assert MAHRegister.from_csv(path) == original
+    path.write_text(original.to_csv(), encoding=encoding)
+    assert MAHRegister.from_csv(str(path) if as_string else path) == original
+
+
+@pytest.mark.parametrize("with_hazard", [False, True])
+def test_bom_prefixed_text_stream(with_hazard):
+    hazards = (MajorAccidentHazard(**hazard_data()),) if with_hazard else ()
+    original = MAHRegister(hazards=hazards)
+    stream = io.StringIO("\ufeff" + original.to_csv())
+    assert MAHRegister.from_csv(stream) == original
+    assert not stream.closed
+
+
+def test_bom_before_quoted_header_in_text_stream():
+    text = csv_text()
+    quoted_header = text.replace("hazard_id,", '"hazard_id",', 1)
+    expected = MAHRegister.from_csv(io.StringIO(text))
+    assert MAHRegister.from_csv(io.StringIO("\ufeff" + quoted_header)) == expected
+
+
+@pytest.mark.parametrize("field", ["frequency_per_year", "fatalities_per_event"])
+def test_underscore_numeric_cell_rejected(field):
+    with pytest.raises(MAHValidationError) as exc:
+        MAHRegister.from_csv(io.StringIO(csv_text(**{field: "1_0"})))
+    assert exc.value.row == 2
+    assert exc.value.field == field
+
+
+@pytest.mark.parametrize(
+    "preceding,malformed,expected_row",
+    [
+        (None, 'bad,"d"x,unused\n', 2),
+        ("Prior scenario", 'bad,"d"x,unused\n', 3),
+        ("Prior\nscenario", 'bad,"d"x,unused\n', 4),
+        (None, 'bad,"d\ncontinued"x,unused\n', 3),
+        (None, 'bad,"d\ncontinued', 3),
+        (None, '\nbad,"d"x,unused\n', 3),
+    ],
+)
+def test_strict_quoting_error_reports_physical_line(preceding, malformed, expected_row):
+    text = csv_text(description=preceding) if preceding is not None else (
+        MAHRegister(hazards=()).to_csv()
+    )
+    with pytest.raises(MAHValidationError) as exc:
+        MAHRegister.from_csv(io.StringIO(text + malformed))
+    assert exc.value.row == expected_row
+    assert exc.value.field == "row"
+    assert "malformed CSV" in str(exc.value)
+
+
+def test_malformed_header_reports_physical_line():
+    with pytest.raises(MAHValidationError) as exc:
+        MAHRegister.from_csv(io.StringIO('"hazard_id"x,description\n'))
+    assert exc.value.row == 1
+    assert exc.value.field == "row"
+    assert "malformed CSV" in str(exc.value)
 
 
 @pytest.mark.parametrize(

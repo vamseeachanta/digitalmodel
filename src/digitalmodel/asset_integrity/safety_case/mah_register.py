@@ -127,14 +127,24 @@ class MAHRegister(BaseModel):
 
     @classmethod
     def from_csv(cls, source: str | Path | TextIO) -> MAHRegister:
-        """Read a UTF-8 CSV path or open text stream; reject the entire bad input."""
+        """Read a UTF-8 CSV path or open text stream; reject the entire bad input.
+
+        A str always denotes a file path, never CSV text; wrap CSV text in
+        io.StringIO. Paths and streams accept a leading UTF-8 BOM. File-opening
+        errors propagate as OSError; CSV errors use MAHValidationError.
+        """
         context = (
             Path(source).open(encoding="utf-8-sig", newline="")
             if isinstance(source, (str, Path))
             else nullcontext(source)
         )
         with context as stream:
-            reader = csv.DictReader(stream, strict=True)
+            # Strip before parsing so a BOM cannot hide a quoted first header.
+            lines = (
+                line.removeprefix("\ufeff") if index == 0 else line
+                for index, line in enumerate(stream)
+            )
+            reader = csv.DictReader(lines, strict=True)
             hazards = []
             seen = set()
             try:
@@ -163,6 +173,8 @@ class MAHRegister(BaseModel):
                             ) from None
                     for field in ("frequency_per_year", "fatalities_per_event"):
                         try:
+                            if "_" in row[field]:
+                                raise ValueError
                             row[field] = (
                                 float(row[field]) if row[field].strip() else None
                             )
@@ -185,8 +197,10 @@ class MAHRegister(BaseModel):
                     seen.add(hazard.hazard_id)
                     hazards.append(hazard)
             except csv.Error:
+                # DictReader.line_num advances only after a successful record;
+                # the underlying parser counts physical lines even on errors.
                 raise MAHValidationError(
-                    reader.line_num, "row", "malformed CSV"
+                    reader.reader.line_num, "row", "malformed CSV"
                 ) from None
         return cls(hazards=tuple(hazards))
 

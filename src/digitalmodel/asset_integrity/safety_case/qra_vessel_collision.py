@@ -86,6 +86,10 @@ def assess_vessel_collision(
     EVALUATED means that the arithmetic has inputs; it is not an acceptance or
     ALARP verdict. Annual collision frequency can exceed one. No Poisson
     conversion to an annual occurrence probability is applied.
+
+    The hazard's frequency_basis combines traffic and probability bases into
+    one string. A MAHRegister CSV round-trip preserves that text but cannot
+    reconstruct the separate bases; retain result.inputs for their structure.
     """
     missing = tuple(
         field
