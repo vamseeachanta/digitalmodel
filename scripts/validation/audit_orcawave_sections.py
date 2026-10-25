@@ -17,81 +17,123 @@ import warnings
 import numpy as np
 
 
-# Existing independent acceptance nodes, not the broad historical smoke tests.
+def _nodes(module, **cases):
+    """Expand explicit parameter IDs into complete pytest identities."""
+    return tuple(
+        f"tests/orcawave/test_{module}.py::{name}{suffix}"
+        for name, parameters in cases.items()
+        for suffix in (tuple(f"[{value}]" for value in parameters) or ("",))
+    )
+
+
+# Every independent acceptance case is required, including its file and parameters.
 NODES = {
-    1: ("test_01_volume_waterline", "test_01_inward_flagged"),
-    2: (
-        "test_02_single_cell_cycles",
-        "test_02_two_cell_cycle_mixture",
-        "test_02_probability_sum",
+    1: _nodes(
+        "audit_p1",
+        test_01_volume_waterline=("True-False", "False-False", "False-True"),
+        test_01_inward_flagged=(),
     ),
-    3: ("test_03_annex_d_weighted_dose", "test_03_explicit_inputs"),
-    4: ("test_04_rayleigh_maxima",),
-    5: ("test_05_significant_amplitudes",),
-    6: ("test_06_symmetry_defaults_and_domain",),
-    7: ("test_07_explicit_two_peak",),
-    8: ("test_08_native_fixture_and_wamit_refusal",),
-    9: (
-        "test_09_vertex_stream",
-        "test_09_bad_count_or_nonfinite",
-        "test_09_negative_npan",
+    2: _nodes(
+        "audit_p1",
+        test_02_single_cell_cycles=(),
+        test_02_two_cell_cycle_mixture=(),
+        test_02_probability_sum=(),
     ),
-    10: (
-        "test_10_gamma_validation",
-        "test_10_unusual_gamma_warning",
-        "test_10_finite_results",
-        "test_10_result_rejects_nan",
+    3: _nodes("audit_p1", test_03_annex_d_weighted_dose=(), test_03_explicit_inputs=()),
+    4: _nodes("audit_p1", test_04_rayleigh_maxima=()),
+    5: _nodes("audit_p1", test_05_significant_amplitudes=()),
+    6: _nodes("audit_p1", test_06_symmetry_defaults_and_domain=()),
+    7: _nodes("audit_p1", test_07_explicit_two_peak=()),
+    8: _nodes("audit_p1", test_08_native_fixture_and_wamit_refusal=()),
+    9: _nodes(
+        "audit_p1",
+        test_09_vertex_stream=(),
+        test_09_bad_count_or_nonfinite=("0 0 -2 " * 20, "0 0 -2 " * 28, "nan " * 72),
+        test_09_negative_npan=(),
     ),
-    11: (
-        "test_11_disjoint_raos",
-        "test_11_invalid_quantile",
-        "test_11_invalid_moments",
-        "test_11_bad_grid",
-        "test_11_generation_grid",
+    10: _nodes(
+        "audit_p2",
+        test_10_gamma_validation=("0", "-1", "nan", "inf"),
+        test_10_unusual_gamma_warning=(),
+        test_10_finite_results=(),
+        test_10_result_rejects_nan=(),
     ),
-    12: ("test_12_jonswap_published_ordinates", "test_12_issc_period_ratio"),
-    13: (
-        "test_04_rayleigh_maxima",
-        "test_05_significant_amplitudes",
-        "test_02_single_cell_cycles",
-        "test_03_annex_d_weighted_dose",
+    11: _nodes(
+        "audit_p2",
+        test_11_disjoint_raos=("period", "heading"),
+        test_11_invalid_quantile=("0-1", "-1-1", "1.1-1", "0.1-0", "0.1--1", "nan-1"),
+        test_11_invalid_moments=tuple(
+            f"{value}-{moment}" for value in (0, -1) for moment in ("m0", "m2", "m4")
+        ),
+        test_11_bad_grid=("omega0", "omega1", "omega2", "omega3"),
+        test_11_generation_grid=("kwargs0", "kwargs1", "kwargs2"),
     ),
-    14: ("test_14_beam_wind_current_values",),
+    12: _nodes(
+        "audit_p2", test_12_jonswap_published_ordinates=(), test_12_issc_period_ratio=()
+    ),
+    13: _nodes(
+        "audit_p1",
+        test_04_rayleigh_maxima=(),
+        test_05_significant_amplitudes=(),
+        test_02_single_cell_cycles=(),
+        test_03_annex_d_weighted_dose=(),
+    ),
+    14: _nodes("audit_p2", test_14_beam_wind_current_values=()),
     15: (
-        "test_15_hydrostatic_values_and_assumptions",
-        "test_hydrodynamics_zero_diagonal_cannot_hide_asymmetry",
+        *_nodes("audit_p2", test_15_hydrostatic_values_and_assumptions=()),
+        *_nodes(
+            "pack_gates",
+            test_hydrodynamics_zero_diagonal_cannot_hide_asymmetry=(
+                "added_mass",
+                "radiation_damping",
+            ),
+        ),
     ),
-    16: tuple(
-        "test_" + name.replace("-", "_")
-        for name in (
-            "C0-CSV",
-            "C0-GDF",
-            "C0-COEFF",
-            "C0-MAP",
-            "C1-OW",
-            "C1-AQWA",
-            "C4-AREA",
-            "C4-ASPECT",
-            "C4-SKEW",
-            "C4-VOLUME",
-            "C4-BALANCE",
-            "C4-FRAME",
-            "C4-MESH",
-            "C4-WATERLINE",
-            "C4-NORMALS",
-            "C4-IRREGULAR",
-            "C4-HYDRO",
-            "C4-WIND",
-            "C4-HULL",
-            "C5-TRACE",
-        )
+    16: _nodes(
+        "pack_gates",
+        **{
+            "test_" + name.replace("-", "_"): ()
+            for name in (
+                "C0-CSV",
+                "C0-GDF",
+                "C0-COEFF",
+                "C0-MAP",
+                "C1-OW",
+                "C1-AQWA",
+                "C4-AREA",
+                "C4-ASPECT",
+                "C4-SKEW",
+                "C4-VOLUME",
+                "C4-BALANCE",
+                "C4-FRAME",
+                "C4-MESH",
+                "C4-WATERLINE",
+                "C4-NORMALS",
+                "C4-IRREGULAR",
+                "C4-HYDRO",
+                "C4-WIND",
+                "C4-HULL",
+                "C5-TRACE",
+            )
+        },
     ),
-    17: ("test_17_database_consistency", "test_17_rotation_at_25_seconds"),
-    18: ("test_18_heuristic_explicit",),
-    19: (
-        "test_19_head_wind_frame",
-        "test_19_heading_domain",
-        "test_19_imported_frame_required",
+    17: _nodes(
+        "audit_p2",
+        test_17_database_consistency=("entry1", "entry2", "entry3", "entry4", "entry5"),
+        test_17_rotation_at_25_seconds=(
+            "FPSO-0.05-0.08",
+            "SemiSubmersible-0.03-0.12",
+            "Drillship-0.04-0.08",
+            "Barge-0.06-0.1",
+            "LNGC-0.04-0.08",
+        ),
+    ),
+    18: _nodes("audit_p2", test_18_heuristic_explicit=("8", "16")),
+    19: _nodes(
+        "audit_p2",
+        test_19_head_wind_frame=(),
+        test_19_heading_domain=("-1", "360", "nan"),
+        test_19_imported_frame_required=(),
     ),
 }
 
@@ -107,15 +149,18 @@ def audit(log):
 
     outcomes = []
     for line in log.splitlines():
-        if line.startswith(("PASSED ", "FAILED ", "SKIPPED ", "XFAIL ", "XPASS ")):
+        if line.startswith(
+            ("PASSED ", "FAILED ", "SKIPPED ", "XFAIL ", "XPASS ", "ERROR ")
+        ):
             status, node = line.split(maxsplit=1)
-            outcomes.append((status, node.split("::")[-1].split("[")[0]))
+            outcomes.append((status, node))
     result = {}
     for section, nodes in NODES.items():
         passed = all(
             any(status == "PASSED" and name == node for status, name in outcomes)
             and not any(
-                status != "PASSED" and name == node for status, name in outcomes
+                status != "PASSED" and (name == node or name.startswith(node + " - "))
+                for status, name in outcomes
             )
             for node in nodes
         )
@@ -161,7 +206,8 @@ def audit(log):
     result[18] = {
         "status": "FIXED" if compatible and result[18]["status"] == "FIXED" else "OPEN",
         "evidence": (
-            "renamed heuristic and deprecated callable; published model NOT_EVALUATED"
+            result[18]["evidence"]
+            + "; renamed heuristic and deprecated callable; published model NOT_EVALUATED"
             if compatible
             else "heuristic renamed, but deprecated callable raises"
         ),
@@ -190,11 +236,13 @@ def main():
             check=True,
             capture_output=True,
         )
-    result = audit(args.pytest_log.read_text())
+    result = audit(args.pytest_log.read_text(encoding="utf-8"))
     for section, row in result.items():
         print(f"{section:02d} {row['status']}: {row['evidence']}")
     if args.output:
-        args.output.write_text(json.dumps(result, indent=2) + "\n")
+        args.output.write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
 
 
 if __name__ == "__main__":
