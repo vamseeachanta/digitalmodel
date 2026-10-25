@@ -15,11 +15,13 @@ These exactly representable values need no numerical acceptance tolerance.
 """
 
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
+from digitalmodel.hydrodynamics.diffraction.orcawave_runner import OrcaWaveRunner
 from digitalmodel.hydrodynamics.diffraction.output_schemas import HydrostaticResults
 from digitalmodel.hydrodynamics.diffraction.postprocess import _build_html_report
 from digitalmodel.hydrodynamics.diffraction.postprocess import postprocess_diffraction_run
@@ -29,6 +31,108 @@ from digitalmodel.hydrodynamics.diffraction.report_computations import (
     compute_stability,
 )
 from digitalmodel.hydrodynamics.diffraction.report_data_models import HydrostaticData
+
+
+@pytest.fixture
+def native_hydrostatic_results():
+    """Synthetic native SI data: tonnes, kN and metres; no solver is loaded.
+
+    OrcaWave WebHelp, Data: Model, Units (online edition accessed 2026-10-25):
+    https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Model.htm#Units
+    Native C44=600 kN m/rad and C55=900 kN m/rad give the hand cases above
+    after converting to N. Couplings exercise both off-diagonal blocks.
+    """
+    restoring = np.zeros((6, 6))
+    restoring[2, 2] = 100.0
+    restoring[2, 3] = restoring[3, 2] = 2.0
+    restoring[2, 4] = restoring[4, 2] = 3.0
+    restoring[3, 4] = restoring[4, 3] = 5.0
+    restoring[3, 3], restoring[4, 4] = 600.0, 900.0
+    native = SimpleNamespace(
+        frequencies=np.array([0.2, 0.1]),
+        headings=np.array([0.0]),
+        displacementRAOs=np.zeros((1, 2, 6), dtype=complex),
+        addedMass=np.zeros((2, 6, 6)),
+        damping=np.zeros((2, 6, 6)),
+        hydrostaticResults=[{
+            "volume": 10.0,
+            "mass": 10.0,
+            "centreOfMass": [1.0, 2.0, 3.0],
+            "centreOfBuoyancy": [1.0, 2.0, 3.0],
+            "Awp": 10.0,
+            "restoringMatrix": restoring,
+        }],
+    )
+    runner = object.__new__(OrcaWaveRunner)
+    runner._result = SimpleNamespace(spec_name="synthetic")
+    runner._water_depth = 200.0
+    return runner, native
+
+
+def test_producer_normalizes_mass_and_preserves_geometry(native_hydrostatic_results):
+    """Ten native tonnes must serialize as 10000 kg; geometry stays metric."""
+    runner, native = native_hydrostatic_results
+    results = runner._build_results_from_object(native, [])
+    hs = results.hydrostatics
+    assert results.unit_system == "SI"
+    assert hs is not None
+    assert hs.mass == 10000.0
+    assert hs.displacement_volume == 10.0
+    assert hs.waterplane_area == 10.0
+    assert hs.centre_of_gravity == [1.0, 2.0, 3.0]
+    assert hs.centre_of_buoyancy == [1.0, 2.0, 3.0]
+    assert native.hydrostaticResults[0]["mass"] == 10.0
+
+
+def test_producer_normalizes_every_restoring_block(native_hydrostatic_results):
+    """Each force/moment block converts kN to N, retaining length and angle."""
+    runner, native = native_hydrostatic_results
+    expected = np.zeros((6, 6))
+    expected[2, 2] = 100000.0
+    expected[2, 3] = expected[3, 2] = 2000.0
+    expected[2, 4] = expected[4, 2] = 3000.0
+    expected[3, 4] = expected[4, 3] = 5000.0
+    expected[3, 3], expected[4, 4] = 600000.0, 900000.0
+    original = native.hydrostaticResults[0]["restoringMatrix"].copy()
+    for _ in range(2):
+        results = runner._build_results_from_object(native, [])
+        assert results.hydrostatics is not None
+        np.testing.assert_array_equal(results.hydrostatics.stiffness_matrix, expected)
+        np.testing.assert_array_equal(
+            native.hydrostaticResults[0]["restoringMatrix"], original
+        )
+
+
+@pytest.mark.parametrize(
+    "density,gravity,transverse,longitudinal",
+    [(1000.0, 10.0, "6.0000", "9.0000"),
+     (1200.0, 10.0, "5.0000", "7.5000"),
+     (1000.0, 20.0, "3.0000", "4.5000")],
+)
+def test_native_producer_json_public_report_gm(
+    tmp_path, native_hydrostatic_results, density, gravity, transverse, longitudinal
+):
+    """Native stiffness must reach public reports as the independent hand cases."""
+    runner, native = native_hydrostatic_results
+    # Free-floating balance: native tonnes = rho[kg/m3] * V[m3] / 1000.
+    native.hydrostaticResults[0]["mass"] = density * 10.0 / 1000.0
+    results = runner._build_results_from_object(native, [])
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "diffraction_results.json").write_text(json.dumps(results.to_dict()))
+    result = postprocess_diffraction_run(
+        bundle, tmp_path / "report", make_plots=False,
+        environment=EnvironmentSpec(
+            water_depth=200.0, water_density=density, gravity=gravity,
+        ),
+    )
+    assert result.report is not None
+    html = result.report.read_text()
+    assert ("<td>GM_T (transverse metacentric height)</td>"
+            f"<td>{transverse} m</td>") in html
+    assert ("<td>GM_L (longitudinal metacentric height)</td>"
+            f"<td>{longitudinal} m</td>") in html
+    assert json.loads(result.index.read_text())["report"] == result.report.name
 
 
 @pytest.fixture
