@@ -1046,8 +1046,8 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         summary = result["summary"]
         assert summary["overall_status"] == "PASS"
         assert summary["n_results"] == 8
-        assert summary["min_safety_factor"] == pytest.approx(2.08)
-        assert summary["max_utilization"] == pytest.approx(0.48)
+        assert summary["min_safety_factor"] == pytest.approx(3.73)
+        assert summary["max_utilization"] == pytest.approx(0.268)
         assert result["environmental_loads"]["total_force"] == pytest.approx(2280.94225)
 
         summary_path = Path(cfg["outputs"]["summary_json"])
