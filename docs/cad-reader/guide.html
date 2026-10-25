@@ -47,7 +47,8 @@ summarized below. Computer-aided design is abbreviated as CAD.</p>
 </ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr></tbody></table>
+<tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr>
+<tr><td>1</td><td>2026-10-25</td><td>Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings.</td></tr></tbody></table>
 </section>
 <section id="scope">
 <h2>2. Scope</h2>
@@ -100,7 +101,12 @@ No load or boundary condition is assigned.</desc>
 </figure>
 <p>DXF layer and handle metadata are retained. Mesh appearance, normals,
 materials and groups are omitted. The source-unit decision records whether the
-basis is the file, the caller or both. No healing, welding or triangulation is performed.</p>
+basis is the file, the caller or both. The meshio STL decoder deduplicates
+exact-coordinate corners into shared point indices before unit conversion;
+source corner numbering is not preserved. Face vertex order and winding are
+retained. No tolerance-based welding, triangulation or healing is performed by
+this interface. Two-facet ASCII and binary regressions check that six corners
+with one repeated position produce five points and one shared index.</p>
 </section>
 <section id="formats">
 <h2>5. Supported formats</h2>
@@ -167,7 +173,7 @@ the scope of each result.</p>
 <li>Deferred kernel formats and downstream geometric criteria are stated.</li>
 </ul>
 <details><summary>Change panel</summary><ul id="changes"></ul>
-<noscript>The initial revision adds explicit units, straight drawing and mesh readers, and the converter interface.</noscript></details>
+<noscript>This revision documents exact-coordinate STL deduplication and shared connectivity tests for ASCII and binary input.</noscript></details>
 <h3>9.2 Sources and companion artifacts</h3>
 <ul>
 <li>NIST SP 811 (2008), Appendix B.8, foot and inch entries:
@@ -210,12 +216,11 @@ A downloaded file is moved to that folder manually if a folder picker is unavail
 </main>
 <script type="application/json" id="change-data">
 {
-  "revision": "0",
-  "date": "2026-10-19",
+  "revision": "1",
+  "date": "2026-10-25",
   "changes": [
-    {"section": "Unit basis", "change": "Require declared or explicitly supplied source length units.", "reason": "Prevent silent coordinate scale assumptions."},
-    {"section": "Readers", "change": "Add straight DXF primitives, STL triangles and OBJ faces.", "reason": "Provide typed geometry in metres without repair."},
-    {"section": "Converter", "change": "Add an explicit DWG-to-DXF argument interface.", "reason": "Separate external conversion from geometry and unit checks."}
+    {"section": "STL connectivity", "change": "Disclose exact-coordinate corner deduplication into shared point indices.", "reason": "Describe the decoder behavior without implying independent facet corners."},
+    {"section": "Validation", "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.", "reason": "Check five unique points from six corners with one repeated position."}
   ]
 }
 </script>

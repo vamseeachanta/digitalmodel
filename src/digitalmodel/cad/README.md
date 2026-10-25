@@ -17,6 +17,7 @@ Draft for client review
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-19 | Initial interface and synthetic examples establish explicit units. |
+| 1 | 2026-10-25 | Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings. |
 
 # 2. Scope
 
@@ -55,8 +56,11 @@ metadata are retained. Mesh appearance, normals, materials and groups are omitte
 
 The `UnitDecision` record identifies `source_units`, `metres_per_unit` and a
 basis of `file`, `caller` or `file_and_caller`. Its scale is applied once; result
-`units` is always `m`. Coincident vertices are permitted; source numbering is not
-preserved by the STL decoder. No welding, triangulation or healing is performed.
+`units` is always `m`. Coincident vertices are permitted. The meshio STL decoder
+deduplicates exact-coordinate corners into shared point indices before unit
+conversion, so source corner numbering is not preserved. Face vertex order and
+winding are retained. No tolerance-based welding, triangulation or healing is
+performed by this interface.
 
 # 5. Supported formats
 
@@ -124,7 +128,9 @@ position indices are checked against the fixture definitions.
 
 Tests cover world-coordinate transforms, triangular and polygonal faces, missing
 and conflicting units, non-finite coordinates, malformed inputs, optional
-imports and explicit converter failures. Converter tests copy a synthetic DXF;
+imports and explicit converter failures. Two-facet ASCII and binary STL fixtures
+check that six corners with one repeated position produce five points and one
+shared index while retaining face vertex order. Converter tests copy a synthetic DXF;
 they establish call behavior, not DWG fidelity. No third-party drawing is used.
 
 # 8. Failure handling

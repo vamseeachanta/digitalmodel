@@ -56,6 +56,55 @@ def test_binary_stl_with_solid_header(tmp_path):
     assert triangle == ((0, 0, 0), (0.0508, 0, 0), (0, 0.0508, 0))
 
 
+@pytest.mark.parametrize("binary", [False, True], ids=["ascii", "binary"])
+def test_stl_exact_coordinate_deduplication_retains_face_winding(tmp_path, binary):
+    """Six facet corners have five unique positions and one shared index.
+
+    Independent fixture: only the origin repeats. Millimetres are divided by
+    1000; both faces retain their ordered positions after meshio deduplication.
+    """
+    facets = (
+        ((0, 0, 0), (1000, 0, 0), (0, 2000, 0)),
+        ((0, 0, 0), (0, 0, 3000), (1000, 2000, 3000)),
+    )
+    path = tmp_path / "two_facets.stl"
+    if binary:
+        path.write_bytes(
+            b"synthetic two facets".ljust(80, b" ")
+            + struct.pack("<I", 2)
+            + b"".join(
+                struct.pack("<12fH", 0, 0, 0, *sum(face, ()), 0) for face in facets
+            )
+        )
+    else:
+        path.write_text(
+            "solid synthetic\n"
+            + "".join(
+                "facet normal 0 0 0\nouter loop\n"
+                + "".join(f"vertex {x} {y} {z}\n" for x, y, z in face)
+                + "endloop\nendfacet\n"
+                for face in facets
+            )
+            + "endsolid synthetic\n",
+            encoding="ascii",
+        )
+    result = read_cad(path, units="mm")
+    assert len(result.points) == 5
+    assert len(result.entities) == 2
+    assert all(entity.kind == "triangle" for entity in result.entities)
+    assert result.entities[0].indices[0] == result.entities[1].indices[0]
+    assert set(result.entities[0].indices) & set(result.entities[1].indices) == {
+        result.entities[0].indices[0]
+    }
+    assert tuple(
+        tuple(result.points[index] for index in entity.indices)
+        for entity in result.entities
+    ) == (
+        ((0, 0, 0), (1, 0, 0), (0, 2, 0)),
+        ((0, 0, 0), (0, 0, 3), (1, 2, 3)),
+    )
+
+
 def test_obj_negative_indices_and_quad(tmp_path):
     """Hand: 2 ft = 6096/10000 m, 3 ft = 9144/10000 m.
 

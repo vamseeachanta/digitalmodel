@@ -1,21 +1,16 @@
 {
-  "revision": "0",
-  "date": "2026-10-19",
+  "revision": "1",
+  "date": "2026-10-25",
   "changes": [
     {
-      "section": "Unit basis",
-      "change": "Require declared or explicitly supplied source length units.",
-      "reason": "Prevent silent coordinate scale assumptions."
+      "section": "STL connectivity",
+      "change": "Disclose exact-coordinate corner deduplication into shared point indices.",
+      "reason": "Describe the decoder behavior without implying independent facet corners."
     },
     {
-      "section": "Readers",
-      "change": "Add straight DXF primitives, STL triangles and OBJ faces.",
-      "reason": "Provide typed geometry in metres without repair."
-    },
-    {
-      "section": "Converter",
-      "change": "Add an explicit DWG-to-DXF argument interface.",
-      "reason": "Separate external conversion from geometry and unit checks."
+      "section": "Validation",
+      "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.",
+      "reason": "Check five unique points from six corners with one repeated position."
     }
   ]
 }
