@@ -7,36 +7,382 @@
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{text-align:right;padding:6px;border-bottom:1px solid #ccd4dd}
 caption{caption-side:bottom;text-align:left;padding:12px 0}pre{white-space:pre-wrap}
-.notice{padding:16px;background:#fff0d0}h2{margin-top:2em}</style></head>
+.notice{padding:16px;background:#fff0d0}h2{margin-top:2em}
+figure{margin:24px 0}figcaption{font-size:.9em}
+[hidden]{display:none}circle:hover,circle:focus{r:6;stroke:#16324f}
+.series-controls label{display:inline-block;margin-right:16px}</style></head>
 <body><header><h1>Generic hull coupled roll screening estimate</h1>
-<p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p></header>
-<h2>Summary</h2>
+<p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p></header><svg id="hull-section" viewBox="0 0 820 390" role="img"
+aria-labelledby="hull-title hull-desc" style="width:100%;height:auto">
+<title id="hull-title">Hull section with U-tube anti-roll tank</title>
+<desc id="hull-desc">Tank dimensions from the screening data assumptions.
+Hull outline and conduit height are schematic; hull dimensions are unspecified.</desc>
+<path d="M 130 65 L 200 300 Q 410 365 620 300 L 690 65" fill="none" stroke="#16324f" stroke-width="3"/>
+<path d="M 282.0 120.0 v 80.0 H 538.0 v -80.0
+ h -96.0 v 64.0 H 378.0 v -64.0 Z"
+ fill="#b6e4ef" stroke="#0B3D91" stroke-width="2"/>
+<path d="M 410 50 V 320" stroke="#555555" stroke-dasharray="5 5"/>
+<path d="M 282.0 100 v -12 h 96.0 v 12 M 282.0 120.0
+ h -18 v 80.0 h 18 M 410 55 v 10 h 80.0 v -10"
+ fill="none" stroke="#16324f"/>
+<text x="410" y="25" text-anchor="middle">U-tube anti-roll tank</text>
+<text x="330.0" y="78" text-anchor="middle">Leg width 6.0 m</text>
+<text x="450.0" y="49" text-anchor="middle">Offset 5.0 m</text>
+<text x="258.0" y="160.0" text-anchor="end">Fill 5.0 m</text>
+<text x="410" y="227.0" text-anchor="middle">Conduit area A_c 6.8 m²</text>
+<text x="410" y="355" text-anchor="middle">Leg length 20.0 m (out of section)</text>
+<text x="410" y="382" text-anchor="middle">Hull section: outline and duct height not to scale</text>
+</svg><p><a href="data/generic_hull_roll_screening.json">Data record</a>: assumptions and cases fields. <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Builder</a>: compute, line 146; screen_case, line 92; chart_specs, line 309. Tank dimensions are recorded assumptions; the hull outline supplies no hull dimensions.</p>
+<h2 id="summary">Summary</h2>
 <p>The coupled model predicts a screening estimate for generic hulls. No result represents a real hull.</p>
 <p class="notice">At an 18 s hull roll period, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
 the peak roll reduction screening estimates are 46.1 % at 2 % hull damping and 23.3 % at 5 %.</p>
-<h2>Revision history</h2>
-<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
-<tr><td>Clarification</td><td>2026-10-25</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr></tbody></table>
-<h2>Coupled method: screening estimate</h2>
-<p>The model links hull roll to water transfer between connected tank legs. Tank moments feed back into the hull roll equation.
-Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha has no units.</p>
-<p>The public model includes vertical-centroid and local free-surface terms in that quasi-static stiffness.
-Ks also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
-<p>The normalized bare-hull impedance is D = 1 − (T₀/T)² + 2iζ(T₀/T).
-The coupled impedance is D − αH/Kₛ. H is tank moment per roll angle; Kₛ is its quasi-static limit.</p>
-<p>The hull equation uses normalized restoring of 1, with no units. The model sets forcing to give 5° bare roll at the nominal resonance
-(ASSUMED - to be confirmed). Forcing stays fixed within each tank-on and tank-off comparison.
-Forcing is rescaled between damping groups to keep the 5 degree bare-roll reference, so the comparison also changes the tank amplitude.</p>
-<p>The calculation finds each response peak separately over 0.7 to 1.3 times the hull roll period, with no units.
-It refines all sampled local peaks. Reduction equals 100 % times one minus the coupled peak divided by the bare peak.</p>
-<h2>Tank basis: screening estimate</h2>
-<p>The calculation uses public reference tank inputs (ASSUMED - to be confirmed), with no actual hull geometry.
-Each leg measures 20.0 m by 6.0 m (120 m² in plan). Fill depth is 5.0 m; centroid offset is 5.0 m.
-Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
-<p>The data record lists every coefficient and its units. Calibration transfer: ASSUMED - to be confirmed.
-These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page.</p>
-<h2>Peak roll reduction: screening estimate</h2>
+<p>All charts select the existing 18 s hull roll period and conduit area 6.8 m². The wave-period chart uses 2 % hull damping and alpha 0.05. Alpha is normalized stiffness as defined in the method. The calculated tank natural period is 14.3 s.</p><figure><svg id="damping" viewBox="0 0 820 440" role="img" aria-labelledby="damping-title damping-desc" style="width:100%;height:auto">
+<title id="damping-title">Peak roll reduction against hull damping</title>
+<desc id="damping-desc">Peak roll reduction (%) against Hull damping (% of critical). Alpha 0.05.</desc>
+<rect width="820" height="440" fill="white"/>
+<text x="84" y="22" fill="#16324f">Peak roll reduction against hull damping</text>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="304.0" text-anchor="end" font-size="12">0.0</text>
+<text x="84.0" y="322" text-anchor="middle" font-size="12">2.0</text>
+<path d="M 84 249.2 H 770" stroke="#e2e7eb"/>
+<text x="76" y="253.2" text-anchor="end" font-size="12">9.2</text>
+<text x="221.2" y="322" text-anchor="middle" font-size="12">2.6</text>
+<path d="M 84 198.4 H 770" stroke="#e2e7eb"/>
+<text x="76" y="202.4" text-anchor="end" font-size="12">18.4</text>
+<text x="358.4" y="322" text-anchor="middle" font-size="12">3.2</text>
+<path d="M 84 147.6 H 770" stroke="#e2e7eb"/>
+<text x="76" y="151.6" text-anchor="end" font-size="12">27.7</text>
+<text x="495.6" y="322" text-anchor="middle" font-size="12">3.8</text>
+<path d="M 84 96.8 H 770" stroke="#e2e7eb"/>
+<text x="76" y="100.8" text-anchor="end" font-size="12">36.9</text>
+<text x="632.8" y="322" text-anchor="middle" font-size="12">4.4</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="50.0" text-anchor="end" font-size="12">46.1</text>
+<text x="770.0" y="322" text-anchor="middle" font-size="12">5.0</text>
+<text x="427" y="345" text-anchor="middle">Hull damping (% of critical)</text>
+<text transform="translate(18 175) rotate(-90)" text-anchor="middle">Peak roll reduction (%)</text>
+<g data-series="0"><polyline points="84.0,46.0 770.0,171.7" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">Alpha 0.05</text>
+<circle cx="84.0" cy="46.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="2.0" data-y="46.1131587008" aria-label="Alpha 0.05: 2.0, 46.1131587008"><title>Alpha 0.05: 2.0, 46.1131587008</title></circle>
+<circle cx="770.0" cy="171.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="5.0" data-y="23.2862649764" aria-label="Alpha 0.05: 5.0, 23.2862649764"><title>Alpha 0.05: 5.0, 23.2862649764</title></circle>
+</g>
+</svg><div class="series-controls"><label><input type="checkbox" checked aria-controls="damping" onchange="toggleSeries('damping', 0, this.checked)">Alpha 0.05</label> </div><a download="damping.csv" href="data:text/csv;charset=utf-8,series%2CHull%20damping%20%28%25%20of%20critical%29%2CPeak%20roll%20reduction%20%28%25%29%0AAlpha%200.05%2C2.0%2C46.1131587008%0AAlpha%200.05%2C5.0%2C23.2862649764%0A">Export CSV</a><figcaption><a href="data/generic_hull_roll_screening.json">Data record</a>: assumptions and cases fields. <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Builder</a>: compute, line 146; screen_case, line 92; chart_specs, line 309. CSV contains each plotted series point; hover or focus points for values and use checkboxes to toggle series.</figcaption></figure><figure><svg id="response" viewBox="0 0 820 440" role="img" aria-labelledby="response-title response-desc" style="width:100%;height:auto">
+<title id="response-title">Roll response with and without the tank</title>
+<desc id="response-desc">Roll / unit wave moment (1) against Wave forcing period (s). Without tank; With tank. Shaded periods are outside the published moment fit band.</desc>
+<rect width="820" height="440" fill="white"/>
+<text x="84" y="22" fill="#16324f">Roll response with and without the tank</text>
+<rect x="84" y="46" width="470.0" height="254" fill="#fff0d0"/>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="304.0" text-anchor="end" font-size="12">0.0</text>
+<text x="84.0" y="322" text-anchor="middle" font-size="12">12.6</text>
+<path d="M 84 249.2 H 770" stroke="#e2e7eb"/>
+<text x="76" y="253.2" text-anchor="end" font-size="12">5.0</text>
+<text x="221.2" y="322" text-anchor="middle" font-size="12">14.8</text>
+<path d="M 84 198.4 H 770" stroke="#e2e7eb"/>
+<text x="76" y="202.4" text-anchor="end" font-size="12">10.0</text>
+<text x="358.4" y="322" text-anchor="middle" font-size="12">16.9</text>
+<path d="M 84 147.6 H 770" stroke="#e2e7eb"/>
+<text x="76" y="151.6" text-anchor="end" font-size="12">15.0</text>
+<text x="495.6" y="322" text-anchor="middle" font-size="12">19.1</text>
+<path d="M 84 96.8 H 770" stroke="#e2e7eb"/>
+<text x="76" y="100.8" text-anchor="end" font-size="12">20.0</text>
+<text x="632.8" y="322" text-anchor="middle" font-size="12">21.2</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="50.0" text-anchor="end" font-size="12">25.0</text>
+<text x="770.0" y="322" text-anchor="middle" font-size="12">23.4</text>
+<text x="427" y="345" text-anchor="middle">Wave forcing period (s)</text>
+<text transform="translate(18 175) rotate(-90)" text-anchor="middle">Roll / unit wave moment (1)</text>
+<g data-series="0"><polyline points="84.0,290.3 89.7,290.0 95.4,289.7 101.1,289.4 106.9,289.1 112.6,288.8 118.3,288.4 124.0,288.1 129.7,287.7 135.5,287.4 141.2,287.0 146.9,286.6 152.6,286.1 158.3,285.7 164.0,285.2 169.8,284.8 175.5,284.3 181.2,283.7 186.9,283.2 192.6,282.6 198.3,282.0 204.1,281.4 209.8,280.7 215.5,280.0 221.2,279.3 226.9,278.5 232.6,277.6 238.3,276.7 244.1,275.8 249.8,274.8 255.5,273.7 261.2,272.6 266.9,271.4 272.7,270.1 278.4,268.7 284.1,267.2 289.8,265.5 295.5,263.8 301.2,261.8 307.0,259.7 312.7,257.4 318.4,254.9 324.1,252.1 329.8,249.0 335.5,245.6 341.2,241.7 347.0,237.3 352.7,232.3 358.4,226.6 364.1,220.0 369.8,212.4 375.6,203.4 381.3,192.7 387.0,180.0 392.7,164.8 398.4,146.5 404.1,124.9 409.9,100.4 415.6,75.3 421.3,54.9 427.0,46.0 432.7,52.3 438.4,70.3 444.2,93.2 449.9,115.9 455.6,136.1 461.3,153.4 467.0,167.9 472.7,180.0 478.4,190.2 484.2,198.9 489.9,206.3 495.6,212.6 501.3,218.2 507.0,223.0 512.8,227.3 518.5,231.1 524.2,234.4 529.9,237.5 535.6,240.2 541.3,242.7 547.1,245.0 552.8,247.0 558.5,248.9 564.2,250.7 569.9,252.3 575.6,253.8 581.4,255.1 587.1,256.4 592.8,257.6 598.5,258.8 604.2,259.8 609.9,260.8 615.6,261.7 621.4,262.6 627.1,263.4 632.8,264.2 638.5,264.9 644.2,265.6 650.0,266.3 655.7,266.9 661.4,267.5 667.1,268.1 672.8,268.7 678.5,269.2 684.3,269.7 690.0,270.2 695.7,270.6 701.4,271.1 707.1,271.5 712.8,271.9 718.6,272.3 724.3,272.6 730.0,273.0 735.7,273.4 741.4,273.7 747.1,274.0 752.9,274.3 758.6,274.6 764.3,274.9 770.0,275.2" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">Without tank</text>
+<circle cx="84.0" cy="290.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="12.6" data-y="0.959339568804" aria-label="Without tank: 12.6, 0.959339568804"><title>Without tank: 12.6, 0.959339568804</title></circle>
+<circle cx="89.7" cy="290.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="12.69" data-y="0.986620910235" aria-label="Without tank: 12.69, 0.986620910235"><title>Without tank: 12.69, 0.986620910235</title></circle>
+<circle cx="95.4" cy="289.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="12.78" data-y="1.01487266036" aria-label="Without tank: 12.78, 1.01487266036"><title>Without tank: 12.78, 1.01487266036</title></circle>
+<circle cx="101.1" cy="289.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="12.87" data-y="1.04414518618" aria-label="Without tank: 12.87, 1.04414518618"><title>Without tank: 12.87, 1.04414518618</title></circle>
+<circle cx="106.9" cy="289.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="12.96" data-y="1.0744924181" aria-label="Without tank: 12.96, 1.0744924181"><title>Without tank: 12.96, 1.0744924181</title></circle>
+<circle cx="112.6" cy="288.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.05" data-y="1.10597216947" aria-label="Without tank: 13.05, 1.10597216947"><title>Without tank: 13.05, 1.10597216947</title></circle>
+<circle cx="118.3" cy="288.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.14" data-y="1.13864649106" aria-label="Without tank: 13.14, 1.13864649106"><title>Without tank: 13.14, 1.13864649106</title></circle>
+<circle cx="124.0" cy="288.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.23" data-y="1.172582065" aria-label="Without tank: 13.23, 1.172582065"><title>Without tank: 13.23, 1.172582065</title></circle>
+<circle cx="129.7" cy="287.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.32" data-y="1.20785064331" aria-label="Without tank: 13.32, 1.20785064331"><title>Without tank: 13.32, 1.20785064331</title></circle>
+<circle cx="135.5" cy="287.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.41" data-y="1.24452953711" aria-label="Without tank: 13.41, 1.24452953711"><title>Without tank: 13.41, 1.24452953711</title></circle>
+<circle cx="141.2" cy="287.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.5" data-y="1.28270216338" aria-label="Without tank: 13.5, 1.28270216338"><title>Without tank: 13.5, 1.28270216338</title></circle>
+<circle cx="146.9" cy="286.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.59" data-y="1.32245865735" aria-label="Without tank: 13.59, 1.32245865735"><title>Without tank: 13.59, 1.32245865735</title></circle>
+<circle cx="152.6" cy="286.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.68" data-y="1.36389655982" aria-label="Without tank: 13.68, 1.36389655982"><title>Without tank: 13.68, 1.36389655982</title></circle>
+<circle cx="158.3" cy="285.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.77" data-y="1.40712159024" aria-label="Without tank: 13.77, 1.40712159024"><title>Without tank: 13.77, 1.40712159024</title></circle>
+<circle cx="164.0" cy="285.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.86" data-y="1.45224851847" aria-label="Without tank: 13.86, 1.45224851847"><title>Without tank: 13.86, 1.45224851847</title></circle>
+<circle cx="169.8" cy="284.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="13.95" data-y="1.49940214978" aria-label="Without tank: 13.95, 1.49940214978"><title>Without tank: 13.95, 1.49940214978</title></circle>
+<circle cx="175.5" cy="284.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.04" data-y="1.54871844101" aria-label="Without tank: 14.04, 1.54871844101"><title>Without tank: 14.04, 1.54871844101</title></circle>
+<circle cx="181.2" cy="283.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.13" data-y="1.60034576822" aria-label="Without tank: 14.13, 1.60034576822"><title>Without tank: 14.13, 1.60034576822</title></circle>
+<circle cx="186.9" cy="283.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.22" data-y="1.65444637052" aria-label="Without tank: 14.22, 1.65444637052"><title>Without tank: 14.22, 1.65444637052</title></circle>
+<circle cx="192.6" cy="282.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.31" data-y="1.71119799902" aria-label="Without tank: 14.31, 1.71119799902"><title>Without tank: 14.31, 1.71119799902</title></circle>
+<circle cx="198.3" cy="282.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.4" data-y="1.77079580568" aria-label="Without tank: 14.4, 1.77079580568"><title>Without tank: 14.4, 1.77079580568</title></circle>
+<circle cx="204.1" cy="281.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.49" data-y="1.83345451325" aria-label="Without tank: 14.49, 1.83345451325"><title>Without tank: 14.49, 1.83345451325</title></circle>
+<circle cx="209.8" cy="280.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.58" data-y="1.89941091649" aria-label="Without tank: 14.58, 1.89941091649"><title>Without tank: 14.58, 1.89941091649</title></circle>
+<circle cx="215.5" cy="280.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.67" data-y="1.9689267743" aria-label="Without tank: 14.67, 1.9689267743"><title>Without tank: 14.67, 1.9689267743</title></circle>
+<circle cx="221.2" cy="279.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.76" data-y="2.04229216582" aria-label="Without tank: 14.76, 2.04229216582"><title>Without tank: 14.76, 2.04229216582</title></circle>
+<circle cx="226.9" cy="278.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.85" data-y="2.11982939884" aria-label="Without tank: 14.85, 2.11982939884"><title>Without tank: 14.85, 2.11982939884</title></circle>
+<circle cx="232.6" cy="277.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="14.94" data-y="2.20189757874" aria-label="Without tank: 14.94, 2.20189757874"><title>Without tank: 14.94, 2.20189757874</title></circle>
+<circle cx="238.3" cy="276.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.03" data-y="2.2888979708" aria-label="Without tank: 15.03, 2.2888979708"><title>Without tank: 15.03, 2.2888979708</title></circle>
+<circle cx="244.1" cy="275.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.12" data-y="2.38128031986" aria-label="Without tank: 15.12, 2.38128031986"><title>Without tank: 15.12, 2.38128031986</title></circle>
+<circle cx="249.8" cy="274.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.21" data-y="2.47955033075" aria-label="Without tank: 15.21, 2.47955033075"><title>Without tank: 15.21, 2.47955033075</title></circle>
+<circle cx="255.5" cy="273.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.3" data-y="2.5842785634" aria-label="Without tank: 15.3, 2.5842785634"><title>Without tank: 15.3, 2.5842785634</title></circle>
+<circle cx="261.2" cy="272.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.39" data-y="2.69611106101" aria-label="Without tank: 15.39, 2.69611106101"><title>Without tank: 15.39, 2.69611106101</title></circle>
+<circle cx="266.9" cy="271.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.48" data-y="2.81578211333" aria-label="Without tank: 15.48, 2.81578211333"><title>Without tank: 15.48, 2.81578211333</title></circle>
+<circle cx="272.7" cy="270.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.57" data-y="2.94412966556" aria-label="Without tank: 15.57, 2.94412966556"><title>Without tank: 15.57, 2.94412966556</title></circle>
+<circle cx="278.4" cy="268.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.66" data-y="3.0821140253" aria-label="Without tank: 15.66, 3.0821140253"><title>Without tank: 15.66, 3.0821140253</title></circle>
+<circle cx="284.1" cy="267.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.75" data-y="3.23084070723" aria-label="Without tank: 15.75, 3.23084070723"><title>Without tank: 15.75, 3.23084070723</title></circle>
+<circle cx="289.8" cy="265.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.84" data-y="3.39158850327" aria-label="Without tank: 15.84, 3.39158850327"><title>Without tank: 15.84, 3.39158850327</title></circle>
+<circle cx="295.5" cy="263.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="15.93" data-y="3.56584419761" aria-label="Without tank: 15.93, 3.56584419761"><title>Without tank: 15.93, 3.56584419761</title></circle>
+<circle cx="301.2" cy="261.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.02" data-y="3.75534579213" aria-label="Without tank: 16.02, 3.75534579213"><title>Without tank: 16.02, 3.75534579213</title></circle>
+<circle cx="307.0" cy="259.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.11" data-y="3.96213671206" aria-label="Without tank: 16.11, 3.96213671206"><title>Without tank: 16.11, 3.96213671206</title></circle>
+<circle cx="312.7" cy="257.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.2" data-y="4.18863428609" aria-label="Without tank: 16.2, 4.18863428609"><title>Without tank: 16.2, 4.18863428609</title></circle>
+<circle cx="318.4" cy="254.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.29" data-y="4.43771692548" aria-label="Without tank: 16.29, 4.43771692548"><title>Without tank: 16.29, 4.43771692548</title></circle>
+<circle cx="324.1" cy="252.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.38" data-y="4.71283598454" aria-label="Without tank: 16.38, 4.71283598454"><title>Without tank: 16.38, 4.71283598454</title></circle>
+<circle cx="329.8" cy="249.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.47" data-y="5.01816043672" aria-label="Without tank: 16.47, 5.01816043672"><title>Without tank: 16.47, 5.01816043672</title></circle>
+<circle cx="335.5" cy="245.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.56" data-y="5.35876547051" aria-label="Without tank: 16.56, 5.35876547051"><title>Without tank: 16.56, 5.35876547051</title></circle>
+<circle cx="341.2" cy="241.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.65" data-y="5.74088017775" aria-label="Without tank: 16.65, 5.74088017775"><title>Without tank: 16.65, 5.74088017775</title></circle>
+<circle cx="347.0" cy="237.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.74" data-y="6.17221497915" aria-label="Without tank: 16.74, 6.17221497915"><title>Without tank: 16.74, 6.17221497915</title></circle>
+<circle cx="352.7" cy="232.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.83" data-y="6.66239649236" aria-label="Without tank: 16.83, 6.66239649236"><title>Without tank: 16.83, 6.66239649236</title></circle>
+<circle cx="358.4" cy="226.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="16.92" data-y="7.22354583301" aria-label="Without tank: 16.92, 7.22354583301"><title>Without tank: 16.92, 7.22354583301</title></circle>
+<circle cx="364.1" cy="220.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.01" data-y="7.87104372379" aria-label="Without tank: 17.01, 7.87104372379"><title>Without tank: 17.01, 7.87104372379</title></circle>
+<circle cx="369.8" cy="212.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.1" data-y="8.62452515742" aria-label="Without tank: 17.1, 8.62452515742"><title>Without tank: 17.1, 8.62452515742</title></circle>
+<circle cx="375.6" cy="203.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.19" data-y="9.50911710772" aria-label="Without tank: 17.19, 9.50911710772"><title>Without tank: 17.19, 9.50911710772</title></circle>
+<circle cx="381.3" cy="192.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.28" data-y="10.5568187714" aria-label="Without tank: 17.28, 10.5568187714"><title>Without tank: 17.28, 10.5568187714</title></circle>
+<circle cx="387.0" cy="180.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.37" data-y="11.8075776138" aria-label="Without tank: 17.37, 11.8075776138"><title>Without tank: 17.37, 11.8075776138</title></circle>
+<circle cx="392.7" cy="164.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.46" data-y="13.3086646285" aria-label="Without tank: 17.46, 13.3086646285"><title>Without tank: 17.46, 13.3086646285</title></circle>
+<circle cx="398.4" cy="146.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.55" data-y="15.108539339" aria-label="Without tank: 17.55, 15.108539339"><title>Without tank: 17.55, 15.108539339</title></circle>
+<circle cx="404.1" cy="124.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.64" data-y="17.2359544034" aria-label="Without tank: 17.64, 17.2359544034"><title>Without tank: 17.64, 17.2359544034</title></circle>
+<circle cx="409.9" cy="100.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.73" data-y="19.6460171194" aria-label="Without tank: 17.73, 19.6460171194"><title>Without tank: 17.73, 19.6460171194</title></circle>
+<circle cx="415.6" cy="75.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.82" data-y="22.1146898249" aria-label="Without tank: 17.82, 22.1146898249"><title>Without tank: 17.82, 22.1146898249</title></circle>
+<circle cx="421.3" cy="54.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="17.91" data-y="24.1287243025" aria-label="Without tank: 17.91, 24.1287243025"><title>Without tank: 17.91, 24.1287243025</title></circle>
+<circle cx="427.0" cy="46.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.0" data-y="25.0" aria-label="Without tank: 18.0, 25.0"><title>Without tank: 18.0, 25.0</title></circle>
+<circle cx="432.7" cy="52.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.09" data-y="24.3783933614" aria-label="Without tank: 18.09, 24.3783933614"><title>Without tank: 18.09, 24.3783933614</title></circle>
+<circle cx="438.4" cy="70.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.18" data-y="22.6066250035" aria-label="Without tank: 18.18, 22.6066250035"><title>Without tank: 18.18, 22.6066250035</title></circle>
+<circle cx="444.2" cy="93.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.27" data-y="20.3540153205" aria-label="Without tank: 18.27, 20.3540153205"><title>Without tank: 18.27, 20.3540153205</title></circle>
+<circle cx="449.9" cy="115.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.36" data-y="18.119826827" aria-label="Without tank: 18.36, 18.119826827"><title>Without tank: 18.36, 18.119826827</title></circle>
+<circle cx="455.6" cy="136.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.45" data-y="16.1274475998" aria-label="Without tank: 18.45, 16.1274475998"><title>Without tank: 18.45, 16.1274475998</title></circle>
+<circle cx="461.3" cy="153.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.54" data-y="14.4286728667" aria-label="Without tank: 18.54, 14.4286728667"><title>Without tank: 18.54, 14.4286728667</title></circle>
+<circle cx="467.0" cy="167.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.63" data-y="13.0029841984" aria-label="Without tank: 18.63, 13.0029841984"><title>Without tank: 18.63, 13.0029841984</title></circle>
+<circle cx="472.7" cy="180.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.72" data-y="11.8088736334" aria-label="Without tank: 18.72, 11.8088736334"><title>Without tank: 18.72, 11.8088736334</title></circle>
+<circle cx="478.4" cy="190.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.81" data-y="10.8042724301" aria-label="Without tank: 18.81, 10.8042724301"><title>Without tank: 18.81, 10.8042724301</title></circle>
+<circle cx="484.2" cy="198.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.9" data-y="9.95295160723" aria-label="Without tank: 18.9, 9.95295160723"><title>Without tank: 18.9, 9.95295160723</title></circle>
+<circle cx="489.9" cy="206.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="18.99" data-y="9.22553359803" aria-label="Without tank: 18.99, 9.22553359803"><title>Without tank: 18.99, 9.22553359803</title></circle>
+<circle cx="495.6" cy="212.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.08" data-y="8.59874233285" aria-label="Without tank: 19.08, 8.59874233285"><title>Without tank: 19.08, 8.59874233285</title></circle>
+<circle cx="501.3" cy="218.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.17" data-y="8.05426096387" aria-label="Without tank: 19.17, 8.05426096387"><title>Without tank: 19.17, 8.05426096387</title></circle>
+<circle cx="507.0" cy="223.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.26" data-y="7.57765886851" aria-label="Without tank: 19.26, 7.57765886851"><title>Without tank: 19.26, 7.57765886851</title></circle>
+<circle cx="512.8" cy="227.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.35" data-y="7.1575089695" aria-label="Without tank: 19.35, 7.1575089695"><title>Without tank: 19.35, 7.1575089695</title></circle>
+<circle cx="518.5" cy="231.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.44" data-y="6.78469860225" aria-label="Without tank: 19.44, 6.78469860225"><title>Without tank: 19.44, 6.78469860225</title></circle>
+<circle cx="524.2" cy="234.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.53" data-y="6.4519030598" aria-label="Without tank: 19.53, 6.4519030598"><title>Without tank: 19.53, 6.4519030598</title></circle>
+<circle cx="529.9" cy="237.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.62" data-y="6.15318644863" aria-label="Without tank: 19.62, 6.15318644863"><title>Without tank: 19.62, 6.15318644863</title></circle>
+<circle cx="535.6" cy="240.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.71" data-y="5.88369916516" aria-label="Without tank: 19.71, 5.88369916516"><title>Without tank: 19.71, 5.88369916516</title></circle>
+<circle cx="541.3" cy="242.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.8" data-y="5.639447781" aria-label="Without tank: 19.8, 5.639447781"><title>Without tank: 19.8, 5.639447781</title></circle>
+<circle cx="547.1" cy="245.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.89" data-y="5.41711900473" aria-label="Without tank: 19.89, 5.41711900473"><title>Without tank: 19.89, 5.41711900473</title></circle>
+<circle cx="552.8" cy="247.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="19.98" data-y="5.21394408953" aria-label="Without tank: 19.98, 5.21394408953"><title>Without tank: 19.98, 5.21394408953</title></circle>
+<circle cx="558.5" cy="248.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.07" data-y="5.02759362203" aria-label="Without tank: 20.07, 5.02759362203"><title>Without tank: 20.07, 5.02759362203</title></circle>
+<circle cx="564.2" cy="250.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.16" data-y="4.8560952659" aria-label="Without tank: 20.16, 4.8560952659"><title>Without tank: 20.16, 4.8560952659</title></circle>
+<circle cx="569.9" cy="252.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.25" data-y="4.69776896565" aria-label="Without tank: 20.25, 4.69776896565"><title>Without tank: 20.25, 4.69776896565</title></circle>
+<circle cx="575.6" cy="253.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.34" data-y="4.55117552605" aria-label="Without tank: 20.34, 4.55117552605"><title>Without tank: 20.34, 4.55117552605</title></circle>
+<circle cx="581.4" cy="255.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.43" data-y="4.41507551291" aria-label="Without tank: 20.43, 4.41507551291"><title>Without tank: 20.43, 4.41507551291</title></circle>
+<circle cx="587.1" cy="256.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.52" data-y="4.28839617589" aria-label="Without tank: 20.52, 4.28839617589"><title>Without tank: 20.52, 4.28839617589</title></circle>
+<circle cx="592.8" cy="257.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.61" data-y="4.17020465098" aria-label="Without tank: 20.61, 4.17020465098"><title>Without tank: 20.61, 4.17020465098</title></circle>
+<circle cx="598.5" cy="258.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.7" data-y="4.05968611282" aria-label="Without tank: 20.7, 4.05968611282"><title>Without tank: 20.7, 4.05968611282</title></circle>
+<circle cx="604.2" cy="259.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.79" data-y="3.95612585471" aria-label="Without tank: 20.79, 3.95612585471"><title>Without tank: 20.79, 3.95612585471</title></circle>
+<circle cx="609.9" cy="260.8" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.88" data-y="3.85889450545" aria-label="Without tank: 20.88, 3.85889450545"><title>Without tank: 20.88, 3.85889450545</title></circle>
+<circle cx="615.6" cy="261.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="20.97" data-y="3.76743576715" aria-label="Without tank: 20.97, 3.76743576715"><title>Without tank: 20.97, 3.76743576715</title></circle>
+<circle cx="621.4" cy="262.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.06" data-y="3.68125619066" aria-label="Without tank: 21.06, 3.68125619066"><title>Without tank: 21.06, 3.68125619066</title></circle>
+<circle cx="627.1" cy="263.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.15" data-y="3.59991660787" aria-label="Without tank: 21.15, 3.59991660787"><title>Without tank: 21.15, 3.59991660787</title></circle>
+<circle cx="632.8" cy="264.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.24" data-y="3.52302491816" aria-label="Without tank: 21.24, 3.52302491816"><title>Without tank: 21.24, 3.52302491816</title></circle>
+<circle cx="638.5" cy="264.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.33" data-y="3.45022998767" aria-label="Without tank: 21.33, 3.45022998767"><title>Without tank: 21.33, 3.45022998767</title></circle>
+<circle cx="644.2" cy="265.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.42" data-y="3.38121646743" aria-label="Without tank: 21.42, 3.38121646743"><title>Without tank: 21.42, 3.38121646743</title></circle>
+<circle cx="650.0" cy="266.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.51" data-y="3.31570037396" aria-label="Without tank: 21.51, 3.31570037396"><title>Without tank: 21.51, 3.31570037396</title></circle>
+<circle cx="655.7" cy="266.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.6" data-y="3.25342530526" aria-label="Without tank: 21.6, 3.25342530526"><title>Without tank: 21.6, 3.25342530526</title></circle>
+<circle cx="661.4" cy="267.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.69" data-y="3.19415918884" aria-label="Without tank: 21.69, 3.19415918884"><title>Without tank: 21.69, 3.19415918884</title></circle>
+<circle cx="667.1" cy="268.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.78" data-y="3.13769147689" aria-label="Without tank: 21.78, 3.13769147689"><title>Without tank: 21.78, 3.13769147689</title></circle>
+<circle cx="672.8" cy="268.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.87" data-y="3.08383071891" aria-label="Without tank: 21.87, 3.08383071891"><title>Without tank: 21.87, 3.08383071891</title></circle>
+<circle cx="678.5" cy="269.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="21.96" data-y="3.03240245404" aria-label="Without tank: 21.96, 3.03240245404"><title>Without tank: 21.96, 3.03240245404</title></circle>
+<circle cx="684.3" cy="269.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.05" data-y="2.9832473753" aria-label="Without tank: 22.05, 2.9832473753"><title>Without tank: 22.05, 2.9832473753</title></circle>
+<circle cx="690.0" cy="270.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.14" data-y="2.93621972586" aria-label="Without tank: 22.14, 2.93621972586"><title>Without tank: 22.14, 2.93621972586</title></circle>
+<circle cx="695.7" cy="270.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.23" data-y="2.89118589393" aria-label="Without tank: 22.23, 2.89118589393"><title>Without tank: 22.23, 2.89118589393</title></circle>
+<circle cx="701.4" cy="271.1" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.32" data-y="2.8480231783" aria-label="Without tank: 22.32, 2.8480231783"><title>Without tank: 22.32, 2.8480231783</title></circle>
+<circle cx="707.1" cy="271.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.41" data-y="2.80661870088" aria-label="Without tank: 22.41, 2.80661870088"><title>Without tank: 22.41, 2.80661870088</title></circle>
+<circle cx="712.8" cy="271.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.5" data-y="2.76686844637" aria-label="Without tank: 22.5, 2.76686844637"><title>Without tank: 22.5, 2.76686844637</title></circle>
+<circle cx="718.6" cy="272.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.59" data-y="2.72867641198" aria-label="Without tank: 22.59, 2.72867641198"><title>Without tank: 22.59, 2.72867641198</title></circle>
+<circle cx="724.3" cy="272.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.68" data-y="2.69195385299" aria-label="Without tank: 22.68, 2.69195385299"><title>Without tank: 22.68, 2.69195385299</title></circle>
+<circle cx="730.0" cy="273.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.77" data-y="2.65661861158" aria-label="Without tank: 22.77, 2.65661861158"><title>Without tank: 22.77, 2.65661861158</title></circle>
+<circle cx="735.7" cy="273.4" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.86" data-y="2.62259451872" aria-label="Without tank: 22.86, 2.62259451872"><title>Without tank: 22.86, 2.62259451872</title></circle>
+<circle cx="741.4" cy="273.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="22.95" data-y="2.58981085978" aria-label="Without tank: 22.95, 2.58981085978"><title>Without tank: 22.95, 2.58981085978</title></circle>
+<circle cx="747.1" cy="274.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="23.04" data-y="2.55820189622" aria-label="Without tank: 23.04, 2.55820189622"><title>Without tank: 23.04, 2.55820189622</title></circle>
+<circle cx="752.9" cy="274.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="23.13" data-y="2.52770643665" aria-label="Without tank: 23.13, 2.52770643665"><title>Without tank: 23.13, 2.52770643665</title></circle>
+<circle cx="758.6" cy="274.6" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="23.22" data-y="2.49826745139" aria-label="Without tank: 23.22, 2.49826745139"><title>Without tank: 23.22, 2.49826745139</title></circle>
+<circle cx="764.3" cy="274.9" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="23.31" data-y="2.46983172543" aria-label="Without tank: 23.31, 2.46983172543"><title>Without tank: 23.31, 2.46983172543</title></circle>
+<circle cx="770.0" cy="275.2" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="23.4" data-y="2.44234954555" aria-label="Without tank: 23.4, 2.44234954555"><title>Without tank: 23.4, 2.44234954555</title></circle>
+</g>
+<g data-series="1"><polyline points="84.0,289.6 89.7,289.3 95.4,289.0 101.1,288.7 106.9,288.3 112.6,288.0 118.3,287.7 124.0,287.4 129.7,287.1 135.5,286.8 141.2,286.5 146.9,286.2 152.6,285.9 158.3,285.6 164.0,285.3 169.8,284.9 175.5,284.6 181.2,284.3 186.9,283.9 192.6,283.6 198.3,283.2 204.1,282.8 209.8,282.4 215.5,281.9 221.2,281.5 226.9,281.0 232.6,280.5 238.3,279.9 244.1,279.3 249.8,278.7 255.5,278.1 261.2,277.4 266.9,276.6 272.7,275.9 278.4,275.0 284.1,274.1 289.8,273.1 295.5,272.1 301.2,271.0 307.0,269.8 312.7,268.5 318.4,267.1 324.1,265.6 329.8,264.0 335.5,262.2 341.2,260.3 347.0,258.2 352.7,255.9 358.4,253.3 364.1,250.5 369.8,247.4 375.6,244.0 381.3,240.1 387.0,235.9 392.7,231.0 398.4,225.7 404.1,219.6 409.9,213.0 415.6,205.6 421.3,197.7 427.0,189.5 432.7,181.4 438.4,174.2 444.2,168.4 449.9,164.6 455.6,163.1 461.3,163.7 467.0,166.0 472.7,169.5 478.4,173.8 484.2,178.5 489.9,183.3 495.6,188.1 501.3,192.8 507.0,197.3 512.8,201.6 518.5,205.7 524.2,209.6 529.9,213.2 535.6,216.7 541.3,219.9 547.1,223.0 552.8,225.9 558.5,228.6 564.2,231.2 569.9,233.6 575.6,235.9 581.4,238.0 587.1,240.1 592.8,242.0 598.5,243.8 604.2,245.5 609.9,247.1 615.6,248.7 621.4,250.1 627.1,251.5 632.8,252.8 638.5,254.0 644.2,255.1 650.0,256.2 655.7,257.3 661.4,258.2 667.1,259.2 672.8,260.1 678.5,260.9 684.3,261.7 690.0,262.5 695.7,263.2 701.4,263.9 707.1,264.6 712.8,265.2 718.6,265.8 724.3,266.4 730.0,266.9 735.7,267.5 741.4,268.0 747.1,268.5 752.9,268.9 758.6,269.4 764.3,269.8 770.0,270.2" fill="none" stroke="#0f8a7e" stroke-width="2"/>
+<text x="84" y="381" fill="#0f8a7e" font-size="12">With tank</text>
+<circle cx="84.0" cy="289.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="12.6" data-y="1.02750115441" aria-label="With tank: 12.6, 1.02750115441"><title>With tank: 12.6, 1.02750115441</title></circle>
+<circle cx="89.7" cy="289.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="12.69" data-y="1.05706946032" aria-label="With tank: 12.69, 1.05706946032"><title>With tank: 12.69, 1.05706946032</title></circle>
+<circle cx="95.4" cy="289.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="12.78" data-y="1.08685007792" aria-label="With tank: 12.78, 1.08685007792"><title>With tank: 12.78, 1.08685007792</title></circle>
+<circle cx="101.1" cy="288.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="12.87" data-y="1.11675313454" aria-label="With tank: 12.87, 1.11675313454"><title>With tank: 12.87, 1.11675313454</title></circle>
+<circle cx="106.9" cy="288.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="12.96" data-y="1.14670725018" aria-label="With tank: 12.96, 1.14670725018"><title>With tank: 12.96, 1.14670725018</title></circle>
+<circle cx="112.6" cy="288.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.05" data-y="1.17666313825" aria-label="With tank: 13.05, 1.17666313825"><title>With tank: 13.05, 1.17666313825</title></circle>
+<circle cx="118.3" cy="287.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.14" data-y="1.20659530508" aria-label="With tank: 13.14, 1.20659530508"><title>With tank: 13.14, 1.20659530508</title></circle>
+<circle cx="124.0" cy="287.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.23" data-y="1.23650215419" aria-label="With tank: 13.23, 1.23650215419"><title>With tank: 13.23, 1.23650215419</title></circle>
+<circle cx="129.7" cy="287.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.32" data-y="1.2664049898" aria-label="With tank: 13.32, 1.2664049898"><title>With tank: 13.32, 1.2664049898</title></circle>
+<circle cx="135.5" cy="286.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.41" data-y="1.296346379" aria-label="With tank: 13.41, 1.296346379"><title>With tank: 13.41, 1.296346379</title></circle>
+<circle cx="141.2" cy="286.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.5" data-y="1.32638824218" aria-label="With tank: 13.5, 1.32638824218"><title>With tank: 13.5, 1.32638824218</title></circle>
+<circle cx="146.9" cy="286.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.59" data-y="1.35660992654" aria-label="With tank: 13.59, 1.35660992654"><title>With tank: 13.59, 1.35660992654</title></circle>
+<circle cx="152.6" cy="285.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.68" data-y="1.38710641312" aria-label="With tank: 13.68, 1.38710641312"><title>With tank: 13.68, 1.38710641312</title></circle>
+<circle cx="158.3" cy="285.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.77" data-y="1.41798673466" aria-label="With tank: 13.77, 1.41798673466"><title>With tank: 13.77, 1.41798673466</title></circle>
+<circle cx="164.0" cy="285.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.86" data-y="1.44937261428" aria-label="With tank: 13.86, 1.44937261428"><title>With tank: 13.86, 1.44937261428</title></circle>
+<circle cx="169.8" cy="284.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="13.95" data-y="1.48139733324" aria-label="With tank: 13.95, 1.48139733324"><title>With tank: 13.95, 1.48139733324</title></circle>
+<circle cx="175.5" cy="284.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.04" data-y="1.51420479478" aria-label="With tank: 14.04, 1.51420479478"><title>With tank: 14.04, 1.51420479478</title></circle>
+<circle cx="181.2" cy="284.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.13" data-y="1.5479487667" aria-label="With tank: 14.13, 1.5479487667"><title>With tank: 14.13, 1.5479487667</title></circle>
+<circle cx="186.9" cy="283.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.22" data-y="1.58279228363" aria-label="With tank: 14.22, 1.58279228363"><title>With tank: 14.22, 1.58279228363</title></circle>
+<circle cx="192.6" cy="283.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.31" data-y="1.61890720011" aria-label="With tank: 14.31, 1.61890720011"><title>With tank: 14.31, 1.61890720011</title></circle>
+<circle cx="198.3" cy="283.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.4" data-y="1.65647389327" aria-label="With tank: 14.4, 1.65647389327"><title>With tank: 14.4, 1.65647389327</title></circle>
+<circle cx="204.1" cy="282.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.49" data-y="1.69568112442" aria-label="With tank: 14.49, 1.69568112442"><title>With tank: 14.49, 1.69568112442</title></circle>
+<circle cx="209.8" cy="282.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.58" data-y="1.73672609078" aria-label="With tank: 14.58, 1.73672609078"><title>With tank: 14.58, 1.73672609078</title></circle>
+<circle cx="215.5" cy="281.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.67" data-y="1.77981466959" aria-label="With tank: 14.67, 1.77981466959"><title>With tank: 14.67, 1.77981466959</title></circle>
+<circle cx="221.2" cy="281.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.76" data-y="1.8251619214" aria-label="With tank: 14.76, 1.8251619214"><title>With tank: 14.76, 1.8251619214</title></circle>
+<circle cx="226.9" cy="281.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.85" data-y="1.87299286398" aria-label="With tank: 14.85, 1.87299286398"><title>With tank: 14.85, 1.87299286398</title></circle>
+<circle cx="232.6" cy="280.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="14.94" data-y="1.92354361363" aria-label="With tank: 14.94, 1.92354361363"><title>With tank: 14.94, 1.92354361363</title></circle>
+<circle cx="238.3" cy="279.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.03" data-y="1.97706283676" aria-label="With tank: 15.03, 1.97706283676"><title>With tank: 15.03, 1.97706283676</title></circle>
+<circle cx="244.1" cy="279.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.12" data-y="2.03381367901" aria-label="With tank: 15.12, 2.03381367901"><title>With tank: 15.12, 2.03381367901</title></circle>
+<circle cx="249.8" cy="278.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.21" data-y="2.09407619887" aria-label="With tank: 15.21, 2.09407619887"><title>With tank: 15.21, 2.09407619887</title></circle>
+<circle cx="255.5" cy="278.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.3" data-y="2.15815024143" aria-label="With tank: 15.3, 2.15815024143"><title>With tank: 15.3, 2.15815024143</title></circle>
+<circle cx="261.2" cy="277.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.39" data-y="2.22635900642" aria-label="With tank: 15.39, 2.22635900642"><title>With tank: 15.39, 2.22635900642</title></circle>
+<circle cx="266.9" cy="276.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.48" data-y="2.29905322555" aria-label="With tank: 15.48, 2.29905322555"><title>With tank: 15.48, 2.29905322555</title></circle>
+<circle cx="272.7" cy="275.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.57" data-y="2.37661618877" aria-label="With tank: 15.57, 2.37661618877"><title>With tank: 15.57, 2.37661618877</title></circle>
+<circle cx="278.4" cy="275.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.66" data-y="2.45946948062" aria-label="With tank: 15.66, 2.45946948062"><title>With tank: 15.66, 2.45946948062</title></circle>
+<circle cx="284.1" cy="274.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.75" data-y="2.54807984801" aria-label="With tank: 15.75, 2.54807984801"><title>With tank: 15.75, 2.54807984801</title></circle>
+<circle cx="289.8" cy="273.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.84" data-y="2.64296724832" aria-label="With tank: 15.84, 2.64296724832"><title>With tank: 15.84, 2.64296724832</title></circle>
+<circle cx="295.5" cy="272.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="15.93" data-y="2.74471413047" aria-label="With tank: 15.93, 2.74471413047"><title>With tank: 15.93, 2.74471413047</title></circle>
+<circle cx="301.2" cy="271.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.02" data-y="2.85397651554" aria-label="With tank: 16.02, 2.85397651554"><title>With tank: 16.02, 2.85397651554</title></circle>
+<circle cx="307.0" cy="269.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.11" data-y="2.97149695866" aria-label="With tank: 16.11, 2.97149695866"><title>With tank: 16.11, 2.97149695866</title></circle>
+<circle cx="312.7" cy="268.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.2" data-y="3.09812000557" aria-label="With tank: 16.2, 3.09812000557"><title>With tank: 16.2, 3.09812000557</title></circle>
+<circle cx="318.4" cy="267.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.29" data-y="3.23481035002" aria-label="With tank: 16.29, 3.23481035002"><title>With tank: 16.29, 3.23481035002</title></circle>
+<circle cx="324.1" cy="265.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.38" data-y="3.38267466372" aria-label="With tank: 16.38, 3.38267466372"><title>With tank: 16.38, 3.38267466372</title></circle>
+<circle cx="329.8" cy="264.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.47" data-y="3.5429875354" aria-label="With tank: 16.47, 3.5429875354"><title>With tank: 16.47, 3.5429875354</title></circle>
+<circle cx="335.5" cy="262.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.56" data-y="3.71722260206" aria-label="With tank: 16.56, 3.71722260206"><title>With tank: 16.56, 3.71722260206</title></circle>
+<circle cx="341.2" cy="260.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.65" data-y="3.90708947321" aria-label="With tank: 16.65, 3.90708947321"><title>With tank: 16.65, 3.90708947321</title></circle>
+<circle cx="347.0" cy="258.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.74" data-y="4.1145778277" aria-label="With tank: 16.74, 4.1145778277"><title>With tank: 16.74, 4.1145778277</title></circle>
+<circle cx="352.7" cy="255.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.83" data-y="4.34200938447" aria-label="With tank: 16.83, 4.34200938447"><title>With tank: 16.83, 4.34200938447</title></circle>
+<circle cx="358.4" cy="253.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="16.92" data-y="4.59209793697" aria-label="With tank: 16.92, 4.59209793697"><title>With tank: 16.92, 4.59209793697</title></circle>
+<circle cx="364.1" cy="250.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.01" data-y="4.86801736123" aria-label="With tank: 17.01, 4.86801736123"><title>With tank: 17.01, 4.86801736123</title></circle>
+<circle cx="369.8" cy="247.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.1" data-y="5.17347401951" aria-label="With tank: 17.1, 5.17347401951"><title>With tank: 17.1, 5.17347401951</title></circle>
+<circle cx="375.6" cy="244.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.19" data-y="5.51277646199" aria-label="With tank: 17.19, 5.51277646199"><title>With tank: 17.19, 5.51277646199</title></circle>
+<circle cx="381.3" cy="240.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.28" data-y="5.89088572407" aria-label="With tank: 17.28, 5.89088572407"><title>With tank: 17.28, 5.89088572407</title></circle>
+<circle cx="387.0" cy="235.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.37" data-y="6.3134127859" aria-label="With tank: 17.37, 6.3134127859"><title>With tank: 17.37, 6.3134127859</title></circle>
+<circle cx="392.7" cy="231.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.46" data-y="6.78649976894" aria-label="With tank: 17.46, 6.78649976894"><title>With tank: 17.46, 6.78649976894</title></circle>
+<circle cx="398.4" cy="225.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.55" data-y="7.31646901212" aria-label="With tank: 17.55, 7.31646901212"><title>With tank: 17.55, 7.31646901212</title></circle>
+<circle cx="404.1" cy="219.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.64" data-y="7.90903895363" aria-label="With tank: 17.64, 7.90903895363"><title>With tank: 17.64, 7.90903895363</title></circle>
+<circle cx="409.9" cy="213.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.73" data-y="8.56778975672" aria-label="With tank: 17.73, 8.56778975672"><title>With tank: 17.73, 8.56778975672</title></circle>
+<circle cx="415.6" cy="205.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.82" data-y="9.29145217433" aria-label="With tank: 17.82, 9.29145217433"><title>With tank: 17.82, 9.29145217433</title></circle>
+<circle cx="421.3" cy="197.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="17.91" data-y="10.0696610437" aria-label="With tank: 17.91, 10.0696610437"><title>With tank: 17.91, 10.0696610437</title></circle>
+<circle cx="427.0" cy="189.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.0" data-y="10.877461604" aria-label="With tank: 18.0, 10.877461604"><title>With tank: 18.0, 10.877461604</title></circle>
+<circle cx="432.7" cy="181.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.09" data-y="11.670641733" aria-label="With tank: 18.09, 11.670641733"><title>With tank: 18.09, 11.670641733</title></circle>
+<circle cx="438.4" cy="174.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.18" data-y="12.3866274451" aria-label="With tank: 18.18, 12.3866274451"><title>With tank: 18.18, 12.3866274451</title></circle>
+<circle cx="444.2" cy="168.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.27" data-y="12.9561775309" aria-label="With tank: 18.27, 12.9561775309"><title>With tank: 18.27, 12.9561775309</title></circle>
+<circle cx="449.9" cy="164.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.36" data-y="13.3246595499" aria-label="With tank: 18.36, 13.3246595499"><title>With tank: 18.36, 13.3246595499</title></circle>
+<circle cx="455.6" cy="163.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.45" data-y="13.4709442963" aria-label="With tank: 18.45, 13.4709442963"><title>With tank: 18.45, 13.4709442963</title></circle>
+<circle cx="461.3" cy="163.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.54" data-y="13.4107793279" aria-label="With tank: 18.54, 13.4107793279"><title>With tank: 18.54, 13.4107793279</title></circle>
+<circle cx="467.0" cy="166.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.63" data-y="13.1845144289" aria-label="With tank: 18.63, 13.1845144289"><title>With tank: 18.63, 13.1845144289</title></circle>
+<circle cx="472.7" cy="169.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.72" data-y="12.8402407975" aria-label="With tank: 18.72, 12.8402407975"><title>With tank: 18.72, 12.8402407975</title></circle>
+<circle cx="478.4" cy="173.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.81" data-y="12.421747174" aria-label="With tank: 18.81, 12.421747174"><title>With tank: 18.81, 12.421747174</title></circle>
+<circle cx="484.2" cy="178.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.9" data-y="11.9633812789" aria-label="With tank: 18.9, 11.9633812789"><title>With tank: 18.9, 11.9633812789</title></circle>
+<circle cx="489.9" cy="183.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="18.99" data-y="11.4896251399" aria-label="With tank: 18.99, 11.4896251399"><title>With tank: 18.99, 11.4896251399</title></circle>
+<circle cx="495.6" cy="188.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.08" data-y="11.0167551415" aria-label="With tank: 19.08, 11.0167551415"><title>With tank: 19.08, 11.0167551415</title></circle>
+<circle cx="501.3" cy="192.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.17" data-y="10.5549555317" aria-label="With tank: 19.17, 10.5549555317"><title>With tank: 19.17, 10.5549555317</title></circle>
+<circle cx="507.0" cy="197.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.26" data-y="10.1101797409" aria-label="With tank: 19.26, 10.1101797409"><title>With tank: 19.26, 10.1101797409</title></circle>
+<circle cx="512.8" cy="201.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.35" data-y="9.68557118351" aria-label="With tank: 19.35, 9.68557118351"><title>With tank: 19.35, 9.68557118351</title></circle>
+<circle cx="518.5" cy="205.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.44" data-y="9.28247100185" aria-label="With tank: 19.44, 9.28247100185"><title>With tank: 19.44, 9.28247100185</title></circle>
+<circle cx="524.2" cy="209.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.53" data-y="8.90110311764" aria-label="With tank: 19.53, 8.90110311764"><title>With tank: 19.53, 8.90110311764</title></circle>
+<circle cx="529.9" cy="213.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.62" data-y="8.54102694231" aria-label="With tank: 19.62, 8.54102694231"><title>With tank: 19.62, 8.54102694231</title></circle>
+<circle cx="535.6" cy="216.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.71" data-y="8.20143015023" aria-label="With tank: 19.71, 8.20143015023"><title>With tank: 19.71, 8.20143015023</title></circle>
+<circle cx="541.3" cy="219.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.8" data-y="7.8813140693" aria-label="With tank: 19.8, 7.8813140693"><title>With tank: 19.8, 7.8813140693</title></circle>
+<circle cx="547.1" cy="223.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.89" data-y="7.57960808839" aria-label="With tank: 19.89, 7.57960808839"><title>With tank: 19.89, 7.57960808839</title></circle>
+<circle cx="552.8" cy="225.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="19.98" data-y="7.29523769507" aria-label="With tank: 19.98, 7.29523769507"><title>With tank: 19.98, 7.29523769507</title></circle>
+<circle cx="558.5" cy="228.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.07" data-y="7.02716257975" aria-label="With tank: 20.07, 7.02716257975"><title>With tank: 20.07, 7.02716257975</title></circle>
+<circle cx="564.2" cy="231.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.16" data-y="6.77439573013" aria-label="With tank: 20.16, 6.77439573013"><title>With tank: 20.16, 6.77439573013</title></circle>
+<circle cx="569.9" cy="233.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.25" data-y="6.53601077059" aria-label="With tank: 20.25, 6.53601077059"><title>With tank: 20.25, 6.53601077059</title></circle>
+<circle cx="575.6" cy="235.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.34" data-y="6.31114235764" aria-label="With tank: 20.34, 6.31114235764"><title>With tank: 20.34, 6.31114235764</title></circle>
+<circle cx="581.4" cy="238.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.43" data-y="6.09898280627" aria-label="With tank: 20.43, 6.09898280627"><title>With tank: 20.43, 6.09898280627</title></circle>
+<circle cx="587.1" cy="240.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.52" data-y="5.89877700897" aria-label="With tank: 20.52, 5.89877700897"><title>With tank: 20.52, 5.89877700897</title></circle>
+<circle cx="592.8" cy="242.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.61" data-y="5.7098169409" aria-label="With tank: 20.61, 5.7098169409"><title>With tank: 20.61, 5.7098169409</title></circle>
+<circle cx="598.5" cy="243.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.7" data-y="5.53143650944" aria-label="With tank: 20.7, 5.53143650944"><title>With tank: 20.7, 5.53143650944</title></circle>
+<circle cx="604.2" cy="245.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.79" data-y="5.36300713398" aria-label="With tank: 20.79, 5.36300713398"><title>With tank: 20.79, 5.36300713398</title></circle>
+<circle cx="609.9" cy="247.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.88" data-y="5.20393418999" aria-label="With tank: 20.88, 5.20393418999"><title>With tank: 20.88, 5.20393418999</title></circle>
+<circle cx="615.6" cy="248.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="20.97" data-y="5.05365429058" aria-label="With tank: 20.97, 5.05365429058"><title>With tank: 20.97, 5.05365429058</title></circle>
+<circle cx="621.4" cy="250.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.06" data-y="4.91163328909" aria-label="With tank: 21.06, 4.91163328909"><title>With tank: 21.06, 4.91163328909</title></circle>
+<circle cx="627.1" cy="251.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.15" data-y="4.77736482817" aria-label="With tank: 21.15, 4.77736482817"><title>With tank: 21.15, 4.77736482817</title></circle>
+<circle cx="632.8" cy="252.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.24" data-y="4.65036930643" aria-label="With tank: 21.24, 4.65036930643"><title>With tank: 21.24, 4.65036930643</title></circle>
+<circle cx="638.5" cy="254.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.33" data-y="4.53019306444" aria-label="With tank: 21.33, 4.53019306444"><title>With tank: 21.33, 4.53019306444</title></circle>
+<circle cx="644.2" cy="255.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.42" data-y="4.41640770516" aria-label="With tank: 21.42, 4.41640770516"><title>With tank: 21.42, 4.41640770516</title></circle>
+<circle cx="650.0" cy="256.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.51" data-y="4.30860944437" aria-label="With tank: 21.51, 4.30860944437"><title>With tank: 21.51, 4.30860944437</title></circle>
+<circle cx="655.7" cy="257.3" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.6" data-y="4.20641843372" aria-label="With tank: 21.6, 4.20641843372"><title>With tank: 21.6, 4.20641843372</title></circle>
+<circle cx="661.4" cy="258.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.69" data-y="4.10947802234" aria-label="With tank: 21.69, 4.10947802234"><title>With tank: 21.69, 4.10947802234</title></circle>
+<circle cx="667.1" cy="259.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.78" data-y="4.01745394307" aria-label="With tank: 21.78, 4.01745394307"><title>With tank: 21.78, 4.01745394307</title></circle>
+<circle cx="672.8" cy="260.1" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.87" data-y="3.93003342391" aria-label="With tank: 21.87, 3.93003342391"><title>With tank: 21.87, 3.93003342391</title></circle>
+<circle cx="678.5" cy="260.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="21.96" data-y="3.84692423448" aria-label="With tank: 21.96, 3.84692423448"><title>With tank: 21.96, 3.84692423448</title></circle>
+<circle cx="684.3" cy="261.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.05" data-y="3.76785368254" aria-label="With tank: 22.05, 3.76785368254"><title>With tank: 22.05, 3.76785368254</title></circle>
+<circle cx="690.0" cy="262.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.14" data-y="3.6925675781" aria-label="With tank: 22.14, 3.6925675781"><title>With tank: 22.14, 3.6925675781</title></circle>
+<circle cx="695.7" cy="263.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.23" data-y="3.62082918218" aria-label="With tank: 22.23, 3.62082918218"><title>With tank: 22.23, 3.62082918218</title></circle>
+<circle cx="701.4" cy="263.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.32" data-y="3.55241815638" aria-label="With tank: 22.32, 3.55241815638"><title>With tank: 22.32, 3.55241815638</title></circle>
+<circle cx="707.1" cy="264.6" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.41" data-y="3.48712952705" aria-label="With tank: 22.41, 3.48712952705"><title>With tank: 22.41, 3.48712952705</title></circle>
+<circle cx="712.8" cy="265.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.5" data-y="3.42477267542" aria-label="With tank: 22.5, 3.42477267542"><title>With tank: 22.5, 3.42477267542</title></circle>
+<circle cx="718.6" cy="265.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.59" data-y="3.3651703627" aria-label="With tank: 22.59, 3.3651703627"><title>With tank: 22.59, 3.3651703627</title></circle>
+<circle cx="724.3" cy="266.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.68" data-y="3.30815779675" aria-label="With tank: 22.68, 3.30815779675"><title>With tank: 22.68, 3.30815779675</title></circle>
+<circle cx="730.0" cy="266.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.77" data-y="3.25358174598" aria-label="With tank: 22.77, 3.25358174598"><title>With tank: 22.77, 3.25358174598</title></circle>
+<circle cx="735.7" cy="267.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.86" data-y="3.20129969597" aria-label="With tank: 22.86, 3.20129969597"><title>With tank: 22.86, 3.20129969597</title></circle>
+<circle cx="741.4" cy="268.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="22.95" data-y="3.15117906896" aria-label="With tank: 22.95, 3.15117906896"><title>With tank: 22.95, 3.15117906896</title></circle>
+<circle cx="747.1" cy="268.5" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="23.04" data-y="3.10309648072" aria-label="With tank: 23.04, 3.10309648072"><title>With tank: 23.04, 3.10309648072</title></circle>
+<circle cx="752.9" cy="268.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="23.13" data-y="3.05693705371" aria-label="With tank: 23.13, 3.05693705371"><title>With tank: 23.13, 3.05693705371</title></circle>
+<circle cx="758.6" cy="269.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="23.22" data-y="3.01259377702" aria-label="With tank: 23.22, 3.01259377702"><title>With tank: 23.22, 3.01259377702</title></circle>
+<circle cx="764.3" cy="269.8" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="23.31" data-y="2.96996691273" aria-label="With tank: 23.31, 2.96996691273"><title>With tank: 23.31, 2.96996691273</title></circle>
+<circle cx="770.0" cy="270.2" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="23.4" data-y="2.92896344621" aria-label="With tank: 23.4, 2.92896344621"><title>With tank: 23.4, 2.92896344621</title></circle>
+</g>
+</svg><div class="series-controls"><label><input type="checkbox" checked aria-controls="response" onchange="toggleSeries('response', 0, this.checked)">Without tank</label> <label><input type="checkbox" checked aria-controls="response" onchange="toggleSeries('response', 1, this.checked)">With tank</label> </div><a download="response.csv" href="data:text/csv;charset=utf-8,series%2CWave%20forcing%20period%20%28s%29%2CRoll%20%2F%20unit%20wave%20moment%20%281%29%0AWithout%20tank%2C12.6%2C0.959339568804%0AWithout%20tank%2C12.69%2C0.986620910235%0AWithout%20tank%2C12.78%2C1.01487266036%0AWithout%20tank%2C12.87%2C1.04414518618%0AWithout%20tank%2C12.96%2C1.0744924181%0AWithout%20tank%2C13.05%2C1.10597216947%0AWithout%20tank%2C13.14%2C1.13864649106%0AWithout%20tank%2C13.23%2C1.172582065%0AWithout%20tank%2C13.32%2C1.20785064331%0AWithout%20tank%2C13.41%2C1.24452953711%0AWithout%20tank%2C13.5%2C1.28270216338%0AWithout%20tank%2C13.59%2C1.32245865735%0AWithout%20tank%2C13.68%2C1.36389655982%0AWithout%20tank%2C13.77%2C1.40712159024%0AWithout%20tank%2C13.86%2C1.45224851847%0AWithout%20tank%2C13.95%2C1.49940214978%0AWithout%20tank%2C14.04%2C1.54871844101%0AWithout%20tank%2C14.13%2C1.60034576822%0AWithout%20tank%2C14.22%2C1.65444637052%0AWithout%20tank%2C14.31%2C1.71119799902%0AWithout%20tank%2C14.4%2C1.77079580568%0AWithout%20tank%2C14.49%2C1.83345451325%0AWithout%20tank%2C14.58%2C1.89941091649%0AWithout%20tank%2C14.67%2C1.9689267743%0AWithout%20tank%2C14.76%2C2.04229216582%0AWithout%20tank%2C14.85%2C2.11982939884%0AWithout%20tank%2C14.94%2C2.20189757874%0AWithout%20tank%2C15.03%2C2.2888979708%0AWithout%20tank%2C15.12%2C2.38128031986%0AWithout%20tank%2C15.21%2C2.47955033075%0AWithout%20tank%2C15.3%2C2.5842785634%0AWithout%20tank%2C15.39%2C2.69611106101%0AWithout%20tank%2C15.48%2C2.81578211333%0AWithout%20tank%2C15.57%2C2.94412966556%0AWithout%20tank%2C15.66%2C3.0821140253%0AWithout%20tank%2C15.75%2C3.23084070723%0AWithout%20tank%2C15.84%2C3.39158850327%0AWithout%20tank%2C15.93%2C3.56584419761%0AWithout%20tank%2C16.02%2C3.75534579213%0AWithout%20tank%2C16.11%2C3.96213671206%0AWithout%20tank%2C16.2%2C4.18863428609%0AWithout%20tank%2C16.29%2C4.43771692548%0AWithout%20tank%2C16.38%2C4.71283598454%0AWithout%20tank%2C16.47%2C5.01816043672%0AWithout%20tank%2C16.56%2C5.35876547051%0AWithout%20tank%2C16.65%2C5.74088017775%0AWithout%20tank%2C16.74%2C6.17221497915%0AWithout%20tank%2C16.83%2C6.66239649236%0AWithout%20tank%2C16.92%2C7.22354583301%0AWithout%20tank%2C17.01%2C7.87104372379%0AWithout%20tank%2C17.1%2C8.62452515742%0AWithout%20tank%2C17.19%2C9.50911710772%0AWithout%20tank%2C17.28%2C10.5568187714%0AWithout%20tank%2C17.37%2C11.8075776138%0AWithout%20tank%2C17.46%2C13.3086646285%0AWithout%20tank%2C17.55%2C15.108539339%0AWithout%20tank%2C17.64%2C17.2359544034%0AWithout%20tank%2C17.73%2C19.6460171194%0AWithout%20tank%2C17.82%2C22.1146898249%0AWithout%20tank%2C17.91%2C24.1287243025%0AWithout%20tank%2C18.0%2C25.0%0AWithout%20tank%2C18.09%2C24.3783933614%0AWithout%20tank%2C18.18%2C22.6066250035%0AWithout%20tank%2C18.27%2C20.3540153205%0AWithout%20tank%2C18.36%2C18.119826827%0AWithout%20tank%2C18.45%2C16.1274475998%0AWithout%20tank%2C18.54%2C14.4286728667%0AWithout%20tank%2C18.63%2C13.0029841984%0AWithout%20tank%2C18.72%2C11.8088736334%0AWithout%20tank%2C18.81%2C10.8042724301%0AWithout%20tank%2C18.9%2C9.95295160723%0AWithout%20tank%2C18.99%2C9.22553359803%0AWithout%20tank%2C19.08%2C8.59874233285%0AWithout%20tank%2C19.17%2C8.05426096387%0AWithout%20tank%2C19.26%2C7.57765886851%0AWithout%20tank%2C19.35%2C7.1575089695%0AWithout%20tank%2C19.44%2C6.78469860225%0AWithout%20tank%2C19.53%2C6.4519030598%0AWithout%20tank%2C19.62%2C6.15318644863%0AWithout%20tank%2C19.71%2C5.88369916516%0AWithout%20tank%2C19.8%2C5.639447781%0AWithout%20tank%2C19.89%2C5.41711900473%0AWithout%20tank%2C19.98%2C5.21394408953%0AWithout%20tank%2C20.07%2C5.02759362203%0AWithout%20tank%2C20.16%2C4.8560952659%0AWithout%20tank%2C20.25%2C4.69776896565%0AWithout%20tank%2C20.34%2C4.55117552605%0AWithout%20tank%2C20.43%2C4.41507551291%0AWithout%20tank%2C20.52%2C4.28839617589%0AWithout%20tank%2C20.61%2C4.17020465098%0AWithout%20tank%2C20.7%2C4.05968611282%0AWithout%20tank%2C20.79%2C3.95612585471%0AWithout%20tank%2C20.88%2C3.85889450545%0AWithout%20tank%2C20.97%2C3.76743576715%0AWithout%20tank%2C21.06%2C3.68125619066%0AWithout%20tank%2C21.15%2C3.59991660787%0AWithout%20tank%2C21.24%2C3.52302491816%0AWithout%20tank%2C21.33%2C3.45022998767%0AWithout%20tank%2C21.42%2C3.38121646743%0AWithout%20tank%2C21.51%2C3.31570037396%0AWithout%20tank%2C21.6%2C3.25342530526%0AWithout%20tank%2C21.69%2C3.19415918884%0AWithout%20tank%2C21.78%2C3.13769147689%0AWithout%20tank%2C21.87%2C3.08383071891%0AWithout%20tank%2C21.96%2C3.03240245404%0AWithout%20tank%2C22.05%2C2.9832473753%0AWithout%20tank%2C22.14%2C2.93621972586%0AWithout%20tank%2C22.23%2C2.89118589393%0AWithout%20tank%2C22.32%2C2.8480231783%0AWithout%20tank%2C22.41%2C2.80661870088%0AWithout%20tank%2C22.5%2C2.76686844637%0AWithout%20tank%2C22.59%2C2.72867641198%0AWithout%20tank%2C22.68%2C2.69195385299%0AWithout%20tank%2C22.77%2C2.65661861158%0AWithout%20tank%2C22.86%2C2.62259451872%0AWithout%20tank%2C22.95%2C2.58981085978%0AWithout%20tank%2C23.04%2C2.55820189622%0AWithout%20tank%2C23.13%2C2.52770643665%0AWithout%20tank%2C23.22%2C2.49826745139%0AWithout%20tank%2C23.31%2C2.46983172543%0AWithout%20tank%2C23.4%2C2.44234954555%0AWith%20tank%2C12.6%2C1.02750115441%0AWith%20tank%2C12.69%2C1.05706946032%0AWith%20tank%2C12.78%2C1.08685007792%0AWith%20tank%2C12.87%2C1.11675313454%0AWith%20tank%2C12.96%2C1.14670725018%0AWith%20tank%2C13.05%2C1.17666313825%0AWith%20tank%2C13.14%2C1.20659530508%0AWith%20tank%2C13.23%2C1.23650215419%0AWith%20tank%2C13.32%2C1.2664049898%0AWith%20tank%2C13.41%2C1.296346379%0AWith%20tank%2C13.5%2C1.32638824218%0AWith%20tank%2C13.59%2C1.35660992654%0AWith%20tank%2C13.68%2C1.38710641312%0AWith%20tank%2C13.77%2C1.41798673466%0AWith%20tank%2C13.86%2C1.44937261428%0AWith%20tank%2C13.95%2C1.48139733324%0AWith%20tank%2C14.04%2C1.51420479478%0AWith%20tank%2C14.13%2C1.5479487667%0AWith%20tank%2C14.22%2C1.58279228363%0AWith%20tank%2C14.31%2C1.61890720011%0AWith%20tank%2C14.4%2C1.65647389327%0AWith%20tank%2C14.49%2C1.69568112442%0AWith%20tank%2C14.58%2C1.73672609078%0AWith%20tank%2C14.67%2C1.77981466959%0AWith%20tank%2C14.76%2C1.8251619214%0AWith%20tank%2C14.85%2C1.87299286398%0AWith%20tank%2C14.94%2C1.92354361363%0AWith%20tank%2C15.03%2C1.97706283676%0AWith%20tank%2C15.12%2C2.03381367901%0AWith%20tank%2C15.21%2C2.09407619887%0AWith%20tank%2C15.3%2C2.15815024143%0AWith%20tank%2C15.39%2C2.22635900642%0AWith%20tank%2C15.48%2C2.29905322555%0AWith%20tank%2C15.57%2C2.37661618877%0AWith%20tank%2C15.66%2C2.45946948062%0AWith%20tank%2C15.75%2C2.54807984801%0AWith%20tank%2C15.84%2C2.64296724832%0AWith%20tank%2C15.93%2C2.74471413047%0AWith%20tank%2C16.02%2C2.85397651554%0AWith%20tank%2C16.11%2C2.97149695866%0AWith%20tank%2C16.2%2C3.09812000557%0AWith%20tank%2C16.29%2C3.23481035002%0AWith%20tank%2C16.38%2C3.38267466372%0AWith%20tank%2C16.47%2C3.5429875354%0AWith%20tank%2C16.56%2C3.71722260206%0AWith%20tank%2C16.65%2C3.90708947321%0AWith%20tank%2C16.74%2C4.1145778277%0AWith%20tank%2C16.83%2C4.34200938447%0AWith%20tank%2C16.92%2C4.59209793697%0AWith%20tank%2C17.01%2C4.86801736123%0AWith%20tank%2C17.1%2C5.17347401951%0AWith%20tank%2C17.19%2C5.51277646199%0AWith%20tank%2C17.28%2C5.89088572407%0AWith%20tank%2C17.37%2C6.3134127859%0AWith%20tank%2C17.46%2C6.78649976894%0AWith%20tank%2C17.55%2C7.31646901212%0AWith%20tank%2C17.64%2C7.90903895363%0AWith%20tank%2C17.73%2C8.56778975672%0AWith%20tank%2C17.82%2C9.29145217433%0AWith%20tank%2C17.91%2C10.0696610437%0AWith%20tank%2C18.0%2C10.877461604%0AWith%20tank%2C18.09%2C11.670641733%0AWith%20tank%2C18.18%2C12.3866274451%0AWith%20tank%2C18.27%2C12.9561775309%0AWith%20tank%2C18.36%2C13.3246595499%0AWith%20tank%2C18.45%2C13.4709442963%0AWith%20tank%2C18.54%2C13.4107793279%0AWith%20tank%2C18.63%2C13.1845144289%0AWith%20tank%2C18.72%2C12.8402407975%0AWith%20tank%2C18.81%2C12.421747174%0AWith%20tank%2C18.9%2C11.9633812789%0AWith%20tank%2C18.99%2C11.4896251399%0AWith%20tank%2C19.08%2C11.0167551415%0AWith%20tank%2C19.17%2C10.5549555317%0AWith%20tank%2C19.26%2C10.1101797409%0AWith%20tank%2C19.35%2C9.68557118351%0AWith%20tank%2C19.44%2C9.28247100185%0AWith%20tank%2C19.53%2C8.90110311764%0AWith%20tank%2C19.62%2C8.54102694231%0AWith%20tank%2C19.71%2C8.20143015023%0AWith%20tank%2C19.8%2C7.8813140693%0AWith%20tank%2C19.89%2C7.57960808839%0AWith%20tank%2C19.98%2C7.29523769507%0AWith%20tank%2C20.07%2C7.02716257975%0AWith%20tank%2C20.16%2C6.77439573013%0AWith%20tank%2C20.25%2C6.53601077059%0AWith%20tank%2C20.34%2C6.31114235764%0AWith%20tank%2C20.43%2C6.09898280627%0AWith%20tank%2C20.52%2C5.89877700897%0AWith%20tank%2C20.61%2C5.7098169409%0AWith%20tank%2C20.7%2C5.53143650944%0AWith%20tank%2C20.79%2C5.36300713398%0AWith%20tank%2C20.88%2C5.20393418999%0AWith%20tank%2C20.97%2C5.05365429058%0AWith%20tank%2C21.06%2C4.91163328909%0AWith%20tank%2C21.15%2C4.77736482817%0AWith%20tank%2C21.24%2C4.65036930643%0AWith%20tank%2C21.33%2C4.53019306444%0AWith%20tank%2C21.42%2C4.41640770516%0AWith%20tank%2C21.51%2C4.30860944437%0AWith%20tank%2C21.6%2C4.20641843372%0AWith%20tank%2C21.69%2C4.10947802234%0AWith%20tank%2C21.78%2C4.01745394307%0AWith%20tank%2C21.87%2C3.93003342391%0AWith%20tank%2C21.96%2C3.84692423448%0AWith%20tank%2C22.05%2C3.76785368254%0AWith%20tank%2C22.14%2C3.6925675781%0AWith%20tank%2C22.23%2C3.62082918218%0AWith%20tank%2C22.32%2C3.55241815638%0AWith%20tank%2C22.41%2C3.48712952705%0AWith%20tank%2C22.5%2C3.42477267542%0AWith%20tank%2C22.59%2C3.3651703627%0AWith%20tank%2C22.68%2C3.30815779675%0AWith%20tank%2C22.77%2C3.25358174598%0AWith%20tank%2C22.86%2C3.20129969597%0AWith%20tank%2C22.95%2C3.15117906896%0AWith%20tank%2C23.04%2C3.10309648072%0AWith%20tank%2C23.13%2C3.05693705371%0AWith%20tank%2C23.22%2C3.01259377702%0AWith%20tank%2C23.31%2C2.96996691273%0AWith%20tank%2C23.4%2C2.92896344621%0A">Export CSV</a><figcaption><a href="data/generic_hull_roll_screening.json">Data record</a>: assumptions and cases fields. <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Builder</a>: compute, line 146; screen_case, line 92; chart_specs, line 309. CSV contains each plotted series point; hover or focus points for values and use checkboxes to toggle series.</figcaption></figure><figure><svg id="alpha" viewBox="0 0 820 440" role="img" aria-labelledby="alpha-title alpha-desc" style="width:100%;height:auto">
+<title id="alpha-title">Peak roll reduction against alpha</title>
+<desc id="alpha-desc">Peak roll reduction (%) against Alpha: normalized stiffness (1). Hull damping 2 %; Hull damping 5 %.</desc>
+<rect width="820" height="440" fill="white"/>
+<text x="84" y="22" fill="#16324f">Peak roll reduction against alpha</text>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="304.0" text-anchor="end" font-size="12">0.0</text>
+<text x="84.0" y="322" text-anchor="middle" font-size="12">0.0</text>
+<path d="M 84 249.2 H 770" stroke="#e2e7eb"/>
+<text x="76" y="253.2" text-anchor="end" font-size="12">13.4</text>
+<text x="221.2" y="322" text-anchor="middle" font-size="12">0.1</text>
+<path d="M 84 198.4 H 770" stroke="#e2e7eb"/>
+<text x="76" y="202.4" text-anchor="end" font-size="12">26.9</text>
+<text x="358.4" y="322" text-anchor="middle" font-size="12">0.1</text>
+<path d="M 84 147.6 H 770" stroke="#e2e7eb"/>
+<text x="76" y="151.6" text-anchor="end" font-size="12">40.3</text>
+<text x="495.6" y="322" text-anchor="middle" font-size="12">0.1</text>
+<path d="M 84 96.8 H 770" stroke="#e2e7eb"/>
+<text x="76" y="100.8" text-anchor="end" font-size="12">53.8</text>
+<text x="632.8" y="322" text-anchor="middle" font-size="12">0.2</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text x="76" y="50.0" text-anchor="end" font-size="12">67.2</text>
+<text x="770.0" y="322" text-anchor="middle" font-size="12">0.2</text>
+<text x="427" y="345" text-anchor="middle">Alpha: normalized stiffness (1)</text>
+<text transform="translate(18 175) rotate(-90)" text-anchor="middle">Peak roll reduction (%)</text>
+<g data-series="0"><polyline points="84.0,208.3 198.3,125.7 388.9,68.0 579.4,50.5 770.0,46.0" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">Hull damping 2 %</text>
+<circle cx="84.0" cy="208.3" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.02" data-y="24.2533874028" aria-label="Hull damping 2 %: 0.02, 24.2533874028"><title>Hull damping 2 %: 0.02, 24.2533874028</title></circle>
+<circle cx="198.3" cy="125.7" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.05" data-y="46.1131587008" aria-label="Hull damping 2 %: 0.05, 46.1131587008"><title>Hull damping 2 %: 0.05, 46.1131587008</title></circle>
+<circle cx="388.9" cy="68.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.1" data-y="61.3708265831" aria-label="Hull damping 2 %: 0.1, 61.3708265831"><title>Hull damping 2 %: 0.1, 61.3708265831</title></circle>
+<circle cx="579.4" cy="50.5" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.15" data-y="65.9955703766" aria-label="Hull damping 2 %: 0.15, 65.9955703766"><title>Hull damping 2 %: 0.15, 65.9955703766</title></circle>
+<circle cx="770.0" cy="46.0" r="4" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.2" data-y="67.1972659743" aria-label="Hull damping 2 %: 0.2, 67.1972659743"><title>Hull damping 2 %: 0.2, 67.1972659743</title></circle>
+</g>
+<g data-series="1"><polyline points="84.0,260.4 198.3,212.0 388.9,156.9 579.4,127.7 770.0,116.0" fill="none" stroke="#0f8a7e" stroke-width="2"/>
+<text x="84" y="381" fill="#0f8a7e" font-size="12">Hull damping 5 %</text>
+<circle cx="84.0" cy="260.4" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.02" data-y="10.4739692338" aria-label="Hull damping 5 %: 0.02, 10.4739692338"><title>Hull damping 5 %: 0.02, 10.4739692338</title></circle>
+<circle cx="198.3" cy="212.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.05" data-y="23.2862649764" aria-label="Hull damping 5 %: 0.05, 23.2862649764"><title>Hull damping 5 %: 0.05, 23.2862649764</title></circle>
+<circle cx="388.9" cy="156.9" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.1" data-y="37.8622654351" aria-label="Hull damping 5 %: 0.1, 37.8622654351"><title>Hull damping 5 %: 0.1, 37.8622654351</title></circle>
+<circle cx="579.4" cy="127.7" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.15" data-y="45.5813812497" aria-label="Hull damping 5 %: 0.15, 45.5813812497"><title>Hull damping 5 %: 0.15, 45.5813812497</title></circle>
+<circle cx="770.0" cy="116.0" r="4" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.2" data-y="48.6884412365" aria-label="Hull damping 5 %: 0.2, 48.6884412365"><title>Hull damping 5 %: 0.2, 48.6884412365</title></circle>
+</g>
+</svg><div class="series-controls"><label><input type="checkbox" checked aria-controls="alpha" onchange="toggleSeries('alpha', 0, this.checked)">Hull damping 2 %</label> <label><input type="checkbox" checked aria-controls="alpha" onchange="toggleSeries('alpha', 1, this.checked)">Hull damping 5 %</label> </div><a download="alpha.csv" href="data:text/csv;charset=utf-8,series%2CAlpha%3A%20normalized%20stiffness%20%281%29%2CPeak%20roll%20reduction%20%28%25%29%0AHull%20damping%202%20%25%2C0.02%2C24.2533874028%0AHull%20damping%202%20%25%2C0.05%2C46.1131587008%0AHull%20damping%202%20%25%2C0.1%2C61.3708265831%0AHull%20damping%202%20%25%2C0.15%2C65.9955703766%0AHull%20damping%202%20%25%2C0.2%2C67.1972659743%0AHull%20damping%205%20%25%2C0.02%2C10.4739692338%0AHull%20damping%205%20%25%2C0.05%2C23.2862649764%0AHull%20damping%205%20%25%2C0.1%2C37.8622654351%0AHull%20damping%205%20%25%2C0.15%2C45.5813812497%0AHull%20damping%205%20%25%2C0.2%2C48.6884412365%0A">Export CSV</a><figcaption><a href="data/generic_hull_roll_screening.json">Data record</a>: assumptions and cases fields. <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Builder</a>: compute, line 146; screen_case, line 92; chart_specs, line 309. CSV contains each plotted series point; hover or focus points for values and use checkboxes to toggle series.</figcaption></figure><h2 id="comparison">Peak roll reduction: screening estimate</h2>
 <table><thead><tr><th>Hull roll period (s)</th><th>Hull damping (% of critical)</th><th>Alpha (1)</th>
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>
 <tr><td>18</td><td>2</td><td>0.02</td><td>24.3</td><td>18.1</td></tr>
@@ -61,11 +407,36 @@ These screening estimates use the public reference tank, which differs from the 
 <tr><td>21</td><td>5</td><td>0.20</td><td>37.7</td><td>24.5</td></tr>
 </tbody><caption>Screening estimate sensitivity matrix. Tool: public U-tube model and the linked generator.
 Model file: src/digitalmodel/hydrodynamics/utube_tank.py; Git blob: 90f316a9189a8c66e2b079fe14f634788308d062; generation date: 2026-10-25.
-Exact source digests appear in the data record.</caption></table>
+Exact source digests appear in the data record.<a href="data/generic_hull_roll_screening.json">Data record</a>: assumptions and cases fields. <a href="../../../scripts/capabilities/build_generic_hull_screening.py">Builder</a>: compute, line 146; screen_case, line 92; chart_specs, line 309.</caption></table>
 <p>In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio 0.505).
 The ratio of the 5 % benefit to the 2 % benefit ranges from 0.43 to 0.72 across the matrix.
 For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are 18 s: 0.43, 0.50, 0.62, 0.69, 0.72; 21 s: 0.43, 0.51, 0.59, 0.64, 0.66.
 These comparisons rescale forcing between damping groups and therefore change the tank amplitude.</p>
+<h2 id="limits">Validity limits: screening estimate</h2>
+<p>The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established.
+The reference tank's natural period is 14.3 s; the 18 s sweep starts at 12.6 s.
+Every sampled forcing period below 20 s lies outside that band, including parts of the 21 s sweep.
+The published moment fit does not validate coupled hull reduction.</p>
+<p>No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.
+These screening estimates exclude sea-state weighting, structural loads and design qualification.</p>
+<h2 id="method">Coupled method: screening estimate</h2>
+<p>The model links hull roll to water transfer between connected tank legs. Tank moments feed back into the hull roll equation.
+Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha has no units.</p>
+<p>The public model includes vertical-centroid and local free-surface terms in that quasi-static stiffness.
+Ks also includes water redistribution between the legs. Alpha therefore follows the complete public moment convention.</p>
+<p>The normalized bare-hull impedance is D = 1 − (T₀/T)² + 2iζ(T₀/T).
+The coupled impedance is D − αH/Kₛ. H is tank moment per roll angle; Kₛ is its quasi-static limit.</p>
+<p>The hull equation uses normalized restoring of 1, with no units. The model sets forcing to give 5° bare roll at the nominal resonance
+(ASSUMED - to be confirmed). Forcing stays fixed within each tank-on and tank-off comparison.
+Forcing is rescaled between damping groups to keep the 5 degree bare-roll reference, so the comparison also changes the tank amplitude.</p>
+<p>The calculation finds each response peak separately over 0.7 to 1.3 times the hull roll period, with no units.
+It refines all sampled local peaks. Reduction equals 100 % times one minus the coupled peak divided by the bare peak.</p>
+<h2>Tank basis: screening estimate</h2>
+<p>The calculation uses public reference tank inputs (ASSUMED - to be confirmed), with no actual hull geometry.
+Each leg measures 20.0 m by 6.0 m (120 m² in plan). Fill depth is 5.0 m; centroid offset is 5.0 m.
+Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
+<p>The data record lists every coefficient and its units. Calibration transfer: ASSUMED - to be confirmed.
+These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page.</p>
 <h2>Long-period penalty: screening estimate</h2>
 <p>Slow water transfer reduces the effective hull restoring. In the slow-forcing limit, the roll ratio approaches 1/(1−α), with no units.
 At alpha 0.05, with no units, that limit gives 5.3 % more roll.
@@ -80,13 +451,6 @@ not the physics of the moment model. It also checks both natural frequencies.</p
 The conduit has 1 m² area and 1 m effective length. Fluid density is 1 kg/m³; gravity is 1 m/s².</p>
 <p>The hand calculation gives Kₛ = 53/6 N m/rad and H = 359/24 N m/rad at 0.5 rad/s.
 At alpha 0.1, with no units, the response is 2120/1231 times normalized forcing, with no units.</p>
-<h2>Validity limits: screening estimate</h2>
-<p>The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established.
-The reference tank's natural period is 14.3 s; the 18 s sweep starts at 12.6 s.
-Every sampled forcing period below 20 s lies outside that band, including parts of the 21 s sweep.
-The published moment fit does not validate coupled hull reduction.</p>
-<p>No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.
-These screening estimates exclude sea-state weighting, structural loads and design qualification.</p>
 <h2>Reproduce the screening estimate</h2>
 <pre>python scripts/capabilities/build_generic_hull_screening.py
 python -m pytest tests/hydrodynamics/test_generic_hull_screening.py</pre>
@@ -102,4 +466,13 @@ Last-bit math perturbation tests check output stability; native platform runs ar
 <p>AI generated the script, calculations, tests and draft text. Engineering checks and acceptance remain pending.
 P.E. sign-off remains pending; no engineer signature is asserted.</p>
 <p>Questions: support&#64;aceengineer.com</p>
-<footer>Screening estimate only. Generated with Codex.</footer></body></html>
+<details id="revisions"><summary>Revision history</summary>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
+<tr><td>Clarification</td><td>2026-10-25</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr><tr><td>Interactive summary</td><td>2026-10-25</td><td>Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.</td></tr></tbody></table>
+</details><script>
+function toggleSeries(chart, series, visible) {
+  document.querySelectorAll('#' + chart + ' g[data-series="' + series + '"]')
+    .forEach(group => { group.hidden = !visible; group.toggleAttribute('hidden', !visible); });
+}
+</script><footer>Screening estimate only. Generated with Codex.</footer></body></html>

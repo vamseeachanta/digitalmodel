@@ -239,9 +239,6 @@ MANUAL_PAGES = {
     "docs/api/ffs/ffs-field-dashboard.html": (
         "hand-maintained field dashboard; no scripts producer found"
     ),
-    "docs/api/ffs/ffs-showcase.html": (
-        "hand-maintained showcase; no scripts producer found"
-    ),
     "docs/api/hydro/rudder-maneuvering-explorer.html": (
         "hand-maintained explorer; no scripts producer found"
     ),

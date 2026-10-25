@@ -170,6 +170,105 @@ def test_generator_reproduces_all_three_outputs(builder, record, tmp_path):
         assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest
 
 
+
+def test_build_without_existing_outputs(builder, tmp_path, monkeypatch):
+    """Freshness checks remove outputs before running a registered generator."""
+    import shutil
+
+    source = tmp_path / "source"
+    for relative in (builder.SCRIPT, builder.MODEL_PATH):
+        target = source / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    monkeypatch.setattr(builder, "ROOT", source)
+    builder.build(tmp_path / "output")
+    for relative in (builder.PAGE, builder.DATA, builder.TEST):
+        assert (tmp_path / "output" / relative).read_bytes() == (ROOT / relative).read_bytes()
+
+
+def test_published_reductions_are_preserved(record):
+    rows = [row for row in record["cases"]
+            if row["roll_period_s"] == 18 and row["alpha"] == .05]
+    assert [round(row["reduction_percent"], 1) for row in rows] == [46.1, 23.3]
+
+
+def test_schematic_uses_record_dimensions(builder, record):
+    import copy
+    from xml.etree import ElementTree
+
+    svg = builder.schematic(record)
+    ElementTree.fromstring(svg)
+    for field in ("leg_length_m", "leg_width_m", "fill_depth_m",
+                  "centroid_offset_m", "conduit_area_m2"):
+        altered = copy.deepcopy(record)
+        altered["assumptions"][field] += 1
+        assert builder.schematic(altered) != svg
+        assert f'{altered["assumptions"][field]:.1f}' in builder.schematic(altered)
+    assert 'U-tube anti-roll tank' in svg
+    assert 'Hull section' in svg
+
+
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_chart_points_and_csv_have_identical_values(builder, record, index):
+    import csv
+    import io
+    from html.parser import HTMLParser
+    from urllib.parse import unquote
+
+    class Chart(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.points, self.exports, self.controls = [], [], []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "circle":
+                self.points.append((int(attrs["data-series"]),
+                                    float(attrs["data-x"]), float(attrs["data-y"])))
+            if tag == "a" and "download" in attrs:
+                self.exports.append(attrs["href"])
+            if tag == "input" and attrs.get("type") == "checkbox":
+                self.controls.append(attrs)
+
+    chart = builder.chart_specs(record)[index]
+    parsed = Chart()
+    rendered = builder.interactive_chart(*chart)
+    parsed.feed(rendered)
+    identifier, title, xs, series, xlabel, ylabel = chart
+    expected = [(i, x, y) for i, (_, ys) in enumerate(series) for x, y in zip(xs, ys)]
+    assert parsed.points == expected
+    assert len(parsed.exports) == 1
+    rows = list(csv.reader(io.StringIO(unquote(parsed.exports[0].split(",", 1)[1]))))
+    assert rows[0] == ["series", xlabel, ylabel]
+    assert rows[1:] == [[series[i][0], str(x), str(y)] for i, x, y in expected]
+    assert len(parsed.controls) == len(series)
+    assert rendered.count("<title>") == len(expected)
+    assert "onchange=" in rendered and "toggleAttribute('hidden'" in builder.render(record)
+    assert "data/generic_hull_roll_screening.json" in rendered
+    if index == 0:
+        assert xs == [100 * row["hull_damping_ratio"] for row in record["cases"]
+                      if row["roll_period_s"] == 18 and row["alpha"] == .05]
+    elif index == 1:
+        row = next(row for row in record["cases"] if row["roll_period_s"] == 18
+                   and row["alpha"] == .05 and row["hull_damping_ratio"] == .02)
+        assert xs == row["forcing_periods_s"]
+        assert series[0][1] == row["bare_rao"]
+        assert series[1][1] == row["tank_rao"]
+    else:
+        assert xs == list(builder.ALPHAS)
+
+
+def test_page_section_order_and_collapsed_revisions(builder, record):
+    page = builder.render(record)
+    markers = ['<h1>', 'id="hull-section"', 'id="summary"', 'id="damping"',
+               'id="response"', 'id="alpha"', 'id="comparison"',
+               'id="limits"', 'id="method"', '<details id="revisions">']
+    positions = [page.index(marker) for marker in markers]
+    assert positions == sorted(positions)
+    assert '<details id="revisions" open' not in page
+    assert '<summary>Revision history</summary>' in page
+
+
 def test_page_wording_links_and_preservation(builder, record):
     from html.parser import HTMLParser
     from urllib.parse import urlsplit

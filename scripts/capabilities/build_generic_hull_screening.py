@@ -9,6 +9,9 @@ Only the standard library and the public U-tube model are required.
 from __future__ import annotations
 
 import argparse
+import csv
+import html
+import io
 from collections.abc import Callable
 import hashlib
 import importlib.util
@@ -18,6 +21,7 @@ from pathlib import Path
 import sys
 from time import perf_counter
 from typing import Any
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = "src/digitalmodel/hydrodynamics/utube_tank.py"
@@ -205,6 +209,156 @@ def compute() -> dict[str, Any]:
     }
 
 
+# Adapted from build_dual_tank_sloshing_study.chart: retain its axes and palette.
+def chart_svg(identifier, title, xs, series, xlabel, ylabel, supported_from=None):
+    """Inline accessible SVG with independent axes, legend and validity shading."""
+    colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78", "#555555")
+    left, right, top, bottom = 84, 770, 46, 300
+    xmin, xmax = min(xs), max(xs)
+    ymin = min(0, min(min(ys) for _, ys in series))
+    ymax = max(max(ys) for _, ys in series)
+
+    def x(value):
+        return left + (value - xmin) / (xmax - xmin) * (right - left)
+
+    def y(value):
+        return bottom - (value - ymin) / (ymax - ymin) * (bottom - top)
+
+    shading = (" Shaded periods are outside the published moment fit band."
+               if supported_from is not None else "")
+    parts = [f'<svg id="{identifier}" viewBox="0 0 820 440" role="img" '
+             f'aria-labelledby="{identifier}-title {identifier}-desc" '
+             'style="width:100%;height:auto">',
+             f'<title id="{identifier}-title">{html.escape(title)}</title>',
+             f'<desc id="{identifier}-desc">{html.escape(ylabel)} against '
+             f'{html.escape(xlabel)}. {html.escape("; ".join(n for n, _ in series))}.'
+             f'{shading}</desc>',
+             '<rect width="820" height="440" fill="white"/>',
+             f'<text x="84" y="22" fill="#16324f">{html.escape(title)}</text>']
+    if supported_from is not None:
+        parts.append(f'<rect x="{left}" y="{top}" '
+                     f'width="{x(supported_from)-left:.1f}" '
+                     f'height="{bottom-top}" fill="#fff0d0"/>')
+    for i in range(6):
+        xv = xmin + (xmax - xmin) * i / 5
+        yv = ymin + (ymax - ymin) * i / 5
+        parts.extend([
+            f'<path d="M {left} {y(yv):.1f} H {right}" stroke="#e2e7eb"/>',
+            f'<text x="{left-8}" y="{y(yv)+4:.1f}" text-anchor="end" '
+            f'font-size="12">{yv:.1f}</text>',
+            f'<text x="{x(xv):.1f}" y="322" text-anchor="middle" '
+            f'font-size="12">{xv:.1f}</text>',
+        ])
+    parts.extend([
+        f'<text x="427" y="345" text-anchor="middle">{html.escape(xlabel)}</text>',
+        '<text transform="translate(18 175) rotate(-90)" text-anchor="middle">'
+        f'{html.escape(ylabel)}</text>',
+    ])
+    for index, (name, ys) in enumerate(series):
+        color = colors[index % len(colors)]
+        points = " ".join(f"{x(xv):.1f},{y(yv):.1f}" for xv, yv in zip(xs, ys))
+        parts.extend([
+            f'<g data-series="{index}"><polyline points="{points}" fill="none" stroke="{color}" stroke-width="2"/>',
+            f'<text x="84" y="{365+index*16}" fill="{color}" '
+            f'font-size="12">{html.escape(name)}</text>',
+        ])
+        for xv, yv in zip(xs, ys):
+            parts.append(
+                f'<circle cx="{x(xv):.1f}" cy="{y(yv):.1f}" r="4" '
+                f'fill="{color}" tabindex="0" data-series="{index}" '
+                f'data-x="{xv}" data-y="{yv}" '
+                f'aria-label="{html.escape(name)}: {xv}, {yv}">'
+                f'<title>{html.escape(name)}: {xv}, {yv}</title></circle>')
+        parts.append('</g>')
+    return "\n".join(parts) + "\n</svg>"
+
+
+
+def schematic(record: dict[str, Any]) -> str:
+    """Draw the recorded tank section; hull outline and duct height are symbolic."""
+    a = record["assumptions"]
+    scale, centre, waterline = 16, 410, 120
+    width = a["leg_width_m"] * scale
+    depth = a["fill_depth_m"] * scale
+    offset = a["centroid_offset_m"] * scale
+    left, right = centre - offset - width / 2, centre + offset - width / 2
+    base = waterline + depth
+    return f'''<svg id="hull-section" viewBox="0 0 820 390" role="img"
+aria-labelledby="hull-title hull-desc" style="width:100%;height:auto">
+<title id="hull-title">Hull section with U-tube anti-roll tank</title>
+<desc id="hull-desc">Tank dimensions from the screening data assumptions.
+Hull outline and conduit height are schematic; hull dimensions are unspecified.</desc>
+<path d="M 130 65 L 200 300 Q 410 365 620 300 L 690 65" fill="none" stroke="#16324f" stroke-width="3"/>
+<path d="M {left:.1f} {waterline:.1f} v {depth:.1f} H {right + width:.1f} v {-depth:.1f}
+ h {-width:.1f} v {depth - 16:.1f} H {left + width:.1f} v {16 - depth:.1f} Z"
+ fill="#b6e4ef" stroke="#0B3D91" stroke-width="2"/>
+<path d="M {centre} 50 V 320" stroke="#555555" stroke-dasharray="5 5"/>
+<path d="M {left:.1f} 100 v -12 h {width:.1f} v 12 M {left:.1f} {waterline:.1f}
+ h -18 v {depth:.1f} h 18 M {centre} 55 v 10 h {offset:.1f} v -10"
+ fill="none" stroke="#16324f"/>
+<text x="410" y="25" text-anchor="middle">U-tube anti-roll tank</text>
+<text x="{left + width / 2:.1f}" y="78" text-anchor="middle">Leg width {a['leg_width_m']:.1f} m</text>
+<text x="{centre + offset / 2:.1f}" y="49" text-anchor="middle">Offset {a['centroid_offset_m']:.1f} m</text>
+<text x="{left - 24:.1f}" y="{waterline + depth / 2:.1f}" text-anchor="end">Fill {a['fill_depth_m']:.1f} m</text>
+<text x="410" y="{base + 27:.1f}" text-anchor="middle">Conduit area A_c {a['conduit_area_m2']:.1f} m²</text>
+<text x="410" y="355" text-anchor="middle">Leg length {a['leg_length_m']:.1f} m (out of section)</text>
+<text x="410" y="382" text-anchor="middle">Hull section: outline and duct height not to scale</text>
+</svg>'''
+
+
+def chart_specs(record: dict[str, Any]) -> list[tuple]:
+    """Select existing calculated samples without interpolation or new cases."""
+    cases = [row for row in record["cases"] if row["roll_period_s"] == 18.0]
+    reference = [row for row in cases if row["alpha"] == .05]
+    response = next(row for row in reference if row["hull_damping_ratio"] == .02)
+    return [
+        ("damping", "Peak roll reduction against hull damping",
+         [100 * row["hull_damping_ratio"] for row in reference],
+         [("Alpha 0.05", [row["reduction_percent"] for row in reference])],
+         "Hull damping (% of critical)", "Peak roll reduction (%)"),
+        ("response", "Roll response with and without the tank",
+         response["forcing_periods_s"],
+         [("Without tank", response["bare_rao"]), ("With tank", response["tank_rao"])],
+         "Wave forcing period (s)", "Roll / unit wave moment (1)"),
+        ("alpha", "Peak roll reduction against alpha", sorted({row["alpha"] for row in cases}),
+         [(f"Hull damping {100 * damping:.0f} %",
+           [row["reduction_percent"] for row in cases if row["hull_damping_ratio"] == damping])
+          for damping in sorted({row["hull_damping_ratio"] for row in cases})],
+         "Alpha: normalized stiffness (1)", "Peak roll reduction (%)"),
+    ]
+
+
+def source_note() -> str:
+    """Identify source lines in the same data record and calculation code."""
+    return ('<a href="data/generic_hull_roll_screening.json">Data record</a>: '
+            'assumptions and cases fields. '
+            f'<a href="../../../{SCRIPT}">Builder</a>: '
+            f'compute, line {compute.__code__.co_firstlineno}; '
+            f'screen_case, line {screen_case.__code__.co_firstlineno}; '
+            f'chart_specs, line {chart_specs.__code__.co_firstlineno}.')
+
+
+def interactive_chart(identifier, title, xs, series, xlabel, ylabel) -> str:
+    """Use identical values for SVG hover targets and downloadable CSV rows."""
+    stream = io.StringIO(newline="")
+    writer = csv.writer(stream, lineterminator="\n")
+    writer.writerow(["series", xlabel, ylabel])
+    for name, ys in series:
+        writer.writerows((name, x, y) for x, y in zip(xs, ys))
+    controls = ''.join(
+        f'<label><input type="checkbox" checked aria-controls="{identifier}" '
+        f'onchange="toggleSeries(\'{identifier}\', {i}, this.checked)">'
+        f'{html.escape(name)}</label> ' for i, (name, _) in enumerate(series))
+    svg = chart_svg(identifier, title, xs, series, xlabel, ylabel,
+                    supported_from=20 if identifier == "response" else None)
+    return (f'<figure>{svg}<div class="series-controls">{controls}</div>'
+            f'<a download="{identifier}.csv" href="data:text/csv;charset=utf-8,'
+            f'{quote(stream.getvalue(), safe="")}">Export CSV</a>'
+            f'<figcaption>{source_note()} CSV contains each plotted series point; '
+            'hover or focus points for values and use checkboxes to toggle series.'
+            '</figcaption></figure>')
+
+
 def render(record: dict[str, Any]) -> str:
     """Render short technical prose and the full sensitivity table."""
     rows = []
@@ -233,7 +387,7 @@ def render(record: dict[str, Any]) -> str:
     model_bytes = (ROOT / MODEL_PATH).read_bytes()
     model_blob = hashlib.sha1(
         f'blob {len(model_bytes)}\0'.encode() + model_bytes).hexdigest()
-    return f'''<!DOCTYPE html>
+    document = f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Generic hull coupled roll screening estimate</title>
@@ -242,10 +396,13 @@ def render(record: dict[str, Any]) -> str:
 table{{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}}
 th,td{{text-align:right;padding:6px;border-bottom:1px solid #ccd4dd}}
 caption{{caption-side:bottom;text-align:left;padding:12px 0}}pre{{white-space:pre-wrap}}
-.notice{{padding:16px;background:#fff0d0}}h2{{margin-top:2em}}</style></head>
+.notice{{padding:16px;background:#fff0d0}}h2{{margin-top:2em}}
+figure{{margin:24px 0}}figcaption{{font-size:.9em}}
+[hidden]{{display:none}}circle:hover,circle:focus{{r:6;stroke:#16324f}}
+.series-controls label{{display:inline-block;margin-right:16px}}</style></head>
 <body><header><h1>Generic hull coupled roll screening estimate</h1>
 <p class="subtitle">Generic hull roll-plus-tank screening estimate from a public coupled model.</p></header>
-<h2>Summary</h2>
+<h2 id="summary">Summary</h2>
 <p>The coupled model predicts a screening estimate for generic hulls. No result represents a real hull.</p>
 <p class="notice">At an 18 s hull roll period, alpha 0.05 with no units, and conduit area A_c = 6.8 m²,
 the peak roll reduction screening estimates are {lower_damping_benefit:.1f} % at 2 % hull damping and {higher_damping_benefit:.1f} % at 5 %.</p>
@@ -253,7 +410,7 @@ the peak roll reduction screening estimates are {lower_damping_benefit:.1f} % at
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
 <tr><td>Clarification</td><td>{GENERATION_DATE}</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr></tbody></table>
-<h2>Coupled method: screening estimate</h2>
+<h2 id="method">Coupled method: screening estimate</h2>
 <p>The model links hull roll to water transfer between connected tank legs. Tank moments feed back into the hull roll equation.
 Alpha is the tank's quasi-static free-surface moment stiffness divided by the hull's roll restoring. Alpha has no units.</p>
 <p>The public model includes vertical-centroid and local free-surface terms in that quasi-static stiffness.
@@ -271,7 +428,7 @@ Each leg measures 20.0 m by 6.0 m (120 m² in plan). Fill depth is 5.0 m; centro
 Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
 <p>The data record lists every coefficient and its units. Calibration transfer: ASSUMED - to be confirmed.
 These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page.</p>
-<h2>Peak roll reduction: screening estimate</h2>
+<h2 id="comparison">Peak roll reduction: screening estimate</h2>
 <table><thead><tr><th>Hull roll period (s)</th><th>Hull damping (% of critical)</th><th>Alpha (1)</th>
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>
 {chr(10).join(rows)}
@@ -296,7 +453,7 @@ not the physics of the moment model. It also checks both natural frequencies.</p
 The conduit has 1 m² area and 1 m effective length. Fluid density is 1 kg/m³; gravity is 1 m/s².</p>
 <p>The hand calculation gives Kₛ = 53/6 N m/rad and H = 359/24 N m/rad at 0.5 rad/s.
 At alpha 0.1, with no units, the response is 2120/1231 times normalized forcing, with no units.</p>
-<h2>Validity limits: screening estimate</h2>
+<h2 id="limits">Validity limits: screening estimate</h2>
 <p>The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established.
 The reference tank's natural period is {natural_period:.1f} s; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
 Every sampled forcing period below 20 s lies outside that band, including parts of the 21 s sweep.
@@ -320,6 +477,42 @@ P.E. sign-off remains pending; no engineer signature is asserted.</p>
 <p>Questions: support&#64;aceengineer.com</p>
 <footer>Screening estimate only. Generated with Codex.</footer></body></html>
 '''
+    revision_start = document.index('<h2>Revision history</h2>')
+    method_start = document.index('<h2 id="method">')
+    comparison_start = document.index('<h2 id="comparison">')
+    penalty_start = document.index('<h2>Long-period penalty:')
+    limits_start = document.index('<h2 id="limits">')
+    reproduce_start = document.index('<h2>Reproduce the screening estimate</h2>')
+    footer_start = document.index('<footer>')
+    revisions = document[revision_start:method_start].replace('<h2>Revision history</h2>', '')
+    revisions = revisions.replace('</tbody></table>',
+        '<tr><td>Interactive summary</td><td>' + GENERATION_DATE + '</td>'
+        '<td>Input-driven tank section, interactive charts and matching CSV exports added; '
+        'calculated values retained and limits placed before method.</td></tr></tbody></table>')
+    summary = document[:revision_start].replace('</header>', '</header>' + schematic(record)
+        + '<p>' + source_note() + ' Tank dimensions are recorded assumptions; '
+        'the hull outline supplies no hull dimensions.</p>')
+    charts = ''.join(interactive_chart(*spec) for spec in chart_specs(record))
+    basis = ('<p>All charts select the existing 18 s hull roll period and conduit area '
+             f'{record["assumptions"]["conduit_area_m2"]:.1f} m². '
+             'The wave-period chart uses 2 % hull damping and alpha 0.05. '
+             'Alpha is normalized stiffness as defined in the method. '
+             f'The calculated tank natural period is {natural_period:.1f} s.</p>')
+    script = """<script>
+function toggleSeries(chart, series, visible) {
+  document.querySelectorAll('#' + chart + ' g[data-series="' + series + '"]')
+    .forEach(group => { group.hidden = !visible; group.toggleAttribute('hidden', !visible); });
+}
+</script>"""
+    return (summary + basis + charts
+            + document[comparison_start:penalty_start].replace('</caption>', source_note() + '</caption>')
+            + document[limits_start:reproduce_start]
+            + document[method_start:comparison_start]
+            + document[penalty_start:limits_start]
+            + document[reproduce_start:footer_start]
+            + '<details id="revisions"><summary>Revision history</summary>' + revisions + '</details>'
+            + script + document[footer_start:])
+
 
 
 def build(
@@ -528,6 +721,105 @@ def test_generator_reproduces_all_three_outputs(builder, record, tmp_path):
         assert hashlib.sha256((tmp_path / relative).read_bytes()).hexdigest() == digest
     for relative, digest in saved["provenance"]["input_sha256"].items():
         assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest
+
+
+
+def test_build_without_existing_outputs(builder, tmp_path, monkeypatch):
+    """Freshness checks remove outputs before running a registered generator."""
+    import shutil
+
+    source = tmp_path / "source"
+    for relative in (builder.SCRIPT, builder.MODEL_PATH):
+        target = source / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    monkeypatch.setattr(builder, "ROOT", source)
+    builder.build(tmp_path / "output")
+    for relative in (builder.PAGE, builder.DATA, builder.TEST):
+        assert (tmp_path / "output" / relative).read_bytes() == (ROOT / relative).read_bytes()
+
+
+def test_published_reductions_are_preserved(record):
+    rows = [row for row in record["cases"]
+            if row["roll_period_s"] == 18 and row["alpha"] == .05]
+    assert [round(row["reduction_percent"], 1) for row in rows] == [46.1, 23.3]
+
+
+def test_schematic_uses_record_dimensions(builder, record):
+    import copy
+    from xml.etree import ElementTree
+
+    svg = builder.schematic(record)
+    ElementTree.fromstring(svg)
+    for field in ("leg_length_m", "leg_width_m", "fill_depth_m",
+                  "centroid_offset_m", "conduit_area_m2"):
+        altered = copy.deepcopy(record)
+        altered["assumptions"][field] += 1
+        assert builder.schematic(altered) != svg
+        assert f'{altered["assumptions"][field]:.1f}' in builder.schematic(altered)
+    assert 'U-tube anti-roll tank' in svg
+    assert 'Hull section' in svg
+
+
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_chart_points_and_csv_have_identical_values(builder, record, index):
+    import csv
+    import io
+    from html.parser import HTMLParser
+    from urllib.parse import unquote
+
+    class Chart(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.points, self.exports, self.controls = [], [], []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "circle":
+                self.points.append((int(attrs["data-series"]),
+                                    float(attrs["data-x"]), float(attrs["data-y"])))
+            if tag == "a" and "download" in attrs:
+                self.exports.append(attrs["href"])
+            if tag == "input" and attrs.get("type") == "checkbox":
+                self.controls.append(attrs)
+
+    chart = builder.chart_specs(record)[index]
+    parsed = Chart()
+    rendered = builder.interactive_chart(*chart)
+    parsed.feed(rendered)
+    identifier, title, xs, series, xlabel, ylabel = chart
+    expected = [(i, x, y) for i, (_, ys) in enumerate(series) for x, y in zip(xs, ys)]
+    assert parsed.points == expected
+    assert len(parsed.exports) == 1
+    rows = list(csv.reader(io.StringIO(unquote(parsed.exports[0].split(",", 1)[1]))))
+    assert rows[0] == ["series", xlabel, ylabel]
+    assert rows[1:] == [[series[i][0], str(x), str(y)] for i, x, y in expected]
+    assert len(parsed.controls) == len(series)
+    assert rendered.count("<title>") == len(expected)
+    assert "onchange=" in rendered and "toggleAttribute('hidden'" in builder.render(record)
+    assert "data/generic_hull_roll_screening.json" in rendered
+    if index == 0:
+        assert xs == [100 * row["hull_damping_ratio"] for row in record["cases"]
+                      if row["roll_period_s"] == 18 and row["alpha"] == .05]
+    elif index == 1:
+        row = next(row for row in record["cases"] if row["roll_period_s"] == 18
+                   and row["alpha"] == .05 and row["hull_damping_ratio"] == .02)
+        assert xs == row["forcing_periods_s"]
+        assert series[0][1] == row["bare_rao"]
+        assert series[1][1] == row["tank_rao"]
+    else:
+        assert xs == list(builder.ALPHAS)
+
+
+def test_page_section_order_and_collapsed_revisions(builder, record):
+    page = builder.render(record)
+    markers = ['<h1>', 'id="hull-section"', 'id="summary"', 'id="damping"',
+               'id="response"', 'id="alpha"', 'id="comparison"',
+               'id="limits"', 'id="method"', '<details id="revisions">']
+    positions = [page.index(marker) for marker in markers]
+    assert positions == sorted(positions)
+    assert '<details id="revisions" open' not in page
+    assert '<summary>Revision history</summary>' in page
 
 
 def test_page_wording_links_and_preservation(builder, record):

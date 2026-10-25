@@ -70,6 +70,11 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "examples/demos/asset_integrity/ffs_showcase.py",
+        ("docs/api/ffs/ffs-showcase.html",),
+        inputs=("examples/demos/asset_integrity/ffs_showcase.py",),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -233,7 +238,10 @@ module.main()
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Defense-in-depth scan for likely unregistered builders."""
     found = set()
-    for root in (repo / "scripts", repo / "docs" / "api"):
+    for root in (
+        repo / "scripts", repo / "docs" / "api",
+        repo / "examples" / "demos" / "asset_integrity",
+    ):
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
             # Avoid write API names: producers use helpers and exporters too.
