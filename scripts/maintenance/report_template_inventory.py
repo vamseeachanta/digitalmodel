@@ -7,10 +7,11 @@ Run from the repository root:
     python scripts/maintenance/report_template_inventory.py --check
 
 After inspecting intentional template or consumer edits, refresh the snapshot:
-    python scripts/maintenance/report_template_inventory.py > config/report_template_consumers.json
+    python scripts/maintenance/report_template_inventory.py --write
 
-The first command prints JSON for review; the second compares it with the
-committed manifest. Neither command writes files or executes report builders.
+The default command prints JSON for review; --check compares it with the
+committed manifest. Only --write writes the manifest, as UTF-8 with LF newlines,
+independent of shell redirection. No command executes report builders.
 The census uses every tracked HTML path, including manually maintained pages.
 Hashes record working-tree bytes with CRLF normalized to LF, so Git checkout
 line-ending conversion does not cause drift. Other edits, including unstaged
@@ -90,13 +91,22 @@ def build_inventory(repo: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print the census or check the committed snapshot without modifying it."""
+    """Print the census, check the snapshot, or write an inspected refresh."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=REPO)
-    parser.add_argument("--check", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--write", action="store_true")
     args = parser.parse_args(argv)
     try:
         current = build_inventory(args.repo)
+        if args.write:
+            manifest = args.repo / MANIFEST
+            manifest.parent.mkdir(parents=True, exist_ok=True)
+            manifest.write_text(json.dumps(current, indent=2) + "\n",
+                                encoding="utf-8", newline="\n")
+            print("inventory written; rendering freshness is NOT_EVALUATED")
+            return 0
         if not args.check:
             print(json.dumps(current, indent=2))
             return 0
