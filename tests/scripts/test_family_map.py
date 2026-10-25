@@ -254,7 +254,7 @@ def test_rendering_is_deterministic(generator, rules):
 def test_stale_snapshot_is_report_only_but_check_detects_it(tmp_path):
     output = tmp_path / "families.json"
     output.write_text("{}\n", encoding="utf-8", newline="\n")
-    command = [sys.executable, str(SCRIPT), "--output", str(output)]
+    command = [sys.executable, SCRIPT.as_posix(), "--output", output.as_posix()]
     report = subprocess.run([*command, "--report"], capture_output=True, text=True)
     assert report.returncode == 0, report.stderr
     assert "out of date" in report.stdout
@@ -266,7 +266,7 @@ def test_stale_snapshot_is_report_only_but_check_detects_it(tmp_path):
     assert check.returncode == 0, check.stderr
 
 
-GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")
+GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
 
 
 def _fixture_git(root, *args):
@@ -320,6 +320,8 @@ def test_real_inventory_ignores_caller_git_bindings(
         monkeypatch.delenv(key, raising=False)
         if binding in (key, "all"):
             value = caller if key == "GIT_WORK_TREE" else caller / ".git"
+            if key == "GIT_INDEX_FILE":
+                value = caller / ".git" / "index"
             monkeypatch.setenv(key, value.as_posix())
     command = [sys.executable, SCRIPT.as_posix(), "--root", target.as_posix(),
                "--output", output.as_posix(), "--write"]

@@ -57,7 +57,7 @@ def load_rules(root):
 def git_read(root, *args, input=None):
     """Read Git metadata without changing the index or traversing directories."""
     env = os.environ.copy()
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
         env.pop(key, None)
     return subprocess.run(["git", "-C", root.as_posix(), *args], check=True,
                           capture_output=True, input=input, env=env).stdout
