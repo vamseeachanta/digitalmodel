@@ -73,6 +73,7 @@ def test_example_rejects_invalid_csv(tmp_path, text):
         ({}, "COMPATIBLE"),
         ({"wave_speed_ft_s": 400}, "INCOMPATIBLE"),
         ({"peak_positions_in": ()}, "NOT_EVALUATED"),
+        ({"peak_positions_in": (7.5,)}, "NOT_EVALUATED"),
     ],
 )
 def test_printed_conclusion_follows_timing_criterion(
@@ -95,5 +96,7 @@ def test_printed_conclusion_follows_timing_criterion(
     assert f"Peak timing bounds: {status}" in output
     conclusion = "Ringing is consistent with the surface-card humps"
     assert (conclusion in output) == (status == "COMPATIBLE")
-    if status != "COMPATIBLE":
+    if status == "NOT_EVALUATED":
+        assert "NOT_EVALUATED: no peak intervals selected" in output
+    elif status == "INCOMPATIBLE":
         assert f"{status}: check inputs and assumptions" in output

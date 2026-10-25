@@ -113,6 +113,8 @@ def main() -> None:
             "Ringing is consistent with the surface-card humps; "
             "this does not establish pump condition."
         )
+    elif ringing.timing_status == "NOT_EVALUATED":
+        print("NOT_EVALUATED: no peak intervals selected")
     else:
         print(f"{ringing.timing_status}: check inputs and assumptions")
     print(

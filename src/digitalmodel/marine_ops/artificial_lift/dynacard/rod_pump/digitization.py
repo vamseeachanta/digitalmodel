@@ -40,9 +40,12 @@ class AxisCalibration:
             raise ValueError("axis calibration scale must be finite and nonzero")
 
     def value(self, pixel: float) -> float:
-        """Affine interpolation (or extrapolation) through the measured ticks."""
-        fraction = (pixel - self.pixel0) / (self.pixel1 - self.pixel0)
-        return self.value0 + fraction * (self.value1 - self.value0)
+        """Apply the validated affine scale; reject nonfinite results."""
+        scale = (self.value1 - self.value0) / (self.pixel1 - self.pixel0)
+        value = self.value0 + (pixel - self.pixel0) * scale
+        if not math.isfinite(value):
+            raise ValueError("calibrated value must be finite")
+        return value
 
 
 @dataclass(frozen=True)

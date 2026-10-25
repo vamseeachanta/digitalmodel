@@ -105,6 +105,24 @@ def test_invalid_calibration(values):
         AxisCalibration(*values)
 
 
+def test_subnormal_tick_spans_preserve_unit_scale():
+    """Equal spans give value=pixel, including beyond the calibration ticks."""
+    axis = AxisCalibration(0, 0, 1e-320, 1e-320)
+    assert axis.value(0.5) == 0.5
+    mask = np.zeros((10, 5), dtype=bool)
+    mask[[1, 8]] = True
+    card = digitize_mask(mask, axis, axes()[1], max_gap_px=1)
+    assert card.position_in == (0, 1, 2, 3, 4)
+
+
+@pytest.mark.parametrize("pixel", [2, float("inf"), float("nan")])
+def test_calibration_rejects_nonfinite_values(pixel):
+    """A finite scale cannot guarantee representable extrapolated values."""
+    axis = AxisCalibration(0, 0, 1, 1e308)
+    with pytest.raises(ValueError):
+        axis.value(pixel)
+
+
 @pytest.mark.parametrize(
     "mask", [np.ones(5, dtype=bool), np.ones((3, 3)), np.zeros((0, 3), dtype=bool)]
 )

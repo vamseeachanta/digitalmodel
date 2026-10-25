@@ -48,14 +48,20 @@ class UndulationAnalysis:
     )
 
 
-def _positive(**values: float) -> None:
+def _finite(**values: float) -> None:
     for name, value in values.items():
         if (
             isinstance(value, bool)
             or not isinstance(value, Real)
             or not math.isfinite(value)
-            or value <= 0
         ):
+            raise ValueError(f"{name} must be a finite real number")
+
+
+def _positive(**values: float) -> None:
+    _finite(**values)
+    for name, value in values.items():
+        if value <= 0:
             raise ValueError(f"{name} must be finite and positive")
 
 
@@ -104,9 +110,10 @@ def position_time_bounds(
     Downstroke is reflected about half-cycle: t_down=cycle-t_up.
     """
     _positive(stroke_in=stroke_in, strokes_per_minute=strokes_per_minute)
-    if not math.isfinite(position_in) or not 0 <= position_in <= stroke_in:
+    _finite(position_in=position_in, position_error_in=position_error_in)
+    if not 0 <= position_in <= stroke_in:
         raise ValueError("position must be finite and inside the stroke")
-    if not math.isfinite(position_error_in) or position_error_in < 0:
+    if position_error_in < 0:
         raise ValueError("position error must be finite and nonnegative")
     if branch not in ("upstroke", "downstroke"):
         raise ValueError("branch must be upstroke or downstroke")
@@ -152,7 +159,8 @@ def analyse_undulations(
         stroke_in=stroke_in,
         strokes_per_minute=strokes_per_minute,
     )
-    if not math.isfinite(position_error_in) or position_error_in < 0:
+    _finite(position_error_in=position_error_in)
+    if position_error_in < 0:
         raise ValueError("position error must be finite and nonnegative")
     positions = tuple(peak_positions_in)
     times = tuple(

@@ -117,6 +117,16 @@ def test_interval_bounds_and_compatibility():
         ("stroke_in", float("inf")),
         ("strokes_per_minute", float("nan")),
         ("position_error_in", -1),
+        ("position_error_in", True),
+        ("position_error_in", False),
+        ("position_error_in", "1"),
+        ("position_error_in", None),
+        ("position_error_in", 1j),
+        ("peak_positions_in", (True, 5)),
+        ("peak_positions_in", (False, 5)),
+        ("peak_positions_in", ("1", 5)),
+        ("peak_positions_in", (None, 5)),
+        ("peak_positions_in", (1j, 5)),
         ("peak_positions_in", (5, 2)),
         ("peak_positions_in", (5, 5)),
         ("peak_positions_in", (-1,)),
@@ -135,6 +145,31 @@ def test_invalid_analysis_input(field, value):
     )
     with pytest.raises(ValueError):
         analyse_undulations(**{**inputs, field: value})
+
+
+@pytest.mark.parametrize("field", ["position_in", "position_error_in"])
+@pytest.mark.parametrize("value", [True, False, "1", None, 1j])
+def test_timing_bounds_reject_non_real_inputs(field, value):
+    inputs = dict(
+        position_in=5, stroke_in=10, strokes_per_minute=6, position_error_in=0
+    )
+    with pytest.raises(ValueError):
+        position_time_bounds(**{**inputs, field: value})
+
+
+@pytest.mark.parametrize("error", [True, False, "1", None, 1j])
+def test_analysis_validates_error_without_peaks(error):
+    """The error contract also applies when no timing inversion is needed."""
+    with pytest.raises(ValueError):
+        analyse_undulations(
+            rod_length_ft=100,
+            wave_speed_ft_s=400,
+            taper_factor=1,
+            stroke_in=10,
+            strokes_per_minute=6,
+            peak_positions_in=(),
+            position_error_in=error,
+        )
 
 
 @pytest.mark.parametrize("branch", ["invalid", "UPSTROKE"])
