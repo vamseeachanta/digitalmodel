@@ -135,6 +135,18 @@ def test_batch_order_extension_and_cwd(tmp_path):
     assert find_modes(tmp_path, ".out") == results
 
 
+@pytest.mark.parametrize("extension", ["txt", ".TXT", "TXT", ".tXt"])
+def test_case_insensitive_extension_discovery(tmp_path, extension):
+    """Each spelling selects a.txt, b.TXT and c.tXt in lexical order."""
+    for name in ("c.tXt", "a.txt", "b.TXT"):
+        (tmp_path / name).write_text(SAMPLE)
+    (tmp_path / "ignored.txtextra").write_text("unrelated")
+    (tmp_path / "directory.txt").mkdir()
+    results = find_modes(tmp_path, extension)
+    assert [r.filename for r in results] == ["a.txt", "b.TXT", "c.tXt"]
+    assert [r.power_in_nodes for r in results] == [(4, 8, 9)] * 3
+
+
 @pytest.mark.parametrize("extension", ["", "*", "../out", ".o?ut"])
 def test_invalid_extension(tmp_path, extension):
     with pytest.raises(ValueError):

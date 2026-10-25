@@ -4,6 +4,9 @@ Format basis: ModesFind.m and FindModes.m (2009), count/sentinel parsing and
 NodeList output loops, inspected for the compatibility port in issue 1642.
 No solver is imported. Counts and identifiers come from the result file;
 no physical coefficients, thresholds or acceptance criteria are supplied.
+Only the declared number of table rows is consumed; surplus rows are ignored,
+matching the original algorithm. Archive parity evidence is retained privately
+with digests; it cannot be independently reproduced from this repository.
 """
 
 from __future__ import annotations
@@ -126,7 +129,9 @@ def _input_files(directory: Path, extension: str) -> tuple[Path, ...]:
         raise NotADirectoryError("Input directory does not exist")
     files = tuple(
         sorted(
-            p for p in directory.iterdir() if p.is_file() and p.suffix == f".{suffix}"
+            p
+            for p in directory.iterdir()
+            if p.is_file() and p.suffix.lower() == f".{suffix.lower()}"
         )
     )
     if not files:

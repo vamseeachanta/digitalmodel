@@ -18,7 +18,10 @@ started or imported. Input counts and node identifiers are preserved.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-10-19</td><td>Introduce the parser, exports and synthetic
-worked example so existing outputs can be summarized without MATLAB.</td></tr></tbody>
+worked example so existing outputs can be summarized without MATLAB.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Match file suffixes without case sensitivity
+and state the private parity-evidence limit so discovery and reproducibility
+limits are explicit.</td></tr></tbody>
 <caption>Table 1. Document revision history.</caption></table>
 <h2>Use</h2>
 <pre><code>shear7-mode-finder results --output-dir summaries --output-format csv
@@ -29,7 +32,7 @@ shear7-mode-finder results --output-dir summaries --output-format yaml
 PYTHONPATH=src python -m digitalmodel.subsea.viv_tools.shear7_mode_finder \
   examples/viv/shear7_mode_finder --extension .txt \
   --output-dir summaries --output-format json</code></pre>
-<p>The input directory is scanned non-recursively for the literal suffix
+<p>The input directory is scanned non-recursively for the case-insensitive literal suffix
 (default <code>.out</code>). File names are sorted lexically. The command writes
 <code>ExcitedModes</code> and <code>PowerInRegion</code> files with the selected
 extension. It does not change the working directory. Existing exports are
@@ -90,7 +93,9 @@ zero modes; repeated calls; deterministic file ordering; and input protection.</
 outputs matches all 37 excited-mode lists and the full 1,182-row by 37-column
 NodeList matrix (43,734 entries). This establishes parity for that inspected
 archive set, not every Shear7 version. Restricted file names, raw files and
-case-specific results are excluded from this public artifact.</p>
+case-specific results are excluded from this public artifact. The parity evidence
+is retained privately with digests; the comparison cannot be independently
+reproduced from this repository. It was not rerun for revision 2.</p>
 <p>A declared zero-mode count gives an empty result. A first region with a zero
 node count gives no node rows. Missing markers and malformed or truncated
 counted rows raise errors; they do not silently become a zero-mode result.
