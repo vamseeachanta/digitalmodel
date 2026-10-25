@@ -289,11 +289,51 @@ def test_unadmitted_worker_preserves_previous_files(control, tmp_path, monkeypat
     api.assert_not_called()
 
 
+@pytest.mark.parametrize("other_content", ("synthetic: approved\n", "synthetic: other\n"))
+def test_worker_refuses_changed_master_selection_before_solver_access(
+    tmp_path, monkeypatch, other_content,
+):
+    case = {"case_id": "master-selection", "analysis": "statics"}
+
+    def build(directory, selected):
+        directory.mkdir(parents=True)
+        (directory / "approved.yml").write_text("synthetic: approved\n", encoding="utf-8")
+        (directory / "other.yml").write_text(other_content, encoding="utf-8")
+        return directory / selected
+
+    prepared = build(tmp_path / "prepared", "approved.yml")
+    fingerprint = control_fingerprint(prepared, case)
+    qa = make_qa([case], tmp_path / "qa", {case["case_id"]: fingerprint})
+    _, bindings = runner.check_cases([case], qa=qa, expected_dll="test-version")
+    worker_files = {}
+
+    class Adapter:
+        def build(self, case, directory):
+            master = build(directory, "other.yml")
+            worker_files.update({path.name: path.read_bytes() for path in directory.iterdir()})
+            return master
+
+    api = Mock(side_effect=AssertionError("native access is forbidden"))
+    monkeypatch.setattr(runner, "_api", api)
+    monkeypatch.setattr(runner, "_adapter", lambda _: Adapter())
+    record = runner.run_one(
+        case, adapter="unused:adapter", out_dir=str(tmp_path / "worker"),
+        expected_dll="test-version", **bindings[case["case_id"]],
+    )
+
+    assert worker_files == {path.name: path.read_bytes() for path in prepared.parent.iterdir()}
+    assert record["status"] == "admission_failed"
+    assert record["phase"] == "admission"
+    assert record["retry"] is False
+    assert "B2" in record["message"]
+    api.assert_not_called()
+
+
 def test_worker_matches_admission_before_reopen_and_keeps_evidence_identity(control, tmp_path, monkeypatch):
     """Exact bytes produce identical digests; readback is still required.
 
-    The independent control constructs SHA256(``master.yml:SHA256(file)`` plus
-    newline plus canonical case JSON), as written out in control_fingerprint.
+    The independent control hashes the selected relative master JSON line,
+    file digest lines and canonical case JSON, as written in control_fingerprint.
     No numeric engineering output is asserted by this test.
     """
     case, _, _ = control

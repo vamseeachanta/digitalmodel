@@ -5,7 +5,7 @@ knows how to build a text-YAML model for a case and what to extract from the res
 worker:
 
 1. builds the model (``adapter.build(case, model_dir) -> master.yml``) and hashes the input
-   (every model file plus the canonical case JSON);
+   (the selected relative master path, every model file and the canonical case JSON);
 2. loads it with one solver thread, applies ``adapter.prepare(model, case)`` if present, and solves
    statics (``adapter.statics(model, case)`` if present, else ``CalculateStatics``) and, for
    ``analysis == "dynamics"``, the simulation;
@@ -157,12 +157,18 @@ def sha256_file(path: Path) -> str:
 
 
 def input_digest(master: Path, case: dict) -> str:
-    """SHA-256 over every file of the text model (master.yml and all files below its folder, whatever their
-    type - YAML, CSV data, external-function or hydrodynamic files - sorted by relative path) and the canonical
-    JSON of the case."""
+    """SHA-256 over the selected relative master path, all model files and case JSON.
+
+    The first line is compact JSON identifying the master relative to its folder.
+    Every file below that folder follows, sorted by relative path, regardless of
+    type (YAML, CSV, external-function or hydrodynamic data). The canonical case
+    JSON is appended last. Absolute preparation and worker paths do not participate.
+    """
     master = Path(master)
     root = master.parent
     h = hashlib.sha256()
+    h.update(json.dumps({"master": master.relative_to(root).as_posix()},
+                        separators=(",", ":")).encode() + b"\n")
     for p in sorted((q for q in root.rglob("*") if q.is_file()),
                     key=lambda q: q.relative_to(root).as_posix()):
         h.update(f"{p.relative_to(root).as_posix()}:{sha256_file(p)}\n".encode())

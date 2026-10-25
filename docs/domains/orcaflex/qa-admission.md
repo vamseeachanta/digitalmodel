@@ -13,6 +13,7 @@ qualification. A worker's `status=ok` remains an execution result.
 | --- | --- | --- |
 | 1 | 2026-10-19 | Define evidence admission and worker binding so incomplete or changed evidence cannot silently enter a batch. |
 | 2 | 2026-10-19 | Migrate native test callers, retain validated evidence digests, and preserve adapter failure classification and test dependency coverage. |
+| 3 | 2026-10-25 | Bind the selected relative master path to the approved fingerprint so another root model cannot execute under the same approval. |
 
 ## Basis and scope
 
@@ -67,8 +68,14 @@ Each `AdmissionRequest` contains:
 - `images`: required roles mapped to the actual local files for digest readback.
 
 The request fingerprint is checked against the evidence at admission and
-against newly built worker inputs before any native binding access. The case
-JSON and all files below the model folder participate in this fingerprint.
+against newly built worker inputs before any native binding access. The selected
+master path relative to its folder, the case JSON and all files below that folder
+participate in this fingerprint. The digest starts with a compact JSON object
+containing `master` and its relative path, followed by a newline, sorted file
+digest lines and canonical case JSON. Absolute preparation and worker paths do
+not participate. Selecting another master changes the fingerprint even when
+both files remain present and have identical contents. Evidence produced with
+the previous directory-only convention requires recomputation and approval.
 Keep the evidence outside that folder to avoid a circular fingerprint.
 The worker primitive `run_one` consumes admission identities from the parent;
 it is not an independent signature-authenticating admission API.

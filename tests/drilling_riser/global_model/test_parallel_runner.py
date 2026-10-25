@@ -100,6 +100,33 @@ def test_input_digest_covers_model_files_and_case(tmp_path: Path):
     assert len({d1, d2, d3}) == 3
 
 
+@pytest.mark.parametrize("other_content", ("a: 1\n", "a: 2\n"))
+def test_input_digest_binds_selected_master(tmp_path, other_content):
+    approved = tmp_path / "approved.yml"
+    other = tmp_path / "other.yml"
+    approved.write_text("a: 1\n", encoding="utf-8")
+    other.write_text(other_content, encoding="utf-8")
+    case = {"case_id": "C1", "analysis": "statics"}
+
+    assert pr.input_digest(approved, case) != pr.input_digest(other, case)
+
+
+def test_input_digest_is_independent_of_preparation_directory(tmp_path):
+    case = {"case_id": "C1", "analysis": "statics"}
+    masters = []
+    for name in ("prepared", "worker"):
+        directory = tmp_path / name
+        directory.mkdir()
+        master = directory / "approved.yml"
+        master.write_text("a: 1\n", encoding="utf-8")
+        (directory / "other.yml").write_text("a: 2\n", encoding="utf-8")
+        masters.append(master)
+
+    expected = control_fingerprint(masters[0], case)
+    assert pr.input_digest(masters[0], case) == expected
+    assert pr.input_digest(masters[1], case) == expected
+
+
 def test_case_ids_must_be_unique_and_safe():
     with pytest.raises(ValueError):
         pr.check_cases([{"case_id": "A", "analysis": "statics"}, {"case_id": "A", "analysis": "statics"}])

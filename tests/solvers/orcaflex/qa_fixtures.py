@@ -9,7 +9,8 @@ from digitalmodel.solvers.orcaflex.qa_admission import AdmissionContext, Admissi
 def control_fingerprint(master, case):
     """Construct the expected digest independently from the runner.
 
-    Hand construction, using the repository fingerprint convention: sort the
+    Hand construction, using the repository fingerprint convention: start with
+    compact JSON identifying the selected relative master and a newline; sort
     fixture files by relative name; concatenate ``name:SHA256(file)`` and a
     newline for each; append the case JSON with sorted keys and compact
     separators; SHA256 the resulting UTF-8 bytes. No solver output participates.
@@ -19,7 +20,9 @@ def control_fingerprint(master, case):
         (path.relative_to(root).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest())
         for path in root.rglob("*") if path.is_file()
     )
-    material = "".join(f"{name}:{digest}\n" for name, digest in entries)
+    material = json.dumps({"master": master.relative_to(root).as_posix()},
+                          separators=(",", ":")) + "\n"
+    material += "".join(f"{name}:{digest}\n" for name, digest in entries)
     material += json.dumps(case, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(material.encode()).hexdigest()
 
