@@ -198,6 +198,57 @@ def test_matrix_numeric_domain_refuses_overflow(mock_diffraction_results, tmp_pa
     assert next(iter(stats.values()))[(1, 1)].quality == "INSUFFICIENT_DATA"
 
 
+@pytest.mark.parametrize("attribute", ["added_mass", "damping"])
+@pytest.mark.parametrize("all_refused", [False, True])
+def test_legacy_matrix_overflow_preserves_axis_and_exports(
+    mock_diffraction_results, tmp_path, attribute, all_refused,
+):
+    """Synthetic differences: cell (1,1) overflows; cell (1,2) peaks at 1."""
+    import json
+
+    first = deepcopy(mock_diffraction_results)
+    second = deepcopy(first)
+    first_set = getattr(first, attribute)
+    second_set = getattr(second, attribute)
+    axis = first_set.frequencies.values
+    peak_index = len(axis) // 2
+    for sample_a, sample_b in zip(first_set.matrices, second_set.matrices):
+        if all_refused:
+            sample_a.matrix.fill(-np.finfo(float).max)
+            sample_b.matrix.fill(np.finfo(float).max)
+        else:
+            sample_a.matrix[0, 0] = -np.finfo(float).max
+            sample_b.matrix[0, 0] = np.finfo(float).max
+    if not all_refused:
+        second_set.matrices[peak_index].matrix[0, 1] += 1.0
+
+    comparator = DiffractionComparator(first, second)
+    report = comparator.generate_report()
+    assert report.comparison_status == "REFUSED"
+    matrix = getattr(report, attribute + "_comparison")
+    np.testing.assert_array_equal(matrix.frequencies, axis)
+    refused = matrix.element_statistics[(0, 0)]
+    assert refused.quality == "INSUFFICIENT_DATA"
+    assert refused.sample_count is None
+    if not all_refused:
+        assert matrix.max_deviation_value == pytest.approx(1.0)
+        assert matrix.max_deviation_element == (0, 1)
+        assert matrix.max_deviation_frequency == axis[peak_index]
+
+    target = tmp_path / "legacy-overflow.json"
+    comparator.export_report(target)
+    data = json.loads(target.read_text())
+    assert data["comparison_status"] == "REFUSED"
+    exported = data[attribute + "_comparison"]
+    assert exported["quality"]["0,0"] == "INSUFFICIENT_DATA"
+    assert exported["sample_counts"]["0,0"] is None
+    if not all_refused:
+        assert exported["max_deviation"] == pytest.approx(1.0)
+        assert exported["max_deviation_element"] == [0, 1]
+        assert exported["max_deviation_frequency"] == axis[peak_index]
+        assert exported["sample_counts"]["0,1"] == len(axis)
+
+
 def test_worked_example():
     """Affine interpolation gives r=1 and RMS=0; constants have no Pearson r."""
     import runpy

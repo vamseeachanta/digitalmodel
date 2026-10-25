@@ -195,12 +195,16 @@ class DiffractionComparator:
         comparisons = canonical._compare_matrix_set(matrix_type)
         stats = next(iter(comparisons.values()))
         elements = {(i - 1, j - 1): value for (i, j), value in stats.items()}
-        frequencies = next(iter(elements.values())).frequencies
+        # A cell can refuse statistics after the matrix axis has been aligned.
+        alignment, _ = canonical._align_matrix_pair(
+            getattr(self.aqwa, matrix_type), getattr(self.orcawave, matrix_type),
+        )
+        frequencies = alignment.frequencies if alignment is not None else np.array([], dtype=float)
         comparison = MatrixComparison(matrix_type=matrix_type, frequencies=frequencies, element_statistics=elements)
         for element, value in elements.items():
             if value.max_error > comparison.max_deviation_value:
                 comparison.max_deviation_value = value.max_error
-                comparison.max_deviation_frequency = float(frequencies[np.argmax(np.abs(value.errors))])
+                comparison.max_deviation_frequency = float(value.frequencies[np.argmax(np.abs(value.errors))])
                 comparison.max_deviation_element = element
         return comparison
 
