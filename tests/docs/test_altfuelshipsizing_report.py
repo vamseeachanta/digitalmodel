@@ -246,6 +246,47 @@ def test_only_report_deliverables_are_reincluded():
     assert result.returncode == 0
 
 
+def test_shared_module_report_defaults_are_defined_once():
+    """Declare shared parents once, before all module-specific exceptions."""
+    lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    parents = [i for i, line in enumerate(lines)
+               if line.lstrip("/") == "docs/reports/modules/*"]
+    assert len(parents) == 1
+    # The shared dependency uses root-anchored defaults.
+    assert lines[parents[0]] == "/docs/reports/modules/*"
+    exceptions = [i for i, line in enumerate(lines)
+                  if re.fullmatch(r"!?/?docs/reports/modules/[^*/]+/.*", line)]
+    assert exceptions and all(i > parents[0] for i in exceptions)
+
+
+@pytest.mark.parametrize("sizing_first", [True, False])
+def test_sibling_report_exceptions_compose_in_either_order(tmp_path, sizing_first):
+    """A sibling exception must not hide another module's deliverables."""
+    lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    module = [line for line in lines if "docs/reports/modules/altfuelshipsizing/" in line]
+    shared = [line for line in lines if line not in module]
+    sibling = [line.replace("altfuelshipsizing", "sibling-report") for line in module]
+    blocks = [module, sibling] if sizing_first else [sibling, module]
+    (tmp_path / ".gitignore").write_text(
+        "\n".join(shared + blocks[0] + blocks[1]) + "\n", encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    for directory in ("altfuelshipsizing", "sibling-report"):
+        for name in ("index.html", "generate.py", "changes.json", "intermediate.csv"):
+            result = subprocess.run(
+                ["git", "check-ignore", "--no-index", "-q",
+                 f"docs/reports/modules/{directory}/{name}"],
+                cwd=tmp_path, check=False,
+            )
+            assert result.returncode == (0 if name == "intermediate.csv" else 1)
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q",
+         "docs/reports/modules/unlisted-report/index.html"],
+        cwd=tmp_path, check=False,
+    )
+    assert result.returncode == 0
+
+
 def test_headlines_against_hand_worked_literals():
     """Pin arithmetic independent of the sizing API, including the fixed point.
 

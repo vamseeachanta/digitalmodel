@@ -268,13 +268,6 @@ reports/
 !docs/reports/
 docs/reports/*
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
-!docs/reports/modules/
-docs/reports/modules/*
-!docs/reports/modules/altfuelshipsizing/
-docs/reports/modules/altfuelshipsizing/*
-!docs/reports/modules/altfuelshipsizing/index.html
-!docs/reports/modules/altfuelshipsizing/changes.json
-!docs/reports/modules/altfuelshipsizing/generate.py
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
@@ -588,3 +581,21 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
+
+# Reproducible vessel seakeeping module documentation
+!/scripts/reports/
+/scripts/reports/*
+!/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/
+!/docs/reports/modules/
+/docs/reports/modules/*
+!/docs/reports/modules/vesselseakeeping/
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json
+
+# Reproducible alternative-fuel sizing module documentation
+!docs/reports/modules/altfuelshipsizing/
+docs/reports/modules/altfuelshipsizing/*
+!docs/reports/modules/altfuelshipsizing/index.html
+!docs/reports/modules/altfuelshipsizing/changes.json
+!docs/reports/modules/altfuelshipsizing/generate.py
