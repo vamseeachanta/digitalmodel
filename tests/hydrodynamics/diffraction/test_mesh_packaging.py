@@ -61,7 +61,7 @@ def _multibody_spec_data(mesh_a: str, mesh_b: str) -> dict:
 
 
 
-@pytest.mark.parametrize("route", ["runner", "converter", "programmatic"])
+@pytest.mark.parametrize("route", ["runner", "implicit_runner", "converter", "programmatic", "loaded"])
 @pytest.mark.parametrize("partial", [False, True])
 def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, partial):
     """A decoy beside the spec must never replace the packaged mesh check."""
@@ -96,11 +96,18 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
     def generate():
         if route == "converter":
             return SpecConverter(spec_path).convert(solver="orcawave", output_dir=output)
-        if route == "runner":
+        if route in {"runner", "implicit_runner"}:
             runner = OrcaWaveRunner(RunConfig(output_dir=output, generate_modular=True))
-            result = runner.prepare(DiffractionSpec.from_yaml(spec_path), spec_path=spec_path)
+            result = runner.prepare(
+                DiffractionSpec.from_yaml(spec_path),
+                spec_path=spec_path if route == "runner" else None,
+            )
             assert result.modular_files
             return result.input_file
+        if route == "loaded":
+            spec = DiffractionSpec.from_yaml(spec_path)
+            packaged, _, _ = package_spec_meshes(spec, output)
+            return OrcaWaveBackend().generate_single(packaged, output)
         spec = DiffractionSpec.model_validate(data)
         assert spec._source_dir is None
         packaged, _, _ = package_spec_meshes(spec, output, spec_dir=case)

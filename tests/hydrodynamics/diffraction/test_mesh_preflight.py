@@ -224,3 +224,87 @@ def test_buoyancy_criterion_must_be_finite_and_nonnegative(tmp_path, tolerance):
     data["vessel"]["geometry"]["buoyancy_relative_tolerance"] = tolerance
     with pytest.raises(ValueError, match="buoyancy_relative_tolerance"):
         DiffractionSpec.model_validate(data)
+
+
+def packed_diamond_spec(tmp_path, partial=False, width=12):
+    """Every panel starts on y=0; later vertices reveal the stored sector."""
+    spec = box_spec(tmp_path, "xz", "0 1")
+    corners = [(2, 0), (0, 1), (-2, 0), (0, -1)]
+    panels = []
+    for first, second in zip(corners, corners[1:] + corners[:1]):
+        if partial and (first[1] < 0 or second[1] < 0):
+            continue
+        if first[1] != 0:
+            first, second = second, first
+        panels.append([
+            (*first, -1), (*second, -1), (*second, 0), (*first, 0)
+        ])
+    coordinates = [str(value) for panel in panels for point in panel for value in point]
+    mesh = tmp_path / "box.gdf"
+    mesh.write_text("\n".join(
+        ["Synthetic diamond", "1 1", "0 1", str(len(panels))]
+        + [" ".join(coordinates[i:i + width]) for i in range(0, len(coordinates), width)]
+    ) + "\n")
+    return spec
+
+
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("width", [12, 24, 5, 1])
+def test_packed_full_body_refuses_reflection(tmp_path, mode, width):
+    spec = packed_diamond_spec(tmp_path, width=width)
+    assert spec.vessel.geometry.buoyancy_relative_tolerance is None
+    with pytest.raises(ValueError, match="both sides"):
+        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+    assert not list((tmp_path / "output").glob("*"))
+
+
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("width", [12, 24, 5, 1])
+def test_packed_matching_sector_passes(tmp_path, mode, width):
+    spec = packed_diamond_spec(tmp_path, partial=True, width=width)
+    result = generate(OrcaWaveBackend(), spec, tmp_path, mode)
+    assert yaml.safe_load(result.read_text())["Bodies"][0]["BodyMeshSymmetry"] == "xz plane"
+
+
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("symmetry,flags", [("none", "0 0"), ("xz", "0 1")])
+@pytest.mark.parametrize("defect", [
+    "zero_count", "negative_count", "fractional_count", "invalid_count",
+    "missing_count", "too_few", "too_many", "nan", "inf", "invalid_coordinate",
+])
+def test_gdf_coordinate_stream_must_be_complete_and_finite(
+    tmp_path, mode, symmetry, flags, defect
+):
+    spec = box_spec(tmp_path, symmetry, flags, partial=True)
+    mesh = tmp_path / "box.gdf"
+    header = mesh.read_text().splitlines()[:4]
+    coordinates = mesh.read_text().splitlines()[4:]
+    tokens = " ".join(coordinates).split()
+    counts = {"zero_count": "0", "negative_count": "-1", "fractional_count": "1.5",
+              "invalid_count": "bad", "missing_count": ""}
+    if defect in counts:
+        header[3] = counts[defect]
+    elif defect == "too_few":
+        tokens.pop()
+    elif defect == "too_many":
+        tokens.append("0")
+    else:
+        # A later coordinate in a packed panel must not be discarded.
+        tokens[5] = {"nan": "nan", "inf": "inf", "invalid_coordinate": "bad"}[defect]
+    mesh.write_text("\n".join(header + [" ".join(tokens)]) + "\n")
+    with pytest.raises(ValueError, match="GDF.*(panel count|coordinates)"):
+        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+    assert not list((tmp_path / "output").glob("*"))
+
+
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("annotation", ["end of panel 1", "end of panel 9"])
+def test_panel_annotation_cannot_hide_missing_coordinates(tmp_path, mode, annotation):
+    spec = packed_diamond_spec(tmp_path, partial=True)
+    mesh = tmp_path / "box.gdf"
+    lines = mesh.read_text().splitlines()
+    lines[4] = "0 0 -1 " + annotation
+    mesh.write_text("\n".join(lines) + "\n")
+    with pytest.raises(ValueError, match="Invalid GDF coordinates"):
+        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+    assert not list((tmp_path / "output").glob("*"))

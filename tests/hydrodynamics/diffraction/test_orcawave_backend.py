@@ -864,7 +864,10 @@ def test_gdf_title_encoding_does_not_hide_symmetry_flags(monkeypatch, flags, ref
 
     spec = _ship_spec()
     spec.vessel.geometry.symmetry = "none"
-    payload = b"title \xff\n1 9.81\n" + flags.encode("ascii") + b"\n"
+    payload = (
+        b"title \xff\n1 9.81\n" + flags.encode("ascii")
+        + b"\n1\n0 0 -1 1 0 -1 1 1 -1 0 1 -1\n"
+    )
 
     def open_header(path, **kwargs):
         return io.TextIOWrapper(io.BytesIO(payload), **kwargs)

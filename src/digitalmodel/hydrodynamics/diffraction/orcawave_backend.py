@@ -282,15 +282,41 @@ def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
             stream.readline()  # length unit and gravity
             flags = parse_symmetry_flags(stream.readline())
             validate_symmetry(flags, geom.symmetry)
-            # Header flags describe a sector, not a full mesh to expand twice.
-            if any(flags):
-                import numpy as np
+            import numpy as np
 
-                stream.readline()  # panel count
-                rows = [line.split()[:3] for line in stream if line.strip()]
-                vertices = np.asarray(rows, dtype=float)
-                if vertices.size:
-                    validate_symmetry(flags, geom.symmetry, vertices)
+            try:
+                panel_count = int(stream.readline().split()[0])
+            except (ValueError, IndexError) as exc:
+                raise ValueError("Invalid GDF panel count: expected a positive integer") from exc
+            if panel_count <= 0:
+                raise ValueError("Invalid GDF panel count: expected a positive integer")
+            # WAMIT v7.4 section 6.1 permits sequential coordinates across
+            # line breaks. Read all twelve scalars per panel, not one vertex
+            # per line, so packed full bodies cannot masquerade as sectors.
+            tokens = []
+            for line in stream:
+                coordinates, marker, annotation = line.partition("end of panel")
+                tokens.extend(coordinates.split())
+                # Retain the numbered panel annotations in existing GDFs,
+                # but accept them only after a complete, correctly numbered panel.
+                if marker and (
+                    len(tokens) % 12
+                    or annotation.strip() != str(len(tokens) // 12)
+                ):
+                    raise ValueError("Invalid GDF coordinates: invalid panel annotation")
+            if len(tokens) != 12 * panel_count:
+                raise ValueError(
+                    "Invalid GDF coordinates: expected "
+                    f"{12 * panel_count} values for {panel_count} panels, "
+                    f"got {len(tokens)}"
+                )
+            try:
+                vertices = np.asarray(tokens, dtype=float).reshape(-1, 3)
+            except ValueError as exc:
+                raise ValueError("Invalid GDF coordinates: expected numeric values") from exc
+            if not np.isfinite(vertices).all():
+                raise ValueError("Invalid GDF coordinates: expected finite values")
+            validate_symmetry(flags, geom.symmetry, vertices)
     except OSError as exc:
         raise ValueError(
             f"Cannot verify GDF symmetry for mesh {Path(geom.mesh_file).name!r}"
