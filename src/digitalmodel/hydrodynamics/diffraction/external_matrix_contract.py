@@ -89,6 +89,13 @@ def write_matrix_provenance(
                 continue
             point = getattr(body.vessel, f"external_{kind}_reference_point")
             factor = ORCAWAVE_PER_CANONICAL if backend == "orcawave" else 1.0
+            coordinates: list[float] | None = [0.0, 0.0, 0.0]
+            if point == "centre_of_mass":
+                # Free-floating COM coordinates are solver-derived; the
+                # explicit-mode compatibility field is ignored by the deck.
+                inertia = body.vessel.inertia
+                coordinates = (list(inertia.centre_of_gravity)
+                               if inertia.mode == "explicit" else None)
             records.append({
                 "body_index": index,
                 "kind": kind,
@@ -98,9 +105,9 @@ def write_matrix_provenance(
                 "native_units": matrix_units(kind, "kN" if backend == "orcawave" else "N"),
                 "normalized_units": matrix_units(kind),
                 "reference_point": point,
-                "reference_point_body_coordinates_m": (
-                    list(body.vessel.inertia.centre_of_gravity)
-                    if point == "centre_of_mass" else [0.0, 0.0, 0.0]
+                "reference_point_body_coordinates_m": coordinates,
+                "reference_point_body_coordinates_status": (
+                    "unknown_solver_derived" if coordinates is None else "known"
                 ),
                 "axes": "body" if backend == "orcawave" else "global_parallel",
             })
@@ -112,4 +119,5 @@ def write_matrix_provenance(
         "matrices": records,
     }
     path = Path(output_dir) / f"external_matrices.{backend}.json"
-    path.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8", newline="\n")

@@ -103,7 +103,7 @@ def test_cross_backend_matrix_conversion(tmp_path, kind, keyword):
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 
     spec = spec_data(kind)
-    ow = yaml.safe_load(OrcaWaveBackend().generate_single(spec, tmp_path).read_text())
+    ow = yaml.safe_load(OrcaWaveBackend().generate_single(spec, tmp_path).read_text(encoding="utf-8"))
     body = ow["Bodies"][0]
     key = next(k for k in body if k.startswith(f"BodyExternal{kind.title()}Matrixx,"))
     assert body[key] == [
@@ -154,7 +154,7 @@ def test_generated_matrix_provenance(tmp_path, backend, modular):
     adapter = AQWABackend() if backend == "aqwa" else OrcaWaveBackend()
     method = adapter.generate_modular if modular else adapter.generate_single
     method(spec, tmp_path)
-    data = json.loads((tmp_path / f"external_matrices.{backend}.json").read_text())
+    data = json.loads((tmp_path / f"external_matrices.{backend}.json").read_text(encoding="utf-8"))
     assert data["dof_order"] == ["surge", "sway", "heave", "roll", "pitch", "yaw"]
     row = data["matrices"][0]
     assert row["normalized_values"] == matrix()
@@ -165,6 +165,40 @@ def test_generated_matrix_provenance(tmp_path, backend, modular):
     assert row["normalized_units"][3][0] == "N.m.s/m"
 
 
+@pytest.mark.parametrize("kind", ["stiffness", "damping"])
+@pytest.mark.parametrize("point", ["body_origin", "centre_of_mass"])
+@pytest.mark.parametrize("modular", [False, True])
+def test_free_floating_matrix_origin_provenance(tmp_path, kind, point, modular):
+    """Solver-derived coordinates must not reuse ignored explicit-mode inputs."""
+    import json
+    import yaml
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+
+    spec = spec_data(kind, point)
+    spec.vessel.inertia.mode = "free_floating"
+    # Chosen inputs: compatibility z=-2 m is ignored; cog_z=-5 m is emitted.
+    spec.vessel.inertia.cog_z = -5
+    adapter = OrcaWaveBackend()
+    generate = adapter.generate_modular if modular else adapter.generate_single
+    output = generate(spec, tmp_path)
+    body = yaml.safe_load(output.read_text(encoding="utf-8"))["Bodies"][0]
+    assert body["BodyCentreOfMassZRelativeToFreeSurface"] == -5
+    assert "BodyCentreOfMass" not in body
+    assert body[f"BodyExternal{kind.title()}MatrixOriginType"] == (
+        "Body origin" if point == "body_origin" else "Centre of mass"
+    )
+    data = json.loads(
+        (tmp_path / "external_matrices.orcawave.json").read_text(encoding="utf-8")
+    )
+    row = data["matrices"][0]
+    assert row["reference_point"] == point
+    if point == "centre_of_mass":
+        assert row["reference_point_body_coordinates_m"] is None
+        assert row["reference_point_body_coordinates_status"] == "unknown_solver_derived"
+    else:
+        assert row["reference_point_body_coordinates_m"] == [0, 0, 0]
+
+
 @pytest.mark.parametrize("mutation", ["origin", "units", "shape"])
 def test_reverse_parser_fails_closed(tmp_path, mutation):
     """A native deck may not silently supply the missing input contract."""
@@ -173,7 +207,7 @@ def test_reverse_parser_fails_closed(tmp_path, mutation):
     from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
     path = OrcaWaveBackend().generate_single(spec_data(), tmp_path)
-    data = yaml.safe_load(path.read_text())
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if mutation == "units":
         data["UnitsSystem"] = "US"
     elif mutation == "origin":
@@ -182,7 +216,7 @@ def test_reverse_parser_fails_closed(tmp_path, mutation):
         body = data["Bodies"][0]
         key = next(k for k in body if k.startswith("BodyExternalDampingMatrixx,"))
         body[key][0].pop()
-    path.write_text(yaml.safe_dump(data))
+    path.write_text(yaml.safe_dump(data), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         OrcaWaveInputParser().parse(path)
 
@@ -206,7 +240,7 @@ def test_worked_example_and_full_matrix_blocks(tmp_path):
         values = [[1000 * (10 * (1 + i) if i == j else 1 + min(i, j))
                    for j in range(6)] for i in range(6)]
         setattr(spec.vessel, f"external_{kind}", values)
-    data = yaml.safe_load(OrcaWaveBackend().generate_single(spec, tmp_path).read_text())
+    data = yaml.safe_load(OrcaWaveBackend().generate_single(spec, tmp_path).read_text(encoding="utf-8"))
     cards = AQWABackend().build_deck7(spec)
     for kind, keyword in (("stiffness", "SSTF"), ("damping", "FIDP")):
         key = next(k for k in data["Bodies"][0]
@@ -261,7 +295,7 @@ def test_reused_output_directory_has_current_provenance(tmp_path):
     spec.vessel.external_damping_units = None
     spec.vessel.external_damping_reference_point = None
     adapter.generate_single(spec, tmp_path)
-    data = json.loads((tmp_path / "external_matrices.orcawave.json").read_text())
+    data = json.loads((tmp_path / "external_matrices.orcawave.json").read_text(encoding="utf-8"))
     assert data["matrices"] == []
 
 
@@ -306,9 +340,9 @@ def test_aqwa_basis_sums_repeated_sstf_records(tmp_path):
     from digitalmodel.hydrodynamics.diffraction.aqwa_deck_basis import read_aqwa_basis
 
     path = AQWABackend().generate_single(spec_data("stiffness"), tmp_path)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     path.write_text("\n".join(line + "\n" + line if "SSTF" in line else line
-                              for line in lines) + "\n")
+                              for line in lines) + "\n", encoding="utf-8", newline="\n")
     assert read_aqwa_basis(path).additional_stiffness == tuple(
         tuple(2 * value for value in row) for row in matrix()
     )
@@ -320,8 +354,9 @@ def test_aqwa_basis_refuses_cross_body_sstf(tmp_path):
     from digitalmodel.hydrodynamics.diffraction.aqwa_deck_basis import AmbiguousDeck, read_aqwa_basis
 
     path = AQWABackend().generate_single(spec_data("stiffness"), tmp_path)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     path.write_text("\n".join(line[:10] + f"{2:5d}" + line[15:]
-                              if "SSTF" in line else line for line in lines) + "\n")
+                              if "SSTF" in line else line for line in lines) + "\n",
+                    encoding="utf-8", newline="\n")
     with pytest.raises(AmbiguousDeck, match="coupled SSTF"):
         read_aqwa_basis(path)
