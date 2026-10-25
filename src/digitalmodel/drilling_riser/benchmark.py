@@ -185,7 +185,10 @@ def read_result(path: Path, *, case_id: str, case_digest: str,
         if not finite_number(reference) or reference == 0:
             result["reason"] = "Comparable nonzero screen unavailable; mechanical stroke is not geometric extension"
             continue
-        difference = 100 * (item["value"] - reference) / abs(reference)
+        try:
+            difference = 100 * (item["value"] - reference) / abs(reference)
+        except OverflowError:
+            difference = math.inf
         if not math.isfinite(difference):
             result["reason"] = "Percentage difference is not finite"
             continue

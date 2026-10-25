@@ -250,3 +250,33 @@ def test_out_of_range_json_integer_is_not_evaluated(tmp_path):
                                    screens={"top_tension_kn": 100}, criteria={})
     assert result["top_tension_kn"]["status"] == "NOT_EVALUATED"
     assert result["top_tension_kn"]["value"] is None
+
+
+@pytest.mark.parametrize("value,reference", [
+    pytest.param(10 ** 308, 1, id="positive-integer-overflow"),
+    pytest.param(-(10 ** 308), 1, id="negative-integer-overflow"),
+    pytest.param(1e308, 1, id="floating-product-overflow"),
+    pytest.param(110, 5e-324, id="floating-division-overflow"),
+])
+def test_percentage_overflow_is_not_evaluated(tmp_path, value, reference):
+    """Finite operands can overflow before the percentage can be checked."""
+    record = json.loads(FIXTURE.read_text())
+    record["metrics"]["top_tension_kn"]["value"] = value
+    path = tmp_path / "result.json"
+    path.write_text(json.dumps(record))
+    assert benchmark.finite_number(value)
+    assert benchmark.finite_number(reference)
+    result = benchmark.read_result(
+        path, case_id="synthetic", case_digest="synthetic",
+        screens={"top_tension_kn": reference, "stroke_m": None},
+        criteria={"top_tension_kn": {"value": 10, "source": "synthetic arithmetic only"}},
+    )
+    comparison = result["top_tension_kn"]
+    assert comparison["status"] == "NOT_EVALUATED"
+    assert comparison["difference_pct"] is None
+    assert comparison["reason"] == "Percentage difference is not finite"
+    assert comparison["value"] == value
+    assert comparison["origin"] == record["origin"]
+    assert comparison["solver_version"] == record["solver_version"]
+    assert comparison["criterion_source"] is None
+    assert result["stroke_m"]["status"] == "NOT_EVALUATED"
