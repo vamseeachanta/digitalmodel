@@ -66,7 +66,10 @@ def test_rebuild_matches_committed_report(tmp_path):
     module = builder()
     module.build(tmp_path)
     for filename in ("report.html", "changes.json"):
-        assert (tmp_path / filename).read_bytes() == (REPORT / filename).read_bytes()
+        assert (tmp_path / filename).read_bytes() == (REPORT / filename).read_bytes(), (
+            "Rebuild with PYTHONPATH=src uv run python "
+            "docs/reports/modules/ansys/build_report.py --output-dir docs/reports/modules/ansys"
+        )
 
 
 def test_every_worked_value_calls_module_and_public_example():
@@ -74,7 +77,7 @@ def test_every_worked_value_calls_module_and_public_example():
     from digitalmodel.ansys.cylinder_reference import reference_text
 
     data = builder().compute()
-    record = json.loads((ROOT / "examples/ansys/cylinder-benchmark/reference.json").read_text())
+    record = json.loads((ROOT / "examples/ansys/cylinder-benchmark/reference.json").read_text(encoding="utf-8"))
     for row in data["stations"]:
         expected = reference_text(row["pressure_mpa"], row["r_mm"], row["y_mm"])
         assert row["values"] == expected
@@ -114,6 +117,14 @@ def test_independent_equilibrium_hooke_law_and_boundary_oracle():
         assert Decimal(data["profile"][0]["values"]["sigma_r"]) == -p
         assert Decimal(data["profile"][-1]["values"]["sigma_r"]) == 0
     assert all(Decimal(v) == 0 for v in data["zero_control"].values())
+    # Hand calculation: Applied Mechanics of Solids, online edition, 4.1.7–4.1.9.
+    # At a=750, b=810, p=10: A=10*750**2/(810**2-750**2)=60.096154 MPa.
+    # Bore radial=-p=-10; hoop=2*A+p=130.192308 MPa;
+    # u_r=750*(130.192308+0.3*10)/200000=0.499471154 mm.
+    bore = data["profile"][0]["values"]
+    for key, expected in (("sigma_r", -10.0), ("sigma_theta", 130.192308),
+                          ("u_r", 0.499471154)):
+        assert float(bore[key]) == pytest.approx(expected, rel=1e-8, abs=1e-9)
 
 
 def test_all_displayed_example_numbers_are_bound_and_formatted():
@@ -145,7 +156,7 @@ def test_structure_sources_and_standalone_assets():
             assert (REPORT / link).exists(), link
     assert page.external_assets == []
     assert '<b>' not in text and '<strong>' not in text
-    assert "Draft for client review" in text
+    assert "Draft for maintainer review" in text
     assert "NOT_EVALUATED" in text
     assert "showDirectoryPicker" in text
     assert "textContent" in text
@@ -153,7 +164,8 @@ def test_structure_sources_and_standalone_assets():
     assert "fetch(" not in module.INTERACTION
 
 
-def test_comment_persistence_and_chart_controls_without_browser(tmp_path):
+@pytest.fixture
+def run_interaction(tmp_path):
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node is absent; browser-free interaction check is unavailable")
@@ -162,6 +174,7 @@ def test_comment_persistence_and_chart_controls_without_browser(tmp_path):
     # asynchronous read/merge/write path. No browser or solver is launched.
     harness = r'''
 const vm = require('node:vm');
+const {TextEncoder} = require('node:util');
 const assert = require('node:assert/strict');
 class Element {
   constructor() { this.textContent = ''; this.children = []; this.value = ''; this.files = []; }
@@ -174,16 +187,19 @@ const get = id => { if (!ids.has(id)) ids.set(id, new Element()); return ids.get
 const config = {report: 'ANSYS module analysis', revision: '1', content_digest: 'example',
                 sections: ['section-1', 'section-2']};
 get('comment-config').textContent = JSON.stringify(config);
-let onDisk = null, written = null, exported = null, nextId = 0;
-const stored = () => JSON.stringify({...config, comments: onDisk});
+let onDisk = null, written = null, writtenText = null, exported = null, nextId = 0, writesOpened = 0;
+const stored = () => JSON.stringify({...config, comments: onDisk}, null, 2) + '\n';
 const directory = {
   async getFileHandle(name, options) {
     if (name === 'report.html') return {getFile: async () => ({text: async () => 'report'})};
     if (!onDisk && !options) throw Object.assign(new Error('absent'), {name: 'NotFoundError'});
     return {
-      getFile: async () => ({size: stored().length, text: async () => stored()}),
-      createWritable: async () => ({write: async value => {written = JSON.parse(value);},
-                                    close: async () => {onDisk = written.comments;}})
+      getFile: async () => ({size: Buffer.byteLength(stored(), 'utf8'), text: async () => stored()}),
+      createWritable: async () => {
+        writesOpened++;
+        return {write: async value => {writtenText = value; written = JSON.parse(value);},
+                close: async () => {onDisk = written.comments;}};
+      }
     };
   }
 };
@@ -195,11 +211,26 @@ const document = {
   querySelectorAll: selector => circles[selector.includes('sigma_vm') ? 'sigma_vm' : 'sigma_r']
 };
 class DOMParser { parseFromString() { return {getElementById: () => ({textContent: JSON.stringify(config)})}; } }
-const context = {document, DOMParser, window: {showDirectoryPicker: async () => directory},
+const context = {document, DOMParser, TextEncoder, window: {showDirectoryPicker: async () => directory},
   crypto: {randomUUID: () => 'comment-' + (++nextId)}, Blob: class {constructor(parts) {exported = parts[0];}},
   URL: {createObjectURL: () => 'blob:example', revokeObjectURL() {}}};
 vm.runInNewContext(SCRIPT, context);
-(async () => {
+'''
+    def run(scenario):
+        script = tmp_path / "interactions.cjs"
+        footer = "})().catch(error => {console.error(error); process.exitCode = 1;});"
+        script.write_text("const SCRIPT = " + json.dumps(module.INTERACTION) + ";\n" +
+                          harness + "\n(async () => {\n" + scenario + footer,
+                          encoding="utf-8", newline="\n")
+        result = subprocess.run([node, script.as_posix()], capture_output=True,
+                                text=True, encoding="utf-8", env=dict(os.environ), timeout=30)
+        assert result.returncode == 0, result.stderr
+
+    return run
+
+
+def test_comment_persistence_and_chart_controls_without_browser(run_interaction):
+    run_interaction(r'''
   get('comment-text').value = '<img src=x onerror=alert(1)> A boundary question.';
   get('comment-add').onclick();
   assert.match(get('comment-list').children[0].textContent, /<img/);
@@ -242,12 +273,119 @@ vm.runInNewContext(SCRIPT, context);
   await get('comment-folder').onclick();
   assert.match(get('comment-status').textContent, /unavailable/);
   console.log('Comment persistence, mismatch, conflict, export and chart controls passed.');
-})().catch(error => {console.error(error); process.exitCode = 1;});
-'''
-    script = tmp_path / "interactions.cjs"
-    script.write_text("const SCRIPT = " + json.dumps(module.INTERACTION) + ";\n" + harness)
-    env = dict(os.environ)
-    for name in ("UV_TOOL_DIR", "PRE_COMMIT_HOME", "XDG_CACHE_HOME", "npm_config_cache"):
-        env[name] = str(Path(os.environ["TMPDIR"]) / name.lower())
-    result = subprocess.run([node, str(script)], capture_output=True, text=True, env=env, timeout=30)
-    assert result.returncode == 0, result.stderr
+''')
+
+
+@pytest.mark.parametrize("source", ["import", "folder", "save"])
+def test_conflicting_new_ids_are_rejected_atomically(run_interaction, source):
+    run_interaction("const source = " + json.dumps(source) + ";\n" + r'''
+  get('comment-text').value = 'Unsaved question.'; get('comment-add').onclick();
+  await get('comment-folder').onclick();
+  const rows = [
+    {id:'unique', section:'section-1', text:'Must not be partially merged.'},
+    {id:'duplicate', section:'section-1', text:'First finding.'},
+    {id:'duplicate', section:'section-1', text:'Different finding.'}
+  ];
+  if (source === 'import') {
+    const text = JSON.stringify({...config, comments:rows});
+    get('comment-load').files = [{size:Buffer.byteLength(text), text:async () => text}];
+    await get('comment-load').onchange();
+  } else {
+    onDisk = rows;
+    await get(source === 'folder' ? 'comment-folder' : 'comment-save').onclick();
+  }
+  assert.match(get('comment-status').textContent, /Conflicting comment identity/);
+  assert.equal(written, null);
+  get('comment-export').onclick();
+  assert.deepEqual(JSON.parse(exported).comments.map(row => row.text), ['Unsaved question.']);
+  // Identical repeats retain one record and remain reloadable.
+  onDisk = null;
+  const text = JSON.stringify({...config, comments:[rows[1], rows[1]]});
+  get('comment-load').files = [{size:Buffer.byteLength(text), text:async () => text}];
+  await get('comment-load').onchange();
+  get('comment-export').onclick();
+  assert.equal(JSON.parse(exported).comments.length, 2);
+''')
+
+
+@pytest.mark.parametrize("byte_count", [4999999, 5000000, 5000001])
+def test_utf8_payload_limit_and_save_reload_boundary(run_interaction, byte_count):
+    run_interaction("const byteCount = " + str(byte_count) + ";\n" + r'''
+  const rows = Array.from({length:500}, (_, i) => ({
+    id:'size-' + i, section:'section-1', text:'é'.repeat(4900)
+  }));
+  const serialized = () => JSON.stringify({...config, comments:rows}, null, 2) + '\n';
+  let remaining = byteCount - Buffer.byteLength(serialized(), 'utf8');
+  for (const row of rows) {
+    const count = Math.min(10000 - row.text.length, remaining);
+    row.text += 'x'.repeat(count); remaining -= count;
+  }
+  assert.equal(remaining, 0);
+  assert.equal(Buffer.byteLength(serialized(), 'utf8'), byteCount);
+  assert.ok(serialized().length < 5000000); // UTF-16 length would miss the overflow.
+  onDisk = rows.slice(0, 250);
+  await get('comment-folder').onclick();
+  const text = JSON.stringify({...config, comments:rows.slice(250)});
+  get('comment-load').files = [{size:Buffer.byteLength(text), text:async () => text}];
+  await get('comment-load').onchange();
+  assert.equal(get('comment-list').children.length, 500);
+  const retained = JSON.stringify(onDisk);
+  await get('comment-save').onclick();
+  if (byteCount > 5000000) {
+    assert.equal(written, null);
+    assert.equal(writesOpened, 0);
+    assert.equal(JSON.stringify(onDisk), retained);
+    assert.match(get('comment-status').textContent, /size limit/);
+    get('comment-export').onclick();
+    assert.equal(exported, null);
+    assert.match(get('comment-status').textContent, /size limit/);
+    assert.equal(get('comment-list').children.length, 500);
+    assert.ok(get('comment-list').children[499].textContent.includes(rows[499].text));
+  } else {
+    assert.deepEqual(written.comments, rows);
+    assert.equal(Buffer.byteLength(writtenText, 'utf8'), byteCount);
+    get('comment-export').onclick();
+    assert.equal(Buffer.byteLength(exported, 'utf8'), byteCount);
+    assert.deepEqual(JSON.parse(exported).comments, rows);
+    vm.runInNewContext(SCRIPT, context); // Fresh page state reloads the saved records.
+    await get('comment-folder').onclick();
+    assert.match(get('comment-status').textContent, /folder selected/);
+    get('comment-export').onclick();
+    assert.deepEqual(JSON.parse(exported).comments, rows);
+  }
+''')
+
+
+@pytest.mark.parametrize("record_count", [10000, 10001])
+def test_merged_record_limit_preserves_unsaved_comments(run_interaction, record_count):
+    run_interaction("const recordCount = " + str(record_count) + ";\n" + r'''
+  const rows = Array.from({length:recordCount}, (_, i) => ({
+    id:'count-' + i, section:'section-1', text:'Question ' + i
+  }));
+  onDisk = rows.slice(0, 5000);
+  await get('comment-folder').onclick();
+  const text = JSON.stringify({...config, comments:rows.slice(5000)});
+  get('comment-load').files = [{size:Buffer.byteLength(text), text:async () => text}];
+  await get('comment-load').onchange();
+  await get('comment-save').onclick();
+  if (recordCount > 10000) {
+    assert.equal(written, null);
+    assert.equal(writesOpened, 0);
+    assert.equal(onDisk.length, 5000);
+    assert.match(get('comment-status').textContent, /limit/);
+    get('comment-export').onclick();
+    assert.equal(exported, null);
+    assert.match(get('comment-status').textContent, /limit/);
+    assert.equal(get('comment-list').children.length, 10001);
+    assert.match(get('comment-list').children[10000].textContent, /Question 10000/);
+  } else {
+    assert.deepEqual(written.comments, rows);
+    get('comment-export').onclick();
+    assert.deepEqual(JSON.parse(exported).comments, rows);
+    vm.runInNewContext(SCRIPT, context);
+    await get('comment-folder').onclick();
+    assert.match(get('comment-status').textContent, /folder selected/);
+    get('comment-export').onclick();
+    assert.deepEqual(JSON.parse(exported).comments, rows);
+  }
+''')

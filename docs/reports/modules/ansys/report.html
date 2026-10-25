@@ -130,7 +130,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 </style>
 </head><body class="hs-doc"><main class="wrap">
 <header><div class="kicker">Finite element analysis</div>
-<h1>ANSYS module analysis</h1><p class="sub">Draft for client review</p></header>
+<h1>ANSYS module analysis</h1><p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report sections"><a href="#section-1">1</a> · <a href="#section-2">2</a> · <a href="#section-3">3</a> · <a href="#section-4">4</a> · <a href="#section-5">5</a> · <a href="#section-6">6</a> · <a href="#section-7">7</a> · <a href="#section-8">8</a> · <a href="#section-9">9</a> · <a href="#section-10">10</a></nav>
 <h2 id="section-1">1. Executive Summary</h2>
 <p>The ANSYS module is a Python interface for preparing structural analysis inputs, reading result records and calculating supporting engineering quantities. Analysis is performed to determine the response of an open-ended elastic cylinder and the extent of the available software evidence; key results are summarized below.</p>
@@ -140,7 +140,8 @@ code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} foo
 <ul><li>Mesh preparation and analytical evaluation are demonstrated. Mesh convergence, native execution and component design acceptance remain NOT_EVALUATED in this analysis. <a href="#ref-B">[Source B]</a> <a href="#ref-E">[Source E]</a></li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
-<tr><td>1</td><td>2026-10-22</td><td>Initial module analysis; the reproducible analytical example and evidence restrictions are presented.</td></tr></tbody></table>
+<tr><td>1</td><td>2026-10-22</td><td>Initial module analysis; the reproducible analytical example and evidence restrictions are presented.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>Conflicting comment imports and oversized save or export payloads are rejected to preserve records and reloadability.</td></tr></tbody></table>
 <h2 id="section-2">2. Introduction</h2>
 <p>The purpose, scope and status of the analysis are presented in this section. The main workflow is assessed from fixed cylinder inputs through mesh preparation and analytical response calculation.</p>
 <p>Text inputs are generated for ANSYS Parametric Design Language. Material and section records, design-point tables, journal metadata and output listings are read by separate interfaces. Thickness, weld-linearization and fatigue calculations are supplied as supporting methods. Input generation is distinguished from solution execution and engineering acceptance. <a href="#ref-D">[Source D]</a></p>
@@ -244,8 +245,8 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
 <li>Radial traction, zero axial stress, isotropic elastic displacement and zero-pressure identities are independently checked.</li>
 <li>Internal links, unique section identifiers, standalone assets and the house document class are checked.</li>
 <li>Comment saving and loading are checked without starting a browser. Browser file access remains subject to the reader’s explicit permission.</li></ul>
-<h3>Engineering changes</h3><ul><li>The fixed open-cylinder basis and its use restrictions are stated.</li><li>Analytical stresses, displacements and prepared mesh sizes are presented.</li><li>Design inputs and native evidence needed for engineering acceptance are identified.</li></ul>
-<p>The change panel describes the initial issue. The adjacent <code>changes.json</code> contains the same engineering changes.</p>
+<h3>Engineering changes</h3><ul><li>The fixed open-cylinder basis and its use restrictions are stated.</li><li>Analytical stresses, displacements and prepared mesh sizes are presented.</li><li>Design inputs and native evidence needed for engineering acceptance are identified.</li><li>Comment imports reject conflicting identities; save and export enforce reload limits.</li></ul>
+<p>The change panel records the initial analysis and the comment-persistence correction. The adjacent <code>changes.json</code> contains the same engineering changes.</p>
 <aside aria-label="Report comments"><h2 id="comments">Report comments</h2>
 <p>Select a section and enter a comment. Choose the folder containing this report to save comments beside it as <code>report.comments.json</code>. Existing files are loaded before saving. Where folder access is unavailable, export a copy and save it beside the report. Unsaved comments are lost when the page closes.</p>
 <label>Section <select id="comment-section"></select></label>
@@ -255,19 +256,22 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
 <button id="comment-save" type="button">Save beside report</button>
 <button id="comment-export" type="button">Export comments</button>
 <label>Load exported comments <input id="comment-load" type="file" accept=".json"></label>
-<p id="comment-status" role="status">Comments are not saved.</p><ul id="comment-list"></ul></aside><script id="comment-config" type="application/json">{"report": "ANSYS module analysis", "revision": "1", "content_digest": "07b9c33e4f4f1ec7ea9fe49286e08134d9c7db5324951e75b1d25f03db89e2bf", "sections": ["section-1", "section-2", "section-3", "section-4", "section-5", "section-6", "section-7", "section-8", "section-9", "section-10", "appendix-a", "appendix-b"]}</script>
+<p id="comment-status" role="status">Comments are not saved.</p><ul id="comment-list"></ul></aside><script id="comment-config" type="application/json">{"report": "ANSYS module analysis", "revision": "2", "content_digest": "8ddb642aefc3a6048927980192cc0c4db0f17d26e650f69aabd055e98cdc7f8d", "sections": ["section-1", "section-2", "section-3", "section-4", "section-5", "section-6", "section-7", "section-8", "section-9", "section-10", "appendix-a", "appendix-b"]}</script>
 <script>
 (() => {
   'use strict';
   const config = JSON.parse(document.getElementById('comment-config').textContent);
   const el = id => document.getElementById('comment-' + id);
   const sections = new Set(config.sections);
+  const maxComments = 10000, maxBytes = 5000000;
   let comments = [], directory = null;
   const status = text => { el('status').textContent = text; };
   function validate(value) {
     if (!value || value.report !== config.report || value.revision !== config.revision ||
-        value.content_digest !== config.content_digest || !Array.isArray(value.comments) ||
-        value.comments.length > 10000) throw new Error('Comment file belongs to a different report or revision.');
+        value.content_digest !== config.content_digest || !Array.isArray(value.comments))
+      throw new Error('Comment file belongs to a different report or revision.');
+    if (value.comments.length > maxComments)
+      throw new Error('Comment count exceeds the limit of ' + maxComments + ' records.');
     for (const row of value.comments) {
       if (!row || typeof row.id !== 'string' || !sections.has(row.section) ||
           typeof row.text !== 'string' || !row.text.trim() || row.text.length > 10000)
@@ -280,8 +284,8 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
     for (const row of incoming) {
       if (byId.has(row.id) && JSON.stringify(byId.get(row.id)) !== JSON.stringify(row))
         throw new Error('Conflicting comment identity; retain both files for review.');
+      byId.set(row.id, row);
     }
-    for (const row of incoming) byId.set(row.id, row);
     comments = [...byId.values()];
   }
   function show() {
@@ -292,7 +296,15 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
       el('list').appendChild(li);
     }
   }
-  function payload() { return JSON.stringify({...config, comments}, null, 2) + '\n'; }
+  function payload() {
+    const value = {...config, comments};
+    validate(value);
+    const text = JSON.stringify(value, null, 2) + '\n';
+    const bytes = new TextEncoder().encode(text).byteLength;
+    if (bytes > maxBytes)
+      throw new Error('Comment payload is ' + bytes + ' UTF-8 bytes; size limit is ' + maxBytes + '.');
+    return text;
+  }
   for (const id of sections) {
     const option = document.createElement('option'); option.value = id;
     option.textContent = document.getElementById(id).textContent;
@@ -316,7 +328,7 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
           supplied.revision !== config.revision) throw new Error('The selected folder contains a different report.');
       try {
         const file = await (await selected.getFileHandle('report.comments.json')).getFile();
-        if (file.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+        if (file.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
         merge(validate(JSON.parse(await file.text())));
       } catch (error) { if (error.name !== 'NotFoundError') throw error; }
       directory = selected; show(); status('Report folder selected. Existing comments are retained.');
@@ -327,23 +339,26 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
       if (!directory) throw new Error('Choose the report folder first, or export comments.');
       try {
         const previous = await (await directory.getFileHandle('report.comments.json')).getFile();
-        if (previous.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+        if (previous.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
         merge(validate(JSON.parse(await previous.text())));
       } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+      const text = payload();
       const handle = await directory.getFileHandle('report.comments.json', {create: true});
-      const stream = await handle.createWritable(); await stream.write(payload()); await stream.close();
+      const stream = await handle.createWritable(); await stream.write(text); await stream.close();
       show(); status('Comments saved beside the report.');
     } catch (error) { status(error.message); }
   };
   el('export').onclick = () => {
-    const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
-    const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
-    link.click(); URL.revokeObjectURL(url); status('Comments exported; save the file beside the report.');
+    try {
+      const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
+      link.click(); URL.revokeObjectURL(url); status('Comments exported; save the file beside the report.');
+    } catch (error) { status(error.message); }
   };
   el('load').onchange = async () => {
     try {
       const file = el('load').files[0]; if (!file) return;
-      if (file.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+      if (file.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
       merge(validate(JSON.parse(await file.text()))); show(); status('Matching comments loaded; save to retain additions.');
     } catch (error) { status(error.message); }
     el('load').value = '';

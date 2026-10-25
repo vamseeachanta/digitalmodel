@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 EXAMPLE = ROOT / "examples/ansys/cylinder-benchmark"
 DATE = "2026-10-22"
+REVISION_DATE = "2026-10-25"
 EXEMPLAR = "docs/api/cfd/turbulent-flat-plate-verification.html"
 LABELS = {
     "sigma_r": ("Radial stress", "MPa"),
@@ -34,19 +35,20 @@ LABELS = {
     "u_z": ("Axial displacement", "mm"),
 }
 CHANGES = {
-    "report": "ANSYS module analysis", "revision": "1", "date": DATE,
+    "report": "ANSYS module analysis", "revision": "2", "date": REVISION_DATE,
     "changes": [
         {"section": "section-3", "change": "The fixed open-cylinder basis and its use restrictions are stated."},
         {"section": "section-5", "change": "Analytical stresses, displacements and prepared mesh sizes are presented."},
         {"section": "section-8", "change": "Design inputs and native evidence needed for engineering acceptance are identified."},
+        {"section": "appendix-b", "change": "Comment imports reject conflicting identities; save and export enforce reload limits."},
     ],
 }
 
 
 def compute():
     """Call public module functions on the retained cylinder example."""
-    manifest = json.loads((EXAMPLE / "manifest.json").read_text())
-    retained = json.loads((EXAMPLE / "reference.json").read_text())
+    manifest = json.loads((EXAMPLE / "manifest.json").read_text(encoding="utf-8"))
+    retained = json.loads((EXAMPLE / "reference.json").read_text(encoding="utf-8"))
     basis = frozen_basis()
     meshes = []
     for case_id in manifest["case_order"]:
@@ -122,9 +124,9 @@ def format_value(value, key):
 
 def style():
     """Inline the existing house report stylesheet and shared brand tokens."""
-    exemplar = (ROOT / EXEMPLAR).read_text()
+    exemplar = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
     local = re.search(r"<style>(.*?)</style>", exemplar, re.S).group(1)
-    return (ROOT / "docs/api/_assets/brand.css").read_text() + "\n" + local
+    return (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8") + "\n" + local
 
 
 def render(data):
@@ -197,7 +199,7 @@ def render(data):
     ]
     refs = ''.join(f'<li id="ref-{r[0]}">{r[1]}</li>' for r in reference_rows)
     content = f'''<header><div class="kicker">Finite element analysis</div>
-<h1>ANSYS module analysis</h1><p class="sub">Draft for client review</p></header>
+<h1>ANSYS module analysis</h1><p class="sub">Draft for maintainer review</p></header>
 <nav aria-label="Report sections">{' · '.join(f'<a href="#section-{index}">{index}</a>' for index in range(1, 11))}</nav>
 <h2 id="section-1">1. Executive Summary</h2>
 <p>The ANSYS module is a Python interface for preparing structural analysis inputs, reading result records and calculating supporting engineering quantities. Analysis is performed to determine the response of an open-ended elastic cylinder and the extent of the available software evidence; key results are summarized below.</p>
@@ -207,7 +209,8 @@ def render(data):
 <ul><li>Mesh preparation and analytical evaluation are demonstrated. Mesh convergence, native execution and component design acceptance remain NOT_EVALUATED in this analysis. {cite('B')} {cite('E')}</li></ul></li></ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
-<tr><td>1</td><td>{DATE}</td><td>Initial module analysis; the reproducible analytical example and evidence restrictions are presented.</td></tr></tbody></table>
+<tr><td>1</td><td>{DATE}</td><td>Initial module analysis; the reproducible analytical example and evidence restrictions are presented.</td></tr>
+<tr><td>2</td><td>{REVISION_DATE}</td><td>Conflicting comment imports and oversized save or export payloads are rejected to preserve records and reloadability.</td></tr></tbody></table>
 <h2 id="section-2">2. Introduction</h2>
 <p>The purpose, scope and status of the analysis are presented in this section. The main workflow is assessed from fixed cylinder inputs through mesh preparation and analytical response calculation.</p>
 <p>Text inputs are generated for ANSYS Parametric Design Language. Material and section records, design-point tables, journal metadata and output listings are read by separate interfaces. Thickness, weld-linearization and fatigue calculations are supplied as supporting methods. Input generation is distinguished from solution execution and engineering acceptance. {cite('D')}</p>
@@ -286,10 +289,10 @@ uᵣ = [(1 − ν)Ar + (1 + ν)B/r]/E; u𝓏 = −2νAy/E;<br>
 <li>Internal links, unique section identifiers, standalone assets and the house document class are checked.</li>
 <li>Comment saving and loading are checked without starting a browser. Browser file access remains subject to the reader’s explicit permission.</li></ul>
 <h3>Engineering changes</h3><ul>{''.join('<li>' + escape(row['change']) + '</li>' for row in CHANGES['changes'])}</ul>
-<p>The change panel describes the initial issue. The adjacent <code>changes.json</code> contains the same engineering changes.</p>
+<p>The change panel records the initial analysis and the comment-persistence correction. The adjacent <code>changes.json</code> contains the same engineering changes.</p>
 '''
     identity = hashlib.sha256(content.encode()).hexdigest()
-    config = {"report": "ANSYS module analysis", "revision": "1", "content_digest": identity,
+    config = {"report": "ANSYS module analysis", "revision": CHANGES["revision"], "content_digest": identity,
               "sections": [f"section-{i}" for i in range(1, 11)] + ["appendix-a", "appendix-b"]}
     comments = '''<aside aria-label="Report comments"><h2 id="comments">Report comments</h2>
 <p>Select a section and enter a comment. Choose the folder containing this report to save comments beside it as <code>report.comments.json</code>. Existing files are loaded before saving. Where folder access is unavailable, export a copy and save it beside the report. Unsaved comments are lost when the page closes.</p>
@@ -382,12 +385,15 @@ INTERACTION = r"""(() => {
   const config = JSON.parse(document.getElementById('comment-config').textContent);
   const el = id => document.getElementById('comment-' + id);
   const sections = new Set(config.sections);
+  const maxComments = 10000, maxBytes = 5000000;
   let comments = [], directory = null;
   const status = text => { el('status').textContent = text; };
   function validate(value) {
     if (!value || value.report !== config.report || value.revision !== config.revision ||
-        value.content_digest !== config.content_digest || !Array.isArray(value.comments) ||
-        value.comments.length > 10000) throw new Error('Comment file belongs to a different report or revision.');
+        value.content_digest !== config.content_digest || !Array.isArray(value.comments))
+      throw new Error('Comment file belongs to a different report or revision.');
+    if (value.comments.length > maxComments)
+      throw new Error('Comment count exceeds the limit of ' + maxComments + ' records.');
     for (const row of value.comments) {
       if (!row || typeof row.id !== 'string' || !sections.has(row.section) ||
           typeof row.text !== 'string' || !row.text.trim() || row.text.length > 10000)
@@ -400,8 +406,8 @@ INTERACTION = r"""(() => {
     for (const row of incoming) {
       if (byId.has(row.id) && JSON.stringify(byId.get(row.id)) !== JSON.stringify(row))
         throw new Error('Conflicting comment identity; retain both files for review.');
+      byId.set(row.id, row);
     }
-    for (const row of incoming) byId.set(row.id, row);
     comments = [...byId.values()];
   }
   function show() {
@@ -412,7 +418,15 @@ INTERACTION = r"""(() => {
       el('list').appendChild(li);
     }
   }
-  function payload() { return JSON.stringify({...config, comments}, null, 2) + '\n'; }
+  function payload() {
+    const value = {...config, comments};
+    validate(value);
+    const text = JSON.stringify(value, null, 2) + '\n';
+    const bytes = new TextEncoder().encode(text).byteLength;
+    if (bytes > maxBytes)
+      throw new Error('Comment payload is ' + bytes + ' UTF-8 bytes; size limit is ' + maxBytes + '.');
+    return text;
+  }
   for (const id of sections) {
     const option = document.createElement('option'); option.value = id;
     option.textContent = document.getElementById(id).textContent;
@@ -436,7 +450,7 @@ INTERACTION = r"""(() => {
           supplied.revision !== config.revision) throw new Error('The selected folder contains a different report.');
       try {
         const file = await (await selected.getFileHandle('report.comments.json')).getFile();
-        if (file.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+        if (file.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
         merge(validate(JSON.parse(await file.text())));
       } catch (error) { if (error.name !== 'NotFoundError') throw error; }
       directory = selected; show(); status('Report folder selected. Existing comments are retained.');
@@ -447,23 +461,26 @@ INTERACTION = r"""(() => {
       if (!directory) throw new Error('Choose the report folder first, or export comments.');
       try {
         const previous = await (await directory.getFileHandle('report.comments.json')).getFile();
-        if (previous.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+        if (previous.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
         merge(validate(JSON.parse(await previous.text())));
       } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+      const text = payload();
       const handle = await directory.getFileHandle('report.comments.json', {create: true});
-      const stream = await handle.createWritable(); await stream.write(payload()); await stream.close();
+      const stream = await handle.createWritable(); await stream.write(text); await stream.close();
       show(); status('Comments saved beside the report.');
     } catch (error) { status(error.message); }
   };
   el('export').onclick = () => {
-    const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
-    const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
-    link.click(); URL.revokeObjectURL(url); status('Comments exported; save the file beside the report.');
+    try {
+      const url = URL.createObjectURL(new Blob([payload()], {type: 'application/json'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'report.comments.json';
+      link.click(); URL.revokeObjectURL(url); status('Comments exported; save the file beside the report.');
+    } catch (error) { status(error.message); }
   };
   el('load').onchange = async () => {
     try {
       const file = el('load').files[0]; if (!file) return;
-      if (file.size > 5000000) throw new Error('Comment file exceeds the size limit.');
+      if (file.size > maxBytes) throw new Error('Comment file exceeds the size limit.');
       merge(validate(JSON.parse(await file.text()))); show(); status('Matching comments loaded; save to retain additions.');
     } catch (error) { status(error.message); }
     el('load').value = '';
@@ -485,8 +502,8 @@ def build(output_dir):
     """Write the report and its change panel to an explicit destination."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(compute()), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "report.html").write_text(render(compute()), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
