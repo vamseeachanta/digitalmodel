@@ -396,7 +396,8 @@ def test_mobile_point_readout_and_view_choice_execute(tmp_path, plotly_mode, non
     At wall index zero and the last load indices (6, 6), u = 1.7 and
     collapse governs by the synthetic parity rule in _study. No engineering
     acceptance equation is evaluated. Canvas and Plotly are instrumented
-    directly; no browser or external script is started.
+    directly; initialized layout state exercises react for view changes.
+    No browser or external script is started.
 
     For nonuniform axes the sampled tensions are (0.1, 1.0, 3.7) MN and
     moments (0.1, 1.0, 3.7) kN m. Along the bottom edge, u changes from
@@ -440,8 +441,12 @@ element('study-data').textContent=RAW;element('view').value='auto';
 const mode=MODE;
 const nonuniform=NONUNIFORM;
 if(mode!=='absent')global.Plotly={newPlot:async (target,traces,layout)=>{
- plots.push({traces,layout});if(mode==='reject')throw Error('library failure');
-},react:async()=>{throw Error('unexpected react');}};
+ plots.push({method:'newPlot',traces,layout});if(mode==='reject')throw Error('library failure');
+ target._fullLayout=layout;
+},react:async(target,traces,layout)=>{
+ assert(target._fullLayout);plots.push({method:'react',traces,layout});
+ target._fullLayout=layout;
+}};
 window.Plotly=global.Plotly;
 """.replace("RAW", json.dumps(raw)).replace("MODE", json.dumps(plotly_mode)).replace("NONUNIFORM", json.dumps(nonuniform))
     trailer = r"""
@@ -456,11 +461,16 @@ setImmediate(()=>{
  assert(labels.includes(nonuniform?'3.7':'0.1'));
  assert.equal(element('point-tension').textContent,nonuniform?'3700.0':'0.6');
  assert.equal(element('point-moment').textContent,nonuniform?'3.7':'0.1');
+ const viewUpdateStart=plots.length;
  element('view').value='2d';element('view').change();
  setImmediate(()=>{
   if(mode==='absent'||mode==='reject'){
    assert.equal(element('fallback').style.display,'block');
   }else{
+   const viewUpdates=plots.slice(viewUpdateStart);
+   assert(viewUpdates.length>0);
+   assert(viewUpdates.every(p=>p.method==='react'));
+   assert.equal(plots.filter(p=>p.method==='newPlot').length,1);
    assert(plots.some(p=>p.traces.some(t=>t.type==='mesh3d')));
    assert(plots.at(-1).traces.some(t=>t.type==='heatmap'));
    if(nonuniform){
@@ -473,8 +483,14 @@ setImmediate(()=>{
    if(mode==='context-loss'){
     element('view').value='auto';element('view').change();
     setImmediate(()=>{
+     assert.equal(plots.at(-1).method,'react');
+     assert(plots.at(-1).traces.some(t=>t.type==='mesh3d'));
      contextEvents.webglcontextlost({preventDefault(){}});
-     setImmediate(()=>assert(plots.at(-1).traces.some(t=>t.type==='heatmap')));
+     setImmediate(()=>{
+      assert.equal(plots.at(-1).method,'react');
+      assert.equal(plots.filter(p=>p.method==='newPlot').length,1);
+      assert(plots.at(-1).traces.some(t=>t.type==='heatmap'));
+     });
     });
    }
   }
