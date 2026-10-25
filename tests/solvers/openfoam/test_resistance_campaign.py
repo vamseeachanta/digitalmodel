@@ -12,6 +12,7 @@ Policy values are illustrative required inputs, not published acceptance limits.
 from __future__ import annotations
 
 import json
+import re
 import runpy
 from dataclasses import replace
 from pathlib import Path
@@ -236,6 +237,43 @@ def test_mismatched_final_time_is_refused(tmp_path, config, policy):
         assess_resistance_campaign(evidence, policy)
 
 
+@pytest.mark.parametrize("incomplete_level", [0, 1, 2])
+def test_equal_end_times_with_different_starts_have_no_gci(
+    tmp_path, config, policy, incomplete_level
+):
+    evidence = campaign(tmp_path, config)
+    path = evidence[incomplete_level].force_file
+    lines = path.read_text().splitlines()
+    # Three remaining samples still satisfy the illustrative sample policy.
+    path.write_text("\n".join([lines[0], *lines[2:]]) + "\n")
+    result = assess_resistance_campaign(evidence, policy)
+    assert {level["last_time"] for level in result["levels"]} == {3}
+    assert {level["first_time"] for level in result["levels"]} == {0, 1}
+    assert all(
+        value == "PASS"
+        for level in result["levels"]
+        for value in level["checks"].values()
+    )
+    assert result["checks"]["numerical_evidence"] == "NOT_EVALUATED"
+    assert result["grid"]["status"] == "NOT_EVALUATED"
+    assert result["grid"]["absolute_gci"] is None
+    assert "averaging coverage" in result["grid"]["reason"]
+
+
+def test_discarded_samples_do_not_change_averaging_coverage(tmp_path, config, policy):
+    evidence = campaign(tmp_path, config)
+    path = evidence[1].force_file
+    lines = path.read_text().splitlines()
+    path.write_text("\n".join([lines[0], *lines[2:]]) + "\n")
+    result = assess_resistance_campaign(
+        evidence, replace(policy, window=2, minimum_samples=2)
+    )
+    assert {level["first_time"] for level in result["levels"]} == {2}
+    assert {level["last_time"] for level in result["levels"]} == {3}
+    assert result["grid"]["status"] == "EVALUATED"
+    assert result["checks"]["numerical_evidence"] == "PASS"
+
+
 @pytest.mark.parametrize("invalid", [0, -1, float("nan"), float("inf")])
 def test_invalid_spacing_is_refused(tmp_path, invalid):
     with pytest.raises(ValueError, match="spacing_m"):
@@ -256,6 +294,43 @@ def test_prepare_never_overwrites_existing_case(tmp_path, config):
     with pytest.raises(FileExistsError):
         prepare_resistance_case(config, tmp_path)
     assert (case / "resistance_input.json").is_file()
+
+
+@pytest.mark.parametrize("run", [False, True])
+def test_full_domain_preparation_is_refused_before_writing(tmp_path, config, run):
+    unsupported = config.replace(half_domain=False)
+    with pytest.raises(ValueError, match="only half-domain"):
+        if run:
+            run_resistance_case(unsupported, tmp_path, timeout_seconds=60, dry_run=True)
+        else:
+            prepare_resistance_case(unsupported, tmp_path)
+    assert not (tmp_path / config.name).exists()
+
+
+def test_emitted_symmetry_matches_receipt_and_reduction(tmp_path, config, policy):
+    evidence = campaign(tmp_path, config)
+    for item in evidence:
+        case = item.case_dir
+        provenance = json.loads((case / "case_provenance.json").read_text())
+        receipt = json.loads((case / "resistance_input.json").read_text())
+        assert provenance["domain"]["half_domain"] is True
+        assert receipt["condition"]["half_domain"] is True
+        mesh = (case / "system" / "blockMeshDict").read_text()
+        assert re.search(r"midPlane\s*\{\s*type\s+symmetryPlane;", mesh)
+        vertices = re.search(r"vertices\s*\((.*?)\);", mesh, re.DOTALL).group(1)
+        lateral_coordinates = {
+            float(vertex.split()[1]) for vertex in re.findall(r"\(([^()]+)\)", vertices)
+        }
+        assert min(lateral_coordinates) < 0
+        assert max(lateral_coordinates) == 0
+    result = assess_resistance_campaign(evidence, policy)
+    fine = result["levels"][0]
+    # The emitted reflected half body needs -2*(-10)=20 N on full-body area.
+    assert fine["resistance_n"] == pytest.approx(20)
+    assert fine["ct"] == pytest.approx(
+        20 / (0.5 * 1000 * config.manifest.reference_wetted_surface_m2 * 2**2)
+    )
+    assert result["checks"]["numerical_evidence"] == "PASS"
 
 
 def test_runner_dry_run_uses_complete_pipeline(tmp_path, config):

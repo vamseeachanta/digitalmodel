@@ -101,7 +101,8 @@ def prepare_resistance_case(config: HullCaseConfig, parent_dir: Path | str) -> P
 
     Consume the existing ingestion contract: metres, x forward, y port, z up,
     aft-perpendicular keel origin and closed surface. Ingestion and union-area
-    checks remain the existing builder's responsibility. Refuse overwrites.
+    checks remain the existing builder's responsibility. Refuse overwrites
+    and full-domain requests: the builder emits a symmetry half-domain.
     """
     parent = Path(parent_dir)
     if Path(config.name).name != config.name or config.name in ("", ".", ".."):
@@ -116,6 +117,10 @@ def prepare_resistance_case(config: HullCaseConfig, parent_dir: Path | str) -> P
         _positive(value, name)
     if type(config.half_domain) is not bool:
         raise ValueError("half_domain must be boolean")
+    if not config.half_domain:
+        raise ValueError(
+            "only half-domain preparation is supported by the case builder"
+        )
     case = build_hull_case(config, parent)
     condition = {
         "geometry": config.manifest.to_provenance(),
@@ -372,18 +377,23 @@ def assess_resistance_campaign(
         )
         levels.append(dict(reduced, cells=item.cells, spacing_m=item.spacing_m))
     levels.sort(key=lambda level: level["spacing_m"])
+    if len({level["last_time"] for level in levels}) != 1:
+        raise ValueError("final averaging times do not match across grid levels")
     checks = [value for level in levels for value in level["checks"].values()]
-    grid = (
-        _grid_result(levels, policy)
-        if all(value == "PASS" for value in checks)
-        else {
+    if len({level["first_time"] for level in levels}) != 1:
+        grid = {
+            "status": "NOT_EVALUATED",
+            "absolute_gci": None,
+            "reason": "actual averaging coverage must match across grid levels",
+        }
+    elif all(value == "PASS" for value in checks):
+        grid = _grid_result(levels, policy)
+    else:
+        grid = {
             "status": "NOT_EVALUATED",
             "absolute_gci": None,
             "reason": "all force histories must satisfy the declared reduction policy",
         }
-    )
-    if len({level["last_time"] for level in levels}) != 1:
-        raise ValueError("final averaging times do not match across grid levels")
     status = (
         "FAIL"
         if "FAIL" in checks

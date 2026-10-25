@@ -13,6 +13,7 @@ Refs #2023; benchmark evidence remains a prerequisite for engineering use.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-19 | Added case-bound force reduction and grid assessment to make the existing geometry and solver components reproducible together. |
+| 1 | 2026-10-25 | Refused unsupported full-domain preparation and withheld grid estimates for unequal averaging coverage to prevent force-scaling and comparison errors. |
 
 ## Inputs and contract
 
@@ -34,6 +35,8 @@ The entry point is
    physical condition, union reference area, geometry digests, numerical schemes
    and input-file digests. Domain factors and turbulence settings must agree
    across levels. Case names, ranks and mesh sizing may differ.
+   Preparation requires `half_domain=True`: the builder emits a symmetry
+   half-domain, so full-domain requests are refused before writing a case.
 4. To connect preparation to execution, call
    `run_resistance_case(config, output, timeout_seconds=budget, dry_run=True)`.
    An explicit positive budget is required even in dry mode. Set `dry_run=False`
@@ -78,7 +81,12 @@ The relative span is `(max(Ct)-min(Ct))/abs(mean(Ct))`. It is a descriptive
 stationarity check against the caller's declared policy, not a statistical
 uncertainty interval. An insufficient sample count gives `NOT_EVALUATED`.
 Every grid level must satisfy the policy before a spatial estimate is reported.
-Final averaging times must match across levels.
+Final averaging times must match across levels. The first retained sample time
+must also match: equal end times with different starts give `NOT_EVALUATED`
+and no GCI, even when every history meets the minimum sample count. Coverage
+is compared after selecting the declared window; earlier discarded samples do
+not affect the comparison. Matching coverage does not establish stationarity
+beyond the declared policy or qualify the chosen averaging duration.
 
 Exactly three distinct matched cases are required for an observed-order estimate.
 For fine-to-coarse spacings h1, h2, h3 with equal ratios r, define
