@@ -283,6 +283,20 @@ def _ci_head(root: Path, ci_ref: str, retained: str, revision: str) -> str:
         ) from None
 
 
+def _origin_repository(root: Path) -> str:
+    remote = _git(root, "remote", "get-url", "origin").decode("utf-8").strip()
+    prefix, separator, path = remote.partition(":")
+    if separator and prefix.split("@") == ["git", "github.com"]:
+        return path.removesuffix(".git")
+    parsed = urlsplit(remote)
+    if (parsed.hostname != "github.com" or parsed.port is not None
+            or parsed.query or parsed.fragment or parsed.password
+            or not (parsed.scheme == "https" and parsed.username is None
+                    or parsed.scheme == "ssh" and parsed.username == "git")):
+        raise ValueError("Unsupported destination")
+    return parsed.path.removeprefix("/").removesuffix(".git")
+
+
 def _integration_repository(root: Path) -> str:
     ci = (os.environ.get("GITHUB_ACTIONS") == "true"
           or os.environ.get("GITHUB_REF", "").startswith("refs/pull/"))
@@ -291,19 +305,7 @@ def _integration_repository(root: Path) -> str:
         if not repository:
             if ci:
                 raise ValueError("Missing CI destination")
-            remote = _git(root, "remote", "get-url", "origin").decode("utf-8").strip()
-            prefix, separator, path = remote.partition(":")
-            if separator and prefix.split("@") == ["git", "github.com"]:
-                repository = path
-            else:
-                parsed = urlsplit(remote)
-                if (parsed.hostname != "github.com" or parsed.port is not None
-                        or parsed.query or parsed.fragment or parsed.password
-                        or not (parsed.scheme == "https" and parsed.username is None
-                                or parsed.scheme == "ssh" and parsed.username == "git")):
-                    raise ValueError("Unsupported destination")
-                repository = parsed.path.removeprefix("/")
-            repository = repository.removesuffix(".git")
+            repository = _origin_repository(root)
         if (not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository)
                 or any(part in {".", ".."} for part in repository.split("/"))):
             raise ValueError("Invalid destination")
@@ -343,13 +345,61 @@ def _integration_policy(root: Path, retained_ref: str) -> dict:
     return policy
 
 
+def _ci_event_base(root: Path, retained_ref: str, revision: str) -> str:
+    try:
+        _integration_repository(root)
+        event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
+        base = event["pull_request"]["base"]
+        value = base["sha"]
+        if (base["ref"] != retained_ref.rsplit("/", 1)[-1]
+                or not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{40}", value)):
+            raise ValueError("Invalid destination base")
+        retained = _commit(root, value)
+        if not _ancestor(root, retained, revision):
+            raise ValueError("Destination base outside checkout")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid CI destination base or retained branch in event payload") from None
+    return retained
+
+
+def _check_ci_base(root: Path, ci_ref: str, retained: str, revision: str) -> None:
+    try:
+        destination = _integration_repository(root)
+        if _origin_repository(root).casefold() != destination.casefold():
+            raise ValueError("Origin does not identify destination")
+        parents = _git(root, "rev-list", "--parents", "-n", "1", revision).decode().split()
+        if not ci_ref.endswith("/merge") or len(parents) != 3 or parents[1] != retained:
+            raise ValueError("Unproven destination base")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid CI destination base without event evidence") from None
+
+
+def _retention_context(root: Path, retained_ref: str, revision: str,
+                       pr_head: str | None) -> tuple[str, str | None]:
+    ci_ref = re.fullmatch(r"refs/pull/([0-9]+)/(?:head|merge)", os.environ.get("GITHUB_REF", ""))
+    event = ci_ref is not None and bool(os.environ.get("GITHUB_EVENT_PATH"))
+    retained = _ci_event_base(root, retained_ref, revision) if event else _commit(root, retained_ref)
+    if not ci_ref:
+        return retained, None
+    head = _ci_head(root, ci_ref[0], retained, revision)
+    if pr_head and _commit(root, pr_head) != head:
+        raise EvidenceError("Explicit head does not match the CI pull request head")
+    if not _ancestor(root, head, revision):
+        raise EvidenceError("Pull request head is outside the current checkout ancestry")
+    if not event:
+        _check_ci_base(root, ci_ref[0], retained, revision)
+    return retained, head
+
+
 def _verify_retention(record: dict, root: Path, retained_ref: str,
                       revision: str, pr_head: str | None) -> None:
-    retained = _commit(root, retained_ref)
+    retained, head = _retention_context(root, retained_ref, revision, pr_head)
     source = record["source_revision"]
     on_default = _ancestor(root, source, retained)
-    retention_hint = (f" Retained ref {retained_ref} ({retained}) does not retain source {source}, "
-                      "or the retained ref is stale; fetch it.")
+    retained_label = "CI destination base" if head and os.environ.get("GITHUB_EVENT_PATH") else retained_ref
+    remedy = "refresh trusted destination event evidence." if retained_label != retained_ref else (
+        "or the retained ref is stale; fetch it.")
+    retention_hint = f" Retained ref {retained_label} ({retained}) does not retain source {source}; {remedy}"
     try:
         branch = _git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
     except EvidenceError:
@@ -365,15 +415,10 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
             )
         return
 
-    ci_ref = re.fullmatch(r"refs/pull/([0-9]+)/(?:head|merge)", os.environ.get("GITHUB_REF", ""))
-    if ci_ref:
-        head = _ci_head(root, ci_ref[0], retained, revision)
-        if pr_head and _commit(root, pr_head) != head:
-            raise EvidenceError("Explicit head does not match the CI pull request head")
-    else:
+    if head is None:
         head = _commit(root, pr_head or "HEAD")
-    if not _ancestor(root, head, revision):
-        raise EvidenceError("Pull request head is outside the current checkout ancestry")
+        if not _ancestor(root, head, revision):
+            raise EvidenceError("Pull request head is outside the current checkout ancestry")
     base = _git(root, "merge-base", retained, head).decode().strip()
     before = _inventory_at(root, base)
     current = _inventory_at(root, head).get(record["manifest"])

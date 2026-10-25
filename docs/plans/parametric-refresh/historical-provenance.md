@@ -17,6 +17,7 @@ qualification of the engineering methods or proof of a historical execution.
 | 3 | 2026-10-24 | Permit changed pull-request entries to retain their own source snapshots and require merge commits to preserve that ancestry after merging. |
 | 4 | 2026-10-25 | Resolve CI heads from event evidence or validated local merges, isolate Git object reads, and describe merge-only integration and recovery. |
 | 5 | 2026-10-25 | Reject branch-only source retention unless live destination settings establish merge-only integration, preventing acceptance before a squash or rebase can orphan the source. |
+| 6 | 2026-10-25 | Bind CI ancestry and inventory comparisons to destination base evidence so a contributor fork's default ref cannot bypass integration policy. |
 
 ## Inventory and interpretation
 
@@ -149,6 +150,21 @@ which does not fetch a pull ref. The synthetic merge commit itself never
 substitutes for the head, and an explicit override shall resolve to the same
 authenticated head. Missing evidence fails closed; the verifier never fetches.
 Inherited object-directory overrides and Git replacement objects are ignored.
+
+CI retention decisions use the destination base before checking default-branch
+ancestry or comparing inventory entries. With an event file supplied,
+`pull_request.base.sha` shall be a full available commit contained in the checked
+revision; `base.ref` shall match the retained branch, and `base.repo.full_name`
+shall match `GITHUB_REPOSITORY`. That event base supplies both retention ancestry
+and the merge base used for inventory comparison. A fork's `origin/main` cannot
+substitute for it. A stale event base can reject newly retained evidence; it
+cannot silently qualify a fork-only source. Missing or invalid event base
+evidence rejects the check without falling back to another ref.
+
+Without an event file, CI requires a two-parent merge whose first parent equals
+the configured retained tip and an origin URL that identifies the trusted
+destination repository. Missing identity or merge evidence fails closed. Sources
+retained on an authenticated destination base still require no policy request.
 
 Branch-only source retention **requires an enforced merge-only integration
 policy**, rather than a manually selected merge method. Before accepting that
