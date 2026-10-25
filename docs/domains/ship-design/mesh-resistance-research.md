@@ -12,6 +12,30 @@ remain **NOT_EVALUATED**. Refs #2239.
 |---|---|---|
 | 1 | 2026-10-20 | Added friction records, benchmark gates and analytical evidence checks to extend the existing geometry and friction kernels. |
 | 2 | 2026-10-20 | Retained mesh friction only, deferred the benchmark and analytical gates and transfer inventory, and corrected the equation source locators. |
+| 3 | 2026-10-25 | Added the retained scope, implementation steps and validation checks in Plan-lite. |
+
+## Plan-lite
+
+Retained scope: four text additions covering the mesh-derived friction record,
+its tests, the synthetic box example and this research note. Benchmark
+comparisons, analytical evidence gates and the cross-domain transfer inventory
+remain deferred under #2239.
+
+Implementation steps:
+
+1. Compose existing mesh hydrostatics and SI friction kernels with explicit
+   operating conditions, provenance and unevaluated resistance components.
+2. Check geometry and friction arithmetic against an independently derived box
+   calculation, including rejection cases and citation failure behaviour.
+3. Document equation locators, the runnable JSON example and the limits of the
+   friction-only result, preserving the requirements for both deferred gates.
+
+Validation checks: run the mesh-record tests and existing mesh, friction,
+citation and empirical-kernel regressions; read back the example JSON; run
+Ruff lint and formatting, engineering-register, repository-structure,
+whitespace, public-text, credential-pattern and LFS-filter checks. Arithmetic
+agreement does not qualify physical accuracy, wave or total resistance, or
+total effective power.
 
 ## Implementation and ownership
 
