@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE = "examples/workflows/vessel-seakeeping/input.yml"
 DESTINATION = ROOT / "docs/reports/modules/vesselseakeeping"
 CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
-            "The spectral operability method, illustrative calculation and limits of use are presented for initial assessment."}]
+            "The spectral operability method, illustrative calculation and limits of use are presented for initial assessment."},
+           {"revision": "B", "date": "2026-10-24", "change":
+            "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
@@ -90,6 +92,10 @@ def render(scratch):
     brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(), flags=re.S)
     payload = json.dumps(data, sort_keys=True, allow_nan=False).replace("<", "\\u003c")
     changes = json.dumps(CHANGES).replace("<", "\\u003c")
+    history = "".join(
+        f'<tr><td>{html.escape(item["revision"])}</td><td>{html.escape(item["date"])}</td>'
+        f'<td>{html.escape(item["change"])}</td></tr>' for item in CHANGES[1:]
+    )
     return f'''<!DOCTYPE html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -102,7 +108,7 @@ def render(scratch):
 <ul><li>Screening against the supplied criteria is available.<ul><li>The governing component is {g}, with operability of {pct} % against a required {required} % [A, C]. These illustrative criteria are not operating limits for a physical hull.</li></ul></li>
 <li>Engineering release remains conditional.<ul><li>Physical response accuracy is NOT_EVALUATED because measured motions, qualified response amplitudes and approved operating criteria are absent [B].</li></ul></li></ul>
 <h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
-<tbody><tr><td>A</td><td>2026-10-21</td><td>The method and illustrative calculation are presented to establish the scope and limits of motion screening.</td></tr></tbody></table>
+<tbody><tr><td>A</td><td>2026-10-21</td><td>The method and illustrative calculation are presented to establish the scope and limits of motion screening.</td></tr>{history}</tbody></table>
 <h2 id="s2">2. Introduction</h2>
 <p>The purpose, scope and status of the analysis are presented in this section. The documented public example is evaluated through the module entry point, without generating hydrodynamic response amplitudes.</p>
 <p>The main workflow converts supplied motion response amplitude operators and wave conditions into significant motion amplitudes, component operability and a governing disposition [B, C]. A response amplitude operator is the motion amplitude per unit incident wave amplitude. The example describes an illustrative floating hull; its response curves are not measured hull data.</p>
@@ -166,7 +172,7 @@ def render(scratch):
 <p>Layout exemplar: docs/api/cfd/turbulent-flat-plate-verification.html. Canonical palette: docs/api/_assets/brand.css. The existing layout and palette are inlined; the document body carries the house-style class.</p>
 <p>The callable entry point is <code>digitalmodel.vessel_seakeeping.workflow.router(cfg)</code>. It mutates and returns the configuration and writes detailed and summary comma-separated value files to the configured output directory. The input keys appear in the data register; the returned component summaries and sea-state rows are reproduced above [C]. Rebuild with source imports enabled using <code>python scripts/reports/build_vessel_seakeeping_module_report.py --scratch ../report-calculation</code>; NumPy, SciPy and PyYAML are required. The scratch directory must be outside the checkout.</p>
 <p>Quality pre-flight: the rebuild test compares the complete delivered page with a fresh calculation, checks every embedded input and returned result against an independent router call, and verifies the visible result rows. The mutation test confirms that a changed computed amplitude changes the display. These checks establish reproducibility, not physical accuracy. Execution counts and outcomes are recorded with the delivery record.</p>
-<details id="changes-panel"><summary>Engineering changes</summary><p>{html.escape(CHANGES[0]["change"])}</p></details>
+<details id="changes-panel"><summary>Engineering changes</summary><p>{html.escape(CHANGES[-1]["change"])}</p></details>
 <h2 id="s10">10. Acronyms and Review Notes</h2>
 <p>The terminology is defined for interpretation of the screening result. A degree of freedom is an independent translation or rotation; a response amplitude operator is a motion-to-wave amplitude ratio; computational fluid dynamics is a numerical flow-field calculation and is not performed here.</p>
 <label for="notes">Review notes</label><textarea id="notes" rows="6" style="width:100%" placeholder="Enter engineering comments"></textarea>
@@ -215,7 +221,7 @@ function drawChart() {
 }
 select.addEventListener('change',drawChart); drawChart();
 document.getElementById('save-notes').addEventListener('click',async () => {
-  const text = JSON.stringify({document:'Vessel seakeeping module analysis', revision:'A',
+  const text = JSON.stringify({document:'Vessel seakeeping module analysis', revision:'B',
     comments:document.getElementById('notes').value},null,2);
   const status = document.getElementById('save-status');
   try {

@@ -43,6 +43,10 @@ modules:
       spec: docs/plans/2026-10-06-issue-2287-uniform-local-loss-screening.md
       status: unqualified-preparation
       diagnostic: src/digitalmodel/asset_integrity/uniform_loss_diagnostic.py
+      request_runner: src/digitalmodel/asset_integrity/uniform_loss_study.py
+      request_guide: docs/domains/asset-integrity/uniform-loss-request-study.md
+      request_example: examples/asset_integrity/uniform_loss_requests.json
+      request_validation: tests/asset_integrity/test_uniform_loss_study.py
       results_owner: digitalmodel-data
       note: No qualified API 579 envelope; exact synthetic pressure-study outputs retained privately with verified hashes.
       canonical_preliminary_results:
@@ -484,6 +488,9 @@ modules:
       fatigue_apps:
         agent_pack: src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md
         qa_family: EC
+      stress:
+        agent_pack: src/digitalmodel/structural/stress/docs/agent-pack.md
+        qa_family: EC
       offshore_resilience:
         agent_pack: src/digitalmodel/structural/offshore_resilience/docs/agent-pack.md
         qa_family: EC
@@ -497,6 +504,9 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      manifolds:
+        agent_pack: src/digitalmodel/subsea/manifolds/docs/agent-pack.md
+        qa_family: EC
       riser:
         agent_pack: src/digitalmodel/subsea/riser/docs/agent-pack.md
         qa_family: EC

@@ -30,6 +30,8 @@ from typing import Optional
 
 import numpy as np
 
+from digitalmodel._jonswap import normalising_factor
+
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 # Gravitational acceleration [m/s²]
@@ -114,7 +116,9 @@ def jonswap_spectrum(
     Returns
     -------
     ndarray
-        Spectral density S(ω) [m²·s/rad].
+        Spectral density S(ω) [m²·s/rad]. Full-spectrum energy is Hs²/16;
+        a finite frequency grid retains its bandwidth loss. The source and
+        numerical basis are in docs/domains/installation/jonswap-normalisation.md.
     """
     if gamma is None:
         gamma = jonswap_gamma(Hs, Tp)
@@ -128,15 +132,17 @@ def jonswap_spectrum(
     # Peak enhancement exponent
     a = np.exp(-0.5 * ((omega - wp) / (sigma * wp)) ** 2)
 
-    # Normalisation factor for gamma (DNV-RP-F105 / Goda)
-    C_gamma = 1.0 - 0.287 * math.log(gamma) if gamma > 1.0 else 1.0
+    # SIMA JONSWAP Spectra sections 1-2 (accessed 2026-10-22):
+    # beta=1.25, sigma=0.07/0.09; Hs²/16 fixes the energy scale.
+    # Use the integrated shape instead of the approximate logarithmic fit.
+    C_gamma = normalising_factor(gamma)
 
     # Alpha from Hs constraint
     alpha = (5.0 / 16.0) * Hs**2 * wp**4 / g**2
 
     with np.errstate(divide="ignore", invalid="ignore"):
         S_pm = (alpha * g**2 / omega**5) * np.exp(-1.25 * (wp / omega) ** 4)
-        S = (S_pm / C_gamma) * gamma**a
+        S = (S_pm * C_gamma) * gamma**a
 
     S = np.nan_to_num(S, nan=0.0, posinf=0.0, neginf=0.0)
     return S

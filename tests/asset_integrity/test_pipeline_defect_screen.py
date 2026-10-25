@@ -241,14 +241,47 @@ def test_boundary_loss_is_disclosed(reference):
 
 
 def test_area_weighted_property_preserves_projected_profile_contract():
+    """Issue #2335 (2026): .475/.5=.95 raw; (.475+.025)/2/.5=.50 projected.
+
+    The legacy profile remains valid; the typed record qualifies the source.
+    """
     from digitalmodel.asset_integrity.rstreng_2d import rstreng_2d_river_bottom
 
     result = rstreng_2d_river_bottom(
         24, 0.5, [0, 8], [[0.475, 0.025]] * 2, 52000, projection="area_weighted"
     )
-    # Existing sensitivity mode checks its averaged profile, not the raw pit.
-    assert result.within_applicability is result.applicability.ok is True
-    assert result.applicability is result.result.applicability
+    assert result.within_applicability is True
+    assert result.projected_profile_applicability is result.result.applicability
+    assert result.projected_profile_applicability.ok is True
+    assert result.applicability.ok is False
+
+
+@pytest.mark.parametrize("projection", ["max", "area_weighted"])
+@pytest.mark.parametrize("raw_depth", [0.25, 0.475])
+def test_projected_result_qualification_reaches_decision(projection, raw_depth):
+    """Synthetic hand cases: raw d/t=.25/.5=.50 or .475/.5=.95.
+
+    Equal weighting with a zero column halves those ratios. The depth
+    envelope and sensitivity restriction are documented in the 2026 record
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose and Caveat.
+    A synthetic strength margin of two over an allowable of one deliberately
+    passes the numeric screen; only shallow MAX may receive ACCEPT.
+    """
+    from digitalmodel.asset_integrity.applicability import collect
+    from digitalmodel.asset_integrity.assessment.ffs_decision import decide
+    from digitalmodel.asset_integrity.pipeline_defect_screen import _pressure_row
+    from digitalmodel.asset_integrity.rstreng_2d import rstreng_2d_river_bottom
+
+    result = rstreng_2d_river_bottom(
+        24, 0.5, [0, 8], [[raw_depth, 0.0]] * 2, 52000, projection=projection,
+    )
+    row = _pressure_row("RSTRENG-2D", result, 2.0, 2.0, 1.0)
+    app = collect([result])
+    assert row["applicability"] == app.to_dict()
+    decision = decide(2.0, 1.0, 1.0, "pipeline", applicability=app)
+    expected = "ACCEPT" if projection == "max" and raw_depth == 0.25 else "ESCALATE"
+    assert decision.verdict.value == expected
+    assert decision.to_dict()["applicability"] == app.to_dict()
 
 
 @pytest.mark.parametrize("filename", ["input.yml", "synthetic.yml"])

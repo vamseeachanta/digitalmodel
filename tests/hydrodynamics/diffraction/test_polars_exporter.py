@@ -1,9 +1,10 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for PolarsExporter (WRK-030)."""
 from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
@@ -36,13 +37,26 @@ class TestRaosToPolars:
         expected_cols = {"frequency", "period", "heading", "dof", "amplitude", "phase", "unit"}
         assert expected_cols == set(df.columns)
 
-    def test_row_count(self, mock_diffraction_results: DiffractionResults) -> None:
-        exporter = PolarsExporter(mock_diffraction_results)
+    @pytest.mark.parametrize(
+        "fixture_name", ["mock_diffraction_results", "dense_diffraction_results"]
+    )
+    def test_row_count(self, request: pytest.FixtureRequest, fixture_name: str) -> None:
+        """Count the Cartesian product independently of the exporter.
+
+        Inputs: conftest.py's mock and dense result fixtures; DOF from
+        output_schemas.py. Hand calculation for the current fixtures:
+        mock: 40 frequencies * 5 headings * 6 DOFs = 1200 rows;
+        dense: 24 frequencies * 13 headings * 6 DOFs = 1872 rows.
+        Read the dimensions so an abscissa-contract change needs no new total.
+        """
+        results: DiffractionResults = request.getfixturevalue(fixture_name)
+        exporter = PolarsExporter(results)
         if not POLARS_AVAILABLE:
             pytest.skip("polars not installed")
         df = exporter.raos_to_polars()
-        # 10 frequencies * 5 headings * 6 DOFs = 300
-        assert len(df) == 10 * 5 * 6
+        frequency_count = results.raos.surge.frequencies.count
+        heading_count = results.raos.surge.headings.count
+        assert len(df) == frequency_count * heading_count * len(DOF)
 
     def test_dof_values(self, mock_diffraction_results: DiffractionResults) -> None:
         exporter = PolarsExporter(mock_diffraction_results)
@@ -78,13 +92,33 @@ class TestMatrixExport:
         expected = {"frequency", "period", "dof_i", "dof_j", "value", "unit"}
         assert expected == set(df.columns)
 
-    def test_added_mass_row_count(self, mock_diffraction_results: DiffractionResults) -> None:
-        exporter = PolarsExporter(mock_diffraction_results)
+    @pytest.mark.parametrize(
+        "fixture_name", ["mock_diffraction_results", "dense_diffraction_results"]
+    )
+    @pytest.mark.parametrize("matrix_type", ["added_mass", "damping"])
+    def test_matrix_row_count(
+        self, request: pytest.FixtureRequest, fixture_name: str, matrix_type: str
+    ) -> None:
+        """Count each frequency's DOF row/column pairs by hand.
+
+        Inputs: conftest.py's mock and dense matrix sets; DOF from
+        output_schemas.py. For both added mass and damping:
+        mock: 40 frequencies * 6 row DOFs * 6 column DOFs = 1440 rows;
+        dense: 24 frequencies * 6 row DOFs * 6 column DOFs = 864 rows.
+        The expected count uses input dimensions, never exported records.
+        """
+        results: DiffractionResults = request.getfixturevalue(fixture_name)
+        exporter = PolarsExporter(results)
         if not POLARS_AVAILABLE:
             pytest.skip("polars not installed")
-        df = exporter.added_mass_to_polars()
-        # 10 frequencies * 6 * 6 = 360
-        assert len(df) == 10 * 6 * 6
+        if matrix_type == "added_mass":
+            matrix_set = results.added_mass
+            df = exporter.added_mass_to_polars()
+        else:
+            matrix_set = results.damping
+            df = exporter.damping_to_polars()
+        # output_schemas.py: each matrix has a row and column for every DOF.
+        assert len(df) == matrix_set.frequencies.count * len(DOF) * len(DOF)
 
     def test_damping_columns(self, mock_diffraction_results: DiffractionResults) -> None:
         exporter = PolarsExporter(mock_diffraction_results)
